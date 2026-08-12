@@ -90,6 +90,16 @@ was identical:
   nothing ever provides when there's no real writer consuming it; or a retry loop with no backoff cap tied to the "Event
   logging not initialized" condition.
 
+**RULED 2026-08-12 (/plan-reconcile, operator interactive)**: implement the configurable-timeout fix in the SHARED
+`_upload_gcs_with_retry()` helper (broadest fix — covers every caller of that helper, not just `_route_lighter`), not a
+narrow call-site-only `asyncio.wait_for()` wrap and not graceful-degradation-only. Not implemented in this docs-only
+pass — tracked as a new `[CODE]` todo below.
+
+- [ ] [CODE] P2. Add a configurable timeout to `_upload_gcs_with_retry()` (or the shared in-flight-registry flush/ack
+      await path it wraps, wherever the actual hang occurs) so a caller with no live writer/event-logging fails fast
+      instead of hanging indefinitely, per the 2026-08-12 operator ruling above. Repo: market-tick-data-service /
+      unified-trading-library.
+
 ## Recommended decision
 
 Investigate whether `TardisAdapter.download_batch` / `_ChainAnnotatingWriter` / the in-flight-registry consumer path has
@@ -172,9 +182,14 @@ error in that case, or (b) add a bounded timeout so a misconfigured caller degra
 
 ## Follow-ups
 
-- [ ] [CODE] P3. Implement one of the 3 recommended fixes for the Tardis writer=None/setup_events() hang
-      (asyncio.wait_for timeout at tardis_batch_download.py:709, configurable upload timeout in _upload_gcs_with_retry,
-      or graceful log_event RuntimeError degradation) - human design decision pending per Progress Log 2026-08-05
+- [ ] [CODE] P3. BLOCKED-OPERATOR-DECISION — Implement one of the 3 recommended fixes for the Tardis
+      writer=None/setup_events() hang (asyncio.wait_for timeout at tardis_batch_download.py:709, configurable upload
+      timeout in _upload_gcs_with_retry, or graceful log_event RuntimeError degradation) - human design decision pending
+      per Progress Log 2026-08-05. _(retagged 2026-08-12 (/plan-reconcile): this doc is `assigned_vm: planning`
+      (AO-dispatched) and the todo's own text says "human design decision pending" among 3 non-equivalent options (scope
+      differs: this-path-only fail-fast vs. shared-helper-wide robustness vs. trigger-only degradation) — no single
+      option is evidence-determinable, so this stays non-dispatchable pending an explicit operator pick, not a
+      mechanical retag to a craft role.)_
 
 > **2026-08-06 archive-candidate audit**: DIAG todo is [x] (root cause traced to the blocking run_in_executor await),
 > but the Progress Log's 'Recommended fix (human design decision - 3 options)' is never implemented - the hang is only

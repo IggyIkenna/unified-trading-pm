@@ -372,21 +372,27 @@ below is untouched (out of scope — DRIFT-specific, unrelated to this GMX pass)
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **RECLASSIFIED 2026-08-08 — "source wins, full regen is correct" is the ruling, not an open design
-      question.** Original text (kept for context): "Resync the fourth instance
-      (`unified-api-contracts/openapi/prospectus/*.md`, 57 files) — the prospectus generator
-      (`unified-trading-pm/scripts/openapi/generate_strategy_prospectus.py`) has drifted from the committed files on
-      multiple unrelated axes (venue-category classification, execution-algorithm lists, formatting,
-      `generated_from_commit` baseline, 2 missing archetypes), so a blind regen isn't safe yet." Re-verified 2026-08-08:
-      the generator is a PURE regenerate-from-source tool by construction — its own docstring states "Output:
-      deterministic (sorted, no timestamps). Run twice = byte-identical," and the only file write in the whole script is
-      a single unconditional `with open(out_path, "w", encoding="utf-8") as f: f.write(doc)` inside the per-archetype
-      loop (line 663) — no read-existing-file, no diff-against-committed, no merge, no preserve-hand-edit logic anywhere
-      in the file. This means there is no mechanism by which a committed `.md` could carry authoritative content the
-      generator doesn't already derive from source — any divergence is drift, not intentional hand-authored content the
-      generator would destroy. Confirmed by git history in `unified-api-contracts`: commits `f8d266ab` (2026-07-30,
-      "correct stale gap#3 notes on ARBITRAGE_PRICE_DISPERSION") and `f8515eb7` (2026-07-30, "correct stale gap#10 notes
-      on CARRY_BASIS_DATED CME cell") both land the same fix simultaneously in
+- [ ] [SCRIPT] P2. **Run `generate_strategy_prospectus.py` against current `unified-api-contracts` HEAD, review the diff
+      (expected large: many unrelated-axis differences plus 2 wholly missing archetypes, `CARRY_FUNDING_DISPERSION` and
+      `TSMOM_BTC_CTA`), confirm the 2 missing archetypes land correctly and nothing else looks structurally wrong (a
+      `[MACHINE-DERIVED]`/`[CODEX-DERIVED]` header on every file, no truncated sections), then commit all 57 (or 59,
+      with the 2 new ones) regenerated files as one `unified-api-contracts` change.** **CORRECTED 2026-08-12
+      (/plan-reconcile)**: moved the actionable instruction to this todo's first physical line (was buried after ~250
+      words of history/justification, per task_template.md's ao-readiness convention) — no change to scope or intent.
+      **RECLASSIFIED 2026-08-08 — "source wins, full regen is correct" is the ruling, not an open design question.**
+      Original text (kept for context): "Resync the fourth instance (`unified-api-contracts/openapi/prospectus/*.md`, 57
+      files) — the prospectus generator (`unified-trading-pm/scripts/openapi/generate_strategy_prospectus.py`) has
+      drifted from the committed files on multiple unrelated axes (venue-category classification, execution-algorithm
+      lists, formatting, `generated_from_commit` baseline, 2 missing archetypes), so a blind regen isn't safe yet."
+      Re-verified 2026-08-08: the generator is a PURE regenerate-from-source tool by construction — its own docstring
+      states "Output: deterministic (sorted, no timestamps). Run twice = byte-identical," and the only file write in the
+      whole script is a single unconditional `with open(out_path, "w", encoding="utf-8") as f: f.write(doc)` inside the
+      per-archetype loop (line 663) — no read-existing-file, no diff-against-committed, no merge, no preserve-hand-edit
+      logic anywhere in the file. This means there is no mechanism by which a committed `.md` could carry authoritative
+      content the generator doesn't already derive from source — any divergence is drift, not intentional hand-authored
+      content the generator would destroy. Confirmed by git history in `unified-api-contracts`: commits `f8d266ab`
+      (2026-07-30, "correct stale gap#3 notes on ARBITRAGE_PRICE_DISPERSION") and `f8515eb7` (2026-07-30, "correct stale
+      gap#10 notes on CARRY_BASIS_DATED CME cell") both land the same fix simultaneously in
       `internal/architecture_v2/archetype_capability_manifest.json` (the source registry) AND
       `openapi/prospectus/<archetype>.md` (the generated artifact this todo covers) AND
       `openapi/capability-manifest.json`/`openapi/capability-unlock-report.json` in one commit each — i.e. the

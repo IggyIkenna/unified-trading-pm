@@ -30,7 +30,8 @@ summary:
   plan's own coverage-matrix claim of 'LIVE -- coded + RUNNING' for the WS odds_api_ws.py connector. This second finding
   is NOT blocked -- the operator's 2026-07-28 ruling already authorizes resuming it -- and is being worked as
   continue_on while this doc's api_football question is escalated."
-status: open
+status: resolved
+resolved_by: "plan_reconciler /plan-reconcile Section-2 archival pass, 2026-08-12"
 nature: issue
 asset_group: [sports]
 stage: [data, live]
@@ -52,7 +53,7 @@ related:
   [
     /plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md,
     /plans/archive/2026_07/sports_live_availability_and_source_latency_2026_07_24_finalize_2026_07_30.md,
-    /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
+    /plans/archive/2026_08/infra_capture_and_devops_leftovers_2026_07_06.md,
     plans/archive/issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md,
     plans/archive/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md,
   ]
@@ -68,7 +69,6 @@ drift_direction: unknown
 assigned_vm: planning
 execution_scope: orchestrator-agent
 source: [infra_capture_and_devops_leftovers-001 backlog task, slot 3, 2026-08-02]
-resolved_by:
 locked_by:
 depends_on: []
 last_updated: 2026-08-02
@@ -81,6 +81,12 @@ context_scope:
     instruments-service/instruments_service/reference_data/adapters/sports/adapters/api_football.py,
   ]
 ---
+
+> **RESOLVED 2026-08-12 (plan_reconciler /plan-reconcile Section-2 archival pass)** — both open questions this doc
+> raised were already resolved via the `/blocked` mechanism it started (see
+> `## Resolution (2026-08-10, prose-findings formalization sweep)` below): the api_football half was struck
+> (`BLK-b969f5f0`, decision B) and the live sports-odds VM finding was closed 2026-08-03. That 2026-08-10 sweep
+> explicitly deferred the `status` flip + archival to "a close-out/archival pass" — this is that pass.
 
 ## Why this is a big finding, not routine triage
 
@@ -155,16 +161,16 @@ LIVE_ODDS/odds_horizon_bucket gate this todo exists to close.
 
 ## Resolution (2026-08-10, prose-findings formalization sweep)
 
-**Both open questions from this doc are already resolved — no todo needed, both were already actioned via the
-`/blocked` escalation mechanism this doc itself started.**
+**Both open questions from this doc are already resolved — no todo needed, both were already actioned via the `/blocked`
+escalation mechanism this doc itself started.**
 
 1. **Recommended decision → RULED, option B (decline).** `BLK-b969f5f0` was answered "decision B" — confirmed via the
    sibling tracker doc's own record: `plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md`
    states (line 169) "**api_football `/odds` in-play second-source half STRUCK 2026-08-02 (`BLK-b969f5f0`, main,
    decision B) — SUPERSEDED, not pursued**" and (line 415) "recommendation B (strike the api_football half as based on
-   incomplete information)." The sibling plan's P2 todo was corrected accordingly — a genuine second live-odds source
-   is now explicitly scoped as "its OWN new operator-gated design decision if ever wanted," not folded back into that
-   todo. Matches this doc's own recommendation exactly.
+   incomplete information)." The sibling plan's P2 todo was corrected accordingly — a genuine second live-odds source is
+   now explicitly scoped as "its OWN new operator-gated design decision if ever wanted," not folded back into that todo.
+   Matches this doc's own recommendation exactly.
 2. **The separate, non-conflicting finding (live sports-odds VM not running) → RESOLVED 2026-08-03.** Same sibling
    tracker doc, its coverage-matrix row for LIVE_ODDS/odds_horizon_bucket: "**LIVE — RUNNING**
    (`mtds-live-sports-odds-api-trades-20260803-172841`, verified 2026-08-03: 35+ min of clean `run.log`, zero

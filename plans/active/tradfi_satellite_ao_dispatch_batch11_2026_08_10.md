@@ -12,7 +12,7 @@ summary: >-
   established batch6/7/8/9 precedent of NOT drafting into docs whose parent_epic routes ownership elsewhere). Conflict
   -checked against every active tradfi covering doc plus the cross-cutting governance_sweep_deferred_followups conflict
   batch8 already found (still unresolved) — zero NEW collisions found among this batch's own 14 todos.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -33,7 +33,7 @@ related:
 created: "2026-08-10"
 last_updated: "2026-08-10"
 parent_epic: tradfi_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: local-only
 priority: P1
 estimate_class: infra

@@ -419,8 +419,9 @@ flagged to the operator directly in-session, fixed immediately per the small+cle
 
 ## Codex SSOTs
 
-- `/codex/08-workflows/ci-cd-flow.md` — gate set / quickmerge / reusable-workflow rollout mechanism; needs todo 9's
-  update once this plan ships.
+- `/codex/08-workflows/ci-cd-flow.md` — gate set / quickmerge / reusable-workflow rollout mechanism. **CORRECTED
+  2026-08-12 (/plan-reconcile)**: todo 9 already applied its update 2026-08-08 (see Todos above) — this line was stale,
+  still describing the update as pending.
 - `/plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md` — the prior plan this one directly follows;
   its "Confirmed technical facts" + Progress Log document the base state (the 2-file extraction, the revert incident,
   the dangling-reference sweep) this plan's own facts build on.

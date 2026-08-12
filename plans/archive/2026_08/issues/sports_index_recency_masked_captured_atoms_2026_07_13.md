@@ -25,7 +25,7 @@ summary: |
   verify green twice, zero captured-key losses; ALL 100 FIXTURES cells were truthset gaps (see body). REMAINING:
   the INFRA image redeploy + the P3 fleet sweep + 2 residual atoms (parked blank-data_type row; new TEAMS/TFF
   nightly-image masking).
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [data]
@@ -56,6 +56,13 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **RESOLVED 2026-08-12 (/plan-reconcile)**: all 7 tracked checkboxes in this doc are `[x]` (adjudication subclasses
+> (a)/(b), reader-side tie-break, INFRA redeploy-superseded, fleet sweep, the corrected guard-extension fix, and the
+> downgrade-verification todo) — confirmed via full-file read, no remaining `- [ ]`. `status:` frontmatter was stale
+> `open` since the 2026-08-06 Progress Log entry self-flagged this exact mismatch and it was never applied. Archived per
+> the plan-completion-and-archival-discipline ritual
+> (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).
 
 # Sports index — 189 recency-masked captured atoms (2026-07-13 oscillation residue)
 

@@ -20,7 +20,7 @@ summary: >-
   miss). The 5th, extracted below, is a genuine gap: a real, open, conflict-clear, bounded P2/P3 code-fix doc that
   existed as `asset_group: [tradfi]` since 2026-08-09 (well before any of today's 3 passes) and simply never appeared in
   any covering doc's text.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -39,7 +39,7 @@ related:
 created: "2026-08-10"
 last_updated: "2026-08-10"
 parent_epic: tradfi_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: local-only
 priority: P2
 estimate_class: infra

@@ -358,11 +358,11 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
   into `PYTEST_UNIT_DIR` — the D3 reader-bridge half of Track 1 now HAS CI enforcement.
 - `issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md` — blank-itype `attempted_failed` re-tag,
   gated on `cefi-recapture-sweep-complete` (still false).
-- `issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md` — **RESOLVED 2026-08-08, re-verified 2026-08-09**:
-  the Tardis `lighter` entitlement gap is gone (re-probed live, non-1st-of-month dates return real data); the
-  LIGHTER-ZKSYNC `derivative_ticker` re-launch VERIFY landed (16,491 captured rows, 2026-04-17..2026-08-02,
-  source=tardis) and Layer-1 confirms LIGHTER-ZKSYNC is no longer among cefi's missing tuples (only
-  BITGET-FUTURES/OKX-FUTURES remain) — all todos `[x]`, doc archive-eligible per its own finalize plan.
+- `plans/archive/2026_08/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md` — **RESOLVED 2026-08-08,
+  re-verified 2026-08-09, ARCHIVED 2026-08-12**: the Tardis `lighter` entitlement gap is gone (re-probed live,
+  non-1st-of-month dates return real data); the LIGHTER-ZKSYNC `derivative_ticker` re-launch VERIFY landed (16,491
+  captured rows, 2026-04-17..2026-08-02, source=tardis) and Layer-1 confirms LIGHTER-ZKSYNC is no longer among cefi's
+  missing tuples (only BITGET-FUTURES/OKX-FUTURES remain) — all todos `[x]`, archived alongside its finalize plan.
 - `/plans/archive/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md` — ✅ DONE (`deployment-service@9b13679`,
   launcher entries removed).
 - `issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md` — spot-check GCS/manifest/UI

@@ -71,6 +71,13 @@ connector rewire.
 
 ## A reusable precedent already exists in this codebase
 
+> **CORRECTED 2026-08-12 (/plan-reconcile)**: `build_drift_v2_sig_index.py` (and its test suite) no longer exist —
+> deleted 2026-07-16 by the DRIFT/PACIFICA retirement, so it is no longer a _live_ precedent script; the design pattern
+> below is preserved for reference only. The actual current state of this generalization work (recovered via
+> `git show 2e674d1f~1:...` as a design reference, extracted into the chunk-flush/resume core) is tracked content-wise
+> in `plans/active/solana_dex_pool_swaps_indexer_2026_08_08.md` (its todo 1, `[x]` DONE) — see that doc rather than
+> assuming this script is present on disk.
+
 `market_tick_data_service/scripts/build_drift_v2_sig_index.py` (657 lines) already solves HALF of this exact problem for
 a different Solana program (Drift V2 perps): it walks Helius RPC `getSignaturesForAddress` for a program address from
 HEAD backwards, chunk-flushing `(signature, slot, blockTime)` tuples to GCS parts (`_index/<program>_sig_index_parts/`)

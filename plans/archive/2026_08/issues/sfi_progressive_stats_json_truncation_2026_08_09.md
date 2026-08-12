@@ -12,7 +12,7 @@ summary: >-
   (`classify_and_emit_error` → `manifest.record_failed`, loop continues, run finishes normally). Not a hang, not
   data-loss-silent (the manifest honestly records `attempted_failed`), but a real recurring data-quality gap: some
   fraction of SFI_PROGRESSIVE_STATS shards never capture because the provider response is truncated mid-body.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -30,9 +30,8 @@ source: >-
   Discovered verifying the SFI mid-processing-hang todo in cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md —
   not itself in scope of that todo (that todo is about a HANG, this is a distinct low-frequency data-quality bug that is
   already correctly isolated, not silently swallowed).
-resolved_by:
+resolved_by: instruments-service@ecfc2749
 locked_by:
-archive_exempt: true # 2026-08-10 slot-22
 archive_exempt: true # 2026-08-10 slot-22: two-commit ritual
 parent_epic: sports_master
 assigned_vm: planning
@@ -42,6 +41,9 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🗄️ ARCHIVED 2026-08-12 (/plan-reconcile)** — `status: resolved`, sole todo done, `resolved_by` filled, `locked_by`
+> cleared (corpus-wide placeholder bug, option B ruling).
 
 # SFI progressive-stats occasional JSON truncation
 

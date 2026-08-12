@@ -309,6 +309,24 @@ spelling variant survives, which is the entire point of the panel". It does not.
       the consumer a `data_type` grep does not find; it must move in the same change as the rename per the codex rename
       rule.
 
+      > **CORRECTED 2026-08-12 (/plan-reconcile)**: this todo has now been prematurely dispatched 4x
+          > (slots 22/15/10/30, 2026-08-09 → 2026-08-11 Progress Log entries above) — each dispatch independently
+          > re-verified P2's `odds_horizon_bucket` re-stamp is still unshipped and skipped back with `reason_code: GATED`.
+          > The durable `auto_park` is confirmed structurally not holding (slot-30 entry: `auto_park.manual_park`'s
+          > idempotency guard no-ops re-park attempts against a stale cooldown marker) — flagged as an operator-attention
+          > AO mechanism bug in `plans/active/issues/plan_reconciler_findings_all_2026_08_12.md`'s summary, not this doc's
+          > fix to make. Root authoring gap (per CLAUDE.md: "partial parallelism isn't expressible in one plan → SPLIT"):
+          > this single todo needs `depends_on`+`gate_on_depends: true` onto P2's re-stamp todo, but this plan has 14
+          > other (mostly done) todos with no such constraint — plan-level gating would over-gate them. Tracked below so
+          > the fix isn't lost as one-off Progress Log prose.
+
+- [ ] [OPERATOR] P3. **Split this ML PATH-PREFIX loader-migration todo into its own single-todo plan**, gated via
+      `depends_on: [sports_taxonomy_p2_migration_2026_08_08]` + `gate_on_depends: true` on P2's `odds_horizon_bucket`
+      re-stamp todo, so it stops re-dispatching until the rename lands (per CLAUDE.md's documented SPLIT pattern for
+      partial-plan gating). Tagged `[OPERATOR]` because authoring a new plan requires the "AO plan or human plan?"
+      ask-first ruling (CLAUDE.md § Plans) — not a worker-determinable call. **Done when**: the split plan exists, is
+      properly gated, and this todo is removed from this plan (superseded by the split).
+
 ### Betfair Exchange
 
 - [x] ✅ [CODE] P1. **Build the Betfair Exchange adapter scaffold + UAC contract** (operator ruling 2026-08-08, per this

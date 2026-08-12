@@ -13,7 +13,7 @@ summary: >-
   row stays open forever even after the next run proves the drift is gone. Fix the payload, add a collapsible
   structured-context field so verbosity costs nothing to scan, and generalise a condition-cleared retirement exit that
   any future detector-derived row can use.
-status: active
+status: complete # (was: active) 2026-08-12 /plan-reconcile archival sweep: all 11 todos [x], no locked_by
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -66,6 +66,12 @@ context_scope:
 ---
 
 # Blocked-question payload quality + condition-derived retirement
+
+> **🟢 ARCHIVED 2026-08-12 (/plan-reconcile) — COMPLETE.** All 11 todos shipped (A2-A4, B1, C1-C5, D1) —
+> agent-orchestrator@ab7ca12/7bc9ed0/13f4848/04db4ee/b5d38671d/dff3e40480 + unified-trading-pm@da81b08733; see Progress
+> Log for the full per-todo commit trail. Gated sibling
+> `/plans/archive/2026_08/blocked_question_card_context_rendering_2026_08_10.md` also archived same-day, both todos
+> shipped `agent-orchestrator@4d2c9580ec`.
 
 ## The live instance
 
@@ -187,6 +193,15 @@ Post-phase codex audit: once the condition-cleared exit lands, the alerting SSOT
 transition documented, and the scheduled-jobs SSOT needs `plan_health`'s new "closes rows it previously opened"
 behaviour recorded.
 
+> **CORRECTED 2026-08-12 (/plan-reconcile)**: this self-imposed follow-up was written as prose here (not a tracked
+> `- [ ]` todo) and never actioned even after the condition-cleared exit landed (todo B1/D1 area,
+> `agent-orchestrator@b5d38671d`) and this doc was fully archived. Done now: added a "Condition-derived BLOCKED rows
+> auto-retire..." section to `/codex/04-architecture/agent-orchestrator-alerting.md` documenting the `condition_cleared`
+> exit, the `condition_key`/`_CONDITION_SEEN_SET_RELPATHS` mechanism, and the `auto:condition_cleared` closure-bookend
+> treatment (verified absent before this edit: `grep -c auto-retir codex/04-architecture/agent-orchestrator-alerting.md`
+> → 0). No matching home found in `agent-orchestrator-scheduled-jobs.md` (that doc covers systemd-timer dispatch
+> mechanics, not blocked-queue reconciliation semantics) — not force-fit there.
+
 ## Why this is two plans, and why this one is `sequential: true`
 
 Both choices are forced by the file map, not by taste.
@@ -201,7 +216,7 @@ slots, which is exactly the collision the rule forbids. This is the sanctioned "
 **Why the UI work is a separate, gated plan.** `sequential: true` serialises the WHOLE plan, so folding the two `[UI]`
 todos in here would be correct but would also hide a real dependency behind mere ordering. Per CLAUDE.md's
 "partial-parallelism isn't expressible in one plan → SPLIT", the UI work goes in
-[`/plans/active/blocked_question_card_context_rendering_2026_08_10.md`](/plans/active/blocked_question_card_context_rendering_2026_08_10.md)
+[`/plans/archive/2026_08/blocked_question_card_context_rendering_2026_08_10.md`](/plans/archive/2026_08/blocked_question_card_context_rendering_2026_08_10.md)
 with `depends_on: [blocked_question_payload_quality_and_condition_retirement_2026_08_10]` + `gate_on_depends: true`, so
 the dispatcher cannot offer the UI todos before the `context` column they render actually exists.
 
@@ -267,18 +282,18 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
 ### B — structured context, collapsed by default
 
 > The two `[UI]` todos that render this field MOVED to the gated companion plan
-> [`/plans/active/blocked_question_card_context_rendering_2026_08_10.md`](/plans/active/blocked_question_card_context_rendering_2026_08_10.md)
+> [`/plans/archive/2026_08/blocked_question_card_context_rendering_2026_08_10.md`](/plans/archive/2026_08/blocked_question_card_context_rendering_2026_08_10.md)
 > (`depends_on` this plan, `gate_on_depends: true`) — they both edit `dashboard/src/layout.tsx` and cannot start until
 > the `context` column below exists. See § "Why this is two plans". Their disposition markers stay below so the move is
 > recorded rather than read as a todo deletion.
 
 - **[UI] P2. CANCELLED — SUPERSEDED 2026-08-10 (slot-3 interactive, per
-  /plans/active/blocked_question_card_context_rendering_2026_08_10.md).** Render `context` as a `<details>` block
-  collapsed by default in `BlockedCard` — MOVED to the gated companion plan, not dropped; still open there.
+  /plans/archive/2026_08/blocked_question_card_context_rendering_2026_08_10.md).** Render `context` as a `<details>`
+  block collapsed by default in `BlockedCard` — MOVED to the gated companion plan, not dropped; still open there.
 - **[UI] P3. CANCELLED — SUPERSEDED 2026-08-10 (slot-3 interactive, per
-  /plans/active/blocked_question_card_context_rendering_2026_08_10.md).** Replace the raw `#{q.slot_id}` render with a
-  named source chip so `NO_WORKER_SLOT_SENTINEL` never shows as `#-1` — MOVED to the gated companion plan, not dropped;
-  still open there.
+  /plans/archive/2026_08/blocked_question_card_context_rendering_2026_08_10.md).** Replace the raw `#{q.slot_id}` render
+  with a named source chip so `NO_WORKER_SLOT_SENTINEL` never shows as `#-1` — MOVED to the gated companion plan, not
+  dropped; still open there.
 
 - [x] ✅ [BACKEND] P1. **Add a nullable `context` column to `BlockedRow` plus an idempotent migration**, mirroring
       `_migrate_blocked_queue_claude_session_id`'s no-backfill pattern in `bootstrap.py`. Populate it on the `doc_drift`

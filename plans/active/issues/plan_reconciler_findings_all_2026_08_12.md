@@ -21,10 +21,10 @@ scope: [engineer, admin]
 tags: [plan_reconciler, reconciliation, plan-hygiene, findings, all-tranches]
 related:
   [
-    /plans/active/issues/plan_reconciler_findings_defi_2026_08_09.md,
-    /plans/active/issues/plan_reconciler_findings_ci_2026_08_09.md,
-    /plans/active/issues/plan_reconciler_findings_cefi_2026_08_09.md,
-    /plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_09.md,
+    /plans/archive/2026_08/issues/plan_reconciler_findings_defi_2026_08_09.md,
+    /plans/archive/2026_08/issues/plan_reconciler_findings_ci_2026_08_09.md,
+    /plans/archive/2026_08/issues/plan_reconciler_findings_cefi_2026_08_09.md,
+    /plans/archive/2026_08/issues/plan_reconciler_findings_cross_cutting_2026_08_09.md,
   ]
 created: "2026-08-12"
 parent_epic: plan_hygiene_master
@@ -265,8 +265,8 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
 - [ ] [REVIEW] P3. (P2) plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md — Deferred section claims a doc is
       still operator-gated; its own finalize twin shows it was reclassified NA→planning the same day, self-flagged but
       never corrected
-- [ ] [REVIEW] P3. (P3) plans/active/issues/ao_park_disposition_blocked_answer_no_follow_through_2026_07_31.md —
-      `locked_since` predates `created` by 2 months (impossible); `locked_by` is a branch name, not an owner
+- [ ] [REVIEW] P3. (P3) plans/archive/2026_08/issues/ao_park_disposition_blocked_answer_no_follow_through_2026_07_31.md
+      — `locked_since` predates `created` by 2 months (impossible); `locked_by` is a branch name, not an owner
 - [ ] [REVIEW] P3. (P2) plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md:87,96 — Phase-3 checkbox still asserts
       an opus-gating requirement the doc's own later section already retired
 - [ ] [REVIEW] P3. (P2) plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md:131-138 — todo
@@ -285,7 +285,7 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       [x], frontmatter status stale (self-flagged 2026-08-06, never fixed)
 - [ ] [REVIEW] P3. (P3) plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md — stale
       annotation claims a followup "is not tracked as a todo" directly beneath the todo tracking it
-- [ ] [REVIEW] P3. (P2) plans/active/issues/sfi_progressive_stats_json_truncation_2026_08_09.md — frontmatter
+- [ ] [REVIEW] P3. (P2) plans/archive/2026_08/issues/sfi_progressive_stats_json_truncation_2026_08_09.md — frontmatter
       status:open vs body all-[x]-done + resolved_by empty
 - [ ] [REVIEW] P3. (P2) plans/active/sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md — Progress Log claims a
       codex path "does not resolve" for a path confirmed to exist
@@ -387,8 +387,8 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       whether" with a conditional premise
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/sports_track_h_denominator_prereqs_2026_07_28.md — blocked status buried
       at end of a long paragraph
-- [ ] [REVIEW] P3. (ao-readiness) plans/active/issues/sfi_progressive_stats_json_truncation_2026_08_09.md — duplicate
-      YAML frontmatter key `archive_exempt`
+- [ ] [REVIEW] P3. (ao-readiness) plans/archive/2026_08/issues/sfi_progressive_stats_json_truncation_2026_08_09.md —
+      duplicate YAML frontmatter key `archive_exempt`
 - [ ] [REVIEW] P3. (ao-readiness)
       plans/active/issues/instruments_service_sports_footystats_uac_overlap_qg_red_2026_07_30.md — `locked_by` is a
       branch-name-shaped value, not an owner

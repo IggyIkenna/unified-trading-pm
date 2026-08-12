@@ -147,7 +147,13 @@ registered canonical_question_groups have ≥1 live manifest row.
 
 **Per-cadence completion % table** (captured / empty_confirmed / attempted_failed / expected_unattempted counts, and
 `reachable_coverage_pct = captured / (captured + attempted_failed + expected_unattempted)` — empty_confirmed EXCLUDED
-from the numerator per the RULED formula, `/codex/02-data/availability-manifest-and-data-status.md` line 1054):
+from the numerator per the RULED formula, `/codex/02-data/availability-manifest-and-data-status.md` line 1136):
+
+> **CORRECTED 2026-08-12 (/plan-reconcile)**: the line citation above was "line 1054", which now falls in that codex
+> doc's unrelated "Sparseness"/sports-fixtures section (the 2285-line doc has grown/shifted since this was written
+> 2026-07-27). The actual formula
+> (`reachable_coverage = captured / (captured + attempted_failed + expected_unattempted)` — empty_confirmed EXCLUDED)
+> lives at line 1136 under "Coverage formula" (CK3-certified 2026-06-29) — verified via direct read of the codex doc.
 
 | cadence                           | captured | empty_confirmed | attempted_failed | expected_unattempted | total rows | reachable_coverage % | distinct CQGs |
 | --------------------------------- | -------: | --------------: | ---------------: | -------------------: | ---------: | -------------------: | ------------: |

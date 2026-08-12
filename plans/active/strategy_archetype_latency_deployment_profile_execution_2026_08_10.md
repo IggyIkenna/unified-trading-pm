@@ -146,10 +146,15 @@ source: >-
       distributed unless evidence is decisive"; needs an operator ruling. (4) `portfolio-*` + single-sided `yield-*`
       docs declare `basic` while the decision artifact's §6 says `standard` (arguably `basic` is correct for
       non-executing allocation/staking). Repo: unified-trading-pm (codex + configs/runtime-topology.yaml).
-- [ ] [DATA] P2. **Cross-check against the SLA-tier gap the audit plan may have flagged** (any archetype family whose
-      real latency requirement exceeds even the `premium` tier's 40ms budget) — if the audit found such a gap, this
-      plan's derivation logic must surface it as an explicit warning/exception rather than silently under- provisioning;
-      if the audit found no such gap, this todo is a no-op confirmation, not new work.
+- [ ] [DATA] P2. **CORRECTED 2026-08-12 (/plan-reconcile): de-conditionalized — the audit's answer is now known.**
+      Original text was written before the audit plan landed and hedged with "may have flagged"/"if the audit found such
+      a gap." The audit's binding decision artifact (`strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`
+      todo 8, `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`) has since answered this definitively: **YES, a
+      real gap exists** — every Low-category family's real E2E latency requirement (MM <100ms / arb <200-300ms /
+      basis+ML+rules+stat-arb ms-realm inter-leg gap) EXCEEDS the `premium` SLA tier's 40ms `latency_budget_ms` budget.
+      **Cross-check against this SLA-tier gap**: this plan's derivation logic must surface it as an explicit
+      warning/exception rather than silently under-provisioning — this is confirmed real work, not a no-op confirmation
+      branch.
 - [ ] [DOC] P3. **Update `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`** (or wherever the audit plan's decision
       artifact landed) with a note that the archetype↔deployment link is now live-derived, not manually maintained,
       cross-referencing the new code paths added by this plan.

@@ -7,7 +7,7 @@ summary: >-
   `docs_reconcile_remaining_broken_links_2026_08_02.md`'s own `[SCRIPT] P2` checkbox (replacing the redirect-pointer
   with real commit/test evidence), confirms that doc's other 11 open items are untouched and it stays open (not archived
   — real judgment-call work remains), then runs the standard 6-step archival ritual on the batch plan itself.
-status: active
+status: archived
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-11, finalize, satellite-extraction]
 related:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch11_2026_08_09.md,
     /plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
@@ -42,7 +42,7 @@ gate_on_depends: true
 sequential: true
 context_scope:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch11_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/cross-reference-path-convention.md,
   ]
@@ -52,6 +52,12 @@ source: >-
 ---
 
 # AO satellite AO batch 11 — finalize
+
+> **ARCHIVED 2026-08-12 (/plan-reconcile)**: all 5 todos are `[x]`, the last one ("DONE 2026-08-12 (/plan-reconcile)")
+> already recording that the 6-step archival ritual ran on the batch plan itself
+> (`plans/archive/2026_08/ao_satellite_ao_dispatch_batch11_2026_08_09.md`). Unlocked (`locked_by:` empty). This finalize
+> doc's own status/archival simply hadn't been flipped to match. Archived per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 > **Machine-gated on `/plans/active/ao_satellite_ao_dispatch_batch11_2026_08_09.md`** (`depends_on` +
 > `gate_on_depends: true`) — will not dispatch until that batch's sole todo is `done`. The batch itself stays
@@ -96,11 +102,24 @@ source: >-
       judgment-call/investigation items (dead links needing human successor decisions, stale-claim investigations, a
       design observation, a content-staleness gap). Doc correctly stays `status: open` / `assigned_vm: NA` — not
       archival-eligible.
-- [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
-      `/plans/active/ao_satellite_ao_dispatch_batch11_2026_08_09.md`, move to `plans/archive/2026_08/`, fix every
-      corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then re-run the active-plan
-      inventory generator. **Done when**: the batch plan is archived with a banner, the inventory regenerates cleanly,
-      and `check_finalize_plan_coverage.py` no longer names this pair.
+- [x] ✅ [INFRA] P0. **DONE 2026-08-12 (/plan-reconcile)** — Ran the 6-step archival ritual on the batch plan itself,
+      then regenerated the inventory. banner `/plans/active/ao_satellite_ao_dispatch_batch11_2026_08_09.md`, move to
+      `plans/archive/2026_08/`, fix every corpus-wide referrer including this finalize plan's own
+      `related:`/`depends_on:`, then re-run the active-plan inventory generator. **Done when**: the batch plan is
+      archived with a banner, the inventory regenerates cleanly, and `check_finalize_plan_coverage.py` no longer names
+      this pair. **Evidence**:
+      `git mv plans/active/ao_satellite_ao_dispatch_batch11_2026_08_09.md     plans/archive/2026_08/ao_satellite_ao_dispatch_batch11_2026_08_09.md`;
+      ARCHIVED banner added citing the finalize-doc's own re-verification chain; `depends_on:` stays a bare slug (out of
+      scope per cross-reference-path-convention), `related:`/`context_scope:` repointed to the archive path (this doc,
+      above); real-path referrers fixed: `/plans/epics/agent_operating_framework_master.md` (2 relative links),
+      `/plans/active/issues/ag_closeout_audit_ao_parked_2026_08_10.md` (context_scope entry); prose-only backtick
+      mentions (no path, e.g. `docs_reconcile_remaining_broken_links_2026_08_02.md`,
+      `gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md`) left as historical citations, not broken links.
+      `python3 scripts/plans/regenerate_active_plan_inventory.py` run — regenerated
+      `plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md` (275 plans, 4 orphans, 0 TBD; batch11 row
+      dropped from the table along with several other already-stale entries that predated this run). `INDEX.md` is a
+      separately auto-generated doc (not this script's output target) — left for its own generator to refresh rather
+      than hand-edited.
 
 ## Codex SSOTs
 

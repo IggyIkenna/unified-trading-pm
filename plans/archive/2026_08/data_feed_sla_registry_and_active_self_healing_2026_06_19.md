@@ -4,7 +4,7 @@ title: Data-feed SLA registry (single SSOT) + active feed self-healing
 summary:
   Build a single declarative data-feed SLA registry (consolidating scattered freshness thresholds) and add active feed
   self-healing via re-fetch on stale detection.
-status: active
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -21,8 +21,8 @@ estimate_class: design
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 3.0
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-19
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
@@ -45,6 +45,10 @@ context_scope:
     unified-api-contracts/unified_api_contracts/internal/reference/data_freshness.py,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-12 (/plan-reconcile)** — 13/13 todos `[x]` done, `locked_by` was the corpus-wide
+> `live-defi-rollout` placeholder (cleared this same run per the operator's Option B ruling), genuinely unlocked.
+> Archived per the standard fully-done-plan ritual.
 
 # Data-feed SLA registry + active feed self-healing
 
@@ -138,31 +142,32 @@ ladder, the 4-state honest-absence manifest).
 Shipping the UAC change surfaced + required fleet-QG fixes (landed PM@`f7f393636` via carve-out #3 — `qg-common.sh` +
 `base-service.sh` + `base-library.sh`). Residual proper-fix follow-ups:
 
-- [x] ✅ [SCRIPT] P0. **Bump msgpack `>=1.2.1` fleet-wide + lock-regen**, then drop its `--ignore-vuln GHSA-6v7p-g79w-8964`
-      from `base-service.sh` + `base-library.sh`. **18/20 SHIPPED + 3 were already 1.2.1 = 21/23 at 1.2.1.** Shipped:
-      instruments@`9cd6540`, mdps@`f6f3554`, mtds@`0a1b389`, ml@`fc46485`, sit@`3b98675`, trading-agent@`f0d0a39`,
-      uta@`9fa5a12`, UTL@`01f9b7b2`, PM@`467e86348`(PR#440), deployment-api@`ebe7cd0`, e2e-testing@`bd1f8af`,
-      execution-service@`feb77852`, features-service@`5e8558cf`, fund-administration-service@`88027cc`,
-      greeks-service@`6f49522`, ibkr-gateway-infra@`415c8b0`, UAC@`e6c2ec7`, deployment-service@`510047e`. (Lock-only
-      bumps via `quickmerge --agent --files 'uv.lock' --skip-preflight` — `--skip-preflight` because heavy concurrent
-      foreign WIP in dep repos blocks the dirty-deps pre-flight; safe for a transitive lock bump; trailer intact.) **2
-      BLOCKED on PROMOTION-MACHINERY / FOREIGN gates — NOT the msgpack bump (verified 2026-06-20 — both repos' uv.lock
-      cleanly reaches 1.2.1):** - `alerting-service` — the `DAILY_LEDGER_DIGEST` parity test that blocked it earlier is
-      now GREEN (ledger-digest fix landed alerting@`f5da821`). It now blocks on the **version/internal-dep-alignment
-      gate** (`run-version-alignment` — its UAC pin trails the fresh `dep-update/unified-api-contracts-0.24.0`); that
-      gate blocks ANY alerting-service ship right now (not feed-SLA-specific) and its remedy is the workspace-broad
-      `run-version-alignment.sh --fix` or the human-only `--skip-version-alignment` — out of feed-SLA scope. Bump
-      reverted (regenerable); re-ship after the dep-update flow reconciles alerting's version. - `agent-orchestrator` —
-      still red on the foreign UI dashboard `vitest: not found` + `tsc TS2307` (its node-test-infra not
-      installed/working on this host); foreign + out of feed-SLA scope. Owner fixes the dashboard, then bump + ship.
-      **The `--ignore-vuln GHSA-6v7p-g79w-8964` MUST STAY until those 2 land** — removing it now would red the 2
-      unbumped repos. Genuine-impossibility-in-scope per autonomous rule 1 (can't ship past a foreign/version-machinery
-      red gate without a workspace-broad version op or editing foreign UI infra). **DONE (staleness-recheck
-      2026-08-09)** — both blockers cleared: live-verified `alerting-service/uv.lock` and `agent-orchestrator/uv.lock`
-      both now pin `msgpack==1.2.1`; `unified-trading-pm/scripts/quality-gates-base/qg-common.sh`'s
-      `QG_PIP_AUDIT_COMMON_IGNORES` is confirmed EMPTY (resolved 2026-07-30 per its own inline changelog, well before
-      this recheck) — the GHSA-6v7p-g79w-8964 mention there is historical commentary only, not an active ignore. All
-      23/23 repos at msgpack>=1.2.1, ignore fully dropped.
+- [x] ✅ [SCRIPT] P0. **Bump msgpack `>=1.2.1` fleet-wide + lock-regen**, then drop its
+      `--ignore-vuln GHSA-6v7p-g79w-8964` from `base-service.sh` + `base-library.sh`. **18/20 SHIPPED + 3 were already
+      1.2.1 = 21/23 at 1.2.1.** Shipped: instruments@`9cd6540`, mdps@`f6f3554`, mtds@`0a1b389`, ml@`fc46485`,
+      sit@`3b98675`, trading-agent@`f0d0a39`, uta@`9fa5a12`, UTL@`01f9b7b2`, PM@`467e86348`(PR#440),
+      deployment-api@`ebe7cd0`, e2e-testing@`bd1f8af`, execution-service@`feb77852`, features-service@`5e8558cf`,
+      fund-administration-service@`88027cc`, greeks-service@`6f49522`, ibkr-gateway-infra@`415c8b0`, UAC@`e6c2ec7`,
+      deployment-service@`510047e`. (Lock-only bumps via `quickmerge --agent --files 'uv.lock' --skip-preflight` —
+      `--skip-preflight` because heavy concurrent foreign WIP in dep repos blocks the dirty-deps pre-flight; safe for a
+      transitive lock bump; trailer intact.) **2 BLOCKED on PROMOTION-MACHINERY / FOREIGN gates — NOT the msgpack bump
+      (verified 2026-06-20 — both repos' uv.lock cleanly reaches 1.2.1):** - `alerting-service` — the
+      `DAILY_LEDGER_DIGEST` parity test that blocked it earlier is now GREEN (ledger-digest fix landed
+      alerting@`f5da821`). It now blocks on the **version/internal-dep-alignment gate** (`run-version-alignment` — its
+      UAC pin trails the fresh `dep-update/unified-api-contracts-0.24.0`); that gate blocks ANY alerting-service ship
+      right now (not feed-SLA-specific) and its remedy is the workspace-broad `run-version-alignment.sh --fix` or the
+      human-only `--skip-version-alignment` — out of feed-SLA scope. Bump reverted (regenerable); re-ship after the
+      dep-update flow reconciles alerting's version. - `agent-orchestrator` — still red on the foreign UI dashboard
+      `vitest: not found` + `tsc TS2307` (its node-test-infra not installed/working on this host); foreign + out of
+      feed-SLA scope. Owner fixes the dashboard, then bump + ship. **The `--ignore-vuln GHSA-6v7p-g79w-8964` MUST STAY
+      until those 2 land** — removing it now would red the 2 unbumped repos. Genuine-impossibility-in-scope per
+      autonomous rule 1 (can't ship past a foreign/version-machinery red gate without a workspace-broad version op or
+      editing foreign UI infra). **DONE (staleness-recheck 2026-08-09)** — both blockers cleared: live-verified
+      `alerting-service/uv.lock` and `agent-orchestrator/uv.lock` both now pin `msgpack==1.2.1`;
+      `unified-trading-pm/scripts/quality-gates-base/qg-common.sh`'s `QG_PIP_AUDIT_COMMON_IGNORES` is confirmed EMPTY
+      (resolved 2026-07-30 per its own inline changelog, well before this recheck) — the GHSA-6v7p-g79w-8964 mention
+      there is historical commentary only, not an active ignore. All 23/23 repos at msgpack>=1.2.1, ignore fully
+      dropped.
 - [x] ✅ [SCRIPT] P3. **Re-export `ACCOUNT_STATE_FRESHNESS` via the UAC facade** — UAC@`6b91f1f`: added to
       `internal/reference/__init__.py` + `internal/__init__.py` (import + `__all__`);
       `from unified_api_contracts.internal     import ACCOUNT_STATE_FRESHNESS` now works. (Unblocked once the
@@ -326,6 +331,6 @@ droppability now rather than treated as still-gated.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged, 1 open todo): the fleet-wide
   msgpack `>=1.2.1` bump on the last 2/20 repos (agent-orchestrator, alerting-service) remains DEPENDENCY_BLOCKED on
-  foreign repo state (UI test-infra `vitest: not found`/`tsc TS2307` on agent-orchestrator; a foreign `DAILY_LEDGER_DIGEST`
-  parity-test/version-alignment chain on alerting-service) — outside this plan's own fix authority.
-  `locked_by: live-defi-rollout` still applies.
+  foreign repo state (UI test-infra `vitest: not found`/`tsc TS2307` on agent-orchestrator; a foreign
+  `DAILY_LEDGER_DIGEST` parity-test/version-alignment chain on alerting-service) — outside this plan's own fix
+  authority. `locked_by: live-defi-rollout` still applies.

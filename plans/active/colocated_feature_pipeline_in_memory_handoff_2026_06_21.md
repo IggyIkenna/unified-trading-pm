@@ -107,8 +107,11 @@ severities were weakened to `"none"`, masking 574 errors).
 
 - In-memory DAG handoff + parquet consolidation + read-time pruning land with features-service `quality-gates.sh` green
   and a measured I/O reduction (object count / read bytes) on a sample (day, fg, tf).
-- features-service basedpyright `reportUnknown*` severities back to `error` (or a downward-only ratchet) with the 574
-  errors burned down; no new suppressions added.
+- features-service basedpyright `reportUnknown*` severities back to `error` (or a downward-only ratchet) with the errors
+  burned down; no new suppressions added. **CORRECTED 2026-08-12 (/plan-reconcile)**: the "574 errors" figure is rotted
+  — item 1.7e's own DONE note (below) found the real baseline was already `error`-severity at 1040 (never weakened to
+  "none" as originally believed) and burned down to ~1020 via pure type narrowing, satisfied via an operator-approved
+  downward-only ratchet, not a 0-error/574-burn-down outcome.
 
 ## Temporary states + their canonical follow-up plans
 

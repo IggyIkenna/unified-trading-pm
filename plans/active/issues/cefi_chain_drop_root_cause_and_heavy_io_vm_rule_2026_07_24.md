@@ -45,7 +45,11 @@ code_refs:
   ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
-depends_on: [cefi_lighter_zksync_systemic_collision_2026_08_08, cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08]
+depends_on: [cefi_lighter_zksync_systemic_collision_2026_08_08]
+# CORRECTED 2026-08-12 (/plan-reconcile): dropped cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08 — resolved
+# + archived to plans/archive/2026_08/issues/ (status: resolved), consistent with this doc's own Progress Log entries
+# ("Blocker 2 ... is now RESOLVED" / "confirmed still RESOLVED"). Blocker 1 (cefi_lighter_zksync_systemic_collision)
+# remains genuinely open (status: open) and stays as the sole gate.
 context_scope:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,

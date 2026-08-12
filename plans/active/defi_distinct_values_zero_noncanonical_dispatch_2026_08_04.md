@@ -44,7 +44,8 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: "2026-08-04"
-last_updated: "2026-08-07"
+last_updated: "2026-08-10" # CORRECTED 2026-08-12 (/plan-reconcile): was stale "2026-08-07" — git log shows the doc was
+# substantively edited 2026-08-10 (b3241ef496, OOM root-cause + relaunch + retirement-plan extraction)
 parent_epic: manifest_master
 assigned_vm: NA
 execution_scope: local-only
@@ -218,26 +219,25 @@ the manifest consolidator cron and trigger a fresh honest-coverage rollup (this 
 ## Todos
 
 _(formalized 2026-08-10 from prose in the "REVISED completion sequencing" and Progress Log below — see that section for
-full evidence/citations. Everything else in the Deferred-work table and Progress Log below already has its own
-delegated tracking doc with real checkboxes — not duplicated here.)_
+full evidence/citations. Everything else in the Deferred-work table and Progress Log below already has its own delegated
+tracking doc with real checkboxes — not duplicated here.)_
 
-- **[DATA] P2. CANCELLED — SUPERSEDED 2026-08-10, EXTRACTED → `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md`
-  (`assigned_vm: planning`, `status: draft` — flips `active` once the rebuild VM reaches genuine terminal SUCCESS).**
-  Retire POOL/`rate_indices`/`dex_pool_fees` legacy manifest rows, resume the consolidator, trigger a fresh rollup,
-  re-check the panel — the judgment calls this depended on are resolved (rebuild VM OOM root-caused + fixed, see
-  `/plans/active/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md`), so the remaining work
-  is AO-dispatch-eligible. Finalize companion:
-  `defi_pool_rate_indices_dex_pool_fees_retirement_finalize_2026_08_10.md`.
-- [ ] [DATA] P3. **Cross-check `instrument_type=spot_pair` (9,802 rows) against `defi-canonical-naming-ssot.md`'s
-      locked instrument_type list** — flagged 2026-08-07 ("not yet cross-checked... needs a quick check before
-      assuming drift vs. legitimate") but never followed up.
+- **[DATA] P2. CANCELLED — SUPERSEDED 2026-08-10, EXTRACTED →
+  `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` (`assigned_vm: planning`, `status: draft` — flips
+  `active` once the rebuild VM reaches genuine terminal SUCCESS).** Retire POOL/`rate_indices`/`dex_pool_fees` legacy
+  manifest rows, resume the consolidator, trigger a fresh rollup, re-check the panel — the judgment calls this depended
+  on are resolved (rebuild VM OOM root-caused + fixed, see
+  `/plans/active/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md`), so the remaining work is
+  AO-dispatch-eligible. Finalize companion: `defi_pool_rate_indices_dex_pool_fees_retirement_finalize_2026_08_10.md`.
+- [ ] [DATA] P3. **Cross-check `instrument_type=spot_pair` (9,802 rows) against `defi-canonical-naming-ssot.md`'s locked
+      instrument_type list** — flagged 2026-08-07 ("not yet cross-checked... needs a quick check before assuming drift
+      vs. legitimate") but never followed up.
 - [ ] [BACKEND] P3. **Fix the Distinct Values panel's `<blank>` `instrument_type` badge to exclude `empty_confirmed`
       rows.** Currently over-reports ~5.35M blank rows when only ~58 `captured` rows are a genuine gap (the rest are
       legitimate honest-absence markers, ~212,800-215,600 per data_type, consistent with one empty-marker per missing
       cell). Needs a `_distinct_values.py` / `measure_honest_coverage.py` change to exclude `empty_confirmed` from the
-      blank-key check specifically (mirrors the `capture_status != "attempted_failed"` filter already shipped
-      2026-08-10 for the enumeration-key bug, `instruments-service@8b59e8ba2`). Repo: instruments-service or
-      deployment-api.
+      blank-key check specifically (mirrors the `capture_status != "attempted_failed"` filter already shipped 2026-08-10
+      for the enumeration-key bug, `instruments-service@8b59e8ba2`). Repo: instruments-service or deployment-api.
 
 ## Progress Log
 
@@ -617,10 +617,11 @@ delegated tracking doc with real checkboxes — not duplicated here.)_
   carrying real `- [ ]` checkboxes (verified via direct grep of each cited doc) and was left untouched to avoid
   duplication.
 - **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: KEEP-NA, valid — not all 3 open todos are bounded.
-  Todo 1 (POOL/rate_indices/dex_pool_fees retirement) explicitly gates on `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s
-  R3 rebuild VM reaching a stable terminal state — live-reverified this pass: R3 is still `[~]` (not terminal), the
-  named successor VM `canonical-migration-defi-rebuild-20260809-163511` is confirmed GONE
+  Todo 1 (POOL/rate_indices/dex_pool_fees retirement) explicitly gates on
+  `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s R3 rebuild VM reaching a stable terminal state —
+  live-reverified this pass: R3 is still `[~]` (not terminal), the named successor VM
+  `canonical-migration-defi-rebuild-20260809-163511` is confirmed GONE
   (`gcloud compute instances list --filter="name~canonical-migration-defi-rebuild"` returns empty per that doc's own
   2026-08-10 Progress Log), flagged there for root-cause triage, unresolved. A depends-on-a-still-open-prerequisite
-  citation is KEEP-NA per this audit's own rule — since not every todo is bounded, the whole doc stays NA (todos 2/3
-  are individually small and plausibly bounded, but the whole-doc bar requires all three).
+  citation is KEEP-NA per this audit's own rule — since not every todo is bounded, the whole doc stays NA (todos 2/3 are
+  individually small and plausibly bounded, but the whole-doc bar requires all three).

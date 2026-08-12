@@ -165,6 +165,19 @@ the second (consolidated) is not — see that doc's own correction below. cefi/d
 confirmed clean on the "consolidated" precondition either (no fresh audit found either way beyond tradfi's) — treat
 RESUME-runbook readiness as unconfirmed fleet-wide, not just tradfi-gated.
 
+> **CORRECTED 2026-08-12 (/plan-reconcile)**: this section is stale as of 2026-07-14 — the RESUME-runbook (task `-003`)
+> was actually EXECUTED 2026-07-16 (`tradfi_v9_stage1_finish_2026_07_06.md` task -003 Progress Log, "operator-authorized
+> 'drive the re-stamp, then resume' dispatch"). Net result: the 14 DeFi-priority crons were resumed first (3
+> `defi-fwd-*` live-poll crons verified genuinely live again, `exit_code=0`); the 11 `uts-prod-mtds-collect-*`
+> daily-batch crons hit a confirmed systemic shared-UTL date-default bug and were re-paused (same root cause as
+> `group_c_cloud_run_job_failures_triage_2026_07_16.md` Cluster 5); the rest of the GCP runbook was resumed where
+> targets still existed (2 SUCCEEDED, 4 pre-existing-broken re-paused, 7 no target, 2 already independently retired);
+> all 26 AWS EventBridge rules were enabled then immediately disabled again on a shared IAM `logs:CreateLogStream` gap
+> (`aws_consolidator_batch_logstream_iam_gap_2026_07_16.md`). Task -003's own verdict: "the resume runbook is DONE —
+> driven for real, every item verified or correctly flagged — but 'DeFi collection is fully live again' is FALSE; only
+> the near-real-time leg is restored." So "unconfirmed fleet-wide" above no longer holds — it was run, with a specific,
+> tracked partial-success outcome, not left untouched.
+
 **master_data_canonicalisation_migration_catalogue (finding 152)**: its own Gate-State Board (refreshed 2026-07-12, G4
 🟢 all 5 AGs, RESUME-runbook text unchanged/still correctly conditional) was checked against this adjudication and found
 ALREADY ACCURATE — no correction needed there; the staleness was confined to this cross-cutting doc's per-AG table

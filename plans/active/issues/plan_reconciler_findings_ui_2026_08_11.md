@@ -116,6 +116,15 @@ include multiline-frontmatter ui-tagged docs.
 - **Conservation**: N/A (no moves/folds)
 - **routed == parked**: N/A (0 == 0, trivially true)
 
+## Todos
+
+- [ ] [DOC] P3. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — Expand the ui-tranche doc
+      inventory (the corpus derivation this run and its predecessors used) to include multiline-frontmatter
+      `asset_group:\n  [ui]` docs missed by same-line grep (e.g.
+      `data_status_tab_and_downloads_remediation_2026_06_16.md`,
+      `deployment_registry_firestore_migration_2026_07_14.md`) — the 9 same-line matches this run found undercount the
+      real tranche.
+
 ## Deferred to next run
 
 - Full multiline-frontmatter inventory of ui-tagged docs (the 9 same-line matches undercount the real tranche — source

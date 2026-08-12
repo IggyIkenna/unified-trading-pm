@@ -69,18 +69,26 @@ context_scope:
       `<parent>_finalize*.md`, re-derive `check_finalize_plan_coverage.py::_gated_slugs()` over the CURRENT corpus and
       refuse if the parent is already gated by an existing finalize plan — regardless of that plan's filename shape. The
       two colliding files differ only by a redundant `_2026_07_31` suffix, so any guard keyed on the exact expected
-      filename would have missed this; key it on the `depends_on` relationship, which is the real contract.
+      filename would have missed this; key it on the `depends_on` relationship, which is the real contract. **Done
+      when**: the creation path (or a pre-commit/QG check standing in for it) refuses to add a second finalize plan
+      whose `depends_on` names a parent already covered by an existing `gate_on_depends: true` plan, verified against a
+      reconstructed copy of this doc's own 2026-07-31 collision.
 
 - [ ] [INFRA] P3. **Add a corpus-wide duplicate-gate detector to the hygiene sweep.** Flag any parent slug named in the
       `depends_on` of MORE THAN ONE `gate_on_depends: true` plan. This is cheap (the sweep already parses every plan's
       frontmatter for `_gated_slugs`), it catches the collision at rest instead of at dispatch time, and it would have
       surfaced this pair on 2026-07-31 rather than a week later via a worker's blocked question. Report it the same way
-      the orphan count is reported — a non-zero count is review-blocking.
+      the orphan count is reported — a non-zero count is review-blocking. **Done when**: `run_hygiene_sweep.sh` prints a
+      duplicate-gated-parent count (0 = clean) alongside the existing orphan count, and the check is wired into `--ci`
+      mode so a non-zero count fails the sweep the same way the orphan check does.
 
 - [ ] [DOC] P3. **Sweep the corpus once for other duplicate gates.** Run the detector from todo 2 over `plans/active/`
       and de-race any other parent found with >1 gated finalize plan, using the same procedure applied here: port any
       todo unique to the loser into the survivor FIRST, then set `superseded_by`/`supersedes` + a dated banner. Report
-      the count found — if it is zero, this pair was a one-off and todo 1's guard is belt-and-braces.
+      the count found — if it is zero, this pair was a one-off and todo 1's guard is belt-and-braces. **Done when**:
+      todo 2's detector has been run once over the full `plans/active/` corpus, every hit (if any) is de-raced per the
+      port-then-supersede procedure documented in this doc's 2026-08-06 Progress Log entry, and the found-count is
+      recorded in this doc's Progress Log (0 is a valid, complete result).
 
 ## Progress Log
 

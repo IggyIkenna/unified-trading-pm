@@ -26,12 +26,12 @@ priority: P2
 source: ["GCS vm-logs sweep of ~75 running VMs (all lanes), 2026-06-21 ~16:10 UTC"]
 assigned_vm: planning
 resolved_by: cross_cutting_satellite_ao_dispatch_batch1b-003
-locked_by: live-defi-rollout
+locked_by:
 context_scope:
   [
     /codex/02-data/pipeline-mode-partition.md,
     /codex/05-infrastructure/live-pipeline-architecture.md,
-    /plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
+    /plans/archive/2026_08/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
     /plans/archive/issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/_source_priority_data.py,
   ]
@@ -40,6 +40,9 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-08-04 # (slot-5 data_engineering: all 4 remaining items verified resolved — see Progress Log)
 ---
+
+> **🗄️ ARCHIVED 2026-08-12 (/plan-reconcile)** — `status: resolved`, all todos done, `locked_by` cleared (corpus-wide
+> placeholder bug, option B ruling).
 
 # Fleet data-acquisition health — 2026-06-21 (operator-requested)
 

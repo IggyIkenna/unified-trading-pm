@@ -66,7 +66,9 @@ source: >-
       confirmed 0 genuine gaps — `vm-launcher-runbook.md` unchanged; (4) confirmed no new durable contract; (5) referrer
       paths repointed corpus-wide: INDEX.md, infrastructure_master.md, ag_closeout_audit_infra_parked_2026_08_10.md, and
       this finalize plan's own `related:`/`context_scope:` frontmatter; (6) confirmed no lock (`locked_by:` empty, not
-      set). Batch 12 physically moved to `plans/archive/2026_08/`. — unified-trading-pm@SHA_PLACEHOLDER
+      set). Batch 12 physically moved to `plans/archive/2026_08/`. — unified-trading-pm@103374f281 (**CORRECTED
+      2026-08-12 /plan-reconcile**: was a literal `SHA_PLACEHOLDER`; verified via
+      `git log --diff-filter=A -- plans/archive/2026_08/infra_satellite_ao_dispatch_batch12_2026_08_09.md`)
 
 ## Codex SSOTs
 

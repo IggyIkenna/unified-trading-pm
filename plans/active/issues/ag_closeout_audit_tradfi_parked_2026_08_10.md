@@ -74,6 +74,13 @@ These will become fully covered once batch11/12 are flipped to `status: active` 
 **Operator action needed**: flip batch11 and batch12 from draft→active (the BATCH plans only; their finalize siblings
 are already `status: active` per the skill's Phase 3 rule). This unblocks 4 docs + 8 open todos.
 
+> **RESOLVED 2026-08-12 (/plan-reconcile, operator interactive ruling)**: batch11 + batch12 flipped
+> `status: draft`→`active` and `assigned_vm: NA`→`planning`. Reason for flipping NOW rather than waiting: a live check
+> this same run found the tradfi host-cron dispatch mechanism was never actually paused and is currently launching an
+> out-of-scope `nq-2022` shard (see `tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md`) —
+> batch11's shipped `_cme_root_universe()` MVP_SCOPE-consulting fix needs to actually dispatch to close that gap, not
+> sit in draft. This unblocks the 4 docs + 8 open todos named in Finding 2 above.
+
 ### Finding 3 — 6 archivable candidates (0 open todos, no hidden prose work)
 
 - ~~`plan_reconciler_findings_2026_08_06.md` — locked_by: plan_reconciler (run in progress).~~ **RESOLVED 2026-08-10**:

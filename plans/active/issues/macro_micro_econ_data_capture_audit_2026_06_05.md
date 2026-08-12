@@ -650,10 +650,3 @@ marked so above.
 - **context-scout 2026-08-06**: re-scouted; all `- [ ]` todos are now flipped `[x]` (both remaining items the 2026-08-03
   marker cited shipped 2026-08-04) — context_scope re-verified (6 entries) as still-valid historical evidence pointers,
   unchanged; worth a fresh source-hunt pass if/when this doc is next touched with new open work.
-- **2026-08-12** — `locked_by`/`locked_since` cleared (corpus-wide fix, operator ruling Option B, interactive session
-  2026-08-12; see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md). This doc has
-  0 open todos, so clearing the placeholder lock immediately makes it archive-eligible. Per the ruling's explicit scope
-  ("do NOT auto-archive in this same pass"), archival itself is deferred to a separate follow-on pass; bridged with
-  `archive_exempt: true` (the sanctioned flip-then-mv two-commit pattern documented in
-  `scripts/plan-hygiene/check_archive_candidates.sh`) so this commit doesn't trip the archive-candidates pre-commit
-  gate. The follow-on pass should drop `archive_exempt` and `git mv` this doc to `plans/archive/[issues/]`.

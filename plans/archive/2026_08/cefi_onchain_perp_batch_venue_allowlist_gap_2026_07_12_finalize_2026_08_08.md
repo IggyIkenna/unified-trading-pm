@@ -9,7 +9,7 @@ summary: >-
   once shipped (citing the manifest evidence), then archives it via the standard 6-step ritual once fully closed.
   Authored 2026-08-08 as part of the na-eligibility-audit round7 RECLASSIFY sweep, per task_template.md's
   finalize-plan-coverage rule (every assigned_vm:planning doc needs a companion gated finalize plan).
-status: active
+status: resolved
 nature: process
 asset_group: [cefi]
 stage: [meta]
@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, na-audit]
 related:
   [
-    /plans/active/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md,
+    /plans/archive/2026_08/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -51,12 +51,16 @@ effort: high
 drift_direction: none
 context_scope:
   [
-    /plans/active/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md,
+    /plans/archive/2026_08/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /codex/05-infrastructure/vm-tarball-deployment.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/_onchain_perp_batch_lighter.py,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-12 (/plan-reconcile)** — both todos closed (reconcile + archive). Source doc
+> `issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md` fully resolved and archived alongside this plan in
+> the same pass.
 
 # cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12 — finalize
 
@@ -74,13 +78,20 @@ context_scope:
       `cefi_consolidated_closeout_2026_07_18.md` line-334 citation (was still "BLOCKED-CREDENTIALS, scaffold correct")
       to reflect the resolved entitlement + verified re-launch. No code change needed — this was a verification-only
       reconcile, the source doc's checkbox was already correctly `[x]`. (repo: unified-trading-pm)
-- [ ] [DOC] P2. **Archive.** Run the standard 6-step archival ritual
+- [x] ✅ [DOC] P2. **Archive.** Run the standard 6-step archival ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
       `issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md` once todo 1 confirms it is fully closed — dated
       archive folder, exact-successor banner, corpus-wide referrer fixup (this finalize doc,
       `cefi_consolidated_closeout_2026_07_18.md`, and any other citer named in the source doc's own `related:`). Then
       archive this finalize plan itself in the same pass. **Done when**: the source doc and this finalize plan are both
-      under `plans/archive/`, and `check_reference_paths.py` shows zero new broken referrers.
+      under `plans/archive/`, and `check_reference_paths.py` shows zero new broken referrers. **DONE 2026-08-12
+      (/plan-reconcile)**: source doc banner added + `status: resolved` + `git mv` to
+      `plans/archive/2026_08/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md`; this finalize plan
+      banner added + `git mv` to `plans/archive/2026_08/`. Live-corpus referrer repoint (excluding already-archived docs
+      and other agents' isolated `.claude/worktrees/*` checkouts, out of scope):
+      `cefi_consolidated_closeout_2026_07_18.md`, `ag_closeout_audit_rollout_2026_07_25.md`, `plans/active/INDEX.md`,
+      `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`, `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`,
+      `plans/epics/cefi_master.md` — see each doc's own edit for the repointed path.
 
 ## Progress Log
 

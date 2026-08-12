@@ -207,7 +207,7 @@ Real code fixes / features needed (not backfills, not pure doc drift).
 10. **Fleet data-acquisition health sweep 2026-06-21** — no checkboxes; several fixable bugs not confirmably shipped
     (prediction venue-case mismatch, Pyth Hermes hex-encoding, sports ODDS_API completeness-check false-flag, zero-byte
     footystats log, `book_snapshot`/`book_snapshot_5` SOURCE_PRIORITY key mismatch, mtds version-surface drift blocking
-    QG) `plans/active/issues/fleet_data_acquisition_health_2026_06_21.md`
+    QG) `plans/archive/2026_08/issues/fleet_data_acquisition_health_2026_06_21.md`
 
 11. **instruments-service's `--run-tag` CLI flag doesn't do what its help text says**
     `/plans/archive/issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md` (archived 2026-07-28, resolved

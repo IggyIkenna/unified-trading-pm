@@ -160,3 +160,26 @@ machinery — is a genuinely separate, non-trivial piece of infrastructure work,
 Open — a genuine, evidenced coverage gap, filed for operator/planning triage per this task's instruction not to build
 the fix inline. Does not block anything currently (the originating incident is resolved — see
 `/plans/archive/2026_08/issues/mtds_tid251_ratchet_breach_blocks_all_quickmerges_2026_08_09.md`).
+
+> **RULED 2026-08-12 (/plan-reconcile, operator interactive)** — design direction for option 1's detector, superseding
+> the open 1-vs-2 choice above (option 1 is now the ruled direction, with this specific shape):
+>
+> - Route through the EXISTING CI-escalation infrastructure (`server/escalation.py`'s `enqueue()`/dedup/cooldown
+>   machinery, same wall-type pattern other CI escalations already use) — not a bespoke new alerting path.
+> - **15-minute grace window**: after a local-ratchet-gate breach is detected, re-check whether it's STILL present in
+>   LDR 15 minutes later before escalating. If it self-fixed in that window (the observed pattern — next quickmerge
+>   fixes it), do nothing. If it's still present after 15 minutes, dispatch to AO.
+> - **AO dispatch is the primary remediation path, not the Slack alert.** The existing Slack alert stays as-is for human
+>   visibility, but the human is not expected to fix it inside the window — the alert "catches strays" (cases AO itself
+>   can't resolve), it isn't the intended fix mechanism.
+> - **The dispatched fix's goal is always to drive the breached metric back below its baseline** — not just
+>   acknowledge/log the breach.
+>
+> This is real new-infrastructure scope (a wall type + a 15-min delayed re-check + an AO dispatch target) — not
+> implemented in this docs-only pass. Per the "AO plan or human plan?" hard rule, ask the operator before authoring the
+> implementation plan; tracked as the todo below.
+
+- [ ] [REVIEW] P2. Author the implementation plan for the 2026-08-12-ruled detector above (ask operator: AO-dispatched
+      vs human plan, per the standing hard rule, before authoring) — scope: new escalation wall type in
+      `server/escalation.py`, a 15-minute delayed re-check against LDR before dispatch, AO-driven remediation that
+      restores the breached ratchet/baseline below its ceiling, existing Slack alert left as visibility-only.

@@ -158,6 +158,17 @@ collision bug (`data_pipeline_e2e_check_mtds_<day>.md`/`.json` gets silently ove
 see the 2026-08-02 report's provenance note) by giving each asset_group's invocation its own `--report-dir`, merged by
 hand into one combined report afterward.
 
+## Todos
+
+- [ ] [CODE] P1. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — Add `_CEFI_MVP_SHARDS` / a
+      SPORTS-equivalent hand-listed override to `market-tick-data-service/scripts/pipeline_e2e_check.py`'s
+      `_venue_data_type_is_mvp()` (mirrors the existing `_TRADFI_MVP_SHARDS` shape) so it stops unconditionally
+      returning `False` for CEFI/SPORTS venue×data_type cells that need a `base_ccy`/`league` the enumeration-time probe
+      can't yet supply — this is the minimal fix (remediation option (a)). The more robust alternative (option (b), not
+      required to close this todo but fixes the masking mechanism itself): change the "last-resort fallback" (line ~688)
+      to fire per-asset_group instead of gating on the combined `shards` list's aggregate truthiness. Repo:
+      market-tick-data-service.
+
 ## Progress Log
 
 - **context-scout 2026-08-07**: populated/refreshed context_scope (6 entries).

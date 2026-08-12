@@ -14,9 +14,11 @@ summary: >-
   FUTURES; tiny pre-existing DERIBIT remnants (20-21/day from earlier DERIBIT-only backfill) and BITFINEX-FUTURES
   remnants (07-22/07-24) — none written by this VM. **Consequence**: -011 corpus recompute gate NOT met; -014 (GCS
   cleanup) correctly remains blocked; the backfill window 2026-06-05→08-05 is still absent for 5 of 6 CARRY_BASIS_PERP
-  venues. This is the second consecutive cefi-fwd VM terminated before completing its window (prior:
-  `cefi-fwd-20260806-065837`, terminated at 12/75 days). Root cause unknown — likely the Tardis concurrency guard or
-  zombie watchdog reacting to the double-insert (two concurrent VMs). Operator + slot-14 action required.
+  venues. This is the third consecutive cefi-fwd VM terminated before completing its window (**CORRECTED 2026-08-12
+  /plan-reconcile: was "second", contradicted this doc's own "Pattern analysis" section below** — prior:
+  `cefi-fwd-20260806-064507` (double-insert race loser, same day) and `cefi-fwd-20260806-065837`, terminated at 12/75
+  days). Root cause unknown — likely the Tardis concurrency guard or zombie watchdog reacting to the double-insert (two
+  concurrent VMs). Operator + slot-14 action required.
 status: open
 nature: issue
 asset_group: [cefi]
@@ -85,8 +87,10 @@ context_scope:
 
 This is the **third consecutive cefi-fwd VM terminated before completing its intended window**:
 
-1. `cefi-fwd-20260806-065837`: terminated at 12/75 days (documented in cefi_tardis archive, operator flagged premature)
-2. `cefi-fwd-20260808-110409`: terminated within 10-13 minutes, 0 data written
+1. `cefi-fwd-20260806-064507`: double-insert race loser, terminated same-day
+   (`cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md`)
+2. `cefi-fwd-20260806-065837`: terminated at 12/75 days (documented in cefi_tardis archive, operator flagged premature)
+3. `cefi-fwd-20260808-110409`: terminated within 10-13 minutes, 0 data written
 
 Both show a **double-insert** pattern (8s apart here; 13s apart for `cefi-fwd-20260806-064507`). The prior similar issue
 (`cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md`) was about `instances.stop` — here it's
@@ -312,6 +316,11 @@ before launch.
       (adjust the end date to whatever "today" is at run time — the daily cron's own 08-10+ fires will have already
       covered any days ≥08-10 via the `tier=daemon` fix above, so only re-check the specific still-empty days first).
       Verify via `probe_cefi_perp_funding_raw_coverage.py` before flipping this todo — do not flip on VM-STOPPED alone.
+      **No `[OPERATOR]` tag needed (self-justified, per this doc's own na-eligibility-audit round7 RECLASSIFY ruling
+      above)**: routine `launch-cefi-forward-poll.sh` backfill-VM launch, same script/pattern as the already-executed VM
+      launches in this doc, run against the now-hardened singleton-lock refusal (see the "Harden the singleton-lock
+      refusal" `[INFRA]` P1 todo above) that specifically fixes the double-insert bug this incident traced to — no
+      business/spend judgment, no destructive-delete decision, worker-determinable per `task_template.md` finding U.
 
 ## Progress Log
 

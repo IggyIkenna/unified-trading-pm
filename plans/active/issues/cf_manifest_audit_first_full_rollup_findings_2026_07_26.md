@@ -253,12 +253,15 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
       declined. Checking this off as "diagnosed" per the todo's own literal scope and this doc's established precedent
       (the CF-8 sports todos above), NOT as "CF-3/CF-4 are GREEN," which they are not. No code shipped, no production
       write; read-only diagnostic + this doc edit only.
-- [ ] [DATA] P3. **OPERATOR-APPROVED — schedule + run now (2026-08-11).** Prior text's "FALSE since 2026-07-14" gate
-      state is STALE: `sports_consolidated_closeout_2026_07_19.md` (Track H, decision 11) shows `BLK-d9137d48` was
-      already lifted **2026-08-07** ("AUTHORIZED... not executed this pass — prior regressions + a coordinate-first
-      lesson mean real scheduling care"), which this doc's own last gate-check (2026-08-05, one entry above the fix)
-      predates — the 2026-08-05 "still FALSE" reading was correct AT THE TIME, just never re-checked after. Operator
-      reconfirmed 2026-08-11: proceed now. **Execution notes (do not fire-and-forget)**: acquire the
+- [ ] [DATA] P3. **OPERATOR-APPROVED — schedule + run now (2026-08-11).** _(No separate `[OPERATOR]` bracket-tag needed
+      — this is a live production manifest rewrite on a twice-regressed sports surface, but prior explicit operator
+      approval is already secured + cited inline with a date, satisfying `task_template.md` finding Q's
+      self-justification path rather than defaulting to `[OPERATOR]`.)_ Prior text's "FALSE since 2026-07-14" gate state
+      is STALE: `sports_consolidated_closeout_2026_07_19.md` (Track H, decision 11) shows `BLK-d9137d48` was already
+      lifted **2026-08-07** ("AUTHORIZED... not executed this pass — prior regressions + a coordinate-first lesson mean
+      real scheduling care"), which this doc's own last gate-check (2026-08-05, one entry above the fix) predates — the
+      2026-08-05 "still FALSE" reading was correct AT THE TIME, just never re-checked after. Operator reconfirmed
+      2026-08-11: proceed now. **Execution notes (do not fire-and-forget)**: acquire the
       `unified_trading_library.maintenance_window` GCS-sentinel lease first
       (`scheduler_maintenance.py::pause_for_maintenance()`), snapshot both canonicals, run
       `market-tick-data-service/scripts/sports_captured_available_at_targeted_backfill_2026_07_14.py` (`af627b5b`,

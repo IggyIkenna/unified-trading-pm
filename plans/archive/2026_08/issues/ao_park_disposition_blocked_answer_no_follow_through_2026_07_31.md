@@ -51,8 +51,9 @@ resolved_by:
   applies the RULES.md §4 recipe on an explicit request. Not yet live-verified end-to-end on a real dispatched task
   (this session had no path to the live orchestrator VM — see the doc's own note below); verified via unit + endpoint
   tests instead."
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_by: # CORRECTED 2026-08-12 (/plan-reconcile): cleared — locked_since predated created (2026-07-31) by ~2 months
+locked_since: # (impossible), and locked_by held a branch name, not an owner; same corpus-wide placeholder-lock bug
+# flagged elsewhere in this findings doc. Doc status is already `resolved`, so no live lock should remain anyway.
 context_scope:
   [
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
@@ -60,6 +61,9 @@ context_scope:
     agent-orchestrator/server/auto_park.py,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-12 (/plan-reconcile)** — `status: resolved`, all todos done, `locked_by` cleared (was a
+> corpus-wide placeholder bug artifact — locked_since predated created by 2 months, impossible; cleared this run).
 
 # AO: partial-disposition "park it" blocked-answers have no automatic follow-through
 

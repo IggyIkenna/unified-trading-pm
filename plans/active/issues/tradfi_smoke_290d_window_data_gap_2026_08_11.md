@@ -83,3 +83,7 @@ decision, not a worker fix. Options:
 
 Do NOT adjust the harness or window without the operator picking among these. Until then the correct state is: tradfi
 smoke slice = `INSUFFICIENT_HISTORY` (honest), harness shipped and verified.
+
+> **RULED 2026-08-12 (/plan-reconcile, operator interactive)**: Option 1 — accept `INSUFFICIENT_HISTORY` until the
+> tracked tradfi backfill work closes the window. No harness/window change. Re-check status once KRX/in-window
+> `attempted_failed` coverage closes.

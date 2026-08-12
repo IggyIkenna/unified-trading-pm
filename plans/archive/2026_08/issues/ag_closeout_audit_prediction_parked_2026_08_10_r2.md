@@ -16,7 +16,7 @@ summary: >-
   `## Todos` counts). 3 docs the naive bar would call orphaned are reclassified self-dispatched (`planning`+`open`, AO
   ingests their own open checkboxes) and 1 is genuinely multi-AG — both corrections recorded here so a future run does
   not over-report them.
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [meta]
@@ -47,7 +47,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "plan_reconciler /plan-reconcile Section-2 archival pass, 2026-08-12"
 depends_on: []
 context_scope: [/scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py]
 source: >-
@@ -57,6 +57,16 @@ source: >-
 ---
 
 # Parked findings — 2026-08-10 `/ag-closeout-audit prediction` (sharded, strict coverage bar)
+
+> **RESOLVED 2026-08-12 (plan_reconciler /plan-reconcile Section-2 archival pass)** — closed audit-run record: ledger
+> balanced 4==4, Phase 3 correctly ran no new batch (0 batchable orphans, all 4 findings non-batchable), and each of the
+> 4 findings is independently carried in its own tracked source doc (`data_completion_prediction_2026_07_15.md`,
+> `prediction_cross_venue_arb_and_coverage_2026_07_24.md`, `predictions_ml_walk_forward_and_arb_2026_06_20.md`,
+> `prediction_capture_incident_remediation_2026_07_06.md`) — nothing is lost by archiving this report. Archived under a
+> `_r2` filename suffix: this doc's original target filename (`ag_closeout_audit_prediction_parked_2026_08_10.md`) was
+> already claimed by a different, earlier-archived same-day report (slot-26's `all`-mode 0-orphans run, archived
+> 2026-08-10 06:25 UTC) — a genuine filename collision between two independent same-day dispatches, not a duplicate of
+> this doc's content (diff-verified: entirely different body/ verdict/Progress-Log).
 
 ## Run summary
 

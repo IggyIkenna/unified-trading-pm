@@ -91,9 +91,14 @@ P3.
 
 ## Recommended decision
 
-- [ ] [LOCAL] P3. **Resolve the Aave/Chainlink aggregate-zero-path signal design question** (which of: classify+thread
-      the caught exception type into `fetch_evidence`, vs surface per-reserve/per-feed exception counts up to the
-      empty-path recorder) as a human/local decision FIRST — mirrors
+- [ ] [LOCAL] P3. BLOCKED-OPERATOR-DECISION — **Resolve the Aave/Chainlink aggregate-zero-path signal design question**
+      _(retagged 2026-08-12 (/plan-reconcile): `[LOCAL]` alone is not a recognized ingestion-gate marker —
+      `regen_backlog_from_plan.py`'s `_UNCHECKED_RE` only skips `BLOCKED-<TOKEN>`/`[OPERATOR]`/`_(stretch, optional)_`
+      lines — so on a doc with `assigned_vm: planning` this todo would otherwise be dispatched to an AO worker who
+      cannot resolve it; the doc's own text (below) already calls this "a genuine human design call." The design
+      question itself stays open for the operator — this edit only fixes dispatch-gating, does not answer it.)_ (which
+      of: classify+thread the caught exception type into `fetch_evidence`, vs surface per-reserve/per-feed exception
+      counts up to the empty-path recorder) as a human/local decision FIRST — mirrors
       `defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md`'s already-resolved item 5 pattern. THEN file the
       scoped CODE todo(s) against that decision (market-tick-data-service: `_aave_oracle_collection.py` +
       `oracle_prices_handler.py`'s Chainlink leg).

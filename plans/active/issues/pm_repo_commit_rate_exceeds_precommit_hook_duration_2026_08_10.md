@@ -527,12 +527,12 @@ Directions, cheapest first — each is a todo below:
       unified-trading-pm@d85ad41fac.
 
       **Done when, confirmed**: the precommit sweep on one staged file is now **20.8s** total wall (measured 2026-08-12,
-                  isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
-                  down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
-                  concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
-                  single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
-                  `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
-                  nothing left to move out of the per-commit path. Repo: unified-trading-pm.
+                      isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
+                      down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
+                      concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
+                      single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
+                      `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
+                      nothing left to move out of the per-commit path. Repo: unified-trading-pm.
 
 - [x] ✅ [INFRA] P2. **Record the AO-vs-PM volume asymmetry in the codex** so the next person does not re-derive it —
       unified-trading-pm@baae1922bb. New § "1b. PM is the fleet's single write hotspot" in
@@ -713,20 +713,25 @@ Directions, cheapest first — each is a todo below:
 
 ## Deferred work after 2026-08-10
 
-| Item                                                              | State / why deferred                                                                                                   | Blocked on               |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| ~~Cross-repo citation reconciliation~~                            | **DONE 2026-08-10** — unified-trading-pm@7f9bd2a366; reachability + patch-id, neither design option needed             | —                        |
-| `fix_prosewrap_padding.py` line-scoping                           | **Not done** — precondition for auto-wiring it; today it rewrites whole files (10 of 25 sampled plans)                 | nobody; pick it up       |
-| quickmerge isolation back to laptop-default                       | **Not done** — proven on one repo/host only; wants a second repo + cache-invalidation check                            | nobody; pick it up       |
-| Slot 2 unwedge                                                    | **Operator-owned** — live conflict in another session's WIP, must not be resolved by a third party                     | that WIP's owner         |
-| `check_chain_set_inclusion` 3 failures                            | **Not done** — pre-existing, unrelated to this work                                                                    | nobody; low priority     |
-| PM CI green (ldr-docs-gate, na_corpus ratchet promotion deadlock) | **Cannot be done yet** — separate CI/promotion defects already being worked by a peer (two issue docs in slot 2's WIP) | that peer's work landing |
+| Item                                                              | State / why deferred                                                                                                                                                                                                                                            | Blocked on               |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| ~~Cross-repo citation reconciliation~~                            | **DONE 2026-08-10** — unified-trading-pm@7f9bd2a366; reachability + patch-id, neither design option needed                                                                                                                                                      | —                        |
+| ~~`fix_prosewrap_padding.py` line-scoping~~                       | **CORRECTED 2026-08-12 (/plan-reconcile): DONE** — unified-trading-pm@a29967623a; fixer now takes the check's flagged line set, leaves everything else alone (byte-identical repair on pre-existing corruption vs whole-file mode, per the Todos section above) | —                        |
+| quickmerge isolation back to laptop-default                       | **Not done** — proven on one repo/host only; wants a second repo + cache-invalidation check                                                                                                                                                                     | nobody; pick it up       |
+| Slot 2 unwedge                                                    | **Operator-owned** — live conflict in another session's WIP, must not be resolved by a third party                                                                                                                                                              | that WIP's owner         |
+| `check_chain_set_inclusion` 3 failures                            | **Not done** — pre-existing, unrelated to this work                                                                                                                                                                                                             | nobody; low priority     |
+| PM CI green (ldr-docs-gate, na_corpus ratchet promotion deadlock) | **Cannot be done yet** — separate CI/promotion defects already being worked by a peer (two issue docs in slot 2's WIP)                                                                                                                                          | that peer's work landing |
 
-| UTL `_per_vm_shard_backlog` foreign WIP | **Operator-owned** — uncommitted edit in a sibling clone; reverting it
-destroys another agent's work | that WIP's owner | | Commit-time citation-resolves-against-origin gate | **Not done** —
-closes the dead-citation class at source | nobody; pick it up | | PM bats: 60/229 failing, ungated | **Not done** —
-pre-existing, none from this session | nobody; pick it up | | Release-tag stall (7 repos), UTL prod trigger, glue runner
-228 restarts | **Not done** — untouched CI groups from the alert audit | nobody; pick it up |
+| Item                                                                    | State / why deferred                                                                                                                                                                                                                                                | Blocked on         |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| UTL `_per_vm_shard_backlog` foreign WIP                                 | **Operator-owned** — uncommitted edit in a sibling clone; reverting it destroys another agent's work                                                                                                                                                                | that WIP's owner   |
+| ~~Commit-time citation-resolves-against-origin gate~~                   | **CORRECTED 2026-08-12 (/plan-reconcile): DONE** — unified-trading-pm@b7ba752839; `check_plan_commit_sha_evidence.py` now requires a self-citation `<repo>@<sha>` to be reachable from `origin/*`/local `HEAD`, not merely a present loose object (see Todos above) | —                  |
+| PM bats: 60/229 failing, ungated                                        | **Not done** — pre-existing, none from this session                                                                                                                                                                                                                 | nobody; pick it up |
+| Release-tag stall (7 repos), UTL prod trigger, glue runner 228 restarts | **Not done** — untouched CI groups from the alert audit                                                                                                                                                                                                             | nobody; pick it up |
+
+> **CORRECTED formatting 2026-08-12 (/plan-reconcile)**: this table's rows were previously merged into unwrapped run-on
+> paragraph text (a prosewrap-style line-wrap corruption — ironic given this doc's own subject matter) and have been
+> restored to proper Markdown table rows above, content unchanged apart from the 2 DONE corrections noted.
 
 **Recommended next item**: unblock the UTL import — it red-lines every PM gate on this host, so nothing else can ship
 until it clears. Then the commit-time citation gate, which removes the largest recurring cause of PM promote-flow

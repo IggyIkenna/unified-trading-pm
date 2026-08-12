@@ -5,7 +5,7 @@ summary: >-
   Daily deep plan-reconciliation run-findings doc for the ci topic tranche, dispatch agt-04cb0e (slot 29). Records
   hunter-detected candidates, adversarial-verification outcomes, applied fixes, routed operator questions, and coverage
   for this run. Also the progress journal for the run itself.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -26,9 +26,15 @@ calibrated_ai_days: 0.1
 assigned_role: backend_engineer
 drift_direction: fix
 resolved_by:
-locked_by: plan_reconciler (agt-04cb0e) since 2026-08-09T16:22:00Z
+locked_by:
 depends_on: []
 ---
+
+> **🗄️ ARCHIVED 2026-08-12 (/plan-reconcile, operator ruling)** — this run died mid-flight 2026-08-09
+> (`locked_by: plan_reconciler (agt-04cb0e)` since, zero forward progress, no live process holding the lock, confirmed
+> dead via git log). Operator approved unlocking + archiving as an aborted attempt, superseded by the full-corpus
+> `/plan-reconcile all` run of 2026-08-12 (`/plans/active/issues/plan_reconciler_findings_all_2026_08_12.md`). Root
+> cause of the mid-flight death tracked separately.
 
 # plan_reconciler findings — ci tranche — 2026-08-09
 
@@ -152,17 +158,16 @@ own note).
 
 ## Progress Log
 
-- **2026-08-10 (prose-findings formalization sweep)**: converted 0 prose findings into formal todos (0 already
-  resolved via a new todo — 1 finding was already resolved by pointing to an existing todo in a successor doc, cited
-  inline, no duplicate todo added); this doc's "(pending)" sections turned out to be an incomplete/died-mid-flight run
-  rather than an unconverted prose finding — added a "Run status" section explaining why and cross-referencing the
-  successor doc's own already-tracked follow-up.
+- **2026-08-10 (prose-findings formalization sweep)**: converted 0 prose findings into formal todos (0 already resolved
+  via a new todo — 1 finding was already resolved by pointing to an existing todo in a successor doc, cited inline, no
+  duplicate todo added); this doc's "(pending)" sections turned out to be an incomplete/died-mid-flight run rather than
+  an unconverted prose finding — added a "Run status" section explaining why and cross-referencing the successor doc's
+  own already-tracked follow-up.
 - **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: KEEP-NA, valid — not ARCHIVE-eligible.
-  `locked_by: plan_reconciler (agt-04cb0e) since 2026-08-09T16:22:00Z` is still set (dead session, never auto-cleared)
-  — per the HARD RULE, a `locked_by:` doc is never archived autonomously. 0 open todos of its own (died mid-flight
-  before reaching a `## Todos`-bearing step); the real remaining action (unlock or explicitly abandon) is already
-  tracked as an `[OPERATOR]` P3 todo in the successor `plan_reconciler_findings_ci_2026_08_10.md`. Doc stays
-  `assigned_vm: NA`.
+  `locked_by: plan_reconciler (agt-04cb0e) since 2026-08-09T16:22:00Z` is still set (dead session, never auto-cleared) —
+  per the HARD RULE, a `locked_by:` doc is never archived autonomously. 0 open todos of its own (died mid-flight before
+  reaching a `## Todos`-bearing step); the real remaining action (unlock or explicitly abandon) is already tracked as an
+  `[OPERATOR]` P3 todo in the successor `plan_reconciler_findings_ci_2026_08_10.md`. Doc stays `assigned_vm: NA`.
 - **2026-08-09 16:22 UTC** — Run started. FF'd PM + all 25 sibling repo clones (all clean). Computed ci-tranche
   population (56 docs) and grace set (52 grace / 4 writable). Hygiene sweep (`--ci`) kicked off in background — host is
   heavily contended (multiple sibling slots running concurrent hygiene sweeps / QGs at the same time).

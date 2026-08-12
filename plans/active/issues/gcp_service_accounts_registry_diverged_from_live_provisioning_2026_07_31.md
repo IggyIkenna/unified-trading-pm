@@ -113,13 +113,14 @@ Two directions are both plausible and this is an architecture decision, not a bo
 
 ## Open todos
 
-- [ ] [INFRA] P2. **DEFAULT-RULED 2026-08-06 (no explicit operator input on this specific P2 item — applying reasoned
-      judgment per the operator's standing P2/P3 policy; override if you disagree), option (a): migrate to real
-      per-service SAs.** `[INFRA]` tag (was `[OPERATOR]`) — consistent with this session's broader IAM-hardening
-      direction (god-SA removal, per-tier SA cutover already approved) — closes the least-privilege gap for real rather
-      than just documenting it away. This is scoped provisioning + redeploy work, not a quick fix — track as its own
-      sub-effort. **Decide direction (a) vs (b) above** — migrate to real per-service SAs, or rewrite the registry to
-      document live reality. Blocks the rest of this list.
+- [ ] [INFRA] P2. **CONFIRMED 2026-08-12 (/plan-reconcile, operator interactive) — direction (a): migrate to real
+      per-service SAs.** Supersedes the prior 2026-08-06 DEFAULT-RULED status — this is now an explicit operator
+      confirmation, not just a standing-policy default. `[INFRA]` tag — consistent with this session's broader
+      IAM-hardening direction (god-SA removal, per-tier SA cutover already approved) — closes the least-privilege gap
+      for real rather than just documenting it away. This is scoped provisioning + redeploy work, not a quick fix —
+      track as its own sub-effort: provision the 17 missing per-service SAs + declared buckets via
+      `sync_gcp_service_accounts.py`, re-point each Cloud Run service's runtime SA. No longer blocks the rest of this
+      list.
 - [ ] [INFRA] P2. **Enumerate every live Cloud Run service's actual runtime SA + role set into the registry** (bounded,
       determinable audit — `gcloud run services list` + `describe` per service, cross-reference
       `gcloud projects get-iam-policy`). Sampled 7/~25 live services this pass; the rest are unaudited. (repo:

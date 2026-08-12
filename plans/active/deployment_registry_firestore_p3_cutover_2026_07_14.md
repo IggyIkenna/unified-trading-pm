@@ -54,9 +54,11 @@ context_scope:
 
 # Phase 3 — Cutover to Firestore-only + decommission the GCS registry
 
-> **Dispatch:** `assigned_role: backend-engineer` · **model: Opus** (`opus-required`) · **effort: high**.
-> `status: active` (activated by Phase 2's last todo, per frontmatter — this line corrected 2026-07-21, plan-reconcile:
-> was stale `draft` boilerplate copied from the phase-chain template and never updated on activation);
+> **Dispatch:** `assigned_role: backend-engineer` · **model: Sonnet** · **effort: high**. (CORRECTED 2026-08-12
+> `/plan-reconcile` — this line still said "Opus (`opus-required`)" after the frontmatter `model_tier` was already
+> corrected to `sonnet` 2026-08-10; `opus-required` has no standing category left per CLAUDE.md's 2026-08-07/08-08
+> ruling.) `status: active` (activated by Phase 2's last todo, per frontmatter — this line corrected 2026-07-21,
+> plan-reconcile: was stale `draft` boilerplate copied from the phase-chain template and never updated on activation);
 > `sequential: true` orders its todos. (Phase 4 runs in parallel off Phase 1.) **Fully autonomous — NO operator gates.**
 > **Pulled to LOCAL execution 2026-07-14** (`assigned_vm: NA` / `execution_scope: local-only`, same as the rest of this
 > phase chain) — see Phase 0's Dispatch note for why. The irreversible GCS deletion is made safe by the

@@ -115,12 +115,12 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       the inverse of the one this §2 item's own dispatch text described.
 
       **DONE (na-eligibility-audit 2026-08-03)** — the doc has since genuinely closed: the reverted root-cause todo was
-                                                                                          completed for real 2026-07-28 (slot-15, root cause diagnosed via git/commit archaeology, corroborated against
-                                                                                          `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s own identical todo 52, confirmed checked there too), all 3
-                                                                                          todos are `[x]`, and the doc was unlocked + archived 2026-07-31 under the operator's `[unlock-plan]` ruling
-                                                                                          (`status: resolved`, banner: "the earlier 'todo 1's `[x]` was FALSE' note described a transient 2026-07-27 state
-                                                                                          that the 2026-07-28 completion superseded — it is no longer true"). Now at
-                                                                                          `plans/archive/issues/phantom_captures_defi_2026_06_28.md` for real.
+                                                                                              completed for real 2026-07-28 (slot-15, root cause diagnosed via git/commit archaeology, corroborated against
+                                                                                              `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s own identical todo 52, confirmed checked there too), all 3
+                                                                                              todos are `[x]`, and the doc was unlocked + archived 2026-07-31 under the operator's `[unlock-plan]` ruling
+                                                                                              (`status: resolved`, banner: "the earlier 'todo 1's `[x]` was FALSE' note described a transient 2026-07-27 state
+                                                                                              that the 2026-07-28 completion superseded — it is no longer true"). Now at
+                                                                                              `plans/archive/issues/phantom_captures_defi_2026_06_28.md` for real.
 
 - [x] ✅ [PLAN] P2. `plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md` — ARCHIVED
       2026-07-27 — unified-trading-pm@(this commit). All 3 stale items re-verified against current code (`understat.py`,
@@ -360,15 +360,15 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       itself (wire a `ModelsMvpRule` against `generate_model_id`/`parse_model_id`'s identity axes + a data-status
       consumer) — content verified present in both files, batch1b's copy verified still open. Still not archivable
       (batch1b hasn't run; the new ModelsMvpRule todo is also unexecuted).
-- [x] ✅ [PLAN] P2. `plans/active/ui_build_warm_cache_2026_06_17.md` → `ci_satellite_ao_dispatch_batch1_2026_07_26.md`
-      (item 4). Item 1 (tsc incremental) is ALREADY implemented in both UI repos' tsconfig.json — flag batch1's D28
-      entry as needing correction, not fresh dispatch. Item 2 confirmed genuinely not done; item 3 deferred as D20 (see
-      §5, operator-gated pnpm decision). — **DONE 2026-07-28** — unified-trading-pm@c2308363d (item 1 flipped `[x]` with
-      evidence, item 2 confirmed still-open with evidence, item 3/D20 reframed from "evaluate" to a real `[INFRA] P3`
-      implementation todo per operator APPROVED decision §5#33) + unified-trading-pm@cd5c0bde1 (batch1's D28 entry
-      corrected: tsc-incremental half flagged already-shipped, setup.sh-prewarm half confirmed genuinely open; D20 entry
-      updated to reflect the decision is made). Source doc NOT archived (item 2 + the new pnpm todo remain open, by
-      design).
+- [x] ✅ [PLAN] P2. `plans/archive/2026_08/ui_build_warm_cache_2026_06_17.md` →
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (item 4). Item 1 (tsc incremental) is ALREADY implemented in both
+      UI repos' tsconfig.json — flag batch1's D28 entry as needing correction, not fresh dispatch. Item 2 confirmed
+      genuinely not done; item 3 deferred as D20 (see §5, operator-gated pnpm decision). — **DONE 2026-07-28** —
+      unified-trading-pm@c2308363d (item 1 flipped `[x]` with evidence, item 2 confirmed still-open with evidence, item
+      3/D20 reframed from "evaluate" to a real `[INFRA] P3` implementation todo per operator APPROVED decision §5#33) +
+      unified-trading-pm@cd5c0bde1 (batch1's D28 entry corrected: tsc-incremental half flagged already-shipped,
+      setup.sh-prewarm half confirmed genuinely open; D20 entry updated to reflect the decision is made). Source doc NOT
+      archived (item 2 + the new pnpm todo remain open, by design).
 - [x] ✅ [PLAN] P2. `plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` →
       `plans/epics/infrastructure_master.md` ("Folded-in scope 2026-07-15"). Sole remaining todo (remove 5 Phase-0
       banners, archive tracker) already folded there. **Requires operator `[unlock-plan]`**

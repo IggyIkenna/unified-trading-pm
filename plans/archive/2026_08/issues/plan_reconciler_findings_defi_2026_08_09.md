@@ -9,7 +9,7 @@ summary: >-
   active/issue docs as the actionable set. Fans out read-only hunter sub-agents across 8 size-balanced batches covering
   every in-scope doc, adversarially verifies every candidate before acting, auto-fixes the verified-easy, and routes the
   hard ones to the operator.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [meta]
@@ -26,8 +26,8 @@ estimate_calibrated_ai_days: 1.2
 assigned_role: review
 assigned_vm: planning
 execution_scope: orchestrator-agent
-locked_by: plan_reconciler
-locked_since: "2026-08-09"
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 resolved_by:
@@ -43,6 +43,12 @@ context_scope:
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🗄️ ARCHIVED 2026-08-12 (/plan-reconcile, operator ruling)** — this run died mid-flight 2026-08-09
+> (`locked_by: plan_reconciler` since, zero forward progress, no live process holding the lock, confirmed dead via git
+> log). Operator approved unlocking + archiving as an aborted attempt, superseded by the full-corpus
+> `/plan-reconcile all` run of 2026-08-12 (`/plans/active/issues/plan_reconciler_findings_all_2026_08_12.md`). Root
+> cause of the mid-flight death tracked separately.
 
 # plan_reconciler run — 2026-08-09 (agt-1e903d, defi tranche)
 

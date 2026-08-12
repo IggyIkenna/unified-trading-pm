@@ -46,6 +46,7 @@ source:
     eth etfs.'",
   ]
 resolved_by:
+archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
 locked_by:
 locked_since:
 context_scope:
@@ -172,15 +173,27 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
       recognizes a running single-root VM as covering its candidate — closing the gap without needing to touch
       `wave_launcher.py` itself. Verified `git merge-base --is-ancestor bcf55c781... origin/live-defi-rollout` = YES
       (real ancestor, not a local-only peer commit).
-- [ ] [SCRIPT] P1. **NEW (2026-08-09)** — confirm `wave_launcher.py`'s ACTUAL production deployment mechanism and that
-      it has picked up `deployment-service@bcf55c781` (the dedup fix above). The module's own docstring says it runs as
-      a "Cloud Run Job + Scheduler (every 2-3h)" (implying a built container image, needing an explicit rebuild to pick
-      up new code), but `_write_last_run_sentinel`'s comment says it runs as a "HOST cron... on the monitor host"
-      (implying a live git checkout that would pick up the fix on its next `git pull`) — these two descriptions of the
-      SAME script are in tension and were not reconciled this session. Done when: the actual invocation mechanism is
-      confirmed (Cloud Build/Cloud Run Job config vs. a host crontab entry), and — if it's an image-based Cloud Run Job
-      — either a redeploy has run or one is explicitly triggered. Until confirmed, do not assume the CME duplicate-VM
-      recurrence has actually stopped in production, only that the code fix is correct and shipped.
+- [x] ✅ [SCRIPT] P1. **NEW (2026-08-09)** — confirm `wave_launcher.py`'s ACTUAL production deployment mechanism and
+      that it has picked up `deployment-service@bcf55c781` (the dedup fix above). **RESOLVED — RE-VERIFIED LIVE
+      2026-08-12 (/plan-reconcile)**, independent of `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md` (still
+      `status: draft`, not cited as the sole basis): the module's "Cloud Run Job + Scheduler" self-description is STALE
+      — `gcloud scheduler jobs describe uts-prod-tradfi-wave-launcher-cron --location=asia-northeast1` shows
+      `state: PAUSED`, `userUpdateTime: '2026-06-24T22:44:03.047172Z'`, and
+      `gcloud run jobs executions list     --job=uts-prod-tradfi-wave-launcher --region=asia-northeast1` shows the last
+      execution was `2026-06-25 00:49:53     UTC` — the Cloud Run Job has not fired in 7 weeks. The actual live
+      mechanism is the undocumented HOST cron (`_write_last_run_sentinel`'s comment is the accurate one):
+      `gcloud compute operations list` shows `tradfi-bf-cme-ohlcv-1m-*` VMs still being inserted TODAY (2026-08-12) on a
+      ~3h-aligned cadence carrying the clean single-root naming from `deployment-service@bcf55c781` (e.g.
+      `tradfi-bf-cme-ohlcv-1m-eth-2023-20260812-120648`, `...-es-2023-20260812-120631`) — since it's a host cron running
+      from a live git checkout (not a baked container image), no separate redeploy step was ever needed; the fix is
+      confirmed live via the naming pattern itself. Both halves of this todo's done-when are satisfied: the mechanism is
+      confirmed (host cron, not Cloud Run Job), and the "if it's an image-based Cloud Run Job" redeploy branch does not
+      apply since it isn't one. This also means
+      `tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md`'s "Cloud Run Job's container
+      process" attribution for the 2026-08-09 `ps aux` observations was a misattribution (see that doc's own dated
+      correction) — the Cloud Scheduler pause it treated as its P1 stopgap had already been in place since 2026-06-24
+      and was unrelated to its investigation; only the two `kill -TERM` actions on the actual (host-cron-spawned)
+      processes were real interventions.
 - [x] ✅ [DATA] P1. **NEW FINDING (2026-08-09)** — `tradfi-bf-nyse-ohlcv-1m-2023-d01-*` was observed RUNNING live,
       violating the "equities = 2026 ONLY" scope. **Resolved itself** — by the instrument-scope-diff session
       (2026-08-09, several hours later), this VM was no longer running (self-deleted on completion or reaped; not
@@ -293,6 +306,11 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
   `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1 (Yahoo/FRED-sourced, not
   Databento-billing-gated; now `[x]` ✅, archived). This doc stays `assigned_vm: NA` as an SSOT ruling doc — both
   remaining action items are now tracked/closed elsewhere.
+- **/plan-reconcile 2026-08-12 (Section 1 re-check)**: closed the sole remaining open todo (`wave_launcher.py`
+  production-deployment-mechanism confirmation) with fresh live `gcloud` evidence (see todo above) — the Cloud
+  Scheduler/Cloud Run Job path is confirmed dormant since 2026-06-25, the host cron is confirmed the live mechanism and
+  confirmed carrying the `bcf55c781` dedup fix via today's (2026-08-12) VM naming. All todos in this doc are now `[x]`;
+  doc is archive-eligible pending a separate archival pass (not done here — out of this task's scope).
 - **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:ac4c223a308148ee]: **KEEP-NA,
   stale-items fixed.** Fresh full read, 4 open items. Closed 3 this pass: todo "check FRED coverage, launch/verify
   CBOE/KRW/DXY" (this doc's own round-9 Progress Log entry above already confirmed it EXTRACTED + archived, checkbox

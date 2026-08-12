@@ -163,7 +163,6 @@ Mechanical, bounded remediation — not a design/judgment call:
   agent hand-authoring a multi-paragraph annotation near a checkbox: use a top-level blockquote banner (matching the
   style already used elsewhere in this corpus for dated correction banners), not a nested checkbox-continuation
   paragraph, or expect to re-fight this bug on every commit attempt.
-
 - **Re-measured 2026-08-12 (slot 3, hit while shipping an unrelated cloudbuild change) — ON THIS DOC'S OWN METRIC, the
   corpus is IMPROVING.** `bash scripts/plan-hygiene/check_prosewrap_padding.sh` (no args, the comparable measurement):
   **2808 violating lines against a baseline of 3655**, itself already ratcheted down from the 4472 seeded on 08-03. So

@@ -5,7 +5,7 @@ title:
   any ref / on GitHub"
 summary:
   "check_plan_commit_sha_evidence.py flags 1 unresolvable citation (baseline 0 -> 1):
-  plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md:250 cites
+  plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md:250 cites
   `unified-trading-pm@0f9b8a65ca` (in a `- [x] ✅ [DOCS] P1` todo's evidence) but the commit is not reachable from any
   local ref, not present after `git fetch`, and 404s on GitHub (`gh api repos/.../commits/0f9b8a65ca` -> Not Found). The
   flip commit `b9d9725354` (slot-28, 2026-08-10 11:15) introduced the citation. This red blocks every PM ship (post-gate
@@ -17,7 +17,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [infra, plan-hygiene, ratchet, evidence, commit-sha, qg-red]
-related: [/plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md]
+related: [/plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md]
 created: 2026-08-10
 author: slot-20 (infra worker)
 parent_epic: plan_hygiene_master
@@ -46,7 +46,7 @@ source: slot-20 QG pass on unified-trading-pm, 2026-08-10
 `check_plan_commit_sha_evidence.py` (PM post-gate in `quality-gates.sh`) reports 1 unresolvable `<repo>@<sha>` citation
 vs a baseline of 0:
 
-- **plan**: `plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md:250`
+- **plan**: `plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md:250`
 - **citation**: `unified-trading-pm@0f9b8a65ca` — appears in a `- [x] ✅ [DOCS] P1` todo's evidence line ("make
   `contradicted_by` and `description` REQUIRED, add `doc_line` / … `unified-trading-pm@0f9b8a65ca`")
 - **introduced by**: commit `b9d9725354` ("docs(plans): flip item 3 (unified-trading-pm@0f9b8a65ca)", slot-28,

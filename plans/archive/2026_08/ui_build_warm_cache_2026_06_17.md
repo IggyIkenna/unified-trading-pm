@@ -20,7 +20,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
 last_updated: 2026-08-04
-locked_by: live-defi-rollout
+locked_by:
 locked_since:
 supersedes:
 superseded_by:
@@ -43,6 +43,9 @@ context_scope:
     /plans/archive/2026_06/quality_gates_speed_and_config_ssot_2026_06_09.md,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-12 (/plan-reconcile)** — `status: complete`, all todos done, `locked_by` cleared (corpus-wide
+> placeholder bug, option B ruling).
 
 # UI build warm-cache
 

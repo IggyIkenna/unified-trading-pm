@@ -128,6 +128,17 @@ no true threading): each bookend carries the original page's **opened-at timesta
   closure with no matching open is churn) — this preserves the WS-A treatment for the common auto-dispatch→auto-resolve
   path. Test-locked by `test_escalation_resolved_pages_only_when_it_previously_paged`.
 
+### Condition-derived BLOCKED rows auto-retire when the detector stops reporting them (2026-08-10)
+
+Any `BlockedRow` seeded with a `condition_key` (namespaced `<detector>:<key>`, e.g. `doc_drift:<key>`) retires through
+`classify_retirement`'s **`condition_cleared`** exit — the generic form of the answered-question close path above, but
+with **no `TaskRow` dependency**: it retires purely because the owning detector's latest run no longer reports that key
+present (checked against each detector's `_CONDITION_SEEN_SET_RELPATHS` registry, path-joined at call time). Reconcile
+stamps `answered_by=auto:condition_cleared` on these rows, so they get the same ✅ closure-bookend treatment as an
+auto-answered question above — a condition-derived row that pages OPEN and later clears is not silent churn.
+`agent-orchestrator@b5d38671d` generalized this from a bespoke `doc_drift`-only closer (the older bespoke closer was
+removed, not left running alongside the generic exit).
+
 ## Complete pager audit (2026-07-13) — the SSOT for every `slack._post` notifier
 
 Every notifier that _can_ post to `#agent-orchestrator-alerts`, and its verdict. **Before adding or restoring a page,

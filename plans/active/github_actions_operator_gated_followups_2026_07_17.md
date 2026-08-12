@@ -237,12 +237,12 @@ prove on ONE caller → only then fan out._
 
 ### ⛔ OPERATOR DECISIONS — 4 open, nothing below them moves without these
 
-| ID     | Decision                                                                            | Recommendation + why                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ------ | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **D1** | ✅ **DECIDED 2026-07-17** — operator delegated; checkout kept, `@main` pin rejected | Finding ② made pre-main testability non-negotiable; ~1s sparse checkout on our own runner = $0. Rollout executed same day (`a6057ea36`); STEP 2b's no-checkout clause amended to sparse-checkout.                                                                                                                                                                                                                                                                       |
-| **D2** | **Event ledger loses rows** — fix vs accept                                         | ✅ **RESOLVED 2026-08-02** — consumer confirmed: `deployment-api/_repo_ci_alerts.py::_read_ledgers_sync()` prefix-walks `cicd/events/`, feeding `unified_alerts.py`/`repo_ci.py`/`health_overview.py` → `deployment-ui`'s Alerts page. Option 1 (one-object-per-event) already shipped, `unified-trading-pm@4cbf2006d` (confirmed ancestor of `origin/live-defi-rollout`). SSOT: `plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md`. |
-| **D3** | **The 3 dead workflows** — operator wants to review first (2026-07-17)              | **`reconcile-release-tags` RESOLVED 2026-08-08** — repurposed into the fleet's release-stall alarm (see the retired-todo entry above), not deleted; its part of D3 is closed. `digest-drift-sweep` still unfixed and **STEP 2d is still held** for it (its design depends on this remaining undecided item).                                                                                                                                                            |
-| **D4** | ✅ **RESOLVED 2026-08-08** — close 52 false issues? fix the UAC matching?           | Not false positives — 20 real recurring issues, consolidated to 1 (#880), root cause diagnosed (checker/cassette bug, not live schema drift), fix specified pending shipment in `unified-api-contracts`. See the matching planning todo above.                                                                                                                                                                                                                          |
+| ID     | Decision                                                                            | Recommendation + why                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------ | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **D1** | ✅ **DECIDED 2026-07-17** — operator delegated; checkout kept, `@main` pin rejected | Finding ② made pre-main testability non-negotiable; ~1s sparse checkout on our own runner = $0. Rollout executed same day (`a6057ea36`); STEP 2b's no-checkout clause amended to sparse-checkout.                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| **D2** | **Event ledger loses rows** — fix vs accept                                         | ✅ **RESOLVED 2026-08-02** — consumer confirmed: `deployment-api/_repo_ci_alerts.py::_read_ledgers_sync()` prefix-walks `cicd/events/`, feeding `unified_alerts.py`/`repo_ci.py`/`health_overview.py` → `deployment-ui`'s Alerts page. Option 1 (one-object-per-event) already shipped, `unified-trading-pm@4cbf2006d` (confirmed ancestor of `origin/live-defi-rollout`). SSOT: `plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md`.                                                                                                                                                         |
+| **D3** | **The 3 dead workflows** — operator wants to review first (2026-07-17)              | **`reconcile-release-tags` RESOLVED 2026-08-08** — repurposed into the fleet's release-stall alarm (see the retired-todo entry above), not deleted; its part of D3 is closed. **CORRECTED 2026-08-12 (/plan-reconcile)**: `digest-drift-sweep` is 3-of-4 FIXED (2026-07-26, per its own SSOT `issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md`'s banner) — the token bug + silent-failure hardening + dispatch cap all shipped. Only recommendation 1 (investigate the dormant `update-dependency-version.yml` primary cascade) is still open, and **STEP 2d is still held** on that one remaining item. |
+| **D4** | ✅ **RESOLVED 2026-08-08** — close 52 false issues? fix the UAC matching?           | Not false positives — 20 real recurring issues, consolidated to 1 (#880), root cause diagnosed (checker/cassette bug, not live schema drift), fix specified pending shipment in `unified-api-contracts`. See the matching planning todo above.                                                                                                                                                                                                                                                                                                                                                                                  |
 
 ### Not done — blocked on nobody, real work
 
@@ -943,14 +943,13 @@ work
   `/plans/archive/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md`, the SSOT for the
   cassette-drift-check operator-decision item that was substantively corrected 2026-08-06 (18 real open drift issues
   found, not false positives — a live unresolved P0). Other 5 entries re-verified and still resolve.
-
-**na-eligibility-audit 2026-08-07** (tranche `ci`, autonomous, `agt-cbbd1f`): KEEP-NA, stale citations fixed — all 13
-open items re-verified genuinely operator-/design-gated (7 valid) or already tracked in an active
-`assigned_vm: planning` doc (6, cited but the citations wrongly said "status: draft, not yet dispatched" for the
-`ci_satellite_ao_dispatch_batch4_2026_07_31.md`/`batch5_2026_08_02.md` items — both are `status: active` and have been
-since creation). Corrected the wording at all 5 affected citation points (5 items; the batch1 citation was already
-accurate) so a future reader doesn't wrongly think these need re-extraction. No `assigned_vm` change — flipping this doc
-would create a live duplicate-dispatch path against batch4/batch5, which already own this work.
+  **na-eligibility-audit 2026-08-07** (tranche `ci`, autonomous, `agt-cbbd1f`): KEEP-NA, stale citations fixed — all 13
+  open items re-verified genuinely operator-/design-gated (7 valid) or already tracked in an active
+  `assigned_vm: planning` doc (6, cited but the citations wrongly said "status: draft, not yet dispatched" for the
+  `ci_satellite_ao_dispatch_batch4_2026_07_31.md`/`batch5_2026_08_02.md` items — both are `status: active` and have been
+  since creation). Corrected the wording at all 5 affected citation points (5 items; the batch1 citation was already
+  accurate) so a future reader doesn't wrongly think these need re-extraction. No `assigned_vm` change — flipping this
+  doc would create a live duplicate-dispatch path against batch4/batch5, which already own this work.
 
 **round5-ci-question-resolution 2026-08-08**: closed 1 stale item — the `quickmerge.sh --agent` sentinel-race todo (head
 of "Open todos forked from the parent plan") and its matching "Operator-owned" table row 9 were both flipped to
@@ -995,15 +994,13 @@ explicitly not-recommended. No `assigned_vm` change.
 BigQuery `resource_samples` utilization: measured avg_cpu_pct=50.6%, within the 50-70% band — full detail on the flipped
 checkbox at ~line 685. (2) Test-impact design scoping: MOOT, already `[x]` at ~line 861 (extracted 2026-08-03, now fully
 shipped as `test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md`) — no fresh design needed.
-`ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 2 is done.
 
-**round-9 sweep, 2026-08-09**: KEEP-NA, valid — unchanged from round7; no round-9 new-facts apply here.
-
+**round-9 sweep, 2026-08-09**: KEEP-NA, valid, unchanged from round7 — no round-9 new-facts apply.
 **na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:058d1b97f5f905f2]: KEEP-NA,
 valid — Full read (1001 lines, both pages) + grep confirm 4 open todos, matching phase0=4. (1) line 106 STEP 2d
 assert-not-decorative: doc's own D3 table row states 'digest-drift-sweep still unfixed and STEP 2d is still held for it
 (its design depends on this remaining undecided item)' -- dependency-blocked on the still-open
 /plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md investigation. (2) line 188
-bare-host bootstrap PROVE: container leg done, but IMDS/EC2-role, GCP ADC (doc's own text flags this leg 'interactive'),
-systemd, and real GH runner registration 'structurally cannot' run in a container -- doc ties this explicitly to 'the
-upcoming planning-VM deploy,' a genuine host rebuild.
+bare-host bootstrap PROVE: container leg done, IMDS/EC2-role + GCP ADC (doc flags this leg 'interactive') + systemd +
+real GH runner registration 'structurally cannot' run in a container -- tied to 'the upcoming planning-VM deploy,' a
+genuine host rebuild.

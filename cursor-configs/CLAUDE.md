@@ -361,9 +361,10 @@ architecture (L0–L4)".
   sonnet-tier dispatch (DeepSeek = baseline fallback). SSOT: `/codex/15-runbooks/safe-service-restart-procedures.md`.
 - **AO scheduled jobs (systemd timers / status model / capacity queue)?** `dispatched` = spawn receipt, NOT completion
   (`agent_exit_reason == "lifecycle-complete"` is done); `git pull` does NOT reinstall a timer — re-run
-  `sudo bash scripts/install-<job>-timer.sh`; `no_capacity` is legacy (queue-on-no-capacity default);
-  `quarantined/timeout/error` page, `dispatched/queued` don't. SSOT:
-  `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md`.
+  `bash scripts/install-<job>-timer.sh` (**no `sudo`** — CORRECTED 2026-08-12 (/plan-reconcile): all 8 installers
+  converted to `systemd --user` units 2026-08-08 (`agent-orchestrator@c3a85c3b4`) and now hard-fail under `sudo`, per
+  the codex SSOT below); `no_capacity` is legacy (queue-on-no-capacity default); `quarantined/timeout/error` page,
+  `dispatched/queued` don't. SSOT: `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
   IS→MTDS→features-onchain→strategy→execution; Pyth Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT:
   `/codex/04-architecture/defi-execution-overview.md`.

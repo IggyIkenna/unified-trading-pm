@@ -24,7 +24,7 @@ related:
   [
     /plans/epics/escalation_and_disaster_recovery_master.md,
     /plans/archive/issues/dispatch_sequential_gate_fix_2026_07_24.md,
-    /plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md,
+    /plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md,
   ]
 created: 2026-07-24
 author: unknown
@@ -46,7 +46,7 @@ context_scope:
     agent-orchestrator/server/transcript_log.py,
     agent-orchestrator/server/orm.py,
     /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,
-    /plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md,
+    /plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md,
   ]
 ---
 
@@ -239,7 +239,7 @@ exists" section together before scoping the workstream.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
 - **2026-08-10 (cross-link, slot-3 interactive)**: linked
-  [`/plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md`](/plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md)
+  [`/plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md`](/plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md)
   in both directions. That plan is a LOCAL/human companion covering a DISJOINT axis — blocked-question **payload
   sufficiency** (the `plan_health` `doc_drift` path raises undecidable questions) and **condition-derived
   auto-retirement** (a `doc_drift:<key>` row can never retire, since all three `classify_retirement` exits resolve a
@@ -256,8 +256,8 @@ exists" section together before scoping the workstream.
   specific dispatch-race gap this todo flagged is moot; the general mechanism (per-todo `depends_on_todo` in regen)
   remains an open design question but is not actionable here. Set `archive_exempt: true` — all 4 build todos now checked
   off, but the doc carries standing context + cross-references for the active companion plan
-  `/plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md`; premature archival would
-  orphan those references.
+  `/plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md`; premature archival
+  would orphan those references.
 
 - **2026-08-10 (slot-32, backend_engineer, dispatched onto `-003`)**: shipped the `[BACKEND] P3` dedup/similarity todo —
   agent-orchestrator@514df29c07. Added `normalize_question_text()` + `group_similar_blocked()` in whitespace/case-folded
@@ -268,7 +268,7 @@ exists" section together before scoping the workstream.
   deepseek-worker session's ambient `CLAUDE_CODE_MAX_CONTEXT_TOKENS` — now unset inside the test scripts).
   `quality-gates.sh` green incl. dashboard tsc + vitest (270 tests).
 - **2026-08-10 (slot-8, backend_engineer, dispatched onto todo D of
-  `/plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md`)**: applied the repo
+  `/plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md`)**: applied the repo
   correction that doc's todo D records. The `[UI] P2` transcript-jump todo named `Repo: deployment-ui` (and this doc's
   `repos:` frontmatter listed `deployment-ui`), but the blocked-question queue is rendered ONLY by
   `agent-orchestrator/dashboard/src/layout.tsx` (`BlockedCard`) — `deployment-ui` has zero blocked-question code

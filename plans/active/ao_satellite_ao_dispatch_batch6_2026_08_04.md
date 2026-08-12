@@ -48,6 +48,7 @@ context_scope:
     /plans/active/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
   ]
+archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
 locked_by:
 locked_since:
 supersedes:
@@ -273,9 +274,13 @@ evidence-backed, zero-risk housekeeping action, not new work.
   `context_scope_consumption_enforcement_2026_07_30.md`,
   ~~`dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`~~ **RESOLVED 2026-08-06** (its own Progress Log:
   "Option A operator-confirmed + implemented; both todos closed" — removed from this count, corrected 2026-08-06
-  (/plan-reconcile ao)), `long_lived_vm_logs_not_backed_up_2026_07_02.md` (checked 2026-08-06, still genuinely
+  (/plan-reconcile ao)), ~~`long_lived_vm_logs_not_backed_up_2026_07_02.md` (checked 2026-08-06, still genuinely
   operator-gated — 3 open todos, explicit 2026-07-02 operator decision "not needed right now... revive by scheduling
-  these todos" — correctly stays here),
+  these todos" — correctly stays here)~~ **CORRECTED 2026-08-12 (/plan-reconcile) — REMOVED, wrongly listed here**: live
+  check shows `assigned_vm: planning` (reclassified NA→planning 2026-08-06 by `/plan-reconcile ao`, per that doc's own
+  Progress Log), the opposite of "still genuinely operator-gated." This batch's finalize twin
+  (`ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md`) already self-flagged the contradiction 2026-08-04 but it
+  was never fixed in this source doc until now.
   `mdps_odds_horizon_bucket_launch_prep_stale_todo_duplicate_dispatch_2026_07_27.md`,
   `mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md`,
   `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md`,

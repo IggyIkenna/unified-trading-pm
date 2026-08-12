@@ -387,6 +387,13 @@ leave). The strategy-service surface is the more complete one and is real today;
 - G3 (P2) stage4 agent dispatch to trading-agent-service is markdown-only. **Still genuinely open as of 2026-07-27** —
   no successor plan tracks this; rehomed as an explicit todo in
   `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`. [→§7.1-6]
+  > **CORRECTED 2026-08-12 (/plan-reconcile)**: superseded — §10's 2026-07-28 todo RESCOPED G3 (see below, "RESCOPED,
+  > still open") and pointed it to `/plans/archive/issues/blrs_g3_g10_rescope_2026_07_28.md`; that rescope was then
+  > operator-ruled 2026-07-29 (a daily-scheduled LLM analysis job, not a trading-agent-service endpoint) and DONE at its
+  > own scope per `citadel_paper_batch_live_reconciliation_2026_06_19.md`'s `P2.BLRS2` (was G3) entry — see
+  > `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md` for the build-phase follow-ups. This line's "still
+  > genuinely open"/"no successor plan tracks this" framing is stale; kept verbatim below only as the historical §7.1
+  > record.
 - G4 ✅ DONE (BLRS@43e88ea, shipped via `issue_docs_remediation_sweep_2026_06_02.md` §D3/G4 — corrected 2026-07-27, this
   doc previously re-litigated it as open for 7 weeks after it shipped) `soak_mode` built: producer-side
   `ReconConfig.soak_mode` flag + alerting-service `recon_drift_event_handler` CRITICAL→PagerDuty suppression landed

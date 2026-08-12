@@ -13,7 +13,7 @@ summary: >-
   with no word/sentence-boundary awareness — the source doc's own 2026-08-08 `na-eligibility-audit` pass already flagged
   this exact item `MISCLASSIFIED_LIKELY_AO_ELIGIBLE`, naming the function, the bug, and a recommended fix, while
   correctly keeping the whole doc `NA` because its 11 sibling items are genuine judgment calls.
-status: active
+status: resolved
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -22,7 +22,7 @@ scope: [engineer]
 tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-11, satellite-docs, satellite-extraction, docs-tooling]
 related:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch11_finalize_2026_08_09.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch11_finalize_2026_08_09.md,
     /plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
@@ -61,8 +61,10 @@ source: >-
 
 # AO satellite AO batch 11
 
-> **`status: draft`** — pending operator approval, same convention as batch5-10: flip to `active` to dispatch.
-> **`assigned_vm: planning` / `execution_scope: orchestrator-agent`** once approved, same as the rest of this series.
+> **ARCHIVED 2026-08-12 (/plan-reconcile)** — sole todo done (`unified-trading-pm@2022f4142f`, verified via
+> `ao_satellite_ao_dispatch_batch11_finalize_2026_08_09.md`'s own re-verification + reconciliation todos, all `[x]`),
+> paired finalize plan's reconciliation into the source doc confirmed complete, no open work remains here. Original body
+> preserved below.
 
 ## Why this plan exists
 
@@ -78,8 +80,9 @@ batch performs.
 ## Rules for every worker on this plan
 
 - **Do not edit the source doc's remaining 11 checkboxes** or this todo's own redirect-pointer beyond appending your
-  evidence when done. The paired finalize plan (`/plans/active/ao_satellite_ao_dispatch_batch11_finalize_2026_08_09.md`)
-  reconciles evidence back into the source doc.
+  evidence when done. The paired finalize plan
+  (`/plans/archive/2026_08/ao_satellite_ao_dispatch_batch11_finalize_2026_08_09.md`) reconciles evidence back into the
+  source doc.
 - This is a shared frontmatter-tooling script every `docs-reconcile`/`na-eligibility-audit`/`fix_frontmatter.py` caller
   depends on — run the full `scripts/plan-hygiene/` test suite, not just a new unit test for this function.
 

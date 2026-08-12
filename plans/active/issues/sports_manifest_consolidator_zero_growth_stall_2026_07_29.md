@@ -481,6 +481,12 @@ any direct canonical intervention — § "Diagnostic caveats" now carries the st
       no tracked todo carries them. (The separate 595-day canonical gap re-run is already a tracked P1 todo in
       sports_odds_api_scattered_multiyear_gaps_2026_07_27.md.)
 
+> **CORRECTED 2026-08-12 (/plan-reconcile)**: this Follow-up is now tracked as an actual AO-dispatched todo —
+> `/plans/active/sports_satellite_ao_dispatch_batch12_2026_08_09.md:153`
+> `[DIAG] P3. Explain the 23 sentinel-free missing odds_api days`, which cites back to this doc as its Source. Not
+> duplicating the work item here; track resolution there. Evidence:
+> `grep -n "23 sentinel-free" plans/active/sports_satellite_ao_dispatch_batch12_2026_08_09.md` → line 153.
+
 > **2026-08-06 archive-candidate audit**: Consolidator is EXONERATED (banner: RESOLVED 2026-07-30, static rows_out is
 > in-place UPDATE) and the real root cause (check_shard_freshness ODDS_API-sentinel collision skipping 572/595 dates) is
 > diagnosed and fixed (market-tick-data-service@362e64e3). But the doc retains prose-only open items: the 23

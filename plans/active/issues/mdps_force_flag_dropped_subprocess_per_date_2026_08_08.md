@@ -118,6 +118,9 @@ correctly scoped per-day (see the Track-7 doc's Relaunch todo), once fully done.
       target days, NOT the full 2023-06-01→2026-01-01 range — the launcher has no day-list flag, and the full-range
       scope is what caused 2 prior preemptions plus ~8 months of unnecessary compute at the observed ~12 min/day rate)
       now that the force-forwarding fix is live. (repo: deployment-service, market-data-processing-service)
+      Safe-idempotent justification (no `[OPERATOR]` tag needed): a `--force` candle-regen backfill VM launch, no GCS
+      delete, `--force` re-derivation is idempotent per date (re-running the same day re-writes the same manifest rows),
+      and SPOT preemption recovery resumes from measured per-day progress, never replays already-done days.
 
 ## Progress Log
 

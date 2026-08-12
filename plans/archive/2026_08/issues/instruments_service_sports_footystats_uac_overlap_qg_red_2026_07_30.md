@@ -1,7 +1,7 @@
 ---
 doc_type: issue
 title: instruments-service QG RED — FOOTYSTATS overlaps UAC sports venues, golden EXPECTED matrix drift
-status: superseded
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -28,9 +28,13 @@ execution_scope: orchestrator-agent
 priority: P2
 drift_direction: advance-code
 depends_on: []
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_by:
+locked_since:
 ---
+
+> **🗄️ ARCHIVED 2026-08-12 (/plan-reconcile, operator ruling)** — superseded + zero real remaining work was deliberately
+> kept unarchived "for the corpus trail"; operator ruled to archive now like any other superseded doc rather than
+> special-case it indefinitely.
 
 > **SUPERSEDED** — duplicate discovery of the same repo-blocker (RB-ecfc50de), filed minutes before slot-11's
 > independent, more complete report which already identifies the exact root-cause commit

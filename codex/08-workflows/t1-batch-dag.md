@@ -102,7 +102,7 @@ presence before starting each stage.
 | features-service (calendar family)         | 01:30          | `t1-recon/features/calendar/{date}/`         | none         |
 | features-service (delta-one family)        | 02:00          | `t1-recon/features/delta-one/{date}/`        | calendar     |
 | features-service (volatility family)       | 02:00          | `t1-recon/features/volatility/{date}/`       | delta-one    |
-| features-service (onchain family)          | 02:30          | `t1-recon/features/onchain/{date}/`          | none         |
+| ~~features-service (onchain family)~~ [^1] | ~~02:30~~      | ~~`t1-recon/features/onchain/{date}/`~~      | none         |
 | features-service (sports family)           | 02:30          | `t1-recon/features/sports/{date}/`           | none         |
 | features-service (cross-instrument family) | 02:30          | `t1-recon/features/cross-instrument/{date}/` | delta-one    |
 | features-service (multi-timeframe family)  | 02:30          | `t1-recon/features/multi-timeframe/{date}/`  | delta-one    |
@@ -110,6 +110,13 @@ presence before starting each stage.
 | ml-inference-service                       | 03:00          | `t1-recon/ml/{date}/`                        | all features |
 | strategy-service                           | 04:00          | `t1-recon/strategy/{date}/`                  | ml           |
 | batch-live-reconciliation-service          | 06:00          | `t1-recon/recon/`                            | all above    |
+
+> **CORRECTED 2026-08-12 (/plan-reconcile)**: [^1] the onchain-family T+1 recon producer no longer exists live — its
+> Cloud Scheduler map entry was removed and never replaced (confirmed 2026-07-28, zero features-onchain/T+1-recon
+> resources remain), and the standalone `features-onchain-service` repo it targeted was archived 2026-05-08. Evidence:
+> `deployment-service/terraform/gcp/defi_collection_scheduler.tf:29-37`,
+> `deployment-service/terraform/gcp/lst_seasonal_rewards_scheduler.tf:87-97`. Kept struck-through (not deleted) so the
+> DAG's dependency shape stays legible; do not schedule work against it as a live producer.
 
 ---
 

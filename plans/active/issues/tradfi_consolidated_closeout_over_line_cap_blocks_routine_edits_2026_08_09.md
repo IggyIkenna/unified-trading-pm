@@ -69,11 +69,18 @@ depends_on: []
       already drafted — see `tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md`'s third
       finding for the exact content: 2020-2024 ~94.8-100% covered, 2025 confirmed 0% gap, 2026 73% partial — replacing
       the stale "66% attempted_failed... not yet launched" text). Repo: unified-trading-pm.
-- [ ] [SCRIPT] P3. **Consider whether `check_line_caps.sh`'s scoped-mode carve-out should accept a net-zero-LENGTH
-      content substitution** (not just `DELETED=0`), per the root-cause analysis already done in
-      `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` — a shared fix would unblock both that
-      doc's link-archival case and this doc's table-row-update case without requiring every over-cap closeout plan to be
-      split first. Repo: unified-trading-pm, `scripts/plan-hygiene/check_line_caps.sh`.
+- [ ] [OPERATOR] P3. **CORRECTED 2026-08-12 (/plan-reconcile): de-ambiguated "consider whether X should Y" — this is a
+      real gate-design decision, not a worker-determinable task.** Original ask: whether `check_line_caps.sh`'s
+      scoped-mode carve-out should accept a net-zero-LENGTH content substitution (not just `DELETED=0`), per the
+      root-cause analysis already done in `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` — a
+      shared fix would unblock both that doc's link-archival case and this doc's table-row-update case without requiring
+      every over-cap closeout plan to be split first. **Why this needs an operator call, not a mechanical
+      implementation**: loosening a QG-enforced HARD-cap gate's carve-out is a real risk/tradeoff decision (a
+      net-zero-length diff can still smuggle a large, unrelated content swap past the cap check) — the SSOT's own "never
+      raise the cap" posture on adjacent size gates argues for caution here too. **Done when**: the operator either
+      approves the net-zero-length carve-out (then implement + regression-test it against both cited cases) or rules the
+      split-first workaround stays the standing pattern (then close this todo as CANCELLED, not implement anything).
+      Repo: unified-trading-pm, `scripts/plan-hygiene/check_line_caps.sh`.
 
 ## Progress Log
 

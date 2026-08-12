@@ -29,7 +29,7 @@ related:
     /plans/active/issues/context_scope_sufficiency_measurement_2026_08_08.md,
     /plans/active/issues/operator_ruling_record_ao_round5_apply_session_2026_08_08.md,
     /plans/active/review_agent_evidence_gated_write_capability_2026_08_09.md,
-    /plans/active/ao_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch11_2026_08_09.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch13_2026_08_09.md,
     /plans/active/ao_satellite_ao_dispatch_batch15_finalize_2026_08_09.md,
     /plans/active/ao_satellite_ao_dispatch_batch17_2026_08_10.md,

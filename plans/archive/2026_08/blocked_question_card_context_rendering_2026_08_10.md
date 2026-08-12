@@ -11,7 +11,7 @@ summary: >-
   chip so `NO_WORKER_SLOT_SENTINEL` never reaches the screen as "#-1". Both todos edit `dashboard/src/layout.tsx`, and
   the first cannot start until the `context` column exists — hence a separate plan with `gate_on_depends` rather than
   two more todos on the backend plan.
-status: active
+status: complete # (was: active) 2026-08-12 /plan-reconcile archival sweep: both todos [x], no locked_by
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -20,13 +20,13 @@ scope: [engineer]
 tags: [agent-orchestrator, blocked-questions, dashboard, ux, playwright]
 related:
   [
-    /plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md,
+    /plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md,
     /plans/active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md,
     /plans/archive/2026_08/issues/ao_model_main_agent_as_first_class_slot_2026_08_10.md,
     /codex/06-coding-standards/ui-testing-layers.md,
   ]
 created: 2026-08-10
-last_updated: "2026-08-10"
+last_updated: "2026-08-11"
 parent_epic: escalation_and_disaster_recovery_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -44,35 +44,35 @@ locked_since:
 supersedes:
 superseded_by:
 source: >-
-  Split out of /plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md on 2026-08-10 when
-  the operator flipped that plan to AO dispatch — partial parallelism is not expressible in one plan, and the UI work
-  has a real backend dependency that must be machine-gated, not merely ordered.
+  Split out of /plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md on
+  2026-08-10 when the operator flipped that plan to AO dispatch — partial parallelism is not expressible in one plan,
+  and the UI work has a real backend dependency that must be machine-gated, not merely ordered.
 depends_on: [blocked_question_payload_quality_and_condition_retirement_2026_08_10]
 gate_on_depends: true
-# Cross-repo (mode-2) two-commit bridge (2026-08-11, slot-16): flip-only commit
-# must land BEFORE the git mv, and check_archive_candidates --only flags a flip-only
-# commit on a 0-open-todo unlocked doc — this flag is the sanctioned exemption; it
-# is dropped as part of the immediately-following archival commit.
-archive_exempt: true
 context_scope:
   [
     agent-orchestrator/dashboard/src/layout.tsx,
     agent-orchestrator/dashboard/src/styles.css,
     agent-orchestrator/dashboard/src/types.ts,
     agent-orchestrator/server/orm.py,
-    /plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md,
+    /plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md,
     /codex/06-coding-standards/ui-testing-layers.md,
   ]
 ---
 
 # Blocked-question card — collapsed structured context + source chip
 
+> **🟢 ARCHIVED 2026-08-12 (/plan-reconcile) — COMPLETE.** Both todos (P2, P3) shipped `agent-orchestrator@4d2c9580ec`
+> 2026-08-11. Gated upstream
+> `/plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md` also archived
+> same-day.
+
 ## Why this is a separate, gated plan
 
 Both todos below edit the same file (`dashboard/src/layout.tsx`, the `BlockedCard` component), so they cannot run
 concurrently — hence `sequential: true`. And the first one renders a `BlockedRow.context` field that does not exist yet:
 it is created by the `[BACKEND] P1` todo on
-[`/plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md`](/plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md).
+[`/plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md`](/plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md).
 `depends_on` + `gate_on_depends: true` makes that a machine-held gate rather than a hope.
 
 The precedent for insisting on the gate is in this exact subject area. The sibling issue doc

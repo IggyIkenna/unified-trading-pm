@@ -97,6 +97,14 @@ escalation.
    `launch-mdps-sharded-backfill.sh cefi --year 2021` to resume from checkpoint if available, or from genesis.
 3. **Close this escalation** — confirmed false positive from a now-fixed detector gap.
 
+## Todos
+
+- [ ] [INFRA] P2. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — Re-launch the
+      `mdps-cefi-2021-*` sharded MDPS CeFi backfill (`launch-mdps-sharded-backfill.sh cefi --year 2021`), resuming from
+      checkpoint if available (prior run `mdps-cefi-2021-20260810-052119` was killed mid-run at 2021-01-04, no terminal
+      `EXIT_STATUS` — confirmed false-positive SILENT classification; real candle data already in GCS). Repo:
+      deployment-service.
+
 ## Progress Log
 
 - 2026-08-11: Read escalation context, domain SSOTs, and classifier code. Accessed VM run.log from GCS. Confirmed 21,847

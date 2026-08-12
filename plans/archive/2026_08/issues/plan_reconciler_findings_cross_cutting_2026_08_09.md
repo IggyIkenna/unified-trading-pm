@@ -5,7 +5,7 @@ summary: >-
   Daily deep plan-reconciliation run-findings doc for the cross-cutting topic tranche, dispatch agt-627fc7 (slot 30).
   Records hunter-detected candidates, adversarial-verification outcomes, applied fixes, routed operator questions, and
   coverage for this run. Also the progress journal for the run itself.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -26,9 +26,15 @@ calibrated_ai_days: 0.1
 assigned_role: backend_engineer
 drift_direction: fix
 resolved_by:
-locked_by: plan_reconciler (agt-627fc7) since 2026-08-09T16:00:00Z
+locked_by:
 depends_on: []
 ---
+
+> **🗄️ ARCHIVED 2026-08-12 (/plan-reconcile, operator ruling)** — this run died mid-flight 2026-08-09
+> (`locked_by: plan_reconciler (agt-627fc7)` since, zero forward progress, no live process holding the lock, confirmed
+> dead via git log). Operator approved unlocking + archiving as an aborted attempt, superseded by the full-corpus
+> `/plan-reconcile all` run of 2026-08-12 (`/plans/active/issues/plan_reconciler_findings_all_2026_08_12.md`). Root
+> cause of the mid-flight death tracked separately.
 
 # plan_reconciler findings — cross-cutting tranche — 2026-08-09
 

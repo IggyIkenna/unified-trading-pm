@@ -124,6 +124,11 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       is still open if this plan intends a literal regen pass beyond the invariant-test confirmation — check before
       archiving this todo further.
 
+      **RULED 2026-08-12 (/plan-reconcile, operator interactive)**: a literal regen-script run IS required before this
+          closes — invariant-test confirmation alone is not sufficient. Do NOT flip this todo `[x]` until
+          `build_instrument_catalogue.py` + `enumerate_expected_universe.py` (v2) have actually been executed against real
+          infra and the new AAVE/CHAINLINK cells confirmed `expected_unattempted`.
+
 ## Phase 2 — Collectors ready to fetch
 
 - [x] [MTDS] P2. **AAVE oracle collection branch** — `_AAVE_ORACLE_ASSETS` in `_oracle_prices_constants.py` +

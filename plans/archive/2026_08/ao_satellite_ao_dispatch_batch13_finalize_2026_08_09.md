@@ -6,7 +6,7 @@ summary: >-
   `gate_on_depends` until its sole todo is done. Reconciles the verified todo's evidence back into
   `operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md`'s own checkbox, checks whether that source doc is
   now fully closed and archives it if so, then archives the batch plan itself.
-status: active
+status: archived
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -52,6 +52,12 @@ source: >-
 
 # AO satellite AO batch 13 — finalize
 
+> **ARCHIVED 2026-08-12 (/plan-reconcile)**: all 5 todos are `[x]` — the gated batch plan is archived
+> (`plans/archive/2026_08/ao_satellite_ao_dispatch_batch13_2026_08_09.md`), its evidence is reconciled into
+> `operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md`, and this finalize doc's own todo of archiving the
+> batch plan is verified complete. Unlocked (`locked_by:` empty). Archived per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
+
 > **Machine-gated on `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch13_2026_08_09.md`** (`depends_on` +
 > `gate_on_depends: true`) — will not dispatch until its sole todo is `done`. The batch itself stays `status: draft`
 > until the operator approves it; this finalize plan needs no separate flip either way.
@@ -80,21 +86,29 @@ source: >-
       todo", matches; (4) `sports_consolidated_closeout_2026_07_19.md:724-726` cites
       `/plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md` todo 17 — doc exists, citation traceable.
       No discrepancies found — no new todo needed. Repo: unified-trading-pm.
-- [ ] [REVIEW] P0. **Reconcile the verified todo's evidence into
+- [x] ✅ [REVIEW] P0. **Reconcile the verified todo's evidence into
       `operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md`'s own `[SCRIPT] P2` checkbox** — replace the
       redirect-pointer text batch13 left behind with the real completion evidence. **Done when**: the source checkbox
-      carries real evidence, not a bare redirect pointer.
+      carries real evidence, not a bare redirect pointer. — **DONE 2026-08-12 (/plan-reconcile)**: replaced the bare
+      redirect pointer with the corpus-wide re-verification evidence from this doc's own todo 1 above
+      (`Unsourced operator-ruling citations: 2 (baseline 2)`). Repo: unified-trading-pm
+      (`plans/archive/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md`).
 - [x] ✅ [REVIEW] P1. **Checked whether the source doc is now fully closed — it is, archived.** Both batch13 todos were
       already `[x]` done (baseline 52→2 via 22 fixes + 2 extracted as a new follow-on todo; over-cap files trimmed under
       1000L). No `locked_by`. Ran the full 6-step archival ritual: added archival banner, status→archived, set
       `superseded_by`, updated all corpus-wide referrers (batch12 `related:` + body, epic `related_plans:` + section,
       INDEX.md, parked issue `related:`, inventory dashboard, finalize plan's own `related:`/`context_scope:`), `git mv`
       to `plans/archive/2026_08/`. No deferred items to migrate; no new codex contracts. Repo: unified-trading-pm.
-- [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
+- [x] ✅ [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch13_2026_08_09.md`, move to `plans/archive/2026_08/`, fix
       every corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then re-run the
       active-plan inventory generator. **Done when**: the batch plan is archived with a banner, the inventory
-      regenerates cleanly, and `check_finalize_plan_coverage.py` no longer names this pair.
+      regenerates cleanly, and `check_finalize_plan_coverage.py` no longer names this pair. — **VERIFIED DONE 2026-08-12
+      (/plan-reconcile)**: `ao_satellite_ao_dispatch_batch13_2026_08_09.md` already sits at
+      `plans/archive/2026_08/ao_satellite_ao_dispatch_batch13_2026_08_09.md` (evidence:
+      `find plans -iname ao_satellite_ao_dispatch_batch13_2026_08_09.md` → archive path only); this finalize doc's own
+      `related:`/`context_scope:` already cite the archived path. This todo's own status simply hadn't been flipped to
+      reflect work already done by an earlier pass.
 
 ## Codex SSOTs
 

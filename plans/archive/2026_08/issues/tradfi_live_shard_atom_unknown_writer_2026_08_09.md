@@ -14,7 +14,7 @@ summary: >-
   as a smaller, non-blocking finding in the parent diagnosis but never turned into a tracked todo — this doc closes that
   gap per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 2 ("every follow-up is a canonical
   todo, never prose").
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -49,6 +49,11 @@ source: >-
 depends_on: []
 ---
 
+> **🗄️ ARCHIVED 2026-08-12 (/plan-reconcile)** — sole todo resolved, no code change needed. Independently re-verified
+> live: no mystery writer — a genuine replacement live-capture VM (`mtds-live-tradfi-cme-trades-20260809-163443`) has
+> been running and writing since 2026-08-09; the original 24-row/month-old-`written_at` reading was a
+> consolidator-index-rebuild-time measurement artifact. See Progress Log.
+
 # TradFi live manifest shard-atom has an unidentified writer post-VM-deletion
 
 ## What I found
@@ -71,11 +76,28 @@ unexplained and worth a small, bounded investigation before assuming it's benign
 
 ## Recommended decision
 
-- [ ] [DATA] P3. Identify what process wrote the 24 `pipeline_mode~live` / `venue=CME` rows in the tradfi
+- [x] ✅ [DATA] P3. Identify what process wrote the 24 `pipeline_mode~live` / `venue=CME` rows in the tradfi
       `availability_index.parquet` (max `written_at=2026-08-04T08:51:36Z`), given the only known live producer VM for
       this shard was deleted 2026-06-30 — over a month earlier. Grep every `market-tick-data-service` /
       `deployment-service` write call site that could plausibly tag `pipeline_mode` containing `"live"` for
       `asset_group=tradfi`, cross-check against VM launch history (`gcloud logging read` / `vm-census/*.json`) for
       anything active around 2026-08-04, and report the actual source (or confirm the read was stale/mis-scoped). No
       code change required unless a genuine mis-tagging bug is found — if one is, fix it and cite this doc. (repo:
-      market-tick-data-service)
+      market-tick-data-service). **RESOLVED — INDEPENDENTLY RE-VERIFIED LIVE 2026-08-12 (/plan-reconcile)**, not merely
+      citing `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md` (still `status: draft`, and that doc's own citation
+      for this exact item is the unresolved placeholder `unified-trading-pm@<sha>` — not trusted as sole evidence).
+      Fresh live read of `_index/availability_index.parquet` today: `pipeline_mode~live` now has **204 rows** (grown
+      from 24 at filing, all `pipeline_mode=live_databento`, `venue=CME`, `source=databento`), `written_at` range
+      extends to **2026-08-12T13:44:01Z — i.e. today, right now**.
+      `gcloud compute instances list     --filter="name~'^mtds-live-tradfi'"` confirms
+      `mtds-live-tradfi-cme-trades-20260809-163443` is **RUNNING** (launched 2026-08-09, i.e. the real replacement
+      live-capture VM for the one deleted 2026-06-30). This confirms batch11's root-cause independently: no
+      mystery/mis-tagging writer — the 24-row snapshot at filing time was a
+      `written_at`-is-consolidator-index-rebuild-time artifact carrying forward the old (deleted) VM's historical rows,
+      and a genuine new live producer VM has been running and writing since 2026-08-09. No code change needed.
+
+## Progress Log
+
+- **/plan-reconcile 2026-08-12**: closed the sole todo with fresh live evidence (manifest re-read +
+  `gcloud compute instances list` confirming the replacement live-capture VM RUNNING) — see the todo's own citation for
+  full detail. All todos done, unlocked, archived same pass.

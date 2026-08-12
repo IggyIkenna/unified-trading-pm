@@ -103,6 +103,16 @@ Fallback if parallelization is not immediately shippable: reduce the exit-code c
 (e.g. `*/15` or `*/30`) so fewer executions overlap — but that trades detection latency (a VM dying at T+0 won't be seen
 until the next sweep) and is a stopgap, not the root fix.
 
+## Todos
+
+- [ ] [BACKEND] P1. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — Parallelize the per-VM
+      I/O in `sweep()` (`deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py` +
+      `heartbeat_stall_watcher.py`) via `ThreadPoolExecutor` over the independent GCS reads (precedent: `cli.py`).
+      Target: sweep completes in <5 min so cron overlap collapses to ~1 execution. Parallelize only the pure reads; keep
+      classify/route/emit sequential to preserve the shared-state discipline (findings sink, `_EMITTED_THIS_SWEEP`,
+      RESOLVED bookend). Fallback if not immediately shippable: reduce cron cadence to match sweep duration (stopgap
+      only, trades detection latency). Repo: deployment-service.
+
 ## Related
 
 - `/plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md` — the exit-code-monitor OOM (signal 9)

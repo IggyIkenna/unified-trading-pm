@@ -101,7 +101,16 @@ The Cloud Run Job + its Cloud Scheduler (`uts-prod-tradfi-wave-launcher-cron`, `
 are DORMANT — the Scheduler has been PAUSED since 2026-06-24 (this same date). The mechanism that has actually been
 draining CME/CBOE tradfi backfills since then is an undocumented HOST cron on the monitor host, not the Cloud Run Job
 described here. A future reader checking "is the fleet still draining automatically" must check the host cron, not this
-resource. `gcloud run jobs update uts-prod-tradfi-wave-launcher --update-env-vars TRADFI_OHLCV_MACHINE=e2-highmem-4`
+resource. **RE-VERIFIED LIVE 2026-08-12 (/plan-reconcile, independent of batch11's still-`status: draft` doc)**:
+`gcloud scheduler jobs describe uts-prod-tradfi-wave-launcher-cron --location=asia-northeast1` → `state: PAUSED`,
+`userUpdateTime: '2026-06-24T22:44:03.047172Z'` (matches "paused since 2026-06-24" exactly — a live API field, not an
+inference); `gcloud run jobs executions list --job=uts-prod-tradfi-wave-launcher --region=asia-northeast1` → most recent
+execution `uts-prod-tradfi-wave-launcher-td5v6`, created `2026-06-25 00:49:53 UTC`, nothing since — the Cloud Run Job
+genuinely has not executed in seven weeks. Meanwhile `gcloud compute operations list` shows `tradfi-bf-cme-ohlcv-1m-*`
+VMs still being inserted TODAY (2026-08-12) on a ~3h-aligned cadence with the clean single-root naming from
+`deployment-service@bcf55c781` (e.g. `tradfi-bf-cme-ohlcv-1m-eth-2023-20260812-120648`, `...-es-2023-20260812-120631`) —
+live, current proof the host cron (not the Cloud Run Job) is the real driver and has picked up the dedup fix via its git
+checkout. `gcloud run jobs update uts-prod-tradfi-wave-launcher --update-env-vars TRADFI_OHLCV_MACHINE=e2-highmem-4`
 (the lib reads the env var; the launch subprocess inherits it). **VERIFIED:** a triggered execution launched 6 shards
 (6a/6b/6c/6e/6j/ es-2020) all on e2-highmem-4. The committed default makes it permanent once the deployment-service
 image rebuilds (drop the env override then). NOTE: the 12:00 wave had already launched 6 shards on the OLD e2-standard-4
@@ -552,10 +561,3 @@ dates, so no wasted duplicate work from the relaunch.
 - **context-scout 2026-08-06**: re-scouted; the `mtds_chunk_had_failure_blind_to_partial_payload_loss_2026_08_03.md`
   entry had since been archived (now under `plans/archive/2026_08/`) — repointed to its new path, all other 5 entries
   re-verified unchanged (6 entries total).
-- **2026-08-12** — `locked_by`/`locked_since` cleared (corpus-wide fix, operator ruling Option B, interactive session
-  2026-08-12; see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md). This doc has
-  0 open todos, so clearing the placeholder lock immediately makes it archive-eligible. Per the ruling's explicit scope
-  ("do NOT auto-archive in this same pass"), archival itself is deferred to a separate follow-on pass; bridged with
-  `archive_exempt: true` (the sanctioned flip-then-mv two-commit pattern documented in
-  `scripts/plan-hygiene/check_archive_candidates.sh`) so this commit doesn't trip the archive-candidates pre-commit
-  gate. The follow-on pass should drop `archive_exempt` and `git mv` this doc to `plans/archive/[issues/]`.

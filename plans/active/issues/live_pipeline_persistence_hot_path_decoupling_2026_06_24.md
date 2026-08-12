@@ -10,9 +10,7 @@ summary:
   decoupling shipped (LiveEventFacadeSink default at websocket_runner.py:242); status blocked because the durable
   warm-tier (Pub/Sub→Cloud-Storage→GCS parts→daily aggregate) is NOT yet built — tracked in
   mtds_plan_reconciliation_2026_06_29 § Section F M-C7."
-status:
-  open # corrected 2026-08-10 (plan_reconciler) — the blocking condition (dead compaction job) is live-verified
-  # resolved; only item (4) of the sole open todo remains (paper==batch-rerun re-test). (was: blocked)
+status: open
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -235,14 +233,26 @@ per-tick files). This issue doc is the problem-record; the plan is the executabl
 > pipeline actually executes end-to-end. Not run by this session — leaving the checkbox open on that one remaining
 > sub-item rather than flipping on 3-of-4.
 
-- [ ] [VERIFY] P2. **Only remaining sub-item, corrected 2026-08-12 to match the 2026-08-10 banner above (was stale — the
-      compaction-leg build this item originally described is DONE, see banner).** The warm→cold compaction leg described
-      in the pre-2026-08-10 version of this todo now runs successfully (5 consecutive daily `live-event-log-compactor`
-      executions confirmed, most recently 2026-08-09; `live-events/cold/` has real `cefi/`/`prediction/` data).
-      Remaining scope is item (4) only: re-run the `paper(W)==batch-rerun(W)` determinism test now that the full
-      three-tier pipeline actually executes end-to-end (not yet run as of 2026-08-10).
+- [ ] [CODE] P2. **Finish the warm-GCS-parts durable sink — the compaction leg never landed (STALE, see banner above).**
+      Verified live 2026-07-29: the warm tier is real and receiving data (Terraform-applied
+      `deployment-service@c540cd03` 2026-06-29 — 52 `warm-sink-persist-*` Cloud Storage subscriptions, confirmed live
+      via `gcloud pubsub subscriptions list`. The warm-tier path
+      `gs://central-element-323112-events/live-events/warm/prediction/{book_snapshot_5,trades}/` confirms real data
+      landing. But the daily cold-compaction Cloud Run Job (`live-event-log-compactor`,
+      `deployment-service/deployment_service/jobs/live_event_log_compactor.py` +
+      `deployment-service/terraform/gcp/live_event_log/compaction_job.tf`) has been non-functional since its creation
+      (2026-06-29): its image `gcr.io/central-element-323112/live-event-log-compactor:latest` was never built/pushed (no
+      `cloudbuild.yaml` step references it), so the Job sits `Ready: False` / `ContainerMissing` with ZERO executions
+      ever (`gcloud run jobs describe` + `executions list`, confirmed 2026-07-29), and `live-events/cold/` is empty in
+      GCS.
 
 ## Progress Log
+
+- **CORRECTED 2026-08-12 (/plan-reconcile)** — moved the 2026-08-10 status-correction note out of the frontmatter
+  `status:` scalar (was split across a scalar line + 2 YAML comment lines, fragile for simple `status:`-line parsers)
+  into this Progress Log: **corrected 2026-08-10 (plan_reconciler)** — the blocking condition (dead compaction job) is
+  live-verified resolved; only item (4) of the sole open todo remains (paper==batch-rerun re-test). (was: `blocked`).
+  `status:` is now a clean single-line `open` scalar; no content changed, only representation.
 
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped in the actual active successor plan
   (`live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`, which now carries the remaining compaction-job

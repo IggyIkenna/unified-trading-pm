@@ -27,8 +27,8 @@ scope: [engineer, admin]
 tags: [odds-api, quota, billing-waste, sports, data-correctness, live-connector]
 related:
   [
-    /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
-    /plans/active/issues/sports_api_football_live_odds_second_source_conflicts_with_wipe_ruling_2026_08_02.md,
+    /plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md,
+    /plans/archive/2026_08/issues/sports_api_football_live_odds_second_source_conflicts_with_wipe_ruling_2026_08_02.md,
     plans/archive/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md,
     /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
     /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md,
@@ -53,9 +53,9 @@ depends_on: []
 last_updated: 2026-08-03 # status flipped resolved -- 0 open todos remain, both follow-up todos shipped/verified
 context_scope:
   [
-    /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
+    /plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md,
     /plans/archive/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md,
-    /plans/active/issues/sports_api_football_live_odds_second_source_conflicts_with_wipe_ruling_2026_08_02.md,
+    /plans/archive/2026_08/issues/sports_api_football_live_odds_second_source_conflicts_with_wipe_ruling_2026_08_02.md,
     /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
     market-tick-data-service/market_tick_data_service/live/connectors/odds_api_ws.py,
     deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh,

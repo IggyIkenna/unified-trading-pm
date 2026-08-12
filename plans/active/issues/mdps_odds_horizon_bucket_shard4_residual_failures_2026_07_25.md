@@ -124,50 +124,50 @@ stabilize. Left untracked, this manifest residual would silently persist forever
       re-check todo. (repo: market-data-processing-service, deployment-service — verification only, no new code.)
 
       **Correction (slot-16, 2026-08-03T~14:35Z): the resolved-date list above does not match a direct manifest read —
-                                                                                                                                              superseding it.** Ran a direct post-completion `ManifestWriter.lookup()` query (the same fixed, bounded
-                                                                                                                                              filtered path from `unified-trading-library@4dc12dbe`, one call per date, memory-bounded via
-                                                                                                                                              `run-bounded-analysis.sh`) against all 26 dates on the SAME completed run
-                                                                                                                                              (`mdps-sports-bucket-20260803-134154`). Result: **4 dates now read `captured`** — 2025-07-31, 2025-08-26,
-                                                                                                                                              2025-10-07, 2025-10-14 — not 2025-09-04/10-07/11-13 as stated above (only 10-07 overlaps). **22 dates remain
-                                                                                                                                              `attempted_failed`**: 14 `ADAPTER_RETURNED_EMPTY_OUTPUT` (2025-08-05, 08-12, 08-13, 08-21, 09-02, 09-03, 09-04,
-                                                                                                                                              09-09, 09-10, 11-11, 11-13, 12-18, 12-24, 12-31), 4 `RAW_ODDS_SHAPE_UNRECOGNIZED` (2026-06-21..24, unchanged), 4
-                                                                                                                                              `LOSS_GUARD_BLOCKED` (2025-02-16, 08-14, 09-18, 10-23, unchanged). Root cause of the discrepancy: at least one
-                                                                                                                                              date (2025-10-14, directly confirmed via `run.log`) logs an interim `WARNING ... recording attempted_failed`
-                                                                                                                                              partway through the day's own processing, then the coarse per-day manifest row is later overwritten to
-                                                                                                                                              `captured` once other data for that date lands — the manifest's last-write-wins semantics mean a mid-run log
-                                                                                                                                              line is not a reliable proxy for the final row; only a post-completion manifest read is authoritative. The
-                                                                                                                                              aggregate run tally above (571 total/48 success/19 failed/500 skipped/4 blocked) is unaffected and still correct
-                                                                                                                                              — only the specific resolved-vs-still-failed date attribution changes. (repo: market-data-processing-service,
-                                                                                                                                              unified-trading-library — verification-only correction, no new code; verification script deleted per its own
-                                                                                                                                              `Delete-when:` marker after use.)
+                                                                                                                                                  superseding it.** Ran a direct post-completion `ManifestWriter.lookup()` query (the same fixed, bounded
+                                                                                                                                                  filtered path from `unified-trading-library@4dc12dbe`, one call per date, memory-bounded via
+                                                                                                                                                  `run-bounded-analysis.sh`) against all 26 dates on the SAME completed run
+                                                                                                                                                  (`mdps-sports-bucket-20260803-134154`). Result: **4 dates now read `captured`** — 2025-07-31, 2025-08-26,
+                                                                                                                                                  2025-10-07, 2025-10-14 — not 2025-09-04/10-07/11-13 as stated above (only 10-07 overlaps). **22 dates remain
+                                                                                                                                                  `attempted_failed`**: 14 `ADAPTER_RETURNED_EMPTY_OUTPUT` (2025-08-05, 08-12, 08-13, 08-21, 09-02, 09-03, 09-04,
+                                                                                                                                                  09-09, 09-10, 11-11, 11-13, 12-18, 12-24, 12-31), 4 `RAW_ODDS_SHAPE_UNRECOGNIZED` (2026-06-21..24, unchanged), 4
+                                                                                                                                                  `LOSS_GUARD_BLOCKED` (2025-02-16, 08-14, 09-18, 10-23, unchanged). Root cause of the discrepancy: at least one
+                                                                                                                                                  date (2025-10-14, directly confirmed via `run.log`) logs an interim `WARNING ... recording attempted_failed`
+                                                                                                                                                  partway through the day's own processing, then the coarse per-day manifest row is later overwritten to
+                                                                                                                                                  `captured` once other data for that date lands — the manifest's last-write-wins semantics mean a mid-run log
+                                                                                                                                                  line is not a reliable proxy for the final row; only a post-completion manifest read is authoritative. The
+                                                                                                                                                  aggregate run tally above (571 total/48 success/19 failed/500 skipped/4 blocked) is unaffected and still correct
+                                                                                                                                                  — only the specific resolved-vs-still-failed date attribution changes. (repo: market-data-processing-service,
+                                                                                                                                                  unified-trading-library — verification-only correction, no new code; verification script deleted per its own
+                                                                                                                                                  `Delete-when:` marker after use.)
 
-                                  **Correction (slot-9, 2026-08-05): authoritative tie-break — both 2025-09-04 and 2025-11-13 are COARSE
-                                  ``captured``, confirming slot-9's original read and the review agent's run.log cross-check.**
-                                  Re-ran ``ManifestWriter.lookup()`` against the prod sports availability manifest
-                                  (``instruments-store-sports-prd-*``, ``service_name=market-data-processing-service``) with pyarrow from the
-                                  MDPS ``.venv``, querying the COARSE per-day row (``date=<D>, venue=ODDS_API, data_type=odds_horizon_bucket,
-                                  league_id="", timeframe=""``) for all 6 dates in the dispute. Results:
+                                      **Correction (slot-9, 2026-08-05): authoritative tie-break — both 2025-09-04 and 2025-11-13 are COARSE
+                                      ``captured``, confirming slot-9's original read and the review agent's run.log cross-check.**
+                                      Re-ran ``ManifestWriter.lookup()`` against the prod sports availability manifest
+                                      (``instruments-store-sports-prd-*``, ``service_name=market-data-processing-service``) with pyarrow from the
+                                      MDPS ``.venv``, querying the COARSE per-day row (``date=<D>, venue=ODDS_API, data_type=odds_horizon_bucket,
+                                      league_id="", timeframe=""``) for all 6 dates in the dispute. Results:
 
-                                  | Date       | COARSE `capture_status` | Fine-shard note |
-                                  | 2025-07-31 | `captured`              | clean |
-                                  | 2025-08-26 | `captured`              | has fine shard `attempted_failed` (`soccer_australia_aleague`, T-0, `SHARD_FILE_MISSING`) |
-                                  | 2025-09-04 | `captured`              | has fine shard `attempted_failed` (`soccer_australia_aleague`, T-0, `SHARD_FILE_MISSING`) |
-                                  | 2025-10-07 | `captured`              | clean |
-                                  | 2025-10-14 | `captured`              | clean |
-                                  | 2025-11-13 | `captured`              | clean |
+                                      | Date       | COARSE `capture_status` | Fine-shard note |
+                                      | 2025-07-31 | `captured`              | clean |
+                                      | 2025-08-26 | `captured`              | has fine shard `attempted_failed` (`soccer_australia_aleague`, T-0, `SHARD_FILE_MISSING`) |
+                                      | 2025-09-04 | `captured`              | has fine shard `attempted_failed` (`soccer_australia_aleague`, T-0, `SHARD_FILE_MISSING`) |
+                                      | 2025-10-07 | `captured`              | clean |
+                                      | 2025-10-14 | `captured`              | clean |
+                                      | 2025-11-13 | `captured`              | clean |
 
-                                  **Verdict**: the COARSE row (what the reprocess script checks in its pre-flight ``Manifest pre-flight: prior
-                                  status=...`` log line) is ``captured`` for ALL 6 dates, so all will be skipped by a future ``full``-mode re-run.
-                                  **Both 2025-09-04 and 2025-11-13 are resolved — slot-9 was correct on both, slot-16 was wrong.** The root
-                                  cause is the ``coarse-per-day-row vs fine-grained-shard manifest discrepancy`` slot-16 itself cited for 10-14:
-                                  fine-grained shard rows can read ``attempted_failed`` even when the coarse per-day row is ``captured``.
-                                  The **full resolved-date set is {2025-07-31, 2025-08-26, 2025-09-04, 2025-10-07, 2025-10-14, 2025-11-13}** (6
-                                  dates). This removes 2025-09-04 and 2025-11-13 from the ``ADAPTER_RETURNED_EMPTY_OUTPUT`` attempted_failed list
-                                  above. Corrected attempted_failed tally: 12 ADAPTER_RETURNED_EMPTY_OUTPUT (2025-08-05, 08-12, 08-13, 08-21,
-                                  09-02, 09-03, 09-09, 09-10, 11-11, 12-18, 12-24, 12-31) + 4 RAW_ODDS_SHAPE_UNRECOGNIZED + 4
-                                  LOSS_GUARD_BLOCKED = **20 total** (down from 22). Aggregate run tally from 2026-08-03 is unaffected.
-                                  One-off verification script: ``market-data-processing-service/scripts/_tiebreak_manifest_lookup_20260805.py``
-                                  (temporary — to be deleted per script-homes.md lifecycle rules).
+                                      **Verdict**: the COARSE row (what the reprocess script checks in its pre-flight ``Manifest pre-flight: prior
+                                      status=...`` log line) is ``captured`` for ALL 6 dates, so all will be skipped by a future ``full``-mode re-run.
+                                      **Both 2025-09-04 and 2025-11-13 are resolved — slot-9 was correct on both, slot-16 was wrong.** The root
+                                      cause is the ``coarse-per-day-row vs fine-grained-shard manifest discrepancy`` slot-16 itself cited for 10-14:
+                                      fine-grained shard rows can read ``attempted_failed`` even when the coarse per-day row is ``captured``.
+                                      The **full resolved-date set is {2025-07-31, 2025-08-26, 2025-09-04, 2025-10-07, 2025-10-14, 2025-11-13}** (6
+                                      dates). This removes 2025-09-04 and 2025-11-13 from the ``ADAPTER_RETURNED_EMPTY_OUTPUT`` attempted_failed list
+                                      above. Corrected attempted_failed tally: 12 ADAPTER_RETURNED_EMPTY_OUTPUT (2025-08-05, 08-12, 08-13, 08-21,
+                                      09-02, 09-03, 09-09, 09-10, 11-11, 12-18, 12-24, 12-31) + 4 RAW_ODDS_SHAPE_UNRECOGNIZED + 4
+                                      LOSS_GUARD_BLOCKED = **20 total** (down from 22). Aggregate run tally from 2026-08-03 is unaffected.
+                                      One-off verification script: ``market-data-processing-service/scripts/_tiebreak_manifest_lookup_20260805.py``
+                                      (temporary — to be deleted per script-homes.md lifecycle rules).
 
 - [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-10)** — Flagged the 2026-06-21..24 4-day only-meta-snapshot gap to the
       odds_api raw-ingestion owner. Escalation issue doc:
@@ -199,3 +199,8 @@ stabilize. Left untracked, this manifest residual would silently persist forever
 > **2026-08-06 archive-candidate audit**: Doc's own prose: ~20 dates remain attempted_failed and 'should be picked up
 > again on a future full-mode re-run', with 'nothing currently re-polls just these 26 dates' — an explicitly deferred
 > retry not tracked as a - [ ] todo.
+
+> **CORRECTED 2026-08-12 (/plan-reconcile)**: this banner is stale — the retry IS tracked as a `- [ ]` todo directly
+> above, in "## Follow-ups" (`[DATA] P3. Re-run shard4's range ... re-poll the ~20 remaining attempted_failed dates`).
+> Evidence: full-file read of this doc, `## Follow-ups` section immediately precedes this banner. Doc otherwise still
+> has that one open todo — not an archive candidate.

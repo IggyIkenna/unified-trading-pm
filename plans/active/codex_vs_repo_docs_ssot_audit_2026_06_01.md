@@ -187,12 +187,15 @@ from scope).
       Per-repo commit + push (PR where LDR is branch-protected — e.g. features-service). **✅ GATE CLEARED 2026-07-28
       (operator ruling, Option A of
       `/plans/archive/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md`): the
-      FIX-STALE-only hold is LIFTED — this REDIRECT/DELETE APPLY is cleared to execute.** Still opus-gated
+      FIX-STALE-only hold is LIFTED — this REDIRECT/DELETE APPLY is cleared to execute.** ~~Still opus-gated
       (redirect/slim editorial judgment must run on an opus sub-agent per this plan's "Execution model" section, not a
-      default-tier worker delegating the call out) — that requirement is unchanged, only the hold itself lifted.
-      Full-completion mandate: apply REDIRECT/slim across every repo in the per-repo rollout list (Appendix A/B) in this
-      pass, not a partial subset; the mechanical FIX-STALE archived-mirror sweep (line ~519) was already DONE under the
-      old hold and does not need repeating. SSOT for the ruling:
+      default-tier worker delegating the call out) — that requirement is unchanged, only the hold itself lifted.~~
+      **CORRECTED 2026-08-12 (/plan-reconcile)**: the opus-gating requirement referenced above was itself retired
+      2026-08-10 (`plan_reconciler` infra shard, agt-716973) — this plan's "Execution model" section now reads "Opus is
+      no longer required or expected on this plan"; run on Sonnet 5. This checkbox's "Still opus-gated" note is stale
+      leftover from before that correction. Full-completion mandate: apply REDIRECT/slim across every repo in the
+      per-repo rollout list (Appendix A/B) in this pass, not a partial subset; the mechanical FIX-STALE archived-mirror
+      sweep (line ~519) was already DONE under the old hold and does not need repeating. SSOT for the ruling:
       `/plans/archive/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md`.
 - [x] [DOCS] P1. **Phase 4 — delete pure-dups.** ✅ CANCELLED 2026-07-29 (main, BLK-3b8233e0) — REDUNDANT with the
       per-repo satellite tasks (own combined Phase-3/4 apply); mirrors the `-001` cancellation. Also carried a LIVE
@@ -787,10 +790,10 @@ genuine-UI, out of scope.
       replaced hardcoded `central-element-323112` with `{project_id}`. unified-trading-pm@codex-doc-commit +
       client-reporting-api@77b2d54 (quickmerge, landed LDR). Doc gates: prettier-clean, doc-body-links clean, my refs
       add 0 danglers.
-- [ ] [DOCS] P2. **[OPERATOR-DECISION] ibkr-gateway-infra internal contradictions (⚠️ ground-truth needed)**: the repo
-      contradicts itself on (a) archived-vs-live status (`QUALITY_GATE_BYPASS_AUDIT.md` says archived;
-      README/docs/coverage-floor treat it as live) and (b) 2FA automation (README/ARCHITECTURE claim IBGA+TOTP "no human
-      2FA"; `DEPLOYMENT_GUIDE`/`FIRST_TIME_LOGIN` describe manual GUI/IB-Key login). Needs an operator/owner call on the
+- [ ] [OPERATOR] P2. **ibkr-gateway-infra internal contradictions (⚠️ ground-truth needed)**: the repo contradicts
+      itself on (a) archived-vs-live status (`QUALITY_GATE_BYPASS_AUDIT.md` says archived; README/docs/coverage-floor
+      treat it as live) and (b) 2FA automation (README/ARCHITECTURE claim IBGA+TOTP "no human 2FA";
+      `DEPLOYMENT_GUIDE`/`FIRST_TIME_LOGIN` describe manual GUI/IB-Key login). Needs an operator/owner call on the
       repo's actual status + the canonical 2FA path before the FIX-STALE rewrite can land. (repo: ibkr-gateway-infra)
       **⏸ PARKED 2026-07-31 (main, Option A of BLK-273ddfda — false prereq `ibkr-owner-decision-made`, priority:999):**
       dispatch-scope mismatch — this is an owner decision, not worker/main-determinable, so it was churning through

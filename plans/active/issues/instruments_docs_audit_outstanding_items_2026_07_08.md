@@ -416,8 +416,8 @@ tracking: `instrument_id_format_canonicalization_2026_07_08.md` +
   new working key on 2026-07-29 (this connector resolves that exact secret), so live sports odds capture can now
   actually start. Once it does, this dead-trigger bug means live sports feature computation will silently never fire,
   with no crash/error/alert to surface it. Bumped P1→P0 accordingly. Batch mode is unaffected. Same bug class as
-  `plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md` (topic-naming drift between a service sink and
-  terraform-provisioned topics) — worth flagging as systemic.
+  `plans/archive/2026_08/issues/live_mode_event_sink_topic_missing_2026_06_21.md` (topic-naming drift between a service
+  sink and terraform-provisioned topics) — worth flagging as systemic.
 - **Fix options:**
   - **A (recommended):** repoint FSS's subscriber default from `sports-odds-ready` → the real `persist-sports-odds`
     topic MTDS already publishes (4 files: `subscriber.py`, `cli/handlers/live_handler.py`, `cli/main.py`,

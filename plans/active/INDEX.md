@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 275 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 274 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (30)
+### cefi (29)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -64,10 +64,6 @@ by hand._
 - [`cefi_ml_directional_continuous_live_2026_06_20`](./cefi_ml_directional_continuous_live_2026_06_20.md) — "Ship the
   live CeFi ML_DIRECTIONAL_CONTINUOUS archetype across OKX, Binance, and Bybit: live tick to live ML inference to live
   strategy to live execution."
-- [`cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08`](./cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08.md)
-  — Gated closeout for issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md — machine-held via depends_on +
-  gate_on_depends: true until the source doc's sole remaining item (the LIGHTER-ZKSYNC derivative_ticker re-launch
-  VERIFY,…
 - [`cefi_satellite_ao_dispatch_batch10_2026_08_08`](./cefi_satellite_ao_dispatch_batch10_2026_08_08.md) — Tenth
   AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-08-08 (scheduled autonomous dispatch,
   tranche=cefi, slot 8, dispatch agt-6bc9c4). Unlike batch9 (a narrow 5-doc "never-cited + linkage-gap delta" run),…
@@ -135,6 +131,12 @@ by hand._
   — Gated closeout for the retroactive reclassification of
   issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md (NA → planning, 2026-08-08 na-eligibility-audit round7
   RECLASSIFY sweep). Machine-held via depends_on + gate_on_depends:…
+- [`bybit_perp_hedge_execution_plan_2026_08_10`](./bybit_perp_hedge_execution_plan_2026_08_10.md) — Gated follow-up to
+  the Hyperliquid perp-hedge path (todos 11–14 of recursive_loop_orchestrator_wiring_finalize_2026_08_09). Builds a
+  Bybit-native connector adapter wrapping the existing BybitCCXTAdapter for the perp-hedge interface,…
+- [`bybit_usdc_deposit_automation_plan_2026_08_11`](./bybit_usdc_deposit_automation_plan_2026_08_11.md) — Gated
+  follow-up to the Bybit perp-hedge connector plan (todos 1-6 of bybit_perp_hedge_execution_plan_2026_08_10). Replaces
+  the honest NOT_WIRED stub in PerpHedgeConsumer._topup_guard() with a real Bybit USDC deposit path — deposit-address…
 - [`cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27`](./cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md)
   — Gated closeout for cefi_deribit_binance_futures_bundle_verification_2026_06_20.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
@@ -244,6 +246,10 @@ by hand._
 - [`lst_rate_honest_coverage_2026_07_21`](./lst_rate_honest_coverage_2026_07_21.md) — Operator-directed (2026-07-21)
   build to bring the four LST exchange-rate surfaces to HONEST COVERAGE end-to-end so the DeFi interest PnL can sit on
   real data. is a phantom-minting anti-pattern). is dormant — wire a collection branch +…
+- [`recursive_loop_orchestrator_wiring_finalize_2026_08_09`](./recursive_loop_orchestrator_wiring_finalize_2026_08_09.md)
+  — Gated finalize companion to recursive_loop_orchestrator_wiring_2026_08_09.md. Reconciles every completed todo's
+  evidence back into the source issue doc's [DESIGN] todo, re-checks the Family-2 hedge-poller audit's deferred outcome,
+  and runs…
 - [`solana_dex_pool_swaps_indexer_2026_08_08`](./solana_dex_pool_swaps_indexer_2026_08_08.md) — Build the genuine
   on-chain Solana swap-event indexer for ORCA/RAYDIUM dex_pool_swaps (operator ruling 2026-08-08 — prioritize now), per
   solana_dex_pool_swaps_indexer_scope_2026_07_12.md's own scoping + "Recommended next step"…
@@ -649,7 +655,7 @@ by hand._
 - [`data_completion_to_100_all_ag_2026_06_21`](./data_completion_to_100_all_ag_2026_06_21.md) — Drives MTDS
   market-data + IS reference-data to 100% honest-coverage across every asset group (cefi/defi/ tradfi/sports/pred),
   batch AND live, on manifest v9. Snapshot 2026-06-21: LIVE=0 rows on every AG (live pipeline never populated), low…
-- [`data_feed_sla_registry_and_active_self_healing_2026_06_19`](./data_feed_sla_registry_and_active_self_healing_2026_06_19.md)
+- [`data_feed_sla_registry_and_active_self_healing_2026_06_19`](/plans/archive/2026_08/data_feed_sla_registry_and_active_self_healing_2026_06_19.md)
   — Build a single declarative data-feed SLA registry (consolidating scattered freshness thresholds) and add active feed
   self-healing via re-fetch on stale detection.
 - [`data_pipeline_ag_residual_backfill_decisions_2026_07_24`](./data_pipeline_ag_residual_backfill_decisions_2026_07_24.md)

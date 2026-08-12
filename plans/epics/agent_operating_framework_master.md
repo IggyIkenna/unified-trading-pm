@@ -27,10 +27,10 @@ co_operators: [harsh, ikenna]
 codex_ssots: [/codex/11-project-management/plan-hygiene.md, /codex/12-agent-workflow/canonical-plan-flow.md]
 related_plans:
   - ../active/ag_closeout_audit_rollout_2026_07_25.md
-  - ../active/ao_satellite_ao_dispatch_batch11_2026_08_09.md
-  - ../active/ao_satellite_ao_dispatch_batch11_finalize_2026_08_09.md
+  - ../archive/2026_08/ao_satellite_ao_dispatch_batch11_2026_08_09.md
+  - ../archive/2026_08/ao_satellite_ao_dispatch_batch11_finalize_2026_08_09.md
   - ../archive/2026_08/ao_satellite_ao_dispatch_batch13_2026_08_09.md
-  - ../active/ao_satellite_ao_dispatch_batch13_finalize_2026_08_09.md
+  - ../archive/2026_08/ao_satellite_ao_dispatch_batch13_finalize_2026_08_09.md
   - ../active/ao_satellite_ao_dispatch_batch15_2026_08_09.md
   - ../active/ao_satellite_ao_dispatch_batch15_finalize_2026_08_09.md
   - ../active/ao_satellite_ao_dispatch_batch17_2026_08_10.md
@@ -428,22 +428,22 @@ cross-AG correctness criteria for the 5 asset-group consolidated closeouts
 
 ## P2 — useful; opportunistic
 
-### [`ao_satellite_ao_dispatch_batch11_2026_08_09`](../active/ao_satellite_ao_dispatch_batch11_2026_08_09.md)
+### [`ao_satellite_ao_dispatch_batch11_2026_08_09`](../archive/2026_08/ao_satellite_ao_dispatch_batch11_2026_08_09.md)
 
-**status**: active · **estimate**: 0.12 cal AI-days (class: refactor) **title**: AO satellite AO batch 11 —
-fix_frontmatter.py's summary-truncation bug (agent_operating_framework_master epic)
+**status**: resolved (archived 2026-08-12) · **estimate**: 0.12 cal AI-days (class: refactor) **title**: AO satellite AO
+batch 11 — fix_frontmatter.py's summary-truncation bug (agent_operating_framework_master epic)
 
-### [`ao_satellite_ao_dispatch_batch11_finalize_2026_08_09`](../active/ao_satellite_ao_dispatch_batch11_finalize_2026_08_09.md)
+### [`ao_satellite_ao_dispatch_batch11_finalize_2026_08_09`](../archive/2026_08/ao_satellite_ao_dispatch_batch11_finalize_2026_08_09.md)
 
-**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: AO satellite AO batch 11 — finalize
+**status**: archived · **estimate**: 0.16 cal AI-days (class: infra) **title**: AO satellite AO batch 11 — finalize
 
 ### [`ao_satellite_ao_dispatch_batch13_2026_08_09`](../archive/2026_08/ao_satellite_ao_dispatch_batch13_2026_08_09.md)
 
 **status**: active · **estimate**: 0.24 cal AI-days (class: refactor)
 
-### [`ao_satellite_ao_dispatch_batch13_finalize_2026_08_09`](../active/ao_satellite_ao_dispatch_batch13_finalize_2026_08_09.md)
+### [`ao_satellite_ao_dispatch_batch13_finalize_2026_08_09`](../archive/2026_08/ao_satellite_ao_dispatch_batch13_finalize_2026_08_09.md)
 
-**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: AO satellite AO batch 13 — finalize
+**status**: archived · **estimate**: 0.24 cal AI-days (class: infra) **title**: AO satellite AO batch 13 — finalize
 
 ### [`ao_satellite_ao_dispatch_batch15_2026_08_09`](../active/ao_satellite_ao_dispatch_batch15_2026_08_09.md)
 

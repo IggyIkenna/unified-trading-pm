@@ -40,7 +40,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by: unified-trading-pm@<pending-quickmerge-sha, filled at ship>
+resolved_by: unified-trading-pm@5078a6c31e # CORRECTED 2026-08-12 (/plan-reconcile): filled from git log — "fix(ci): raise cloud-build-failure-watcher's --limit=30 coverage gap..." (2026-08-11)
 source:
   User asked, after the uts-prod-data-status-rollup-svc deploy blocker was fixed, why the 5+ hour silent failure never
   paged data-pipeline-alerts or any CI/live Slack channel, and to diagnose + fix it via /autonomous.
