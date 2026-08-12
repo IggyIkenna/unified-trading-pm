@@ -107,18 +107,17 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       drawdown, else a topped-up window reads as spending less than nothing. A window whose start predates the series
       returns `real_spend_usd=None`, never 0. 5 tests; `quality-gates.sh` green (3410 python, 290 dashboard). Deployed +
       verified live: series sampling at 61s intervals, `/api/healthz` ok.
-- [ ] [OPERATOR] P0. **BLOCKED-OPERATOR-TIME-GATE until 2026-08-12 07:46 UTC — record the first TRUE 24h window
-      residual.** Tagged operator-blocked deliberately so nothing picks it up early. The balance series began
-      **2026-08-11 07:46:24 UTC** (first sample after the @b4e3e74205 restart), so a 24h window has no opening reading
-      until exactly 24h later and the endpoint correctly returns `real_spend_usd=null` until then. Running it sooner
-      yields a null, not a small number — and a null misread as "zero residual" is the one wrong conclusion available
-      here. Command (read-only, on the orchestrator VM via SSM):
-      `curl -s "localhost:8765/api/accounts/deepseek/wallet-reconciliation/window?window_hours=24"`. This is the
-      operator's stated success criterion (24h residual to zero, no non-AO DeepSeek usage). Curl the windowed endpoint
-      once the series covers a full 24h and record `real_spend_usd`, `attributed_total_usd`, `residual_usd` and BOTH
-      balance sample timestamps here. At 1-minute cadence the edge skew is ~$0.13, so a residual materially above that
-      is a real defect worth chasing; at or below it, the wallet reconciles and the remaining todos are fidelity work
-      rather than leak-hunting. (repo: agent-orchestrator, read-only)
+- [x] ✅ [OPERATOR] P0. **MEASURED 2026-08-12 08:00 UTC — the 24h residual is NOT zero: $12.44 of $29.14 (42.7%)
+      unattributed.** Window 2026-08-11T08:00:09Z → 2026-08-12T08:00:09Z. balance
+      $13.40 (sampled 07:59:40Z, 29s before
+      the boundary) → $44.26 (sampled 08:00:02Z, 7s before), top-ups in
+      window $60.00, so real drawdown $29.14 against $16.70 attributed (worker $15.47 / orchestrator
+      $0.57 / review $0.65). **Edge skew is
+      ~$0.01 at these sample
+      distances and explains none of it.** This CONTRADICTS the 50-minute window taken 2026-08-11 (ratio 1.045, read at
+      the time as "reconciles within noise") — that window was simply too short, and its $0.26
+      sat inside the old 30-minute sampler's own error bar. At 24h with 1-minute sampling the ratio is **1.745**.
+      Operator states no non-AO DeepSeek usage, so this is an attribution defect, not human spend.
 - [ ] [BACKEND] P1. **Stamp `agent_kind` onto `deepseek_message_usage` at sweep time.** The reconciliation's three
       buckets split on `slot_id == 0` / `is_review_slot` / everything-else, but scheduled jobs and escalation workers
       both spawn onto free NUMBERED slots via `_pick_free_slot` (`plan_health.dispatch`, `escalation.escalate`), so all
@@ -167,6 +166,22 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       usage block when it returns, independent of whether the client survived to write the transcript. Measured cost of
       NOT doing it is currently ~$0.07-$0.16 per crash-loop episode, so this is a judgment call about observability, not
       a cost-recovery case. Revisit if the first true 24h residual is materially above the ~$0.13 skew floor.
+
+- [ ] [BACKEND] P0. **Find where 42.7% of DeepSeek spend goes unattributed over a clean 24h window.** Measured above:
+      $12.44 of $29.14. The stock-vs-flow conclusion from 2026-08-11 is now only half right — the pre-2026-08-04 gap is
+      still a frozen historical stock, but there IS ALSO a live leak, and at ~~43% it is far too large to be edge skew,
+      crash-loop losses (~~$0.07-0.16/episode, measured) or unswept dirs ($0.017, measured). Prime suspects in order:
+      (a) the NULL-provenance rows and missing `agent_kind` (see the todos below) meaning spend lands in no bucket at
+      all; (b) sessions whose transcripts the per-slot enumeration never visits — the glob-not-enumerate todo below; (c)
+      turns billed with no transcript line, which only proxy-level accounting can see. **Done when**: the 24h residual
+      is either driven below ~2% or its irreducible component is explained with a measurement. (repo:
+      agent-orchestrator)
+- [ ] [DATA] P1. **Re-measure the 24h residual daily for a week and record the series here.** One window is one
+      datapoint: this one ran at low DeepSeek volume ($29 real vs ~$122/24h on 2026-08-11, Anthropic capacity having
+      returned), and a fixed unattributable component would look proportionally huge at low volume while a proportional
+      leak would not. The shape of the series distinguishes those two, and they need different fixes. **Done when**: 7
+      daily readings are recorded with volume alongside residual, and the fixed-vs-proportional question is answered.
+      (repo: agent-orchestrator, read-only)
 
 ## Codex SSOTs
 
