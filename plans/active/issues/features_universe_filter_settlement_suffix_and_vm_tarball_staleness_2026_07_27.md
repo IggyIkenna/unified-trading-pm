@@ -271,98 +271,98 @@ gap; no new action taken on the default itself (existing P2 todos below already 
       and the second still needs a real launch observation.
 
       **Half-2 DONE 2026-08-10 (slot 12, data_engineering)** — real-VM-launch observation of auto-republish
-              completed. `launch-canonical-smoke-vm.sh` invoked 2026-08-10T23:24Z against a naturally-stale
-              `unified-api-contracts` tarball (manifest sha `06516af1` vs local HEAD `3c2f17047e73`). `lc_verify_tarball_freshness`
-              in `auto` mode (the new default since `deployment-service@c1e0481`): (1) detected staleness —
-              `WARNING: STALE tarball for unified-api-contracts — unified-api-contracts-code manifest=06516af1ad2b but
-              repo=3c2f17047e73`; (2) triggered auto-republish — `lc_verify_tarball_freshness: auto-republishing stale
-              tarball(s): unified-api-contracts`; (3) republished — `Creating unified-api-contracts-code.tar.gz from
-              unified-api-contracts (sha=3c2f17047e73 clean=true)... Created: unified-api-contracts-code.tar.gz (9.4M)` in ~5s;
-              (4) re-verified fresh — `tarball fresh: unified-api-contracts (unified-api-contracts-code @ 3c2f17047e73)`. A
-              second launch immediately after (DEFI canonical-smoke, same launcher invocation) confirmed persistence:
-              `lc_verify_tarball_freshness: all 4 tarball(s) current.` with `unified-api-contracts-code @ 3c2f17047e73`. VM
-              lifecycle: 3 VMs created (canonical-smoke-cefi/tradfi/defi-20260810-232401, e2-standard-4, asia-northeast1-c),
-              all STARTED → RUNNING → deleted post-observation (exit 0). No confounds — the `auto`-mode silent-dirty-skip
-              sibling bug (`issues/lc_verify_tarball_freshness_auto_mode_silent_dirty_skip_2026_08_06.md`) did NOT manifest
-              (the local checkout was clean, republish ran full tar+upload, not a skip). **Both done-when halves now satisfied.** Operator ruling on 2026-07-28, recorded here in
-              `features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md`: "things should recover FULLY
-              if they die or restart" — this default flip IS the full automatic recovery, matching the standing theme.
+          completed. `launch-canonical-smoke-vm.sh` invoked 2026-08-10T23:24Z against a naturally-stale
+          `unified-api-contracts` tarball (manifest sha `06516af1` vs local HEAD `3c2f17047e73`). `lc_verify_tarball_freshness`
+          in `auto` mode (the new default since `deployment-service@c1e0481`): (1) detected staleness —
+          `WARNING: STALE tarball for unified-api-contracts — unified-api-contracts-code manifest=06516af1ad2b but
+          repo=3c2f17047e73`; (2) triggered auto-republish — `lc_verify_tarball_freshness: auto-republishing stale
+          tarball(s): unified-api-contracts`; (3) republished — `Creating unified-api-contracts-code.tar.gz from
+          unified-api-contracts (sha=3c2f17047e73 clean=true)... Created: unified-api-contracts-code.tar.gz (9.4M)` in ~5s;
+          (4) re-verified fresh — `tarball fresh: unified-api-contracts (unified-api-contracts-code @ 3c2f17047e73)`. A
+          second launch immediately after (DEFI canonical-smoke, same launcher invocation) confirmed persistence:
+          `lc_verify_tarball_freshness: all 4 tarball(s) current.` with `unified-api-contracts-code @ 3c2f17047e73`. VM
+          lifecycle: 3 VMs created (canonical-smoke-cefi/tradfi/defi-20260810-232401, e2-standard-4, asia-northeast1-c),
+          all STARTED → RUNNING → deleted post-observation (exit 0). No confounds — the `auto`-mode silent-dirty-skip
+          sibling bug (`issues/lc_verify_tarball_freshness_auto_mode_silent_dirty_skip_2026_08_06.md`) did NOT manifest
+          (the local checkout was clean, republish ran full tar+upload, not a skip). **Both done-when halves now satisfied.** Operator ruling on 2026-07-28, recorded here in
+          `features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md`: "things should recover FULLY
+          if they die or restart" — this default flip IS the full automatic recovery, matching the standing theme.
 
-              **RULED 2026-07-28** (operator general theme applied — no item-specific answer was given, so the
-              standing theme governs: "things should recover FULLY if they die or restart... prefer building the full automatic
-              recovery, not just a manual runbook note"). **Ruling: (a) — flip `LC_TARBALL_FRESHNESS` default `warn` → `auto` in
-              `deployment-service/scripts/vm/lib/launcher_common.sh`, once (and only once) the prior test-hardening todo above
-              is FULLY complete** (every affected test in `test_vm_launcher_scripts.py` hardened — not just the 24 named, any
-              other test that invokes a launcher without `--dry-run`/an explicit `LC_TARBALL_FRESHNESS` pin — no partial
-              hardening pass). Reasoning: `auto` mode is not merely a stricter warning — it actually REPUBLISHES the stale
-              tarball and continues the launch, i.e. it is a genuine full self-healing auto-recovery (closing the gap at launch
-              time with zero staleness reaching the workload), which is a strictly better fit for the theme's stated preference
-              than `enforce` (which only blocks) or option (b) alone (which only prevents the _common_ case — a merge — but
-              doesn't help a tarball that goes stale for any other reason, e.g. an infra rebuild lag). **Full-completion scope,
-              not MVP**: also close the `_fresh_repos` allowlist gaps this same doc's corroborating findings exposed (the
-              `sports-features-purge` category omission — already tracked as its own P2 todo above, land that in the same pass)
-              so `auto` mode actually covers every launcher/category combination that can go stale, not just the two this doc
-              directly analyzed. **Option (b) (a proactive rebuild-on-merge pipeline hook) is not additionally required** —
-              `auto` mode already achieves full staleness self-healing without a second, overlapping piece of infrastructure; if
-              `auto` mode's per-launch republish cost ever proves too slow in practice, revisit (b) then as a follow-up, not
-              now. **Done when**: the default flip ships with `quality-gates.sh` green (no new regressions beyond the
-              already-hardened 24 tests), and a real VM launch against an intentionally-stale tarball is observed
-              auto-republishing before the workload starts.
+          **RULED 2026-07-28** (operator general theme applied — no item-specific answer was given, so the
+          standing theme governs: "things should recover FULLY if they die or restart... prefer building the full automatic
+          recovery, not just a manual runbook note"). **Ruling: (a) — flip `LC_TARBALL_FRESHNESS` default `warn` → `auto` in
+          `deployment-service/scripts/vm/lib/launcher_common.sh`, once (and only once) the prior test-hardening todo above
+          is FULLY complete** (every affected test in `test_vm_launcher_scripts.py` hardened — not just the 24 named, any
+          other test that invokes a launcher without `--dry-run`/an explicit `LC_TARBALL_FRESHNESS` pin — no partial
+          hardening pass). Reasoning: `auto` mode is not merely a stricter warning — it actually REPUBLISHES the stale
+          tarball and continues the launch, i.e. it is a genuine full self-healing auto-recovery (closing the gap at launch
+          time with zero staleness reaching the workload), which is a strictly better fit for the theme's stated preference
+          than `enforce` (which only blocks) or option (b) alone (which only prevents the _common_ case — a merge — but
+          doesn't help a tarball that goes stale for any other reason, e.g. an infra rebuild lag). **Full-completion scope,
+          not MVP**: also close the `_fresh_repos` allowlist gaps this same doc's corroborating findings exposed (the
+          `sports-features-purge` category omission — already tracked as its own P2 todo above, land that in the same pass)
+          so `auto` mode actually covers every launcher/category combination that can go stale, not just the two this doc
+          directly analyzed. **Option (b) (a proactive rebuild-on-merge pipeline hook) is not additionally required** —
+          `auto` mode already achieves full staleness self-healing without a second, overlapping piece of infrastructure; if
+          `auto` mode's per-launch republish cost ever proves too slow in practice, revisit (b) then as a follow-up, not
+          now. **Done when**: the default flip ships with `quality-gates.sh` green (no new regressions beyond the
+          already-hardened 24 tests), and a real VM launch against an intentionally-stale tarball is observed
+          auto-republishing before the workload starts.
 
-              **Checked 2026-07-31 (slot 12): still genuinely blocked — confirmed against live code, not just this doc's
-              checkbox.** `deployment-service/scripts/vm/lib/launcher_common.sh:672` still defaults
-              `LC_TARBALL_FRESHNESS:-warn` (unflipped). Grepped `tests/unit/test_vm_launcher_scripts.py`'s 4 named classes
-              (`TestCanonicalMigrationVmRelaunch`, `TestCanonicalMigrationStallDetection`,
-              `TestDefiLaunchersSpotPreemptionContract`, `TestCandleApplyCategory`) for `LC_TARBALL_FRESHNESS`/`commit_sha` —
-              zero hits across all 24 tests, confirming the hardening todo above
-              (`features_universe_filter_settlement_suffix_and_vm_tarball_staleness-005`, backlog status `queued`,
-              `dispatched_to: null` as of this check) has NOT landed yet. Flipping the default now would reproduce the exact
-              24-test breakage the P1 resolution above already measured. **Dispatch note**: this doc has no
-              `depends_on`/`sequential` wiring between the two todos (correctly, per CLAUDE.md — the rest of this doc's
-              todos are independent and a whole-doc `sequential: true` would wrongly serialise them too), so the intra-doc
-              "once the prior todo is FULLY complete" gate is prose-only, not structural — the dispatcher offered this
-              SCRIPT todo (`-013`) to slot 12 despite `-005` still sitting unclaimed in queue. Not a backend defect worth its
-              own issue doc (self-contained, low-blast-radius authoring pattern — the answer is "read this note before
-              touching this todo," not a code fix); skipping this dispatch (`reason_code=BLOCKED`) rather than flip the
-              default. Whoever picks up `-005` next should land that first; this todo becomes genuinely actionable
-              immediately after.
+          **Checked 2026-07-31 (slot 12): still genuinely blocked — confirmed against live code, not just this doc's
+          checkbox.** `deployment-service/scripts/vm/lib/launcher_common.sh:672` still defaults
+          `LC_TARBALL_FRESHNESS:-warn` (unflipped). Grepped `tests/unit/test_vm_launcher_scripts.py`'s 4 named classes
+          (`TestCanonicalMigrationVmRelaunch`, `TestCanonicalMigrationStallDetection`,
+          `TestDefiLaunchersSpotPreemptionContract`, `TestCandleApplyCategory`) for `LC_TARBALL_FRESHNESS`/`commit_sha` —
+          zero hits across all 24 tests, confirming the hardening todo above
+          (`features_universe_filter_settlement_suffix_and_vm_tarball_staleness-005`, backlog status `queued`,
+          `dispatched_to: null` as of this check) has NOT landed yet. Flipping the default now would reproduce the exact
+          24-test breakage the P1 resolution above already measured. **Dispatch note**: this doc has no
+          `depends_on`/`sequential` wiring between the two todos (correctly, per CLAUDE.md — the rest of this doc's
+          todos are independent and a whole-doc `sequential: true` would wrongly serialise them too), so the intra-doc
+          "once the prior todo is FULLY complete" gate is prose-only, not structural — the dispatcher offered this
+          SCRIPT todo (`-013`) to slot 12 despite `-005` still sitting unclaimed in queue. Not a backend defect worth its
+          own issue doc (self-contained, low-blast-radius authoring pattern — the answer is "read this note before
+          touching this todo," not a code fix); skipping this dispatch (`reason_code=BLOCKED`) rather than flip the
+          default. Whoever picks up `-005` next should land that first; this todo becomes genuinely actionable
+          immediately after.
 
-              **Re-checked 2026-08-02 (slot-13, review craft): still genuinely blocked, unchanged from slot-12's finding.**
-              `launcher_common.sh:787` still defaults `LC_TARBALL_FRESHNESS:-warn`. Grepped the 4 named test classes
-              (`TestCanonicalMigrationVmRelaunch`, `TestCanonicalMigrationStallDetection`, `TestCandleApplyCategory`,
-              `TestDefiLaunchersSpotPreemptionContract`) for `LC_TARBALL_FRESHNESS`/`commit_sha` individually — zero hits
-              in all 4 (the 8 corpus-wide hits that now exist are pre-existing, scoped to the dedicated
-              `lc_verify_tarball_freshness` unit-test class itself, not the 4 launcher-invoking classes this todo's gate
-              names). `-005` (the hardening todo) confirmed still `status: queued`, `dispatched_to: None` in the live
-              backlog — untouched since slot-12's check. Declining via `/skip-current-task` with `reason_code: "GATED"`
-              (slot-12 used `BLOCKED`; either engages the fleet cooldown/auto-park escalation per
-              `dispatch_cooldown_auto_park_skip_threshold`, `GATED` is the closer semantic match for "waiting on a sibling
-              todo") rather than a plain decline, so a repeat re-dispatch before `-005` lands cools down / eventually
-              auto-parks instead of bouncing to a fresh slot every time.
+          **Re-checked 2026-08-02 (slot-13, review craft): still genuinely blocked, unchanged from slot-12's finding.**
+          `launcher_common.sh:787` still defaults `LC_TARBALL_FRESHNESS:-warn`. Grepped the 4 named test classes
+          (`TestCanonicalMigrationVmRelaunch`, `TestCanonicalMigrationStallDetection`, `TestCandleApplyCategory`,
+          `TestDefiLaunchersSpotPreemptionContract`) for `LC_TARBALL_FRESHNESS`/`commit_sha` individually — zero hits
+          in all 4 (the 8 corpus-wide hits that now exist are pre-existing, scoped to the dedicated
+          `lc_verify_tarball_freshness` unit-test class itself, not the 4 launcher-invoking classes this todo's gate
+          names). `-005` (the hardening todo) confirmed still `status: queued`, `dispatched_to: None` in the live
+          backlog — untouched since slot-12's check. Declining via `/skip-current-task` with `reason_code: "GATED"`
+          (slot-12 used `BLOCKED`; either engages the fleet cooldown/auto-park escalation per
+          `dispatch_cooldown_auto_park_skip_threshold`, `GATED` is the closer semantic match for "waiting on a sibling
+          todo") rather than a plain decline, so a repeat re-dispatch before `-005` lands cools down / eventually
+          auto-parks instead of bouncing to a fresh slot every time.
 
-              **Re-checked 2026-08-02 (slot 15, cicd-role worker): still genuinely blocked, byte-identical to slot-13's
-              finding above.** `launcher_common.sh:787` still defaults `LC_TARBALL_FRESHNESS:-warn`; all 4 named test
-              classes still show 0 hits for `LC_TARBALL_FRESHNESS`/`commit_sha`; live `/api/backlog` confirms `-005` is
-              still `status: queued`, unclaimed. Nothing to add beyond re-confirming no drift. Skipping via
-              `reason_code: "GATED"`, same as the prior check.
+          **Re-checked 2026-08-02 (slot 15, cicd-role worker): still genuinely blocked, byte-identical to slot-13's
+          finding above.** `launcher_common.sh:787` still defaults `LC_TARBALL_FRESHNESS:-warn`; all 4 named test
+          classes still show 0 hits for `LC_TARBALL_FRESHNESS`/`commit_sha`; live `/api/backlog` confirms `-005` is
+          still `status: queued`, unclaimed. Nothing to add beyond re-confirming no drift. Skipping via
+          `reason_code: "GATED"`, same as the prior check.
 
-              **Fresh live corroboration, 2026-08-02T19:2xZ (slot-2, data_engineering, dispatched
-              `cefi_delta_one_benchmark_vm_operator_approved-001`, not this doc's own todo).** Hit this exact bug class
-              again, independently, on `launch-features-vm.sh` (same launcher family). Fixed a real
-              `_resolve_mdps_bucket` bug in `features-service` (ambient `DEPLOYMENT_ENV=staging` leaking into an MDPS
-              candle dependency-check read, resolving a never-provisioned `-stg-` bucket — `features-service@529ec90e`),
-              shipped + verified on `origin/live-defi-rollout`, then launched a fresh CEFI:delta_one VM to verify —
-              **it hit the byte-identical pre-fix failure**, because `gs://deployment-scripts-.../code/features-service-
-              code.manifest.json` still pinned `commit_sha=06a98496...` from a build at `15:01:45Z`, hours before the fix
-              landed, and `LC_TARBALL_FRESHNESS:-warn` let the launch proceed onto it anyway (no loud block, no
-              auto-republish). Manually ran `create-code-tarballs.sh --include features-service` to work around it (same
-              manual-rebuild workaround this doc's own Finding 2 used 2026-07-27) — confirmed effective, a second VM then
-              passed the dependency check and is now genuinely computing. Net: **this is the SAME unflipped default,
-              6 days later, causing the same class of wasted VM launch + real debugging time** (a `_resolve_mdps_bucket`
-              fix that provably worked, launched onto stale code, looked like the fix itself was wrong for several
-              minutes before the tarball-manifest timestamp check revealed the real cause). Not touching `-005`/`-013`
-              themselves (out of scope for the dispatched task) — logging as evidence the priority on this already-ruled
-              fix is real and current, not stale.
+          **Fresh live corroboration, 2026-08-02T19:2xZ (slot-2, data_engineering, dispatched
+          `cefi_delta_one_benchmark_vm_operator_approved-001`, not this doc's own todo).** Hit this exact bug class
+          again, independently, on `launch-features-vm.sh` (same launcher family). Fixed a real
+          `_resolve_mdps_bucket` bug in `features-service` (ambient `DEPLOYMENT_ENV=staging` leaking into an MDPS
+          candle dependency-check read, resolving a never-provisioned `-stg-` bucket — `features-service@529ec90e`),
+          shipped + verified on `origin/live-defi-rollout`, then launched a fresh CEFI:delta_one VM to verify —
+          **it hit the byte-identical pre-fix failure**, because `gs://deployment-scripts-.../code/features-service-
+          code.manifest.json` still pinned `commit_sha=06a98496...` from a build at `15:01:45Z`, hours before the fix
+          landed, and `LC_TARBALL_FRESHNESS:-warn` let the launch proceed onto it anyway (no loud block, no
+          auto-republish). Manually ran `create-code-tarballs.sh --include features-service` to work around it (same
+          manual-rebuild workaround this doc's own Finding 2 used 2026-07-27) — confirmed effective, a second VM then
+          passed the dependency check and is now genuinely computing. Net: **this is the SAME unflipped default,
+          6 days later, causing the same class of wasted VM launch + real debugging time** (a `_resolve_mdps_bucket`
+          fix that provably worked, launched onto stale code, looked like the fix itself was wrong for several
+          minutes before the tarball-manifest timestamp check revealed the real cause). Not touching `-005`/`-013`
+          themselves (out of scope for the dispatched task) — logging as evidence the priority on this already-ruled
+          fix is real and current, not stale.
 
 ## Progress Log
 
