@@ -918,18 +918,32 @@ before concluding it's a real blocker.
   real row; only the most recent sample, 2026-08-11, correctly shows `row_count=1.0`) — a manifest-field population bug,
   not a data-absence bug. **New tracked follow-up** (not fixed this session — root cause line not isolated, needs its
   own investigation):
-  - [ ] [SCRIPT] P2. Find and fix why `row_count` is written as 0 for historical KRX (and possibly other Yahoo-sourced
-        `ohlcv_24h`) `captured` manifest rows despite the underlying parquet genuinely containing data — likely an older
-        `record_captured(...)` call site never passed a real count (vs. the `record_captured_from_counts(...)` helper
-        that exists in `unified_trading_library/manifest_writer/_writer_captured.py`). Check whether this is already
-        fixed forward (the most recent 2026-08-11 KRX row correctly shows `row_count=1`) and the gap is purely
-        historical rows never backfilled, or whether it's still live-broken for some write path. Scope: confirm whether
-        this affects only KRX or other Yahoo/`ohlcv_24h` venues (CBOE-indices, FX, ICE/DXY) before assuming KRX-only.
-        This bug is a standing false-alarm risk for any future manifest-driven completeness audit that trusts
-        `row_count` at face value. **Verification method note**: do the row_count/content check via individual
-        single-object parquet reads (as done here) or VM-side, never a local full `_index/availability_index.parquet`
-        download (14.29M rows — violates the local heavy-I/O hard rule; this session did it twice before being corrected
-        by the operator mid-task).
+  - [x] ✅ [SCRIPT] P2. Find and fix why `row_count` is written as 0 for historical KRX (and possibly other
+        Yahoo-sourced `ohlcv_24h`) `captured` manifest rows despite the underlying parquet genuinely containing data —
+        likely an older `record_captured(...)` call site never passed a real count (vs. the
+        `record_captured_from_counts(...)` helper that exists in
+        `unified_trading_library/manifest_writer/_writer_captured.py`). Check whether this is already fixed forward (the
+        most recent 2026-08-11 KRX row correctly shows `row_count=1`) and the gap is purely historical rows never
+        backfilled, or whether it's still live-broken for some write path. Scope: confirm whether this affects only KRX
+        or other Yahoo/`ohlcv_24h` venues (CBOE-indices, FX, ICE/DXY) before assuming KRX-only. This bug is a standing
+        false-alarm risk for any future manifest-driven completeness audit that trusts `row_count` at face value.
+        **Verification method note**: do the row_count/content check via individual single-object parquet reads (as done
+        here) or VM-side, never a local full `_index/availability_index.parquet` download (14.29M rows — violates the
+        local heavy-I/O hard rule; this session did it twice before being corrected by the operator mid-task). —
+        market-tick-data-service@356bed5a65: ROOT CAUSE = `rebuild_tradfi_manifest.py`'s non-bundled object-scan path
+        hardcoded `row_count=0` (2925/2943 KRX ohlcv_24h captured rows) — FIXED forward in ca93d553 (2026-08-09);
+        forward path verified correct (engine finalize passes `add(row_count=rows)`, rebuild passes `row_count=1`).
+        Fixed the 2 STILL live-broken registration scripts (recover_tradfi_chain_manifest_registration +
+        register_tradfi_recovery_quarantine_manifest) that also wrote `row_count=0` for non-bundled rows →
+        `row_count=1`. Scope: the mechanism is GENERIC across tradfi non-bundled rows, not KRX/ohlcv_24h-only.
+        Historical cells written pre-ca93d553 retain `row_count=0` — re-stamp tracked as the follow-up below.
+
+  - [ ] [SCRIPT] P2. Re-stamp `row_count` for the historical tradfi `captured` cells written before the 2026-08-09
+        `row_count=0` fix (ca93d553): KRX ohlcv_24h (2925/2943 rows) + any other non-bundled tradfi rows with
+        `capture_status=captured AND row_count<=0`. Re-run the FIXED `rebuild_tradfi_manifest.py` (row_count=1) over the
+        affected historical range, or a targeted re-stamp (captured + row_count<=0 → verify the parquet exists via
+        single-object read → re-stamp row_count=1). VM-side or individual-object reads only — never a local full
+        `_index/availability_index.parquet` download (14.29M rows). (repo: market-tick-data-service)
 
 ---
 
