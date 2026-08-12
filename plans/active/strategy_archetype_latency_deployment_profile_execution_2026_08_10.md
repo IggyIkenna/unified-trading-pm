@@ -91,9 +91,19 @@ source: >-
       / `InstanceResourceSizing` + `derive_instance_resource_sizing()` / `derive_resource_sizing()` and a
       `--live-config` CLI flag in `deployment_service/deployment_profile_derivation.py`; fails loud
       (`MissingLiveConfigError`) when a routed archetype has no live-config row. — deployment-service@9116a2fe
-- [ ] [SCRIPT] P2. **Regression test**: two archetypes with different required deployment_profiles must NOT get silently
-      collapsed onto one shared instance, and the derivation must be idempotent (same active-archetype-set in → same
-      deployment-plan out, no drift between repeated runs with unchanged input).
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-12 (slot 18, backend_engineer) — already covered, no new code needed.** Verified
+      (not assumed) that `tests/unit/test_deployment_profile_derivation.py` already carries exactly this coverage,
+      landed with todo 3's own commit: `test_different_profiles_never_collapse_onto_one_instance` asserts a Low +
+      Medium/High archetype pair derives 2 separate instances (never collapsed onto one), and
+      `test_derivation_is_idempotent_and_order_independent` asserts `derive_required_deployment_profiles` is both
+      order-independent (forward vs reversed input lists produce an equal result) and idempotent (repeated calls on
+      unchanged input produce an equal result) — both properties this todo asks for.
+      `git log -- tests/unit/     test_deployment_profile_derivation.py` confirms these two tests were added in
+      `deployment-service@13223da3` (todo 3, not new here). Ran the full `bash scripts/quality-gates.sh` on current HEAD
+      (`52936f60`, fresh-pulled) to confirm genuinely green today, not relying on the historical landing:
+      `✅ ALL QUALITY GATES PASSED (336s)`, sentinel `.qg_last_passed_sha=52936f608b68cbf114f62e2272e12289773c7c72`. No
+      code changes shipped this todo — the regression coverage already existed; this flip corrects the tracked-vs-actual
+      gap.
 - [ ] [SCRIPT] P2. **Regression test**: the reverse case — archetypes sharing the SAME deployment_profile requirement
       (e.g. two `Low`-category archetypes) should be able to co-locate per the existing `co_location_rules` structure,
       and the derivation should correctly union them onto shared infrastructure rather than over-provisioning one
@@ -175,3 +185,15 @@ source: >-
 - 2026-08-10: Plan created, gated on the paired audit plan's decision artifact. Implements the operator's "union of
   registered deployments from union of registered archetypes, resources derived live from configuration" design
   verbatim.
+
+- **backend_engineer (slot 18) 2026-08-12**: Todo 5 done. Dispatched this exact regression-test todo; found it already
+  satisfied by tests landed alongside todo 3 (`deployment-service@13223da3`) —
+  `test_different_profiles_never_collapse_onto_one_instance`
+  - `test_derivation_is_idempotent_and_order_independent` in `tests/unit/test_deployment_profile_derivation.py`. Did not
+    assume historical passing still holds: fresh-pulled to current HEAD (`52936f60`) and ran the full
+    `bash scripts/quality-gates.sh` for deployment-service, which exercises this suite — green,
+    `.qg_last_passed_sha=52936f608b68cbf114f62e2272e12289773c7c72`. No new code shipped for this todo; flip corrects a
+    tracked-vs-actual gap (coverage existed, checkbox didn't reflect it). Todo 6 (the reverse co-location regression
+    case) is a separate todo, also already covered by `test_same_profile_archetypes_union_onto_one_instance` in the same
+    file — not flipped here since it wasn't this dispatch's todo; whoever picks up todo 6 can verify + flip it the same
+    way.
