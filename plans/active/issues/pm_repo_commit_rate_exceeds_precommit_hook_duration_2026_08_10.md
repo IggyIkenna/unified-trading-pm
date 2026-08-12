@@ -483,12 +483,12 @@ Directions, cheapest first — each is a todo below:
       unified-trading-pm@d85ad41fac.
 
       **Done when, confirmed**: the precommit sweep on one staged file is now **20.8s** total wall (measured 2026-08-12,
-              isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
-              down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
-              concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
-              single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
-              `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
-              nothing left to move out of the per-commit path. Repo: unified-trading-pm.
+                  isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
+                  down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
+                  concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
+                  single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
+                  `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
+                  nothing left to move out of the per-commit path. Repo: unified-trading-pm.
 
 - [x] ✅ [INFRA] P2. **Record the AO-vs-PM volume asymmetry in the codex** so the next person does not re-derive it —
       unified-trading-pm@baae1922bb. New § "1b. PM is the fleet's single write hotspot" in
@@ -694,6 +694,22 @@ Directions, cheapest first — each is a todo below:
       pass/fail × opt-in/unset/explicit-0, proving the shared WARN-only default is unchanged for every repo that doesn't
       opt in. Repo: unified-trading-pm.
 
+## Deferred work after 2026-08-12
+
+6/7 todos in this doc are done (A, B, C, D, F, G). Only the isolation-validation todo remains, and it is genuinely not
+finishable this session — not because of nobody-picked-it-up neglect, but because the one repo tried has its own
+unrelated blocker.
+
+| Item                                                                                   | State / why deferred                                                                                                                                                                                                                                                               | Blocked on                                                             |
+| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Todo: isolated quickmerge validated end-to-end on a 2nd repo + lock-bump cache refresh | **Not done** — isolation mechanics themselves proven correct on `alerting-service` (evacuate/gate/honest-fail all worked), but that repo's own pre-existing basedpyright debt (43 errors vs cap 21) blocks the actual ship. The lock-bump-refresh half was never attempted at all. | a repo with a currently-green gate (alerting-service does not qualify) |
+| `alerting-service` 43-vs-21 basedpyright regression                                    | **Not done** — filed as its own issue doc, not investigated further this session                                                                                                                                                                                                   | nobody; pick it up (or Harsh, repo owner)                              |
+
+**Recommended next item**: retry the isolation-validation todo against a _different_ small service repo whose gate is
+currently green — this isolates "is isolation mechanics itself sound" (already answered: yes) from "is this particular
+repo's accumulated debt in the way" (answered for alerting-service: yes, it's in the way). Do not re-try
+alerting-service for this purpose until its own basedpyright issue is separately resolved.
+
 ## Deferred work after 2026-08-10
 
 | Item                                                              | State / why deferred                                                                                                   | Blocked on               |
@@ -736,6 +752,31 @@ reconciliation, the previous recommendation, shipped 2026-08-10.)
 - **Rejected: copying the QG sentinel into the isolated worktree.** A sentinel attests one specific tree, and the
   worktree is deliberately a different tree (named files on origin/HEAD). Copying it would assert a gate result never
   obtained. The full re-gate stays — and it is what caught the F7 P0 already on live-defi-rollout.
+- **A "pre-existing failing test" claim needs re-verification against CURRENT code, not the code as it was when the
+  claim was written.** Two `test_slot_cron_ff_pull_dirty_gate.bats` failures this session turned out to be testing
+  behavior a 2026-08-10 design change (COLLISION-DEFERRAL) had deliberately superseded, not a live regression — the
+  fixtures never diverged origin, so the new collision-gated skip path was structurally unreachable from them.
+  `check_chain_set_inclusion`'s "3 pre-existing failures" was the same shape: already fixed by unrelated later UAC data
+  work, re-verify before spending time on a fix.
+- **A perf-shrink todo should re-measure before trusting its own prior breakdown.** Todo B's original 118s attribution
+  (four specific checks) was 2 days stale; the actual cost when re-profiled was two unrelated regressions (one
+  self-inflicted by this session's own earlier fix for a different todo) that the original breakdown never mentioned.
+  Shipping a fix without re-profiling after would have left the real cost unaddressed while marking the todo done.
+- **`ahead=0` (commits in HEAD not in origin) is not the same check as `behind=0` (commits in origin not in HEAD), and
+  conflating them looks exactly like data loss.** Mid-checkpoint this session, `git merge-base --is-ancestor <sha> HEAD`
+  said NOT ANCESTOR for two commits I'd shipped earlier — but that was because local HEAD in this checkout was stale
+  (behind origin, likely because a live peer session's in-progress merge-conflict resolution in the same shared checkout
+  was blocking its fast-forward), not because the commits never landed.
+  `git merge-base --is-ancestor <sha> origin/<branch>` (after a fresh fetch) confirmed both were correctly on origin the
+  whole time. Before concluding work is lost, check ancestry against `origin/<branch>` directly, not just against a
+  local `HEAD` that may itself be behind — and don't touch a shared checkout's unrelated `UU`/conflict state to
+  investigate, since (per this doc's own F6 and the workspace's liveness-gating rule) a peer session's in-progress
+  conflict resolution with sub-2-minute file mtimes is a live claim, not inheritable WIP.
+- **Validating infra on a "real" second repo carries a different risk profile than PM-only doc/script work, and is worth
+  confirming with the operator before touching a service repo** — done this session via AskUserQuestion before the
+  alerting-service attempt; the operator's answer (small/low-risk repo, trivial change) shaped the scope correctly and
+  the eventual finding (repo debt, not isolation defect) validated that a real attempt was the right call over a
+  synthetic one.
 
 ## Progress Log
 
@@ -835,3 +876,17 @@ reconciliation, the previous recommendation, shipped 2026-08-10.)
   worktree while trying to measure an "idle" baseline — exactly the "8 concurrent hook chains inflate 19s to 118s"
   contention mechanism F1 already describes, self-inflicted by not waiting for my own background ship to finish before
   profiling. Fixes: unified-trading-pm@4e8447bd21 (SHA-evidence), unified-trading-pm@d85ad41fac (AG-closeout linkage).
+
+- **2026-08-12 (todos C/D/F closed, G closed, pre-compact checkpoint)**: closed the AO-vs-PM volume asymmetry codex doc
+  (unified-trading-pm@baae1922bb), the reconcile-format-commit recipe codex doc (bundled in the same commit), the
+  `check_chain_set_inclusion` re-triage (already-fixed, no code change — recorded above), and the bats-gating todo
+  (unified-trading-pm@ef552936b3, `BATS_HARD_FAIL` opt-in + 2 stale-test fixes). Attempted the remaining isolation-
+  validation todo against `alerting-service` per operator confirmation (small/low-risk repo): isolation mechanics proven
+  sound, ship blocked by that repo's own 43-vs-21 basedpyright debt — filed as
+  `alerting_service_basedpyright_regression_blocks_all_ships_2026_08_12.md` (unified-trading-pm@c66ff545d4) and recorded
+  as a PARTIAL ATTEMPT on the todo itself (unified-trading-pm@f35a041e0f). Mid pre-compact checkpoint, briefly suspected
+  both of those commits had been lost (local `HEAD` in the shared `.tabs/1` checkout showed them as NOT an ancestor) —
+  false alarm, traced to checking ancestry against a stale local `HEAD` instead of `origin/live-defi-rollout` directly;
+  both were correctly landed on origin the whole time (see Lessons). No content was recreated or duplicated. 6/7 todos
+  now done; only the isolation-validation todo remains open, genuinely blocked on finding a second repo with a
+  currently-green gate — not archivable yet.
