@@ -128,3 +128,105 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── duplicate-gate guard (creation-time idempotency, --only mode) ───────────
+
+
+def _finalize(path: Path, parent: str, *, status: str = "active") -> Path:
+    return _write_plan(
+        path,
+        extra_frontmatter=(f"depends_on: [{parent}]\ngate_on_depends: true\nstatus: {status}"),
+    )
+
+
+def test_duplicate_gate_fails_when_a_staged_finalize_duplicates_a_parent(tmp_path: Path) -> None:
+    """Staging a second finalize plan for an already-gated parent must fail, keyed on
+    depends_on — NOT filename shape (the 2026-07-31 collision was a redundant _2026_07_31
+    suffix)."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_08_12.md")
+    _finalize(active / "parent_2026_08_12_finalize.md", "parent_2026_08_12")
+    dupe = _finalize(
+        active / "parent_2026_08_12_finalize_2026_08_12.md",
+        "parent_2026_08_12",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(dupe)])
+    assert rc == 1
+
+
+def test_duplicate_gate_passes_when_parent_is_ungated(tmp_path: Path) -> None:
+    """A finalize plan gating on a parent no OTHER plan gates on is clean."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_08_12.md")
+    fin = _finalize(active / "parent_2026_08_12_finalize.md", "parent_2026_08_12")
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(fin)])
+    assert rc == 0
+
+
+def test_duplicate_gate_passes_when_survivor_staged_and_loser_is_superseded(tmp_path: Path) -> None:
+    """Post-de-race state: the loser is `status: superseded` on disk next to the survivor.
+    Staging the SURVIVOR (a harmless edit) must NOT trip the guard — a superseded loser is
+    a de-raced plan, not a live duplicate gate."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_08_12.md")
+    survivor = _finalize(active / "parent_2026_08_12_finalize.md", "parent_2026_08_12")
+    _finalize(
+        active / "parent_2026_08_12_finalize_2026_08_12.md",
+        "parent_2026_08_12",
+        status="superseded",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(survivor)])
+    assert rc == 0
+
+
+def test_duplicate_gate_ignores_two_finalize_plans_for_different_parents(tmp_path: Path) -> None:
+    """Two finalize plans gating on two DISTINCT parents are not duplicates."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_a_2026_08_12.md")
+    _write_plan(active / "parent_b_2026_08_12.md")
+    fin_a = _finalize(active / "parent_a_2026_08_12_finalize.md", "parent_a_2026_08_12")
+    fin_b = _finalize(active / "parent_b_2026_08_12_finalize.md", "parent_b_2026_08_12")
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(fin_a), str(fin_b)])
+    assert rc == 0
+
+
+def test_duplicate_gate_ignores_downstream_fanout_on_a_shared_parent(tmp_path: Path) -> None:
+    """Legitimate DAG fan-out — multiple NON-finalize downstream plans gating on the same
+    parent — must NOT read as a duplicate gate. This is the false-positive the `_finalize`
+    scoping exists to prevent (phases C/D/E all `depends_on` phase AB)."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_phase_ab_2026_08_12.md")
+    _finalize(active / "parent_phase_ab_2026_08_12_finalize.md", "parent_phase_ab_2026_08_12")
+    downstream_c = _write_plan(
+        active / "parent_phase_c_2026_08_12.md",
+        extra_frontmatter="depends_on: [parent_phase_ab_2026_08_12]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "parent_phase_d_2026_08_12.md",
+        extra_frontmatter="depends_on: [parent_phase_ab_2026_08_12]\ngate_on_depends: true",
+    )
+
+    # Staging a downstream phase that shares the parent with an existing finalize plan is
+    # clean — only a second _finalize plan would duplicate the gate.
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(downstream_c)])
+    assert rc == 0
+
+
+def test_duplicate_gate_is_filename_shape_agnostic(tmp_path: Path) -> None:
+    """The redundant `_2026_07_31` suffix variant must still trip the guard — keyed on
+    depends_on, not on matching the exact `<parent>_finalize.md` filename."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_08_12.md")
+    _finalize(active / "parent_2026_08_12_finalize.md", "parent_2026_08_12")
+    dupe = _finalize(
+        active / "parent_2026_08_12_finalize_2026_08_12.md",
+        "parent_2026_08_12",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(dupe)])
+    assert rc == 1

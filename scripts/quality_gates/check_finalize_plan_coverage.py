@@ -35,7 +35,16 @@ way, most with their upstream already done and archived weeks earlier. Fix: auth
 finalize plans `status: active` from the start (`ag-closeout-audit` SKILL.md corrected the
 same day). This check ratchets that fix so it can't silently regress.
 
-Exit-code semantics: 0 = at/below baseline (both checks); 1 = regression (either check);
+Third check (added 2026-08-12, same script — creation-time idempotency guard, `--only`
+mode only): staging a NEW finalize plan (`depends_on` + `gate_on_depends: true`) whose
+`depends_on` names a parent ALREADY gated by a DIFFERENT `gate_on_depends: true` plan is
+refused. Keyed on the `depends_on` relationship, NOT filename shape — the 2026-07-31
+collision was two files differing only by a redundant `_2026_07_31` suffix, which any
+guard keyed on the exact expected filename would have missed. See
+duplicate_finalize_plans_created_for_one_parent_2026_08_06.md (its todo 2 adds the
+corpus-wide "at rest" counterpart to the hygiene sweep).
+
+Exit-code semantics: 0 = at/below baseline (all checks); 1 = regression (any check);
 2 = arg/IO error.
 """
 
@@ -115,9 +124,9 @@ def _is_finalize_plan(fm: dict[str, object]) -> bool:
     return bool(has_deps and gate is True)
 
 
-def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
-    """Every plan-slug named in some OTHER plan's depends_on + gate_on_depends: true."""
-    out: set[str] = set()
+def _gating_map(all_plans: list[Coverage]) -> dict[str, list[Path]]:
+    """parent-slug -> plan paths gating on it (depends_on + gate_on_depends: true)."""
+    out: dict[str, list[Path]] = {}
     for cov in all_plans:
         if not _is_finalize_plan(cov.frontmatter):
             continue
@@ -126,8 +135,83 @@ def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
             continue
         for dep in cast(list[object], depends_on):
             if isinstance(dep, str):
-                out.add(dep.strip())
+                out.setdefault(dep.strip(), []).append(cov.path)
     return out
+
+
+def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
+    """Every plan-slug named in some OTHER plan's depends_on + gate_on_depends: true."""
+    return set(_gating_map(all_plans))
+
+
+def _is_finalize_named(cov: Coverage) -> bool:
+    """True for a plan following the `<parent>_finalize*` companion naming convention.
+
+    task_template.md §4: the companion is always named `<plan-slug>_finalize_*.md`. This is
+    what distinguishes a FINALIZE plan (whose entire job is the parent's archival ritual)
+    from a downstream phase plan that merely happens to `gate_on_depends` the same parent —
+    legitimate DAG fan-out (e.g. phases C/D/E all depending on phase AB) must NOT read as a
+    duplicate gate."""
+    return "_finalize" in cov.path.stem
+
+
+def _finalize_gating_map(all_plans: list[Coverage]) -> dict[str, list[Path]]:
+    """parent-slug -> *finalize-named* plan paths gating on it. Scoped to the companion
+    convention so downstream fan-out never counts as a duplicate finalize gate. A `status:
+    superseded` plan is EXCLUDED — it is a de-raced loser, not a live gate, so it never
+    reads as "the parent is already covered"."""
+    out: dict[str, list[Path]] = {}
+    for cov in all_plans:
+        if not _is_finalize_plan(cov.frontmatter):
+            continue
+        if not _is_finalize_named(cov):
+            continue
+        if cov.frontmatter.get("status") == "superseded":
+            continue
+        depends_on = cov.frontmatter.get("depends_on")
+        if not isinstance(depends_on, list):
+            continue
+        for dep in cast(list[object], depends_on):
+            if isinstance(dep, str):
+                out.setdefault(dep.strip(), []).append(cov.path)
+    return out
+
+
+def _duplicate_gate_violations(active_dir: Path, staged: list[Path]) -> list[Path]:
+    """Staged *finalize-named* plans whose `depends_on` names a parent ALREADY gated by a
+    DIFFERENT, non-superseded finalize-named plan — the creation-time idempotency guard.
+
+    Keyed on the `depends_on` relationship (the real contract), NOT the exact filename: the
+    2026-07-31 collision was two files differing only by a redundant `_2026_07_31` suffix,
+    which any guard keyed on the exact expected filename would have missed. Scoped to
+    `_finalize`-named companions so legitimate multi-downstream fan-out (phase C/D/E all
+    gating on one parent) never trips it, and a `status: superseded` loser is ignored so
+    staging the survivor of an already-de-raced pair (loser still on disk) stays clean."""
+    all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
+    gating = _finalize_gating_map(all_plans)
+    staged_set = {p.resolve() for p in staged}
+    violations: list[Path] = []
+    for cov in all_plans:
+        if cov.path.resolve() not in staged_set:
+            continue
+        if not _is_finalize_plan(cov.frontmatter):
+            continue
+        if not _is_finalize_named(cov):
+            continue
+        if cov.frontmatter.get("status") == "superseded":
+            continue  # a staged superseded loser is being de-raced, not adding a gate
+        depends_on = cov.frontmatter.get("depends_on")
+        if not isinstance(depends_on, list):
+            continue
+        for dep in cast(list[object], depends_on):
+            if not isinstance(dep, str):
+                continue
+            parent = dep.strip()
+            others = [q for q in gating.get(parent, []) if q.resolve() != cov.path.resolve()]
+            if others:
+                violations.append(cov.path)
+                break
+    return violations
 
 
 def _find_violations(active_dir: Path) -> list[Path]:
@@ -233,6 +317,50 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def _run_only_mode(
+    active_dir: Path,
+    only: list[str],
+    violations: list[Path],
+    draft_gate_violations: list[Path],
+) -> int:
+    """--only: resolve each given path the same way (relative-to-cwd or absolute both work,
+    since argparse hands us whatever the caller typed) and keep just the violations that
+    ARE one of them — the corpus scan above still ran in full (gating is inherently
+    corpus-wide), only the reported/failed set narrows. A plan outside --only that's
+    ALSO in violation is silently not-our-problem here, same as check_frontmatter_schema.py's
+    staged-files scoping (foreign_dirty_frontmatter_blocks_every_agents_gate_2026_07_18)."""
+    only_resolved = {Path(o).resolve() for o in only}
+    violations = [v for v in violations if v.resolve() in only_resolved]
+    draft_gate_violations = [v for v in draft_gate_violations if v.resolve() in only_resolved]
+    duplicate_gate_violations = _duplicate_gate_violations(active_dir, [Path(o) for o in only])
+    if not violations and not draft_gate_violations and not duplicate_gate_violations:
+        print("✅ finalize-plan-coverage (--only): clean.")
+        return 0
+    if violations:
+        print(
+            "❌ Plan(s) missing a gated finalize plan (add depends_on: [<this-slug>] + gate_on_depends: true"
+            " to a new/existing companion plan — see task_template.md §4):"
+        )
+        for v in violations:
+            print(f"  - {v}")
+    if draft_gate_violations:
+        print(
+            "❌ Finalize plan(s) redundantly stuck at status: draft (gate_on_depends already holds them —"
+            " flip to status: active, see task_template.md §4):"
+        )
+        for v in draft_gate_violations:
+            print(f"  - {v}")
+    if duplicate_gate_violations:
+        print(
+            "❌ Staged finalize plan(s) duplicate an existing gate — their depends_on names a parent"
+            " already covered by a DIFFERENT gate_on_depends: true plan (keyed on depends_on, not filename;"
+            " see duplicate_finalize_plans_created_for_one_parent_2026_08_06.md):"
+        )
+        for v in duplicate_gate_violations:
+            print(f"  - {v}")
+    return 1
+
+
 def main(argv: list[str] | None = None) -> int:
     ns = _parse_args(argv)
     workspace_root: Path = cast(Path, ns.workspace_root).resolve()
@@ -276,33 +404,7 @@ def main(argv: list[str] | None = None) -> int:
     draft_gate_violations = _find_draft_gate_violations(active_dir)
 
     if only is not None:
-        # --only: resolve each given path the same way (relative-to-cwd or absolute both work,
-        # since argparse hands us whatever the caller typed) and keep just the violations that
-        # ARE one of them — the corpus scan above still ran in full (gating is inherently
-        # corpus-wide), only the reported/failed set narrows. A plan outside --only that's
-        # ALSO in violation is silently not-our-problem here, same as check_frontmatter_schema.py's
-        # staged-files scoping (foreign_dirty_frontmatter_blocks_every_agents_gate_2026_07_18).
-        only_resolved = {Path(o).resolve() for o in only}
-        violations = [v for v in violations if v.resolve() in only_resolved]
-        draft_gate_violations = [v for v in draft_gate_violations if v.resolve() in only_resolved]
-        if not violations and not draft_gate_violations:
-            print("✅ finalize-plan-coverage (--only): clean.")
-            return 0
-        if violations:
-            print(
-                "❌ Plan(s) missing a gated finalize plan (add depends_on: [<this-slug>] + gate_on_depends: true"
-                " to a new/existing companion plan — see task_template.md §4):"
-            )
-            for v in violations:
-                print(f"  - {v}")
-        if draft_gate_violations:
-            print(
-                "❌ Finalize plan(s) redundantly stuck at status: draft (gate_on_depends already holds them —"
-                " flip to status: active, see task_template.md §4):"
-            )
-            for v in draft_gate_violations:
-                print(f"  - {v}")
-        return 1
+        return _run_only_mode(active_dir, only, violations, draft_gate_violations)
 
     print(
         f"Scanned plans/active/ for assigned_vm: planning plans lacking a gated finalize plan — "
