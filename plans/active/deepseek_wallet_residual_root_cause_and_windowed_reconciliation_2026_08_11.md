@@ -197,6 +197,24 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       $4.9177
       stored, pro $6.4081 vs $6.4082 — the arithmetic is exact. Tool: `deepseek_spend_probe.py --capture`
       (agent-orchestrator@fab845c1df).
+- [x] ✅ [BACKEND] P0. **DeepSeek bills on a measured 3-MINUTE LAG — and that lag is NOT the residual.**
+      Cross-correlating per-minute card cost against per-minute wallet drawdown gives a single sharp peak: r = -0.11 at
+      lag 0, -0.06 at 1, +0.08 at 2, **+0.74 at lag 3**, +0.42 at 4, then noise (|r| < 0.24) out to 30 min. So a turn's
+      cost reaches the balance ~3 minutes after the transcript records it. This matters for any window shorter than ~1h
+      and for any bucketed analysis, but it does NOT explain the level gap: LAG-ALIGNED, paired-minute totals still give
+      drawdown/card = **1.1712**, essentially identical to the 24h window's 1.168. The gap is a LEVEL effect, not a
+      timing one. Probe: `/tmp/lag.py` pattern, folded into `deepseek_spend_probe.py`.
+- [x] ✅ [BACKEND] P0. **Which rate is wrong is NOT identifiable from the data we have — recorded so nobody re-runs
+      it.** Attempted directly rather than waiting on the 7-day series: bucket the existing 1-minute balance series and
+      regress real drawdown on (input, output, cache_read) tokens per model. It FAILS, for a measurable reason.
+      Unaligned buckets fit noise — the 6-free-parameter solution returns NEGATIVE rates (pro.input -0.023/M at 5-min
+      buckets, flash.cache_read -0.0025/M at 10-min), which are physically impossible, and the bucket ratio drifts 0.82
+      -> 0.93 -> 0.94 as buckets widen from 5 -> 10 -> 15 min, which is the signature of the 3-min lag above, not of a
+      rate. Aligning by the measured lag and demanding full drawdown coverage per bucket leaves only **3 buckets at 10
+      min, 2 at 15, 1 at 20** — fewer observations than free parameters, so the system is underdetermined no matter
+      which estimator is used. Root cause of the shortage: all usable spend sits in ONE burst (2026-08-11 07:46-09:30Z)
+      with one token mix; the fleet has been idle since. **Identification needs days whose token MIX differs**, which is
+      exactly what the daily cron now accumulates — it is a data-availability limit, not an analysis one.
 - [ ] [OPERATOR] P1. **Verify the DeepSeek rate card against DeepSeek's own usage page — the residual is now a rate
       question.** With capture at 99.93% and the rate-card arithmetic exact, the remaining ~14% must be a per-token rate
       that does not match what DeepSeek actually bills. A SINGLE window cannot say which rate is wrong: closing the
