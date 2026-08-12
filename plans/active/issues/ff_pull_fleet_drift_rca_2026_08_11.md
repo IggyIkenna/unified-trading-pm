@@ -22,10 +22,7 @@ repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]
 tags: [ff-pull, fleet-drift, slot-worktrees, starvation, observability, ci-cd, agent-orchestrator]
 related:
-  [
-    /codex/05-infrastructure/per-tab-worktrees.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-  ]
+  [/codex/05-infrastructure/per-tab-worktrees.md, /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md]
 created: 2026-08-11
 last_updated: "2026-08-11"
 parent_epic: infrastructure_master
@@ -103,9 +100,9 @@ clean.
 A second withdrawn claim: the `*/5` crontab `git checkout origin/… -- scripts/dev/slot-cron-ff-pull.sh` was blamed for
 destroying local edits. It cannot — it runs in the **top-level** clone only, and the in-script managed-file auto-clean
 restores a file **only when byte-identical to origin**. The actual cause of three separate WIP losses that session was a
-peer agent's `pre-reconcile quarantine` stash on the shared slot-2 checkout
-(the `prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08` finding, which is itself still uncommitted) —
-content was **not** recoverable from those stashes, nor from 89 dangling blobs.
+peer agent's `pre-reconcile quarantine` stash on the shared slot-2 checkout (the
+`prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08` finding, which is itself still uncommitted) — content
+was **not** recoverable from those stashes, nor from 89 dangling blobs.
 
 `min-interval` was likewise cleared as a contributor: `cron-repo-min-interval.txt` throttles `unified-trading-pm` only
 (900s), never the service repos.
