@@ -238,3 +238,20 @@ source: >-
   the full `bash scripts/quality-gates.sh` for deployment-service — `✅ ALL QUALITY GATES PASSED (307s)`, sentinel
   `.qg_last_passed_sha=52936f608b68cbf114f62e2272e12289773c7c72`. No new code shipped; flip corrects a tracked-vs-actual
   gap.
+- **backend_engineer (slot 7) 2026-08-12, dispatch
+  `strategy_archetype_latency_deployment_profile_execution-73c2e13d68fc` — verified not-AO-eligible, skipped with GATED,
+  no code action.** Dispatcher offered the residual-gaps todo (2)(3)(4), which self-labels "each a judgment call /
+  operator ruling, not AO-eligible". Confirmed against the checkbox text + this plan's Progress Log: (3) `vol-*` docs
+  declare `premium` vs the mapping's `distributed` — the decision artifact defers to "keep distributed unless evidence
+  is decisive" and no ruling has landed; (4) `portfolio-*`/single-sided `yield-*` docs declare `basic` vs
+  decision-artifact §6 `standard` — a judgment call the checkbox itself flags ("arguably `basic` is correct for
+  non-executing allocation/staking"). Both genuinely need an operator ruling; a worker flipping either way would be
+  making the ruling itself, which is not AO-eligible. (2) is a real boot-time inconsistency
+  (`isolation_policies.strategy-service` `default: shared` vs the corrected `co_located_vm` docs declaring
+  `strategy-service: isolated` → `_check_isolation()` would raise on boot) whose fix the decision artifact's item 6
+  commits to but which **no todo in this plan carries** — flagged here for the plan owner / main agent to track as its
+  own todo (touches live `configs/runtime-topology.yaml` + the isolation model, a design/config decision, not a bounded
+  doc edit). No code shipped; checkbox left `[ ]` (correctly — it is not AO-done). **Flag for main/operator**:
+  `regen_backlog_from_plan.py` derived an AO-dispatchable task from a checkbox that explicitly self-labels "not
+  AO-eligible" — the same dispatch-scope pattern as the batch14 re-derivation thrash; a guard that skips checkboxes
+  self-declaring non-AO-eligibility would stop this class.
