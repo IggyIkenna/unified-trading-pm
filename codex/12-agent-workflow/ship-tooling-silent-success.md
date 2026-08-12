@@ -50,6 +50,34 @@ Per _marker_, not per file: a partial commit lands the file while dropping the c
 2026-08-10 — a ship reported `✅ post-push ancestry verified` and `EXIT=0` having committed one of four named files.
 Ancestry verification is honest about the commit it made; it cannot tell you the commit contained what you asked for.
 
+## Verify with a marker only YOUR change could have produced
+
+"Per marker, not per file" is not enough on its own. On 2026-08-12 a ship was reported LANDED on the strength of
+`grep -qF "AlertCode"` — a string the doc's OLDER text already contained. Nothing had landed. Re-checking with a phrase
+unique to the new edit showed the truth immediately.
+
+Pick the marker so that **no prior version of the file could satisfy it**: a distinctive phrase the edit introduces, a
+new function name, a new frontmatter key. Then invert it too where the change REMOVES something — assert the count is
+zero, not merely that the replacement is present, or a half-applied edit reads as success.
+
+## Some checkers are prose-blind — describing a rule can trip it
+
+Three separate checkers in this workspace grep flat text and cannot distinguish code from prose or a path from an
+English phrase. All three were hit in a single session:
+
+- the CI skip marker (already documented in CLAUDE.md: the literal token anywhere, "even when only describing it",
+  triggers it — write it hyphenated),
+- the quality-gate bypass ban: a comment EXPLAINING why a bypass was removed tripped the check that bans the bypass,
+- `check_doc_body_links`: a `codex/`-prefixed reference to CLAUDE.md appears in ~9 active docs as prose shorthand for
+  "codex and CLAUDE.md" — two documents, not a path. No such file exists or was ever intended.
+
+**Do not "fix" prose to satisfy a text matcher.** Rewriting a doc so a grep stops matching corrupts the document to
+serve the tool. Spell the token in words, or record it in the checker's baseline — the codex-prefixed CLAUDE.md case
+belongs in the ratchet, and the doc that cites it as an EXAMPLE of a broken ref must keep citing it.
+
+This very section demonstrates it: written with the literal path spelled out, it FAILED the body-link check twice — the
+doc describing the trap fell into the trap. Convey the token, never spell it.
+
 ## Five measured ways a green ship shipped nothing
 
 | mechanism                                                                            | what it printed                                |
