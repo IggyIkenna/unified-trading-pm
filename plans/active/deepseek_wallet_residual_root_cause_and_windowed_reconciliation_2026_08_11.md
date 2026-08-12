@@ -183,6 +183,50 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       daily readings are recorded with volume alongside residual, and the fixed-vs-proportional question is answered.
       (repo: agent-orchestrator, read-only)
 
+## Deferred work after 2026-08-12
+
+**Recommended NEXT item**: find where the 42.7% goes. It is the operator's stated success criterion, and every other
+item here is secondary to it.
+
+| Item                                                     | State / why deferred                                                                                     | Blocked on                           |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| Find the $12.44 (42.7%) unattributed 24h spend           | **Not done** — real work, nothing blocking it                                                            | nobody                               |
+| Re-measure the 24h residual daily x7                     | **Cannot be done yet** — one reading per day by construction; the series is the point, not any one value | elapsed time                         |
+| Stamp `agent_kind` onto `deepseek_message_usage`         | **Not done** — bounded backend work; also a prime suspect for the 42.7%                                  | nobody                               |
+| Repair NULL slot_id / is_review_slot rows (re-sweep)     | **Not done** — needs fingerprints cleared first; also a prime suspect                                    | nobody                               |
+| Discover transcripts by glob, not slot enumeration       | **Not done** — removes a silent-loss class by construction                                               | nobody                               |
+| Freeze the pre-observability opening balance             | **Not done** — cosmetic until the live leak above is understood                                          | nobody                               |
+| Windowed view in `DeepSeekWalletPanel.tsx`               | **Not done** — needs `pw:L2` spec                                                                        | nobody                               |
+| Fix the `uv.lock` churn cycle                            | **Not done** — touches `setup.sh` sibling pinning + cron `[auto-clean]`, both fleet-load-bearing         | operator scoping (my recommendation) |
+| Flip `QG_ENFORCE_FRESH_VENV` to default on               | **Cannot be done yet** — strictly downstream of the churn fix                                            | the churn fix                        |
+| Anthropic Wallet Reconciliation (5 todos)                | **Not done** — filed in the anthropic calibration plan; AO-dispatched                                    | nobody                               |
+| Request-level proxy accounting for DeepSeek              | **Operator-owned** — a cost/observability judgement, not a defect                                        | operator decision                    |
+| Peer conflicts left in two shared clones (see issue doc) | **Operator-owned** — another session's WIP; not mine to resolve                                          | the sessions that own them           |
+
+## Session lessons 2026-08-12 (carry these — each cost real time)
+
+- **A 50-minute window cannot answer a 24-hour question.** The 2026-08-11 window read 1.045 and I called flow
+  "reconciled within noise"; the 24h window reads **1.745**. The short window's $0.26 residual sat _inside_ the old
+  30-minute sampler's own error bar, so it measured nothing. Do not generalise a short window to a long property — state
+  the error bar and check it exceeds the signal.
+- **Silence from a freshly-shipped fleet check is a RED FLAG, not success.** The shared stale-venv check was keyed on
+  `REPO_ROOT`, which in this codebase is the WORKSPACE dir (`$PROJECT_ROOT/..`), not the repo — so it looked for
+  `<workspace>/uv.lock`, never found one, and returned clean everywhere. It produced zero warnings across a fleet
+  measured at 70-75% drift and I read that as working. **`PROJECT_ROOT` is the repo root; `REPO_ROOT` is not.**
+- **`scripts/dev/slot-cron-ff-pull.sh` overwrites itself from origin every 5 minutes** via its own crontab entry
+  (`git show origin/<b>:<script> | cmp -s - <script> || mv`). An in-place edit silently reverts; landing on origin is
+  the only way to change it. Caught only because an extracted patch came back one file short.
+- **`head -N` on a counting pipeline yields a truncated "total".** "28 stale of 60" was really 162 of 216, and the first
+  fix list built from it covered only 22 repos.
+- **A token grep that matches a COMMENT produces a confident wrong verdict.** Filtering `pyproject.toml` for the UTL
+  string matched a pip-audit comment in `unified-trading-pm` — a repo that does not depend on UTL — and produced a false
+  "12 slots BROKEN" finding.
+- **`git pull` on a SHARED clone autostashes other sessions' WIP and can conflict on the pop.** Prefer the
+  isolated-worktree ship scripts (they build from origin + your named files) and avoid pulling a clone you do not own.
+- **uv check semantics**: `uv sync --frozen --check` fails on a MISSING LOCKFILE as well as on drift, so a `-f uv.lock`
+  guard is mandatory or every lockless repo aborts. `--inexact` tolerates extra packages but still catches
+  missing/wrong-version ones — it does NOT make a genuinely drifted env look clean.
+
 ## Codex SSOTs
 
 - `/codex/12-agent-workflow/measurement-claims-discipline.md` — the discipline this plan's findings section follows
