@@ -611,6 +611,31 @@ memory and that's what kills sessions" as-is.
       Anthropic than "tmux pane vanished") rather than waiting on the two stale-closed ones. Repo: agent-orchestrator
       (investigation), no code shipped for this lead itself this session — the two closed issues were surfaced via
       `gh issue view 27705/27734 --repo anthropics/claude-code`, not this fleet's own logs.
+- [x] [INFRA] P0. ~~Root-caused + fixed why NO death ever produced a real forensic artifact~~ — **SHIPPED 2026-08-12,
+      `agent-orchestrator@007995b3bd` + a live systemd drop-in.** Operator pushback on "no forensic trace" being treated
+      as a dead end ("must be a way to figure out what's happened, can't just say it was random") led to checking the
+      one thing never checked: whether core dumps were even POSSIBLE on this VM. They weren't — `ulimit -c` measured
+      live as **0** for the whole `orchestrator.service` process tree, despite `kernel.core_pattern` already being
+      correctly configured (`/tmp/core-%e-%p-%t`). Every SIGABRT/SIGSEGV-class death in this entire investigation had a
+      real crash artifact available to produce and nothing was ever allowed to write it. **Fix**: `LimitCORE=infinity`
+      added to `scripts/orchestrator.service` (repo template) — applied LIVE via a systemd drop-in
+      (`/etc/systemd/system/orchestrator.service.d/override.conf`), NOT a raw file overwrite: the live installed unit
+      differs from the repo template (`User=ubuntu`/path-substituted via `install-orchestrator-service.sh`, template
+      still says `hk`) — cp'ing the template over it would have broken the live service. Limits inherit down the process
+      tree at fork/exec, so every tmux session + `claude` worker this service spawns now gets it too — only processes
+      spawned AFTER the restart, already-running workers keep the old (disabled) limit until their own next respawn.
+      Wired `tmux_spawn.find_recent_core_dumps()` (broad `/tmp/core-*` glob within the last 120s, not pid-matched — most
+      deaths have no known pid captured either, e.g. `pane_death_info is None`) into the same automatic per-death
+      capture as the earlier host/account/pane fields, as `core_dumps_found`. Restarted live, verified healthy
+      post-restart (`/api/healthz` uptime_seconds=47, real request traffic flowing, `LimitCORE=infinity` confirmed via
+      `systemctl show`) — worker slots 14/16/17/26/27 posted successfully right through the restart, confirming
+      `KillMode=process` protected them as designed. **Also added** (operator ask, the historically-manual `pgrep`-based
+      `newsess=`/`spawns=` signal from the live-capture script): `concurrent_recent_spawns` — DB-only count of
+      `SlotRow.last_spawned_at` within the last 60s, in the same capture, no subprocess needed. **Done when**: the next
+      live death (isolated or burst) is checked for a populated `core_dumps_found` — that's the first real test of
+      whether this VM's crash class actually produces a core at all (an uncatchable external SIGKILL, e.g. from the
+      still-unconfirmed tmux-server-death mechanism, produces NO core regardless — cores only capture self-inflicted
+      signals like SIGABRT/SIGSEGV/SIGBUS). 3 new tests. Repo: agent-orchestrator.
 
 ## Progress Log
 
