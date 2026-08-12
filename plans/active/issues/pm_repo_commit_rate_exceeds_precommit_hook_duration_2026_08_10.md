@@ -476,6 +476,39 @@ Directions, cheapest first — each is a todo below:
       regression coverage (`tests/test_safe_doc_push_entry_hash_reverted_edits.bats` 10/10,
       `tests/test_quickmerge_landed_content_assertion.bats`) still passes unchanged, and a direct manual invocation of
       the dump function confirmed correct, rich output. Repo: unified-trading-pm.
+- [ ] [INFRA] P0. **F9 — `_sdp_reconcile_caller_duplicates` never refreshes a caller's stale local copy against
+      GENUINELY different peer content, only against reformatting-equivalent content — a stale local copy can then
+      silently clobber a peer's already-landed lines on a later push.** Found 2026-08-12, DISTINCT from every other
+      mechanism tested this investigation (cross-worktree prek patches-dir race: clean; single-shot same-file concurrent
+      edits, overlapping and not: clean). Root cause, read directly in `scripts/dev/safe-doc-push.sh`'s
+      `_sdp_reconcile_caller_duplicates`: it only calls `git restore --source=origin/$BRANCH --worktree -- $f` when
+      `_sdp_same_content` says the caller's local file is "the same words, differently wrapped" as what landed (a
+      prosewrap/prettier-reflow detector) — it does NOT refresh the local copy when origin has genuinely different
+      content (a peer's real, distinct addition), by design (that function's job is narrower than "always sync my local
+      copy"). **Consequence**: if a caller's local copy of a shared file goes stale across several ship rounds (nothing
+      re-syncs it automatically), a LATER round submits a diff against a freshly-fetched origin that gets committed as a
+      wholesale REPLACEMENT of a peer's already-landed lines with the caller's own stale-but-locally-consistent
+      accumulation — every individual push succeeds, every entry-hash "landed" check passes (it only verifies the
+      CALLER's own diff landed, never whether a peer's content survived), and `git log -p` shows the full, unbroken
+      commit history — but the file's CURRENT tree content silently drops the peer's most recent lines from anyone
+      reading HEAD. **Measured**: 4 workers × 6 rounds (24 ship attempts) against one shared file, no re-pull between a
+      worker's own rounds — 12 of 18 markers from a clean, uninterrupted run vanished from the final tree despite being
+      individually reported LANDED; the tip commit's own diff literally showed `-` removing a prior worker's whole
+      marker set and `+` adding the new worker's own, in ONE commit. Repro:
+      `scripts/dev/repro-safe-doc-push-stale-local-clobber.sh` (permanent, re-runnable). **Caveat, stated plainly**: the
+      repro's worker loop deliberately never re-pulls between its own rounds, more aggressive than a real editing
+      workflow (an agent normally reads a file fresh before editing) — this is not a confirmed match for the ORIGINAL
+      reported symptom (whose raw logs no longer exist), but it is the closest real, reproducible mechanism found across
+      3 investigation sessions, and it matches the affected file's actual situation (heavy, frequent, unrelated peer
+      commit traffic) more closely than anything else tested. **Fix direction, not yet built**: either (a) make
+      `_sdp_reconcile_caller_duplicates` ALSO refresh the caller's local copy when content is genuinely different
+      (accepting that this discards the caller's uncommitted diff to that SAME file, which needs its own careful UX —
+      silently discarding a real uncommitted edit is exactly the class of bug this whole investigation is about), or (b)
+      detect the "wholesale replacement of peer content" shape specifically (compare the pushed commit's diff against
+      what was on origin at push time, not just at entry-fetch time) and refuse to ship it, forcing a manual
+      re-read+re-edit instead of a silent clobber. **Done when**: the repro script no longer reproduces after the fix
+      (i.e., 0 missing markers across a full run), or the fix's tradeoffs are decided by the operator and documented if
+      a full fix is descoped. Repo: unified-trading-pm.
 - [x] ✅ [INFRA] P0. **Fix F7 — resolve the repo root from git, not from the directory name.** DONE 2026-08-10 — new
       `scripts/quality_gates/_pm_root.py` resolves by CONTENT (`plans/` + `scripts/quality_gates/` present), applied to
       13 call sites across 11 scripts; verified it resolves correctly given a bogus workspace root and that
@@ -527,12 +560,12 @@ Directions, cheapest first — each is a todo below:
       unified-trading-pm@d85ad41fac.
 
       **Done when, confirmed**: the precommit sweep on one staged file is now **20.8s** total wall (measured 2026-08-12,
-                      isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
-                      down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
-                      concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
-                      single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
-                      `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
-                      nothing left to move out of the per-commit path. Repo: unified-trading-pm.
+                          isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
+                          down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
+                          concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
+                          single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
+                          `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
+                          nothing left to move out of the per-commit path. Repo: unified-trading-pm.
 
 - [x] ✅ [INFRA] P2. **Record the AO-vs-PM volume asymmetry in the codex** so the next person does not re-derive it —
       unified-trading-pm@baae1922bb. New § "1b. PM is the fleet's single write hotspot" in
@@ -857,3 +890,18 @@ reconciliation, the previous recommendation, shipped 2026-08-10.)
   worktree while trying to measure an "idle" baseline — exactly the "8 concurrent hook chains inflate 19s to 118s"
   contention mechanism F1 already describes, self-inflicted by not waiting for my own background ship to finish before
   profiling. Fixes: unified-trading-pm@4e8447bd21 (SHA-evidence), unified-trading-pm@d85ad41fac (AG-closeout linkage).
+
+- **2026-08-12 (F9 found — the real mechanism, or at least a real one, after 3 sessions of clean negatives)**: a peer
+  agent's review correctly challenged the PREK_HOME fix as unverified against the actual reported symptom (see the
+  earlier-shipped correction to that todo). Built and ran a genuine stress test — 4 independent clones, 6 rounds each,
+  all shipping to the SAME shared file via the real `safe-doc-push.sh`, no re-pull between a worker's own rounds — and
+  it reproduced real, repeated data loss (12/18 confirmed-landed markers missing from the final tree) on a clean,
+  uninterrupted run. Traced to `_sdp_reconcile_caller_duplicates` only refreshing a caller's local copy against
+  reformatting-equivalent content, never genuinely different peer content — full mechanism and fix direction in the new
+  F9 todo above. Nearly mis-attributed this to a git-rebase bug before catching that the loop's own zsh execution
+  environment (not bash — `mapfile` doesn't exist, and bare `$var:literal` triggers zsh's history-modifier parsing and
+  silently mangles the string) had corrupted an earlier diagnostic trace, producing "0 lines everywhere" garbage that
+  briefly looked like a much stranger finding than it was. Promoted the stress harness as
+  `scripts/dev/repro-safe-doc-push-stale-local-clobber.sh`. Explicitly NOT claiming this is confirmed to be the original
+  reported mechanism — the raw logs from that report no longer exist — but it is the first REAL, reproducible data-loss
+  mechanism found in 3 sessions of testing, and the fix is not yet built.
