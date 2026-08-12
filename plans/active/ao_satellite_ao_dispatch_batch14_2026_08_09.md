@@ -116,31 +116,31 @@ A 1-item batch is sanctioned by `task_template.md` §4 ("Fewer is fine; group RE
       not here. Original (unreliable) DONE text preserved below for record, superseded by this note:
 
       ~~**DONE 2026-08-09 (slot 30).** Correction found while executing: "BOTH hosts" was stale — exactly
-                                                          the "either VM"/"both VMs" framing `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` warns
-                                                          against carrying forward for the human-planning VM, terminated 2026-08-03 (CLAUDE.md: "`planning` is the ONLY
-                                                          VM"). Verified live via IMDSv2
-                                                          (`curl -H "X-aws-ec2-metadata-token: $TOKEN"     http://169.254.169.254/latest/meta-data/instance-id` →
-                                                          `i-0c9b283b31d6b5ca7`, `.../public-ipv4` → `13.113.200.22`) that THIS slot's own host **IS** the planning VM named
-                                                          in this todo — there was only ever ONE file to fix (`~/.claude-accounts/deepseek-v4-pro.env`, confirmed the sole
-                                                          `oauth_token_env_file` for this account in the live `accounts.json`, same `ubuntu` user the orchestrator process
-                                                          itself runs as). No SSM dispatch needed (operator's Option-B answer to the filed blocked question, `BLK-a07f8261`,
-                                                          is moot once this fact is known — not wrong, just resolved by a fact the blocked-question itself hadn't yet
-                                                          surfaced).
+                                                              the "either VM"/"both VMs" framing `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` warns
+                                                              against carrying forward for the human-planning VM, terminated 2026-08-03 (CLAUDE.md: "`planning` is the ONLY
+                                                              VM"). Verified live via IMDSv2
+                                                              (`curl -H "X-aws-ec2-metadata-token: $TOKEN"     http://169.254.169.254/latest/meta-data/instance-id` →
+                                                              `i-0c9b283b31d6b5ca7`, `.../public-ipv4` → `13.113.200.22`) that THIS slot's own host **IS** the planning VM named
+                                                              in this todo — there was only ever ONE file to fix (`~/.claude-accounts/deepseek-v4-pro.env`, confirmed the sole
+                                                              `oauth_token_env_file` for this account in the live `accounts.json`, same `ubuntu` user the orchestrator process
+                                                              itself runs as). No SSM dispatch needed (operator's Option-B answer to the filed blocked question, `BLK-a07f8261`,
+                                                              is moot once this fact is known — not wrong, just resolved by a fact the blocked-question itself hadn't yet
+                                                              surfaced).
 
-                                                          Re-sourced via `export ANTHROPIC_AUTH_TOKEN="$(gcloud secrets versions access latest
-                                                                  --secret=deepseek-v4-pro-api-key --project=central-element-323112)"` (mirrors
-                                                                  `agent-orchestrator/scripts/refresh_env_from_sm.sh`'s pattern). Verification (the literal "successful spawn"
-                                                                  bar in this todo's original text is currently unreachable for EITHER the old or new config — the account has
-                                                                  $0 balance, tracked as its own fresh finding in the source doc below, not a re-sourcing defect): (1) SHA-256 hash
-                                                                  of the GSM secret value == hash of the prior literal token, byte-identical; (2) a live `claude -p` auth probe
-                                                                  under this account returns the IDENTICAL `API Error: 402 Insufficient Balance` on both the pre-change backup file
-                                                                  and the post-change indirection file — proving the token reaches the API identically either way (a real auth
-                                                                  failure would read 401/403, not 402). Literal key removed from the live file; a `chmod 600` backup
-                                                                  (`deepseek-v4-pro.env.bak-presm-1786317618`) kept in `~/.claude-accounts/` as the reversible fallback until a
-                                                                  genuine post-topup successful spawn is confirmed (operator's own security call whether/when to shred it).
-                                                                  `unified-trading-pm@b3d909979` (this doc + source doc updates). Source:
-                                                                  `/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md:440`. Repo: agent-orchestrator (env-file
-                                                                  change is host-local config, not a repo commit — no agent-orchestrator sha for this todo itself).~~
+                                                              Re-sourced via `export ANTHROPIC_AUTH_TOKEN="$(gcloud secrets versions access latest
+                                                                      --secret=deepseek-v4-pro-api-key --project=central-element-323112)"` (mirrors
+                                                                      `agent-orchestrator/scripts/refresh_env_from_sm.sh`'s pattern). Verification (the literal "successful spawn"
+                                                                      bar in this todo's original text is currently unreachable for EITHER the old or new config — the account has
+                                                                      $0 balance, tracked as its own fresh finding in the source doc below, not a re-sourcing defect): (1) SHA-256 hash
+                                                                      of the GSM secret value == hash of the prior literal token, byte-identical; (2) a live `claude -p` auth probe
+                                                                      under this account returns the IDENTICAL `API Error: 402 Insufficient Balance` on both the pre-change backup file
+                                                                      and the post-change indirection file — proving the token reaches the API identically either way (a real auth
+                                                                      failure would read 401/403, not 402). Literal key removed from the live file; a `chmod 600` backup
+                                                                      (`deepseek-v4-pro.env.bak-presm-1786317618`) kept in `~/.claude-accounts/` as the reversible fallback until a
+                                                                      genuine post-topup successful spawn is confirmed (operator's own security call whether/when to shred it).
+                                                                      `unified-trading-pm@b3d909979` (this doc + source doc updates). Source:
+                                                                      `/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md:440`. Repo: agent-orchestrator (env-file
+                                                                      change is host-local config, not a repo commit — no agent-orchestrator sha for this todo itself).~~
 
 ## Codex SSOTs (read before starting)
 
@@ -227,9 +227,10 @@ A 1-item batch is sanctioned by `task_template.md` §4 ("Fewer is fine; group RE
   would make the proxy send the command string as the Bearer token (401). So the durable fix is TWO components (S3
   bucket source + proxy token resolution), i.e. a design decision, not a bounded worker edit. Token value itself is
   confirmed consistent: no-newline hash of the literal in all backups == GSM secret value (`715f0bb8...`). Filed the
-  full finding + actionable todos at `plans/active/issues/deepseek_v4_pro_token_gsm_resourcing_reverted_2026_08_12.md`
-  and escalated the design question via /blocked — did NOT flip this checkbox (per the 2026-08-12 correction it stays
-  `[ ]`; the real fix is tracked in the issue doc + finalize plan todo 3/5).
+  full finding + actionable todos at
+  `plans/archive/2026_08/issues/deepseek_v4_pro_token_gsm_resourcing_reverted_2026_08_12.md` and escalated the design
+  question via /blocked — did NOT flip this checkbox (per the 2026-08-12 correction it stays `[ ]`; the real fix is
+  tracked in the issue doc + finalize plan todo 3/5).
 - **2026-08-12 (slot 7, infra craft, dispatch `ao_satellite_ao_dispatch_batch14-791d3e7d35b7`) — 6th re-derivation; live
   re-verified, skipped with GATED, no action taken.** Re-measured the live host (this planning VM) rather than trusting
   doc labels (per slot 16's measurement-discipline call): `~/.claude-accounts/deepseek-v4-pro.env` STILL literal —

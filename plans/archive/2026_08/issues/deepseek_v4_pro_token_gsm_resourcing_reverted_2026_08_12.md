@@ -16,8 +16,11 @@ summary: >-
   via `read_env_var_from_file` (literal regex parse, no command substitution, `usage_tracker.py:174`) — so a `$(gcloud
   secrets versions access ...)` indirection in the file would make the proxy send the command string as the Bearer token
   (DeepSeek 401), breaking the account.
-status: open
-resolved_by:
+status: resolved
+resolved_by: >-
+  agent-orchestrator@4dbfea0250 (slot 18, proxy GSM-first resolution) + durable S3/local re-sourcing (slot 18) +
+  agent-orchestrator@438b53c6d0 (slot 16, balance-poller GSM-first) + proxy restart re-verify (slot 14) +
+  unified-trading-pm (slot 16, finalize-plan record correction) — all 4 todos landed 2026-08-12.
 nature: notes
 asset_group: [ao]
 repos: [agent-orchestrator]
@@ -41,6 +44,13 @@ depends_on: []
 locked_by:
 locked_since:
 ---
+
+> **📦 ARCHIVED 2026-08-12 — all 4 fix todos + this correction todo are done.** GSM-first token resolution landed in
+> both the native proxy (`agent-orchestrator@4dbfea0250`) and the balance poller (`agent-orchestrator@438b53c6d0`); the
+> S3 bucket + local env file both carry the durable indirection now (verified resolved-token hash == GSM secret hash,
+> `claude -p` probe HTTP 200); the proxy service was confirmed already running the new code (no restart needed). The
+> stale finalize-plan record was corrected with the reversion evidence
+> (`/plans/active/ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md` todo 2). Zero open todos remain.
 
 # deepseek-v4-pro token GSM re-sourcing reverted + native-proxy incompatibility
 
@@ -137,10 +147,14 @@ planning VM (`i-0c9b283b31d6b5ca7` / `13.113.200.22`, user `ubuntu`):
       "falling back to env file" warning. NOTE (known + tracked): the balance poller now 401s per-tick for this account
       (`deepseek_balance.py` regex returns the `$(gcloud` prefix from the indirection) until the [BACKEND] P1 GSM-first
       fix lands — tracked below.
-- [ ] [REVIEW] P2. Correct the stale "DONE 2026-08-10 (slot 5)" record on
+- [x] ✅ [REVIEW] P2. Correct the stale "DONE 2026-08-10 (slot 5)" record on
       `ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md` todo 2 (the edit was real but was reverted by
       `creds_env_poller` within one tick and is not live today) — append the reversion evidence so the finalize plan's
-      todo 3 reconcile carries truthful data. (repo: unified-trading-pm)
+      todo 3 reconcile carries truthful data. (repo: unified-trading-pm) — unified-trading-pm (slot 16, 2026-08-12):
+      appended a correction paragraph to todo 2 in the finalize plan documenting the poller-revert mechanism + evidence
+      (live sha256 `86f0758f...` vs the todo's own post-edit `c154633...c2f42`) and pointing at this issue doc's now-
+      durable re-fix (S3 bucket + local file both updated, slot 18); added a matching Progress Log entry. Did not alter
+      the todo 2 checkbox itself, per the append-don't-replace rule.
 - [x] ✅ [BACKEND] P1. Update `deepseek_balance.py` to resolve the account token GSM-first (same `api_key_secret_name`
       path as the proxy) — once the [INFRA] P0 todo lands the `$(gcloud secrets ...)` indirection in
       `~/.claude-accounts/*.env`, `read_env_var_from_file`'s regex `(['"]?)(\S+)\1` can't span the quoted value's spaces
