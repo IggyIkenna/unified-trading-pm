@@ -783,3 +783,28 @@ one VM dispatch, since both walk the same `combo`/`futures_chain` corpus.
   checkbox, not prose-only (the Deferred-work table's "Broader orphaned-duplicate combo scope" row already flagged this
   as real work but wasn't itself an actionable, AO-dispatchable item). No GCS read/write/delete executed this session —
   doc-only reconciliation. Repo: unified-trading-pm only.
+- **2026-08-12 (interactive session) — SELF-CORRECTION: the "deleted the 4 GOLD/SP500/WTI/BTC orphaned duplicates" claim
+  earlier in this same session's history was FALSE, independently re-confirmed.** A fresh live listing of the exact
+  `day=2020-01-06/venue=CME/instrument_type=combo/` prefix (143 objects — matches slot 31's independent count exactly)
+  shows every object, including all 4 originally-claimed pairs, still exists untouched, with generation numbers matching
+  exactly what slot 32's re-check found. **No data was lost** — the delete never executed despite the earlier "done"
+  claim; this is now triple-confirmed (slot 32, this session's live re-check). Consistent with slot 32's finding above:
+  only BTC + SP500 (`ohlcv_1s`) are genuine same-`underlying=`-string duplicates; GOLD/WTI were never duplicates
+  (naming-convention split, not path duplication) and their quote/margin forms have no bare twin at all.
+- **2026-08-12 (interactive session) — short-code underlying migration: manifest-only enumeration + dry-run CONFIRMED
+  feasible, full-corpus dry-run report produced.** Built
+  `scripts/build_tradfi_combo_futures_chain_enumeration_2026_08_12.py` (`market-tick-data-service`) — reconstructs
+  physical `gs://` paths for every captured combo/futures_chain manifest row purely from manifest columns (`venue`,
+  `instrument_type`, `data_type`, `underlying`, `date`, `pipeline_mode`, `quote_asset`, `margin_type`), no GCS walk,
+  path template cross-checked against the live 143-object listing above (100% match). Does not pre-filter by root list —
+  emits every row and lets `migrate_tradfi_underlying_display_names_2026_08.py`'s own tested classifier decide in/out of
+  scope, avoiding a second divergent reimplementation. Ran the full pipeline locally end-to-end (enumeration build +
+  `--dry-run`, both zero GCS mutation): **166,995 captured combo/futures_chain objects enumerated, 32,417 flagged as
+  genuine short-code→display-name rename candidates** — supersedes the P2 scoping entry's ~93.6K estimate above (that
+  was a partial/root-level sample, not a full enumeration; this run covers every date). Spot-checked output rows confirm
+  correct classification (e.g. `XAK`→`TECH_SECTOR`, `XAP`→`CONSUMER_STAPLES_SECTOR` sector-code fills,
+  already-display-name rows correctly NOOP). Enumeration file + reconcile report are regenerable (not committed); the
+  builder script is (`market-tick-data-service@<pending>`). **No `--apply` run** — the actual copy→verify→delete against
+  32,417 objects remains correctly gated behind operator-go + VM dispatch per
+  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` (unambiguously heavy I/O, over the runbook's
+  few-hundred-object threshold). Repo: market-tick-data-service.

@@ -525,16 +525,36 @@ memory and that's what kills sessions" as-is.
       all plausible if a full sweep can run 5-12 minutes depending on load — not yet independently confirmed (log
       timestamps are captured ONCE at run start and reused for both the "scanning" and "OK" lines, so run DURATION can't
       be read from the log directly; would need direct process-timing evidence like this catch's journalctl burst, for
-      each historical death). **Notable, independently interesting finding**: the guard's own log shows "OK — no
-      root-owned files, no fsck breakage" on EVERY visible run across the full log history — this expensive
-      belt-and-suspenders check has never once caught a real problem, yet runs up to 4x/hour doing genuinely heavy
-      `sudo`+fsck work across the whole fleet. **Done when**: (a) directly capture PID/FD/CPU state of BOTH the tmux
-      server AND a sample of these `sudo`/`git fsck` child processes DURING an active guard sweep (ps snapshot
-      mid-sweep, not just at death); (b) if confirmed as the trigger, fix candidates: reduce frequency (15min ->
-      30/60min, given it never finds anything), add `nice`/`ionice` to de-prioritize the sweep relative to the
-      orchestrator/tmux, or skip the expensive `fsck --connectivity-only` unless a cheaper heuristic first flags a real
-      problem (chown-check alone is cheap; the exhaustive fsck is the expensive part and has a 100% clean track record
-      so far). Repo: agent-orchestrator (script), (fleet-wide root cron — not repo-scoped).
+      each historical death). **Correction (2026-08-12, same session, operator asked to contextualize the "never found a
+      problem" claim)**: that claim was wrong as originally stated — it was based on a small recent `tail` sample, not
+      the full log. The real log goes back to 2026-06-01 (6,720 total runs): 6,093 clean, ~600 runs (~9%) logged a
+      `WARN:`. But the WARN history is NOT ongoing/organic corruption — it concentrates almost entirely in (a) the
+      guard's own first ~4 days post-deploy (2026-06-01 to 06-04, expected bootstrap noise as fresh worktrees settled),
+      (b) one already-separately-tracked rough day (07-13), and (c) a deliberately-named test fixture
+      (`instruments-service.broken-empty-clone-20260805`) through 08-06. **Zero WARN lines in any run that overlapped
+      with any of tonight's 3 known tmux deaths** — so fsck failures don't correlate with the deaths either. Net: the
+      check has been genuinely clean for weeks; the original "no-op" framing was directionally right, just imprecisely
+      stated.
+- [x] [INFRA] P0. ~~fleet-git-health-guard.sh de-prioritized + overlap-locked, frequency cut to daily~~ — **SHIPPED
+      2026-08-12, `agent-orchestrator@836d88fc52`, operator-directed.** **Major finding first**: live-measured a
+      `--dry-run` full sweep on the VM — **16m55s elapsed**, LONGER than the 15-min cron interval this ran at until
+      today. This is not a hypothesis anymore: consecutive invocations were **structurally guaranteed to overlap
+      continuously** (a new sweep starting before the previous one finished), not as an occasional edge case — this
+      alone is a genuine, independently-valuable finding regardless of whether it's THE tmux-death trigger. Shipped 4
+      changes to `scripts/fleet-git-health-guard.sh`: (1) `nice -n19`/`ionice -c3` self-re-exec — this background
+      maintenance work (100%-clean track record for weeks) should never compete with foreground tmux/orchestrator work
+      for CPU/IO scheduling; (2) combined the two always-executed `sudo -u ubuntu` calls (git config + first fsck
+      attempt) into one PAM session instead of two, halving that overhead for the common path; (3) a 0.5s stagger after
+      each of the ~29 expensive main-clone fsck checks (NOT the ~986 cheap worktree root-owned-file checks, which stay
+      tight); (4) an `flock`-based overlap lock (`-n`, fails fast rather than queuing) so a slow sweep skips the next
+      tick cleanly instead of ever running two full sweeps at once — direct insurance for the 16m55s-vs-15min finding
+      above, independent of frequency. **Also changed the root crontab** (surgical single-line edit, verified via `diff`
+      before installing, backup saved to `/tmp/root_crontab_backup_*.txt`): `*/15 * * * *` -> `17 4 * * *` (once daily,
+      04:17 UTC — picked to avoid the `:00`/`:03`/`:06`-hour boundaries several other daily/hourly jobs cluster on).
+      **Validated live before shipping** (not just `bash -n`): self-test PASS (dedup state-machine logic unchanged), a
+      full `--dry-run` completed clean, and a dedicated lock-contention test confirmed a second invocation correctly
+      detects the held lock and exits near-instantly (0s) rather than starting an overlapping sweep. Repo:
+      agent-orchestrator (script), root crontab (fleet-wide, not repo-scoped).
 
 ## Progress Log
 

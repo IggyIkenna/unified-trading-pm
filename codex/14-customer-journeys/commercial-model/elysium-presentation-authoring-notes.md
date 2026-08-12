@@ -4,8 +4,8 @@ title: Elysium/POD client document set — authoring notes, artifact URLs and tr
 summary: >-
   Operational notes for the Elysium client-facing HTML documents held in this directory: the published artifact URLs
   (republishing without passing the URL creates a duplicate rather than updating), the design token set and validated
-  palette, and nine authoring traps that each cost real time to learn — chief among them that CSS var() does not resolve
-  in SVG presentation attributes.
+  palette, and the authoring traps that each cost real time to learn — chief among them that CSS var() does not resolve
+  in SVG presentation attributes, and that an artifact URL absent from the table above is unrecoverable.
 authoritative_for:
   - elysium client document authoring traps
   - elysium published artifact urls
@@ -23,6 +23,7 @@ related:
   [
     /codex/14-customer-journeys/commercial-model/carveout-engineering.html,
     /codex/14-customer-journeys/commercial-model/platform-architecture.html,
+    /codex/14-customer-journeys/commercial-model/strategy-service-deep-dive.html,
     /codex/14-customer-journeys/commercial-model/elysium-carveout-deferral-message-2026-08-11.md,
   ]
 created: 2026-08-11
@@ -32,35 +33,59 @@ code_refs: []
 
 # Elysium / POD client-facing documents
 
-Two standalone HTML documents produced 2026-08-11 for the Elysium (POD) DeFi mandate. **Not reveal.js decks** — unlike
-the numbered files in the parent directory these are scrolling documents with progressive disclosure, designed to be
-read and forwarded rather than presented from a stage.
+The standalone HTML documents produced from 2026-08-11 for the Elysium (POD) DeFi mandate. **Not reveal.js decks** —
+unlike the numbered files in the parent directory these are scrolling documents with progressive disclosure, designed to
+be read and forwarded rather than presented from a stage.
 
 ## Published artifact URLs — USE THESE TO UPDATE, DO NOT REPUBLISH BLIND
 
-Both files are published as private Claude artifacts. **Publishing without passing the existing `url` creates a
-DUPLICATE artifact rather than updating the one the operator already has.** From a fresh session, pass the URL:
+Each file is published as a private Claude artifact. **Publishing without passing the existing `url` creates a DUPLICATE
+artifact rather than updating the one the operator already has.** From a fresh session, pass the URL:
 
-| File                         | Artifact URL                                                         | Favicon |
-| ---------------------------- | -------------------------------------------------------------------- | ------- |
-| `platform-architecture.html` | https://claude.ai/code/artifact/cd44b148-6752-437c-919f-d8b4cef42cba | 🏛️      |
-| `carveout-engineering.html`  | https://claude.ai/code/artifact/39d52123-63ad-49ac-a62a-99d2b9f26269 | 🧩      |
+| File                              | Artifact URL                                                         | Favicon |
+| --------------------------------- | -------------------------------------------------------------------- | ------- |
+| `platform-architecture.html`      | https://claude.ai/code/artifact/cd44b148-6752-437c-919f-d8b4cef42cba | 🏛️      |
+| `carveout-engineering.html`       | https://claude.ai/code/artifact/39d52123-63ad-49ac-a62a-99d2b9f26269 | 🧩      |
+| `strategy-service-deep-dive.html` | https://claude.ai/code/artifact/a99f5b1e-401d-4b2e-b025-f7511bda6552 | ⚙️      |
 
 Keep the favicon stable across redeploys — the operator finds the tab by its icon.
 
 ## What each one is
 
-- **`platform-architecture.html`** — the primary client document. 12 sections, 9 hand-authored SVG figures. Covers the
-  entity chain, a component map encoding group/ownership/build-stage on three independent channels, the two strategy
-  archetypes in mechanical detail, data coverage per venue, the batch/paper/live determinism spine, execution algorithm
-  resolution and the connectivity-vs-execution-intelligence boundary, the repository/tier stack, infrastructure and data
-  flow, the delivery and CI-escalation loop, live operations, the Article 4 carve-out with a per-repository hand-over
-  manifest, and programme status.
-- **`carveout-engineering.html`** — **rev 2.0**, CTO-audience engineering specification. 9 sections, 2 SVG figures.
-  Defines the acceptance bar for "runnable"; specifies **11 proposed packages** with a declared ship form each (FULL /
-  REDUCED / STATIC / INTERFACE-ONLY); the 7-step runtime path; **the platform seam — 10 typed interfaces** that resolve
-  either to local implementations or to maintained services; the configuration snapshot; **9 hand-over acceptance
-  criteria**; 9 standing operational functions; extension work-items; and the 26-repo estate mapping as a §09 appendix.
+> Section counts are deliberately not given below — they went stale twice (see trap 9). Count `<h2>` and subtract the
+> contents block if you need one.
+
+- **`platform-architecture.html`** — the primary client document, and the only one written for a non-engineering reader
+  as well as an engineer. Hand-authored SVG figures throughout. Covers the entity chain, a component map encoding
+  group/ownership/build-stage on three independent channels, the two strategy archetypes in mechanical detail, data
+  coverage per venue, the batch/paper/live determinism spine, execution algorithm resolution and the
+  connectivity-vs-execution-intelligence boundary, the repository/tier stack, infrastructure and data flow, the delivery
+  and CI-escalation loop, live operations, the Article 4 carve-out with a per-repository hand-over manifest, **the wider
+  platform surface and where it can go**, and programme status.
+
+  > The wider-surface section is **deliberately asset-group-agnostic** — it describes market types by their properties
+  > ("event-driven markets whose settlement has nothing to do with price at all") and names no asset group, venue or
+  > instrument. That was an explicit operator instruction: convey multi-asset-group breadth without naming specifics.
+  > Adding a named asset group there would break the constraint the section was written to satisfy.
+
+- **`carveout-engineering.html`** — CTO-audience engineering specification. Defines the acceptance bar for "runnable";
+  specifies the **proposed packages** with a declared ship form each (FULL / REDUCED / STATIC / INTERFACE-ONLY); the
+  runtime path; **the platform seam of typed interfaces** that resolve either to local implementations or to maintained
+  services; the configuration snapshot; the hand-over acceptance criteria; the standing operational functions; extension
+  work-items; and the 26-repo estate mapping as the final appendix. Carries an _inspection is not transfer_ note.
+
+- **`strategy-service-deep-dive.html`** — the companion to sending the strategy-service repository itself, and the most
+  technical of the three. Reproduces from source the `StrategyInstructionEnvelope` and **all eleven instruction
+  subtypes**, the live `carry_staked_basis.yaml`, the typed configuration schemas, the breakers and kill switch, capital
+  movement through Copper (Figure 1), the read surface by module, external-strategy integration, asset-group agnosticism
+  and the research path. **Its config extracts are reproduced from real files, so a reader can diff them against the
+  repository they receive** — if a schema changes in code, this document is wrong until updated, unlike the other two
+  which describe structure rather than quote it.
+
+  > Contains the **placeholder risk thresholds** from the client's own strategy config, still carrying their
+  > `⚠️ MAY-23 CUTOVER PLACEHOLDER VALUES ⚠️` banner. That is deliberate honesty, not an oversight — but it means the
+  > operator-owned threshold approval is now visible to the client, and the document should be re-checked against the
+  > config once those values are ratified.
 
   > **Rev 1.0 was rejected by the operator** (2026-08-11) as discussing "our methodology way too much" and not
   > presentable to a CTO — it read as an internal negotiation memo. **Rev 2.0 fixed that structurally, not by editing
@@ -136,11 +161,33 @@ Keep the favicon stable across redeploys — the operator finds the tab by its i
    overflow and confirm the detector fires** before trusting a clean result. A null result from an unvalidated detector
    is not evidence.
 
-9. **Re-derive every asserted count; two were wrong within a day.** Rev 1.0 claimed 8 carry archetypes (actual **6**)
-   and 13 venue adapters (actual **20** distinct adapters in `trade_execution/adapters/` alone — the claim _understated_
-   the estate). Note also that `VENUE_TO_ADAPTER_KEY`, which CLAUDE.md names as the venue-registry SSOT, could not be
-   located in non-test UAC sources; the 20 is a **measured floor from the adapter directory**, not a registry read.
-   Quote the floor and say so, or find the registry.
+9. **Re-derive every asserted count — and prefer not asserting a total at all.** Rev 1.0 claimed 8 carry archetypes and
+   13 venue adapters. Both were wrong, and the _corrections_ then rotted too: the "6 carry archetypes" replacement was
+   itself wrong (the package declares **seven** `ARCHETYPE` values; the missed one was `CARRY_FUNDING_DISPERSION`), and
+   the venue claim _understated_ the estate at 13 against 20 distinct adapters in `trade_execution/adapters/`. Two
+   lessons, in order of value:
+
+   - **A total is the most rot-prone thing you can write.** Every one of these numbers was correct when measured and
+     wrong within days, because the estate grows. Prefer a property that does not move — "the package names two carry
+     archetypes" is stable because it describes the spec, not the tree. Where a client argument genuinely needs the
+     contrast, give the shape ("every archetype across every family") rather than an integer.
+   - **Derive counts from the enum or registry, never from the directory.** The 6 came from counting files and missing
+     one; the definitive oracle was `grep 'ARCHETYPE = StrategyArchetype\.'` over the package. Likewise
+     `VENUE_TO_ADAPTER_KEY`, which CLAUDE.md names as the venue-registry SSOT, could not be located in non-test UAC
+     sources — so the 20 is a **measured floor from the adapter directory**, not a registry read. Quote the floor and
+     say so, or find the registry.
+
+   Corollary trap: **a correction applied to one artefact is not applied to the set.** The "liquidity provision" family
+   was fixed in `strategy-service-deep-dive.html` on 2026-08-11 and missed in
+   `elysium-carveout-deferral-message-2026-08-11.md`, so a wrong claim stayed live for a day. Grep the whole directory
+   for the wrong string, not just the file you found it in.
+
+   And a trap inside that trap — **over-correction.** I recorded the liquidity-provision family as "invented". It is
+   not: `DEFI_LP_CONCENTRATED`, `DEFI_LP_POOL` and `DEFI_LP_VAULT` are all real `StrategyArchetype` members. The error
+   was narrower than I described — liquidity provision is a genuine platform capability **misfiled as a family** when
+   `StrategyFamily` has nine members and none of them is LP. Saying "invented" would have led a future reader to delete
+   a true capability claim from `platform-architecture.html`, which names DeFi liquidity provision correctly. **Diagnose
+   the exact shape of an error before recording it, because the record is what the next person acts on.**
 
 10. **`safe-doc-push` does not carry deletions, so a `git mv` half-lands.** The script copies **named files** into an
     isolated worktree and commits from there; a deleted path is not a file to copy, so the new path lands and the old
@@ -151,6 +198,25 @@ Keep the favicon stable across redeploys — the operator finds the tab by its i
     git ls-tree -r --name-only origin/live-defi-rollout -- <old-path>   # MUST be empty
     git ls-tree -r --name-only origin/live-defi-rollout -- <new-path>   # MUST list the file
     ```
+
+11. **An artifact URL that is not in the table above is GONE, and "I recorded it" is not evidence that it is.** The
+    `strategy-service-deep-dive.html` URL was missing from this table for a day while a session-end verdict asserted
+    that all three URLs were safely recorded here. It survived only because a conversation summary happened to carry it;
+    had that context been dropped, the operator's published artifact would have become unreachable and a republish would
+    have silently created a duplicate at a new URL, leaving them holding a stale link. The claim was a **proxy** — "I
+    wrote the notes file, therefore the URL is in it" — never a measurement. Before asserting any artefact is durable:
+
+    ```bash
+    grep -c '<the-uuid>' codex/14-*/commercial-model/elysium-presentation-authoring-notes.md   # MUST be 1
+    ```
+
+    (The glob is not cosmetic: `check_reference_paths.py` scans **fenced code blocks too**, so a literal repo-relative
+    `codex/NN-name/...md` path inside a shell example is a FORMAT violation even though it is a command, not a
+    reference. A leading slash would make the command wrong; the glob dodges the pattern and stays runnable.)
+
+    Generalises past URLs: **verify durability by reading the file back, not by remembering that you wrote it.** This is
+    the same proxy-vs-property failure as trusting `exit 0` from a checker that never opened the file (see the plan's
+    H.6).
 
 ## Design system
 

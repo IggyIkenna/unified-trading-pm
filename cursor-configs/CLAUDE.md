@@ -173,8 +173,10 @@ SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
   (liveness `kill -0 <PID>`, no self-match); `ScheduleWakeup` / a dispatched sub-agent are NOT reliable wakes — arm your
   OWN `run_in_background` heartbeat watchdog (≤30-min) in the SAME turn. SSOT:
   `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
-- **Batch independent tool calls** — compound `&&`/`;` Bash, several `tool_use` blocks per message, `replace_all` over
-  serial Edits; only result-dependent calls stay sequential. Measured: 57.3% collapsible, each a ~406k prefix re-read.
+- **Batch independent tool calls — the trigger is PRE-call**: before any Bash/Read/Grep ask _what else will I want to
+  know regardless of this answer_, and fold it into the SAME call (compound `&&`/`;`, several `tool_use` blocks per
+  message, `replace_all` over serial Edits); only result-dependent calls stay sequential. Stating it as an outcome fails
+  — a reminder acknowledged ~88×/session changed nothing. Measured: 57.3% collapsible, each a ~406k prefix re-read.
   SSOT: `/codex/06-coding-standards/tool-call-batching.md`.
 - **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`).
 - **Pre-task plan/issue conflict check (HARD RULE)** — before ANY task grep `plans/active/`+`issues/`: plans go
@@ -214,13 +216,9 @@ architecture (L0–L4)".
   `assigned_role` (skill-based), not VM.
 
 - **Format**: every todo `- [x] [SCRIPT] P0. …`. **Frontmatter SSOT: `plans/PLAN_FORMAT.md`** (canonical schema via
-  `/codex/11-project-management/doc-frontmatter-schema.md`). All plans carry: `doc_type: plan`, `title`, `summary`,
-  `status`, `nature`, `asset_group`, `stage`, `repos`, `scope`, `tags`, `related`, `created`, `parent_epic`,
-  `assigned_vm`, `execution_scope`, `priority`, `estimate_class`, `estimate_baseline/calibrated_ai_days`,
-  `assigned_role`, `drift_direction`, + optional `depends_on` (prerequisites), `locked_by/since`,
-  `supersedes/superseded_by`, `source`. **`assigned_vm` ∈ `{planning, NA}` only**: `planning` = orchestrator VM
-  executes; `NA` = not dispatched. **`status: draft`** = WIP → NOT ingested; flip to `active` to dispatch.
-  **`depends_on`** documents task ordering + gates archival (does NOT affect dispatch). SSOTs: `plans/PLAN_FORMAT.md`,
+  `/codex/11-project-management/doc-frontmatter-schema.md`) — read it for the required-key list; a copy here only rots.
+  Semantics not to guess: **`status: draft`** = WIP → NOT ingested (flip to `active` to dispatch); **`depends_on`**
+  documents ordering + gates archival, does NOT affect dispatch. SSOTs: `plans/PLAN_FORMAT.md`,
   `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.
 - **A plan REFERENCES codex, it does not duplicate it (HARD RULE)**: the durable rule's SSOT is the codex doc; the plan
   links to it. **When authoring or touching a plan, READ the codex docs it depends on and check the plan against them**

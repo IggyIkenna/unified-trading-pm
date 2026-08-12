@@ -1250,6 +1250,18 @@ other unstaged files, hooks modify the staged file, then prek tries to restore a
 > needed outside that wrapper, pin explicitly (`npx -y prettier@3.9.5 --write <file>`) and run
 > `bash scripts/plan-hygiene/check_prettier_mangling.sh <file>` before staging.
 
+**A second, version-independent mangle — a wrapped line that BEGINS with `+`, `-`, or `*` becomes a list item.** Under
+`proseWrap: always` prettier rewraps prose freely, so a continuation line you wrote as `… \`rebase --abort\``/`+
+\`QUICKMERGE_BLOCKED\` (recover …)` is re-parsed as a bullet, splitting one sentence into a paragraph plus an
+unrelated-looking list entry. This is not corruption prettier introduces — it is valid CommonMark being read the way the
+spec says — which is exactly why no version pin and no mangling checker catches it. It changes MEANING in rules files,
+where a dense near-cap line wraps often and a stray bullet reads as a separate rule.
+
+Write the continuation so it cannot start with a list marker: put the operator at the END of the previous line, or
+reword (`…, then X` rather than `… \n + X`). Observed 2026-08-12 in `SUB_AGENT_MANDATORY_RULES.md`, where the "Behind
+remote" recovery step was silently split off into its own bullet by an otherwise-correct wrapper run. **After any
+prettier pass on a rules/plan file, re-read the diff for new `- `/`+ ` line starts you did not write.**
+
 1. **Pre-format ALL formatters before `git add`:**
    ```bash
    bash scripts/hooks/prettier-autostage.sh <file>   # JSON, YAML, MD, etc. — version-guarded, never bare `npx prettier`

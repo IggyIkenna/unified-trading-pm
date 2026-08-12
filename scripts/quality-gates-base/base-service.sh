@@ -551,31 +551,28 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     # `--overrides` requirements file preserves full normal transitive resolution while still forcing the
     # intended floor. SSOT:
     # plans/active/issues/qg_editable_sibling_install_regresses_override_only_cve_fixes_2026_08_04.md.
+    # Resolve each sibling ONCE, then derive both install guards. The overrides extraction that
+    # used to be inlined here now lives in qg-common.sh so base-library.sh shares it verbatim;
+    # --constraints is the 2026-08-12 addition that stops this install from upgrading lock pins.
+    _sib_dirs=()
+    for lib in "${LOCAL_DEPS[@]}"; do
+        for _libcand in "${_ws_root}/$lib" "${REPO_ROOT}/$lib"; do
+            [ -d "$_libcand" ] && { _sib_dirs+=("$_libcand"); break; }
+        done
+    done
     _local_deps_overrides="${TMPDIR:-/tmp}/qg-local-deps-overrides.$$"
-    : > "$_local_deps_overrides"
-    for lib in "${LOCAL_DEPS[@]}"; do
-        for _libcand in "${_ws_root}/$lib" "${REPO_ROOT}/$lib"; do
-            [ -f "$_libcand/pyproject.toml" ] || continue
-            python3 -c "
-import tomllib, sys
-try:
-    with open(sys.argv[1], 'rb') as f:
-        d = tomllib.load(f)
-except Exception:
-    sys.exit(0)
-for line in d.get('tool', {}).get('uv', {}).get('override-dependencies', []):
-    print(line)
-" "$_libcand/pyproject.toml" >> "$_local_deps_overrides" 2>/dev/null
-            break
-        done
+    _local_deps_constraints="${TMPDIR:-/tmp}/qg-local-deps-constraints.$$"
+    qg_build_local_deps_overrides "$_local_deps_overrides" ${_sib_dirs[@]+"${_sib_dirs[@]}"}
+    qg_build_local_deps_constraints "$_local_deps_constraints" "$_local_deps_overrides"
+    for _libcand in ${_sib_dirs[@]+"${_sib_dirs[@]}"}; do
+        uv pip install -e "$_libcand" --python "$_venv_py" \
+            --overrides "$_local_deps_overrides" --constraints "$_local_deps_constraints" --quiet \
+            || log_warn "editable install failed for $(basename "$_libcand") — local typecheck may inflate via Unknown-type cascade"
     done
-    for lib in "${LOCAL_DEPS[@]}"; do
-        for _libcand in "${_ws_root}/$lib" "${REPO_ROOT}/$lib"; do
-            [ -d "$_libcand" ] && { uv pip install -e "$_libcand" --python "$_venv_py" --overrides "$_local_deps_overrides" --quiet \
-                || log_warn "editable install failed for $lib — local typecheck may inflate via Unknown-type cascade"; break; }
-        done
-    done
-    rm -f "$_local_deps_overrides"
+    rm -f "$_local_deps_overrides" "$_local_deps_constraints"
+    # The env the suite is ABOUT to run against now matches the lock, or the sync above failed
+    # silently (it is `|| log_warn`). This is the call that blocks under QG_ENFORCE_FRESH_VENV=1.
+    qg_assert_venv_fresh post-sync
 fi
 PYTHON_CMD=".venv/bin/python"; [ ! -f "$PYTHON_CMD" ] && PYTHON_CMD="python3"
 

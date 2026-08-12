@@ -304,12 +304,28 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     # SSOT: plans/active/cicd_consolidated_remaining_2026_06_24.md § Phase 1.5b.
     UV_PROJECT_ENVIRONMENT=.venv uv sync --frozen --quiet \
         || log_warn "uv sync --frozen failed (lock stale/broken?) — QG runs against the existing .venv"
+    # Resolve each sibling ONCE, then derive the two install guards — see
+    # qg_build_local_deps_overrides / qg_build_local_deps_constraints in qg-common.sh for why
+    # both are needed and why --no-deps is not the answer.
+    _sib_dirs=()
     for lib in ${LOCAL_DEPS[@]+"${LOCAL_DEPS[@]}"}; do
         for _libcand in "${_ws_root}/$lib" "${REPO_ROOT}/$lib"; do
-            [ -d "$_libcand" ] && { uv pip install -e "$_libcand" --python "$_venv_py" --quiet \
-                || log_warn "editable install failed for $lib — local typecheck may inflate via Unknown-type cascade"; break; }
+            [ -d "$_libcand" ] && { _sib_dirs+=("$_libcand"); break; }
         done
     done
+    _ld_ov="${TMPDIR:-/tmp}/qg-local-deps-overrides.$$"
+    _ld_con="${TMPDIR:-/tmp}/qg-local-deps-constraints.$$"
+    qg_build_local_deps_overrides "$_ld_ov" ${_sib_dirs[@]+"${_sib_dirs[@]}"}
+    qg_build_local_deps_constraints "$_ld_con" "$_ld_ov"
+    for _libcand in ${_sib_dirs[@]+"${_sib_dirs[@]}"}; do
+        uv pip install -e "$_libcand" --python "$_venv_py" \
+            --overrides "$_ld_ov" --constraints "$_ld_con" --quiet \
+            || log_warn "editable install failed for $(basename "$_libcand") — local typecheck may inflate via Unknown-type cascade"
+    done
+    rm -f "$_ld_ov" "$_ld_con"
+    # The env the suite is ABOUT to run against now matches the lock, or the sync above failed
+    # silently (it is `|| log_warn`). This is the call that blocks under QG_ENFORCE_FRESH_VENV=1.
+    qg_assert_venv_fresh post-sync
 fi
 if [ -f ".venv/bin/python" ]; then
     PYTHON_CMD=".venv/bin/python"

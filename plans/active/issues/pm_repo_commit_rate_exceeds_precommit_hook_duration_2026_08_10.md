@@ -352,20 +352,36 @@ Directions, cheapest first — each is a todo below:
       worktree recipe circulated in this session (including in the sub-agent brief) symlinks the throwaway worktree's
       `.venv` at the operator's LIVE venv — a `uv sync --frozen` through that symlink can PRUNE packages out of the real
       environment (measured 2026-08-10; `scripts/quickmerge.sh` already used a shared venv cache for this reason). The
-      helper uses the shared cache (`QM_ISO_VENV_CACHE`). Live venv verified undamaged after the fact: 388 packages
-      before and after a full QG run through such a symlink, imports OK. Codex SSOT:
+      helper uses the shared cache (`QM_ISO_VENV_CACHE`). **Do NOT read a package COUNT as the damage signal** —
+      corrected 2026-08-12, after that framing produced a false alarm here. A later full QG took slot 4 from 388
+      packages to 145, which is CONVERGENCE TO CORRECT, not a prune: 145 is what PM's own `uv.lock` declares (slots 2
+      and 3 sit at 145 untouched, and `pydantic` is not in PM's lock at all), while slot 5's 388 is the outlier
+      superset. The real signal is CAPABILITY — whether the tools the gate needs still run. Codex SSOT:
       `/codex/05-infrastructure/per-tab-worktrees.md`.
-- [ ] [OPERATOR] P2. **Decide whether the session-collision check should escalate past WARN.** Now that the hook
-      actually runs on macOS (above), the policy question is live and unanswered — it was previously moot because the
-      detection never fired here. Options, per the sub-agent that measured it: **(A) [RECOMMENDED]** keep `SessionStart`
-      WARN-only and strengthen the message to name `scripts/dev/ship-from-worktree.sh` as the concrete next action — a
-      true block is not even mechanically available at the `SessionStart` hook event, which is documented non-blocking
-      regardless of exit code; **(B)** add a narrower `PreToolUse` guard on the actually-risky commands (`git commit` /
-      `quickmerge.sh` / `safe-doc-push.sh`) that re-checks liveness at the moment of mutation rather than only at
-      session start, with a clean opt-out for anything run from a `ship-from-worktree.sh` worktree — cost is that a
-      mid-task block is far more expensive per false positive than a skippable warning, and it would add friction for a
-      read-only second session's first commit and during AO worker handoff. **Done when**: the operator picks A or B (or
-      Other) and the choice is implemented + tested. Repo: unified-trading-pm.
+- [x] ✅ [OPERATOR] P2. **Decide whether the session-collision check should escalate past WARN.** RESOLVED 2026-08-12 —
+      operator chose **option B**; shipped unified-trading-pm@6aba7ca9ff. New
+      `cursor-configs/hooks/pretooluse-slot-collision-guard.py`, registered on `PreToolUse`/`Bash` by APPENDING to the
+      existing matcher so `block_destructive_commands.py` keeps running (under `bypassPermissions` the
+      `permissions.deny` list is discarded, making these hooks the only surviving guardrail —
+      `/plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md`). **Blocks** (only with a live
+      peer in the slot): a bare `git commit`, `quickmerge.sh --no-isolated`, and `safe-doc-push.sh` under
+      `SDP_ISOLATED=0` — the variants that write the SHARED index. **Deliberately does NOT block** default
+      `quickmerge.sh` / `safe-doc-push.sh`, which commit from a private worktree and are therefore the REMEDY, not the
+      hazard; blocking them would push an agent toward a bare `git commit`, strictly worse. Anything already inside a
+      linked worktree is exempt on the same principle, tested via `git rev-parse --git-dir` != `--git-common-dir` so it
+      covers `ship-from-worktree.sh`, quickmerge isolation and any hand-rolled worktree alike. Fails OPEN on every error
+      path (malformed payload, unparseable command, missing `pgrep`) — a guard that blocks on its own bug would wedge
+      every commit. **Detection was EXTRACTED to `cursor-configs/hooks/lib/slot-collision-detect.sh`** and both hooks
+      now share it: the macOS `/proc` gap survived unnoticed in a single copy, and a second copy is exactly how that
+      returns fixed-in-one/broken-in-the-other. **Two real defects the gate caught in this work, both mine**: (1) the
+      refactor added `dirname`/`grep` — external binaries absent from the curated-PATH degradation test — silently
+      killing signal 2 again; caught by the existing 10-test suite, replaced with builtins. (2) The escape hatch was
+      written as an `os.environ` read while documented as a `SLOT_COLLISION_GUARD=0 <cmd>` PREFIX; those are
+      incompatible, since the hook is a child of the CLI and never sees a command's env prefix — it would have shipped
+      an escape hatch that silently did nothing. Now matched in the command string, with a test pinning that the
+      environment-only form does NOT pass. Tests: `tests/test_pretooluse_slot_collision_guard.bats` (17; only 6 are
+      blocking cases — the rest pin the false-positive surface the operator explicitly paid for), plus the 10 existing
+      session-start tests still green.
 - [ ] [INFRA] P2. **A liveness check built on `pgrep` substring matching is unsound on this shared host.** Measured
       2026-08-11: a watcher using `pgrep -f "quality-gates.sh --no-fix" | head -1` matched an ARBITRARY FOREIGN process
       — this host runs several concurrent QG invocations across slots, and the zsh `eval` wrappers' own command lines
@@ -451,12 +467,13 @@ Directions, cheapest first — each is a todo below:
       a service repo with a heavier suite and confirm the cached venv stays valid across a dependency bump. **Done
       when**: two repos pass an isolated `--isolated` quickmerge end-to-end and the cache is shown to refresh on a lock
       change. Repo: unified-trading-pm.
-- [ ] [INFRA] P2. **Slot 2's PM checkout is wedged and cannot receive any of these fixes.** 81 commits behind, blocked
-      on 4 unresolved conflict markers in `scripts/plan-hygiene/na_corpus_baseline.yaml` plus 22 dirty files (~86 min
-      stale at 2026-08-10, no `.agent-claim`). Deliberately NOT resolved by this session — it is another session's
-      in-flight work and the inherit path assumes CLEAN WIP, not a live conflict. **Done when**: the conflict is
-      resolved by its owner (or explicitly abandoned) and slot 2 fast-forwards. Owner: whoever owns that WIP. Repo:
-      unified-trading-pm.
+- [ ] [INFRA] P2. **Slot 2's PM checkout is wedged and cannot receive any of these fixes.** **STALE 2026-08-12: slot 2
+      is 3 commits behind origin, not 81 — measured directly. Re-verify the wedge before acting on the number in this
+      todo.** 81 commits behind, blocked on 4 unresolved conflict markers in
+      `scripts/plan-hygiene/na_corpus_baseline.yaml` plus 22 dirty files (~86 min stale at 2026-08-10, no
+      `.agent-claim`). Deliberately NOT resolved by this session — it is another session's in-flight work and the
+      inherit path assumes CLEAN WIP, not a live conflict. **Done when**: the conflict is resolved by its owner (or
+      explicitly abandoned) and slot 2 fast-forwards. Owner: whoever owns that WIP. Repo: unified-trading-pm.
 - [ ] [INFRA] P3. **`check_chain_set_inclusion` has 3 failing tests, pre-existing.** Verified failing identically at the
       pre-F7 baseline `c7fe11851a`; untouched by this session. Recorded so the next person does not mistake them for
       isolation fallout. **Done when**: triaged or fixed. Repo: unified-trading-pm.
@@ -551,7 +568,11 @@ Directions, cheapest first — each is a todo below:
       "every content check passed … Do NOT go looking for a content bug" while one was failing. A false all-clear is
       worse than the false alarm it replaced. Hardened to also match pytest-style `FAILED`/`ERROR`/`E`-prefixed lines,
       not just the emoji.
-- [ ] [INFRA] P0. **BLOCKED: a peer's uncommitted UTL edit red-lines every PM quality gate on this host.**
+- [ ] [INFRA] P0. **BLOCKED: a peer's uncommitted UTL edit red-lines every PM quality gate on this host.** **RE-TRIAGE
+      2026-08-12: the stated blocker is GONE — re-verify and close or re-scope.** Measured:
+      `git -C unified-trading-library status --porcelain` is empty, and PM's full `quality-gates.sh` passed four times
+      on this host on 2026-08-11/12 (287s and 305s runs among them). Nothing is currently blocked by this. Left open
+      rather than flipped because the original author may have intended a durable guard, not just the one incident.
       `tests/unit/test_capability_verdict_matrix.py::test_fixture_matches_live_engine_registry` dies with
       `ImportError: cannot import name '_per_vm_shard_backlog' from 'unified_trading_library.manifest_writer._state'`.
       Measured: the symbol IS on `origin/live-defi-rollout`, is ABSENT from the local working file, and the UTL clone is

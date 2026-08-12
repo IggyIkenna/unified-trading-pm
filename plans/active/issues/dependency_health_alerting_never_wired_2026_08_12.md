@@ -92,11 +92,17 @@ the active corpus without ever being done.
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Decide the producer.** Nothing computes dependency outage duration today. Options: (a) the
-      dependency owner emits a lifecycle event on transition and alerting derives duration; (b) a poller in
-      alerting-service tracks last-healthy timestamps per `dependency_id` and evaluates on a tick. (b) is self-contained
-      and needs no changes in dependent services; (a) is more accurate but touches every dependency owner. Done-when:
-      choice recorded here with its trade-off.
+- [x] [BACKEND] P1. **Decide the producer — RESOLVED 2026-08-12: (b), a probe-driven producer in alerting-service,
+      dispatched on the policy's own `test_method` field.** See "Producer decision" below for the evidence and the
+      trade-off accepted.
+- [ ] [BACKEND] **P0. Put a duration floor on the no-fallback branch BEFORE any producer is wired.** As written,
+      `evaluate_dependency_health` ORs `not policy.fallback_available` into the CRITICAL branch with no minimum outage:
+      any `outage > 0` — a single failed probe, 1 second — returns SEV0 `pagerduty+telegram`. **10 of 27 policies set
+      `fallback_available: false`** (aave_v3, lido, gcp_pubsub, gcp_cloud_storage, gcp_secret_manager,
+      gcp_artifact_registry, gcp_bigquery, redis_primary, gcp_cloud_sql, twilio_voice_sms), so wiring a prober today
+      turns one flaky probe against Secret Manager into a 3am page. Fix: require N consecutive failed probes AND
+      `outage >= expected_recovery_time_seconds` before the no-fallback escalation, so "no fallback" raises SEVERITY,
+      never bypasses DURATION. This is a correctness bug in the shipped rule, independent of the wiring.
 - [ ] [BACKEND] P1. Wire the subscriber once the producer exists — a `*_event_handler.py` importing
       `evaluate_dependency_health` + `evaluate_dependency_recovered`, registered in `subscribers/alert_subscriber.py`,
       following the `recon_freeze_event_handler` pattern.
@@ -107,8 +113,55 @@ the active corpus without ever being done.
       `alerting-service@839cb5f`"). Add a status line stating it is contract-and-config only until the todos above land,
       so the next reader is not misled the way this doc misled me.
 
+## Producer decision (2026-08-12)
+
+**Chosen: (b) — a probe-driven producer inside alerting-service, dispatching on each policy's `test_method`.**
+
+The choice as originally framed ("dependency owner emits on transition" vs "poller tracks last-healthy") turned out not
+to be a live choice, for three reasons found in the code:
+
+1. **(a) is structurally impossible here.** All 27 policies are EXTERNAL venues/chains (binance_rest, uniswap_v3,
+   helius_solana_rpc), cloud infrastructure (gcp_pubsub, redis_primary, gcp_cloud_sql) or third-party alerting
+   (pagerduty, twilio). **Not one is an internal service of ours.** There is no "dependency owner" to emit a transition
+   event — Binance will not publish our `CONNECTIVITY_DEGRADED`. The emitter would have to be whichever of our services
+   happens to call the venue, and several call the same one, so outage state would be computed multiple times with
+   conflicting clocks.
+2. **The config already specifies the producer.** Every policy carries `test_method`, and it takes six distinct values —
+   `synthetic_probe`, `healthcheck_endpoint`, `probe_publish_subscribe`, `probe_read_write`, `probe_query`,
+   `probe_ping`. That field is a prober dispatch table; it has no other possible consumer. The original design intended
+   a prober and the field survived while the prober did not.
+3. **`CONNECTIVITY_DEGRADED` does not exist.** The rule's docstring says it consumes that event, but a fleet-wide `rg`
+   finds the string in exactly one place: that docstring. It is not an `EventType`, not an `AlertCode`, not a schema.
+   Option (a) would mean inventing the event type as well as the emitters.
+
+**Shape**: an async prober in alerting-service, one `_dispatch` on `test_method` returning a per-dependency result, and
+last-healthy timestamps kept per `dependency_id` so `current_outage_seconds` is derived rather than reported. Model it
+on `unified_trading_library/treasury/custody_pinger.py`, which is the same pattern already working in this workspace
+(`CustodyPinger.ping_all` → `_dispatch(source, config)` → per-source `_ping_*`). Keeping the prober in alerting-service
+co-locates outage state with the evaluation that consumes it and adds no cross-service contract.
+
+**Trade-off accepted — write this down where operators will read it**: a synthetic probe measures _the prober's_ view of
+reachability, not the trading path's. An unauthenticated probe can succeed against a venue whose authenticated order
+path is failing, and it can fail from one egress IP while the execution path is healthy. So probe-derived
+`DEPENDENCY_DEGRADED` is a floor on dependency health, never a statement that execution is fine, and its absence must
+never be read as "the venue is good". The corroborating signal — the execution path's own `classify_venue_error()`
+results, which already exist — should be folded in as a second input later; it is deliberately out of scope here because
+it would re-introduce the multi-emitter clock problem that ruled out (a).
+
 ## Progress Log
 
 - 2026-08-12 — Filed. Found while correcting `live-deployment-monitoring.md`, which listed `DEPENDENCY_DEGRADED` in its
   lifecycle-events table. It is an alerting-service AlertCode, not a lifecycle event a workload emits — a category
   error. Chasing which of the two was right surfaced that neither producer nor consumer exists.
+- 2026-08-12 — Producer decided (see above): probe-driven, dispatched on `test_method`, modelled on `CustodyPinger`.
+  Reading the config to make that call surfaced a **P0 correctness bug in the already-shipped rule** — the no-fallback
+  branch escalates to SEV0 with no duration floor, so the 10 `fallback_available: false` policies would page on a single
+  failed probe. That bug is latent only because the feature is dead; wiring the producer without fixing it first would
+  convert a dormant defect into a pager storm. Ordering is now: floor → producer → subscriber → integration test.
+- 2026-08-12 — Fixed two pointers that actively mislead the next implementer: `connectivity_rules.py` documented
+  `CONNECTIVITY_DEGRADED` as its input event (no such event exists anywhere in the fleet), and
+  `dependency_health_policies.yaml` cited the schema as `unified_api_contracts.canonical.crosscutting.dependency…` — a
+  `canonical.*` path that is workspace-BANNED and not the real import (`unified_api_contracts.dependency`). Both also
+  pointed at the owning plan as `plans/active/…` when it was archived to `plans/archive/2026_05/` in May. Shipped:
+  `alerting-service@79beb47b0f` (docstring: NOT-WIRED banner + real input contract) and `deployment-service@2cd96940c8`
+  (yaml header: real schema path + CONFIG-ONLY status).

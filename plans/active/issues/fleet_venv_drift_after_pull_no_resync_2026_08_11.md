@@ -108,10 +108,12 @@ leaves the environment behind, silently, forever.
       `unified-trading-pm` drifts on local tabs 5 and 6 too, and PM was the ONLY repo to re-drift (2 of 215 re-checked
       within an hour). (b) Not "three unpruned packages": PM's venv has **5 packages missing or at the wrong version**
       (incl. `propcache` DOWNGRADED 0.5.2 -> 0.4.1) alongside 136 extras, so `--inexact` correctly still flags it — this
-      is genuine drift of the same class that broke fastapi, not benign leftovers. (c) Not "something re-adds packages":
-      `uv sync` regenerates `uv.lock` with editable-dep version churn, `slot-cron-ff-pull.sh`'s `[auto-clean]` reverts
-      that via `git checkout -- uv.lock` (content unchanged in git, only the mtime moves), and the venv is then
-      consistent with the DISCARDED lock rather than the committed one. Superseded by the lock-churn todo below.
+      is genuine drift of the same class that broke fastapi, not benign leftovers. (c) Not "something re-adds packages"
+      — and the replacement mechanism given here was ALSO wrong (see the ticked lock-churn todo below for the measured
+      one; the text that followed blamed: `uv sync` regenerates `uv.lock` with editable-dep version churn,
+      `slot-cron-ff-pull.sh`'s `[auto-clean]` reverts that via `git checkout -- uv.lock` (content unchanged in git, only
+      the mtime moves), and the venv is then consistent with the DISCARDED lock rather than the committed one.
+      Superseded by the lock-churn todo below.
 - [x] ✅ [INFRA] P3. **Confirmed intentional — no change made, and both branches of the original todo were wrong.**
       `unified-trading-system-ui`'s `pyproject.toml` has **no `[project]` table**, so `uv lock` fails outright ("No
       `project` table found") — a lockfile is not addable. Nor is it vestigial: it is a documented tool-config carrying
@@ -119,18 +121,28 @@ leaves the environment behind, silently, forever.
       would strip lint and typecheck config from live code. The `-f uv.lock` guard in `qg_assert_venv_fresh` already
       skips it correctly, which is the right handling.
 
-- [ ] [INFRA] P1. **Fix the uv.lock churn cycle that leaves a venv matched to a DISCARDED lock.** `uv sync` regenerates
-      `uv.lock` with editable-dep version churn; `slot-cron-ff-pull.sh`'s `[auto-clean]` reverts it with
-      `git checkout -- uv.lock`; the environment is then consistent with the reverted lock and reads as permanently
-      stale. This is why the fleet-wide freshness check had to ship warn-only. Touches `setup.sh`'s sibling pinning
-      (STEP 7/8b `uv pip install -e ../sibling`) and the cron's auto-clean — both load-bearing fleet-wide, so scope it
-      before changing it. **Done when**: a sync -> gate -> re-check cycle on `unified-trading-pm` ends CLEAN, and
-      `QG_ENFORCE_FRESH_VENV=1` can be made the default. (repo: unified-trading-pm)
-- [ ] [INFRA] P2. **Flip the shared freshness check back to blocking once the churn cycle above is fixed.** It is
-      warn-only today purely because PM self-drifts; the check itself is verified working (fires, warns, and aborts
-      under `QG_ENFORCE_FRESH_VENV=1`). **Done when**: `QG_ENFORCE_FRESH_VENV` defaults to 1 in `qg-common.sh` and a
-      full fleet gate sweep stays green. (repo: unified-trading-pm)
-
+- [x] ✅ [INFRA] P1. **Lock-churn cycle FIXED — unified-trading-pm@f9dbc8a31f.** And the mechanism recorded here was
+      WRONG. It is NOT `uv sync` regenerating the lock plus the cron's `[auto-clean]` reverting it. Measured directly in
+      a controlled sync -> re-pin -> check run: `uv sync --frozen` leaves the venv CLEAN, and then the bases' own
+      `uv pip install -e <sibling>` re-resolves that sibling's transitive tree from the index and UPGRADES lock-pinned
+      packages — exactly 5 on PM (attrs, certifi, charset-normalizer, propcache, aiohappyeyeballs). The gate re-drifted
+      its OWN venv on every run. Fixed by `qg_build_local_deps_constraints`, which derives a constraints file from
+      `uv export --frozen` and passes it to the editable install; override-owned names are excluded because a `>=` floor
+      and an `==` pin on one package deadlock the resolve. `--no-deps` was re-tested and re-REJECTED (drops the
+      sibling's transitives; pydantic disappears for UAC consumers), independently reproducing base-service.sh's own
+      2026-08-04 finding. **Verified**: PM gate CLEAN -> CLEAN, where it was CLEAN -> STALE before.
+- [x] ✅ [INFRA] P2. **Freshness check is BLOCKING by default — unified-trading-pm@f9dbc8a31f.** Two changes made the
+      flip safe rather than merely possible. (a) `--inexact`: exact mode counts every package the lock does not list as
+      drift, and the bases deliberately install sibling trees ON TOP of the lock (131 such extras on PM against 5 real
+      conflicts), so exact mode flagged every repo with siblings forever. (b) A `pre-sync`/`post-sync` phase argument:
+      the bases call the check at line ~64 but do not run `uv sync --frozen` until line ~541, so the old placement
+      aborted on ordinary post-pull drift BEFORE the gate could repair it. Only `post-sync` blocks now, so it fires
+      exclusively when the gate's own sync silently failed (that sync is `|| log_warn`, non-fatal) — the actual
+      agent-orchestrator fastapi-0.136.3 incident. agent-orchestrator's duplicate local copy was DELETED
+      (agent-orchestrator@fab845c1df); it had both flaws. **Verified before flipping**: fleet sweep = 0 stale under
+      `--inexact` across every live repo (the only stragglers are abandoned `*.stale-pre-history-rewrite-*` backup
+      dirs); unit-tested all four phase/enforce combinations; and a full PM gate with enforcement ON against a
+      DELIBERATELY drifted venv did NOT abort and left the venv CLEAN.
 - [ ] [OPERATOR] P2. **Two shared PM clones are left with unresolved conflicts that are NOT mine to fix.** (a) The main
       clone `unified-trading-system-repos/unified-trading-pm` has `UU scripts/dev/ff-starvation-detect.sh` with 4
       conflict markers and NO merge/rebase in progress — a peer's stuck state that makes that clone's gate fail on
