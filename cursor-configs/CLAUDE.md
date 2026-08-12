@@ -171,7 +171,8 @@ SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
   `time_created` not `updated`), NEVER activity** — an entity-agnostic check passes for hours while the target writes
   ZERO rows; monitors read terminal `exit_code` + manifest counts + log-mtime → a TERMINAL **measured** verdict
   (liveness `kill -0 <PID>`, no self-match); `ScheduleWakeup` / a dispatched sub-agent are NOT reliable wakes — arm your
-  OWN `run_in_background` heartbeat watchdog (≤30-min) in the SAME turn. SSOT:
+  OWN `run_in_background` heartbeat watchdog (size-to-job — unbounded work ≤30-min, a KNOWN-duration VM job gets ONE
+  monitor sized to its own documented duration, never a ≤30-min re-arm chain) in the SAME turn. SSOT:
   `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 - **Batch independent tool calls — the trigger is PRE-call**: before any Bash/Read/Grep ask _what else will I want to
   know regardless of this answer_, and fold it into the SAME call (compound `&&`/`;`, several `tool_use` blocks per

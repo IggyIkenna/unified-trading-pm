@@ -222,7 +222,12 @@ Read brief + done_definition carefully and do it.
 ### 3) PROGRESS
 
 Call every ~5 minutes of active work (matches the Heartbeat HARD RULE below; server flags stale at 25 min), AND whenever
-you start a distinct sub-step:
+you start a distinct sub-step. **This includes while waiting on a VM-scale job** (a launched backfill/migration VM
+documented at 30 min – 6+ hours in `vm-launcher-runbook.md`) — keep sending this ~5-min heartbeat throughout, rather
+than switching to the laptop-side sub-agent ≤30-min-watchdog-then-re-arm pattern
+(`/codex/12-agent-workflow/ async-wait-and-poll-discipline.md` § "Dispatched sub-agent is NOT a reliable wake"): a cheap
+heartbeat ping doesn't require the underlying job to finish, so it stays correct regardless of how long the VM job
+actually runs, unlike a watchdog that must re-arm a full turn on every tick.
 
 ```bash
 curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/progress \
