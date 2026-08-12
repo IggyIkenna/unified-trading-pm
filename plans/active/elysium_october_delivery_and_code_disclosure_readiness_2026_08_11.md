@@ -425,11 +425,10 @@ gap it surfaced is carried to H.7.
       Polymarket-perp, `BLOCKED-UPSTREAM-OUTAGE` on DNS NXDOMAIN). The docstring now points at the tuple instead of
       duplicating it. **Evidence: strategy-service@66edb20d4d.**
 
-- [ ] [AGENT] P2. **Two archetypes remain undocumented** — `TSMOM_BTC_CTA` (mentioned only in
-      `category-instrument-coverage.md`) and `ARBITRAGE_SPORTS_DUTCHING` (**zero** codex mentions anywhere). Both need
-      an `archetypes/*.md` written from source, modelled on `carry-basis-perp.md`. Deliberately scoped rather than done
-      blind: writing an archetype spec requires reading its engine, and a guessed spec is worse than an acknowledged
-      gap. Both are named in the README's own gap table so they cannot be silently forgotten.
+- [x] ✅ [AGENT] P2. **Two archetypes documented 2026-08-12 (slot 16, backend_engineer).** `TSMOM_BTC_CTA` and
+      `ARBITRAGE_SPORTS_DUTCHING` now each have an `archetypes/*.md` written from engine source, modelled on
+      `carry-basis-perp.md` (runtime-enforced `topology_requirements` frontmatter included). —
+      unified-trading-pm@b3eefb806d.
 - [x] [AGENT] P2. ✅ **Operator ruled ON (2026-08-12): "Turn it ON."** Default flipped `False → True` so ADV-ranked
       dynamic candidate discovery is the running behaviour, not just an available capability — which is what the
       operator asked for on 2026-07-23 and what makes "dynamic coin rotation" true of the _running system_. **Evidence:

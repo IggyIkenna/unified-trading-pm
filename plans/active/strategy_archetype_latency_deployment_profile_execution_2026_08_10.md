@@ -127,19 +127,25 @@ source: >-
       `Low`→`co_located_vm` archetype to declare `premium` + `co_location: [execution, strategy]`), and added the
       missing `topology_requirements` block to `carry-funding-dispersion.md`. 25 archetype docs edited total; 0
       invalid/missing `min_sla_tier` values remain across the active registry.
-- [ ] [DOC] P2. **Residual gaps surfaced while fixing §6 + archetype frontmatter (not in the decision artifact's
-      enumerated scope).** (1) Two enum archetypes have NO `archetypes/*.md` doc at all — `TSMOM_BTC_CTA` and
-      `ARBITRAGE_SPORTS_DUTCHING` — so `topology_enforcement.load_topology_requirements()` raises `FileNotFoundError` if
-      either is ever activated (boot-gate risk). (2) `runtime-topology.yaml` `isolation_policies.strategy-service`
-      `default: shared` — but the (now-correct) `co_located_vm` archetype docs declare `strategy-service: isolated`, so
-      `_check_isolation()` would raise "topology declares default=shared" on boot; the decision artifact's item 6
-      commits the execution plan to wire a per-archetype strategy isolation section into runtime-topology.yaml but no
-      todo here carries it (affects MM too — pre-existing). (3) VOL edge-case docs (`vol-market-making`,
-      `vol-0dte-gamma-scalping`, `vol-0dte-pin-risk`) declare `premium` while the mapping says `distributed` — the
-      decision artifact defers the first two to "keep distributed unless evidence is decisive"; needs an operator
-      ruling. (4) `portfolio-*` + single-sided `yield-*` docs declare `basic` while the decision artifact's §6 says
-      `standard` (arguably `basic` is correct for non-executing allocation/staking). Repo: unified-trading-pm (codex +
-      configs/runtime-topology.yaml).
+- [x] ✅ [DOC] P2. **Residual gap (1) — two missing archetype docs — DONE 2026-08-12 (slot 16, backend_engineer).**
+      Authored `/codex/09-strategy/architecture-v2/archetypes/tsmom-btc-cta.md` and
+      `/codex/09-strategy/architecture-v2/archetypes/arbitrage-sports-dutching.md` from engine source
+      (`strategy_service/engine/strategies/v2/rules_directional/tsmom_btc_cta.py` +
+      `strategy_service/engine/strategies/v2/arbitrage_structural/sports_arb_dutching.py`), each carrying the
+      runtime-enforced `topology_requirements` frontmatter (`premium` / co-located / strategy-isolated, matching
+      `ARCHETYPE_TO_DEPLOYMENT_PROFILE`) so `topology_enforcement.load_topology_requirements()` no longer raises
+      `FileNotFoundError` for either. Updated the README gap table to a closed-gap statement. —
+      unified-trading-pm@b3eefb806d.
+- [ ] [DOC] P2. **Residual gaps (2)(3)(4) — still open, each a judgment call / operator ruling, not AO-eligible.** (2)
+      `runtime-topology.yaml` `isolation_policies.strategy-service` `default: shared` — but the (now-correct)
+      `co_located_vm` archetype docs declare `strategy-service: isolated`, so `_check_isolation()` would raise "topology
+      declares default=shared" on boot; the decision artifact's item 6 commits the execution plan to wire a
+      per-archetype strategy isolation section into runtime-topology.yaml but no todo here carries it (affects MM too —
+      pre-existing). (3) VOL edge-case docs (`vol-market-making`, `vol-0dte-gamma-scalping`, `vol-0dte-pin-risk`)
+      declare `premium` while the mapping says `distributed` — the decision artifact defers the first two to "keep
+      distributed unless evidence is decisive"; needs an operator ruling. (4) `portfolio-*` + single-sided `yield-*`
+      docs declare `basic` while the decision artifact's §6 says `standard` (arguably `basic` is correct for
+      non-executing allocation/staking). Repo: unified-trading-pm (codex + configs/runtime-topology.yaml).
 - [ ] [DATA] P2. **Cross-check against the SLA-tier gap the audit plan may have flagged** (any archetype family whose
       real latency requirement exceeds even the `premium` tier's 40ms budget) — if the audit found such a gap, this
       plan's derivation logic must surface it as an explicit warning/exception rather than silently under- provisioning;
