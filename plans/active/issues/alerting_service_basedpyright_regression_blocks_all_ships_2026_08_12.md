@@ -43,7 +43,7 @@ source: >-
 depends_on: []
 ---
 
-# alerting-service is currently unshippable via quickmerge — 43 basedpyright errors, cap is 21
+# RESOLVED: alerting-service basedpyright debt fixed (afbbdd2df9); isolated-worktree re-gate false-positive remains open
 
 ## What was measured
 
