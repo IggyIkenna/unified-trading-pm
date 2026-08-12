@@ -85,11 +85,11 @@ picking this plan up cold should never trust the flip-time state without a fresh
       clause not triggered.
 
       Note for todo 2's worker: the direct pandas `read_availability_index(columns=..., filters=[("capture_status",
-                                      "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
-                                      fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
-                                      DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
-                                      `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
-                                      streaming footprint regardless of corpus size.
+                                          "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
+                                          fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
+                                          DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
+                                          `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
+                                          streaming footprint regardless of corpus size.
 
 - [x] ✅ [DATA] P1. **Root-cause the 0→7,930,863 `instrument_type=POOL` recurrence before any retirement resumes**
       (blocks the retirement todo below — main-agent-added 2026-08-11 per
@@ -118,21 +118,24 @@ picking this plan up cold should never trust the flip-time state without a fresh
       in their GCS path. The 2026-08-05 fold's assumption is correct — no Part-5 "legacy COPIED not MOVED" migration
       treatment needed. The retirement todo's only remaining blocker is slot-31's wrapped-id content-verify gap
       (manifest-only fix is safe). Full evidence: Progress Log, 2026-08-12 (slot 32) entry.
-- [ ] [DATA] P1. **Pause the DeFi manifest consolidator cron, retire POOL (uppercase `instrument_type`) legacy
+- [x] ✅ [DATA] P1. **Pause the DeFi manifest consolidator cron, retire POOL (uppercase `instrument_type`) legacy
       `captured` rows in `dex_pool_swaps` via the proven reversible `capture_status: captured→attempted_failed`
       pattern.** Mirror `retire_dex_pools_legacy_captured_rows_2026_08_05.py` /
       `retire_dex_swaps_legacy_captured_rows_2026_08_09.py` (both `market-tick-data-service/scripts/one_offs/`). Pause
       `uts-prod-manifest-consolidator-market-data-defi-cron` (`asia-northeast1`) before writing, resume after.
       Done-when: a fresh `read_availability_index()` query shows 0 remaining `captured` rows with
-      `instrument_type=POOL`. (repo: market-tick-data-service) — **NOT DONE, blocked on a genuine content-verify gap
-      found live 2026-08-11 (slot 31) — see Progress Log for full evidence.** Wrote
-      `retire_pool_uppercase_legacy_captured_rows_2026_08_11.py` (`market-tick-data-service@85677ff363`) mirroring the
-      sibling scripts' reversible pattern, but the canonical `pool` (lowercase) population turned out to be itself mixed
-      (a genuine subset still carries the full legacy wrapped id verbatim, not a clean bare-id rename) — a simple
-      twin-match cannot safely tell "real bare-form canonical twin" from "same-string mislabeled duplicate" apart. 0
-      rows retired, no manifest write executed (the script's own safety gate correctly excluded all 1,135,962 candidate
-      keys rather than guess). Needs a content-verify pass (read actual swap data, not just id strings) before this todo
-      can safely proceed.
+      `instrument_type=POOL`. (repo: market-tick-data-service) — **DONE 2026-08-12 (slot 7, data_engineering):
+      `market-tick-data-service@5e456d0d`.** Resolved both blockers the prior slots flagged — slot-31's content-verify
+      gap AND slot-31's script key-vocabulary bug (its dry-run matched 0 of 1,135,962 keys because it unwrapped only the
+      canonical side). Content-verified live (DuckDB + GCS object probes): canonical `pool` twins' objects hold real
+      swap data at lowercase `instrument_type=pool/` paths; no-twin legacy rows' physical objects also exist there (real
+      data, never hidden). Fixed the script to unwrap BOTH sides to the last-colon segment → 1,122,141 of 1,135,962
+      legacy keys (98.8% of 7,930,863 rows) have a canonical twin. Applied two-bucket treatment (mirrors the 2026-08-05
+      fold): RETIRED 7,834,322 twin-having rows (`captured→attempted_failed`) + FOLDED 96,541 no-twin rows (`POOL→pool`,
+      kept `captured`). Cron paused before write / resumed after. Snapshot
+      `_index/snapshots/pre_pool_uppercase_retire_2026_08_12T*.parquet` + `.pool_uppercase_retire.bak` written
+      pre-write. Post-apply fresh query: **0 remaining captured `instrument_type=POOL` rows** (`POOL`
+      attempted_failed=7,841,381; `pool` captured=8,849,599 incl. the 96,541 folded).
 - [ ] [DATA] P1. **Retire `rate_indices` legacy `captured` rows** (fold already GENUINELY 100% COMPLETE 2026-08-07 per
       `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` row 4 — this is the retirement half only, never
       done). Same reversible pattern + consolidator pause/resume as the prior todo (share the pause window if run
@@ -276,3 +279,36 @@ picking this plan up cold should never trust the flip-time state without a fresh
   todo's only remaining blocker is slot-31's wrapped-id content-verify gap (the manifest-only fix is safe from a
   physical-path perspective). Pipeline_mode distribution of the 7,930,863 POOL rows: `batch_onchain_subgraph` 4,025,328
   (2023-01-01..2026-08-05), `batch_onchain_rpc` 3,905,535 (2023-01-04..2026-04-19).
+- **2026-08-12 (slot 7, data_engineering) — todo 5 DONE: POOL (uppercase) retirement applied + independently verified (0
+  remaining captured `instrument_type=POOL`).** Resolved the two blockers prior slots flagged: (1) slot-31's
+  content-verify gap, and (2) slot-31's script key-vocabulary bug. Full evidence:
+  - **Key-vocabulary bug root-caused**: `retire_pool_uppercase_legacy_captured_rows_2026_08_11.py`'s dry-run matched 0
+    of 1,135,962 legacy keys because `_keys()` unwrapped ONLY the canonical side (`unwrap_canonical_id=True`) while
+    leaving legacy `POOL` keys in FULL wrapped form (`unwrap_canonical_id=False`) — legacy wrapped
+    `VENUE-CHAIN:POOL:0xabc` vs canonical bare `0xabc` never intersect. Legacy `POOL` is 100% wrapped-form; canonical
+    `pool` is mixed (wrapped + bare). Fixed to unwrap BOTH sides to the last-colon segment. Verified live via DuckDB
+    (fresh consolidated index, 2026-08-12): 1,122,141 of 1,135,962 distinct legacy keys (98.8% of the 7,930,863 captured
+    rows) have a canonical `pool` twin; 13,821 keys (96,541 rows) have none.
+  - **Content-verify passed**: for sampled matched pairs, the canonical `pool` row's physical object exists at
+    `instrument_type=pool/data_type=dex_pool_swaps/` with real swap columns (verified content), and legacy rows are
+    per-timeframe (15s/1m/5m/15m/1h/4h/1d) manifest duplicates of the same cell; no-twin legacy rows' physical objects
+    also exist at lowercase `pool/` paths (probed 8/8 sampled) — real data, so they are FOLDED (never retired).
+  - **Two-bucket apply** (mirrors `fold_pool_instrument_type_casing_2026_08_05.py`): RETIRED 7,834,322 twin-having
+    legacy `POOL` rows (`capture_status` `captured→attempted_failed`,
+    `error_reason=superseded_by_content_verified_ canonical_pool_lowercase_twin_2026_08_11`) and FOLDED 96,541 no-twin
+    rows (`instrument_type` `POOL→pool`, status kept `captured`, id untouched).
+    `uts-prod-manifest-consolidator-market-data-defi-cron` paused (verified PAUSED) before the write, resumed (verified
+    ENABLED) after. Snapshot `_index/snapshots/pre_pool_uppercase_retire_2026_08_12T131625Z.parquet` +
+    `_index/availability_index.parquet .pool_uppercase_retire.bak` streamed via `storage.upload_file` (the 6.8GB index
+    is never materialised in memory — whole-file `read_bytes`+`upload_bytes` OOMs the shared host). Round-trip verify
+    inside the apply returned 0 remaining captured `POOL` rows; independent post-apply fresh query confirmed the same:
+    `POOL` attempted_failed= 7,841,381, `pool` captured=8,849,599 (incl. the 96,541 folded). Script shipped
+    `market-tick-data-service@5e456d0d`.
+  - **Recurrence note**: the 0→7.9M recurrence mechanism (issue `defi_pool_uppercase_recurrence_after_fold_2026_08_11`)
+    remains ROOT-CAUSE-UNRESOLVED after the three checks the issue doc recommended (stale-snapshot ruled out, rebuild
+    upsert-onto-existing exonerated, physical-uppercase-objects ruled out — manifest-column-only). This retirement
+    achieves the done-when for the current population; if the underlying writer/reconsolidation path re-emits uppercase
+    `POOL` rows again, that issue doc is the tracking point for a durable fix. Notably the legacy rows' `written_at`
+    timestamps (2026-08-10T03:52-03:53Z, during the rebuild VM window) and `service_name=market-data-processing-service`
+    differ from canonical `pool` rows (`market-tick-data-service`) — flagged as a lead for that issue doc's eventual
+    root-cause, not investigated further here (bounded task scope).
