@@ -125,9 +125,17 @@ BALANCER rows ... Do NOT touch the 14 CURVE rows").
 - [ ] [DATA] P1. Apply the corrective flip: restore 14 CURVE `dex_pool_fees` rows to `captured` (clear `error_reason`)
       and retire the 7 BALANCER rows to `attempted_failed` per BLK-b118f150. (repo: market-tick-data-service) — in
       progress (slot 14)
-- [ ] [DATA] P1. Reconcile issue-doc todo 1 (`dex_pool_fees_phantom_premise_...-1119d9d2c3d8`): its inverted script must
-      not re-apply; mark the BALANCER retirement done based on the corrective result. (repo: agent-orchestrator) —
-      operator/main: stop or re-scope the second slot's task
+- [x] ✅ [DATA] P1. Reconcile issue-doc todo 1 (`dex_pool_fees_phantom_premise_...-1119d9d2c3d8`): its inverted script
+      must not re-apply; mark the BALANCER retirement done based on the corrective result. (repo: agent-orchestrator) —
+      **DONE 2026-08-12 (slot 18, data_engineering).** Verified the second slot's task
+      (`dex_pool_fees_phantom_premise_false_real_mid_may_objects-1119d9d2c3d8`) is `status=done` + `orphan: true`
+      (removed from backlog.yaml → the dispatcher cannot re-derive/re-dispatch it), `done_sha=ad0db52396`,
+      `done_at=2026-08-12T18:09:35Z`. Its inverted script
+      (`market-tick-data-service/scripts/one_offs/retire_dex_pool_fees_balancer_legacy_captured_rows_2026_08_12.py`) is
+      a manual one-off `--apply` script with no cron/systemd trigger — it will not re-apply. No "stop" action was
+      needed: the second slot's task already ran to completion. BALANCER retirement (7 rows) is the uncontested half of
+      the disposition and is reconciled as done via the corrective flip (todo 1); the phantom-premise doc's todo-1
+      checkbox now carries a reconciliation note pointing back here. See Progress Log.
 - [ ] [DATA] P2. Root-cause the second slot's inverted twin-matching (why it retired the no-twin CURVE rows) and add the
       coordination gate so plan + issue-doc retirement todos never dispatch concurrently to the same manifest. (repo:
       market-tick-data-service)
@@ -138,3 +146,12 @@ BALANCER rows ... Do NOT touch the 14 CURVE rows").
   retired @ 17:12Z, round-trip verified 14 remaining) was overwritten at 17:14:52Z by the second slot's inverted flip.
   Current live state confirmed via fresh census + row-detail read (7 BALANCER captured / 14 CURVE attempted_failed with
   the superseded reason). `/blocked` filed to the operator; corrective flip in progress.
+- **2026-08-12 (slot 18, data_engineering) — todo 2 done: second slot's inverted script reconciled, will not re-apply.**
+  Verified the second slot's task (`dex_pool_fees_phantom_premise_false_real_mid_may_objects-1119d9d2c3d8`) is
+  `status=done` + `orphan: true` (removed from backlog.yaml → the dispatcher cannot re-derive/re-dispatch it),
+  `done_sha=ad0db52396`, `done_at=2026-08-12T18:09:35Z`. Its script
+  (`market-tick-data-service/scripts/one_offs/retire_dex_pool_fees_balancer_legacy_captured_rows_2026_08_12.py`) is a
+  manual one-off `--apply` script with no cron/systemd trigger — it will not re-apply. No "stop" action was needed: the
+  second slot's task already ran to completion. BALANCER retirement (7 rows) is the uncontested half of the disposition
+  and is reconciled as done via the corrective flip (todo 1); the phantom-premise doc's todo-1 checkbox now carries a
+  reconciliation note pointing back here.
