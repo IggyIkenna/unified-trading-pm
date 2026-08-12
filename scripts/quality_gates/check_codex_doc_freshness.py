@@ -282,6 +282,20 @@ def main() -> int:
         print(f"ERROR: workspace-root does not exist: {workspace_root}", file=sys.stderr)
         return 2
 
+    # Anchor every stored/compared path to the resolved PM checkout root, not the raw
+    # --workspace-root argument. quality-gates.sh always passes the PARENT of the repo
+    # (WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"), producing
+    # "unified-trading-pm/codex/...", while a standalone `--workspace-root .` run (the repo
+    # root itself) produces "codex/..." — two different strings for the same doc. A baseline
+    # written under one convention silently mismatches every path when diffed under the
+    # other, so EVERY known violation reads as "NEW" regardless of content (live 2026-08-12:
+    # a --workspace-root . baseline-write failed quality-gates-v2's real --workspace-root
+    # "$WORKSPACE_ROOT" invocation for this exact reason). _pm_root_or_legacy already resolves
+    # the PM checkout root by content for _iter_codex_md below — reusing it here for the
+    # relative-path anchor makes the baseline genuinely invocation-independent, closing the
+    # gap the module docstring already claims ("portable across per-slot worktrees").
+    pm_root = Path(_pm_root_or_legacy(workspace_root))
+
     today = datetime.date.today()
     docs = _iter_codex_md(workspace_root)
     violations: list[FreshnessViolation] = []
@@ -296,14 +310,14 @@ def main() -> int:
     )
 
     if baseline_write:
-        _write_baseline(baseline_path, violations, workspace_root)
+        _write_baseline(baseline_path, violations, pm_root)
         print(f"✅ Wrote baseline ({len(violations)} violations) to {baseline_path}")
         return 0
 
     if violations:
         print("\nViolations (first 20 shown):")
         for v in violations[:20]:
-            rel = _relative_path(v.path, workspace_root)
+            rel = _relative_path(v.path, pm_root)
             print(f"  - {rel}: {v.reason}{(' (' + v.detail + ')') if v.detail else ''}")
         if len(violations) > 20:
             print(f"  ... + {len(violations) - 20} more")
@@ -316,14 +330,14 @@ def main() -> int:
         return 0
 
     baseline = _load_baseline(baseline_path)
-    new_violations = _new_violations(violations, baseline, workspace_root)
+    new_violations = _new_violations(violations, baseline, pm_root)
     if new_violations:
         print(
             f"\n❌ Regression: {len(new_violations)} NEW violation(s) not in the baseline snapshot "
             f"({len(violations)} total, {baseline.count} known-at-baseline):"
         )
         for v in new_violations[:20]:
-            rel = _relative_path(v.path, workspace_root)
+            rel = _relative_path(v.path, pm_root)
             print(f"  - NEW: {rel}: {v.reason}{(' (' + v.detail + ')') if v.detail else ''}")
         print(
             "Either fix the new violation(s) OR re-run with --baseline-write after intentional debt. "

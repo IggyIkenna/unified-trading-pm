@@ -466,7 +466,8 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
   re-check found those specific 14 already completed naturally — nothing to kill there. Live check DID find a different,
   newly-discovered set of 7 out-of-scope commodity-futures VMs still running (CL/GC/HG/NG/PA/PL), confirmed NOT from the
   known (still-paused) `wave_launcher.py` cron — filed as a fresh issue,
-  `/plans/active/issues/tradfi_out_of_scope_commodity_futures_wave_2026_08_11.md`, since it's outside the scope of what
-  was actually approved. **This todo's singleton-lock blocker is likely still occupied** by that new set (any RUNNING
-  `tradfi-bf-*` holds the lock) — not re-verified against the ES_OPT retry directly this session; the P1 BLOCKED-ON tag
-  stays as-is until the new issue's kill/no-kill call resolves.
+  `/plans/archive/2026_08/issues/tradfi_out_of_scope_commodity_futures_wave_2026_08_11.md` (archived 2026-08-12, all
+  todos resolved), since it's outside the scope of what was actually approved. **This todo's singleton-lock blocker is
+  likely still occupied** by that new set (any RUNNING `tradfi-bf-*` holds the lock) — not re-verified against the
+  ES_OPT retry directly this session; the P1 BLOCKED-ON tag stays as-is until the new issue's kill/no-kill call
+  resolves.

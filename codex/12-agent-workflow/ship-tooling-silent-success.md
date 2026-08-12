@@ -59,9 +59,28 @@ Ancestry verification is honest about the commit it made; it cannot tell you the
 | isolated mode skipped paths absent from the caller tree, so `git mv` lost its DELETE | `skipping copy: <path>`                        |
 | `cmd \| tail -25` returned tail's status                                             | nothing — exit 0                               |
 | pre-reconcile quarantine on a large stash pile                                       | `quarantined; the next pull will start clean`  |
+| QG killed mid-run by the host RAM-pressure watchdog (2026-08-12)                     | `Re-gate hit ONLY the duration budget`         |
 
 Every one of them logged what it was doing. The failure is not that the tools are silent; it is that the line is one of
 several hundred and reads as routine.
+
+**A sixth, and it is the CALLER's bug, not the tool's** (measured 2026-08-12, twice in one session). Backgrounding a
+ship as:
+
+```bash
+bash scripts/quickmerge.sh ... > ship.log 2>&1; echo "EXIT=$?"
+```
+
+makes the backgrounded command's overall status that of the LAST command in the list — the `echo`, which is **always
+0**. The harness then reports `completed (exit code 0)` no matter what quickmerge did. This is the same class as the
+documented `cmd | tail` row above (status of the wrong process), but it survives the fix for that one, because there is
+no pipe to notice. Both times the ship had genuinely not landed: once the QG was SIGTERM'd by `qg-governor-watchdog`
+at >=75% host RAM (a peer slot was running two concurrent quickmerges), once a rebase conflict left the commit unpushed.
+
+Use `set -o pipefail` and let the ship command BE the last command, or capture its status into a variable before echoing
+anything. But the durable defence is the one rule above: **the exit code never proves a ship; only `origin` does.**
+`git rev-list --count origin/<branch>..HEAD` and grepping the log for `CITE THIS` / `Landed on` cost one call and cannot
+be fooled by any of the six.
 
 ## "My work vanished" — diagnostic order
 

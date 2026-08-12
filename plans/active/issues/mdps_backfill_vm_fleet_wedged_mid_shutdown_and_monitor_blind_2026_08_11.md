@@ -223,3 +223,38 @@ guest liveness on 2 samples) — a future check should confirm they're actually 
       neither live nor wedged and were left alone. Tool: `deployment-service/scripts/vm/probe_vm_serial_liveness.sh`
       (promoted from this incident's diagnostic session, read its header before trusting a fresh timestamp as more than
       guest-alive).
+
+## Progress Log
+
+- **data_pipeline_failure escalation `agt-68d94a` (2026-08-12, slot 5)**: dispatched via `rb_infra_relaunch.md` with
+  `CONTEXT=CRITICAL DP_VM_EXIT_NONZERO (DP-VM-001) — VM mdps-cefi-2019-20260810-023141 terminated with exit_code=1 ... RELAUNCH`.
+  Did **NOT** relaunch — this VM (and this exact shard, `mdps-cefi-2019`/CeFi) is the SAME pattern this doc already
+  tracks, confirmed still live 2 days later:
+  - `DeploymentsRegistry.list_recent_archive(days=3)` shows **76 archived `mdps-cefi-2019-*` deployments, ALL
+    `status=failed exit_code=125`**, spanning 2026-08-10T04:38Z-23:16Z (deployment_ids `a9a06d5d`..`f9ac35c7`, full list
+    in registry, not reproduced here) — i.e. the relaunch-storm this doc documents for the fleet generally is STILL
+    producing dozens of same-shard failures for this specific prefix, not merely the 2026-08-11 06:05-06:53Z wedge
+    window this doc's "measured" table covers.
+  - `DeploymentsRegistry.list_active()` shows **3 concurrently RUNNING `mdps-cefi-2019-*` VMs right now**
+    (`mdps-cefi-2019-20260811-212851` started 21:31Z 08-11, `mdps-cefi-2019-20260811-222436` started 22:26Z 08-11,
+    `mdps-cefi-2019-20260812-012210` started ~01:22Z 08-12) — confirmed via serial-console read that the first two are
+    running the byte-identical command (`--start-date 2019-01-01 --end-date 2019-12-31`, `MDPS_ASSET_GROUP=CEFI`), i.e.
+    genuine duplicate/redundant compute on the same shard, consistent with this doc's "Second remediation" section
+    (mdps-cefi-2019 had up to 42 duplicates pruned 2026-08-11) — the duplication has regrown since that prune.
+  - `gcloud scheduler jobs describe uts-prod-dp-exit-code-monitor-cron` confirms **still `state=PAUSED`** (the standing
+    hold from this doc's first remediation) — so this specific relaunch dispatch did not originate from the paused cron;
+    it reads as either a queued/delayed escalation from before the pause, or a separate actuator path
+    (`RelaunchBackfillVm`) not covered by the cron pause. Not chased further — out of scope for a one-shot relaunch
+    worker and orthogonal to the "should I relaunch" decision.
+  - Per `rb_infra_relaunch.md`'s own bound ("if the registry archive shows ≥2 relaunches of this prefix today, do NOT
+    relaunch again; page the operator") and this doc's own operator ruling ("prune the duplicates, wasting money"),
+    launching a 4th VM for this shard would be the exact anti-pattern this doc exists to stop, not a fix. Precedent:
+    `/plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md` — a prior DP-VM-001 worker
+    also found its target VM already superseded by a supervising loop and correctly declined to relaunch.
+  - Did NOT attempt to fix `exit_code=125`'s root cause (out of scope/too large for a one-shot dispatch; the run.log
+    tail for a sampled failure, `mdps-cefi-2019-20260810-231350`, ends mid-candle-aggregation with no
+    `=== VM EXIT rc=... ===` trap line ever written, suggesting a hard SIGKILL/preemption rather than an
+    application-level error — consistent with, not yet proof of, this doc's open P1 "why ~398 VMs hung" investigation)
+    and did NOT kill either duplicate VM (no destructive action without a clearer instruction than "relaunch," and
+    reaping is already this doc's own tracked P0/P1 territory). No code shipped this session; this Progress Log entry is
+    the only change. `/done` posted with `one_shot_complete: true`.

@@ -179,7 +179,7 @@ baseline:
   instruments-service/instruments_service/engine/orchestrator/sports_reference_fixtures_write.py:
     count: 10
   instruments-service/instruments_service/engine/orchestrator/transfermarkt.py:
-    count: 8
+    count: 7
   instruments-service/instruments_service/engine/orchestrator/understat.py:
     count: 25
   instruments-service/instruments_service/engine/orchestrator/weather.py:

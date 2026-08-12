@@ -21,7 +21,7 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 275 plans a
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (31)
+### cefi (30)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -81,10 +81,6 @@ by hand._
 - [`cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25`](./cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md)
   — Gated closeout for cefi_track2_coverage_backfill_checkpoints_2026_07_25.md — machine-held via depends_on +
   gate_on_depends: true until all 5 of that plan's sequential todos are done. Reconciles the parent…
-- [`corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize_2026_08_09`](./corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize_2026_08_09.md)
-  — Gated closeout for issues/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09.md — machine-held via
-  depends_on + gate_on_depends: true until the source doc's 3 remaining items (defi corrector live-verification, the
-  mirrored timestamp…
 - [`crypto_alpha_research_2026_07_24`](./crypto_alpha_research_2026_07_24.md) — Alpha-research + book-sizing decisions
   (short-leg re-spec, basis realism, TS-momentum, execution/universe research) plus the standalone e2e-testing
   paper-trading POC dashboard (`scripts/paper_trading/`) — extracted from the…
@@ -149,10 +145,6 @@ by hand._
   — Gated closeout for cefi_deribit_binance_futures_bundle_verification_2026_06_20.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
   its…
-- [`corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize_2026_08_09`](./corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize_2026_08_09.md)
-  — Gated closeout for issues/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09.md — machine-held via
-  depends_on + gate_on_depends: true until the source doc's 3 remaining items (defi corrector live-verification, the
-  mirrored timestamp…
 - [`data_completion_defi_2026_07_15`](./data_completion_defi_2026_07_15.md) — DeFi slice of the data-completion-to-100%
   program, split out of data_completion_to_100_all_ag_2026_06_21 (M-1) on 2026-07-15 per operator ruling (plan-reconcile
   §8) when M-1 breached the absolute 5000-line ceiling. Carries the defi scope…
@@ -251,6 +243,10 @@ by hand._
 - [`defi_venue_lst_rates_residual_2026_07_24`](./defi_venue_lst_rates_residual_2026_07_24.md) — 2 small residual todos
   forked verbatim out of the archived migration-verification/orphan-safety harness plan (2026-07-24 plan line-cap
   remediation split): folding the `lst-rates` corpus into the DeFi could-exist / data-status view, and…
+- [`elysium_october_delivery_and_code_disclosure_readiness_2026_08_11`](./elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md)
+  — Internal plan for closing the gap between what the codebase should contain for the October delivery and what
+  currently exists. Four workstreams: (1) a falsifiable code-completion bar for strategy-service, since the operator's
+  decision to…
 - [`lst_rate_honest_coverage_2026_07_21`](./lst_rate_honest_coverage_2026_07_21.md) — Operator-directed (2026-07-21)
   build to bring the four LST exchange-rate surfaces to HONEST COVERAGE end-to-end so the DeFi interest PnL can sit on
   real data. is a phantom-minting anti-pattern). is dormant — wire a collection branch +…

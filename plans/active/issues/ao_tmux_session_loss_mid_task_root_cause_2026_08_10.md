@@ -426,6 +426,115 @@ memory and that's what kills sessions" as-is.
       re-enablement to isolate which role/workload is the actual trigger. **Re-enlarge**: 8×
       `POST /api/slots/{id}/resume` on the same slot IDs once either root cause is found or the smaller fleet is
       confirmed not to help. Repo: agent-orchestrator (no code shipped — pure runtime state change).
+- [x] [INFRA] P0. ~~Second mass burst even at reduced fleet + operator-directed scheduled-task shutdown~~ — **DONE
+      2026-08-11/12.** A further mass `tmux_session_lost` (8 slots: 16,18,19,20,21,22,24,32,33) at 22:23:45 confirmed
+      the 8-slot capacity cut alone had NOT stabilized things, and `orchestrator.service`'s own cgroup briefly hit
+      `available: 2.9M` of its 26GB ceiling (load 41.44/37.75/28.13) — though `oom_kill` stayed 0 throughout (no actual
+      kill fired; system-wide `free -h` still showed 18GB available — the cgroup's OWN ceiling was the binding
+      constraint, not the host). Operator directed going further: stop ALL scheduled task dispatch, keep only
+      escalations + the already-reduced planning pool. Built a NEW capability for this rather than a one-off action
+      (operator ask: "make the dashboard have ability to pause all scheduled task individually by task type... so that
+      an endpoint is exposed for it") — **SHIPPED `agent-orchestrator@7fb8581df7`**:
+      `server/scheduled_dispatch_pause.py` (operator-toggleable pause registry, DB-persisted via `dedup_state`'s
+      existing seen-keys pattern so a pause survives an orchestrator restart), gated at BOTH independent
+      scheduled-dispatch chokepoints found (`plan_health.dispatch(mode=...)` — 10 of 11 modes — and
+      `CIReconcileLoop.tick_once` separately, since it doesn't route through `plan_health.dispatch` at all), exposed via
+      `POST /api/scheduled-dispatch/{mode}/pause`, `POST .../resume`, `GET /api/scheduled-dispatch/status` (mirrors the
+      existing per-slot pause/resume shape). 24 new tests across 3 files. Applied live once `ao-self-pull` redeployed
+      (~1h self-pull lag observed — worth investigating separately, see follow-up below): paused all 10 `plan_health`
+      modes + `ci_reconcile`, left `escalation_reconcile` active (it maintains the escalation system itself, not a
+      competing scheduled workload). **Dashboard UI toggle NOT built this pass** — the operator's concrete ask ("an
+      endpoint is exposed for it") is satisfied; a UI wiring is a fast-follow, not done here to avoid shipping
+      unpainted-Playwright-covered UI under this session's time pressure. **Observed after**: load 41.44 -> 2.20, cgroup
+      Tasks 1183 -> 68, Memory 22.9G -> 2.3G (20.6G available) — a dramatic improvement, but ~2h of real elapsed time
+      passed between the crisis reading and this one, so this is NOT cleanly attributable to the pause alone (the fleet
+      could have settled on its own); the pause mechanism itself is proven correct and live (verified via
+      `GET /api/scheduled-dispatch/status`), independent of whether it's what caused this specific recovery. Repo:
+      agent-orchestrator.
+- [ ] [INFRA] P2. **New lead found live: `sock_throttled` at the cgroup level.**
+      `/sys/fs/cgroup/system.slice/     orchestrator.service/memory.events` carries a `sock_throttled` counter (not
+      previously checked this investigation) that read **4,302,026** during the 22:35 load spike — an extremely high
+      cumulative count of TCP-send-buffer memory-pressure throttle events at the cgroup level. Not yet connected to a
+      specific death, but a promising NEW angle distinct from everything checked so far (cgroup OOM, host CPU/load,
+      git-fetch concurrency, spawn concurrency) — socket-buffer throttling under memory pressure could plausibly affect
+      tmux's own client/server IPC sockets specifically. **Done when**: correlate `sock_throttled`'s RATE OF CHANGE (not
+      just the cumulative count) against known death timestamps, ideally with the live-capture script extended to sample
+      it every second alongside load/spawns/newsess. Repo: agent-orchestrator.
+- [ ] [INFRA] P3. **`ao-self-pull` took ~1h to redeploy a pushed commit, not the documented ~15min.** Confirmed via
+      `/var/log/ao-self-pull.log`: `agent-orchestrator@7fb8581df7` landed on `live-defi-rollout` well before 22:45:01
+      (its actual pickup time — the log shows
+      `current (7fb8581) but running process predates HEAD...     restarting stale process` at exactly 22:45:01), but
+      earlier `journalctl -u orchestrator` checks at 22:35 and 22:41 still showed the OLD checkout running — meaning
+      either the push landed later than assumed, or the 15-min cron genuinely skipped 2-3 cycles. Not chased further
+      this session (time pressure), but worth a dedicated look given a future urgent pause/config-toggle ship might need
+      to actually confirm live sooner than "wait ~15min and hope." Repo: agent-orchestrator, unified-trading-pm (cron
+      definition).
+- [ ] [INFRA] P3. **Dashboard UI for scheduled-dispatch pause/resume.** The API
+      (`POST     /api/scheduled-dispatch/{mode}/pause`/`/resume`, `GET .../status`) is shipped and live; a dashboard
+      toggle (mirroring however per-slot pause is surfaced) was explicitly requested but not built this pass — needs its
+      own `[UI]`-tagged todo with Playwright `pw:L2` coverage per the workspace's UI-testing HARD RULE, not bundled into
+      this backend-only ship. Repo: agent-orchestrator (dashboard/).
+- [ ] [INFRA] P0. **THIRD live catch, 2026-08-12 01:34:55 — happened WITH all scheduled tasks paused AND the reduced
+      26-slot fleet.** `tmux_server_died`, 12+ slots/agents lost within 13s (`[1,5,12,14,15,16]` + 6 agent-scope). This
+      is decisive: it rules out scheduled-task load as the sole/primary cause (none were dispatching — confirmed via the
+      SAME window's log showing
+      `scheduled-job drain: plan_reconciler:cefi... deferred (mode     'reconcile' is paused by operator)` and an
+      external caller's `POST /api/plan-health/dispatch` correctly 503'd), and weakens the raw-fleet-size theory
+      (already cut by 8). **New signature**: `journalctl` for 01:34:30-01:34:55 shows a STEADY stream of
+      `POST /api/slots/N/git-status` calls sweeping nearly every slot (27,18,28,19,29,2,3,20,30,21,22...) roughly one
+      every 1-2s, right up to the death — critically, from a MIX of `127.0.0.1` (local) AND external IPs
+      (`103.251.212.47`, `152.37.120.206`), confirming **multiple physical hosts** are running their own
+      `slot-git-status-report.sh` cron and hitting this ONE central endpoint concurrently, not just this VM's own copy.
+      Checked the handler (`server/routes/git_health.py:224     post_slot_git_status`): cheap by design (client does the
+      real `git status` work locally, server only writes one `SlotGitStatusRow` per call) — but every write still opens
+      a real SQLite write transaction (`BEGIN IMMEDIATE`), so a ~30-wide burst of near-simultaneous writes from multiple
+      hosts is real write-lock contention, the same class of problem `_do_spawns_concurrently`'s docstring cites as a
+      PRIOR incident (143 "database is locked" errors, 2026-07-27). **Emerging pattern across all 3 live catches**: the
+      EXACT signature differs every time (utempter/pane-creation burst #1; CPU/git-fetch/rg saturation #2; multi-host
+      git-status POST storm #3) but all 3 share ONE thing — concurrent git/dispatch/spawn activity from MULTIPLE sources
+      co-occurring with the death. No single mechanism has been proven causal yet (still correlation, not proof), but
+      the common thread is now real signal, not noise. **Correction (2026-08-12, same investigation, operator pushback
+      "why would that kill tmux?")**: checked part (a) — operator's own Mac crontab for `slot-git-status-report.sh` is
+      `2,7,12,17,22,27,32,37,42,47,52,57 *     * * *`, IDENTICAL to the VM's own schedule (installed via the same
+      self-updating cron-pull mechanism), i.e. **synchronized across hosts, not staggered**. This actually WEAKENS
+      rather than confirms the git-status-storm hypothesis: if every host fires on the same grid, the 436-sample
+      historical burst data should show a spike at that exact offset, and it didn't (uniform distribution, checked
+      earlier this doc). `post_slot_git_status` itself is also a cheap DB write with no plausible mechanism to affect a
+      separate OS process (tmux) at all. Retracting this as a causal candidate — the correlation for that one incident
+      was likely a symptom (marker of high fleet activity), not a cause. Also verified, per the same pushback: `SlotRow`
+      (the real fleet/tmux tracking table) has no host dimension and is written exclusively by VM-local processes;
+      git-status reporting is separately keyed by `(host, slot_id)` — confirmed the operator's own local interactive
+      sessions do NOT bleed into or get confused with the VM's real dispatched-worker slot tracking.
+- [ ] [INFRA] P0. **FOURTH live catch, 2026-08-12 01:34:55 — new, stronger lead: `fleet-git-health-guard.sh` (root cron,
+      `*/15 * * * *`, `agent-orchestrator/scripts/fleet-git-health-guard.sh`).** A broad (not just orchestrator-scoped)
+      `journalctl` sweep at the exact death window (never done before this catch — always previously scoped to the
+      orchestrator process's own log) found something new: at 01:34:40-01:34:41 — **14 seconds before**
+      `tmux_server_died` at 01:34:55 — a rapid burst of `sudo git -C <repo> config     gc.pruneExpire never` immediately
+      followed by `sudo git -C <repo> fsck --connectivity-only --no-progress`, repeating across many different repos in
+      slots 20 and 23 in the log excerpt alone (instruments-service, unified-trading-library,
+      market-data-processing-service, deployment-api, strategy-service, unified-trading-system-ui,
+      client-reporting-api...). Unlike the retracted git-status theory, `git fsck     --connectivity-only` is genuinely
+      expensive (a full object-graph traversal), and each repo needs TWO separate `sudo` invocations (PAM session
+      open/close overhead each). The guard's own log (`/var/log/fleet-git-health-guard.log`) confirms a sweep started at
+      01:30:01 — ~4m39s before the observed subprocess burst, consistent with a multi-minute sweep across ~1132
+      directories × 2 sudo calls still being mid-flight at 01:34:40-41. **This is a genuinely different,
+      previously-untested hypothesis** — the earlier cron-alignment refutation only tested the 5-minute grid
+      (`slot-cron-ff-pull.sh`/`slot-git-status-report.sh`); this is a SEPARATE 15-minute root-cron with a MULTI-MINUTE
+      active window, which a simple minute-offset test would never have caught. Rough fit against earlier live catches:
+      18:10:50 is ~10-11min into the 18:00:01 run; 18:24:41 is ~9-10min into 18:15:01; 21:11:27 is ~11min into 21:00:01;
+      all plausible if a full sweep can run 5-12 minutes depending on load — not yet independently confirmed (log
+      timestamps are captured ONCE at run start and reused for both the "scanning" and "OK" lines, so run DURATION can't
+      be read from the log directly; would need direct process-timing evidence like this catch's journalctl burst, for
+      each historical death). **Notable, independently interesting finding**: the guard's own log shows "OK — no
+      root-owned files, no fsck breakage" on EVERY visible run across the full log history — this expensive
+      belt-and-suspenders check has never once caught a real problem, yet runs up to 4x/hour doing genuinely heavy
+      `sudo`+fsck work across the whole fleet. **Done when**: (a) directly capture PID/FD/CPU state of BOTH the tmux
+      server AND a sample of these `sudo`/`git fsck` child processes DURING an active guard sweep (ps snapshot
+      mid-sweep, not just at death); (b) if confirmed as the trigger, fix candidates: reduce frequency (15min ->
+      30/60min, given it never finds anything), add `nice`/`ionice` to de-prioritize the sweep relative to the
+      orchestrator/tmux, or skip the expensive `fsck --connectivity-only` unless a cheaper heuristic first flags a real
+      problem (chown-check alone is cheap; the exhaustive fsck is the expensive part and has a 100% clean track record
+      so far). Repo: agent-orchestrator (script), (fleet-wide root cron — not repo-scoped).
 
 ## Progress Log
 

@@ -88,10 +88,18 @@ source: >-
      reached terminal SUCCESS) ran. A rebuild using this code cannot emit a literal uppercase `POOL` row from what it
      scans on disk.
 4. **What I did NOT verify** (ran out of bounded-investigation budget for this task — flagging rather than guessing):
-   - Whether the completed rebuild VM actually ran the current `HEAD` code or a stale pre-N6a tarball snapshot (the N6a
-     fix long predates the VM's stated launch date, so this shouldn't be it, but the tarball-deployment content wasn't
-     independently confirmed the way `defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md` did for a
-     prior relaunch).
+   - ~~Whether the completed rebuild VM actually ran the current `HEAD` code or a stale pre-N6a tarball snapshot~~ —
+     **RESOLVED 2026-08-12 (slot 5, data_engineering), RULED OUT.** `-204358` (the VM that reached terminal SUCCESS) had
+     `MTDS_TARBALL_SHA` FLOATING in its `TARBALL_PINS.json` (no exact resolved commit_sha recorded — a genuine
+     observability gap in `create-code-tarballs.sh`'s floating-pin path, flagged as a follow-up but not fixed here,
+     infra-craft scope). Bounded it instead:
+     `git log 3f5cc6e4..HEAD -- market_tick_data_service/scripts/rebuild_defi_manifest.py` shows 12 commits touching
+     this file between the N6a fix (2026-06-18) and the current tarball HEAD (`market-tick-data-service@859405a1`,
+     2026-08-11T23:00:56Z), none reverting the `parse_hive_path` lowercasing; confirmed both call sites
+     (`instrument_type=p["itype"].lower()`, lines 370 + 395) intact at HEAD. A floating tarball is built from whatever
+     HEAD is checked out when `create-code-tarballs.sh` last ran, so no snapshot in that window could have shipped
+     pre-N6a code. Full evidence: `/plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` Progress
+     Log, 2026-08-12 entry.
    - Whether the rebuild is a full index REPLACE or an UPSERT-onto-existing-index — if upsert, any pre-existing
      uppercase rows that survived the 2026-08-05 fold (or were written between 2026-08-05 and the rebuild by some path
      not covered above) would simply pass through untouched rather than being reintroduced by the rebuild itself.

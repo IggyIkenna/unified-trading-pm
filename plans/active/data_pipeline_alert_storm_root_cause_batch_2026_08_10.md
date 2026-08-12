@@ -548,10 +548,51 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       per-year full reprocess) and VMs appear to pick up whichever code was current at THEIR OWN launch time (SPOT,
       preemption-recovery churns run-ts continuously — 20-43 instances per year), so convergence on the 4,429 is neither
       instant nor guaranteed complete (a VM that finished its year range before `3ff54776e0` deployed and never
-      relaunches leaves that year's wrong shards untouched indefinitely). **Decision needed before executing the scoped
-      re-derive: run it now (redundant compute where the ambient fleet already fixed a shard is harmless, both converge
-      on the same value) vs. wait + re-measure for residual-only.** Not yet executed this continuation — asking the
-      operator before running a --force job with 439 other VMs already touching the same corpus.
+      relaunches leaves that year's wrong shards untouched indefinitely). **Operator ruling 2026-08-11: prune the
+      ambient duplicate fleet first (billing waste), then execute the scoped re-derive regardless of redundant
+      compute.** Executed 2026-08-12 (continuation session): 1. **Fleet pruned first** (see the second remediation
+      section in `/plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`) —
+      411 duplicate `mdps-{cefi,tradfi,defi,sports}-{year}` VMs reaped, 485/467 running → 69/51 running. 2.
+      **Re-measured before launch**: population moved 4,113 → 4,429 (2026-08-11 late) → **4,463** (2026-08-12, 64
+      instrument_ids unchanged, dates 2020-01-03 to 2026-01-28) — re-measure again before quoting, it moves every
+      wave. 3. **First launch attempt failed harmlessly** —
+      `bash deployment-service/scripts/vm/launch-mdps-backfill-vm.sh        --force --data-types liquidations --timeframes "1d 4h 1h 15m" --instrument-ids <64 ids> --date-concurrency 4        cefi 2020-01-01 2026-01-31 full`
+      created VM `mdps-backfill-cefi-20260812-014240`, which self-deleted via `VM_SHUTDOWN_ON_COMPLETION=true` within 3
+      minutes, `EXIT_STATUS=2`. Root cause (found via the tee'd `gs://deployment-scripts-.../vm-logs/<vm>/run.log`,
+      downloaded with UTL `download_from_storage` — never a subprocess `gcloud storage`/`gsutil`): the launcher's
+      `--date-concurrency N` flag appended `--date-concurrency        N` onto the `--operation process --mode batch`
+      entrypoint's own argv, but that entrypoint's argparser has no such flag (only the legacy sub-parser reached via
+      `cli/main.py`'s internal bridge does) — a hard parse error, not a no-op, so the lever was silently broken every
+      time anyone used it. Zero data written or touched before the crash — safe no-op, not a near-miss on correctness.
+      **Fixed at the root, not worked around**: `deployment-service@decdf98fb2` changes the launcher to prepend
+      `MDPS_DATE_CONCURRENCY=$DATE_CONCURRENCY` as an env var (config.py already reads it directly via `get_config()`)
+      instead of appending the broken CLI flag — gate green (353s), shipped via quickmerge. 4. **Relaunched
+      successfully** — VM `mdps-backfill-cefi-20260812-015953`, tarball-freshness check passed for all 5 repos
+      (confirmed `market-data-processing-service-code @ a959bd0192de`, the commit carrying `3ff54776e0`'s contract_size
+      fix, and `deployment-service-code @ decdf98fb2a5`, the launcher fix just shipped — same-session tarball turnaround
+      confirmed fast enough to pick up a fix shipped minutes earlier). Verified via `run.log`: `MDPS_DATE_CONCURRENCY=4`
+      correctly threaded (3-4 dates processing concurrently), correctly scoped to the 64 instrument_ids +
+      `liquidations` + the 4 timeframes, catalogue loaded (431,890 rows, contract_size present). **Not a rubber-stamp
+      verification** — read real per-date outcomes, not just "still running": some dates 5xxx-genuine successes, some
+      `MalformedTickFieldError(field=contract_size)` (honest catalog-miss fail-closed, working as designed — e.g.
+      `DERIBIT:PERPETUAL:BTC-PERPETUAL`/`ETH-PERPETUAL`, DIFFERENT instrument_ids than the `@INV`-suffixed ones
+      targeted, so not evidence of scope leakage), and a **separate, pre-existing bug** found on some `KRAKEN-FUTURES`
+      sub-daily (15m/1h/4h) shards: `SCHEMA_VALIDATION_FAILED` on `open/high/low/close        NOT NULL` — the real cause
+      is
+      `aggregate_from_15s_efficient: N NaN values in 'open' input column — adapter        density bug, expected LOCF-dense base candles`,
+      i.e. sparse liquidation events don't densify cleanly at high-frequency timeframes. This is UNRELATED to the
+      inverse-notional fix (contract_size computation itself succeeds; the OHLC columns fail), doesn't corrupt anything
+      (a failed write leaves the prior captured row exactly as-is, per the captured-outranks-tie-break already
+      documented above), and doesn't block the 1d timeframe (the large majority of the target population — 3,030 of
+      4,463 shards). Filed as a new P2 todo below rather than chased down in this session (out of scope, pre-existing,
+      non-blocking, non-corrupting). 5. **Left running, not yet complete.** VM covers 2020-01-01 to 2026-01-31 across
+      all 64 instrument_ids — a multi-hour job, not something to babysit synchronously. **Next verification step for
+      whoever picks this up**: re-run the manifest query in this todo's evidence (DuckDB over
+      `_index/availability_index.parquet` filtered
+      `data_type='liquidations' AND capture_status='captured' AND margin_type='inverse'`) and spot-check a few
+      `written_at` timestamps AFTER this launch for correct `liquidation_notional_usd` magnitude (method: compare
+      `notional/liquidation_count` against the linear reference for the same day/venue, per the original P0 finding
+      above) before flipping this checkbox `[x]`. Do NOT flip on "VM still running" or "exit code 0" alone.
 - [ ] [OPERATOR] P1. Full re-drive of the remaining cells once `contract_size` lands. The failure population has GROWN
       since the plan's original 150,182: measured 355,818 MDPS liquidation failures at 14:19Z (352,409
       `SCHEMA_VALIDATION_FAILED` + 3,409 `MalformedTickFieldError`), split LIN 335,931 / INV 12,822 / neither 7,065 —
@@ -576,6 +617,17 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       re-pinned rather than widened blind — but whether a combo chain should carry `expiration` is a real domain
       question nobody has answered. Surfaced 2026-08-11 by the pin failing the whole MDPS suite, which is exactly its
       job.
+- [ ] [SCRIPT] P2. **Liquidations sub-daily (15m/1h/4h) candles fail schema validation on sparse-event days —
+      pre-existing, unrelated to the inverse-notional fix.** Found 2026-08-12 running the P0 re-derive:
+      `KRAKEN-FUTURES:PERPETUAL:{BTC,ETH,LTC,XRP}-USD@INV` (and likely others) throw `SCHEMA_VALIDATION_FAILED` on
+      `open/high/low/close NOT NULL` at 15m/1h/4h. Root cause per the log:
+      `aggregate_from_15s_efficient: N NaN values in 'open' input column — adapter density bug, expected LOCF-dense     base candles`.
+      Liquidation events are sparse (unlike continuous trades), so many 15s base-candle buckets have no price data and
+      the aggregator's LOCF-density assumption doesn't hold. Does NOT affect 1d (the majority of the liquidations
+      population) and does NOT corrupt anything (a failed write leaves the prior row untouched, per the
+      captured-outranks tie-break documented above) — but it silently caps how much of the sub-daily wrong-inverse
+      population the P0 re-derive can actually fix. Evidence:
+      `gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-cefi-20260812-015953/run.log`.
 
 ## Deferred work after 2026-08-11
 

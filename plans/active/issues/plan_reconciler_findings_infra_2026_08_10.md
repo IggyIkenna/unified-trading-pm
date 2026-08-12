@@ -164,10 +164,16 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
       by its own next sentence (~7.5min average pre-PR latency from promotion-cron cadence, not captured by the
       "open→merge" metric) — Contradictions #6. Needs a judgment call: add a new todo tracking the cron-cadence
       bottleneck, or explicitly scope it out of the plan's "done" bar. Not this run's call to make unilaterally.
-- [ ] [DOCS] P3. `deployment_registry_firestore_p3_cutover_2026_07_14.md:31` still declares `model_tier: opus-required`
-      (Contradictions #1 cross-batch note) — outside this tranche's corpus (not infra-tagged). Flag for whichever
-      tranche owns it, or scope a corpus-wide `model_tier: opus-required` currency sweep (this run only found 2 stale
-      instances by accident, not via a systematic search).
+- [x] [DOCS] P3. ~~`deployment_registry_firestore_p3_cutover_2026_07_14.md:31` still declares
+      `model_tier:     opus-required`~~ (Contradictions #1 cross-batch note) — **CLOSED 2026-08-12, operator-directed
+      corpus-wide sweep.** `deployment_registry_firestore_p3_cutover_2026_07_14.md` was independently already fixed
+      (line 31 now blank) by the time this ran. Ran the systematic sweep this todo asked for
+      (`grep -rln '^model_tier: opus' plans/ | grep -v /archive/`) and found 3 more stale active instances beyond the 2
+      found by accident: `defi_turbo_api_hides_real_captured_data_2026_07_07.md`,
+      `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`,
+      `uac_data_type_validity_combinator_fragmentation_2026_07_07.md` — all cleared to `model_tier:` (blank, matching
+      this corpus's established fix convention). Zero `model_tier: opus*` remaining outside `plans/archive/` and the
+      commented-out example in `task_template.md`. Repo: unified-trading-pm.
 - [ ] [DOCS] P3. Independently re-verify (live `find`/`ls`) whether `codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s
       market-data-processing-service + instruments-service `[x]` items have the same DELETE-half-unshipped pattern as
       the 3 already-fixed items (Flips verified #2) — neither hunter batch 1 nor this run independently checked their

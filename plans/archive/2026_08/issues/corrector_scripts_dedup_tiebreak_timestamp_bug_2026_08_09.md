@@ -20,7 +20,7 @@ summary:
   null attempted_at always loses to a row carrying a real timestamp — so any defi corrections already applied via this
   script may also have silently failed to merge into the canonical. NOT independently verified live for defi in this
   session (out of N1b's cefi-only scope) — flagging for operator triage rather than assuming either outcome."
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, defi]
 stage: [data]
@@ -35,7 +35,7 @@ related:
     plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-09
-last_updated: 2026-08-11
+last_updated: 2026-08-12
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -50,11 +50,19 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: instruments-service@159c0ebe0, @7be93d5d, @c51e37ab, @f6caf7f5
 source: N1b (slot 6, cefi corrector re-verification, 2026-08-09)
 ---
 
 # Corrector scripts' dedup-tiebreak timestamp bug — cefi confirmed, defi at risk
+
+> **🟢 ARCHIVED 2026-08-12 — RESOLVED** (status: resolved, 0 open todos, unlocked). All 4 todos closed: cefi fix
+> (`instruments-service@159c0ebe0`), defi fix in both defi-relevant scripts (`instruments-service@7be93d5d`), the
+> workspace-wide audit (slot 2, 2026-08-11) that found 4 more defective scripts, and their fix
+> (`instruments-service@c51e37ab` + `@f6caf7f5`). Durable rule migrated to
+> `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Dedup key" so future corrector-script authors don't
+> re-discover this defect. Closed out by the companion finalize plan
+> `/plans/archive/2026_08/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize_2026_08_09.md`.
 
 ## What happened (cefi, confirmed live)
 

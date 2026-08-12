@@ -37,7 +37,7 @@ assigned_vm: planning
 resolved_by:
 locked_by:
 execution_scope: orchestrator-agent
-model_tier: opus-required
+model_tier:
 thinking_tier: high
 estimate_class: design
 estimate_baseline_ai_days: 3
