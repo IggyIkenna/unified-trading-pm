@@ -1389,6 +1389,18 @@ Isolation symlinks `.venv` / `.venv-workspace` / `node_modules` from the caller'
 `quality-gates.sh` resolves the repo's own `.venv` and a fresh worktree has none (gitignored). Without that symlink
 isolation would silently turn every quickmerge into a QG failure.
 
+**Known unresolved limitation (2026-08-12): the isolated re-gate can produce false-positive basedpyright errors.**
+Reproduced on `alerting-service` — `--isolated`'s basedpyright re-gate reported ~22 phantom `reportArgumentType`
+"nominally different, structurally identical type" errors (5/5 isolated attempts), while every direct/manual
+`basedpyright` invocation against the identical code + identical venv (including one run inside the SAME failed
+worktree, seconds after the gate itself failed there) came back clean. 7 independent elimination attempts across two
+sessions (cache reuse, stale editable-install pointer, the override-dependencies reinstall step, invocation shape, `CI`
+env, local venv staleness) all ruled out — root cause unknown. Workaround: `--no-isolated`, safe when you're the sole
+worker on that checkout. Full trail:
+`/plans/archive/2026_08/issues/alerting_service_basedpyright_regression_blocks_all_ships_2026_08_12.md`. If this recurs,
+capture live diagnostics (the gate's own `PYRIGHT_OUT`, exit code, and the failing worktree's `site-packages` dist-info
+listing) from inside the failure itself — post-hoc reproduction has failed every time so far.
+
 ### Exit codes worth recognising
 
 - **`safe-doc-push` exit 10** — retries exhausted **and** your named files no longer match what you handed the script.

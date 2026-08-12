@@ -487,12 +487,12 @@ Directions, cheapest first — each is a todo below:
       unified-trading-pm@d85ad41fac.
 
       **Done when, confirmed**: the precommit sweep on one staged file is now **20.8s** total wall (measured 2026-08-12,
-                          isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
-                          down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
-                          concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
-                          single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
-                          `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
-                          nothing left to move out of the per-commit path. Repo: unified-trading-pm.
+                              isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
+                              down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
+                              concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
+                              single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
+                              `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
+                              nothing left to move out of the per-commit path. Repo: unified-trading-pm.
 
 - [x] ✅ [INFRA] P2. **Record the AO-vs-PM volume asymmetry in the codex** so the next person does not re-derive it —
       unified-trading-pm@baae1922bb. New § "1b. PM is the fleet's single write hotspot" in
@@ -548,9 +548,11 @@ Directions, cheapest first — each is a todo below:
       NEW, better-evidenced, and more concerning defect was found in its place: the isolated re-gate itself is
       unreliable for at least one repo shape (path-editable UAC dependency via symlink), independent of caching. **Still
       NOT done** — flipping laptop default back on is now MORE blocked than before, not less: a false-positive failure
-      is worse than a slow gate. New companion issue:
-      `/plans/active/issues/alerting_service_basedpyright_regression_blocks_all_ships_2026_08_12.md` (retitled to match
-      — its 2 basedpyright-debt todos are closed, one new root-cause todo is open). Repo: unified-trading-pm.
+      is worse than a slow gate. Companion issue (now RESOLVED + archived, 2026-08-12 — 7 elimination attempts across
+      two sessions never found the root cause; closed as accepted-with-workaround since `--no-isolated` is proven safe
+      and nothing else regressed):
+      `/plans/archive/2026_08/issues/alerting_service_basedpyright_regression_blocks_all_ships_2026_08_12.md`. Repo:
+      unified-trading-pm.
 - [x] ✅ [INFRA] P2. **Slot 2's PM checkout is wedged and cannot receive any of these fixes.** CLOSED 2026-08-12 —
       re-verified directly
       (`git -C .tabs/2/unified-trading-pm fetch origin live-defi-rollout && git rev-list     HEAD..origin/live-defi-rollout --count`
