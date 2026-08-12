@@ -129,9 +129,11 @@ it's through that final refinement I'm happy to send you that repository in full
 actual strategy instructions and decision flow.
 
 It's also the component that sits closest to your side of the system. It's what emits the instructions that drive
-collateral and capital movements — including the Copper leg, where we post collateral into Copper custody and Copper's
-ClearLoop mirrors it onto the exchange so it can be traded without leaving custody. And it's what most directly answers
-the questions around how the strategy itself actually works.
+collateral and capital movements — including the custody legs. We work with two custodians: collateral posted into
+Copper custody is mirrored onto the exchange by Copper's ClearLoop, and for Binance the equivalent runs through Ceffu,
+so in both cases the collateral is traded against without leaving custody. The strategy layer doesn't distinguish
+between them — it emits one instruction and the custody configuration determines the route. And it's what most directly
+answers the questions around how the strategy itself actually works.
 
 So from your perspective, it's genuinely the most relevant repository to inspect. I'll have that for you next week.
 

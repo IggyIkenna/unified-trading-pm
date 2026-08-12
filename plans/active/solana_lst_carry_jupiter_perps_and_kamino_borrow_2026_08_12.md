@@ -133,12 +133,21 @@ from 2020-12-18).
       ETH staked basis too, and the ETH data is materially deeper (Lido staking yields to 2020-12, Aave to 2023-01). If
       the ETH spread is better AND the venues are already integrated, **ETH is the cheaper first shipment and Solana
       should follow it** — say so explicitly if the numbers support it.
-- [ ] [AGENT] P0. **Audit SOL staking-yield data coverage before trusting the SOL answer.** Measured gap: the only
-      Solana `staking_yields` venue advertised is `JITORESTAKING-SOLANA` from **2024-08-01**, which is Jito
-      **restaking** — not plain JitoSOL/mSOL LST staking yield, and 14 months shorter than the Kamino borrow series.
-      Establish whether LST staking yield is derivable (e.g. from the LST/SOL exchange-rate drift in `oracle_prices`)
-      before quoting a spread; if it is not, the SOL answer is **BLOCKED-DATA** and the honest output is a capture task,
-      not an estimate.
+- [x] [AGENT] P0. ✅ **NOT blocked on data — CORRECTING my own earlier claim.** I previously wrote that the SOL answer
+      might be `BLOCKED-DATA` because the only Solana `staking_yields` venue advertised is `JITORESTAKING-SOLANA`
+      (2024-08-01, and that is Jito **restaking**, not LST yield). **That was wrong, because I read the capability
+      registry instead of the services.** Both legs are collected: - **SOL staking yield** — MTDS `lst_rates_handler.py`
+      covers **MARINADE / mSOL** (alongside stETH/wstETH/rETH/weETH), and `staking_yields_handler.py` covers **JITO**
+      (alongside LIDO/ETHERFI/EIGENLAYER). - **Solana stable borrow rate** — `_lending_grain.py` routes `kamino_lending`
+      / `solend` / `marginfi` to `InstrumentType.SOLANA_LENDING`, and `_solana_defi_fetch.py` emits `lending_indices`. -
+      **Funding** — features-service has `perp_funding_rates.py` (CeFi) and `perp_funding_rates_defi.py` (on-chain). So
+      § A's spread IS computable and the go/no-go analysis can proceed on real history.
+- [ ] [SCRIPT] P2. **Registry-vs-handler drift: `VENUE_DATA_TYPE_CAPABILITIES` under-declares what MTDS actually
+      collects.** It advertises `staking_yields` only for `JITORESTAKING-SOLANA` while `staking_yields_handler.py`
+      collects JITO and `lst_rates_handler.py` collects MARINADE/mSOL. **This is what produced the false BLOCKED-DATA
+      verdict above** — the registry is the cheap thing to grep, so an under-declared registry actively misleads.
+      Reconcile declared capabilities against the handlers' real coverage, and treat the handler as ground truth. Check
+      the same drift for the ETH LSTs before relying on any advertised start date.
 - [ ] [AGENT] P1. **Compare LTV and borrow cost across the three Solana lending venues** (Kamino / Solend / MarginFi)
       and against Aave on the ETH side. Operator asked which has better LTV and lower stable borrow rates. **Note for
       the record: Aave has NO Solana deployment** — all 11 `AAVE_V3-*` keys are EVM chains — so Aave is not a candidate
