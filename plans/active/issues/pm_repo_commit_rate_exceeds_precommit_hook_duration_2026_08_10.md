@@ -31,7 +31,7 @@ related:
     /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md,
   ]
 created: 2026-08-10
-last_updated: "2026-08-10"
+last_updated: "2026-08-12"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -485,13 +485,13 @@ Directions, cheapest first — each is a todo below:
       a service repo with a heavier suite and confirm the cached venv stays valid across a dependency bump. **Done
       when**: two repos pass an isolated `--isolated` quickmerge end-to-end and the cache is shown to refresh on a lock
       change. Repo: unified-trading-pm.
-- [ ] [INFRA] P2. **Slot 2's PM checkout is wedged and cannot receive any of these fixes.** **STALE 2026-08-12: slot 2
-      is 3 commits behind origin, not 81 — measured directly. Re-verify the wedge before acting on the number in this
-      todo.** 81 commits behind, blocked on 4 unresolved conflict markers in
-      `scripts/plan-hygiene/na_corpus_baseline.yaml` plus 22 dirty files (~86 min stale at 2026-08-10, no
-      `.agent-claim`). Deliberately NOT resolved by this session — it is another session's in-flight work and the
-      inherit path assumes CLEAN WIP, not a live conflict. **Done when**: the conflict is resolved by its owner (or
-      explicitly abandoned) and slot 2 fast-forwards. Owner: whoever owns that WIP. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P2. **Slot 2's PM checkout is wedged and cannot receive any of these fixes.** CLOSED 2026-08-12 —
+      re-verified directly
+      (`git -C .tabs/2/unified-trading-pm fetch origin live-defi-rollout && git rev-list     HEAD..origin/live-defi-rollout --count`
+      → 0; `git status --porcelain` → 0 lines; 0 `UU`/`AA`/`DD` entries). Slot 2 is fully fast-forwarded and clean — not
+      the 81-commits/4-conflict-markers/22-dirty-files state this todo was originally filed against, and not even the
+      3-behind state the 2026-08-12 STALE note found. The "Done when" (owner resolves the conflict, slot 2
+      fast-forwards) has happened; nothing further to do here. Repo: unified-trading-pm.
 - [ ] [INFRA] P3. **`check_chain_set_inclusion` has 3 failing tests, pre-existing.** Verified failing identically at the
       pre-F7 baseline `c7fe11851a`; untouched by this session. Recorded so the next person does not mistake them for
       isolation fallout. **Done when**: triaged or fixed. Repo: unified-trading-pm.
@@ -586,25 +586,39 @@ Directions, cheapest first — each is a todo below:
       "every content check passed … Do NOT go looking for a content bug" while one was failing. A false all-clear is
       worse than the false alarm it replaced. Hardened to also match pytest-style `FAILED`/`ERROR`/`E`-prefixed lines,
       not just the emoji.
-- [ ] [INFRA] P0. **BLOCKED: a peer's uncommitted UTL edit red-lines every PM quality gate on this host.** **RE-TRIAGE
-      2026-08-12: the stated blocker is GONE — re-verify and close or re-scope.** Measured:
-      `git -C unified-trading-library status --porcelain` is empty, and PM's full `quality-gates.sh` passed four times
-      on this host on 2026-08-11/12 (287s and 305s runs among them). Nothing is currently blocked by this. Left open
-      rather than flipped because the original author may have intended a durable guard, not just the one incident.
-      `tests/unit/test_capability_verdict_matrix.py::test_fixture_matches_live_engine_registry` dies with
-      `ImportError: cannot import name '_per_vm_shard_backlog' from 'unified_trading_library.manifest_writer._state'`.
-      Measured: the symbol IS on `origin/live-defi-rollout`, is ABSENT from the local working file, and the UTL clone is
-      `behind=0` with 6 dirty files — so an uncommitted local edit removed it. NOT reverted: that is foreign WIP, and
-      destroying it is the exact harm this issue doc exists to stop. **Owner: whoever holds that UTL WIP.** Until it is
-      committed or parked, no PM ship can gate green from this checkout. **Done when**: the symbol resolves again and
-      the test passes.
-- [ ] [INFRA] P1. **One dead evidence citation red-lines the whole repo's promote flow.** `4f901b9916` (written by
+- [x] ✅ [INFRA] P0. **BLOCKED: a peer's uncommitted UTL edit red-lines every PM quality gate on this host.** CLOSED
+      2026-08-12 — the premise is not just gone, it is superseded. Re-verified:
+      `git -C unified-trading-library status     --porcelain` is still empty, `behind=0`/`ahead=0` against origin. The
+      cited test, `tests/unit/test_capability_verdict_matrix.py::test_fixture_matches_live_engine_registry`, does not
+      exist anywhere in the current UTL tree (`grep -rl test_fixture_matches_live_engine_registry .` — zero hits; the
+      file itself has no delete history either, so it was never actually committed). `_per_vm_shard_backlog` was
+      legitimately relocated out of `_state.py` into its own module by a real, shipped, unrelated commit —
+      `77fef206 fix(manifest-writer): stop the real OOM driver in the per-VM shard flush path … Extracted     _per_vm_shard_backlog.py from _state.py (pure code motion) to stay under the file-size cap`
+      — and every current import site (`manifest_writer/__init__.py`, `tests/unit/test_per_vm_shard_backlog.py`) already
+      points at the new module; that test suite passes 6/6. There was never a "durable guard" to preserve here: the
+      failure was tied to a specific peer's WIP against a specific pre-refactor file layout, both of which are gone, and
+      the refactor made the old import path meaningless rather than merely fixing a revert. Nothing is blocked. Repo:
+      unified-trading-pm.
+- [x] ✅ [INFRA] P1. **One dead evidence citation red-lines the whole repo's promote flow.** `4f901b9916` (written by
       slot-12 at 16:50, a SHA that never existed here — the pre-rebase id of its own commit) failed
       `check_plan_commit_sha_evidence` corpus-wide, failing PM's gate, failing the promote PR — the "QG slice(s) FAILED
-      | unified-trading-pm" → "PROMOTION LAG cause unknown" pair repeating hourly all day. Repaired to `72adcb234c`. The
-      orphan-healing reconciler CANNOT fix this form: the SHA never existed locally, so there is no object to patch-id
-      match. **Done when**: quickmerge refuses to commit a `- [x]` whose citation does not resolve against origin at
-      commit time, closing it at the source instead of corpus-wide hours later.
+      | unified-trading-pm" → "PROMOTION LAG cause unknown" pair repeating hourly all day. Repaired to `72adcb234c`.
+      Re-confirmed 2026-08-12: corpus is clean (0 unresolvable citations, 2887 checked) — the specific incident stays
+      resolved. **The structural "Done when" is now DONE too** — unified-trading-pm@b7ba752839.
+      `check_plan_commit_sha_evidence.py`'s existence-only test (`git cat-file -t <sha>`) is exactly why this slipped
+      past precommit: it passes for ANY loose object, including a commit a rebase already rewrote away, which is
+      precisely the shape both `4f901b9916` and the sibling `0f9b8a65ca` incident took (see
+      `plans/active/issues/plan_commit_sha_evidence_unresolvable_0f9b8a65ca_2026_08_10.md`).
+      `reconcile-sha-citations.sh` already explains why the precommit check itself cannot validate a SELF-citation to
+      the very commit being created (it doesn't exist yet) — so the fix scopes a STRICTER test to self-citations only:
+      `<repo>@<sha>` where `<repo>` is this repo's own name must now be an ancestor of some `origin/*` ref or of local
+      `HEAD` (`_is_reachable_from_any_branch`), not merely a present object. A cross-repo citation keeps the weaker test
+      (PM does not control when a sibling repo pushes). This directly rejects a guessed/pre-rebase self-citation AT
+      COMMIT TIME instead of letting it land and fail corpus-wide hours later; re-ran the full corpus after the change
+      and confirmed 0 regressions (2887 citations, 0 unresolvable — the change is additive-only for self-citations that
+      are genuinely unreachable). Tests: `scripts/quality_gates/test_check_plan_commit_sha_evidence.py` (7/7) — pushed,
+      local-only-unpushed, and dangling-orphan cases, both with and without `require_reachable`. `ruff`/`basedpyright`
+      clean. Repo: unified-trading-pm.
 - [ ] [INFRA] P2. **60 of 229 PM bats tests fail and NOTHING gates them.** Measured full run: 169 ok / 60 not ok. PM's
       gate (`base-service.sh`) carries bats as warn-only for service repos; PM's own 30 bats files are not invoked by
       its gate at all. None of the 60 are from this session's five new files. **Done when**: PM's bats suite is either
@@ -713,3 +727,22 @@ reconciliation, the previous recommendation, shipped 2026-08-10.)
   before it was killed by hand; fixed, plus a `SDP_ISO_DEPTH` backstop that hard-fails at depth >= 1 (exit 11) so a
   future handshake bug cannot repeat that blast radius. (4) the first harness had no peer-noise writer and so tested the
   easy case. None of these were reachable by reading the diff.
+
+- **2026-08-12 (todos 5 and 6 closed)**: `check_plan_commit_sha_evidence.py` now requires self-citations to be reachable
+  from a branch, not merely present as an object — closes the structural "Done when" for the dead-citation todo
+  (unified-trading-pm@b7ba752839, 7/7 new tests). Hit the same self-citation chicken-and-egg problem while authoring
+  this: quickmerge's precommit gate hard-blocks a literal `<repo>@PENDING` token, so citing the very commit being
+  created has to be a two-step ship (land the code first, then flip the checkbox with the real landed SHA) — the earlier
+  todos 1-4 doc flip worked around this the same way. Also hit a live instance of this doc's own F4/loss-guard subject
+  while shipping todo 5: quickmerge's reconcile reported this file's uncommitted edit as "GONE (content changed during
+  the reconcile)" mid-run — the edit was NOT actually lost (verified present and intact immediately after, 22 checked +
+  8 unchecked todos, no truncation), so the warning fired on a transient mid-reconcile state rather than a real loss
+  this time; recorded here rather than silently ignored, since a false-positive "GONE" warning is itself worth a future
+  look if it recurs. Todo 6: re-verified both stale BLOCKED items live — the UTL `_per_vm_shard_backlog` import is not
+  just unblocked (`git status --porcelain` empty) but the whole premise is superseded: the symbol was legitimately
+  relocated to its own module by commit `77fef206` (a real, shipped, unrelated refactor), the cited test file no longer
+  exists anywhere in the tree, and the replacement test suite passes 6/6. Slot 2 is now 0 commits behind origin with 0
+  dirty files (previously 81-behind/4-conflict-markers, then 3-behind per the 2026-08-12 STALE note) — fully
+  fast-forwarded. Both closed as resolved, not re-scoped: neither retained a "durable guard" purpose once checked, since
+  each was tied to a specific incident/file-layout that a legitimate later commit or the WIP's owner had already
+  superseded.
