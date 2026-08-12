@@ -572,27 +572,38 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       fix, and `deployment-service-code @ decdf98fb2a5`, the launcher fix just shipped — same-session tarball turnaround
       confirmed fast enough to pick up a fix shipped minutes earlier). Verified via `run.log`: `MDPS_DATE_CONCURRENCY=4`
       correctly threaded (3-4 dates processing concurrently), correctly scoped to the 64 instrument_ids +
-      `liquidations` + the 4 timeframes, catalogue loaded (431,890 rows, contract_size present). **Not a rubber-stamp
-      verification** — read real per-date outcomes, not just "still running": some dates 5xxx-genuine successes, some
-      `MalformedTickFieldError(field=contract_size)` (honest catalog-miss fail-closed, working as designed — e.g.
-      `DERIBIT:PERPETUAL:BTC-PERPETUAL`/`ETH-PERPETUAL`, DIFFERENT instrument_ids than the `@INV`-suffixed ones
-      targeted, so not evidence of scope leakage), and a **separate, pre-existing bug** found on some `KRAKEN-FUTURES`
-      sub-daily (15m/1h/4h) shards: `SCHEMA_VALIDATION_FAILED` on `open/high/low/close        NOT NULL` — the real cause
-      is
-      `aggregate_from_15s_efficient: N NaN values in 'open' input column — adapter        density bug, expected LOCF-dense base candles`,
-      i.e. sparse liquidation events don't densify cleanly at high-frequency timeframes. This is UNRELATED to the
-      inverse-notional fix (contract_size computation itself succeeds; the OHLC columns fail), doesn't corrupt anything
-      (a failed write leaves the prior captured row exactly as-is, per the captured-outranks-tie-break already
-      documented above), and doesn't block the 1d timeframe (the large majority of the target population — 3,030 of
-      4,463 shards). Filed as a new P2 todo below rather than chased down in this session (out of scope, pre-existing,
-      non-blocking, non-corrupting). 5. **Left running, not yet complete.** VM covers 2020-01-01 to 2026-01-31 across
-      all 64 instrument_ids — a multi-hour job, not something to babysit synchronously. **Next verification step for
-      whoever picks this up**: re-run the manifest query in this todo's evidence (DuckDB over
-      `_index/availability_index.parquet` filtered
-      `data_type='liquidations' AND capture_status='captured' AND margin_type='inverse'`) and spot-check a few
-      `written_at` timestamps AFTER this launch for correct `liquidation_notional_usd` magnitude (method: compare
-      `notional/liquidation_count` against the linear reference for the same day/venue, per the original P0 finding
-      above) before flipping this checkbox `[x]`. Do NOT flip on "VM still running" or "exit code 0" alone.
+      `liquidations` + the 4 timeframes, catalogue loaded (431,890 rows, contract_size present). 5. **RAN TO COMPLETION
+      (2026-08-12T05:42Z, all 2223 dates) BUT FIXED ZERO SHARDS — correcting an earlier WRONG in-session claim of
+      partial success.** The mid-run spot-check above (read while the job was still running) sampled a handful of error
+      lines, correctly diagnosed two REAL failure classes, and was then wrongly generalized to "the fix works, only a
+      narrow sub-daily bug blocks some shards, 1d is fine (the majority)." **That was never verified against the actual
+      outcome and was wrong.** Post-completion verification (this same continuation, after being asked "is liquidations
+      done"): parsed the full `run.log` (`grep liquidations complete.*succeeded` across all 2,197 per-date summary
+      lines) — **0 of 33,686 attempted (instrument x timeframe) writes succeeded, fleet-wide, every venue, every
+      timeframe.** Confirmed three ways, not just the counter: (a) manifest re-query shows the 1d timeframe's newest
+      `written_at` for the inverse population is `2026-08-11T21:57Z` — BEFORE this VM even launched; (b) direct
+      `gcs_describe_object` on `OKX-SWAP:PERPETUAL:BTC-USD@INV` day=2022-01-29 1d (a shard this job explicitly
+      requested) shows `last_modified=2026-08-11T20:43:36Z` — the AMBIENT fleet's write from the day before, untouched
+      by this job; (c) the sub-daily failure classes are real but their combined volume (15m/1h/4h only —
+      `SCHEMA_VALIDATION_FAILED` 59,290 + `MalformedTickFieldError` 39,132 + generic `candle write failed` 10,074)
+      already exceeds 100% coverage of those three timeframes many times over, i.e. NOTHING got through even there.
+      **The 1d timeframe (the majority of the target population) is the more serious open question**: it NEVER appears
+      in a single success line, error line, or `ERRORS` block anywhere in the 96 MB log — not one mention of `1d` next
+      to `liquidations` outside the initial per-date `Timeframes: [...]` announcement. Not failing loudly, not
+      succeeding — silently absent, as if it's never actually attempted despite being requested and despite `--force`.
+      Root cause NOT YET FOUND: `candle_write_mixin.py`'s `not force and blob_exists()` skip guard (the obvious suspect)
+      is shared code across all timeframes and correctly gates on `force`, so 1d's total silence is unexplained by that
+      path — needs someone to actually trace the 1d-specific aggregation branch (likely NOT
+      `aggregate_from_15s_efficient`, which is what throws the sub-daily density error) rather than assume it is the
+      same code path. **This P0 remains OPEN — 0% of the ~4,463-5,232-shard (population moves) target population is
+      fixed.** Nothing was corrupted (failed/skipped writes leave prior rows untouched, confirmed above), but nothing
+      was corrected either. **Next steps, not yet done**: (i) find why 1d silently no-ops under `--force` — likely the
+      actual P0 blocker, more central than the sub-daily density bug; (ii) fix the sub-daily
+      `aggregate_from_15s_efficient` NaN-density issue (P2 below) since it blocks 100% of 15m/1h/4h too, not the
+      minority case originally described; (iii) only then re-launch and re-verify with the SAME rigor as this correction
+      (parse `run.log`'s aggregate succeeded/attempted counts and spot-check GCS object `last_modified` directly — a "VM
+      completed" or "some dates showed success in a sample" signal is NOT sufficient, both were tried and both were
+      misleading here).
 - [ ] [OPERATOR] P1. Full re-drive of the remaining cells once `contract_size` lands. The failure population has GROWN
       since the plan's original 150,182: measured 355,818 MDPS liquidation failures at 14:19Z (352,409
       `SCHEMA_VALIDATION_FAILED` + 3,409 `MalformedTickFieldError`), split LIN 335,931 / INV 12,822 / neither 7,065 —
@@ -617,16 +628,19 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       re-pinned rather than widened blind — but whether a combo chain should carry `expiration` is a real domain
       question nobody has answered. Surfaced 2026-08-11 by the pin failing the whole MDPS suite, which is exactly its
       job.
-- [ ] [SCRIPT] P2. **Liquidations sub-daily (15m/1h/4h) candles fail schema validation on sparse-event days —
-      pre-existing, unrelated to the inverse-notional fix.** Found 2026-08-12 running the P0 re-derive:
-      `KRAKEN-FUTURES:PERPETUAL:{BTC,ETH,LTC,XRP}-USD@INV` (and likely others) throw `SCHEMA_VALIDATION_FAILED` on
-      `open/high/low/close NOT NULL` at 15m/1h/4h. Root cause per the log:
-      `aggregate_from_15s_efficient: N NaN values in 'open' input column — adapter density bug, expected LOCF-dense     base candles`.
+- [ ] [SCRIPT] P1. **Liquidations sub-daily (15m/1h/4h) candles fail schema validation on sparse-event days —
+      pre-existing, unrelated to the inverse-notional fix, and TOTAL not partial.** UPGRADED P2->P1 and corrected
+      2026-08-12: originally described (from a mid-run sample) as affecting "some KRAKEN-FUTURES shards" while 1d was
+      unaffected. Full-log analysis after the P0 re-derive VM completed shows this is not a minority edge case: EVERY
+      15m/1h/4h attempt in the entire run failed (`SCHEMA_VALIDATION_FAILED` 59,290 + `MalformedTickFieldError` 39,132 +
+      generic `candle write failed` 10,074 across all venues), and separately, 1d itself never wrote anything either
+      (see the P0 todo's corrected finding — a different, not-yet-diagnosed silent no-op, not this bug). Root cause of
+      the sub-daily failures per the log:
+      `aggregate_from_15s_efficient: N NaN values in 'open' input column — adapter density bug, expected LOCF-dense base candles`.
       Liquidation events are sparse (unlike continuous trades), so many 15s base-candle buckets have no price data and
-      the aggregator's LOCF-density assumption doesn't hold. Does NOT affect 1d (the majority of the liquidations
-      population) and does NOT corrupt anything (a failed write leaves the prior row untouched, per the
-      captured-outranks tie-break documented above) — but it silently caps how much of the sub-daily wrong-inverse
-      population the P0 re-derive can actually fix. Evidence:
+      the aggregator's LOCF-density assumption doesn't hold. Does NOT corrupt anything (a failed write leaves the prior
+      row untouched, per the captured-outranks tie-break documented above) but currently blocks 100% of sub-daily
+      liquidations writes fleet-wide, not just the wrong-inverse re-derive. Evidence:
       `gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-cefi-20260812-015953/run.log`.
 
 ## Deferred work after 2026-08-11
