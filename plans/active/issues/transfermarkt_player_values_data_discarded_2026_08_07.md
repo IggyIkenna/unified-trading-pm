@@ -620,3 +620,21 @@ possibly a rename that ripples into UAC/manifest data_type naming.
   composed semantics (the exact failure mode + in-window on/off-cadence), replacing the pre-ruling
   `is_year_round_not_window_bounded` test with a window-gated assertion. Full `quality-gates.sh` green;
   unified-trading-library@154e08039c.
+- **2026-08-12 (slot 16, data_engineering): TRANSFER_RECORDS resume for ARGENTINA_PRIMERA/LIGA_3/SERIE_A — BLOCKED on
+  the launcher singleton lock; fully verified, NOT force-launched.** Ran the todo's pre-launch checks before
+  relaunching: (a) concurrency — no local launcher/backfill processes, but `gcloud compute instances list` shows
+  `instr-backfill-sports-transfermarkt-20260812-181254` (the full PLAYER_VALUES historical backfill, its own todo) still
+  RUNNING and GENUINELY progressing (run.log via `get_storage_client()`: ~185/1,041 events done at last check, live
+  snapshot writes, mid documented RapidAPI 502-backoff — not wedged); (b) quota — live `x-ratelimit-requests-remaining`
+  check: **56,898 calls remaining** (limit 120,000, reset ~6.8d), down from the ~87K the launcher header still quotes
+  (the PLAYER_VALUES VM has consumed ~30K calls in ~3h, retry-inflated by the 502 storm). The exact todo launch command
+  was attempted and **refused by the launcher's singleton lock**
+  (`ERROR: an api_football/Transfermarkt VM is already running ... 181254; Refusing to launch a duplicate — shared per-key RapidAPI/api_football quota`).
+  Per policy the only bypass (`--force`) is operator-only and was NOT used — a second VM against the same key
+  mid-502-storm is exactly the quota-stacking the lock exists to prevent (doc history: double-launch wasted real quota
+  earlier this day). Master table `entity=transfer_records` still shows **0 rows for all 3 leagues** — the resume is
+  genuinely needed. **Action for the next pass**: re-attempt the todo command once 181254 completes
+  (VM_SHUTDOWN_ON_COMPLETION=true releases the lock), re-checking quota first — if the PLAYER_VALUES VM's retry-heavy
+  consumption has left insufficient headroom, that is a genuine quota-block, reconfirm before launching. No code shipped
+  this pass; the unrelated standing MTDS LDR pre-existing red that also blocks shipping is tracked separately
+  (`mtds_qg_red_lending_indices_compound_pipeline_mode_drift_2026_08_12.md`, blocker RB-fc1bb5dd).
