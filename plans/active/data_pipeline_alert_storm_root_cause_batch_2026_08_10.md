@@ -587,23 +587,39 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       by this job; (c) the sub-daily failure classes are real but their combined volume (15m/1h/4h only —
       `SCHEMA_VALIDATION_FAILED` 59,290 + `MalformedTickFieldError` 39,132 + generic `candle write failed` 10,074)
       already exceeds 100% coverage of those three timeframes many times over, i.e. NOTHING got through even there.
-      **The 1d timeframe (the majority of the target population) is the more serious open question**: it NEVER appears
-      in a single success line, error line, or `ERRORS` block anywhere in the 96 MB log — not one mention of `1d` next
-      to `liquidations` outside the initial per-date `Timeframes: [...]` announcement. Not failing loudly, not
-      succeeding — silently absent, as if it's never actually attempted despite being requested and despite `--force`.
-      Root cause NOT YET FOUND: `candle_write_mixin.py`'s `not force and blob_exists()` skip guard (the obvious suspect)
-      is shared code across all timeframes and correctly gates on `force`, so 1d's total silence is unexplained by that
-      path — needs someone to actually trace the 1d-specific aggregation branch (likely NOT
-      `aggregate_from_15s_efficient`, which is what throws the sub-daily density error) rather than assume it is the
-      same code path. **This P0 remains OPEN — 0% of the ~4,463-5,232-shard (population moves) target population is
-      fixed.** Nothing was corrupted (failed/skipped writes leave prior rows untouched, confirmed above), but nothing
-      was corrected either. **Next steps, not yet done**: (i) find why 1d silently no-ops under `--force` — likely the
-      actual P0 blocker, more central than the sub-daily density bug; (ii) fix the sub-daily
-      `aggregate_from_15s_efficient` NaN-density issue (P2 below) since it blocks 100% of 15m/1h/4h too, not the
-      minority case originally described; (iii) only then re-launch and re-verify with the SAME rigor as this correction
-      (parse `run.log`'s aggregate succeeded/attempted counts and spot-check GCS object `last_modified` directly — a "VM
-      completed" or "some dates showed success in a sample" signal is NOT sufficient, both were tried and both were
-      misleading here).
+      **The 1d timeframe (the majority of the target population) is the more serious open question**: it almost never
+      appears in a success line, error line, or `ERRORS` block anywhere in the 96 MB log — correction to an even earlier
+      "NEVER appears" overclaim in this same entry: a targeted re-query found exactly **20** genuine `attempted_failed`
+      1d rows for the 64 target instruments, all `MalformedTickFieldError` (honest catalog-miss, mostly pre-2022 dates),
+      written at scattered points throughout the run (02:10-05:29Z) — so 1d IS reachable and DOES sometimes get
+      attempted. But 20 out of a target population whose 1d slice alone is ~3,030 shards means **~99% of target 1d
+      shard-days have literally zero trace of ever being attempted** — not captured, not attempted_failed, not
+      empty_confirmed. That's the real mystery, and two follow-up checks this session ruled OUT as the explanation: (1)
+      **not a raw-data-availability/density gap** — `OKX-SWAP:PERPETUAL:BTC-USD@INV` (the running example) has 1,513
+      MTDS-captured liquidation-tick days, row_count range 1-45,993 (median 49, mean 348), and the specific untouched
+      reference day (2022-01-29) has 74 raw tick rows — solidly non-sparse, and this exact instrument+day was
+      successfully computed by the ambient fleet BEFORE this job ran (real notional value already confirmed), so raw
+      data plainly exists and is adequate; the job still never touched it. (2) **not scoped to my job alone** —
+      re-querying with NO instrument filter (all venues, all instruments, entire manifest) found ZERO 1d liquidations
+      captures fleet-wide with `written_at` inside the run window (2026-08-12T01:00-06:00Z), i.e. even the ~47-VM
+      ambient fleet running concurrently produced no 1d liquidation writes in that window either. That's either a
+      genuinely fleet-wide 1d-liquidations outage during this window, or the same underlying bug affecting every VM that
+      picked up the current tarball. Root cause NOT YET FOUND: `candle_write_mixin.py`'s `not force and blob_exists()`
+      skip guard (the obvious suspect) is shared code across all timeframes and correctly gates on `force`, so it
+      doesn't explain a near-total 1d silence while 15m/1h/4h at least attempt (and fail) everything — needs someone to
+      actually trace the 1d-specific aggregation/scheduling branch (likely NOT `aggregate_from_15s_efficient`, which is
+      what throws the sub-daily density error, and likely upstream of the per-timeframe write call entirely, e.g. in
+      whatever decides which timeframes to even enqueue for a given instrument+date) rather than assume it is the same
+      code path as the sub-daily bug. **This P0 remains OPEN — 0% of the ~4,463-5,232-shard (population moves) target
+      population is fixed.** Nothing was corrupted (failed/skipped writes leave prior rows untouched, confirmed above),
+      but nothing was corrected either. **Next steps, not yet done**: (i) find why 1d attempts almost never happen under
+      `--force` — likely the actual P0 blocker, more central than the sub-daily density bug, and worth checking whether
+      it's also silently degrading the AMBIENT fleet's normal (non-`--force`) 1d coverage, not just this scoped
+      re-derive; (ii) fix the sub-daily `aggregate_from_15s_efficient` NaN-density issue (P2 below) since it blocks 100%
+      of 15m/1h/4h too, not the minority case originally described; (iii) only then re-launch and re-verify with the
+      SAME rigor as this correction (parse `run.log`'s aggregate succeeded/attempted counts and spot-check GCS object
+      `last_modified` directly — a "VM completed" or "some dates showed success in a sample" signal is NOT sufficient,
+      both were tried and both were misleading here).
 - [ ] [OPERATOR] P1. Full re-drive of the remaining cells once `contract_size` lands. The failure population has GROWN
       since the plan's original 150,182: measured 355,818 MDPS liquidation failures at 14:19Z (352,409
       `SCHEMA_VALIDATION_FAILED` + 3,409 `MalformedTickFieldError`), split LIN 335,931 / INV 12,822 / neither 7,065 —
@@ -730,3 +746,21 @@ already shipped (`0c38c00d`, row above) and `contract_size` landed — nothing e
     Resolving from `origin` and then `git checkout stash@{0} -- <one-file>` for the genuinely-needed peer file avoided a
     third blind retry and confirmed the peer's content was already on origin (0-line diff) before leaving the stash in
     place, untouched, for its owner.
+21. **"VM ran to completion" and "a mid-run log sample looked fine" are BOTH insufficient proof of success — this cost a
+    wrong claim that had to be corrected in-session.** Mid-run, a handful of error lines were read, correctly diagnosed
+    as two real-but-survivable failure classes, and wrongly generalized to "the fix mostly works." After the VM's own
+    `VM_SHUTDOWN_ON_COMPLETION` self-delete (a clean exit signal), the ACTUAL verification was: sum every
+    `X/Y succeeded` counter across the full log (0/33,686), cross-check a specific GCS object's `last_modified` directly
+    (untouched since before the job), and re-query the manifest for `written_at` inside the run window. Only that
+    combination caught that the real result was 0% fixed, not "mostly working." A completion signal or a favorable
+    sample proves the job didn't crash — it proves nothing about whether it did its job.
+22. **A launcher's `DRY_RUN=true` env var can mean something completely different from what the name implies.** On
+    `launch-mdps-backfill-vm.sh`, `DRY_RUN=true` skips ONLY the tarball-freshness safety check — it still creates a
+    real, live, `--force`-executing VM if the positional `MODE` arg is `full`. Used once expecting a safe
+    command-construction test; got a real (harmlessly failed, but real) launch instead. There is no actual "print the
+    command, touch nothing" mode in this script — read the flag's own code, don't infer behavior from its name.
+23. **When a "why isn't X being processed" mystery shows up, check density/data-availability directly before assuming a
+    code bug (and vice versa) — both directions were verified empirically here, not guessed.** The instinct "maybe we
+    just don't have the underlying data for those shards" was checked directly (MTDS capture count, row_count
+    distribution, and the specific untouched shard's own tick count) and cleanly ruled out — which then correctly
+    redirected the investigation to an unresolved code-path question instead of a data-completeness one.
