@@ -149,11 +149,20 @@ picking this plan up cold should never trust the flip-time state without a fresh
       `rate_indices` rows**; `lending_indices` captured 385,050→385,700 (+650 folded exactly); snapshot
       `_index/snapshots/pre_rate_indices_retire_20260812T144912Z.parquet` + `.rate_indices_retire.bak`. See Progress Log
       for the fold-gap finding (650 cells' rpc canonical rows were never registered).
-- [ ] [DATA] P2. **Verify + retire `dex_pool_fees` legacy `captured` rows if any remain** (tiny scope — a prior read
+- [x] ✅ [DATA] P2. **Verify + retire `dex_pool_fees` legacy `captured` rows if any remain** (tiny scope — a prior read
       noted ~21 rows on the axis-census panel before that panel's `attempted_failed` filter fix; the corpus itself was 0
       real objects for its whole lifetime, phantom manifest rows only). Confirm the count live first — if 0, mark this
       todo done-with-nothing-to-retire and move on; if >0, same reversible pattern as above. (repo:
-      market-tick-data-service)
+      market-tick-data-service) — **DONE 2026-08-12 (slot 14 + 32, data_engineering):
+      `market-tick-data-service@6f2250bb` + `@8d5f37f3`.** Verified live: 21 captured rows (7 BALANCER + 14 CURVE,
+      day 2026-05-16..22) all backed by real objects — the "phantom rows only" premise DISPROVEN. **All 21
+      content-verified redundant with the canonical `dex_pool_state` corpus** (BALANCER: address-named twin
+      `swap_fees` on all 7 days; CURVE: SYMBOL-named twin `USDC-CRVUSD`/`DAI-USDC`, `daily_supply_revenue_usd` ==
+      `fees_usd`, exact volume/tvl cross-match). Operator BLK-b118f150 (retire BALANCER) + BLK-9aed224f (retire
+      CURVE). **Final state (independently verified): `dex_pool_fees` `captured`=0 / `attempted_failed`=21** (7
+      BALANCER + 14 CURVE). A transient dispatch-overlap + wrong-vocabulary CURVE-twin probe caused one wrong
+      re-capture, corrected same session — see
+      `plans/active/issues/dex_pool_fees_inverted_flip_write_race_2026_08_12.md`.
 - [ ] [DATA] P1. **Resume the consolidator (if not already), trigger a fresh `measure_honest_coverage.py` rollup run**,
       and confirm it completes cleanly (the enumeration-key fix shipped `instruments-service@8b59e8ba2` this session
       must be live in whatever image/VM runs the rollup — verify before trusting output). Launcher:
@@ -365,3 +374,19 @@ picking this plan up cold should never trust the flip-time state without a fresh
   `/plans/active/issues/dex_pool_fees_phantom_premise_false_real_mid_may_objects_2026_08_12.md` (data-correctness
   finding, options A/B/C/D) + `/blocked` to the operator. No manifest write made; the retirement script ships as the
   template for the decided disposition (needs twin-verify or migration logic before `--apply`).
+- **2026-08-12 (slot 14 + 32, data_engineering) — todo 7 DONE**: `dex_pool_fees` verified + fully retired.
+  Live census 2026-08-12: **21 captured rows** (7 BALANCER + 14 CURVE, day=2026-05-16..22), all backed by real
+  objects (the "0 objects for its whole lifetime" premise was DISPROVEN — issue doc). **All 21 content-verified
+  redundant with the canonical `dex_pool_state` corpus**: the 7 BALANCER rows against the address-named twin
+  `swap_fees` (all 7 days, retired by slot 14 per BLK-b118f150); the 14 CURVE rows against the SYMBOL-named twin
+  (`CURVE-ETHEREUM:POOL:USDC-CRVUSD.parquet` / `DAI-USDC.parquet` — `pool_address`/`daily_supply_revenue_usd`
+  EXACTLY cross-match `volume_usd`/`tvl_usd`/`fees_usd`; content-verified by slot 32 and independently reproduced
+  by slot 14, retired per operator BLK-9aed224f). **Final state (independently verified by fresh census):
+  `dex_pool_fees` `captured`=0 / `attempted_failed`=21** (7 BALANCER + 14 CURVE). Scripts:
+  `retire_dex_pool_fees_balancer_legacy_captured_rows_2026_08_12.py` + `retire_dex_pool_fees_all_captured_rows_2026_08_12.py`
+  @ `market-tick-data-service@6f2250bb`/`@8d5f37f3`. **Coordination incident (dispatch overlap + wrong-vocabulary
+  probe)**: two AO-eligible todos (this plan's P2 + the phantom-premise issue-doc) dispatched concurrently caused a
+  brief inverted re-capture (slot 14's address-named CURVE probe was a wrong-vocabulary false negative vs the
+  symbol-named objects; its corrective restore was then reverted). Documented in
+  `plans/active/issues/dex_pool_fees_inverted_flip_write_race_2026_08_12.md` — no data lost at any point, final
+  state verified. Consolidator paused before each write / resumed after.
