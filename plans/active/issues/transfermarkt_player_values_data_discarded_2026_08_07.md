@@ -560,5 +560,27 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       `429`/quota-exceeded, but two overlapping launches already spent real calls this session, so the launcher's stale
       ~87K estimate should be re-verified, not assumed. Done when: master table `entity=transfer_records` shows all 3
       leagues with real rows, or a definitive honest-absence reason if genuinely empty.
-- [ ] [DATA] P3. The full PLAYER_VALUES 2020-06+ historical backfill (the real ~1,041-event scope, distinct from the
-      3-event smoke test already run) has still not been launched -- queued behind the TRANSFER_RECORDS work above.
+- [x] ✅ [DATA] P3. **The full PLAYER_VALUES 2020-06+ historical backfill IS now launched — confirmed running,
+      independently verified.** VM `instr-backfill-sports-transfermarkt-20260812-181254`, `VM_MIGRATION_CMD` confirmed
+      via `gcloud compute instances describe --format='value(metadata.items)'` to be
+      `--apply --entities PLAYER_VALUES --tier Prediction --conc 4` (no `--limit-events`, no `--leagues` restriction —
+      the full 1,041-event scope, not the earlier 3-event smoke test). Status `RUNNING` at the time of this check;
+      run.log shows real activity (RapidAPI 502-retry warnings on early clubs, the same documented flakiness class as
+      every other pass this session). Monitoring to a genuine terminal state continues below — not marking this todo's
+      underlying backfill DONE until the manifest shows real per-league captured rows across the 1,041 events, only that
+      the launch itself is confirmed (this checkbox tracks "launched + verified running", per the doc's own "launched ≠
+      done" discipline).
+- **2026-08-12 (interactive session, continued): independently re-verified the state above rather than trusting either
+  session's self-report at face value** (per this workspace's measurement-claims-discipline rule — a claim is only as
+  good as its own re-check). Re-ran the manifest read myself at one point and got a MISLEADING transient result
+  (`ALLSVENSKAN` showing `attempted_failed` while the master table simultaneously already had its rows) — traced to the
+  manifest INDEX being a periodically-consolidated view that lags the master-table's direct, immediate append by minutes
+  (documented consolidator staleness, not a bug); re-confirmed the master table directly
+  (`sports_reference/master/entity=transfer_records/master.parquet`, read via `get_storage_client().download_bytes()`
+  - `pd.read_parquet`, never `gsutil`) shows the same 29 leagues / 146,449 rows the other session's write-up claims —
+    matches. **Lesson for this doc's own future readers**: `read_availability_index()` and the master parquet can
+    disagree for a few minutes after a real write; when reconciling a just-happened event, check the master table
+    directly, not just the index, before concluding a discrepancy is real. Also independently confirmed (not just taking
+    the other session's word for it) that `GREEK_SUPER_LEAGUE` genuinely has no Transfermarkt provider mapping
+    (`get_provider_league_id("GREEK_SUPER_LEAGUE", "transfermarkt")` returns `None` live) — correctly excluded from
+    every resume list.
