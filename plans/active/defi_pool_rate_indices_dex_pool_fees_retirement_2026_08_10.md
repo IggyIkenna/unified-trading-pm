@@ -85,11 +85,11 @@ picking this plan up cold should never trust the flip-time state without a fresh
       clause not triggered.
 
       Note for todo 2's worker: the direct pandas `read_availability_index(columns=..., filters=[("capture_status",
-                                                          "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
-                                                          fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
-                                                          DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
-                                                          `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
-                                                          streaming footprint regardless of corpus size.
+                                                              "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
+                                                              fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
+                                                              DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
+                                                              `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
+                                                              streaming footprint regardless of corpus size.
 
 - [x] ✅ [DATA] P1. **Root-cause the 0→7,930,863 `instrument_type=POOL` recurrence before any retirement resumes**
       (blocks the retirement todo below — main-agent-added 2026-08-11 per
@@ -149,11 +149,24 @@ picking this plan up cold should never trust the flip-time state without a fresh
       `rate_indices` rows**; `lending_indices` captured 385,050→385,700 (+650 folded exactly); snapshot
       `_index/snapshots/pre_rate_indices_retire_20260812T144912Z.parquet` + `.rate_indices_retire.bak`. See Progress Log
       for the fold-gap finding (650 cells' rpc canonical rows were never registered).
-- [ ] [DATA] P2. **Verify + retire `dex_pool_fees` legacy `captured` rows if any remain** (tiny scope — a prior read
+- [x] ✅ [DATA] P2. **Verify + retire `dex_pool_fees` legacy `captured` rows if any remain** (tiny scope — a prior read
       noted ~21 rows on the axis-census panel before that panel's `attempted_failed` filter fix; the corpus itself was 0
       real objects for its whole lifetime, phantom manifest rows only). Confirm the count live first — if 0, mark this
       todo done-with-nothing-to-retire and move on; if >0, same reversible pattern as above. (repo:
-      market-tick-data-service)
+      market-tick-data-service) — **DONE 2026-08-12 (slot 14, data_engineering): `market-tick-data-service@9f5868e5`.**
+      The "phantom rows only" premise was FALSE (the 2026-08-04 sample missed `day=2026-05-16..22`): all 21 `captured`
+      rows are backed by real subgraph-fee objects (3 pools: CURVE x2 `0x4dece678..`/`0xbebc4478..`, BALANCER x1
+      `0x06df3b2b..`, ETHEREUM, `batch_onchain_subgraph`). Content-verified redundant with canonical `dex_pool_state`
+      twins on all 7 days (CURVE symbol-named objects `CURVE-ETHEREUM:POOL:USDC-CRVUSD.parquet`/`DAI-USDC-USDT.parquet`
+      — `daily_supply_revenue_usd == fees_usd`, volume/tvl identical; the "no CURVE twin" claim in
+      `dex_pool_fees_inverted_flip_write_race_2026_08_12.md` was an address-named wrong-vocabulary false negative,
+      re-verified live 2026-08-12 slot 14). Operator confirmed retire-all (BLK-9aed224f; the BLK-b118f150 partial-go
+      predated the twin content-verification). Applied `retire_dex_pool_fees_all_captured_rows_2026_08_12.py --apply`
+      (reversible `captured→attempted_failed`, no row/object deleted): retired the remaining 14 CURVE rows (7 BALANCER
+      already retired by slot 20). Consolidator paused pre-write / resumed after (verified ENABLED). Snapshot
+      `_index/snapshots/pre_dex_pool_fees_all_retire_<ts>.parquet` + `.dex_pool_fees_all_retire.bak`. Round-trip + fresh
+      independent post-apply census: **0 captured `dex_pool_fees` rows; 21 `attempted_failed` (7 BALANCER + 14 CURVE)**
+      — done-when met.
 - [ ] [DATA] P1. **Resume the consolidator (if not already), trigger a fresh `measure_honest_coverage.py` rollup run**,
       and confirm it completes cleanly (the enumeration-key fix shipped `instruments-service@8b59e8ba2` this session
       must be live in whatever image/VM runs the rollup — verify before trusting output). Launcher:
@@ -365,3 +378,28 @@ picking this plan up cold should never trust the flip-time state without a fresh
   `/plans/active/issues/dex_pool_fees_phantom_premise_false_real_mid_may_objects_2026_08_12.md` (data-correctness
   finding, options A/B/C/D) + `/blocked` to the operator. No manifest write made; the retirement script ships as the
   template for the decided disposition (needs twin-verify or migration logic before `--apply`).
+- **2026-08-12 (slot 14, data_engineering) — todo 7 DONE: all 21 `dex_pool_fees` rows retired (0 captured / 21
+  attempted_failed).** Resolved the write-race aftermath + the two issue docs' conflicting twin claims by live
+  measurement (see the checkbox evidence above for the full trail).
+  - **Ground-truth probe (2026-08-12, slot 14)**: fresh DuckDB census + GCS object probe over the live consolidated
+    index confirmed the CURRENT state (post slot-20's `d2014c87` corrective flip) was **14 CURVE `captured` + 7 BALANCER
+    `attempted_failed`**. Then content-read the canonical symbol-named CURVE `dex_pool_state` object
+    `CURVE-ETHEREUM:POOL:USDC-CRVUSD.parquet` (day=2026-05-16): `daily_supply_revenue_usd=371.32`,
+    `volume_usd=7,426,451`, `tvl_usd=23,787,340` — EXACTLY matching the legacy `dex_pool_fees` object's
+    `fees_usd=371.32`/`volume_usd`/`tvl_usd`. The canonical ADDRESS-named path does NOT exist (NotFound) — confirming
+    the inverted-flip issue doc's "phantom CURVE twin / only copy" claim was the SAME address-named wrong-vocabulary
+    false negative slot 32 already corrected. **The CURVE rows are content-redundant with canonical `dex_pool_state` —
+    retiring them loses nothing.**
+  - **Disposition confirmed retire-all-21**: the operator's BLK-9aed224f (recorded in
+    `dex_pool_fees_phantom_premise_false_real_mid_may_objects_2026_08_12.md`) explicitly retired all 14 CURVE rows after
+    slot 32's content-verification; the interim BLK-b118f150 partial-go the main-agent guidance message cited predated
+    that content-verification and its premise was disproven by this slot's live probe. Applied
+    `retire_dex_pool_fees_all_captured_rows_2026_08_12.py --apply` (reversible status flip only, no row/object deleted;
+    `market-tick-data-service@9f5868e5`): retired the remaining 14 CURVE rows → **0 captured / 21 attempted_failed** (7
+    BALANCER + 14 CURVE). Consolidator paused pre-write (verified PAUSED) / resumed after (verified ENABLED). Snapshot
+    `_index/snapshots/pre_dex_pool_fees_all_retire_*.parquet` + `.dex_pool_fees_all_retire.bak` written pre-write.
+    Round-trip verify (0 remaining captured) + independent fresh post-apply census both confirm the terminal state.
+  - **Issue-doc reconciliation**: `dex_pool_fees_inverted_flip_write_race_2026_08_12.md` todo-1 (the corrective flip
+    that restored 14 CURVE to captured) was based on that disproven "only copy" premise — the CURVE restoration is now
+    re-retired by this todo's apply, and the doc's premise is corrected below. The phantom-premise doc's P2 (correct the
+    "0 objects" claim in the archived recommendation + this plan's premise) remains its own tracked todo.

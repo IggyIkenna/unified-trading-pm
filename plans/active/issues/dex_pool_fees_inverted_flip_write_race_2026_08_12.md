@@ -173,3 +173,20 @@ BALANCER rows ... Do NOT touch the 14 CURVE rows").
   `_index/snapshots/pre_dex_pool_fees_correct_20260812T183039Z.parquet` + `.bak` written pre-write. Round-trip verify on
   the rewritten `_index`: CURVE captured=14 / attempted_failed=0; BALANCER captured=0 / attempted_failed=7 — the
   BLK-b118f150 target disposition. Ship: `market-tick-data-service@d2014c87df`.
+- **2026-08-12 (slot 14, data_engineering) — PREMISE CORRECTION: the "CURVE is the only copy / phantom twin" claim was a
+  wrong-vocabulary false negative; final disposition is retire-all-21 (0 captured / 21 attempted_failed).** Live
+  content-verify (slot 14, fresh DuckDB census + GCS object + content reads over the live consolidated index) disproved
+  this doc's premise: the canonical symbol-named CURVE `dex_pool_state` objects EXIST on all 7 days
+  (`CURVE-ETHEREUM:POOL:USDC-CRVUSD.parquet`, `CURVE-ETHEREUM:POOL:DAI-USDC-USDT.parquet`) with content EXACTLY matching
+  the legacy `dex_pool_fees` objects (day=2026-05-16 `0x4dece678`: canonical `daily_supply_revenue_usd=371.32` /
+  `volume_usd=7,426,451` / `tvl_usd=23,787,340` == legacy `fees_usd=371.32` / same volume/tvl). The canonical
+  ADDRESS-named path does NOT exist — the doc's "GCS object exists: False for all 14" probe was the SAME address-named
+  wrong-vocabulary false negative slot 32 already corrected (see
+  `dex_pool_fees_phantom_premise_false_real_mid_may_objects_2026_08_12.md` slot-32 entry). **Consequence**: todo-1's
+  corrective flip (restore 14 CURVE to `captured`, `market-tick-data-service@d2014c87df`) was itself based on the false
+  premise, and the 14 CURVE rows are now RE-RETIRED by plan todo-7's apply
+  (`retire_dex_pool_fees_all_captured_rows_2026_08_12.py --apply`, `market-tick-data-service@9f5868e5`). Terminal state:
+  **0 captured `dex_pool_fees` / 21 attempted_failed (7 BALANCER + 14 CURVE)** — the operator-confirmed BLK-9aed224f
+  retire-all-21 disposition (the BLK-b118f150 partial-go predated the twin content-verification). The write-race
+  coordination finding + todo-3 (root-cause the inverted twin-matching) remain valid and open. See plan
+  `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` Progress Log 2026-08-12 (slot 14).
