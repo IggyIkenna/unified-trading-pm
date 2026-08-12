@@ -184,24 +184,19 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       18%-coverage bundle-vs-per-league skip mismatch, per the inline comment at transfermarkt.py:442-447) — this is a
       second instance of the same class.
 
-- [x] ✅ [CODE] P1. **Fix the window-gating bug — FIXED 2026-08-12.** Removed the `_tm_window_open`/`_tm_needs_refresh`
-      skip block (transfermarkt.py:462-481) entirely — `_fetch_transfermarkt_data`'s PLAYER_VALUES path had no separate
-      `transfer_records` fetch to preserve a gate for, so the whole reimplemented skip was the bug, not just its
-      application to PLAYER_VALUES. Cost control on non-trigger dates stays the existing cache-hit short-circuit
-      (`_cache_is_fresh` / `_TRANSFERMARKT_CACHE_STALENESS_DAYS=7`), unaffected by this change. Done when: a forced
-      non-window-date PLAYER_VALUES fetch for a league genuinely attempts the API call (no
-      `EXPECTED_OUTSIDE_TRANSFER_WINDOW` empty-confirmed) + a regression test locks the two data_types' gating apart so
-      this can't silently re-merge — rewrote `TestTransfermarktTransferWindowGuard` →
-      `TestTransfermarktPlayerValuesYearRoundFetch` in `test_orchestrator_data_fetchers.py`:
-      `test_outside_window_non_trigger_still_fetches` asserts the exact old-bug condition (outside window, no refresh
-      trigger) now attempts the fetch and never stamps `EXPECTED_OUTSIDE_TRANSFER_WINDOW`;
-      `test_within_window_still_fetches` locks the within-window case too. instruments-service@df8ff1b732. QG green
-      (full pass + the `check_adapter_contract_regression` baseline intentionally lowered 8→7 for transfermarkt.py,
-      since removing the buggy skip's `record_empty` call site legitimately drops one contract-call site —
-      `scripts/quality_gates/adapter_contract_baseline.yaml` regenerated via `--regenerate-baseline`, diffed to confirm
-      it touched only this file). Not yet live-verified against a real non-window-date trigger (Transfermarkt fetches
-      are still gated behind real API quota; the next non-trigger-date run for any expected league will exercise this
-      live).
+- [x] ✅ [CODE] P1. **SUPERSEDED 2026-08-12 — REVERTED, this was never a bug.** The "CONFIRMED bug" finding above and
+      the fix it led to (`instruments-service@df8ff1b732`, removing the window-gate entirely) were both wrong.
+      **Operator ruling (2026-08-12, direct — quoted verbatim in this doc's own Progress Log entry below,
+      /plans/active/issues/transfermarkt_player_values_data_discarded_2026_08_07.md)**: "Total market value euros and
+      transfer records should be window gated. Expected outside transfer window." — the gate is correct behavior, not a
+      bug; valuations genuinely don't move outside a real transfer window. The SSOTs the earlier finding leaned on
+      (`is_transfer_data_expected()`'s docstring, `honest-absence-downstream-handling.md`'s scoping note) were
+      themselves stale on this specific point, not the orchestrator code — both corrected in this same pass (see
+      Progress Log). **Reverted** via `instruments-service@de31f3a7bd` (clean `git revert` of df8ff1b732, plus an
+      in-code comment recording this decision so it doesn't get re-removed on the same misreading again; restores
+      `TestTransfermarktTransferWindowGuard`, 9/9 passing). The window-gate block (transfermarkt.py:462-486) is back in
+      place, `EXPECTED_OUTSIDE_TRANSFER_WINDOW` is confirmed the correct honest-empty reason for PLAYER_VALUES same as
+      transfer_records.
 - [x] ✅ [CODE] P2. **Root-cause the empty `players` per-player list — FIXED 2026-08-12, NOT an upstream limitation.**
       Live-traced the deployed key (GSM `transfermarkt-api-key`, `central-element-323112`) — RapidAPI-backed, not Apify.
       Confirmed `_fetch_clubs_via_rapidapi()` only ever called `/api/v1/clubs/profile` (returns
@@ -221,15 +216,22 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       corrected to the actual endpoints. New regression test `test_get_team_squads_rapidapi_fetches_players`
       (`tests/unit/test_transfermarkt_adapter_coverage.py`) locks in the 3-call sequence (standings + profile + squad)
       and non-null `market_value_eur`; existing `test_get_teams_rapidapi` extended to assert `get_teams()` does NOT make
-      the extra squad call. instruments-service@3d7418bb. Not yet live-verified against a real trigger fetch
-      (Transfermarkt only re-fetches on transfer-window trigger dates, and today's window-gating bug — the P1 todo above
-      — still blocks a genuine non-window-date attempt from happening at all); the "fresh snapshot with non-null
-      `players`" half will be confirmed once the window-gating fix (P1, still open) lands and a real trigger fires.
-- [ ] [OPERATOR] P2. **Backfill decision**, once the window-gating bug above is fixed: force-refetch the historical
-      (league, trigger-date) pairs that were captured under the old value-discarding code (recovers real value data for
-      real past transfer windows — bounded, not the full 5,772-row count, per the finding above), vs. accept gradual
-      natural convergence as each league's future trigger dates land, vs. some hybrid (e.g. only the most recent N
+      the extra squad call. instruments-service@3d7418bb. **Independently live-verified 2026-08-12 (playground download,
+      direct adapter call, no manifest/GCS write)**: confirmed both major and minor leagues genuinely have full
+      per-player data via this endpoint — EPL (`GB1`): 20 squads, e.g. Arsenal 40/40 players with real names +
+      positions + market values (David Raya €30M); K_LEAGUE_1 (`RSK1`) itself: 12 squads, e.g. FC Seoul 30/30 players
+      (Sung-yun Gu €500K). All 9 leagues checked were mid-transfer-window on 2026-08-12. The RapidAPI backend is
+      currently intermittently 502'ing (needed up to ~2-3 min of the adapter's own exponential-backoff retries per
+      league to succeed) — that's a live third-party reliability issue, not a data-coverage gap; not tracked further
+      here since it's outside this doc's scope. This closes the "not yet live-verified" gap this todo's Progress Log
+      entry (slot 13) had left open — no code change needed from this verification pass.
+- [ ] [OPERATOR] P2. **Backfill decision**: force-refetch the historical (league, trigger-date) pairs that were captured
+      under the old value-discarding code (recovers real value data for real past transfer windows — bounded, not the
+      full 5,772-row count, per the finding above), vs. accept gradual natural convergence as each league's future
+      trigger dates land (now correctly gated, per the reverted P1 above), vs. some hybrid (e.g. only the most recent N
       seasons). Needs a rough cost estimate (API quota / row count) before picking — not scoped here.
+      GCS-path/manifest-accounting design for scaling this beyond the playground verification above is also not scoped
+      here.
 
 ## Progress Log
 
@@ -300,3 +302,23 @@ possibly a rename that ripples into UAC/manifest data_type naming.
   contract calls (the removed skip's own `record_empty` call) — regenerated via `--regenerate-baseline` and diffed to
   confirm the regen touched only that one file, not unrelated fleet drift. instruments-service@df8ff1b732 (code) — see
   the flipped todo above for detail. Remaining open work on this doc: the `[OPERATOR]` P2 backfill-decision todo.
+- **2026-08-12 (interactive session, continued): reverted slot 4's window-gating removal — operator ruling overturned my
+  own earlier "confirmed bug" framing, which had already propagated into a shipped commit.** While independently
+  investigating this doc's per-player-list gap live (matching slot 13's already-shipped finding exactly, unaware it had
+  landed), I asked the operator to confirm my "SSOT says year-round" reading before writing anything further — they
+  corrected it directly: "Total market value euros and transfer records should be window gated. Expected outside
+  transfer window." My earlier framing had already been read and acted on by slot 4 (`df8ff1b732`, landed on LDR and
+  promoted to main before I caught this). **Reverted** via a clean `git revert` + restored the pre-removal regression
+  tests, `instruments-service@de31f3a7bd`, QG green, 9/9 Transfermarkt tests passing. **Corrected the two SSOTs whose
+  stale wording caused both my own and slot 4's misreading** (not the code, which was right all along): UAC
+  `is_transfer_data_expected()`'s docstring no longer claims PLAYER_VALUES is "expected year-round" — corrected to say
+  it's window-gated same as transfer_records; codex `honest-absence-downstream-handling.md`'s
+  `EXPECTED_OUTSIDE_TRANSFER_WINDOW` scoping note (lines 616, 1003) extended from `transfer_records`-only to include
+  PLAYER_VALUES. Also live-verified slot 13's per-player-list fix independently (see that todo's update above) via a
+  direct playground download (EPL + K_LEAGUE_1, real per-player market values confirmed for both) rather than relying on
+  the shipped regression tests alone. **Lesson for future passes on this doc**: a "SSOT confirms X" claim is only as
+  good as the SSOT text actually being current — always worth a direct operator check before a finding gets framed as
+  "confirmed, not a judgment call," especially on a fast-moving multi-session doc where someone else may act on the
+  finding before you can correct it. Remaining open work: the `[OPERATOR]` P2 backfill-decision todo, and (per the
+  operator's "then we scale it" direction) a follow-up GCS-path/manifest-accounting design pass to move PLAYER_VALUES
+  from playground-verified to properly wired — not scoped as a todo yet, flagging here so it isn't lost.
