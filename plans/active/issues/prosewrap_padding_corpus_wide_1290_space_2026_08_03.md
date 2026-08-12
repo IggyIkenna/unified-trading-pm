@@ -163,3 +163,19 @@ Mechanical, bounded remediation — not a design/judgment call:
   agent hand-authoring a multi-paragraph annotation near a checkbox: use a top-level blockquote banner (matching the
   style already used elsewhere in this corpus for dated correction banners), not a nested checkbox-continuation
   paragraph, or expect to re-fight this bug on every commit attempt.
+
+- **Re-measured 2026-08-12 (slot 3, hit while shipping an unrelated cloudbuild change).** Corpus scan of
+  `plans/active/**` + `codex/**` for checkbox-continuation lines indented >=10: **100 docs affected** (was 82 on 08-03),
+  **worst single line 1150 leading spaces in a 1257-char line** — i.e. ~91% padding — in
+  `/plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`. So the two axes moved in
+  opposite directions since 08-03: the worst case came DOWN (1290 -> 1150, remediation landing) while the number of
+  affected docs went UP (82 -> 100). Anyone quoting "82 docs" as current is quoting a stale number; re-measure.
+
+- **Hand-repair has a measured half-life of exactly one commit — quantifying "temporary".** Dedented one doc's
+  continuation block from 26 spaces to the 6-space list-content indent, verified word-content byte-identical, and
+  shipped it. On the very next prettier pass (the same ship) it came back at **10**. Growth per pass is +4 and the
+  reflow is non-idempotent regardless of where you start, so dedenting does NOT establish a fixed point — it only resets
+  the accumulator. Correcting a claim I made in that commit message (`unified-trading-pm@017bdf4901`), which said the
+  dedent gave "the formatter a fixed point": it does not, and the measurement above disproves it. The only durable fix
+  is the one this doc already recommends — author the annotation as a top-level blockquote so there is no nested
+  continuation for the printer to re-indent.
