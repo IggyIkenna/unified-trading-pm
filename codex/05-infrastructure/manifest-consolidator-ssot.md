@@ -155,6 +155,14 @@ temp files and bounds working memory via `memory_limit`.
 - **Dedup key** — base (`date, venue, data_type, service_name`) + optional dims present in the union schema,
   last-write-wins by `attempted_at` → `written_at` DESC NULLS LAST (mirrors the old pandas stable-sort + `keep="last"`).
   NULL-safe key match (coalesce-to-sentinel) for enumerator shards that omit key columns like `timeframe`/`underlying`.
+  **Any per-VM-shard-writing script that CORRECTS an existing row's `capture_status`/`error_reason` (not just a fresh
+  capture) MUST stamp a fresh `attempted_at` AND `written_at` on the corrected row** — leaving either field untouched
+  (exact tie, falls to undefined DuckDB scan order) or clearing `attempted_at` to `None` (`NULLS LAST` sorts it behind
+  ANY row with a real timestamp) makes the correction silently lose the tie-break: the shard uploads cleanly and the
+  consolidator counts it as "changed", but the canonical row never actually updates (`rows_added=0`). Confirmed live
+  2026-08-09 (cefi) + 2026-05-13/05-15 (defi, retroactively) and fixed across 6 `instruments-service/scripts/`
+  correctors (`instruments-service@159c0ebe0`, `@7be93d5d`, `@c51e37ab`, `@f6caf7f5`); full incident history archived at
+  `/plans/archive/2026_08/issues/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09.md`.
 - **Validated** against the real 75.5M-row cefi canonical in a hard 16 GiB cgroup: incremental ~10.5 GB peak at the 8GB
   default, 0 duplicate keys, exact key-set parity vs a full re-merge incl. the NULL-key path. **No Cloud Run memory bump
   needed.**

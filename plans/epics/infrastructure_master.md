@@ -47,7 +47,7 @@ related_plans:
   - ../active/ci_pipeline_speed_and_cost_redesign_2026_08_05.md
   - ../active/ci_vm_exposure_remediation_2026_08_06.md
   - ../active/codex_violations_ratchet_to_five_2026_06_10.md
-  - ../active/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize_2026_08_09.md
+  - ../archive/2026_08/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize_2026_08_09.md
   - ../active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md
   - ../active/cross_cutting_consolidated_closeout_2026_07_25.md
   - ../active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md
@@ -575,9 +575,9 @@ per-tier/per-domain SAs replace the project-wide god-SA (§8 implementation)
 
 **status**: active · **estimate**: 0.8 cal AI-days (class: infra)
 
-### [`corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize_2026_08_09`](../active/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize_2026_08_09.md)
+### [`corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize_2026_08_09`](../archive/2026_08/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize_2026_08_09.md)
 
-**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: >-
+**status**: complete · **estimate**: 0.16 cal AI-days (class: infra) **title**: >-
 
 ### [`cross_cutting_closeout_observability_and_monitoring_2026_08_09`](../active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md)
 
