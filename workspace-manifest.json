@@ -69,7 +69,7 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.49.3",
     "deployment-api": "0.79.5",
-    "deployment-service": "0.129.0",
+    "deployment-service": "0.129.1",
     "deployment-ui": "0.1.0",
     "execution-service": "0.64.2",
     "features-service": "0.81.3",
@@ -81,7 +81,7 @@
     "unified-api-contracts": "0.114.2",
     "unified-trading-library": "0.79.0",
     "unified-trading-pm": "1.2.741",
-    "market-data-processing-service": "0.29.2",
+    "market-data-processing-service": "0.29.3",
     "e2e-testing": "0.41.3",
     "agent-orchestrator": "0.100.3",
     "greeks-service": "0.18.19",
@@ -144,7 +144,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "warn_file_count": 0,
         "large_file_count": 1,
@@ -1327,14 +1327,14 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 0,
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "001637ba6f4142da37971ea78ebc615c33b87bd4"
+      "ldr_ci_status_sha": "911e8c6b75b23dab6db0a5208a43bd68f1e7e51a"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
@@ -2254,8 +2254,8 @@
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.101.11",
-      "published_at": "2026-08-11T22:04:45Z",
+      "version": "0.101.12",
+      "published_at": "2026-08-12T01:34:26Z",
       "registry": "artifact-registry"
     }
   }
