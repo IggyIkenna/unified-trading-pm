@@ -211,8 +211,10 @@ Keep the favicon stable across redeploys — the operator finds the tab by its i
     ```
 
     (The glob is not cosmetic: `check_reference_paths.py` scans **fenced code blocks too**, so a literal repo-relative
-    `codex/NN-name/...md` path inside a shell example is a FORMAT violation even though it is a command, not a
-    reference. A leading slash would make the command wrong; the glob dodges the pattern and stays runnable.)
+    codex/NN-name/...md path inside a shell example is a FORMAT violation even though it is a command, not a reference.
+    A leading slash would make the command wrong; the glob dodges the pattern and stays runnable. Not backtick-quoted
+    here on purpose — `check_doc_body_links.py`'s backtick-codex regex would otherwise treat this illustrative mention
+    as a real citation.)
 
     Generalises past URLs: **verify durability by reading the file back, not by remembering that you wrote it.** This is
     the same proxy-vs-property failure as trusting `exit 0` from a checker that never opened the file (see the plan's
