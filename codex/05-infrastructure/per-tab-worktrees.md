@@ -1389,18 +1389,29 @@ Isolation symlinks `.venv` / `.venv-workspace` / `node_modules` from the caller'
 `quality-gates.sh` resolves the repo's own `.venv` and a fresh worktree has none (gitignored). Without that symlink
 isolation would silently turn every quickmerge into a QG failure.
 
-**Isolation also gives each run its own `PREK_HOME` (fixed 2026-08-12, `unified-trading-pm@62d1a42613`).** prek's
-default cache (`~/.cache/prek`) is host-global, not per-worktree — its `patches/` subdir is where an unstaged-change
-stash/restore cycle lives around each hook batch, and two fully-separate isolated worktrees on the same host still
-funnel through that ONE shared directory. F6's isolation fix closes the shared-INDEX race (a peer's dirty files can no
-longer interfere) but does NOT close this: a slower run's restore can silently revert a faster run's already-landed
-content even though both checkouts are individually clean. Measured live 2026-08-12, reproducible — see
-`/plans/archive/2026_08/issues/alerting_service_basedpyright_regression_blocks_all_ships_2026_08_12.md` for the original
-elimination trail that surfaced it. Both `quickmerge.sh` and `safe-doc-push.sh` now export a per-run `PREK_HOME`
-(`$TMPDIR/{qm,sdp}-iso-$$/prek-home`) into the isolated re-exec — `repos`/`hooks`/`tools`/`cache` (the expensive
-hook-environment installs, not part of the race) are symlinked in from a shared per-repo cache
+**Isolation also gives each run its own `PREK_HOME` (2026-08-12, `unified-trading-pm@62d1a42613`) — a real hardening,
+NOT a confirmed fix for any specific observed corruption.** prek's default cache (`~/.cache/prek`) is host-global, not
+per-worktree — its `patches/` subdir is where an unstaged-change stash/restore cycle lives around each hook batch, and
+two fully-separate isolated worktrees on the same host funnel through that ONE shared directory in principle. **A direct
+repro (`scripts/dev/repro-prek-cross-worktree-race.sh`) tested this exact mechanism — two separate worktrees, racing,
+with a shared vs. isolated `PREK_HOME` — and it came back clean BOTH ways: cross-worktree corruption via a shared
+patches dir does not reproduce, isolated or not.** A same-file concurrency test against the real `safe-doc-push.sh`
+(non-overlapping edits: both preserved via the existing rebase-retry; overlapping edits: loud abort, never silent loss)
+was also clean. So this hardening is kept because host-global cache sharing across worktrees is bad isolation hygiene
+regardless, and it's free (every repo gets it via the `quickmerge.sh` symlink) — but do NOT cite it as "the fix" for a
+specific revert report; that connection was tested and falsified. See
+`/plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md` for the full elimination trail
+(7 mechanisms tested) and the still-open root cause. Both `quickmerge.sh` and `safe-doc-push.sh` export a per-run
+`PREK_HOME` (`$TMPDIR/{qm,sdp}-iso-$$/prek-home`) into the isolated re-exec — `repos`/`hooks`/`tools`/`cache` (the
+expensive hook-environment installs, not part of the race) are symlinked in from a shared per-repo cache
 (`~/.cache/qm-iso-prek/<repo>`, mirroring the venv-cache pattern), while `patches`/`scratch` are left for prek to create
 fresh, private to that one run.
+
+**If a revert IS ever detected again**, both scripts now dump a forensic snapshot automatically
+(`unified-trading-pm@340bae9f60`) — entry fingerprints, HEAD state, recent commits on the named files, `git status`,
+stash list, prek patches listing, worktree list — to `~/.cache/{sdp,qm}-forensics/revert-<ts>-<pid>.log` the moment
+detection fires. The 2026-08-12 investigation only had a hash-only summary to work from, which was not enough to
+distinguish the real mechanism from 7 tested-and-cleared candidates; this closes that gap for next time.
 
 ### Exit codes worth recognising
 

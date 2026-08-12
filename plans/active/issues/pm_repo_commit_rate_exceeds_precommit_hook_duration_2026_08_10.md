@@ -432,30 +432,50 @@ Directions, cheapest first — each is a todo below:
       way `prek stash/restore race detected` is already treated (`exit 7` with a diagnosis) instead of silently
       retrying. **Done when**: a commit succeeds with unrelated foreign dirty files present in the checkout, and a
       regression test creates foreign unstaged WIP and proves the caller's commit still lands. Repo: unified-trading-pm.
-- [x] ✅ [INFRA] P0. **F6 is fixed for the shared-INDEX race, but a DIFFERENT, still-live race remains: prek's own patch
-      cache (`~/.cache/prek/patches/`) is HOST-GLOBAL, not per-worktree.** DONE 2026-08-12 —
-      unified-trading-pm@62d1a42613. Measured today (reproducible, twice, back to back, identical): shipping the same 2
-      files via `safe-doc-push.sh` — isolation correctly copies only the caller's own named files into a throwaway
-      worktree (F6's fix), so a PEER's dirty files can no longer interfere. But prek's `patches/` directory (where it
-      stashes+restores unstaged changes around each hook batch) is shared by EVERY isolated worktree on the host, since
-      it defaults to `~/.cache/prek` regardless of which worktree invoked it. Two fully-separate, individually-clean
-      isolated checkouts can still collide through that one shared directory: a slower run's restore silently reverts a
-      faster run's already-landed content. Caught both times by the entry-hash fingerprint check (today's earlier fix,
-      not silent) but the revert itself still happened — landing a stable, reproducible wrong hash both times, not
-      random corruption. Root cause confirmed via `~/.cache/prek/patches/` entry count (4265 at time of investigation)
-      and the measured PM-vs-agent-orchestrator contention asymmetry (stash pile 38 vs 0) that explains why this only
-      manifests on PM: every agent fleet-wide returns to PM to flip plan checkboxes, so PM is the only repo with enough
-      concurrent isolated writers for the shared-cache window to matter. **Fix**: scope `PREK_HOME` per isolated
-      worktree in both `quickmerge.sh` and `safe-doc-push.sh` — a `PREK_HOME` env var confirmed live-tested (fresh dir →
-      prek populates it independently). The expensive, reusable subdirs (`repos`/`hooks`/`tools`/`cache`, ~20MB+ of
-      installed hook environments — NOT part of the race) are symlinked in from a shared per-repo cache
-      (`~/.cache/qm-iso-prek/<repo>`, mirroring the existing venv-cache pattern) so isolation doesn't reinstall every
-      hook repo on every commit; `patches`/`scratch` are left unlinked so prek creates them fresh, private to this run,
-      then seeded back into the shared cache post-run for repos that had nothing cached yet. Exported on the SAME
-      logical line as the recursive re-exec (both scripts already warn: a `\` continuing onto a comment before `bash`
-      silently breaks the env-var handoff — this fix followed that constraint exactly). **Done when**: the same
-      back-to-back reproduction that hit this today lands both ships correctly (not just detects the revert). Repo:
+- [x] ✅ [INFRA] P1. **prek's patch cache (`~/.cache/prek/patches/`) is host-global, not per-worktree — hardened
+      regardless of confirmed root-cause status.** DONE 2026-08-12 — unified-trading-pm@62d1a42613. `quickmerge.sh` and
+      `safe-doc-push.sh` now scope `PREK_HOME` per isolated worktree (verified live: a fresh `PREK_HOME` dir gets
+      populated independently); the expensive, reusable subdirs (`repos`/`hooks`/`tools`/`cache`, ~20MB+ of installed
+      hook environments) are symlinked in from a per-repo shared cache (`~/.cache/qm-iso-prek/<repo>`, mirroring the
+      venv-cache pattern) so isolation doesn't reinstall every hook repo per commit; `patches`/`scratch` are left
+      unlinked so prek creates them fresh, private to the run. Kept because it's a genuine, verified isolation
+      improvement (reduces host-global state sharing) and every repo in the fleet gets it for free via the
+      `scripts/quickmerge.sh` symlink architecture — but **retitled and downgraded from P0** because the NEXT todo
+      falsifies the theory that this was ever the cause of the originally-reported symptom. Do not cite this as "the
+      fix" for a revert — it closes a real, separate risk that was never actually confirmed to have fired.
+- [x] ✅ [INFRA] P0. **The PREK_HOME hypothesis does NOT explain the originally-reported reverts — falsified by direct
+      test, not just argued away.** Investigated 2026-08-12 (challenged by a peer agent's review, which was correct to
+      push back). Built `scripts/dev/repro-prek-cross-worktree-race.sh`: two genuinely separate `git worktree`s, one
+      slow hook, racing a file that exists independently at each worktree's own path — the specific mechanism the
+      PREK_HOME fix was supposed to close. Ran it BOTH with a shared `PREK_HOME` (the pre-fix shape) and with isolated
+      `PREK_HOME` (the fix): **both came back clean, zero cross-worktree corruption, no fix needed to prevent it.** The
+      classic prek stash/restore race does not cross worktree boundaries via a shared patches directory, tested directly
+      rather than assumed. Went further: built a REAL same-file concurrency test against the actual `safe-doc-push.sh`
+      (2 independent clones + a disposable bare origin, not a synthetic repro) — two workers editing the SAME file
+      concurrently, both non-overlapping lines (both edits correctly preserved via the existing rebase-retry reconcile)
+      and overlapping lines (loud `rebase --abort` + exit 3, "genuine content collision, not contention" — never a
+      silent drop). **7 distinct mechanisms tested this session, all clean**: cross-worktree ×2 PREK_HOME modes,
+      same-file non-overlapping, same-file overlapping, plus the earlier-session single-shared-tree classic race
+      (already covered by `repro-prek-stash-restore-race.sh`). Could not reproduce the originally-reported corruption
+      through any constructible mechanism without the original raw `safe-doc-push.sh` output (only a hash-only summary
+      survived from the original two occurrences). Strongest remaining lead, not yet confirmed: the affected file
+      (`ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`) had an ACTIVE `UU` conflict in this shared checkout at
+      investigation time, under heavy legitimate concurrent-peer commit traffic (5+ commits same day, unrelated
+      investigation) — a shared-checkout collision against an actively-committing peer is a far more mundane explanation
+      than a prek bug, but unconfirmed without the original logs. **Done when**: either the original logs surface and
+      pin the mechanism down, or it recurs and the new forensic dump (next todo) captures it live. Repo:
       unified-trading-pm.
+- [x] ✅ [INFRA] P1. **Make the next occurrence self-diagnosing instead of leaving a hash-only summary.** DONE
+      2026-08-12 — unified-trading-pm@340bae9f60. All three revert-detection call sites in `quickmerge.sh`
+      (`_qm_content_vanished`, `_qm_assert_entry_change_landed`) and `safe-doc-push.sh`
+      (`_sdp_warn_if_content_vanished`, `_sdp_guard_already_landed_claim`, `_sdp_assert_entry_change_landed`) now write
+      a durable, timestamped forensic snapshot the moment a revert is detected — entry fingerprints, entry HEAD blobs,
+      current disk fingerprint, current HEAD, last 3 commits touching each named file, full `git status --porcelain`,
+      `git stash list`, recent `prek/patches` listing, `git worktree list` — to
+      `~/.cache/{sdp,qm}-forensics/revert-<ts>-<pid>.log`. Best-effort, never blocks the caller. Verified: existing
+      regression coverage (`tests/test_safe_doc_push_entry_hash_reverted_edits.bats` 10/10,
+      `tests/test_quickmerge_landed_content_assertion.bats`) still passes unchanged, and a direct manual invocation of
+      the dump function confirmed correct, rich output. Repo: unified-trading-pm.
 - [x] ✅ [INFRA] P0. **Fix F7 — resolve the repo root from git, not from the directory name.** DONE 2026-08-10 — new
       `scripts/quality_gates/_pm_root.py` resolves by CONTENT (`plans/` + `scripts/quality_gates/` present), applied to
       13 call sites across 11 scripts; verified it resolves correctly given a bogus workspace root and that
@@ -507,12 +527,12 @@ Directions, cheapest first — each is a todo below:
       unified-trading-pm@d85ad41fac.
 
       **Done when, confirmed**: the precommit sweep on one staged file is now **20.8s** total wall (measured 2026-08-12,
-              isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
-              down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
-              concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
-              single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
-              `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
-              nothing left to move out of the per-commit path. Repo: unified-trading-pm.
+                  isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
+                  down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
+                  concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
+                  single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
+                  `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
+                  nothing left to move out of the per-commit path. Repo: unified-trading-pm.
 
 - [x] ✅ [INFRA] P2. **Record the AO-vs-PM volume asymmetry in the codex** so the next person does not re-derive it —
       unified-trading-pm@baae1922bb. New § "1b. PM is the fleet's single write hotspot" in
