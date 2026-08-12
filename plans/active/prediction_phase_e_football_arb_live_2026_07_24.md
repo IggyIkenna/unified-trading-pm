@@ -50,7 +50,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-24"
+last_updated: "2026-08-12"
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only
@@ -127,19 +127,18 @@ context_scope:
 
 ### E3 — Unify the two arb paths onto the shared fixture identity (Leg 3)
 
-- [ ] [BACKEND] P1. **Wire the arb engine to CONSUME `af_fixture_id` — VERIFIED the NEXT GAP (trace 2026-07-19).** The 6
-      materialized columns (`uac@e7ed754e` + `is@e3ffc613`) are an UNCONSUMED landing spot — the `InstrumentRecord`
-      docstring says materialization is "downstream + deferred", and strategy-service + features-service
-      `cross_instrument/` READ ZERO of them; `price_dispersion.py` (`ARBITRAGE_PRICE_DISPERSION`) pairs on VENUE NAME
-      (`candidate_venues`) and just ASSUMES "same instrument". Concrete 3-step gap (dependency order): **(1)**
-      features-service `prediction_cross_venue_dispatch.py::_records_from_universe` (L173-214) reads only
-      key/symbol/expiry → add the 6 `_COL_*` + populate `InstrumentRecord.af_fixture_id` / `af_league_id` / home+away
-      canonical ids / `fixture_date` / `af_fixture_match_status` (today they stay `None` even when the parquet has
-      them). **(2)** UAC `predictions/cross_venue_mapping.py::match_key` (L376-409) — accept + PREFER `af_fixture_id` as
-      the sports `canonical_event_id` join key (exact/deterministic) over the fuzzy `SportsFixtureKey.pairing_key()`
-      team-name/title parse, when `af_fixture_match_status==MATCHED` — this is the single point a Polymarket + Kalshi
-      row for one fixture collapse to one `xv_instrument_id`. **(3)** 3rd venue (bookmaker odds): generalize
-      `build_cross_venue_mapping` beyond its pairwise Kalshi↔Polymarket shape, OR resolve `SportsArbDutchingEngine`'s
+- [ ] [BACKEND] P1. **Wire the arb engine to CONSUME `af_fixture_id` — gaps (1) and (2) below SHIPPED since the
+      2026-07-19 trace (verified live in code 2026-08-12); only gap (3) remains open.** ~~The 6 materialized columns are
+      an UNCONSUMED landing spot~~ — **(1) DONE**: features-service
+      `prediction_cross_venue_dispatch.py::_records_from_universe` now reads the 6 `_COL_*` columns and populates
+      `InstrumentRecord.af_fixture_id` / `af_league_id` / home+away canonical ids / `fixture_date` /
+      `af_fixture_match_status` (`features-service@ba385100c`, 2026-08-05). **(2) DONE**: UAC
+      `predictions/cross_venue_mapping.py::match_key` now accepts + PREFERS `af_fixture_id` — returns the exact
+      `SPORTS_FIX::{id}::{bet_type}` key when set, falling back to the fuzzy `sports_pairing_key` only when
+      `af_fixture_id is None` (`unified-api-contracts@1dddc6804`, 2026-07-31 — matches the live docstring and
+      `/codex/04-architecture/cross-venue-prediction-arb-detection.md`'s "Identity" section, which was correct, not this
+      todo's stale text). **Remaining — (3) only**: 3rd venue (bookmaker odds): generalize `build_cross_venue_mapping`
+      beyond its pairwise Kalshi↔Polymarket shape, OR resolve `SportsArbDutchingEngine`'s
       `decimal_odds_<outcome>_<venue>` features per `af_fixture_id`, so live-odds ∧ Polymarket ∧ Kalshi pair on ONE
       fixture. Also: the ONLY wired prediction-arb slots today are CRYPTO (`btc/eth/spx UP_DOWN_DAILY`) — a FOOTBALL
       prediction-arb slot must be added. Fold: `predictions_ml_walk_forward_and_arb_2026_06_20.md`. (repos:
