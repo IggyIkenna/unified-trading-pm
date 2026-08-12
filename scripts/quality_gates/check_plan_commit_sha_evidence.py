@@ -256,7 +256,48 @@ def _cat_file_is_commit(repo_path: Path, sha: str) -> bool:
     return proc.returncode == 0 and proc.stdout.strip() == "commit"
 
 
-def _resolves_to_commit(repo_path: Path, sha: str) -> bool:
+def _is_reachable_from_any_branch(repo_path: Path, sha: str) -> bool:
+    """True when ``sha`` is an ancestor of some `origin/*` ref OR of local `HEAD`.
+
+    `git cat-file -t` succeeds for ANY object present in the local object database, including
+    a dangling commit a rebase already rewrote away — that gap is exactly how
+    `pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`'s dead citation
+    (`4f901b9916`) and the earlier `0f9b8a65ca` incident slipped past this gate at commit time:
+    both existed as loose local objects when cited but were reachable from no branch, local or
+    remote. `scripts/dev/reconcile-sha-citations.sh` (Pass 2) heals that AFTER a rebase by the
+    same reachability test — this mirrors it, applied BEFORE the commit for self-citations (see
+    the `require_reachable` caller in `_resolves_to_commit`).
+
+    `git branch -r --contains` (not `merge-base --is-ancestor origin/<branch>`) so this needs no
+    branch name — any remote-tracking ref counts, matching the reconciler's own "OR local HEAD"
+    allowance for genuinely unpushed-but-not-yet-rebased work.
+    """
+    try:
+        remote = subprocess.run(  # fixed argv, no shell=True
+            ["git", "-C", str(repo_path), "branch", "-r", "--contains", sha],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+        return True  # can't verify — never manufacture a violation out of a tooling failure
+    if remote.returncode == 0 and remote.stdout.strip():
+        return True
+    try:
+        local = subprocess.run(
+            ["git", "-C", str(repo_path), "merge-base", "--is-ancestor", sha, "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+        return True
+    return local.returncode == 0
+
+
+def _resolves_to_commit(repo_path: Path, sha: str, *, require_reachable: bool = False) -> bool:
     """True when ``sha`` is a real commit in ``repo_path`` — fetching once before giving up.
 
     Bug fixed 2026-08-08: this used to be a BARE `git cat-file` against whatever the local
@@ -275,9 +316,16 @@ def _resolves_to_commit(repo_path: Path, sha: str) -> bool:
 
     A fetch is attempted only on the miss path, so the common (already-present) case costs
     nothing extra.
+
+    ``require_reachable`` (2026-08-12, pm_repo_commit_rate_exceeds_precommit_hook_duration
+    todo 5): scoped to self-citations only (see `main`'s caller) — a citation to THIS repo's
+    own history must be reachable from a branch, not merely present as a loose object. A
+    citation to another repo is left on the weaker cat-file-only test: PM does not control
+    when a sibling repo pushes, and that repo's own precommit gate is where its own
+    self-citations get this same treatment.
     """
     if _cat_file_is_commit(repo_path, sha):
-        return True
+        return not require_reachable or _is_reachable_from_any_branch(repo_path, sha)
     # Fetch AT MOST ONCE per repo per run. The caller's sha_cache already dedups by
     # (repo, sha), but N *distinct* stale SHAs in one repo would otherwise pay N fetches of
     # up to 120s each — so a single behind clone could turn a fast gate into a multi-minute
@@ -297,7 +345,9 @@ def _resolves_to_commit(repo_path: Path, sha: str) -> bool:
             # this gate must never manufacture a violation out of its own inability to
             # verify. Recorded as fetched so the next miss does not retry the same timeout.
             return True
-    return _cat_file_is_commit(repo_path, sha)
+    if not _cat_file_is_commit(repo_path, sha):
+        return False
+    return not require_reachable or _is_reachable_from_any_branch(repo_path, sha)
 
 
 def _load_baseline(baseline_path: Path) -> int:
@@ -400,6 +450,13 @@ def main() -> int:
         deduped.append(c)
     citations = deduped
 
+    # A citation of THIS repo's own history must be reachable from a branch, not merely present
+    # as a loose object (see `_resolves_to_commit`'s `require_reachable` docstring) — that gap is
+    # exactly how the 4f901b9916/0f9b8a65ca dead citations slipped past this gate at commit time,
+    # only surfacing corpus-wide once the rebase that orphaned them had already happened. Scoped
+    # to self-citations: PM does not control when a sibling repo pushes.
+    self_repo_name = _pm_root_or_legacy(workspace_root).name
+
     sha_cache: dict[tuple[str, str], bool] = {}
     violations: list[ShaViolation] = []
     for c in citations:
@@ -408,7 +465,7 @@ def main() -> int:
             continue  # not a present sibling clone — can't verify from here, soft-skip
         key = (c.repo, c.sha)
         if key not in sha_cache:
-            sha_cache[key] = _resolves_to_commit(repo_path, c.sha)
+            sha_cache[key] = _resolves_to_commit(repo_path, c.sha, require_reachable=(c.repo == self_repo_name))
         if not sha_cache[key]:
             violations.append(ShaViolation(citation=c))
 
