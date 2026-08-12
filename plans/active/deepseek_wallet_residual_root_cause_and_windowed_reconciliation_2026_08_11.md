@@ -167,21 +167,54 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       NOT doing it is currently ~$0.07-$0.16 per crash-loop episode, so this is a judgment call about observability, not
       a cost-recovery case. Revisit if the first true 24h residual is materially above the ~$0.13 skew floor.
 
-- [ ] [BACKEND] P0. **Find where 42.7% of DeepSeek spend goes unattributed over a clean 24h window.** Measured above:
-      $12.44 of $29.14. The stock-vs-flow conclusion from 2026-08-11 is now only half right — the pre-2026-08-04 gap is
-      still a frozen historical stock, but there IS ALSO a live leak, and at ~~43% it is far too large to be edge skew,
-      crash-loop losses (~~$0.07-0.16/episode, measured) or unswept dirs ($0.017, measured). Prime suspects in order:
-      (a) the NULL-provenance rows and missing `agent_kind` (see the todos below) meaning spend lands in no bucket at
-      all; (b) sessions whose transcripts the per-slot enumeration never visits — the glob-not-enumerate todo below; (c)
-      turns billed with no transcript line, which only proxy-level accounting can see. **Done when**: the 24h residual
-      is either driven below ~2% or its irreducible component is explained with a measurement. (repo:
+- [x] ✅ [BACKEND] P0. **ROOT-CAUSED — 82% of the "42.7% unattributed" was a PHANTOM TOP-UP, not lost spend.** Row id 6
+      ($10.00, 2026-08-11 11:13Z, note "erro is previous top up sum") recorded a top-up that never happened.
+      Proved twice, independently: (1) the 1-minute balance series shows the wallet going -0.90 -> 44.98 across
+      2026-08-11 11:00Z (+45.88 net, ~+$50
+      gross once in-hour spend is added back) — a
+      $60 credit would have ended
+      near 54.98; (2) DeepSeek's transactions page shows exactly ONE Success at 2026-08-11 11:10Z for $50,
+      beside several Cancelled $50 attempts that explain how the mis-entry happened. The 02:xx entries (id3 $52 + id4
+      $2 =
+      $54) match the three real Successes ($2 + $2 +
+      $50) and are CORRECT — an earlier suspicion that id4
+      double-counted id3 was WRONG; do not "fix" them. Ledger corrected on the live VM to the operator-attested
+      lifetime total: **$319.00
+      -> $308.99**, via one -$10.01 adjustment row backdated to 11:13:11 so windowed reconciliation is right from that
+      instant onward. $10.00 of it is receipt-proven; the last $0.01 reconciles to the operator's attested total
+      (visible receipts sum to
+      $309.00, so the cent is rounding/FX, not a missing
+      top-up). Pre-change table backed up to `/home/ubuntu/deepseek_topups_backup_20260812T082841Z.json`.
+      **Result: the 24h residual fell $11.82
+      -> $2.09 — 42.7% -> 14.4%, ratio 1.795 -> 1.168.**
+- [x] ✅ [BACKEND] P0. **Transcript loss RULED OUT as the residual's cause — capture is 99.93%.** Tested the operator's
+      "fast tmux deaths lose spend" hypothesis directly, and it does not hold. Over the same 24h window, transcripts
+      filtered by each turn's OWN timestamp and deduped on `message.id` hold **2,949 flash / 1,467 pro** turns against
+      **2,949 / 1,464** rows in `deepseek_message_usage` — 3 turns of 4,416 (0.07%). Turns in structurally-unswept
+      config dirs: **ZERO**. Since `agent_kind` and NULL-provenance only misfile spend BETWEEN buckets and cannot change
+      the attributed TOTAL, and turn capture is complete, the remaining gap is necessarily a per-token PRICING question,
+      not a measurement one. Confirmed by recomputing spend from the rate card: flash $4.9178 computed vs
+      $4.9177
+      stored, pro $6.4081 vs $6.4082 — the arithmetic is exact. Tool: `deepseek_spend_probe.py --capture`
+      (agent-orchestrator@fab845c1df).
+- [ ] [OPERATOR] P1. **Verify the DeepSeek rate card against DeepSeek's own usage page — the residual is now a rate
+      question.** With capture at 99.93% and the rate-card arithmetic exact, the remaining ~14% must be a per-token rate
+      that does not match what DeepSeek actually bills. A SINGLE window cannot say which rate is wrong: closing the
+      $2.09 gap needs input x1.25, OR output x2.26, OR cache_read x2.43 — all three fit equally well. What
+      separates them is a token mix that VARIES, so this pairs with the daily-series todo below. Compare our 24h
+      totals (flash 22,892,972 in / 3,046,702 out / 307,019,392 cache-read = $4.9177;
+      pro 11,480,931 / 929,470 / 166,986,240 = $6.4082) against platform.deepseek.com's usage page for the same window.
+      **Done when**: each published rate is confirmed or corrected in `model_pricing.py` with the source cited. (repo:
       agent-orchestrator)
-- [ ] [DATA] P1. **Re-measure the 24h residual daily for a week and record the series here.** One window is one
-      datapoint: this one ran at low DeepSeek volume ($29 real vs ~$122/24h on 2026-08-11, Anthropic capacity having
-      returned), and a fixed unattributable component would look proportionally huge at low volume while a proportional
-      leak would not. The shape of the series distinguishes those two, and they need different fixes. **Done when**: 7
-      daily readings are recorded with volume alongside residual, and the fixed-vs-proportional question is answered.
-      (repo: agent-orchestrator, read-only)
+- [ ] [DATA] P1. **Re-measure the 24h residual daily for a week — and regress it to identify WHICH rate is wrong.** One
+      window is one datapoint, and this one ran at low volume ($14.50 real vs ~$122/24h on 2026-08-11), where a fixed
+      unattributable component looks proportionally huge and a proportional one does not. Beyond that
+      fixed-vs-proportional split, the series answers a sharper question: with 7 readings whose token MIX differs,
+      regressing real_spend on (input, output, cache_read) tokens yields coefficients that ARE the true per-token rates
+      — which is the only way to distinguish the three equally-good single-window fits above without vendor ground
+      truth. Run `deepseek_spend_probe.py` (its `reconciliation` block emits every window at once). **Done when**: 7
+      daily readings are recorded with volume and token mix alongside residual, and the regression either names the
+      mispriced rate or shows the residual is not rate-shaped. (repo: agent-orchestrator, read-only)
 
 ## Deferred work after 2026-08-12
 
