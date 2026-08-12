@@ -118,11 +118,25 @@ planning VM (`i-0c9b283b31d6b5ca7` / `13.113.200.22`, user `ubuntu`):
       `_resolve_account_token` is now GSM-first via UTL `get_secret` (success-cache; env-file literal read kept as
       fallback); 6 new GSM tests (30 proxy+balance tests green, QG green); live accounts.json set the field (backup
       .bak-*, secret hash 715f0bb8… verified).
-- [ ] [INFRA] P0. Re-apply the deepseek-v4-pro GSM re-sourcing DURABLY: upload the indirection version of
+- [x] ✅ [INFRA] P0. Re-apply the deepseek-v4-pro GSM re-sourcing DURABLY: upload the indirection version of
       `deepseek-v4-pro.env` to the S3 creds bucket (`uts-orchestrator-creds-427895769566/accounts/`) AND rewrite the
       local `~/.claude-accounts/deepseek-v4-pro.env` to match (so `creds_env_poller` no longer reverts it), then verify
       resolved-token hash == GSM secret hash (`715f0bb8...`) + a `claude -p` probe returning 402-not-401/403, and record
-      before/after evidence. (repo: agent-orchestrator — host-local config + creds bucket)
+      before/after evidence. (repo: agent-orchestrator — host-local config + creds bucket) — **DONE 2026-08-12 (slot 18,
+      infra): durable re-sourcing verified live (state was already applied at 19:44:33Z; re-verified first-party)** — S3
+      bucket object `accounts/deepseek-v4-pro.env` (uts-orchestrator-creds-427895769566)
+      `last_modified=     2026-08-12T19:44:33Z`, size 323, sha256 `5ca2561f…` — and local
+      `~/.claude-accounts/deepseek-v4-pro.env` are byte-identical and BOTH carry the
+      `$(gcloud secrets versions access latest --secret=deepseek-v4-pro-api-key     --project=central-element-323112)`
+      indirection (grep-count 1; S3 being the poller's source means it now distributes the indirection and cannot revert
+      it). `source`-resolved token sha256 `715f0bb8…` == GSM secret `deepseek-v4-pro-api-key` (no-newline hash).
+      `claude -p` probe through the account: exit 0, reply "OK" (HTTP 200 — not 401/403; balance now +22.93 USD). Proxy
+      `deepseek-native-proxy` (PID 578877, ExecMainStart 19:37:03Z post-GSM-fix) resolves GSM-first via
+      `api_key_secret_name=deepseek-v4-pro-api-key` (live accounts.json confirmed) — journal shows live
+      `POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"` for `/accounts/deepseek-v4-pro/v1/messages`, no
+      "falling back to env file" warning. NOTE (known + tracked): the balance poller now 401s per-tick for this account
+      (`deepseek_balance.py` regex returns the `$(gcloud` prefix from the indirection) until the [BACKEND] P1 GSM-first
+      fix lands — tracked below.
 - [ ] [REVIEW] P2. Correct the stale "DONE 2026-08-10 (slot 5)" record on
       `ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md` todo 2 (the edit was real but was reverted by
       `creds_env_poller` within one tick and is not live today) — append the reversion evidence so the finalize plan's
