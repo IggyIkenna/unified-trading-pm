@@ -25,6 +25,29 @@ code_refs: [agent-orchestrator/server/model_pricing.py]
 
 > **The rule in one line**: if two tool calls do not depend on each other's results, they belong in ONE call.
 
+## The trigger is PRE-call, not post-hoc
+
+State the rule as a thing to do **before** a call, or it will not change behaviour:
+
+> **Before any Bash/Read/Grep, ask: _what else will I want to know regardless of how this one comes out?_ Fold that into
+> the same call.**
+
+This matters because the earlier phrasing ("batch independent calls") describes an OUTCOME. An outcome-shaped rule is
+one you can only grade yourself against after the fact, when the round-trip is already spent and the finding is "noted
+for next time" — which never arrives, because the next call has its own new context and the same instinct fires. The
+pre-call question has a checkable answer at the only moment the answer is still actionable.
+
+Measured failure of the outcome phrasing (2026-08-11 session): a `PreToolUse` hook printed the batching reminder **~88
+times in one session** and was acknowledged nearly every time without the next call changing shape. Acknowledging cost
+nothing and looked like compliance; the acknowledgement itself became the green signal with no behaviour behind it. If
+you find yourself agreeing with this rule more than once in a session, you are not applying it — treat the second
+reminder as evidence, not as a nudge.
+
+The question also has a useful side effect: it surfaces what you actually want to know. "What else, regardless?" tends
+to return the check you would otherwise have skipped (the `git status` alongside the `git diff`, the second repo's
+state, the file's size before you read it), so the batched call is usually a BETTER-informed call, not merely a cheaper
+one.
+
 ## Why this is expensive, not merely untidy
 
 An agent turn does not send "just the new message" — it re-reads the whole cached conversation prefix. So the cost of a
