@@ -85,11 +85,11 @@ picking this plan up cold should never trust the flip-time state without a fresh
       clause not triggered.
 
       Note for todo 2's worker: the direct pandas `read_availability_index(columns=..., filters=[("capture_status",
-                              "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
-                              fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
-                              DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
-                              `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
-                              streaming footprint regardless of corpus size.
+                                  "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
+                                  fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
+                                  DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
+                                  `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
+                                  streaming footprint regardless of corpus size.
 
 - [x] ✅ [DATA] P1. **Root-cause the 0→7,930,863 `instrument_type=POOL` recurrence before any retirement resumes**
       (blocks the retirement todo below — main-agent-added 2026-08-11 per
@@ -97,10 +97,18 @@ picking this plan up cold should never trust the flip-time state without a fresh
       the rebuild VM's actual deployed code content (`cloudbuild`/tarball manifest `commit_sha`) to rule in/out a stale
       pre-N6a snapshot. (repo: market-tick-data-service) — unified-trading-pm (verification-only, no code). **Stale
       pre-N6a snapshot theory RULED OUT.** See Progress Log for evidence.
-- [ ] [DATA] P1. **Determine whether the manifest rebuild is full-replace or upsert-onto-existing-index** (same
+- [x] ✅ [DATA] P1. **Determine whether the manifest rebuild is full-replace or upsert-onto-existing-index** (same
       recurrence investigation). Read `rebuild_defi_manifest.py`'s top-level `main()`/index-write path — if upsert, any
       pre-existing uppercase rows that survived the 2026-08-05 fold would pass through untouched rather than being
-      reintroduced by the rebuild. (repo: market-tick-data-service)
+      reintroduced by the rebuild. (repo: market-tick-data-service) — **UPSERT-onto-existing-index, NOT full-replace.**
+      The rebuild's only index write is a per-VM shard (`_build_manifest_writer()` →
+      `ManifestWriter(per_vm_shards=True)` → `_index/per_vm/{instance}.parquet`); UTL `_writer.py` `per_vm_shards`
+      docstring + `_read_index.py` `_read_and_merge_per_vm_shards` confirm the consolidator merges shards into the
+      canonical `_index/availability_index.parquet` asynchronously (last-attempted-write wins per dedup key). The
+      rebuild never deletes/rewrites rows in the canonical index its scan doesn't touch, and `parse_hive_path`
+      lowercases `instrument_type` unconditionally (lines 370/395) — so the 7.9M uppercase `POOL` rows were PRESENT in
+      the index BEFORE the rebuild ran and passed through untouched; the rebuild is exonerated as a reintroduction
+      mechanism. Full evidence: Progress Log, 2026-08-12 (slot 32) entry.
 - [ ] [DATA] P1. **Sample the 7,930,863 uppercase rows' underlying GCS objects directly**
       (`gcs_describe_object`/`list_blobs` under `instrument_type=POOL/`) to settle whether this is a
       manifest-column-only artifact (as the 2026-08-05 fold assumed) or genuinely reflects physical objects at an
@@ -228,3 +236,26 @@ picking this plan up cold should never trust the flip-time state without a fresh
   scope): `create-code-tarballs.sh`'s floating-pin path should persist the resolved `commit_sha` into
   `TARBALL_PINS.json` at launch time (mirroring the pinned-tarball case) so a future audit doesn't have to reconstruct
   it from git history — worth an infra-craft todo if this pattern comes up again.
+- **2026-08-12 (slot 32, data_engineering) — todo 3 done: the rebuild is UPSERT-onto-existing-index, NOT full-replace.**
+  Read `rebuild_defi_manifest.py::main()` → `scan_and_rebuild()`/`_run_chunked()` → `_build_manifest_writer()`, plus the
+  UTL `ManifestWriter` per-VM-shard write + reader/consolidator merge paths (direct code reads, not inference):
+  - The rebuild's ONLY index write is a per-VM shard: `_build_manifest_writer()` (rebuild_defi_manifest.py:121-136)
+    constructs `ManifestWriter(per_vm_shards=True, per_vm_flush_entries=50_000, per_vm_flush_interval_sec=300)`. UTL
+    `_writer.py` `per_vm_shards` docstring (lines 131-142): per-VM mode writes to `_index/per_vm/{instance}.parquet`
+    "regardless of the bucket-wide flag — guarantees the writer never races the consolidator daemon on the canonical
+    `_index/availability_index.parquet`", and "The consolidator (`consolidate_per_vm_shards`) merges per-VM shards into
+    the canonical view asynchronously". `_read_index.py::_read_and_merge_per_vm_shards` (line 1347):
+    "Last-attempted-write wins per dedup key (matches the consolidator's intended algorithm)". The canonical blob is
+    consolidator-owned — the rebuild never rewrites it directly.
+  - The rebuild is idempotent/upsert by construction (one `ManifestWriter.add()` per parquet found on disk, CAPTURED;
+    module docstring "Safe to re-run" / "OCC-safe via UTL's generation-match"). It only ADDS/updates rows for objects
+    its scan finds; it never DELETES or rewrites rows already in the index that its disk scan doesn't touch.
+  - **Implication for the POOL recurrence**: `parse_hive_path` lowercases `instrument_type` unconditionally (lines 370 +
+    395, N6a), so the rebuild cannot EMIT an uppercase `POOL` row from disk scanning; and because it is
+    upsert-onto-existing, it also cannot have REMOVED pre-existing uppercase rows. Therefore the 7,930,863 uppercase
+    `POOL` rows must have been PRESENT in the consolidated index BEFORE the rebuild ran (i.e. by the time the `-204358`
+    VM's scan/merge landed on 2026-08-10) and passed through untouched. This narrows the unexplained 0→7.9M window from
+    "between the 08-05 fold and the 08-11 stability check" to "between the 08-05 fold and the 08-10 rebuild start" —
+    either the 2026-08-05 fold's verified '0 POOL remain' did not actually remove all rows, or some writer path
+    re-created them in that pre-rebuild window. The rebuild is exonerated as a reintroduction mechanism. Remaining open
+    question (todo 4): whether the uppercase rows are manifest-column-only or reflect physical uppercase GCS objects.
