@@ -136,13 +136,17 @@ wires one of these must also delete or update whatever doc claims it is already 
 - [ ] [AGENT] P0. **Add the reference price to the shared instruction envelope**, not just `QuoteInstruction` — with the
       mark mode (static at send vs updating as the underlying moves) so execution knows which to apply. This is the
       field the `refprice_*` params shipped in `4762c211ab` configure, and they are inert until it exists.
-- [ ] [AGENT] P0. **State the benchmark-fill assumption in one place and cite it from both services.** It is what makes
-      a strategy-only backtest legitimate; today it is an assumption with no written contract, which is how a backtest
-      and live execution drift apart without anyone noticing.
-- [ ] [AGENT] P1. **Prove the standalone-backtest property with a test**, not an argument: run a strategy backtest using
-      only strategy-service + pipeline data, asserting no execution-service import and no execution config read. That
-      test is the guard on the whole service boundary — if it ever needs execution config to pass, the boundary has
-      leaked.
+- [x] [AGENT] P0. ✅ **The benchmark-fill assumption IS already written and shared — no new contract needed.**
+      `/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md` is the contract,
+      `/codex/04-architecture/backtest-groups.md` § "Group B" is the isolation model, and both services implement it
+      (`benchmark_fills.py` Group B / `BenchmarkMatcher` Group C). An earlier draft of this plan claimed it was "an
+      assumption with no written contract" — that was wrong, found while auditing execution-service. The gap is
+      duplicate implementation (§ G3), not a missing definition.
+- [ ] [AGENT] P1. **Prove the standalone-backtest property with a test**, not an argument: run a Group-B backtest using
+      only strategy-service + pipeline data, asserting no execution-service import and no execution config read. The
+      architecture already intends this — `benchmark_fills.py` says Group B "replaces execution entirely" — but nothing
+      _enforces_ it, so a future import would silently break the property. That test is the guard on the whole service
+      boundary.
 - [ ] [AGENT] P1. **Reconcile the ref price with the ε=0 spine.** `UPDATE_AS_UNDERLYING_MOVES` means the benchmark is
       time-varying, so a batch rerun must re-derive the same series — pin it to the same tick source and add it to the
       `paper(W) == batch-rerun(W)` assertion rather than assuming it reproduces.
@@ -203,14 +207,18 @@ exists to protect, and it is already implemented rather than aspirational.
       `received_at_mark_price_eth` (restaking rewards), `token.received_at_utc` (dust quote sources), `submitted_at` (an
       order-adapter idempotency cache). **There is no instruction-level received/sent pair in either service.** Both
       sides need it, per the operator, so define it once in UAC on the envelope and the fill record rather than twice.
-- [ ] [AGENT] P0. **G3 — reconcile WHO owns the benchmark price, because today both sides could.** execution-service
-      currently derives its own benchmark via `BenchmarkMatcher`; the target has **strategy sending the ref price**. If
-      both compute independently they can disagree on the benchmark itself, which would silently break the
-      backtest-vs-live comparison while every individual number still looks right. So § C's envelope field is not
-      plumbing — it is what makes the two sides' benchmark provably identical. Decide: strategy-sent is authoritative
-      and `BenchmarkMatcher` consumes it, or `BenchmarkMatcher` stays authoritative and strategy's ref price is
-      advisory. **Recommendation: strategy-sent is authoritative**, since the whole point is that the strategy's own
-      assumption is what its backtest was measured against.
+- [ ] [AGENT] P0. **G3 — collapse the benchmark's TWO independent implementations into one sent value.** _Corrected from
+      an earlier draft of this plan that framed this as two competing benchmarks — it is not._ There is **one**
+      benchmark-fills contract bridging the backtest groups
+      ([backtest-groups](/codex/04-architecture/backtest-groups.md): Group B uses benchmark fills, Group C measures
+      execution alpha "against the same benchmark"), and **the standalone-backtest property is already built**:
+      `strategy_service/engine/backtest/benchmark_fills.py` is a pure, bit-identical, 653-line Group-B implementation
+      whose own docstring states it lives in strategy-service "because Group B replaces execution entirely". The real
+      risk is therefore not disagreement-by-design but **drift between two implementations of one definition** — 653
+      lines here, `BenchmarkMatcher` there. When they drift, Group B's strategy alpha and Group C's execution alpha are
+      measured against different references while every number still looks correct and the sum stops reconciling.
+      Sending the reference on the instruction makes them provably identical rather than coincidentally equal.
+      **Recommendation: strategy-sent is authoritative; `BenchmarkMatcher` consumes it** rather than re-deriving.
 
 ### Smaller execution-service items
 
@@ -246,6 +254,20 @@ exists to protect, and it is already implemented rather than aspirational.
 
 ## Progress Log
 
+- **2026-08-12 (execution-service deep audit)** — § G added. **The single most important finding: the target property —
+  "strategy backtests using just strategy-service and the upstream data, given the benchmark fill assumption" — is
+  already the documented AND implemented architecture**, as Group B. `benchmark_fills.py` (653 lines, pure,
+  bit-identical) exists in strategy-service precisely because "Group B replaces execution entirely"; Group C in
+  execution-service measures execution alpha against the same benchmark; `pnl_attribution/rows.py` already splits
+  STRATEGY-layer from EXECUTION-layer PnL; `benchmark/metrics.py` already computes alpha with 95% CIs and early/mid/late
+  path decomposition. So the answer to "how close are we" is: **the load-bearing piece is built.** **A correction I made
+  to my own work mid-audit, worth keeping**: I first wrote (into this plan AND into `benchmark-fills.md`) that there
+  were TWO benchmarks with two owners, reasoning that a per-algo reference is unknowable to strategy at send time. That
+  was wrong, and `backtest-groups.md` says so in one line — the contract is shared and the reference is derivable from
+  the instruction, which is why strategy-service can and does compute it. Both documents are corrected. The real risk is
+  narrower and more useful: **one definition, two independent implementations, free to drift** — which is the actual
+  argument for sending the reference price. Reaching for the doc that already covered it before writing the conclusion
+  would have skipped the wrong version entirely.
 - **2026-08-12** — Authored from the operator's statement of target architecture plus a same-session audit. The audit's
   most useful result was negative: **almost nothing here needs designing.** The envelope already opts in by reference,
   the policy artifact is already content-hashed and versioned with the right gating axes, the selector already validates

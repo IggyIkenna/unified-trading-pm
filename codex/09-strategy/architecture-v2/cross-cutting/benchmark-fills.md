@@ -97,38 +97,38 @@ reference price, what would the fill look like?"_
 | `DELTA_HEDGE_CONTINUOUS` | per-tick mid                                 |
 | `LIQUIDATION_FLASH_LOAN` | liquidation-bonus payout at target block     |
 
-## Who owns the reference price — TWO benchmarks, not one
+## ONE contract, two implementations — and why strategy should SEND the reference price
 
-> **Reconciliation added 2026-08-12** after an operator ruling that _"strategy sends the ref price, execution layer
-> marks underlying against it either statically or updates as UL moves"_ appeared to conflict with the per-algo table
-> above. It does not conflict — it names a **different** benchmark. Both exist and they measure different things.
+> **Added 2026-08-12** on an operator ruling that _"strategy sends the ref price, execution layer marks underlying
+> against it either statically or updates as UL moves"_. This does not introduce a second benchmark; it removes a
+> duplicated computation of the existing one.
 
-The table above makes the benchmark reference a function of the ALGO (`TWAP(window)` → time-weighted mid over the
-window). But the algo is execution's choice, and the window has not happened yet when the instruction is emitted — so
-strategy **cannot** know that benchmark at send time. The resolution is that there are two benchmarks with two owners,
-which is already how attribution is layered in code:
+There is **one** benchmark-fills contract, and it bridges the backtest groups —
+[backtest-groups](/codex/04-architecture/backtest-groups.md): _"Group B uses benchmark fills (zero exec alpha, strategy
+alpha isolated); Group C uses a matching engine and measures execution alpha **against the same benchmark**."_ The
+per-algo table above is that contract's reference definition, and it is derivable **from the instruction**, so both
+services can and do compute it:
 
-| Benchmark               | Owner             | Reference                                                         | What it measures                                                           |
-| ----------------------- | ----------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| **Strategy benchmark**  | strategy-service  | the ref price strategy SENDS (last/mid of the instrument at send) | Strategy alpha — and it is what a standalone backtest was measured against |
-| **Execution benchmark** | execution-service | the per-algo reference in the table above                         | Execution quality against the algo's own fair standard                     |
+| Group | Service           | Implementation                                                                      | Benchmark's role                                 |
+| ----- | ----------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------ |
+| **B** | strategy-service  | `engine/backtest/benchmark_fills.py` — pure, bit-identical outputs                  | the benchmark fill IS the fill (zero exec alpha) |
+| **C** | execution-service | `BenchmarkMatcher` (`BookType.ALPHA_ZERO`, always-fill) + `pnl_attribution/rows.py` | the reference the live fill is measured against  |
 
-This is not a new idea being introduced here; it is what `execution-service/execution_service/pnl_attribution/rows.py`
-already implements — rows are built from a PAIR of (benchmark, live) `MatchResult`s, splitting a **STRATEGY layer**
-(benchmark-fill decomposition at benchmark price) from an **EXECUTION layer** (`live_fill − benchmark_fill` residual →
-`SLIPPAGE`, `FEES`). The benchmark fill itself is `BenchmarkMatcher` with `BookType.ALPHA_ZERO`, always-fill.
+Group C's attribution then splits a **STRATEGY layer** (benchmark-fill decomposition at benchmark price) from an
+**EXECUTION layer** (`live_fill − benchmark_fill` residual → `SLIPPAGE`, `FEES`). **This is what licenses a
+strategy-only backtest**: Group B needs no execution-service at all, because benchmark fills replace execution entirely.
 
-**Why the distinction is load-bearing rather than pedantic.** Measuring a TWAP execution against an arrival price
-conflates execution skill with market drift over the window; measuring strategy alpha against a per-algo TWAP benchmark
-makes a strategy's measured edge depend on an execution choice it did not make. Keeping them separate is also precisely
-what licenses a **strategy-only backtest**: the STRATEGY layer is computable at the strategy's own benchmark price with
-no execution-service involvement at all.
+**So why send the price at all?** Because the contract is implemented **twice, independently** — 653 lines in
+strategy-service and a matching engine in execution-service — and two implementations of one definition can drift. When
+they drift, Group B's strategy alpha and Group C's execution alpha are measured against _different_ references while
+every individual number still looks correct, and the sum silently stops reconciling. Putting the reference price on the
+instruction makes the two sides provably identical rather than coincidentally equal. The operator's two mark modes
+(`STATIC_AT_SEND` vs `UPDATE_AS_UNDERLYING_MOVES`) then say which reference the sent price represents.
 
-**Open decision (operator):** whether the strategy-sent ref price is authoritative for the strategy layer — recommended,
-since it is the assumption the backtest was measured against — or advisory with `BenchmarkMatcher` deriving both. Until
-this lands, note that execution derives its own benchmark, so **the two sides could disagree on the benchmark itself**
-while every individual number still looks correct. Tracked:
-`/plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` § G3.
+**Corollary for the ε=0 spine:** `UPDATE_AS_UNDERLYING_MOVES` makes the reference time-varying, so a batch rerun must
+re-derive the identical series — pin it to the same tick source and assert it inside the `paper(W) == batch-rerun(W)`
+proof rather than assuming it reproduces. Tracked:
+`/plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` §§ C, G3.
 
 ## Per-action-type benchmarks
 
