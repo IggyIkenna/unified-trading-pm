@@ -217,12 +217,13 @@ context_scope:
       bridge, `confirmed_balance_delta` returned) + app startup binds/tears down + no-connector stays NOT-WIRED.
       `quality-gates.sh` green (sentinel `d64df597`); full suite 7,960 passed / 0 errors.
 
-- [ ] [BACKEND] P3. Mainnet custody gating — COPPER_MPC/CEFFU_MPC honest `UNSUPPORTED_SOURCE`. `_topup_guard()` already
-      returns `UNSUPPORTED_SOURCE` for COPPER_MPC/CEFFU_MPC on Bybit (todo 4). This todo validates that the
+- [x] ✅ [BACKEND] P3. Mainnet custody gating — COPPER_MPC/CEFFU_MPC honest `UNSUPPORTED_SOURCE`. `_topup_guard()`
+      already returns `UNSUPPORTED_SOURCE` for COPPER_MPC/CEFFU_MPC on Bybit (todo 4). This todo validates that the
       `build_bybit_deposit()` wiring layer also gates on `TopupSource` — if the resolved source is COPPER_MPC or
       CEFFU_MPC, `build_bybit_deposit()` returns `None` with a logged warning citing Group F item 19, so the deposit
       path stays NOT_WIRED until the custody provider graduates. Repo: execution-service. Done-when: unit test asserts
-      COPPER_MPC deposit wiring returns None + honest log message; `quality-gates.sh` green.
+      COPPER_MPC deposit wiring returns None + honest log message; `quality-gates.sh` green. —
+      execution-service@6e12ceb962 (slot 16, 2026-08-12).
 
 - [ ] [BACKEND] P3. End-to-end integration test — Bybit USDC deposit smoke path. Mocks the CCXT deposit-address +
       deposit-records endpoints and the web3 transfer, then drives a full
@@ -328,3 +329,13 @@ context_scope:
   → no binding). First QG pass surfaced 4 test-collection ImportErrors (the runtime `BybitDepositCallable` import) —
   fixed by moving the alias into TYPE_CHECKING, re-gated clean. Final `quality-gates.sh` green, sentinel `d64df597`,
   full suite 7,960 passed / 0 errors.
+- **2026-08-12 (slot 16, backend_engineer)**: Todo 9 (mainnet custody gating — COPPER_MPC/CEFFU_MPC honest
+  `UNSUPPORTED_SOURCE`) — implemented in `execution-service@6e12ceb962`. `build_bybit_deposit()` gained a
+  `source: TopupSource = TopupSource.TREASURY_HOT` keyword param; any non-TREASURY_HOT source (COPPER_MPC/CEFFU_MPC)
+  returns `None` with a logged warning citing Group F item 19 — defense-in-depth at the wiring layer so the deposit path
+  stays NOT-WIRED until the custody provider graduates (the consumer's `_topup_guard` already returned
+  `UNSUPPORTED_SOURCE` per todo 4). `_wire_bybit_deposit` in `app.py` now passes `source=TopupSource.TREASURY_HOT`
+  explicitly. Tests added to `tests/unit/defi_execution/test_bybit_wiring.py`: `test_copper_mpc_source_returns_none` +
+  `test_ceffu_mpc_source_returns_none` (assert `None` + caplog contains "Group F item 19"), and
+  `test_treasury_hot_source_still_builds`; `TestBybitAppStartupWiring`'s monkeypatched builders updated for the new
+  kwarg. `quality-gates.sh` green (194s, sentinel `6e12ceb962`).
