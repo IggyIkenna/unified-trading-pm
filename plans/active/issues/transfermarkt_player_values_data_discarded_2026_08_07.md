@@ -184,13 +184,24 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       18%-coverage bundle-vs-per-league skip mismatch, per the inline comment at transfermarkt.py:442-447) — this is a
       second instance of the same class.
 
-- [ ] [CODE] P1. **Fix the window-gating bug**: PLAYER_VALUES must not be skipped outside transfer windows — remove or
-      bypass the `_tm_window_open`/`_tm_needs_refresh` skip block (transfermarkt.py:463-475) for PLAYER_VALUES
-      specifically (call `is_transfer_data_expected()` properly if `transfer_records` in the same fetch path still needs
-      its own gate, or split the two data_types' skip logic apart). Repo: instruments-service. Done when: a forced
+- [x] ✅ [CODE] P1. **Fix the window-gating bug — FIXED 2026-08-12.** Removed the `_tm_window_open`/`_tm_needs_refresh`
+      skip block (transfermarkt.py:462-481) entirely — `_fetch_transfermarkt_data`'s PLAYER_VALUES path had no separate
+      `transfer_records` fetch to preserve a gate for, so the whole reimplemented skip was the bug, not just its
+      application to PLAYER_VALUES. Cost control on non-trigger dates stays the existing cache-hit short-circuit
+      (`_cache_is_fresh` / `_TRANSFERMARKT_CACHE_STALENESS_DAYS=7`), unaffected by this change. Done when: a forced
       non-window-date PLAYER_VALUES fetch for a league genuinely attempts the API call (no
       `EXPECTED_OUTSIDE_TRANSFER_WINDOW` empty-confirmed) + a regression test locks the two data_types' gating apart so
-      this can't silently re-merge.
+      this can't silently re-merge — rewrote `TestTransfermarktTransferWindowGuard` →
+      `TestTransfermarktPlayerValuesYearRoundFetch` in `test_orchestrator_data_fetchers.py`:
+      `test_outside_window_non_trigger_still_fetches` asserts the exact old-bug condition (outside window, no refresh
+      trigger) now attempts the fetch and never stamps `EXPECTED_OUTSIDE_TRANSFER_WINDOW`;
+      `test_within_window_still_fetches` locks the within-window case too. instruments-service@df8ff1b732. QG green
+      (full pass + the `check_adapter_contract_regression` baseline intentionally lowered 8→7 for transfermarkt.py,
+      since removing the buggy skip's `record_empty` call site legitimately drops one contract-call site —
+      `scripts/quality_gates/adapter_contract_baseline.yaml` regenerated via `--regenerate-baseline`, diffed to confirm
+      it touched only this file). Not yet live-verified against a real non-window-date trigger (Transfermarkt fetches
+      are still gated behind real API quota; the next non-trigger-date run for any expected league will exercise this
+      live).
 - [x] ✅ [CODE] P2. **Root-cause the empty `players` per-player list — FIXED 2026-08-12, NOT an upstream limitation.**
       Live-traced the deployed key (GSM `transfermarkt-api-key`, `central-element-323112`) — RapidAPI-backed, not Apify.
       Confirmed `_fetch_clubs_via_rapidapi()` only ever called `/api/v1/clubs/profile` (returns
@@ -278,3 +289,14 @@ possibly a rename that ripples into UAC/manifest data_type naming.
   call. instruments-service@3d7418bb. QG green, verified on origin. Not yet live-verified against a real trigger fetch
   (blocked on the still-open P1 window-gating todo above, which currently prevents any non-window-date attempt from
   firing at all).
+- **2026-08-12 (slot 4, data_engineering): fixed the P1 window-gating todo.** Removed the `_tm_window_open`/
+  `_tm_needs_refresh` skip block from `_fetch_transfermarkt_data` entirely — the function only ever fetches
+  PLAYER_VALUES (no separate `transfer_records` fetch shares this code path), so there was no legitimate gate left to
+  preserve once PLAYER_VALUES itself is scoped out of `EXPECTED_OUTSIDE_TRANSFER_WINDOW`. Cost control on non-trigger
+  dates remains the pre-existing cache-hit short-circuit (7-day TTL), not a window gate. Rewrote the class of tests that
+  had locked in the old (buggy) skip behavior to instead lock in the year-round fetch, including the exact
+  outside-window/no-refresh-trigger condition the old bug fired on. Full `quality-gates.sh` surfaced one legitimate
+  ratchet consequence — `check_adapter_contract_regression`'s per-file baseline for transfermarkt.py dropped from 8 to 7
+  contract calls (the removed skip's own `record_empty` call) — regenerated via `--regenerate-baseline` and diffed to
+  confirm the regen touched only that one file, not unrelated fleet drift. instruments-service@df8ff1b732 (code) — see
+  the flipped todo above for detail. Remaining open work on this doc: the `[OPERATOR]` P2 backfill-decision todo.
