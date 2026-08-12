@@ -637,4 +637,5 @@ possibly a rename that ripples into UAC/manifest data_type naming.
   (VM_SHUTDOWN_ON_COMPLETION=true releases the lock), re-checking quota first — if the PLAYER_VALUES VM's retry-heavy
   consumption has left insufficient headroom, that is a genuine quota-block, reconfirm before launching. No code shipped
   this pass; the unrelated standing MTDS LDR pre-existing red that also blocks shipping is tracked separately
-  (`mtds_qg_red_lending_indices_compound_pipeline_mode_drift_2026_08_12.md`, blocker RB-fc1bb5dd).
+  (`/plans/archive/2026_08/issues/mtds_qg_red_lending_indices_compound_pipeline_mode_drift_2026_08_12.md`, blocker
+  RB-fc1bb5dd, now RESOLVED).

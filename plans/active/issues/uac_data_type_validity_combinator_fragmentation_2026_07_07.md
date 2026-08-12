@@ -468,12 +468,12 @@ just belongs on a different layer than instrument_type does, and conflating the 
   force-compute vs the `-test-` bucket) NOT yet run — the code is written + passes QG (only the pre-existing
   `test_lending_indices_handler.py::test_collect_protocol_chain_writes_canonical_partition_compound` failure remains,
   which blocks the commit), but the MTDS ship lane is RED on that pre-existing issue
-  (`mtds_qg_red_lending_indices_compound_pipeline_mode_drift_2026_08_12.md`, blocker RB-fc1bb5dd). **Adjacent finding
-  (raised for the other doc)**: the UTL venue-only overrides (`AAVE`/`SPARK`/`COMPOUND_V3` → BATCH_*) mislabel
-  `lending_indices` as `batch_aave`/`batch_spark`/`batch_compound_v3` instead of `batch_onchain_subgraph` for ALL THREE
-  venues (verified via `derive_pipeline_mode_for_row`); the correct mechanism is `_VENUE_DT_OVERRIDES` scoped per
-  `(venue, "oracle_prices")`, but scoping it changes AAVE/SPARK derivation too (migration implication) — left to the
-  other doc's P0/escalation rather than fixed unilaterally here.
+  (`/plans/archive/2026_08/issues/mtds_qg_red_lending_indices_compound_pipeline_mode_drift_2026_08_12.md`, blocker
+  RB-fc1bb5dd, now RESOLVED). **Adjacent finding (raised for the other doc)**: the UTL venue-only overrides
+  (`AAVE`/`SPARK`/`COMPOUND_V3` → BATCH_*) mislabel `lending_indices` as `batch_aave`/`batch_spark`/`batch_compound_v3`
+  instead of `batch_onchain_subgraph` for ALL THREE venues (verified via `derive_pipeline_mode_for_row`); the correct
+  mechanism is `_VENUE_DT_OVERRIDES` scoped per `(venue, "oracle_prices")`, but scoping it changes AAVE/SPARK derivation
+  too (migration implication) — left to the other doc's P0/escalation rather than fixed unilaterally here.
 - **2026-08-12 (slot 16, continued): MTDS ship lane unblocked.** The pre-existing MTDS red was fixed on origin by the
   escalation (`market-tick-data-service@6a039e5242` — threads the SSOT pipeline_mode through the lending_indices write
   path; QG green) AND the UTL root-cause P1 was shipped by a peer (`unified-trading-library@b3b2c440` — moved

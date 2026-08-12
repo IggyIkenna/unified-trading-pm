@@ -13,7 +13,7 @@ summary: >-
   `quality-gates-v2` failed with the SAME assertion in both runs today (31636664383 @ 20:14, 31632477709 @ 19:24),
   before slot 32's commit landed. AAVE_V3 asserts the same `batch_onchain_subgraph` convention at test line 106, so the
   fallback's venue-specific `batch_compound_v3` token is the drift, not the test.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -30,18 +30,22 @@ created: 2026-08-12
 author: [ikennaigboaka (slot-32, data_engineering)]
 source: ["slot-32 quality-gates.sh Pass-1 run on 071a5466 + CI verification of 31636664383/31632477709"]
 parent_epic: defi_master
-resolved_by:
+resolved_by: market-tick-data-service@6a039e5242 + unified-trading-library@b3b2c440e4
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 drift_direction: advance-code
-archive_exempt: true
 depends_on: []
 locked_by:
 locked_since:
 ---
 
 # MTDS QG red — lending_indices COMPOUND_V3 pipeline_mode drift
+
+> **ARCHIVED 2026-08-12** — both todos resolved. market-tick-data-service@6a039e5242 threaded the SSOT `pipeline_mode`
+> through the lending_indices write path (COMPOUND_V3 → `batch_onchain_subgraph`); the follow-up
+> unified-trading-library@b3b2c440e4 moved the SPARK/COMPOUND_V3 oracle overrides to per-data_type
+> `_VENUE_DT_OVERRIDES`. MTDS + UTL QG green; the MTDS QG-red is cleared (unblocked slot-32 sports re-stamp).
 
 ## What I found
 
