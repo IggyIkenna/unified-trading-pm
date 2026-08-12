@@ -63,8 +63,10 @@ context_scope:
 > lives in the six phase-plans below (`assigned_vm: planning`), run as a **draft-gated chain**: only **P0 is `active`**
 > (dispatches now); **P1–P5 are `draft`** (NOT ingested) and each phase's LAST todo flips the next phase
 > `draft`→`active` once its work completes — so no downstream phase can be worked out of order (`gate_on_depends` alone
-> proved leaky). Fully autonomous — no operator gates; the irreversible GCS deletion is made safe by
-> snapshot-before-delete (recoverable), so no human sits in the loop.
+> proved leaky). **P3 specifically has an active operator gate** — it is self-halted pending an operator GO/NO-GO (see
+> the phase table below and `deployment_registry_firestore_p3_cutover_2026_07_14.md`'s own 🔴 HALT banner, still in
+> force as of a 2026-08-09 remeasurement finding only 27% of live VMs matched a Firestore doc); the other phases proceed
+> autonomously, and the irreversible GCS deletion itself is made safe by snapshot-before-delete (recoverable).
 
 ## Problem
 
