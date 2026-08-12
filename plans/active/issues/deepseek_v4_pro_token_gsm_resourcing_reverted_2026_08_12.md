@@ -133,9 +133,17 @@ planning VM (`i-0c9b283b31d6b5ca7` / `13.113.200.22`, user `ubuntu`):
       → returns None → the balance poller reports "no token". (Issue finding #4's "command string as Bearer token"
       mechanism is likewise None-or-prefix, not the full string; either way the native path fails, which the GSM-first
       proxy fix removes.) (repo: agent-orchestrator)
-- [ ] [INFRA] P2. Restart the running `deepseek-native-proxy` service so the GSM resolution code goes live —
+- [x] ✅ [INFRA] P2. Restart the running `deepseek-native-proxy` service so the GSM resolution code goes live —
       `ao-self-pull.sh` restarts only `orchestrator.service`, so the proxy keeps the old env-file-only resolution until
-      explicitly restarted. (repo: agent-orchestrator — host-local systemd unit)
+      explicitly restarted. (repo: agent-orchestrator — host-local systemd unit) — **DONE 2026-08-12 (slot 14, infra):
+      NO RESTART NEEDED — the proxy already restarted post-fix** (operator answer to BLK-b0a53193 + live re-verify).
+      Running proxy PID 578877, `ExecMainStartTimestamp=2026-08-12T19:37:03Z` — AFTER the GSM-first fix
+      (`agent-orchestrator@4dbfea0`, committed 18:54:20Z; checkout HEAD 64a559f, `4dbfea0` ancestor = YES), so the
+      process loaded `server/deepseek_native_proxy_server` with the GSM-first `_resolve_account_token`
+      (`api_key_secret_name` → UTL `get_secret`; env-file literal is now only the fallback). Live health:
+      `curl http://127.0.0.1:8767/health` → HTTP 200 `{"status":"ok"}`; journal since 19:37Z shows no "falling back to
+      env file" warning and no errors. The earlier slot-14 `/blocked` was based on a stale read (PID 1418434 / 17:37Z
+      predated the 19:37:03Z restart). Done-when met: GSM resolution code live, service active.
 
 ## Codex SSOTs
 
