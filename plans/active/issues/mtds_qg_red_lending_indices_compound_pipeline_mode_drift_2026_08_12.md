@@ -78,7 +78,16 @@ Fix the fallback path's emitted `pipeline_mode` to the SSOT value `batch_onchain
 re-verify the pipeline-mode-partition SSOT contract. The AAVE_V3 assertion (line 106, `batch_onchain_subgraph`) and the
 handler's own primary-path resolution favor the former.
 
-- [ ] [DATA] P0. Fix `market-tick-data-service` QG red: align the lending_indices COMPOUND_V3 fallback write path's
+- [x] ✅ [DATA] P0. Fix `market-tick-data-service` QG red: align the lending_indices COMPOUND_V3 fallback write path's
       emitted pipeline_mode with `pipeline_mode_for_source("onchain_subgraph", ...)` (`batch_onchain_subgraph`), or
       update the test assertion if the venue-specific token is SSOT- correct — resolve against
-      `/codex/02-data/pipeline-mode-partition.md` and clear the MTDS QG red. (repo: market-tick-data-service)
+      `/codex/02-data/pipeline-mode-partition.md` and clear the MTDS QG red. — market-tick-data-service@6a039e5242:
+      threaded the SSOT pipeline_mode through `_collect_protocol_chain` → `_write_protocol_chain_rows` →
+      `write_defi_rows` (resolver `_resolve_lending_pipeline_mode` in `lending_indices_write.py`); full
+      `quality-gates.sh` green (exit 0); quickmerge landed on LDR + ancestry verified on origin.
+
+- [ ] [DATA] P1. Convert the COMPOUND_V3 venue-only `_VENUE_OVERRIDES` entry
+      (`unified-trading-library/unified_trading_library/pipeline_mode_resolver.py:135`) to a per-data_type
+      `_VENUE_DT_OVERRIDES` entry (`oracle_prices` → `batch_compound_v3`), following the POLYMARKET multi-source-venue
+      precedent — the venue-only entry shadows the `lending_indices` SSOT source (onchain_subgraph) for ANY derive-path
+      caller (backfill / manifest-rebuild / future COMPOUND_V3 data_type). (repo: unified-trading-library)
