@@ -73,6 +73,33 @@ Format with Prettier (auto-stage).......Failed
   [ "$output" = "DETERMINISTIC" ]
 }
 
+@test "'files were modified by this hook' with no content rejection is RETRIABLE (F2 autofix signal, pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10)" {
+  # prek's own re-stage-and-rerun autofix signal, not a content verdict -- observed twice
+  # 2026-08-10 misclassified as DETERMINISTIC even though every sub-check reported OK.
+  run classify 'Format with Prettier (auto-stage)........................................Passed
+plan-hygiene.............................................................Passed
+- hook id: plan-hygiene
+- files were modified by this hook'
+  [ "$status" -eq 0 ]
+  [ "$output" = "RETRIABLE" ]
+}
+
+@test "'files were modified by this hook' PLUS a genuine content rejection in the SAME run is still RETRIABLE by design (worst case is one extra attempt, not a false hard-stop)" {
+  # By design (see commit_failure_is_retriable's own comment): a mixed failure retries once
+  # re-staging the autofix; if a genuine violation is ALSO present it is unchanged by the retry
+  # and the *next* attempt (which no longer carries "files were modified", only the unresolved
+  # violation) correctly exits 6 -- covered by the "plan-hygiene failure is DETERMINISTIC" case
+  # above once the autofix text is gone. This test pins the deliberate one-extra-attempt
+  # tradeoff so it is not mistaken for a bug and "fixed" into a false hard-stop.
+  run classify 'plan-hygiene.............................................................Failed
+- hook id: plan-hygiene
+- files were modified by this hook
+- exit code: 1
+    ❌ Conflict marker(s) in staged plans — resolve before commit'
+  [ "$status" -eq 0 ]
+  [ "$output" = "RETRIABLE" ]
+}
+
 @test "a rejection with no parseable hook id stays RETRIABLE (preserves prior behaviour)" {
   run classify 'error: unable to create index.lock: File exists'
   [ "$status" -eq 0 ]
