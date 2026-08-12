@@ -156,15 +156,16 @@ reading. All three name their replacement, so the machine already has everything
 
 ## Todos (added 2026-08-12)
 
-- [ ] [SCRIPT] P2. **Exempt formally-retired docs from the staleness window in `check_codex_doc_freshness.py`** —
-      operator-approved 2026-08-12. **IMPLEMENTED AND VERIFIED LOCALLY, NOT YET SHIPPED**: the code sits dirty in slot 3
-      because PM code commits are blocked by an unrelated fleet-wide ratchet failure
-      (`/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`). No sha to cite yet — do
-      not read the detail below as a landed change. `_is_retired_with_successor()` skips
-      `superseded|deprecated|archived` ONLY when a non-empty `superseded_by` is present; the exempt set is PRINTED as
-      `exempt-retired` rather than dropped silently. Baseline ratcheted DOWN 6 → 3 by removing exactly the 3 retired
-      entries (hand-edited removal — no `--baseline-write`, nothing added). Gate verified green under BOTH invocation
-      styles (standalone `--workspace-root .` and quality-gates.sh's parent-root form):
+- [x] [SCRIPT] P2. ✅ **Exempt formally-retired docs from the staleness window in `check_codex_doc_freshness.py`** —
+      operator-approved and SHIPPED 2026-08-12, `unified-trading-pm@c92375f05b`. Verified on origin by marker
+      (`_is_retired_with_successor` present; `violation_count: 3` in the baseline blob), not by exit code. The commit
+      was briefly held by an unrelated fleet-wide ratchet failure
+      (`/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`), resolved by its owning
+      session the same morning. `_is_retired_with_successor()` skips `superseded|deprecated|archived` ONLY when a
+      non-empty `superseded_by` is present; the exempt set is PRINTED as `exempt-retired` rather than dropped silently.
+      Baseline ratcheted DOWN 6 → 3 by removing exactly the 3 retired entries (hand-edited removal — no
+      `--baseline-write`, nothing added). Gate verified green under BOTH invocation styles (standalone
+      `--workspace-root .` and quality-gates.sh's parent-root form):
       `✅ At-or-below baseline (0 new; 3 known, 3 at     baseline)`. 26 unit tests pass, including the mute-button guard
       (retired WITHOUT a successor stays stale), a `status: current` + stray `superseded_by` case,
       list/empty-list/blank-string successors, case-insensitivity, and a non-string `status` that must neither crash nor

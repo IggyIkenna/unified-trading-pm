@@ -345,13 +345,14 @@ disk.
 ## Operator rulings + actions 2026-08-12
 
 - **Retention default changed to 2 days (48h), not 14.** Operator ruling: drop >48h AND make it the default so it is
-  automatic. **The code edit is NOT yet shipped** — it sits dirty in slot 3 behind the fleet-wide commit block in
-  `/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`. The SWEEP below did run (it used
-  the new default from the working copy), so the drop is real even though the default change has no sha yet. 14 was
-  chosen to mirror `stash-pile-detect.sh`'s `STASH_WARN_AGE_DAYS`, and that symmetry was simply wrong for this pile —
-  measured the same day, a 14d cutoff made **0 of 30** entries droppable while the pile still regrew past
-  `safe-doc-push`'s "extreme" threshold within ONE day and quarantined a live push. The binding constraint is the ship
-  scripts' COUNT threshold, not the detector's age warn.
+  automatic. ✅ **SHIPPED `unified-trading-pm@c92375f05b`**, verified on origin by marker (`STASH_PRUNE_AGE_DAYS:-2`
+  present in the origin blob). It was briefly held by the fleet-wide commit block in
+  `/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`, resolved by its owning session
+  the same morning. The SWEEP below ran before the ship, using the new default from the working copy. 14 was chosen to
+  mirror `stash-pile-detect.sh`'s `STASH_WARN_AGE_DAYS`, and that symmetry was simply wrong for this pile — measured the
+  same day, a 14d cutoff made **0 of 30** entries droppable while the pile still regrew past `safe-doc-push`'s "extreme"
+  threshold within ONE day and quarantined a live push. The binding constraint is the ship scripts' COUNT threshold, not
+  the detector's age warn.
   - Deliberate consequence, recorded in the script: with a 2d prune the detector's AGE warn (`oldest_days > 14`) can now
     essentially never fire, because nothing survives to 14 days. Its COUNT warn carries the signal. Re-check that
     pairing if the prune horizon is ever raised.
