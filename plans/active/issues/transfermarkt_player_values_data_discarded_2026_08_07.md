@@ -18,9 +18,9 @@ summary: >
   `league_id`, `canonical_league`, `season`, and snapshot metadata — team/league scaffolding, not player values. Despite
   this, the manifest legitimately records these rows as `captured` (this is not the honest-absence /
   EXPECTED_NO_PROVIDER_COVERAGE gap investigated the same day in
-  plans/active/issues/sports_af_full_entity_completion_2026_08_03.md — that's a separate, correctly-behaving denominator
-  issue; this is captured rows containing no signal). The `total_market_value_eur` team aggregate isn't persisted
-  either, so even a coarse per-team value proxy is unavailable.
+  plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md — that's a separate, correctly-behaving
+  denominator issue; this is captured rows containing no signal). The `total_market_value_eur` team aggregate isn't
+  persisted either, so even a coarse per-team value proxy is unavailable.
 status: open
 nature: notes
 asset_group: [sports]
@@ -30,7 +30,7 @@ scope: [engineer, admin]
 tags: [data-correctness, transfermarkt, player-values, silent-data-loss, honest-coverage]
 related:
   [
-    plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
+    plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-coverage-model.md,
   ]
@@ -52,7 +52,7 @@ context_scope:
   [
     instruments-service/instruments_service/engine/orchestrator/transfermarkt.py,
     instruments-service/instruments_service/reference_data/adapters/sports/adapters/transfermarkt.py,
-    plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
+    plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
   ]
 resolved_by:
 ---

@@ -27,7 +27,7 @@ scope: [engineer, admin]
 tags: [sports, honest-coverage, data-correctness, odds-api, mtds, multi-vendor]
 related:
   [
-    plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
+    plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
     plans/active/issues/transfermarkt_player_values_data_discarded_2026_08_07.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-coverage-model.md,

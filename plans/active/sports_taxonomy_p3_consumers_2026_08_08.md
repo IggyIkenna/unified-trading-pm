@@ -440,14 +440,14 @@ spelling variant survives, which is the entire point of the panel". It does not.
   present on `origin/main`. Live AO backlog (read-only via SSM) holds tasks for every one, one already dispatched to a
   worker. The gates release WITHOUT a human: `gate_on_depends` is machine-managed by `_wire_gate_on_depends_prereqs`,
   which also covers a zero-backlog-task upstream via a derived `gate-upstream-open:<stem>` condition — and P2's second
-  gate, `/plans/active/issues/sports_af_full_entity_completion_2026_08_03.md`, is itself `assigned_vm: planning` with 3
-  open `[SCRIPT]` todos, so nothing in the chain waits on an operator to release it. **One real gap found and fixed**:
-  this plan's Betfair scaffold todo had NEVER been ingested. Its own closing sentence ("Do NOT mark this
-  `BLOCKED-CREDENTIALS`") tripped `_has_live_blocked_token`, so regen classified the todo non-dispatchable — while the
-  same todo's text asserted it was "Fully AO-completable with no operator step". Rewritten in
-  `unified-trading-pm@a134a45948`; re-verified with regen's REAL parser, not a re-implementation: P3 14/15 -> 15/15, and
-  all 8 docs now parse 75/75. Corpus-wide the same silent drop hits 47 todos across 37 AO docs (14 of them parse to ZERO
-  dispatchable todos) — filed as
+  gate, `/plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md`, is itself
+  `assigned_vm: planning` with 3 open `[SCRIPT]` todos, so nothing in the chain waits on an operator to release it.
+  **One real gap found and fixed**: this plan's Betfair scaffold todo had NEVER been ingested. Its own closing sentence
+  ("Do NOT mark this `BLOCKED-CREDENTIALS`") tripped `_has_live_blocked_token`, so regen classified the todo
+  non-dispatchable — while the same todo's text asserted it was "Fully AO-completable with no operator step". Rewritten
+  in `unified-trading-pm@a134a45948`; re-verified with regen's REAL parser, not a re-implementation: P3 14/15 -> 15/15,
+  and all 8 docs now parse 75/75. Corpus-wide the same silent drop hits 47 todos across 37 AO docs (14 of them parse to
+  ZERO dispatchable todos) — filed as
   `/plans/archive/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md`, NOT hand-triaged,
   because three prior regex-widening fixes all regressed. Ingestion of the fixed todo lands on the next plan-regen tick
   (~30 min default); no operator action.

@@ -31,7 +31,7 @@ scope: [engineer]
 tags: [manifest, consolidator, sports, data-correctness, dedup, cross-cutting, false-alarm-likely]
 related:
   [
-    /plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
+    /plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /plans/archive/issues/manifest_consolidator_stale_sports_bucket_2026_07_21.md,
     /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,

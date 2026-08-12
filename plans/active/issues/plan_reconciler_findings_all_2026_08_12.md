@@ -75,9 +75,9 @@ idempotency guard silently no-ops re-park attempts (observed 4x/26x redundant re
       flip until batch11 is dispatched/verified; re-check batch11's status first. Also note: batch11's own evidence
       citations for 2-3 adjacent todos use the literal unresolved placeholder `unified-trading-pm@<sha>` instead of a
       real commit sha — needs a real citation before anything downstream trusts it.
-- [ ] [REVIEW] P1. `plans/active/issues/sports_af_full_entity_completion_2026_08_03.md` — HARD evidence (VM run.log,
-      exit_code=0, repeat-stable census) exists for 6 of 8 named entities; run the final unified re-census + notify +
-      close per `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`'s convergence evidence.
+- [ ] [REVIEW] P1. `plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md` — HARD evidence (VM
+      run.log, exit_code=0, repeat-stable census) exists for 6 of 8 named entities; run the final unified re-census +
+      notify + close per `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`'s convergence evidence.
 - [ ] [REVIEW] P2. `plans/active/sports_track_h_denominator_prereqs_2026_07_28.md` todo 2 (batch_footystats copy+swap) —
       the PROD data-correctness work is done+verified (fresh live manifest census cited), but the code commit is blocked
       on an unrelated repo QG gate. Re-check market-tick-data-service QG state; if green, commit + flip.
@@ -375,7 +375,8 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md:544-558 — low
       severity
 - [ ] [DOC] P3. (codex-drift) plans/active/predictions_ml_walk_forward_and_arb_2026_06_20.md:150 — low severity
-- [ ] [REVIEW] P3. (ao-readiness) plans/active/issues/sports_af_full_entity_completion_2026_08_03.md — see Section 1
+- [ ] [REVIEW] P3. (ao-readiness) plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md — see
+      Section 1
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/sports_taxonomy_p3_consumers_2026_08_08.md — auto_park idempotency
       mechanism finding, see "already fixed" section above for the fleet-wide flag
 - [ ] [REVIEW] P3. (ao-readiness)

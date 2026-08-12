@@ -22,7 +22,7 @@ related:
   [
     /plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md,
     /plans/active/sports_taxonomy_p4_backfill_2026_08_08.md,
-    /plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
+    /plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/four-surface-reconciliation-procedure.md,
   ]
@@ -62,8 +62,8 @@ locked_since:
 
 > **🔴 DOUBLE-GATED.** `gate_on_depends: true` on BOTH
 > `/plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md` (contracts must exist first) AND
-> `/plans/active/issues/sports_af_full_entity_completion_2026_08_03.md` (the in-flight API-Football campaign must
-> converge first). That second gate is not optional — see below.
+> `/plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md` (the in-flight API-Football campaign
+> must converge first). That second gate is not optional — see below.
 
 ## Why the API-Football gate exists
 

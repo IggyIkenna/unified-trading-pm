@@ -47,7 +47,7 @@ related:
     /plans/archive/2026_08/sports_closeout_exchange_fixed_odds_fork_2026_07_25.md,
     /plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md,
     /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
-    /plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
+    /plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
     /plans/archive/2026_08/issues/sports_api_football_live_odds_second_source_conflicts_with_wipe_ruling_2026_08_02.md,
   ]
 created: "2026-07-19"
