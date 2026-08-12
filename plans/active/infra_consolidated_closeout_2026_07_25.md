@@ -166,7 +166,11 @@ INDEX.md; `scripts/plans/regenerate_active_plan_index.py` built + wired into `ru
 [issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md](/plans/active/issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md)
 (generic UI e2e test-helper `?persona=` bug, unrelated to any AG/AO/CI concern) ·
 [issues/smoke_matrix_stale_ssot_citations_remaining_7_domains_2026_08_04.md](/plans/archive/issues/smoke_matrix_stale_ssot_citations_remaining_7_domains_2026_08_04.md)
-(stale SSOT citations in 7 domain smoke_matrix.py files — doc-hygiene; added 2026-08-06 closeout-linkage fix).
+(stale SSOT citations in 7 domain smoke_matrix.py files — doc-hygiene; added 2026-08-06 closeout-linkage fix) ·
+[issues/infra_satellite_batch10_fabricated_commit_sha_evidence_2026_08_09.md](/plans/active/issues/infra_satellite_batch10_fabricated_commit_sha_evidence_2026_08_09.md)
+(a `- [x]` citing a commit SHA that resolves nowhere — local, fetch, or GitHub API; evidence-integrity, so it belongs
+with the plan-hygiene tooling that is supposed to catch it. Added 2026-08-12 closeout-linkage fix: the doc had sat
+UNTRACKED for 3 days because this mention did not exist).
 
 **Close-out criterion**: each tooling doc's own open todos closed; the zero-checkbox sweep's findings triaged; the
 reference-path convention rollout complete corpus-wide.

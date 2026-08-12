@@ -156,15 +156,30 @@ reading. All three name their replacement, so the machine already has everything
 
 ## Todos (added 2026-08-12)
 
-- [ ] [SCRIPT] P2. **Exempt formally-retired docs from the staleness window in `check_codex_doc_freshness.py`.**
-      Proposal: skip `status: superseded|deprecated|archived`, but ONLY when the doc names its replacement
-      (`superseded_by` non-empty) — so the exemption rewards pointing at the successor instead of becoming a way to mute
-      the gate by editing one field. Docs affected today: the 3 tabled above. Keep them counted in the report as
-      `exempt-retired` rather than dropping them silently, so the surface stays visible. This is a governance-semantics
-      change to a gate, so it needs an explicit operator OK before shipping, not just a green run — raise it, don't
-      merge it unilaterally. Repo: unified-trading-pm. Done when: the checker distinguishes retired from stale, and
-      `codex_doc_freshness_baseline.yaml` shrinks by exactly the retired docs (baseline is shrink-only — no
-      `--baseline-write`).
+- [ ] [SCRIPT] P2. **Exempt formally-retired docs from the staleness window in `check_codex_doc_freshness.py`** —
+      operator-approved 2026-08-12. **IMPLEMENTED AND VERIFIED LOCALLY, NOT YET SHIPPED**: the code sits dirty in slot 3
+      because PM code commits are blocked by an unrelated fleet-wide ratchet failure
+      (`/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`). No sha to cite yet — do
+      not read the detail below as a landed change. `_is_retired_with_successor()` skips
+      `superseded|deprecated|archived` ONLY when a non-empty `superseded_by` is present; the exempt set is PRINTED as
+      `exempt-retired` rather than dropped silently. Baseline ratcheted DOWN 6 → 3 by removing exactly the 3 retired
+      entries (hand-edited removal — no `--baseline-write`, nothing added). Gate verified green under BOTH invocation
+      styles (standalone `--workspace-root .` and quality-gates.sh's parent-root form):
+      `✅ At-or-below baseline (0 new; 3 known, 3 at     baseline)`. 26 unit tests pass, including the mute-button guard
+      (retired WITHOUT a successor stays stale), a `status: current` + stray `superseded_by` case,
+      list/empty-list/blank-string successors, case-insensitivity, and a non-string `status` that must neither crash nor
+      exempt. **Original proposal, for the record:** Proposal: skip `status: superseded|deprecated|archived`, but ONLY
+      when the doc names its replacement (`superseded_by` non-empty) — so the exemption rewards pointing at the
+      successor instead of becoming a way to mute the gate by editing one field. Docs affected today: the 3 tabled
+      above. Keep them counted in the report as `exempt-retired` rather than dropping them silently, so the surface
+      stays visible. This is a governance-semantics change to a gate, so it needs an explicit operator OK before
+      shipping, not just a green run — raise it, don't merge it unilaterally. Repo: unified-trading-pm. Done when: the
+      checker distinguishes retired from stale, and `codex_doc_freshness_baseline.yaml` shrinks by exactly the retired
+      docs (baseline is shrink-only — no `--baseline-write`). **Measured surprise on implementation**: the exempt set is
+      **5**, not the 3 this issue predicted — `bucket-naming-and-config.md` and `sports-integration-plan.md` are also
+      retired-with-successor, but were still inside the 90d window so they had never surfaced as violations. They would
+      have expired later and cost another round of the same pointless review. That is the argument for fixing the rule
+      rather than the 3 instances: the instance list was never the real population.
 - [ ] [DEVOPS] P3. **Decide the endgame for the 3 retired docs above, independent of the gate change.** A `superseded`
       doc that still sits on a cutover-critical surface is discoverable by grep and can mislead an agent into
       implementing against it. Options: SUPERSEDED banner at the top pointing at the replacement (the workspace's stated

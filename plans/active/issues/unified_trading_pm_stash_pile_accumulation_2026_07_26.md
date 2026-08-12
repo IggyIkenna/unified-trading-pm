@@ -342,6 +342,32 @@ The freshness gate never needed the 6 re-reviews this table asked for, and the r
 work left here that loses something if ignored is the untracked docs, which carry open todos and exist on exactly one
 disk.
 
+## Operator rulings + actions 2026-08-12
+
+- **Retention default changed to 2 days (48h), not 14.** Operator ruling: drop >48h AND make it the default so it is
+  automatic. **The code edit is NOT yet shipped** — it sits dirty in slot 3 behind the fleet-wide commit block in
+  `/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`. The SWEEP below did run (it used
+  the new default from the working copy), so the drop is real even though the default change has no sha yet. 14 was
+  chosen to mirror `stash-pile-detect.sh`'s `STASH_WARN_AGE_DAYS`, and that symmetry was simply wrong for this pile —
+  measured the same day, a 14d cutoff made **0 of 30** entries droppable while the pile still regrew past
+  `safe-doc-push`'s "extreme" threshold within ONE day and quarantined a live push. The binding constraint is the ship
+  scripts' COUNT threshold, not the detector's age warn.
+  - Deliberate consequence, recorded in the script: with a 2d prune the detector's AGE warn (`oldest_days > 14`) can now
+    essentially never fire, because nothing survives to 14 days. Its COUNT warn carries the signal. Re-check that
+    pairing if the prune horizon is ever raised.
+- **Sweep run in slot 3 at the new default**: 8 dropped, 26 surfaced as genuine-WIP, everything archived to a gc-proof
+  bundle first. PM pile 31 → 23. All 8 were 3-day-old `autostash` entries; every one of the classification guards held
+  (no captured-untracked entry and no `safety-snapshot`/`quarantine` label was in the drop set).
+- **The parked MTDS stash could NOT be dropped by an agent.** Operator approved dropping
+  `slot3-mtds-superseded-by-b13e3a2b-20260812` (superseded by `market-tick-data-service@b13e3a2b`, verified an ancestor
+  of origin, and captured in the archive bundle as stash sha `1129da62`). The attempt was refused by this workspace's
+  own PreToolUse guardrail, which hard-bans `git stash drop` for autonomous workers. **That refusal is correct and was
+  not worked around** — the hook's stated remedy is to escalate to the operator, so the drop is an operator action.
+  - **Asymmetry worth knowing**: the guardrail matches the text of commands an agent types, so
+    `audit-stash-pile.sh --apply` drops stashes freely while a hand-typed `git stash drop` is blocked. That is a
+    defensible line — the script archives first and classifies conservatively, an ad-hoc command does neither — but it
+    is a line drawn by tool shape, not by risk, and nothing currently documents it.
+
 **Lesson worth keeping from this table's own errors**: two of its four rows were wrong in the same direction — both
 declared work blocked by an external condition that a `git pull` dissolved. Both were written from a checkout 32 commits
 behind. **Re-measure a blocker from a synced tree before recording it as one**; a stale checkout manufactures blockers
