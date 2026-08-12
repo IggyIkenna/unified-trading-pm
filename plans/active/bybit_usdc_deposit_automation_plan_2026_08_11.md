@@ -157,11 +157,11 @@ context_scope:
 
 - [x] ✅ [BACKEND] P2. Define `BybitDepositResult` TypedDict + `BybitDepositCallable` type alias —
       execution-service@22875249c0.
-      `BybitDepositResult = {"success": bool, "deposit_address": str, "tx_hash": str | None,     "confirmed_balance_delta": Decimal, "error": str | None}`.
-      `BybitDepositCallable = Callable[     [Decimal], Awaitable[BybitDepositResult]]` — the pre-bound deposit callable
-      the wiring layer produces. Lives alongside `BridgeDepositCallable` in `perp_hedge_consumer.py` (or a new
-      `types.py` if the consumer module's TYPE_CHECKING block grows unwieldy). Repo: execution-service. Done-when: types
-      import cleanly; no circular imports; `quality-gates.sh` green.
+      `BybitDepositResult = {"success": bool, "deposit_address": str, "tx_hash": str | None, "confirmed_balance_delta": Decimal, "error": str | None}`.
+      `BybitDepositCallable = Callable[ [Decimal], Awaitable[BybitDepositResult]]` — the pre-bound deposit callable the
+      wiring layer produces. Lives alongside `BridgeDepositCallable` in `perp_hedge_consumer.py` (or a new `types.py` if
+      the consumer module's TYPE_CHECKING block grows unwieldy). Repo: execution-service. Done-when: types import
+      cleanly; no circular imports; `quality-gates.sh` green.
 
 - [x] ✅ [BACKEND] P2. Extend `PerpHedgeConsumer._topup_guard()` to accept a `BybitDepositCallable | None` parameter.
       When `instruction.perp_venue == PerpVenueId.BYBIT` and `instruction.source == TopupSource.TREASURY_HOT` and

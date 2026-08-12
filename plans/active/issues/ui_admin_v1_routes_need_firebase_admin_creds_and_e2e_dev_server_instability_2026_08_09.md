@@ -24,6 +24,7 @@ related:
   [
     /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
     unified-trading-system-ui/tests/e2e/user-management.spec.ts,
     unified-trading-system-ui/lib/firebase-admin.ts,
     unified-trading-system-ui/lib/api/mock-handler.ts,
