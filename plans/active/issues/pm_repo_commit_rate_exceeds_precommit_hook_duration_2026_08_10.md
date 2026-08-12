@@ -461,11 +461,35 @@ Directions, cheapest first — each is a todo below:
       `max(2, floor(cores/4))` derivation instead of a constant. **Done when**: the cap is core-derived, and a measured
       before/after shows per-run sweep wall time on a loaded host materially closer to its idle 18.6s. Repo:
       unified-trading-pm.
-- [ ] [INFRA] P1. **Shrink the 118s critical section itself** — profile `run_hygiene_sweep.sh --precommit` per sub-check
-      and move anything whose cost is corpus-wide-but-not-staged-file-dependent out of the per-commit path (to the
-      hourly sweep or the promote-PR QG). The gate set only needs to be _sound for the staged files_ at commit time.
-      **Done when**: the measured precommit sweep on one staged file is materially below the measured commit
-      inter-arrival time, with a per-check timing table recorded in this doc's Progress Log. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P1. **Shrink the 118s critical section itself.** Re-profiled 2026-08-12 (per-check timestamp method,
+      same as the original 2026-08-10 profiling) and found the top cost was NOT residual contention or an
+      intrinsically-expensive check — it was two SELF-INFLICTED regressions from earlier sessions, both fixed and
+      shipped this session: - `check_plan_commit_sha_evidence.py --only`: **57s**, because `main()` verified every
+      citation in the WHOLE corpus (not just staged files) even in `--only` mode — always true, but harmless until todo
+      5 above added a `require_reachable` reachability check (2 extra git subprocess calls) for every self-citation, of
+      which this corpus has hundreds. Fix: `--only` mode now skips verification entirely for citations outside the
+      staged paths, since their violation status is filtered out and never reported anyway. `--only` run: 57s → 2.4s.
+      Baseline (full-corpus) mode unaffected (unchanged 56.8s, off the precommit path). Tests:
+      `scripts/quality_gates/test_check_plan_commit_sha_evidence.py` (+2, 9/9 total) — proves `--only` mode never calls
+      the verifier for an unstaged citation, and baseline mode still verifies everything.
+      unified-trading-pm@4e8447bd21. - `check_ag_closeout_linkage.py`: **42.7s** (31.1s of it kernel/syscall time),
+      because `resolve_related_entry`'s legacy-form fallback ran a fresh `rglob` over the whole corpus PER `related:`
+      ENTRY across every doc — with ~750 docs each carrying several entries, hundreds of full recursive directory walks
+      per run. Fix: one `rglob("*.md")` walk building a memoized basename index; `resolve_related_entry` does O(1) dict
+      lookups against it instead, with identical resolution semantics (verified via A/B diff of full-corpus output,
+      byte-identical before/after). Run: 42.7s → 1.95s (`--only`), 2.2s (baseline). Tests:
+      `scripts/plan-hygiene/test_check_ag_closeout_linkage.py` (7 new) — both fallback forms, the plans/-only scoping
+      the bare-slug form has always had, and that the index is built exactly once per process.
+      unified-trading-pm@d85ad41fac.
+
+      **Done when, confirmed**: the precommit sweep on one staged file is now **20.8s** total wall (measured 2026-08-12,
+          isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
+          down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
+          concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
+          single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
+          `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
+          nothing left to move out of the per-commit path. Repo: unified-trading-pm.
+
 - [x] ✅ [INFRA] P2. **Record the AO-vs-PM volume asymmetry in the codex** so the next person does not re-derive it —
       unified-trading-pm@baae1922bb. New § "1b. PM is the fleet's single write hotspot" in
       `/codex/12-agent-workflow/host-concurrency-and-commit-provenance.md` carries F1's measured table (118s loaded vs
@@ -765,3 +789,22 @@ reconciliation, the previous recommendation, shipped 2026-08-10.)
   fast-forwarded. Both closed as resolved, not re-scoped: neither retained a "durable guard" purpose once checked, since
   each was tied to a specific incident/file-layout that a legitimate later commit or the WIP's owner had already
   superseded.
+
+- **2026-08-12 (todo B closed — the "118s" cost was two self-inflicted regressions, not intrinsic)**: re-profiled the
+  precommit sweep expecting to find corpus-wide checks to relocate out of the per-commit path (the todo's own framing).
+  Instead found the dominant costs were regressions THIS SESSION and an earlier one introduced:
+  `check_plan_commit_sha_evidence.py --only` (57s — todo 5's `require_reachable` reachability check running against
+  every self-citation in the whole corpus, not just staged files) and `check_ag_closeout_linkage.py` (42.7s, 31.1s
+  kernel time — a fresh corpus-wide `rglob` per legacy-form `related:` entry, pre-existing, unrelated to this session).
+  First lesson: a "shrink the critical section" todo should re-measure before assuming the original 2026-08-10 breakdown
+  (Operator-ruling evidence/depends_on-DAG/Terminal-status/Line-caps) still holds two days and several fixes later — it
+  did not. Second: my OWN fix for todo 5 introduced exactly the kind of regression this todo exists to catch, caught
+  only because I profiled again rather than trusting the "Done when" was satisfied by shipping the reachability check
+  alone. Per-check timing before fix: `plan-commit-sha-evidence` 57.0s, `check_ag_closeout_linkage` 26.0s (first pass,
+  host also running a concurrent quickmerge — see below), `check_archive_candidates` 5.0s, `finalize-plan-coverage`
+  1.0s. After both fixes, on an otherwise-idle host: total precommit sweep **20.8s** (down from 118s original / 85s this
+  session's own noisy first re-measurement), no single check over 4s. Also caught mid-session: my FIRST re-measurement
+  attempt (85s, then later a noisy 146s) was inflated by a background quickmerge I had running concurrently in the SAME
+  worktree while trying to measure an "idle" baseline — exactly the "8 concurrent hook chains inflate 19s to 118s"
+  contention mechanism F1 already describes, self-inflicted by not waiting for my own background ship to finish before
+  profiling. Fixes: unified-trading-pm@4e8447bd21 (SHA-evidence), unified-trading-pm@d85ad41fac (AG-closeout linkage).
