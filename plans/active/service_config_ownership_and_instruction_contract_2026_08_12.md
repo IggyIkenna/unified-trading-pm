@@ -169,6 +169,63 @@ wires one of these must also delete or update whatever doc claims it is already 
       hot-reloadable. The goal is "everything centralised and hot-reloadable"; without the inventory there is no way to
       say how far along that is, and partial coverage reads as full coverage.
 
+## § G. Execution-service change surface — measured 2026-08-12, exhaustive
+
+> Operator asked to be "fully sure even for the execution service stuff what the changes needed are". This section is
+> that answer. **The headline: the benchmark-fill architecture — the load-bearing piece — is already built, and only
+> three things are genuinely missing.**
+
+### Already built, and better than expected
+
+| Capability                          | What exists                                                                                                                                                                                                                                                                                                                              |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **The benchmark fill itself**       | `BenchmarkMatcher` with `BookType.ALPHA_ZERO`, **always-fill** — the benchmark-fill assumption is implemented, not assumed                                                                                                                                                                                                               |
+| **The two-layer attribution split** | `pnl_attribution/rows.py` builds rows from a PAIR of (benchmark, live) `MatchResult`s: **STRATEGY layer** = benchmark-fill decomposition at benchmark price (delta/funding/basis/carry/financing/greeks/settlement/fx); **EXECUTION layer** = `live_fill − benchmark_fill` residual → `SLIPPAGE` + `FEES` (surprise = actual − modelled) |
+| **Slippage**                        | Computed, correctly signed and layered: `slippage = sign * (benchmark.fill_price - live.fill_price) * filled_quantity`, emitted as `PnLFactor.SLIPPAGE` / `PnLLayer.EXECUTION`                                                                                                                                                           |
+| **Alpha, with statistical rigour**  | `benchmark/metrics.py` (328 lines): `StatisticalMetrics` (mean, std, standard error, 95% CI, `ci_width`, `is_reliable`) and `PathAwareMetrics` (`early_alpha_bps` / `mid_alpha_bps` / `late_alpha_bps` + `cumulative_alpha_curve`)                                                                                                       |
+| Surrounding benchmark tooling       | `comparison.py`, `enhanced_comparison.py`, `ranking.py`, `regimes.py`, `storage.py`, `html_report.py`                                                                                                                                                                                                                                    |
+
+**Why this matters more than any other finding in the plan**: the STRATEGY-layer / EXECUTION-layer split is _exactly_
+why a strategy-only backtest is legitimate. The strategy-attributable PnL is computable at benchmark price with no
+execution involvement; everything execution adds or destroys is the residual. That is the property the service boundary
+exists to protect, and it is already implemented rather than aspirational.
+
+### The three real gaps
+
+- [ ] [AGENT] P0. **G1 — feed `config_algorithm`; nothing supplies it.** The hook is threaded through THREE levels —
+      `selector.select_algorithm(instruction_type, requested_algorithm, config_algorithm)`, the
+      `HandlerRegistry.select_algorithm()` wrapper that forwards it, and validation against `ALGOS_BY_INSTRUCTION_TYPE`
+      — and **zero call sites supply it** (the only `requested="TWAP"` is a docstring example, not live code). So the
+      change is: resolve the per-`(client_id, slot_label)` policy, pass its `then_algo` as `config_algorithm`. **No new
+      plumbing** — the parameter, the validation and the fallback chain already exist.
+- [ ] [AGENT] P0. **G2 — add instruction-level `received_at` / `sent_at`; latency is the ONLY missing analytic.** Alpha
+      and slippage are built; latency has nothing to compute from. The timestamps that exist are unrelated —
+      `received_at_mark_price_eth` (restaking rewards), `token.received_at_utc` (dust quote sources), `submitted_at` (an
+      order-adapter idempotency cache). **There is no instruction-level received/sent pair in either service.** Both
+      sides need it, per the operator, so define it once in UAC on the envelope and the fill record rather than twice.
+- [ ] [AGENT] P0. **G3 — reconcile WHO owns the benchmark price, because today both sides could.** execution-service
+      currently derives its own benchmark via `BenchmarkMatcher`; the target has **strategy sending the ref price**. If
+      both compute independently they can disagree on the benchmark itself, which would silently break the
+      backtest-vs-live comparison while every individual number still looks right. So § C's envelope field is not
+      plumbing — it is what makes the two sides' benchmark provably identical. Decide: strategy-sent is authoritative
+      and `BenchmarkMatcher` consumes it, or `BenchmarkMatcher` stays authoritative and strategy's ref price is
+      advisory. **Recommendation: strategy-sent is authoritative**, since the whole point is that the strategy's own
+      assumption is what its backtest was measured against.
+
+### Smaller execution-service items
+
+- [ ] [AGENT] P1. **Unify the algo vocabulary — there are two.** `engine/instruction_convert.py` does
+      `algorithm = (algo or "MARKET").upper()`, and **`"MARKET"` does not exist in UAC `EXECUTION_ALGOS`** at all; it
+      also re-implements TWAP slicing params inline. That is a second naming system on the manual-instruction path,
+      invisible to the selector's validation. Either register the manual path's names in UAC or route it through the
+      selector.
+- [ ] [AGENT] P1. **Wire the execution-policy evaluator** (see § B) — `ExecutionPolicyArtifact` / `PolicyRule` appear
+      only in `v2/__init__.py` re-export plumbing, so the rule evaluator that already implements first-match-wins /
+      default-deny is never called.
+- [ ] [AGENT] P2. **Confirm the benchmark module's own consumers.** `metrics.py` is imported only by its siblings
+      (`enhanced_comparison.py`, `ranking.py`) — verify the chain reaches a live/reporting caller rather than
+      terminating in the benchmark package, so the alpha metrics are actually surfaced somewhere.
+
 ## § E. Codex reconciliation (do AFTER § B–D land, per operator sequencing)
 
 - [ ] [AGENT] P1. **Update `/codex/04-architecture/execution-policy.md`** to state the `(client_id, slot_label)` keying
