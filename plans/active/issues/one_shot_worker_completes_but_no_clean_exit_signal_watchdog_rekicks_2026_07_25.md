@@ -23,6 +23,7 @@ summary: >-
   (that is a compact-submission wedge on slot 4; this is a one-shot completion-exit-signal gap on slot 2).
 status: open
 nature: issue
+archive_exempt: true
 asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
@@ -132,13 +133,18 @@ terminated/idle, not re-kicked.
       post-TTL check had no guarantee the winner thread's write had landed yet; the original `time.sleep(1.1)`
       accidentally provided that ordering, the fake-clock replacement did not), verified `quality-gates.sh` green, and
       shipped it separately as `unified-trading-library@2e39d98b` before retrying this ship.
-- [ ] [REVIEW] P3. **Not fixed this pass, flagged as a real residual risk found during investigation**: if a stuck
+- [x] ✅ [REVIEW] P3. **Not fixed this pass, flagged as a real residual risk found during investigation**: if a stuck
       one-shot slot crosses `kick_escalation_threshold` (default 3 consecutive non-recovered kicks — including a
       corrective one, per this fix), `_maybe_auto_respawn_stuck_slot`/`_respawn.py` has zero lifecycle/one-shot
       awareness and will force kill+respawn it — for an already-one-shot-complete slot this could spin up a DUPLICATE
       worker for a task that's already done. Not observed in the original incident (kicks self-healed before reaching
       escalation) and the two fixes above should make that less likely (the corrective nudge converges faster), but it's
-      a real gap, not a hypothetical — worth its own scoped fix if it's ever observed live.
+      a real gap, not a hypothetical — worth its own scoped fix if it's ever observed live. **CLOSED 2026-08-12
+      (preemptively, not observation-gated)** — `agent-orchestrator@687cad2d00` threads the already-shipped
+      `self_declared_complete` kick signal through `_respawn.py::maybe_auto_respawn_stuck_slot`: an escalating
+      (`force=True`) task-less one-shot whose most recent kick was flagged self-declared-complete is now reaped via the
+      clean `_reap_idle_session` path even with `queued_undispatched > 0`, closing the duplicate-worker spin-up risk
+      this todo names (regression-tested in `tests/test_worker_liveness.py`; `quality-gates.sh` green).
 
 ## Triage / charter note
 
@@ -176,6 +182,19 @@ confirmed, recurrence-prone, and points at a real one-shot-lifecycle exit-signal
   credential/plan-destination/delete-safety question). Not found in any batch1-15 citation list, but the item's own
   gating condition (unobserved-so-far) means there is nothing bounded to extract yet.
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
-  **1**, matching. Sole open item ([REVIEW] P3) remains explicitly observation-gated ("act only if this scenario is
-  ever observed live") — no bounded fix is writable for a not-yet-observed failure shape. Not found in any batch1-17
-  citation list; the gating condition itself (unobserved-so-far) means there is nothing extractable yet.
+  **1**, matching. Sole open item ([REVIEW] P3) remains explicitly observation-gated ("act only if this scenario is ever
+  observed live") — no bounded fix is writable for a not-yet-observed failure shape. Not found in any batch1-17 citation
+  list; the gating condition itself (unobserved-so-far) means there is nothing extractable yet.
+- **2026-08-12 (batch5 todo 7, slot 16)**: residual `[REVIEW] P3` CLOSED preemptively (not observation-gated) —
+  `agent-orchestrator@687cad2d00` threads the already-shipped `self_declared_complete` kick signal through
+  `_respawn.py::maybe_auto_respawn_stuck_slot`: an escalating (`force=True`) task-less one-shot whose most recent kick
+  was flagged self-declared-complete is now idle-reaped via the clean `_reap_idle_session` path even with queued work
+  system-wide, instead of force-kill+respawned into a DUPLICATE worker for an already-done task. Regression tests
+  `test_self_declared_complete_queued_work_reaped_not_respawned` (+ control
+  `test_queued_work_escalating_not_self_declared_takes_respawn_path`) in `tests/test_worker_liveness.py`; full
+  `quality-gates.sh` green.
+- **2026-08-12 (archive-exempt marker)**: doc now has 0 open todos — NOT archived here because archival of batch5 source
+  docs is owned by the paired finalize plan (`/plans/active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md`,
+  `gate_on_depends`-held) which reconciles evidence back into every source doc and runs archival. Set
+  `archive_exempt: true` so the `check_archive_candidates` hook stops flagging this doc until finalize runs; un-set at
+  finalize time.
