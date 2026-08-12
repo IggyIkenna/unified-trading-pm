@@ -191,11 +191,29 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       non-window-date PLAYER_VALUES fetch for a league genuinely attempts the API call (no
       `EXPECTED_OUTSIDE_TRANSFER_WINDOW` empty-confirmed) + a regression test locks the two data_types' gating apart so
       this can't silently re-merge.
-- [ ] [CODE] P2. **Root-cause the empty `players` per-player list.** Confirm (via live request tracing — is this adapter
-      instance on Apify or RapidAPI for `K_LEAGUE_1`?) why `item.get("players") or item.get("squad")` is not a list for
-      these teams; if it's a genuine upstream limitation (RapidAPI plan/tier doesn't return full squads for this
-      competition), document it as an honest per-source coverage gap rather than leave it silently null; if it's fixable
-      (e.g. a second endpoint call needed), fix it. Repo: instruments-service.
+- [x] ✅ [CODE] P2. **Root-cause the empty `players` per-player list — FIXED 2026-08-12, NOT an upstream limitation.**
+      Live-traced the deployed key (GSM `transfermarkt-api-key`, `central-element-323112`) — RapidAPI-backed, not Apify.
+      Confirmed `_fetch_clubs_via_rapidapi()` only ever called `/api/v1/clubs/profile` (returns
+      `squadSize`/`averageAge`/ `totalMarketValue` aggregate — verified live, e.g. FC Barcelona id=131, zero player-list
+      fields present at all) and never called `/api/v1/clubs/squad`, the endpoint that actually returns the per-player
+      roster. Verified live against FC Barcelona (id=131, 36/36 players with non-null `marketValue`) and K_LEAGUE_1's
+      own FC Seoul (id=6500, 30/30 non-null) that the missing endpoint has full data for this exact competition — so the
+      earlier "upstream RapidAPI-tier coverage gap" hypothesis (P3 todo above) was wrong; this was a simple missed API
+      call. **Fix**: added an `include_players` flag threaded `get_team_squads()`/`get_teams()` → `_fetch_squads()` →
+      `_fetch_clubs_via_rapidapi()`; the squad-fetch loop now also calls `/api/v1/clubs/squad?id=<clubId>` per club
+      (same per-club try/except pattern as the existing profile call, so one club's roster failure doesn't kill the
+      league fetch) and stores the result under `club["players"]` so `_parse_squad()`'s existing
+      `item.get("players") or item.get("squad")` picks it up. `get_teams()` (which discards player data via
+      `CanonicalTeam` normalization) passes `include_players=False` to skip the extra per-club call it would otherwise
+      waste — `get_team_squads()` (the PLAYER_VALUES write path) passes `True`. Also fixed a stale docstring on
+      `get_teams()` claiming the RapidAPI path used `/competitions/{id}/clubs` on a `felipeall` wrapper — it doesn't;
+      corrected to the actual endpoints. New regression test `test_get_team_squads_rapidapi_fetches_players`
+      (`tests/unit/test_transfermarkt_adapter_coverage.py`) locks in the 3-call sequence (standings + profile + squad)
+      and non-null `market_value_eur`; existing `test_get_teams_rapidapi` extended to assert `get_teams()` does NOT make
+      the extra squad call. instruments-service@3d7418bb. Not yet live-verified against a real trigger fetch
+      (Transfermarkt only re-fetches on transfer-window trigger dates, and today's window-gating bug — the P1 todo above
+      — still blocks a genuine non-window-date attempt from happening at all); the "fresh snapshot with non-null
+      `players`" half will be confirmed once the window-gating fix (P1, still open) lands and a real trigger fires.
 - [ ] [OPERATOR] P2. **Backfill decision**, once the window-gating bug above is fixed: force-refetch the historical
       (league, trigger-date) pairs that were captured under the old value-discarding code (recovers real value data for
       real past transfer windows — bounded, not the full 5,772-row count, per the finding above), vs. accept gradual
@@ -248,3 +266,15 @@ possibly a rename that ripples into UAC/manifest data_type naming.
   call. This is why the historical backlog never converges naturally. Added 3 new open todos (window-gating fix,
   per-player-list root-cause, backfill decision) -- no code shipped this pass, doc-only per the operator's explicit ask
   to write this up first.
+- **2026-08-12 (slot 13, data_engineering): fixed the P2 per-player-list root-cause todo.** Live-traced the deployed key
+  via GSM -- RapidAPI-backed. Confirmed via direct curl against the live API that `/api/v1/clubs/profile` (the only
+  per-club endpoint the RapidAPI path called) carries zero player-list fields, but `/api/v1/clubs/squad` -- an endpoint
+  the adapter never called at all -- returns the full roster with `marketValue` populated (36/36 for FC Barcelona, 30/30
+  for K_LEAGUE_1's own FC Seoul). So the P3 todo's "likely upstream RapidAPI squad-data gap" hypothesis was wrong --
+  this was a missing API call, not a coverage limitation. Added the missing `/clubs/squad` fetch (gated behind a new
+  `include_players` flag so `get_teams()`, which discards player data, doesn't pay for the extra per-club call). Also
+  fixed a stale docstring claiming the RapidAPI path used a different `felipeall`-wrapper endpoint shape. New regression
+  test locks in the 3-call sequence + non-null market values; existing `get_teams()` test extended to assert no extra
+  call. instruments-service@3d7418bb. QG green, verified on origin. Not yet live-verified against a real trigger fetch
+  (blocked on the still-open P1 window-gating todo above, which currently prevents any non-window-date attempt from
+  firing at all).
