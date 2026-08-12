@@ -260,10 +260,11 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       `instruments-service@3a3ce822fa` (adapter + orchestrator + tests + backfill script),
       `deployment-service@ca061d0564` (VM launcher). Live-verify (playground-only, no GCS/manifest write, 2+ leagues)
       tracked in the Progress Log below.
-- [ ] [DATA] P2. **Backfill launch (2020-06-01+ floor) — recomputed cost estimate, 2026-08-12** (methodology: bounded,
-      direct UAC-registry computation of real `get_reference_refresh_dates()` trigger dates in `[2020-06-01, today]`,
-      NOT a GCS corpus walk — a deliberate simplification vs. the prior full-history estimate's GCS-snapshot-listing
-      step, since this is "what should be refetched going forward" not "what was captured wrongly in the past"; script:
+- [x] ✅ [DATA] P2. **Backfill launch (2020-06-01+ floor) — recomputed cost estimate, 2026-08-12** (methodology:
+      bounded, direct UAC-registry computation of real `get_reference_refresh_dates()` trigger dates in
+      `[2020-06-01, today]`, NOT a GCS corpus walk — a deliberate simplification vs. the prior full-history estimate's
+      GCS-snapshot-listing step, since this is "what should be refetched going forward" not "what was captured wrongly
+      in the past"; script:
       `instruments-service/scripts/backfill_transfermarkt_2020_06_floor_2026_08_12.py     --estimate-only`).
       **Prediction-tier (33 leagues, the default)**: 1,041 events, ~39,766 PLAYER_VALUES calls + ~16,606
       TRANSFER_RECORDS calls (current-squads-only pass, see quota note below) = **~56,372 calls combined**.
@@ -280,8 +281,13 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       pass per league (today's roster) — captures full career history for every player active today (all their 2020-06+
       transfers included), but does NOT recover history for a player who left the covered league universe entirely
       before today. A follow-up (cross-call global player-id dedup cache, letting a fuller historical sweep fit the same
-      budget) is flagged here, not built under this session's time constraint. **Launch status**: tracked in the
-      Progress Log below (VM launch + monitoring is this session's next step after live-verify).
+      budget) is flagged here, not built under this session's time constraint. **Launch status — LAUNCHED + VERIFIED
+      RUNNING 2026-08-12 (slot 2)**: VM `instr-backfill-sports-transfermarkt-20260812-181254` RUNNING with the full
+      1,041-event scope (`--apply --entities PLAYER_VALUES --tier Prediction --conc 4`, no `--limit-events`). Genuine
+      progress confirmed against the master table (not just activity): `total_market_value_eur` non-null 12→124,
+      `players` non-null 0→112, real per-event writes in run.log under the documented RapidAPI 502-backoff. Underlying
+      backfill completion (all 1,041 events) tracked separately per this doc's own 'launched ≠ done' discipline —
+      monitoring to a genuine terminal state continues in the Progress Log.
 - [ ] [DATA] P2. **New finding (2026-08-12): the legacy_reason_classifier's PLAYER_VALUES weekday-cadence branch
       (`unified_trading_library/legacy_reason_classifier.py:266-276`, `TRANSFERMARKT_PLAYER_VALUES_UPDATE_WEEKDAYS` =
       Tue/Wed) never checks transfer-window state at all — it's a separate, older (shipped 2026-05-13, months before
@@ -584,3 +590,19 @@ possibly a rename that ripples into UAC/manifest data_type naming.
     the other session's word for it) that `GREEK_SUPER_LEAGUE` genuinely has no Transfermarkt provider mapping
     (`get_provider_league_id("GREEK_SUPER_LEAGUE", "transfermarkt")` returns `None` live) — correctly excluded from
     every resume list.
+- **2026-08-12 (slot 2, data_engineering): verified the PLAYER_VALUES backfill launch + flipped the launch checkbox
+  (this todo tracks 'launched + verified running', per this doc's own 'launched ≠ done' discipline — the underlying
+  backfill completion across all 1,041 events is tracked separately).** VM
+  `instr-backfill-sports-transfermarkt-20260812-181254` confirmed RUNNING via `gcloud compute instances describe`,
+  `VM_MIGRATION_CMD` = `--apply --entities PLAYER_VALUES --tier Prediction --conc 4` (no `--limit-events`, no
+  `--leagues` — the full historical scope, not the earlier 3-event smoke test). Confirmed genuine progress against the
+  master table directly (`sports_reference/master/entity=player_values/master.parquet`, read via
+  `get_storage_client().download_bytes()` + `pd.read_parquet`, never gsutil): `total_market_value_eur` non-null 12→124,
+  `players` non-null 0→112 vs. the pre-launch baseline — real per-league captured rows appearing, not just process
+  liveness. run.log shows real per-event writes (`Transfermarkt teams → player_values: N rows written` + per-event
+  snapshots, e.g. SE1 season 2020/2019 triggers) under the documented RapidAPI 502 flakiness (exponential-backoff
+  retries, `timeout error ... recovery=retry_with_backoff` — the known transient, not a bug; the launcher's
+  STALL_TIMEOUT_SEC=43200 covers the multi-hour expected duration). No code change this pass (backfill script + VM
+  launcher already shipped by prior sessions: instruments-service@f0f76e12f2/3a3ce822fa,
+  deployment-service@9ba048f45a/ca061d0564). Terminal-state monitoring continues via the fleet exit-code monitor + this
+  doc's own tracking.
