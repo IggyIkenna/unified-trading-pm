@@ -104,10 +104,17 @@ source: >-
       `✅ ALL QUALITY GATES PASSED (336s)`, sentinel `.qg_last_passed_sha=52936f608b68cbf114f62e2272e12289773c7c72`. No
       code changes shipped this todo — the regression coverage already existed; this flip corrects the tracked-vs-actual
       gap.
-- [ ] [SCRIPT] P2. **Regression test**: the reverse case — archetypes sharing the SAME deployment_profile requirement
-      (e.g. two `Low`-category archetypes) should be able to co-locate per the existing `co_location_rules` structure,
-      and the derivation should correctly union them onto shared infrastructure rather than over-provisioning one
-      instance per archetype.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-12 (slot 18, backend_engineer) — already covered, no new code needed.** The reverse
+      case is covered by `test_same_profile_archetypes_union_onto_one_instance`
+      (`deployment-service/tests/unit/test_deployment_profile_derivation.py:68`): two `Low`-category archetypes
+      (`MARKET_MAKING_CONTINUOUS` + `ARBITRAGE_PRICE_DISPERSION`) union onto ONE `co_located_vm` instance
+      (`len(instances)==1`), never over-provisioned per archetype — exactly this todo's requirement. Complemented by
+      `test_co_located_archetypes_sum_load_units_on_shared_instance` (:174), which additionally asserts the sizing sums
+      across the two co-located archetypes on that shared instance. Both landed with todo 3's commit
+      (`deployment-service@13223da3`, `git log -- tests/unit/test_deployment_profile_derivation.py` confirms). Ran the
+      full `bash scripts/quality-gates.sh` on current HEAD (`52936f60`, fresh-pulled) to confirm genuinely green today:
+      `✅ ALL QUALITY GATES PASSED (307s)`, sentinel `.qg_last_passed_sha=52936f608b68cbf114f62e2272e12289773c7c72`. No
+      code shipped this todo — coverage already existed; this flip corrects the tracked-vs-actual gap.
 - [ ] [DOC] P1. **ADDED 2026-08-12 (/plan-reconcile) — genuine coverage gap, no tracked remediation existed until now.**
       Fix `/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md` §6's row set (7 inconsistent rows + ~37
       missing rows) and the stale `archetypes/*.md` runtime frontmatter (5 stale values + 5 invalid `min_sla_tier` enum
@@ -197,3 +204,15 @@ source: >-
     case) is a separate todo, also already covered by `test_same_profile_archetypes_union_onto_one_instance` in the same
     file — not flipped here since it wasn't this dispatch's todo; whoever picks up todo 6 can verify + flip it the same
     way.
+
+- **backend_engineer (slot 18) 2026-08-12**: Todo 6 done. The reverse co-location regression case — archetypes sharing
+  the SAME `deployment_profile` requirement must union onto shared infra, not over-provision one instance per archetype
+  — is already covered by `test_same_profile_archetypes_union_onto_one_instance`
+  (`deployment-service/tests/unit/test_deployment_profile_derivation.py:68`), landed alongside todo 3
+  (`deployment-service@13223da3`). Two `Low`-category archetypes (`MARKET_MAKING_CONTINUOUS` +
+  `ARBITRAGE_PRICE_DISPERSION`) derive exactly ONE `co_located_vm` instance holding both;
+  `test_co_located_archetypes_sum_load_units_on_shared_instance` (:174) additionally asserts the per-instance sizing
+  sums across both. Verified genuinely green today (not assumed from history): fresh-pulled to HEAD (`52936f60`) and ran
+  the full `bash scripts/quality-gates.sh` for deployment-service — `✅ ALL QUALITY GATES PASSED (307s)`, sentinel
+  `.qg_last_passed_sha=52936f608b68cbf114f62e2272e12289773c7c72`. No new code shipped; flip corrects a tracked-vs-actual
+  gap.
