@@ -474,6 +474,34 @@ memory and that's what kills sessions" as-is.
       toggle (mirroring however per-slot pause is surfaced) was explicitly requested but not built this pass — needs its
       own `[UI]`-tagged todo with Playwright `pw:L2` coverage per the workspace's UI-testing HARD RULE, not bundled into
       this backend-only ship. Repo: agent-orchestrator (dashboard/).
+- [ ] [INFRA] P0. **THIRD live catch, 2026-08-12 01:34:55 — happened WITH all scheduled tasks paused AND the reduced
+      26-slot fleet.** `tmux_server_died`, 12+ slots/agents lost within 13s (`[1,5,12,14,15,16]` + 6 agent-scope). This
+      is decisive: it rules out scheduled-task load as the sole/primary cause (none were dispatching — confirmed via the
+      SAME window's log showing
+      `scheduled-job drain: plan_reconciler:cefi... deferred (mode     'reconcile' is paused by operator)` and an
+      external caller's `POST /api/plan-health/dispatch` correctly 503'd), and weakens the raw-fleet-size theory
+      (already cut by 8). **New signature**: `journalctl` for 01:34:30-01:34:55 shows a STEADY stream of
+      `POST /api/slots/N/git-status` calls sweeping nearly every slot (27,18,28,19,29,2,3,20,30,21,22...) roughly one
+      every 1-2s, right up to the death — critically, from a MIX of `127.0.0.1` (local) AND external IPs
+      (`103.251.212.47`, `152.37.120.206`), confirming **multiple physical hosts** are running their own
+      `slot-git-status-report.sh` cron and hitting this ONE central endpoint concurrently, not just this VM's own copy.
+      Checked the handler (`server/routes/git_health.py:224     post_slot_git_status`): cheap by design (client does the
+      real `git status` work locally, server only writes one `SlotGitStatusRow` per call) — but every write still opens
+      a real SQLite write transaction (`BEGIN IMMEDIATE`), so a ~30-wide burst of near-simultaneous writes from multiple
+      hosts is real write-lock contention, the same class of problem `_do_spawns_concurrently`'s docstring cites as a
+      PRIOR incident (143 "database is locked" errors, 2026-07-27). **Emerging pattern across all 3 live catches**: the
+      EXACT signature differs every time (utempter/pane-creation burst #1; CPU/git-fetch/rg saturation #2; multi-host
+      git-status POST storm #3) but all 3 share ONE thing — concurrent git/dispatch/spawn activity from MULTIPLE sources
+      co-occurring with the death. No single mechanism has been proven causal yet (still correlation, not proof), but
+      the common thread is now real signal, not noise. **Done when**: (a) confirm whether
+      `slot-git-status-report     .sh` genuinely runs from multiple DIFFERENT hosts on overlapping schedules (not just
+      staggered per-repo like the already-refuted 2-cron-job hypothesis) — check each host's own crontab, not just this
+      VM's; (b) if confirmed, the fix candidate is server-side backpressure/serialization on `post_slot_git_status` (a
+      semaphore or batching the SQLite write) rather than trying to coordinate every remote host's cron timing; (c)
+      capture the tmux server's own FD/thread state DURING a git-status-POST-storm window specifically (not just at
+      death) to see whether ITS OWN resource envelope degrades during the sweep, not just the orchestrator process's.
+      Live-capture relaunched (PID 4192606, 20min window) to try to catch the NEXT death with this specific hypothesis
+      in view. Repo: agent-orchestrator, unified-trading-pm (the cron script + its multi-host rollout).
 
 ## Progress Log
 
