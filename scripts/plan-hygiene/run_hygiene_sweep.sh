@@ -406,7 +406,18 @@ echo " Plan Hygiene Sweep — $(date -u '+%Y-%m-%d %H:%M UTC')"
 echo "========================================"
 echo ""
 
-run_check "Todo regression vs origin"       hard "$SCRIPT_DIR/check_todo_regression.sh"
+# Todo regression vs origin — CI snapshot-race fix (2026-08-12,
+# plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md). The default
+# full-baseline mode compares every plan against origin/live-defi-rollout's MOVING tip, which
+# races a PR snapshot: a concurrent commit landing after the fork adds todos to an untouched
+# plan and false-flags a "loss". --merge-base (passed in --ci mode only, never local/precommit)
+# compares against the merge-base of HEAD and origin/live-defi-rollout instead — the stable
+# fork point, so only this push's OWN diff can lose a todo.
+TODO_REGRESSION_ARGS=()
+if [ "$CI_MODE" = "--ci" ]; then
+  TODO_REGRESSION_ARGS=(--merge-base)
+fi
+run_check "Todo regression vs origin"       hard "$SCRIPT_DIR/check_todo_regression.sh" "${TODO_REGRESSION_ARGS[@]}"
 run_check "Frontmatter validity"             hard "$SCRIPT_DIR/check_frontmatter.sh"
 run_check "Todo format (priority + canonical)" hard "$SCRIPT_DIR/check_todo_format.sh"
 run_check "Runbook governance fields"        hard python3 "$SCRIPT_DIR/check_runbook_fields.py"
