@@ -138,6 +138,33 @@ def target_files() -> list[Path]:
     return files
 
 
+_MD_BASENAME_INDEX: dict[str, list[Path]] | None = None
+
+
+def _md_basename_index() -> dict[str, list[Path]]:
+    """basename -> every matching Path under PM_DIR, built via ONE `rglob("*.md")` walk and
+    memoized process-wide.
+
+    Perf fix (2026-08-12, pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md
+    todo B): `resolve_related_entry` used to run its OWN fresh `rglob` per fallback lookup,
+    called once per `related:` ENTRY across the whole corpus (`build_related_graph`'s loop) —
+    with ~750 docs each carrying several `related:` entries, a meaningful fraction landing on
+    the fallback path meant hundreds of full recursive directory walks. Measured: 42.7s wall,
+    31.1s of it kernel time (`rglob`'s stat/readdir syscalls), for a single `--only` run.
+    One walk + a dict lookup is behaviorally identical (same "first match" semantics — Python's
+    `rglob` order was never guaranteed sorted to begin with, so this changes no live case where
+    exactly one file matches a basename, which is every case seen in this corpus) and turns
+    O(entries x corpus size) into O(corpus size).
+    """
+    global _MD_BASENAME_INDEX
+    if _MD_BASENAME_INDEX is None:
+        index: dict[str, list[Path]] = {}
+        for p in PM_DIR.rglob("*.md"):
+            index.setdefault(p.name, []).append(p)
+        _MD_BASENAME_INDEX = index
+    return _MD_BASENAME_INDEX
+
+
 def resolve_related_entry(entry: str, from_path: Path) -> Path | None:
     """Best-effort resolution of a related: entry to a real file — leading-slash
     /plans/.../codex/... form first (the convention), then a same-basename search
@@ -148,17 +175,20 @@ def resolve_related_entry(entry: str, from_path: Path) -> Path | None:
     if entry.startswith("/"):
         candidate = PM_DIR / entry.lstrip("/")
         return candidate if candidate.is_file() else None
+    index = _md_basename_index()
     if entry.endswith(".md"):
         candidate = (from_path.parent / entry).resolve()
         if candidate.is_file():
             return candidate
-        for hit in PM_DIR.rglob(Path(entry).name):
+        for hit in index.get(Path(entry).name, ()):
             if hit.is_file():
                 return hit
         return None
     # Bare slug (parent_epic-style, no extension) — try a basename match under plans/.
-    for hit in (PM_DIR / "plans").rglob(f"{entry}.md"):
-        return hit
+    plans_dir = PM_DIR / "plans"
+    for hit in index.get(f"{entry}.md", ()):
+        if plans_dir in hit.parents:
+            return hit
     return None
 
 
