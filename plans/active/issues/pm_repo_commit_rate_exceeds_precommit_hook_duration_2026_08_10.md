@@ -391,17 +391,25 @@ Directions, cheapest first — each is a todo below:
       environment-only form does NOT pass. Tests: `tests/test_pretooluse_slot_collision_guard.bats` (17; only 6 are
       blocking cases — the rest pin the false-positive surface the operator explicitly paid for), plus the 10 existing
       session-start tests still green.
-- [ ] [INFRA] P2. **A liveness check built on `pgrep` substring matching is unsound on this shared host.** Measured
-      2026-08-11: a watcher using `pgrep -f "quality-gates.sh --no-fix" | head -1` matched an ARBITRARY FOREIGN process
-      — this host runs several concurrent QG invocations across slots, and the zsh `eval` wrappers' own command lines
-      contain the literal pattern, so the check also self-matches. The watcher waited on an unrelated slot's process and
-      its result said nothing about the run it was meant to track. Structurally the same class as this todo's own
-      subject: two sessions sharing observable host state with no scoping key. Any liveness/collision check needs a
-      scoping key (PID ownership via `$$`/ancestry, a file-based own-task handle, or a unique marker), not a
-      command-line pattern — the collision hook already gets this partly right via ancestor-exclusion. **Done when**:
-      the workspace's liveness-check helpers are audited for pattern-only matching and the unsound ones carry a scoping
-      key, with a regression test. Repo: unified-trading-pm. SSOT:
-      `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
+- [x] ✅ [INFRA] P2. **A liveness check built on `pgrep` substring matching is unsound on this shared host.**
+      unified-trading-pm@37d7095041. Audited every standing `pgrep`-based liveness/collision helper in
+      `scripts/`/`cursor-configs/` (grep for `pgrep -f`/`pgrep -af`, ~15 files). Most are one-shot lookups or already
+      exact-PID-scoped (`_ancestor_pids`/`_cwd_of` in `cursor-configs/hooks/lib/slot-collision-detect.sh`, already fixed
+      by the earlier session-collision todo). Found one genuinely unsound LOOP-shaped liveness check gating a
+      destructive action: `scripts/dev/slot-cron-ff-pull.sh`'s `_resync_venv_if_lock_moved` decided whether to skip a
+      `uv sync --frozen` (which this same issue doc's own P1 lesson says can PRUNE a live environment) via
+      `pgrep -af 'pytest|quality-gates|basedpyright' | grep -qF "${PWD}"` — a substring test against the matched
+      process's argv TEXT, not its actual cwd. The dangerous direction is a false negative (a live gate invoked via a
+      relative path or wrapper, whose argv never literally spells out `${PWD}`, goes undetected and `uv sync` runs
+      concurrently with it). Fixed by reusing `_cwd_of` from the already-existing collision-detect library — exact cwd
+      match per candidate PID, portable macOS/Linux, with a substring fallback only if the library is missing. The
+      originally-cited incident itself (`pgrep -f "quality-gates.sh --no-fix" | head -1`) was an ad-hoc watcher written
+      live in a 2026-08-11 session, not standing repo code — nothing to fix there; the SSOT
+      (`/codex/12-agent-workflow/async-wait-and-poll-discipline.md` §4) already documents that class. Tests:
+      `tests/test_slot_cron_ff_pull_venv_resync_liveness.bats` (6/6) — exact-cwd match triggers the gate, a
+      path-prefix-only match (the old bug's false-positive-by-substring shape) does not, no candidates / multiple
+      candidates both behave correctly, and the substring pattern is confirmed gone from the primary path. Repo:
+      unified-trading-pm. SSOT: `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 - [x] ✅ [INFRA] P0. **Stop `safe-doc-push.sh` exiting 5 with the caller's edits silently reverted.** DONE — shipped
       2026-08-10 in unified-trading-pm@e59d4750fa, same unflipped-checkbox gap as the two todos above.
       `_sdp_fingerprint_named()` hashes every named file at entry (`_SDP_ENTRY_FINGERPRINT`);
@@ -458,15 +466,22 @@ Directions, cheapest first — each is a todo below:
       hourly sweep or the promote-PR QG). The gate set only needs to be _sound for the staged files_ at commit time.
       **Done when**: the measured precommit sweep on one staged file is materially below the measured commit
       inter-arrival time, with a per-check timing table recorded in this doc's Progress Log. Repo: unified-trading-pm.
-- [ ] [INFRA] P2. **Record the AO-vs-PM volume asymmetry in the codex** so the next person does not re-derive it — fold
-      F1's table and the "PM is the fleet's single write hotspot" explanation into
-      `/codex/12-agent-workflow/host-concurrency-and-commit-provenance.md`, alongside the existing concurrency-cap
-      rules. **Done when**: the codex doc carries the measured rates, the dated measurement, and the structural reason.
-      Repo: unified-trading-pm.
-- [ ] [DOC] P2. **Document the working sequence (reconcile → format → commit) in
-      `/codex/05-infrastructure/per-tab-worktrees.md`** as the supported recipe for a contended doc push, and
-      cross-reference F4 so an agent seeing exit 5 checks `git stash list` before believing "transient, re-run". **Done
-      when**: the codex doc carries the recipe and the exit-5 caveat. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P2. **Record the AO-vs-PM volume asymmetry in the codex** so the next person does not re-derive it —
+      unified-trading-pm@baae1922bb. New § "1b. PM is the fleet's single write hotspot" in
+      `/codex/12-agent-workflow/host-concurrency-and-commit-provenance.md` carries F1's measured table (118s loaded vs
+      18.6s idle-worktree, 60-80s commit inter-arrival, 1318/59/152 commits-per-24h for PM/AO/MTDS), the dated
+      measurement (2026-08-10), and the structural reason (Commit+Push+Flip means every agent in every repo writes to
+      PM, so a fixed critical section safe at AO's ~1 commit/24min is unsafe at PM's ~1/60s) — plus which two
+      mitigations actually landed against it (`DRIFT_GATE_ADVISORY`, isolated-worktree-by-default), so a reader isn't
+      left wondering if the 118s number is still live. Repo: unified-trading-pm.
+- [x] ✅ [DOC] P2. **Document the working sequence (reconcile → format → commit) in
+      `/codex/05-infrastructure/per-tab-worktrees.md`** — unified-trading-pm@baae1922bb. New subsection "The working
+      commit order — reconcile → format → commit" under the existing "Committing from a contended checkout" section:
+      states the recipe, walks through why any OTHER order re-forms the F1/F2/F3 closed loop, notes the sanctioned
+      scripts don't need it spelled out by hand (they set `DRIFT_GATE_ADVISORY=1` themselves) so this is for a bare
+      `git commit` workaround specifically, and cross-references F4's exit-5-vs-exit-10 distinction right next to the
+      existing "Exit codes worth recognising" list so an agent seeing "transient, re-run" reads the actual exit code
+      before believing it. Repo: unified-trading-pm.
 
 - [x] [INFRA] P1. **Cross-repo evidence citations still go stale on rebase.** ✅ Done — neither option in the original
       framing was needed. `scripts/dev/reconcile-sha-citations.sh` gained a second pass that asks a question requiring
@@ -492,9 +507,13 @@ Directions, cheapest first — each is a todo below:
       the 81-commits/4-conflict-markers/22-dirty-files state this todo was originally filed against, and not even the
       3-behind state the 2026-08-12 STALE note found. The "Done when" (owner resolves the conflict, slot 2
       fast-forwards) has happened; nothing further to do here. Repo: unified-trading-pm.
-- [ ] [INFRA] P3. **`check_chain_set_inclusion` has 3 failing tests, pre-existing.** Verified failing identically at the
-      pre-F7 baseline `c7fe11851a`; untouched by this session. Recorded so the next person does not mistake them for
-      isolation fallout. **Done when**: triaged or fixed. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P3. **`check_chain_set_inclusion` has 3 failing tests, pre-existing.** RE-VERIFIED 2026-08-12: all 3
+      tests now PASS (`test_invariant_holds_on_live_uac`, `test_returns_violation_when_genesis_orphan`,
+      `test_returns_violation_when_gas_fee_chain_id_orphan`), and running the check directly confirms the invariant it
+      guards: `MAINNET_CHAIN_IDS ⊇ CHAIN_GENESIS_DATES ⊇ GAS_FEE_CHAIN_START_DATES`. `test_invariant_holds_on_live_uac`
+      reads live `unified-api-contracts` registry data, so this was fixed by unrelated UAC data work landing between the
+      2026-08-10 baseline (`c7fe11851a`) and now, not by anything in this session. No code or test change needed —
+      triaged and confirmed already fixed. Repo: unified-trading-pm.
 
 - [x] [INFRA] P1. **Isolated mode left the caller holding a stale untracked duplicate.** ✅ Done — reported live by a
       peer session minutes after isolation shipped: a NEW file pushed from the private worktree never becomes tracked in
