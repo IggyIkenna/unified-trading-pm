@@ -85,11 +85,11 @@ picking this plan up cold should never trust the flip-time state without a fresh
       clause not triggered.
 
       Note for todo 2's worker: the direct pandas `read_availability_index(columns=..., filters=[("capture_status",
-                                                              "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
-                                                              fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
-                                                              DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
-                                                              `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
-                                                              streaming footprint regardless of corpus size.
+                                                                  "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
+                                                                  fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
+                                                                  DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
+                                                                  `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
+                                                                  streaming footprint regardless of corpus size.
 
 - [x] ✅ [DATA] P1. **Root-cause the 0→7,930,863 `instrument_type=POOL` recurrence before any retirement resumes**
       (blocks the retirement todo below — main-agent-added 2026-08-11 per
@@ -167,12 +167,24 @@ picking this plan up cold should never trust the flip-time state without a fresh
       `_index/snapshots/pre_dex_pool_fees_all_retire_<ts>.parquet` + `.dex_pool_fees_all_retire.bak`. Round-trip + fresh
       independent post-apply census: **0 captured `dex_pool_fees` rows; 21 `attempted_failed` (7 BALANCER + 14 CURVE)**
       — done-when met.
-- [ ] [DATA] P1. **Resume the consolidator (if not already), trigger a fresh `measure_honest_coverage.py` rollup run**,
-      and confirm it completes cleanly (the enumeration-key fix shipped `instruments-service@8b59e8ba2` this session
-      must be live in whatever image/VM runs the rollup — verify before trusting output). Launcher:
+- [x] ✅ [DATA] P1. **Resume the consolidator (if not already), trigger a fresh `measure_honest_coverage.py` rollup
+      run**, and confirm it completes cleanly (the enumeration-key fix shipped `instruments-service@8b59e8ba2` this
+      session must be live in whatever image/VM runs the rollup — verify before trusting output). Launcher:
       `deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh` or the existing scheduled job, whichever this
       workspace currently uses for on-demand triggers — check the launcher registry rather than guessing. Done-when: a
-      new `coverage.json` is written with a timestamp after this todo's retirements. (repo: instruments-service)
+      new `coverage.json` is written with a timestamp after this todo's retirements. (repo: instruments-service) —
+      **DONE 2026-08-12 (slot 14, data_engineering): `instruments-service@4bb2164e`.** Consolidator already ENABLED
+      (verified `uts-prod-manifest-consolidator-market-data-defi-cron`). Fresh rollup written
+      `gs://central-element-323112-honest-coverage/2026-08-12/coverage.json` (`generated_at=2026-08-12T22:00:38Z`, post
+      all retirements) on `measure-honest-coverage-20260812-215144` (e2-highmem-8), launcher VERIFIED terminal SUCCESS.
+      Two blocking bugs root-caused + fixed: (1) post-rebuild defi index at 158,267,760 rows OOM'd the default
+      e2-highmem-4 (32 GiB) → ran e2-highmem-8 (64 GiB), memory proven sufficient; (2) the 2026-08-11
+      `get_storage_client` refactor left `blob.upload_from_string`/`bucket.get_blob` calls that UTL handles no longer
+      expose → fixed to `client.upload_bytes`/`client.get_blob_metadata` (`instruments-service@4bb2164e`, the real
+      reason 08-11/08-12 cron wrote nothing). Enumeration fix `8b59e8ba2` confirmed live in the VM's tarball
+      (`instruments-service-code @ 4bb2164e9491`, contains it). Post-rollup key check: defi `POOL` uppercase,
+      `rate_indices`, `dex_pool_fees` all ABSENT from enumerated keys; `lending_indices` present. 5/5 AGs measured,
+      `asset_groups_failed: []`.
 - [ ] [DATA] P1. **Re-check the Distinct Values panel post-rollup.** Confirm: `dex_pools`/`dex_swaps`/`rate_indices`/
       `dex_pool_fees` no longer appear as non-canonical `data_type`s; `POOL` (uppercase) no longer appears as a
       non-canonical `instrument_type`; venues drop to the genuinely-unresolved set (ASTER/GMX/HYPERLIQUID/EXTENDED/
@@ -403,3 +415,39 @@ picking this plan up cold should never trust the flip-time state without a fresh
     that restored 14 CURVE to captured) was based on that disproven "only copy" premise — the CURVE restoration is now
     re-retired by this todo's apply, and the doc's premise is corrected below. The phantom-premise doc's P2 (correct the
     "0 objects" claim in the archived recommendation + this plan's premise) remains its own tracked todo.
+- **2026-08-12 (slot 14, data_engineering) — todo 8 DONE: fresh `measure_honest_coverage.py` rollup written +
+  verified.** Full trail:
+  - **Pre-flight**: consolidator `uts-prod-manifest-consolidator-market-data-defi-cron` already ENABLED (resumed); no
+    running honest-coverage VM (singleton lock free); latest prior `coverage.json` was `2026-08-10 00:37` — genuinely
+    stale vs the 2026-08-12 retirements.
+  - **Attempt 1 (e2-highmem-4 / 32 GiB, `measure-honest-coverage-20260812-211215`) → OOM (exit 137)**: run.log shows
+    cefi (27.8M rows) completed, then defi manifest SELECTED at **158,267,760 rows** (post-rebuild) was `Killed`. The
+    08-10 00:37 success predated the defi rebuild (`canonical-migration-defi-rebuild-20260810-204358`); the post-rebuild
+    defi index no longer fits in 32 GiB. This is the SAME tracked OOM class
+    (`honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md`) — and notably there was **no coverage.json for 08-11
+    or 08-12** in the bucket: the daily cron had silently failed since the rebuild landed.
+  - **Attempt 2 (e2-highmem-8 / 64 GiB + `--oom-monitor`, `measure-honest-coverage-20260812-212755`) → computed ALL 5
+    asset groups cleanly (memory fix proven), then crashed on the FINAL WRITE**: `_write_output`'s
+    `blob.upload_from_string(...)` — `AttributeError: 'GCSBlobHandle' object has no attribute 'upload_from_string'`,
+    exit rc=1. Same-class warn-only regression in `_get_blob_updated`
+    (`'GCSBucketHandle' object has no attribute 'get_blob'`). **Root cause: `instruments-service@02cc9055` (2026-08-11,
+    "replace google.cloud/boto3 imports with get_storage_client across scripts tier") swapped the import but left
+    google.cloud-style method calls on the UTL handles.** This is the definitive explanation for the 08-11/08-12 missing
+    cron output — even with enough memory, the rollup computed but could never write.
+  - **FIX SHIPPED `instruments-service@4bb2164e`**: `_write_output` →
+    `client.upload_bytes(_OUTPUT_BUCKET, f"{run_date}/coverage.json", blob_bytes, content_type="application/json")`;
+    `_get_blob_updated` → `client.get_blob_metadata(...)` with `datetime.fromisoformat(metadata.last_modified)` (UTL
+    `BlobMetadata` is ISO-8601 UTC). Test updated (`upload_bytes` assertion). 44/44 honest-coverage tests pass incl. the
+    enumeration-key attempted_failed exclusion test. Full QG green, quickmerge `--agent` landed, `4bb2164e` verified on
+    origin.
+  - **Attempt 3 (e2-highmem-8, `measure-honest-coverage-20260812-215144`, tarball `instruments-service @ 4bb2164e9491`)
+    → SUCCESS**: launcher VERIFIED `gs://central-element-323112-honest-coverage/2026-08-12/coverage.json` written fresh
+    post-launch (exit 0). `generated_at=2026-08-12T22:00:38Z` — after all retirements. 5/5 AGs measured,
+    `asset_groups_failed: []`. **Post-rollup enumeration-key check** (the drift-panel-relevant surface): defi
+    instrument_types do NOT include uppercase `POOL`; defi data_types do NOT include `rate_indices` or `dex_pool_fees`;
+    `lending_indices` IS present. Done-when met.
+  - **Finding triaged**: both root causes (post-rebuild 32 GiB OOM + the `02cc9055` write-path regression) appended to
+    the open `honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md` issue doc's Progress Log — the write-path
+    regression is the cross-cutting fix this slot shipped; the machine-type bump for the daily cron remains the
+    operator-gated decision in that doc (this run used an explicit `--machine-type e2-highmem-8` override, not a
+    launcher-default change).
