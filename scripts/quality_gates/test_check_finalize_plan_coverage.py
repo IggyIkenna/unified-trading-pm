@@ -128,3 +128,90 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── Duplicate-gate idempotency guard (todo 1, duplicate_finalize_plans_created_for_one_parent_2026_08_06.md) ──
+#
+# Reconstructs the 2026-07-31 collision: two finalize plans for the SAME parent, differing only by
+# a redundant `_2026_07_31` filename suffix (`<parent>_finalize.md` vs `<parent>_finalize_2026_07_31.md`),
+# both with depends_on + gate_on_depends: true. The guard is keyed on the `depends_on` relationship
+# (the real contract), NOT filename shape — an expected-filename-keyed guard would have missed this pair.
+
+
+def _write_parent_with_two_finalize_plans(
+    active: Path,
+    *,
+    parent_stem: str = "live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31",
+) -> tuple[Path, Path]:
+    """Creates the parent + the two near-duplicate finalize plans from the 2026-07-31 collision.
+    Returns (first_finalize, second_finalize)."""
+    _write_plan(active / f"{parent_stem}.md")
+    f1 = _write_plan(
+        active / f"{parent_stem}_finalize.md",
+        extra_frontmatter=f"depends_on: [{parent_stem}]\ngate_on_depends: true",
+    )
+    f2 = _write_plan(
+        active / f"{parent_stem}_finalize_2026_07_31.md",
+        extra_frontmatter=f"depends_on: [{parent_stem}]\ngate_on_depends: true",
+    )
+    return f1, f2
+
+
+def test_only_refuses_a_second_finalize_plan_for_an_already_gated_parent(tmp_path: Path) -> None:
+    """The collision reconstructed as it actually happened: the FIRST finalize plan
+    (`<parent>_finalize.md`) ships clean (parent gated exactly once); then a SECOND
+    plan (`<parent>_finalize_2026_07_31.md`) for the SAME parent is authored — the
+    creation-path guard refuses it because the parent is already covered."""
+    active = _active_dir(tmp_path)
+    parent = active / "live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md"
+    _write_plan(parent)
+    first = _write_plan(
+        active / "live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md",
+        extra_frontmatter=(
+            "depends_on: [live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31]\ngate_on_depends: true"
+        ),
+    )
+    # First alone is clean.
+    rc_first = main(["--workspace-root", str(tmp_path), "--only", str(first)])
+    assert rc_first == 0
+
+    # Now the second colliding finalize plan is authored in the same corpus.
+    second = _write_plan(
+        active / "live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize_2026_07_31.md",
+        extra_frontmatter=(
+            "depends_on: [live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31]\ngate_on_depends: true"
+        ),
+    )
+    # Staging it duplicates the gate -> refused.
+    rc_second = main(["--workspace-root", str(tmp_path), "--only", str(second)])
+    assert rc_second == 1
+
+
+def test_only_ignores_an_unrelated_plan_when_a_duplicate_gate_exists(tmp_path: Path) -> None:
+    """A duplicate gate elsewhere in the corpus must not block an unrelated staged plan
+    (RULE-11 blast-radius safety — pre-existing duplicate-gate debt is de-raced by the
+    issue's todo 3, never surfaced by an unrelated commit). The unrelated plan carries its
+    OWN finalize companion so it is NOT a coverage violation either — the only possible
+    failure would be the duplicate-gate detector leaking out of scope."""
+    active = _active_dir(tmp_path)
+    _write_parent_with_two_finalize_plans(active)
+    unrelated = _write_plan(active / "unrelated_plan_2026_08_12.md")
+    _write_plan(
+        active / "unrelated_plan_2026_08_12_finalize.md",
+        extra_frontmatter="depends_on: [unrelated_plan_2026_08_12]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(unrelated)])
+    assert rc == 0
+
+
+def test_default_mode_reports_duplicate_gate_count_but_stays_at_baseline(tmp_path: Path) -> None:
+    """Default (corpus-wide, no --only) mode reports the duplicate-gate count as informational
+    and does NOT regress the gate on pre-existing debt (todo 2 wires the hard corpus-wide count
+    into the hygiene sweep; the creation-path guard is --only). The parent is gated by two
+    finalize plans (so the coverage check passes) but the duplicate pair is tolerated at baseline."""
+    active = _active_dir(tmp_path)
+    _write_parent_with_two_finalize_plans(active)
+
+    rc = main(["--workspace-root", str(tmp_path)])
+    assert rc == 0
