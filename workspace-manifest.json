@@ -144,7 +144,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 0,
         "large_file_count": 1,
@@ -402,7 +402,7 @@
         "large_file_count": 6,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "427755378e91369ac87e511f63f19190eccfef38"
+      "ldr_ci_status_sha": "b5077fef8852ff6e82c9f8d804791f4a84a8e22c"
     },
     "execution-service": {
       "promotion_model": "ldr_main",
@@ -467,7 +467,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "02c6ec672474fd5c929d7c6301c6095565b96bb8"
+      "ldr_ci_status_sha": "8b2064d5bfc79b7806c2b458bd72390c672d10e7"
     },
     "features-service": {
       "promotion_model": "ldr_main",
@@ -780,7 +780,7 @@
         "coverage_pct": 91.04,
         "warn_file_count": 11
       },
-      "ldr_ci_status_sha": "41fd72207bf9f97272219bcd289f99b20a4b5c85"
+      "ldr_ci_status_sha": "df8ff1b732e7dd86fb9ee5b64830ab03e9934544"
     },
     "market-data-processing-service": {
       "promotion_model": "ldr_main",
@@ -843,7 +843,7 @@
         "large_file_count": 7
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "a959bd0192dea464e43ed0117f87f9c301f5bd08"
+      "ldr_ci_status_sha": "cc65f076ae01a6fbac937526909eefa2085c273b"
     },
     "market-tick-data-service": {
       "promotion_model": "ldr_main",
@@ -1244,7 +1244,7 @@
         "coverage_pct": null,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "fa9d21bbc985b5c5c73016cc71f75df23cd5aa2b"
+      "ldr_ci_status_sha": "b3e0602aa50f207a9a9917626bcccecc332ee3d8"
     },
     "unified-trading-library": {
       "promotion_model": "ldr_main",
@@ -1327,14 +1327,14 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 0,
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "911e8c6b75b23dab6db0a5208a43bd68f1e7e51a"
+      "ldr_ci_status_sha": "02aa7912cf7de8d9c5cea4d76b09b4a9b4f265a7"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
