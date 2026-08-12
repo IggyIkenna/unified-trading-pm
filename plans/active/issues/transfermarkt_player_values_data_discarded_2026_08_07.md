@@ -288,28 +288,24 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       `players` non-null 0→112, real per-event writes in run.log under the documented RapidAPI 502-backoff. Underlying
       backfill completion (all 1,041 events) tracked separately per this doc's own 'launched ≠ done' discipline —
       monitoring to a genuine terminal state continues in the Progress Log.
-- [ ] [DATA] P2. **New finding (2026-08-12): the legacy_reason_classifier's PLAYER_VALUES weekday-cadence branch
-      (`unified_trading_library/legacy_reason_classifier.py:266-276`, `TRANSFERMARKT_PLAYER_VALUES_UPDATE_WEEKDAYS` =
-      Tue/Wed) never checks transfer-window state at all — it's a separate, older (shipped 2026-05-13, months before
-      this doc's transfer-window fixes) rule that classifies an empty PLAYER_VALUES row as
-      `EXPECTED_REFDATA_CADENCE_CHANGE` purely by weekday, with NO knowledge of the orchestrator's now-correct
-      (operator-ruled 2026-08-12) transfer-window gate. The classifier's `"transfer" in     data_type.lower()` guard
-      means `is_transfer_data_expected()` is never even called for PLAYER_VALUES rows — only for `transfer_records`.
-      Confirmed failure mode: a legitimately window-gated-skipped PLAYER_VALUES row on a Tuesday or Wednesday that falls
-      OUTSIDE a real transfer window has weekday.weekday() IN the update set, so the cadence branch does NOT fire
-      `EXPECTED_REFDATA_CADENCE_CHANGE` — the row falls through to `SOURCE_RETURNED_ZERO` (an honest-failure
-      classification) even though it was a legitimate, correct skip. This is a real, machine-checked consumer of
-      `_classify_sports` (instruments-service's `reconcile_expected_absence_reasons.py` and 4 other `reconcile_*`
-      manifest-correction scripts), not test-only. Also fixed a directly-adjacent stale docstring in the same file (line
-      ~229, claimed "Player-values / squad data is year-round" — contradicted by the operator's 2026-08-12 ruling, same
-      stale-claim class as the two SSOTs already corrected in this doc's Progress Log) — corrected in the same pass,
-      `unified-trading-library` (not yet shipped — see Progress Log). **Not fixed**: the actual classification-logic gap
-      (whether/how to compose the weekly cadence rule with the transfer-window check for PLAYER_VALUES) is a design call
-      that affects the same manifest-accounting the GCS-path design pass above is meant to sort out — flagging here per
-      this doc's own note ("worth a look... before doing the manifest design pass") rather than picking a fix
-      unilaterally. Also worth noting when that pass happens: the weekly Tue/Wed cadence's own empirical basis predates
-      the transfer-window-gated fetch pattern (May vs. August 2026) and may no longer hold now that PLAYER_VALUES only
-      fetches on window/trigger dates rather than a broader weekly pattern — not verified either way here.
+- [x] ✅ [DATA] P2. **FIXED 2026-08-12 — the classification-logic gap is closed (composed window-gate → cadence), not
+      left as an open design call.** The `_classify_sports` PLAYER_VALUES weekday-cadence branch now runs only AFTER the
+      transfer-window gate: the `is_transfer_data_expected()` call's guard was widened from
+      `"transfer" in     data_type.lower()` to also match `data_type.upper() == "PLAYER_VALUES"`, so a legitimately
+      window-gated PLAYER_VALUES skip on a Tue/Wed OUTSIDE a real window now returns `EXPECTED_OUTSIDE_TRANSFER_WINDOW`
+      (the operator-ruled honest-empty reason) instead of falling through to `SOURCE_RETURNED_ZERO`. The Tue/Wed cadence
+      rule (`EXPECTED_REFDATA_CADENCE_CHANGE`) is retained for in-window off-cadence days, which is its original intent
+      — the window gate simply takes precedence (the same composed priority order transfer_records already used). The
+      `_classify_sports` docstring's stale "PLAYER_VALUES does not go through this branch" note was corrected to say
+      PLAYER_VALUES goes through the SAME window-gate branch. Regression tests in
+      `tests/unit/test_legacy_reason_classifier.py` were rewritten to lock in the composed semantics — including the
+      exact confirmed failure mode (Tue off-window → `EXPECTED_OUTSIDE_TRANSFER_WINDOW`, not `SOURCE_RETURNED_ZERO`) and
+      in-window on/off-cadence cases — and the stale `is_year_round_not_window_bounded` test (which had locked in the
+      pre-ruling year-round behavior) was replaced with a window-gated assertion. Full `quality-gates.sh` green. **Open
+      question (unchanged from before, still a separate design call — NOT resolved here)**: whether the Tue/Wed
+      cadence's own empirical basis still holds now that PLAYER_VALUES fetches on window/trigger dates rather than a
+      broader weekly pattern — that's a manifest-accounting question for the GCS-path design pass, out of scope for this
+      classification-logic fix. — unified-trading-library@154e08039c
 
 ## Progress Log
 
@@ -606,3 +602,13 @@ possibly a rename that ripples into UAC/manifest data_type naming.
   launcher already shipped by prior sessions: instruments-service@f0f76e12f2/3a3ce822fa,
   deployment-service@9ba048f45a/ca061d0564). Terminal-state monitoring continues via the fleet exit-code monitor + this
   doc's own tracking.
+- **2026-08-12 (slot 20, data_engineering): fixed the `legacy_reason_classifier` PLAYER_VALUES weekday-cadence gap —
+  composed the transfer-window gate ahead of the Tue/Wed cadence rule.** Widened the `is_transfer_data_expected()` guard
+  in `_classify_sports` from `"transfer" in data_type.lower()` to also match `data_type.upper() == "PLAYER_VALUES"`, so
+  a window-gated PLAYER_VALUES skip on a Tue/Wed outside a real window now classifies as
+  `EXPECTED_OUTSIDE_TRANSFER_WINDOW` (the operator-ruled honest-empty reason) instead of the confirmed bug's
+  `SOURCE_RETURNED_ZERO` fall-through. The cadence rule is retained for in-window off-cadence days. Corrected the stale
+  "PLAYER_VALUES does not go through this branch" docstring note and rewrote the cadence test block to lock in the
+  composed semantics (the exact failure mode + in-window on/off-cadence), replacing the pre-ruling
+  `is_year_round_not_window_bounded` test with a window-gated assertion. Full `quality-gates.sh` green;
+  unified-trading-library@154e08039c.
