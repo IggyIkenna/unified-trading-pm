@@ -50,8 +50,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
 last_updated: 2026-07-14 # (was: 2026-07-10 -- bumped 2026-07-15, plan-reconcile: 2026-07-14 operator-ruling banner/descope edit + matching Progress Log entry postdated the recorded last_updated, same staleness class as the 2026-07-12 correction)
-locked_by: live-defi-rollout
-locked_since: 2026-07-06
+locked_by:
+locked_since:
 depends_on: []
 supersedes: []
 superseded_by:

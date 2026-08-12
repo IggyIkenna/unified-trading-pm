@@ -21,8 +21,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-03
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
