@@ -507,3 +507,26 @@ possibly a rename that ripples into UAC/manifest data_type naming.
     confirmation, a re-run capturing full output (no truncating pipe) would close that gap -- not done here since the
     5/8 + 2 already-verified sample is a strong enough signal for the fix's general correctness across league
     size/region, and this was a verification pass, not a new open todo.
+- **2026-08-12 (interactive session, continued): first SPOT preemption hit during the TRANSFER_RECORDS backfill —
+  confirmed root cause, verified real durable progress, and relaunched a targeted resume.** The backfill VM
+  (`instr-backfill-sports-transfermarkt-20260812-142238`) disappeared from `gcloud compute instances list` entirely (0
+  items, SSH resource-not-found) after real activity had continued past its earlier-reported smoke-test success.
+  Confirmed via GCE's own operation log (`gcloud compute operations list --filter="targetLink~<vm-name>"`, never
+  inferred from log silence alone) — a genuine `systemevent...compute.instances.preempted` at `2026-08-12T17:07:59Z`,
+  matching the run.log's last real activity to the second. **Real durable progress before preemption, verified against
+  the master table directly** (not the deleted per-VM shard, which the consolidator had already absorbed and removed —
+  normal lifecycle, not data loss): `sports_reference/master/entity=transfer_records/master.parquet` held 126,144 rows
+  across exactly 25 of the 32 Prediction-tier leagues with a Transfermarkt mapping. Relaunched via the launcher's own
+  documented `--leagues` resume flag (its header already states writes are per-league shard-isolated +
+  manifest-idempotent, so a plain relaunch would have been safe too — the targeted flag just avoids re-paying quota on
+  the 25 already-done leagues) for the 7 incomplete leagues:
+  `--leagues "ALLSVENSKAN,ARGENTINA_PRIMERA,LIGA_3,SERIE_A,SERIE_B,SUPER_LIG,SWISS_SUPER_LEAGUE" --entities TRANSFER_RECORDS`.
+  New VM `instr-backfill-sports-transfermarkt-20260812-173909`, confirmed RUNNING with real bootstrap progress (Python
+  3.13 installed, venv created) via serial-port output. **Coordination incident caught and corrected same-turn**: a
+  second session/agent working this same doc independently detected the identical preemption and issued its OWN relaunch
+  (including `GREEK_SUPER_LEAGUE`, which is wrong — confirmed earlier this session to have zero Transfermarkt mapping)
+  roughly 2 minutes after this one — killed the redundant local process before it reached
+  `gcloud compute instances create` (nothing had been created by either side yet, so this was a safe, local-only kill
+  with zero GCP-side impact). Given the launcher's own documented ~87K-call RapidAPI quota ceiling for the billing
+  window, a genuine double-launch would have wasted real, constrained quota for no benefit. Taking sole ownership of
+  this backfill's VM/launcher actions going forward to prevent a recurrence.
