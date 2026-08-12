@@ -93,7 +93,7 @@ drives annualisation (`apy = rate × seconds_per_year / interval_seconds`).
 | **OKX**         | ❌ per-coin  | `GET public/funding-rate?instId={BASE}-USDT-SWAP`                                                    | `fundingRate`                 | 8h                     | `{BASE}-USDT-SWAP` | no all-symbols funding endpoint → one call per coin (≤40). `nextFundingTime` provided.                                                                                                                                                                                                                |
 | **Deribit**     | ❌ per-coin  | `GET public/ticker?instrument_name={BASE}-PERPETUAL`                                                 | `funding_8h`                  | 8h **figure**          | `{BASE}-PERPETUAL` | lists **only BTC/ETH/SOL + a few**; the stored value is the **8h figure** (not the 1h), annualise at 8h.                                                                                                                                                                                              |
 | **Hyperliquid** | ✅ all       | `POST info {"type":"metaAndAssetCtxs"}`                                                              | `funding` (asset ctx)         | **1h**                 | `{BASE}` (bare)    | **hourly** — annualise ×24×365, NOT ×3×365. GET 405s; must POST. One call returns all coins.                                                                                                                                                                                                          |
-| **Aster**       | ✅ all       | `GET fapi/v1/premiumIndex`                                                                           | `lastFundingRate`             | 8h                     | `{BASE}USDT`       | Binance-compatible API; **no GCS backfill** (historical via paginated `fundingRate`).                                                                                                                                                                                                                 |
+| **Aster**       | ✅ all       | `GET fapi/v1/premiumIndex`                                                                           | `lastFundingRate`             | 8h                     | `{BASE}USDT`       | Binance-compatible API; GCS backfill confirmed DONE (2026-08-03 verification, see `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`).                                                                                                                                       |
 | **Gate**        | ✅ all       | `GET futures/usdt/contracts`                                                                         | `funding_rate`                | `funding_interval` (s) | `{BASE}_USDT`      | interval is **explicit** per contract (28800=8h); `funding_rate_indicative` = next predicted.                                                                                                                                                                                                         |
 | **KuCoin**      | ✅ all       | `GET contracts/active`                                                                               | `fundingFeeRate`              | 8h                     | `{XBT}USDTM`       | **`XBT`=BTC**; use the `baseCurrency` field for mapping; `granularity` (ms) sometimes null → 8h.                                                                                                                                                                                                      |
 | **Bitget**      | ✅ all       | `GET v2/mix/market/tickers?productType=USDT-FUTURES`                                                 | `fundingRate`                 | 8h                     | `{BASE}USDT`       | per-symbol `current-fund-rate` endpoint also exists; some pairs 4h.                                                                                                                                                                                                                                   |
@@ -113,21 +113,23 @@ cross-check against §3 values.
 
 ### 3.1 Cadence correctness (already filed)
 
-UAC `perp_funding_cadence` is the cadence SSOT; UTL `return_metrics.FUNDING_PERIODS_PER_DAY` **disagrees**
-(Aster/Deribit 8× wrong) — filed `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`. There is
-**no historical cadence tracker** (a venue changing its interval over time is invisible) — also filed there. For new
-venues, prefer the **interval the API returns** over a static assumption.
+UAC `perp_funding_cadence` is the cadence SSOT. UTL `return_metrics.FUNDING_PERIODS_PER_DAY` used to **disagree**
+(Aster/Deribit 8× wrong) — filed `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`; that dict
+was **DELETED from UTL 2026-06-17** (`unified-trading-library@b587b91b`/`ed622af8`, per that doc's todo 1) once
+consumers were repointed to the UAC SSOT, so there is no longer a second, disagreeing registry to reconcile against.
+There is **no historical cadence tracker** (a venue changing its interval over time is invisible) — also filed there.
+For new venues, prefer the **interval the API returns** over a static assumption.
 
 ### 3.2 Live/paper history principle — no history is fine, warn and proceed (operator 2026-06-17)
 
 The live/paper signal ranks on the **current** funding snapshot — it does **not** need funding history. So a venue with
-**no GCS funding backfill** (Aster, Gate, KuCoin, Bitget, Kraken, MEXC, dYdX, Vertex, Drift) is **NOT blocked from
-live/paper** — we **warn** ("no history for venue X — using current snapshot only") and proceed. Where some history _is_
-useful (EWMA funding smoothing to damp turnover; spot-price history for vol/max-move estimates), **use whatever history
-we have** (e.g. the spot history that does exist) and **warn** where it's missing; never block a venue or a coin for
-lacking it. The backtest still needs history (that's what a backtest is) — this carve-out is **live/paper only**.
-Concretely: live ranks on the snapshot; the EWMA/economic-rotation gate degrades gracefully to a point estimate when a
-name has < halflife days of history.
+**no GCS funding backfill** (Gate, KuCoin, Bitget, Kraken, MEXC, dYdX, Vertex, Drift — Aster's GCS backfill is confirmed
+DONE as of 2026-08-03, see §3 row above) is **NOT blocked from live/paper** — we **warn** ("no history for venue X —
+using current snapshot only") and proceed. Where some history _is_ useful (EWMA funding smoothing to damp turnover;
+spot-price history for vol/max-move estimates), **use whatever history we have** (e.g. the spot history that does exist)
+and **warn** where it's missing; never block a venue or a coin for lacking it. The backtest still needs history (that's
+what a backtest is) — this carve-out is **live/paper only**. Concretely: live ranks on the snapshot; the
+EWMA/economic-rotation gate degrades gracefully to a point estimate when a name has < halflife days of history.
 
 ---
 
