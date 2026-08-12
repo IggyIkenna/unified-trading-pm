@@ -111,6 +111,9 @@ context_scope:
     /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
+dp_escalation_checkpoint:
+  max_attempted_at: "2026-08-12T00:00:00Z"
+  checked_at: "2026-08-12T17:30:00Z"
 ---
 
 # CeFi `book_snapshot_5` schema-contract mismatch -- root cause + fix (2026-07-28)
