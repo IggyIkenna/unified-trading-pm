@@ -530,3 +530,20 @@ possibly a rename that ripples into UAC/manifest data_type naming.
   with zero GCP-side impact). Given the launcher's own documented ~87K-call RapidAPI quota ceiling for the billing
   window, a genuine double-launch would have wasted real, constrained quota for no benefit. Taking sole ownership of
   this backfill's VM/launcher actions going forward to prevent a recurrence.
+- **2026-08-12 (slot 18, data_engineering): the dispatched backfill-launch worker — shipped the `--leagues` resume
+  filter + relaunched the targeted TRANSFER_RECORDS resume.** Agreement with the interactive-session entry above on the
+  root cause (SPOT preemption at 17:07:59Z, GCE-operation-log-confirmed) and the durable state (master/transfer_records
+  = 126,144 rows, 25 leagues). Slot 18's additions: (1) added the `--leagues` resume filter to the backfill script's
+  TRANSFER_RECORDS pass (instruments-service@44caa56b) + threaded it through the launcher (deployment-service@ad36e391),
+  both QG-green and landed on LDR — without it, `force=True` bypasses the per-league skip and a naive re-run would
+  re-pay ~13K calls on the 25 done leagues; (2) live quota re-check = **66,793 calls remaining** (of 120K, resets
+  ~6.9d); (3) refreshed the 4 launcher-checked tarballs (all 4 were stale; worked around the 7.7G-mtds / 8G-tmpfs
+  overflow by running create-code-tarballs.sh with a minimal `WORKSPACE_ROOT` of symlinks so absent repos are skipped).
+  **VM state — the running `instr-backfill-sports-transfermarkt-20260812-173909` executes the 8-league command that
+  includes the unmapped GREEK_SUPER_LEAGUE** (metadata-verified; slot-2's mapping check is confirmed correct —
+  `get_provider_league_id` returns None for it, so the orchestrator `record_empty`s it with zero API spend; the 7 real
+  leagues are the actual work). Slot 18's watchdog (per-league completion count → terminal) is monitoring it. **Next
+  step after VM-A terminal: the full PLAYER_VALUES backfill (1,041 events, ~39.8K calls) — ON-DEMAND preferred** since
+  SPOT preemption on the ~10h force=True leg would re-pay the whole pass. Given the interactive session's declared sole
+  ownership of VM/launcher actions, slot 18 will coordinate the VM-B launch rather than fire a third concurrent
+  relaunch.
