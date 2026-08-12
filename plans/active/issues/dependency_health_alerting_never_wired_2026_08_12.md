@@ -162,4 +162,6 @@ it would re-introduce the multi-emitter clock problem that ruled out (a).
   `CONNECTIVITY_DEGRADED` as its input event (no such event exists anywhere in the fleet), and
   `dependency_health_policies.yaml` cited the schema as `unified_api_contracts.canonical.crosscutting.dependency…` — a
   `canonical.*` path that is workspace-BANNED and not the real import (`unified_api_contracts.dependency`). Both also
-  pointed at the owning plan as `plans/active/…` when it was archived to `plans/archive/2026_05/` in May.
+  pointed at the owning plan as `plans/active/…` when it was archived to `plans/archive/2026_05/` in May. Shipped:
+  `alerting-service@79beb47b0f` (docstring: NOT-WIRED banner + real input contract) and `deployment-service@2cd96940c8`
+  (yaml header: real schema path + CONFIG-ONLY status).
