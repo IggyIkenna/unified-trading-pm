@@ -148,46 +148,46 @@ from 2020-12-18).
       not `staking_yields`:
 
       | Venue                  | Declared                                        |
-          | ---------------------- | ----------------------------------------------- |
-          | `MARINADE-SOLANA`      | `lst_rates` from **2021-08-01**                 |
-          | `JITO-SOLANA`          | `lst_rates` from **2021-11-01**                 |
-          | `SOLBLAZE-SOLANA`      | `lst_rates` from 2022-10-15                     |
-          | `JITORESTAKING-SOLANA` | `staking_yields` — restaking, correctly distinct |
+              | ---------------------- | ----------------------------------------------- |
+              | `MARINADE-SOLANA`      | `lst_rates` from **2021-08-01**                 |
+              | `JITO-SOLANA`          | `lst_rates` from **2021-11-01**                 |
+              | `SOLBLAZE-SOLANA`      | `lst_rates` from 2022-10-15                     |
+              | `JITORESTAKING-SOLANA` | `staking_yields` — restaking, correctly distinct |
 
-          `lst_rates_handler.py` writes **both** `lst_rates` and `staking_yields`, so the vocabulary split is deliberate and the
-          registry matches the handler exactly. The split is also semantically right: `lst_rates` is the LST exchange-rate/APY
-          series, `staking_yields` is protocol staking APY.
+              `lst_rates_handler.py` writes **both** `lst_rates` and `staking_yields`, so the vocabulary split is deliberate and the
+              registry matches the handler exactly. The split is also semantically right: `lst_rates` is the LST exchange-rate/APY
+              series, `staking_yields` is protocol staking APY.
 
-          **Third correction on the same question, so the lesson is the point, not the fact:** my first verdict was
-          "possibly BLOCKED-DATA" (from reading the registry for the wrong key), my second was "the registry is wrong"
-          (from finding the handlers and still not re-checking the registry with the right key), and the truth is that both the
-          registry and the handlers were right all along. This is exactly the failure
-          `/codex/02-data/four-surface-reconciliation-procedure.md` warns about — **an absence result is evidence ONLY once you
-          have confirmed you probed the vocabulary the WRITER actually emits.** Before declaring any data absent, enumerate the
-          data types the writer emits and grep for those, never for the name you expect.
+              **Third correction on the same question, so the lesson is the point, not the fact:** my first verdict was
+              "possibly BLOCKED-DATA" (from reading the registry for the wrong key), my second was "the registry is wrong"
+              (from finding the handlers and still not re-checking the registry with the right key), and the truth is that both the
+              registry and the handlers were right all along. This is exactly the failure
+              `/codex/02-data/four-surface-reconciliation-procedure.md` warns about — **an absence result is evidence ONLY once you
+              have confirmed you probed the vocabulary the WRITER actually emits.** Before declaring any data absent, enumerate the
+              data types the writer emits and grep for those, never for the name you expect.
 
-          **Consequence for § A, in the good direction:** SOL LST history starts **2021-08**, roughly 22 months EARLIER than
-          Kamino's `lending_indices` (2023-06). So the binding constraint on the Solana spread is the **borrow** series, not the
-          staking series, and the full Kamino window is computable. ETH remains deeper (Lido `staking_yields` 2020-12-18) but
-          Solana is in no way blocked.
+              **Consequence for § A, in the good direction:** SOL LST history starts **2021-08**, roughly 22 months EARLIER than
+              Kamino's `lending_indices` (2023-06). So the binding constraint on the Solana spread is the **borrow** series, not the
+              staking series, and the full Kamino window is computable. ETH remains deeper (Lido `staking_yields` 2020-12-18) but
+              Solana is in no way blocked.
 
 - [ ] [AGENT] P0. **Use `lst_rates`, NOT `staking_yields`, for the § A spread — they measure different things.**
       Measured 2026-08-12; recorded here because § A's answer is wrong if the wrong series is used.
 
       | | `lst_rates` | `staking_yields` |
-          | --- | --- | --- |
-          | `instrument_type` | `lst` | `staking` |
-          | Payload | `exchange_rate` (float64, **non-null**) | `apy` + `total_staked` (nullable) |
-          | Source | **on-chain** — contract / `exchangeRate` / `getPooledEth` / subgraph | **reported** — `yields.llama.fi/pools`, `LIDO_APY_URL`, `ETHERFI_APY_URL` |
-          | Meaning | The LST's redemption rate; **drift over time IS realised accrual** | A published forward-looking APY |
-          | Venues | 14 LST issuers | 26, mostly vaults + restaking |
+              | --- | --- | --- |
+              | `instrument_type` | `lst` | `staking` |
+              | Payload | `exchange_rate` (float64, **non-null**) | `apy` + `total_staked` (nullable) |
+              | Source | **on-chain** — contract / `exchangeRate` / `getPooledEth` / subgraph | **reported** — `yields.llama.fi/pools`, `LIDO_APY_URL`, `ETHERFI_APY_URL` |
+              | Meaning | The LST's redemption rate; **drift over time IS realised accrual** | A published forward-looking APY |
+              | Venues | 14 LST issuers | 26, mostly vaults + restaking |
 
-          **The axis is reported-vs-measured, not protocol-native-vs-DEX-swapped** (a hypothesis considered and rejected), and it
-          is not about token mechanics either — rebasing vs price-appreciating cuts across both. For a staked-basis P&L you want
-          the **measured** series, because exchange-rate drift is the yield actually earned rather than the number a protocol
-          advertises. `sim_schemas.py` already does exactly that: `stake_apy_bps  # staking yield from MTDS lst_rates`.
-          Only **three** venues declare both (LIDO, ETHERFI, PUFFER) — protocols that genuinely both issue an LST and run a
-          vault/restaking product, so the overlap lets you cross-check advertised against realised rather than being duplication.
+              **The axis is reported-vs-measured, not protocol-native-vs-DEX-swapped** (a hypothesis considered and rejected), and it
+              is not about token mechanics either — rebasing vs price-appreciating cuts across both. For a staked-basis P&L you want
+              the **measured** series, because exchange-rate drift is the yield actually earned rather than the number a protocol
+              advertises. `sim_schemas.py` already does exactly that: `stake_apy_bps  # staking yield from MTDS lst_rates`.
+              Only **three** venues declare both (LIDO, ETHERFI, PUFFER) — protocols that genuinely both issue an LST and run a
+              vault/restaking product, so the overlap lets you cross-check advertised against realised rather than being duplication.
 
 - [ ] [AGENT] P1. **Compare LTV and borrow cost across the three Solana lending venues** (Kamino / Solend / MarginFi)
       and against Aave on the ETH side. Operator asked which has better LTV and lower stable borrow rates. **Note for
@@ -268,8 +268,24 @@ no change at all.**
       `_STAKED_BASIS_ETH_LSTS` / `_STAKED_BASIS_SOL_LSTS` split is acceptable as data, but the eligibility test must not
       branch on chain.
 - [ ] [SCRIPT] P2. **Emit `CARRY_RECURSIVE_STAKED` slots for the Solana triple** once § B and § C land, and confirm zero
-      infeasible slots are emitted before them (the current empty SOL bundle is the correct behaviour and must stay
-      correct throughout).
+      infeasible slots are emitted before them (the empty SOL bundle is the correct behaviour **of the generator** and
+      must stay correct throughout — but see the next todo: it is not the system's actual behaviour).
+- [ ] [SCRIPT] P0. **Reconcile the two slot surfaces, which disagree on whether SOL staked basis is runnable at all.**
+      Found by the 54-archetype sweep, 2026-08-12. Both surfaces know the identical fact — HYPERLIQUID does not accept
+      mSOL/JitoSOL as `LST_AS_MARGIN` — and act on it **oppositely**: `archetype_slots_defi.py:154` declares
+      `SOL_STAKED_BASIS` as a live `…-v5-prod` slot (`CARRY_STAKED_BASIS`, mSOL, marinade, spot=jupiter,
+      perp=hyperliquid) whose in-line comment states the engine's `_derive_structure` falls back to
+      `USDC_MARGIN_BUFFERED` and is therefore "genuinely functional (not a dead slot)"; meanwhile
+      `catalog_staked_basis.py:105-120` emits **zero** SOL-side rows because `_resolve_start_token()` returns `None` and
+      the generator "just doesn't implement that fallback branch (pre-existing gap, tracked separately)". **Consequence:
+      "SOL staked basis is infeasible" is true of one surface and false of the other**, so any claim resting on the
+      generator's emptiness — including this plan's § A economics gate — is measuring the wrong surface. Decide ONE
+      answer (teach the generator the `USDC_MARGIN_BUFFERED` fallback, or retire the `archetype_slots_defi` row) and
+      make the other follow. Evidence: `catalog_staked_basis.py:105,244-275`; `archetype_slots_defi.py:154-176`. The
+      parallel-catalog-surface class is already documented in
+      [config-key contract drift](/plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md) §
+      "Second-surface sweep" — this is a **feasibility** divergence, not a config-key one, so it is a new instance of a
+      known class.
 - [ ] [SCRIPT] P2. **Add the ETH equivalent of the same triple** (stETH/wstETH + Aave/Morpho/Spark borrow + a perp
       venue). Sequence it FIRST if § A shows the ETH spread is better — the venues are already integrated, so it is the
       cheaper shipment and it de-risks the Solana one.

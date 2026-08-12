@@ -193,18 +193,145 @@ unknown rather than guessed.
       default rather than the only value. Then confirm the tiers are actually consumed — `default_kelly_fraction` is the
       only consumer I found, in `sports_value_betting.py`, and I did not establish whether the tier constants feed
       anything else. **If they are unconsumed, that is a separate and more serious finding** than being hardcoded.
-- [ ] [AGENT] P1. **Establish instance→wallet binding** and document it in
-      [wallet-hierarchy-and-capital-flow](/codex/04-architecture/wallet-hierarchy-and-capital-flow.md). This is the H.3
-      keying work in the Elysium plan; it must resolve before the artefacts describe wallet behaviour.
-- [ ] [AGENT] P2. **Sweep the remaining 54 archetypes for misplaced cross-archetype logic.** The § A classification rule
-      was derived from four overlays and validated on six archetypes. `TSMOM_BTC_CTA`'s duplicated vol-target proves the
-      defect class exists; nothing establishes it is the only instance.
-- [ ] [AGENT] P2. **Audit instrument-axis selection beyond coins** — expiries, strikes and tenors for the vol family,
-      where 16 of the unreachable archetypes live. The coin axis is well understood (ADV-ranked or static list); the
-      option-surface axes are not, and any artefact claim about options coverage depends on them.
+- [x] [AGENT] P1. ✅ **Audited instance→wallet binding — 2026-08-12. The custodian half is already built and correct;
+      the binding half is a typed contract with ZERO consumers.** Two separate answers: **(1) The custodian model
+      already encodes the operator's principle exactly, and needs no design work.** The operator's framing — _"we track
+      our wallets as separate from a trading perspective to monitor balances and keep things agnostic but the adaptor we
+      are using to handle the money determines how we actually execute the instructions"_ — is precisely the
+      custody-vs-signing-surface split in `architecture_v2/custody_surfaces.py`: `custodian` names who HOLDS,
+      `SigningSurface` names the adaptor that SIGNS, and the two deliberately differ for CEFFU, whose signing **routes
+      via Copper** so that it has no `SigningSurface` member at all ("documented, not invented" — asserted by
+      `test_custody_surfaces.py:115`). `FIREBLOCKS_MPC` is `out_of_scope` per POD stack choice (POD = Copper + CEFFU
+      only). **So the two-custodian model is a documentation and wiring job, not a modelling one.** **(2) The binding
+      itself is unimplemented — the H.3 keying question has no answer in code yet.** `WalletMappingConfig` declares the
+      shape (`custodian` → `chain_env` → `share_class` → one `treasury_wallet` + `trading_wallets[]`, each
+      `TradingWalletConfig` carrying a **`strategy_id`**), `WALLET_CONFIG_GCS_PATH` and `wallet_config_gcs_path()` exist
+      — and **nothing loads any of it.** `WalletMappingConfig`, `ShareClassWalletMapping`, `TradingWalletConfig` and
+      `wallet_config_gcs_path` appear ONLY in `__init__.py` re-export plumbing and `__all__` across UAC,
+      execution-service and strategy-service; the one prose mention in
+      `execution-service/engine/wallet_preflight_registry.py` says "or **equivalent**", i.e. it does not commit to this
+      path. Probed all four symbol names plus `wallet_mapping` and the path constant, so this is an absence established
+      against the writer's own vocabulary, not one grep. **Fixed in the same turn**: the `custodian` docstring listed
+      `"copper" | "fireblocks" | "mock"` — naming the out-of-scope provider and omitting CEFFU, a real June-1 POD
+      custodian — while `custody_surfaces.py`, which imports `SigningSurface` from that very file, says the opposite.
+      Corrected with the custody-vs-signing distinction spelled out — `unified-api-contracts@a395119c44`,
+      `wallet_config.py` (gate green `--no-fix`, exit measured through a redirect not a pipe; post-push ancestry
+      verified against `origin/live-defi-rollout`).
+- [ ] [OPERATOR] P0. **Decide the wallet-binding key before the loader is written — it is cheap now and expensive
+      later.** Two unresolved choices, both baked into the GCS path shape once a loader exists: **(a) Binding
+      granularity.** The schema keys trading wallets by `strategy_id` (values in the sibling slot table read
+      `AAVE_LENDING`, `L2_BASIS` — slot-table keys), but v2 instance identity is `slot_label` + `client_id`, and
+      `target_universe/` emits **many slots per archetype**. A `strategy_id` key therefore cannot distinguish two
+      instances of one archetype on different venues, which is the normal case, not the edge case. **(b) The client
+      dimension is absent entirely.** `client_id` appears **zero** times in
+      `unified_api_contracts/internal/domain/defi/`, and `WALLET_CONFIG_GCS_PATH` is
+      `wallet-config/{chain_env}/wallet_mapping.json` — no client segment, so one mapping serves all clients. Per-client
+      funds isolation is a HARD RULE (`CrossClientTransferForbiddenError`,
+      [client-funds-isolation](/codex/04-architecture/client-funds-isolation.md)) enforced at the transfer layer by
+      `client_id` metadata; if two clients' instances ever resolve to one wallet address through a client-blind mapping,
+      that enforcement is keyed on something the wallet layer does not know. **This is NOT a live defect — nothing loads
+      the mapping, so there is no current exposure** — but it is the reason to settle the key before wiring rather than
+      after. Recommendation: key on `(client_id, slot_label)` and put `client_id` in the path.
+- [ ] [AGENT] P1. **Then document the resolved binding** in
+      [wallet-hierarchy-and-capital-flow](/codex/04-architecture/wallet-hierarchy-and-capital-flow.md), including the
+      custody-vs-signing-surface distinction from (1) above, which no codex doc currently states in one place. The
+      artefacts must not describe wallet behaviour until this lands.
+- [x] [AGENT] P2. ✅ **Swept the remaining archetypes for misplaced cross-archetype logic — 2026-08-12, bounded verdict:
+      exactly TWO clusters, and the catalogue is otherwise clean.** Method: enumerated every module-level `def` across
+      all five `target_universe/catalog_*.py` modules (3,526 lines, 32 registered builders) rather than grepping for
+      suspected names — the registry was loaded in Python to get the builder count, not inferred from a grep. Everything
+      except two clusters is either a pure `build_<archetype>()` or a correctly-shared helper in `catalog_common.py`
+      (`make_spec`, `slot_token`) / `catalog.py` (`specs_for_archetype`, `archetype_for_slot_label`); the five `_mm_*`
+      helpers in `catalog_trading.py` are genuine sub-helpers of one archetype. **The two clusters are the two todos
+      below.** The good news is the scope: the defect class `TSMOM_BTC_CTA` proved does exist, but at the catalogue
+      layer it has exactly two instances, both nameable, so the carve-out build has a bounded relocation list rather
+      than an open-ended audit. Evidence: `catalog_{carry,staked_basis,trading,directional,yield_defi,common}.py`,
+      `catalog.py:90` (`_BUILDERS_BY_ARCHETYPE`, 32 entries against 60 enum members).
+- [ ] [AGENT] P1. **Relocate the perp-venue capability cluster out of `catalog_staked_basis.py`.** It is the clearest
+      instance of the defect class: `venue_supports_perp_funding()` describes itself as "asset_group-agnostic" and "the
+      canonical perp-eligibility gate for hedge-leg selection", and `perp_hedge_candidate_venues(archetype=…)` takes an
+      archetype parameter — both are cross-archetype by their own contract, and both are **defined inside one
+      archetype's module**, re-exported up through `catalog.py` → `__init__.py` so consumers cannot see where they live.
+      Two further symptoms of the same misplacement: `CARRY_BASIS_PERP`'s hedge-venue universe is defined by tuples
+      NAMED `_STAKED_BASIS_ETH_PERP_VENUES` / `_STAKED_BASIS_SOL_PERP_VENUES` (`catalog_staked_basis.py:224-225`
+      branches on both archetypes), and the function returns a bare `frozenset()` for the other 30 registered archetypes
+      with a docstring telling callers to "consult the archetype catalog directly". That empty-set path is **deliberate
+      and tested** (`test_target_universe.py:461`, `arbitrage_price_dispersion`) — so this is a placement and naming
+      defect, not a correctness bug, and the fix must not change behaviour. Move to a venue-capability module alongside
+      the other cross-archetype gates; rename the tuples for the archetypes that actually share them.
+- [ ] [AGENT] P1. **Decide whether ADV-ranked universe resolution is a carry feature or a platform one.** It is wired
+      into exactly **1 of 32 builders**: `catalog_carry.py` holds all 11 ADV references (`_resolve_dynamic_carry_coins`,
+      `_DYNAMIC_CANDIDATE_POOL`, the `as_of_date` cache), and every other builder hardcodes its universe as a tuple. Yet
+      the provider it calls is already generic and archetype-blind —
+      `rank_top_n_by_adv(candidates, venue, asset_group, as_of, top_n, window)` in
+      `engine/core/canonical_adv_ranked_universe_provider.py` — so nothing about liquidity-ranked selection is
+      carry-specific. **This asymmetry is visible in the disclosed code and lands on the carve-out**: of the three
+      archetypes shipping real implementations, `CARRY_BASIS_PERP` resolves its universe from measured ADV while
+      `CARRY_STAKED_BASIS` reads hardcoded venue tuples, with no stated reason for the difference. Either lift the
+      wiring to a shared universe-resolution helper the schema can point any archetype at, or record in codex why carry
+      is the only archetype that earns it. Ties directly to the § B P2 "archetype venue tuples" sweep — same root cause,
+      opposite end: carry escaped the hardcode, nothing else did.
+- [x] [AGENT] P2. ✅ **Audited instrument-axis selection beyond coins — 2026-08-12. The mechanism is right; the axes are
+      constants, and the structure axis is declared but unimplemented.** Three separable results, because they need
+      different responses: **(1) The mechanism is sound and must not be "fixed".** Catalogue rows carry the _rule_, not
+      the instrument, and two pure resolvers derive the instrument at tick: `vol_trading/atm_straddle_resolver.py`
+      (strike nearest spot, nearest weekly expiry ≥ 7 DTE — the selection rule is stated ONLY in that module's own
+      docstring, see the follow-up below) and `carry_and_yield/dated_contract_resolver.py`. Both are total functions of
+      `(underlying, venue, mid_price, now_utc, min_dte)` with no I/O and no randomness, so a batch rerun re-derives
+      identical instrument ids — the ε=0 determinism spine holds through instrument resolution, which is the hard part.
+      `options.py:80-87` prefers explicit `call_instrument`/`put_instrument` params and falls back to the resolver only
+      when absent: the right precedence, not a gap. **(2) Each axis is a single point, so "axis" overstates it.**
+      `strike_selection` takes exactly one value in the entire repository — `"ATM"`, 27 occurrences, no
+      OTM/delta-targeted/skew alternative — and expiry is the one ≥7-DTE-weekly rule. The dated family is the
+      counter-example done properly: `dated_expiry` + `roll_on_dte` (`param_schema.py:163-176`, `units="expiry_tag"`) is
+      a real policy axis an operator can set per instance. **(3) The declared option-structure axis is read by nothing —
+      14 rows, 1 behaviour.** `build_vol_trading_options()` emits `expression` ∈ {straddle, strangle, butterfly,
+      calendar, iron_condor} across 14 rows (8 Deribit + 6 CBOE), and `expression` has **zero** non-catalogue references
+      anywhere in the service; so do `edge_method`, `iv_percentile_low` and `iv_percentile_high`. `options.py` reads
+      exactly four params (`underlying`, `divergence_bps`, `max_slippage_bps`, `stake_vega_notional`), so **4 of the 6
+      keys the catalogue emits are dead, and all 14 rows resolve to the same ATM straddle.** A strangle needs two OTM
+      strikes, a butterfly three, a calendar two expiries — none is expressible through an ATM-only resolver. **Artefact
+      consequence: options coverage cannot be described by counting catalogue rows**, and no artefact may imply
+      butterfly/strangle/calendar capability. Evidence: `catalog_trading.py:590-636`; `param_schema.py`
+      `VOL_TRADING_OPTIONS` schema =
+      `[call_instrument, divergence_bps, max_slippage_bps, put_instrument, stake_vega_notional]`;
+      `atm_straddle_resolver.py:1-25`.
+- [ ] [AGENT] P1. **Resolve the four dead `VOL_TRADING_OPTIONS` catalogue keys** — either implement `expression` (a
+      per-structure resolver beyond ATM straddle) or delete the key and collapse the 14 rows to what actually runs.
+      Leaving both is the worst option: the catalogue advertises capability the engine does not have, and row counts
+      become a false coverage measure. Same for `edge_method` / `iv_percentile_*` — implement or delete, and add
+      whichever survives to the param schema so the validated path covers it. **This is the vol-family instance of the
+      catalogue↔engine key-drift class** documented in
+      [config-key contract drift](/plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md),
+      whose own follow-up asked for exactly this sweep beyond DeFi — found here on the `target_universe/` surface rather
+      than the `archetype_slots_*` one that doc names, so **both surfaces need the sweep, not just the one named**.
+- [ ] [AGENT] P2. **Record the option-instrument selection rule in codex — it currently lives only in a docstring.**
+      `atm_straddle_resolver.py` attributes "strike nearest spot, nearest weekly expiry ≥ 7 DTE" to an operator ruling
+      of 2026-08-08, and **no live codex doc records it**: the only `ATM` hit under `codex/09-strategy/` outside
+      archived pre-v2 material is a _proposed_ `ATM_ONLY` enum member in
+      [uac-registry-gaps](/codex/09-strategy/architecture-v2/uac-registry-gaps.md), which is a gaps register, not a
+      ruling record. Found because the `check_plan_operator_ruling_evidence` gate rejected a citation of it — the gate
+      was right, and the missing durable home is the real finding. A ruling whose only copy is a docstring dies with the
+      next refactor of that module.
+- [ ] [AGENT] P2. **Add a gate asserting every catalogue-emitted config key is read by its engine or its param schema.**
+      Both instances of this defect class were found by hand, months apart, by agents looking for something else. The
+      check is mechanical — catalogue keys per archetype vs `PARAM_SCHEMA_REGISTRY` ∪ engine `*_param(self.params, …)`
+      reads — and it would have caught all 4 dead vol keys and the earlier DeFi ones at commit time.
 
 ## Progress Log
 
+- **2026-08-12 (later)** — **All three blocking audits closed.** Together they were the gate on writing the artefacts
+  once instead of twice, and the net result is narrower than feared: the catalogue layer has exactly **two** misplaced
+  cross-archetype clusters, not an open-ended sprawl, and the custody model needed no design work at all. Three findings
+  change what the artefacts may claim: (1) **options coverage cannot be counted in catalogue rows** — 14
+  `VOL_TRADING_OPTIONS` rows differ only in an `expression` key nothing reads, so they all resolve to the same ATM
+  straddle, and no artefact may imply butterfly/strangle/calendar capability; (2) **`CARRY_BASIS_PERP` and
+  `CARRY_STAKED_BASIS` select their universes by different mechanisms** (measured ADV vs hardcoded tuples) with no
+  stated reason, and both ship real in the carve-out, so the asymmetry is visible in disclosed code; (3) **wallet
+  behaviour must not be described yet** — the binding schema has zero consumers and no client dimension. One
+  cross-cutting lesson: **both instances of the catalogue↔engine dead-key defect were found by hand, months apart, by
+  agents looking for something else**, which is why a mechanical gate is now a todo rather than another sweep. A
+  same-turn doc fix landed in UAC (`wallet_config.py` named the out-of-scope custodian and omitted a real one).
 - **2026-08-12** — Authored from the Elysium readiness audit. **Classification rule established before placing
   anything**, so the four overlays land by principle rather than by convenience: archetype iff it reasons about that
   archetype's selection logic, cross-archetype iff it reasons about any book's risk or turnover. Result: rank-buffer is
