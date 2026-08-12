@@ -306,6 +306,14 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       cadence's own empirical basis still holds now that PLAYER_VALUES fetches on window/trigger dates rather than a
       broader weekly pattern — that's a manifest-accounting question for the GCS-path design pass, out of scope for this
       classification-logic fix. — unified-trading-library@154e08039c
+- [ ] [DATA] P3. **Review agent blind spot (2026-08-12, from review note on slot-20 commit `154e08039c`): fold into the
+      pending PLAYER_VALUES manifest-accounting design pass — `reconcile_expected_absence_reasons.py` passes the
+      manifest `league_id` verbatim into `_classify_sports`, but PLAYER_VALUES manifest `league_id` is the tm_code
+      (GB1/RSK1), not the canonical id. `is_transfer_data_expected()` resolves only canonical ids (else generic-EU
+      window fallback), so a genuinely-empty in-window PLAYER_VALUES row for non-European leagues (K-League Feb-Mar
+      primary, Brazil, MLS, J1) could be misclassified `EXPECTED_OUTSIDE_TRANSFER_WINDOW` and mask a real data gap. Same
+      pre-existing shape as `transfer_records` — not a regression of that commit. Resolve tm_code→canonical before the
+      call, or pass canonical_league.**
 
 ## Progress Log
 
