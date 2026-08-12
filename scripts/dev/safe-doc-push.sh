@@ -555,6 +555,7 @@ _sdp_warn_if_content_vanished() {
     echo "       git show 'stash@{0}:<path>' > <path>"
     echo "   See plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md (F4)."
   } >&2
+  _sdp_dump_revert_forensics
   return 1
 }
 
@@ -612,6 +613,7 @@ _sdp_guard_already_landed_claim() {
     echo "       ls -t ~/.cache/prek/patches/ | head"
     echo "   See plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md (F8)."
   } >&2
+  _sdp_dump_revert_forensics
   return 1
 }
 
@@ -621,6 +623,48 @@ _sdp_guard_already_landed_claim() {
 # (worktree fingerprint also drifted) or silently dropped from the index (worktree untouched, so
 # _sdp_warn_if_content_vanished is blind to it -- that shape was measured on 2026-08-10 as a
 # push containing NEITHER named file while both stayed dirty on disk).
+# _sdp_dump_revert_forensics -- write a durable, self-contained diagnostic snapshot the MOMENT a
+# revert is detected, so a recurrence is self-diagnosing instead of needing hypotheses
+# reconstructed after the fact from a hash-only summary (exactly the gap hit 2026-08-12: a
+# revert was reported, reproduced twice, but only the entry/post-run hashes survived -- not
+# enough to distinguish a caller-tree collision from a rebase-drop from a prek race, and 7
+# separate reproduction mechanisms all came back clean without the original raw state to test
+# against). Never blocks or fails the caller -- best-effort, `|| true` on every capture.
+_sdp_dump_revert_forensics() {
+  local _dir="${SDP_FORENSICS_DIR:-$HOME/.cache/sdp-forensics}"
+  mkdir -p "$_dir" 2>/dev/null || return 0
+  local _stamp _out
+  _stamp="$(date -u +%Y%m%dT%H%M%SZ 2>/dev/null || echo unknown)"
+  _out="$_dir/revert-${_stamp}-$$.log"
+  {
+    echo "=== safe-doc-push.sh revert forensics -- $(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null) ==="
+    echo "--- invocation ---"
+    echo "FILES: ${FILES[*]:-}"
+    echo "BRANCH: ${BRANCH:-}"
+    echo "SDP_IN_ISOLATION: ${SDP_IN_ISOLATION:-unset}  SDP_ISOLATED: ${SDP_ISOLATED:-unset}  cwd: $(pwd)"
+    echo "--- entry fingerprint (caller disk, at run start) ---"
+    printf '%s\n' "$_SDP_ENTRY_FINGERPRINT"
+    echo "--- entry HEAD blobs (branch content, at run start) ---"
+    printf '%s\n' "$_SDP_ENTRY_HEAD_BLOBS"
+    echo "--- current disk fingerprint ---"
+    _sdp_fingerprint_named
+    echo "--- current HEAD ---"
+    git log -1 --format='%H %an %ad %s' 2>&1
+    echo "--- last 5 commits touching named files (this branch) ---"
+    for _ff in "${FILES[@]}"; do git log -3 --format='  %h %ad %s' -- "$_ff" 2>&1; done
+    echo "--- git status --porcelain ---"
+    git status --porcelain 2>&1
+    echo "--- git stash list (top 10) ---"
+    git stash list 2>&1 | head -10
+    echo "--- recent prek patches (top 10 by mtime, name only) ---"
+    ls -t "${PREK_HOME:-$HOME/.cache/prek}/patches" 2>/dev/null | head -10
+    echo "--- git worktree list ---"
+    git worktree list 2>&1
+    echo "=== end forensics ==="
+  } > "$_out" 2>&1 || true
+  echo "   Forensic snapshot written: $_out" >&2
+}
+
 _sdp_assert_entry_change_landed() {
   local _f _disk _entry_head _now_head
   local -a _stuck=()
@@ -653,6 +697,7 @@ _sdp_assert_entry_change_landed() {
     fi
     echo "   See plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md (F8)."
   } >&2
+  _sdp_dump_revert_forensics
   return 1
 }
 

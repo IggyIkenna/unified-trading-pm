@@ -582,7 +582,40 @@ _qm_content_vanished() {
     echo "       git show 'stash@{0}:<path>' > <path>"
     echo "     Also check: ls -t ~/.cache/prek/patches/ | head"
   } >&2
+  _qm_dump_revert_forensics
   return 1
+}
+
+# _qm_dump_revert_forensics -- mirrors safe-doc-push.sh's own version (same rationale: a revert
+# reported 2026-08-12 was reproduced twice but only survived as a hash-only summary, not enough
+# to distinguish the actual mechanism from 7 tested-and-cleared candidates). Best-effort, never
+# fails the caller.
+_qm_dump_revert_forensics() {
+  _qm_forensics_dir="${QM_FORENSICS_DIR:-$HOME/.cache/qm-forensics}"
+  mkdir -p "$_qm_forensics_dir" 2>/dev/null || return 0
+  _qm_forensics_out="$_qm_forensics_dir/revert-$(date -u +%Y%m%dT%H%M%SZ 2>/dev/null || echo unknown)-$$.log"
+  {
+    echo "=== quickmerge.sh revert forensics -- $(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null) ==="
+    echo "--- invocation ---"
+    echo "FILES_ARG: $FILES_ARG"
+    echo "REPO_NAME: ${REPO_NAME:-}  QM_IN_ISOLATION: ${QM_IN_ISOLATION:-unset}  cwd: $(pwd)"
+    echo "--- entry fingerprint ---"
+    printf '%s\n' "$_QM_ENTRY_FINGERPRINT"
+    echo "--- entry HEAD blobs ---"
+    printf '%s\n' "$_QM_ENTRY_HEAD_BLOBS"
+    echo "--- current HEAD ---"
+    git log -1 --format='%H %an %ad %s' 2>&1
+    echo "--- git status --porcelain ---"
+    git status --porcelain 2>&1
+    echo "--- git stash list (top 10) ---"
+    git stash list 2>&1 | head -10
+    echo "--- recent prek patches ---"
+    ls -t "${PREK_HOME:-$HOME/.cache/prek}/patches" 2>/dev/null | head -10
+    echo "--- git worktree list ---"
+    git worktree list 2>&1
+    echo "=== end forensics ==="
+  } > "$_qm_forensics_out" 2>&1 || true
+  echo "   Forensic snapshot written: $_qm_forensics_out" >&2
 }
 
 # ── WHAT WAS IN HEAD WHEN WE STARTED (F8, 2026-08-11) ──────────────────────────────────────
@@ -651,6 +684,7 @@ _qm_assert_entry_change_landed() {
     echo "   Do NOT cite ${_QM_PUSHED_SHA:0:10} as evidence for these paths -- it does not carry them."
     echo "   See plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md (F8)."
   } >&2
+  _qm_dump_revert_forensics
   return 1
 }
 
