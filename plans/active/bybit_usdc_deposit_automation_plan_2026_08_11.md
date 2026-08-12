@@ -43,6 +43,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+archive_exempt: true
 source:
 context_scope:
   [
@@ -225,12 +226,20 @@ context_scope:
       COPPER_MPC deposit wiring returns None + honest log message; `quality-gates.sh` green. —
       execution-service@6e12ceb962 (slot 16, 2026-08-12).
 
-- [ ] [BACKEND] P3. End-to-end integration test — Bybit USDC deposit smoke path. Mocks the CCXT deposit-address +
+- [x] ✅ [BACKEND] P3. End-to-end integration test — Bybit USDC deposit smoke path. Mocks the CCXT deposit-address +
       deposit-records endpoints and the web3 transfer, then drives a full
       `dispatch_margin_topup(instruction, bridge_deposit=None, bybit_deposit=mock_deposit)` through the consumer.
       Asserts the correct log events fire (`PERP_HEDGE_MARGIN_TOPUP_DISPATCHED` → `_SUBMITTED`), the deposit result
       carries the confirmed balance delta, and the HL path is unchanged. Repo: execution-service. Done-when: integration
-      test green; `quality-gates.sh` green.
+      test green; `quality-gates.sh` green. — **DONE 2026-08-12 (slot 2, backend_engineer):
+      `execution-service@1b719ac86a`.** New `tests/unit/defi_execution/test_bybit_deposit_smoke_e2e.py` (3 tests) drives
+      the REAL 3-phase `deposit_usdc_to_bybit` (bound as the consumer's `bybit_deposit` callable, mirroring
+      `build_bybit_deposit()`'s wiring) through `dispatch_margin_topup`, with only the CCXT boundaries
+      (`BybitPerpHedgeConnector` mocks for deposit-address + deposit-records + balance) and the web3 ERC-20 transfer
+      (`sys.modules` patch) mocked — not a stubbed callable. Asserts `DISPATCHED` → `_SUBMITTED` fire in order (+
+      `_FAILED` on a never-arriving deposit), the result carries `confirmed_balance_delta` (500 on top of a 1000
+      pre-balance), and the HL bridge path is unchanged (routes to `bridge_deposit`, `confirmed_balance_delta=None`,
+      Bybit connector untouched). Full `quality-gates.sh` green (174s, sentinel `1b719ac8`).
 
 ## Progress Log
 
@@ -339,3 +348,19 @@ context_scope:
   `test_ceffu_mpc_source_returns_none` (assert `None` + caplog contains "Group F item 19"), and
   `test_treasury_hot_source_still_builds`; `TestBybitAppStartupWiring`'s monkeypatched builders updated for the new
   kwarg. `quality-gates.sh` green (194s, sentinel `6e12ceb962`).
+- **2026-08-12 (slot 2, backend_engineer, dispatch `bybit_usdc_deposit_automation_plan-96569e3d15a4`) — todo 8 DONE:
+  `execution-service@1b719ac86a`.** Added the end-to-end Bybit USDC deposit smoke-path integration test
+  (`tests/unit/defi_execution/test_bybit_deposit_smoke_e2e.py`, 3 tests). Binds the REAL `deposit_usdc_to_bybit` (all 3
+  phases: resolve address → ERC-20 transfer → balance-poll) as the consumer's `bybit_deposit` callable — the same
+  pre-bound shape `build_bybit_deposit()` produces — with only the external boundaries mocked: `BybitPerpHedgeConnector`
+  mocks for the CCXT deposit-address/deposit-records/balance endpoints and a `sys.modules` web3 patch for the transfer
+  (patterns from `test_bybit_deposit.py`). (1) Bybit TREASURY_HOT success: dispatches through the real helper, returns
+  `confirmed_balance_delta=500`, fires `PERP_HEDGE_MARGIN_TOPUP_DISPATCHED` before `_SUBMITTED` (event order asserted
+  via a fresh `MockEventSink`). (2) HL path unchanged: an HL instruction with both callables wired routes to
+  `bridge_deposit`, reports `confirmed_balance_delta=None`, and never invokes the Bybit deposit machinery
+  (`resolve_deposit_address` not awaited). (3) A never-arriving deposit returns not-executed with the timeout error and
+  fires `PERP_HEDGE_MARGIN_TOPUP_FAILED`. Full `quality-gates.sh` green (174s, sentinel `1b719ac8`), shipped via
+  quickmerge to LDR, verified on origin. **Archival bridge**: this flip makes the plan 0-open/unlocked, so
+  `archive_exempt: true` is set (frontmatter) as the sanctioned cross-repo (mode-2) two-commit bridge per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — the immediately-following `git mv` archival
+  commit drops it.
