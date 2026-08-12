@@ -347,37 +347,143 @@ qg_cache_store() {  # $1=name $2=key — call ONLY after a clean/green step run
 # ($PROJECT_ROOT/..), so an earlier version of this function looked for
 # <workspace>/uv.lock, never found one, and silently returned 0 for every repo. A check
 # that no-ops is worse than no check: it reports green and looks installed.
+# $1 = phase: "pre-sync" (default, NEVER aborts) or "post-sync" (aborts under
+# QG_ENFORCE_FRESH_VENV=1). The distinction is what makes blocking safe to enable at all.
+# The bases call this EARLY, at line ~64, but their own `uv sync --frozen` does not run until
+# line ~541 — so an early STALE only means "the venv was drifted when we walked in", which the
+# gate is about to repair by itself. Aborting there would turn every ordinary post-pull drift
+# into a hard stop that the gate could no longer fix, and the operator would have to run
+# `uv sync` by hand. The POST-SYNC call is the one worth blocking on: it fires only when the
+# gate has already run `uv sync --frozen` plus the constrained editable re-pin and the env
+# STILL does not match the lock — i.e. the sync silently failed (it is `|| log_warn`,
+# non-fatal), which is exactly the agent-orchestrator fastapi-0.136.3 incident.
 qg_assert_venv_fresh() {
+    local _phase="${1:-pre-sync}"
     [ "${QG_ALLOW_STALE_VENV:-0}" = "1" ] && return 0
     [ -f "${PROJECT_ROOT:-.}/uv.lock" ] || return 0
     [ -x "${PROJECT_ROOT:-.}/.venv/bin/python" ] || return 0
     command -v uv >/dev/null 2>&1 || return 0
+    # --inexact is load-bearing, NOT a loosening. EXACT mode counts every package the lock
+    # does not list as drift, and the bases deliberately install each repo's LOCAL_DEPS
+    # siblings ON TOP of the lock, which drags in whole transitive trees the lock never knew
+    # about. Measured on unified-trading-pm: 131 such extras against 5 genuine version
+    # conflicts. In exact mode this function would therefore report STALE for every repo with
+    # siblings, permanently — which is exactly what it did on the day it shipped.
+    # --inexact still catches what actually breaks a suite: a MISSING or WRONG-VERSION package.
     # Read-only: --check never writes the env and --frozen never touches the lock.
-    # ~50ms on an in-sync tree, so this costs nothing in the common case.
-    (cd "${PROJECT_ROOT:-.}" && uv sync --frozen --check >/dev/null 2>&1) && return 0
+    (cd "${PROJECT_ROOT:-.}" && uv sync --frozen --inexact --check >/dev/null 2>&1) && return 0
 
-    # WARN-ONLY BY DEFAULT (downgraded 2026-08-11, same day it shipped, on measurement).
-    # Blocking here is not yet safe fleet-wide: unified-trading-pm re-drifts its OWN venv
-    # across a gate run — verified by a controlled sync -> clean -> gate(exit 0) -> STALE
-    # cycle — so a blocking check would stop PM from ever gating green. Mechanism: `uv sync`
-    # regenerates uv.lock with editable-dep version churn, slot-cron-ff-pull.sh's [auto-clean]
-    # reverts that with `git checkout -- uv.lock` (uv.lock content unchanged in git but its
-    # mtime moves), and the venv is then consistent with the DISCARDED lock rather than the
-    # committed one. Measured blast radius: 2 of 215 local venvs re-drift within an hour, both
-    # unified-trading-pm.
+    # BLOCKING BY DEFAULT at the post-sync phase since 2026-08-12. It shipped blocking on
+    # 2026-08-11, was downgraded to warn-only hours later on measurement (PM re-drifted its own
+    # venv across a gate run, so blocking would have stopped it gating green at all), and is
+    # blocking again now that the cause is fixed AND the call moved after the gate's own sync.
+    # Verified before the flip: (a) a fleet sweep of every live repo with a lock+venv reports 0
+    # stale under --inexact — the only stragglers are abandoned *.stale-pre-history-rewrite-*
+    # backup dirs; (b) a full PM gate run with enforcement ON, against a DELIBERATELY drifted
+    # venv, did NOT abort and left the venv CLEAN. Ordinary post-pull drift therefore cannot
+    # trip this; only a genuinely failed sync can.
     #
-    # The signal is still worth printing everywhere — this is the class that let
-    # agent-orchestrator sit on fastapi 0.136.3 against a lock pinning 0.140.7 with the whole
-    # suite unable to collect. agent-orchestrator's own gate keeps a BLOCKING copy
-    # (agent-orchestrator@f9a61ebf62) because it was verified there and does not self-drift.
-    # Flip this to blocking fleet-wide with QG_ENFORCE_FRESH_VENV=1 once the PM lock-churn
-    # cycle is fixed.
-    echo "⚠ WARN — .venv is STALE against uv.lock in ${PROJECT_ROOT:-$PWD} (run 'uv sync')." >&2
-    echo "   Non-blocking: a stale venv can stop the suite COLLECTING, so treat a red pytest here" >&2
-    echo "   as possibly environmental. Set QG_ENFORCE_FRESH_VENV=1 to make this abort." >&2
-    if [ "${QG_ENFORCE_FRESH_VENV:-0}" = "1" ]; then
-        echo "❌ quality gate ABORTED — QG_ENFORCE_FRESH_VENV=1 and .venv is stale." >&2
+    # CAUSE — corrected 2026-08-12. The note that stood here blamed slot-cron-ff-pull.sh's
+    # [auto-clean] reverting a regenerated uv.lock. That was WRONG; it is recorded only so the
+    # next reader does not re-derive it. The real cycle was measured directly, in a controlled
+    # sync -> re-pin -> check run: `uv sync --frozen` leaves the venv CLEAN, and then the bases'
+    # own `uv pip install -e <sibling>` re-resolves that sibling's transitive tree from the
+    # index and UPGRADES lock-pinned packages — on PM exactly 5 of them (attrs, certifi,
+    # charset-normalizer, propcache, aiohappyeyeballs). Every gate run re-drifted its own venv,
+    # which is precisely why this check could not be made blocking.
+    # Fixed by qg_build_local_deps_constraints (below), which the bases now pass to that install.
+    #
+    # The signal is worth printing everywhere — this is the class that let agent-orchestrator
+    # sit on fastapi 0.136.3 against a lock pinning 0.140.7 with the whole suite unable to
+    # COLLECT. agent-orchestrator's own gate keeps a BLOCKING copy (agent-orchestrator@f9a61ebf62).
+    # Flip fleet-wide with QG_ENFORCE_FRESH_VENV=1 once a sweep confirms 0 stale repos.
+    echo "⚠ WARN — .venv is STALE against uv.lock in ${PROJECT_ROOT:-$PWD} [${_phase}] (run 'uv sync')." >&2
+    echo "   A stale venv can stop the suite COLLECTING, so treat a red pytest here as" >&2
+    echo "   possibly environmental rather than a code defect." >&2
+    if [ "${_phase}" = "pre-sync" ]; then
+        echo "   Non-blocking at this phase: the gate's own 'uv sync --frozen' runs later and" >&2
+        echo "   should repair this. If it is still stale afterwards, the post-sync check reports it." >&2
+        return 0
+    fi
+    if [ "${QG_ENFORCE_FRESH_VENV:-1}" = "1" ]; then
+        echo "❌ quality gate ABORTED — the venv STILL does not match uv.lock after the gate's own" >&2
+        echo "   'uv sync --frozen' + editable re-pin. That sync is non-fatal (|| log_warn), so this" >&2
+        echo "   means it silently failed and the suite would run against a mismatched env." >&2
+        echo "   Fix: run 'uv sync --frozen' here and read its error. Escape hatch:" >&2
+        echo "   QG_ENFORCE_FRESH_VENV=0 (or QG_ALLOW_STALE_VENV=1) downgrades this to a warning." >&2
         exit 1
     fi
     return 0
+}
+
+# ── Editable-sibling install guards: overrides + lock-derived constraints ─────────────
+# Shared by base-library.sh and base-service.sh so there is ONE implementation of the rules
+# below instead of two that drift apart.
+#
+# `uv pip install -e <sibling>` is uv's pip-compatible interface. Unlike `uv sync` it reads
+# NEITHER this repo's uv.lock NOR the sibling's own [tool.uv] override-dependencies, which
+# produces two distinct defects that need two DIFFERENT files:
+#
+#   * override-dependencies lost -> a CVE floor living ONLY there (unified-api-contracts's
+#     cryptography>=50.0.0) is silently re-resolved back down.  Fixed by --overrides.
+#     (/plans/active/issues/qg_editable_sibling_install_regresses_override_only_cve_fixes_2026_08_04.md)
+#   * lock pins lost -> packages this repo's uv.lock pins get UPGRADED, so a venv that was
+#     CLEAN immediately after `uv sync --frozen` is STALE the instant the re-pin runs.
+#     Fixed by --constraints.  (measured 2026-08-12 on PM: 5 packages; this was the entire
+#     reason qg_assert_venv_fresh had to ship warn-only.)
+#
+# `--no-deps` appears to solve both and does NOT: it drops the sibling's transitives outright,
+# so unified_api_contracts loses pydantic in any consumer whose own pyproject never declares
+# it. Verified live TWICE, independently — 2026-08-04 and again 2026-08-12. Do not retry it.
+#
+# Override-owned names are EXCLUDED from the constraints file on purpose: a floor (>=50.0.0)
+# and a pin (==49.x) on the same package are contradictory and uv fails the resolve outright.
+# The override has to win, so no constraint is emitted for that name.
+qg_build_local_deps_overrides() {
+    local out="$1"; shift
+    : > "$out"
+    local _dir
+    for _dir in "$@"; do
+        [ -f "$_dir/pyproject.toml" ] || continue
+        python3 -c '
+import tomllib, sys
+try:
+    with open(sys.argv[1], "rb") as f:
+        d = tomllib.load(f)
+except Exception:
+    sys.exit(0)
+for line in d.get("tool", {}).get("uv", {}).get("override-dependencies", []):
+    print(line)
+' "$_dir/pyproject.toml" >> "$out" 2>/dev/null || :
+    done
+}
+
+qg_build_local_deps_constraints() {
+    local out="$1" overrides="${2:-/dev/null}"
+    : > "$out"
+    [ -f "${PROJECT_ROOT:-.}/uv.lock" ] || return 0
+    command -v uv >/dev/null 2>&1 || return 0
+    # Degrades to "no constraints" rather than failing: an older uv without `export`, or an
+    # unresolvable lock, must never stop the suite from running. Worst case is today's behaviour.
+    (cd "${PROJECT_ROOT:-.}" && uv export --frozen --no-emit-project --no-hashes 2>/dev/null) \
+        | python3 -c '
+import re, sys
+norm = lambda n: re.sub(r"[-_.]+", "-", n).lower()
+skip = set()
+try:
+    with open(sys.argv[1]) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#"):
+                skip.add(norm(re.split(r"[<>=!~\[; ]", line)[0]))
+except OSError:
+    pass
+for line in sys.stdin:
+    s = line.strip()
+    # Emit ONLY name==version pins. `uv export` also yields editable/path entries and bare
+    # option lines, both ILLEGAL in a constraints file — uv aborts the install on them.
+    m = re.match(r"^([A-Za-z0-9][A-Za-z0-9._-]*)(\[[^\]]*\])?==", s)
+    if m and norm(m.group(1)) not in skip:
+        print(s)
+' "$overrides" > "$out" 2>/dev/null || : > "$out"
 }

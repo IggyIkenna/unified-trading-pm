@@ -107,6 +107,15 @@ def _extract_links(text: str) -> list[tuple[int, str]]:
         for m in _LINK_RE.finditer(line):
             out.append((lineno, m.group(1)))
         for m in _BACKTICK_CODEX_RE.finditer(line):
+            # A backtick path containing a literal "..." is a PLACEHOLDER, never a citation —
+            # no real file has an "..." segment, so resolving it can only ever report a false
+            # broken link. Measured 2026-08-12: `codex/NN-name/...md`, written in PROSE inside
+            # elysium-presentation-authoring-notes.md precisely to describe this class of
+            # false positive, failed check_doc_body_links for the whole fleet and blocked every
+            # unified-trading-pm quickmerge. Fences were already excluded (_body_without_fences);
+            # this is the prose case that exclusion cannot reach.
+            if "..." in m.group(1):
+                continue
             out.append((lineno, m.group(1)))
     return out
 
