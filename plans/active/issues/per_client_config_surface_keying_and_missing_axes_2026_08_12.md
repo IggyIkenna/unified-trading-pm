@@ -135,13 +135,21 @@ rather than a new invention.
 
 ## Todos
 
-- [ ] [OPERATOR] P0. **Decide the primary key for per-client config: client-first or archetype-first.** Recommendation:
-      **client-first** — `configs/clients/{client_id}.yaml` carrying a per-archetype block, which makes onboarding and
-      offboarding one file, gives a single client-level view, and stops `venue_creds_kms_path` being restated per
-      archetype. This is the operator's own instinct ("general client name would be logical"). The counter-argument for
-      the status quo is that `StrategySupervisor` boots per (archetype, shard) and reads only its own file; a
-      client-first layout means the supervisor loads N client files and filters. That is a small loader change, not a
-      blocker — but it is a real cost and the operator should see it before the decision.
+- [x] [AGENT] P0. ✅ **DECIDED 2026-08-12 — client-first.** Operator ruling quoted verbatim in § "Target state" of this
+      doc (/plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md), with the provenance in
+      its `source:` frontmatter. Shape: `configs/clients/{client_id}.yaml` carrying a per-archetype block. One file per
+      client, so onboarding and offboarding are single-file operations, `venue_creds_kms_path` stops being restated per
+      archetype, and there is finally a file that answers "what is this client configured to do?". Accepted cost:
+      `StrategySupervisor` boots per (archetype, shard) and today reads only its own file, so it must now load N client
+      files and filter to its own (archetype, shard) — a loader change, not an architecture change. **Second dividend,
+      which turned out to decide the reload story too**: the file boundary now matches the PROCESS boundary (per-client
+      isolation is one subprocess per client), so a param edit maps to exactly one client's subprocess with no diffing
+      to work out whose values moved. Under archetype-first, one client's edit touches a file shared by every client on
+      that archetype, giving a reload a blast radius of N clients. See § "Dynamic param updates" below.
+- [ ] [AGENT] P0. **Implement the client-first layout** — `configs/clients/{client_id}.yaml` with a per-archetype block,
+      a `ClientsYaml` schema change to match, and the supervisor-side loader that filters to its own (archetype, shard).
+      Migrate the two existing files (`carry_staked_basis`, `arbitrage_price_dispersion`) which today duplicate both
+      `client_id`s and restate `venue_creds_kms_path` per archetype.
 - [ ] [OPERATOR] P0. **Confirm which of leverage / venue selection / coin universe become per-client axes**, since each
       is a UAC schema change plus a consumer, and each has an architectural interaction: **leverage** must reconcile
       with `max_position_usd` (two overlapping notional controls invite contradiction — decide whether leverage is
@@ -162,6 +170,135 @@ rather than a new invention.
       what, which is why the question needed a code audit to answer. The three-surface table above is the content;
       [per-client-isolation-architecture](/codex/04-architecture/per-client-isolation-architecture.md) is the likely
       home.
+
+## Target state — operator ruling 2026-08-12: the `(client, archetype slot)` config governs everything
+
+> _"client + strategy archetype slot config would govern everything. It's effectively gotta be verbose enough that
+> strategy wizard could generate it (not fixed, can be a human too) and it governs exactly how everything is gonna
+> operate for that client strategy slot, all the way to the execution algo selection criteria they wanna see. How they
+> want PnL, analytics, risk behaviour to look — basically everything in strategy service that can be a config should be
+> in there so that it can be dynamically changed per client."_
+
+**The key is `(client_id, slot_label)`** — which is exactly the pair the event-tag 9-tuple already carries, so this
+ruling is consistent with the identity standard rather than a new axis. It also settles the wallet-binding key question
+in the expansion plan: the same pair.
+
+What this ruling changes, relative to the `clients.yaml` schema measured above:
+
+| Dimension | `clients.yaml` today                                        | Ruling target                                                                                                                                                                          |
+| --------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Key       | (archetype, shard) → [client]                               | **(client_id, slot_label)** — per client-strategy-SLOT, not per archetype                                                                                                              |
+| Scope     | 7 fields: creds path, per-venue balance floors, 3 risk caps | **Everything in strategy-service that can be config** — strategy params, venue + coin selection, leverage, execution-algo selection criteria, PnL treatment, analytics, risk behaviour |
+| Authoring | Hand-edited YAML in a git repo                              | **Wizard-generatable, human-writable** — the capability wizard is the generator, not optional UI                                                                                       |
+| Substrate | Git file, baked into a deployment                           | **GCS instance; schema + defaults in code** — the prerequisite for dynamic change                                                                                                      |
+
+Three consequences worth stating before anyone builds it:
+
+1. **The wizard stops being a convenience and becomes load-bearing.** A config object this complete is not comfortably
+   hand-authored, which is precisely why the ruling names the wizard as its generator. `capability_manifest.py` is
+   already a restriction GRAPH consuming `PARAM_SCHEMA_REGISTRY`, so the wizard is the right home — but the schema
+   registry currently covers **strategy params only, for 35 of 60 archetypes**. It must grow sections for execution,
+   PnL, analytics and risk before it can generate a governing object.
+2. **"Execution algo selection criteria" crosses a service seam.** strategy-service config would govern an
+   execution-service behaviour, and there are **no service↔service deps** by rule
+   ([tier-and-import-architecture](/codex/04-architecture/tier-and-import-architecture.md)). So this travels as a
+   _contract on the instruction_ (a UAC-typed selection-criteria block that execution-service interprets), never as an
+   import or a shared config read. Getting this wrong is the most likely way this design picks up a dependency it is not
+   allowed to have.
+3. **A bigger config surface makes the determinism rule matter more, not less.** Every one of these axes becomes part of
+   `config_hash`, so every change must still be a versioned event at a tick boundary (see below). The larger the object,
+   the more valuable that discipline — and the more expensive a silent swap would be.
+
+### Todos
+
+- [ ] [AGENT] P0. **Draft the full `(client_id, slot_label)` config schema** covering the six governed areas the ruling
+      names: strategy params · venue + coin selection · leverage and risk behaviour · execution-algo selection criteria
+      · PnL treatment · analytics. Schema + defaults in code, instance in GCS. This supersedes the narrow
+      `ClientsYamlEntry` shape rather than extending it.
+- [ ] [AGENT] P0. **Extend `PARAM_SCHEMA_REGISTRY` to the non-strategy sections** — it covers strategy params for 35 of
+      60 archetypes today, and the wizard cannot generate a governing config from a schema that describes a fraction of
+      it. Sequence this against the existing § B gate asserting factory-registered ⊆ param-schema-covered.
+- [ ] [AGENT] P1. **Define the execution-algo selection-criteria contract as a UAC type carried on the instruction**,
+      not as a config read across the seam. Name the interpreting surface in execution-service explicitly so the seam is
+      documented rather than discovered.
+- [ ] [OPERATOR] P2. **Confirm the PnL and analytics axes a client may actually vary.** PnL already has real modes (HWM
+      is TWR / Notional / PnL-recovery, never raw equity —
+      [pnl-attribution](/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)), so some of this axis
+      exists; "how they want analytics to look" needs a bounded list before it can be a schema, or it becomes an
+      open-ended surface with no defaults.
+
+## Dynamic param updates — why leverage is a restart today, and why it need not be
+
+Operator question 2026-08-12: _"strategy service is running live, we update leverage for a client, it's a restart in
+this case but we want it to be dynamic right, same with api key changes (that's execution though) — I thought hot
+reloader was working"_.
+
+**The hot reloader IS working. The operator's model is correct — for credentials.** Measured:
+
+| Surface                          | Dynamic today?                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **API keys / credentials**       | **Yes, no restart.** `CredentialStore.reload()` is thread-safe under an `RLock` so the IPC listener thread can swap while the main loop reads; `ClientCredentialKmsPoller` (UTL) runs a background daemon with per-(client_id, venue) poll intervals and fires `CredentialRotatedSignal` on a version change; a `CREDENTIAL_ROTATED` bus event does an immediate reload bypassing the poll interval. execution-service has the sibling `ApiKeyReloader` pushing into the connector (HYPERLIQUID wired; Bybit explicitly cannot be served by it — a `DATA_SOURCE_TO_SECRET` registry gap noted in its own source) |
+| Instrument universe              | **Yes** — `DomainConfigReloader[InstrumentDomainConfig]`, atomic module-level swap, `register_instrument_change_callback(added, removed, new_config)` gives engines a hook                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Strategy domain config           | **Yes** — `DomainConfigReloader[StrategyDomainConfig]`, same pattern                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| **Per-client params (leverage)** | **No — restart.** Two stacked reasons below                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+
+### Root cause: the substrate, not the reloader
+
+**`clients.yaml` is a git-committed file in the deployment-service repo**, handed to the VM as a local path via
+`VM_CLIENTS_YAML_PATH` metadata. **A git file baked into a deployment cannot hot-reload by construction** — changing
+leverage means editing the repo, committing, and relaunching the VM. That is the whole reason it is a restart. It is not
+that hot reload is missing; it is that this one config lives on the wrong substrate while every other hot-reloadable
+config is GCS-backed.
+
+This is exactly the operator's centralisation directive 2026-08-12: _"centralise all config with strategy-service having
+the schema/defaults in config.py but not the actual config — instance is in GCS"_. **That directive and dynamic leverage
+are the same change, not two.** The GCS rails already exist and are already used: `ConfigLoader.load_config()` reads
+`configs/{strategy_id}.json` from `STRATEGY_BUCKET` (and `configs_grid/{grid_id}/…` for grids) through the
+cloud-agnostic `storage_client`, with caching and `_validate_risk_config_blocks()` on load; `load_config_from_path()`
+takes a full `gs://` path. Move the per-client instance to GCS and `DomainConfigReloader` (cloud-agnostic,
+`min_reload_interval`-throttled) picks up changes with no restart.
+
+### The second gap: a running engine cannot be told
+
+Even with the value arriving, **`self.params` has no mutation path** — it is set once in `register_instance()` and never
+rewritten; there is no setter, no `update`, and no param-change callback. The pattern to copy sits **two functions away
+in the same file**: `config_reloaders.py` already exposes `register_instrument_change_callback()`. There is no
+`register_param_change_callback()`. So: GCS move makes the value _arrive_; a callback + setter makes the running engine
+_see_ it. Both are needed, and neither is a new subsystem.
+
+### The constraint that decides the implementation: determinism
+
+A naive `self.params.update()` would be dynamic **and would silently break the ε=0 proof**. `paper(W)` must equal
+`batch-rerun(W)` trade-for-trade
+([paper-batch-live-reconciliation](/codex/09-strategy/operational/paper-batch-live-reconciliation.md)), and a rerun
+cannot reproduce a value that changed at an unrecorded moment. The design is already implied by the event tag, which
+carries **both `config_hash` and `config_version`** in its 9-tuple
+([strategy-identity-versioning](/codex/06-coding-standards/strategy-identity-versioning.md)): a param change must be
+**an event in the log with a `config_version` bump applied at a known tick boundary**, so the rerun replays it at the
+same tick. That is the difference between an implementation that works and one that quietly invalidates reconciliation.
+
+### Todos
+
+- [ ] [AGENT] P0. **Move the per-client config instance to GCS**, schema + defaults staying in code per the operator's
+      centralisation ruling. This is the change that makes leverage dynamic; everything below depends on it.
+- [ ] [AGENT] P0. **Add `register_param_change_callback()` + an engine param setter**, mirroring
+      `register_instrument_change_callback()`. Without it the value reaches the process and the running engine still
+      cannot see it.
+- [ ] [AGENT] P0. **Emit a config-change EVENT with a `config_version` bump at a tick boundary**, never a silent
+      in-place swap — otherwise the ε=0 batch-rerun proof breaks. Add a reconciliation test that changes a param
+      mid-window and asserts `paper(W) == batch-rerun(W)` still holds.
+- [ ] [OPERATOR] P1. **Confirm the tighten-vs-loosen asymmetry for risk limits.** Recommendation: **tightening** (lower
+      leverage, lower caps) applies immediately as a protective action; **loosening** waits for a clean boundary or
+      needs explicit authorisation. This mirrors the existing direction-and-scope-aware kill-switch philosophy
+      ([autonomous-recovery-matrix](/codex/04-architecture/autonomous-recovery-matrix.md)) rather than inventing a
+      second policy. Worth an explicit ruling because "hot reload" usually implies symmetry, and here symmetry is wrong.
+- [ ] [AGENT] P1. **Reconcile the three config loaders before centralising onto one.**
+      `config.py::load_strategy_config()` is **local-file only** (`Path(path).exists()` + `yaml.safe_load`, falling back
+      to a hardcoded default Pure Lending config), while `engine/core/config_loader.py::ConfigLoader` is the GCS/JSON
+      path with caching and risk-block validation, and
+      `engine/core/strategy_config_loader.py::load_strategy_config(strategy_id)` is a third. **The name
+      `load_strategy_config` is reused for two different functions with different substrates** — a centralisation that
+      leaves all three in place has not centralised anything.
 
 ## Progress Log
 

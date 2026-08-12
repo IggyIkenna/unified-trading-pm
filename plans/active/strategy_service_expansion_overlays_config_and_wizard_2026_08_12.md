@@ -217,13 +217,21 @@ unknown rather than guessed.
       Corrected with the custody-vs-signing distinction spelled out — `unified-api-contracts@a395119c44`,
       `wallet_config.py` (gate green `--no-fix`, exit measured through a redirect not a pipe; post-push ancestry
       verified against `origin/live-defi-rollout`).
-- [ ] [OPERATOR] P0. **Decide the wallet-binding key before the loader is written — it is cheap now and expensive
-      later.** Two unresolved choices, both baked into the GCS path shape once a loader exists: **(a) Binding
-      granularity.** The schema keys trading wallets by `strategy_id` (values in the sibling slot table read
-      `AAVE_LENDING`, `L2_BASIS` — slot-table keys), but v2 instance identity is `slot_label` + `client_id`, and
-      `target_universe/` emits **many slots per archetype**. A `strategy_id` key therefore cannot distinguish two
-      instances of one archetype on different venues, which is the normal case, not the edge case. **(b) The client
-      dimension is absent entirely.** `client_id` appears **zero** times in
+- [x] [AGENT] P0. ✅ **RESOLVED by operator ruling 2026-08-12 — the key is `(client_id, slot_label)`.** Ruling quoted
+      verbatim in
+      [per-client config keying](/plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md) §
+      "Target state": _"client + strategy archetype slot config would govern everything"_. It settles both sub-questions
+      below in one answer: binding granularity is the SLOT (not `strategy_id`, not the archetype), and the client
+      dimension is present as the first element of the pair. This matches the event-tag 9-tuple, which already carries
+      exactly that pair, so it follows the identity standard rather than inventing an axis. Full ruling, scope and
+      consequences:
+      [per-client config keying](/plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md) §
+      "Target state". The two sub-questions as originally posed, retained because the reasoning still applies to the
+      implementation: **(a) Binding granularity.** The schema keys trading wallets by `strategy_id` (values in the
+      sibling slot table read `AAVE_LENDING`, `L2_BASIS` — slot-table keys), but v2 instance identity is `slot_label` +
+      `client_id`, and `target_universe/` emits **many slots per archetype**. A `strategy_id` key therefore cannot
+      distinguish two instances of one archetype on different venues, which is the normal case, not the edge case. **(b)
+      The client dimension is absent entirely.** `client_id` appears **zero** times in
       `unified_api_contracts/internal/domain/defi/`, and `WALLET_CONFIG_GCS_PATH` is
       `wallet-config/{chain_env}/wallet_mapping.json` — no client segment, so one mapping serves all clients. Per-client
       funds isolation is a HARD RULE (`CrossClientTransferForbiddenError`,
