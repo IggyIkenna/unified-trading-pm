@@ -88,6 +88,10 @@ CUTOVER_CRITICAL_DIRS = (
 DEFAULT_STALENESS_DAYS = 90
 DEFAULT_BASELINE_PATH = Path(__file__).parent / "codex_doc_freshness_baseline.yaml"
 
+# A doc carrying one of these statuses is formally retired: it is no longer the SSOT for
+# anything, and it is not supposed to still match the running system.
+RETIRED_STATUSES = frozenset({"superseded", "deprecated", "archived"})
+
 
 class FreshnessViolation:
     """A codex doc failing the freshness SSOT."""
@@ -144,10 +148,49 @@ def _parse_last_reviewed(value: object) -> datetime.date | None:
     return None
 
 
-def _check_doc(path: Path, staleness_days: int, today: datetime.date) -> FreshnessViolation | None:
-    fm = _parse_frontmatter(path)
+def _is_retired_with_successor(fm: dict[str, object]) -> bool:
+    """True when a doc is formally retired AND names what replaced it.
+
+    Such a doc is exempt from the staleness window (operator ruling 2026-08-12,
+    /plans/active/issues/codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md).
+
+    The reason is that "re-review" has no honest meaning here. `last_reviewed` asserts "someone
+    checked this still matches the system"; a superseded doc is *supposed* to no longer match,
+    so the only available actions on expiry were to stamp it unread or to re-read a doc nobody
+    should be reading. Holding retired docs to the live cadence therefore manufactured exactly
+    the dishonest-stamp pressure the gate exists to prevent (3 of the 6 docs flagged on
+    2026-08-12 were retired).
+
+    **The `superseded_by` requirement is load-bearing, not decoration.** Exempting on `status`
+    alone would make this a mute button: any stale doc could be silenced by editing one field.
+    Requiring the successor means the only way to buy the exemption is to record where the
+    truth moved to — which is the thing that actually protects a reader who greps into a dead
+    doc. A retired doc with no successor stays subject to the window, deliberately: nothing
+    records what replaced it, so it is the more dangerous shape, not the less.
+    """
+    status = fm.get("status")
+    if not isinstance(status, str) or status.strip().lower() not in RETIRED_STATUSES:
+        return False
+    successor = fm.get("superseded_by")
+    if isinstance(successor, str):
+        return bool(successor.strip())
+    if isinstance(successor, list):
+        return any(isinstance(s, str) and s.strip() for s in cast(list[object], successor))
+    return False
+
+
+def _check_parsed(
+    path: Path, fm: dict[str, object] | None, staleness_days: int, today: datetime.date
+) -> FreshnessViolation | None:
+    """Freshness verdict for an ALREADY-parsed frontmatter dict.
+
+    Split out from `_check_doc` so `main()` can parse each doc's frontmatter exactly once and
+    still classify retired-exempt docs separately, rather than re-reading all 316 files.
+    """
     if fm is None:
         return FreshnessViolation(path, "no-frontmatter")
+    if _is_retired_with_successor(fm):
+        return None
     last_reviewed_raw = fm.get("last_reviewed")
     if last_reviewed_raw is None:
         return FreshnessViolation(path, "no-last_reviewed-field")
@@ -158,6 +201,11 @@ def _check_doc(path: Path, staleness_days: int, today: datetime.date) -> Freshne
     if age > staleness_days:
         return FreshnessViolation(path, "stale", f"{age}d old (limit {staleness_days}d; last_reviewed={last_reviewed})")
     return None
+
+
+def _check_doc(path: Path, staleness_days: int, today: datetime.date) -> FreshnessViolation | None:
+    """Parse-and-check a single doc. Convenience wrapper over `_check_parsed`."""
+    return _check_parsed(path, _parse_frontmatter(path), staleness_days, today)
 
 
 class BaselineSnapshot:
@@ -299,8 +347,13 @@ def main() -> int:
     today = datetime.date.today()
     docs = _iter_codex_md(workspace_root)
     violations: list[FreshnessViolation] = []
+    exempt_retired: list[Path] = []
     for doc in docs:
-        v = _check_doc(doc, staleness_days, today)
+        fm = _parse_frontmatter(doc)
+        if fm is not None and _is_retired_with_successor(fm):
+            exempt_retired.append(doc)
+            continue
+        v = _check_parsed(doc, fm, staleness_days, today)
         if v is not None:
             violations.append(v)
 
@@ -308,6 +361,12 @@ def main() -> int:
         f"Scanned {len(docs)} codex doc(s) across {len(CUTOVER_CRITICAL_DIRS)} cutover-critical "
         f"surface(s); {len(violations)} violation(s) (staleness limit: {staleness_days}d)."
     )
+    # Report the exempt set rather than dropping it silently: an exemption nobody can see is
+    # indistinguishable from a doc the walker missed, and this surface is meant to stay visible.
+    if exempt_retired:
+        print(f"  exempt-retired: {len(exempt_retired)} doc(s) with a retired status + a named successor")
+        for doc in sorted(exempt_retired):
+            print(f"    - {_relative_path(doc, pm_root)}")
 
     if baseline_write:
         _write_baseline(baseline_path, violations, pm_root)

@@ -177,7 +177,7 @@ def write_baseline(counts: dict[str, int], existing: Baseline, path: Path | None
         "# deployment-api's vendor-deps/deploy/redeploy-monitor-jobs steps) is\n"
         '# expected to live here PERMANENTLY, baselined rather than "fixed".\n'
         "#\n"
-        "# SSOT: plans/active/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md\n"
+        "# SSOT: plans/archive/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md\n"
         "# + plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md.\n"
     )
     body = yaml.safe_dump(
@@ -351,7 +351,7 @@ def main(argv: list[str] | None = None) -> int:
             "`rollout-cloudbuild.py --apply` on this repo would either be refused (would-drop-content guard) "
             "or, if the guard is ever bypassed, silently regress it. Forward-port the fix into the template, "
             "or if the drift is intentional per-repo customization, ratchet the baseline (`--update-baseline`). "
-            "SSOT: plans/active/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md. "
+            "SSOT: plans/archive/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md. "
             "Baseline: unified-trading-pm/scripts/quality_gates/cloudbuild_template_drift_baseline.yaml "
             "(NEVER raise a count).",
             file=sys.stderr,

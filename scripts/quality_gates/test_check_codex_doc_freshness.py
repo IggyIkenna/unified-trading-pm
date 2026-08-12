@@ -23,6 +23,7 @@ from check_codex_doc_freshness import (
     BaselineSnapshot,
     FreshnessViolation,
     _check_doc,
+    _is_retired_with_successor,
     _load_baseline,
     _new_violations,
     _relative_path,
@@ -162,3 +163,99 @@ def test_check_doc_future_dated_is_clean_not_an_error(tmp_path: Path) -> None:
     p = tmp_path / "future.md"
     p.write_text("---\nlast_reviewed: 2026-10-20\n---\nbody\n", encoding="utf-8")
     assert _check_doc(p, 90, datetime.date(2026, 8, 9)) is None
+
+
+# ---------------------------------------------------------------------------
+# Retired-doc exemption (operator ruling 2026-08-12). A formally retired doc that
+# NAMES its successor is out of the staleness window; one that does not is still in.
+# The asymmetry is the whole design — see _is_retired_with_successor's docstring.
+# ---------------------------------------------------------------------------
+
+_ANCIENT = "last_reviewed: 2020-01-01"
+_TODAY = datetime.date(2026, 8, 12)
+
+
+def _doc(tmp_path: Path, name: str, *fields: str) -> Path:
+    p = tmp_path / name
+    p.write_text("---\n" + "\n".join(fields) + "\n---\nbody\n", encoding="utf-8")
+    return p
+
+
+def test_retired_with_successor_is_exempt_however_stale(tmp_path: Path) -> None:
+    """The point of the ruling: 6 years stale, still clean, because it is retired."""
+    p = _doc(tmp_path, "sup.md", _ANCIENT, "status: superseded", "superseded_by: replacement.md")
+    assert _check_doc(p, 90, _TODAY) is None
+
+
+def test_retired_without_successor_is_still_stale(tmp_path: Path) -> None:
+    """The mute-button guard. Without this, `status: superseded` alone silences any doc."""
+    p = _doc(tmp_path, "orphan.md", _ANCIENT, "status: superseded")
+    v = _check_doc(p, 90, _TODAY)
+    assert v is not None
+    assert v.reason == "stale"
+
+
+def test_empty_successor_does_not_buy_the_exemption(tmp_path: Path) -> None:
+    """`superseded_by:` with no value parses to None — an empty field is not a successor."""
+    p = _doc(tmp_path, "empty.md", _ANCIENT, "status: superseded", "superseded_by:")
+    v = _check_doc(p, 90, _TODAY)
+    assert v is not None
+    assert v.reason == "stale"
+
+
+def test_blank_string_successor_does_not_buy_the_exemption(tmp_path: Path) -> None:
+    p = _doc(tmp_path, "blank.md", _ANCIENT, "status: superseded", "superseded_by: '   '")
+    v = _check_doc(p, 90, _TODAY)
+    assert v is not None
+    assert v.reason == "stale"
+
+
+def test_current_status_is_never_exempt_even_with_successor(tmp_path: Path) -> None:
+    """`status` is what retires a doc; a stray superseded_by on a live doc must not exempt it."""
+    p = _doc(tmp_path, "live.md", _ANCIENT, "status: current", "superseded_by: other.md")
+    v = _check_doc(p, 90, _TODAY)
+    assert v is not None
+    assert v.reason == "stale"
+
+
+def test_deprecated_and_archived_also_retire(tmp_path: Path) -> None:
+    for status in ("deprecated", "archived"):
+        p = _doc(tmp_path, f"{status}.md", _ANCIENT, f"status: {status}", "superseded_by: x.md")
+        assert _check_doc(p, 90, _TODAY) is None, status
+
+
+def test_status_match_is_case_and_whitespace_insensitive(tmp_path: Path) -> None:
+    p = _doc(tmp_path, "shouty.md", _ANCIENT, "status: '  SUPERSEDED  '", "superseded_by: x.md")
+    assert _check_doc(p, 90, _TODAY) is None
+
+
+def test_successor_as_list_counts(tmp_path: Path) -> None:
+    """Frontmatter across the corpus uses both scalar and list forms for this field."""
+    p = _doc(tmp_path, "listy.md", _ANCIENT, "status: superseded", "superseded_by: [a.md, b.md]")
+    assert _check_doc(p, 90, _TODAY) is None
+
+
+def test_empty_list_successor_does_not_buy_the_exemption(tmp_path: Path) -> None:
+    p = _doc(tmp_path, "emptylist.md", _ANCIENT, "status: superseded", "superseded_by: []")
+    v = _check_doc(p, 90, _TODAY)
+    assert v is not None
+    assert v.reason == "stale"
+
+
+def test_retired_exemption_does_not_mask_missing_frontmatter(tmp_path: Path) -> None:
+    """A file with no frontmatter has no status to be retired BY — it must still fail."""
+    p = tmp_path / "nofm.md"
+    p.write_text("# heading only\n", encoding="utf-8")
+    v = _check_doc(p, 90, _TODAY)
+    assert v is not None
+    assert v.reason == "no-frontmatter"
+
+
+def test_is_retired_with_successor_predicate_directly() -> None:
+    assert _is_retired_with_successor({"status": "superseded", "superseded_by": "x.md"})
+    assert not _is_retired_with_successor({"status": "superseded"})
+    assert not _is_retired_with_successor({"status": "current", "superseded_by": "x.md"})
+    assert not _is_retired_with_successor({})
+    # A non-string status (e.g. an accidental YAML bool/int) must not crash or exempt.
+    assert not _is_retired_with_successor({"status": True, "superseded_by": "x.md"})
+    assert not _is_retired_with_successor({"status": "superseded", "superseded_by": [None, 3]})

@@ -53,10 +53,19 @@ set -euo pipefail
 # ---------------------------------------------------------------------------- args
 APPLY=0
 # Retention cutoff for the `stale-autostash` class, in days. 0 disables the class entirely
-# (restoring the pre-2026-08-12 identity-only behaviour). Default 14 matches
-# stash-pile-detect.sh's STASH_WARN_AGE_DAYS, so the detector's warn threshold and the
-# auto-prune horizon are the same number rather than two knobs drifting apart.
-PRUNE_AGE_DAYS="${STASH_PRUNE_AGE_DAYS:-14}"
+# (restoring the pre-2026-08-12 identity-only behaviour).
+#
+# Default 2 (48h) per operator ruling 2026-08-12. It was briefly 14, chosen to match
+# stash-pile-detect.sh's STASH_WARN_AGE_DAYS — but 14 cannot hold this pile: measured the same
+# day, a 14d cutoff made 0 of 30 entries droppable while the pile still regrew past
+# safe-doc-push's "extreme" quarantine threshold within ONE day and quarantined a live push.
+# The binding constraint is the ship scripts' count threshold, not the detector's age warn, so
+# the prune horizon is now set by how fast the pile regrows rather than by knob symmetry.
+#
+# Consequence, deliberate: with a 2d prune the detector's AGE warn (oldest_days > 14) can now
+# essentially never fire, because nothing survives to 14 days. Its COUNT warn is what still
+# carries the signal. If you ever raise this back up, re-check that pairing.
+PRUNE_AGE_DAYS="${STASH_PRUNE_AGE_DAYS:-2}"
 ONLY_REPO=""
 BASE_OVERRIDE=""
 HOST="$(hostname -s 2>/dev/null || hostname)"
