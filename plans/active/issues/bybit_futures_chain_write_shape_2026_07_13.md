@@ -35,8 +35,9 @@ execution_scope: local-only
 model_tier: sonnet-doable
 drift_direction: advance-code
 depends_on: []
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
+locked_by:
+locked_since:
 resolved_by:
 context_scope:
   [
@@ -230,3 +231,10 @@ workspace).
   then `--apply`: 490/490 deleted, 0 precondition failures. Post-delete re-verify: 0/490 still present, 10-row
   spot-check of the 290 `not_duplicate` + 334 `no_counterpart` rows confirms zero collateral deletes. This doc's sole
   open todo is now closed — no `locked_by` on this doc, so it's archive-candidate on the next hygiene sweep.
+- **2026-08-12** — `locked_by`/`locked_since` cleared (corpus-wide fix, operator ruling Option B, interactive session
+  2026-08-12; see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md). This doc has
+  0 open todos, so clearing the placeholder lock immediately makes it archive-eligible. Per the ruling's explicit scope
+  ("do NOT auto-archive in this same pass"), archival itself is deferred to a separate follow-on pass; bridged with
+  `archive_exempt: true` (the sanctioned flip-then-mv two-commit pattern documented in
+  `scripts/plan-hygiene/check_archive_candidates.sh`) so this commit doesn't trip the archive-candidates pre-commit
+  gate. The follow-on pass should drop `archive_exempt` and `git mv` this doc to `plans/archive/[issues/]`.
