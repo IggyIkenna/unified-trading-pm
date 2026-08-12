@@ -546,6 +546,87 @@ it with `--quiet`, which **prints the violation count without the filename**.
       token. **0 hits is not evidence of absence in a prettier-formatted corpus** — the same rule the workspace already
       applies to runtime-resolved symbols.
 
+### H.11 Two-custodian model (Copper + Ceffu) — and a CORRECTION to H.2's rail-enum claim (2026-08-12)
+
+Operator raised: Elysium need **Ceffu for Binance**, so Copper↔Ceffu transfers are required and would go **on-chain**;
+exchange-to-exchange movement inside a custodian's network uses that custodian's mirroring protocol (ClearLoop for
+Copper); and the governing principle is _"we track our wallets as separate from a trading perspective to monitor
+balances and keep things agnostic, but the adaptor we are using to handle the money determines how we actually execute
+the instructions."_ **That principle is already the design — but it is only half-implemented, and the unimplemented half
+is the Copper side the client cares most about.**
+
+#### CORRECTION — H.2's "the rail enum has three members, all API-executed" is FALSE
+
+Measured 2026-08-12. There is no enum anywhere with those three members. The real ones:
+
+| Enum                                                         | Members                                                                                                                            |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `internal.TransferType` (`architecture_v2/enums.py`) — **7** | `INTERNAL_SUBACCOUNT`, `CEX_WITHDRAWAL_DEPOSIT`, `ON_CHAIN_TRANSFER`, `BRIDGE`, `WRAP_UNWRAP`, `UNITY_WALLET_OP`, `IBKR_FUND_MOVE` |
+| `BusTransferType` (`transfer_events.py`) — **5**             | `CEX_WITHDRAW`, `DEFI_DEPOSIT`, `DEFI_WITHDRAW`, `BRIDGE`, `SUBACCOUNT_MOVE`                                                       |
+| `domain.defi.transfers.TransferType` — **6**                 | `SAME_CHAIN`, `CROSS_CHAIN`, `CEX_WITHDRAWAL`, `CEX_DEPOSIT`, `SWEEP`, `REBALANCE`                                                 |
+
+I also previously described the defi one as having two members (`SAME_CHAIN`/`CROSS_CHAIN`) — it has six. **The
+conclusion H.2 drew survives, but for a different reason than stated**: `UNITY_WALLET_OP` is plausibly the
+bookmaker-wallet rail (the sports slot labels are `…@unity-betfair-matchbook-…`), and it is **declared with zero
+consumers anywhere in the fleet** — as is `IBKR_FUND_MOVE`. So a hand-operated bookmaker deposit is still
+unrepresentable in practice; the rail name exists and nothing implements it. That is a materially different fix from
+"add a member to a three-member enum". Contributing cause worth noting: **`TransferType` in `enums.py` carries no
+docstrings on any member**, so nothing in the file explains what `UNITY_WALLET_OP` is for.
+
+- [ ] [AGENT] P1. **Re-scope H.2's manual-route work against the real enums** before building anything. Specifically:
+      decide whether the manual/bookmaker path is `UNITY_WALLET_OP` finally being implemented, or a new member, and
+      reconcile the three overlapping enums while you are there (the same de-duplication logic that applied to the
+      allocator roster applies here). **Docstring every member** as part of it.
+
+#### What already exists — more than expected on Ceffu, nothing on Copper
+
+- [x] [AGENT] P1. ✅ **The ledger ALREADY models Copper↔Ceffu as a first-class event.**
+      `canonical/crosscutting/ledger/_enums.py` has `CUSTODY_MOVE` — _"Movement of assets between custody providers /
+      sub-custodians for the same client (**Copper ↔ CEFFU ↔ on-chain wallet ↔ KMS-encrypted hot wallet**). HARD RULE:
+      counterparty_client_id == client_id"_. So the accounting layer already encodes the operator's exact route **and**
+      binds it to client-funds isolation. The agnostic-monitoring half of the principle is done.
+- [x] [AGENT] P1. ✅ **Ceffu's off-exchange settlement is implemented; Copper's is not.** `custody/ceffu.py` carries
+      `oes_move_collateral`, `oes_query_settlement`, **`oes_get_mirror_balance`** and `direct_custody_sign` alongside
+      the standard methods — so the mirrored-vs-real balance distinction the operator described exists for
+      Binance/Ceffu. `custody/copper.py` has **only** `sign_transaction` / `get_balance` / `create_transfer` /
+      `list_wallets` / `health_check`. Fleet-wide, `oes_` appears 12 times and **`clearloop` still returns ZERO source
+      hits**.
+
+#### The architectural gap: mirroring is not in the abstraction
+
+- [ ] [AGENT] P0. **Lift mirroring into the `CustodyProvider` Protocol.** The Protocol declares only `sign_transaction`
+      / `get_balance` / `create_transfer` / `list_wallets` (+ `health_check`) — **no mirroring**. Ceffu's `oes_*`
+      methods are therefore provider-specific extras _outside_ the contract, so any caller that uses them is concretely
+      coupled to Ceffu. **That directly defeats the operator's stated principle**: the strategy layer cannot stay
+      custodian-agnostic if the mirroring capability is only reachable through a Ceffu-shaped method name. Add
+      protocol-level members (e.g. `move_collateral_to_venue()` / `get_mirrored_balance()` / `query_settlement()`), have
+      Ceffu implement them via OES/MirrorX and Copper via ClearLoop, and let the factory keep the caller ignorant of
+      which. This is the change that makes "the adapter determines execution" true at the seam rather than in
+      commentary.
+- [ ] [AGENT] P1. **Implement the Copper ClearLoop path** behind those protocol members. Today there is no code path for
+      the mechanism the client documents describe most prominently. **Client-document implication, and it is the reason
+      this is P1 rather than P2:** the deferral message and deep dive both state that we post collateral into Copper
+      custody and Copper's ClearLoop mirrors it onto the exchange. That is accurate about _Copper's product_ and our
+      code does instruct Copper — but there is no mirroring call, while the Ceffu equivalent exists. If Ceffu is now
+      required for Binance, the two-custodian reality should be reflected before the documents are re-sent. **Do NOT add
+      a "what's missing" note to a client artefact** — this is an operator escalation about wording, per this plan's own
+      hard rule.
+- [ ] [AGENT] P1. **Add the custody↔custody rail.** No rail enum has a custody-move member, and no code path routes
+      Copper→Ceffu, even though the ledger event exists. Per the operator this leg is **on-chain**, so it may be
+      expressible as `ON_CHAIN_TRANSFER` with custodian endpoints rather than a new member — **decide deliberately and
+      write down which**, because "on-chain between two custodians" and "on-chain to an external address" have different
+      approval, whitelisting and reconciliation semantics.
+- [ ] [AGENT] P2. **Model mirrored balance distinctly from held balance in the wallet/position view.** A balance
+      mirrored onto Binance via Ceffu is _custodied at Ceffu_, not held at Binance. Double-counting it, or treating it
+      as withdrawable from the venue, would misstate both available margin and client assets. `oes_get_mirror_balance`
+      exists but `WalletType` (`FUNDING`/`TRADING`/`SPOT`/`UNIFIED`/`ON_CHAIN`) has no mirrored notion — check whether
+      the balance aggregation layer already distinguishes them before adding a member.
+- [ ] [OPERATOR] P2. **Confirm the ClearLoop venue set and whether Binance is reachable through Copper at all.** The
+      operator's framing implies Binance needs Ceffu specifically, which suggests Binance is not on Copper's ClearLoop —
+      that determines whether Binance↔Bybit is one mirrored hop or a Ceffu→on-chain→Copper round trip, and the two have
+      very different cost and settlement-time profiles. This is a custodian-contract fact we should confirm with Copper
+      and Ceffu rather than infer from documentation.
+
 ## Progress Log
 
 - **2026-08-12 — measurement lesson, recorded because it is the SECOND proxy-vs-property slip in one session.** I ran
@@ -613,10 +694,11 @@ it with `--quiet`, which **prints the violation count without the filename**.
   tier rule and must not simply be deleted. Confirmed the operator's recollection that treasury/client prior art exists:
   `/codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md` and
   `/codex/14-customer-journeys/shared-core/fund-administration-and-custody.md` are both written and must be read before
-  any keying change. Measured the manual gap precisely: the rail enum has three members, all API-executed, so a
-  bookmaker deposit is unrepresentable; and `ApprovalBus` provides approval of a system-executed transfer, which is the
-  inverse of the manual case. Added manual **trade** capture alongside manual transfers, since betting venues will be
-  hand-operated at first and the fills must still book canonically.
+  any keying change. ⚠️ **The rail-enum sentence that follows is WRONG — corrected in H.11, kept here so the error is
+  traceable rather than silently rewritten.** Measured the manual gap precisely: the rail enum has three members, all
+  API-executed, so a bookmaker deposit is unrepresentable; and `ApprovalBus` provides approval of a system-executed
+  transfer, which is the inverse of the manual case. Added manual **trade** capture alongside manual transfers, since
+  betting venues will be hand-operated at first and the fills must still book canonically.
 - **2026-08-11** — Rewritten as a **claims audit** on operator instruction: no new repository build, full audit of
   everything missing, every fix in line with the existing architecture. Twenty-three load-bearing document claims were
   checked against the tree: **17 verified in source, 1 partial, 2 unverified, 1 false, 2 already-wrong-and-now-fixed.**
