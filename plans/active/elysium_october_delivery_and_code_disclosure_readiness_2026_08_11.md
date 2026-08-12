@@ -28,6 +28,8 @@ related:
     /plans/active/issues/elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md,
     /plans/archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md,
+    /plans/active/issues/check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12.md,
   ]
 created: 2026-08-11
 parent_epic: client_isolation_and_governance_master
@@ -428,11 +430,11 @@ gap it surfaced is carried to H.7.
       an `archetypes/*.md` written from source, modelled on `carry-basis-perp.md`. Deliberately scoped rather than done
       blind: writing an archetype spec requires reading its engine, and a guessed spec is worse than an acknowledged
       gap. Both are named in the README's own gap table so they cannot be silently forgotten.
-- [ ] [OPERATOR] P2. **Decide whether the Elysium instance runs with `enable_dynamic_carry_universe` ON.** Default is
-      OFF (static coin list, zero GCS I/O). ON gives real ADV-ranked candidate discovery — which is what the operator
-      asked for on 2026-07-23, and what makes "dynamic coin rotation" true of the _running system_ rather than only of
-      the code. Not an engineering task: the flag exists and works, with a loud-logging fallback to the static list.
-      This is a risk-appetite call on letting the traded universe move by itself.
+- [x] [AGENT] P2. ✅ **Operator ruled ON (2026-08-12): "Turn it ON."** Default flipped `False → True` so ADV-ranked
+      dynamic candidate discovery is the running behaviour, not just an available capability — which is what the
+      operator asked for on 2026-07-23 and what makes "dynamic coin rotation" true of the _running system_. **Evidence:
+      strategy-service@d1092e9d32** (`ALL QUALITY GATES PASSED`, real exit 0). Retagged from `[OPERATOR]` the moment the
+      decision landed. The reproducibility debt this creates is H.8's P0, NOT this todo.
 - [ ] [SCRIPT] P3. **`/codex/03-services/portfolio-allocator.md` describes a service that does not exist as a repo.** It
       is titled `portfolio-allocator-service` and said "Not inside strategy-service — separate service with its own
       lifecycle"; the code is at `strategy_service/portfolio_allocator/` and **no such repo is in the 26-repo estate**
@@ -456,11 +458,13 @@ breach that must not be left implicit.
       the flag flip: the resolved date, coin set and pin-status are now logged at INFO on the success path (which
       previously logged nothing at all) plus a warning when unpinned, so a run's universe is at least recoverable from
       its logs. Note `RunManifest` is not defined in strategy-service, so scope the writer's location before starting.
-- [ ] [OPERATOR] P2. **The flag is service-level and cannot be scoped to one client.** It sits on the
-      `StrategyServiceConfig` singleton and `TARGET_UNIVERSE` is built once at module import, so turning it on moves the
-      carry universe for **every** client the service runs, not just Elysium. Flagged because the instruction was
-      phrased per-instance; if per-client universes are wanted, that is a separate design change (universe resolution
-      would have to move off the import-time singleton), not a config setting.
+- [x] [AGENT] P2. ✅ **Service-level scope RAISED and ACCEPTED by the operator (2026-08-12): "that's fine they can have
+      it."** The flag sits on the `StrategyServiceConfig` singleton and `TARGET_UNIVERSE` is built once at module
+      import, so turning it on moves the carry universe for **every** client the service runs, not just Elysium. Raised
+      because the instruction was phrased per-instance; the operator ruled that all clients getting the dynamic universe
+      is the intended outcome. **No further work** — per-client universes would require moving universe resolution off
+      the import-time singleton, and that is explicitly NOT wanted. Retagged from `[OPERATOR]` since the decision is
+      made.
 
 ### H.9 Jupiter perps — verified, and it does NOT restore SOL staked basis (2026-08-12)
 
@@ -478,6 +482,13 @@ custodies exactly six tokens — **SOL, ETH, BTC, USDC, USDT, JupUSD** — and c
 wBTC for long positions"_, _"USDC / USDT for short positions"_. **No LST appears anywhere.** A staked-basis trade needs
 to short SOL perp while posting the LST as margin; on Jupiter a short requires USDC/USDT, so the LST cannot be the
 margin token. Jupiter therefore yields `USDC_MARGIN_BUFFERED` for SOL, never `LST_AS_MARGIN`.
+
+> **Integration work now lives in its own plan (2026-08-12):**
+> [solana_lst_carry_jupiter_perps_and_kamino_borrow](/plans/active/solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md)
+> — authored on operator instruction for full cross-repo integration, held at `status: draft` because it is gated on
+> both an explicit operator decision to re-add a Solana perp venue AND an economics answer (is the stable borrow rate
+> reliably below the staking yield). The todos below stay here as the Elysium-side decision record; the build steps are
+> there.
 
 - [ ] [OPERATOR] P2. **Decide whether to scope Jupiter PERPS integration** — the codex requires an explicit new operator
       decision (`/codex/04-architecture/solana-defi-coverage.md`: _"Do not re-add without an explicit new operator
