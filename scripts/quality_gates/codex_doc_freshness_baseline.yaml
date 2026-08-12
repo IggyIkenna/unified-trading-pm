@@ -4,15 +4,15 @@ source: "CLAUDE.md \xA7 'Post-Plan-Phase Codex Audit (HARD RULE)' +
   governance_qg_automation_gaps_post_cutover_2026_05_12.md\
   \ \xA7 Group B"
 baseline_files:
-  - path: codex/02-data/data-catalogue-schema.md
+  - path: unified-trading-pm/codex/02-data/data-catalogue-schema.md
     reason: stale
-  - path: codex/04-architecture/capital-flow-model.md
+  - path: unified-trading-pm/codex/04-architecture/capital-flow-model.md
     reason: stale
-  - path: codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md
+  - path: unified-trading-pm/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md
     reason: stale
-  - path: codex/05-infrastructure/ui-architecture.md
+  - path: unified-trading-pm/codex/05-infrastructure/ui-architecture.md
     reason: stale
-  - path: codex/05-infrastructure/ui-dependency-matrix.md
+  - path: unified-trading-pm/codex/05-infrastructure/ui-dependency-matrix.md
     reason: stale
-  - path: codex/05-infrastructure/ui-functionality-requirements.md
+  - path: unified-trading-pm/codex/05-infrastructure/ui-functionality-requirements.md
     reason: stale

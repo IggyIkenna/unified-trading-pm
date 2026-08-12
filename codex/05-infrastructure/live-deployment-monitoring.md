@@ -80,30 +80,29 @@ Every adapter / service / strategy / VM workload emits the same closed set of li
 (ModuleNotFoundError); the enum moved to `internal.events`. `classify_venue_error()` is unaffected and still lives at
 `unified_api_contracts.canonical.crosscutting.errors`:
 
-| Event                                         | Severity | Expected cadence                                     | Stall trigger                                         |
-| --------------------------------------------- | -------- | ---------------------------------------------------- | ----------------------------------------------------- |
-| `STARTED`                                     | INFO     | Once per `correlation_id` at process boot            | Missing within 60s of VM provisioning = launcher fail |
-| `PROCESSING_STARTED` / `PROCESSING_COMPLETED` | INFO     | Every shard / batch / iteration the workload owns    | No `PROCESSING` for `max_gap_seconds` = stall         |
-| `ADAPTER_FETCH_FAILED`                        | WARN     | Per-adapter classified-error emission                | High rate = upstream venue degradation                |
-| `DEPENDENCY_DEGRADED` ⚠️ NOT IN ENUM          | WARN     | Manifest gap / upstream API slow / RPC node failover | Persistent = data-correctness risk                    |
-| `STOPPED`                                     | INFO     | Once per `correlation_id` at clean exit              | Pair with prior `STARTED` for run-completeness sweep  |
-| `FAILED`                                      | CRITICAL | Once per `correlation_id` at exception exit          | Auto-pages via alerting-service                       |
-| `PREFLIGHT_SKIPPED`                           | INFO     | Once per `correlation_id` when honest-absence skip   | Expected on holiday / weekend / pre-source-coverage   |
+| Event                                         | Severity | Expected cadence                                   | Stall trigger                                         |
+| --------------------------------------------- | -------- | -------------------------------------------------- | ----------------------------------------------------- |
+| `STARTED`                                     | INFO     | Once per `correlation_id` at process boot          | Missing within 60s of VM provisioning = launcher fail |
+| `PROCESSING_STARTED` / `PROCESSING_COMPLETED` | INFO     | Every shard / batch / iteration the workload owns  | No `PROCESSING` for `max_gap_seconds` = stall         |
+| `ADAPTER_FETCH_FAILED`                        | WARN     | Per-adapter classified-error emission              | High rate = upstream venue degradation                |
+| `STOPPED`                                     | INFO     | Once per `correlation_id` at clean exit            | Pair with prior `STARTED` for run-completeness sweep  |
+| `FAILED`                                      | CRITICAL | Once per `correlation_id` at exception exit        | Auto-pages via alerting-service                       |
+| `PREFLIGHT_SKIPPED`                           | INFO     | Once per `correlation_id` when honest-absence skip | Expected on holiday / weekend / pre-source-coverage   |
 
 Every adapter MUST classify errors via UAC `classify_venue_error()` + emit `ADAPTER_FETCH_FAILED` (shard-level failure
 isolation rule, SSOT `/codex/04-architecture/shard-level-failure-isolation.md`).
 
-> **⚠️ Verified against the enum 2026-08-11 — two rows above do not match `LifecycleEventType`.**
+> **⚠️ Verified against the enum 2026-08-11/12.**
 >
 > - `PROCESSING` is not a member. It is a PAIR: `PROCESSING_STARTED` / `PROCESSING_COMPLETED`. A stall rule written
 >   against a single `PROCESSING` event will never fire.
-> - `DEPENDENCY_DEGRADED` has no generic member at all. The nearest is `INSTRUMENTS_LIVE_SOURCE_DEGRADED`, which is one
->   specific source, not the cross-cutting concept this row describes. Emitting `DEPENDENCY_DEGRADED` as written would
->   fail the closed-set contract.
->
-> Left in place rather than deleted: whether the generic event was dropped deliberately or the doc predates a rename is
-> an owner call (deployment-platform). What is certain is that the table as written does not match the enum it claims to
-> be the closed set of.
+> - `DEPENDENCY_DEGRADED` was REMOVED from this table — it never belonged. It is an alerting-service **AlertCode**
+>   (`unified_api_contracts.canonical.crosscutting.alerting.codes.AlertCode`), raised by
+>   `alerting_service.rules.evaluate_dependency_health()` on an outage-duration ladder, not a lifecycle event a workload
+>   emits about itself via `log_event()`. Different producer, different mechanism. The neighbouring
+>   `classify_venue_error()` genuinely does live under `canonical.crosscutting`, which is probably why the wrong home
+>   looked plausible. **That path is currently UNWIRED and cannot fire** — see
+>   `/plans/active/issues/dependency_health_alerting_never_wired_2026_08_12.md`.
 
 ## Per-archetype heartbeat matrix
 
