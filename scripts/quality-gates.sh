@@ -1142,9 +1142,16 @@ if [ -f "$CLOUDBUILD_TEMPLATE_DRIFT_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; 
     if python3 "$CLOUDBUILD_TEMPLATE_DRIFT_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
         log_success "Cloud Build template-vs-consumer drift ratchet passed (at-or-below baseline)"
     else
-        echo "❌ Cloud Build template drift regression — a consumer's cloudbuild.yaml carries content its template does not." >&2
-        echo "   Forward-port the fix into the template, OR" >&2
-        echo "   if intentional per-repo customization, re-baseline with: python3 ${CLOUDBUILD_TEMPLATE_DRIFT_CHECKER} --update-baseline" >&2
+        echo "❌ Cloud Build template drift — THE OFFENDING CONTENT IS IN ANOTHER REPO (named in the [FAIL] line above)." >&2
+        echo "   This is almost certainly NOT the change you are shipping. This check is fleet-wide: a consumer" >&2
+        echo "   repo's cloudbuild.yaml drifting from its template fails THIS gate, so no .qg_last_passed_sha" >&2
+        echo "   sentinel is written and quickmerge refuses EVERY unified-trading-pm code ship, on every host," >&2
+        echo "   until that other repo is drained. Fix it there; do not try to route around it here." >&2
+        echo "   Forward-port the content into unified-trading-pm/configs/cloudbuild-*-template.yaml." >&2
+        echo "   NOTE: --update-baseline is SHRINK-ONLY and silently REFUSES to raise a count (it prints the" >&2
+        echo "   higher number and leaves the file unchanged). It is not an unblock path." >&2
+        echo "   Consumer-side prevention: base-service.sh STEP 5.108 / base-ui.sh [5.108] now fail in the" >&2
+        echo "   consumer's OWN gate, so new drift should be caught there before it ever reaches this one." >&2
         _post_gate_fail "cloudbuild-template-drift"
     fi
 fi
