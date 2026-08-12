@@ -1,10 +1,9 @@
 {
-  "cleanupPeriodDays": 30,
+  "cleanupPeriodDays": 15,
   "permissions": {
     "allow": [
       "Bash(*)",
       "Bash",
-      "Bash(aws ssm send-command:*)",
       "Read",
       "Write",
       "Edit",
