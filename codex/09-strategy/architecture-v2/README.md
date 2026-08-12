@@ -20,9 +20,11 @@ scope: [engineer, admin]
 Every strategy is a composition of:
 
 - **1 of 9 families** (orthogonal alpha styles) — what kind of edge you capture (UAC `StrategyFamily` enum SSOT)
-- **1 of 57 archetypes** (code paths under a family) — the specific code implementation (UAC `StrategyArchetype` enum
-  SSOT; expanded from 53 → 55 when `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` were
-  split out of `CARRY_RECURSIVE_STAKED`; then to 57 by the 2026-05-18 taxonomy decision)
+- **1 archetype** (code path under a family) — the specific code implementation. **The UAC `StrategyArchetype` enum is
+  the SSOT and the only place to read the count**; this README carried a hardcoded "57" that was stale by three (see the
+  note under the family table). The roster has only ever grown — 53 → 55 when `CARRY_RECURSIVE_BORROW_LENDING_ONLY` and
+  `CARRY_RECURSIVE_BORROW_PERP_HEDGED` split out of `CARRY_RECURSIVE_STAKED`, then again at the 2026-05-18 taxonomy
+  decision, and again since — which is precisely why a number written here rots.
 - **7 axes of composition** (signal × edge × staking × venue × expression × hold-policy × share-class)
 - **10 cross-cutting concerns** — shared infrastructure
 
@@ -123,9 +125,38 @@ taxonomy decision renamed `CARRY_RECURSIVE_BORROW_PERP_HEDGED` → `CARRY_BASIS_
 | Stat Arb / Pairs       | `STAT_ARB_PAIRS_FIXED`, `STAT_ARB_CROSS_SECTIONAL`                                                                                                                                                                                                                                                                                                                                                                                            | 2 docs                   |
 | Portfolio              | `PORTFOLIO_MULTI_STRATEGY`, `PORTFOLIO_RISK_PARITY`, `PORTFOLIO_FACTOR_ALLOCATION`, `PORTFOLIO_TACTICAL_OVERLAY`                                                                                                                                                                                                                                                                                                                              | 4 docs                   |
 
-**Total: 57 archetypes.** Every strategy maps to exactly one. Per-archetype docs under `archetypes/` cover the May-23
-live + immediate-backtest subset; the Phase 9 expansions are catalogued in the UAC enum + cross-referenced from
+**Every strategy maps to exactly one archetype.** Per-archetype docs under `archetypes/` cover the May-23 live +
+immediate-backtest subset; the Phase 9 expansions are catalogued in the UAC enum + cross-referenced from
 [`category-instrument-coverage.md`](category-instrument-coverage.md).
+
+> **Read the count from the enum, never from this file** (corrected 2026-08-12). The per-family "N docs" figures in the
+> table above and the totals in this README have gone stale repeatedly — the archetype total was **57 against an enum of
+> 60**, and `cross-cutting/` was described as 10 docs when it held 31. Verify before quoting:
+>
+> ```bash
+> python3 -c "import unified_api_contracts.internal as u; print(len(list(u.StrategyArchetype)))"
+> ls codex/09-strategy/architecture-v2/archetypes/*.md | wc -l
+> ```
+>
+> **Doc count and archetype count are not the same number and should not be expected to match**: `archetypes/` also
+> holds `-inv` / `-config-variants` companions and `status: superseded` rename stubs (e.g.
+> `carry-recursive-borrow-perp-hedged.md`, renamed to `CARRY_BASIS_PERP_INV` on 2026-05-18), so a doc can exist with no
+> live archetype behind it. Reconcile by mapping enum member → expected slug, not by comparing totals.
+
+### Archetypes with no doc — a live gap, not a claim of completeness
+
+This README previously asserted "all archetypes documented". **That was false.** As of 2026-08-12,
+`CARRY_FUNDING_DISPERSION` was implemented, factory-registered and given a target universe with **no doc at all** — now
+written up at [`carry-funding-dispersion.md`](archetypes/carry-funding-dispersion.md). Two remain undocumented and are
+tracked in
+[the Elysium readiness plan](/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md):
+
+| Archetype                   | Codex presence                                      |
+| --------------------------- | --------------------------------------------------- |
+| `TSMOM_BTC_CTA`             | mentioned only in `category-instrument-coverage.md` |
+| `ARBITRAGE_SPORTS_DUTCHING` | **zero** mentions anywhere in codex                 |
+
+Do not restore an "all archetypes documented" claim without re-running the enum→slug reconciliation above.
 
 **Rule:** archetype IDs use structural descriptors (continuous vs event*settled, fixed vs cross_sectional, sub-variant
 qualifiers like `_PASSIVE_SPREAD` / `_RV_IV` / `\_MEV*\*`), never category prefixes.
@@ -670,10 +701,10 @@ codex/
     ├── architecture-v2/                  ← NEW canonical structure
     │   ├── README.md                     (this document)
     │   ├── MIGRATION.md                  (old doc → new archetype audit)
-    │   ├── families/                     (9 docs)
-    │   ├── archetypes/                   (57 docs — all archetypes documented; full enum in UAC SSOT)
-    │   ├── axes/                         (7 docs)
-    │   └── cross-cutting/                (10 docs)
+    │   ├── families/                     (one per StrategyFamily member)
+    │   ├── archetypes/                   (per-archetype; NOT complete — see "Archetypes with no doc")
+    │   ├── axes/                         (one per composition axis)
+    │   └── cross-cutting/                (concerns spanning families)
     ├── cefi/                             (legacy, migrated via MIGRATION.md)
     ├── defi/                             (legacy)
     ├── sports/                           (legacy)
@@ -719,7 +750,9 @@ See [../../plans/active/](../../../plans/active/) for the active week-to-live im
 
 ## Authoring Conventions
 
-Every archetype doc follows a standard structure (see [templates/archetype-doc.md](templates/archetype-doc.md)):
+Every archetype doc follows the standard structure below. **There is no `templates/` directory** — this line pointed at
+`templates/archetype-doc.md` for an unknown period and that file has never existed (verified 2026-08-12); the structure
+is specified here, and [`archetypes/carry-basis-perp.md`](archetypes/carry-basis-perp.md) is the exemplar to copy.
 
 1. **What & why** — alpha source, edge thesis, position structure
 2. **Token / position flow** — step-by-step bankroll + instruction sequence

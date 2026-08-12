@@ -74,19 +74,6 @@ Keep the favicon stable across redeploys — the operator finds the tab by its i
   services; the configuration snapshot; the hand-over acceptance criteria; the standing operational functions; extension
   work-items; and the 26-repo estate mapping as the final appendix. Carries an _inspection is not transfer_ note.
 
-- **`strategy-service-deep-dive.html`** — the companion to sending the strategy-service repository itself, and the most
-  technical of the three. Reproduces from source the `StrategyInstructionEnvelope` and **all eleven instruction
-  subtypes**, the live `carry_staked_basis.yaml`, the typed configuration schemas, the breakers and kill switch, capital
-  movement through Copper (Figure 1), the read surface by module, external-strategy integration, asset-group agnosticism
-  and the research path. **Its config extracts are reproduced from real files, so a reader can diff them against the
-  repository they receive** — if a schema changes in code, this document is wrong until updated, unlike the other two
-  which describe structure rather than quote it.
-
-  > Contains the **placeholder risk thresholds** from the client's own strategy config, still carrying their
-  > `⚠️ MAY-23 CUTOVER PLACEHOLDER VALUES ⚠️` banner. That is deliberate honesty, not an oversight — but it means the
-  > operator-owned threshold approval is now visible to the client, and the document should be re-checked against the
-  > config once those values are ratified.
-
   > **Rev 1.0 was rejected by the operator** (2026-08-11) as discussing "our methodology way too much" and not
   > presentable to a CTO — it read as an internal negotiation memo. **Rev 2.0 fixed that structurally, not by editing
   > prose**, and the mechanism is the thing to preserve if this document is ever restructured again:
@@ -112,6 +99,19 @@ Keep the favicon stable across redeploys — the operator finds the tab by its i
   `strategy-basis-core` / `contracts-platform` / lite package is in the workspace. Showing this document therefore
   commits us to building the seam, since a CTO reading §04 will ask to see it. The lite-repo decision is now coupled to
   whether the document goes out.
+
+- **`strategy-service-deep-dive.html`** — the companion to sending the strategy-service repository itself, and the most
+  technical of the three. Reproduces from source the `StrategyInstructionEnvelope` and **all eleven instruction
+  subtypes**, the live `carry_staked_basis.yaml`, the typed configuration schemas, the breakers and kill switch, capital
+  movement through Copper (Figure 1), the read surface by module, external-strategy integration, asset-group agnosticism
+  and the research path. **Its config extracts are reproduced from real files, so a reader can diff them against the
+  repository they receive** — if a schema changes in code, this document is wrong until updated, unlike the other two
+  which describe structure rather than quote it.
+
+  > Contains the **placeholder risk thresholds** from the client's own strategy config, still carrying their
+  > `⚠️ MAY-23 CUTOVER PLACEHOLDER VALUES ⚠️` banner. That is deliberate honesty, not an oversight — but it means the
+  > operator-owned threshold approval is now visible to the client, and the document should be re-checked against the
+  > config once those values are ratified.
 
 ## Authoring traps — read before editing (each of these cost real time)
 
@@ -176,6 +176,19 @@ Keep the favicon stable across redeploys — the operator finds the tab by its i
      `VENUE_TO_ADAPTER_KEY`, which CLAUDE.md names as the venue-registry SSOT, could not be located in non-test UAC
      sources — so the 20 is a **measured floor from the adapter directory**, not a registry read. Quote the floor and
      say so, or find the registry.
+
+   **The "26 repositories" figure is CORRECT — do not "fix" it to 31.** Counting `.git`-bearing directories in a slot
+   returns **31**, and five of those are `*.stale-pre-history-rewrite-20260805T112453Z` backup clones left by the
+   2026-08-05 history rewrite (of `e2e-testing`, `execution-service`, `instruments-service`,
+   `market-data-processing-service`, `unified-trading-library`). They share a remote with their live counterpart, so
+   they are duplicates, not repositories. Count distinct remotes, not directories:
+
+   ```bash
+   for d in */.git; do git -C "$(dirname "$d")" config --get remote.origin.url; done | sort -u | wc -l   # 26
+   ```
+
+   This is the one count in the client documents that has survived every re-measurement, and the naive recount is the
+   error.
 
    Corollary trap: **a correction applied to one artefact is not applied to the set.** The "liquidity provision" family
    was fixed in `strategy-service-deep-dive.html` on 2026-08-11 and missed in

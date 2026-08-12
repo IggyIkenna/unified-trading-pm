@@ -362,14 +362,20 @@ gap it surfaced is carried to H.7.
       `(wstETH, BYBIT)` and `(wstETH, DERIBIT)` because those margin engines credit the rebasing stETH balance rather
       than the wstETH price, and `(stETH, OKX)` because OKX does no daily rebase reconciliation and marks undersized
       each epoch. Each entry carries its reason inline.
-- [x] [AGENT] P1. ✅ **ADV/volume filters exist and are wired.** `engine/core/canonical_adv_ranked_universe_provider.py`
-      is Layer 1 dynamic candidate discovery, built from the operator's own 2026-07-23 ask, and is consumed by
-      `target_universe/catalog_carry.py`; `engine/core/rolling_adv_reader.py` provides the rolling window. Two things
-      worth knowing: it is a **T4-local reader of the same GCS corpus** features-service's `adv.py` computes over,
-      deliberately not an import (the no-service-imports tier rule), because `adv.py` computes on the fly and persists
-      nothing there is to read. And its docstring records **path-convention corrections verified against real prod
-      objects** where `adv.py`'s documented shape is wrong — an extra `instrument_type=` segment, and `timeframe=1d` not
-      `24h`.
+- [x] [AGENT] P1. ✅ **ADV/volume filters exist and are wired — but the dynamic ranking is OPT-IN and defaults OFF.**
+      `_resolve_dynamic_carry_coins()` is gated on `StrategyServiceConfig.enable_dynamic_carry_universe`, whose default
+      is `False`: OFF returns the static coin list with **zero GCS I/O** (there is a regression test asserting live
+      behaviour is byte-for-byte preserved), ON ranks by real ADV via `rank_top_n_by_adv`. On any failure it falls back
+      to the static list rather than shrinking the catalog to zero, and logs loudly. **So "ADV-filtered" is true of the
+      capability and false of the current default** — do not describe the running system as ADV-filtered without saying
+      the flag is off. Whether to turn it on for the Elysium instance is an operator call (H.7).
+      `engine/core/canonical_adv_ranked_universe_provider.py` is Layer 1 dynamic candidate discovery, built from the
+      operator's own 2026-07-23 ask, and is consumed by `target_universe/catalog_carry.py`;
+      `engine/core/rolling_adv_reader.py` provides the rolling window. Two things worth knowing: it is a **T4-local
+      reader of the same GCS corpus** features-service's `adv.py` computes over, deliberately not an import (the
+      no-service-imports tier rule), because `adv.py` computes on the fly and persists nothing there is to read. And its
+      docstring records **path-convention corrections verified against real prod objects** where `adv.py`'s documented
+      shape is wrong — an extra `instrument_type=` segment, and `timeframe=1d` not `24h`.
 - [x] [AGENT] P1. ✅ **The dispersion basket is already built, and it is genuinely two-sided.**
       `CarryFundingDispersionEngine` (`carry_and_yield/funding_dispersion.py`, archetype `CARRY_FUNDING_DISPERSION`,
       registered `factory.py:73`) goes **LONG when `funding_rank_pct <= long_rank_pct` and SHORT when
@@ -390,33 +396,94 @@ gap it surfaced is carried to H.7.
       logic is behaving correctly — it emits nothing rather than emitting an infeasible slot — but the effect is that
       SOL staked basis is structurally unavailable, not merely unfunded. **Operator decision: re-admit a venue, accept
       USDC-margin-buffered structure for SOL, or retire the SOL bundle.** Not an engineering fix.
-- [ ] [SCRIPT] P2. **`portfolio_allocator/__init__.py` docstring undercounts its own registry by more than half** — it
-      says "the 8 `AllocatorArchetype` engines" and enumerates eight, where `ALLOCATOR_ARCHETYPE_REGISTRY` has **17**
-      entries (the nine missing ones are the Phase-8 per-archetype rank allocators, including both dispersion engines).
-      This docstring is the first thing anyone reads about the allocator and it hid the existence of the dispersion
-      capability. Fix by describing the two groups (generic weighting engines + per-archetype rank allocators) **without
-      a total**, since a total re-rots on the next archetype added.
+- [x] [SCRIPT] P2. ✅ **The "8 allocator archetypes" claim was systemic, not one stale docstring — fixed in all four
+      places.** `ALLOCATOR_ARCHETYPE_REGISTRY` holds **17** engines; the figure 8 appeared in
+      `portfolio_allocator/__init__.py`, in `/codex/03-services/portfolio-allocator.md` **three times including its
+      `authoritative_for:` facet** (a frontmatter facet asserting authority over a wrong count — which is precisely how
+      doc-retrieval lands a reader on it), and in
+      `/codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md`. **Doc and code agreed with each other
+      and both were wrong** — a false consensus, and the reason the entire Phase-8 rank-allocator group including both
+      dispersion allocators stayed invisible to me for most of this session. All four now describe the two groups with
+      **no total**, and the roster is de-duplicated: `03-services` owns it and `cross-cutting` points at it, since
+      maintaining two copies is what let them drift to the same wrong number. **Evidence: strategy-service@66edb20d4d**
+      (`__init__.py` docstring; `ALL QUALITY GATES PASSED (43s)`, real exit 0) + the two codex docs in this push.
+- [x] [AGENT] P1. ✅ **Wrote the missing `CARRY_FUNDING_DISPERSION` archetype doc** —
+      `/codex/09-strategy/architecture-v2/archetypes/carry-funding-dispersion.md`. It was implemented,
+      factory-registered and had a target universe with **no entry in `archetypes/`**, found by mapping all 60
+      `StrategyArchetype` members to expected doc slugs rather than eyeballing the directory. The doc leads with the
+      misreading most likely to cost money: this is cross-sectional **price** reversion, not a funding-carry harvest,
+      and dollar- not delta-neutral.
+- [x] [AGENT] P2. ✅ **Corrected four stale counts and one dead link in `/codex/09-strategy/architecture-v2/README.md`**
+      — "57 archetypes" (twice) against an enum of 60; "57 docs — all archetypes documented", which was **false**;
+      `cross-cutting/ (10 docs)` against **31**; and a pointer to `templates/archetype-doc.md` which has **never
+      existed**. Counts replaced with the verification command plus an exemplar doc, and a standing note that doc count
+      ≠ archetype count (the directory also holds `-inv`/variant companions and `status: superseded` rename stubs).
+- [x] [SCRIPT] P2. ✅ **`build_funding_dispersion()`'s docstring named four venues where its own tuple holds six** — the
+      omissions being the two conditional CFTC-regulated perp venues (Kalshi-perp, edge TBD pending data accumulation;
+      Polymarket-perp, `BLOCKED-UPSTREAM-OUTAGE` on DNS NXDOMAIN). The docstring now points at the tuple instead of
+      duplicating it. **Evidence: strategy-service@66edb20d4d.**
+
+- [ ] [AGENT] P2. **Two archetypes remain undocumented** — `TSMOM_BTC_CTA` (mentioned only in
+      `category-instrument-coverage.md`) and `ARBITRAGE_SPORTS_DUTCHING` (**zero** codex mentions anywhere). Both need
+      an `archetypes/*.md` written from source, modelled on `carry-basis-perp.md`. Deliberately scoped rather than done
+      blind: writing an archetype spec requires reading its engine, and a guessed spec is worse than an acknowledged
+      gap. Both are named in the README's own gap table so they cannot be silently forgotten.
+- [ ] [OPERATOR] P2. **Decide whether the Elysium instance runs with `enable_dynamic_carry_universe` ON.** Default is
+      OFF (static coin list, zero GCS I/O). ON gives real ADV-ranked candidate discovery — which is what the operator
+      asked for on 2026-07-23, and what makes "dynamic coin rotation" true of the _running system_ rather than only of
+      the code. Not an engineering task: the flag exists and works, with a loud-logging fallback to the static list.
+      This is a risk-appetite call on letting the traded universe move by itself.
+- [ ] [SCRIPT] P3. **`/codex/03-services/portfolio-allocator.md` describes a service that does not exist as a repo.** It
+      is titled `portfolio-allocator-service` and said "Not inside strategy-service — separate service with its own
+      lifecycle"; the code is at `strategy_service/portfolio_allocator/` and **no such repo is in the 26-repo estate**
+      (verified). A correction banner is now in place, but the body still reads target-as-present. Either finish the
+      rewrite to present-tense-plus-target, or split the target into its own design doc.
 
 ### H.6 Gate findings — the two defects that hid a one-line violation for seven attempts (2026-08-12)
 
 Found by paying the cost, per the workspace rule that a tool which misled you is itself a finding. Both are in
 `scripts/plan-hygiene/check_reference_paths.py` / `run_hygiene_sweep.sh` and affect every agent who stages a doc.
 
-- [ ] [SCRIPT] P1. **`_run_only()` reports success for a file it never opened.** `if not p.is_file(): continue` skips
-      any unresolvable path and the function then prints `0 violation(s)` and returns exit 0 — so running the checker
-      from the wrong working directory produces a clean bill of health for a file with violations. This is a
-      PROXY-vs-property failure of exactly the kind `/codex/12-agent-workflow/measurement-claims-discipline.md` names:
-      exit 0 meant "nothing was checked", not "nothing is wrong". Fix: a path passed explicitly to `--only` that does
-      not resolve is an ERROR (name it, exit non-zero), never a silent skip. Evidence: this plan's own seven failed
-      pushes.
-- [ ] [SCRIPT] P2. **`--quiet` suppresses the violation text but keeps the count, which is the least useful pairing.**
-      `run_hygiene_sweep.sh` invokes the checker with `--quiet --only`, so a precommit failure says
-      `1 violation(s) in     staged files` and never names the reference. `find_moved_doc_referrers.sh` already
-      documents this same trap in its own header comment, which means it has now cost time twice. Fix: always print the
-      offending references on FAILURE regardless of `--quiet` — quiet should suppress noise on success, not evidence on
-      failure.
+**Moved out of this plan 2026-08-12 →
+[check_reference_paths silent-skip and quiet-hides-violation](/plans/active/issues/check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12.md)**,
+with the four fix todos. These are workspace plan-hygiene tooling defects affecting every agent who stages a doc, not
+Elysium delivery work, so they belong in an issue doc rather than riding along in a client-delivery plan — correct
+triage per the findings-triage rule, and it keeps this plan's todo list answerable to the October date.
+
+The two defects in one line each, so this section still explains the seven failed pushes it was written to record: the
+checker's `--only` mode **silently skips any path it cannot stat and then returns exit 0** (so "0 violations locally"
+was a false negative from the wrong working directory, and it anchored six wrong diagnoses), and the hygiene sweep runs
+it with `--quiet`, which **prints the violation count without the filename**.
 
 ## Progress Log
+
+- **2026-08-12 — measurement lesson, recorded because it is the SECOND proxy-vs-property slip in one session.** I ran
+  `bash scripts/quality-gates.sh --no-fix 2>&1 | tail -45` in the background, was notified "exit code 0", and reported
+  the gate green. **That 0 was `tail`'s exit code, not the gate's** — a shell pipeline reports its LAST command's
+  status, so piping a gate through `tail`/`grep`/`head` discards the verdict and replaces it with "did the pager run".
+  The output file was exactly 45 lines, which is the tell. Compounding it, the visible tail showed only a
+  peripheral-directory ruff warning, which read as "nearly clean" when in fact the summary had been cut off. **Rule:
+  never pipe a gate. Redirect the full log to a file and capture `$?` on its own line**
+  (`bash scripts/quality-gates.sh > "$LOG" 2>&1; echo "EXIT=$?"`), then read the log. Same shape as the
+  `check_reference_paths` false negative earlier the same day — exit 0 from something that never did the work — which is
+  why this is worth writing down rather than filing as a one-off slip.
+- **2026-08-12 (fourth pass — codex ↔ code reconciliation)** — Operator asked for the remaining fixes plus a
+  reconciliation of codex and strategy-service docs. **The root cause of my own H.5 blind spot turned out to be a
+  documentation defect, not my search technique: the codex allocator SSOT and the code docstring both said "8 allocator
+  archetypes" against a registry of 17, and they corroborated each other.** A false consensus between doc and code is
+  far more dangerous than either being wrong alone, because cross-checking one against the other confirms the error.
+  Fixed in all four locations, including an `authoritative_for:` frontmatter facet that asserted authority over the
+  wrong count. Roster de-duplicated so two codex docs no longer maintain parallel tables — that duplication is what let
+  both drift to the same wrong number. Wrote the missing `CARRY_FUNDING_DISPERSION` archetype doc (implemented and
+  registered, zero codex entry) after reconciling all 60 enum members against doc slugs; corrected four stale counts and
+  a never-existent `templates/archetype-doc.md` link in the architecture-v2 README, replacing counts with the command
+  that derives them. Two archetypes remain undocumented and are now named in the README's own gap table rather than
+  hidden behind an "all archetypes documented" claim that was false. **Refinement to yesterday's ADV tick:** the dynamic
+  ADV universe is real but `enable_dynamic_carry_universe` defaults **False**, so "ADV-filtered" describes the
+  capability and not the running default — now an operator decision. **Counter-finding worth keeping:** the client
+  documents' "26 repositories" is right and the naive recount (31 `.git` dirs) is wrong — five are history-rewrite
+  backup clones sharing a remote. Recorded in the authoring notes with the distinct-remote command, because the next
+  person to measure will otherwise "correct" a correct number.
 
 - **2026-08-12 (third pass)** — **H.5 audited; all four operator asks were already built.** Composite composition is
   architecture (a) and the allocator composes on two levels (across instances via `target_weights` + family/category

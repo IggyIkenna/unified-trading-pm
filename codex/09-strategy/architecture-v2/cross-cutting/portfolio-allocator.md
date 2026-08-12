@@ -2,9 +2,12 @@
 doc_type: codex-ssot
 title: "Cross-Cutting: Portfolio Allocator"
 summary:
-  "Strategy-scope capital allocator (dedicated service): 8 archetypes (FIXED / PNL_WEIGHTED / SHARPE_WEIGHTED /
-  RISK_PARITY / KELLY / MIN_CVAR / REGIME_AWARE / MANUAL) emit `AllocationDirective` per cadence; strategies rescale via
-  `react_to_equity_change`. Owns strategies-within-one-client scope only — not venue or client scope."
+  "Strategy-scope capital allocator (hosted inside strategy-service; a dedicated repo is the target, not the present):
+  allocator archetypes in two groups — generic weighting engines and per-archetype RANK allocators that select and
+  weight along an axis — emit `AllocationDirective` per cadence; strategies rescale via `react_to_equity_change`.
+  Composition is two-level (across instances via target_weights + guard rails, within an axis via a rank allocator);
+  there is NO composite archetype. Owns strategies-within-one-client scope only — not venue or client scope. Archetype
+  roster lives in /codex/03-services/portfolio-allocator.md, not here."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -59,21 +62,34 @@ All three scopes share the "target X at Y = Z" event-driven reconciliation primi
 - **Versioned artifacts** — allocator algorithm changes are consumer-opt-in, not auto-upgrade
 - **Auditable** — every AllocationDirective is logged with the allocator algorithm version + inputs
 
-## 8 Allocator Archetypes
+## Allocator archetypes
 
-| #   | Archetype         | Allocation rule                                                            |
-| --- | ----------------- | -------------------------------------------------------------------------- |
-| 1   | `FIXED`           | Constant weights set by operator                                           |
-| 2   | `PNL_WEIGHTED`    | Weight ∝ trailing P&L contribution                                         |
-| 3   | `SHARPE_WEIGHTED` | Weight ∝ trailing Sharpe ratio                                             |
-| 4   | `RISK_PARITY`     | Weight ∝ 1/vol; equal risk contribution                                    |
-| 5   | `KELLY`           | Full/fractional Kelly across strategies using historical edge + covariance |
-| 6   | `MIN_CVAR`        | Minimize tail risk (5% CVaR); constrained optimizer                        |
-| 7   | `REGIME_AWARE`    | Weights swap by detected regime (vol-high/vol-low, risk-on/risk-off)       |
-| 8   | `MANUAL`          | Human-in-loop approval on every directive                                  |
+**The roster lives in [portfolio-allocator](/codex/03-services/portfolio-allocator.md), which is `authoritative_for`
+it.** This doc used to carry a second copy of the table, and **both copies drifted to the same wrong count** ("8
+archetypes" against a registry holding more than twice that) — duplicating a roster across two SSOTs is what let the
+whole rank-allocator layer go undocumented until 2026-08-12. The two groups, in one line each:
 
-Every per-client allocator instance picks ONE archetype (no composite archetypes — if genuinely hybrid, build a new
-archetype).
+- **Generic weighting engines** — weight instances by a portfolio statistic (`FIXED`, `PNL_WEIGHTED`, `SHARPE_WEIGHTED`,
+  `RISK_PARITY`, `KELLY`, `MIN_CVAR`, `REGIME_AWARE`, `MANUAL`).
+- **Per-archetype RANK allocators** — select AND weight along an axis (coin / venue / protocol / expiry / LST),
+  single-stage or hierarchical 2-stage, including the two dispersion allocators.
+
+### Composition: one archetype per instance, composed at two levels
+
+Every per-client allocator instance picks ONE archetype, and **there are no composite archetypes.** That ruling stands —
+but the reason it is not a limitation has changed, and the old advice ("if genuinely hybrid, build a new archetype") is
+now the wrong first move:
+
+| Kind of "composite" the operator wants        | How it is expressed                                                           |
+| --------------------------------------------- | ----------------------------------------------------------------------------- |
+| Several strategies run side by side, weighted | **Many single-archetype instances**; allocator `target_weights` + guard rails |
+| Weights across coins / venues / protocols     | **A Group-2 rank allocator** on that axis — no new archetype needed           |
+| A long/short cross-sectional basket           | **N instances of one archetype**, each emitting one leg off a shared rank     |
+| A genuinely new mechanism                     | Then, and only then, a new archetype                                          |
+
+`StrategyInstanceDefinition` carrying ONE `archetype_id` and ONE `capital_budget_amount` is therefore a design choice,
+not a gap to work around. Worked example:
+[`carry-funding-dispersion`](/codex/09-strategy/architecture-v2/archetypes/carry-funding-dispersion.md).
 
 ## AllocationDirective event
 
