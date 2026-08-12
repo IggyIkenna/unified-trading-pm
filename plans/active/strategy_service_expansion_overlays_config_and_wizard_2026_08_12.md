@@ -232,6 +232,14 @@ unknown rather than guessed.
       that enforcement is keyed on something the wallet layer does not know. **This is NOT a live defect — nothing loads
       the mapping, so there is no current exposure** — but it is the reason to settle the key before wiring rather than
       after. Recommendation: key on `(client_id, slot_label)` and put `client_id` in the path.
+- [ ] [AGENT] P1. **Fold in the per-client config surface once its key is settled** —
+      [per-client config keying and missing axes](/plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md).
+      Raised by operator question 2026-08-12. The surface the § B ruling-5 work is widening is **not** the only config
+      surface: `deployment-service/configs/strategy/{archetype}/clients.yaml` is live and wired, keyed archetype-first,
+      and its `extra="forbid"` schema cannot express per-client leverage, venue selection or coin universe. Ruling 5's
+      "all configuration in one place, schema-backed, hot-reloadable" cannot be satisfied while a second live config
+      surface sits outside it, so the two must converge — and `client_id` stays a Layer-4 config axis, never part of the
+      instance name, per [strategy-identity-versioning](/codex/06-coding-standards/strategy-identity-versioning.md).
 - [ ] [AGENT] P1. **Then document the resolved binding** in
       [wallet-hierarchy-and-capital-flow](/codex/04-architecture/wallet-hierarchy-and-capital-flow.md), including the
       custody-vs-signing-surface distinction from (1) above, which no codex doc currently states in one place. The
