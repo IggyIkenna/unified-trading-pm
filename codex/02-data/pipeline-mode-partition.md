@@ -63,23 +63,23 @@ code_refs:
 
 ## Shipped progress (updated 2026-05-19 post-Phase-3 run)
 
-| Phase                                                       | Status        | Commit(s)                                                                       |
-| ----------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------- |
-| 0 — pre-audit doc (operator-runnable on same-region VM)     | ✅ shipped    | `unified-trading-pm@0cc633c8` (doc) + `@12483f5b` (plan flip)                   |
-| 1A — UAC `PipelineMode` SSOT + closed-set round-trip        | ✅ shipped    | `unified-api-contracts@8bc3f2a`                                                 |
-| 1B — UTL `ManifestWriter` `pipeline_mode` kwarg + tests     | ✅ shipped    | `unified-trading-library@87134364`                                              |
-| 1C — UAC `SOURCE_PRIORITY` `pipeline_mode` field            | ✅ shipped    | `unified-api-contracts@6a8529f` + `unified-trading-pm@53c498c5`                 |
-| 2 — Canonical migration script + 23 unit tests              | ✅ shipped    | `unified-trading-pm@5a3c360a` + `@cc6fe4ce` (plan flip)                         |
-| 3 — VM fleet execution (31 VMs, all 5 asset_groups)         | ✅ complete   | 2026-05-19 13:52→16:01 UTC; all 31 VMs TERMINATED exit 0. No data loss.         |
-| 4 — Workspace-wide consumer sweep                           | ✅ complete   | All production callsites pass explicit `pipeline_mode=`. No gaps found.         |
-| 5.1 — UTL `read_manifest_with_source_priority` reader       | ✅ shipped    | `unified-trading-library@52f123d6` + `unified-trading-pm@2a0d105d` (annotation) |
-| 5.2 — MTDS/MDPS path probers                                | ✅ shipped    | `market-tick-data-service@33b2ae5` (2026-05-19)                                 |
-| 5.3 — Sports/DeFi `candidate_parquet_paths` extension       | ✅ shipped    | `unified-api-contracts@fefd720` (2026-05-19)                                    |
-| Axis-10 — Reconciler pipeline_mode= prefix fix              | ✅ shipped    | `instruments-service@8accb30` (2026-05-19) — see pre/post counts below          |
-| 3.6 — Post-migration phantom gate (re-audit w/ Axis-10 fix) | ✅ complete   | prediction ✅ 0 / sports ✅ 0 / tradfi ✅ 0 / defi ✅ 0 / cefi ✅ 0             |
-| 6 — Residual phantom cleanup                                | 🚫 not needed | Axis-10 false positives; parquets exist at new paths. DO NOT run `--apply`.     |
-| 8 — Reader fallback removal (T+30d, ~2026-06-15)            | ⏸ deferred    | "no double SSOT" rule once `READER_FELL_BACK_TO_LEGACY_PATH` count = 0 / 7d.    |
-| 9 — Final workspace-wide QG sweep                           | ⏳ pending    | Sequential after Phase 3.6 operator sign-off.                                   |
+| Phase                                                       | Status                                                                                                                                             | Commit(s)                                                                       |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| 0 — pre-audit doc (operator-runnable on same-region VM)     | ✅ shipped                                                                                                                                         | `unified-trading-pm@0cc633c8` (doc) + `@12483f5b` (plan flip)                   |
+| 1A — UAC `PipelineMode` SSOT + closed-set round-trip        | ✅ shipped                                                                                                                                         | `unified-api-contracts@8bc3f2a`                                                 |
+| 1B — UTL `ManifestWriter` `pipeline_mode` kwarg + tests     | ✅ shipped                                                                                                                                         | `unified-trading-library@87134364`                                              |
+| 1C — UAC `SOURCE_PRIORITY` `pipeline_mode` field            | ✅ shipped                                                                                                                                         | `unified-api-contracts@6a8529f` + `unified-trading-pm@53c498c5`                 |
+| 2 — Canonical migration script + 23 unit tests              | ✅ shipped                                                                                                                                         | `unified-trading-pm@5a3c360a` + `@cc6fe4ce` (plan flip)                         |
+| 3 — VM fleet execution (31 VMs, all 5 asset_groups)         | ✅ complete                                                                                                                                        | 2026-05-19 13:52→16:01 UTC; all 31 VMs TERMINATED exit 0. No data loss.         |
+| 4 — Workspace-wide consumer sweep                           | ✅ complete                                                                                                                                        | All production callsites pass explicit `pipeline_mode=`. No gaps found.         |
+| 5.1 — UTL `read_manifest_with_source_priority` reader       | ✅ shipped                                                                                                                                         | `unified-trading-library@52f123d6` + `unified-trading-pm@2a0d105d` (annotation) |
+| 5.2 — MTDS/MDPS path probers                                | ✅ shipped                                                                                                                                         | `market-tick-data-service@33b2ae5` (2026-05-19)                                 |
+| 5.3 — Sports/DeFi `candidate_parquet_paths` extension       | ✅ shipped                                                                                                                                         | `unified-api-contracts@fefd720` (2026-05-19)                                    |
+| Axis-10 — Reconciler pipeline_mode= prefix fix              | ✅ shipped                                                                                                                                         | `instruments-service@8accb30` (2026-05-19) — see pre/post counts below          |
+| 3.6 — Post-migration phantom gate (re-audit w/ Axis-10 fix) | ✅ complete                                                                                                                                        | prediction ✅ 0 / sports ✅ 0 / tradfi ✅ 0 / defi ✅ 0 / cefi ✅ 0             |
+| 6 — Residual phantom cleanup                                | 🚫 not needed                                                                                                                                      | Axis-10 false positives; parquets exist at new paths. DO NOT run `--apply`.     |
+| 8 — Reader fallback removal (T+30d, ~2026-06-15)            | ⏸ deferred, now significantly overdue (verified 2026-08-12: `unified_trading_library/manifest_reader_fallback.py` levels 1/3/4 still live in code) | "no double SSOT" rule once `READER_FELL_BACK_TO_LEGACY_PATH` count = 0 / 7d.    |
+| 9 — Final workspace-wide QG sweep                           | ⏳ pending                                                                                                                                         | Sequential after Phase 3.6 operator sign-off.                                   |
 
 > **🔴 GCS DELETE SAFETY INVARIANT (codified 2026-06-18; HARD RULE).** The v9 migration COPIED objects to canonical
 > `pipeline_mode={mode}_{source}/asset_group={ag}/…` paths (COPY not MOVE) → the legacy bare `asset_group=`/`category=`/
@@ -321,7 +321,7 @@ Three migrations rode together:
 
 The manifest was rewritten ONCE during the bundle — readers continue to function via the fallback chain (see below).
 
-## Reader fallback chain (≤30 days post-migration; deleted 2026-06-15)
+## Reader fallback chain (≤30 days post-migration; scheduled deletion 2026-06-15 — NOT executed, see correction below)
 
 UTL `read_manifest_with_source_priority(...)` + MTDS / MDPS path probers + sports `candidate_parquet_paths` helper try
 canonical path first, then fall back through:
@@ -332,8 +332,16 @@ canonical path first, then fall back through:
 4. Combinations of the above.
 
 Each fallback hit emits a `READER_FELL_BACK_TO_LEGACY_PATH` event so we can monitor when fallbacks are no longer needed.
-Fallback paths are **deleted T+30 days post-migration** per workspace "no double SSOT" rule. Tracked in the migration
-plan's Phase 8.
+Fallback paths were **scheduled for deletion T+30 days post-migration** per workspace "no double SSOT" rule, tracked in
+the migration plan's Phase 8. **Correction 2026-08-12 (docs-drift fix)**: that deletion never actually happened — no
+newer operator ruling supersedes the deferral either; this section previously read "(deleted 2026-06-15)" in past tense,
+which was wrong. Live-code check (`unified-trading-library/unified_trading_library/manifest_reader_fallback.py`,
+2026-08-12) confirms all 5 fallback levels are still present and exercised. Per that module's own docstring, level 2
+(`category=` legacy hive vocab) is a **permanent, documented exception** to the "no double SSOT" rule (asset-group
+vocabulary preserved on disk, not scheduled for removal) — only levels 1/3/4 (strip-`pipeline_mode` / legacy
+`day=`-prefix variants) are the transitional ones Phase 8 was meant to delete once `READER_FELL_BACK_TO_LEGACY_PATH`
+drops to zero for 7 consecutive days. That verification was never run (see the migration plan's own Phase 8 status).
+Phase 8 stays open/overdue, not silently abandoned — a real remaining-work item, not a stale doc claim.
 
 ```yaml
 execution:
@@ -351,7 +359,11 @@ execution:
 
 ## Anti-patterns
 
-- Don't keep the `category=` reader fallback long-term. Phase 8 of the migration plan deletes it 2026-06-15.
+- Don't keep the transitional (levels 1/3/4: strip-`pipeline_mode` / legacy `day=`-prefix) reader fallback levels
+  long-term — Phase 8 of the migration plan was meant to delete them 2026-06-15 but never ran (still open/overdue as of
+  2026-08-12, see § "Reader fallback chain" above). **Correction 2026-08-12**: this line previously named the
+  `category=` fallback (level 2) as the one to delete — that was backwards; `category=` is the one PERMANENT, documented
+  exception (asset-group vocabulary preserved on disk, per CLAUDE.md), not scheduled for removal.
 - Don't introduce a new batch `pipeline_mode` value without adding a corresponding `SOURCE_PRIORITY` entry. The
   round-trip unit test will fail.
 - Don't glue a transport into the `source` (the `hyperliquid_rest` antipattern, retired R4 2026-06-07) — `source` is the
