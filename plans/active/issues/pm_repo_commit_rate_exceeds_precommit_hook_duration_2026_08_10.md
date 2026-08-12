@@ -228,19 +228,28 @@ Directions, cheapest first — each is a todo below:
 
 ## Todos
 
-- [ ] [INFRA] P0. **Make the pre-commit drift gate advisory for reconciling wrappers.** Add an explicit opt-in (e.g.
-      `DRIFT_GATE_ADVISORY=1`) that `check-branch-drift.sh` honours by WARNING instead of exiting 1, and set it in
-      `safe-doc-push.sh` and `scripts/quickmerge.sh` around their own commit calls only — both already rebase before
-      pushing, so the invariant the gate protects is still enforced, just after the commit rather than before it. A bare
-      `git commit` by a human keeps the hard block, and the existing human-only `SKIP_BRANCH_DRIFT=1` override is
-      untouched. **Done when**: a commit driven by either wrapper proceeds while behind origin, the wrapper's
-      post-commit rebase still runs, a bare `git commit` while behind still hard-fails, and a regression test covers all
-      three. Repo: unified-trading-pm.
-- [ ] [INFRA] P0. **Fix the F2 misclassification.** `commit_failure_is_retriable()` must treat a prek failure whose only
-      signal is `- files were modified by this hook` (with no hook reporting a content violation) as RETRIABLE —
-      re-stage the named files and retry — rather than exiting 6 with "Do NOT re-run this script". **Done when**: a
-      simulated autofix-only prek failure re-stages and retries to success, a genuine content rejection still exits 6
-      with the hook's remedy line, and both are covered by tests. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P0. **Make the pre-commit drift gate advisory for reconciling wrappers.** DONE — the code shipped
+      2026-08-10 in unified-trading-pm@e59d4750fa (same-day as this doc's filing) but this checkbox was never flipped;
+      caught while re-triaging this doc 2026-08-12. `check-branch-drift.sh` honours `DRIFT_GATE_ADVISORY=1` by WARNING
+      and exiting 0 instead of hard-blocking; `safe-doc-push.sh` and `scripts/quickmerge.sh` both `export` it
+      immediately before their own `git commit` call and `unset` it immediately after (verified: both scripts contain
+      the export/unset pair). A bare `git commit` (the flag unset) still hard-fails, and `SKIP_BRANCH_DRIFT=1` is
+      untouched. **What was actually missing**: the regression test this todo's own "Done when" required. Added
+      unified-trading-pm@bdc6c3ab52 — `tests/test_check_branch_drift_advisory_mode.bats` (5/5): not-behind exits 0
+      regardless of the flag, behind+unset hard-blocks, behind+advisory warns and exits 0, `SKIP_BRANCH_DRIFT` still
+      wins, and a static containment check that both wrappers scope the export/unset to their own commit call. Repo:
+      unified-trading-pm.
+- [x] ✅ [INFRA] P0. **Fix the F2 misclassification.** DONE — shipped 2026-08-10 in unified-trading-pm@e59d4750fa
+      alongside the drift-advisory todo above, same unflipped-checkbox gap. `commit_failure_is_retriable()` now returns
+      RETRIABLE as soon as it sees `files were modified by this hook`, before even looking at hook ids — by design a
+      mixed failure (autofix text plus a genuine unresolved violation in the same run) also classifies RETRIABLE; the
+      worst case is one extra attempt, since the retry re-stages the autofix and the _next_ attempt (no longer carrying
+      that text) correctly exits 6 on the surviving violation. **What was actually missing**: test coverage for the F2
+      case itself — the existing test file only covered pure content rejections and pure drift, not the autofix signal.
+      Added unified-trading-pm@bdc6c3ab52 — two new cases in `tests/test_safe_doc_push_failure_classification.bats` (9/9
+      total): autofix-only is RETRIABLE, and autofix-plus-content-rejection is RETRIABLE by design (pinned so the
+      deliberate one-extra-attempt tradeoff is never mistaken for a bug and "fixed" into a false hard-stop). Repo:
+      unified-trading-pm.
 - [x] ✅ [INFRA] P0. **The silent-revert class also hits `quickmerge.sh`, and safe-doc-push's own "already landed"
       heuristic converts it into a FALSE SUCCESS.** DONE 2026-08-11 — unified-trading-pm@91d559ee19. **Root cause was
       not a missing check but a one-argument call-site bug.** `autostash_guard_bound_backlog` (tree-wip-guard.sh) takes
@@ -393,12 +402,17 @@ Directions, cheapest first — each is a todo below:
       the workspace's liveness-check helpers are audited for pattern-only matching and the unsound ones carry a scoping
       key, with a regression test. Repo: unified-trading-pm. SSOT:
       `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
-- [ ] [INFRA] P0. **Stop `safe-doc-push.sh` exiting 5 with the caller's edits silently reverted.** Before any
-      non-success exit, compare the named files on disk against the content the script was invoked with (hash them at
-      entry); if they no longer match, do not print "transient, not a defect — re-run" — print the recovering
-      `git stash` ref and exit with a distinct code meaning "your edits are in the stash, not on disk". **Done when**:
-      an induced exhausted-retries run with a reverted tracked file reports the stash ref instead of the transient
-      message, and a test covers the entry-hash comparison. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P0. **Stop `safe-doc-push.sh` exiting 5 with the caller's edits silently reverted.** DONE — shipped
+      2026-08-10 in unified-trading-pm@e59d4750fa, same unflipped-checkbox gap as the two todos above.
+      `_sdp_fingerprint_named()` hashes every named file at entry (`_SDP_ENTRY_FINGERPRINT`);
+      `_sdp_warn_if_content_vanished()` re-hashes before the exhausted-retries message and, on a mismatch, prints a loud
+      warning naming `git stash list` / `git show 'stash@{0}:<path>'` and the run exits **10** instead of the
+      plain-transient **5**. **What was actually missing**: the "Done when"'s own test requirement — a
+      `test_tree_wip_guard.bats` comment claimed this was "already covered" but no test anywhere exercised
+      `_sdp_fingerprint_named`/`_sdp_warn_if_content_vanished`. Added unified-trading-pm@bdc6c3ab52 — new
+      `tests/test_safe_doc_push_entry_hash_reverted_edits.bats` (3/3, sed-extracted harness against a real git repo,
+      same pattern as the failure-classification test): unchanged file compares clean, a file reverted to HEAD mid-run
+      is caught and names the recovery ref, a file deleted mid-run (ABSENT) is caught too. Repo: unified-trading-pm.
 - [x] ✅ [INFRA] P0. **Break F6 — stop the hook chain fighting a peer session's unstaged WIP.** DONE 2026-08-10 —
       isolated-worktree mode is now the DEFAULT in `safe-doc-push.sh` (`SDP_ISOLATED=0` escapes; setup failure degrades
       to the legacy path rather than blocking). Proven 6/6 vs legacy 0/6 under peer noise. Original text: An isolated
@@ -421,12 +435,16 @@ Directions, cheapest first — each is a todo below:
       otherwise fails for every agent that adopts it. **Done when**: the commit- SHA evidence check passes from a
       worktree with an arbitrary directory name, an unresolvable repo root produces a distinct loud error, and a
       regression test runs the check from a differently-named worktree. Repo: unified-trading-pm.
-- [ ] [INFRA] P1. **Make `prettier-autostage.sh` format regardless of drift.** Formatting is idempotent and has no
-      dependency on origin's state; the current "skipping format while behind" guard is what prevents the fast path from
-      ever self-correcting (F3). If the reflow-residue concern behind that guard is still real, satisfy it by formatting
-      AFTER the wrapper's reconcile step rather than by declining to format at all. **Done when**: the guard is removed
-      or moved after reconcile, a formatted-while-behind commit does not leave residue that breaks slot FF-sync, and the
-      F3 loop is demonstrably broken. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P1. **Make `prettier-autostage.sh` format regardless of drift.** DONE — shipped 2026-08-10 in
+      unified-trading-pm@aa1f445933 (same session as the three todos above, same unflipped-checkbox gap — this is why it
+      kept hitting live on 2026-08-11/12 even though the fix had already landed the day before). Rather than
+      unconditionally removing the guard, it now mirrors `check-branch-drift.sh`'s own advisory mode: the "skip while
+      behind" branch is itself gated on `DRIFT_GATE_ADVISORY:-0 != 1`, so under a reconciling wrapper (whose commit the
+      drift gate will not block) formatting proceeds while behind, and the residue protection stays intact for a bare
+      `git commit`. **What was actually missing**: test coverage proving the F3 loop is actually broken. Added
+      unified-trading-pm@bdc6c3ab52 — new `tests/test_prettier_autostage_advisory_mode.bats` (2/2): behind+unset still
+      skips (residue protection intact), behind+`DRIFT_GATE_ADVISORY=1` does NOT skip and falls through past the drift
+      check entirely. Repo: unified-trading-pm.
 - [x] ✅ [INFRA] P1. **Re-derive the push-governor's validation cap from measured host cores.** DONE 2026-08-10 —
       `_push_gov_validate_default_k()` now mirrors `qg-host-governor.sh`'s `max(2, floor(cores/4))`; measured 8 -> 2 on
       the 10-core operator host. Original text: `push-host-governor.sh` admits a fixed K=8 validation-phase tokens.
@@ -669,6 +687,21 @@ reconciliation, the previous recommendation, shipped 2026-08-10.)
   goes from zero to complete. Note the peer-noise writer is load-bearing: an earlier run against a CLEAN checkout scored
   5/6 for legacy and proved nothing — foreign UNSTAGED WIP is what makes prek's patch save/restore collide with the
   hook's own autofix, which is the F6 mechanism.
+- **2026-08-12 (re-triage: four P0/P1 todos were already shipped code-wise, just never flipped)**: working this doc's
+  remaining open todos in order, found that todos 1-4 (drift-gate-advisory, F2 misclassification, exit-5 silent revert,
+  prettier-autostage mirroring) were ALL already implemented — in unified-trading-pm@e59d4750fa and @aa1f445933, both
+  landed 2026-08-10, the same day this doc was filed — but the checkboxes were left unchecked. That is why F3's
+  "skipping format while behind origin" message kept firing live on 2026-08-11/12 even though the mirror fix predates
+  both incidents: the fix was live, the _symptom quoted in the dispatch_ was a stale citation, not a live gap. What was
+  genuinely missing in every case was the test coverage each todo's own "Done when" required — verified by grepping
+  `tests/` for every mechanism name (`DRIFT_GATE_ADVISORY`, `files were modified by this hook`,
+  `_SDP_ENTRY_FINGERPRINT`, a prettier-autostage test file) and finding zero hits before this session. Added four bats
+  files/additions (19 new test cases total) exercising each mechanism directly against real git repos, all green. One
+  test written for the F2 case initially asserted the WRONG expected behavior (that a mixed autofix+content-rejection
+  failure should be DETERMINISTIC) — running it against the real code showed it is RETRIABLE by design, per the
+  function's own comment; corrected the test rather than the code, and documented why so the deliberate
+  one-extra-attempt tradeoff is not later "fixed" into a false hard-stop.
+
 - **2026-08-10 (four self-inflicted defects the harness caught, all pre-land)**: recorded because they are the argument
   for the harness existing. (1) `safe-doc-push` gated on `[[ ! -d .git ]]`, but `.git` is a FILE in a linked worktree —
   isolation re-execs into a worktree, so the child exited 2 and EVERY invocation would have failed; fixed via
