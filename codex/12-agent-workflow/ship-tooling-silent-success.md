@@ -184,6 +184,23 @@ attempt is.
   and still verify against `origin` afterwards: the same message once accompanied a watchdog-SIGTERM'd gate where
   nothing landed.
 
+## zsh modifiers can corrupt the verification command itself — producing a FALSE "not landed"
+
+Worse than a failed ship is a verification you cannot trust. Measured 2026-08-12, verifying a landed doc:
+
+```bash
+git show "$B:codex/06-coding-standards/…"   # → fatal: ambiguous argument 'origin/live-defi-rolloutodex/…'
+git show "${B}:codex/06-coding-standards/…" # → correct
+```
+
+zsh applied its `:c` **parameter modifier** to `$B` and swallowed the `c`, silently rewriting the path. The file HAD
+landed; the check said it had not. Every sibling check in the same command used `$B:plans/…` and passed, because `:p` is
+not a modifier in that position — so the failure looked file-specific, exactly like a real partial ship.
+
+**Always brace the variable when a `:` follows it** (`"${B}:path"`), and when a marker check fails, re-run it braced
+before concluding anything. Treat a single failing check among passing siblings as suspect tooling until the command is
+proven, or you will "recover" a ship that never broke — and a needless re-ship is how peers' work gets clobbered.
+
 ## zsh does not word-split an unquoted variable
 
 `FILES="a.md b.md"; cmd $FILES` passes ONE argument in zsh, not two — unlike bash. It surfaces as
