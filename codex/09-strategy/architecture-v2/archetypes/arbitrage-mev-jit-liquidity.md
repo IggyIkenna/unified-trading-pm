@@ -38,9 +38,10 @@ archetype: ARBITRAGE_MEV_JIT_LIQUIDITY
 family: ARBITRAGE_STRUCTURAL
 venue_universe: [UNISWAP_V3, PANCAKESWAP_V3, SUSHISWAP_V3]
 topology_requirements:
-  isolation: { execution-service: isolated }
+  isolation: { execution-service: isolated, strategy-service: isolated }
+  co_location: [execution-service, strategy-service]
   latency_budget_ms: 150
-  min_sla_tier: high
+  min_sla_tier: premium
 ---
 
 # Archetype: `ARBITRAGE_MEV_JIT_LIQUIDITY`

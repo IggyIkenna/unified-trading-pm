@@ -41,10 +41,10 @@ archetype: CARRY_RECURSIVE_BORROW_LENDING_ONLY
 family: CARRY_AND_YIELD
 venue_universe: [AAVE, MORPHO, COMPOUND, EULER, UNISWAP_V3]
 topology_requirements:
-  isolation: { execution-service: isolated }
-  co_location: []
+  isolation: { execution-service: isolated, strategy-service: isolated }
+  co_location: [execution-service, strategy-service]
   latency_budget_ms: 150
-  min_sla_tier: standard
+  min_sla_tier: premium
 ---
 
 # CARRY_RECURSIVE_BORROW_LENDING_ONLY

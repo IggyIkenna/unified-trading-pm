@@ -37,10 +37,10 @@ archetype: STAT_ARB_PAIRS_FIXED
 family: STAT_ARB_PAIRS
 venue_universe: [IBKR, CME, BINANCE, OKX, DERIBIT]
 topology_requirements:
-  isolation: { execution-service: isolated }
-  co_location: []
+  isolation: { execution-service: isolated, strategy-service: isolated }
+  co_location: [execution-service, strategy-service]
   latency_budget_ms: 150
-  min_sla_tier: standard
+  min_sla_tier: premium
 ---
 
 # Archetype: `STAT_ARB_PAIRS_FIXED`

@@ -35,6 +35,11 @@ code_refs:
     strategy-service/strategy_service/engine/strategies/v2/target_universe/,
     strategy-service/strategy_service/portfolio_allocator/,
   ]
+topology_requirements:
+  isolation: { execution-service: isolated, strategy-service: isolated }
+  co_location: [execution-service, strategy-service]
+  latency_budget_ms: 150
+  min_sla_tier: premium
 ---
 
 # Archetype: `CARRY_FUNDING_DISPERSION`

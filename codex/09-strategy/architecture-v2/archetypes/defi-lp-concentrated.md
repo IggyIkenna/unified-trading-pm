@@ -41,10 +41,10 @@ archetype: DEFI_LP_CONCENTRATED
 family: MARKET_MAKING
 venue_universe: [UNISWAP_V3, PANCAKESWAP_V3, SUSHISWAP_V3, TRADER_JOE_LB]
 topology_requirements:
-  isolation: { execution-service: shared }
-  co_location: []
+  isolation: { execution-service: isolated, strategy-service: isolated }
+  co_location: [execution-service, strategy-service]
   latency_budget_ms: 500
-  min_sla_tier: standard
+  min_sla_tier: premium
 ---
 
 # Archetype: `DEFI_LP_CONCENTRATED`
