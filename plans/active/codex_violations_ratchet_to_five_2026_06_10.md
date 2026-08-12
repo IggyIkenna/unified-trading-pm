@@ -23,8 +23,8 @@ estimate_class: refactor
 estimate_baseline_ai_days: 18.0
 estimate_calibrated_ai_days: 7.2
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-10
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
@@ -387,7 +387,7 @@ unchanged:
       as its own `[CODE] P3` todo in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` ("Reconcile UAC's stale
       `defi_position.py` liquidation threshold to the registry-driven form"). Cross-referencing rather than leaving 2
       live copies of the same work — track it there going forward; not executed yet.
-- [x] ✅ [CODE] P3. **DONE — `execution-service@89fbf99d`** ("feat(execution): wire delta-proxy repricer into live MM
+- [x] ✅ [CODE] P3. **DONE — `execution-service@980a6ad0`** ("feat(execution): wire delta-proxy repricer into live MM
       QUOTE-instruction handling", 2026-07-28). The "separate, concurrent workstream" the 2026-07-27 correction below
       referred to has landed: `DeltaProxyRepricer` is imported and wired into
       `execution_service/engine/quote_maintenance.py` (module docstring line 1 states the wiring; import at line 74)
@@ -674,7 +674,7 @@ for a `batch2` on the next pass and rehome then.
   verified evidence.** In scope this run because the doc was edited since its 2026-07-30 marker (context-scout
   backfill + a 2026-07-31 ci-tranche flip of the MTDS `PYTEST_UNIT_DIR` item). Read end-to-end; `grep -cE '^- \[ \]'` =
   **7** at entry, matching this verdict's item count, **now 6**. Closed: the `delta_proxy_repricer.py` `[CODE] P3` item,
-  which `execution-service@89fbf99d` (2026-07-28) already satisfied — evidence re-derived from the execution-service
+  which `execution-service@980a6ad0` (2026-07-28) already satisfied — evidence re-derived from the execution-service
   checkout this run (`git show --stat`, ancestor check against `origin/live-defi-rollout`, live re-read of
   `quote_maintenance.py`'s import + the test file), not accepted from the reporting doc. Doc stays NA on the remaining
   6: Phase 3's schema-provenance migration is flagged too-large-for-a-batch-todo in batch1's own Deferred section (a

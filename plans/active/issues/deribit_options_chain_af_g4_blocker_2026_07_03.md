@@ -23,7 +23,7 @@ execution_scope: human
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-29
-locked_by: live-defi-rollout
+locked_by:
 context_scope:
   [
     /plans/archive/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
@@ -33,7 +33,7 @@ context_scope:
     market-tick-data-service/market_tick_data_service/scripts/reclass_cefi_futures_chain_no_tardis_source.py,
     deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
   ]
-locked_since: 2026-05-21
+locked_since:
 resolved_by:
 ---
 

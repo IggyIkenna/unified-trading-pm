@@ -30,7 +30,7 @@ estimate_class: refactor
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 3.2
 last_updated: 2026-07-28
-locked_by: live-defi-rollout
+locked_by:
 locked_since:
 supersedes:
 superseded_by:

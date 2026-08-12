@@ -27,7 +27,7 @@ estimate_class: brand-new
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 6
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
+locked_by:
 locked_since:
 supersedes:
 superseded_by:

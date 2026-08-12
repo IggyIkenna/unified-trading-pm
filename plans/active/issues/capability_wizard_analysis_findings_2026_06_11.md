@@ -24,7 +24,7 @@ priority: P2
 source: [found while building the capability wizard/manifest 2026-06-11]
 assigned_vm: planning
 resolved_by:
-locked_by: live-defi-rollout
+locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
@@ -407,7 +407,7 @@ at install (engine floor 20.19). Remedy for agents on this host: `PATH="/usr/bin
 
 ### F33–F37 — Five selector contradictions: execution-algo truth disagrees across its own code paths
 
-**Status**: FIXED — verified 2026-07-30, execution-service@d0597237 + unified-api-contracts@91df8e34 (see the F33–F37
+**Status**: FIXED — verified 2026-07-30, execution-service@52fe0632 + unified-api-contracts@91df8e34 (see the F33–F37
 todo below for the per-slug remediation detail). Originally transcribed declaratively in UAC
 `algo_compatibility.py:: SELECTOR_CONTRADICTIONS` (UAC@180fb56, the detail SSOT; manifest carries them as edges). Slugs:
 **F33 iceberg_path_split** (ICEBERG valid via manual API + live selector + factory but excluded from canonical
@@ -653,7 +653,7 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 | Unfinished adapters            | F42 (6 adapter-backed venues absent from VENUE_CATEGORY_MAP) — F43 RESOLVED uac@61ba5239 (2026-07-15, plan-reconcile §10)                                     | FIXED uac@f3440731 (2026-07-28)                     | UAC registry                                                                                                                        |
 | Catalogue ↔ engine             | F47 (verdict-matrix venues v2 slot-token registry rejects)                                                                                                    | FIXED (verified 2026-07-30)                         | `KNOWN_VENUE_TOKENS` + verdict-matrix regression test — see F47 section above                                                       |
 | Catalogue ↔ engine             | F48 (22 VOL*\*/MARKET_MAKING*\* archetypes, no v2 engine)                                                                                                     | FIXED (verified 2026-07-30)                         | verdict-matrix demotes to `not_registered(no_v2_engine)` + `test_f48_engineless_archetypes_are_not_registered` — see F48 todo above |
-| Catalogue ↔ engine             | F27 (carry-staked-basis `deribit`≠`DERIBIT` case mismatch), F33–F37 (execution-algo selector contradictions)                                                  | FIXED (F27 verified 2026-07-27; F33–F37 2026-07-30) | strategy-service@dac939d6 / execution-service@d0597237 + uac@91df8e34 — see F33–F37 todo above                                      |
+| Catalogue ↔ engine             | F27 (carry-staked-basis `deribit`≠`DERIBIT` case mismatch), F33–F37 (execution-algo selector contradictions)                                                  | FIXED (F27 verified 2026-07-27; F33–F37 2026-07-30) | strategy-service@dac939d6 / execution-service@52fe0632 + uac@91df8e34 — see F33–F37 todo above                                      |
 | Catalogue ↔ engine             | F22 (multi-leg collapsed to one cell)                                                                                                                         | FIXED (leg-spec registry)                           | derive-from-legs follow-up open                                                                                                     |
 | Collateral + movements         | **F28 (two collateral SSOTs disagree on LST haircuts — 4 conflicts)**                                                                                         | OPEN                                                | `venue_collateral.py` vs `lst_collateral_resolver.py:51-82` (HL wstETH; Bybit 10%vs15%; Deribit 7.5%vs20%; OKX absent vs 15%)       |
 | Collateral + movements         | F7 (policy was derivation)                                                                                                                                    | FIXED (registry backfilled)                         | —                                                                                                                                   |
@@ -773,7 +773,7 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
       over-claiming AVAILABLE, which was the actual correctness defect this finding raised.
 - [x] ✅ [LOGIC] P2. **F33–F37 — reconcile the 5 execution-algo selector contradictions** (iceberg/SOR/ghost-algos/
       heuristic-bypass/no-SSOT). LOGIC-FREEZE. Target: execution-service. — **DONE 2026-07-30 —
-      execution-service@d0597237 + unified-api-contracts@91df8e34 + pm codex doc (this commit).** FREEZE STATUS:
+      execution-service@52fe0632 + unified-api-contracts@91df8e34 + pm codex doc (this commit).** FREEZE STATUS:
       verified lifted (same basis as F27/F47/F48 above — `plans/epics/strategy_master.md` carries zero freeze language).
       Per-slug resolution: **F34 (sor_naming_mismatch)** — `AlgorithmFactory._ALGO_MAP` now carries a
       `"smart_order_router"` alias alongside `"sor"` (both -> `SORAlgorithm`); regression test
