@@ -474,14 +474,14 @@ just belongs on a different layer than instrument_type does, and conflating the 
   venues (verified via `derive_pipeline_mode_for_row`); the correct mechanism is `_VENUE_DT_OVERRIDES` scoped per
   `(venue, "oracle_prices")`, but scoping it changes AAVE/SPARK derivation too (migration implication) — left to the
   other doc's P0/escalation rather than fixed unilaterally here.
-- **2026-08-12 (slot 16, continued): MTDS ship lane unblocked + UTL root-cause fix applied.** The pre-existing MTDS red
-  was fixed on origin by the escalation (`market-tick-data-service@6a039e5242` — threads the SSOT pipeline_mode through
-  the lending_indices write path; QG green). Separately, applied the UTL root-cause fix for the open P1 there: scoped
-  the venue-only `_VENUE_OVERRIDES["COMPOUND_V3"]` to `_VENUE_DT_OVERRIDES[("COMPOUND_V3","oracle_prices")]`
-  (`unified-trading-library`, regression test added — lending_indices/liquidations/risk_params now derive
-  batch_onchain_subgraph/batch_onchain_rpc per SOURCE_PRIORITY, oracle_prices stays batch_compound_v3). My COMPOUND_V3
-  oracle capture code (entry above) is QG-verified; ship of UTL + MTDS + the done-when force-compute vs the `-test-`
-  bucket in flight.
+- **2026-08-12 (slot 16, continued): MTDS ship lane unblocked.** The pre-existing MTDS red was fixed on origin by the
+  escalation (`market-tick-data-service@6a039e5242` — threads the SSOT pipeline_mode through the lending_indices write
+  path; QG green) AND the UTL root-cause P1 was shipped by a peer (`unified-trading-library@b3b2c440` — moved
+  SPARK/COMPOUND_V3 oracle overrides to per-data_type `_VENUE_DT_OVERRIDES`, so lending_indices/liquidations/risk_params
+  derive batch_onchain_subgraph/batch_onchain_rpc per SOURCE_PRIORITY while oracle_prices stays batch_compound_v3). I
+  independently applied the same COMPOUND_V3-scoped fix, QG-verified it (green), then REVERTED it as redundant once
+  b3b2c440 landed. My COMPOUND_V3 oracle capture code (entry above) is QG-verified; ship of MTDS + the done-when
+  force-compute vs the `-test-` bucket in flight.
 
 ## Follow-ups
 
