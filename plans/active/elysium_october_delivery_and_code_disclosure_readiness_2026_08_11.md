@@ -904,6 +904,17 @@ Coverage across three surfaces now measured, and no two agree: **60** enum membe
       wire it if not. SSOT for the pattern:
       [config-reloader-pattern](/codex/06-coding-standards/config-reloader-pattern.md).
 
+## Deferred work after 2026-08-12
+
+**Session handoff — deferred table, lessons, corrections, invariants and rejected approaches — MOVED to**
+[strategy_service_expansion_overlays_config_and_wizard](/plans/active/strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md)
+§ "Session handoff 2026-08-12". It lives with the plan that will EXECUTE the remaining audits rather than with this
+delivery plan, and this plan is at its 1000-line hard cap. Measurement lessons are in codex:
+[measurement-claims-discipline](/codex/12-agent-workflow/measurement-claims-discipline.md).
+
+**Recommended next: the 54-archetype sweep, instrument-axis selection, then instance-to-wallet binding** — the only work
+between here and an artifact pass writable once instead of twice.
+
 ## Progress Log
 
 - **2026-08-12 — measurement lesson, recorded because it is the SECOND proxy-vs-property slip in one session.** I ran

@@ -212,3 +212,52 @@ unknown rather than guessed.
   in `TSMOM_BTC_CTA` — which is the concrete argument for the rule. Established that the capability manifest is a
   restriction GRAPH already consuming `PARAM_SCHEMA_REGISTRY`, so rulings 3, 4 and 5 all converge on widening it rather
   than adding a surface. Split from the Elysium plan at 977/1000 lines against its hard cap.
+
+## Session handoff 2026-08-12 (moved from the Elysium plan at its line cap)
+
+Five plans now carry this programme. **This plan is at its 1000-line hard cap** — anything substantial from the
+remaining audits needs its own file or a trim of what is already flipped here. Know that before it forces a decision
+mid-audit.
+
+**NOT DONE — blocked on nobody, pick it up.** The three audits: **54-archetype sweep** for misplaced cross-archetype
+logic (rule validated on 6 of 60) · **instrument-axis selection** (expiries/strikes/tenors — gates any options claim) ·
+**instance→wallet binding** (H.3 keying; established as UNKNOWN, not absent). Then **artifact regeneration** (all 3,
+post-plan reality, §04 reframe). Also: the expansion plan (**gates the repo send**), the carve-out build (`depends_on`
+expansion — committed to, not optional), the `check_reference_paths` gate fixes, and ADV `as_of_date` manifest stamping
+— until which **PIN `DYNAMIC_CARRY_UNIVERSE_AS_OF_DATE` on any run that must reproduce.**
+
+**CANNOT BE DONE YET.** Solana LST carry needs the § A economics answer first, then an operator ruling on the perp
+venue.
+
+**OPERATOR-OWNED — do not start.** Risk-threshold ratification (the deep dive discloses them as placeholders) · SLA
+reissue to make 30 days binding (client's copy still says 60 under a prevailing-provisions clause) · repository
+disclosure review incl. git history · the Jupiter perps decision (codex requires an explicit new ruling).
+
+**Recommended next: the three audits, in that order.** They are the only things between here and an artifact pass
+writable once instead of twice, and the first two are pure measurement with no decisions attached.
+
+## Lessons from 2026-08-12 — read before repeating the work
+
+**The measurement lessons were MIGRATED to codex** — they are workspace-wide, not Elysium-specific, and a plan archives:
+[measurement-claims-discipline](/codex/12-agent-workflow/measurement-claims-discipline.md) § "The absence-from-one-probe
+failure". Five instances in one session, the discharges, and the corollary that over-stating an error's scope is its own
+defect. **Read that before repeating any audit here.** Headline: for anything with a registry, ask the registry.
+
+**Corrections to my own claims — the wrong version must not survive.** Rail enum has **5** members
+(`transfer_types.TransferType`), not 3: I dropped `CUSTODY_TRANSFER` and `BRIDGE`, the two most relevant, then
+"corrected" it against a different 7-member enum. **Four** transfer-type enums exist; codex documents the 5-member one
+correctly. "An instance is one coin on one venue" is false — only **2 of 60** archetypes hold set-valued roles. Carry
+has **7** archetypes, not 6, the miss being `CARRY_FUNDING_DISPERSION` — the count was wrong _because_ the capability
+was unknown. "Liquidity provision" is real (`DEFI_LP_CONCENTRATED`/`_POOL`/`_VAULT`), **misfiled as a family**, not
+invented.
+
+**Invariants.** The factory fails **loudly** (`KeyError`) for unregistered archetypes, so the 28 unreachable ones are
+dead-but-safe — that is what makes H.12 disclosure rather than correctness. `safe-doc-push` **exit 13 has a
+false-positive mode** (fires when content already landed in a prior push); its remedy is stash surgery, so verify at
+origin before touching a stash. And piping a gate through `tail`/`grep` **discards its exit code** — redirect to a file
+and capture `$?` alone.
+
+**Rejected, so they are not re-walked:** narrowing `StrategyArchetype` for the carve-out (the full enum as stubs IS the
+disclosure design); `AtomicInstruction`/`CompensationPolicy` for multi-hop transfers (trade-leg compensation semantics
+are wrong for a half-moved custody balance); keying `VENUE_WALLET_CAPABILITIES` by `(venue, client_id)` (mixes venue
+physics with client policy); a third routing-config surface (adds an SSOT, the original complaint).

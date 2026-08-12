@@ -171,6 +171,24 @@ from 2020-12-18).
           staking series, and the full Kamino window is computable. ETH remains deeper (Lido `staking_yields` 2020-12-18) but
           Solana is in no way blocked.
 
+- [ ] [AGENT] P0. **Use `lst_rates`, NOT `staking_yields`, for the § A spread — they measure different things.**
+      Measured 2026-08-12; recorded here because § A's answer is wrong if the wrong series is used.
+
+      | | `lst_rates` | `staking_yields` |
+          | --- | --- | --- |
+          | `instrument_type` | `lst` | `staking` |
+          | Payload | `exchange_rate` (float64, **non-null**) | `apy` + `total_staked` (nullable) |
+          | Source | **on-chain** — contract / `exchangeRate` / `getPooledEth` / subgraph | **reported** — `yields.llama.fi/pools`, `LIDO_APY_URL`, `ETHERFI_APY_URL` |
+          | Meaning | The LST's redemption rate; **drift over time IS realised accrual** | A published forward-looking APY |
+          | Venues | 14 LST issuers | 26, mostly vaults + restaking |
+
+          **The axis is reported-vs-measured, not protocol-native-vs-DEX-swapped** (a hypothesis considered and rejected), and it
+          is not about token mechanics either — rebasing vs price-appreciating cuts across both. For a staked-basis P&L you want
+          the **measured** series, because exchange-rate drift is the yield actually earned rather than the number a protocol
+          advertises. `sim_schemas.py` already does exactly that: `stake_apy_bps  # staking yield from MTDS lst_rates`.
+          Only **three** venues declare both (LIDO, ETHERFI, PUFFER) — protocols that genuinely both issue an LST and run a
+          vault/restaking product, so the overlap lets you cross-check advertised against realised rather than being duplication.
+
 - [ ] [AGENT] P1. **Compare LTV and borrow cost across the three Solana lending venues** (Kamino / Solend / MarginFi)
       and against Aave on the ETH side. Operator asked which has better LTV and lower stable borrow rates. **Note for
       the record: Aave has NO Solana deployment** — all 11 `AAVE_V3-*` keys are EVM chains — so Aave is not a candidate
