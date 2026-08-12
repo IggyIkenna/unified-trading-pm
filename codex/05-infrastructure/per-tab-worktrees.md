@@ -1389,17 +1389,18 @@ Isolation symlinks `.venv` / `.venv-workspace` / `node_modules` from the caller'
 `quality-gates.sh` resolves the repo's own `.venv` and a fresh worktree has none (gitignored). Without that symlink
 isolation would silently turn every quickmerge into a QG failure.
 
-**Known unresolved limitation (2026-08-12): the isolated re-gate can produce false-positive basedpyright errors.**
-Reproduced on `alerting-service` — `--isolated`'s basedpyright re-gate reported ~22 phantom `reportArgumentType`
-"nominally different, structurally identical type" errors (5/5 isolated attempts), while every direct/manual
-`basedpyright` invocation against the identical code + identical venv (including one run inside the SAME failed
-worktree, seconds after the gate itself failed there) came back clean. 7 independent elimination attempts across two
-sessions (cache reuse, stale editable-install pointer, the override-dependencies reinstall step, invocation shape, `CI`
-env, local venv staleness) all ruled out — root cause unknown. Workaround: `--no-isolated`, safe when you're the sole
-worker on that checkout. Full trail:
-`/plans/archive/2026_08/issues/alerting_service_basedpyright_regression_blocks_all_ships_2026_08_12.md`. If this recurs,
-capture live diagnostics (the gate's own `PYRIGHT_OUT`, exit code, and the failing worktree's `site-packages` dist-info
-listing) from inside the failure itself — post-hoc reproduction has failed every time so far.
+**Isolation also gives each run its own `PREK_HOME` (fixed 2026-08-12, `unified-trading-pm@62d1a42613`).** prek's
+default cache (`~/.cache/prek`) is host-global, not per-worktree — its `patches/` subdir is where an unstaged-change
+stash/restore cycle lives around each hook batch, and two fully-separate isolated worktrees on the same host still
+funnel through that ONE shared directory. F6's isolation fix closes the shared-INDEX race (a peer's dirty files can no
+longer interfere) but does NOT close this: a slower run's restore can silently revert a faster run's already-landed
+content even though both checkouts are individually clean. Measured live 2026-08-12, reproducible — see
+`/plans/archive/2026_08/issues/alerting_service_basedpyright_regression_blocks_all_ships_2026_08_12.md` for the original
+elimination trail that surfaced it. Both `quickmerge.sh` and `safe-doc-push.sh` now export a per-run `PREK_HOME`
+(`$TMPDIR/{qm,sdp}-iso-$$/prek-home`) into the isolated re-exec — `repos`/`hooks`/`tools`/`cache` (the expensive
+hook-environment installs, not part of the race) are symlinked in from a shared per-repo cache
+(`~/.cache/qm-iso-prek/<repo>`, mirroring the venv-cache pattern), while `patches`/`scratch` are left for prek to create
+fresh, private to that one run.
 
 ### Exit codes worth recognising
 
