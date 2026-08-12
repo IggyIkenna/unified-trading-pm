@@ -97,6 +97,39 @@ reference price, what would the fill look like?"_
 | `DELTA_HEDGE_CONTINUOUS` | per-tick mid                                 |
 | `LIQUIDATION_FLASH_LOAN` | liquidation-bonus payout at target block     |
 
+## Who owns the reference price — TWO benchmarks, not one
+
+> **Reconciliation added 2026-08-12** after an operator ruling that _"strategy sends the ref price, execution layer
+> marks underlying against it either statically or updates as UL moves"_ appeared to conflict with the per-algo table
+> above. It does not conflict — it names a **different** benchmark. Both exist and they measure different things.
+
+The table above makes the benchmark reference a function of the ALGO (`TWAP(window)` → time-weighted mid over the
+window). But the algo is execution's choice, and the window has not happened yet when the instruction is emitted — so
+strategy **cannot** know that benchmark at send time. The resolution is that there are two benchmarks with two owners,
+which is already how attribution is layered in code:
+
+| Benchmark               | Owner             | Reference                                                         | What it measures                                                           |
+| ----------------------- | ----------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **Strategy benchmark**  | strategy-service  | the ref price strategy SENDS (last/mid of the instrument at send) | Strategy alpha — and it is what a standalone backtest was measured against |
+| **Execution benchmark** | execution-service | the per-algo reference in the table above                         | Execution quality against the algo's own fair standard                     |
+
+This is not a new idea being introduced here; it is what `execution-service/execution_service/pnl_attribution/rows.py`
+already implements — rows are built from a PAIR of (benchmark, live) `MatchResult`s, splitting a **STRATEGY layer**
+(benchmark-fill decomposition at benchmark price) from an **EXECUTION layer** (`live_fill − benchmark_fill` residual →
+`SLIPPAGE`, `FEES`). The benchmark fill itself is `BenchmarkMatcher` with `BookType.ALPHA_ZERO`, always-fill.
+
+**Why the distinction is load-bearing rather than pedantic.** Measuring a TWAP execution against an arrival price
+conflates execution skill with market drift over the window; measuring strategy alpha against a per-algo TWAP benchmark
+makes a strategy's measured edge depend on an execution choice it did not make. Keeping them separate is also precisely
+what licenses a **strategy-only backtest**: the STRATEGY layer is computable at the strategy's own benchmark price with
+no execution-service involvement at all.
+
+**Open decision (operator):** whether the strategy-sent ref price is authoritative for the strategy layer — recommended,
+since it is the assumption the backtest was measured against — or advisory with `BenchmarkMatcher` deriving both. Until
+this lands, note that execution derives its own benchmark, so **the two sides could disagree on the benchmark itself**
+while every individual number still looks correct. Tracked:
+`/plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` § G3.
+
 ## Per-action-type benchmarks
 
 Different action types have different reference pricing:
