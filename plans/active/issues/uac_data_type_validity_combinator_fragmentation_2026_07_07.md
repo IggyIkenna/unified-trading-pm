@@ -640,6 +640,13 @@ just belongs on a different layer than instrument_type does, and conflating the 
       resumable-from-measured-progress (SSOT `/codex/05-infrastructure/spot-vms-for-backfill.md`) — re-running never
       double-writes. Done-when: each newly- wired `(venue, data_type)` pair has real `captured` rows in the prod defi
       availability index. (repo: market-tick-data-service)
+- [ ] [CODE] P3. **Add `if __name__ == "__main__":` guard to `market_tick_data_service/cli/main.py`** — found 2026-08-12
+      while running the COMPOUND_V3 done-when: `python -m market_tick_data_service.cli.main` imports the module
+      (printing 2 config lines from UTL DomainValidationService) and exits 0 running nothing, because main.py has no
+      `__main__` guard. Only the console script `.venv/bin/market-tick-data-service` (or
+      `python -m     market_tick_data_service` via `__main__.py`) actually dispatches. The guard makes `-m` behave like
+      the console script — removes a recurring footgun for ad-hoc force-compute/done-when runs. (repo:
+      market-tick-data-service)
 
 > **2026-08-06 archive-candidate audit**: The DESIGN P2 31-pair todo is marked [x] but its own evidence and the
 > 2026-08-05 Progress Log state 'Operator decision still needed: which of the now-reconciled pairs to wire a real
