@@ -340,12 +340,17 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
 **All four rows of this table are now closed** (final revision 2026-08-12). Nothing in it is at risk; the entries are
 kept as the record of what each turned out to be, because two of the four were wrong in instructive ways.
 
-**Recommended NEXT item**: the P2 in
+**Recommended NEXT item** (written 2026-08-12, ✅ **since DONE** — kept for provenance): the P2 in
 `/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md` — make consumer-vs-template drift
-fail in the CONSUMER's own gate. That is the highest-value item this session surfaced and did not do: it is the
-structural fix for the class that cost two separate sessions most of a morning today, and it stays latent until someone
-builds it. The two `[SCRIPT] P3`s added above (stash-report frontmatter, slot-aware `--host` default) are cheap and
-independent; do them opportunistically, not first.
+fail in the CONSUMER's own gate. Shipped `unified-trading-pm@2b4bee96d3` as `base-service.sh` STEP 5.108 + `base-ui.sh`
+`[5.108]`. Both `[SCRIPT] P3`s below (stash-report frontmatter, slot-aware `--host` default) shipped in the same commit.
+
+Doing that work surfaced a defect worth more than any of the three: `mktemp /tmp/name-XXXX.md` does not substitute — BSD
+`mktemp` expands only TRAILING X's — so four call sites in this repo were creating a FIXED filename in a shared `/tmp`.
+Two concurrent runs collide 100% of the time and a run that dies before cleanup wedges every later run host-wide. It
+failed two PM gates in a row here while a peer slot gated concurrently, and it presents as a flake, so re-running
+"works" often enough to keep it alive. Fixed in the same commit; see the `[DOCS] P3` in the cloudbuild issue doc for the
+codex write-up.
 
 ## Operator rulings + actions 2026-08-12
 
@@ -376,19 +381,31 @@ independent; do them opportunistically, not first.
 
 ## Follow-ups found 2026-08-12 (pre-compact audit)
 
-- [ ] [SCRIPT] P3. **`audit-stash-pile.sh` writes to a TRACKED surface but emits no frontmatter, so every report must be
-      hand-repaired before it can be committed.** `plans/active/issues/stash_audit_reports/` holds 3 committed reports
-      (`Mac-slot2-20260811`, `Mac-slot4-20260811`, `ip-172-31-5-118-20260730`), all carrying full `doc_type: issue`
-      frontmatter — which the script does not produce (its output starts at `# Stash audit — host …`). So either
-      somebody hand-adds frontmatter each time, or reports silently never get committed. Slot 3 has no committed report
-      at all, which is consistent with the latter. Done when: the script emits conformant frontmatter, or the report
-      path moves off a plan-hygiene-governed surface. Repo: unified-trading-pm.
-- [ ] [SCRIPT] P3. **Default `--host` label collides across slots on one machine.** It defaults to `hostname -s` (`Mac`)
-      for every slot, so slot 3's reports land as `stash-audit-Mac-<date>.md` while the committed ones are
-      slot-qualified. The script's own header already warns "pass `--host` so each slot's report is distinguishable" — a
-      warning that exists precisely because the default is wrong, which is a defaulting bug, not a documentation gap.
-      Done when: the default derives the slot from the path (`slot-identity-lib.sh` already does this for commit
-      attribution), so the right thing happens without remembering a flag. Repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P3. **`audit-stash-pile.sh` now emits conformant frontmatter.** — unified-trading-pm@2b4bee96d3.
+      Validated by running the real checkers over a generated report: `check_frontmatter_yaml` + `check_frontmatter.sh`
+      clean, `check_frontmatter_schema` "1995 docs, zero frontmatter violations (docspec HARD+SOFT)" with the new report
+      in scope. Emitted at the END of the run, not in the header block, because `summary:` quotes the real counts.
+
+      **Two corrections to this todo's own premises, both measured 2026-08-12.** (1) The claim that the surface is
+          enforced is FALSE — a frontmatter-less doc there is not review-blocking; `check_frontmatter_schema` skips it
+          entirely (stripping the frontmatter moved the corpus 1995 → 1994 docs and still printed "zero violations"). The
+          real cost is INVISIBILITY to the documented L0→L4 retrieval model, which finds docs by grepping L1 facets: 3 of
+          the 6 reports in that directory were unfindable by `rg -l '^doc_type: issue'`. (2) The "either/or" was wrong —
+          BOTH happen. The three tracked reports were hand-frontmattered; the two untracked ones (`Mac-20260811`,
+          `Mac-20260812`, both slot 3's) have no frontmatter and were never committed.
+
+          **Trap worth keeping**: adding frontmatter naively would have CORRUPTED every report. The summary table was
+          spliced in at a fixed `head -n 7` / `tail -n +8` offset, which any header-length change silently breaks. Replaced
+          with a marker-anchored `awk` substitution that hard-fails if the marker is missing, rather than emitting a report
+          with no summary.
+
+- [x] ✅ [SCRIPT] P3. **Default `--host` label is now slot-aware.** — unified-trading-pm@2b4bee96d3. Derives
+      `<hostname -s>-slot<N>` by sourcing `scripts/hooks/slot-identity-lib.sh` and reusing its `…/.tabs/<N>/<repo>` path
+      rule — the same derivation that stamps commit identity — rather than a second copy of that regex. A non-slot
+      checkout resolves to `main` and keeps the bare host label, preserving the AO VM's existing
+      `ip-172-31-5-118-<date>` shape. Verified by running the script: archive root resolved to
+      `.stash-archive-Mac-slot3-20260812`. The stale header line telling you to pass `--host` was removed in the same
+      commit — it was a warning that existed because the default was wrong.
 
 **Lesson worth keeping from this table's own errors**: two of its four rows were wrong in the same direction — both
 declared work blocked by an external condition that a `git pull` dissolved. Both were written from a checkout 32 commits
