@@ -117,6 +117,19 @@ corrected 2026-08-10, plan_reconciler — the flat `data_status.py` module was s
 - Handles loading, 404 (no data for today yet — renders a muted "not yet measured" note), and error states.
 - Placed at the top of `DataStatusTab`'s return (after the `UpcomingFixtures` gate, before the Coverage Summary Card).
 
+**Client-side `deriveCoverage()` recompute** (`HonestCoverageCard.tsx`, per-asset_group, run on each row before render):
+takes the raw `by_asset_group[ag]` counts and recomputes the headline figures locally rather than trusting the payload's
+own `coverage_pct` — `manifestCapturePct`/`capturedPct` use an "of attempted" denominator
+(`captured + empty_confirmed + known_empty + attempted_failed`), deliberately **excluding** the never-fetched
+`pending_fetch` universe (the cell type that had tanked the old headline to ~11.7%). It also prefers the split
+`expected_unattempted_known_empty` / `expected_unattempted_pending_fetch` fields when the payload carries them, falling
+back to treating the whole collapsed `expected_unattempted` as `pending_fetch` on older payloads. Per the
+Honest-Coverage v2 layered model (`/codex/02-data/honest-coverage-model.md`), it also surfaces `layer2Gated`
+(`instrument_gates_download`) and `layer1CompletenessPct` — when `layer2Gated` is true, the row's
+manifest/captured/could-exist percentages are rendered as a LOWER BOUND (amber tone) because Layer-1's
+instrument-denominator audit isn't yet 100% for that asset_group, matching the codex SSOT's "⚠ DENOMINATOR INCOMPLETE"
+annotation rule.
+
 ## Styling conventions
 
 - `captured` → `bg-emerald-500` / `text-emerald-600`
