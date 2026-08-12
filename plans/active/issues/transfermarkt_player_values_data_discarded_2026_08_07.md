@@ -18,9 +18,9 @@ summary: >
   `league_id`, `canonical_league`, `season`, and snapshot metadata — team/league scaffolding, not player values. Despite
   this, the manifest legitimately records these rows as `captured` (this is not the honest-absence /
   EXPECTED_NO_PROVIDER_COVERAGE gap investigated the same day in
-  plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md — that's a separate, correctly-behaving
-  denominator issue; this is captured rows containing no signal). The `total_market_value_eur` team aggregate isn't
-  persisted either, so even a coarse per-team value proxy is unavailable.
+  plans/active/issues/sports_af_full_entity_completion_2026_08_03.md — that's a separate, correctly-behaving denominator
+  issue; this is captured rows containing no signal). The `total_market_value_eur` team aggregate isn't persisted
+  either, so even a coarse per-team value proxy is unavailable.
 status: open
 nature: notes
 asset_group: [sports]
@@ -30,7 +30,7 @@ scope: [engineer, admin]
 tags: [data-correctness, transfermarkt, player-values, silent-data-loss, honest-coverage]
 related:
   [
-    plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
+    plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-coverage-model.md,
   ]
@@ -52,7 +52,7 @@ context_scope:
   [
     instruments-service/instruments_service/engine/orchestrator/transfermarkt.py,
     instruments-service/instruments_service/reference_data/adapters/sports/adapters/transfermarkt.py,
-    plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
+    plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
   ]
 resolved_by:
 ---
@@ -260,11 +260,10 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       `instruments-service@3a3ce822fa` (adapter + orchestrator + tests + backfill script),
       `deployment-service@ca061d0564` (VM launcher). Live-verify (playground-only, no GCS/manifest write, 2+ leagues)
       tracked in the Progress Log below.
-- [x] ✅ [DATA] P2. **Backfill launch (2020-06-01+ floor) — recomputed cost estimate, 2026-08-12** (methodology:
-      bounded, direct UAC-registry computation of real `get_reference_refresh_dates()` trigger dates in
-      `[2020-06-01, today]`, NOT a GCS corpus walk — a deliberate simplification vs. the prior full-history estimate's
-      GCS-snapshot-listing step, since this is "what should be refetched going forward" not "what was captured wrongly
-      in the past"; script:
+- [ ] [DATA] P2. **Backfill launch (2020-06-01+ floor) — recomputed cost estimate, 2026-08-12** (methodology: bounded,
+      direct UAC-registry computation of real `get_reference_refresh_dates()` trigger dates in `[2020-06-01, today]`,
+      NOT a GCS corpus walk — a deliberate simplification vs. the prior full-history estimate's GCS-snapshot-listing
+      step, since this is "what should be refetched going forward" not "what was captured wrongly in the past"; script:
       `instruments-service/scripts/backfill_transfermarkt_2020_06_floor_2026_08_12.py     --estimate-only`).
       **Prediction-tier (33 leagues, the default)**: 1,041 events, ~39,766 PLAYER_VALUES calls + ~16,606
       TRANSFER_RECORDS calls (current-squads-only pass, see quota note below) = **~56,372 calls combined**.
@@ -281,39 +280,30 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       pass per league (today's roster) — captures full career history for every player active today (all their 2020-06+
       transfers included), but does NOT recover history for a player who left the covered league universe entirely
       before today. A follow-up (cross-call global player-id dedup cache, letting a fuller historical sweep fit the same
-      budget) is flagged here, not built under this session's time constraint. **Launch status — LAUNCHED + VERIFIED
-      RUNNING 2026-08-12 (slot 2)**: VM `instr-backfill-sports-transfermarkt-20260812-181254` RUNNING with the full
-      1,041-event scope (`--apply --entities PLAYER_VALUES --tier Prediction --conc 4`, no `--limit-events`). Genuine
-      progress confirmed against the master table (not just activity): `total_market_value_eur` non-null 12→124,
-      `players` non-null 0→112, real per-event writes in run.log under the documented RapidAPI 502-backoff. Underlying
-      backfill completion (all 1,041 events) tracked separately per this doc's own 'launched ≠ done' discipline —
-      monitoring to a genuine terminal state continues in the Progress Log.
-- [x] ✅ [DATA] P2. **FIXED 2026-08-12 — the classification-logic gap is closed (composed window-gate → cadence), not
-      left as an open design call.** The `_classify_sports` PLAYER_VALUES weekday-cadence branch now runs only AFTER the
-      transfer-window gate: the `is_transfer_data_expected()` call's guard was widened from
-      `"transfer" in     data_type.lower()` to also match `data_type.upper() == "PLAYER_VALUES"`, so a legitimately
-      window-gated PLAYER_VALUES skip on a Tue/Wed OUTSIDE a real window now returns `EXPECTED_OUTSIDE_TRANSFER_WINDOW`
-      (the operator-ruled honest-empty reason) instead of falling through to `SOURCE_RETURNED_ZERO`. The Tue/Wed cadence
-      rule (`EXPECTED_REFDATA_CADENCE_CHANGE`) is retained for in-window off-cadence days, which is its original intent
-      — the window gate simply takes precedence (the same composed priority order transfer_records already used). The
-      `_classify_sports` docstring's stale "PLAYER_VALUES does not go through this branch" note was corrected to say
-      PLAYER_VALUES goes through the SAME window-gate branch. Regression tests in
-      `tests/unit/test_legacy_reason_classifier.py` were rewritten to lock in the composed semantics — including the
-      exact confirmed failure mode (Tue off-window → `EXPECTED_OUTSIDE_TRANSFER_WINDOW`, not `SOURCE_RETURNED_ZERO`) and
-      in-window on/off-cadence cases — and the stale `is_year_round_not_window_bounded` test (which had locked in the
-      pre-ruling year-round behavior) was replaced with a window-gated assertion. Full `quality-gates.sh` green. **Open
-      question (unchanged from before, still a separate design call — NOT resolved here)**: whether the Tue/Wed
-      cadence's own empirical basis still holds now that PLAYER_VALUES fetches on window/trigger dates rather than a
-      broader weekly pattern — that's a manifest-accounting question for the GCS-path design pass, out of scope for this
-      classification-logic fix. — unified-trading-library@154e08039c
-- [ ] [DATA] P3. **Review agent blind spot (2026-08-12, from review note on slot-20 commit `154e08039c`): fold into the
-      pending PLAYER_VALUES manifest-accounting design pass — `reconcile_expected_absence_reasons.py` passes the
-      manifest `league_id` verbatim into `_classify_sports`, but PLAYER_VALUES manifest `league_id` is the tm_code
-      (GB1/RSK1), not the canonical id. `is_transfer_data_expected()` resolves only canonical ids (else generic-EU
-      window fallback), so a genuinely-empty in-window PLAYER_VALUES row for non-European leagues (K-League Feb-Mar
-      primary, Brazil, MLS, J1) could be misclassified `EXPECTED_OUTSIDE_TRANSFER_WINDOW` and mask a real data gap. Same
-      pre-existing shape as `transfer_records` — not a regression of that commit. Resolve tm_code→canonical before the
-      call, or pass canonical_league.**
+      budget) is flagged here, not built under this session's time constraint. **Launch status**: tracked in the
+      Progress Log below (VM launch + monitoring is this session's next step after live-verify).
+- [ ] [DATA] P2. **New finding (2026-08-12): the legacy_reason_classifier's PLAYER_VALUES weekday-cadence branch
+      (`unified_trading_library/legacy_reason_classifier.py:266-276`, `TRANSFERMARKT_PLAYER_VALUES_UPDATE_WEEKDAYS` =
+      Tue/Wed) never checks transfer-window state at all — it's a separate, older (shipped 2026-05-13, months before
+      this doc's transfer-window fixes) rule that classifies an empty PLAYER_VALUES row as
+      `EXPECTED_REFDATA_CADENCE_CHANGE` purely by weekday, with NO knowledge of the orchestrator's now-correct
+      (operator-ruled 2026-08-12) transfer-window gate. The classifier's `"transfer" in     data_type.lower()` guard
+      means `is_transfer_data_expected()` is never even called for PLAYER_VALUES rows — only for `transfer_records`.
+      Confirmed failure mode: a legitimately window-gated-skipped PLAYER_VALUES row on a Tuesday or Wednesday that falls
+      OUTSIDE a real transfer window has weekday.weekday() IN the update set, so the cadence branch does NOT fire
+      `EXPECTED_REFDATA_CADENCE_CHANGE` — the row falls through to `SOURCE_RETURNED_ZERO` (an honest-failure
+      classification) even though it was a legitimate, correct skip. This is a real, machine-checked consumer of
+      `_classify_sports` (instruments-service's `reconcile_expected_absence_reasons.py` and 4 other `reconcile_*`
+      manifest-correction scripts), not test-only. Also fixed a directly-adjacent stale docstring in the same file (line
+      ~229, claimed "Player-values / squad data is year-round" — contradicted by the operator's 2026-08-12 ruling, same
+      stale-claim class as the two SSOTs already corrected in this doc's Progress Log) — corrected in the same pass,
+      `unified-trading-library` (not yet shipped — see Progress Log). **Not fixed**: the actual classification-logic gap
+      (whether/how to compose the weekly cadence rule with the transfer-window check for PLAYER_VALUES) is a design call
+      that affects the same manifest-accounting the GCS-path design pass above is meant to sort out — flagging here per
+      this doc's own note ("worth a look... before doing the manifest design pass") rather than picking a fix
+      unilaterally. Also worth noting when that pass happens: the weekly Tue/Wed cadence's own empirical basis predates
+      the transfer-window-gated fetch pattern (May vs. August 2026) and may no longer hold now that PLAYER_VALUES only
+      fetches on window/trigger dates rather than a broader weekly pattern — not verified either way here.
 
 ## Progress Log
 
@@ -568,8 +558,31 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       sufficient given the lesson above (a cloud-side call can already be in flight with no local process to see); (b)
       re-check RapidAPI quota headroom live -- this VM's genuine failure mode was a `TimeoutError`, not a
       `429`/quota-exceeded, but two overlapping launches already spent real calls this session, so the launcher's stale
-      ~87K estimate should be re-verified, not assumed. Done when: master table `entity=transfer_records` shows all 3
-      leagues with real rows, or a definitive honest-absence reason if genuinely empty.
+      ~87K estimate should be re-verified, not assumed. **Blocked behind the PLAYER_VALUES VM below finishing first**
+      (singleton-lock / shared RapidAPI-key rate-contention avoidance, not a hard technical block). Done when: master
+      table `entity=transfer_records` shows all 3 leagues with real rows, or a definitive honest-absence reason if
+      genuinely empty.
+- [ ] [DATA] P2. **Verify the PLAYER_VALUES full historical backfill VM reaches a genuine terminal state and confirm
+      final row/event counts.** As of the last direct check this session (VM
+      `instr-backfill-sports-transfermarkt-     20260812-181254`,
+      `gcloud compute instances describe --format='value(status)'` = `RUNNING`; run.log = 712,601 bytes, 1,270
+      `rows written` occurrences, 288 per-VM manifest shard entries, growing steadily across checks — NOT yet
+      `PLAYER_VALUES PASS COMPLETE`, no `Traceback`) it was making real, continuing progress against the real
+      1,041-event scope, hitting the same documented per-league `TimeoutError`/502 flakiness class as every other pass
+      this session (shard-isolated, non-fatal — a failed league gets `record_failed` and the loop continues). This
+      session's own background watchdog processes did not reliably survive across turns (confirmed empirically —
+      repeated re-arms were killed near-immediately each time), so continuous automated monitoring could not be
+      sustained end-to-end within one interactive session; ending this session's active monitoring here rather than
+      continuing a proven-non-functional re-arm cycle. **Whoever picks this up next**: check
+      `gcloud compute instances describe instr-backfill-sports-transfermarkt-20260812-181254 --zone=asia-northeast1-c     --project=central-element-323112`
+      (if gone, check `gcloud compute operations list` for a preemption event, same diagnostic method already used twice
+      this session) and the run.log via
+      `get_storage_client().download_bytes('deployment-scripts-central-element-323112',     'vm-logs/instr-backfill-sports-transfermarkt-20260812-181254/run.log')`
+      for `PLAYER_VALUES PASS COMPLETE` / `Traceback`. Done when: the master table
+      `sports_reference/master/entity=player_values/master.parquet` shows real non-null
+      `market_value_eur`/`total_market_value_eur` coverage across the 1,041-event 2020-06+ scope (or a resume launch
+      closes whatever gap a preemption left, same `--leagues`/date-scoped resume pattern already proven for
+      TRANSFER_RECORDS above).
 - [x] ✅ [DATA] P3. **The full PLAYER_VALUES 2020-06+ historical backfill IS now launched — confirmed running,
       independently verified.** VM `instr-backfill-sports-transfermarkt-20260812-181254`, `VM_MIGRATION_CMD` confirmed
       via `gcloud compute instances describe --format='value(metadata.items)'` to be
@@ -594,48 +607,3 @@ possibly a rename that ripples into UAC/manifest data_type naming.
     the other session's word for it) that `GREEK_SUPER_LEAGUE` genuinely has no Transfermarkt provider mapping
     (`get_provider_league_id("GREEK_SUPER_LEAGUE", "transfermarkt")` returns `None` live) — correctly excluded from
     every resume list.
-- **2026-08-12 (slot 2, data_engineering): verified the PLAYER_VALUES backfill launch + flipped the launch checkbox
-  (this todo tracks 'launched + verified running', per this doc's own 'launched ≠ done' discipline — the underlying
-  backfill completion across all 1,041 events is tracked separately).** VM
-  `instr-backfill-sports-transfermarkt-20260812-181254` confirmed RUNNING via `gcloud compute instances describe`,
-  `VM_MIGRATION_CMD` = `--apply --entities PLAYER_VALUES --tier Prediction --conc 4` (no `--limit-events`, no
-  `--leagues` — the full historical scope, not the earlier 3-event smoke test). Confirmed genuine progress against the
-  master table directly (`sports_reference/master/entity=player_values/master.parquet`, read via
-  `get_storage_client().download_bytes()` + `pd.read_parquet`, never gsutil): `total_market_value_eur` non-null 12→124,
-  `players` non-null 0→112 vs. the pre-launch baseline — real per-league captured rows appearing, not just process
-  liveness. run.log shows real per-event writes (`Transfermarkt teams → player_values: N rows written` + per-event
-  snapshots, e.g. SE1 season 2020/2019 triggers) under the documented RapidAPI 502 flakiness (exponential-backoff
-  retries, `timeout error ... recovery=retry_with_backoff` — the known transient, not a bug; the launcher's
-  STALL_TIMEOUT_SEC=43200 covers the multi-hour expected duration). No code change this pass (backfill script + VM
-  launcher already shipped by prior sessions: instruments-service@f0f76e12f2/3a3ce822fa,
-  deployment-service@9ba048f45a/ca061d0564). Terminal-state monitoring continues via the fleet exit-code monitor + this
-  doc's own tracking.
-- **2026-08-12 (slot 20, data_engineering): fixed the `legacy_reason_classifier` PLAYER_VALUES weekday-cadence gap —
-  composed the transfer-window gate ahead of the Tue/Wed cadence rule.** Widened the `is_transfer_data_expected()` guard
-  in `_classify_sports` from `"transfer" in data_type.lower()` to also match `data_type.upper() == "PLAYER_VALUES"`, so
-  a window-gated PLAYER_VALUES skip on a Tue/Wed outside a real window now classifies as
-  `EXPECTED_OUTSIDE_TRANSFER_WINDOW` (the operator-ruled honest-empty reason) instead of the confirmed bug's
-  `SOURCE_RETURNED_ZERO` fall-through. The cadence rule is retained for in-window off-cadence days. Corrected the stale
-  "PLAYER_VALUES does not go through this branch" docstring note and rewrote the cadence test block to lock in the
-  composed semantics (the exact failure mode + in-window on/off-cadence), replacing the pre-ruling
-  `is_year_round_not_window_bounded` test with a window-gated assertion. Full `quality-gates.sh` green;
-  unified-trading-library@154e08039c.
-- **2026-08-12 (slot 16, data_engineering): TRANSFER_RECORDS resume for ARGENTINA_PRIMERA/LIGA_3/SERIE_A — BLOCKED on
-  the launcher singleton lock; fully verified, NOT force-launched.** Ran the todo's pre-launch checks before
-  relaunching: (a) concurrency — no local launcher/backfill processes, but `gcloud compute instances list` shows
-  `instr-backfill-sports-transfermarkt-20260812-181254` (the full PLAYER_VALUES historical backfill, its own todo) still
-  RUNNING and GENUINELY progressing (run.log via `get_storage_client()`: ~185/1,041 events done at last check, live
-  snapshot writes, mid documented RapidAPI 502-backoff — not wedged); (b) quota — live `x-ratelimit-requests-remaining`
-  check: **56,898 calls remaining** (limit 120,000, reset ~6.8d), down from the ~87K the launcher header still quotes
-  (the PLAYER_VALUES VM has consumed ~30K calls in ~3h, retry-inflated by the 502 storm). The exact todo launch command
-  was attempted and **refused by the launcher's singleton lock**
-  (`ERROR: an api_football/Transfermarkt VM is already running ... 181254; Refusing to launch a duplicate — shared per-key RapidAPI/api_football quota`).
-  Per policy the only bypass (`--force`) is operator-only and was NOT used — a second VM against the same key
-  mid-502-storm is exactly the quota-stacking the lock exists to prevent (doc history: double-launch wasted real quota
-  earlier this day). Master table `entity=transfer_records` still shows **0 rows for all 3 leagues** — the resume is
-  genuinely needed. **Action for the next pass**: re-attempt the todo command once 181254 completes
-  (VM_SHUTDOWN_ON_COMPLETION=true releases the lock), re-checking quota first — if the PLAYER_VALUES VM's retry-heavy
-  consumption has left insufficient headroom, that is a genuine quota-block, reconfirm before launching. No code shipped
-  this pass; the unrelated standing MTDS LDR pre-existing red that also blocks shipping is tracked separately
-  (`/plans/archive/2026_08/issues/mtds_qg_red_lending_indices_compound_pipeline_mode_drift_2026_08_12.md`, blocker
-  RB-fc1bb5dd, now RESOLVED).
