@@ -85,11 +85,11 @@ picking this plan up cold should never trust the flip-time state without a fresh
       clause not triggered.
 
       Note for todo 2's worker: the direct pandas `read_availability_index(columns=..., filters=[("capture_status",
-                                              "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
-                                              fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
-                                              DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
-                                              `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
-                                              streaming footprint regardless of corpus size.
+                                                  "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
+                                                  fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
+                                                  DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
+                                                  `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
+                                                  streaming footprint regardless of corpus size.
 
 - [x] ✅ [DATA] P1. **Root-cause the 0→7,930,863 `instrument_type=POOL` recurrence before any retirement resumes**
       (blocks the retirement todo below — main-agent-added 2026-08-11 per
@@ -140,7 +140,7 @@ picking this plan up cold should never trust the flip-time state without a fresh
       per `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` row 4 — this is the retirement half only,
       never done). Same reversible pattern + consolidator pause/resume as the prior todo (share the pause window if run
       back-to-back). Done-when: 0 remaining `captured` legacy `rate_indices` rows. (repo: market-tick-data-service) —
-      **DONE 2026-08-12 (slot 20, data_engineering): `market-tick-data-service@8f34de66`.** Three-bucket treatment
+      **DONE 2026-08-12 (slot 20, data_engineering): `market-tick-data-service@bf712ddb`.** Three-bucket treatment
       (mirrors the POOL precedent's retire-vs-fold split): RETIRE 25,478 twin-verified rows (AAVE_V3/ETHEREUM 3,160
       exact-id; MORPHO/ETHEREUM 22,318 full-address-prefix) + FOLD 650 no-twin rows (22 MORPHO markets whose
       fold-written `batch_onchain_rpc` canonical objects exist on GCS but were never manifest-registered — only the
