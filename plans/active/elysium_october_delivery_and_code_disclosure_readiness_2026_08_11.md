@@ -555,24 +555,82 @@ balances and keep things agnostic, but the adaptor we are using to handle the mo
 the instructions."_ **That principle is already the design — but it is only half-implemented, and the unimplemented half
 is the Copper side the client cares most about.**
 
-#### CORRECTION — H.2's "the rail enum has three members, all API-executed" is FALSE
+#### CORRECTION — H.2's rail-enum claim was an UNDERCOUNT, and my first correction of it was ALSO wrong
 
-Measured 2026-08-12. There is no enum anywhere with those three members. The real ones:
+Two errors, recorded in order because the second is the instructive one.
 
-| Enum                                                         | Members                                                                                                                            |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `internal.TransferType` (`architecture_v2/enums.py`) — **7** | `INTERNAL_SUBACCOUNT`, `CEX_WITHDRAWAL_DEPOSIT`, `ON_CHAIN_TRANSFER`, `BRIDGE`, `WRAP_UNWRAP`, `UNITY_WALLET_OP`, `IBKR_FUND_MOVE` |
-| `BusTransferType` (`transfer_events.py`) — **5**             | `CEX_WITHDRAW`, `DEFI_DEPOSIT`, `DEFI_WITHDRAW`, `BRIDGE`, `SUBACCOUNT_MOVE`                                                       |
-| `domain.defi.transfers.TransferType` — **6**                 | `SAME_CHAIN`, `CROSS_CHAIN`, `CEX_WITHDRAWAL`, `CEX_DEPOSIT`, `SWEEP`, `REBALANCE`                                                 |
+**Error 1 (original H.2):** "the rail enum has three members, all API-executed". The enum I was describing is
+`unified_api_contracts/internal/domain/execution_service/transfer_types.py` — the one
+[transfer-architecture](/codex/04-architecture/transfer-architecture.md) names as the routing SSOT — and it has **five**
+members: `ON_CHAIN`, `CEX_WITHDRAWAL`, `CEX_INTERNAL`, **`CUSTODY_TRANSFER`**, **`BRIDGE`**. I named three of five.
+**The two I dropped are the two that matter most here** — `CUSTODY_TRANSFER` is documented as "Treasury→trading wallet,
+custodied moves", i.e. precisely the custody leg I later described as unrepresentable.
 
-I also previously described the defi one as having two members (`SAME_CHAIN`/`CROSS_CHAIN`) — it has six. **The
-conclusion H.2 drew survives, but for a different reason than stated**: `UNITY_WALLET_OP` is plausibly the
-bookmaker-wallet rail (the sports slot labels are `…@unity-betfair-matchbook-…`), and it is **declared with zero
-consumers anywhere in the fleet** — as is `IBKR_FUND_MOVE`. So a hand-operated bookmaker deposit is still
-unrepresentable in practice; the rail name exists and nothing implements it. That is a materially different fix from
-"add a member to a three-member enum". Contributing cause worth noting: **`TransferType` in `enums.py` carries no
-docstrings on any member**, so nothing in the file explains what `UNITY_WALLET_OP` is for.
+**Error 2 (my correction, earlier today):** I "corrected" it by declaring _"There is no enum anywhere with those three
+members"_ and tabling `architecture_v2/enums.py`'s seven-member `TransferType` instead. **That compared against a
+different enum than the one the original claim was about.** The three names I originally listed ARE members of
+`transfer_types.py`; the fault was omission, not misidentification. Over-stating an error's scope is its own defect —
+the same lesson the liquidity-provision over-correction taught, repeated within a day, which is why it is written down
+twice.
 
+**What is actually true:** four overlapping transfer-type enums exist, and the codex SSOT correctly documents the
+five-member one:
+
+| Enum                                                                      | Members                                                                                                                            |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **`transfer_types.TransferType` — 5 — THE ROUTING SSOT** (cited by codex) | `ON_CHAIN`, `CEX_WITHDRAWAL`, `CEX_INTERNAL`, `CUSTODY_TRANSFER`, `BRIDGE`                                                         |
+| `architecture_v2.enums.TransferType` — **7**                              | `INTERNAL_SUBACCOUNT`, `CEX_WITHDRAWAL_DEPOSIT`, `ON_CHAIN_TRANSFER`, `BRIDGE`, `WRAP_UNWRAP`, `UNITY_WALLET_OP`, `IBKR_FUND_MOVE` |
+| `BusTransferType` (`transfer_events.py`) — **5**                          | `CEX_WITHDRAW`, `DEFI_DEPOSIT`, `DEFI_WITHDRAW`, `BRIDGE`, `SUBACCOUNT_MOVE`                                                       |
+| `domain.defi.transfers.TransferType` — **6**                              | `SAME_CHAIN`, `CROSS_CHAIN`, `CEX_WITHDRAWAL`, `CEX_DEPOSIT`, `SWEEP`, `REBALANCE`                                                 |
+
+I also previously described the defi one as having two members (`SAME_CHAIN`/`CROSS_CHAIN`) — it has six. **H.2's
+conclusion still survives, but the reasoning is now different again**: a custody leg IS representable
+(`CUSTODY_TRANSFER` exists and is documented), so the gap is not "no custody rail". The gaps are (a) no **custodian-to-
+custodian** route and no multi-hop representation, and (b) no manual/acknowledged path — `UNITY_WALLET_OP` is plausibly
+the bookmaker rail (sports slots are `…@unity-betfair-matchbook-…`) and is **declared with zero consumers fleet-wide**,
+as is `IBKR_FUND_MOVE`. Contributing cause: **`architecture_v2.enums.TransferType` carries no member docstrings at
+all**, so nothing explains what `UNITY_WALLET_OP` is for — which is how I mistook which enum was which twice.
+
+#### H.11 build set — operator rulings 2026-08-12, deferred to the code phase ("so that we can do that all later")
+
+Design is settled by the two rulings below; SSOT for both is
+[transfer-architecture](/codex/04-architecture/transfer-architecture.md) § "Mirrored custody, multi-hop routes, and
+per-client binding". **These are the code todos for the strategy-service completion phase — do not start them ahead of
+it.**
+
+- [ ] [AGENT] P0. **RULING 1 — make `WalletMappingConfig` the per-client custody binding layer.**
+      `VENUE_WALLET_CAPABILITIES` stays pure venue PHYSICS (deposits_to, requires_internal_transfer, whitelist, CCXT
+      params — immutable, global); `WalletMappingConfig` carries the per-client CHOICE (custodian, which venues are
+      mirrored, treasury/trading wallet identities); the router intersects them. **Today `custody_provider` is a single
+      global string per venue** (`BYBIT` = `''`/direct), so "Bybit on Copper for client A, direct for client B" is
+      inexpressible. Constraint set is `(client_id, strategy_id)`. Rejected and not to be re-proposed: keying the
+      capabilities registry by `(venue, client_id)`; a third routing-config surface.
+- [ ] [AGENT] P0. **RULING 2 — implement the persisted multi-hop `TransferRoute` with per-hop status.** One strategy
+      instruction expands to an ordered, persisted route (`UNMIRROR` → `ON_CHAIN` custodian-to-custodian → `MIRROR`),
+      each hop independently retryable. **Non-idempotency is the whole point: an unmirror is not idempotent with a
+      re-mirror**, so a mid-route failure must resume at the failed hop, never replay from hop 1 — otherwise real
+      collateral strands between custodians. Emits the ledger's existing `CUSTODY_MOVE`. Explicitly NOT
+      `AtomicInstruction`/`CompensationPolicy` (built for trade legs; compensation for a half-moved custody balance is a
+      different problem).
+- [ ] [AGENT] P0. **Lift mirroring into the `CustodyProvider` Protocol** so Copper-ClearLoop and Ceffu-OES are
+      interchangeable behind one contract — carried from H.11's gap list; this is the change that makes "the adapter
+      determines execution" true at the seam.
+- [ ] [AGENT] P1. **Register CEFFU across the routing surfaces.** `custody_provider` accepts `copper`/`fireblocks`/`''`
+      and **zero venues bind to ceffu**; `WalletMappingConfig.custodian` is `copper`/`fireblocks`/`mock`. So Binance
+      cannot be routed via CEFFU at all, despite `custody/ceffu.py` being fully implemented with OES. Note **Fireblocks
+      IS real** (referenced in `custody/factory.py`, `base.py`, `transfer_handler.py`) — do not strip it while adding
+      Ceffu.
+- [ ] [AGENT] P1. **Distinguish mirrored from held balance in the wallet/position model.** A balance mirrored onto
+      Binance is custodied at CEFFU. `WalletType` has no mirrored notion, so double-counting would misstate available
+      margin AND client assets. `oes_get_mirror_balance` exists to read it — check the aggregation layer before adding
+      an enum member.
+- [ ] [AGENT] P1. **Build the manual/acknowledged transfer path** — record an externally-executed transfer in canonical
+      form so the strategy layer sees the balance move. **Keep it off the rail axis**: the rail says _how money moved_,
+      "a human did it" says _who executed_, so they are separate fields. This is what makes SMA client-executed moves
+      and bookmaker deposits the same shape, cross-AG.
+- [ ] [AGENT] P2. **Reconcile the four transfer-type enums to one**, docstring every member, and make
+      `transfer_types.TransferType` the single rail axis the others defer to — same de-duplication that fixed the
+      allocator roster. `architecture_v2.enums.TransferType` currently has zero member docstrings.
 - [ ] [AGENT] P1. **Re-scope H.2's manual-route work against the real enums** before building anything. Specifically:
       decide whether the manual/bookmaker path is `UNITY_WALLET_OP` finally being implemented, or a new member, and
       reconcile the three overlapping enums while you are there (the same de-duplication logic that applied to the

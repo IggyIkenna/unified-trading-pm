@@ -1,10 +1,14 @@
 ---
 doc_type: codex-ssot
 title: Transfer Architecture
-summary:
+summary: >-
   Five transfer types (ON_CHAIN / CEX_WITHDRAWAL / CEX_INTERNAL / CUSTODY_TRANSFER / BRIDGE) each with a distinct
   execution path, confirmation mechanism, and events — plus per-venue wallet capabilities (which venues need a
-  funding-to-trading internal move after deposit) and the DeFi treasury reserve-ratio (20/10/30) capital flow.
+  funding-to-trading internal move after deposit) and the DeFi treasury reserve-ratio (20/10/30) capital flow. Also
+  carries the 2026-08-12 operator rulings on mirrored custody: strategy-layer PnL/balance tracking is identical whether
+  collateral is mirrored or held, WalletMappingConfig is the per-client custody binding layer (VENUE_WALLET_CAPABILITIES
+  stays pure venue physics), a cross-custodian move is a PERSISTED multi-hop route with per-hop status, and manual
+  acknowledged transfers are part of the model rather than an exception.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -21,7 +25,11 @@ related:
     /codex/04-architecture/kill-switch-circuit-breaker.md,
   ]
 created: 2026-04-16
-authoritative_for: [five-transfer-type taxonomy + per-venue wallet capabilities]
+authoritative_for:
+  [
+    five-transfer-type taxonomy + per-venue wallet capabilities,
+    mirrored-custody routing model (per-client binding + multi-hop route + manual acknowledgement),
+  ]
 referenced_by:
   [
     /codex/04-architecture/transfer-coordinator.md,
@@ -41,9 +49,9 @@ code_refs:
 The system discriminates five transfer types, each with a different execution path, latency profile, and fee structure.
 Transfer type determines which adapter handles execution, how confirmation works, and what events are emitted. The SSOT
 for per-venue routing is `VenueWalletCapabilities` in UAC —
-`unified_api_contracts/internal/domain/execution_service/transfer_types.py` (re-verified 2026-07-31; this doc
-previously gave the path as `execution_service/transfer_types.py`, which does not exist — the module lives in UAC, not
-in the execution-service package, even though its UAC sub-path is named after the consumer).
+`unified_api_contracts/internal/domain/execution_service/transfer_types.py` (re-verified 2026-07-31; this doc previously
+gave the path as `execution_service/transfer_types.py`, which does not exist — the module lives in UAC, not in the
+execution-service package, even though its UAC sub-path is named after the consumer).
 
 ## Transfer Types
 
@@ -173,6 +181,92 @@ All transfers emit lifecycle events via unified-trading-library. Failures trigge
 | `DEPOSIT_DETECTED`                | PBMS detects inbound deposit        |
 | `TREASURY_LOW`                    | Reserve ratio below 10%             |
 | `TREASURY_HIGH`                   | Reserve ratio above 30%             |
+
+## Mirrored custody, multi-hop routes, and per-client binding (operator rulings 2026-08-12)
+
+**The governing principle, verbatim from the operator:** _"we track our wallets as separate from a trading perspective
+to monitor balances and keep things agnostic, but the adaptor we are using to handle the money determines how we
+actually execute the instructions."_ Two consequences that must not be conflated:
+
+- **Position / PnL / balance tracking is IDENTICAL whether collateral is mirrored or directly held.** The mirrored
+  balance is what is tracked, exactly as an unmirrored balance would be. The strategy layer neither knows nor cares
+  which custodian holds the asset — a strategy emits ONE transfer instruction and never names a rail.
+- **Transfer ROUTING is where the custodian topology matters**, and it is resolved below the strategy layer from
+  per-client configuration.
+
+### The worked example this model must satisfy
+
+Bybit + OKX under Copper custody; Binance under CEFFU. Client deposits to treasury, moves to the trading wallet (held at
+Copper) — that is the collateral to mirror.
+
+| Strategy instruction        | Underlying route                                                                                |
+| --------------------------- | ----------------------------------------------------------------------------------------------- |
+| Move 1 BTC to Bybit and OKX | Instruct **Copper** to mirror against each venue. No coin moves.                                |
+| Move between Bybit and OKX  | Instruct **Copper** only — both venues sit under the same custodian's mirror.                   |
+| Move OKX → Binance          | **Unmirror at Copper → physically move Copper→CEFFU on-chain → mirror at Binance.** Three hops. |
+
+The third row is the shape everything else must accommodate: **one strategy instruction, N underlying hops, crossing a
+custodian boundary.**
+
+### RULING 1 — `WalletMappingConfig` is the per-client binding layer
+
+Custody binding is **NOT** a global venue property. The same venue is direct for one client and custodied for another,
+so:
+
+- **`VENUE_WALLET_CAPABILITIES` stays pure venue PHYSICS** — what is _possible_ at a venue: where deposits land, whether
+  a funding→trading move is required, whether withdrawal needs a whitelist, the CCXT params. Immutable venue facts,
+  global.
+- **`WalletMappingConfig` carries the per-client CHOICE** — which custodian, which venues are mirrored, treasury and
+  trading wallet identities. Already per-share-class and GCS-loaded (`wallet-config/{chain_env}/wallet_mapping.json`),
+  so this extends an existing surface rather than adding a third.
+- **The router intersects the two.** Physics says what can be done; client config says what this client does.
+
+Rejected alternatives, recorded so they are not re-proposed: keying `VENUE_WALLET_CAPABILITIES` by `(venue, client_id)`
+mixes immutable venue facts with per-client policy and grows combinatorially; a third dedicated routing config adds
+another overlapping SSOT surface. **The constraint set is (client_id, strategy_id) — never a hardcoded venue→custodian
+map, of which there must be exactly one.**
+
+### RULING 2 — a multi-hop transfer is a PERSISTED route plan with per-hop status
+
+The coordinator expands one instruction into an explicit ordered route, persisted, with independent per-hop state:
+
+```
+TransferRoute(instruction_id, client_id)
+  hop 1  UNMIRROR   OKX      @copper        status=DONE
+  hop 2  ON_CHAIN   copper -> ceffu         status=PENDING   <-- resumable
+  hop 3  MIRROR     BINANCE  @ceffu         status=NOT_STARTED
+```
+
+**Why persisted rather than an opaque adapter sequence:** a failure between hops leaves real collateral stranded
+_between custodians_. Hop 2 must be retryable without replaying hop 1 — an unmirror is not idempotent with a re-mirror.
+It also supplies the audit record the ledger's `CUSTODY_MOVE` event already expects. The strategy layer still observes
+one instruction and one terminal status.
+
+`AtomicInstruction` / `AtomicLeg` / `CompensationPolicy` were considered and NOT chosen: they exist for trade legs, and
+compensation semantics for a half-moved custody balance differ from unwinding a trade.
+
+### Manual / acknowledged transfers are part of the model, not an exception
+
+Some moves the system **cannot** execute: separately-managed accounts where the client must move funds to a main
+account, prime-broker instructions, or simply missing credentials. The system must still **record** the transfer so the
+strategy layer sees the balance move. This is an acknowledgement path — an externally-executed transfer booked in
+canonical form — and it is what makes the model work across asset groups (a bookmaker deposit is the same shape as an
+SMA sweep). It is NOT a rail: the rail axis describes _how money moves_, and "a human did it" is a statement about _who
+executed_, so the two must stay separate fields.
+
+### Known gaps as of 2026-08-12 (audited, tracked, NOT yet built)
+
+| Gap                                                                                                                                                                                                      | Where it bites                                                                                                          |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **CEFFU absent from every routing surface** — `custody_provider` is `copper`/`fireblocks`/`''`; zero venues bound to ceffu; `WalletMappingConfig.custodian` is `copper`/`fireblocks`/`mock`              | Binance cannot be routed via CEFFU at all                                                                               |
+| **No mirroring in `CustodyProvider`** — Ceffu's `oes_*` methods sit OUTSIDE the protocol; Copper has no ClearLoop path (`clearloop` = zero source hits)                                                  | Callers using mirroring are coupled to Ceffu concretely, defeating agnosticism                                          |
+| **No mirrored-vs-held distinction in `WalletType`** (`FUNDING`/`TRADING`/`SPOT`/`UNIFIED`/`ON_CHAIN`)                                                                                                    | A balance mirrored onto Binance is custodied at CEFFU — double-counting it misstates available margin and client assets |
+| **No custody↔custody route**; no multi-hop representation                                                                                                                                                | The OKX→Binance row above is unexecutable                                                                               |
+| **No manual/acknowledged transfer path** — `UNITY_WALLET_OP` and `IBKR_FUND_MOVE` are declared with ZERO consumers fleet-wide                                                                            | SMA and bookmaker moves are unrepresentable                                                                             |
+| **FOUR overlapping transfer-type enums** — `transfer_types.TransferType` (5, this doc's SSOT), `architecture_v2.enums.TransferType` (7), `domain.defi.transfers.TransferType` (6), `BusTransferType` (5) | Any reader can cite a different "the" taxonomy; `architecture_v2`'s has no member docstrings at all                     |
+
+Tracked in
+[the Elysium readiness plan](/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md) § H.11.
 
 ## Related Docs
 
