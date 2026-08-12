@@ -355,17 +355,30 @@ Directions, cheapest first — each is a todo below:
       helper uses the shared cache (`QM_ISO_VENV_CACHE`). Live venv verified undamaged after the fact: 388 packages
       before and after a full QG run through such a symlink, imports OK. Codex SSOT:
       `/codex/05-infrastructure/per-tab-worktrees.md`.
-- [ ] [OPERATOR] P2. **Decide whether the session-collision check should escalate past WARN.** Now that the hook
-      actually runs on macOS (above), the policy question is live and unanswered — it was previously moot because the
-      detection never fired here. Options, per the sub-agent that measured it: **(A) [RECOMMENDED]** keep `SessionStart`
-      WARN-only and strengthen the message to name `scripts/dev/ship-from-worktree.sh` as the concrete next action — a
-      true block is not even mechanically available at the `SessionStart` hook event, which is documented non-blocking
-      regardless of exit code; **(B)** add a narrower `PreToolUse` guard on the actually-risky commands (`git commit` /
-      `quickmerge.sh` / `safe-doc-push.sh`) that re-checks liveness at the moment of mutation rather than only at
-      session start, with a clean opt-out for anything run from a `ship-from-worktree.sh` worktree — cost is that a
-      mid-task block is far more expensive per false positive than a skippable warning, and it would add friction for a
-      read-only second session's first commit and during AO worker handoff. **Done when**: the operator picks A or B (or
-      Other) and the choice is implemented + tested. Repo: unified-trading-pm.
+- [x] ✅ [OPERATOR] P2. **Decide whether the session-collision check should escalate past WARN.** RESOLVED 2026-08-12 —
+      operator chose **option B**; shipped unified-trading-pm@6aba7ca9ff. New
+      `cursor-configs/hooks/pretooluse-slot-collision-guard.py`, registered on `PreToolUse`/`Bash` by APPENDING to the
+      existing matcher so `block_destructive_commands.py` keeps running (under `bypassPermissions` the
+      `permissions.deny` list is discarded, making these hooks the only surviving guardrail —
+      `/plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md`). **Blocks** (only with a live
+      peer in the slot): a bare `git commit`, `quickmerge.sh --no-isolated`, and `safe-doc-push.sh` under
+      `SDP_ISOLATED=0` — the variants that write the SHARED index. **Deliberately does NOT block** default
+      `quickmerge.sh` / `safe-doc-push.sh`, which commit from a private worktree and are therefore the REMEDY, not the
+      hazard; blocking them would push an agent toward a bare `git commit`, strictly worse. Anything already inside a
+      linked worktree is exempt on the same principle, tested via `git rev-parse --git-dir` != `--git-common-dir` so it
+      covers `ship-from-worktree.sh`, quickmerge isolation and any hand-rolled worktree alike. Fails OPEN on every error
+      path (malformed payload, unparseable command, missing `pgrep`) — a guard that blocks on its own bug would wedge
+      every commit. **Detection was EXTRACTED to `cursor-configs/hooks/lib/slot-collision-detect.sh`** and both hooks
+      now share it: the macOS `/proc` gap survived unnoticed in a single copy, and a second copy is exactly how that
+      returns fixed-in-one/broken-in-the-other. **Two real defects the gate caught in this work, both mine**: (1) the
+      refactor added `dirname`/`grep` — external binaries absent from the curated-PATH degradation test — silently
+      killing signal 2 again; caught by the existing 10-test suite, replaced with builtins. (2) The escape hatch was
+      written as an `os.environ` read while documented as a `SLOT_COLLISION_GUARD=0 <cmd>` PREFIX; those are
+      incompatible, since the hook is a child of the CLI and never sees a command's env prefix — it would have shipped
+      an escape hatch that silently did nothing. Now matched in the command string, with a test pinning that the
+      environment-only form does NOT pass. Tests: `tests/test_pretooluse_slot_collision_guard.bats` (17; only 6 are
+      blocking cases — the rest pin the false-positive surface the operator explicitly paid for), plus the 10 existing
+      session-start tests still green.
 - [ ] [INFRA] P2. **A liveness check built on `pgrep` substring matching is unsound on this shared host.** Measured
       2026-08-11: a watcher using `pgrep -f "quality-gates.sh --no-fix" | head -1` matched an ARBITRARY FOREIGN process
       — this host runs several concurrent QG invocations across slots, and the zsh `eval` wrappers' own command lines
