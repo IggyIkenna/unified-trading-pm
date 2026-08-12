@@ -524,6 +524,28 @@ checker's `--only` mode **silently skips any path it cannot stat and then return
 was a false negative from the wrong working directory, and it anchored six wrong diagnoses), and the hygiene sweep runs
 it with `--quiet`, which **prints the violation count without the filename**.
 
+### H.10 `safe-doc-push` exit 13 has a false-positive mode — and it is the most dangerous kind (2026-08-12)
+
+- [ ] [SCRIPT] P2. **Exit 13 fires when a named file's content was ALREADY at origin from a previous push.** Hit live:
+      `/codex/04-architecture/solana-defi-coverage.md` had landed in `eee9186884`; my local copy then differed only by
+      prettier's re-wrap, so the next run saw "a real diff at start" and "HEAD content byte-identical after" — which is
+      exactly the signature of a lost write, and also exactly what an already-landed file looks like. The script cannot
+      distinguish the two, so it raised `🛑 THE PUSH LANDED BUT YOUR CHANGE DID NOT` while the push had in fact shipped
+      everything (verified at `d2bf5a07e4`). **Why this matters more than a normal false alarm:** exit 13's documented
+      remedy is stash surgery (`git show 'stash@{0}:<path>' > <path>`) and an explicit "never plain re-run", so a false
+      positive actively invites hand-editing files out of an autostash that may hold a **peer session's** WIP — turning
+      a non-event into real risk. Fix: before declaring 13, check whether the file's content already matches
+      `origin/<branch>` (already-landed → exit 0 with a note), and compare content **normalised for prose re-wrap**,
+      since prek re-wraps in the isolated worktree and that alone changes the hash. Recommend recording as an F-finding
+      in `/plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`, which is the SSOT the
+      script's own messages cite (F4/F6/F8).
+- [ ] [SCRIPT] P3. **A plan-hygiene grep for a phrase can fail purely because prettier wrapped it mid-sentence.** Cost
+      time three times today: `"they can have it"`, `"portfolio-allocator.md describes a service"` and
+      `"no templates directory"` all returned 0 hits while present, because a newline sat inside the phrase. Any
+      verification that greps a plan for prose MUST normalise first (`tr -s ' \n' ' '`) or match on a single unwrapped
+      token. **0 hits is not evidence of absence in a prettier-formatted corpus** — the same rule the workspace already
+      applies to runtime-resolved symbols.
+
 ## Progress Log
 
 - **2026-08-12 — measurement lesson, recorded because it is the SECOND proxy-vs-property slip in one session.** I ran
