@@ -946,6 +946,36 @@ mock · local_key · cloud_kms · <b>copper</b> · ceffu</div>
         execution and funding, per venue and per leg. That split is usually the interesting part, because it separates
         "the idea was right" from "the idea was implementable".
       </p>
+
+      <h3>How strategy alpha is separated from execution alpha</h3>
+      <p>
+        That separation is not a reporting convention applied afterwards — it is how the backtest is constructed. A
+        <em>benchmark fill</em> is the answer to a single question: if this order filled with zero market impact at the
+        benchmark reference price, what would the fill look like? The reference is defined per instruction and per algo
+        — mid at arrival for a sweep, the time-weighted mid over the window for a TWAP, pool mid at the target block for
+        a protected swap. One contract defines it, and two isolations use it:
+      </p>
+      <div class="code"><i># The same benchmark reference, used two ways</i>
+Strategy isolation   benchmark fills ARE the fills. Zero execution alpha by
+                     construction, so what remains is the strategy's own edge.
+                     Runs against pipeline history with no execution stack at all.
+
+Execution isolation  a matching engine fills against real historical book state,
+                     and the benchmark is the reference it is measured against.
+                     What remains is execution alpha: slippage, fees, timing.</div>
+      <p>
+        The consequence is that a strategy's measured edge does not silently inherit an execution choice it did not make,
+        and execution quality is not credited or blamed for market direction. The fill engine is a pure function — the
+        same inputs produce bit-identical outputs — so the strategy-side number is reproducible rather than
+        approximately repeatable.
+      </p>
+      <p>
+        Execution alpha is reported with its uncertainty rather than as a point estimate: mean, standard error and a 95%
+        confidence interval, with a reliability flag that turns off once the sample is too thin to support a claim. It is
+        also decomposed across the life of an order — early, middle and late thirds, plus the cumulative curve — because
+        an algo that captures its benchmark on average while losing consistently in the final third is a different
+        problem from one that is simply noisy, and the average alone does not distinguish them.
+      </p>
       <div class="callout">
         <span class="tag">Worth agreeing in advance</span>
         <p>
