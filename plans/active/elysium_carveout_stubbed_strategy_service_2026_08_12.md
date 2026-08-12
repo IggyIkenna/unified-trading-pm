@@ -153,11 +153,29 @@ in production** (Elysium plan § H.12), so stubbing the remainder is continuing 
 
 The expansion plan changes what "real" means at the decision boundary, so the carve-out inherits it.
 
-- [ ] [AGENT] P1. **Decide the resolution for each of the four book-level overlays.** Rank-buffer is archetype-layer so
-      it carves with the engine. **Beta-hedge, vol-target and the no-trade band are cross-archetype book-level** — so
-      either they carve (and the client gets a working risk overlay) or they are `PortfolioRiskService` stubs (and the
-      carved strategy runs un-overlaid, materially different risk). **This is the single most consequential carve-out
-      decision** and it must be explicit, because the overlays are what make the research risk profile real.
+### RESOLVED — the four overlays CARVE, as `risk-guards-local` (2026-08-12)
+
+Derived from the operator's own stated line rather than as a new decision, and reversible if they disagree:
+
+1. **The boundary is the strategy-decision layer.** Risk overlays are **pre-decision** — they size and veto the decision
+   before an instruction is emitted. They are not post-decision execution dynamics, so they fall on the **real** side.
+2. **The carved package already includes `risk-guards-local`** ("local safety and test: risk-guards · sim-harness ·
+   ops"), and the operator's line on risk is that **cross-client portfolio risk and governance** stay platform-side.
+   Vol-target and beta-hedge on a single carved book are **local single-book risk**, not cross-client governance.
+3. **§03's acceptance bar requires "runnable".** A strategy with no drawdown control is not runnable in any meaningful
+   sense — the research book calls vol-target "the drawdown DIAL". Stubbing it would make the package fail our own bar.
+
+So: rank-buffer carves with the engine; **no-trade band, beta-hedge and vol-target carve as `risk-guards-local`**;
+`PortfolioRiskService` remains the stub for **cross-client** portfolio risk and governance, which is a genuinely
+different capability rather than the same one withheld.
+
+- [ ] [AGENT] P1. **Implement the carved overlays against the same code as production**, not a reimplementation. If they
+      are built once at the book layer per the expansion plan § A, the carve is a package-boundary decision rather than
+      new code — which is the whole reason to build them shared. A divergent carved copy would be a second
+      implementation to keep in sync, the exact defect the vol-target duplication in `TSMOM_BTC_CTA` already
+      demonstrates.
+- [ ] [AGENT] P2. **State the distinction in §04's resolution table** so `PortfolioRiskService` being a stub is not read
+      as "no risk management" — local guard-rails and overlays ship; cross-client portfolio governance does not.
 - [ ] [AGENT] P2. **Stub the capability wizard.** It lives in strategy-service, and its backing restriction graph is
       exactly the reconciliation IP withheld. Carve the _resolved_ config, not the form that generates it.
 - [ ] [AGENT] P2. **Account for archetype reachability.** Only the contracted archetypes carve. The other 50-odd enum

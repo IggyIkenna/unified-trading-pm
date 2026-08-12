@@ -164,6 +164,45 @@ is the same graph extended with borrow/lend/custodian nodes and route edges; rul
       must stub it: the restriction graph and universe registries are exactly the reconciliation IP a carve-out
       withholds. Carried into the carve-out plan; recorded here so the dependency is visible from this side too.
 
+## D. Risk-limit and wallet selection — audited 2026-08-12, two of the four remaining gaps
+
+Audited because the artefacts describe risk and wallet behaviour, so exploring before writing them means writing once.
+
+**Risk selection — what is established.** Two layers exist and only one is schema-backed:
+
+- **Per-archetype capital fraction, in CODE.** `archetype_defaults.py` buckets archetypes into variance tiers as bare
+  `Decimal` constants — `_TIER_STABLE_STRUCTURAL` 0.500 · `_TIER_NEAR_FULL` 0.750 · `_TIER_MID_VARIANCE` 0.375 ·
+  `_TIER_DIRECTIONAL_ML` 0.250 · `_TIER_HIGH_VARIANCE` 0.125 — mapped per archetype (`CARRY_BASIS_PERP` →
+  stable-structural). This is risk appetite as a **hardcoded literal**, so it is a ruling-5 candidate: an operator would
+  plausibly want to change a capital fraction without a deploy.
+- **Per-(client, archetype) `risk_limits`, but UNTYPED.** `ClientContext` carries `client_id`, `archetype_id`,
+  `shard_id` and **`risk_limits: dict[str, object]`**. So the per-client dimension exists — good — but as an untyped bag
+  with no schema, no defaults and no validation. **Same weakness as `params: dict[str, str]`**, which
+  `PARAM_SCHEMA_REGISTRY` was built to fix; risk limits never got the equivalent.
+
+**Wallet selection — partially established, and I am not asserting the rest.** `treasury_monitor.py` carries a
+`treasury_wallet.wallet_id` on config (example value `vault-usdc-eth`), and `WalletMappingConfig` keys treasury and
+trading wallets **by share class**. What I did **not** establish is how a specific strategy _instance_ binds to a
+specific wallet — whether that is derived from share class alone, or carries an instance-level override. Recorded as
+unknown rather than guessed.
+
+- [ ] [AGENT] P1. **Give `risk_limits` a typed schema with defaults**, mirroring `PARAM_SCHEMA_REGISTRY`. An untyped
+      `dict[str, object]` on the risk path means a typo in a limit name silently does nothing — the failure mode is a
+      limit that is never enforced, which is the worst possible one for a risk control.
+- [ ] [AGENT] P2. **Move the archetype capital-fraction tiers onto the config surface**, keeping the tier map as the
+      default rather than the only value. Then confirm the tiers are actually consumed — `default_kelly_fraction` is the
+      only consumer I found, in `sports_value_betting.py`, and I did not establish whether the tier constants feed
+      anything else. **If they are unconsumed, that is a separate and more serious finding** than being hardcoded.
+- [ ] [AGENT] P1. **Establish instance→wallet binding** and document it in
+      [wallet-hierarchy-and-capital-flow](/codex/04-architecture/wallet-hierarchy-and-capital-flow.md). This is the H.3
+      keying work in the Elysium plan; it must resolve before the artefacts describe wallet behaviour.
+- [ ] [AGENT] P2. **Sweep the remaining 54 archetypes for misplaced cross-archetype logic.** The § A classification rule
+      was derived from four overlays and validated on six archetypes. `TSMOM_BTC_CTA`'s duplicated vol-target proves the
+      defect class exists; nothing establishes it is the only instance.
+- [ ] [AGENT] P2. **Audit instrument-axis selection beyond coins** — expiries, strikes and tenors for the vol family,
+      where 16 of the unreachable archetypes live. The coin axis is well understood (ADV-ranked or static list); the
+      option-surface axes are not, and any artefact claim about options coverage depends on them.
+
 ## Progress Log
 
 - **2026-08-12** — Authored from the Elysium readiness audit. **Classification rule established before placing
