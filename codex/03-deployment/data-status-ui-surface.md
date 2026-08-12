@@ -24,7 +24,7 @@ referenced_by:
     plans/epics/tradfi_master.md,
   ]
 owner:
-last_reviewed:
+last_reviewed: 2026-08-12
 code_refs:
   [
     instruments-service/scripts/measure_honest_coverage.py,
@@ -87,9 +87,19 @@ Top-level keys:
 GET /api/data-status/honest-coverage?date=YYYY-MM-DD
 ```
 
-- Query param `date` defaults to today UTC.
-- Returns raw JSON blob as-is (passthrough `Response`).
-- 404 when the blob hasn't been written yet for the requested date.
+- Query param `date` is optional. An **explicit** `?date=` is honoured exactly (404 on miss, no substitution). An
+  **un-dated** request does NOT simply default to today UTC — it walks BACK from today through a
+  `_HONEST_COVERAGE_FALLBACK_LOOKBACK_DAYS` = **14-day lookback window** and serves the most recent measured
+  `coverage.json` (added 2026-07-15: the daily cron hasn't run yet for the first several hours of each UTC day, so a
+  bare "today" request routinely 404'd and the card showed an empty "not yet computed" state for that whole window).
+- The response JSON is enriched with two **additive provenance fields** on top of the backend blob's own keys (added
+  2026-07-17): `requested_date` (the day the caller asked for — an explicit `?date=`, else today UTC) and
+  `resolved_date` (the day whose file was actually served). `requested_date == resolved_date` means "today's file"; a
+  difference means the walk-back served an older measurement. Every pre-existing field is passed through untouched. A
+  payload that is not a JSON object has nothing to enrich onto and is served verbatim.
+- Returns raw JSON blob as-is otherwise (passthrough `Response`).
+- 404 when no coverage has been measured for the requested date (explicit date), or for any day in the 14-day lookback
+  window (un-dated request).
 - 500 if the blob exists but contains malformed JSON.
 
 Source: `deployment-api/deployment_api/routes/data_status/_live_coverage_honest.py` → `get_honest_coverage()` (path

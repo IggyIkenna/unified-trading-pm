@@ -42,9 +42,11 @@ related:
     /plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
     /codex/08-workflows/ci-cd-flow.md,
     /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
+    /plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md,
+    /plans/archive/2026_07/pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28.md,
   ]
 created: 2026-08-05
-last_updated: 2026-08-06
+last_updated: 2026-08-12
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
