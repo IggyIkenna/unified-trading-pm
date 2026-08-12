@@ -135,12 +135,6 @@ by hand._
   — Gated closeout for the retroactive reclassification of
   issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md (NA → planning, 2026-08-08 na-eligibility-audit round7
   RECLASSIFY sweep). Machine-held via depends_on + gate_on_depends:…
-- [`bybit_perp_hedge_execution_plan_2026_08_10`](./bybit_perp_hedge_execution_plan_2026_08_10.md) — Gated follow-up to
-  the Hyperliquid perp-hedge path (todos 11–14 of recursive_loop_orchestrator_wiring_finalize_2026_08_09). Builds a
-  Bybit-native connector adapter wrapping the existing BybitCCXTAdapter for the perp-hedge interface,…
-- [`bybit_usdc_deposit_automation_plan_2026_08_11`](./bybit_usdc_deposit_automation_plan_2026_08_11.md) — Gated
-  follow-up to the Bybit perp-hedge connector plan (todos 1-6 of bybit_perp_hedge_execution_plan_2026_08_10). Replaces
-  the honest NOT_WIRED stub in PerpHedgeConsumer._topup_guard() with a real Bybit USDC deposit path — deposit-address…
 - [`cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27`](./cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md)
   — Gated closeout for cefi_deribit_binance_futures_bundle_verification_2026_06_20.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
@@ -250,10 +244,6 @@ by hand._
 - [`lst_rate_honest_coverage_2026_07_21`](./lst_rate_honest_coverage_2026_07_21.md) — Operator-directed (2026-07-21)
   build to bring the four LST exchange-rate surfaces to HONEST COVERAGE end-to-end so the DeFi interest PnL can sit on
   real data. is a phantom-minting anti-pattern). is dormant — wire a collection branch +…
-- [`recursive_loop_orchestrator_wiring_finalize_2026_08_09`](./recursive_loop_orchestrator_wiring_finalize_2026_08_09.md)
-  — Gated finalize companion to recursive_loop_orchestrator_wiring_2026_08_09.md. Reconciles every completed todo's
-  evidence back into the source issue doc's [DESIGN] todo, re-checks the Family-2 hedge-poller audit's deferred outcome,
-  and runs…
 - [`solana_dex_pool_swaps_indexer_2026_08_08`](./solana_dex_pool_swaps_indexer_2026_08_08.md) — Build the genuine
   on-chain Solana swap-event indexer for ORCA/RAYDIUM dex_pool_swaps (operator ruling 2026-08-08 — prioritize now), per
   solana_dex_pool_swaps_indexer_scope_2026_07_12.md's own scoping + "Recommended next step"…

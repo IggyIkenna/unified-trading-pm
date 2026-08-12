@@ -5,7 +5,7 @@ summary: >-
   Gated finalize companion to recursive_loop_orchestrator_wiring_2026_08_09.md. Reconciles every completed todo's
   evidence back into the source issue doc's [DESIGN] todo, re-checks the Family-2 hedge-poller audit's deferred outcome,
   and runs the 6-step archival ritual on the now-complete parent plan.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [strategy]
@@ -46,6 +46,10 @@ context_scope:
     /plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md,
   ]
 ---
+
+> **ARCHIVED 2026-08-12** — All 15 todos done. Ran the 6-step archival ritual on the parent
+> `recursive_loop_orchestrator_wiring_2026_08_09.md` plan, reconciled evidence, extended the HL perp-hedge path to Bybit
+> (now itself archived), and closed the Family-2 hedge-poller audit follow-up. Retired from the active set.
 
 # Finalize — RecursiveLoopOrchestrator wiring
 
@@ -94,18 +98,18 @@ context_scope:
       plan) is filed against that ruling.
 
       **RULED 2026-08-09 (main, via BLK-b0af53e2, slot 4)**: option (1) — clone the `HealthFactorMonitor` pattern into a
-          new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
-          Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
-          (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
-          perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
-          (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
-          rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
-          service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
-          code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
-          opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
-          docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
-          would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
-          requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
+                  new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
+                  Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
+                  (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
+                  perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
+                  (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
+                  rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
+                  service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
+                  code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
+                  opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
+                  docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
+                  would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
+                  requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
 
 - [x] ✅ [BACKEND] P2. Implement the `HealthFactorMonitor`-pattern asyncio poller CLASS for `PerpHedgeSizer` (Family-2
       `CARRY_BASIS_PERP_INV`), per todo 4's 2026-08-09 ruling (option A). Build a new `PerpHedgeMonitor` class in
@@ -311,10 +315,11 @@ context_scope:
       HMAC auth, USDC margin, new connector + bridge + instruction mapping, `depends_on`/`gate_on_depends` on the HL
       path's instruction-mapping pattern from todo 11. Repo: execution-service. Done-when: a properly-scoped
       implementation plan (same shape as todos 11–14) filed; gated on HL path being green. — unified-trading-pm@<SHA>.
-      Filed `/plans/active/bybit_perp_hedge_execution_plan_2026_08_10.md`: 7 todos covering BybitPerpHedgeConnector
-      adapter (wrapping existing BybitCCXTAdapter), PerpHedgeConsumer _rebalance_guard extension, credential
-      hot-reloader + wiring module, app.py startup/shutdown binding, fetch-reader wiring, USDC topup honest interim
-      stub, and USDC deposit-automation follow-up. Gated on this parent plan (`depends_on` + `gate_on_depends: true`).
+      Filed `/plans/archive/2026_08/bybit_perp_hedge_execution_plan_2026_08_10.md`: 7 todos covering
+      BybitPerpHedgeConnector adapter (wrapping existing BybitCCXTAdapter), PerpHedgeConsumer _rebalance_guard
+      extension, credential hot-reloader + wiring module, app.py startup/shutdown binding, fetch-reader wiring, USDC
+      topup honest interim stub, and USDC deposit-automation follow-up. Gated on this parent plan (`depends_on` +
+      `gate_on_depends: true`).
 
 ## Progress Log
 
@@ -485,12 +490,12 @@ context_scope:
   orchestrator-binding assertion). Full `quality-gates.sh` green (216s) on the committed HEAD, verified as an ancestor
   of `origin/live-defi-rollout`.
   - **2026-08-10 (slot 13, backend_engineer)**: Todo 15 shipped — filed
-    `/plans/active/bybit_perp_hedge_execution_plan_2026_08_10.md` (7 todos, `depends_on` + `gate_on_depends: true` on
-    this plan). Scoped from code evidence: `BybitCCXTAdapter` (`bybit_ccxt.py`) already has live
-    `place_order()`/`get_positions()`/`get_account_state()` via CCXT with HMAC key+secret auth — the plan wraps it with
-    a thin `BybitPerpHedgeConnector` adapter rather than building a native connector from scratch (P3 secondary venue;
-    the adapter IS the seam). Todos cover: connector adapter (todo 1), `PerpHedgeConsumer._rebalance_guard()` extension
-    (todo 2), credential hot-reloader + wiring module mirroring `hyperliquid_wiring.py` (todo 3), `app.py`
+    `/plans/archive/2026_08/bybit_perp_hedge_execution_plan_2026_08_10.md` (7 todos, `depends_on` +
+    `gate_on_depends: true` on this plan). Scoped from code evidence: `BybitCCXTAdapter` (`bybit_ccxt.py`) already has
+    live `place_order()`/`get_positions()`/`get_account_state()` via CCXT with HMAC key+secret auth — the plan wraps it
+    with a thin `BybitPerpHedgeConnector` adapter rather than building a native connector from scratch (P3 secondary
+    venue; the adapter IS the seam). Todos cover: connector adapter (todo 1), `PerpHedgeConsumer._rebalance_guard()`
+    extension (todo 2), credential hot-reloader + wiring module mirroring `hyperliquid_wiring.py` (todo 3), `app.py`
     startup/shutdown binding (todo 4), fetch-reader wiring into `PerpHedgeFetchProvider` (todo 5), USDC topup honest
     interim stub (todo 6), USDC deposit-automation follow-up plan (todo 7). All 14 prior todos were already `[x]` — this
     was the last open item.

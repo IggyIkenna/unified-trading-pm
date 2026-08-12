@@ -7,7 +7,7 @@ summary: >-
   BybitCCXTAdapter for the perp-hedge interface, extends PerpHedgeConsumer to route Bybit-venue rebalance/topup intents,
   wires the connector at app.py startup/shutdown with GSM credential hot-reloading, and wires the USDC Bybit deposit
   path. Bybit is a 50% counterparty-cap secondary venue — Hyperliquid is primary.
-status: active
+status: complete
 nature: design
 asset_group: [defi]
 stage: [strategy]
@@ -52,6 +52,12 @@ context_scope:
     execution_service/defi_execution/wiring/hyperliquid_wiring.py,
   ]
 ---
+
+> **ARCHIVED 2026-08-12** — All 7 todos done. The Bybit perp-hedge connector adapter, consumer routing, credential
+> hot-reload wiring, app.py startup binding, and fetch-reader wiring shipped end-to-end; the USDC deposit-automation
+> follow-up was scoped and filed as its own gated plan
+> (`/plans/archive/2026_08/bybit_usdc_deposit_automation_plan_2026_08_11.md`, since completed). Retired from the active
+> set.
 
 # Bybit Perp-Hedge Execution — Connector Adapter, Consumer Extension, and USDC Bridge
 
@@ -170,19 +176,19 @@ context_scope:
       polling, credential custody for the funding wallet (TREASURY_HOT → COPPER_MPC/CEFFU_MPC gating per Group F item
       19). Gated on the Bybit connector + consumer path (todos 1-5) being green. Repo: execution-service (+ possibly
       infra for the funding-wallet custody). — unified-trading-pm (plan:
-      /plans/active/bybit_usdc_deposit_automation_plan_2026_08_11.md)
+      /plans/archive/2026_08/bybit_usdc_deposit_automation_plan_2026_08_11.md)
 
 ## Progress Log
 
 - **2026-08-11 (slot 4, backend_engineer)**: Todo 7 shipped — filed the Bybit USDC deposit automation plan at
-  `/plans/active/bybit_usdc_deposit_automation_plan_2026_08_11.md` (10 todos, P2/P3, `sequential: true`, gated on this
-  plan's completion). Scoped from code evidence: `BybitPerpHedgeConnector` has `fetch_balance()` but no deposit-address
-  resolution; `BybitCCXTAdapter`'s underlying `ccxt.bybit` supports `fetch_deposit_address()` but neither adapter
-  exposes it; `_topup_guard()` returns honest `NOT_WIRED` for Bybit; `HyperliquidBridge`'s Arbitrum approve+sendDeposit
-  does NOT transfer to Bybit (CEX deposit addresses, not a bridge contract). Design decisions: CEX deposit model
-  (resolve address → transfer → poll `get_account_state()`), CCXT for deposit-address resolution, two-phase deposit
-  (initiate+confirm), TREASURY_HOT funding wallet for testnet, COPPER_MPC/CEFFU_MPC gated on Group F item 19 for
-  mainnet.
+  `/plans/archive/2026_08/bybit_usdc_deposit_automation_plan_2026_08_11.md` (10 todos, P2/P3, `sequential: true`, gated
+  on this plan's completion). Scoped from code evidence: `BybitPerpHedgeConnector` has `fetch_balance()` but no
+  deposit-address resolution; `BybitCCXTAdapter`'s underlying `ccxt.bybit` supports `fetch_deposit_address()` but
+  neither adapter exposes it; `_topup_guard()` returns honest `NOT_WIRED` for Bybit; `HyperliquidBridge`'s Arbitrum
+  approve+sendDeposit does NOT transfer to Bybit (CEX deposit addresses, not a bridge contract). Design decisions: CEX
+  deposit model (resolve address → transfer → poll `get_account_state()`), CCXT for deposit-address resolution,
+  two-phase deposit (initiate+confirm), TREASURY_HOT funding wallet for testnet, COPPER_MPC/CEFFU_MPC gated on Group F
+  item 19 for mainnet.
 
 - **2026-08-10 (slot 13, backend_engineer)**: Authored. Scoped from code evidence: `BybitCCXTAdapter` (`bybit_ccxt.py`)
   — existing CCXT-based adapter with live `place_order()`/`get_positions()`/ `get_account_state()`, HMAC key+secret

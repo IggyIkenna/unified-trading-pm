@@ -9,7 +9,7 @@ summary: >-
   COPPER_MPC/CEFFU_MPC gated on Group F item 19 for mainnet). Bybit is a CEX — deposits use exchange-generated deposit
   addresses, not an on-chain bridge contract, so the automation surface is fundamentally different from Hyperliquid's
   Arbitrum bridge.
-status: active
+status: complete
 nature: design
 asset_group: [defi]
 stage: [strategy]
@@ -43,7 +43,6 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-archive_exempt: true
 source:
 context_scope:
   [
@@ -59,6 +58,11 @@ context_scope:
     execution_service/trade_execution/adapters/bybit_ccxt.py,
   ]
 ---
+
+> **ARCHIVED 2026-08-12** — All 10 todos done. The Bybit USDC deposit automation shipped end-to-end (deposit-address
+> resolution → ERC-20 transfer → balance-poll confirmation → consumer dispatch routing → app startup wiring → mainnet
+> custody gating), with the final e2e smoke-path integration test at `execution-service@1b719ac86a` (see Progress Log
+> for per-todo SHAs). Retired from the active set.
 
 # Bybit USDC Deposit Automation — Deposit-Address Resolution, Transfer Tracking, and Funding-Wallet Custody
 
