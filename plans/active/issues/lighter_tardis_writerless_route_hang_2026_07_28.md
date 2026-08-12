@@ -52,6 +52,12 @@ depends_on:
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_since:
+# archive_exempt: true (temporary bridge, flip-then-mv pattern) — this doc's last open
+# todo is its own archival trigger; exemption set in the SAME commit as the flip so the
+# cross-repo /done M3 flip check passes at the active path, then dropped when git mv'd
+# to plans/archive/issues/ in the IMMEDIATELY FOLLOWING commit (check_archive_candidates.sh
+# --only flip-then-mv exemption, 2026-08-09). See Progress Log 2026-08-12.
+archive_exempt: true
 ---
 
 ## What I found
@@ -95,10 +101,14 @@ was identical:
 narrow call-site-only `asyncio.wait_for()` wrap and not graceful-degradation-only. Not implemented in this docs-only
 pass — tracked as a new `[CODE]` todo below.
 
-- [ ] [CODE] P2. Add a configurable timeout to `_upload_gcs_with_retry()` (or the shared in-flight-registry flush/ack
+- [x] ✅ [CODE] P2. Add a configurable timeout to `_upload_gcs_with_retry()` (or the shared in-flight-registry flush/ack
       await path it wraps, wherever the actual hang occurs) so a caller with no live writer/event-logging fails fast
-      instead of hanging indefinitely, per the 2026-08-12 operator ruling above. Repo: market-tick-data-service /
-      unified-trading-library.
+      instead of hanging indefinitely, per the 2026-08-12 operator ruling (`plan_reconciler_findings_all_2026_08_12.md`,
+      RULED block above). Repo: market-tick-data-service / unified-trading-library. — implemented via a configurable
+      `timeout_seconds` on the shared helper (option 2) wired through
+      `StreamingParquetWriter(upload_timeout_seconds=...)` (default 600s = `_GCS_UPLOAD_TIMEOUT_SECONDS`); daemon-thread
+      wall-clock bound raises `TimeoutError` instead of an indefinite hang; + 2 unit tests.
+      **unified-trading-library@b3afeb8c4** (QG green, quickmerge-verified on origin/live-defi-rollout).
 
 ## Recommended decision
 
@@ -179,17 +189,25 @@ error in that case, or (b) add a bounded timeout so a misconfigured caller degra
   (`tardis_batch_download.py`, `streaming_writer.py`, `streaming_shard_finalizer.py`, `events_interface/__init__.py`)
   more precise than the prior generic entries — swapped `umi_tick_provider.py`/`event_facade.py` for those, kept
   `in_flight_registry.py` (still the evidence log source) and the source dispatch plan, now 6 entries.
+- **slot-7 implementation — 2026-08-12**: Implemented the operator-ruled fix (option 2 — configurable upload timeout in
+  the SHARED `_upload_gcs_with_retry()` helper, `unified_trading_library/io/streaming_writer.py`). The helper gains
+  `timeout_seconds: float | None = None` (`None` = historical unbounded behavior); when set, the whole `with_retry`
+  chain runs on a daemon `threading.Thread` and the caller is bounded by a wall-clock `join(timeout_seconds)`, raising
+  `TimeoutError` on expiry so a wedged GCS upload (writer=None / no setup_events() diagnostic call) fails fast instead
+  of blocking the executor thread forever (Phase 2 mechanism). `StreamingParquetWriter` gains `upload_timeout_seconds`
+  (default `_GCS_UPLOAD_TIMEOUT_SECONDS = 600.0`, matching the GCS SDK's per-attempt/retry deadline so healthy uploads
+  are unaffected; `None` opts out). Shipped **unified-trading-library@b3afeb8c4** (QG green 158s incl. 2 new unit tests;
+  quickmerge-verified on origin/live-defi-rollout).
 
 ## Follow-ups
 
-- [ ] [CODE] P3. BLOCKED-OPERATOR-DECISION — Implement one of the 3 recommended fixes for the Tardis
-      writer=None/setup_events() hang (asyncio.wait_for timeout at tardis_batch_download.py:709, configurable upload
-      timeout in _upload_gcs_with_retry, or graceful log_event RuntimeError degradation) - human design decision pending
-      per Progress Log 2026-08-05. _(retagged 2026-08-12 (/plan-reconcile): this doc is `assigned_vm: planning`
-      (AO-dispatched) and the todo's own text says "human design decision pending" among 3 non-equivalent options (scope
-      differs: this-path-only fail-fast vs. shared-helper-wide robustness vs. trigger-only degradation) — no single
-      option is evidence-determinable, so this stays non-dispatchable pending an explicit operator pick, not a
-      mechanical retag to a craft role.)_
+- [x] ✅ [CODE] P3. Implement one of the 3 recommended fixes for the Tardis writer=None/setup_events() hang
+      (asyncio.wait_for timeout at tardis_batch_download.py:709, configurable upload timeout in _upload_gcs_with_retry,
+      or graceful log_event RuntimeError degradation) — RESOLVED: the 2026-08-12 operator ruling
+      (`plan_reconciler_findings_all_2026_08_12.md`) picked option 2 (configurable timeout in the shared
+      `_upload_gcs_with_retry()`), implemented in the P2 todo above — **unified-trading-library@b3afeb8c4**. _(retagged
+      2026-08-12 (/plan-reconcile): no longer applicable — the operator pick resolved the 3-option ambiguity; tag
+      superseded by the implementation.)_
 
 > **2026-08-06 archive-candidate audit**: DIAG todo is [x] (root cause traced to the blocking run_in_executor await),
 > but the Progress Log's 'Recommended fix (human design decision - 3 options)' is never implemented - the hang is only
