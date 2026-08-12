@@ -85,11 +85,11 @@ picking this plan up cold should never trust the flip-time state without a fresh
       clause not triggered.
 
       Note for todo 2's worker: the direct pandas `read_availability_index(columns=..., filters=[("capture_status",
-                                                  "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
-                                                  fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
-                                                  DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
-                                                  `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
-                                                  streaming footprint regardless of corpus size.
+                                                          "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
+                                                          fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
+                                                          DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
+                                                          `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
+                                                          streaming footprint regardless of corpus size.
 
 - [x] ✅ [DATA] P1. **Root-cause the 0→7,930,863 `instrument_type=POOL` recurrence before any retirement resumes**
       (blocks the retirement todo below — main-agent-added 2026-08-11 per
@@ -349,3 +349,19 @@ picking this plan up cold should never trust the flip-time state without a fresh
     group-by-having duplicate scan found none at the (…, pipeline_mode) level).
   - **Residual note for todo 7 (dex_pool_fees)**: its count is unchanged at 21 `captured` rows on the axis census; this
     todo did not touch `dex_pool_fees`.
+- **2026-08-12 (slot 20, data_engineering) — todo 7 NOT RETIRABLE AS PLANNED: the phantom-rows premise is FALSE; 21 real
+  `dex_pool_fees` objects exist (day=2026-05-16..22) and the reversible flip would mislabel real data.** Ran the
+  retirement script's dry-run census (`retire_dex_pool_fees_legacy_captured_rows_2026_08_12.py`, mirror of the
+  rate_indices pattern) over the fresh consolidated index: `dex_pool_fees` `captured` = **21** (baseline confirmed). Its
+  physical-object safety probe classified **RETIRE 0 / EXCLUDE 21** — every captured row is backed by a real parquet
+  object at `data_type=dex_pool_fees/` for 3 pools (CURVE x2 `0x4dece678..`/`0xbebc4478..`, BALANCER x1 `0x06df3b2b..`)
+  × day=2026-05-16..22, `batch_onchain_subgraph`, chain ETHEREUM. Content read (CURVE 05-16): `fees_usd=371.3`,
+  `volume_usd=7,426,451`, `tvl_usd=23,787,341` — real subgraph fee/volume/TVL data, `available_at=2026-06-21`
+  (materialised 2026-06-21, i.e. the 2026-08-04 "0 objects for its lifetime" sample missed the mid-May window). Rows
+  (re)registered `captured` by the 2026-08-10 rebuild scan (`written_at=2026-08-10T23:08-23:10Z`,
+  `service_name=market-tick-data-service`). Twin analysis: BALANCER has a canonical `dex_pool_state` twin on all 7 days
+  (`swap_fees`) → retire-as-superseded feasible after content-verify; **CURVE has NO `dex_pool_state` twin on any day**
+  → its fee data may be the only copy. Filed
+  `/plans/active/issues/dex_pool_fees_phantom_premise_false_real_mid_may_objects_2026_08_12.md` (data-correctness
+  finding, options A/B/C/D) + `/blocked` to the operator. No manifest write made; the retirement script ships as the
+  template for the decided disposition (needs twin-verify or migration logic before `--apply`).
