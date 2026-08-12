@@ -100,59 +100,20 @@ fi
 # an existing WARN-only signal actually fire where it silently couldn't
 # before. It does not change the non-blocking exit-0-always contract, and a
 # false positive here costs one extra warning line, never a refusal.
-_ppid_of() { # <pid> -> ppid on stdout, empty on failure. /proc first (fast,
-             # Linux), `ps` fallback (works on both, needed on macOS).
-  local pid="$1" v
-  if [ -r "/proc/${pid}/status" ]; then
-    v="$(awk '/^PPid:/{print $2}' "/proc/${pid}/status" 2>/dev/null || true)"
-    [ -n "${v}" ] && { printf '%s' "${v}"; return 0; }
-  fi
-  v="$(ps -o ppid= -p "${pid}" 2>/dev/null | tr -d ' ')"
-  [ -n "${v}" ] && printf '%s' "${v}"
-}
-_cwd_of() { # <pid> -> resolved absolute cwd on stdout, empty on failure.
-            # /proc first (Linux); lsof fallback (macOS/BSD -- no /proc cwd
-            # link exists there at all, so this is the ONLY way to ask a
-            # macOS host "what directory is this OTHER process running in").
-  local pid="$1" cwd_link="/proc/$1/cwd" v
-  if [ -r "${cwd_link}" ]; then
-    v="$(readlink -f "${cwd_link}" 2>/dev/null || true)"
-    [ -n "${v}" ] && { printf '%s' "${v}"; return 0; }
-  fi
-  if command -v lsof >/dev/null 2>&1; then
-    # `lsof -a -d cwd -p <pid> -Fn` emits a field-per-line format; the path
-    # line is prefixed with 'n'. Same-user processes need no elevated
-    # privileges to query on macOS.
-    v="$(lsof -a -d cwd -p "${pid}" -Fn 2>/dev/null | awk '/^n/{sub(/^n/,""); print; exit}')"
-    [ -n "${v}" ] && printf '%s' "${v}"
-  fi
-}
+# Detection lives in ONE place, shared with the PreToolUse guard
+# (cursor-configs/hooks/pretooluse-slot-collision-guard.py). It used to be inline here, where the
+# /proc-only cwd read was a silent no-op on macOS for as long as it existed. A second consumer
+# arrived 2026-08-12; copy-pasting the scan is exactly how a platform gap survives in one copy
+# while being fixed in the other. Sourcing failure degrades to "skip signal 2", never an error.
+_SSCC_LIB="${BASH_SOURCE[0]%/*}/lib/slot-collision-detect.sh"
+# shellcheck source=/dev/null
+[ -r "${_SSCC_LIB}" ] && . "${_SSCC_LIB}"
 
-if command -v pgrep >/dev/null 2>&1; then
-  # Ancestor PIDs of THIS hook invocation (the CLI process that spawned it,
-  # its own parent, etc.) must never be reported as "another" process.
-  ancestors=" $$ "
-  _walk_pid="${PPID:-0}"
-  _hops=0
-  while [ "${_walk_pid}" != "0" ] && [ "${_walk_pid}" != "1" ] && [ "${_hops}" -lt 10 ]; do
-    ancestors="${ancestors}${_walk_pid} "
-    _next="$(_ppid_of "${_walk_pid}")"
-    [ -z "${_next}" ] && break
-    _walk_pid="${_next}"
-    _hops=$((_hops + 1))
-  done
-
-  SLOT_DIR_REAL="$(readlink -f "${SLOT_DIR}" 2>/dev/null || echo "${SLOT_DIR}")"
+if declare -F foreign_claude_pids >/dev/null 2>&1; then
+  _sscc_pids="$(foreign_claude_pids "${SLOT_DIR}")"
   foreign_count=0
-  for pid in $(pgrep -f claude 2>/dev/null || true); do
-    case "${ancestors}" in *" ${pid} "*) continue ;; esac
-    resolved="$(_cwd_of "${pid}")"
-    [ -z "${resolved}" ] && continue
-    case "${resolved}" in
-      "${SLOT_DIR_REAL}"|"${SLOT_DIR_REAL}"/*) foreign_count=$((foreign_count + 1)) ;;
-    esac
-  done
-  if [ "${foreign_count}" -gt 0 ]; then
+  for _sscc_p in ${_sscc_pids}; do foreign_count=$((foreign_count + 1)); done
+  if [ "${foreign_count:-0}" -gt 0 ]; then
     WARNINGS+=("${foreign_count} other live process(es) matching 'claude' have their cwd inside this slot (${SLOT_DIR})")
   fi
 fi
