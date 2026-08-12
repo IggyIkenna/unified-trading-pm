@@ -183,7 +183,18 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
       **Ready-to-run for the operator**: `gcloud storage rm -r gs://ml-models-store` (GCP project
       `central-element-323112`), then remove any now-dead TF/yaml reference to the flat name (none found this session —
       the flat name was never in `cloud-providers.yaml`, only the resolver-side `_KIND_ALIASES`, which is itself already
-      sunset per the todo below). Left `- [ ]` deliberately — see notes.
+      sunset per the todo below). Left `- [ ]` deliberately — see notes. **NOTE 2026-08-12 (docs-drift correction,
+      interactive session): the delete this todo asks for has ALREADY HAPPENED, via the sibling plan, not this one.**
+      `bucket_fold_ml_2026_07_17.md`'s "Delete sources" P0 todo is checked `[x]` DONE 2026-08-08 (operator
+      authorization, NA-corpus blocker digest round 5, id=44) and its own text states, GCP side: "already gone — nothing
+      to delete... none of the 5 legacy source names (`ml-models-store`, `ml-models-store-prd`, `ml-predictions-store`,
+      `ml-configs-store`, `ml-training-artifacts`, `ml-artifacts`) exist in this project any more" — cross-checked via
+      both `gcloud storage buckets list` and `gcloud asset     search-all-resources` (project-level inventory). That is
+      the SAME flat `ml-models-store` GCP bucket this todo targets. So the categorical human-only hard stop this todo
+      was waiting on is moot — the bucket is confirmed gone, executed under the sibling plan's own record, not this one.
+      Not flipping this checkbox `[x]` here myself (no independent re-verification run from this session, and this doc's
+      own convention treats the checkbox flip as a formal closeout step) — left `- [ ]` for a human/future pass to
+      reconcile formally against `bucket_fold_ml_2026_07_17.md` as the actual execution record.
 
 ## Wave 3 residuals — structural-fold closeout
 
@@ -417,3 +428,10 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
   out-of-scope-for-this-plan; the `ml-models-store` prod-bucket delete stays a human-only hard stop per
   `gcs-and-manifest-delete-safety-protocol.md` §3 regardless of how well-proven the disposition is -- whole doc stays
   NA.
+- **2026-08-12 (docs-drift correction, interactive session)**: the "ml legacy variants" P1 todo's `ml-models-store` GCP
+  delete already happened — via `bucket_fold_ml_2026_07_17.md`'s "Delete sources" P0 todo, `[x]` DONE 2026-08-08
+  (operator authorization, NA-corpus blocker digest round 5, id=44). That doc's own text confirms the flat
+  `ml-models-store` bucket is gone (project-level `gcloud asset search-all-resources` inventory, zero `ml-*` hits beyond
+  the folded `ml-store-{prd,test}` targets) — the same bucket this plan's todo names. Added a dated note inline on the
+  todo pointing to the sibling plan as the actual execution record; did not flip this todo's checkbox (no independent
+  re-verification run this session) — left for a human/future pass to formally reconcile.
