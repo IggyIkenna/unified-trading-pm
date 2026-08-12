@@ -547,3 +547,16 @@ possibly a rename that ripples into UAC/manifest data_type naming.
   SPOT preemption on the ~10h force=True leg would re-pay the whole pass. Given the interactive session's declared sole
   ownership of VM/launcher actions, slot 18 will coordinate the VM-B launch rather than fire a third concurrent
   relaunch.
+- **2026-08-12 (slot 18, data_engineering): VM-A (TRANSFER_RECORDS targeted resume) COMPLETED + VM-B (full PLAYER_VALUES
+  backfill) launched.** VM-A `instr-backfill-sports-transfermarkt-20260812-173909` finished at **18:11:33Z**:
+  `TRANSFER_RECORDS PASS COMPLETE {'ok': 8, 'raised': 0}`, script rc=0, `DEPLOYMENT_COMPLETED` (exit_code=0), VM
+  self-deleted. Verified durable output directly: **master/transfer_records = 146,449 rows** (126,144 pre-resume →
+  +20,305 from the 7 remaining real leagues; the unmapped GREEK_SUPER_LEAGUE `record_empty`'d with zero API spend, per
+  slot-2's mapping check). **All 32 Prediction-tier leagues with a Transfermarkt mapping now have TRANSFER_RECORDS
+  data** (25 from the preempted VM1 + 7 from VM-A) — the TRANSFER_RECORDS leg is COMPLETE. **VM-B
+  `instr-backfill-sports-transfermarkt-20260812-181254` launched at 18:12:54Z** — full PLAYER_VALUES historical backfill
+  (1,041 events, ~39.8K estimated calls), **ON-DEMAND** provisioning (SPOT preemption on the ~10h force=True leg would
+  re-pay the whole pass — documented rationale), tier=Prediction, conc=4, metadata-verified. Live quota re-checked at
+  VM-B launch time: 66,659 remaining (→ ~63K after VM-A's ~3.6K-call pass); PLAYER_VALUES ~39.8K fits with ~23K margin.
+  VM-B RUNNING; monitoring via a 15-min self-check cron. The P2 backfill-launch checkbox flips when VM-B reaches
+  terminal + is verified.
