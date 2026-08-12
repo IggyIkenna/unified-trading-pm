@@ -168,7 +168,9 @@ def _reconcile_dynamic_repo(owner: str, repo: str) -> tuple[str, str, str]:
     Extracted from ``reconcile()`` (2026-08-09) purely to keep that function's own branch count
     under the complexity ceiling — no behavior change from inlining it back would occur.
     """
-    highest = _highest_existing_tag(owner, repo)
+    highest, fetch_ok = _highest_existing_tag(owner, repo)
+    if not fetch_ok:
+        return "unresolved", "", ""
     if highest is None:
         return "stalled", "", "dynamic versioning but NO v* tag exists at all"
     tag = f"v{'.'.join(map(str, highest))}"
@@ -237,16 +239,25 @@ def _newest_tag_age_days(owner: str, repo: str, tag: str) -> float | None:
     return (datetime.now(UTC) - when).total_seconds() / 86400.0
 
 
-def _highest_existing_tag(owner: str, repo: str) -> Version | None:
+def _highest_existing_tag(owner: str, repo: str) -> tuple[Version | None, bool]:
+    """Returns ``(highest, fetch_ok)``.
+
+    ``fetch_ok=False`` means the API call itself failed or returned unparseable content — the
+    caller must NOT read ``highest is None`` in that case as "confirmed zero tags exist" (2026-08-12,
+    deployment_api_release_tag_stall_false_positive_2026_08_12.md): a transient `gh api` failure
+    (rate limit / network blip) was misreported as "dynamic versioning but NO v* tag exists at all"
+    for a repo that in fact had a brand-new tag pushed 32 minutes earlier — only a genuinely
+    successful fetch that finds zero matching tag names is a real "stalled" verdict.
+    """
     rc, out = _gh([f"repos/{owner}/{repo}/tags", "--paginate"])
     if rc != 0:
-        return None
+        return None, False
     try:
         payload: object = _loads(out)
     except (json.JSONDecodeError, ValueError):
-        return None
+        return None, False
     if not isinstance(payload, list):
-        return None
+        return None, False
     highest: Version | None = None
     for entry in cast("list[object]", payload):
         if not isinstance(entry, dict):
@@ -260,7 +271,7 @@ def _highest_existing_tag(owner: str, repo: str) -> Version | None:
         t: Version = (int(tm.group(1)), int(tm.group(2)), int(tm.group(3)))
         if highest is None or t > highest:
             highest = t
-    return highest
+    return highest, True
 
 
 def _tag_exists(owner: str, repo: str, tag: str) -> bool:
@@ -505,7 +516,7 @@ def reconcile(
         tag = f"v{version}"
         if _tag_exists(owner, repo, tag):
             continue  # idempotent — already released
-        highest = _highest_existing_tag(owner, repo)
+        highest, _fetch_ok = _highest_existing_tag(owner, repo)
         if highest is not None and _ver_tuple(version) < highest:
             # main version is BEHIND the latest tag (a revert / clean-start) — do NOT backfill an old tag.
             print(f"  SKIP {repo}: main {version} < latest tag v{'.'.join(map(str, highest))} (no backfill)")

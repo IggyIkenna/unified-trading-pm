@@ -398,6 +398,23 @@ For every repo whose current `quality-gates-v2` conclusion is `failure`, pull th
   CLOSES/SUPERSEDES an artifact which may have triggered a standing-channel alert should check for that alert's
   precondition before closing and post the matching resolution — don't assume "closing it" is self-evidently visible to
   whoever is watching the alert channel.
+- **(n) A detector helper returns a bare `None`/empty for two different conditions — "the check ran and confirmed
+  nothing" vs. "the check itself failed to run" — and the caller treats both as the former** (2026-08-12,
+  `deployment_api_release_tag_stall_false_positive_2026_08_12.md`). Tell: `reconcile_release_tags.py`'s
+  `_highest_existing_tag()` returned bare `Version | None` — `None` both when `gh api repos/.../tags` genuinely failed
+  (`rc != 0`) AND when a successful fetch found zero matching tag names — and the caller (`_reconcile_dynamic_repo`)
+  read `highest is None` as a confirmed "dynamic versioning but NO v* tag exists at all" CRITICAL. A transient `gh api`
+  hiccup fired that exact message for `deployment-api`, which in fact had a tag minted 32 minutes earlier (confirmed
+  live: re-running the identical `gh api repos/<o>/<r>/tags` call immediately after found the tag with zero issues — the
+  failure was a one-off, not a structural regex/matching bug). This is the same shape as (i)/(k) — an ambiguous return
+  value collapsing "checked, genuinely clear" and "couldn't check" into one signal — but at the return-type level rather
+  than a regex/allowlist level. Before trusting any detector's `None`/empty/zero-count verdict as a real "nothing
+  found": read the function that produced it and confirm it structurally CANNOT return that same value on a fetch
+  failure. If it can, that's the bug — fix it by making the two cases distinguishable in the return type (here:
+  `tuple[Version | None, bool]`, second value = fetch succeeded), route the fetch-failure case to the SAME
+  `"unresolved"` bucket the function already uses elsewhere for other unmeasurable conditions (never invent a new bucket
+  when an existing one already means "couldn't tell this run"), and add a regression test pinning both branches (fetch
+  failure → unresolved, confirmed-empty → still alarms) so the collapse can't silently return.
 
 ## 2. Fix (b), (c), (d) directly in the target repo
 
