@@ -85,17 +85,18 @@ picking this plan up cold should never trust the flip-time state without a fresh
       clause not triggered.
 
       Note for todo 2's worker: the direct pandas `read_availability_index(columns=..., filters=[("capture_status",
-                          "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
-                          fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
-                          DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
-                          `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
-                          streaming footprint regardless of corpus size.
+                              "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
+                              fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
+                              DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
+                              `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
+                              streaming footprint regardless of corpus size.
 
-- [ ] [DATA] P1. **Root-cause the 0→7,930,863 `instrument_type=POOL` recurrence before any retirement resumes** (blocks
-      the retirement todo below — main-agent-added 2026-08-11 per
+- [x] ✅ [DATA] P1. **Root-cause the 0→7,930,863 `instrument_type=POOL` recurrence before any retirement resumes**
+      (blocks the retirement todo below — main-agent-added 2026-08-11 per
       `/plans/active/issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md`, BLK-e7fe6971 answered A). Confirm
       the rebuild VM's actual deployed code content (`cloudbuild`/tarball manifest `commit_sha`) to rule in/out a stale
-      pre-N6a snapshot. (repo: market-tick-data-service)
+      pre-N6a snapshot. (repo: market-tick-data-service) — unified-trading-pm (verification-only, no code). **Stale
+      pre-N6a snapshot theory RULED OUT.** See Progress Log for evidence.
 - [ ] [DATA] P1. **Determine whether the manifest rebuild is full-replace or upsert-onto-existing-index** (same
       recurrence investigation). Read `rebuild_defi_manifest.py`'s top-level `main()`/index-write path — if upsert, any
       pre-existing uppercase rows that survived the 2026-08-05 fold would pass through untouched rather than being
@@ -204,3 +205,26 @@ picking this plan up cold should never trust the flip-time state without a fresh
   a big finding (data-correctness, SSOT contradiction) per CLAUDE.md's findings-triage rule rather than absorbing an
   open-ended root-cause investigation as unplanned scope on a task scoped to "retire POOL rows." Recommend the
   operator/main review the new issue doc's 3-point verification list before todo 2-4 are attempted again.
+- **2026-08-12 (slot 5, data_engineering) — todo 2 done: stale pre-N6a snapshot theory RULED OUT.** Read
+  `vm-logs/<vm>/TARBALL_PINS.json` for both VMs in the `-093118`→`-204358` chain (GCS reads via UTL
+  `download_from_storage`, per the storage-code HARD RULE): the OOM'd predecessor `-093118` had `MTDS_TARBALL_SHA`
+  PINNED to `483eb895581cc645cf884ba780c871b65060202d` (well past N6a); the VM that actually reached terminal SUCCESS,
+  `-204358`, had `MTDS_TARBALL_SHA` FLOATING (`"pins": {}`) — no per-deployment record captured the exact commit_sha it
+  resolved to at launch (2026-08-10T19:43:58Z), a genuine observability gap in `create-code-tarballs.sh`'s
+  floating-tarball path (not fixed here — infra-craft scope, flagged below). Since a floating tarball is built from
+  whatever `market-tick-data-service` HEAD is checked out when `create-code-tarballs.sh` last ran, the relevant question
+  is whether the N6a lowercasing fix (`market-tick-data-service@3f5cc6e4`, 2026-06-18) was EVER reverted between then
+  and the VM's 2026-08-10 launch. `git log 3f5cc6e4..HEAD -- market_tick_data_service/scripts/rebuild_defi_manifest.py`
+  lists every commit touching this file in that window (12 commits, none of them touching the `parse_hive_path`
+  lowercasing lines); confirmed directly at HEAD (`market-tick-data-service@859405a1`, the tarball commit_sha as of
+  2026-08-11T23:00:56Z — after the VM launch, used as the nearest-available content proof): both
+  `instrument_type=p["itype"].lower()` call sites in `parse_hive_path` (lines 370, 395) are intact, unconditional,
+  unchanged. **Conclusion: no floating-tarball snapshot in the 2026-06-18→2026-08-11 window could have shipped pre-N6a
+  code — the stale-snapshot theory from the issue doc's "what I did NOT verify" #1 is RULED OUT.** This narrows the
+  still-unresolved recurrence mechanism to the issue doc's remaining two open questions (full-replace vs. upsert;
+  physical uppercase GCS objects vs. manifest-column-only) — those are this plan's next two todos, not re-litigated
+  here. Updated `/plans/active/issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md` to mark this question
+  resolved. **Follow-up flagged, not filed as new work** (small, non-blocking, outside this plan's `data_engineering`
+  scope): `create-code-tarballs.sh`'s floating-pin path should persist the resolved `commit_sha` into
+  `TARBALL_PINS.json` at launch time (mirroring the pinned-tarball case) so a future audit doesn't have to reconstruct
+  it from git history — worth an infra-craft todo if this pattern comes up again.
