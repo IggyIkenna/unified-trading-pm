@@ -187,3 +187,33 @@ reading. All three name their replacement, so the machine already has everything
       convention), or archival off the scanned surface. All three name a replacement, so the successor is always
       recoverable and no doc here is orphaned — this is a tidiness and grep-noise decision, not a data-loss one. Repo:
       unified-trading-pm.
+
+## Update 2026-08-12 — a fourth failure mode: a genuine YAML syntax error reports as "no-frontmatter"
+
+Hit live authoring a NEW codex doc (`agent-orchestrator-ci-escalation-wall-types.md`). The gate reported
+`no-frontmatter` — which reads as "you forgot the `---` block" — but the file plainly had one. `_parse_frontmatter()`
+(line ~122) wraps `yaml.safe_load(raw)` in `except yaml.YAMLError: return None`, and `_check_parsed()` maps ANY `None`
+to the SAME `"no-frontmatter"` reason regardless of whether frontmatter was truly absent or present-but-unparseable —
+confirmed by direct reproduction: `_parse_frontmatter()` returned `None`, but manually running `text.find("\n---\n", 4)`
+found the closing delimiter fine (`end=1584`); the actual failure was `yaml.safe_load` raising
+`ScannerError: could not find expected ':'` on the `summary:` field, whose plain (unquoted, no `>-`/`|` block indicator)
+multi-line value contained a literal `": "` inside a sentence ("WALL_TYPES accepts: what triggers it") — YAML's
+plain-scalar grammar treats an internal `": "` as a would-be mapping-key separator. Fixed the doc (added `>-` to
+`summary:`, and removed the ambiguous colon besides) — confirmed via `check_codex_doc_freshness.py --workspace-root .`
+going from 1 new violation to 0.
+
+**The transferable lesson**: same shape as the two Updates above (a real-looking violation whose true cause is a
+checker/mechanism bug, not the named doc's content) — but this one is a plain code smell (broad `except` collapsing two
+distinct failure classes into one ambiguous verdict), not a data/path bug, so it is a different fix. Before trusting a
+`no-frontmatter` verdict on a doc that visibly HAS a `---` block: run `_parse_frontmatter()` directly (or just
+`yaml.safe_load` the block) to see the REAL exception — the ratchet's own message will send you looking for a missing
+delimiter that was never missing.
+
+- [ ] [SCRIPT] P3. **Distinguish "no-frontmatter" from "frontmatter present but failed to parse" in
+      `check_codex_doc_freshness.py`.** Give `_parse_frontmatter()` a way to signal which case occurred (e.g. return a
+      sentinel/raise a typed exception the caller catches, or a `(fm, reason)` tuple) so `_check_parsed()` can emit a
+      distinct violation reason (`"yaml-parse-error"` with the caught exception's message as `detail`) instead of
+      silently reusing `"no-frontmatter"` for both. Low urgency (P3) since the underlying doc-authoring bug is what
+      actually blocks a commit either way — this is purely about the diagnostic pointing the next person at the right
+      fix on the first read instead of a false "you're missing the frontmatter block entirely" lead. Repo:
+      unified-trading-pm.

@@ -91,6 +91,35 @@ jobs:
             echo "__EOR__"
           } >> "$GITHUB_OUTPUT"
 
+  # ── Escalate to an agent (2026-08-12) ─────────────────────────────────────────────────
+  # Previously Slack-only — see reconcile-release-tags.yml's escalate job for the audit +
+  # rationale (same pattern). Asymmetric gap: glue-runner-health-monitor.yml (single unhealthy
+  # runner) already escalates; this pool-WIDE starvation case didn't. SSOT:
+  # codex/04-architecture/agent-orchestrator-ci-escalation-wall-types.md.
+  escalate:
+    needs: check
+    if: needs.check.outputs.starved == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch glue_pool_starvation escalation
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          REPORT: ${{ needs.check.outputs.report }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping escalation dispatch" && exit 0
+          GH_TOKEN="${GH_PAT}" gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=${{ github.event.repository.name }}" \
+            -f "client_payload[pr_number]=0" \
+            -f 'client_payload[wall_type]=glue_pool_starvation' \
+            -f "client_payload[context]=glue-pool-starvation-monitor found the self-hosted glue-runner pool starved (fleet-wide queue depth over threshold): ${REPORT}. Run: ${RUN_URL}. Diagnose via SSM on the glue-runner host(s) — check for a crash-looped runner, a stuck job holding a slot, or genuine demand exceeding pool capacity (in which case this may need an operator decision on pool sizing, not a code fix)." \
+            -f 'client_payload[model]=sonnet' \
+            >/dev/null 2>&1 && echo "escalated glue_pool_starvation to orchestrator" \
+            || echo "::warning::orchestrator escalation dispatch failed (non-fatal — Slack alert still fires)"
+
   notify:
     needs: check
     if: needs.check.outputs.starved == 'true'
