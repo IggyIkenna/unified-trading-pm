@@ -200,11 +200,10 @@ deployment-api/UI so EVERY "what's missing" surface (data, features, strategies,
   models; where trained-model identities get recorded) is resolved per the round5-cross-cutting-audit 2026-08-08 note
   above (`TrainingGridConfig` = could-exist bound; `ModelRegistry.list_models()` = live write path — narrows to ordinary
   wiring). See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
-- **[DATA] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch8_2026_08_09.md`.** **Verify**: with
-  MVP ON, data-status shows ~100% for captured MVP cells and does NOT count non-MVP catalogued instruments as
-  missing; with MVP OFF, the full could-exist universe is shown (the gap is honest, not hidden) — re-confirm
-  consolidator freshness first, then run the real-DATA verify. See the batch doc for the full scoped todo; do not
-  duplicate-dispatch from here.
+- **[DATA] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch8_2026_08_09.md`.** **Verify**: with MVP
+  ON, data-status shows ~100% for captured MVP cells and does NOT count non-MVP catalogued instruments as missing; with
+  MVP OFF, the full could-exist universe is shown (the gap is honest, not hidden) — re-confirm consolidator freshness
+  first, then run the real-DATA verify. See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
 
 ## Config versioning (config_version) — per-config, metadata-not-path-axis
 
@@ -271,7 +270,10 @@ catalogue MVP is filtered from) · `macro_micro_econ_data_capture_audit_2026_06_
 the "what we intend to capture for launch" cut) · the G3 deployment union view (the denominator machinery MVP refines) ·
 `mtds_data_status_page_parity_2026_07_21.md` (2026-07-21 — extends this plan's `is_mvp`/`CoverageScope` toggle to MTDS,
 which has no MVP wiring today, and precomputes the sports/prediction catalogue `mvp` column this plan left as a live
-`df.apply` fallback — annotated here rather than duplicated as a new MVP-scope plan).
+`df.apply` fallback — annotated here rather than duplicated as a new MVP-scope plan) ·
+`mvp_could_exist_rollup_dual_scope_2026_08_12.md` (2026-08-12 — extends this plan's `scope=mvp|could_exist|all` toggle
+to the deployment-api rollup worker, which has zero scope-awareness today; same "own plan, annotated here" pattern as
+the MTDS entry above).
 
 ## Progress Log
 
@@ -300,5 +302,5 @@ which has no MVP wiring today, and precomputes the sports/prediction catalogue `
 - **round9-cross-cutting-sweep 2026-08-09**: satellite-extracted the "Verify" `[DATA] P2` todo into
   `cross_cutting_satellite_ao_dispatch_batch8_2026_08_09.md` — the item flagged `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` by
   the 2026-08-07/08-08 na-eligibility-audit passes but never previously extracted. Whole-doc RECLASSIFY not applied —
-  `locked_by: live-defi-rollout` remains set (unrelated to this extraction; content edits/extractions are unaffected
-  by the archival lock).
+  `locked_by: live-defi-rollout` remains set (unrelated to this extraction; content edits/extractions are unaffected by
+  the archival lock).
