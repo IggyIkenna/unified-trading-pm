@@ -483,12 +483,12 @@ Directions, cheapest first — each is a todo below:
       unified-trading-pm@d85ad41fac.
 
       **Done when, confirmed**: the precommit sweep on one staged file is now **20.8s** total wall (measured 2026-08-12,
-          isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
-          down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
-          concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
-          single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
-          `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
-          nothing left to move out of the per-commit path. Repo: unified-trading-pm.
+              isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
+              down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
+              concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
+              single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
+              `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
+              nothing left to move out of the per-commit path. Repo: unified-trading-pm.
 
 - [x] ✅ [INFRA] P2. **Record the AO-vs-PM volume asymmetry in the codex** so the next person does not re-derive it —
       unified-trading-pm@baae1922bb. New § "1b. PM is the fleet's single write hotspot" in
@@ -523,7 +523,21 @@ Directions, cheapest first — each is a todo below:
       passed), but it has been exercised on ONE repo (PM) on ONE host. Before flipping laptop default back on, verify on
       a service repo with a heavier suite and confirm the cached venv stays valid across a dependency bump. **Done
       when**: two repos pass an isolated `--isolated` quickmerge end-to-end and the cache is shown to refresh on a lock
-      change. Repo: unified-trading-pm.
+      change. Repo: unified-trading-pm. **PARTIAL ATTEMPT 2026-08-12** (operator confirmed: proceed on a small, low-risk
+      repo). Ran `quickmerge.sh --isolated` on `alerting-service` (a docs-only README addition, chosen as the
+      lowest-risk possible real change). The isolation mechanics themselves worked correctly and as documented:
+      staged+ran the FULL gate in a throwaway worktree (`/private/var/.../qm-iso-127/...`), correctly evacuated the
+      caller's dirty file into a named stash for the run's duration (`qm-iso-evac-127-...`), and on failure reported it
+      HONESTLY (a real basedpyright regression, not a false success) rather than silently discarding it. **But the ship
+      itself could not complete**: `alerting-service`'s OWN pre-existing codebase already has **43 basedpyright errors
+      against a `BASEDPYRIGHT_MAX_ERRORS=21` ratchet cap** — unrelated to isolation, unrelated to the docs-only change
+      being shipped, and out of scope to fix here (a different repo's accumulated type-check debt, not this issue's
+      subject). Quickmerge correctly refused to ship past a real gate failure; this is the gate working as intended, not
+      an isolation defect. The stash entry (`stash@{0}` in `alerting-service`) was left in place rather than
+      force-dropped (the `git stash drop` guardrail hook blocks it for autonomous workers) — harmless, recoverable, does
+      not block anything. **Still NOT done**: needed a repo whose OWN gate is currently green to actually exercise the
+      isolated-ship-succeeds path end-to-end, and the lock-bump-refresh half was never reached. Repo:
+      unified-trading-pm.
 - [x] ✅ [INFRA] P2. **Slot 2's PM checkout is wedged and cannot receive any of these fixes.** CLOSED 2026-08-12 —
       re-verified directly
       (`git -C .tabs/2/unified-trading-pm fetch origin live-defi-rollout && git rev-list     HEAD..origin/live-defi-rollout --count`
@@ -662,10 +676,23 @@ Directions, cheapest first — each is a todo below:
       are genuinely unreachable). Tests: `scripts/quality_gates/test_check_plan_commit_sha_evidence.py` (7/7) — pushed,
       local-only-unpushed, and dangling-orphan cases, both with and without `require_reachable`. `ruff`/`basedpyright`
       clean. Repo: unified-trading-pm.
-- [ ] [INFRA] P2. **60 of 229 PM bats tests fail and NOTHING gates them.** Measured full run: 169 ok / 60 not ok. PM's
-      gate (`base-service.sh`) carries bats as warn-only for service repos; PM's own 30 bats files are not invoked by
-      its gate at all. None of the 60 are from this session's five new files. **Done when**: PM's bats suite is either
-      gated or its failures are ratcheted.
+- [x] ✅ [INFRA] P2. **60 of 229 PM bats tests fail and NOTHING gates them.** unified-trading-pm@ef552936b3. The premise
+      needed correcting on two counts: (1) `base-service.sh`'s bats block already invokes PM's own `.bats` files (found
+      while investigating — the 2026-07-26 fix this comment cites already covers PM, contradicting "not invoked at
+      all"); it just runs WARN-only fleet-wide, by deliberate design (this file is shared by every service repo, so a
+      blanket hard-fail risked breaking repos whose own suites were never measured). (2) Re-measured the actual current
+      count: **2 failing, not 60** — `tests/*.bats` now runs 320 tests, 318 ok. Root-caused both: both were in
+      `tests/test_slot_cron_ff_pull_dirty_gate.bats`, asserting the OLD "any confirmed dirt skips the FF" behavior —
+      superseded by a 2026-08-10 fix (`COLLISION-DEFERRAL`) that gates the skip on the confirmed-dirty file actually
+      COLLIDING with an incoming change, closing a real 3-day fleet-starvation outage. The tests' fixtures never
+      diverged origin at all, so the collision-gated skip path was structurally unreachable — stale tests, not a live
+      regression. Fixed the fixtures (push a genuinely colliding commit to the fixture's bare origin between ticks) to
+      exercise the CURRENT, correct design. With the corpus now genuinely clean, added `BATS_HARD_FAIL` — a per-repo
+      opt-in (`base-service.sh`'s shared default stays WARN-only, zero behavior change for every other repo) that PM's
+      own `scripts/quality-gates.sh` sets, so a bats regression on PM specifically now blocks the gate instead of
+      warning. Tests: `tests/test_base_service_bats_hard_fail.bats` (5/5, harness-extracted via a new marker comment) —
+      pass/fail × opt-in/unset/explicit-0, proving the shared WARN-only default is unchanged for every repo that doesn't
+      opt in. Repo: unified-trading-pm.
 
 ## Deferred work after 2026-08-10
 
