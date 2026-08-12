@@ -164,12 +164,23 @@ Mechanical, bounded remediation — not a design/judgment call:
   style already used elsewhere in this corpus for dated correction banners), not a nested checkbox-continuation
   paragraph, or expect to re-fight this bug on every commit attempt.
 
-- **Re-measured 2026-08-12 (slot 3, hit while shipping an unrelated cloudbuild change).** Corpus scan of
-  `plans/active/**` + `codex/**` for checkbox-continuation lines indented >=10: **100 docs affected** (was 82 on 08-03),
-  **worst single line 1150 leading spaces in a 1257-char line** — i.e. ~91% padding — in
-  `/plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`. So the two axes moved in
-  opposite directions since 08-03: the worst case came DOWN (1290 -> 1150, remediation landing) while the number of
-  affected docs went UP (82 -> 100). Anyone quoting "82 docs" as current is quoting a stale number; re-measure.
+- **Re-measured 2026-08-12 (slot 3, hit while shipping an unrelated cloudbuild change) — ON THIS DOC'S OWN METRIC, the
+  corpus is IMPROVING.** `bash scripts/plan-hygiene/check_prosewrap_padding.sh` (no args, the comparable measurement):
+  **2808 violating lines against a baseline of 3655**, itself already ratcheted down from the 4472 seeded on 08-03. So
+  remediation is landing: 4472 -> 3655 -> 2808. Current worst single line in the ACTIVE corpus is **1150 leading spaces
+  in a 1257-char line (~91% padding)** in
+  `/plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`. This doc's headline "1290
+  spaces" instance is gone from the active corpus by ARCHIVAL, not repair — its file now sits at
+  `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`.
+
+  **Correcting my own first version of this entry (shipped `unified-trading-pm@d6026f40dc`), which claimed "82 -> 100
+  docs affected, count went UP".** That was a CLAIM > MEASUREMENT error: I counted checkbox-continuation lines indented
+
+  > =10 across `plans/**` + `codex/**`, whereas this doc's 82 came from `check_prosewrap_padding.sh` at its own
+  > INDENT_THRESHOLD of 14 and over a different file set (it includes `plans/epics/`). Two different metrics, so the
+  > comparison never supported a trend — and on the metric that IS comparable the direction is the opposite one. The
+  > same error applied to "worst case DOWN 1290 -> 1150": different files, and the drop is archival rather than repair.
+  > **Rule this re-teaches: when re-measuring someone else's number, run THEIR tool, not your own approximation of it.**
 
 - **Hand-repair has a measured half-life of exactly one commit — quantifying "temporary".** Dedented one doc's
   continuation block from 26 spaces to the 6-space list-content indent, verified word-content byte-identical, and
