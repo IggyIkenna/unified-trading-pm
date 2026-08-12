@@ -1100,16 +1100,24 @@ PYEOF
     [[ -n "$SKIP_NO_REASON" ]] && { log_fail "pytest.mark.skip without reason comment — add '# reason: ...' above"; echo "$SKIP_NO_REASON" | head -3; exit 1; }
     log_ok "All pytest.mark.skip have reason comments"
 
-    # ── BATS SHELL TESTS (warn-only, transitional) ──────────────────────────
+    # ── BATS SHELL TESTS (warn-only fleet default; hard-fail opt-in per repo) ──
     # `.bats` shell-test suites (per-tab-worktree invariants, FF-pull starvation
     # detection, git-status dirty-count integrity, etc.) were written but never
     # actually invoked by this gate — CI installs bats-core into the tool cache
     # but no step ever called `bats tests/`, so a regression in any of them went
-    # undetected. WARN-ONLY initially (mirrors the actionlint transitional
+    # undetected. WARN-ONLY by DEFAULT (mirrors the actionlint transitional
     # pattern at [5.5] below) since the fleet-wide pass/fail baseline across
-    # every repo's `.bats` files has never been measured; re-harden to a hard
-    # failure once a clean baseline run is confirmed.
+    # every repo's `.bats` files has never been measured — this file is shared by
+    # every service repo, so a blanket hard-fail here risks breaking a repo whose
+    # own suite was never part of any measurement.
     # SSOT: plans/active/issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md
+    #
+    # BATS_HARD_FAIL=1 (2026-08-12, pm_repo_commit_rate_exceeds_precommit_hook_duration
+    # todo G): per-repo opt-in once THAT repo's own suite is confirmed clean — PM's
+    # `scripts/quality-gates.sh` sets it, having re-measured to 0 failures (was 60,
+    # traced to two stale tests exercising a since-superseded dirty-gate design, not a
+    # live regression; fixed rather than skipped). Any repo without the opt-in keeps
+    # today's unchanged WARN-only behaviour.
     _BATS_FILES=()
     while IFS= read -r -d '' _bf; do _BATS_FILES+=("$_bf"); done \
         < <(find tests -name "*.bats" -type f -print0 2>/dev/null)
@@ -1149,6 +1157,9 @@ PYEOF
             fi
             if bats "${_BATS_ARGS[@]}" "${_BATS_FILES[@]}" 2>&1; then
                 log_ok "BATS tests PASSED (${#_BATS_FILES[@]} file(s))"
+            elif [ "${BATS_HARD_FAIL:-0}" = "1" ]; then
+                log_fail "BATS: ${#_BATS_FILES[@]} file(s) — one or more tests failed (BATS_HARD_FAIL=1 for this repo — this suite is confirmed clean at baseline, so any failure here is a genuine regression)"
+                exit 1
             else
                 log_warn "BATS: ${#_BATS_FILES[@]} file(s) — one or more tests failed (NON-FATAL transitional — re-harden to hard-fail once a clean fleet baseline is confirmed)"
             fi
@@ -1156,6 +1167,9 @@ PYEOF
             log_warn "bats not found on PATH — skipping shell tests (${#_BATS_FILES[@]} .bats file(s) present); install: https://github.com/bats-core/bats-core"
         fi
     fi
+    # === END OF BATS SHELL TESTS BLOCK === (extraction marker for
+    # tests/test_base_service_bats_hard_fail.bats — see FN_DEFS_MARKER's own comment in
+    # test_slot_cron_ff_pull_dirty_gate.bats for why a marker, not a line number)
 
     qg_prof end tests
 fi

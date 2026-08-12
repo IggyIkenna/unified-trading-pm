@@ -11,6 +11,12 @@ SOURCE_DIR="scripts"
 # Prior floor: 70%. Re-set to 69% — will ratchet back up as coverage is restored.
 MIN_COVERAGE=69
 RUN_INTEGRATION=true
+# BATS_HARD_FAIL: PM's own .bats suite re-measured 2026-08-12 at 0 failures (was 60; both
+# root causes fixed rather than left ratcheted — see
+# pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md todo G). Opting in here
+# (per-repo, base-service.sh's shared default stays WARN-only for every other repo) means a
+# future bats failure on THIS repo genuinely blocks the gate instead of silently warning.
+BATS_HARD_FAIL=1
 PYTEST_WORKERS=${PYTEST_WORKERS:-}  # default: max(1, cpu_count//4) computed by base script
 # Wire the checker-adjacent test_*.py files that live next to their checkers under scripts/
 # (scripts/quality_gates/, scripts/cicd/, scripts/docs/) into the TESTS phase. Plain `testpaths`
