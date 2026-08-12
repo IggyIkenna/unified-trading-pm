@@ -543,11 +543,11 @@ memory and that's what kills sessions" as-is.
                         suggestive, not proof the AutoSpawn path — rather than escalation/plan_health — is the actual source,
                         since `deepseek_spawn_selected`'s caller isn't logged). **Done when**: (a) attribute the 7
                         `deepseek_spawn_selected` calls to their actual caller — add a `source` field to that log line
-          (autospawn/escalation/plan_health) so this doesn't need inference next time; (b) if AutoSpawn's routine
-          refill is confirmed as the source, consider lowering `autospawn_max_concurrent_spawns` below 8 and
-          re-testing, or applying the SAME backoff-between-spawns pattern just shipped for escalation/plan_health
-          to AutoSpawn's own `_do_spawns_concurrently` (which currently fires all N spawns via a ThreadPoolExecutor
-          with no inter-spawn delay, even though N is capped). Repo: agent-orchestrator.
+                        (autospawn/escalation/plan_health) so this doesn't need inference next time; (b) if AutoSpawn's routine
+                        refill is confirmed as the source, consider lowering `autospawn_max_concurrent_spawns` below 8 and
+                        re-testing, or applying the SAME backoff-between-spawns pattern just shipped for escalation/plan_health
+                        to AutoSpawn's own `_do_spawns_concurrently` (which currently fires all N spawns via a ThreadPoolExecutor
+                        with no inter-spawn delay, even though N is capped). Repo: agent-orchestrator.
 
 - [x] [INFRA] P1. ~~Reduce fleet capacity while root cause remains open~~ — **DONE 2026-08-11, operator-directed.**
       Given the throttle fix alone hasn't stopped the crash class, and to slow credit burn during the ongoing
@@ -982,3 +982,12 @@ memory and that's what kills sessions" as-is.
   word-count/content checks confirm both peers' additions AND my own recovered content are present,
   `check_conflict_markers.sh` PASS, todo count matches origin's 30 exactly (a pure in-place edit, no count drift). No
   content from any of the three contributing sessions was lost in this reconciliation.
+- 2026-08-12 21:47Z (operator: "keep going until confirmed fixed at the AO level, /autonomous"): arming
+  `AUTONOMOUS_AGENT_RULES.md`'s completion loop — will not stop at diagnosis, termination condition is a shipped +
+  verified fix. Shipped `agent-orchestrator@3afe35f13a` (`scripts/orchestrator/strace_tmux_server_supervisor.sh`) and
+  launched it detached on the VM (`setsid nohup`, PID 250591) — keeps a live `strace -e trace=signal,exit,exit_group`
+  attached to whichever process is currently the tmux server, re-attaching on every respawn, so the next death gets
+  `+++ killed by SIGKILL +++` / a caught signal / a clean `exit_group` on the record instead of another silent gap.
+  While shipping it, found **6 more deaths in the 90min since the last check** (20:18, 20:21, 20:27, 20:38, 20:43,
+  21:06Z) — averaging ~1/10min right now, well above this doc's historical cadence; good news for actually catching one
+  live. Self-paced wakeup loop starts now to poll the strace log for the first captured transition.
