@@ -4,9 +4,10 @@ title: Live data persistence and central event log
 summary: >-
   SSOT for the live=batch event-log persistence spine — MTDS/MDPS/features/strategy/ml/execution all publish/read via
   the UTL EventTransport facade (InMemoryTransport for paper, Pub/Sub for live), three automatic persistence tiers
-  (hot/warm/cold) classified by SINK_MATRIX (52 shards) + RetentionClass, giving paper(W)==batch-rerun(W)
-  trade-for-trade determinism (epsilon=0); 52 Pub/Sub topics + warm-GCS subscriptions + daily compaction provisioned in
-  Terraform.
+  (hot/warm/cold) classified by SINK_MATRIX + RetentionClass, giving paper(W)==batch-rerun(W) trade-for-trade
+  determinism (epsilon=0); Pub/Sub topics + warm-GCS subscriptions + daily compaction provisioned in Terraform.
+  Shard/topic counts drift as connectors are added — verify against the live SINK_MATRIX/Terraform before citing an
+  exact number (see § SINK_MATRIX below).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -74,8 +75,11 @@ Execution fills/positions/PnL/paper_ledger are `STREAM_ONLY`. All market-data an
 
 ### SINK_MATRIX
 
-`unified_api_contracts.events.sink_matrix.SINK_MATRIX` — 52 entries keyed by `(asset_group, data_type)`. Wildcard `"*"`
-in asset_group matches any. `sinks_for()` raises `KeyError` on unknown shard (no silent default).
+`unified_api_contracts.events.sink_matrix.SINK_MATRIX` — keyed by `(asset_group, data_type)`. Wildcard `"*"` in
+asset_group matches any. `sinks_for()` raises `KeyError` on unknown shard (no silent default). **As of 2026-08-12,
+SINK_MATRIX carries 54 entries** (measured directly from `unified_api_contracts/events/sink_matrix.py`, up from the 52
+at this doc's authoring) — this count grows as new connectors go live; verify against the live file rather than citing a
+fixed number.
 
 ### EventTransport (UTL facade)
 
@@ -99,7 +103,10 @@ Proven in `e2e-testing/tests/unit/test_live_persist_determinism.py` (4 tests):
 1. `test_paper_equals_batch_rerun_trade_for_trade` — 7-window candle spine, epsilon=0
 2. `test_faithful_copy_three_tier_read_agreement` — Pub/Sub seek == warm GCS == cold GCS
 3. `test_lifecycle_reproducible_vs_stream_only` — REPRODUCIBLE finite TTL; STREAM_ONLY none
-4. `test_sink_matrix_covers_all_52_shards` — SINK_MATRIX completeness gate
+4. `TestSinkMatrixCompleteness` (`test_matrix_is_non_empty`/`test_all_explicit_entries_resolve`/
+   `test_wildcard_entries_resolve_for_sample_asset_groups`) — SINK_MATRIX completeness gate (test name corrected
+   2026-08-12; the doc previously cited a `test_sink_matrix_covers_all_52_shards` name that no longer exists in
+   `unified-api-contracts/tests/unit/test_persist_envelope.py`)
 
 ## Topic naming
 
@@ -108,8 +115,12 @@ One Pub/Sub topic per shard `(asset_group, data_type)`. Wildcard shards use topi
 
 ## Terraform provisioning
 
-52 Pub/Sub topics + Cloud Storage subscriptions (warm GCS) + BigQuery external tables + daily compaction Cloud Run Job
-deployed in `deployment-service/terraform/gcp/live_event_log/`.
+53 Pub/Sub topics (measured 2026-08-12, `deployment-service/terraform/gcp/live_event_log/main.tf` — 1 fewer than the 54
+live SINK_MATRIX entries; the `atomic_instruction` wildcard shard has no matching `persist_all_atomic_instruction` topic
+resource yet, a provisioning gap worth a follow-up, not re-derived here) + Cloud Storage subscriptions (warm GCS)
+
+- BigQuery external tables + daily compaction Cloud Run Job deployed in
+  `deployment-service/terraform/gcp/live_event_log/`.
 
 ## Cross-references
 
