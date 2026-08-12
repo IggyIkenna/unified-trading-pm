@@ -967,21 +967,10 @@ memory and that's what kills sessions" as-is.
   mid-word stray-space wrap glitches) via precise line-range `sed` deletion, verified with `check_conflict_markers.sh`
   (PASS) and a full re-read. No investigation content was lost — this was pure structural corruption from tooling, not
   conflicting analysis. Backup of the pre-fix file at `<session-scratchpad>/ao_tmux_backup_before_conflict_fix.md`.
-- 2026-08-12 (content-loss discovery + recovery, while shipping the spawn-race-storm audit): a `safe-doc-push.sh`
-  attempt whose own output I misread as failed (a "PUSH LANDED BUT YOUR CHANGE DID NOT" warning, likely stale from an
-  earlier retry attempt within the same run) had actually landed correctly — `unified-trading-pm@b9341d7ac6` — but a
-  LATER peer commit (`fc808eaecf`, slot-6, "log new isolated slot-2 tmux death + SIGABRT lead") mechanically reverted 2
-  of that commit's todo updates back to their pre-edit state while adding its own genuinely new content elsewhere — most
-  likely because slot-6 branched its local edit from a copy of this doc that predated `b9341d7ac6` landing, and its own
-  push silently overwrote the intervening commit rather than merging with it. Not malicious, not a git-tooling bug this
-  time — a plain stale-base collision, the ordinary multi-agent risk this heavily-contended doc runs constantly.
-  Recovered by extracting `b9341d7ac6`'s own diff (`git show b9341d7ac6 -- <path>`) and reapplying it via `patch`
-  against the current origin tip (which already carries `fc808eaecf` + a further peer addition, `50b5ee1782`, "log the
-  core-dump/LimitCORE root-cause fix" — a clean, unrelated addition, left untouched): 3/4 hunks applied automatically,
-  the 4th (the cgroup-refuted finding) reapplied by hand from the `.rej` file's exact text. Verified post-merge:
-  word-count/content checks confirm both peers' additions AND my own recovered content are present,
-  `check_conflict_markers.sh` PASS, todo count matches origin's 30 exactly (a pure in-place edit, no count drift). No
-  content from any of the three contributing sessions was lost in this reconciliation.
+- 2026-08-12 (content-loss discovery + recovery): a `safe-doc-push.sh` false-failure warning masked a landed commit
+  (`b9341d7ac6`) that a later peer push (`fc808eaecf`) then partially stale-base-overwrote — recovered via `patch`
+  against origin tip against `b9341d7ac6`'s own diff, 3/4 hunks auto, 1 by hand; verified no content lost from any of
+  the 3 contributing sessions, `check_conflict_markers.sh` PASS, todo count matched.
 - 2026-08-12 21:47Z (operator: "keep going until confirmed fixed at the AO level, /autonomous"): arming
   `AUTONOMOUS_AGENT_RULES.md`'s completion loop — will not stop at diagnosis, termination condition is a shipped +
   verified fix. Shipped `agent-orchestrator@3afe35f13a` (`scripts/orchestrator/strace_tmux_server_supervisor.sh`) and
@@ -991,3 +980,11 @@ memory and that's what kills sessions" as-is.
   While shipping it, found **6 more deaths in the 90min since the last check** (20:18, 20:21, 20:27, 20:38, 20:43,
   21:06Z) — averaging ~1/10min right now, well above this doc's historical cadence; good news for actually catching one
   live. Self-paced wakeup loop starts now to poll the strace log for the first captured transition.
+- 2026-08-12 22:38Z: **mistake — destroyed a live catch's own evidence.** Death #7 happened 22:36:57Z→22:38:15Z while
+  the armed strace WAS attached (pid 3382172, `-f` variant) and should have recorded it — but its log growth (`-f`
+  following every forked pane, 113MB→648MB in 14min) prompted a fix-and-redeploy, and the redeploy command killed the
+  old strace + `rm -f`'d its log in the SAME command, before ever reading it. Unrecoverable (tmpfs, no snapshot).
+  Corrective action taken: dropped `-f` (`agent-orchestrator@ee8de4c3d9` — only the top-level server pid's own signals
+  matter, not its forked children's, which was the entire volume problem) and added a standing rule for every future
+  tick: **never kill/delete an armed trace without grepping it for a fatal-signal match FIRST**, regardless of how
+  urgent the fix feels. Re-armed clean on the new server pid (1930233, 22:38:02Z) with the lighter trace.
