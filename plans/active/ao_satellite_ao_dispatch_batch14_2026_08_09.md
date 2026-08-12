@@ -116,31 +116,31 @@ A 1-item batch is sanctioned by `task_template.md` §4 ("Fewer is fine; group RE
       not here. Original (unreliable) DONE text preserved below for record, superseded by this note:
 
       ~~**DONE 2026-08-09 (slot 30).** Correction found while executing: "BOTH hosts" was stale — exactly
-                              the "either VM"/"both VMs" framing `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` warns
-                              against carrying forward for the human-planning VM, terminated 2026-08-03 (CLAUDE.md: "`planning` is the ONLY
-                              VM"). Verified live via IMDSv2
-                              (`curl -H "X-aws-ec2-metadata-token: $TOKEN"     http://169.254.169.254/latest/meta-data/instance-id` →
-                              `i-0c9b283b31d6b5ca7`, `.../public-ipv4` → `13.113.200.22`) that THIS slot's own host **IS** the planning VM named
-                              in this todo — there was only ever ONE file to fix (`~/.claude-accounts/deepseek-v4-pro.env`, confirmed the sole
-                              `oauth_token_env_file` for this account in the live `accounts.json`, same `ubuntu` user the orchestrator process
-                              itself runs as). No SSM dispatch needed (operator's Option-B answer to the filed blocked question, `BLK-a07f8261`,
-                              is moot once this fact is known — not wrong, just resolved by a fact the blocked-question itself hadn't yet
-                              surfaced).
+                                  the "either VM"/"both VMs" framing `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` warns
+                                  against carrying forward for the human-planning VM, terminated 2026-08-03 (CLAUDE.md: "`planning` is the ONLY
+                                  VM"). Verified live via IMDSv2
+                                  (`curl -H "X-aws-ec2-metadata-token: $TOKEN"     http://169.254.169.254/latest/meta-data/instance-id` →
+                                  `i-0c9b283b31d6b5ca7`, `.../public-ipv4` → `13.113.200.22`) that THIS slot's own host **IS** the planning VM named
+                                  in this todo — there was only ever ONE file to fix (`~/.claude-accounts/deepseek-v4-pro.env`, confirmed the sole
+                                  `oauth_token_env_file` for this account in the live `accounts.json`, same `ubuntu` user the orchestrator process
+                                  itself runs as). No SSM dispatch needed (operator's Option-B answer to the filed blocked question, `BLK-a07f8261`,
+                                  is moot once this fact is known — not wrong, just resolved by a fact the blocked-question itself hadn't yet
+                                  surfaced).
 
-                              Re-sourced via `export ANTHROPIC_AUTH_TOKEN="$(gcloud secrets versions access latest
-                                      --secret=deepseek-v4-pro-api-key --project=central-element-323112)"` (mirrors
-                                      `agent-orchestrator/scripts/refresh_env_from_sm.sh`'s pattern). Verification (the literal "successful spawn"
-                                      bar in this todo's original text is currently unreachable for EITHER the old or new config — the account has
-                                      $0 balance, tracked as its own fresh finding in the source doc below, not a re-sourcing defect): (1) SHA-256 hash
-                                      of the GSM secret value == hash of the prior literal token, byte-identical; (2) a live `claude -p` auth probe
-                                      under this account returns the IDENTICAL `API Error: 402 Insufficient Balance` on both the pre-change backup file
-                                      and the post-change indirection file — proving the token reaches the API identically either way (a real auth
-                                      failure would read 401/403, not 402). Literal key removed from the live file; a `chmod 600` backup
-                                      (`deepseek-v4-pro.env.bak-presm-1786317618`) kept in `~/.claude-accounts/` as the reversible fallback until a
-                                      genuine post-topup successful spawn is confirmed (operator's own security call whether/when to shred it).
-                                      `unified-trading-pm@b3d909979` (this doc + source doc updates). Source:
-                                      `/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md:440`. Repo: agent-orchestrator (env-file
-                                      change is host-local config, not a repo commit — no agent-orchestrator sha for this todo itself).~~
+                                  Re-sourced via `export ANTHROPIC_AUTH_TOKEN="$(gcloud secrets versions access latest
+                                          --secret=deepseek-v4-pro-api-key --project=central-element-323112)"` (mirrors
+                                          `agent-orchestrator/scripts/refresh_env_from_sm.sh`'s pattern). Verification (the literal "successful spawn"
+                                          bar in this todo's original text is currently unreachable for EITHER the old or new config — the account has
+                                          $0 balance, tracked as its own fresh finding in the source doc below, not a re-sourcing defect): (1) SHA-256 hash
+                                          of the GSM secret value == hash of the prior literal token, byte-identical; (2) a live `claude -p` auth probe
+                                          under this account returns the IDENTICAL `API Error: 402 Insufficient Balance` on both the pre-change backup file
+                                          and the post-change indirection file — proving the token reaches the API identically either way (a real auth
+                                          failure would read 401/403, not 402). Literal key removed from the live file; a `chmod 600` backup
+                                          (`deepseek-v4-pro.env.bak-presm-1786317618`) kept in `~/.claude-accounts/` as the reversible fallback until a
+                                          genuine post-topup successful spawn is confirmed (operator's own security call whether/when to shred it).
+                                          `unified-trading-pm@b3d909979` (this doc + source doc updates). Source:
+                                          `/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md:440`. Repo: agent-orchestrator (env-file
+                                          change is host-local config, not a repo commit — no agent-orchestrator sha for this todo itself).~~
 
 ## Codex SSOTs (read before starting)
 
@@ -188,3 +188,19 @@ A 1-item batch is sanctioned by `task_template.md` §4 ("Fewer is fine; group RE
   401/403), confirming the new auth path itself works. Full evidence + Progress Log entry on that plan's flipped todo 2.
   This batch14 todo itself intentionally stays `[ ]`/reverted — its checkbox is not the record of the real fix; see the
   finalize plan.
+
+- **2026-08-12 (slot 18, backend_engineer craft, dispatch `ao_satellite_ao_dispatch_batch14-791d3e7d35b7`) — re-verified
+  and correctly skipped, no action taken.** Dispatcher handed me this exact todo 1 (backlog-derived from the still-open
+  `- [ ]` checkbox, generic `done_definition: "Checkbox flipped in plan + code shipped"`). Read the checkbox's own
+  2026-08-12 `/plan-reconcile` correction plus the finalize plan
+  (`ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md` todos 2-3) before touching anything: the real re-sourcing
+  fix already landed 2026-08-10 (slot 5, finalize todo 2, verified with real before/after sha256 evidence), and this
+  todo's own checkbox is explicitly designed to stay `[ ]` forever — flipping it here would recreate the exact
+  false-completion pattern already caught and reverted twice (slot 30 2026-08-09, then again before today's
+  `/plan-reconcile` correction). Took no code action; skipped this backlog task via `/skip-current-task` rather than
+  flip. **Flagging for main/operator**: `regen_backlog_from_plan.py` has now re-derived a dispatchable task from this
+  same intentionally-permanent `[ ]` checkbox at least 3 times (2026-08-09, pre-2026-08-12, and this dispatch), each
+  costing a worker/reviewer session to re-diagnose from scratch — the structural fix is landing finalize plan's
+  remaining todo 3 (reconcile into source doc) + todo 5 (archive this batch plan), which removes the checkbox from the
+  active corpus entirely and stops the re-derivation at the root. Todo 3 is `assigned_role: review` (not infra) and todo
+  5 is gated behind it via `sequential: true`, so neither was mine to pick up on this dispatch.
