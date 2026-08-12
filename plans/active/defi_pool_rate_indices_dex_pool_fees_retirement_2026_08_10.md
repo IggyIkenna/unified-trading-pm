@@ -85,11 +85,11 @@ picking this plan up cold should never trust the flip-time state without a fresh
       clause not triggered.
 
       Note for todo 2's worker: the direct pandas `read_availability_index(columns=..., filters=[("capture_status",
-                                          "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
-                                          fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
-                                          DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
-                                          `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
-                                          streaming footprint regardless of corpus size.
+                                              "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
+                                              fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
+                                              DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
+                                              `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
+                                              streaming footprint regardless of corpus size.
 
 - [x] ✅ [DATA] P1. **Root-cause the 0→7,930,863 `instrument_type=POOL` recurrence before any retirement resumes**
       (blocks the retirement todo below — main-agent-added 2026-08-11 per
@@ -136,10 +136,19 @@ picking this plan up cold should never trust the flip-time state without a fresh
       `_index/snapshots/pre_pool_uppercase_retire_2026_08_12T*.parquet` + `.pool_uppercase_retire.bak` written
       pre-write. Post-apply fresh query: **0 remaining captured `instrument_type=POOL` rows** (`POOL`
       attempted_failed=7,841,381; `pool` captured=8,849,599 incl. the 96,541 folded).
-- [ ] [DATA] P1. **Retire `rate_indices` legacy `captured` rows** (fold already GENUINELY 100% COMPLETE 2026-08-07 per
-      `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` row 4 — this is the retirement half only, never
-      done). Same reversible pattern + consolidator pause/resume as the prior todo (share the pause window if run
-      back-to-back). Done-when: 0 remaining `captured` legacy `rate_indices` rows. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P1. **Retire `rate_indices` legacy `captured` rows** (fold already GENUINELY 100% COMPLETE 2026-08-07
+      per `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` row 4 — this is the retirement half only,
+      never done). Same reversible pattern + consolidator pause/resume as the prior todo (share the pause window if run
+      back-to-back). Done-when: 0 remaining `captured` legacy `rate_indices` rows. (repo: market-tick-data-service) —
+      **DONE 2026-08-12 (slot 20, data_engineering): `market-tick-data-service@8f34de66`.** Three-bucket treatment
+      (mirrors the POOL precedent's retire-vs-fold split): RETIRE 25,478 twin-verified rows (AAVE_V3/ETHEREUM 3,160
+      exact-id; MORPHO/ETHEREUM 22,318 full-address-prefix) + FOLD 650 no-twin rows (22 MORPHO markets whose
+      fold-written `batch_onchain_rpc` canonical objects exist on GCS but were never manifest-registered — only the
+      subgraph twin existed; folded in-place to `MORPHO-ETHEREUM:LENDING:{sym}-0x{short}`, kept `captured`) + EXCLUDE 0.
+      Consolidator paused before write / resumed after. Round-trip + independent post-apply verify: **0 captured
+      `rate_indices` rows**; `lending_indices` captured 385,050→385,700 (+650 folded exactly); snapshot
+      `_index/snapshots/pre_rate_indices_retire_20260812T144912Z.parquet` + `.rate_indices_retire.bak`. See Progress Log
+      for the fold-gap finding (650 cells' rpc canonical rows were never registered).
 - [ ] [DATA] P2. **Verify + retire `dex_pool_fees` legacy `captured` rows if any remain** (tiny scope — a prior read
       noted ~21 rows on the axis-census panel before that panel's `attempted_failed` filter fix; the corpus itself was 0
       real objects for its whole lifetime, phantom manifest rows only). Confirm the count live first — if 0, mark this
@@ -312,3 +321,31 @@ picking this plan up cold should never trust the flip-time state without a fresh
     timestamps (2026-08-10T03:52-03:53Z, during the rebuild VM window) and `service_name=market-data-processing-service`
     differ from canonical `pool` rows (`market-tick-data-service`) — flagged as a lead for that issue doc's eventual
     root-cause, not investigated further here (bounded task scope).
+- **2026-08-12 (slot 20, data_engineering) — todo 6 DONE: `rate_indices` retirement applied + independently verified (0
+  remaining captured `rate_indices`).** Pre-apply census (memory-safe DuckDB over the fresh consolidated index):
+  `data_type=rate_indices` `captured` = 26,128 — AAVE_V3/ETHEREUM 3,160 (bare symbol ids `WETH`/`USDC`/`DAI`/`USDT`) +
+  MORPHO/ETHEREUM 22,968 (wrapped `MORPHO-ETHEREUM:LENDING_MARKET:{sym}:0x{short}` ids). Established the venue-aware key
+  vocabulary the retirement uses (this task's slot-31-style "wrong vocabulary" trap): `0x`-short legacy ids prefix-match
+  the canonical full-address (`0x<64hex>` / `MORPHO-ETHEREUM:LENDING:0x<64hex>`) while bare-symbol legacy ids
+  exact-match (`usdt` vs the distinct `usdt.e` market — a prefix match would false-flag ambiguity).
+  - **Fold-gap finding (data-correctness, resolved in-band)**: the 2026-08-07 fold is NOT "100% complete" on the
+    manifest side. 22 MORPHO markets (650 cells) have fold-written canonical GCS objects under
+    `MORPHO-ETHEREUM:LENDING:{sym}-0x{short}` for **both** `batch_onchain_rpc` and `batch_onchain_subgraph`, but the
+    fold's manifest registration only recorded the SUBGRAPH twin — the RPC canonical rows were never registered, so the
+    legacy `rate_indices` row was the only captured manifest record. Verified via the pre-apply snapshot
+    (`_index/snapshots/pre_rate_indices_retire_20260812T144912Z.parquet`: wstETH-WBTC had only the subgraph row). GCS
+    probes confirmed every one of the 650 rpc objects exists (`blob_exists` 650/650).
+  - **Three-bucket apply** (`retire_rate_indices_legacy_captured_rows_2026_08_12.py --apply`): RETIRE 25,478
+    twin-verified rows (`capture_status` `captured→attempted_failed`,
+    `error_reason=superseded_by_content_verified_canonical_lending_indices_twin_2026_08_12`); FOLD 650 no-twin rows
+    in-place (`data_type` `rate_indices→lending_indices`, `instrument_id` re-keyed to
+    `MORPHO-ETHEREUM:LENDING:{sym}-0x{short}`, `capture_status` kept `captured` — the physical object already exists at
+    that path); EXCLUDE 0. Consolidator cron paused before write / resumed after. Snapshot + `.rate_indices_retire.bak`
+    streamed to `_index/` pre-write (the 6GB index is never materialised in memory).
+  - **Independent post-apply verify**: `rate_indices` `captured` = **0** (done-when met), `attempted_failed` = 25,478;
+    `lending_indices` `captured` 385,050→385,700 (**+650 = the folded rows exactly**); the folded rows appear as
+    `MORPHO-ETHEREUM:LENDING:wstETH-WBTC-0x3197ba` etc. on their legacy dates; no true duplicates introduced (the
+    rpc-vs-subgraph pairs for the 650 are separate shard atoms — `pipeline_mode` is part of the shard atom — and the
+    group-by-having duplicate scan found none at the (…, pipeline_mode) level).
+  - **Residual note for todo 7 (dex_pool_fees)**: its count is unchanged at 21 `captured` rows on the axis census; this
+    todo did not touch `dex_pool_fees`.
