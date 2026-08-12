@@ -26,7 +26,8 @@ Every strategy is a composition of:
   `CARRY_RECURSIVE_BORROW_PERP_HEDGED` split out of `CARRY_RECURSIVE_STAKED`, then again at the 2026-05-18 taxonomy
   decision, and again since — which is precisely why a number written here rots.
 - **7 axes of composition** (signal × edge × staking × venue × expression × hold-policy × share-class)
-- **10 cross-cutting concerns** — shared infrastructure
+- **cross-cutting concerns** — shared infrastructure (`cross-cutting/` holds 31 docs; the "10" written here was stale —
+  count the directory, and note not every doc is a distinct concern)
 
 A strategy's identity has **5 layers**: family, archetype, instance, config, derived-categories.
 
@@ -50,7 +51,8 @@ organization was per-category (cefi/defi/sports/tradfi/prediction), which produc
 
 v2 fixes this by:
 
-- **Collapsing 200+ legacy strategy variants into 53 code paths** (archetypes) served by shared family engines
+- **Collapsing 200+ legacy strategy variants into a far smaller set of code paths** (archetypes) served by shared family
+  engines — the count was written as "53" here and has grown since; read the UAC enum
 - **Making every strategy config-driven**: new instances are config, not new code
 - **Making categories derived labels**: execution category + data category are multi-valued tags derived from config,
   not routing axes
@@ -98,7 +100,7 @@ with vol hedge as risk management, not a composite.
 - **No category prefixes on archetype IDs** — no `CEFI_ML_DIRECTIONAL`, no `TRADFI_ML_DIRECTIONAL`
 - **No hybrid families** — if genuinely two alpha sources → two separate strategies sharing correlation_id
 
-## 57 Archetypes
+## Archetypes
 
 Archetypes distinguish different _code paths_ within a family. Distinguishing axis is usually **settlement model**
 (continuous vs event-settled), **signal logic shape** (fixed basket vs cross-sectional ranking), or **structural
