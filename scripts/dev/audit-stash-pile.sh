@@ -5,8 +5,18 @@
 #
 # audit-stash-pile.sh — per-host git stash pile audit + conservative cleanup.
 #
-# Stashes live in a host's shared common .git (one refs/stash per repo, visible to every
-# slot worktree on that host) and are NEVER pushed, so they can only be cleaned host-locally.
+# Stashes are NEVER pushed, so they can only be cleaned host-locally.
+#
+# CORRECTED 2026-08-11 (measured, not assumed): each slot is its OWN clone with its OWN .git
+# and its OWN independent stash pile — `git rev-parse --git-common-dir` returns a plain `.git`
+# in every `.tabs/<N>/<repo>`, NOT a shared path. The previous header here claimed stashes live
+# in "a host's shared common .git (one refs/stash per repo, visible to every slot worktree on
+# that host)". That is FALSE for this layout and actively misleading: it reads as "run the tool
+# once and the host is clean". Measured 2026-08-11 the host carried 284 stashes across FOUR
+# separate piles (slot 1: 47, slot 2: 34, slot 3: 118, slot 4: 85); cleaning slot 3 alone left
+# 166 untouched in the other three. RUN THIS PER SLOT, and pass --host so each slot's archive
+# and report are distinguishable (the default label is `hostname -s`, identical for all slots).
+# SSOT for the per-slot-clone model: /codex/05-infrastructure/per-tab-worktrees.md.
 # This script archives EVERYTHING first (gc-proof refs + portable bundle + manifest), then
 # classifies each stash, and ONLY with --apply drops the provably-safe classes. Genuine WIP
 # is always surfaced in a committed report for its owner to review — never auto-dropped, never
@@ -17,6 +27,7 @@
 #
 # Usage:
 #   audit-stash-pile.sh [--apply] [--repo <name>] [--base <ref>] [--host <id>] [--report <path>]
+#                       [--prune-age-days <N>]
 #
 #   (no flags)        Dry-run: archive + classify + write report, drop NOTHING. The default.
 #   --apply           Drop the auto-drop classes (empty / redundant / foreign-park). Still archives first.
@@ -26,16 +37,26 @@
 #   --report <path>   Report output path. Defaults under unified-trading-pm/plans/active/issues/.
 #
 # Classification (strict / conservative):
-#   empty         tracked diff empty AND no captured untracked files            -> auto-drop
-#   redundant     every changed path is byte-identical in the base ref          -> auto-drop
-#   foreign-park  redundant AND label matches foreign-*/autostash               -> auto-drop
-#   genuine-WIP   anything else (incl. ANY captured untracked file, or          -> SURFACE to owner
-#                 unverifiable base) -> never auto-dropped
+#   empty          tracked diff empty AND no captured untracked files           -> auto-drop
+#   redundant      every changed path is byte-identical in the base ref         -> auto-drop
+#   foreign-park   redundant AND label matches foreign-*/autostash              -> auto-drop
+#   stale-autostash  `autostash`-labelled, older than --prune-age-days, NO      -> auto-drop
+#                  captured untracked files, and NOT a safety-snapshot/quarantine
+#                  label. The RETENTION class — the three above all require
+#                  byte-identity with the base, so none of them can ever clean a
+#                  REGROWN pile (measured 2026-08-11: 0 of 118 qualified).
+#   genuine-WIP    anything else (incl. ANY captured untracked file, or         -> SURFACE to owner
+#                  unverifiable base) -> never auto-dropped
 #
 set -euo pipefail
 
 # ---------------------------------------------------------------------------- args
 APPLY=0
+# Retention cutoff for the `stale-autostash` class, in days. 0 disables the class entirely
+# (restoring the pre-2026-08-12 identity-only behaviour). Default 14 matches
+# stash-pile-detect.sh's STASH_WARN_AGE_DAYS, so the detector's warn threshold and the
+# auto-prune horizon are the same number rather than two knobs drifting apart.
+PRUNE_AGE_DAYS="${STASH_PRUNE_AGE_DAYS:-14}"
 ONLY_REPO=""
 BASE_OVERRIDE=""
 HOST="$(hostname -s 2>/dev/null || hostname)"
@@ -44,6 +65,7 @@ REPORT_PATH=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --apply)   APPLY=1; shift ;;
+    --prune-age-days) PRUNE_AGE_DAYS="${2:?--prune-age-days needs a value}"; shift 2 ;;
     --repo)    ONLY_REPO="${2:?--repo needs a value}"; shift 2 ;;
     --base)    BASE_OVERRIDE="${2:?--base needs a value}"; shift 2 ;;
     --host)    HOST="${2:?--host needs a value}"; shift 2 ;;
@@ -67,6 +89,13 @@ fi
 mkdir -p "$(dirname "$REPORT_PATH")"
 
 MODE_LABEL="DRY-RUN (no drops)"; [[ "$APPLY" -eq 1 ]] && MODE_LABEL="APPLY (auto-drop enabled)"
+case "$PRUNE_AGE_DAYS" in ''|*[!0-9]*) echo "ERROR: --prune-age-days must be a non-negative integer (got '$PRUNE_AGE_DAYS')" >&2; exit 2 ;; esac
+PRUNE_CUTOFF=$(( $(date +%s) - PRUNE_AGE_DAYS * 86400 ))
+if [[ "$PRUNE_AGE_DAYS" -gt 0 ]]; then
+  echo ">> retention: autostash entries older than ${PRUNE_AGE_DAYS}d are auto-droppable (safety-snapshot/quarantine labels + any captured untracked files are always exempt)"
+else
+  echo ">> retention: DISABLED (--prune-age-days 0) — identity-based classes only"
+fi
 
 # ---------------------------------------------------------------------------- helpers
 # Base ref per repo: agent-orchestrator tracks main, every other repo tracks live-defi-rollout.
@@ -149,6 +178,9 @@ for repo_dir in "$WORKSPACE_ROOT"/*/; do
     # provenance only (attribution, never the safety decision)
     branch="$(sed -E 's/^(WIP on|On) ([^:]+):.*/\2/' <<<"$label")"
     age="$(git_in log -1 --format='%cr' "$sha" 2>/dev/null || echo '?')"
+    # Absolute commit epoch for the age-based retention class below. Empty (never prunable) if
+    # the stash commit can't be read — same fail-safe posture as BASE_VERIFIED.
+    sha_epoch="$(git_in log -1 --format='%ct' "$sha" 2>/dev/null || echo '')"
 
     # tracked changed paths = diff between stash parent^1 (anchor) and stash tip
     mapfile -t tracked < <(git_in diff --name-only "${sha}^1" "$sha" 2>/dev/null || true)
@@ -171,11 +203,34 @@ for repo_dir in "$WORKSPACE_ROOT"/*/; do
       class="genuine-WIP"                       # never auto-drop captured untracked files
     elif [[ "$BASE_VERIFIED" -eq 1 ]] && git_in diff --quiet "$BASE" "$sha" -- "${tracked[@]}" 2>/dev/null; then
       if printf '%s' "$label" | grep -qiE 'foreign|autostash'; then class="foreign-park"; else class="redundant"; fi
+    elif [[ "$PRUNE_AGE_DAYS" -gt 0 && -n "$sha_epoch" && "$sha_epoch" -lt "$PRUNE_CUTOFF" ]] \
+         && printf '%s' "$label" | grep -qiE 'autostash' \
+         && ! printf '%s' "$label" | grep -qiE 'safety-snapshot|quarantine'; then
+      # RETENTION class, per /plans/active/issues/unified_trading_pm_stash_pile_accumulation_2026_07_26.md.
+      # The three classes
+      # above all require byte-identity with the base ref, which is why they can never clean a
+      # REGROWN pile: measured 2026-08-11, 0 of 118 stashes across 12 repos qualified, because
+      # after days of drift nothing is still identical to today's base. The pile therefore grew
+      # 0 -> 284 in the 12 days since the previous manual sweep, and crossed quickmerge's
+      # "extreme pile" threshold, which quarantined a working tree mid-ship.
+      #
+      # An `autostash` entry is a MACHINE artifact: `git pull --rebase --autostash` parks the
+      # dirty tree and re-applies it seconds later, so a surviving entry is by definition one
+      # whose re-apply already happened (or whose session is long gone). Past a multi-day
+      # cutoff it is abandoned by construction, whether or not its content still matches base.
+      # That is what makes age a sound criterion here where content-identity is not.
+      #
+      # Deliberately NOT covered, and both guards are load-bearing:
+      #   - captured untracked files -> caught by the `has_untracked` branch ABOVE this one, so
+      #     an autostash carrying untracked work can never reach this class regardless of age.
+      #   - `safety-snapshot` / `quarantine` labels -> a human-or-ship-script-authored park of a
+      #     genuine dirty tree (quickmerge writes these before a risky reconcile). Never aged out.
+      class="stale-autostash"
     fi
 
     action="surface"
     case "$class" in
-      empty|redundant|foreign-park) action="auto-drop"; DROP_INDICES+=("$idx"); r_drop=$((r_drop+1)) ;;
+      empty|redundant|foreign-park|stale-autostash) action="auto-drop"; DROP_INDICES+=("$idx"); r_drop=$((r_drop+1)) ;;
       *) r_wip=$((r_wip+1)) ;;
     esac
 

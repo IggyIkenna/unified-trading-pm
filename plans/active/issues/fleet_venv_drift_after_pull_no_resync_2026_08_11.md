@@ -131,6 +131,16 @@ leaves the environment behind, silently, forever.
       under `QG_ENFORCE_FRESH_VENV=1`). **Done when**: `QG_ENFORCE_FRESH_VENV` defaults to 1 in `qg-common.sh` and a
       full fleet gate sweep stays green. (repo: unified-trading-pm)
 
+- [ ] [OPERATOR] P2. **Two shared PM clones are left with unresolved conflicts that are NOT mine to fix.** (a) The main
+      clone `unified-trading-system-repos/unified-trading-pm` has `UU scripts/dev/ff-starvation-detect.sh` with 4
+      conflict markers and NO merge/rebase in progress — a peer's stuck state that makes that clone's gate fail on
+      unrelated post-gate checks. (b) In `.tabs/6/unified-trading-pm`, my own `git pull --ff-only` autostashed a peer's
+      dirty files and the pop conflicted, leaving
+      `UU plans/active/elysium_october_delivery_and_code_disclosure_     readiness_2026_08_11.md` plus two dangling
+      `autostash` entries in `git stash list`. Their content is preserved in those stashes and I deliberately did NOT
+      drop, pop or resolve either — foreign WIP. **Done when**: the owning sessions resolve both, or the operator
+      confirms the stashes are safe to discard. (repo: unified-trading-pm)
+
 ## Codex SSOTs
 
 - `/codex/06-coding-standards/quality-gates.md` — the gate contract this adds a preflight to.
