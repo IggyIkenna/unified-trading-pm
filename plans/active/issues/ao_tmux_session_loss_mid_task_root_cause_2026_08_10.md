@@ -493,15 +493,48 @@ memory and that's what kills sessions" as-is.
       EXACT signature differs every time (utempter/pane-creation burst #1; CPU/git-fetch/rg saturation #2; multi-host
       git-status POST storm #3) but all 3 share ONE thing — concurrent git/dispatch/spawn activity from MULTIPLE sources
       co-occurring with the death. No single mechanism has been proven causal yet (still correlation, not proof), but
-      the common thread is now real signal, not noise. **Done when**: (a) confirm whether
-      `slot-git-status-report     .sh` genuinely runs from multiple DIFFERENT hosts on overlapping schedules (not just
-      staggered per-repo like the already-refuted 2-cron-job hypothesis) — check each host's own crontab, not just this
-      VM's; (b) if confirmed, the fix candidate is server-side backpressure/serialization on `post_slot_git_status` (a
-      semaphore or batching the SQLite write) rather than trying to coordinate every remote host's cron timing; (c)
-      capture the tmux server's own FD/thread state DURING a git-status-POST-storm window specifically (not just at
-      death) to see whether ITS OWN resource envelope degrades during the sweep, not just the orchestrator process's.
-      Live-capture relaunched (PID 4192606, 20min window) to try to catch the NEXT death with this specific hypothesis
-      in view. Repo: agent-orchestrator, unified-trading-pm (the cron script + its multi-host rollout).
+      the common thread is now real signal, not noise. **Correction (2026-08-12, same investigation, operator pushback
+      "why would that kill tmux?")**: checked part (a) — operator's own Mac crontab for `slot-git-status-report.sh` is
+      `2,7,12,17,22,27,32,37,42,47,52,57 *     * * *`, IDENTICAL to the VM's own schedule (installed via the same
+      self-updating cron-pull mechanism), i.e. **synchronized across hosts, not staggered**. This actually WEAKENS
+      rather than confirms the git-status-storm hypothesis: if every host fires on the same grid, the 436-sample
+      historical burst data should show a spike at that exact offset, and it didn't (uniform distribution, checked
+      earlier this doc). `post_slot_git_status` itself is also a cheap DB write with no plausible mechanism to affect a
+      separate OS process (tmux) at all. Retracting this as a causal candidate — the correlation for that one incident
+      was likely a symptom (marker of high fleet activity), not a cause. Also verified, per the same pushback: `SlotRow`
+      (the real fleet/tmux tracking table) has no host dimension and is written exclusively by VM-local processes;
+      git-status reporting is separately keyed by `(host, slot_id)` — confirmed the operator's own local interactive
+      sessions do NOT bleed into or get confused with the VM's real dispatched-worker slot tracking.
+- [ ] [INFRA] P0. **FOURTH live catch, 2026-08-12 01:34:55 — new, stronger lead: `fleet-git-health-guard.sh` (root cron,
+      `*/15 * * * *`, `agent-orchestrator/scripts/fleet-git-health-guard.sh`).** A broad (not just orchestrator-scoped)
+      `journalctl` sweep at the exact death window (never done before this catch — always previously scoped to the
+      orchestrator process's own log) found something new: at 01:34:40-01:34:41 — **14 seconds before**
+      `tmux_server_died` at 01:34:55 — a rapid burst of `sudo git -C <repo> config     gc.pruneExpire never` immediately
+      followed by `sudo git -C <repo> fsck --connectivity-only --no-progress`, repeating across many different repos in
+      slots 20 and 23 in the log excerpt alone (instruments-service, unified-trading-library,
+      market-data-processing-service, deployment-api, strategy-service, unified-trading-system-ui,
+      client-reporting-api...). Unlike the retracted git-status theory, `git fsck     --connectivity-only` is genuinely
+      expensive (a full object-graph traversal), and each repo needs TWO separate `sudo` invocations (PAM session
+      open/close overhead each). The guard's own log (`/var/log/fleet-git-health-guard.log`) confirms a sweep started at
+      01:30:01 — ~4m39s before the observed subprocess burst, consistent with a multi-minute sweep across ~1132
+      directories × 2 sudo calls still being mid-flight at 01:34:40-41. **This is a genuinely different,
+      previously-untested hypothesis** — the earlier cron-alignment refutation only tested the 5-minute grid
+      (`slot-cron-ff-pull.sh`/`slot-git-status-report.sh`); this is a SEPARATE 15-minute root-cron with a MULTI-MINUTE
+      active window, which a simple minute-offset test would never have caught. Rough fit against earlier live catches:
+      18:10:50 is ~10-11min into the 18:00:01 run; 18:24:41 is ~9-10min into 18:15:01; 21:11:27 is ~11min into 21:00:01;
+      all plausible if a full sweep can run 5-12 minutes depending on load — not yet independently confirmed (log
+      timestamps are captured ONCE at run start and reused for both the "scanning" and "OK" lines, so run DURATION can't
+      be read from the log directly; would need direct process-timing evidence like this catch's journalctl burst, for
+      each historical death). **Notable, independently interesting finding**: the guard's own log shows "OK — no
+      root-owned files, no fsck breakage" on EVERY visible run across the full log history — this expensive
+      belt-and-suspenders check has never once caught a real problem, yet runs up to 4x/hour doing genuinely heavy
+      `sudo`+fsck work across the whole fleet. **Done when**: (a) directly capture PID/FD/CPU state of BOTH the tmux
+      server AND a sample of these `sudo`/`git fsck` child processes DURING an active guard sweep (ps snapshot
+      mid-sweep, not just at death); (b) if confirmed as the trigger, fix candidates: reduce frequency (15min ->
+      30/60min, given it never finds anything), add `nice`/`ionice` to de-prioritize the sweep relative to the
+      orchestrator/tmux, or skip the expensive `fsck --connectivity-only` unless a cheaper heuristic first flags a real
+      problem (chown-check alone is cheap; the exhaustive fsck is the expensive part and has a 100% clean track record
+      so far). Repo: agent-orchestrator (script), (fleet-wide root cron — not repo-scoped).
 
 ## Progress Log
 
