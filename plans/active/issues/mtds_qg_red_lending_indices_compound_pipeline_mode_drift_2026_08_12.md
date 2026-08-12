@@ -35,6 +35,7 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 drift_direction: advance-code
+archive_exempt: true
 depends_on: []
 locked_by:
 locked_since:
@@ -86,8 +87,12 @@ handler's own primary-path resolution favor the former.
       `write_defi_rows` (resolver `_resolve_lending_pipeline_mode` in `lending_indices_write.py`); full
       `quality-gates.sh` green (exit 0); quickmerge landed on LDR + ancestry verified on origin.
 
-- [ ] [DATA] P1. Convert the COMPOUND_V3 venue-only `_VENUE_OVERRIDES` entry
+- [x] ✅ [DATA] P1. Convert the COMPOUND_V3 venue-only `_VENUE_OVERRIDES` entry
       (`unified-trading-library/unified_trading_library/pipeline_mode_resolver.py:135`) to a per-data_type
       `_VENUE_DT_OVERRIDES` entry (`oracle_prices` → `batch_compound_v3`), following the POLYMARKET multi-source-venue
       precedent — the venue-only entry shadows the `lending_indices` SSOT source (onchain_subgraph) for ANY derive-path
-      caller (backfill / manifest-rebuild / future COMPOUND_V3 data_type). (repo: unified-trading-library)
+      caller (backfill / manifest-rebuild / future COMPOUND_V3 data_type). — unified-trading-library@b3b2c440e4: moved
+      COMPOUND_V3 AND SPARK to `_VENUE_DT_OVERRIDES[(*, "oracle_prices")]` (SPARK had the identical latent drift — its
+      lending venue "SPARK" matched its override key, mis-stamping spark lending_indices as batch_spark); AAVE retained
+      as venue-only (lending venue AAVE_V3 ≠ "AAVE", single-source). UTL + MTDS QG green (exit 0), quickmerge landed on
+      LDR + ancestry verified.
