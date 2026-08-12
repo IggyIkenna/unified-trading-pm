@@ -100,9 +100,14 @@ BALANCER rows ... Do NOT touch the 14 CURVE rows").
 - **The CURVE fee data may be unique**: `fees_usd` / `volume_usd` / `tvl_usd` for those pool-days with no canonical
   `dex_pool_state` twin -- the flip labels it failed even though it is captured. Reversible (flip back), but a
   data-correctness violation of the kind the delete-safety protocol exists to prevent.
-- **Root cause is a coordination gap**: two AO-eligible todos (the plan's P2 and the issue-doc P1) were dispatched for
-  the SAME logical retirement, and the issue-doc slot's script inverted the twin logic (retired the no-twin rows). The
-  dispatcher re-derived both from overlapping `- [ ]` checkboxes; nothing gated them on each other.
+- **Root cause is a lost-write race, NOT inverted twin-matching logic** (measured + corrected 2026-08-12, slot 7 — see
+  Progress Log). Both dispatched scripts (plan todo-7 slot 14 + issue-doc todo-1 slot 20) had CORRECT twin-matching
+  (twin-having rows → RETIRE, no-twin rows → EXCLUDE — verified in the committed script
+  `retire_dex_pool_fees_balancer_legacy_captured_rows_2026_08_12.py` @ `market-tick-data-service@ad0db52396`). The
+  transient "inverted" state came from a read-modify-write write-race: both writers rewrote the canonical
+  `_index/availability_index.parquet` via plain non-CAS `upload_file`; writer 2's base read predated writer 1's write,
+  so its full-blob upload silently reverted writer 1's rows while applying its own flip. The dispatcher re-derived both
+  from overlapping `- [ ]` checkboxes; nothing gated them on each other.
 - Non-durable in the same way as the POOL recurrence: the next full rebuild re-registers real disk objects; a flip that
   mislabels real data is both wrong now and self-healing only in the wrong direction.
 
@@ -114,7 +119,8 @@ BALANCER rows ... Do NOT touch the 14 CURVE rows").
    (`error_reason=superseded_by_content_verified_canonical_dex_pool_state_twin_2026_08_12`). Consolidator paused before
    write / resumed after; snapshot + `.bak`; round-trip verify to captured=14 (CURVE) / attempted_failed=7 (BALANCER).
 2. **Stop / reconcile the second slot's task** (`dex_pool_fees_phantom_premise_false_real_mid_may_objects-1119d9d2c3d8`)
-   -- its script has an inverted twin-matching bug (it retired the no-twin rows). It must NOT re-apply. The issue-doc
+   -- it must NOT re-apply. (CORRECTED 2026-08-12, slot 7: the script does NOT have an inverted twin-matching bug — the
+   inverted state was a non-CAS lost-write race; its logic is twin-having→RETIRE / no-twin→EXCLUDE.) The issue-doc
    todo-1 checkbox should be reconciled against the corrective result.
 3. **Process gap (tracked separately)**: overlapping `- [ ]` retirement todos in the plan + the issue doc got dispatched
    to two slots concurrently. Add a coordination note (or a `depends_on`/gate) when a plan todo's execution is split
@@ -144,9 +150,24 @@ BALANCER rows ... Do NOT touch the 14 CURVE rows").
       needed: the second slot's task already ran to completion. BALANCER retirement (7 rows) is the uncontested half of
       the disposition and is reconciled as done via the corrective flip (todo 1); the phantom-premise doc's todo-1
       checkbox now carries a reconciliation note pointing back here. See Progress Log.
-- [ ] [DATA] P2. Root-cause the second slot's inverted twin-matching (why it retired the no-twin CURVE rows) and add the
-      coordination gate so plan + issue-doc retirement todos never dispatch concurrently to the same manifest. (repo:
-      market-tick-data-service)
+- [x] ✅ [DATA] P2. Root-cause the second slot's inverted twin-matching (why it retired the no-twin CURVE rows) and add
+      the coordination gate so plan + issue-doc retirement todos never dispatch concurrently to the same manifest.
+      (repo: market-tick-data-service) — **DONE 2026-08-12 (slot 7, data_engineering).** ROOT-CAUSE = lost-write race,
+      NOT inverted logic: both dispatched scripts have correct twin-matching (verified
+      `retire_dex_pool_fees_balancer_legacy_captured_rows_2026_08_12.py` @ `market-tick-data-service@ad0db52396`:
+      twin-having→RETIRE, no-twin→EXCLUDE); the transient inverted state was a non-CAS full-blob read-modify-write race
+      (writer 2's base predated writer 1's 17:12Z write and silently reverted it). Coordination gate shipped
+      `market-tick-data-service@6b557144` (verified at HEAD): CAS generation-match
+      (`conditional_upload_file(if_generation_match=...)`) on all 4 dex_pool_fees scripts → stale-base writer REJECTED
+      (exit 2, manifest UNCHANGED-SAFE); retire-all additionally HARD-ABORTs `--from + --apply`. UTL
+      `conditional_upload_file` verified (None-on-PreconditionFailed, gcp.py:459). See Progress Log.
+- [ ] [DATA] P3. Codify the manifest-write coordination gate in the data SSOT
+      (`/codex/02-data/availability-manifest-and-data-status.md` or
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §5): any rewrite of a canonical consolidated `_index`
+      MUST use CAS generation-match (`conditional_upload_file`) + pause the consolidator cron. Sibling one-off retire
+      scripts (`retire_rate_indices_...`, `retire_pool_uppercase_...`, `retire_dex_swaps_...`, `retire_dex_pools_...`)
+      predate the gate (historical, already-applied — no backfill needed; the pattern is the default for future
+      retirements). (repo: unified-trading-pm)
 
 ## Progress Log
 
@@ -190,3 +211,18 @@ BALANCER rows ... Do NOT touch the 14 CURVE rows").
   retire-all-21 disposition (the BLK-b118f150 partial-go predated the twin content-verification). The write-race
   coordination finding + todo-3 (root-cause the inverted twin-matching) remain valid and open. See plan
   `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` Progress Log 2026-08-12 (slot 14).
+- **2026-08-12 (slot 7, data_engineering) — todo 3 DONE: root-cause established + coordination gate verified.**
+  ROOT-CAUSE: the "inverted flip" was NOT inverted twin-matching logic. Both dispatched scripts have correct
+  twin-matching (twin-having→RETIRE / no-twin→EXCLUDE — verified in
+  `retire_dex_pool_fees_balancer_legacy_captured_rows_2026_08_12.py` @ `market-tick-data-service@ad0db52396`). The
+  transient inverted state (14 CURVE retired / 7 BALANCER captured @ 17:14:52Z) was a lost-write race: both writers
+  rewrote the canonical `_index` via plain non-CAS `upload_file`; writer 2's full-blob upload (base read predating
+  writer 1's 17:12Z write) silently reverted writer 1's BALANCER-retire while applying its own flip. COORDINATION GATE:
+  already shipped `market-tick-data-service@6b557144` (slot 20) — all 4 dex_pool_fees scripts capture the `_index`
+  generation pre-download and write via `conditional_upload_file(if_generation_match=...)`; a stale-base writer's upload
+  is REJECTED (exit 2, manifest UNCHANGED-SAFE), re-run applies idempotently on a fresh base; retire-all additionally
+  HARD-ABORTs `--from + --apply`. Verified at HEAD in all 4 scripts + UTL `conditional_upload_file` returns None on
+  PreconditionFailed (`unified_trading_library/cloud_interface/providers/gcp.py:459`). The issue doc's earlier "inverted
+  twin-matching bug" framing is corrected in the body + Recommended decision #2. Dispatch-level coordination (never
+  dispatch plan + issue-doc retirement todos for the same manifest concurrently) remains Recommended-decision #3 + new
+  P3 follow-up.
