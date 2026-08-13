@@ -573,11 +573,11 @@ possibly a rename that ripples into UAC/manifest data_type naming.
   stakes (two overlapping launches already spent real RapidAPI calls against the ~87K/billing-window ceiling) and to
   avoid a third rushed action; see the new todo below.
 
-- [ ] [DATA] P2. **Resume TRANSFER_RECORDS for the 3 still-incomplete leagues — IN PROGRESS, 2026-08-13 (fresh
-      session).** PLAYER_VALUES backfill finished clean (see the flipped todo above) so the soft rate-contention block
-      cleared; live RapidAPI quota re-checked first (`x-ratelimit-requests-remaining: 28798` of `120000` — the stale
-      ~87K estimate had already dropped a lot from the PLAYER_VALUES run, but comfortably enough headroom for 3
-      leagues). **Real launcher bug found + fixed en route**: the FIRST relaunch attempt failed
+- [x] ✅ [DATA] P2. **Resume TRANSFER_RECORDS for the 3 still-incomplete leagues — COMPLETE, 2026-08-13.** PLAYER_VALUES
+      backfill finished clean (see the flipped todo above) so the soft rate-contention block cleared; live RapidAPI
+      quota re-checked first (`x-ratelimit-requests-remaining: 28798` of `120000` — the stale ~87K estimate had already
+      dropped a lot from the PLAYER_VALUES run, but comfortably enough headroom for 3 leagues). **Real launcher bug
+      found + fixed en route**: the FIRST relaunch attempt failed
       (`ERROR: (gcloud.compute.instances.create) argument --metadata: Bad syntax for dict arg: [LIGA_3]`) — the launcher
       script embeds `--leagues`'s raw value straight into a comma-delimited `--metadata` string with no escaping, so ANY
       comma-separated `--leagues` value breaks it (the exact same bug class already fixed for `--entities` in the prior
@@ -766,3 +766,16 @@ possibly a rename that ripples into UAC/manifest data_type naming.
     up next**: check the watchdog's own report first; if it stalled again on the same 502 pattern, that's now strong
     evidence the issue is RapidAPI-side and specific to these 3 leagues' club ID ranges, not launcher/quota/naming —
     worth an operator check on whether these specific club IDs need a different fetch strategy.
+- **2026-08-13 (interactive session, continued): watchdog resolved — SUCCESS, all 3 leagues captured, TRANSFER_RECORDS
+  is now genuinely complete for the Prediction tier.** `instr-backfill-sports-transfermarkt-20260813-130349` ran for ~24
+  minutes (some initial `/players/transfers` 502s that self-resolved via the existing retry/backoff, matching the
+  earlier direct-curl evidence that this was a transient RapidAPI degradation window, not a persistent per-league
+  problem), then `TRANSFER_RECORDS PASS COMPLETE: {'ok': 3, 'raised': 0}`, `EXPLICIT PRE-EXIT DRAIN: {}`, VM
+  self-deleted cleanly (`VM_SHUTDOWN_ON_COMPLETION=true`, exit_code=0, deployment archived `status=completed`). Direct
+  master-table re-verify (`sports_reference/master/entity=transfer_records/master.parquet`): **164,924 total rows across
+  32 distinct leagues** (up from 146,449/29 pre-relaunch) — `ARGENTINA_PRIMERA` 6,149 rows, `LIGA_3` 5,337 rows,
+  `SERIE_A` (Italy) 6,989 rows, all real. **32/32 mappable Prediction-tier leagues now have real TRANSFER_RECORDS
+  captures** (33 expected minus `GREEK_SUPER_LEAGUE`'s confirmed no-provider-mapping exclusion) — this closes the
+  TRANSFER_RECORDS half of this doc's original finding. PLAYER_VALUES was already confirmed complete earlier this
+  session (1,041/1,041 events, see above). Both halves of the operator's original success criterion ("100% honest
+  coverage for tm last few years since 2020 june") are now met for the Prediction tier.
