@@ -180,13 +180,14 @@ here — worth folding into whichever future pass touches `DataTypeCapability` f
         correctness HARD RULE (this would mean ODDS_API's `odds_horizon_bucket`/`trades` capture is silently broken). —
         ✅ CONFIRMED reproduces against PROD (same credential regardless of `IS_TEST_RUN`; see Diagnosis §2). Not an
         MTDS code defect — shard-isolation + honest-absence both worked correctly. This is a vendor quota/billing gap:
-  - [ ] [OPERATOR] P2. `the-odds-api.com` historical-endpoint API key (`apiKey=5634d6f1***REDACTED***2c46c`, `odds_api`
-        credential) hit a clean, non-recovering 401 Unauthorized cutover at 2026-08-01 12:40:24 UTC after succeeding for
-        the prior ~2h15m of the same day (14+ subsequent attempts through 14:58 UTC all failed identically) — the
-        signature of an exhausted request-credit/quota balance, not a transient outage. Needs an operator credential
-        check (account dashboard/billing at the-odds-api.com) + quota top-up or key rotation before SPORTS/ODDS_API
-        capture (test OR prod) can resume. Per the external-data-always-available rule this is a credential ask, not a
-        descope — SPORTS/ODDS_API force-refetch is currently blocked pending this action.
+  - [ ] [DATA] P2. **RETAGGED 2026-08-13 (operator confirmed): account has ample available credit (~$10M) — the
+        2026-08-01 401 was not a quota-exhaustion cutover after all, or the balance has since been topped up.** No
+        longer an operator-only credential ask; the remaining action is worker-executable: re-test the SPORTS/ODDS_API
+        historical-endpoint force-fetch (`apiKey=5634d6f1***REDACTED***2c46c`) and confirm the 401 has cleared. If it
+        clears, resume SPORTS/ODDS_API capture (test + prod) normally. If the SAME 401 signature still reproduces
+        despite confirmed available credit, this is a genuinely different vendor-side fault (e.g. a stale/rotated key,
+        an IP allowlist change, or an account-flag issue) — escalate as a new, distinct finding rather than
+        re-diagnosing it as quota exhaustion.
   - [x] [DATA] P3. Confirm whether `odds_horizon_bucket`'s `batch_mdps_...` pipeline_mode label reflects a genuine
         ownership split (MDPS writes this data_type, not MTDS) that the pipeline-check's SPORTS enumeration should
         exclude, rather than a real MTDS capture defect. — ✅ CONFIRMED via UAC trace (Diagnosis §3): `SOURCE_PRIORITY`

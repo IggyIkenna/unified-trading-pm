@@ -12,7 +12,7 @@ summary: >-
   touched by this batch (checkbox reconciliation back into each source doc happens in the paired finalize plan).
   Conflict-checked against every existing active batch/finalize plan for this tranche via basename-citation
   cross-reference before drafting — no item here duplicates ground an existing dispatched Todos entry already claims.
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -65,21 +65,21 @@ source: >-
 
 # cefi satellite AO dispatch batch 19 — 2026-08-13
 
-> **`status: draft` — NOT ingested/dispatched.** Flip to `status: active` only after operator review. Every todo below
-> was classified bounded/deterministic (worker-determinable outcome, no open design/judgment call) by the 2026-08-13
-> full-sweep audit and conflict-checked against this tranche's existing active batches before being drafted here.
+> **Operator-approved 2026-08-13 — `status: active`, dispatchable.** Every todo below was classified
+> bounded/deterministic (worker-determinable outcome, no open design/judgment call) by the 2026-08-13 full-sweep audit
+> and conflict-checked against this tranche's existing active batches before being drafted here.
 
 ## Todos
 
-- [ ] [WRITER] P2: implement Gap 1's resolution — row-level column-value gate for bundle-shaped
+- [ ] [WRITER] P2. implement Gap 1's resolution — row-level column-value gate for bundle-shaped
       (chain-bundle/options_chain) writers, dropping non-canonical rows to record_failed(NON_CANONICAL_INSTRUMENT_ID,
       granularity=row) + adding quarantined_legs to the manifest row (market-tick-data-service) Source:
       `plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md`
-- [ ] [WRITER] P2: implement Gap 2's resolution — make the live/on-chain lane's manifest key a deterministic function of
+- [ ] [WRITER] P2. implement Gap 2's resolution — make the live/on-chain lane's manifest key a deterministic function of
       the already-computed column value instead of an independent resolve_cefi_instrument_id() call
       (market-tick-data-service: venue_fetch.py, partitioned_writer.py) Source:
       `plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md`
-- [ ] [UAC] P3: implement Gap 3's resolution — add the temporal 'unclassified' manifest-row state and wire the Stage 3
+- [ ] [UAC] P3. implement Gap 3's resolution — add the temporal 'unclassified' manifest-row state and wire the Stage 3
       read gate to pass-with-warning on it until a backfill-complete flag promotes it to enforced-fail
       (unified-api-contracts + market-tick-data-service) Source:
       `plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md`

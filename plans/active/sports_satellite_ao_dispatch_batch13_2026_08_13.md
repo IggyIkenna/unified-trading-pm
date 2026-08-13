@@ -14,7 +14,7 @@ summary: >-
   the paired finalize plan). Conflict-checked against every existing active batch/finalize plan for this tranche via
   basename-citation cross-reference before drafting — no item here duplicates ground an existing dispatched Todos entry
   already claims.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -67,9 +67,9 @@ source: >-
 
 # sports satellite AO dispatch batch 13 — 2026-08-13
 
-> **`status: draft` — NOT ingested/dispatched.** Flip to `status: active` only after operator review. Every todo below
-> was classified bounded/deterministic (worker-determinable outcome, no open design/judgment call) by the 2026-08-13
-> full-sweep audit and conflict-checked against this tranche's existing active batches before being drafted here.
+> **Operator-approved 2026-08-13 — `status: active`, dispatchable.** Every todo below was classified
+> bounded/deterministic (worker-determinable outcome, no open design/judgment call) by the 2026-08-13 full-sweep audit
+> and conflict-checked against this tranche's existing active batches before being drafted here.
 
 ## Todos
 
@@ -148,7 +148,7 @@ source: >-
       excluded from this batch unless manifest-canonical or migration-related. The underlying item remains open in its
       own source doc, untouched by this batch/commit. Source:
       `plans/active/issues/sports_odds_horizon_bucket_reader_writer_path_mismatch_defeats_zombie_purge_2026_08_09.md`
-- [ ] [REVIEW] P2: locate and re-engage the owner of 'the bucket-cutover lane' referenced in reprocess_sports_odds.py's
+- [ ] [REVIEW] P2. locate and re-engage the owner of 'the bucket-cutover lane' referenced in reprocess_sports_odds.py's
       code comment (ceadb45c/2026-07-16), or confirm the comment is stale Source:
       `plans/active/issues/sports_odds_horizon_bucket_reader_writer_path_mismatch_defeats_zombie_purge_2026_08_09.md`
 - [x] [CODE] P2. Re-run MDPS odds_horizon_bucket shard4 full-mode (resume-friendly, not --force) reprocess for
