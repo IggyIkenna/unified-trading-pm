@@ -476,39 +476,28 @@ Directions, cheapest first — each is a todo below:
       regression coverage (`tests/test_safe_doc_push_entry_hash_reverted_edits.bats` 10/10,
       `tests/test_quickmerge_landed_content_assertion.bats`) still passes unchanged, and a direct manual invocation of
       the dump function confirmed correct, rich output. Repo: unified-trading-pm.
-- [ ] [INFRA] P0. **F9 — `_sdp_reconcile_caller_duplicates` never refreshes a caller's stale local copy against
-      GENUINELY different peer content, only against reformatting-equivalent content — a stale local copy can then
-      silently clobber a peer's already-landed lines on a later push.** Found 2026-08-12, DISTINCT from every other
-      mechanism tested this investigation (cross-worktree prek patches-dir race: clean; single-shot same-file concurrent
-      edits, overlapping and not: clean). Root cause, read directly in `scripts/dev/safe-doc-push.sh`'s
-      `_sdp_reconcile_caller_duplicates`: it only calls `git restore --source=origin/$BRANCH --worktree -- $f` when
-      `_sdp_same_content` says the caller's local file is "the same words, differently wrapped" as what landed (a
-      prosewrap/prettier-reflow detector) — it does NOT refresh the local copy when origin has genuinely different
-      content (a peer's real, distinct addition), by design (that function's job is narrower than "always sync my local
-      copy"). **Consequence**: if a caller's local copy of a shared file goes stale across several ship rounds (nothing
-      re-syncs it automatically), a LATER round submits a diff against a freshly-fetched origin that gets committed as a
-      wholesale REPLACEMENT of a peer's already-landed lines with the caller's own stale-but-locally-consistent
-      accumulation — every individual push succeeds, every entry-hash "landed" check passes (it only verifies the
-      CALLER's own diff landed, never whether a peer's content survived), and `git log -p` shows the full, unbroken
-      commit history — but the file's CURRENT tree content silently drops the peer's most recent lines from anyone
-      reading HEAD. **Measured**: 4 workers × 6 rounds (24 ship attempts) against one shared file, no re-pull between a
-      worker's own rounds — 12 of 18 markers from a clean, uninterrupted run vanished from the final tree despite being
-      individually reported LANDED; the tip commit's own diff literally showed `-` removing a prior worker's whole
-      marker set and `+` adding the new worker's own, in ONE commit. Repro:
-      `scripts/dev/repro-safe-doc-push-stale-local-clobber.sh` (permanent, re-runnable). **Caveat, stated plainly**: the
-      repro's worker loop deliberately never re-pulls between its own rounds, more aggressive than a real editing
-      workflow (an agent normally reads a file fresh before editing) — this is not a confirmed match for the ORIGINAL
-      reported symptom (whose raw logs no longer exist), but it is the closest real, reproducible mechanism found across
-      3 investigation sessions, and it matches the affected file's actual situation (heavy, frequent, unrelated peer
-      commit traffic) more closely than anything else tested. **Fix direction, not yet built**: either (a) make
-      `_sdp_reconcile_caller_duplicates` ALSO refresh the caller's local copy when content is genuinely different
-      (accepting that this discards the caller's uncommitted diff to that SAME file, which needs its own careful UX —
-      silently discarding a real uncommitted edit is exactly the class of bug this whole investigation is about), or (b)
-      detect the "wholesale replacement of peer content" shape specifically (compare the pushed commit's diff against
-      what was on origin at push time, not just at entry-fetch time) and refuse to ship it, forcing a manual
-      re-read+re-edit instead of a silent clobber. **Done when**: the repro script no longer reproduces after the fix
-      (i.e., 0 missing markers across a full run), or the fix's tradeoffs are decided by the operator and documented if
-      a full fix is descoped. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P0. **F9 — isolated mode's copy loop blindly `cp`'d the caller's on-disk file over a freshly-fetched
+      origin/$BRANCH worktree with no check for peer divergence, silently clobbering a peer's already-landed content.**
+      Found 2026-08-12. FIXED 2026-08-12, unified-trading-pm@f8d1ad47f1. **Root cause, precisely located**: the
+      isolated-worktree copy loop (`scripts/dev/safe-doc-push.sh`, the `for _f in "${FILES[@]}"`loop inside the     isolation branch) did`cp
+      "$_f" "$_sdp_iso_wt/$_f"` unconditionally for every tracked file — no comparison against
+      what the freshly-checked-out worktree already held. If a peer landed different content in that file since the
+      caller's last sync, the cp silently replaced it. `_sdp_reconcile_caller_duplicates` (the ORIGINAL suspect, still
+      real and still narrower-than-ideal by design) only runs AFTER the push, to sync the caller's OWN copy back — it
+      was never the mechanism that caused the loss; the loss happened before that function is ever reached. **Measured
+      before the fix**: 4 workers × 6 rounds (24 ship attempts) against one shared file, no re-pull between a worker's
+      own rounds — 12 of 18 markers vanished from the final tree despite being individually reported LANDED. Repro:
+      `scripts/dev/repro-safe-doc-push-stale-local-clobber.sh` (permanent, re-runnable). **Fix, built**: capture each
+      named file's blob at the caller's OWN pre-fetch HEAD (`_SDP_ISO_BASE_BLOBS`, captured before isolation's `git
+      fetch`/`worktree add` — the only point where "HEAD" still means the caller's last-synced tip, not origin's fresh
+      state). In the copy loop, compare that base blob against `origin/$BRANCH`'s CURRENT blob for the same path     (fetched moments earlier). Equal ⇒ nobody touched the file since the caller's last sync, blind copy stays exactly     as safe as before (the common case, unchanged). Different ⇒ a peer moved the file; abandon isolated mode for THIS     run (`_sdp_copy_ok=false`) and fall through to the existing shared-index fallback path, which reconciles through     git's own ancestor-aware 3-way merge machinery (ff-only / `--rebase
+      --autostash`) and hard-stops loudly (exit 3,     "needs a human") on a genuine content conflict — proven, already-tested machinery, not reinvented. This is a     hybrid of the two options originally sketched: it never silently drops content (option b's guarantee) without     needing a hand-rolled merge-conflict detector, by reusing git's real reconcile path instead (simpler and more     robust than option a's proposed direct blob-level `git
+      merge-file`). **Verified**: `bash
+      -n` + shellcheck clean     (only 2 pre-existing, unrelated warnings elsewhere in the file); full existing bats regression suite (10 files,     39/39) passes unchanged, including all 3 isolated-mode-specific suites (untracked-duplicate, deletion-propagates,     identity-preserved); the repro script run TWICE post-fix: **0/11 confirmed-landed markers missing from the final     tree, both times** (workers whose local copy diverged hit real conflicts via the shared-index fallback and failed     loudly with rc=3, rather than any push silently succeeding while clobbering a peer's content). **quickmerge.sh     checked for the same mechanism and confirmed NOT vulnerable** (its isolated-worktree copy loop has the identical     blind-`cp`shape at line ~1032, but its worktree is created at the caller's local`HEAD`, and — critically —     STAGE 0.4's not-behind gate (`_qm_stage_0_4_not_behind_gate`, called unconditionally at line 1571, which the     isolated child also reaches after re-exec, before any commit) already fetches origin and either fast-forwards     cleanly, blocks loudly on `ahead=0` working-tree overlap (`PRECOMMIT_WORKING_TREE_CONFLICT`, exit 1 — this is the     exact F9-shaped scenario), or blocks loudly on a genuine rebase conflict (`BEHIND_DIVERGED_CONFLICT`/    `AUTOSTASH_POP_CONFLICT`,
+      exit 1) — every branch either succeeds cleanly or hard-stops, no silent-proceed path exists. No fix needed there;
+      this was a real check, not an assumption. **Done when**: repro script shows 0 missing markers post-fix (met,
+      twice) and the sibling ship script is checked for the same class of defect (met — quickmerge.sh confirmed clean by
+      trace, not just assumed). Repo: unified-trading-pm.
 - [x] ✅ [INFRA] P0. **Fix F7 — resolve the repo root from git, not from the directory name.** DONE 2026-08-10 — new
       `scripts/quality_gates/_pm_root.py` resolves by CONTENT (`plans/` + `scripts/quality_gates/` present), applied to
       13 call sites across 11 scripts; verified it resolves correctly given a bogus workspace root and that
@@ -560,12 +549,12 @@ Directions, cheapest first — each is a todo below:
       unified-trading-pm@d85ad41fac.
 
       **Done when, confirmed**: the precommit sweep on one staged file is now **20.8s** total wall (measured 2026-08-12,
-                              isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
-                              down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
-                              concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
-                              single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
-                              `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
-                              nothing left to move out of the per-commit path. Repo: unified-trading-pm.
+                                  isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
+                                  down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
+                                  concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
+                                  single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
+                                  `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
+                                  nothing left to move out of the per-commit path. Repo: unified-trading-pm.
 
 - [x] ✅ [INFRA] P2. **Record the AO-vs-PM volume asymmetry in the codex** so the next person does not re-derive it —
       unified-trading-pm@baae1922bb. New § "1b. PM is the fleet's single write hotspot" in
@@ -746,15 +735,15 @@ Directions, cheapest first — each is a todo below:
 
 ## Deferred work after 2026-08-12
 
-| Item                                                                                            | State / why deferred                                                                                                                                                                                                                       | Blocked on                                             |
-| ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
-| F9 — fix `_sdp_reconcile_caller_duplicates`'s stale-local-copy clobber                          | **Not done** — mechanism found and reproduced (repro script permanent), fix direction sketched (2 options in the todo), neither built. Real work, not waiting on anyone.                                                                   | nobody; pick it up                                     |
-| Confirm F9 is (or isn't) the ORIGINAL reported mechanism                                        | **Cannot be done yet** — the original report's raw `safe-doc-push.sh` logs no longer exist; only a hash-only summary survived. The new forensic-dump tooling makes the NEXT occurrence self-diagnosing, but there is nothing to check now. | a recurrence, captured live via the new forensics dump |
-| Root-cause the isolated-worktree basedpyright false-positive (separate, already-closed finding) | **Closed as accepted-with-workaround**, not reopened — listed here only so a reader doesn't conflate it with F9; different investigation, different doc (archived).                                                                        | n/a — intentionally not being pursued                  |
+| Item                                                                                            | State / why deferred                                                                                                                                                                                                                                                                                                                                                           | Blocked on                                                                      |
+| ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| F9 — fix isolated mode's blind-copy clobber                                                     | **Done 2026-08-12** — real root cause pinpointed (the copy loop, not `_sdp_reconcile_caller_duplicates`), fixed, verified twice against the repro (0/11 missing both runs), full regression suite green, sibling script (quickmerge.sh) checked and confirmed not vulnerable by the same mechanism.                                                                            | n/a — closed                                                                    |
+| Confirm F9 is (or isn't) the ORIGINAL reported mechanism                                        | **Cannot be done yet** — the original report's raw `safe-doc-push.sh` logs no longer exist; only a hash-only summary survived. The new forensic-dump tooling makes the NEXT occurrence self-diagnosing, but there is nothing to check now. Moot either way now: the vulnerability F9 identified is fixed regardless of whether it was the ORIGINAL incident's exact mechanism. | a recurrence, captured live via the new forensics dump (informational only now) |
+| Root-cause the isolated-worktree basedpyright false-positive (separate, already-closed finding) | **Closed as accepted-with-workaround**, not reopened — listed here only so a reader doesn't conflate it with F9; different investigation, different doc (archived).                                                                                                                                                                                                            | n/a — intentionally not being pursued                                           |
 
-**Recommended next item**: F9's fix (option (a) or (b) in the todo, operator's call on the tradeoff) — it's the only
-undone item with no external blocker, and it's a genuine, measured data-loss path on the highest-contention file
-category in this repo.
+**Recommended next item**: none open with no external blocker — every actionable item in this doc is closed. The one
+remaining row (confirming F9 against the original report) is blocked on a recurrence that may never come, and is no
+longer load-bearing since the fix stands on its own measured evidence.
 
 ## Deferred work after 2026-08-10
 
@@ -917,3 +906,24 @@ reconciliation, the previous recommendation, shipped 2026-08-10.)
   `scripts/dev/repro-safe-doc-push-stale-local-clobber.sh`. Explicitly NOT claiming this is confirmed to be the original
   reported mechanism — the raw logs from that report no longer exist — but it is the first REAL, reproducible data-loss
   mechanism found in 3 sessions of testing, and the fix is not yet built.
+
+- **2026-08-12 (F9 fixed, and the earlier root-cause attribution corrected)**: the earlier entry above named
+  `_sdp_reconcile_caller_duplicates` as the mechanism; that was wrong in a specific, useful way — that function only
+  runs AFTER a successful push, to sync the CALLER's own copy back, and could not have caused the measured loss on its
+  own. Re-reading the isolation copy loop line by line found the actual defect one step earlier:
+  `cp "$_f" "$_sdp_iso_wt/$_f"` ran unconditionally, with no comparison against what the just-fetched worktree already
+  held for that path — so a peer's freshly-landed content sitting right there in the worktree got silently overwritten
+  the moment the caller's stale local copy was cp'd on top of it, before `_sdp_reconcile_caller_duplicates` ever runs.
+  Fixed by capturing the caller's true pre-fetch base blob per file (the one point where "HEAD" still means the caller's
+  own last sync, before isolation's own fetch/worktree-add), comparing it against origin's current blob right before the
+  copy, and — on any mismatch — abandoning isolated mode for that run and falling through to the existing shared-index
+  path, which reconciles through git's own ancestor-aware merge machinery and hard-stops loudly on a real conflict
+  instead of guessing. Verified: full bats suite (39/39, unchanged), and the stress-test repro run twice post-fix — 0/11
+  confirmed-landed markers missing both times (down from 12/18 missing pre-fix), with the divergent workers now failing
+  loudly (rc=3) instead of any push silently clobbering a peer. Per the standing "roll it out everywhere, not just one
+  place" instruction from earlier this session: traced quickmerge.sh's isolated mode for the identical blind-`cp` shape
+  (found at line ~1032) and confirmed — by reading STAGE 0.4's not-behind gate, not by assuming — that it is NOT
+  vulnerable: that gate runs unconditionally before any commit, even in the isolated child, and every one of its
+  branches (fast-forward, `ahead=0` working-tree-overlap block, or genuine rebase-conflict block) either succeeds
+  cleanly or hard-stops with `exit 1` — no silent-proceed path exists there. No fix needed in quickmerge.sh; this was
+  checked, not skipped. Full detail in the F9 todo above.
