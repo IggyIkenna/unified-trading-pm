@@ -150,9 +150,12 @@ itself; the CVE doc keeps ownership of the `--ignore-vuln` allowlist.
       instead of degrading to `{}`. Unit test `test_import_error_fails_loud` added. Also rescued a pre-existing
       BATS_HARD_FAIL red (`test_prettier_autostage_advisory_mode.bats` test 2 asserted the npx-absent marker; npx now
       ships in /usr/bin) that blocked every PM commit. QG `--no-fix` exit 0.
-- [ ] [INVESTIGATE] P1. Measure whether the other slots and the AO VM carry the same staleness — this doc's numbers
+- [x] ✅ [INVESTIGATE] P1. Measure whether the other slots and the AO VM carry the same staleness — this doc's numbers
       cover `.tabs/5` only, and a third version (0.135.1) is on record from 2026-08-01, so do not assume uniformity.
-      Report the per-slot installed-vs-declared table.
+      Report the per-slot installed-vs-declared table. ✅ 2026-08-13 — swept ALL 33 slots (239 fastapi-carrying venvs) +
+      the AO VM's own runtime venv: **ZERO below the `>=0.137.0` floor**. Every fastapi venv is 0.140.7
+      (`unified-trading-pm` 0.141.1 in 25 slots); `iter_route_contexts` present in the installed 0.140.7. The 0.136.3
+      staleness was slot-5-only and is gone fleet-wide. Full per-slot table in Progress Log.
 - [ ] [SCRIPT] P1. Add a preflight/QG check that fails when an installed distribution is below the floor its own
       `pyproject.toml` declares. The 20-venv drift persisted for weeks precisely because nothing compares installed
       versions against declared pins.
@@ -164,6 +167,26 @@ itself; the CVE doc keeps ownership of the `--ignore-vuln` allowlist.
       they are retained.
 
 ## Progress Log
+
+**2026-08-13 (slot 18, todo 3)** — Fleet-wide staleness measurement: **the staleness is NOT present elsewhere.** Swept
+all 33 slots on the planning VM (`.tabs/1`–`.tabs/33`) + the AO VM's own runtime venv. 239 fastapi-carrying venvs total,
+**0 below** the `>=0.137.0` floor each repo's `pyproject.toml` declares.
+
+| Surface                                                                                         | Result                                                                                              |
+| ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Slots 1–33, fastapi-carrying venvs                                                              | 239                                                                                                 |
+| Below declared `>=0.137.0` floor                                                                | **0**                                                                                               |
+| Installed distribution spread                                                                   | 0.140.7 (all service / UTL / AO venvs) · 0.141.1 (`unified-trading-pm`, 25 slots)                   |
+| AO VM runtime venv (`agent-orchestrator/.venv`, uvicorn :8765)                                  | 0.140.7 — conforms                                                                                  |
+| Root-clone `agent-orchestrator/.venv`                                                           | 0.140.7 — conforms                                                                                  |
+| `iter_route_contexts` in installed 0.140.7 `fastapi/routing.py`                                 | present (AO runtime, strategy-service, PM venvs)                                                    |
+| `instruments-service` / `market-data-processing-service` / `e2e-testing` / `unified-trading-pm` | don't declare fastapi (transitive dep) — no floor to violate                                        |
+| `.stale-pre-history-rewrite-*` archive dirs (slots 1–16)                                        | **no fastapi present** — supersedes todo 1's "0.136.3 remains in 4 archive dirs" note; feeds todo 6 |
+
+Conclusion: the 2026-08-11 slot-5-only staleness is fully resolved fleet-wide (todo 1 re-synced slot 5's 16 live venvs
+on 2026-08-11; every other slot's venvs were built after the `>=0.137.0` bump). No uniform 0.135.1 anywhere today — the
+2026-08-01 third-version data point is historical, not a live fleet condition. Todo 4's preflight/QG check remains the
+standing prevention.
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).

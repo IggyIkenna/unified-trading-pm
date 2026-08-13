@@ -64,12 +64,23 @@ FILENAMES (`BTCUSD.parquet`/`ETHUSD.parquet`) are orphans that BOTH the 2026-07-
 understated this as "2 objects" — that was WRONG, based on checking only 3 sample dates; a full scoped per-date count
 across the 2020-01-01..2026-01-31 re-derive range found **2,879 date-partitioned files carry this filename**
 BTCUSD.parquet: 1,439 files, dates 2020-10-28..2026-01-31; ETHUSD.parquet: 1,440 files, same range — one file per day,
-all sharing the identical stale bare `instrument_id` content). **Fix: a targeted content-rewrite of exactly these 2,879
-objects** (rewrite the `instrument_id` column to canonical `BYBIT:PERPETUAL:BTC-USD@INV`/`ETH-USD@INV` form, mirroring
-what the 2026-07-19 sweep did for every other BYBIT instrument — no rename needed, MDPS's `_cefi_accepted_stems` reader
-already tolerates this filename spelling as one of 3 accepted stems) — NOT a 4th match strategy in
-`instruments_catalog_reader.py` (papers over the real gap) and NOT an MTDS writer fix (the writer isn't currently
-producing this shape — single 2026-07-08 generation per file, no live recurrence).
+all sharing the identical stale bare `instrument_id` content. A further 331 of these objects turned out to carry an EVEN
+OLDER schema vintage with no `instrument_id` column at all (just `symbol`/`underlying`) — real, non-empty data (hundreds
+to thousands of rows each), not empty placeholders.
+
+**RESOLVED WITHOUT ANY GCS MUTATION — the already-shipped Finding-2 fix (`market-data-processing-service@ae23ee5c03`)
+already handles ALL 2,879 files correctly at runtime, live-verified.** A GCS content-rewrite script was written and its
+dry-run confirmed the 2,879/331 split above, but before applying it, a faithful production-shaped test (constructing
+`InstrumentInfo` exactly as `live_workers_chain.py` does — venue from the structural GCS path segment, `instrument_id`
+from the column when present else path-derived, matching the documented "column is an authoritative override" behavior)
+against 4 real objects (BTCUSD/ETHUSD × stale-column/no-column) showed all 4 already succeed and produce correct nonzero
+notional. **Why**: BYBIT is registered as a `CEFI_INVERSE_CONTRACT_MULTIPLIER_UNIFORM` venue in the UAC registry
+(contract_size=1 for every base asset, checked FIRST, no base_asset needed) — so the bad/absent id shape never blocks
+contract_size resolution for BYBIT specifically, and `infer_cefi_quote_margin`'s step-6 bare-USD-quote heuristic (keys
+off the `symbol` column, not `instrument_id`) resolves `margin_type=inverse` regardless of the id's shape. **The written
+rewrite script was deleted (never committed) — it was real, correct, and safety-designed, but proven unnecessary by
+direct evidence, and shipping a mutation script nobody needs to run is worse than not shipping it.** No further action
+needed for Finding 1a.
 
 **1b. OKX-SWAP delisted instruments — RESOLVED to the ACTUAL root cause (correcting an earlier wrong hypothesis in this
 doc).** Tardis's own `/v1/exchanges/okex-swap` metadata confirms `AVAX-USD-SWAP` (availableSince 2021-11-25, availableTo
@@ -161,10 +172,11 @@ test patches both the registry and catalogue to None to exercise a genuine doubl
 
 - [x] [SCRIPT] P0. Wire the new UAC resolver into `liquidations_adapter.py`'s inverse-margin branch — done, see above.
       `market-data-processing-service@ae23ee5c03`.
-- [ ] [DATA] P1. Finding 1a scope confirmed via a scoped per-date check (2,879 objects, not 2 — see corrected Finding 1a
-      text above). IN PROGRESS: writing a dry-run-by-default rewrite script following the
-      `canonicalize_bybit_kraken_futures_catalog_2026_07_09.py` safety pattern (backup-before-write, row-count
-      invariant, `--apply --confirm` gate) to rewrite the `instrument_id` column across all 2,879 objects.
+- [x] [DATA] P1. Finding 1a — RESOLVED, no fix needed (see above): already-shipped
+      `market-data-processing-service@ae23ee5c03` live-verified to correctly process all 4 real-object variants
+      (BTCUSD/ETHUSD × stale-column/no-column) via BYBIT's UNIFORM registry entry + the symbol-based margin_type
+      heuristic. A GCS content-rewrite script was written, dry-run-verified (2,879 objects), then deleted unapplied once
+      live testing proved it unnecessary.
 - [ ] [DATA] P1. Finding 1b root-caused precisely (see above, corrected from an earlier wrong hypothesis) — run ONE
       `instruments-service/scripts/build_instrument_catalogue.py --asset-group cefi --mode full` to backfill
       `contract_size` onto all 271,838 delisted CeFi derivative rows currently blank (no code change needed; this is the
