@@ -1023,3 +1023,13 @@ against the reproduction script.
   per-day decay 597→392→2180(08-08, known ASTER stale-tarball burst)→453→18→10→0. Re-fire = the filed dedup-inert gap
   (`dp_escalation_dispatch_dedup_inert_monitor_host_no_pm_clone_2026_08_13.md`, [CODE] P2, Option A ruled), not a data
   regression. No code change, no GCS/manifest write, no VM launch (PM plan-doc append only).**
+- **2026-08-13 (data_pipeline_failure escalation worker, agt-8ec9c8, slot 5) — 28th+ dispatch, NEW escalation_id, same
+  static-backlog close-out; no code fix needed.** Reading 7,806/208,624 = 3.7% (STATIC BACKLOG, "no new attempted_failed
+  activity in 2d"). All 11 fix commits still ancestors of origin/live-defi-rollout (fresh `git fetch`). Fresh bounded
+  cefi-manifest read from THIS host (pyarrow predicate-pushdown, 8G cap) reproduces slot-18's numbers byte-identically:
+  full-history af=295,765; max attempted_at=2026-08-11T14:47Z (2d stale; ZERO rows last 24h AND 48h); zero
+  `"schema contract violated"` since 2026-07-31T04:02:18Z; per-day af decay 3641(08-04)→833→392→2180(08-08, known
+  ASTER/404 wave)→453→18→10→0. Residual af is the OTHER already-tracked Tardis 403/rate-limit family (~180k) +
+  VENUE_FETCH_FAILED (~93k), none schema-contract. Re-fire = the filed dedup-inert gap
+  (`dp_escalation_dispatch_dedup_inert_monitor_host_no_pm_clone_2026_08_13.md`, [CODE] P2, Option A ruled), not a data
+  regression. No code change, no GCS/manifest write, no VM launch (PM plan-doc append only).**
