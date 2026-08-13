@@ -510,3 +510,22 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   this investigation has found beyond the original two (kill-server): a real-time-observed, directly-causal instance of
   the tmpfs-disk-cleanup gap, PLUS a previously-unknown non-resilience gap in the isolation directory's own lifecycle
   that let it silently degrade to the exact vulnerability the whole investigation exists to fix.
+- 2026-08-13 17:46Z-18:10Z: **both previously-blocked pushes landed**, via `--isolated` (operator-directed, worktree
+  approach — the isolated worktree does a fresh detached-HEAD checkout, which sidesteps the Not-Behind Gate the live
+  peer collision was blocking entirely, without ever touching the peer's own working directory or files). This doc:
+  `unified-trading-pm@045ce6a8ee`. The `tmpfs-disk-cleanup.sh` denylist fix took two retries — attempt 1 hit a
+  confirmed-flaky, unrelated `test_session_start_collision_check.bats` failure (verified flaky by re-running standalone,
+  passed clean); attempt 2 then silently no-op'd ("No changes in --files paths") because attempt 1's failure path had
+  evacuated the local edit into a stash without restoring it — found via `git stash list`, popped the correctly-named
+  stash (`qm-iso-evac-87281-...`, unambiguously this session's own), retried, landed clean:
+  `unified-trading-pm@6cd0d6c3ce`. Separately, at the operator's request: found and killed 3 confirmed-dead zombie tmux
+  servers accumulated across today's incidents (2934337 — 7 dead sessions on the ambient socket including the
+  split-brain slot 1; 4184652 — `orch-agent-main` from the very first outage; 3560582 — a superseded isolated-socket
+  generation from before the 17:08 respawn), each verified to have zero live `claude` child processes before touching
+  anything. This surfaced a **fourth** gap: nothing reaps an orphaned tmux SERVER process once its socket is superseded
+  — AO's existing `orphan_reap` only kills individual known `claude` processes by pid, never an abandoned server — so
+  today's two fixes prevent NEW orphaning but don't clean up any future recurrence automatically; tracked as a new todo.
+  **Both landed fixes are pending propagation**: `agent-orchestrator`'s self-healing code fix reaches the running VM
+  only via `ao-self-pull.sh`'s 15-min cron, not yet confirmed live as of this entry. Given the number of real events
+  since the last "clean window" claim, the observation clock restarts from 17:08Z — nothing before that counts toward
+  any future closure bar.
