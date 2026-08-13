@@ -100,12 +100,21 @@ Tardis fetch that reaches this function, not just an occasional-missing-snapshot
       before hardcoding). Add a regression test asserting the constructed blob path matches `writers.py`'s real shape
       (string-level parity, not just "the read doesn't throw"). Repo: market-tick-data-service. —
       market-tick-data-service@b4ca5d7bdf
-- [ ] [DATA] P2. **Verify the downstream classification question above** — confirm whether a live Tardis 400 for an
+- [x] ✅ [DATA] P2. **Verify the downstream classification question above** — confirm whether a live Tardis 400 for an
       actual pre-listing symbol currently lands as `empty_confirmed` or `attempted_failed` in the manifest (read
       `classify_venue_error()`'s Tardis-error-code branch, or check a real manifest sample for a known pre-listing
       symbol/date). If it lands as `attempted_failed`, this becomes a manifest-correctness finding, not just an
       efficiency one, and should be escalated per the workspace's data-pipeline-correctness hard rule. Repo:
-      market-tick-data-service.
+      market-tick-data-service. — **VERIFIED (code-read, 2026-08-13): lands as `empty_confirmed`, NOT
+      `attempted_failed`** — a pre-listing symbol's Tardis 400 carries JSON `code=140` ("dataset not available for
+      <date>" — symbol archived but date before `availableSince`) or `code=300` (symbol not in archive at all), both in
+      `TardisHTTPError.STRUCTURAL_ABSENCE_400_CODES={140,300}` (`market_interface/clients/tardis_base_client.py:152`),
+      so `is_structural_absence` is True and `tardis_csv_transport.py` (streaming `:448` + non-streaming `:541`) returns
+      the honest-absence skip sentinel (same as 404) → `empty_confirmed`, never `record_failed`/`attempted_failed`. The
+      reactive classification backstop is live and correct (UAC `classify_venue_error` registers `140`/`300` as
+      `ErrorAction.SKIP`, per the 2026-07-17 structural-absence SSOT), and the vendor-catalog gate is a second proactive
+      layer. Conclusion: efficiency-only (wasted vendor call while the filter was broken); manifest NOT polluted — no
+      data-pipeline-correctness escalation required. No code change (verification todo).
 
 ## Progress Log
 
@@ -120,3 +129,12 @@ Tardis fetch that reaches this function, not just an occasional-missing-snapshot
     writer's real hive shape. QG green on `market-tick-data-service`, shipped via quickmerge, verified on
     origin/live-defi-rollout — market-tick-data-service@b4ca5d7bdf. Todo 2 (downstream `classify_venue_error()`
     manifest-correctness question) is still open.
+- 2026-08-13: closed todo 2 (downstream classification verification) — confirmed via code-read (the more definitive
+  oracle than a manifest sample, which would only show pre-fix historical rows): a pre-listing symbol's Tardis 400
+  carries JSON `code=140`/`code=300`, both in `TardisHTTPError.STRUCTURAL_ABSENCE_400_CODES`
+  (`tardis_base_client.py:152`), so `is_structural_absence` is True and `tardis_csv_transport.py`'s 400 handlers
+  (streaming + non-streaming) return the honest-absence skip sentinel → `empty_confirmed`, never `attempted_failed`.
+  Reactive backstop is backed by UAC `classify_venue_error` registering `140`/`300` as `ErrorAction.SKIP`, and the
+  vendor-catalog gate (`tardis_vendor_catalog.py`, `availableSince<=date<=availableTo`) is a second proactive layer.
+  Conclusion: efficiency-only (wasted vendor call while the GCS-path filter was broken); the manifest is NOT polluted
+  with `attempted_failed` — no data-pipeline-correctness escalation required. No code change (verification todo).
