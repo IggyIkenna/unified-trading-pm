@@ -1,8 +1,8 @@
 ---
 doc_type: issue
 title: >-
-  Fleet dispatch:done gap driven by tmux session loss mid-task — ROOT CAUSE CONFIRMED: shared-default-socket vulnerable
-  to ANY host process's `tmux kill-server`; TMUX_TMPDIR isolation fix shipping, verifying
+  Fleet dispatch:done gap from tmux session loss — ROOT CAUSE CONFIRMED + FIX VERIFIED: shared default socket isolated
+  via TMUX_TMPDIR, watching for a clean observation window
 summary: >-
   Follow-up from shipping the Fleet Efficiency KPIs `dispatches/done` tile + a slot/role/day breakdown
   (agent-orchestrator@016abaff2f, @8a7a8c0fe0, @<pending>): operator asked why redispatch (retry) is so common and
@@ -14,14 +14,9 @@ summary: >-
   `tmux_session_lost` events in 24h (1203 total, most self-heal via resume and never need a full task requeue): 971/1203
   (81%) have NO planned-teardown or already-in-progress-resume precursor in the preceding 60s (i.e., genuinely abrupt),
   and 508/1203 (42%) fire while the slot is holding an undone dispatched task — directly explaining a meaningful share
-  of the retry/redispatch volume. Correlated against the orchestrator's own `resource_history` samples (24h,
-  `data/state/resource_history/*.jsonl`): CPU%, load_avg_1m, and swap% at the moment of loss were NOT elevated vs. the
-  24h baseline (if anything, median CPU at loss-time was LOWER than the 24h median) — a working hypothesis that acute
-  host resource contention (the host runs ~15-20 concurrent `claude` worker processes plus other repos' heavy pytest/QG
-  runs on one 16-vCPU/30GB box, with the box observed steadily swapping, 5%->21.6% swap-used over 24h with 0 OOM-kills
-  logged) triggers the losses was NOT supported by this pass — swap is climbing gradually but RAM usage stays low
-  (~27%), consistent with normal idle-page reclaim rather than genuine memory pressure. **Root cause since CONFIRMED
-  2026-08-13 — see "ROOT CAUSE CONFIRMED" section below** — this summary is kept as original framing/evidence.
+  of the retry/redispatch volume. Correlated against `resource_history` (24h): CPU%/load/swap at loss-time were NOT
+  elevated vs. baseline — the acute-host-resource-contention hypothesis was not supported by this pass. **Root cause
+  since CONFIRMED 2026-08-13 — see "ROOT CAUSE CONFIRMED" below** — summary kept as original framing/evidence.
 status: open
 nature: issue
 asset_group: [ao]
@@ -146,12 +141,15 @@ any process with shell access (this workspace's own already-documented multi-ope
 whole fleet down with one ordinary command, no malice required. This is why exit-empty (ruled out via a clean controlled
 A/B test proving the mechanism itself works, yet 31 deaths continued after the properly-deployed fix) and
 destroy-unattached (confirmed off) never explained it — those govern the SERVER's own auto-exit logic, not an explicit
-external kill-server request, which auditd's first (too-narrow) query window had missed entirely. **Fix shipped**:
-`agent-orchestrator@873821238b` sets `TMUX_TMPDIR` to a dedicated, non-default directory in `orchestrator.service` — an
-ambient `tmux kill-server` elsewhere on the host now resolves to a completely separate, harmless server. One-time
-cutover cost: existing sessions on the old default socket become unreachable and respawn fresh on restart. Verification
-(does the isolated socket survive an ambient kill-server, and does the death rate drop to zero) still pending — do not
-declare done without it, per the exit-empty lesson.
+external kill-server request, which auditd's first (too-narrow) query window had missed entirely. **Fix shipped +
+VERIFIED end-to-end (2026-08-13)**: `agent-orchestrator@873821238b` sets `TMUX_TMPDIR` to a dedicated directory — but
+its FIRST deploy was inert: tmux silently falls back to the ambient `/tmp` default when the TMUX_TMPDIR parent directory
+doesn't already exist, rather than creating it or erroring (confirmed via strace with a fully clean `env -i`
+environment). Corrected via `agent-orchestrator@5dccbf97b1` (`ExecStartPre=mkdir -p -m 0700 /tmp/ao-fleet-tmux`). After
+the corrected restart: simulated the EXACT real-world scenario (a plain `tmux new-session` + `tmux kill-server`, no
+special flags, matching the original slot-7 capture) — all 7 fleet sessions survived untouched. This is a genuine live
+re-test, not a readback-only check, per the exit-empty lesson. Now watching an extended window for zero new
+`tmux_server_died` events to close this out.
 
 ## Todo
 
@@ -451,9 +449,9 @@ declare done without it, per the exit-empty lesson.
                       REJECTED**, meaning whatever creates these pty-registration attempts happens before or independent of the
                       API's pause-check, not only on a successful spawn. Recovered by ~12:24:16, new PID 942168 — ~78s recovery.
 
-          **SUPERSEDED 2026-08-13**: n=3 utempter burst was real but a CONSEQUENCE not the cause — root
-          cause (see "ROOT CAUSE CONFIRMED" above) is an external `tmux kill-server` from another slot;
-          the burst is just the server's own panes being torn down on shutdown.
+                      **SUPERSEDED 2026-08-13**: n=3 utempter burst was real but a CONSEQUENCE not the cause — root
+                      cause (see "ROOT CAUSE CONFIRMED" above) is an external `tmux kill-server` from another slot;
+                      the burst is just the server's own panes being torn down on shutdown.
 
                       **New measurement trap, found by this catch**: the corrected `newsess=` counter (self-match bug already fixed)
                       STILL read 0 through both deaths, even though `journalctl` proves genuine non-AutoSpawn pane-creation activity
@@ -985,15 +983,15 @@ declare done without it, per the exit-empty lesson.
   `scripts/orchestrator/strace_tmux_server_supervisor.sh`) that stays attached to whichever process is currently the
   tmux server, re-attaching on every respawn. Found 6 deaths in the prior 90min (~1/10min, well above historical
   cadence) — good odds of a live catch soon.
-- 2026-08-12 22:38Z: **mistake, corrected same tick** — death #7 (22:36:57Z→22:38:15Z) happened while the FIRST
-  supervisor variant (`-f`, following every forked pane) was attached and should have recorded it, but its log growth
-  (113MB→648MB/14min) prompted a fix-and-redeploy whose cleanup `rm -f`'d the log before it was ever read —
-  unrecoverable. Fixed (`agent-orchestrator@ee8de4c3d9`, dropped `-f` — only the top-level pid's own signals matter) and
-  added a standing rule: never kill/delete an armed trace without grepping it for a fatal-signal match FIRST.
+- 2026-08-12 22:38Z: **mistake, corrected same tick** — death #7 happened while the FIRST supervisor variant (`-f`,
+  following every forked pane) was attached and should have recorded it, but log growth (113MB→648MB/14min) prompted a
+  fix-and-redeploy whose cleanup `rm -f`'d the log before it was ever read — unrecoverable. Fixed
+  (`agent-orchestrator@ee8de4c3d9`, dropped `-f`); standing rule: never delete an armed trace unread.
 - 2026-08-13 00:06Z-00:38Z: death #8 confirmed self-kill, fix shipped, briefly declared root cause found — then death #9
   FALSIFIED it (same signature on the pid I'd live-confirmed `exit-empty off` on). Self-corrected.
-- 2026-08-13 11:18Z: **actual root cause caught, cross-verified two ways** — widened strace (`network` syscalls) read
-  `"kill-server\0"` literally in an incoming client message, `SO_PEERCRED` named the sender pid, an independent
-  `auditctl` execve record for that SAME pid confirmed `argv=["tmux","kill-server"]` from a DIFFERENT operator slot's
-  cwd. Full read + fix in the "ROOT CAUSE CONFIRMED" section above. `agent-orchestrator@873821238b` shipped
-  (`TMUX_TMPDIR` isolation). Verification pending — do not repeat the exit-empty mistake.
+- 2026-08-13 11:18-12:05Z: **actual root cause caught, cross-verified two ways** — widened strace read `"kill-server\0"`
+  literally in an incoming client message; `SO_PEERCRED` + an independent `auditctl` execve record agreed on the same
+  sender pid, `cwd`=a different operator slot. First fix attempt (`873821238b`) was inert (tmux silently no-ops
+  TMUX_TMPDIR if its dir is missing); corrected (`5dccbf97b1`, `ExecStartPre=mkdir`), restarted, then genuinely
+  re-tested (not just readback) by simulating the exact real scenario — survived. Full detail in "ROOT CAUSE CONFIRMED"
+  above. Watching for a clean window now.

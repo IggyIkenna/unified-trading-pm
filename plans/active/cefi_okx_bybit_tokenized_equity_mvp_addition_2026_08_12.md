@@ -77,7 +77,7 @@ and MVP-tagging needs.
 
 ## Todos
 
-- [ ] [RESEARCH] P1. Live-query OKX's SPOT instruments endpoint
+- [x] ✅ [RESEARCH] P1. Live-query OKX's SPOT instruments endpoint
       (`GET     https://www.okx.com/api/v5/public/instruments?instType=SPOT`) and Bybit's SPOT endpoint
       (`GET     https://api.bybit.com/v5/market/instruments-info?category=spot`) for the full tokenized-equity symbol
       set on each venue (equity-ticker heuristic match, mirroring the equity-perp query method above) — confirm OKX
@@ -109,3 +109,73 @@ and MVP-tagging needs.
   time, per `plans/active/issues/dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md`). Equity-perp listing-date
   research (a related but distinct product class) done the same session and cross-referenced above for convenience; not
   itself part of this plan's scope.
+
+- **2026-08-13 — Todo 1 (research) COMPLETE: live-queried OKX + Bybit SPOT endpoints; BOTH venues' tokenized-equity
+  product classes confirmed, full symbol set + real listing dates captured.** Slot-18 data_engineering worker. Live
+  fetches (public, no auth): `GET https://www.okx.com/api/v5/public/instruments?instType=SPOT` (1359 instruments) and
+  `GET https://api.bybit.com/v5/market/instruments-info?category=spot` (555 instruments), 2026-08-13 UTC. Full result
+  sets persisted at `.tabs/18/.scratch/okx_spot.json` / `bybit_spot.json`.
+
+  **OKX — CONFIRMED tokenized-equity SPOT class exists (answer to "confirm OKX actually has this product class before
+  assuming it does"): 56 `X`-prefixed tokens**, `instCategory=3` (distinct from the 1295 crypto `instCategory=1` SPOT
+  pairs), all `state=live`, USDT-quoted. Symbol form `X<UNDERLYING>-USDT` (base `X<UNDERLYING>`). Every real `listTime`
+  per symbol decoded below.
+
+  | #   | Symbol      | base  | listing (UTC) | #   | Symbol     | base | listing (UTC) |
+  | --- | ----------- | ----- | ------------- | --- | ---------- | ---- | ------------- |
+  | 1   | XMU-USDT    | MU    | 2026-07-16    | 29  | XCOIN-USDT | COIN | 2026-07-24    |
+  | 2   | XNVDA-USDT  | NVDA  | 2026-07-16    | 30  | XIREN-USDT | IREN | 2026-07-24    |
+  | 3   | XQQQ-USDT   | QQQ   | 2026-07-16    | 31  | XLLY-USDT  | LLY  | 2026-07-24    |
+  | 4   | XSKHY-USDT  | SKHY  | 2026-07-16    | 32  | XDELL-USDT | DELL | 2026-07-24    |
+  | 5   | XSNDK-USDT  | SNDK  | 2026-07-16    | 33  | XPLTR-USDT | PLTR | 2026-07-24    |
+  | 6   | XSPCX-USDT  | SPCX  | 2026-07-16    | 34  | XNFLX-USDT | NFLX | 2026-07-24    |
+  | 7   | XSPY-USDT   | SPY   | 2026-07-16    | 35  | XBMNR-USDT | BMNR | 2026-07-24    |
+  | 8   | XTSLA-USDT  | TSLA  | 2026-07-16    | 36  | XASTS-USDT | ASTS | 2026-07-24    |
+  | 9   | XAAPL-USDT  | AAPL  | 2026-07-16    | 37  | XHIMS-USDT | HIMS | 2026-07-28    |
+  | 10  | XCRCL-USDT  | CRCL  | 2026-07-16    | 38  | XGME-USDT  | GME  | 2026-07-28    |
+  | 11  | XEWY-USDT   | EWY   | 2026-07-16    | 39  | XCSCO-USDT | CSCO | 2026-07-28    |
+  | 12  | XGOOGL-USDT | GOOGL | 2026-07-16    | 40  | XCRWD-USDT | CRWD | 2026-07-28    |
+  | 13  | XINTC-USDT  | INTC  | 2026-07-16    | 41  | XASML-USDT | ASML | 2026-07-29    |
+  | 14  | XMRVL-USDT  | MRVL  | 2026-07-16    | 42  | XAMAT-USDT | AMAT | 2026-07-29    |
+  | 15  | XMSFT-USDT  | MSFT  | 2026-07-16    | 43  | XXLE-USDT  | XLE  | 2026-07-29    |
+  | 16  | XSOXL-USDT  | SOXL  | 2026-07-16    | 44  | XADBE-USDT | ADBE | 2026-07-29    |
+  | 17  | XAMD-USDT   | AMD   | 2026-07-16    | 45  | XONDS-USDT | ONDS | 2026-07-29    |
+  | 18  | XAMZN-USDT  | AMZN  | 2026-07-16    | 46  | XGEV-USDT  | GEV  | 2026-07-29    |
+  | 19  | XAVGO-USDT  | AVGO  | 2026-07-16    | 47  | XVRT-USDT  | VRT  | 2026-07-29    |
+  | 20  | XIWM-USDT   | IWM   | 2026-07-16    | 48  | XTER-USDT  | TER  | 2026-07-29    |
+  | 21  | XLITE-USDT  | LITE  | 2026-07-16    | 49  | XAAOI-USDT | AAOI | 2026-08-13    |
+  | 22  | XMETA-USDT  | META  | 2026-07-16    | 50  | XNBIS-USDT | NBIS | 2026-08-13    |
+  | 23  | XMSTR-USDT  | MSTR  | 2026-07-16    | 51  | XCBRS-USDT | CBRS | 2026-08-13    |
+  | 24  | XTSM-USDT   | TSM   | 2026-07-16    | 52  | XARM-USDT  | ARM  | 2026-08-13    |
+  | 25  | XIBM-USDT   | IBM   | 2026-07-23    | 53  | XTQQQ-USDT | TQQQ | 2026-08-13    |
+  | 26  | XHOOD-USDT  | HOOD  | 2026-07-23    | 54  | XRKLB-USDT | RKLB | 2026-08-13    |
+  | 27  | XORCL-USDT  | ORCL  | 2026-07-23    | 55  | XBE-USDT   | BE   | 2026-08-13    |
+  | 28  | XUSAR-USDT  | USAR  | 2026-07-23    | 56  | XCRWV-USDT | CRWV | 2026-08-13    |
+
+  _(Full 56-row set = 24 listed 2026-07-16, 4 on 07-23, 8 on 07-24, 4 on 07-28, 8 on 07-29, 8 on 2026-08-13 [today].)_
+
+  **Bybit — CONFIRMED 11 `xstocks`** (`symbolType="xstocks"`, the venue's explicit tokenized-stock marker), all
+  `status=Trading`, USDT-quoted: NVDAX, COINX, AAPLX, CRCLX, METAX, HOODX, AMZNX, GOOGLX, MCDX, TSLAX, SPCXX. Base form
+  `<TICKER>X` → underlying via `base[:-1]` (`AAPLX`→AAPL, `SPCXX`→SPCX). **Bybit spot `instruments-info` has NO
+  `launchTime` field** (field set = symbolId/baseCoin/quoteCoin/innovation/status/marginTrading/stTag/lotSizeFilter/
+  priceFilter/riskParameters/symbolType/xstockMultiplier) — per-symbol listing dates are NOT retrievable from this
+  endpoint; the earliest-observation via the venue's listing-news/wire or the Tardis archive start is the backfill floor
+  (recommendation for Todo 4). `xstockMultiplier≈1` on every xstock (present on ALL symbols incl. BTCUSDT — NOT a
+  tokenized discriminator; `symbolType="xstocks"` IS the discriminator).
+
+  **Venue plumbing — the OKX/Bybit SPOT tokenized-equity products ride the EXISTING Tardis CeFi pipeline (pre-answers
+  the plan's P2 "same Tardis archive?" question).** `canonical_mappings.py` `DATA_SOURCE_TO_VENUES["tardis"]` already
+  includes `OKX-SPOT` and `BYBIT-SPOT`; `VENUE_TO_DATA_SOURCE` maps both to `tardis`; `market_data_categories.py`
+  declares `OKX-SPOT`/`BYBIT-SPOT` as canonical cefi venues (2026-07-10/2026-08-04 operator decisions); and
+  `venue_constants.py` `INSTRUMENT_TYPE_FOLDER_MAP` already carries `SPOT_PAIR` for both. So no new fetch path — the
+  backlog work is universe+canonical registration (Todos 2-3) + IS InstrumentRecord registration (Todo 4), then the
+  existing Tardis backfill launcher covers them. Caveat for Todo 2: a token's SPOT is captured only where the venue ALSO
+  lists a perp for the base per the ordinary CeFi rule — these tokenized equities have NO perp leg; the
+  `STAKING_SPOT_EXCEPTION`-style carve-out precedent (operator 2026-06-23) is the registration mechanism to mirror.
+
+  **Findings for the UAC todos (2-4) — symbols needing registration:** OKX 56 X-token underlyings (base form
+  `X<UNDERLYING>` for the cefi universe / `X<UNDERLYING>-USDT` instrument_id) + Bybit 11 xstocks (`<TICKER>X` base).
+  `instrument_type=SPOT_PAIR` + `tracks_equity=<canonical ticker>` via `crypto_equity_link.tracks_equity()` (7 wired
+  today; 45+ more underlyings need the link map extended — incl. the CRCL/COIN/HOOD/CRWD/DELL/ORCL/IBM/LLY/MCD set where
+  the real-equity DBEQ.BASIC twin exists). SpaceX tokens (XSPCX / SPCXX) → `tracks_equity=""` standalone, mirroring the
+  SPCX pre-IPO handling.
