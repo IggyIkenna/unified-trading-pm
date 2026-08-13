@@ -155,8 +155,28 @@ _resolve_token() { # $1 = IS_LOOPBACK (0|1)
     # /api/slots/.../git-status route on it, so it just answers 200 for anything —
     # good enough to prove the request is sent WITHOUT crashing on an empty header
     # and that curl doesn't error building the command).
+    #
+    # This test's own name says "loopback" -- resolve_token_for_slot()'s empty-token
+    # success path only fires when IS_LOOPBACK=1 (its last fallback: `[[ "$IS_LOOPBACK"
+    # -eq 1 ]] && return 0` with no token). Neither the original nor an earlier fix attempt
+    # ever forced that -- IS_LOOPBACK was left to whatever the reporter's own source-time
+    # probe against the REAL default orchestrator URL happened to resolve on the machine
+    # running the test, which is not what "loopback" means here. Two ways this drifted:
+    #   1. HOME left unpinned: resolve_token_for_slot() falls through to the AMBIENT $HOME
+    #      and picks up a real operator's ~/.orch_token if one exists (it does on any laptop
+    #      that has used the orchestrator locally), taking the non-empty-token branch --
+    #      passed locally by accident, never exercising the empty-token path at all.
+    #   2. IS_LOOPBACK unset: on a fresh CI runner (no ~/.orch_token, no /tmp/orch_token, no
+    #      IS_LOOPBACK=1) resolve_token_for_slot() returns 1 (no token found ANYWHERE) and
+    #      post_snapshot returns early with "[skip:no-token]" -- never reaching the curl
+    #      POST this test exists to exercise, so "[ok] slot 99" never appeared.
+    # Both found live 2026-08-13 contributing to a 12+ hour block of every PM promote-PR QG
+    # slice. Pin HOME to the empty fake dir AND force IS_LOOPBACK=1 so the test deterministically
+    # exercises the exact path its own name claims, regardless of the host's ambient state.
     run bash -c '
         source "'"${REPORTER_ABS}"'" --workspace "'"${EMPTY_WS}"'" --quiet
+        HOME="'"${FAKE_HOME}"'"
+        IS_LOOPBACK=1
         ORCH_URL="http://127.0.0.1:'"${HEALTH_PORT}"'"
         post_snapshot 99 "$(printf "repo\tmain\tclean\t0\t0\t0\tabc123\tlive-defi-rollout\t\t\t\n")"
     '

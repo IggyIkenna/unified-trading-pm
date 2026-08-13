@@ -83,8 +83,26 @@ teardown() {
 # "illegal option -- c" on macOS BSD stat -- the production script under test here
 # (slot-git-status-report.sh) already has this exact fallback as stat_mtime_epoch(); this
 # test-local copy mirrors it rather than sourcing the reporter script for just this helper).
+#
+# 2026-08-13: an `||`-chained `stat -f %m ... || stat -c %Y ...` (as below, formerly) is NOT
+# equivalent to the production script's `uname`-based branch on Linux -- GNU coreutils'
+# `-f` means "report FILESYSTEM info", not "custom format" (that's BSD-only; GNU's format
+# flag is `-c`). `stat -f %m FILE` on GNU therefore treats `%m` and FILE as two separate
+# file OPERANDS, fails on the nonexistent `%m` operand (nonzero exit -> the `||` fallback
+# DOES fire) but has already written filesystem-info output for the real operand to stdout
+# first -- command substitution captures both commands' stdout across the whole `||` chain,
+# so the captured value was contaminated multi-line garbage on Linux, not a clean integer.
+# `[ "${after}" -gt "${before}" ]` then failed with "integer expression expected" (status 2,
+# not a real mtime-comparison failure) -- 100% deterministic on every GitHub Actions run
+# (Linux) while always passing on a macOS dev machine, found live 2026-08-13 contributing to
+# a 12+ hour block of every PM promote-PR QG slice. Mirror the production script's actual
+# `uname`-gated branch instead of an exit-code-only `||` chain.
 _stat_mtime_epoch() {
-    stat -f %m "$1" 2>/dev/null || stat -c %Y "$1" 2>/dev/null || true
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        stat -f %m "$1" 2>/dev/null || true
+    else
+        stat -c %Y "$1" 2>/dev/null || true
+    fi
 }
 
 _write_claim() {

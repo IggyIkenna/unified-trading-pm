@@ -55,13 +55,21 @@ setup() {
   # would fetch) -- fetch first so the hook sees a truly-caught-up state.
   git fetch -q origin live-defi-rollout
   git reset -q --hard origin/live-defi-rollout
-  run bash "$HOOK"
+  # The hook's own first line short-circuits `exit 0` whenever GITHUB_ACTIONS/CI is set
+  # ("Skipped in CI" -- correct for the hook's real deployment, since agents' committing
+  # shells always run outside a CI runner). This suite runs INSIDE quality-gates-v2's own
+  # GitHub Actions job, so those vars are ambiently set there and were never set on a local
+  # dev run -- every test below deterministically exercised the CI-skip early-exit (not the
+  # hook logic under test) on every CI run while passing locally by accident, found live
+  # 2026-08-13 blocking every PM promote-PR QG slice for 12+ hours. Strip both so the hook
+  # always runs its real logic regardless of the ambient runner.
+  run env -u GITHUB_ACTIONS -u CI bash "$HOOK"
   [ "$status" -eq 0 ]
 }
 
 @test "behind origin, DRIFT_GATE_ADVISORY unset: hard-blocks (the case this hook exists for)" {
   cd "${WORK}/repo"
-  run bash "$HOOK"
+  run env -u GITHUB_ACTIONS -u CI bash "$HOOK"
   [ "$status" -eq 1 ]
   [[ "$output" == *"BRANCH DRIFT"* ]]
   [[ "$output" == *"Human-only"* ]]
@@ -69,14 +77,14 @@ setup() {
 
 @test "behind origin, DRIFT_GATE_ADVISORY=1: warns and exits 0 (reconciling wrapper's own commit)" {
   cd "${WORK}/repo"
-  DRIFT_GATE_ADVISORY=1 run bash "$HOOK"
+  DRIFT_GATE_ADVISORY=1 run env -u GITHUB_ACTIONS -u CI bash "$HOOK"
   [ "$status" -eq 0 ]
   [[ "$output" == *"ADVISORY"* ]]
 }
 
 @test "SKIP_BRANCH_DRIFT still wins over DRIFT_GATE_ADVISORY (human override untouched)" {
   cd "${WORK}/repo"
-  SKIP_BRANCH_DRIFT=1 DRIFT_GATE_ADVISORY=0 run bash "$HOOK"
+  SKIP_BRANCH_DRIFT=1 DRIFT_GATE_ADVISORY=0 run env -u GITHUB_ACTIONS -u CI bash "$HOOK"
   [ "$status" -eq 0 ]
 }
 
