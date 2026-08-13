@@ -142,10 +142,15 @@ bridges them; it does not extend one over the other.
       Registering the pool as well would be a redundant second layer and a double-drain risk. Closed with the proving
       test instead: unified-trading-library@3378696710 (`test_streaming_parquet_writer_self_registers_and_deregisters`,
       `test_empty_writer_drain_is_a_noop`)
-- [ ] [CODE] P0. Migrate `_preemption_signal` to install its handler THROUGH the drain registry rather than owning its
-      own, so exactly one SIGTERM handler exists per process and the manifest buffer keeps its current guaranteed-drain
-      semantics. Repo: unified-trading-library. **Sharpened 2026-08-12 — this is an ORDERING-FRAGILITY fix, not a
-      cosmetic one.** With two independent chained handlers, drain order is decided by install order:
+- [x] 7. ✅ [CODE] P0. Migrate `_preemption_signal` to install its handler THROUGH the drain registry rather than owning
+      its own, so exactly one SIGTERM handler exists per process and the manifest buffer keeps its current
+      guaranteed-drain semantics. Repo: unified-trading-library. — unified-trading-library@15e285f007 (QG green 218s,
+      real run not sentinel). Deleted (no shims): `_handle_preemption_signal`, `_chain_to_previous_signal_handler`,
+      `_PREV_SIGNAL_HANDLERS`, `_SIGNAL_HANDLER_STATE`, `_PREEMPTION_SIGNALS` + their `__init__` re-exports. Their
+      behaviour MOVED to `tests/unit/test_drain_registry.py` (SIG_DFL re-delivery, SIG_IGN preservation, off-main-thread
+      no-op, idempotent install, chaining, never-raising); the manifest tests keep the per-VM debounce regression and
+      gain `test_manifest_is_registered_and_drains_last`. **Sharpened 2026-08-12 — this is an ORDERING-FRAGILITY fix,
+      not a cosmetic one.** With two independent chained handlers, drain order is decided by install order:
       `manifest_writer/__init__` installs at IMPORT, `drain_registry` installs when the first `StreamingParquetWriter`
       is CONSTRUCTED (later), so the later-installed registry handler runs first and chains to the manifest's —
       data-writers-then-manifest, the correct order, but only by accident of sequence. A process that constructs a
