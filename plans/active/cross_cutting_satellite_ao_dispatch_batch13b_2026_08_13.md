@@ -73,9 +73,17 @@ source: >-
 
 ## Todos
 
-- [ ] [CODE] P2. Diagnose why no successor promote PR opened for market-tick-data-service (check
+- [x] ✅ [CODE] P2. Diagnose why no successor promote PR opened for market-tick-data-service (check
       ldr_to_main_fleet_promote.sh per-repo logic and ahead_by trend) Source:
-      `plans/active/issues/mtds_main_promotion_stall_and_qg_alert_redispatch_2026_08_11.md`
+      `plans/active/issues/mtds_main_promotion_stall_and_qg_alert_redispatch_2026_08_11.md` —
+      unified-trading-pm@0f26818135: **DIAGNOSED — correct behavior, not a stall.** Fleet bot ran + evaluated MTDS each
+      tick (verbatim run 31477434767 09:22:47Z:
+      `SKIP market-tick-data-service: main tree == LDR tree (content-identical)`). The `ahead_by` 1384→1436 is
+      squash-skew SHA noise, not unpromoted content: LDR carries 1436 original commit SHAs the squash promote never
+      replays onto main; `git rev-parse main^{tree} == LDR^{tree}` (byte-identical). No successor PR opened because
+      there was nothing to promote. Code fix: SKIP line now prints the compare ahead_by so this reads as a
+      self-documented correct decision. A successor PR (#963) did open once real content landed 08-12, then merged
+      stream #963-#980; #981 (current LDR tip cbc6531b) is open + mergeable(blocked on its own v2).
 - [ ] [CODE] P2. Read unified-trading-ci's python-quality-gates-v2.yml on: trigger config to find and fix the ~15-min
       redispatch, or migrate the Slack step to the dedup'd notify-slack.yml carrier Source:
       `plans/active/issues/mtds_main_promotion_stall_and_qg_alert_redispatch_2026_08_11.md`

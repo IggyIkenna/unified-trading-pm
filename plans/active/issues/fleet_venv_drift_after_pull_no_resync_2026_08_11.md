@@ -62,6 +62,9 @@ source: found 2026-08-11 while shipping the DeepSeek wallet sampler — the repo
 `iter_route_contexts` (present from 0.140.7), so `tests/conftest.py` failed to import and **not one test could collect**
 — verified by traceback in both, and verified fixed after `uv sync`.
 
+> **Owner for the stale-venv / `iter_route_contexts` ImportError**:
+> /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
+
 **Why it stayed invisible**: the gate fails closed on a MISSING `.venv/bin/python` but never compared an existing venv
 against `uv.lock`. A drifted env therefore ran the whole gate and surfaced one failed pytest step, which reads as a code
 defect rather than an environment one.

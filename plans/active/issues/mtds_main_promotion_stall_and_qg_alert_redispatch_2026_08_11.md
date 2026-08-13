@@ -120,10 +120,19 @@ applies.
 
 ## Follow-ups
 
-- [ ] [SCRIPT] P1. Diagnose why no successor promote PR opened for `market-tick-data-service` across 3+ fleet-bot ticks
-      after PR #953 closed — read `scripts/cicd/ldr_to_main_fleet_promote.sh`'s per-repo logic + the 08:52/ 09:00/09:15
-      run logs, and re-check current `ahead_by` (was 1384 at 09:15Z — confirm whether it's grown, shrunk, or stable).
-      (repo: unified-trading-pm / market-tick-data-service)
+- [x] ✅ [SCRIPT] P1. Diagnose why no successor promote PR opened for `market-tick-data-service` across 3+ fleet-bot
+      ticks after PR #953 closed — read `scripts/cicd/ldr_to_main_fleet_promote.sh`'s per-repo logic + the 08:52/
+      09:00/09:15 run logs, and re-check current `ahead_by` (was 1384 at 09:15Z — confirm whether it's grown, shrunk, or
+      stable). (repo: unified-trading-pm / market-tick-data-service) **RESOLVED 2026-08-13
+      (cross_cutting_satellite_ao_dispatch_batch13b, unified-trading-pm@0f26818135) — correct behavior, not a stall.**
+      Fleet bot evaluated MTDS each tick; verbatim run 31477434767 (09:22:47Z):
+      `SKIP market-tick-data-service:     main tree == LDR tree (content-identical; any ahead_by is squash-accounting noise)`.
+      `ahead_by` grew 1384→1436 but is squash-skew SHA-count noise: LDR carries the 1436 original commit SHAs a squash
+      promote never replays onto main, while `git rev-parse main^{tree} == LDR^{tree}` (byte-identical content). No
+      successor PR = nothing to promote. A successor (#963) DID open once real content landed 08-12 (merged stream
+      #963-#980); #981 (tip cbc6531b) is open now. Code fix added: the content-gate SKIP line now prints compare
+      ahead_by to self-document the squash-skew. Note: the QG-redispatch half of this issue (Finding 2) is a SEPARATE
+      todo in cross_cutting_satellite_ao_dispatch_batch13b, not covered here.
 - [ ] [SCRIPT] P2. Read `unified-trading-ci/.github/workflows/python-quality-gates-v2.yml`'s `on:` trigger config to
       find what re-dispatches a promote-PR's `quality-gates-v2` check on an unchanged head every ~15 min, and fix the
       redispatch (or, if redispatch is intentional/correct, migrate the "QG Slice Failed" Slack step to the dedup'd

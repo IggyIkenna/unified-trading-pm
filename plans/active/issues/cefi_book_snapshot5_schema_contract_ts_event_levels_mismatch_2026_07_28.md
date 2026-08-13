@@ -772,6 +772,9 @@ against the reproduction script.
   `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s still-open Option A recommendation for dedup at
   the orchestrator dispatch layer.
 
+> **Owner for the stale-venv / `iter_route_contexts` ImportError**:
+> /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
+
 - **2026-08-03 (data_pipeline_failure escalation worker, agt-e11908, slot 9) — 20th+ dispatch, SAME escalation_id
   (`agt-e11908`) as the entry directly above, dispatched to a second slot (slot 4 then slot 9) — the fifth confirmed
   exact-duplicate-escalation_id case (after `agt-ccb54c` 2026-07-30, `agt-0bf4a3` 2026-07-31, `agt-406c1f` 2026-07-31,
@@ -1018,5 +1021,15 @@ against the reproduction script.
   cefi manifest (pyarrow row-group filters, 6G cap): full-history af=295,765; max attempted_at=2026-08-11T14:47Z (2d,
   ZERO rows last 24h — more static than the alert's "1d"); zero `"schema contract violated"` since 2026-07-31T04:02Z;
   per-day decay 597→392→2180(08-08, known ASTER stale-tarball burst)→453→18→10→0. Re-fire = the filed dedup-inert gap
+  (`dp_escalation_dispatch_dedup_inert_monitor_host_no_pm_clone_2026_08_13.md`, [CODE] P2, Option A ruled), not a data
+  regression. No code change, no GCS/manifest write, no VM launch (PM plan-doc append only).**
+- **2026-08-13 (data_pipeline_failure escalation worker, agt-8ec9c8, slot 5) — 28th+ dispatch, NEW escalation_id, same
+  static-backlog close-out; no code fix needed.** Reading 7,806/208,624 = 3.7% (STATIC BACKLOG, "no new attempted_failed
+  activity in 2d"). All 11 fix commits still ancestors of origin/live-defi-rollout (fresh `git fetch`). Fresh bounded
+  cefi-manifest read from THIS host (pyarrow predicate-pushdown, 8G cap) reproduces slot-18's numbers byte-identically:
+  full-history af=295,765; max attempted_at=2026-08-11T14:47Z (2d stale; ZERO rows last 24h AND 48h); zero
+  `"schema contract violated"` since 2026-07-31T04:02:18Z; per-day af decay 3641(08-04)→833→392→2180(08-08, known
+  ASTER/404 wave)→453→18→10→0. Residual af is the OTHER already-tracked Tardis 403/rate-limit family (~180k) +
+  VENUE_FETCH_FAILED (~93k), none schema-contract. Re-fire = the filed dedup-inert gap
   (`dp_escalation_dispatch_dedup_inert_monitor_host_no_pm_clone_2026_08_13.md`, [CODE] P2, Option A ruled), not a data
   regression. No code change, no GCS/manifest write, no VM launch (PM plan-doc append only).**

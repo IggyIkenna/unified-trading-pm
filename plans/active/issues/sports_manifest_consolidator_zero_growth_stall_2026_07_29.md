@@ -395,6 +395,9 @@ CLAUDE.md § async-discipline already warns about, here in a skip predicate rath
   `VIRTUAL_ENV=… uv pip install 'fastapi>=0.137.0,<1.0.0'` in `unified-trading-library/.venv` only. Prod images are
   unaffected (they honour the pin); this is local venv drift. Tracked as a todo below.
 
+> **Owner for the stale-venv / `iter_route_contexts` ImportError**:
+> /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
+
 - [x] ✅ [SCRIPT] P3. **Re-sync the slot local venvs to UTL's declared `fastapi>=0.137.0` pin** — slot-11 2026-08-01.
       `uv sync` run in `unified-trading-library`, `market-tick-data-service`, `instruments-service` (already green,
       0.140.7) and `deployment-service`; all four now resolve `fastapi==0.140.7` and

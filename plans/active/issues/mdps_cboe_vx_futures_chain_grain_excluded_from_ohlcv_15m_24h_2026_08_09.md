@@ -170,17 +170,38 @@ market-tick-data-service, not MDPS) to additionally emit or re-key per-contract 
       the doc's own recommended path (narrowest blast radius, matches the 2026-08-07 ruling's "MDPS-owned,
       general-purpose" framing) — option (b) is a bigger, more invasive change outside MDPS-only scope, and neither the
       ruling nor this re-read surfaced a third path worth taking instead.
-- [ ] [CODE] P2. **Implement option (a)**: extend the exclusion/allow-list to key on `(venue, instrument_type)`, admit
-      CBOE `underlying=VIX` at `futures_chain` grain for `ohlcv_15m`/`ohlcv_24h` while CME combo/calendar-spreads stay
-      excluded, then build the bundle-aware manifest-write path resolving the shard-identity question in "Why it
-      matters" above (the manifest's captured CBOE ohlcv_1m/1s rows already carry `instrument_id=CBOE:FUTURE:VIX` even
-      under the `futures_chain` path segment — that FUTURE-shaped id is the natural candidate for the aggregated row's
-      identity too, but confirm against how downstream `vix_features` consumers actually key off it before assuming).
-      Re-scope `tradfi_satellite_ao_dispatch_batch9_2026_08_09.md` todo 2 to this concrete path once picked up. Repo:
-      market-data-processing-service + unified-api-contracts. Not implemented in this session (design ruling only) —
-      needs its own scoped session with the live manifest available to verify against. Done when:
-      `ohlcv_15m`/`ohlcv_24h` requests for CBOE VIX futures produce real candles without reopening the CME combo
-      `SchemaContractNotFoundError` crash.
+- [x] ✅ [CODE] P2. **DONE 2026-08-13 (slot-30, worker) — `market-data-processing-service@3c86d4ef1` +
+      `unified-api-contracts@8688745b`.** Implemented option (a) as a `(venue, instrument_type)`-keyed carve-out: (1)
+      MDPS `orchestration_scanner.py` — replaced the hardcoded inline CBOE exception with a declarative
+      `_COARSE_TIMEFRAME_CHAIN_ADMISSIONS = {("CBOE","futures_chain")}` allow-list + a
+      `_blob_excluded_from_coarse_timeframes` helper, used at BOTH exclusion call-sites (fallback path +
+      `_collect_matching_parquet_blobs`); CBOE `futures_chain` is now admitted for `ohlcv_15m`/`ohlcv_24h`, CME
+      `combo`/`futures_chain` stays excluded. (2) UAC `market_data_categories.py` — added
+      `VALID_DATA_TYPES_VENUE_ADDITIONS` (the additive mirror of the ICE-only `VALID_DATA_TYPES_VENUE_EXCLUSIONS`) +
+      wired it into `valid_data_types_for_venue_instrument_type`, so `(tradfi, CBOE, futures_chain)` now resolves
+      `{trades, ohlcv_1s, ohlcv_1m, tbbo, ohlcv_15m, ohlcv_24h}` while CME/ICE and the venue-less AG-level set are
+      byte-identical to pre-fix. Both repos QG-green; both SHAs verified ancestors of `origin/live-defi-rollout`.
+      **Bundle-aware write path + shard-identity: already present, NOT re-built.** The
+      `ohlcv_1m`→`ohlcv_15m`/`ohlcv_24h` aggregation (OHLC bucketing in
+      `TradfiOhlcvPassthroughAdapter.process_to_candles`, `related_data_types` on the 15m/24h adapters) and the
+      `futures_chain`/`ohlcv_15m`/`ohlcv_24h` SchemaContracts (`_candle_contracts.py`, shipped
+      `unified-api-contracts@2fbe8278`) all already exist; the chain-streaming path resolves `instrument_id` from the
+      parquet's authoritative `instrument_id` column (`live_workers_streaming.py:346`) — which the live manifest's CBOE
+      rows already carry as `CBOE:FUTURE:VIX`, the natural aggregated-row identity. The only thing actually blocking
+      CBOE was the scanner exclusion + the validity-matrix admission gap — both now fixed. **Done-when (live candle
+      verification) is NOT claimed here**: no live VM re-run was launched; a real `ohlcv_15m`/`ohlcv_24h` manifest row
+      for CBOE VX-futures still needs a `mdps-backfill-tradfi-*` run over an affected date to confirm end-to-end.
+
+- [ ] [SCRIPT] P2. **Live-verify option (a) end-to-end (remaining done-when).** Run
+      `mdps-backfill-tradfi-* --force --data-types "ohlcv_15m ohlcv_24h" --venues "CBOE CME" tradfi 2026-07-20     2026-07-24 full`
+      over dates with confirmed CBOE `futures_chain` ohlcv_1m/1s raw capture (2,942 captured rows,
+      2020-06-01→2026-08-06), after refreshing the floating MDPS tarball
+      (`create-code-tarballs.sh --include market-data-processing-service`, per `vm-tarball-deployment.md`), and confirm
+      a real `ohlcv_15m`/`ohlcv_24h` candle row lands in the manifest for CBOE `futures_chain` WITHOUT reopening the CME
+      combo `SchemaContractNotFoundError` crash (run CME in the same pass to prove the exclusion still holds). Safe /
+      idempotent: a `--force` backfill re-writes canonical skip-if-fresh paths; no GCS delete, no `--apply`. Repo:
+      market-data-processing-service (+ deployment-service for the tarball refresh). This is the shared remaining
+      done-when of this doc's `[CODE] P2` above and `tradfi_satellite_ao_dispatch_batch9_2026_08_09.md` todo 2.
 
 # Progress Log
 
@@ -192,3 +213,15 @@ market-tick-data-service, not MDPS) to additionally emit or re-key per-contract 
   conflict with this todo's 2026-08-07 ruling, not a bounded implementation gap. Filed this issue doc rather than absorb
   the unplanned architecture-judgment scope; batch9 todo 2 left `- [ ]` (NOT flipped) pending the operator decision
   above.
+
+- 2026-08-13 (slot-30, worker): dispatched the `[CODE] P2 Implement option (a)` todo. Implemented the
+  `(venue, instrument_type)`-keyed carve-out: MDPS `orchestration_scanner.py` (`_COARSE_TIMEFRAME_CHAIN_ADMISSIONS` +
+  `_blob_excluded_from_coarse_timeframes`) and UAC `VALID_DATA_TYPES_VENUE_ADDITIONS` wired into
+  `valid_data_types_for_venue_instrument_type`. Both QG-green and shipped (`market-data-processing-service@3c86d4ef1`,
+  `unified-api-contracts@8688745b`). Confirmed the bundle-aware write path + shard-identity already exist (no re-build
+  needed): aggregation = `TradfiOhlcvPassthroughAdapter.process_to_candles`; SchemaContracts = `_candle_contracts.py`
+  `futures_chain` 15m/24h (`uac@2fbe8278`); `instrument_id` resolution = parquet's authoritative `instrument_id` column
+  (`live_workers_streaming.py:346`) → `CBOE:FUTURE:VIX`. **NOT live-verified** — no `mdps-backfill-tradfi-*` run
+  launched, so the issue doc's done-when (real candles without reopening the CME crash) still needs a VM run over an
+  affected CBOE date; that live-verify is `tradfi_satellite_ao_dispatch_batch9_2026_08_09.md` todo 2's own done-when,
+  left `- [ ]`.
