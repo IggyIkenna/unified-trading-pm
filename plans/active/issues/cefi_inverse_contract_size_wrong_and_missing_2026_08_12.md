@@ -7,9 +7,10 @@ summary: >-
   face value to 1 (correct by coincidence for Bybit/Kraken, wrong for OKX non-BTC alts and Deribit BTC — understated
   10x/100x) because Tardis's free instrument-enumeration endpoint never carries contractMultiplier and the paid tier
   that does isn't in this workspace's current subscription. Fixed via a reverse-engineered, sourced UAC registry
-  (unified-api-contracts@<pending>). A SEPARATE finding — 30/64 target instruments got ZERO successful writes the entire
-  re-derive run, not intermittent — splits into a BYBIT stale-id-format bug (caller-side, MDPS threads a pre-migration
-  id shape) and an OKX-SWAP delisted-instrument capture/rollup gap (not yet resolved).
+  (unified-api-contracts@49ad03df3d), wired into MDPS (market-data-processing-service@ae23ee5c03). A SEPARATE finding —
+  30/64 target instruments got ZERO successful writes the entire re-derive run, not intermittent — splits into a BYBIT
+  stale-id-format bug (caller-side, MDPS threads a pre-migration id shape) and an OKX-SWAP delisted-instrument
+  capture/rollup gap (not yet resolved).
 status: open
 nature: issue
 asset_group: [cefi]
