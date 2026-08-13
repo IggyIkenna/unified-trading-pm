@@ -377,7 +377,7 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
 - [x] ✅ [SCRIPT] P0. Re-run `measure_honest_coverage` on the corrected catalogue + seeded manifests (**06-29 numbers
       are stale** — predate v12, the incremental-rollup switch, and the cefi 122-row ghost-dupe fix of 07-04). **DONE —
       reconciled 2026-07-28 against `plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md`
-      (`status:     complete`, own todo `[x]`, DONE 2026-07-07 06:22 UTC).** Multi-AG
+      (`status: complete`, own todo `[x]`, DONE 2026-07-07 06:22 UTC).** Multi-AG
       `measure_honest_coverage.py --asset-group all` run on `is@68f174a` with both cross-plan PREREQs verified
       (KALSHI-PERP purge + Plan-5 unregistered-handler audit). Run id `2026-07-07T06:20:58Z / is@68f174a`; evidence
       artefact `coverage_all_20260707T062058Z.json` (4.6 MB).

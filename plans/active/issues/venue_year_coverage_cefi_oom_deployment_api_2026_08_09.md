@@ -287,7 +287,7 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       `df.apply(..., axis=1)` once per row-group chunk (215 for cefi's current ~26M-row manifest), for EVERY `scope=mvp`
       request. Live repro 2026-08-11 (slot 32, infra re-verification): `scope=mvp` against the deployed,
       `_classify`-fixed revision `uts-shared-deployment-api-00523-kwt` still WORKER-TIMED-OUT + SIGABRT'd
-      (`Uncaught     signal: 6`, `[CRITICAL] WORKER TIMEOUT (pid:22)` @2026-08-11T17:17:39Z) — faulthandler dump
+      (`Uncaught signal: 6`, `[CRITICAL] WORKER TIMEOUT (pid:22)` @2026-08-11T17:17:39Z) — faulthandler dump
       confirms the abort site as `_coverage_scope.py:76` (`_manifest_cell`) ← `is_mvp_for_manifest_row:111` ←
       `_row_is_mvp:130` ← `pandas/core/apply.py` ← `filter_to_mvp:132` ← `_process_manifest_chunk:154` ←
       `get_venue_year_coverage:320`. Needs a vectorized or per-row-group-cached `is_mvp` evaluation (the 4 extra axes —
