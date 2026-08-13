@@ -55,8 +55,12 @@ code_refs:
 > | ---------------------------------------------------------------------------------------------------- | ------------------------------------------- |
 > | `enable_transfer_rebalancing` never forwarded — `make_worker_target`'s `False` default always won    | ✅ FIXED `strategy-service@db6e38ae3a`      |
 > | Four competing transfer-type enums, no shared vocabulary                                             | ✅ FIXED `unified-api-contracts@4663daf908` |
-> | Nothing sends `REBALANCE_PERIOD_TICK`, so `_handle_rebalance_period_tick` never fires                | ❌ OPEN                                     |
-> | `compute_rebalance_transfers()` does not exist — zero non-test `TransferRequest(` construction sites | ❌ OPEN                                     |
+> | Nothing sends `REBALANCE_PERIOD_TICK`, so `_handle_rebalance_period_tick` never fires                | ✅ FIXED `strategy-service@46f8728472`      |
+> | `compute_rebalance_transfers()` does not exist — zero non-test `TransferRequest(` construction sites | ✅ FIXED `strategy-service@46f8728472`      |
+>
+> **All four original breaks are closed. One integration gap remains before transfers actually happen**: nothing sources
+> real `WalletBalance` rows to feed `compute_rebalance_transfers()` — no DeFi wallet-balance tracker exists (see §
+> "Sweep and gas reserve"). The computation is correct and tested; it has no live input.
 >
 > Live plan:
 > [service-config-ownership-and-instruction-contract](/plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md)
@@ -131,9 +135,21 @@ Two config fields define this, and their own descriptions are the spec (`strateg
 - **`min_eth_reserve`** (default `0.05`) — _"Minimum ETH balance to maintain in DeFi wallets for gas (in ETH)"_. A floor
   to top UP to, not a target to trade around.
 
-This is **threshold logic, not a judgment call**, which is why it is buildable without a further design decision.
-Balance source is `strategy_service/position/core/venue_balance_tracker.py::get_all_balances()`. A sweep must never take
-a wallet below `min_eth_reserve` — gas is what makes the next transfer possible, so sweeping it is self-defeating.
+This is **threshold logic, not a judgment call**, which is why it is buildable without a further design decision. A
+sweep must never take a wallet below `min_eth_reserve` — gas is what makes the next transfer possible, so sweeping it is
+self-defeating.
+
+**Correction 2026-08-12 — the balance source is NOT `venue_balance_tracker.py::get_all_balances()`.** An earlier
+revision of this section named it, from a symbol-name match without reading the returned type. That method returns UAC's
+`VenueBalance` from `internal/domain/sports/arb_config.py` — the **sports-betting** balance (`is_exchange`, "Betfair,
+Matchbook", float `balance`/`available`/`locked`), which carries **no asset and no chain**, so it is structurally unable
+to express per-asset gas reserves. Do not force a fit.
+
+`compute_rebalance_transfers()` (`strategy_service/transfer_coordinator.py`, shipped `strategy-service@46f8728472`)
+therefore takes a purpose-built **`WalletBalance`** (venue / asset / amount / usd_value / chain_id) as an explicit
+parameter. **No production caller is wired yet**, because no DeFi wallet-balance tracker exists to source real
+`WalletBalance` rows — the computation is correct and tested, and connecting it to live balances is a further
+integration step. That gap is the honest remaining distance between "transfers compute" and "transfers happen".
 
 ## Target-state protocol
 
