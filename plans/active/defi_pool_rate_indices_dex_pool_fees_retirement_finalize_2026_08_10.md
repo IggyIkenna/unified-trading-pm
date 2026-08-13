@@ -58,19 +58,23 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile the retirement plan's completed-todo evidence back into its source docs.** Re-verify
-      (don't trust the plan's own copy) each cited commit/count against live state, then update: (1)
-      `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`'s `## Todos` item "Retire POOL / `rate_indices` /
-      `dex_pool_fees` legacy manifest rows" — flip to `[x]` with evidence citing the actual commits/counts from the
-      retirement plan's Progress Log; (2) `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s R3 checkbox —
-      append a closing note that the post-rebuild retirement + rollup + panel re-check completed, with the same
-      evidence. Check whether either source doc, after this reconciliation, has zero remaining open todos — if so, flag
-      it as an archival candidate for the next todo rather than assuming it stays open (both currently have other
-      unrelated open todos — `spot_pair` cross-check, `<blank>` panel fix in `defi_distinct_values...`; several
-      unrelated tracks in `defi_track01...` — so neither is expected to fully close here, but verify rather than
-      assume).
+- [x] ✅ [REVIEW] P1. **DONE 2026-08-13.** Re-verified live (not trusted from the plan's own copy): all 4 cited commits
+      confirmed on `origin/live-defi-rollout` (`market-tick-data-service@5e456d0d`/`@bf712ddb`/`@9f5868e5`,
+      `instruments-service@4bb2164e`); the cited `coverage.json` (`generated_at=2026-08-12T22:00:38Z`) confirmed still
+      the latest rollup (no fresher regen since, checked via a fresh bucket listing); and the 3 retirement counts
+      independently re-derived RIGHT NOW via each retirement script's own read-only dry-run census against the live,
+      current 158,267,760-row consolidated index (bounded via `run-bounded-analysis.sh`, not a full unbounded load): **0
+      legacy POOL keys**, **0 legacy `rate_indices` keys**, **0 remaining captured `dex_pool_fees` rows** — all match
+      the plan's claims. Updated both source docs: (1) `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`'s
+      `## Todos` retirement item flipped `[x]` with the re-verified commits/counts; (2)
+      `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s R3 section got an appended closing note (checkbox left
+      `[~]` — R3 itself, the per-instrument historical migration, is still genuinely open; this only closes the
+      retirement plan's aftermath of R3's rebuild step). **Archival-candidate check**: neither source doc reaches zero
+      remaining open todos — `defi_distinct_values...` has 2 open (`spot_pair` cross-check, `<blank>` panel fix);
+      `defi_track01...` has 4 open (R3 residual C2-C12 walk, R4 coverage, the TVL-fallback item, R3-run itself) —
+      confirmed via `grep -c '^\s*- \[ \]'`, not assumed. Neither flagged as an archival candidate.
 - [ ] [DOC] P2. **Run the standard 6-step archival ritual on the retirement plan itself** (all todos done, unlocked) —
-      move to `plans/archive/2026_08/`, fix corpus-wide referrer paths (this finalize plan's own
-      `related:`/`depends_on` pointer and any other doc that cites the active path), per
+      move to `plans/archive/2026_08/`, fix corpus-wide referrer paths (this finalize plan's own `related:`/`depends_on`
+      pointer and any other doc that cites the active path), per
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. Then self-archive this finalize plan the
       same way once its own todos are done.

@@ -222,13 +222,30 @@ _(formalized 2026-08-10 from prose in the "REVISED completion sequencing" and Pr
 full evidence/citations. Everything else in the Deferred-work table and Progress Log below already has its own delegated
 tracking doc with real checkboxes — not duplicated here.)_
 
-- **[DATA] P2. CANCELLED — SUPERSEDED 2026-08-10, EXTRACTED →
-  `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` (`assigned_vm: planning`, `status: draft` — flips
-  `active` once the rebuild VM reaches genuine terminal SUCCESS).** Retire POOL/`rate_indices`/`dex_pool_fees` legacy
-  manifest rows, resume the consolidator, trigger a fresh rollup, re-check the panel — the judgment calls this depended
-  on are resolved (rebuild VM OOM root-caused + fixed, see
-  `/plans/active/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md`), so the remaining work is
-  AO-dispatch-eligible. Finalize companion: `defi_pool_rate_indices_dex_pool_fees_retirement_finalize_2026_08_10.md`.
+- [x] ✅ [DATA] P2. **DONE — retired via `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` (all 9 todos
+      complete, 2026-08-12), reconciled here by its finalize companion
+      `defi_pool_rate_indices_dex_pool_fees_retirement_finalize_2026_08_10.md`.** Retired legacy POOL (uppercase
+      `instrument_type`) / `rate_indices` / `dex_pool_fees` `captured` manifest rows (reversible
+      `capture_status: captured→attempted_failed` + fold-no-twin pattern), resumed the consolidator, triggered a fresh
+      honest-coverage rollup, re-checked the Distinct Values panel. Evidence (commits + counts, INDEPENDENTLY
+      RE-VERIFIED live 2026-08-13 against the current 158,267,760-row consolidated index — not just copied from the
+      retirement plan): **POOL uppercase** — `market-tick-data-service@5e456d0d` (retired 7,834,322 twin-having rows,
+      folded 96,541 no-twin rows POOL→pool); live re-check via the retirement script's own dry-run census: **0 legacy
+      POOL keys remain, 0/0 without a canonical twin.** **`rate_indices`** — `market-tick-data-service@bf712ddb`
+      (retired 25,478 twin-verified rows, folded 650 no-twin rows to `lending_indices`); live re-check: **0 legacy
+      `rate_indices` keys remain.** **`dex_pool_fees`** — `market-tick-data-service@9f5868e5` (retired the remaining 14
+      CURVE rows, reaching 0 captured / 21 attempted_failed); live re-check: **0 remaining captured `dex_pool_fees`
+      rows.** **Rollup** — `instruments-service@4bb2164e` (fixed a `get_storage_client`-refactor regression that had
+      silently broken the 08-11/08-12 nightly cron write path); fresh `coverage.json` written
+      `gs://central-element-323112-honest-coverage/2026-08-12/coverage.json` (`generated_at=2026-08-12T22:00:38Z`,
+      confirmed still the latest available rollup as of this 2026-08-13 reconciliation — no fresher regen since), 5/5
+      asset groups measured, `asset_groups_failed: []`. **Panel re-check**: `rate_indices`/`dex_pool_fees` absent from
+      data_types (0 captured each), uppercase `POOL` absent from instrument_types. **Residual non-canonical
+      `dex_pools`/`dex_swaps` are explicitly OUT of this item's scope** — `dex_pools` (454,014 captured) was
+      re-registered by the 2026-08-10/11 defi rebuild (tracked on
+      `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`, same recurrence class as the POOL-uppercase
+      regrowth); `dex_swaps` (3.46M captured) is the separately-tracked open migration on that same doc. Full evidence
+      trail: `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md`'s Progress Log.
 - [ ] [DATA] P3. **Cross-check `instrument_type=spot_pair` (9,802 rows) against `defi-canonical-naming-ssot.md`'s locked
       instrument_type list** — flagged 2026-08-07 ("not yet cross-checked... needs a quick check before assuming drift
       vs. legitimate") but never followed up.
