@@ -578,3 +578,9 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   is deliberately dry-run-only — it observes and logs, not a live safety net — so genuine resolution of the underlying
   vulnerability class rests on the first three fixes continuing to hold, not on the reaper masking any future
   recurrence.
+- 2026-08-13 21:05Z-21:08Z: the v2 supervisor's own `--max-runtime 21600` (6h) ceiling expired on schedule and it exited
+  cleanly, by design — NOT a fleet event. Confirmed via an independent live connect() check: the fleet server itself is
+  still the SAME pid (3514516) it has been since 17:14:30Z, unbroken — the clean window is now 3h53m+ and was never
+  actually interrupted, only the diagnostic tool's own runtime window was. Relaunched immediately for continued
+  coverage; re-attached to the same pid on the first poll, as expected. Operator has not yet responded on the earlier
+  closure question — continuing light background observation, doc not otherwise updated pending their answer.
