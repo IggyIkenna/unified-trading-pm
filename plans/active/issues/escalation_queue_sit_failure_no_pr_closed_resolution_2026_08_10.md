@@ -1,8 +1,8 @@
 ---
 doc_type: issue
 title:
-  sit_failure escalation walls on closed/superseded promote PRs can't machine-resolve — hold queued, spawn no-op
-  workers, eventual false abandon/page
+  sit_failure + ldr_main_qg_failure escalation walls on closed/superseded promote PRs can't machine-resolve — hold
+  queued, spawn no-op workers, eventual false abandon/page
 summary: >-
   `_poll_wall_resolution` (agent-orchestrator/server/escalation.py) returns None for ALL `sit_failure` walls — the
   2026-08-09 fix (884a9bf) gated machine-resolution to `_QG_SIGNAL_WALLS` = {ldr_qg_failure, main_ci_red} to stop
@@ -19,14 +19,17 @@ summary: >-
   fix (mirrors d990ed5): extend the direct PR-closed/merged check to sit_failure when pr_number>0 — a closed/superseded
   promote PR is a definitive, DIRECT terminal signal, not the unrelated repo-wide QG-green the 08-09 fix protected
   against. Routed to main first (BLK-f7bb0212) per Step 3; timed out 2-min bounded wait — operator decision pending in
-  /api/blocked.
+  /api/blocked. Independently re-confirmed 2026-08-13 (review agt-97ed92): `ldr_main_qg_failure` walls on
+  unified-trading-pm promote PRs 2792-2812/2887 (all CLOSED-superseded) are the SAME class — excluded from
+  `_QG_SIGNAL_WALLS` AND from the PR-merged/closed branch at escalation.py:2008 — so the proposed fix is generalized to
+  every promote-PR-scoped wall type (see Evidence 2026-08-13).
 status: open
 nature: issue
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
-tags: [escalation, escalation-queue, sit_failure, agent-orchestrator, ci-cd, promotion]
+tags: [escalation, escalation-queue, sit_failure, ldr_main_qg_failure, agent-orchestrator, ci-cd, promotion]
 related:
   [
     /plans/active/issues/escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md,
@@ -49,7 +52,7 @@ locked_by:
 depends_on: []
 ---
 
-# sit_failure escalation walls on closed/superseded promote PRs can't machine-resolve
+# sit_failure + ldr_main_qg_failure escalation walls on closed/superseded promote PRs can't machine-resolve
 
 Dispatch `agt-ddadf8` (escalation_queue_reconciler, slot 13), 2026-08-10 ~18:40Z. Findings from the 3-hourly
 `/escalation-queue-reconcile` health check (Step 1 anomaly → Step 2 root-cause → Step 3 ask-main → Step 4 file).
@@ -84,6 +87,36 @@ Dispatch loop IS active (autospawn tick retries every ~1-2 min, `journalctl` con
 Control case proving rows drain on capacity: `agt-0ab5b0` (market-tick-data-service data_pipeline_failure) was queued
 18:37Z and dispatched ~18:40Z the moment an MTDS slot freed.
 
+## Evidence (2026-08-13 ~00:20Z — ldr_main_qg_failure, same class, review agt-97ed92)
+
+Independently found while tracing `escalation_held_past_ttl` activity (2026-08-13 00:08-00:10Z, events age 31-39h): 9
+queued + 1 dispatched `ldr_main_qg_failure` rows on unified-trading-pm, every one naming a promote PR that is now
+CLOSED-superseded (`gh pr view`: `state=CLOSED`, `mergedAt=null`, closed 2026-08-11/12 — the Option-B auto-drain closes
+each promote PR when the next is created):
+
+| escalation_id | status     | PR    | closedAt (UTC)       |
+| ------------- | ---------- | ----- | -------------------- |
+| agt-a396fb    | queued     | #2792 | 2026-08-11T09:30:40Z |
+| agt-b00982    | queued     | #2793 | 2026-08-11T09:45:37Z |
+| agt-bdef0a    | queued     | #2794 | 2026-08-11T10:08:06Z |
+| agt-a21047    | queued     | #2795 | 2026-08-11T10:30:44Z |
+| agt-6e6436    | queued     | #2797 | 2026-08-11T11:30:40Z |
+| agt-35e292    | queued     | #2798 | 2026-08-11T12:00:44Z |
+| agt-aef05a    | queued     | #2801 | 2026-08-11T13:00:51Z |
+| agt-fa4286    | queued     | #2802 | 2026-08-11T13:45:39Z |
+| agt-63f998    | queued     | #2812 | 2026-08-11T16:45:40Z |
+| agt-021b30    | dispatched | #2887 | 2026-08-12T16:30:43Z |
+
+`_poll_wall_resolution` returns `None` for `ldr_main_qg_failure` unconditionally — it is missing from `_QG_SIGNAL_WALLS`
+(escalation.py:257 = {ldr_qg_failure, main_ci_red}) AND from the PR-merged/closed branch at escalation.py:2008 (which
+covers only {ldr_qg_failure, promote_qg_failure}; the comment at 2011-2014 explicitly says ldr_main_qg_failure shares
+the same resolution shape but "predates this generalization"). So the TTL-hold reprobe (escalation.py:1407) can never
+auto-resolve these rows regardless of actual CI state. Independent live-CI check same tick: unified-trading-pm
+`ldr-to-main-promote` + `ldr-to-main-promote-fleet` both SUCCESS @00:00Z + @23:45Z (2026-08-12/13); MTDS LDR QG green
+@22:15Z + @23:15Z — the walls are not genuinely red; they are stale rows that cannot machine-resolve. The one DISPATCHED
+row (agt-021b30, PR #2887) was mid-dispatch to a cicd worker killed in the 2026-08-13 ~00:06Z tmux crash — that PR is
+also CLOSED.
+
 ## Root cause
 
 The 2026-08-09 fix `884a9bf` ("stop false-resolving non-QG walls") gated `_poll_wall_resolution`'s fallthrough to
@@ -115,6 +148,13 @@ wall). Regression test in `tests/test_escalation.py` mirroring
 probe-return contract). Gate: only apply when the escalate payload actually names a promote-style PR branch
 (`promote/*→main`), so a hypothetical non-promote sit_failure on a feature PR isn't auto-closed off a repo-wide signal.
 
+**Generalization (2026-08-13, review agt-97ed92):** apply the same direct PR-closed/merged check to EVERY
+promote-PR-scoped wall type, not just `sit_failure`. Confirmed affected: `sit_failure` + `ldr_main_qg_failure`. Worth
+auditing for the same shape but NOT yet confirmed: `plan_health`, `main_ci_red` (and any future promote-PR wall). For
+`ldr_main_qg_failure` the change is the same 1-2 line condition addition at escalation.py:2008 (mirror the
+`ldr_qg_failure` merged/closed handling the comment at 2011-2014 already acknowledges as the same shape). One
+real-SQLite regression test per added wall type.
+
 ## Status / follow-ups
 
 - [ ] [SCRIPT] P1. Operator decision on BLK-f7bb0212: approve extending the direct PR-closed/merged check to sit_failure
@@ -129,3 +169,10 @@ probe-return contract). Gate: only apply when the escalate payload actually name
   `last_error` confirm collision-guard block. PR states verified via `gh pr view` (all 2708-2713 CLOSED).
 - 2026-08-10 ~18:45Z — Step 3: posted BLK-f7bb0212 to main_agent; polled 2 min bounded, no answer; deferred to operator
   via /api/blocked. Filed this issue doc per Step 4.
+- 2026-08-13 ~00:20Z — agt-97ed92 (review, slot 1): independently found the SAME class for `ldr_main_qg_failure` (9
+  queued + 1 dispatched rows on unified-trading-pm, all promote PRs CLOSED-superseded, #2792-2812/#2887) while tracing
+  `escalation_held_past_ttl` activity. Pinned the code gap (missing from `_QG_SIGNAL_WALLS` + missing from the
+  escalation.py:2008 PR-merged/closed branch → `_poll_wall_resolution` always returns None → TTL-hold reprobe can never
+  resolve). Verified live CI green (PM promote + MTDS QG). Per main direction (msg 5685) appended this evidence +
+  generalized the proposed-fix scope to every promote-PR-scoped wall type. No fix decision made — stays operator-owned
+  via BLK-f7bb0212.
