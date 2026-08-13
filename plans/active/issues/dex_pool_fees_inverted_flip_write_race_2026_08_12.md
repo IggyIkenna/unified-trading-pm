@@ -31,6 +31,7 @@ related:
     /plans/active/issues/dex_pool_fees_phantom_premise_false_real_mid_may_objects_2026_08_12.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-12"
 last_updated: "2026-08-12"

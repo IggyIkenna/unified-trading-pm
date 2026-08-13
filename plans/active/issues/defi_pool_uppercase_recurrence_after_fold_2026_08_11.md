@@ -43,6 +43,7 @@ related:
     /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/canonical-cutover-register.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-11"
 parent_epic: manifest_master

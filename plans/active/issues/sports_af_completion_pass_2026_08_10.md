@@ -19,7 +19,11 @@ stage: [data]
 repos: [instruments-service, market-tick-data-service, unified-trading-pm]
 scope: [engineer]
 tags: [sports, api-football, backfill, completion, data-correctness]
-related: [/plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md]
+related:
+  [
+    /plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+  ]
 created: "2026-08-10"
 author: main agent (agt-fe67fd) — routing the slot-25 re-census residual (2026-08-10)
 source: sports_af_full_entity_completion_2026_08_03.md slot-25 re-census progress entry (2026-08-10)

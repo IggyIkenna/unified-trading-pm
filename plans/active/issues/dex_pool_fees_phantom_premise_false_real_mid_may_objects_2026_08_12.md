@@ -31,6 +31,7 @@ related:
     /plans/active/issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/honest-absence-downstream-handling.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-12"
 last_updated: "2026-08-12"
