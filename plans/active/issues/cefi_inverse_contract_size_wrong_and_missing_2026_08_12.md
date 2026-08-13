@@ -218,8 +218,8 @@ values; KRAKEN-FUTURES dated futures → registry `UNIFORM=1`).
 **The 4th re-derive VM (`mdps-backfill-cefi-20260813-174138`) was killed and relaunched** once this fix landed — its
 tarball was staged before the fix shipped, so it would have kept failing on these 7 instruments for the rest of its
 ~2223-date run. MDPS backfill skips already-`captured` manifest rows by default (no `--force` was passed), so the
-relaunch (`mdps-backfill-cefi-20260813-<relaunch-timestamp>`) resumes efficiently rather than redoing the ~700+
-already-completed days.
+relaunch (`mdps-backfill-cefi-20260814-003509`) resumes efficiently rather than redoing the ~700+ already-completed
+days.
 
 ## Still open — NOT done yet
 
