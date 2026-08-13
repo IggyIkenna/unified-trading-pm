@@ -260,10 +260,11 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       `instruments-service@3a3ce822fa` (adapter + orchestrator + tests + backfill script),
       `deployment-service@ca061d0564` (VM launcher). Live-verify (playground-only, no GCS/manifest write, 2+ leagues)
       tracked in the Progress Log below.
-- [ ] [DATA] P2. **Backfill launch (2020-06-01+ floor) — recomputed cost estimate, 2026-08-12** (methodology: bounded,
-      direct UAC-registry computation of real `get_reference_refresh_dates()` trigger dates in `[2020-06-01, today]`,
-      NOT a GCS corpus walk — a deliberate simplification vs. the prior full-history estimate's GCS-snapshot-listing
-      step, since this is "what should be refetched going forward" not "what was captured wrongly in the past"; script:
+- [x] ✅ [DATA] P2. **Backfill launch (2020-06-01+ floor) — recomputed cost estimate, 2026-08-12** (methodology:
+      bounded, direct UAC-registry computation of real `get_reference_refresh_dates()` trigger dates in
+      `[2020-06-01, today]`, NOT a GCS corpus walk — a deliberate simplification vs. the prior full-history estimate's
+      GCS-snapshot-listing step, since this is "what should be refetched going forward" not "what was captured wrongly
+      in the past"; script:
       `instruments-service/scripts/backfill_transfermarkt_2020_06_floor_2026_08_12.py     --estimate-only`).
       **Prediction-tier (33 leagues, the default)**: 1,041 events, ~39,766 PLAYER_VALUES calls + ~16,606
       TRANSFER_RECORDS calls (current-squads-only pass, see quota note below) = **~56,372 calls combined**.
@@ -281,7 +282,11 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       transfers included), but does NOT recover history for a player who left the covered league universe entirely
       before today. A follow-up (cross-call global player-id dedup cache, letting a fuller historical sweep fit the same
       budget) is flagged here, not built under this session's time constraint. **Launch status**: tracked in the
-      Progress Log below (VM launch + monitoring is this session's next step after live-verify).
+      Progress Log below (VM launch + monitoring is this session's next step after live-verify). **COMPLETED
+      2026-08-13**: estimate recorded above; code shipped (instruments-service@3a3ce822fa → f0f76e12f2 → 44caa56b,
+      deployment-service@9ba048f45a); launch confirmed running — VM
+      `instr-backfill-sports-transfermarkt-20260812-181254` (full 1,041-event PLAYER_VALUES scope), independently
+      verified via the checked P3 todo + Progress Log.
 - [ ] [DATA] P2. **New finding (2026-08-12): the legacy_reason_classifier's PLAYER_VALUES weekday-cadence branch
       (`unified_trading_library/legacy_reason_classifier.py:266-276`, `TRANSFERMARKT_PLAYER_VALUES_UPDATE_WEEKDAYS` =
       Tue/Wed) never checks transfer-window state at all — it's a separate, older (shipped 2026-05-13, months before
