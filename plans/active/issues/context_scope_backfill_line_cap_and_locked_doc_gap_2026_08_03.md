@@ -184,7 +184,7 @@ plans/active/data_completion_to_100_all_ag_2026_06_21.md:
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
-    /plans/active/data_completion_cefi_2026_07_15.md,
+    /plans/archive/2026_08/data_completion_cefi_2026_07_15.md,
     /plans/active/data_completion_defi_2026_07_15.md,
   ]
 

@@ -16,12 +16,16 @@ summary: >-
   eliminate the risk, and makes each occurrence just as silent.
 status: open
 nature: issue
-asset_group: [cefi, meta]
+asset_group:
+  [cross-cutting] # corrected 2026-08-13 (/ag-closeout-audit full sweep) -- was [cefi, meta]. The CeFi Tardis
+  # portion (2026-07-22 original finding) is fully resolved; the doc's remaining bulk (2026-07-29+ Progress Log)
+  # is a still-open cross-AG sports/odds_api native-memory-leak investigation, independently confirmed by
+  # cefi_satellite_ao_dispatch_batch10's own Phase-3 exclude_cross_cutting verdict on this exact doc.
 stage: [data]
 repos: [market-tick-data-service, deployment-service, unified-trading-pm]
 scope: [engineer]
 tags: [backfill, oom, memory, tardis, cefi, reliability, vm-hang, resource-profiler]
-related: [lst_rate_honest_coverage_2026_07_21]
+related: [lst_rate_honest_coverage_2026_07_21, /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md]
 created: 2026-07-22
 author: unknown
 priority: P0

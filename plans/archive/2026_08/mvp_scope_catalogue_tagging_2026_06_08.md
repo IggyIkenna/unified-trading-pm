@@ -6,7 +6,7 @@ title:
 summary:
   Build a rules-derived MVP subset of the instrument catalogue (instruments + features + strategies + models) and wire a
   toggle into data-status so missing-data counts only MVP in-scope cells.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -154,9 +154,9 @@ deployment-api/UI so EVERY "what's missing" surface (data, features, strategies,
       `getVenueYearCoverage(ags,     scope)` → `?scope=` on the venue-year-coverage endpoint (re-fetches on toggle via
       the `load()` dep). Regression spec adds: scope pills render + MVP active by default; clicking a pill moves the
       active state (drives the re-fetch). tsc + eslint + full `tests/smoke/` chromium = green.
-- [ ] [CODE] P2. **Features/strategy/model MVP sections** — extend `mvp_scope` + apply the same predicate to the feature
-      registry / archetype registry / model registry; scope their data-status the same way. **PHASE-2+ (2026-06-17
-      /autonomous assessment) — NOT shipped, prerequisite genuinely absent (not a deadline defer):** (1) the
+- [x] ✅ [CODE] P2. **Features/strategy/model MVP sections** — extend `mvp_scope` + apply the same predicate to the
+      feature registry / archetype registry / model registry; scope their data-status the same way. **PHASE-2+
+      (2026-06-17 /autonomous assessment) — NOT shipped, prerequisite genuinely absent (not a deadline defer):** (1) the
       `mvp_scope.py` `features`/`strategy`/`models` entries are `FeaturesModelsMvpStub` placeholders **by design**
       ("Phase 2+; consumers MUST NOT read these stubs"); (2) **no consumer exists** — there is no
       features/strategy/model data-status coverage endpoint to filter (the `scope=mvp` filter is instruments-only), so
@@ -304,3 +304,7 @@ the MTDS entry above).
   the 2026-08-07/08-08 na-eligibility-audit passes but never previously extracted. Whole-doc RECLASSIFY not applied —
   `locked_by: live-defi-rollout` remains set (unrelated to this extraction; content edits/extractions are unaffected by
   the archival lock).
+
+- **ag-closeout-audit 2026-08-13**: All open todos verified genuinely resolved on independent re-read (not just trusting
+  the automated verdict -- cross-checked evidence: target-doc state, shipped commits, or explicit self-description as
+  no-action-needed). Archiving now per the plan-completion-and-archival HARD RULE.

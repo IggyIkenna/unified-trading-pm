@@ -29,7 +29,7 @@ related:
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md,
-    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_10.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_cross_cutting_parked_2026_08_10.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_10.md,
     /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_06.md,
     /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_07.md,
@@ -123,7 +123,7 @@ Two independent causes, both now fixed:
       docs clean. Fix-steps report: all 4 `[BACKEND] P1` still open, already escalated to
       `deployment_api_unauthenticated_prod_p0_2026_08_10.md` (step 1 DONE `UTL@336f2b3b6c`+`deployment-api@d0eebac4e6`).
 - [x] ✅ [DOCS] P2. **Collapse the 4 `[ci, infrastructure]` dual-tags to `[ci]`** —
-      `ci_pipeline_speed_and_cost_redesign_     2026_08_05.md`,
+      `ci_pipeline_speed_and_cost_redesign_ 2026_08_05.md`,
       `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`,
       `self_hosted_runner_public_repo_revert_2026_08_05.md`, `shared_ci_workflow_repo_extraction_2026_08_06.md` (all in
       `/plans/active/issues/`). The `ci` tranche's 2026-08-10 audit already confirmed all 4 CI-pipeline-primary by
@@ -278,10 +278,10 @@ generator addition; scoping the 2 flagged `CITE_RE`-hardening batch-era candidat
       **Done when**: the skill emits per-todo verdicts and names the extraction path.
 
       **Shipped**: split the old whole-doc-only RECLASSIFY (verdict 4) into two sub-verdicts — verdict 4 (whole-doc, every
-                          open todo bounded → flip `assigned_vm` in place) and verdict 5 (per-todo split path, mixed bounded + operator-gated →
-                          extract bounded slice into `{topic}_satellite_ao_dispatch_batch{N}` + `_finalize` pair, source doc stays NA). Added
-                          extraction mechanics to Phase 3 (topic resolution, conflict-check-before-write, source-doc checkbox flip, Progress
-                          Log marker). Updated the "Why RECLASSIFY volume is inherently low" section to document the new model.
+      open todo bounded → flip `assigned_vm` in place) and verdict 5 (per-todo split path, mixed bounded + operator-gated →
+      extract bounded slice into `{topic}_satellite_ao_dispatch_batch{N}` + `_finalize` pair, source doc stays NA). Added
+      extraction mechanics to Phase 3 (topic resolution, conflict-check-before-write, source-doc checkbox flip, Progress
+      Log marker). Updated the "Why RECLASSIFY volume is inherently low" section to document the new model.
 
 ## Codex SSOTs
 

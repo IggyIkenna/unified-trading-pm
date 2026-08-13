@@ -16,11 +16,10 @@ summary: >-
 status: open
 nature: issue
 asset_group:
-  [sports, prediction, defi, meta] # prediction+defi added 2026-08-04 by /ag-closeout-audit sports tranche: sports'
-  # own remaining work is 100% closed (see Progress Log), but the doc's 2 genuinely-open residual checkboxes are
-  # prediction- and defi-scoped (KALSHI/polymarket_clob source-mislabel in the prediction manifest;
-  # market-data-tick-defi-prd blast-radius census) -- without these tags neither tranche's own /ag-closeout-audit
-  # membership check (`asset_group contains <tranche>`) will ever discover this doc, an invisible-orphan gap.
+  [sports] # corrected 2026-08-13 (/ag-closeout-audit full sweep) -- was [sports, prediction, defi, meta]. The
+  # prediction/defi residual checkboxes that justified the 2026-08-04 widening are both closed ([x], slot 15/11,
+  # 2026-08-05); the one remaining open item (23 sentinel-free missing odds_api days) is sports-domain and already
+  # covered by sports_satellite_ao_dispatch_batch12_2026_08_09.md:153 (active, assigned_vm:planning).
 stage: [data]
 repos: [unified-trading-library, market-tick-data-service, deployment-service, instruments-service]
 scope: [engineer, admin]

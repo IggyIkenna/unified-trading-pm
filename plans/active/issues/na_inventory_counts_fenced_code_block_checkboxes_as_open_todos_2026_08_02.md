@@ -28,7 +28,7 @@ related:
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md,
-    /plans/active/issues/ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md,
+    /plans/archive/2026_08/issues/ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md,
     /plans/active/issues/na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md,
   ]
 created: "2026-08-02"

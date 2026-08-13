@@ -17,7 +17,7 @@ scope: [engineer, admin]
 tags: [backfill, manifest, cefi, data-correctness, irreversible-delete, vm-scale, operator-gated]
 related:
   [
-    /plans/active/data_completion_cefi_2026_07_15.md,
+    /plans/archive/2026_08/data_completion_cefi_2026_07_15.md,
     /plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md,
     /plans/archive/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
@@ -47,7 +47,7 @@ context_scope:
     market-tick-data-service/market_tick_data_service/scripts/rebuild_cefi_manifest.py,
     unified-trading-library/unified_trading_library/cf_manifest_audit.py,
     /codex/05-infrastructure/vm-launcher-runbook.md,
-    /plans/active/data_completion_cefi_2026_07_15.md,
+    /plans/archive/2026_08/data_completion_cefi_2026_07_15.md,
     /plans/audit/instructions/cefi_master_audit_instructions.md,
   ]
 ---
@@ -125,7 +125,7 @@ step.
 >
 > | Doc                                                                                       | Relationship to this plan                                                                                                                                                                                         |
 > | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-> | `/plans/active/data_completion_cefi_2026_07_15.md`                                        | **CITES.** Its E4 + "NEXT SESSION — execute the migration" todos are already `SUPERSEDED-BY` this plan (verified 2026-07-31); they execute nothing themselves.                                                    |
+> | `/plans/archive/2026_08/data_completion_cefi_2026_07_15.md`                               | **CITES.** Its E4 + "NEXT SESSION — execute the migration" todos are already `SUPERSEDED-BY` this plan (verified 2026-07-31); they execute nothing themselves.                                                    |
 > | `/plans/archive/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`           | **GATES Phase C.** Owns the normalization-aware snapshot-vs-`-prd` comparison that decides whether Phase C is done-by-fait-accompli or needs a from-snapshot re-scope. Nothing here should pre-empt that verdict. |
 > | `/plans/archive/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` | **GATES Phase B's framing** (the hard-stop carve-out question) — not the execution.                                                                                                                               |
 > | `/plans/archive/2026_07/cefi_track7_candle_namespace_residual_2026_07_25.md`              | **CITES** for sequencing only. (archived 2026-08-07)                                                                                                                                                              |
@@ -331,11 +331,11 @@ todo's isolated wording. No reclassification.
   cheat-sheet rulings (IAM self-service, D16 all-repos, S5.1 tiering, context_scope default, escalation-N default,
   reversibility-qualified deletes, Option B retirement, AWS lower-stakes, script-flag self-service precedent) — none
   apply here. Phases D (manifest `_index` rebuild `--apply`) and E (verify) remain real-production, VM-scale
-  manifest-rewrite work on the data-correctness critical path; this doc's own banner ("all steps human-executed...
-  never an autonomous-agent action") and 6 prior na-eligibility-audit passes (07-31 through 08-07) all reach the same
-  verdict. Not a delete (ruling #6 doesn't apply), not IAM, not a scripted-flag gap — a genuine real-write VM-scale
-  step this corpus has historically kept human-supervised given its track record of hidden production surprises on
-  this exact migration.
+  manifest-rewrite work on the data-correctness critical path; this doc's own banner ("all steps human-executed... never
+  an autonomous-agent action") and 6 prior na-eligibility-audit passes (07-31 through 08-07) all reach the same verdict.
+  Not a delete (ruling #6 doesn't apply), not IAM, not a scripted-flag gap — a genuine real-write VM-scale step this
+  corpus has historically kept human-supervised given its track record of hidden production surprises on this exact
+  migration.
 - **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (cefi tranche)**: KEEP-NA, valid — re-checked same-day
   against the round11 precedent set (identical core rulings to the round7 pass immediately above, plus
   plan-destination-default-to-AO for auto-filed findings and the specific GSM secret/webhook additions) — none newly

@@ -72,8 +72,10 @@ setup() {
   [ "$status" -eq 0 ]
   # The drift-skip's own wording, not the substring "skipping format" -- the no-prettier
   # fallback message below also happens to contain that substring ("skipping format pass").
+  # NB: the "no prettier" positive marker is deliberately NOT asserted -- it only appears when
+  # BOTH prettier AND npx are absent from PATH, and npx now ships in /usr/bin on the shared VM,
+  # so the hook resolves the `npx -y prettier@…` branch and runs real prettier instead. The
+  # drift-marker's ABSENCE (plus exit 0 above) is the npx-independent invariant: the hook did
+  # not short-circuit on the drift gate.
   [[ "$output" != *"the drift gate will block this commit"* ]]
-  # Falls through to the no-prettier-available path instead, proving it did NOT short-circuit
-  # on drift.
-  [[ "$output" == *"no prettier"* ]]
 }

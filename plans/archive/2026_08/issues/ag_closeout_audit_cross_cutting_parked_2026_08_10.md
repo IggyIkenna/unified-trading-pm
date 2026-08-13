@@ -35,7 +35,7 @@ summary: >-
   (`generate_ag_closeout_audit_candidates.py`'s hub-doc exclusion regex over-matched an issue doc merely describing a
   hub-doc problem) — found independently, but the fix had already landed via a parallel tradfi-tranche worker at the
   same timestamp; adopted theirs rather than duplicate.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -88,7 +88,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: unified-trading-pm@3fa34e2475
 depends_on: []
 context_scope:
   [
@@ -177,7 +177,7 @@ source: >-
       `databento_ice_opra_subscription_ask_2026_08_09.md`) — billing decision. > **Round 2 note**: this doc is retagged
       `[tradfi]` as of 2026-08-10 (was a bare `[cross-cutting]` mistag — its > own `tags:` already included `tradfi` and
       it cites the tradfi-databento-sourcing-ssot). Now `tradfi` > tranche's item, not cross-cutting's.
-- [ ] [DOCS] P2. **Verify + flip 3 already-resolved checkboxes** in
+- [x] ✅ [DOCS] P2. **Verify + flip 3 already-resolved checkboxes** in
       `escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md` (finding 3) — evidence already
       cited above, just needs a doc-only reconciliation pass.
 - [x] ✅ [OPERATOR] P1. **RE-HOMED 2026-08-10 →
@@ -507,3 +507,7 @@ independently reaffirmed by repeated na-eligibility-audit history) + 5 new-since
 another session's live in-flight file). Zero new `- [ ]` entries required in this doc's own Todos section — every
 genuinely-open item found this round is either directly resolved above, already tracked with an `[OPERATOR]` tag in its
 own source doc, or explicitly deferred with reasoning in the candidates section above. **Balanced.**
+
+- **ag-closeout-audit 2026-08-13**: All open todos verified genuinely resolved on independent re-read (not just trusting
+  the automated verdict -- cross-checked evidence: target-doc state, shipped commits, or explicit self-description as
+  no-action-needed). Archiving now per the plan-completion-and-archival HARD RULE.

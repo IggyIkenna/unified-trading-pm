@@ -288,6 +288,79 @@ moment a launch actually reaches the workload (not just reaches TERMINATED) — 
 reference implementation. This is orthogonal to the PROGRESS-checkpoint contract below (that fixes WHAT a relaunch
 resumes from; this fixes WHEN a relaunch fires) — a launcher can need both.
 
+## The graceful-flush contract — what "exit gracefully" obliges a process to do (codified 2026-08-13)
+
+The PROGRESS-checkpoint contract above answers _where a relaunch resumes from_. This one answers the question underneath
+it: **when a process is told to stop, what must it write out before it dies?** They are different failures. A perfect
+checkpoint does not help if the rows the checkpoint refers to were still sitting in a buffer when the process exited.
+
+**The rule.** Any object that can hold un-flushed rows MUST register with the process-wide drain registry
+(`unified_trading_library.lifecycle.drain_registry`). Registration is mandatory for every new buffered writer — this is
+not opt-in, and a writer that skips it silently loses whatever it is holding on SIGTERM.
+
+```python
+from unified_trading_library.lifecycle.drain_registry import (
+    DrainPriority, register_drainable, deregister_drainable, install_drain_signal_handler,
+)
+
+class MyBufferedWriter:
+    def __init__(self, ...):
+        install_drain_signal_handler()          # idempotent, main-thread-only, never raises
+        register_drainable(self, DrainPriority.DATA_WRITER, name=f"MyBufferedWriter({path})")
+
+    def drain_for_shutdown(self) -> int:
+        """Flush what is buffered; return the row count written. Must not raise."""
+
+    def close(self) -> None:
+        ...
+        deregister_drainable(self)              # in EVERY terminal path, not just the happy one
+```
+
+**Register at construction, not at first write.** A writer that dies before its first flush is exactly the case worth
+covering.
+
+### Drain ORDER is a correctness property, not a tidiness one
+
+`DrainPriority` is drained low-to-high, and `MANIFEST = 90` is deliberately the highest value in the enum. The manifest
+records _what the data writers wrote_. Draining it first would flush rows asserting `captured` for parquet that has not
+been uploaded — fabrication-by-construction, the DP-MANIFEST-003 phantom-row class. Anything that computes from written
+data drains after the writers and before the manifest (`DERIVED = 50`).
+
+This used to hold only by accident of import sequence, when the manifest and the writers each owned a chained SIGTERM
+handler. It is now structural: one handler, one priority-ordered drain.
+
+### Why atexit is not enough, and why the signal handler is not enough either
+
+- **atexit does not run on SIGKILL.** GCE sends SIGTERM on preemption and SIGKILL ~30s later. That is the entire reason
+  the signal handler exists. (Measured origin: preempted `mdps-cefi-2019-*` VMs whose run.log showed thousands of real
+  aggregations with nothing in the manifest — `DP_VM_GONE_NO_CAPTURE`.)
+- **SIGTERM does not unwind a `with` block.** A `StreamingParquetWriter` inside a context manager gets no `__exit__`
+  when the process is signalled, so `close()` never runs.
+- **Signal installation is last-writer-wins, and a later installer wins silently.** Found 2026-08-13:
+  `GracefulShutdownHandler.__init__` (constructed by every `ServiceBootstrap` service in `main()`, i.e. after imports)
+  called `signal.signal` unconditionally and REPLACED the drain hook. Its `sys.exit(0)` still ran `manifest_writer`'s
+  atexit flush while every `StreamingParquetWriter` buffer — which has no atexit of its own — was discarded. The
+  anti-data-loss machinery was manufacturing phantom rows. Fixed at `unified-trading-library@2aacde1359` with two
+  layers: the registry registers an atexit backstop at install time (LIFO puts it ahead of `_state`'s flush, preserving
+  writers-then-manifest), and `GracefulShutdownHandler` drains explicitly before its cleanup callback.
+
+**Both layers are required.** The atexit backstop covers a clobberer that exits cleanly; only the signal handler covers
+a preemption whose SIGKILL is 30 seconds out.
+
+### A drained partial shard is NOT a captured shard
+
+A drain writes bytes. It MUST NOT call `record_captured` and MUST NOT advance the PROGRESS frontier, so the resume
+re-attempts that shard. A drain that marked its partial shard complete would be worse than no drain at all: the data is
+incomplete AND the manifest claims otherwise, and nothing downstream can tell.
+
+### Async services need one extra line
+
+A service that installs its own handling via `loop.add_signal_handler` bypasses the registry's plain `signal.signal`
+hook. Such a service must call `drain_all()` (or at minimum `flush_all_pending_buckets()`) from its own shutdown
+sequence.
+
+Contract tests: `unified-trading-library/tests/unit/test_drain_registry.py`.
+
 ## Coverage (2026-06-27 fleet-wide conversion)
 
 All GCP backfill launchers in `deployment-service/scripts/vm/` provision Spot by default: ~50 direct-`gcloud` launchers

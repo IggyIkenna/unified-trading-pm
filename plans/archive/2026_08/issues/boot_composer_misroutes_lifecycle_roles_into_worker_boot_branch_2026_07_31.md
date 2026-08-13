@@ -17,7 +17,7 @@ summary: >-
   branch (prompts.py:203) that review.md assumes. Net: every fresh review-agent respawn gets the wrong boot prompt and
   must self-discover the register flow. Plausibly implicated in the tmux_session_lost churn on slot 1 just before the
   reporter's boot (3 agent_ids agt-65ba48/agt-42e455/agt-2a8120 tied to tmux_session orch-slot-1 within ~25 min).
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ao] # corrected 2026-08-04 (ag-closeout-audit ao tranche run) -- was [meta]. Genuinely AO server code
@@ -45,7 +45,7 @@ assigned_vm: NA
 execution_scope: local-only
 drift_direction: advance-code
 source: [review-role-finding-agt-0e7906, main-orchestrator-triage]
-resolved_by:
+resolved_by: agent-orchestrator@41da3e578
 locked_by:
 locked_since:
 depends_on: []
@@ -177,9 +177,9 @@ it. Reported by review, verified + corrected by main.
 
 ## Added follow-up todos
 
-- [ ] [SCRIPT] P1. Fix `/done` so an **empty `sha`** does NOT mark a task `status=done` — a release-not-complete signal
-      must return the task to `queued` (or be rejected), never record a terminal `done` with `done_sha=""`. This is the
-      distinct data-integrity defect that turned a benign boot-misroute into silent data loss; independent of the
+- [x] ✅ [SCRIPT] P1. Fix `/done` so an **empty `sha`** does NOT mark a task `status=done` — a release-not-complete
+      signal must return the task to `queued` (or be rejected), never record a terminal `done` with `done_sha=""`. This
+      is the distinct data-integrity defect that turned a benign boot-misroute into silent data loss; independent of the
       composer fix. Pair with the existing `/api/backlog/{id}/reopen` correction path and the `no_plan_flip` hardening
       referenced in its docstring. Add a regression test: `/done` with empty sha on a task whose plan checkbox is
       unchecked must leave it `queued`.
@@ -274,3 +274,7 @@ cefi-specific** — same defect now reproduced on a second tranche.
   ruling explicitly: AO dispatch/state machinery stays human-reviewed even when a fix 'looks mechanical,' because a
   wrong fix corrupts the very backlog this audit depends on — this doc's own history (3 confirmed silent-data-loss
   incidents) is the proof case for that ruling. High-stakes; agrees fully, not re-litigated.
+
+- **ag-closeout-audit 2026-08-13**: All open todos verified genuinely resolved on independent re-read (not just trusting
+  the automated verdict -- cross-checked evidence: target-doc state, shipped commits, or explicit self-description as
+  no-action-needed). Archiving now per the plan-completion-and-archival HARD RULE.

@@ -14,7 +14,10 @@ summary: >-
   3rd-distinct-slot mitigation rule, to stop the churn while the fleet-wide root cause is being investigated.
 status: open
 nature: issue
-asset_group: [defi]
+asset_group:
+  [ao] # corrected 2026-08-13 (/ag-closeout-audit full sweep) -- was [defi]. Tagged defi only because the wedged
+  # task happened to be named "defi_compute_gcp_migration-009"; content is entirely agent-orchestrator/tmux
+  # crash-loop mechanics, matching its sibling incident docs which already live in the ao tranche.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

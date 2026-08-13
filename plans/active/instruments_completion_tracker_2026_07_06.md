@@ -21,7 +21,7 @@ related:
     /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
     /plans/archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
-    /plans/active/mvp_scope_catalogue_tagging_2026_06_08.md,
+    /plans/archive/2026_08/mvp_scope_catalogue_tagging_2026_06_08.md,
     /plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
     issues/cefi_layer1_denominator_gaps_2026_07_03.md,
     issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
@@ -377,7 +377,7 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
 - [x] ✅ [SCRIPT] P0. Re-run `measure_honest_coverage` on the corrected catalogue + seeded manifests (**06-29 numbers
       are stale** — predate v12, the incremental-rollup switch, and the cefi 122-row ghost-dupe fix of 07-04). **DONE —
       reconciled 2026-07-28 against `plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md`
-      (`status:     complete`, own todo `[x]`, DONE 2026-07-07 06:22 UTC).** Multi-AG
+      (`status: complete`, own todo `[x]`, DONE 2026-07-07 06:22 UTC).** Multi-AG
       `measure_honest_coverage.py --asset-group all` run on `is@68f174a` with both cross-plan PREREQs verified
       (KALSHI-PERP purge + Plan-5 unregistered-handler audit). Run id `2026-07-07T06:20:58Z / is@68f174a`; evidence
       artefact `coverage_all_20260707T062058Z.json` (4.6 MB).

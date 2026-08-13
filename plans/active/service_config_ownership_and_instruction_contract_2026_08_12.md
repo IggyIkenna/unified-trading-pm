@@ -421,13 +421,42 @@ code: `WRAP_UNWRAP`, `UNITY_WALLET_OP`, `IBKR_FUND_MOVE`, `CUSTODY_TRANSFER`, `S
 read of this called it safe to delete; under the operator's rule it is the opposite, because its six unique members are
 the clearest surviving statement of what transfers were meant to support.
 
-- [ ] [AGENT] P0. **Union the four onto `BusTransferType`, then complete the build.** Preserve all 20 values, map the
-      four alias groups, and **split `CEX_WITHDRAWAL_DEPOSIT`** — it conflates direction into one member, so direction
-      is unrecoverable from the value; every other enum keeps withdraw and deposit separate. Sequence this WITH the
-      transfer capability work in § H, not separately: the union defines what "transfers work" has to mean, and § H
-      found that **nothing emits `TransferIntent` at all today**, so there is no migration risk from live data. | J7 |
-      Archetype universe | `StrategyArchetype` (60) | factory-registered (32), `PARAM_SCHEMA_REGISTRY` (35) |
-      **Measured: only 13 overlap.** 19 engines have no schema, 22 schemas have no engine, 6 have neither |
+- [x] [AGENT] P0. ✅ **Unioned onto `BusTransferType` — `unified-api-contracts@4663daf908`**, gate green (re-run
+      independently, exit measured via redirect, not the authoring agent's reported result). **20 source values → 13
+      members**: 4 alias groups merged, `CEX_WITHDRAWAL_DEPOSIT` split into `CEX_WITHDRAW` + `CEX_DEPOSIT`, and all 9
+      single-enum uniques preserved verbatim per the operator's ruling — including the three from the zero-importer enum
+      (`WRAP_UNWRAP`, `UNITY_WALLET_OP`, `IBKR_FUND_MOVE`), which are unfinished capability rather than dead code. **The
+      rail concern is now settled in the type itself**: a `TransferRail` enum plus `BUS_TRANSFER_TYPE_RAIL` classifies
+      every member, so classification and the live CeFi-vs-on-chain router cannot silently disagree. The mapping is
+      **grounded, not invented** — sourced from
+      [transfer-rebalance](/codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md), which carries an
+      explicit per-member mechanism column. Two members genuinely do not fit the CeFi/on-chain binary —
+      `UNITY_WALLET_OP` (Unity API) and `IBKR_FUND_MOVE` (IBKR internal) are neither a CCXT call nor a chain transaction
+      — so they map to a third `OTHER` rail rather than being forced, consistent with
+      [transfer-architecture](/codex/04-architecture/transfer-architecture.md)'s standing "no manual/acknowledged
+      transfer path" finding for exactly those two. Note `CEX_DEPOSIT` is ON_CHAIN (you send to the venue's deposit
+      address) while `CEX_WITHDRAW` is CEFI (an exchange API call) — the asymmetry is correct and matches
+      `CompositeTransferAdapter`'s split. A pre-existing test hardcoding the old 5-member closed set was updated in the
+      same change; it would otherwise have failed the moment the enum legitimately grew.
+- [x] [AGENT] P0. ✅ **Transfer break (a) fixed — `strategy-service@db6e38ae3a`**, gate green. `colocated_engine.py` now
+      reads `enable_transfer_rebalancing` from config and forwards it to `make_worker_target`, so the flag can finally
+      do something. Regression test asserts **both** `True` and `False` reach the call — asserting only `True` would
+      still pass against a hard-coded value. Shipped AFTER the UAC union because quickmerge's dep gate correctly refused
+      while a dependency had uncommitted changes.
+- [ ] [AGENT] P0. **Break (c): add a `REBALANCE_PERIOD_TICK` producer.** Nothing sends it, so
+      `_handle_rebalance_period_tick` (`client_worker.py:214`) never fires even with (a) fixed. The only producer-side
+      `pipe.send` in strategy-service is `CREDENTIAL_ROTATED` (`client_admission_controller.py:215`) — that is the
+      pattern to follow.
+- [ ] [AGENT] P0. **Break (b): implement `compute_rebalance_transfers()` as dust-sweep + gas-reserve top-up.** Scope is
+      narrower than "rebalancing" implies, and the existing config states it: `sweep_threshold_usd` (default 10.0) is
+      _"USD threshold below which wallet balances are swept to the main wallet"_ and `min_eth_reserve` (0.05) is
+      _"minimum ETH balance to maintain in DeFi wallets for gas"_ (`config.py:461-470`, both currently unconsumed). That
+      is **threshold logic, not a judgment call**, so it is determinable. Balance source exists
+      (`position/core/venue_balance_tracker.py::get_all_balances`), and `TransferRequest` already carries the right
+      shape (`source_venue`→`dest_venue`, asset, amount, `transfer_type: BusTransferType`). Emit transfer types whose
+      `BUS_TRANSFER_TYPE_RAIL` rail matches the rail that can actually service them. | J7 | Archetype universe |
+      `StrategyArchetype` (60) | factory-registered (32), `PARAM_SCHEMA_REGISTRY` (35) | **Measured: only 13 overlap.**
+      19 engines have no schema, 22 schemas have no engine, 6 have neither |
 
 ### J7 measured in full (2026-08-12, registries loaded in Python — not grepped)
 

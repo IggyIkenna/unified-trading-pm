@@ -118,14 +118,17 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       the time as "reconciles within noise") — that window was simply too short, and its $0.26
       sat inside the old 30-minute sampler's own error bar. At 24h with 1-minute sampling the ratio is **1.745**.
       Operator states no non-AO DeepSeek usage, so this is an attribution defect, not human spend.
-- [ ] [BACKEND] P1. **Stamp `agent_kind` onto `deepseek_message_usage` at sweep time.** The reconciliation's three
-      buckets split on `slot_id == 0` / `is_review_slot` / everything-else, but scheduled jobs and escalation workers
-      both spawn onto free NUMBERED slots via `_pick_free_slot` (`plan_health.dispatch`, `escalation.escalate`), so all
-      of it lands in the bucket labelled "Worker (backlog tasks)" — a label that is simply wrong. Joining spend to kind
-      through the `agents` table resolves only $8.10 of $212 (3.8%); 2,286 sessions have no surviving `agents` row.
-      Stamp the kind on the usage row the same way `is_review_slot` already is. **Done when**: the reconciliation
-      reports scheduled/escalation spend separately from backlog-task spend, and the panel label matches what the bucket
-      actually contains. (repo: agent-orchestrator)
+- [x] ✅ [BACKEND] P1. **SHIPPED — `agent_kind` stamped onto `deepseek_message_usage` at sweep time
+      (agent-orchestrator@18fc60b).** `DeepSeekMessageUsageRow.agent_kind` column (nullable, same snapshot-not-re-
+      derived contract as `is_review_slot`), added via `_add_missing_columns`; the sweep snapshots each slot's
+      `AgentRow.agent_kind` AT SWEEP TIME via the `orch-slot-{N}` tmux-session join (most-recent registration wins) and
+      stamps it onto every row it writes; the wallet reconciliation now reports **scheduled** (plan_health family) and
+      **escalation** (cicd/conflict_resolver/data_pipeline_failure/quality_gate_resolution) spend separately from
+      backlog-task `worker` spend, in both the lifetime and windowed views, and the DeepSeek wallet panel shows
+      "Scheduled jobs" + "Escalation one-shots" rows so the label matches what the bucket actually contains. Also
+      completed `_SCHEDULED_ROLES` (was missing escalation_queue_reconciler/ci_reconciler/
+      data_pipeline_alerts_reconciler — same latent misclassification class). Tests: sweep-time stamping (present +
+      None), lifetime + windowed kind-split, role-group pinning. quality-gates.sh green. (repo: agent-orchestrator)
 - [ ] [BACKEND] P1. **Repair the NULL-provenance rows, and stop claiming they self-heal.** $68.89 of $212.02 lifetime
       (32%, 35,975 turns, recorded 2026-08-04..08-06) carries `is_review_slot IS NULL`, and $62.72 carries
       `slot_id IS NULL` — those land in `worker` BY DEFAULT, not by measurement. The code comment asserting they

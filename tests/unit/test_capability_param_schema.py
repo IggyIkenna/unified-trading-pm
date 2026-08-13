@@ -31,6 +31,7 @@ os.environ.setdefault("DISABLE_AUTH", "true")
 os.environ.setdefault("GCP_PROJECT_ID", "mock-project")
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "mock-project")
 
+import _capability_gaps
 from _capability_gaps import extract_param_schema
 from unified_api_contracts.internal.architecture_v2.capability_manifest import (
     CapabilityManifest,
@@ -110,3 +111,19 @@ def test_param_schema_round_trips_into_serialised_manifest(
     assert list(block) == sorted(block)
     csb = {row["name"]: row for row in block["CARRY_STAKED_BASIS"]}
     assert csb["margin_buffer_pct"]["default"] == "0.20"
+
+
+def test_import_error_fails_loud(monkeypatch: pytest.MonkeyPatch) -> None:
+    # A probe ImportError (stale venv) must RAISE, never degrade to an empty
+    # schema that surfaces downstream as `assert 0 >= 29`
+    # (issue stale_service_venvs_below_declared_fastapi_floor_2026_08_11).
+    def _fake_probe(workspace_root: object, repo: str, body: str, kind: str) -> dict[str, object]:
+        return {
+            "ok": False,
+            "error": "param_schema: ImportError: cannot import name 'iter_route_contexts' from 'fastapi.routing'",
+            "import_error": True,
+        }
+
+    monkeypatch.setattr(_capability_gaps, "_run_service_probe", _fake_probe)
+    with pytest.raises(RuntimeError, match="ImportError"):
+        extract_param_schema(Path("/nonexistent-workspace"))

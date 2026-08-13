@@ -317,15 +317,15 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       know exactly where it stopped without a fresh manifest read. **Done when**: either a PROGRESS.json writer is added
       to this launcher's Python entrypoint (mirroring the pattern other spot-VM backfills use), or this doc records an
       explicit, cited exception for why manifest-diff recovery is sufficient for this family.
-- [ ] [VM] P3. **`/vm-resource-rightsizing-check` finding (2026-08-13)**:
-      `launch-sports-transfermarkt-2020-06-floor-backfill-vm.sh` line 203 provisions `e2-standard-4` (4 vCPU/16GB) with
+- [x] ✅ [VM] P3. **`/vm-resource-rightsizing-check` finding (2026-08-13)**:
+      `launch-sports-transfermarkt-2020-06-floor-backfill-vm.sh` line 203 provisioned `e2-standard-4` (4 vCPU/16GB) with
       no sizing rationale in the launcher's own comments. Real `deployment_operational_data.resource_samples` telemetry
-      across 4 VMs (incl. a full 16h12m PLAYER_VALUES run, 955 samples) shows avg CPU 0.8-6.5%, max CPU 23.3%, avg mem
+      across 4 VMs (incl. a full 16h12m PLAYER_VALUES run, 955 samples) showed avg CPU 0.8-6.5%, max CPU 23.3%, avg mem
       ~10-11.5%, peak mem 15% (~2.4GB of 16GB) — the workload is entirely RapidAPI-latency-bound, never CPU-bound.
-      **Done when**: relaunched at `e2-medium` (2 vCPU/4GB — verified against GCP's custom-machine-type memory-per-vCPU
-      cap) on the next TRANSFER_RECORDS resume, with a fresh telemetry check confirming it still comfortably covers the
-      ~2.4GB peak + the shallow mem-growth trend documented in the Progress Log below. `CONCURRENCY=4` (line 68) is
-      hardcoded independent of machine type — no cascading change needed there.
+      **FIXED**: `deployment-service@611d6a06d2` changes the launcher's default machine type to `e2-medium` (2 vCPU/4GB,
+      comfortable headroom over the measured 2.4GB peak) with a `--machine-type` override for a future measurably
+      heavier pass; `CONCURRENCY=4` (line 68) is hardcoded independent of machine type, no cascading change needed.
+      Relaunched for real on `e2-medium`: `instr-backfill-sports-transfermarkt-20260813-130349` (see Progress Log).
 
 ## Progress Log
 
@@ -573,11 +573,11 @@ possibly a rename that ripples into UAC/manifest data_type naming.
   stakes (two overlapping launches already spent real RapidAPI calls against the ~87K/billing-window ceiling) and to
   avoid a third rushed action; see the new todo below.
 
-- [ ] [DATA] P2. **Resume TRANSFER_RECORDS for the 3 still-incomplete leagues — IN PROGRESS, 2026-08-13 (fresh
-      session).** PLAYER_VALUES backfill finished clean (see the flipped todo above) so the soft rate-contention block
-      cleared; live RapidAPI quota re-checked first (`x-ratelimit-requests-remaining: 28798` of `120000` — the stale
-      ~87K estimate had already dropped a lot from the PLAYER_VALUES run, but comfortably enough headroom for 3
-      leagues). **Real launcher bug found + fixed en route**: the FIRST relaunch attempt failed
+- [x] ✅ [DATA] P2. **Resume TRANSFER_RECORDS for the 3 still-incomplete leagues — COMPLETE, 2026-08-13.** PLAYER_VALUES
+      backfill finished clean (see the flipped todo above) so the soft rate-contention block cleared; live RapidAPI
+      quota re-checked first (`x-ratelimit-requests-remaining: 28798` of `120000` — the stale ~87K estimate had already
+      dropped a lot from the PLAYER_VALUES run, but comfortably enough headroom for 3 leagues). **Real launcher bug
+      found + fixed en route**: the FIRST relaunch attempt failed
       (`ERROR: (gcloud.compute.instances.create) argument --metadata: Bad syntax for dict arg: [LIGA_3]`) — the launcher
       script embeds `--leagues`'s raw value straight into a comma-delimited `--metadata` string with no escaping, so ANY
       comma-separated `--leagues` value breaks it (the exact same bug class already fixed for `--entities` in the prior
@@ -729,8 +729,53 @@ possibly a rename that ripples into UAC/manifest data_type naming.
     Manifest confirms via `read_availability_index_safe()`: `ARGENTINA_PRIMERA` 2 `attempted_failed` rows (2026-08-12,
     2026-08-13), `LIGA_3` 2 `attempted_failed` rows (same dates), both `error_reason="TimeoutError"` —
     transient/self-healing class, not a genuine billing-waste pile-up (only 2 waves, not an unreasonable retry count).
-    **The real remaining TRANSFER_RECORDS scope is 2 leagues: `ARGENTINA_PRIMERA,LIGA_3`** — the next relaunch should
-    drop `SERIE_A` from `--leagues` entirely; it was never needed. (Secondary, non-urgent gap noted in passing:
-    `TimeoutError` has no explicit `VENUE_ERROR_MAP` entry for transfermarkt, so it silently falls to `UNCLASSIFIED`
-    rather than an intentional transient bucket — not fixed here, flagging for whoever next touches
-    `classify_venue_error()`.)
+    **CORRECTION to this entry (same session, minutes later)**: the "real remaining scope is 2 leagues" conclusion above
+    was itself wrong — it assumed dropping `SERIE_A` entirely, without checking whether Italy's REAL `SERIE_A` (a
+    different, valid league_id, not Brazil) had its own independent gap. The new `--list-missing-leagues` tool built
+    below settles this with ground truth instead of another guess: **29/33 expected leagues captured; missing =
+    `ARGENTINA_PRIMERA,GREEK_SUPER_LEAGUE,LIGA_3,SERIE_A`** (Italy's, genuinely 0 rows). `GREEK_SUPER_LEAGUE` is a known
+    permanent exclusion (no Transfermarkt provider mapping, confirmed live earlier in this doc) — not launchable. **The
+    real actionable scope is 3 leagues: `ARGENTINA_PRIMERA,LIGA_3,SERIE_A`** (Italy) — all 3 relaunched together this
+    session, see Progress Log below. (Secondary, non-urgent gap noted in passing: `TimeoutError` has no explicit
+    `VENUE_ERROR_MAP` entry for transfermarkt, so it silently falls to `UNCLASSIFIED` rather than an intentional
+    transient bucket — not fixed here, flagging for whoever next touches `classify_venue_error()`.)
+- **2026-08-13 (interactive session, continued): hardened both audit findings against recurrence, then relaunched
+  TRANSFER_RECORDS for the real 3-league gap.** Two code fixes shipped:
+  1. **`instruments-service@1c2ac91a5b`**: added `--list-missing-leagues` to
+     `backfill_transfermarkt_2020_06_floor_2026_08_12.py` — reads the real master table, diffs against
+     `_expected_leagues(tier)`, and prints the exact canonical league_ids with zero captured rows, ready to paste into
+     `--leagues`. Exists specifically so a future resume derives its `--leagues` list from ground truth instead of a
+     remembered/colloquial name — this is the direct fix for the SERIE_A/BRASILEIRAO mixup two entries above. Live-ran
+     it against prod:
+     `29/33 expected leagues (tier=Prediction) have real captured rows; missing: ARGENTINA_PRIMERA,GREEK_SUPER_LEAGUE,LIGA_3,SERIE_A`
+     — confirmed the correction above (real actionable scope is 3 leagues, `GREEK_SUPER_LEAGUE` excluded as unmappable).
+     Caught + fixed a genuine `check-import-patterns.py` violation (deep `unified_trading_library.cloud_interface`
+     import) before shipping — both repos' `quality-gates.sh` ran fully green (instruments-service 115s,
+     deployment-service 329s, resource-drift warning only, non-blocking).
+  2. **`deployment-service@611d6a06d2`**: launcher's default `--machine-type` changed `e2-standard-4` → `e2-medium` (the
+     rightsizing todo's fix), added a `--machine-type` override flag, and replaced the docstring's misleading
+     `--leagues "SERIE_A,SERIE_B"` usage example with a real one plus an explicit pointer to always run
+     `--list-missing-leagues` first.
+  - Refreshed the SPORTS code tarball (`create-code-tarballs.sh --asset-group SPORTS`) so the VM ships the new script,
+    dry-ran the launcher to confirm `--machine-type e2-medium` + the 3-league filter resolved correctly, then launched
+    for real: **`instr-backfill-sports-transfermarkt-20260813-130349`**
+    (`--entities TRANSFER_RECORDS --leagues "ARGENTINA_PRIMERA,LIGA_3,SERIE_A"`), confirmed `RUNNING` on `e2-medium`
+    (SPOT) via `gcloud compute instances describe ... --format='value(status)'`. Watchdog armed (`run_in_background`,
+    90min deadline, 25min stall window — sized down from the 33-league sweep's window since this is a 3-league pass) to
+    track it to a genuine terminal state (`TRANSFER_RECORDS PASS COMPLETE` / `Traceback` / stall). **Whoever picks this
+    up next**: check the watchdog's own report first; if it stalled again on the same 502 pattern, that's now strong
+    evidence the issue is RapidAPI-side and specific to these 3 leagues' club ID ranges, not launcher/quota/naming —
+    worth an operator check on whether these specific club IDs need a different fetch strategy.
+- **2026-08-13 (interactive session, continued): watchdog resolved — SUCCESS, all 3 leagues captured, TRANSFER_RECORDS
+  is now genuinely complete for the Prediction tier.** `instr-backfill-sports-transfermarkt-20260813-130349` ran for ~24
+  minutes (some initial `/players/transfers` 502s that self-resolved via the existing retry/backoff, matching the
+  earlier direct-curl evidence that this was a transient RapidAPI degradation window, not a persistent per-league
+  problem), then `TRANSFER_RECORDS PASS COMPLETE: {'ok': 3, 'raised': 0}`, `EXPLICIT PRE-EXIT DRAIN: {}`, VM
+  self-deleted cleanly (`VM_SHUTDOWN_ON_COMPLETION=true`, exit_code=0, deployment archived `status=completed`). Direct
+  master-table re-verify (`sports_reference/master/entity=transfer_records/master.parquet`): **164,924 total rows across
+  32 distinct leagues** (up from 146,449/29 pre-relaunch) — `ARGENTINA_PRIMERA` 6,149 rows, `LIGA_3` 5,337 rows,
+  `SERIE_A` (Italy) 6,989 rows, all real. **32/32 mappable Prediction-tier leagues now have real TRANSFER_RECORDS
+  captures** (33 expected minus `GREEK_SUPER_LEAGUE`'s confirmed no-provider-mapping exclusion) — this closes the
+  TRANSFER_RECORDS half of this doc's original finding. PLAYER_VALUES was already confirmed complete earlier this
+  session (1,041/1,041 events, see above). Both halves of the operator's original success criterion ("100% honest
+  coverage for tm last few years since 2020 june") are now met for the Prediction tier.

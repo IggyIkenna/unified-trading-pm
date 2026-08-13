@@ -43,7 +43,7 @@ locked_by:
 context_scope:
   [
     /plans/active/issues/cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md,
-    /plans/active/issues/cefi_content_apply_memory_freeze_recurs_post_fix_and_registry_false_reap_2026_07_31.md,
+    /plans/archive/2026_08/issues/cefi_content_apply_memory_freeze_recurs_post_fix_and_registry_false_reap_2026_07_31.md,
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
     market-tick-data-service/scripts/migrate_cefi_content_instrument_id_catalogue_2026_07_17.py,
     deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
@@ -259,7 +259,7 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       per the runbook instead. Repo: market-tick-data-service. **2026-07-31T04:02Z update**: the "single anomalously
       large/malformed file" hypothesis is now CONFIRMED for shard 23 (a 3rd shard hitting this same fast-OOM pattern) —
       its `run.log` shows an explicit
-      `ERROR read failed     .../venue=DERIBIT/instrument_type=perpetual/data_type=trades/XRP_USDC-26SEP25-4D6-C.parquet: Could not open     Parquet input source '<Buffer>': Couldn't deserialize thrift: TProtocolException: Exceeded size limit`
+      `ERROR read failed .../venue=DERIBIT/instrument_type=perpetual/data_type=trades/XRP_USDC-26SEP25-4D6-C.parquet: Could not open Parquet input source '<Buffer>': Couldn't deserialize thrift: TProtocolException: Exceeded size limit`
       immediately before its OOM-kill. This is very likely the SAME mechanism killing shards 16 and 44 (no corresponding
       ERROR line survived in their truncated tails, but the fast/anomalous-spike signature matches exactly).
       **Recommended fix approach**: wrap the per-file `pd.read_parquet`/pyarrow open call in a try/except that catches

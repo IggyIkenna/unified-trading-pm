@@ -365,6 +365,11 @@ import json, sys
 out = {{"ok": False}}
 try:
 {body}
+except ImportError as e:
+    # An ImportError is an ENVIRONMENT defect (stale venv / missing dep), not
+    # "registry unavailable" — flag it structurally so callers fail loud instead
+    # of degrading to an empty schema (see extract_param_schema).
+    out = {{"ok": False, "error": "{kind}: ImportError: " + str(e)[:200], "import_error": True}}
 except Exception as e:  # noqa: BLE001 — probe must report failure as a typed gap
     out = {{"ok": False, "error": "{kind}: " + type(e).__name__ + ": " + str(e)[:200]}}
 sys.stdout.write(json.dumps(out))
@@ -837,13 +842,26 @@ def extract_param_schema(
     surface (Phase B inventory), never re-typed by hand in the exporter. Returns
     ``(param_schema, nodes, edges)``: ``param_schema`` keyed by archetype node_id
     (``StrategyArchetype`` value), plus an honest ``not_registered`` gap node/edge
-    when the probe is unavailable (the manifest still generates without it).
+    when the probe is unavailable (the manifest still generates without it). A
+    probe ImportError is a different case — it means strategy-service's OWN venv is
+    broken (stale dependency / missing module), so this function RAISES with the
+    underlying message and the offending venv path instead of degrading to an empty
+    schema that surfaces downstream as ``assert 0 >= 29``.
     """
     body = (
         "    from strategy_service.engine.strategies.v2.param_schema import build_param_schema_registry\n"
         "    out = {'ok': True, 'param_schema': build_param_schema_registry()}\n"
     )
     res = _run_service_probe(workspace_root, "strategy-service", body, "param_schema")
+
+    if res.get("import_error"):
+        venv_python = workspace_root / "strategy-service" / ".venv" / "bin" / "python"
+        raise RuntimeError(
+            f"param_schema probe hit an ImportError in strategy-service's venv "
+            f"({venv_python}): {res.get('error')}. This is a stale/broken environment, "
+            f"not a missing registry — re-sync the venv (`uv sync` in strategy-service) "
+            f"rather than degrading to an empty schema."
+        )
 
     if not res.get("ok"):
         node_id = "service_registry:param_schema"

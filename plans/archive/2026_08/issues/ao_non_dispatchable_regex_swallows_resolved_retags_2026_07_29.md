@@ -23,7 +23,7 @@ summary:
   total, 93 excluded via the BLOCKED-* path, and 27 of those (across 21 files) also contain RETAGGED/RULED/RESOLVED
   language in the same block -- almost certainly already-actioned-and-ready-to-work todos AO can never see. Full detail
   in the body."
-status: open
+status: resolved
 nature: issue
 asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
@@ -43,7 +43,7 @@ parent_epic: agent_operating_framework_master
 source:
   "Operator question 2026-07-29 (interactive session), verified against
   agent-orchestrator/server/regen_backlog_from_plan.py"
-resolved_by:
+resolved_by: ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29
 locked_by:
 assigned_vm: NA
 execution_scope: local-only
@@ -262,3 +262,7 @@ past tense rather than deleting it outright.
   The sole real item's own dated, explicit operator revert (`unified-trading-pm@14478ca26`) is a standing ruling, not
   re-litigated — same specific-ruling-beats-later-default logic already applied across every prior pass on this doc
   (2026-08-02 through round11).
+
+- **ag-closeout-audit 2026-08-13**: All open todos verified genuinely resolved on independent re-read (not just trusting
+  the automated verdict -- cross-checked evidence: target-doc state, shipped commits, or explicit self-description as
+  no-action-needed). Archiving now per the plan-completion-and-archival HARD RULE.
