@@ -200,10 +200,26 @@ bridges them; it does not extend one over the other.
       mirroring `_preemption_signal`'s existing contract. Repo: unified-trading-library. —
       unified-trading-library@d50ca9ff65 (`test_signal_handler_chains_instead_of_clobbering`,
       `test_signal_handler_never_raises_even_when_a_buffer_explodes`)
-- [ ] [CODE] P1. Wire the drain registry into the backfill entrypoints that currently install no SIGTERM handler at all
-      — MTDS, MDPS, instruments-service and features-service backfill CLIs. A fleet grep for `signal.SIGTERM` finds
-      handlers in long-running services but not in these. Repos: market-tick-data-service,
-      market-data-processing-service, instruments-service, features-service.
+- [x] 9. ✅ [CODE] P1. Wire the drain registry into the backfill entrypoints that currently install no SIGTERM handler
+      at all — MTDS, MDPS, instruments-service and features-service backfill CLIs. Repos: market-tick-data-service,
+      market-data-processing-service, instruments-service, features-service. — **THE PREMISE WAS BACKWARDS, the real
+      defect was worse, and the fix is one structural change in UTL rather than four entrypoint edits.**
+      unified-trading-library@2aacde1359 (QG green 89s; the preceding run failed 1/7057 on my own test bug, which proves
+      the suite executed). MEASURED, not assumed: importing `market_tick_data_service` already yields
+      `_HANDLER_STATE {'installed': True}` and `[('manifest_pending_buckets', 90)]`, because `manifest_writer` installs
+      at import. This todo's grep searched the SERVICE repos and so missed the transitive install from UTL. What it also
+      missed is the actual bug: `GracefulShutdownHandler.__init__` calls `signal.signal(SIGTERM, ...)` unconditionally,
+      so every `ServiceBootstrap` service constructing one in `main()` — i.e. AFTER imports — **replaces** the drain
+      hook (proved: handler identity goes `_handle_drain_signal` → `GracefulShutdownHandler._handle_signal`). Its
+      `sys.exit(0)` raises SystemExit, which DOES run atexit, and `manifest_writer._state` has always registered an
+      atexit flush — but `StreamingParquetWriter` has **no atexit at all**. So the manifest drained while the data
+      writers were discarded: rows asserting `captured` for parquet never uploaded — the phantom-row class
+      (DP-MANIFEST-003), manufactured by the machinery meant to prevent data loss. Fixed in two layers: (1)
+      `drain_registry` registers an atexit backstop at install time — atexit is LIFO and this lands after `_state`'s, so
+      the priority-ordered drain runs BEFORE it and `_state`'s flush no-ops; (2)
+      `GracefulShutdownHandler._handle_signal` calls `drain_all()` before its cleanup callback, so a failing callback
+      cannot pre-empt the drain. Four new tests, plus the autouse isolation fixture the file lacked (these tests install
+      REAL signal handlers — without it a test could leave pytest itself exiting on SIGTERM).
 - [ ] [DOC] P1. Document the flush contract in `/codex/05-infrastructure/spot-vms-for-backfill.md` — what "exit
       gracefully" obliges a script to do, and that registering a buffer is mandatory for any new writer.
 
