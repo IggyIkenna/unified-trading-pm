@@ -424,6 +424,31 @@ attempted_failed cells accruing), and its diagnosis just reversed, so nobody sho
   exit-code monitor's relaunch-budget bug — this plan's todo #1 (durable race-free relaunch state) is code-complete but
   unshipped; sibling escalation `agt-c06379` (deployment-service) is dispatched on it. This finding needs no MTDS code
   change — the MTDS side was already correct.
+- **2026-08-13 (data_pipeline_failure escalation worker, agt-f601e4, slot 7) — repeat dispatch for
+  `(cefi, book_snapshot_5)`; VERIFIED STATIC BACKLOG on live data, no new failure class, no code fix.** DP-FETCH-009
+  page: 7,806 attempted_failed of 215,756 attempted (ratio 3.6%). **The number is NOT comparable to prior readings
+  (300-380k/~1.1M = 26-34%):** since `deployment-service@96271280` (2026-08-10) both sides of the ratio share the
+  trailing-14-day window (`ATTEMPTED_FAILED_TRAILING_WINDOW_DAYS=14`, `_attempted_failed_index.py`), so the alert now
+  reports the WINDOWED recent count, not the lifetime cell total. **Ran a bounded live manifest read to independently
+  verify (reproduced the detector's exact computation on
+  `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` via the CLI's own
+  GCS-streaming columnar reader — pyarrow `GcsFileSystem` + `columns=`/`filters=` pushdown, ~7.4M rows materialized, no
+  `gcloud` subprocess, no corpus walk):** 14d windowed `attempted_failed` = **7,806 (EXACT match to the alert)** / 14d
+  windowed `captured` = 202,066 / denom 209,872 / ratio **3.72%** (the small 3.6→3.7% delta is window roll in the
+  minutes between alert evaluation and this read). **1d recent attempted_failed = 0** (STATIC BACKLOG materiality floor
+  = 500); `max attempted_at` = 2026-08-11T14:47Z (~2 days stale). **Recent-failure composition (14d window, all
+  already-documented classes — no new mechanism):** `UNCLASSIFIED_VENUE_ERROR` 2,095 + `UpstreamTimestampBiasError`
+  (ASTER) 2,000 (the aiodns/upstream-timestamp classes fixed by `6a067cf1`/`6c6fab03`), `404 GET https` 1,711 (the known
+  historical-PERPETUAL re-attempt 404 wave), `Tardis HTTP 403 code=274 concurrent-IP-lock` ~1,082 (the
+  concurrent-IP-lock P0), `Tardis HTTP 500/503` ~746 transients. All five known MTDS fix commits verified still on
+  `origin/live-defi-rollout`: `2ddc6d4a` (DERIBIT-combo guard-widen), `6a067cf1`/`6c6fab03` (aiodns hard-fail),
+  `31934527` (403-code-274 tagging), `55ec86ac` (BITGET expiry). **Verdict: no fresh regression, no code fix required**
+  — the residual is the same historical backlog family this doc +
+  `cefi_high_attempted_failed_batch_cluster_2026_07_23.md` already cover; the live capture-side remediation stays gated
+  on `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` (Track-2 resume, machine-gated on Track-1). Cross-linked
+  from `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` — another `(cefi, book_snapshot_5)`
+  repeat-dispatch case (the escalation fast-path still has no open-issue-doc dedup). Read-only: no GCS write, no
+  manifest change, no code shipped; PM plan-doc edit only.
 
 ## Liquidations re-drive — operator decision recorded 2026-08-11
 
