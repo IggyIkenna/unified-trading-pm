@@ -194,6 +194,13 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
 - [ ] [INFRA] P3. Consider documenting the `TMUX_TMPDIR`/`TMUX`/`TMUX_PANE` isolation pattern in codex
       (`/codex/05-infrastructure/`) as a standing rule for this shared multi-operator VM, so the NEXT service that
       spawns its own tmux-based fleet doesn't rediscover this the hard way.
+- [x] [INFRA] P1. Guard against the pre-spawn dirty-state gate ever committing raw unresolved git 3-way-merge
+      conflict-marker blocks as "orphan WIP" again — the exact corruption this doc's own recovery hit mid-investigation
+      (an inherited commit on this doc contained live conflict-marker blocks; recovered by hand, see the Progress Log
+      entry below). SHIPPED `agent-orchestrator@14184ca0ed`: new FM9 guard
+      (`server/worktree_clean_check/_conflict_markers.py`) refuses + quarantines a repo whose dirty tracked files
+      contain the paired open/close conflict-marker sentinel, wired into `commit_and_push_dirty_repos` next to the
+      existing FM2 wiped-index guard. Unit + end-to-end tests included; full `quality-gates.sh` green.
 
 ## Progress Log
 
@@ -370,3 +377,15 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   layer-1-alone insufficient, layer-2-TMUX_TMPDIR-alone insufficient) are preserved above as the actual methodology, not
   smoothed over — each was caught by direct live re-testing before being trusted, per the operator's explicit standing
   objection to declaring victory on a readback rather than a real re-test.
+- 2026-08-13 (post-closure hardening): the recovery work earlier in this Progress Log — an inherited pre-spawn commit on
+  this very doc that carried raw unresolved conflict-marker blocks straight into git history — was a real, reproducible
+  gap in `commit_and_push_dirty_repos` (the FM2 wiped-index/mass-deletion guard has no opinion about file CONTENT, only
+  porcelain shape). Shipped a dedicated guard rather than leaving it as a one-off recovery story:
+  `agent-orchestrator@14184ca0ed` adds FM9 (`_conflict_markers.py`) — refuses + quarantines any dirty tracked file
+  carrying the paired open/close conflict-marker sentinel, mirroring FM2's existing refuse-and-quarantine shape exactly.
+  New unit tests cover the positive signature, the markdown-horizontal-rule false-positive case (a bare `=` divider line
+  is deliberately NOT treated as a signature — mirrors the `check_conflict_markers.sh` false-positive class this same
+  doc's recovery already hit once), and an end-to-end `resolve_dirty_state` refusal. Full `quality-gates.sh` green (3582
+  pytest + 319 vitest), `ahead=0`, content verified on `origin/live-defi-rollout`. This is orthogonal to the tmux-death
+  root cause above (already CLOSED) — it hardens the recovery tooling this investigation happened to expose a real bug
+  in, not the tmux mechanism itself.

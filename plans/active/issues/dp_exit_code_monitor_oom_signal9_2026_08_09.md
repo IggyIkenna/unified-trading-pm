@@ -115,13 +115,13 @@ A silently-OOMing exit-code monitor never reaches its sentinel write (`_gcs.writ
       drift vs terraform 8Gi/2/900); cron scheduler = **PAUSED** `0 * * * *` (drift vs terraform `*/5 * * * *`). The
       `exit-code-last-run.json` sentinel being stale since 08-10T05:41Z is because **the cron is paused**, not OOM.
       Repo: deployment-service.
-- [ ] [SCRIPT] P1. Backport the ALREADY-LIVE 16Gi/cpu4/1800s config on `data_pipeline_exit_code_monitor_job` into
-      `terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf` (live job was bumped 2026-08-10 as an emergency fix;
-      terraform still reads 8Gi/cpu2/900 — pure IaC-vs-live drift). The OOM justification is DISPROVEN (see todo 1); the
-      real fix for the sweep being unable to finish is the parallelization todo in
-      `/plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`. This drift backport is bookkeeping
-      on the existing live config, not a new bump. Ship via `quality-gates.sh` → `quickmerge.sh --agent --files`. Repo:
-      deployment-service.
+- [x] ✅ [SCRIPT] P1. Backport the ALREADY-LIVE 16Gi/cpu4/1800s config on `data_pipeline_exit_code_monitor_job` into
+      `terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf` — deployment-service@a87831b5 (live job was bumped
+      2026-08-10 as an emergency fix; terraform still reads 8Gi/cpu2/900 — pure IaC-vs-live drift). The OOM
+      justification is DISPROVEN (see todo 1); the real fix for the sweep being unable to finish is the parallelization
+      todo in `/plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`. This drift backport is
+      bookkeeping on the existing live config, not a new bump. Ship via `quality-gates.sh` →
+      `quickmerge.sh --agent --files`. Repo: deployment-service.
 - [ ] [SCRIPT] P2. **GATED on the cron being resumed** — live-verify the sentinel advances only once
       `uts-prod-dp-exit-code-monitor-cron` is re-ENABLED; it is currently **PAUSED** (last execution 08-11T15:40), so
       the sentinel is stale by definition of the cron not running. Verification target:
