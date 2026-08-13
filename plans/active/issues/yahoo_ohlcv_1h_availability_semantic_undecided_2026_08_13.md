@@ -161,3 +161,12 @@ So the lookahead risk the original text worried about is modelled by an existing
   shipped as `unified-api-contracts@c206f9100d` (Phases 2-3) rather than being held hostage to this decision. Parked
   rather than guessed because a wrong `tick_timestamp` here is invisible: it produces optimistic backtests, not an
   error. The failing test is the only thing standing between that guess and a shared contract.
+- 2026-08-14 — **Downstream MTDS-side code shipped: `market-tick-data-service@9341a84344`.** This is separate, ~24h-idle
+  WIP found in the same slot 4 (`_umi_yahoo.py`'s `fetch_yahoo_equities_intraday`, `umi_tick_provider.py` routing,
+  `tick_data_handler.py`'s `--source` exemption) — it was blocked transitively by this doc's own UAC gate failure while
+  unresolved, and became shippable once `unified-api-contracts@8f0903bb85` landed. Two real gaps found while finishing
+  it, both fixed same-commit: (1) `test_tradfi_enumeration_is_narrowed_to_the_14_fetchable_cells` had a stale hardcoded
+  14-cell expectation that didn't account for the two new `(NASDAQ|NYSE, ohlcv_1h)` cells — renamed to
+  `..._16_fetchable_cells` and the set/count/docstring updated; (2) `TickDataHandler._resolve_source()` grew past the
+  50-line method cap — extracted `_is_cboe_yahoo_only()` as its own static helper. QG green
+  (`ALL QUALITY GATES PASSED`), all four files shipped together.
