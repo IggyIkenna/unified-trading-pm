@@ -9,7 +9,7 @@ summary: >-
   into each source doc happens in the paired finalize plan). Conflict-checked against every existing active
   batch/finalize plan for this tranche via basename-citation cross-reference before drafting — no item here duplicates
   ground an existing dispatched Todos entry already claims.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -66,9 +66,10 @@ source: >-
 
 # tradfi satellite AO dispatch batch 13 — 2026-08-13
 
-> **`status: draft` — NOT ingested/dispatched.** Flip to `status: active` only after operator review. Every todo below
-> was classified bounded/deterministic (worker-determinable outcome, no open design/judgment call) by the 2026-08-13
-> full-sweep audit and conflict-checked against this tranche's existing active batches before being drafted here.
+> **Operator-approved 2026-08-13 (with an added pre-delete KRX/Yahoo-coverage check, see Todo 1) — `status: active`,
+> dispatchable.** Every todo below was classified bounded/deterministic (worker-determinable outcome, no open
+> design/judgment call) by the 2026-08-13 full-sweep audit and conflict-checked against this tranche's existing active
+> batches before being drafted here.
 
 ## Todos
 
@@ -89,7 +90,16 @@ source: >-
       6-step ritual Source: `plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`
 - [ ] [CODE] P2. Todo 1: re-run the dry-run with the fixed canonical_twin_path, confirm 100% twin-coverage, re-check
       bucket retention, execute delete via sanctioned UTL helpers if both checks clear - fully specified dispatch shape
-      per the section 3a ruling Source: `plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`
+      per the section 3a ruling. **ADDED 2026-08-13 (operator instruction, pre-promotion risk check)**: the
+      canonical_twin_path() bug this fix addresses was found + fixed for `instrument_type=equity` NYSE/Databento rows
+      (900 rows missing venue/instrument_type keys) — before executing ANY delete, the dry-run's 100%-twin-coverage
+      report MUST explicitly break out and confirm coverage for `venue=KRX`/Yahoo-sourced equity rows
+      (`pipeline_mode=     batch_yahoo`, `instrument_type=equity`) as their own subgroup, not just an aggregate
+      percentage that could mask a per-venue gap in the same bug class. KRX/Yahoo equities OHLCV is confirmed canonical
+      MVP data (operator ruling 2026-08-09, `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`) — do not delete
+      any legacy-path object whose canonical twin has not been individually confirmed present for this subgroup. If the
+      KRX/Yahoo subgroup coverage is anything less than 100%, STOP and escalate rather than proceeding on the aggregate
+      number alone. Source: `plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`
 - [ ] [CODE] P2. Harden _apply_one's destination-exists branch in migrate_tradfi_underlying_display_names_2026_08.py to
       do a real content/byte comparison before deleting the source, not size-only Source:
       `plans/active/issues/tradfi_underlying_rename_apply_size_only_verification_gap_2026_08_12.md`
