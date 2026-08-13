@@ -75,7 +75,7 @@
     "features-service": "0.81.4",
     "fund-administration-service": "0.9.32",
     "ibkr-gateway-infra": "0.5.1",
-    "instruments-service": "0.101.21",
+    "instruments-service": "0.101.22",
     "market-tick-data-service": "0.129.6",
     "system-integration-tests": "0.15.1",
     "unified-api-contracts": "0.119.1",
@@ -2254,8 +2254,8 @@
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.101.21",
-      "published_at": "2026-08-13T15:12:09Z",
+      "version": "0.101.22",
+      "published_at": "2026-08-13T21:19:31Z",
       "registry": "artifact-registry"
     }
   }
