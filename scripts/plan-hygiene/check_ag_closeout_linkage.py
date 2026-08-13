@@ -271,6 +271,19 @@ def mentions_stem(text: str, stem: str) -> bool:
     return stem in text
 
 
+def _has_active_single_ag_docs(ag: str, all_docs: dict[Path, dict]) -> bool:
+    """True when at least one live candidate doc is tagged with this single covered asset
+    group — the population whose commits the closeout gate actually screens. Mirrors
+    `_orphans_for`'s candidacy predicate (single covered value + non-closed status)."""
+    for _p, fm in all_docs.items():
+        if fm.get("status") in EXCLUDED_STATUS:
+            continue
+        ag_values = [v for v in docspec._as_list(fm.get("asset_group")) if isinstance(v, str)]
+        if len(ag_values) == 1 and ag_values[0] == ag:
+            return True
+    return False
+
+
 def _scan_current() -> tuple[dict[Path, dict], dict[Path, str]]:
     """Read every candidate doc's frontmatter + body from the CURRENT working-tree content."""
     all_docs: dict[Path, dict] = {}
@@ -447,6 +460,29 @@ def main() -> int:
             f"⚠️  check_ag_closeout_linkage: EMPTY closeout family (UNENFORCED): {', '.join(empty_families)}",
             file=sys.stderr,
         )
+
+    # ARCHIVED-only family with live members = the `ao` 2026-08-12 failure mode (coordinator
+    # archived while the tranche kept producing docs → every new finding became an uncommittable
+    # orphan, diagnosed only when a specific commit was refused 10 days later). The per-orphan
+    # violation message added for that incident only fires at commit time on the ONE doc being
+    # committed; this surfaces the latent condition proactively at sweep time — same posture as
+    # the EMPTY-family warning above — so the tranche is reopened before it blocks anything.
+    archived_only_live = sorted(
+        ag
+        for ag in COVERED_ASSET_GROUPS
+        if closeout_family[ag]
+        and not any(_is_active_path(p) for p in closeout_family[ag])
+        and _has_active_single_ag_docs(ag, all_docs)
+    )
+    if archived_only_live:
+        for ag in archived_only_live:
+            names = ", ".join(sorted(p.name for p in closeout_family[ag]))
+            print(
+                f"⚠️  check_ag_closeout_linkage: [{ag}] closeout family is ARCHIVED-only ({names}) "
+                f"but the tranche still has live docs — reopen it (<ag>_consolidated_closeout_<date>.md) "
+                f"or new findings will block at commit time",
+                file=sys.stderr,
+            )
 
     violations_by_path = _orphans_for(all_docs, all_bodies, closeout_family)
     violations = list(violations_by_path.values())
