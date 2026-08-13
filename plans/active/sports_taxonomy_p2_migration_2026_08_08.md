@@ -119,11 +119,17 @@ than proceeding.
 
 ### The re-stamps (each is a four-surface change — path, parquet content, manifest row, catalogue render)
 
-- [ ] [DATA] P0. **Re-stamp `trades` → `odds` across 375,257 shards (2020-06-06 → present).** Largest population in the
-      estate. Both the GCS path segment `data_type=trades` and the manifest `data_type` column must move together —
+- [x] ✅ [DATA] P0. **Re-stamp `trades` → `odds` across 375,257 shards (2020-06-06 → present).** Largest population in
+      the estate. Both the GCS path segment `data_type=trades` and the manifest `data_type` column must move together —
       path==manifest on data_type is the standing MDPS contract. Run in-region on a VM per the VM-launcher runbook,
       never locally; SPOT with progress-checkpoint resume (never replay from START_DATE on preemption). Verify with a
-      MEASURED count of target artifacts created, entity-scoped, on `time_created` — not an activity check.
+      MEASURED count of target artifacts created, entity-scoped, on `time_created` — not an activity check. ✅ **DONE —
+      VM `canonical-migration-sports-trades-to-odds-20260812-223215` exit 0** (3rd attempt; the first two died on the
+      comma-formatted progress-regex stall, fixed `deployment-service@9d4f0769`). GCS restamp copied **382,137**
+      `data_type=odds` objects (0 failed / 0 content_mismatch), then manifest-swap relabeled **merged 396,115 + legacy
+      seed 232,098** `trades`→`odds` with VERIFY=0 remaining on each surface. Tooling shipped
+      `market-tick-data-service@071a5466`. Residual `trades` rows (merged 20 × `live_odds_api` `empty_confirmed`; seed
+      362,753) are the documented P3-gated live-writer re-population, not incomplete scope — see Progress Log.
 - [ ] [DATA] P0. **Materialise the `in_play` column and retire `trades_inplay`.** 111 rows only (2022-09-07 →
       2022-11-09, blank venue) — a fossil, not a population. **Disposition rule PRE-SPECIFIED**: fold into `odds` with
       `in_play=true` when the backing object exists AND its parquet has `row_count > 0`; delete the manifest row when
@@ -213,3 +219,16 @@ than proceeding.
 - **2026-08-08** — Authored. Double-gate on P1 + the API-Football campaign set at authoring time; protective cross-plan
   banner already landed on that campaign (`unified-trading-pm@3bb3214bdf`). Delete posture set to §3a
   reversibility-qualified per operator ruling, NOT [OPERATOR] tags.
+- **2026-08-13** — `trades` → `odds` re-stamp (todo 1) complete. Tooling
+  (`restamp_sports_trades_to_odds_2026_08_12.py` + `manifest_swap_trades_to_odds_2026_08_12.py` +
+  `census_sports_trades_to_odds_scope_2026_08_12.py`) shipped `market-tick-data-service@071a5466`; VM-launcher
+  `sports-trades-to-odds` category + comma-stall-regex fix shipped `deployment-service@9d4f0769`. Execution: VM
+  `canonical-migration-sports-trades-to-odds-20260812-223215` exit 0 — GCS restamp copied 382,137 `data_type=odds`
+  objects (0 failed / 0 content_mismatch), manifest swap relabeled merged 396,115 + legacy seed 232,098 `trades`→`odds`
+  (VERIFY=0 remaining each). **P3-gated residual (expected, not incomplete scope):** the live forward-poll writer still
+  emits `data_type=trades` rows — post-run census shows merged index at 20 `trades` rows (all
+  `ODDS_API`/`live_odds_api`/`empty_confirmed`) and the frozen legacy seed re-populated to 362,753 `trades` on the next
+  consolidator cycle, per the manifest-swap's own KNOWN PHASED-STATE caveat. Re-run the swap after P3's consumer
+  migration (`sports_taxonomy_p3_consumers_2026_08_08`) flips the writers. Note: the census at dispatch time reported
+  396,110 merged-index `trades` rows (not the plan's 375,257 title figure) — the title's figure is the earlier audit's
+  captured-shard count; the migration re-stamped the full live population regardless.
