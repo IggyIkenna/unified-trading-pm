@@ -43,7 +43,7 @@ last_updated: 2026-08-11
 context_scope:
   [
     unified-trading-library/unified_trading_library/service_framework/fastapi_factory.py,
-    unified-trading-pm/scripts/quality_gates/_capability_gaps.py,
+    unified-trading-pm/scripts/openapi/_capability_gaps.py,
     unified-trading-pm/tests/unit/test_capability_param_schema.py,
     workspace-constraints.toml,
     canonical-dependency-manifest.json,
@@ -84,8 +84,9 @@ reads of the symptom (see the related docs) never landed on it.
    `from fastapi.routing import APIRoute, iter_route_contexts`.
 2. Any import of UTL's `service_framework` from a 0.136.3 venv raises
    `ImportError: cannot import name 'iter_route_contexts' from 'fastapi.routing'`.
-3. PM's `_capability_gaps.py` reaches into **strategy-service's** venv to enumerate capability params. It catches that
-   ImportError, logs `WARNING param schema GAP: …` at `_capability_gaps.py:864`, and returns an **empty** schema.
+3. PM's `scripts/openapi/_capability_gaps.py` reaches into **strategy-service's** venv to enumerate capability params.
+   It catches that ImportError, logs `WARNING param schema GAP: …` at `_capability_gaps.py:864`, and returns an
+   **empty** schema.
 4. `tests/unit/test_capability_param_schema.py` then fails 5 tests on the empty dict
    (`assert 0 >= 29  where 0 = len({})`, plus `KeyError: 'CARRY_STAKED_BASIS'` / `'ARBITRAGE_PRICE_DISPERSION'` /
    `'VOL_CARRY'`), and `test_capability_verdict_matrix.py::test_fixture_matches_live_engine_registry` fails alongside
@@ -141,9 +142,14 @@ itself; the CVE doc keeps ownership of the `--ignore-vuln` allowlist.
       `bash scripts/quality-gates.sh --no-fix` exit code **0** (was `6 failed, 1961 passed` before the sync). Final
       spread: 15 venvs @ 0.140.7, 2 @ 0.141.1, and 0.136.3 remaining ONLY in the 4 `.stale-pre-history-rewrite-*`
       archive dirs (todo 6).
-- [ ] [SCRIPT] P0. Make the swallowed ImportError loud in `unified-trading-pm/scripts/quality_gates/_capability_gaps.py`
+- [x] [SCRIPT] P0. Make the swallowed ImportError loud in `unified-trading-pm/scripts/openapi/_capability_gaps.py`
       (~line 864): an ImportError while probing a sibling venv must fail the gate with the underlying message and the
-      offending venv path, never degrade to an empty schema that surfaces as `assert 0 >= 29`.
+      offending venv path, never degrade to an empty schema that surfaces as `assert 0 >= 29`. ✅ 2026-08-13 —
+      unified-trading-pm@c7c237d804 + a5182bdbfc. `_SERVICE_PROBE` now catches ImportError separately and tags it
+      `import_error`; `extract_param_schema` raises a RuntimeError naming the offending venv path + underlying message
+      instead of degrading to `{}`. Unit test `test_import_error_fails_loud` added. Also rescued a pre-existing
+      BATS_HARD_FAIL red (`test_prettier_autostage_advisory_mode.bats` test 2 asserted the npx-absent marker; npx now
+      ships in /usr/bin) that blocked every PM commit. QG `--no-fix` exit 0.
 - [ ] [INVESTIGATE] P1. Measure whether the other slots and the AO VM carry the same staleness — this doc's numbers
       cover `.tabs/5` only, and a third version (0.135.1) is on record from 2026-08-01, so do not assume uniformity.
       Report the per-slot installed-vs-declared table.
