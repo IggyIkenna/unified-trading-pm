@@ -19,7 +19,7 @@ tags: [backfill, manifest, honest-coverage, data-completion, sports, data-correc
 related:
   [
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
-    /plans/active/data_completion_cefi_2026_07_15.md,
+    /plans/archive/2026_08/data_completion_cefi_2026_07_15.md,
     /plans/active/data_completion_defi_2026_07_15.md,
     /plans/active/data_completion_tradfi_2026_07_15.md,
     /plans/active/data_completion_prediction_2026_07_15.md,

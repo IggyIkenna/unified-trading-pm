@@ -199,7 +199,7 @@ bridges them; it does not extend one over the other.
 - [x] 5. ✅ [TEST] P0. Test: the drain registry chains a pre-existing SIGTERM handler instead of clobbering it,
       mirroring `_preemption_signal`'s existing contract. Repo: unified-trading-library. —
       unified-trading-library@d50ca9ff65 (`test_signal_handler_chains_instead_of_clobbering`,
-      `test_signal_handler_never_raises_even_when_a_buffer_explodes`) <<<<<<< Updated upstream
+      `test_signal_handler_never_raises_even_when_a_buffer_explodes`)
 - [x] 9. ✅ [CODE] P1. Wire the drain registry into the backfill entrypoints that currently install no SIGTERM handler
       at all — MTDS, MDPS, instruments-service and features-service backfill CLIs. Repos: market-tick-data-service,
       market-data-processing-service, instruments-service, features-service. — **THE PREMISE WAS BACKWARDS, the real
@@ -230,8 +230,6 @@ bridges them; it does not extend one over the other.
       `GracefulShutdownHandler` clobber found the same day); the drained-partial-shard-is-not-captured rule; and the
       `loop.add_signal_handler` caveat for async services. Cites the fix at unified-trading-library@2aacde1359 and the
       contract tests.
-
-> > > > > > > Stashed changes
 
 ## Phase 2 — The policy evaluator (one SSOT, no forked policy)
 

@@ -197,8 +197,8 @@ evidence-backed, zero-risk housekeeping action, not new work.
       siblings) — otherwise the identical data-loss variant persists for those roles after the review/main/monitor guard
       lands. **Done when**: the unit test passes for all of `{review, main, monitor}` AND for at least one one-shot
       lifecycle role; full `agent-orchestrator` `quality-gates.sh` green. Source:
-      `/plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md` (its 1st +
-      3rd items, combined — the 3rd explicitly extends the 1st's guard). Repo: agent-orchestrator. —
+      `/plans/archive/2026_08/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md` (its
+      1st + 3rd items, combined — the 3rd explicitly extends the 1st's guard). Repo: agent-orchestrator. —
       **agent-orchestrator@6166269** (2026-08-08, "fix(prompts): route review/main/monitor to register/poll shape even
       with slot_id" — shipped by slot-32, ancestor-verified on `origin/live-defi-rollout`;
       `_REGISTER_POLL_ROLES =     {"review", "main", "monitor"}` now guards both the STEP 0 and STEP 2/3 branches in
@@ -216,8 +216,8 @@ evidence-backed, zero-risk housekeeping action, not new work.
       the existing `/api/backlog/{id}/reopen` correction path and the `no_plan_flip` hardening it already has. **See
       this plan's file-adjacency rule #1 before starting.** **Done when**: a regression test asserts a `/done` call with
       an empty `sha` never leaves the task `status=done`; full `agent-orchestrator` `quality-gates.sh` green. Source:
-      `/plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md` (its 2nd item
-      — independent of the composer-guard fix above per the doc's own text). Repo: agent-orchestrator.
+      `/plans/archive/2026_08/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md` (its
+      2nd item — independent of the composer-guard fix above per the doc's own text). Repo: agent-orchestrator.
 
 - [x] [INFRA] P3. **MOOT 2026-08-05 — do not dispatch.** The source doc's host (`i-0dd9812a96cdda5dc`/`ip-172-31-0-185`)
       was terminated 2026-08-03 (`ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`) — there is no host left to

@@ -17,7 +17,7 @@ scope: [engineer, admin]
 tags: [mvp, could-exist, honest-coverage, rollup, data-status, scope-filter, memory-safety]
 related:
   [
-    /plans/active/mvp_scope_catalogue_tagging_2026_06_08.md,
+    /plans/archive/2026_08/mvp_scope_catalogue_tagging_2026_06_08.md,
     /plans/active/issues/venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md,
     /plans/active/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md,
     /plans/active/issues/honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md,
@@ -42,7 +42,7 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/mvp_scope_catalogue_tagging_2026_06_08.md,
+    /plans/archive/2026_08/mvp_scope_catalogue_tagging_2026_06_08.md,
     /plans/active/issues/venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md,
     deployment-api/deployment_api/routes/data_status/_coverage_scope.py,
     deployment-api/deployment_api/scripts/data_status_rollup_worker.py,

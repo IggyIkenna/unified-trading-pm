@@ -20,7 +20,7 @@ related:
     /plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
     /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md,
-    /plans/active/mvp_scope_catalogue_tagging_2026_06_08.md,
+    /plans/archive/2026_08/mvp_scope_catalogue_tagging_2026_06_08.md,
     /plans/active/is_catalogue_g1_root_audit_log_2026_07_24.md,
   ]
 created: "2026-08-09"

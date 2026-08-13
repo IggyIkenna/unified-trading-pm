@@ -34,7 +34,7 @@ related:
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
     /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
     /plans/archive/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md,
-    /plans/active/data_completion_cefi_2026_07_15.md,
+    /plans/archive/2026_08/data_completion_cefi_2026_07_15.md,
     /plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md,
     /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/instruments_foundation_completeness_2026_06_24.md,

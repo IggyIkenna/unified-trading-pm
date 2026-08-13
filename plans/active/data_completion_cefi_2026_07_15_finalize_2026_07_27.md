@@ -18,8 +18,9 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, na-audit]
 related:
   [
-    /plans/active/data_completion_cefi_2026_07_15.md,
+    /plans/archive/2026_08/data_completion_cefi_2026_07_15.md,
     /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-27"
@@ -46,7 +47,7 @@ assigned_role: data_engineering
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/data_completion_cefi_2026_07_15.md,
+    /plans/archive/2026_08/data_completion_cefi_2026_07_15.md,
     /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,

@@ -21,7 +21,7 @@ related:
     /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
     /plans/archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
-    /plans/active/mvp_scope_catalogue_tagging_2026_06_08.md,
+    /plans/archive/2026_08/mvp_scope_catalogue_tagging_2026_06_08.md,
     /plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
     issues/cefi_layer1_denominator_gaps_2026_07_03.md,
     issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,

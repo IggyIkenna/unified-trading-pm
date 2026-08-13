@@ -30,7 +30,7 @@ related:
     /plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
     /plans/active/ao_satellite_ao_dispatch_batch8_2026_08_08.md,
     /plans/archive/2026_08/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
-    /plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md,
+    /plans/archive/2026_08/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-08"
@@ -53,7 +53,7 @@ depends_on: []
 context_scope:
   [
     /plans/archive/2026_08/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
-    /plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md,
+    /plans/archive/2026_08/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md,
     agent-orchestrator/server/prompts.py,
     agent-orchestrator/server/routes/slots_worker.py,
     unified-trading-pm/agents/review.md,

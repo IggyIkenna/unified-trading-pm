@@ -185,14 +185,13 @@ a fresh one's `/proc/environ` clean. Watching for a clean window now.
       the appearance of a synchronized mass-kill. A simpler, more direct explanation surfaced live the same day (see
       "production breakthrough" Progress Log entry): if the tmux SERVER process itself dies, every pane it hosts is lost
       in the SAME instant for real, no batching illusion needed — still worth confirming which (or both) explain the
-      historical clusters, but no longer the leading hypothesis. **Done when**: pull successive
-      `TmuxPruner: cleared     N` log-line timestamps over a longer window and check whether the gap between ticks is
-      ever meaningfully wider than `tmux_prune_interval_seconds` (delay = real backlog) vs. consistently on-cadence (no
-      delay = the 25 really were closely-clustered, still needing an explanation). A co-occurring
-      `utempter: pututline: Permission denied` line at the same timestamp was investigated and is very likely a red
-      herring — it also fires during the routine respawns immediately after, so it looks like constant/benign noise on
-      this host's permission setup, not death-specific; note this here so it isn't re-chased as a lead. Repo:
-      agent-orchestrator.
+      historical clusters, but no longer the leading hypothesis. **Done when**: pull successive `TmuxPruner: cleared N`
+      log-line timestamps over a longer window and check whether the gap between ticks is ever meaningfully wider than
+      `tmux_prune_interval_seconds` (delay = real backlog) vs. consistently on-cadence (no delay = the 25 really were
+      closely-clustered, still needing an explanation). A co-occurring `utempter: pututline: Permission denied` line at
+      the same timestamp was investigated and is very likely a red herring — it also fires during the routine respawns
+      immediately after, so it looks like constant/benign noise on this host's permission setup, not death-specific;
+      note this here so it isn't re-chased as a lead. Repo: agent-orchestrator.
 - [x] [INFRA] P3. ~~Check for a per-cgroup OOM kill~~ — **CLOSED 2026-08-11, ruled out.** All workers run under
       `orchestrator.service`'s systemd cgroup, which DOES have a real memory ceiling (`MemoryAccounting=yes`,
       `MemoryHigh=24.7GB`, `MemoryMax=26GB` — confirmed via `systemctl show`). Read the cgroup's own lifetime kill
@@ -399,7 +398,7 @@ a fresh one's `/proc/environ` clean. Watching for a clean window now.
       `agent-orchestrator@4452cbb6da`) rather than re-discovering it ad hoc next time. Repo: agent-orchestrator.
 - [x] [INFRA] P3. ~~Confirm the 16:15:xx orchestrator.service restart was ao-self-pull.sh~~ — **CLOSED 2026-08-11,
       confirmed.** `journalctl -u orchestrator` at 16:15:28 UTC:
-      `orchestrator running checkout 4452cbb — 0     pre-existing tmux session(s): []` — the self-pull restart landing
+      `orchestrator running checkout 4452cbb — 0 pre-existing tmux session(s): []` — the self-pull restart landing
       exactly as expected, ~43s after the tmux-server death, finding zero sessions (consistent with the server having
       died and not yet respawned by then, not causing it). Confirmed coincidental, not causal. Repo: agent-orchestrator.
 - [x] [INFRA] P0. ~~Throttle fix verified insufficient alone~~ — **CLOSED 2026-08-12, LEADING HYPOTHESIS NOW n=3 via the
@@ -422,134 +421,134 @@ a fresh one's `/proc/environ` clean. Watching for a clean window now.
       conclusion from it.
 
       **2026-08-12 — TWO live catches under the corrected counter, same 30-min capture window, closing this todo's
-                      done-when with a DIFFERENT, sharper signal than the counter itself.** Both deaths read `spawns=0`, `newsess=0`
-                      throughout the 1s-resolution capture — the corrected counter STILL saw nothing, which is itself the key finding
-                      (see the new measurement-trap note below), but a parallel `journalctl` cross-check found what the counter
-                      missed:
+          done-when with a DIFFERENT, sharper signal than the counter itself.** Both deaths read `spawns=0`, `newsess=0`
+          throughout the 1s-resolution capture — the corrected counter STILL saw nothing, which is itself the key finding
+          (see the new measurement-trap note below), but a parallel `journalctl` cross-check found what the counter
+          missed:
 
-                      **Death (2026-08-12 12:05:21.030 UTC)**: last healthy sample 12:05:19.654 (load 2.76/2.96/2.02, ls_rc=0,
-                      nsess=5) — server gone by 12:05:21.030 (ls_rc=1), a ~1.4s flat-then-instant vanish, load LOW throughout (not a
-                      resource-starvation death). `journalctl` for the same second (12:05:20) shows a burst of **9
-                      `utempter: pututline: Permission denied` lines**: 5 with `ppid=3957305` (the tmux SERVER's own live PID at that
-                      moment), 2 with `ppid=190007`, 2 with `ppid=190322` (both short-lived child processes, gone before any capture
-                      sample could catch them). Recovered by 12:06:05.859, new PID 241676 — 44.8s recovery, same
-                      `orchestrator.service` cgroup as before.
+          **Death (2026-08-12 12:05:21.030 UTC)**: last healthy sample 12:05:19.654 (load 2.76/2.96/2.02, ls_rc=0,
+          nsess=5) — server gone by 12:05:21.030 (ls_rc=1), a ~1.4s flat-then-instant vanish, load LOW throughout (not a
+          resource-starvation death). `journalctl` for the same second (12:05:20) shows a burst of **9
+          `utempter: pututline: Permission denied` lines**: 5 with `ppid=3957305` (the tmux SERVER's own live PID at that
+          moment), 2 with `ppid=190007`, 2 with `ppid=190322` (both short-lived child processes, gone before any capture
+          sample could catch them). Recovered by 12:06:05.859, new PID 241676 — 44.8s recovery, same
+          `orchestrator.service` cgroup as before.
 
-                      **Death (2026-08-12 12:23:06.574 UTC)**: last healthy sample 12:23:05.310 (load 4.58/3.85/3.10, ls_rc=0,
-                      nsess=5) — server gone by 12:23:06.574. `journalctl` for 12:23:05-06 shows a burst of **6 utempter
-                      permission-denied lines**: 5 with `ppid=241676` (again, the tmux SERVER's own live PID), 2 with
-                      `ppid=908530`, 2 with `ppid=908710`. This one has a clear proximate trigger in the same log window:
-                      `ci-reconciler.service`'s systemd timer fired at 12:23:05, attempted a dispatch, and got a 503
-                      (`mode 'ci_reconcile' is paused by operator`) — **the utempter burst fired regardless of the dispatch being
-                      REJECTED**, meaning whatever creates these pty-registration attempts happens before or independent of the
-                      API's pause-check, not only on a successful spawn. Recovered by ~12:24:16, new PID 942168 — ~78s recovery.
+          **Death (2026-08-12 12:23:06.574 UTC)**: last healthy sample 12:23:05.310 (load 4.58/3.85/3.10, ls_rc=0,
+          nsess=5) — server gone by 12:23:06.574. `journalctl` for 12:23:05-06 shows a burst of **6 utempter
+          permission-denied lines**: 5 with `ppid=241676` (again, the tmux SERVER's own live PID), 2 with
+          `ppid=908530`, 2 with `ppid=908710`. This one has a clear proximate trigger in the same log window:
+          `ci-reconciler.service`'s systemd timer fired at 12:23:05, attempted a dispatch, and got a 503
+          (`mode 'ci_reconcile' is paused by operator`) — **the utempter burst fired regardless of the dispatch being
+          REJECTED**, meaning whatever creates these pty-registration attempts happens before or independent of the
+          API's pause-check, not only on a successful spawn. Recovered by ~12:24:16, new PID 942168 — ~78s recovery.
 
-                      **SUPERSEDED 2026-08-13**: n=3 utempter burst was real but a CONSEQUENCE not the cause — root
-                      cause (see "ROOT CAUSE CONFIRMED" above) is an external `tmux kill-server` from another slot;
-                      the burst is just the server's own panes being torn down on shutdown.
+          **SUPERSEDED 2026-08-13**: n=3 utempter burst was real but a CONSEQUENCE not the cause — root
+          cause (see "ROOT CAUSE CONFIRMED" above) is an external `tmux kill-server` from another slot;
+          the burst is just the server's own panes being torn down on shutdown.
 
-                      **New measurement trap, found by this catch**: the corrected `newsess=` counter (self-match bug already fixed)
-                      STILL read 0 through both deaths, even though `journalctl` proves genuine non-AutoSpawn pane-creation activity
-                      was happening at that exact moment. Root cause: `pgrep`-based 1-second-interval sampling is structurally too
-                      coarse for this signal — these child processes spawn, hit `utempter`'s permission-denied, and exit in well
-                      under a second, so a once-per-second poll has a real chance of landing in the gap between two such processes'
-                      entire lifetimes. `journalctl`'s persistent log lines are the reliable detector here, not a live `pgrep` sample
-                      — the capture script's `newsess=` field should be treated as a lower bound / sanity check, never as proof of
-                      absence.
+          **New measurement trap, found by this catch**: the corrected `newsess=` counter (self-match bug already fixed)
+          STILL read 0 through both deaths, even though `journalctl` proves genuine non-AutoSpawn pane-creation activity
+          was happening at that exact moment. Root cause: `pgrep`-based 1-second-interval sampling is structurally too
+          coarse for this signal — these child processes spawn, hit `utempter`'s permission-denied, and exit in well
+          under a second, so a once-per-second poll has a real chance of landing in the gap between two such processes'
+          entire lifetimes. `journalctl`'s persistent log lines are the reliable detector here, not a live `pgrep` sample
+          — the capture script's `newsess=` field should be treated as a lower bound / sanity check, never as proof of
+          absence.
 
-                      **Also ruled out for both catches**: `sockthr_own`/`sockthr_sys` were completely FLAT (no increment at all)
-                      through the entire pre-death window on both — the `sock_throttled` lead (open todo below) is NOT the trigger
-                      for this specific crash class, at least not as an actively-incrementing signal in the second before death.
+          **Also ruled out for both catches**: `sockthr_own`/`sockthr_sys` were completely FLAT (no increment at all)
+          through the entire pre-death window on both — the `sock_throttled` lead (open todo below) is NOT the trigger
+          for this specific crash class, at least not as an actively-incrementing signal in the second before death.
 
-                      **Audit done + mitigation shipped 2026-08-12, `agent-orchestrator@c77a42ab54`.** Traced the mechanism precisely
-                      rather than guessing:
+          **Audit done + mitigation shipped 2026-08-12, `agent-orchestrator@c77a42ab54`.** Traced the mechanism precisely
+          rather than guessing:
 
-                      - `ci-reconciler-dispatch.sh` itself is a pure HTTP client — it never touches tmux, and its death-B dispatch
-                        attempt was rejected by `scheduled_dispatch_pause` (mode paused) BEFORE any spawn logic could run. Its
-                        timing in the journalctl window was coincidental, not causal.
-                      - The real mechanism is `escalation.py`'s `retry_queued_escalations()`: the outer queue-drain loop fetches up
-                        to `limit*50` (≈100) queued escalations per tick and only stops early on a SUCCESSFUL dispatch count — a
-                        FAILED spawn attempt just `continue`s to the next escalation with no cap. Separately, each individual
-                        `escalate()` call has its OWN internal retry loop (`_MAX_SLOT_PICK_ATTEMPTS = 5`, mirrored identically in
-                        `plan_health.dispatch()`): on a `"benign: slot raced by another spawn path"` TOCTOU failure it immediately
-                        retries `do_spawn()` (→ `tmux new-session`) on a different slot, up to 5 times, synchronously, with NO delay
-                        between attempts. Confirmed via code read (`server/escalation.py` ~L499-L737, mirrored in
-                        `server/plan_health.py` ~L660-L810) that the ONE failure mode checked in detail — "repo already active on
-                        another slot" — happens BEFORE `do_spawn`, so it doesn't itself create a pty; the 5x internal race-retry is
-                        the cleaner, more direct explanation and needs only one escalation losing repeated slot races to produce a
-                        multi-wide burst. journalctl confirmed the "thundering herd" precondition: 7-9 TTL-held escalations surfaced
-                        in immediate succession right as the fleet resumed from the DeepSeek pause, with at least two independent
-                        "slot-specific spawn failure... skipping to next queued wall" lines landing in the same 1-2s window as
-                        death B.
-                      - **Shipped as a mitigation** (narrows the window pending full root-cause confirmation, same rationale as the
-                        fleet-git-health-guard.sh fix): (1) a configurable backoff (`tuning.spawn_race_retry_backoff_seconds`,
-                        default 0.5s) between race-retries in BOTH `escalation.escalate()` and `plan_health.dispatch()`'s identical
-                        loops, spreading a burst over more wall-clock time; (2) a cap
-                        (`tuning.escalation_max_failed_spawn_attempts_per_tick`, default 5) on the outer queue-drain loop's failed
-                        spawn attempts per tick, stopping the thundering-herd case early instead of burning through the whole ≈100
-                        row headroom window; (3) `log_activity()` on every race-retry (`escalation_spawn_race_retry` /
-                        `plan_health_spawn_race_retry`, both with escalation/dispatch id + attempt number) and on the cap being hit
-                        (`escalation_failed_spawn_attempts_cap_hit`) — this exact condition happened three times before it was
-                        caught, purely by luck of an active live-capture session; it is now visible in the Activity Log going
-                        forward without needing one. (4) A new Slack alert, `notify_escalation_spawn_storm`, fires when the cap is
-                        hit — explicitly named as "not proof of an imminent crash, but the same shape both confirmed live catches
-                        showed," so it doesn't overclaim causation that is still unconfirmed. Tests:
-                        `test_escalate_race_retry_logs_activity_and_backs_off`,
-                        `test_escalate_exhausted_retries_backs_off_between_but_not_after_last_attempt`,
-                        `test_retry_stops_early_at_failed_spawn_attempts_cap`,
-                        `test_retry_failed_spawn_attempts_below_cap_does_not_trigger_storm_alert` (escalation.py), the mirrored
-                        `test_dispatch_race_retry_logs_activity_and_backs_off` /
-                        `test_dispatch_exhausted_retries_backs_off_between_but_not_after_last_attempt` (plan_health.py), and
-                        `TestNotifyEscalationSpawnStorm` (slack.py) — full suite green, quality gates PASSED.
-                      - **Not done / nice-to-have, not chased this pass**: `worker_liveness_watchdog.py`'s three `tmux_spawn.spawn()`
-                        call sites (`_auth_failover.py`, `_respawn.py`, plus two more in the watchdog itself) call `tmux_spawn.spawn`
-                        directly but WITHOUT this internal 5x-retry-on-race pattern (single-attempt each) — lower individual burst
-                        risk, not touched here; worth a follow-up scan if a future live catch shows the watchdog as the source
-                        instead. Also not done: instrumenting an actual live burst with this specific hypothesis armed (e.g. a
-                        temporary per-attempt `escalation_id` + `do_spawn` correlation log) to CONFIRM escalation's retry loop —
-                        rather than plan_health or watchdog — is the real source of a future burst, since the current evidence is a
-                        strong structural match plus correlated timing, not a smoking-gun capture of `escalate()` itself mid-burst.
-                      - **Still open**: whether a pane-creation burst is actually WHY the tmux server dies remains unconfirmed — this
-                        mitigation narrows the window the same way the fleet-git-health-guard.sh fix did, it does not prove or
-                        disprove causation. The next live catch (now with `escalation_spawn_race_retry` logging + the storm alert
-                        armed) is the way to gather that evidence without needing another lucky manual capture session.
+          - `ci-reconciler-dispatch.sh` itself is a pure HTTP client — it never touches tmux, and its death-B dispatch
+          attempt was rejected by `scheduled_dispatch_pause` (mode paused) BEFORE any spawn logic could run. Its
+          timing in the journalctl window was coincidental, not causal.
+          - The real mechanism is `escalation.py`'s `retry_queued_escalations()`: the outer queue-drain loop fetches up
+          to `limit*50` (≈100) queued escalations per tick and only stops early on a SUCCESSFUL dispatch count — a
+          FAILED spawn attempt just `continue`s to the next escalation with no cap. Separately, each individual
+          `escalate()` call has its OWN internal retry loop (`_MAX_SLOT_PICK_ATTEMPTS = 5`, mirrored identically in
+          `plan_health.dispatch()`): on a `"benign: slot raced by another spawn path"` TOCTOU failure it immediately
+          retries `do_spawn()` (→ `tmux new-session`) on a different slot, up to 5 times, synchronously, with NO delay
+          between attempts. Confirmed via code read (`server/escalation.py` ~L499-L737, mirrored in
+          `server/plan_health.py` ~L660-L810) that the ONE failure mode checked in detail — "repo already active on
+          another slot" — happens BEFORE `do_spawn`, so it doesn't itself create a pty; the 5x internal race-retry is
+          the cleaner, more direct explanation and needs only one escalation losing repeated slot races to produce a
+          multi-wide burst. journalctl confirmed the "thundering herd" precondition: 7-9 TTL-held escalations surfaced
+          in immediate succession right as the fleet resumed from the DeepSeek pause, with at least two independent
+          "slot-specific spawn failure... skipping to next queued wall" lines landing in the same 1-2s window as
+          death B.
+          - **Shipped as a mitigation** (narrows the window pending full root-cause confirmation, same rationale as the
+          fleet-git-health-guard.sh fix): (1) a configurable backoff (`tuning.spawn_race_retry_backoff_seconds`,
+          default 0.5s) between race-retries in BOTH `escalation.escalate()` and `plan_health.dispatch()`'s identical
+          loops, spreading a burst over more wall-clock time; (2) a cap
+          (`tuning.escalation_max_failed_spawn_attempts_per_tick`, default 5) on the outer queue-drain loop's failed
+          spawn attempts per tick, stopping the thundering-herd case early instead of burning through the whole ≈100
+          row headroom window; (3) `log_activity()` on every race-retry (`escalation_spawn_race_retry` /
+          `plan_health_spawn_race_retry`, both with escalation/dispatch id + attempt number) and on the cap being hit
+          (`escalation_failed_spawn_attempts_cap_hit`) — this exact condition happened three times before it was
+          caught, purely by luck of an active live-capture session; it is now visible in the Activity Log going
+          forward without needing one. (4) A new Slack alert, `notify_escalation_spawn_storm`, fires when the cap is
+          hit — explicitly named as "not proof of an imminent crash, but the same shape both confirmed live catches
+          showed," so it doesn't overclaim causation that is still unconfirmed. Tests:
+          `test_escalate_race_retry_logs_activity_and_backs_off`,
+          `test_escalate_exhausted_retries_backs_off_between_but_not_after_last_attempt`,
+          `test_retry_stops_early_at_failed_spawn_attempts_cap`,
+          `test_retry_failed_spawn_attempts_below_cap_does_not_trigger_storm_alert` (escalation.py), the mirrored
+          `test_dispatch_race_retry_logs_activity_and_backs_off` /
+          `test_dispatch_exhausted_retries_backs_off_between_but_not_after_last_attempt` (plan_health.py), and
+          `TestNotifyEscalationSpawnStorm` (slack.py) — full suite green, quality gates PASSED.
+          - **Not done / nice-to-have, not chased this pass**: `worker_liveness_watchdog.py`'s three `tmux_spawn.spawn()`
+          call sites (`_auth_failover.py`, `_respawn.py`, plus two more in the watchdog itself) call `tmux_spawn.spawn`
+          directly but WITHOUT this internal 5x-retry-on-race pattern (single-attempt each) — lower individual burst
+          risk, not touched here; worth a follow-up scan if a future live catch shows the watchdog as the source
+          instead. Also not done: instrumenting an actual live burst with this specific hypothesis armed (e.g. a
+          temporary per-attempt `escalation_id` + `do_spawn` correlation log) to CONFIRM escalation's retry loop —
+          rather than plan_health or watchdog — is the real source of a future burst, since the current evidence is a
+          strong structural match plus correlated timing, not a smoking-gun capture of `escalate()` itself mid-burst.
+          - **Still open**: whether a pane-creation burst is actually WHY the tmux server dies remains unconfirmed — this
+          mitigation narrows the window the same way the fleet-git-health-guard.sh fix did, it does not prove or
+          disprove causation. The next live catch (now with `escalation_spawn_race_retry` logging + the storm alert
+          armed) is the way to gather that evidence without needing another lucky manual capture session.
 
-                        **First real test, same day (2026-08-12 16:28:37 UTC)**: a genuine death — `tmux_server_died`, 8 slots
-                        (`[1,2,7,14,16,18,20,32]`), checkout `687cad2` — confirmed a descendant of the fix
-                        (`git merge-base --is-ancestor c77a42ab54 687cad2` → true), so the instrumentation was live for this one.
-                        **Result weakens the race-retry hypothesis specifically**: zero `escalation_spawn_race_retry` /
-                        `escalation_failed_spawn_attempts_cap_hit` / `plan_health_spawn_race_retry` events anywhere in the 9
-                        minutes before the death (queried directly via `activity_log`) — the two escalation dispatches that DID
-                        fire in that window (slot 18, `agt-5c3186`) succeeded cleanly on the first attempt, no race, no retry.
-                        Found via `scripts/orchestrator/check-ao-recent-deaths.sh` (new tool, built same day by a peer session
-                        specifically for this investigation) + a direct `activity_log` query for the full event sequence in the
-                        window.
+          **First real test, same day (2026-08-12 16:28:37 UTC)**: a genuine death — `tmux_server_died`, 8 slots
+          (`[1,2,7,14,16,18,20,32]`), checkout `687cad2` — confirmed a descendant of the fix
+          (`git merge-base --is-ancestor c77a42ab54 687cad2` → true), so the instrumentation was live for this one.
+          **Result weakens the race-retry hypothesis specifically**: zero `escalation_spawn_race_retry` /
+          `escalation_failed_spawn_attempts_cap_hit` / `plan_health_spawn_race_retry` events anywhere in the 9
+          minutes before the death (queried directly via `activity_log`) — the two escalation dispatches that DID
+          fire in that window (slot 18, `agt-5c3186`) succeeded cleanly on the first attempt, no race, no retry.
+          Found via `scripts/orchestrator/check-ao-recent-deaths.sh` (new tool, built same day by a peer session
+          specifically for this investigation) + a direct `activity_log` query for the full event sequence in the
+          window.
 
-                        **But the general "concurrent-spawn burst precedes death" pattern still shows up, via a DIFFERENT path**:
-                        7 `deepseek_spawn_selected` events landed within a ~50ms window (16:28:32.914-32.968), ~4-5s before the
-                        death — `deepseek_spawn_selected` fires inside `autospawn.select_account_for_spawn()`, called by ALL
-                        THREE dispatch paths (escalation/plan_health/AutoSpawn's own routine refill), so it can't be attributed
-                        to a specific caller by name alone. Only 1 legitimate escalation dispatch happened in the whole window
-                        (slot 18) — not enough to explain 7 — so the remaining ~6 are most likely AutoSpawn's OWN routine
-                        fleet-refill firing for several idle slots at once, which is the ALREADY-THROTTLED path
-                        (`autospawn_max_concurrent_spawns`, cap=8, shipped 2026-08-11 as `agent-orchestrator@54da59c24b`). 7 is
-                        suspiciously close to that cap.
+          **But the general "concurrent-spawn burst precedes death" pattern still shows up, via a DIFFERENT path**:
+          7 `deepseek_spawn_selected` events landed within a ~50ms window (16:28:32.914-32.968), ~4-5s before the
+          death — `deepseek_spawn_selected` fires inside `autospawn.select_account_for_spawn()`, called by ALL
+          THREE dispatch paths (escalation/plan_health/AutoSpawn's own routine refill), so it can't be attributed
+          to a specific caller by name alone. Only 1 legitimate escalation dispatch happened in the whole window
+          (slot 18) — not enough to explain 7 — so the remaining ~6 are most likely AutoSpawn's OWN routine
+          fleet-refill firing for several idle slots at once, which is the ALREADY-THROTTLED path
+          (`autospawn_max_concurrent_spawns`, cap=8, shipped 2026-08-11 as `agent-orchestrator@54da59c24b`). 7 is
+          suspiciously close to that cap.
 
-                        **Net implication — a real update to the leading hypothesis, not a confirmation of it**: this specific
-                        mitigation (throttling FAILED race-retries in escalation/plan_health) did not touch whatever caused THIS
-                        death — there were no races to throttle. What DOES look implicated again is the ORIGINAL, older,
-                        already-shipped concurrent-spawn cap — and this death is evidence that **cap=8 is not necessarily safe**,
-                        not that a NEW mechanism is needed. This directly matches that fix's own original caveat: "8 is a
-                        starting point, not a proven ceiling... no data exists between '8 concurrent' and the 18-27-slot bursts
-                        that crashed the server twice." **Not yet confirmed** (still correlation: 7 selections in 50ms is
-                        suggestive, not proof the AutoSpawn path — rather than escalation/plan_health — is the actual source,
-                        since `deepseek_spawn_selected`'s caller isn't logged). **Done when**: (a) attribute the 7
-                        `deepseek_spawn_selected` calls to their actual caller — add a `source` field to that log line
-                        (autospawn/escalation/plan_health) so this doesn't need inference next time; (b) if AutoSpawn's routine
-                        refill is confirmed as the source, consider lowering `autospawn_max_concurrent_spawns` below 8 and
-                        re-testing, or applying the SAME backoff-between-spawns pattern just shipped for escalation/plan_health
-                        to AutoSpawn's own `_do_spawns_concurrently` (which currently fires all N spawns via a ThreadPoolExecutor
-                        with no inter-spawn delay, even though N is capped). Repo: agent-orchestrator.
+          **Net implication — a real update to the leading hypothesis, not a confirmation of it**: this specific
+          mitigation (throttling FAILED race-retries in escalation/plan_health) did not touch whatever caused THIS
+          death — there were no races to throttle. What DOES look implicated again is the ORIGINAL, older,
+          already-shipped concurrent-spawn cap — and this death is evidence that **cap=8 is not necessarily safe**,
+          not that a NEW mechanism is needed. This directly matches that fix's own original caveat: "8 is a
+          starting point, not a proven ceiling... no data exists between '8 concurrent' and the 18-27-slot bursts
+          that crashed the server twice." **Not yet confirmed** (still correlation: 7 selections in 50ms is
+          suggestive, not proof the AutoSpawn path — rather than escalation/plan_health — is the actual source,
+          since `deepseek_spawn_selected`'s caller isn't logged). **Done when**: (a) attribute the 7
+          `deepseek_spawn_selected` calls to their actual caller — add a `source` field to that log line
+          (autospawn/escalation/plan_health) so this doesn't need inference next time; (b) if AutoSpawn's routine
+          refill is confirmed as the source, consider lowering `autospawn_max_concurrent_spawns` below 8 and
+          re-testing, or applying the SAME backoff-between-spawns pattern just shipped for escalation/plan_health
+          to AutoSpawn's own `_do_spawns_concurrently` (which currently fires all N spawns via a ThreadPoolExecutor
+          with no inter-spawn delay, even though N is capped). Repo: agent-orchestrator.
 
 - [x] [INFRA] P1. ~~Reduce fleet capacity while root cause remains open~~ — **DONE 2026-08-11, operator-directed.**
       Given the throttle fix alone hasn't stopped the crash class, and to slow credit burn during the ongoing
@@ -590,7 +589,7 @@ a fresh one's `/proc/environ` clean. Watching for a clean window now.
       `GET /api/scheduled-dispatch/status`), independent of whether it's what caused this specific recovery. Repo:
       agent-orchestrator.
 - [ ] [INFRA] P2. **New lead found live: `sock_throttled` at the cgroup level.**
-      `/sys/fs/cgroup/system.slice/     orchestrator.service/memory.events` carries a `sock_throttled` counter (not
+      `/sys/fs/cgroup/system.slice/ orchestrator.service/memory.events` carries a `sock_throttled` counter (not
       previously checked this investigation) that read **4,302,026** during the 22:35 load spike — an extremely high
       cumulative count of TCP-send-buffer memory-pressure throttle events at the cgroup level. Not yet connected to a
       specific death, but a promising NEW angle distinct from everything checked so far (cgroup OOM, host CPU/load,
@@ -601,39 +600,39 @@ a fresh one's `/proc/environ` clean. Watching for a clean window now.
 - [ ] [INFRA] P3. **`ao-self-pull` took ~1h to redeploy a pushed commit, not the documented ~15min.** Confirmed via
       `/var/log/ao-self-pull.log`: `agent-orchestrator@7fb8581df7` landed on `live-defi-rollout` well before 22:45:01
       (its actual pickup time — the log shows
-      `current (7fb8581) but running process predates HEAD...     restarting stale process` at exactly 22:45:01), but
+      `current (7fb8581) but running process predates HEAD... restarting stale process` at exactly 22:45:01), but
       earlier `journalctl -u orchestrator` checks at 22:35 and 22:41 still showed the OLD checkout running — meaning
       either the push landed later than assumed, or the 15-min cron genuinely skipped 2-3 cycles. Not chased further
       this session (time pressure), but worth a dedicated look given a future urgent pause/config-toggle ship might need
       to actually confirm live sooner than "wait ~15min and hope." Repo: agent-orchestrator, unified-trading-pm (cron
       definition).
 - [ ] [INFRA] P3. **Dashboard UI for scheduled-dispatch pause/resume.** The API
-      (`POST     /api/scheduled-dispatch/{mode}/pause`/`/resume`, `GET .../status`) is shipped and live; a dashboard
-      toggle (mirroring however per-slot pause is surfaced) was explicitly requested but not built this pass — needs its
-      own `[UI]`-tagged todo with Playwright `pw:L2` coverage per the workspace's UI-testing HARD RULE, not bundled into
+      (`POST /api/scheduled-dispatch/{mode}/pause`/`/resume`, `GET .../status`) is shipped and live; a dashboard toggle
+      (mirroring however per-slot pause is surfaced) was explicitly requested but not built this pass — needs its own
+      `[UI]`-tagged todo with Playwright `pw:L2` coverage per the workspace's UI-testing HARD RULE, not bundled into
       this backend-only ship. Repo: agent-orchestrator (dashboard/).
 - [ ] [INFRA] P0. **THIRD live catch, 2026-08-12 01:34:55 — happened WITH all scheduled tasks paused AND the reduced
       26-slot fleet.** `tmux_server_died`, 12+ slots/agents lost within 13s (`[1,5,12,14,15,16]` + 6 agent-scope). This
       is decisive: it rules out scheduled-task load as the sole/primary cause (none were dispatching — confirmed via the
       SAME window's log showing
-      `scheduled-job drain: plan_reconciler:cefi... deferred (mode     'reconcile' is paused by operator)` and an
-      external caller's `POST /api/plan-health/dispatch` correctly 503'd), and weakens the raw-fleet-size theory
-      (already cut by 8). **New signature**: `journalctl` for 01:34:30-01:34:55 shows a STEADY stream of
-      `POST /api/slots/N/git-status` calls sweeping nearly every slot (27,18,28,19,29,2,3,20,30,21,22...) roughly one
-      every 1-2s, right up to the death — critically, from a MIX of `127.0.0.1` (local) AND external IPs
-      (`103.251.212.47`, `152.37.120.206`), confirming **multiple physical hosts** are running their own
-      `slot-git-status-report.sh` cron and hitting this ONE central endpoint concurrently, not just this VM's own copy.
-      Checked the handler (`server/routes/git_health.py:224     post_slot_git_status`): cheap by design (client does the
-      real `git status` work locally, server only writes one `SlotGitStatusRow` per call) — but every write still opens
-      a real SQLite write transaction (`BEGIN IMMEDIATE`), so a ~30-wide burst of near-simultaneous writes from multiple
-      hosts is real write-lock contention, the same class of problem `_do_spawns_concurrently`'s docstring cites as a
-      PRIOR incident (143 "database is locked" errors, 2026-07-27). **Emerging pattern across all 3 live catches**: the
-      EXACT signature differs every time (utempter/pane-creation burst #1; CPU/git-fetch/rg saturation #2; multi-host
-      git-status POST storm #3) but all 3 share ONE thing — concurrent git/dispatch/spawn activity from MULTIPLE sources
-      co-occurring with the death. No single mechanism has been proven causal yet (still correlation, not proof), but
-      the common thread is now real signal, not noise. **Correction (2026-08-12, same investigation, operator pushback
-      "why would that kill tmux?")**: checked part (a) — operator's own Mac crontab for `slot-git-status-report.sh` is
-      `2,7,12,17,22,27,32,37,42,47,52,57 *     * * *`, IDENTICAL to the VM's own schedule (installed via the same
+      `scheduled-job drain: plan_reconciler:cefi... deferred (mode 'reconcile' is paused by operator)` and an external
+      caller's `POST /api/plan-health/dispatch` correctly 503'd), and weakens the raw-fleet-size theory (already cut by
+      8). **New signature**: `journalctl` for 01:34:30-01:34:55 shows a STEADY stream of `POST /api/slots/N/git-status`
+      calls sweeping nearly every slot (27,18,28,19,29,2,3,20,30,21,22...) roughly one every 1-2s, right up to the death
+      — critically, from a MIX of `127.0.0.1` (local) AND external IPs (`103.251.212.47`, `152.37.120.206`), confirming
+      **multiple physical hosts** are running their own `slot-git-status-report.sh` cron and hitting this ONE central
+      endpoint concurrently, not just this VM's own copy. Checked the handler
+      (`server/routes/git_health.py:224 post_slot_git_status`): cheap by design (client does the real `git status` work
+      locally, server only writes one `SlotGitStatusRow` per call) — but every write still opens a real SQLite write
+      transaction (`BEGIN IMMEDIATE`), so a ~30-wide burst of near-simultaneous writes from multiple hosts is real
+      write-lock contention, the same class of problem `_do_spawns_concurrently`'s docstring cites as a PRIOR incident
+      (143 "database is locked" errors, 2026-07-27). **Emerging pattern across all 3 live catches**: the EXACT signature
+      differs every time (utempter/pane-creation burst #1; CPU/git-fetch/rg saturation #2; multi-host git-status POST
+      storm #3) but all 3 share ONE thing — concurrent git/dispatch/spawn activity from MULTIPLE sources co-occurring
+      with the death. No single mechanism has been proven causal yet (still correlation, not proof), but the common
+      thread is now real signal, not noise. **Correction (2026-08-12, same investigation, operator pushback "why would
+      that kill tmux?")**: checked part (a) — operator's own Mac crontab for `slot-git-status-report.sh` is
+      `2,7,12,17,22,27,32,37,42,47,52,57 * * * *`, IDENTICAL to the VM's own schedule (installed via the same
       self-updating cron-pull mechanism), i.e. **synchronized across hosts, not staggered**. This actually WEAKENS
       rather than confirms the git-status-storm hypothesis: if every host fires on the same grid, the 436-sample
       historical burst data should show a spike at that exact offset, and it didn't (uniform distribution, checked
@@ -647,11 +646,11 @@ a fresh one's `/proc/environ` clean. Watching for a clean window now.
       `*/15 * * * *`, `agent-orchestrator/scripts/fleet-git-health-guard.sh`).** A broad (not just orchestrator-scoped)
       `journalctl` sweep at the exact death window (never done before this catch — always previously scoped to the
       orchestrator process's own log) found something new: at 01:34:40-01:34:41 — **14 seconds before**
-      `tmux_server_died` at 01:34:55 — a rapid burst of `sudo git -C <repo> config     gc.pruneExpire never` immediately
+      `tmux_server_died` at 01:34:55 — a rapid burst of `sudo git -C <repo> config gc.pruneExpire never` immediately
       followed by `sudo git -C <repo> fsck --connectivity-only --no-progress`, repeating across many different repos in
       slots 20 and 23 in the log excerpt alone (instruments-service, unified-trading-library,
       market-data-processing-service, deployment-api, strategy-service, unified-trading-system-ui,
-      client-reporting-api...). Unlike the retracted git-status theory, `git fsck     --connectivity-only` is genuinely
+      client-reporting-api...). Unlike the retracted git-status theory, `git fsck --connectivity-only` is genuinely
       expensive (a full object-graph traversal), and each repo needs TWO separate `sudo` invocations (PAM session
       open/close overhead each). The guard's own log (`/var/log/fleet-git-health-guard.log`) confirms a sweep started at
       01:30:01 — ~4m39s before the observed subprocess burst, consistent with a multi-minute sweep across ~1132
@@ -824,7 +823,7 @@ a fresh one's `/proc/environ` clean. Watching for a clean window now.
       actor that isn't the OOM-killer or a cgroup limit (unidentified), OR the tmux server exiting via its OWN internal
       fault path with no signal at all (a tmux-side bug/assertion under 6-9 concurrent heavy panes — plausible and NOT
       yet checked; would also produce no core and no dmesg trace). Passive log/state inspection is now exhausted — next
-      step has to be a LIVE attach (`strace -p <tmux-server-pid> -e     trace=signal,exit_group` or similar, per
+      step has to be a LIVE attach (`strace -p <tmux-server-pid> -e trace=signal,exit_group` or similar, per
       `/codex/15-runbooks/isolated-deepseek-crash-debug-sandbox.md`'s own methodology) running continuously across a
       death to see the actual exit path in real time. Repo: agent-orchestrator.
 

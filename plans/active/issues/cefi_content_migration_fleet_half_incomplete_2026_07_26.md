@@ -43,7 +43,7 @@ locked_by:
 context_scope:
   [
     /plans/active/issues/cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md,
-    /plans/active/issues/cefi_content_apply_memory_freeze_recurs_post_fix_and_registry_false_reap_2026_07_31.md,
+    /plans/archive/2026_08/issues/cefi_content_apply_memory_freeze_recurs_post_fix_and_registry_false_reap_2026_07_31.md,
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
     market-tick-data-service/scripts/migrate_cefi_content_instrument_id_catalogue_2026_07_17.py,
     deployment-service/scripts/vm/launch-canonical-migration-vm.sh,

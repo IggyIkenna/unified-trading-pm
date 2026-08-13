@@ -49,7 +49,7 @@ context_scope:
     /codex/02-data/data-lineage-MTDS-features-ml.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-absence-downstream-handling.md,
-    /plans/active/data_completion_cefi_2026_07_15.md,
+    /plans/archive/2026_08/data_completion_cefi_2026_07_15.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
     features-service/features_service/onchain/live/lst_yields_compute_runner.py,
   ]

@@ -14,7 +14,8 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [infra, blocked, rate-limit-probe, disposable-ip, operator-decision]
-related: [infra_capture_and_devops_leftovers_2026_07_06]
+related:
+  [infra_capture_and_devops_leftovers_2026_07_06, /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md]
 created: 2026-08-09
 parent_epic: infrastructure_master
 priority: P2

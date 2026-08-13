@@ -29,7 +29,7 @@ related:
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md,
-    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_10.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_cross_cutting_parked_2026_08_10.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_10.md,
     /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_06.md,
     /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_07.md,
@@ -278,10 +278,10 @@ generator addition; scoping the 2 flagged `CITE_RE`-hardening batch-era candidat
       **Done when**: the skill emits per-todo verdicts and names the extraction path.
 
       **Shipped**: split the old whole-doc-only RECLASSIFY (verdict 4) into two sub-verdicts — verdict 4 (whole-doc, every
-                          open todo bounded → flip `assigned_vm` in place) and verdict 5 (per-todo split path, mixed bounded + operator-gated →
-                          extract bounded slice into `{topic}_satellite_ao_dispatch_batch{N}` + `_finalize` pair, source doc stays NA). Added
-                          extraction mechanics to Phase 3 (topic resolution, conflict-check-before-write, source-doc checkbox flip, Progress
-                          Log marker). Updated the "Why RECLASSIFY volume is inherently low" section to document the new model.
+                              open todo bounded → flip `assigned_vm` in place) and verdict 5 (per-todo split path, mixed bounded + operator-gated →
+                              extract bounded slice into `{topic}_satellite_ao_dispatch_batch{N}` + `_finalize` pair, source doc stays NA). Added
+                              extraction mechanics to Phase 3 (topic resolution, conflict-check-before-write, source-doc checkbox flip, Progress
+                              Log marker). Updated the "Why RECLASSIFY volume is inherently low" section to document the new model.
 
 ## Codex SSOTs
 
