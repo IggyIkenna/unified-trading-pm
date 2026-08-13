@@ -83,8 +83,12 @@ source: >-
       decides "live docs" vs "genuinely retired tranche") added at unified-trading-pm@cbec983969 — this task's slot-12
       worker duplicated a8d835e74e before discovering it had already shipped; only the tests were net-new and shipped.
       Source: `plans/active/ao_consolidated_closeout_2026_08_12.md`
-- [ ] [CODE] P2. Identify and fix the source of the stray <repo>/<repo> self-referential symlinks created uniformly
-      across every repo in the Mac base checkout at 2026-08-09 15:28, and clean up the existing ones Source:
+- [x] ✅ [CODE] P2. Identify and fix the source of the stray <repo>/<repo> self-referential symlinks created uniformly
+      across every repo in the Mac base checkout at 2026-08-09 15:28, and clean up the existing ones —
+      unified-trading-pm@820984d53d: added a repo-level self-referential-link heal to link-claude-skills.sh (the
+      canonical self-healer every host runs on QG/setup/pm-pull) mirroring the existing skills/<name>/<name> junk prune;
+      `../../$repo` has zero `git log --all -S` hits (generator is not a current committed script), so the durable fix
+      is healing-at-the-self-healer rather than a one-shot cleanup. Source:
       `plans/active/issues/mac_slot0_base_checkout_stuck_dirty_files_2026_08_11.md`
 - [ ] [CODE] P2. Recovery-audit Layer-1 producer rewire — stand up the standalone recovery-audit-signoff producer
       (consume PubSub agent-recovery-actions, POST verdicts to POST /safety-ops/signoffs, unmock the DART feed, clean

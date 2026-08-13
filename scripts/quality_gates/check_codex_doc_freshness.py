@@ -43,9 +43,15 @@ if the pattern needs extending to a new cohort.
 AGENCY SPLIT (2026-08-12) — this gate blocks only on what the author controls.
 The four violation reasons are not the same kind of thing:
 
-  no-frontmatter / no-last_reviewed-field / invalid-last_reviewed-format
+  no-frontmatter / yaml-parse-error / no-last_reviewed-field / invalid-last_reviewed-format
       AUTHORING defects. Deterministic, caused by the change in hand, fixable in
-      seconds by the person who tripped them. These BLOCK.
+      seconds by the person who tripped them. These BLOCK. ``yaml-parse-error`` is
+      distinguished from ``no-frontmatter`` (2026-08-13,
+      codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md
+      Update 2026-08-12): the former means the ``---`` block IS present but malformed
+      (e.g. a plain multi-line scalar with an internal ``": "`` breaking ``yaml.safe_load``),
+      the latter means there is no frontmatter at all. They need different fixes, so they
+      must not share a reason string.
   stale
       The CLOCK moved. Nothing was edited; the doc simply aged past the window.
       This is ADVISORY — printed as an owner-grouped digest, never blocking.
@@ -146,6 +152,20 @@ class FreshnessViolation:
         return f"{self.path}: {self.reason}"
 
 
+class FrontmatterParseError(RuntimeError):
+    """A ``---`` frontmatter block is PRESENT but could not be parsed into a mapping.
+
+    Distinct from genuinely absent frontmatter (no ``---`` opener at all). Raised by
+    :func:`_parse_frontmatter` for: a missing closing ``---`` delimiter, a ``yaml.safe_load``
+    failure (e.g. a plain multi-line scalar containing an unescaped ``": "`` — the
+    ``ScannerError`` the 2026-08-12 incident hit), or a parsed non-mapping. Carries the
+    underlying parser's message so callers can report a precise ``yaml-parse-error`` violation
+    instead of the misleading ``no-frontmatter`` — see
+    ``/plans/active/issues/codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md``
+    Update 2026-08-12.
+    """
+
+
 def _iter_codex_md(workspace_root: Path) -> list[Path]:
     """Walk cutover-critical codex surfaces for *.md files."""
     candidates: list[Path] = []
@@ -159,19 +179,27 @@ def _iter_codex_md(workspace_root: Path) -> list[Path]:
 
 
 def _parse_frontmatter(path: Path) -> dict[str, object] | None:
+    """Parse a doc's YAML frontmatter block into a dict, or None when genuinely absent.
+
+    ``None`` means the file has NO ``---\n`` opener at all — nothing to parse. Every other
+    failure mode (opener present but no closing delimiter, ``yaml.safe_load`` raising, or a
+    parsed non-mapping) raises :class:`FrontmatterParseError` with the underlying cause, so the
+    caller can distinguish "you forgot the frontmatter block" from "your frontmatter is malformed"
+    — see that class's docstring.
+    """
     text = path.read_text(encoding="utf-8")
     if not text.startswith("---\n"):
         return None
     end = text.find("\n---\n", 4)
     if end == -1:
-        return None
+        raise FrontmatterParseError("frontmatter block present but missing closing '---' delimiter")
     raw = text[4:end]
     try:
         loaded = cast(object, yaml.safe_load(raw))
-    except yaml.YAMLError:
-        return None
+    except yaml.YAMLError as exc:
+        raise FrontmatterParseError(f"yaml parse failed: {exc}") from exc
     if not isinstance(loaded, dict):
-        return None
+        raise FrontmatterParseError(f"frontmatter parsed to {type(loaded).__name__}, expected a mapping")
     return cast(dict[str, object], loaded)
 
 
@@ -248,8 +276,17 @@ def _check_parsed(
 
 
 def _check_doc(path: Path, staleness_days: int, today: datetime.date) -> FreshnessViolation | None:
-    """Parse-and-check a single doc. Convenience wrapper over `_check_parsed`."""
-    return _check_parsed(path, _parse_frontmatter(path), staleness_days, today)
+    """Parse-and-check a single doc. Convenience wrapper over `_check_parsed`.
+
+    Catches :class:`FrontmatterParseError` so a present-but-malformed frontmatter block is
+    reported as ``yaml-parse-error`` (with the parser's message as detail) rather than the
+    misleading ``no-frontmatter``.
+    """
+    try:
+        fm = _parse_frontmatter(path)
+    except FrontmatterParseError as exc:
+        return FreshnessViolation(path, "yaml-parse-error", str(exc))
+    return _check_parsed(path, fm, staleness_days, today)
 
 
 class BaselineSnapshot:
@@ -425,7 +462,14 @@ def main() -> int:
     violations: list[FreshnessViolation] = []
     exempt_retired: list[Path] = []
     for doc in docs:
-        fm = _parse_frontmatter(doc)
+        try:
+            fm = _parse_frontmatter(doc)
+        except FrontmatterParseError as exc:
+            # A malformed frontmatter block is an authoring defect (blocking), and carries a
+            # precise diagnostic instead of the misleading no-frontmatter -- see
+            # _parse_frontmatter / FrontmatterParseError.
+            violations.append(FreshnessViolation(doc, "yaml-parse-error", str(exc)))
+            continue
         if fm is not None and _is_retired_with_successor(fm):
             exempt_retired.append(doc)
             continue

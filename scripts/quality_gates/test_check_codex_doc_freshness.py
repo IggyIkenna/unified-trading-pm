@@ -19,13 +19,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
+import pytest
 from check_codex_doc_freshness import (
     BaselineSnapshot,
     FreshnessViolation,
+    FrontmatterParseError,
     _check_doc,
     _is_retired_with_successor,
     _load_baseline,
     _new_violations,
+    _parse_frontmatter,
     _relative_path,
     _write_baseline,
     partition_by_agency,
@@ -167,6 +170,79 @@ def test_check_doc_future_dated_is_clean_not_an_error(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
+# no-frontmatter vs yaml-parse-error (2026-08-13, batch13).
+# The 2026-08-12 incident: a present-but-malformed frontmatter block (a plain multi-line
+# scalar with an internal ": ") reported as "no-frontmatter" -- a misleading diagnostic that
+# sends the next person looking for a missing --- block that was never missing. The two
+# failure classes must be distinguishable.
+# ---------------------------------------------------------------------------
+
+
+def test_parse_frontmatter_absent_returns_none(tmp_path: Path) -> None:
+    p = tmp_path / "no_fm.md"
+    p.write_text("# just a heading, no frontmatter\n", encoding="utf-8")
+    assert _parse_frontmatter(p) is None
+
+
+def test_parse_frontmatter_parses_valid_block(tmp_path: Path) -> None:
+    p = tmp_path / "good.md"
+    p.write_text("---\nlast_reviewed: 2026-01-01\n---\nbody\n", encoding="utf-8")
+    assert _parse_frontmatter(p) == {"last_reviewed": datetime.date(2026, 1, 1)}
+
+
+def test_parse_frontmatter_raises_on_yaml_scanner_error(tmp_path: Path) -> None:
+    """The 2026-08-12 reproduction: a plain (non-block-indicator) multi-line scalar
+    containing an internal ': ' breaks yaml.safe_load with a ScannerError."""
+    p = tmp_path / "bad_yaml.md"
+    p.write_text(
+        "---\ntitle: X\nsummary: WALL_TYPES accepts: what triggers it\n---\nbody\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(FrontmatterParseError) as excinfo:
+        _parse_frontmatter(p)
+    assert "yaml parse failed" in str(excinfo.value)
+    assert "ScannerError" in str(excinfo.value) or "mapping values" in str(excinfo.value)
+
+
+def test_parse_frontmatter_raises_on_missing_closing_delimiter(tmp_path: Path) -> None:
+    p = tmp_path / "no_close.md"
+    p.write_text("---\nlast_reviewed: 2026-01-01\nbody-no-closing-delim\n", encoding="utf-8")
+    with pytest.raises(FrontmatterParseError) as excinfo:
+        _parse_frontmatter(p)
+    assert "missing closing" in str(excinfo.value)
+
+
+def test_parse_frontmatter_raises_on_non_mapping(tmp_path: Path) -> None:
+    p = tmp_path / "list_yaml.md"
+    p.write_text("---\n- one\n- two\n---\nbody\n", encoding="utf-8")
+    with pytest.raises(FrontmatterParseError) as excinfo:
+        _parse_frontmatter(p)
+    assert "expected a mapping" in str(excinfo.value)
+
+
+def test_check_doc_reports_yaml_parse_error_not_no_frontmatter(tmp_path: Path) -> None:
+    """The regression that matters: a present-but-malformed block must NOT be reported as
+    no-frontmatter -- the misleading diagnostic the incident documented."""
+    p = tmp_path / "bad.md"
+    p.write_text(
+        "---\ntitle: X\nsummary: WALL_TYPES accepts: what triggers it\n---\nbody\n",
+        encoding="utf-8",
+    )
+    v = _check_doc(p, 90, datetime.date(2026, 8, 9))
+    assert v is not None
+    assert v.reason == "yaml-parse-error"
+    assert "yaml parse failed" in v.detail
+
+
+def test_check_doc_reports_no_frontmatter_when_truly_absent(tmp_path: Path) -> None:
+    p = tmp_path / "no_fm.md"
+    p.write_text("# heading only\n", encoding="utf-8")
+    v = _check_doc(p, 90, datetime.date(2026, 8, 9))
+    assert v is not None
+    assert v.reason == "no-frontmatter"
+
+
+# ---------------------------------------------------------------------------
 # Retired-doc exemption (operator ruling 2026-08-12). A formally retired doc that
 # NAMES its successor is out of the staleness window; one that does not is still in.
 # The asymmetry is the whole design — see _is_retired_with_successor's docstring.
@@ -280,7 +356,12 @@ def test_partition_stale_is_advisory_never_blocking(tmp_path: Path) -> None:
 
 
 def test_partition_authoring_reasons_block(tmp_path: Path) -> None:
-    for reason in ("no-frontmatter", "no-last_reviewed-field", "invalid-last_reviewed-format"):
+    for reason in (
+        "no-frontmatter",
+        "yaml-parse-error",
+        "no-last_reviewed-field",
+        "invalid-last_reviewed-format",
+    ):
         v = _violation(f"codex/02-data/{reason}.md", tmp_path, reason=reason)
         blocking, advisory = partition_by_agency([v])
         assert blocking == [v], f"{reason} must block — it is an authoring defect"

@@ -157,11 +157,25 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       today ($0.017) but it removes an entire silent-loss class by construction rather than by an enumeration that
       drifts. **Test proves the done-when**: a retired slot's transcripts (`orch-slot-97`) are still swept. QG green
       (3590 python / 319 vitest). (repo: agent-orchestrator)
-- [ ] [BACKEND] P2. **Freeze the pre-observability gap as an explicit opening balance in the LIFETIME view.** Today the
-      lifetime residual silently mixes unattributable pre-2026-08-04 spend with any live leak, so it can never reach
-      zero and its movement is the only usable signal. Record the measured pre-ledger gap as a labelled opening balance
-      so the lifetime view reports `residual since observability began` instead. **Done when**: the lifetime view
-      distinguishes the frozen historical gap from live residual, and the panel says which is which.
+- [x] ✅ [BACKEND] P2. **SHIPPED — freeze the pre-observability gap as an explicit opening balance in the LIFETIME view
+      (agent-orchestrator@a3eda085f6).** `DeepSeekWalletOpeningBalanceRow` (single-row, fixed PK — a fresh record
+      REPLACES the prior freeze) + `record_deepseek_opening_balance`/`get_deepseek_opening_balance`; the lifetime
+      reconciliation now reports `opening_balance_usd` (with provenance note) and `residual_since_observability_usd` =
+      residual − opening balance — the LIVE leak signal, distinguishable from frozen pre-2026-08-04 history. New
+      `POST /api/accounts/deepseek/wallet-reconciliation/opening-balance`; `DeepSeekWalletPanel` shows the "Opening
+      balance (frozen gap)" + "Residual since observability" rows and a freeze form. 4 backend tests
+      (None-until-recorded, split, replace-prior, replace semantics) + 4 vitest cases; QG green (3597 python / 323
+      vitest). Operator action: record the measured gap (was $26.40 on 2026-08-11) via the panel freeze form to activate
+      the split.
+- [ ] [OPERATOR] P0. **Record the missing 2026-08-13 top-up
+      ($50) in `deepseek_topups`.** Found live 2026-08-13 by slot 18
+      while implementing the opening-balance freeze: the balance series shows -0.93 → 49.06 at 10:44:44 UTC with NO
+      matching `deepseek_topups` row, so the all-time residual reads **negative (-$66.26)**
+      (attributed $362.57 > real
+      $296.31). A $50 credit at -0.93 matches 49.06 within in-minute spend — record it
+      via the dashboard "Record top-up" form (or the exact amount if the operator knows it precisely) to restore the
+      residual's sign and make the frozen-gap view's `residual_since_observability` meaningful. (repo:
+      agent-orchestrator, operator action)
 - [ ] [UI] P2. **Surface the windowed view in `DeepSeekWalletPanel.tsx` with a 24h/7d toggle.** Must render the
       `real_spend_usd=None` case as "sampling since <ts> — 24h view available at <ts+24h>" rather than a dash that reads
       as zero, and show BOTH balance sample timestamps so the true differenced span is visible instead of assumed to
@@ -410,6 +424,16 @@ Progress Log).
   LDR->main promotion pipeline is repo hygiene, not the AO deploy path.
 
 ## Progress Log
+
+- **2026-08-13** — Shipped the opening-balance freeze (the open P2 todo, agent-orchestrator@a3eda085f6). Full detail in
+  the flipped todo. **Live finding while implementing**: the all-time residual is now **NEGATIVE
+  (-$66.26)** — attributed
+  spend ($362.57) exceeds real wallet spend ($296.31). Root cause identified live: a real ~$50
+  top-up at **2026-08-13 10:44:44 UTC** (balance -0.93 → 49.06, confirmed from the 1-min series) has **no
+  `deepseek_topups` row** — top-ups are operator-recorded and this one wasn't. The tracked fix is a new
+  `- [ ] [OPERATOR]` todo: record the $50
+  top-up (balance was -0.93, so a $50 credit matches 49.06 within in-minute
+  spend), which flips the residual positive and into the frozen-gap story the new view is built to tell.
 
 - **2026-08-13** — Shipped glob-based transcript discovery (the open P1 todo, agent-orchestrator@60fd7ba).
   `_sweep_account` now discovers transcripts via `deepseek_usage.discover_all_transcripts()` — glob
