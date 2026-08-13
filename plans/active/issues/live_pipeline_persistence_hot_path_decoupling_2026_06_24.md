@@ -33,6 +33,7 @@ assigned_vm: planning
 resolved_by: live_data_persistence_central_event_log_2026_06_25.md # ANNOTATION 2026-07-14 (verify-rerun-2 finding 21): doc-frontmatter-schema.md requires resolved_by only when status=resolved, but status here is `blocked` per the 2026-06-30 body banner (hot-path decoupling shipped; durable warm-tier still not built) — left populated as a forward-pointer to the plan that partially resolved this issue rather than cleared, because this doc is locked_by: live-defi-rollout (annotate-not-flip per HARD GATE, not a status/archival edit); re-evaluate resolved_by when unlocking for archival
 locked_by:
 locked_since:
+archive_exempt: true # 2026-08-13: 0-open-todos intentional/durable — standing problem-record; remaining determinism re-test tracked at recovery-plan P1.2 (parked), final resolved_by/archival owned by that plan's [SCRIPT] P3
 context_scope:
   [
     /codex/02-data/live-data-persistence-and-event-log.md,
@@ -233,12 +234,23 @@ per-tick files). This issue doc is the problem-record; the plan is the executabl
 > pipeline actually executes end-to-end. Not run by this session — leaving the checkbox open on that one remaining
 > sub-item rather than flipping on 3-of-4.
 
-- [ ] [CODE] P2. **Finish the warm-GCS-parts durable sink — the compaction leg never landed (STALE, see banner above).**
-      Verified live 2026-07-29: the warm tier is real and receiving data (Terraform-applied
-      `deployment-service@c540cd03` 2026-06-29 — 52 `warm-sink-persist-*` Cloud Storage subscriptions, confirmed live
-      via `gcloud pubsub subscriptions list`. The warm-tier path
-      `gs://central-element-323112-events/live-events/warm/prediction/{book_snapshot_5,trades}/` confirms real data
-      landing. But the daily cold-compaction Cloud Run Job (`live-event-log-compactor`,
+- [x] ✅ [CODE] P2. **Finish the warm-GCS-parts durable sink — the compaction leg never landed (STALE, see banner
+      above).** **RESOLVED 2026-08-13 (slot-15, live-verified) — the compaction leg has landed; full build record:
+      `/plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`.** Live 2026-08-13: compactor
+      Cloud Run Job `Ready: True`; **8 consecutive SUCCEEDED daily executions** (2026-08-07 → 2026-08-13, latest
+      `-2g87d` completed 2026-08-13T06:20Z in 4h20m — a real data-processing runtime, not a no-op); Cloud Scheduler
+      trigger `live-event-log-compactor-daily` `ENABLED` with today's real 02:00 UTC firing succeeding
+      (`lastAttemptTime 2026-08-13T02:00:01Z`); **53** `warm-sink-persist-*` subscriptions live (up from the 52 cited
+      here — matches the 2026-08-12 SINK_MATRIX/topic growth per
+      `/codex/02-data/live-data-persistence-and-event-log.md`), never-expire policy holding (recovery-plan P3 recheck
+      2026-08-02); cold tier `live-events/cold/` real + non-empty (prediction/cefi, plan-verified). **Not claimed — the
+      single remaining item, the `paper(W)==batch-rerun(W)` determinism re-test, stays tracked at recovery-plan
+      `[DATA] P1.2`, parked behind the operator-gated prereq `p1-2-preconditions-met` (re-checked 2026-08-13: still zero
+      paper/colocated VMs trading these venues).** Historical finding (kept as record): Verified live 2026-07-29: the
+      warm tier is real and receiving data (Terraform-applied `deployment-service@c540cd03` 2026-06-29 — 52
+      `warm-sink-persist-*` Cloud Storage subscriptions, confirmed live via `gcloud pubsub subscriptions list`. The
+      warm-tier path `gs://central-element-323112-events/live-events/warm/prediction/{book_snapshot_5,trades}/` confirms
+      real data landing. But the daily cold-compaction Cloud Run Job (`live-event-log-compactor`,
       `deployment-service/deployment_service/jobs/live_event_log_compactor.py` +
       `deployment-service/terraform/gcp/live_event_log/compaction_job.tf`) has been non-functional since its creation
       (2026-06-29): its image `gcr.io/central-element-323112/live-event-log-compactor:latest` was never built/pushed (no
@@ -250,6 +262,17 @@ per-tick files). This issue doc is the problem-record; the plan is the executabl
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
+
+- **2026-08-13 (slot-15)**: Flipped the stale `[CODE] P2` compaction-sink todo → ✅. Task brief flagged it STALE; live
+  verification confirms the build landed: compactor job `Ready: True`, 8 consecutive SUCCEEDED daily executions
+  (2026-08-07→08-13), scheduler `ENABLED` + today's 02:00 UTC firing succeeded, 53 `warm-sink-*` subscriptions live
+  (never-expire holding), cold tier real. Resolution cited against the recovery plan
+  `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`. **Explicitly NOT claimed**: the
+  `paper(W)==batch-rerun(W)` determinism re-test — stays tracked at recovery-plan `[DATA] P1.2`, parked behind the
+  operator-gated prereq `p1-2-preconditions-met` (no active paper run exists; not worker-satisfiable). Per recovery-plan
+  `[SCRIPT] P3`, the issue-doc `resolved_by`/archival flip is deferred until P1.2 + the `[DATA] P2` producer-trace are
+  done. Set `archive_exempt: true` (frontmatter) — the 0-open-todos state is intentional/durable: this doc remains the
+  standing problem-record/pointer in `active/` while its remaining scope is owned by the recovery plan.
 
 - **CORRECTED 2026-08-12 (/plan-reconcile)** — moved the 2026-08-10 status-correction note out of the frontmatter
   `status:` scalar (was split across a scalar line + 2 YAML comment lines, fragile for simple `status:`-line parsers)
