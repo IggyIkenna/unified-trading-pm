@@ -185,19 +185,19 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       needs its own bound.
 
       **RESOLVED 2026-08-02 (slot 10)**: `deployment-api@34a596b`. Took the documented alternative to raising the
-                      ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
-                      means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
-                      accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
-                      `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
-                      `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
-                      `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
-                      observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
-                      `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
-                      AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
-                      isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
-                      isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
-                      "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
-                      records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
+                          ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
+                          means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
+                          accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
+                          `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
+                          `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
+                          `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
+                          observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
+                          `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
+                          AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
+                          isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
+                          isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
+                          "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
+                          records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
 
 - [x] ✅ [INFRA] P3. The `data-status-rollup-worker` `GcsEventSink` (the
       `log_event(SERVICE_PROCESSED/SERVICE_FAILED, ...)` calls in `run_rollup`) has not written a new dated prefix under
@@ -431,6 +431,33 @@ worth closing the same way (isolate + surface the real error) rather than leavin
   `deployment-api@31e1affb65`, full QG green, verified on origin. See the todo's own resolution note for the full
   evidence chain. Note: the separate `[DATA] P2` timeouts (MDPS / features-onchain) + `[DATA] P3` live re-verification
   remain open.
+
+- **2026-08-13T~21:00Z (independent confirmation + new evidence for the open [DATA] P2)**: was investigating the P1
+  TypeError independently (parallel effort, unaware of slot-2's fix at the time) and found it already shipped + deployed
+  by the time I checked — confirmed `31e1affb65` is on `origin/main` and the live `uts-prod-data-status-rollup-svc`
+  revision (created 2026-08-13T18:48:28Z, AFTER the fix) carries it. Reproduced `features-delta-one-service`'s CEFI +
+  TRADFI categories locally against the FIXED code — both build cleanly now (`dates_found=5`/`2` respectively, no
+  exception), consistent with the fix working. **New evidence for the still-open P2 (timeouts)**: attempting
+  `features-delta-one-service`'s DEFI category locally (twice, once alongside CEFI/TRADFI, once in total isolation)
+  SIGKILL'd my local machine both times at the identical point — right after the small `features-defi` manifest index
+  read (12,940 rows), before the much larger `market-data-tick-defi` bulk read even logged a profile line. This is
+  consistent with the ALREADY-DOCUMENTED DEFI memory class this workspace has measured before
+  (`venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md`: "DEFI extrapolates to ~80 GiB" peak RSS) —
+  `features-delta-one-service`/`market-data-processing-service`/`features-multi-timeframe-service`/
+  `features-cross-instrument-service` all include DEFI in `_SERVICE_CATEGORY_RESTRICTIONS` (`defi.py:139-150`), so this
+  is a plausible SHARED root cause for several of the P2 timeout services, not a coincidence. **Important scoping note
+  this session's own earlier finding got wrong**: `features-volatility-service` has DEFI explicitly EXCLUDED from its
+  restriction (CEFI/TRADFI only, per `defi.py:145`'s comment: "DEFI removed... no DeFi options exist") yet it was ALSO
+  hit by the (now-fixed) P1 TypeError — proving the TypeError was never a DEFI-memory issue itself, just a
+  coincidentally-overlapping, separate bug. Did not attempt further local reproduction of DEFI (2 SIGKILLs on my own
+  machine is the stop-and-report signal, not retry-a-3rd-time) — a safe repro of the P2 timeout needs either a
+  memory-bounded/column-projected read (mirroring the fix pattern already proven for the CEFI OOM class) or examining
+  this from a machine/subprocess with more headroom, not a bare local call. As of this check (~21:00Z, ~2h after the P1
+  fix deployed), the 7 previously-P1-broken services still show NO fresh `full.json.gz` — the sequential 14-service
+  rollup run apparently hasn't reached them yet in a post-fix cycle (still gated behind
+  `market-tick-data-service`/`market-data-processing-service` earlier in `_DEFAULT_SERVICES`' order, both still timing
+  out per the open P2). Re-check blob timestamps for the 7 P1-affected services after confirming a POST-18:48:28Z cycle
+  has run to completion.
 
 ## Follow-ups
 
