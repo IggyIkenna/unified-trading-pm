@@ -49,19 +49,26 @@ setup() {
   )
 }
 
+# The hook's own line 17 (`[[ -n "$GITHUB_ACTIONS" || -n "$CI" ]] && exit 0`) short-circuits
+# before any of the logic under test ever runs -- and both vars are ambient truthy on every
+# GitHub Actions runner, including the one running THIS bats suite. Every invocation below
+# unsets them so the tests exercise the hook's actual drift logic instead of silently passing
+# (or, for the hard-block/advisory cases, silently FAILING) via that unrelated early-exit
+# (confirmed CI regression, 2026-08-13).
+
 @test "not behind origin: exits 0 regardless of DRIFT_GATE_ADVISORY" {
   cd "${WORK}/repo"
   # HEAD already matches origin (no peer push landed on THIS clone's view before drift check
   # would fetch) -- fetch first so the hook sees a truly-caught-up state.
   git fetch -q origin live-defi-rollout
   git reset -q --hard origin/live-defi-rollout
-  run bash "$HOOK"
+  run env -u CI -u GITHUB_ACTIONS bash "$HOOK"
   [ "$status" -eq 0 ]
 }
 
 @test "behind origin, DRIFT_GATE_ADVISORY unset: hard-blocks (the case this hook exists for)" {
   cd "${WORK}/repo"
-  run bash "$HOOK"
+  run env -u CI -u GITHUB_ACTIONS bash "$HOOK"
   [ "$status" -eq 1 ]
   [[ "$output" == *"BRANCH DRIFT"* ]]
   [[ "$output" == *"Human-only"* ]]
@@ -69,14 +76,14 @@ setup() {
 
 @test "behind origin, DRIFT_GATE_ADVISORY=1: warns and exits 0 (reconciling wrapper's own commit)" {
   cd "${WORK}/repo"
-  DRIFT_GATE_ADVISORY=1 run bash "$HOOK"
+  DRIFT_GATE_ADVISORY=1 run env -u CI -u GITHUB_ACTIONS bash "$HOOK"
   [ "$status" -eq 0 ]
   [[ "$output" == *"ADVISORY"* ]]
 }
 
 @test "SKIP_BRANCH_DRIFT still wins over DRIFT_GATE_ADVISORY (human override untouched)" {
   cd "${WORK}/repo"
-  SKIP_BRANCH_DRIFT=1 DRIFT_GATE_ADVISORY=0 run bash "$HOOK"
+  SKIP_BRANCH_DRIFT=1 DRIFT_GATE_ADVISORY=0 run env -u CI -u GITHUB_ACTIONS bash "$HOOK"
   [ "$status" -eq 0 ]
 }
 

@@ -83,8 +83,18 @@ teardown() {
 # "illegal option -- c" on macOS BSD stat -- the production script under test here
 # (slot-git-status-report.sh) already has this exact fallback as stat_mtime_epoch(); this
 # test-local copy mirrors it rather than sourcing the reporter script for just this helper).
+# MUST branch on uname like the production helper does -- a blind `stat -f %m || stat -c %Y`
+# is not a safe portable chain: on GNU/Linux, `stat -f` means "file system status" (not BSD's
+# format flag), so `stat -f %m FILE` exits 0 with a multi-line filesystem-info dump instead of
+# erroring, and the `||` fallback to the correct `stat -c %Y` never fires (confirmed CI
+# regression, 2026-08-13: before/after captured garbage instead of an epoch, so `-gt`/`-eq`
+# blew up with "integer expression expected").
 _stat_mtime_epoch() {
-    stat -f %m "$1" 2>/dev/null || stat -c %Y "$1" 2>/dev/null || true
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        stat -f %m "$1" 2>/dev/null || true
+    else
+        stat -c %Y "$1" 2>/dev/null || true
+    fi
 }
 
 _write_claim() {
