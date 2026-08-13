@@ -529,3 +529,11 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   only via `ao-self-pull.sh`'s 15-min cron, not yet confirmed live as of this entry. Given the number of real events
   since the last "clean window" claim, the observation clock restarts from 17:08Z — nothing before that counts toward
   any future closure bar.
+- 2026-08-13 18:11Z: **production confirmation the tmpfs-disk-cleanup fix works** — `agent-orchestrator@2e8b218103`
+  self-pulled to the VM (`orchestrator.service` restarted 17:30:19Z), isolated socket (pid 3514516) continuously healthy
+  since 17:14:35Z. The corrected `tmpfs-disk-cleanup.sh` has now run twice for real on its own schedule (17:38:04Z,
+  18:08:05Z) — its new per-path logging shows exactly 7 harmless temp/log files reclaimed the first run and 0 the
+  second, `ao-fleet-tmux` in neither, `skipped_protected` up by exactly one both times (the new denylist entry doing its
+  job). This is direct evidence from the fixed script's own logging, not inference. One `ao_fleet_tmux_delete` auditd
+  hit at 17:45:16Z doesn't line up with either cleanup run — likely another benign sibling-instance event (same class as
+  the earlier `tmux-0` finding), not chased further given the now well-understood pattern.
