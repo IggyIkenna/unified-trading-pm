@@ -100,11 +100,14 @@ locked_since:
 
 ## Tracked follow-ups
 
-- [ ] [DATA] P1. Upstream sports reference `entity=fixtures` for day=2026-08-10 is absent (only
-      fixtures_outcomes/schedule/injuries present) — track until base fixtures exist under
-      `gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/day=2026-08-10/entity=fixtures/`;
-      confirm the running `af-backfill-20260810-162910` historical backfill writes it when it reaches 2026-08-10.
-      (instruments-service reference-capture gap)
+- [x] [DATA] P1. ✅ Upstream sports reference for day=2026-08-10 is now present + readable — via the SPLIT entities
+      (`fixtures_schedule` 43 objs + `fixtures_outcomes` 42 objs under `sports_reference/by_date/day=2026-08-10/`),
+      which `read_reference_entity("fixtures")` joins to 69 rows with NO DependencyError (the exact code path that
+      raised rc=1 at 08:02Z now succeeds). The bare `entity=fixtures/` this todo tracked is FROZEN per
+      `/codex/02-data/sports-fixtures-lifecycle.md` (never an active write target since 2026-05-23) — its absence is
+      correct, not a gap; the reader already resolves "fixtures" split-first. Verified 2026-08-13 via
+      `get_storage_client().list_blobs` (single-day prefix) + `read_fixtures_joined` + `read_reference_entity`.
+      (instruments-service reference-capture gap — RESOLVED upstream, no backfill of the frozen bare entity needed)
 - [ ] [DATA] P2. Relaunch-storm observation: 19 `features-sports-sports-*` VMs launched 2026-08-10 (~8 with empty
       vm-logs, e.g. `-181406`) ≈ 12× the ≤2/(prefix,day) bound. Verify the self-heal actuator dedup
       (`launch_budget_registry`) and whether an external launcher loop is firing without real workloads. Resource-waste
@@ -133,3 +136,13 @@ locked_since:
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
+
+**slot-15 2026-08-13** — verified the P1 upstream-gap todo is RESOLVED, not open. The issue's framing ("base
+`entity=fixtures` for 2026-08-10 missing at source") is a stale misdiagnosis: bare `entity=fixtures/` is FROZEN since
+2026-05-23 (`/codex/02-data/sports-fixtures-lifecycle.md`), never an active write target, and the features reader
+already resolves `"fixtures"` split-first. Measured the live state via the sanctioned UTL SDK (single-day prefix list,
+no corpus walk): `fixtures_schedule` 43 + `fixtures_outcomes` 42 objects present for 2026-08-10; `read_fixtures_joined`
+→ 69 rows; and the exact code path that raised rc=1 at 08:02Z (`read_reference_entity("fixtures", "2026-08-10")`) now
+returns 69 rows with no DependencyError. The 08:02Z failure was genuine same-day upstream lag (split not yet written for
+that date), now self-healed. **The sibling "Recompute day=2026-08-10 features" todo is now UNBLOCKED** — upstream is
+present, so the sparse 15:42Z compute can be redone. No bare-entity backfill is needed; do not relaunch the frozen path.
