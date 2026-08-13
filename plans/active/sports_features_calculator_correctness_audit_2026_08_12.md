@@ -26,7 +26,7 @@ related:
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/issues/transfermarkt_player_values_data_discarded_2026_08_07.md,
+    /plans/archive/2026_08/issues/transfermarkt_player_values_data_discarded_2026_08_07.md,
     /codex/06-coding-standards/validation-and-errors.md,
     /codex/04-architecture/features-service-architecture.md,
   ]
@@ -137,10 +137,10 @@ For each calculator in scope:
       column variance directly. If confirmed, this todo's done-when is met; if NOT (some non-transfer_records path
       already populates them another way this session missed), correct the finding in this doc's Progress Log before the
       next todo proceeds.
-- [ ] [CODE] P1. Once `transfer_records` has a real writer (tracked separately in
-      `transfermarkt_player_values_data_discarded_2026_08_07.md`), re-verify `transfer_window_calculator`'s shock
-      columns show genuine variance against real backfilled data.
-      BLOCKED-ON:transfermarkt_player_values_data_discarded_2026_08_07 until the transfer_records writer lands.
+- [ ] [CODE] P1. **UNBLOCKED 2026-08-13**: `transfer_records` now has a real writer, backfilled and verified 32/32
+      mappable Prediction-tier leagues (164,924 rows) — see
+      `plans/archive/2026_08/issues/transfermarkt_player_values_data_discarded_2026_08_07.md` (RESOLVED). Re-verify
+      `transfer_window_calculator`'s shock columns show genuine variance against this real backfilled data.
 - [ ] [CODE] P1. Wire a real per-player `market_value` join into `player_lineup_calculator`'s production input — trace
       `derived_features_exporter.py`'s `lineups` DataFrame construction, add the missing join against Transfermarkt
       `player_values` (unpacking the per-player JSON `players` column — see the next todo), and update
