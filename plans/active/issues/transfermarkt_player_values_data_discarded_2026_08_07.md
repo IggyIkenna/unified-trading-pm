@@ -779,3 +779,20 @@ possibly a rename that ripples into UAC/manifest data_type naming.
   TRANSFER_RECORDS half of this doc's original finding. PLAYER_VALUES was already confirmed complete earlier this
   session (1,041/1,041 events, see above). Both halves of the operator's original success criterion ("100% honest
   coverage for tm last few years since 2020 june") are now met for the Prediction tier.
+- **2026-08-13 (interactive session, continued): closed the last open caveat — the `players`/`market_value_eur`
+  per-player field-population fix (instruments-service@3d7418bb) is now independently confirmed across ALL 32/32
+  mappable Prediction-tier leagues, not just a 7-league sample.** The 2026-08-12 broader-verification entry above left
+  an honest gap: ES1/IT1/L1's output was lost to a `| tail -60` truncation, and 22 other leagues were never sampled at
+  all — noted at the time as "not a new open todo" but worth closing once backfill infra stabilized. Re-ran the same
+  playground-only methodology (direct `adapter.get_team_squads()`, no GCS/manifest write) against all 25 remaining
+  canonical league_ids, this time writing full output to a file instead of piping through `tail` (the exact mistake that
+  lost ES1/IT1/L1's results last time). **Result: 25/25 leagues OK, 0 errors, 0 unmappable.** Aggregate: 453/456 teams
+  (99.3%) with `total_market_value_eur`, 14,979/16,896 players (88.6%) with `market_value_eur` — the <100% players
+  fraction is the same expected pattern as every previously-verified league (youth/fringe squad members without an
+  assigned Transfermarkt valuation), not a new gap. `LA_LIGA` (ES1) 20/20 teams/767/782 players, `SERIE_A` (IT1)
+  20/20/781/811, `BUNDESLIGA` (L1) 18/18/629/645 — the 3 leagues lost to truncation last time are now independently
+  confirmed. Combined with the 7 leagues confirmed 2026-08-12 (EPL, K_LEAGUE_1, LIGUE_1, BRASILEIRAO, MLS, J1_LEAGUE,
+  SUPER_LIG), **all 32/32 mappable Prediction-tier leagues are now confirmed** for the per-player market-value
+  field-population fix. This closes the last remaining caveat on this doc's original finding — every data-correctness
+  question this doc opened (total_market_value_eur, per-player market_value_eur, TRANSFER_RECORDS coverage,
+  PLAYER_VALUES 2020-06+ backfill) is now resolved across the full league universe.
