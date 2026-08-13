@@ -640,3 +640,28 @@ possibly a rename that ripples into UAC/manifest data_type naming.
   burn-rate risk noted in the entry above remains the thing to watch** — at ~40%-events-burned-to-45K-calls-remaining,
   the tail may hit 429 quota exhaustion before `PASS COMPLETE`; whoever next sees a terminal state (or a
   429/`record_failed` stall) should reconcile that against `x-ratelimit-requests-remaining` before any resume launch.
+- **2026-08-13 (slot 14, data_engineering): TRANSFER_RECORDS resume todo pre-flight, re-check — still genuinely GATED,
+  but progress accelerated and the quota picture is now favorable, not risky.** Re-verified: VM
+  `instr-backfill-sports-transfermarkt-20260812-181254` still `RUNNING` (~08:59 UTC), no concurrent local
+  `gcloud`/launcher process on this host, `gcloud compute instances list` shows exactly this one Transfermarkt VM. Fresh
+  run.log read (`get_storage_client().download_bytes()`, never `gsutil`): 2,425,077 bytes / 16,056 lines, **784 distinct
+  `Transfermarkt snapshot player_values:` write-completion lines (of the 1,041-event scope, ~75.3%) — up from 418 (~40%)
+  at slot 21's 03:25 UTC check, i.e. 366 events completed in ~5.6h (~66 events/hr), `RAISED`/`record_failed` count = 0
+  (no shard failures at all so far)**, `PASS COMPLETE` = 0, `Traceback` = 0 — genuine continuing progress, not a stall.
+  Master table corroborates: `Transfermarkt master/player_values: 5916 rows written` in the latest log line (up from
+  5,784 pre-backfill baseline). **Live RapidAPI quota re-check: `x-ratelimit-requests-remaining` = 31,065 / 120,000** —
+  down from slot 21's 45,226, confirming ~14,161 calls spent across the same 366 events (~38.7 calls/event, matching
+  this doc's own ~37.5 calls/event backfill-cost model almost exactly, NOT an amplification blowout). At that measured
+  rate the remaining 257 events need only ~9,946 more calls — comfortably inside the 31,065 remaining, leaving an
+  estimated ~21K calls of headroom even before touching the TRANSFER_RECORDS resume's much smaller per-league cost (~500
+  calls/league by the doc's own estimate, ~1,500 for the 3 target leagues). **Correcting slot 21's quota-exhaustion
+  concern**: the burn rate that looked alarming pro-rated from the 03:25 snapshot alone is NOT accelerating — it now
+  reads as on-model and unlikely to hit 429 before `PASS COMPLETE`. At the observed ~66 events/hr, PLAYER_VALUES should
+  reach its terminal state in roughly **3.5-4 hours** from this check. Skipped this todo again with `reason_code=GATED`
+  (same launcher singleton-lock rationale as every prior pass — `^instr-backfill-sports-` matches the running VM, and
+  stacking a concurrent Transfermarkt VM against the same RapidAPI key remains the real contention risk the lock exists
+  to prevent) rather than force a concurrent launch. **Whoever picks this up next**: re-check VM status
+  (`gcloud compute instances describe instr-backfill-sports-transfermarkt-20260812-181254 --zone=asia-northeast1-c --project=central-element-323112 --format='value(status)'`)
+  and the run.log for `PLAYER_VALUES PASS COMPLETE` / `Traceback` before relaunching TRANSFER_RECORDS for
+  `ARGENTINA_PRIMERA,LIGA_3,SERIE_A` — given the current trajectory, a check in ~3-4 hours is more likely to find it
+  terminal than an immediate re-poll.
