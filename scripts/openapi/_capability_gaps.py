@@ -366,7 +366,7 @@ out = {{"ok": False}}
 try:
 {body}
 except Exception as e:  # noqa: BLE001 — probe must report failure as a typed gap
-    out = {{"ok": False, "error": "{kind}: " + type(e).__name__ + ": " + str(e)[:200]}}
+    out = {{"ok": False, "error": "{kind}: " + type(e).__name__ + ": " + str(e)[:200], "exc_type": type(e).__name__}}
 sys.stdout.write(json.dumps(out))
 """
 
@@ -846,6 +846,19 @@ def extract_param_schema(
     res = _run_service_probe(workspace_root, "strategy-service", body, "param_schema")
 
     if not res.get("ok"):
+        err = str(res.get("error", "param_schema probe unavailable"))
+        # A sibling venv that exists but can't import the engine SSOT is an
+        # environment defect (typically a stale venv below its declared fastapi
+        # floor), NOT a schema regression. Fail loud with the cause + the venv
+        # path instead of degrading to an empty schema that surfaces downstream
+        # as a confusing `assert 0 >= 29`.
+        if res.get("exc_type") in ("ImportError", "ModuleNotFoundError"):
+            venv_path = workspace_root / "strategy-service" / ".venv"
+            raise RuntimeError(
+                f"param_schema probe import failure probing {venv_path}: {err}\n"
+                "The strategy-service venv is stale/broken — re-sync it "
+                "(uv sync --frozen) before re-running the gate."
+            )
         node_id = "service_registry:param_schema"
         gap_node = _node(
             CapabilityNodeKind.GAP_REGISTRY,
@@ -859,9 +872,9 @@ def extract_param_schema(
             relation=REL_PARAM_SCHEMA_GAP,
             status=CapabilityEdgeStatus.NOT_REGISTERED,
             gap_type=CapabilityGapType.MISSING_EXTRACTION,
-            reason=str(res.get("error", "param_schema probe unavailable")),
+            reason=err,
         )
-        logger.warning("  param schema GAP: %s", res.get("error"))
+        logger.warning("  param schema GAP: %s", err)
         return {}, [gap_node], [gap_edge]
 
     raw = res.get("param_schema", {})
