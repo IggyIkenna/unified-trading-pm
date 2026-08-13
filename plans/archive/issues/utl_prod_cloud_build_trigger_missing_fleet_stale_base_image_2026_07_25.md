@@ -335,33 +335,32 @@ base-image pipeline without confirming the correct source config/IAM/connection 
      not fleet-wide. Escalation `agt-774a0e` (wall_type `cloud_build_router_failure`) resolved; if this doc's
      `escalate-utl-base-image-not-configured` fires again with a real (non-empty) error detail, read the error first —
      NOT_FOUND means recreate the trigger; WAIT_RAM_LIVE/TIMEOUT means re-check the governor-disable export survived in
-     `cloudbuild.yaml`.
+     `cloudbuild.yaml`. (Note: this entry was accidentally duplicated verbatim in this doc during the original 08-13
+     write — the duplicate was removed 2026-08-13 by slot 14/cicd while independently re-verifying this same escalation;
+     no content was lost, only the exact-repeat paragraph.)
 
-- **2026-08-13 (slot 7, cicd) — RECURRENCE: trigger existed + fired, but every build TIMEOUTed (governor flip). Root
-  cause was NOT a missing trigger this time.** The 2026-08-10 reservation-governor flip
-  (`unified-trading-pm@67c4c42f92`, "flip default mode token -> reservation fleet-wide") made the `quality-gates` step
-  in UTL's prod base-image build block forever in `[qg-governor] WAIT_RAM_LIVE` inside the ephemeral ~8GB `E2_HIGHCPU_8`
-  Cloud Build container — `avail < peak(5500MB unmeasured default) + floor(2048MB)` is permanently true there, and
-  `_qg_ledger_with_lock`/`_qg_try_reserve` admit-check on the CONTAINER's own `/proc/meminfo`, never a shared host.
-  Every `unified-trading-library-prod` build from the flip onward (2026-08-10T18:10Z last SUCCESS → every build since =
-  TIMEOUT at the 30-min timeout, base image stale 3 days) died in step `quality-gates`, not in any build step. **Two
-  fixes shipped (both on `live-defi-rollout` + `main` by content):**
-  1. `unified-trading-library@b8357437` — cloudbuild.yaml quality-gates step now exports
-     `QG_GOVERNOR_DISABLE=true QG_TOTAL_GOVERNOR_DISABLE=true` (the governor's own documented "CI / single-run" bypass —
-     an ephemeral single-build container has no shared multi-tenant host to coordinate with). Verified end-to-end:
-     post-promote trigger builds `af475bfa` + `d464a9ab` completed **SUCCESS** through the full QG (no WAIT_RAM_LIVE
-     hang), fresh base images republished 2026-08-13T15:12-15:14Z.
-  2. `unified-trading-pm@bddffcf6fb` — cloud-build-router.yml `trigger_build_in_region` now reads the build ID from
-     **stdout** (`>/tmp/build_trigger_out.txt`) instead of stderr.
-     `gcloud builds triggers run --format=value(metadata.build.id)` writes the ID to STDOUT on success; the old code
-     grepped `/tmp/build_trigger_err.txt` (always empty on success), so EVERY successful trigger invocation fell through
-     to the `not-configured` branch → false CRITICAL alert + this escalation with empty `build_error_detail`, even while
-     builds WERE being created (builds at 13:13/12:06/09:48 matching router invocations, all TIMEOUT). Verified live:
-     manual `gcloud builds triggers run` returned `77447139-b5c2-4ec9-a819-94927ee133b5` on stdout, stderr empty.
-     **Fleet scope**: among repos with QG-in-cloudbuild, only `unified-trading-library-prod` has a prod-deploy trigger
-     exercised today; `instruments-service-prod` is healthy (SUCCESS); the other service repos
-     (`execution/strategy/ml/ features-…-prod`) are build-only pre-cutover (no trigger). So the hang is UTL-specific,
-     not fleet-wide. Escalation `agt-774a0e` (wall_type `cloud_build_router_failure`) resolved; if this doc's
-     `escalate-utl-base-image-not-configured` fires again with a real (non-empty) error detail, read the error first —
-     NOT_FOUND means recreate the trigger; WAIT_RAM_LIVE/TIMEOUT means re-check the governor-disable export survived in
-     `cloudbuild.yaml`.
+- **2026-08-13 (slot 14, cicd) — re-dispatch of the SAME escalation `agt-774a0e` was a STALE re-check, not a new red.**
+  The queue had re-escalated this wall 4× (`reescalations=4`, `resolution=still_red_reescalated`) after slot 7's fix
+  above already landed. Root cause of the loop, not the build: `wall_type=cloud_build_router_failure` is not in
+  `agent-orchestrator/server/escalation.py`'s `_QG_SIGNAL_WALLS` set, so `_poll_wall_resolution()` always returns `None`
+  for it (by design, per that function's own docstring — avoids a false-positive auto-resolve off an unrelated repo-wide
+  QG signal). With no auto-resolve signal, `verify_dispatched_escalations` can only ever see "still red" and
+  re-escalates on every `RESOLUTION_DEADLINE_MINUTES` tick regardless of real-world state, until the reescalation cap is
+  hit — there is no worker-callable "mark resolved" endpoint for this wall type either. So a genuinely-fixed
+  `cloud_build_router_failure` wall keeps re-dispatching fresh workers to re-diagnose a problem that no longer exists,
+  purely because nothing tells the queue it cleared. Independently re-verified LIVE (not trusting the prior session's
+  note alone): `gcloud artifacts docker images list` shows the base image fresh at `2026-08-13T15:14:15Z`
+  (`0.81.1-564391d1434d`/`latest`); `gcloud builds list` for trigger `e9da54bb-ca66-40f6-b5fd-5caff6bfebf1` shows the
+  two SUCCESS builds (`af475bfa`, `d464a9ab`) and zero TIMEOUTs since; `git show origin/main:cloudbuild.yaml` (fetched
+  fresh) confirms `QG_GOVERNOR_DISABLE=true QG_TOTAL_GOVERNOR_DISABLE=true` is present in the live `main` content
+  (`git merge-base --is-ancestor b8357437 origin/main` reads NOT-an-ancestor because the LDR→main promote squashes —
+  confirmed unreliable across squash-promote per this workspace's own known caveat — so verified by CONTENT grep on
+  `origin/main`, not ancestry); no UTL `main` commits landed after the 15:14Z build, and no fresh router run for
+  `unified-trading-library` occurred after 15:2xZ (the two router runs in the 16:00-17:08Z window were for
+  `market-tick-data-service`, unrelated). No new code fix required — closing this dispatch as confirmed-already-fixed.
+  **Possible follow-up (not actioned here, out of cicd's one-shot scope)**: `cloud_build_router_failure` and any other
+  wall type outside `_QG_SIGNAL_WALLS` has no path to auto-resolve once genuinely fixed — worth a look from
+  `/escalation-queue-reconcile` or an agent-orchestrator dev session at whether these wall types need either (a) an
+  explicit worker-callable resolve action wired into `/done`/`one_shot_complete`, or (b) a wall-specific poll signal
+  (e.g. "latest build for this trigger is SUCCESS and newer than the escalation's `created_at`") added to
+  `_poll_wall_resolution`.
