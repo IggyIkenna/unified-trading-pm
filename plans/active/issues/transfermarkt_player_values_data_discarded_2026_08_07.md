@@ -567,27 +567,21 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       (singleton-lock / shared RapidAPI-key rate-contention avoidance, not a hard technical block). Done when: master
       table `entity=transfer_records` shows all 3 leagues with real rows, or a definitive honest-absence reason if
       genuinely empty.
-- [ ] [DATA] P2. **Verify the PLAYER_VALUES full historical backfill VM reaches a genuine terminal state and confirm
-      final row/event counts.** As of the last direct check this session (VM
-      `instr-backfill-sports-transfermarkt-     20260812-181254`,
-      `gcloud compute instances describe --format='value(status)'` = `RUNNING`; run.log = 712,601 bytes, 1,270
-      `rows written` occurrences, 288 per-VM manifest shard entries, growing steadily across checks — NOT yet
-      `PLAYER_VALUES PASS COMPLETE`, no `Traceback`) it was making real, continuing progress against the real
-      1,041-event scope, hitting the same documented per-league `TimeoutError`/502 flakiness class as every other pass
-      this session (shard-isolated, non-fatal — a failed league gets `record_failed` and the loop continues). This
-      session's own background watchdog processes did not reliably survive across turns (confirmed empirically —
-      repeated re-arms were killed near-immediately each time), so continuous automated monitoring could not be
-      sustained end-to-end within one interactive session; ending this session's active monitoring here rather than
-      continuing a proven-non-functional re-arm cycle. **Whoever picks this up next**: check
-      `gcloud compute instances describe instr-backfill-sports-transfermarkt-20260812-181254 --zone=asia-northeast1-c     --project=central-element-323112`
-      (if gone, check `gcloud compute operations list` for a preemption event, same diagnostic method already used twice
-      this session) and the run.log via
-      `get_storage_client().download_bytes('deployment-scripts-central-element-323112',     'vm-logs/instr-backfill-sports-transfermarkt-20260812-181254/run.log')`
-      for `PLAYER_VALUES PASS COMPLETE` / `Traceback`. Done when: the master table
-      `sports_reference/master/entity=player_values/master.parquet` shows real non-null
-      `market_value_eur`/`total_market_value_eur` coverage across the 1,041-event 2020-06+ scope (or a resume launch
-      closes whatever gap a preemption left, same `--leagues`/date-scoped resume pattern already proven for
-      TRANSFER_RECORDS above).
+- [x] ✅ [DATA] P2. **PLAYER_VALUES full historical backfill VM reached a genuine terminal state — DONE, verified
+      2026-08-13 (fresh interactive session).** VM `instr-backfill-sports-transfermarkt-20260812-181254` ran across 3
+      consecutive ~4-hour monitoring windows (main-session-owned `run_in_background` watchdogs, re-armed twice after
+      hitting each window's own deadline with healthy non-stalled progress each time — NOT the sub-agent watchdog class
+      that failed to survive turn boundaries in the prior session; a top-level session's own backgrounded process
+      persists correctly). Final log line: `PLAYER_VALUES PASS COMPLETE: {'ok': 1041, 'raised': 0}` — all 1,041 events,
+      zero failures. Manifest per-VM shard finalized (`process_final=True`), explicit pre-exit drain, clean shutdown
+      (`received signal 15`, not another preemption), VM self-deleted (`VM_SHUTDOWN_ON_COMPLETION=true`).
+      **Independently verified against the master table directly** (never trusting the log alone):
+      `sports_reference/master/entity=player_values/master.parquet` now holds 5,916 rows across 318 distinct
+      (canonical_league, season) pairs / 33 leagues, with 4,028/5,916 (68%) carrying real non-null
+      `total_market_value_eur` — the remaining 32% are older rows captured before the write-path fix
+      (instruments-service@3e87e99f, 2026-08-09) that persist in the accumulating master table, not a gap in this
+      backfill run. Total wall-clock: ~12+ hours across the 3 monitoring windows, entirely RapidAPI 502-retry-bound,
+      zero further preemptions after the one already documented above.
 - [x] ✅ [DATA] P3. **The full PLAYER_VALUES 2020-06+ historical backfill IS now launched — confirmed running,
       independently verified.** VM `instr-backfill-sports-transfermarkt-20260812-181254`, `VM_MIGRATION_CMD` confirmed
       via `gcloud compute instances describe --format='value(metadata.items)'` to be
