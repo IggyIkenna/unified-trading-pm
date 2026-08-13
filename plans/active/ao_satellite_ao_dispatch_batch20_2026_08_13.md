@@ -70,9 +70,11 @@ source: >-
 
 ## Todos
 
-- [ ] [CODE] P2. Make an archived-coordinator tranche detectable before it blocks a commit (WARN in the ag-closeout
-      hygiene sweep, or improve check_ag_closeout_linkage's failure message to name the archived match) Source:
-      `plans/active/ao_consolidated_closeout_2026_08_12.md`
+- [x] ✅ [CODE] P2. Make an archived-coordinator tranche detectable before it blocks a commit (WARN in the ag-closeout
+      hygiene sweep, or improve check_ag_closeout_linkage's failure message to name the archived match) —
+      unified-trading-pm@69ebbb5e57: violation message now names archived closeout match(es) + flags "tranche may need
+      reopening" when no live coordinator; `_is_active_path()` + 2 pinning tests; full-sweep gate still green (0
+      orphans, baseline 0). Source: `plans/active/ao_consolidated_closeout_2026_08_12.md`
 - [ ] [CODE] P2. Check whether the other archived tranches have the same latent gap (confirm every asset group has an
       active coordinator or genuinely zero active docs) Source: `plans/active/ao_consolidated_closeout_2026_08_12.md`
 - [ ] [CODE] P2. Identify and fix the source of the stray <repo>/<repo> self-referential symlinks created uniformly
