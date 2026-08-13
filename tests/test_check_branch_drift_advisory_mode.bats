@@ -61,7 +61,12 @@ setup() {
 
 @test "behind origin, DRIFT_GATE_ADVISORY unset: hard-blocks (the case this hook exists for)" {
   cd "${WORK}/repo"
-  run bash "$HOOK"
+  # The hook's own line 17 unconditionally exits 0 whenever CI/GITHUB_ACTIONS is set
+  # ("skipped in CI") -- both are ALWAYS set on a GitHub Actions runner, which is exactly
+  # where this bats suite itself runs, so a bare `run bash "$HOOK"` here only ever exercises
+  # that CI short-circuit, never the human-invoked hard-block path this test targets. Unset
+  # both for this specific invocation to simulate the non-CI (human `git commit`) case.
+  run env -u CI -u GITHUB_ACTIONS bash "$HOOK"
   [ "$status" -eq 1 ]
   [[ "$output" == *"BRANCH DRIFT"* ]]
   [[ "$output" == *"Human-only"* ]]
@@ -69,7 +74,9 @@ setup() {
 
 @test "behind origin, DRIFT_GATE_ADVISORY=1: warns and exits 0 (reconciling wrapper's own commit)" {
   cd "${WORK}/repo"
-  DRIFT_GATE_ADVISORY=1 run bash "$HOOK"
+  # Same CI-short-circuit issue as the test above -- unset CI/GITHUB_ACTIONS so this
+  # actually exercises the DRIFT_GATE_ADVISORY branch instead of the line-17 CI skip.
+  DRIFT_GATE_ADVISORY=1 run env -u CI -u GITHUB_ACTIONS bash "$HOOK"
   [ "$status" -eq 0 ]
   [[ "$output" == *"ADVISORY"* ]]
 }

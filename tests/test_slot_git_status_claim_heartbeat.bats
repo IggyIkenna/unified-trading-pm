@@ -83,8 +83,13 @@ teardown() {
 # "illegal option -- c" on macOS BSD stat -- the production script under test here
 # (slot-git-status-report.sh) already has this exact fallback as stat_mtime_epoch(); this
 # test-local copy mirrors it rather than sourcing the reporter script for just this helper).
+# GNU (Linux) FIRST, BSD (macOS) fallback -- a BSD-first order never reaches the GNU form
+# on Linux: GNU coreutils treats `stat -f` as `--file-system` (not a format flag) and exits
+# 0 printing a filesystem dump instead of the mtime, so the `||` short-circuits before the
+# real `-c %Y` ever runs. Same bug class already fixed in qg-common.sh::_qg_cache_age_hours
+# and verify-slot-host-symmetry.sh; this test-local copy had drifted out of sync with them.
 _stat_mtime_epoch() {
-    stat -f %m "$1" 2>/dev/null || stat -c %Y "$1" 2>/dev/null || true
+    stat -c %Y "$1" 2>/dev/null || stat -f %m "$1" 2>/dev/null || true
 }
 
 _write_claim() {

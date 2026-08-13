@@ -155,7 +155,17 @@ _resolve_token() { # $1 = IS_LOOPBACK (0|1)
     # /api/slots/.../git-status route on it, so it just answers 200 for anything —
     # good enough to prove the request is sent WITHOUT crashing on an empty header
     # and that curl doesn't error building the command).
+    #
+    # LOOPBACK_ORCH_URL must ALSO point at the fake server, not just the post-source
+    # ORCH_URL override below: the loopback probe (which sets IS_LOOPBACK, and gates
+    # resolve_token_for_slot's no-token-required path) runs at `source` time, against
+    # whatever LOOPBACK_ORCH_URL resolves to (default http://localhost:8765). Leaving
+    # it unset means the probe finds nothing listening there in CI, IS_LOOPBACK stays 0,
+    # resolve_token_for_slot then requires a real token (none present -> post_snapshot
+    # short-circuits at "[skip:no-token]" before ever reaching the curl this test means
+    # to exercise) — the ORCH_URL override alone only redirects a POST that never fires.
     run bash -c '
+        LOOPBACK_ORCH_URL="http://127.0.0.1:'"${HEALTH_PORT}"'"
         source "'"${REPORTER_ABS}"'" --workspace "'"${EMPTY_WS}"'" --quiet
         ORCH_URL="http://127.0.0.1:'"${HEALTH_PORT}"'"
         post_snapshot 99 "$(printf "repo\tmain\tclean\t0\t0\t0\tabc123\tlive-defi-rollout\t\t\t\n")"
