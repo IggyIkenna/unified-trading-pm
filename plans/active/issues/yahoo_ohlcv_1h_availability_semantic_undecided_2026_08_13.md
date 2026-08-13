@@ -1,16 +1,19 @@
 ---
 doc_type: issue
 title:
-  tradfi ohlcv_1h was added to SOURCE_PRIORITY without an availability semantic — the choice is a point-in-time
-  correctness decision, not a registry fill-in
+  tradfi ohlcv_1h was added to SOURCE_PRIORITY without an availability semantic — FIXED as tick_timestamp; only a P3
+  latency re-check remains
 summary: >-
-  A half-finished change adds ("tradfi","ohlcv_1h"):["yahoo"] to SOURCE_PRIORITY and to the validity matrix but never to
-  AVAILABILITY_AT_SEMANTICS, so 6 UAC tests fail tree-wide and every unrelated UAC ship is blocked. The missing entry
-  cannot be filled mechanically: the two sibling timeframes disagree — ("tradfi","ohlcv_1m") is tick_timestamp and
-  ("tradfi","ohlcv_1d") is fetch_completed_at — and for a Yahoo-served bar the choice decides whether we assert the bar
-  was available at its own timestamp. Choosing tick_timestamp when Yahoo only serves the bar later writes lookahead bias
-  into a shared contract that every downstream consumer trusts. The work is parked (stashed + backed up), not reverted;
-  UAC Phases 2-3 shipped around it.
+  A half-finished change added ("tradfi","ohlcv_1h"):["yahoo"] to SOURCE_PRIORITY without the matching
+  AVAILABILITY_AT_SEMANTICS entry, failing 6 UAC tests tree-wide and blocking every unrelated UAC ship. FIXED 2026-08-13
+  as tick_timestamp (unified-api-contracts@8f0903bb85), matching every other tradfi MARKET BAR; the same change added
+  the missing per-instrument_type validity-matrix entry, which the parked work had put in the wrong structure. This
+  doc's FIRST framing was wrong and is kept visible as a correction rather than edited away: it called the choice an
+  operator decision and recommended fetch_completed_at as "conservative", when fetch_completed_at stamps available_at at
+  BACKFILL wall-clock — on a 5-year-old candle that erases the series from every point-in-time backtest. The two tradfi
+  fetch_completed_at pairs are FRED macro series, not bars, so they were never a precedent. Yahoo's 15-min delay is
+  already modelled by emission_latency_ms_for_source. Remaining: P3 re-check that the 900_000ms latency, documented
+  against ^VIX-style indices, also holds for 1h equity bars.
 status: open
 nature: issue
 asset_group: [tradfi]
@@ -82,41 +85,76 @@ Era-B purge would break SOURCE_PRIORITY <-> AVAILABILITY_AT_SEMANTICS symmetry.
 Six failures, one root. Because they are tree-wide, ANY unrelated `unified-api-contracts` ship is blocked while this
 sits — which is how it was found.
 
-## The decision needed (this is the whole issue)
+## RESOLVED 2026-08-13 — `tick_timestamp`, shipped as `unified-api-contracts@8f0903bb85`. Never an open decision.
 
-**Which availability semantic does a Yahoo-sourced `tradfi ohlcv_1h` bar carry?** The sibling timeframes do not agree,
-so there is no precedent to copy:
+> **CORRECTION.** The original version of this section framed it as an operator decision between two semantics and
+> recommended `fetch_completed_at` as "the conservative direction — it can only make a strategy look worse than reality,
+> never better." **That was wrong, and following it would have caused real damage.** The correction was prompted by the
+> operator asking a simple question — _if a candle is 5 years old, is `fetch_completed_at` at the candle close?_ — which
+> the original analysis had never checked. It is not.
 
-| pair                     | semantic             | meaning                                    |
-| ------------------------ | -------------------- | ------------------------------------------ |
-| `("tradfi", "ohlcv_1m")` | `tick_timestamp`     | available AT the bar's own timestamp       |
-| `("tradfi", "ohlcv_1d")` | `fetch_completed_at` | available only when we actually fetched it |
+**What `fetch_completed_at` actually means.** `available_at` is stamped **per-row at write time**
+(`availability_semantics.py` module docstring: "each row's value = when the live pipeline would have actually had that
+row's information"). `fetch_completed_at` resolves to when the FETCH completed. For a 5-year-old candle backfilled today
+that stamps `available_at` ≈ today, so the bar reads as "not available until 2026" and **disappears from every
+point-in-time backtest before today**. That is not conservative — it silently deletes history.
 
-This is not a formatting choice. `tick_timestamp` asserts point-in-time availability at the bar's timestamp; if Yahoo
-only serves that bar some minutes or hours later, then every backtest reading this registry gets **lookahead bias**,
-silently, from a contract it is entitled to trust. `fetch_completed_at` is the conservative direction — it can only make
-a strategy look worse than reality, never better.
+**The siblings do not disagree; they are different KINDS of data.** Every tradfi MARKET BAR uses `tick_timestamp`:
 
-The author's own comment concedes the uncertainty: the start date is described as "the operator-scoped real-launch
-window floor (2026-01-01), NOT a Yahoo serving-floor fact", i.e. Yahoo's real 1h lookback and delay were never measured.
+| pair                                     | semantic             | what it is                                   |
+| ---------------------------------------- | -------------------- | -------------------------------------------- |
+| `trades`, `tbbo`, `ohlcv_1s`, `ohlcv_1m` | `tick_timestamp`     | real market bars                             |
+| `yield_curve`, `ohlcv_1d`                | `fetch_completed_at` | FRED macro series (VIXCLS, CPI, GDP, UNRATE) |
+
+`("tradfi","ohlcv_1d")` is a "degenerate 1-obs/day bar" of published economic series — it genuinely becomes known when
+published/fetched. It is not a precedent for a bar series. Yahoo `ohlcv_1h` is a market bar, so it takes
+`tick_timestamp` like every other one.
+
+**The delay concern is already handled by that semantic, not by choosing a different one.** `tick_timestamp` is not
+"available at the bar's own timestamp" — it stamps **tick-time + `emission_latency_ms_for_source(source)`**, explicitly
+so "the historical archive replay matches the live emission latency". Yahoo is already registered:
+
+```python
+"yahoo": 900_000,  # 15 min: Yahoo Finance free-tier intraday delay
+```
+
+So the lookahead risk the original text worried about is modelled by an existing, already-populated mechanism — and the
+"go measure Yahoo's serving delay" todo was asking for a number the registry already carries.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Decide the semantic for `("tradfi","ohlcv_1h")`.** Done-when: the choice and its justification
-      are recorded here. If the answer is "we don't know Yahoo's serving delay", that makes it `fetch_completed_at` by
-      default — the conservative direction — not a coin flip.
-- [ ] [DATA] P1. **Measure Yahoo's actual 1h serving delay** rather than assuming it: fetch the same symbol repeatedly
-      across a session boundary and record when each bar first becomes retrievable relative to its own close timestamp.
-      That measurement is what makes the todo above answerable, and it is cheap. Repo: market-tick-data-service.
-- [ ] [CODE] P1. Once decided, add the entry to `AVAILABILITY_AT_SEMANTICS`, unstash the two parked files, and verify
-      all six tests go green together (`test_source_priority`, `test_validity_matrix_completeness`, and the four
-      `test_era_b_purge` cases). Repo: unified-api-contracts.
+- [x] ✅ [CODE] P1. **Semantic decided and applied: `("tradfi","ohlcv_1h"): "tick_timestamp"`** — matching every other
+      tradfi market bar, per the correction above. NOT an operator decision: the two `fetch_completed_at` tradfi entries
+      are FRED macro series, not bars, so there was no genuine precedent conflict. Yahoo's 15-min free-tier delay is
+      carried by `emission_latency_ms_for_source("yahoo") == 900_000`, already registered.
+- [x] ✅ [CODE] P1. **Validity-matrix reachability fixed** — the parked work had added `ohlcv_1h` to the flat
+      `DATA_TYPES_BY_ASSET_GROUP["tradfi"]` enumeration, but the reachability invariant reads the per-instrument_type
+      `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`, a different structure — which is why one of the six kept failing
+      after the semantic was added. Added to `("tradfi","equity")` only, matching the source's documented NASDAQ/NYSE
+      coverage; deliberately NOT widened to future/etf/index, which would over-fan cells the writer never captures.
+- [x] ✅ [CODE] P1. Parked files unstashed and all six originally-failing tests verified green together
+      (`test_source_priority`, `test_validity_matrix_completeness`, the four `test_era_b_purge` cases) — 32 passed.
+- [ ] [DATA] P3. **Re-verify the 15-min Yahoo latency still holds for 1h equity bars specifically.** The registered
+      900_000 ms is documented against "CBOE-sourced indices like ^VIX"; it is the right mechanism and a sane default,
+      but it was measured for a different instrument class. Cheap to confirm: fetch a symbol across a session boundary
+      and record when each bar first becomes retrievable relative to its own close. Repo: market-tick-data-service.
 - [ ] [DOCS] P2. Record in `/codex/02-data/tradfi-databento-sourcing-ssot.md` that Yahoo is an interim `ohlcv_1h` source
       while Databento billing is suspended, with its measured delay — so the next person adding an interim vendor knows
       the availability semantic is part of the change, not a follow-up.
 
 ## Progress Log
 
+- 2026-08-13 — **RESOLVED and shipped: `unified-api-contracts@8f0903bb85`.** Semantic = `tick_timestamp`; validity
+  matrix entry added to `("tradfi","equity")`; parked files unstashed; all six originally-failing tests green (32
+  passed), full UAC gate green. The lesson worth keeping is about how this was nearly got wrong: the original filing
+  reasoned from the NAME `fetch_completed_at` and from a two-row table of "sibling" pairs, and produced a confident
+  recommendation — "conservative; can only make a strategy look worse, never better" — that was the opposite of true.
+  Reading the actual contract (`available_at` is per-row WRITE-TIME) takes one file open and shows immediately that on a
+  backfilled bar it stamps today, erasing the series from point-in-time backtests. **A registry value's meaning is in
+  its stamping implementation, never in its name or in what its neighbours happen to use.** The catch came from the
+  operator asking the one concrete question the analysis had skipped — _if the candle is 5 years old, is
+  `fetch_completed_at` at the candle close?_ — which is the shape of question worth asking of any semantic before
+  recommending it.
 - 2026-08-13 — Filed while inheriting ~5h-idle WIP in slot 4. The Yahoo half was the sole cause of all 6 UAC gate
   failures; the dependency-revocation half in the same dirty tree was independent and clean, so it was separated and
   shipped as `unified-api-contracts@c206f9100d` (Phases 2-3) rather than being held hostage to this decision. Parked
