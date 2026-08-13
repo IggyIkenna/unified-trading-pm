@@ -121,3 +121,20 @@ _make_behind_repo() {
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
+
+@test "detached HEAD behind remote → DETACHED HEAD signal (actor skips it)" {
+    repo="$(_make_behind_repo)"
+    ( cd "${repo}" && git checkout -q --detach HEAD )   # detached, 1 behind
+    run env FF_STARVE_COMMIT_THRESHOLD=1 bash "$DETECT" "${repo}" --slot 6
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"FF-PULL DETACHED HEAD"* ]]
+    [[ "$output" == *"slot 6"* ]]
+}
+
+@test "detached HEAD up-to-date → NO signal" {
+    repo="$(_make_behind_repo)"
+    ( cd "${repo}" && git checkout -q --detach origin/live-defi-rollout )   # detached at tip, 0 behind
+    run env FF_STARVE_COMMIT_THRESHOLD=1 bash "$DETECT" "${repo}" --slot 6
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}

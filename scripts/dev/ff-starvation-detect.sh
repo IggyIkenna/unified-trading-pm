@@ -43,7 +43,7 @@
 #   FF_BEHIND_BACKSTOP_HOURS    default 6   (cause-agnostic backstop, oldest-unpulled-commit age)
 #   INTEGRATION_BRANCH          default live-defi-rollout
 #
-# TWO independent verdicts (2026-08-10):
+# THREE independent verdicts:
 #   1. STARVATION — modelled cause: a dirty∩incoming collision is blocking the FF.
 #   2. FF-BEHIND BACKSTOP — CAUSE-AGNOSTIC. A clone that CAN fast-forward, is far behind, and
 #      has stayed that way, pages regardless of WHY. Every other signal in this fleet is keyed
@@ -57,6 +57,10 @@
 #            covers that, and this backstop is what would have caught it.
 #      Deliberately NOT gated on dirty/collision/clean: the point is to fire without a theory.
 #      Threshold sits above verdict 1's so it is a backstop, not a duplicate page.
+#   3. DETACHED HEAD (2026-08-13) — a detached clone is NEVER FF-pulled (the actor skips it
+#      with [skip:detached] regardless of clean/dirty), so "clean → FF would succeed" is false
+#      for it. Fires on behind > 0 alone, before the ff_clean and clean-tree exits that would
+#      otherwise let a detached clone drift silently with no verdict from either side.
 #
 # Codex SSOT: codex/05-infrastructure/per-tab-worktrees.md § "Step 7 — troubleshooting"
 
@@ -135,6 +139,25 @@ local_sha="$(git rev-parse HEAD 2>/dev/null || echo "")"
 
 behind="$(git rev-list --count "HEAD..${remote_ref}" 2>/dev/null || echo 0)"
 [[ "${behind}" -gt 0 ]] || exit 0   # up-to-date or ahead → not starved.
+
+# ── VERDICT 3: DETACHED HEAD ─────────────────────────────────────────────────
+# The actor (slot-cron-ff-pull.sh) skips a detached clone with [skip:detached] — it never
+# FF-pulls it, clean or dirty. A detached clone that is behind is therefore drifting BY
+# CONSTRUCTION, and the "clean → FF would succeed → not starved" exits below would let it
+# do so silently. Fire on behind > 0 alone (an up-to-date or ahead detached clone already
+# exited at the behind check above). Detected the same way the actor does: --abbrev-ref
+# yields "HEAD" on a detached HEAD and "DETACHED" on the error fallback.
+head_branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "DETACHED")"
+if [[ "${head_branch}" == "DETACHED" || "${head_branch}" == "HEAD" ]]; then
+    cat <<EOF
+FF-PULL DETACHED HEAD — ${SLOT_ID:+slot ${SLOT_ID} / }${REPO_NAME}
+behind: ${behind} commits | HEAD is detached (not on ${INTEGRATION_BRANCH})
+why it matters: the FF-pull actor skips detached clones ([skip:detached]), so this clone
+  will never fast-forward on its own and drifts further behind every tick.
+remediation: git checkout ${INTEGRATION_BRANCH} && git merge --ff-only ${remote_ref}
+EOF
+    exit 0
+fi
 
 # ff_clean: a true fast-forward is possible iff merge-base == HEAD (remote is a
 # strict descendant of local). Diverged/ahead is a DIFFERENT failure mode handled
