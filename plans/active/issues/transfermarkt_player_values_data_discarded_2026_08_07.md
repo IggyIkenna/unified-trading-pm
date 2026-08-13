@@ -556,17 +556,29 @@ possibly a rename that ripples into UAC/manifest data_type naming.
   stakes (two overlapping launches already spent real RapidAPI calls against the ~87K/billing-window ceiling) and to
   avoid a third rushed action; see the new todo below.
 
-- [ ] [DATA] P2. **Resume TRANSFER_RECORDS for the 3 still-incomplete leagues**:
-      `bash deployment-service/scripts/vm/launch-sports-transfermarkt-2020-06-floor-backfill-vm.sh --leagues "ARGENTINA_PRIMERA,LIGA_3,SERIE_A" --entities TRANSFER_RECORDS`.
-      Before relaunching: (a) confirm no other session is concurrently touching this launcher -- grep local
-      `gcloud`/launcher processes AND check `gcloud compute instances list`, but a local-process-clean check is NOT
-      sufficient given the lesson above (a cloud-side call can already be in flight with no local process to see); (b)
-      re-check RapidAPI quota headroom live -- this VM's genuine failure mode was a `TimeoutError`, not a
-      `429`/quota-exceeded, but two overlapping launches already spent real calls this session, so the launcher's stale
-      ~87K estimate should be re-verified, not assumed. **Blocked behind the PLAYER_VALUES VM below finishing first**
-      (singleton-lock / shared RapidAPI-key rate-contention avoidance, not a hard technical block). Done when: master
-      table `entity=transfer_records` shows all 3 leagues with real rows, or a definitive honest-absence reason if
-      genuinely empty.
+- [ ] [DATA] P2. **Resume TRANSFER_RECORDS for the 3 still-incomplete leagues — IN PROGRESS, 2026-08-13 (fresh
+      session).** PLAYER_VALUES backfill finished clean (see the flipped todo above) so the soft rate-contention block
+      cleared; live RapidAPI quota re-checked first (`x-ratelimit-requests-remaining: 28798` of `120000` — the stale
+      ~87K estimate had already dropped a lot from the PLAYER_VALUES run, but comfortably enough headroom for 3
+      leagues). **Real launcher bug found + fixed en route**: the FIRST relaunch attempt failed
+      (`ERROR: (gcloud.compute.instances.create) argument --metadata: Bad syntax for dict arg: [LIGA_3]`) — the launcher
+      script embeds `--leagues`'s raw value straight into a comma-delimited `--metadata` string with no escaping, so ANY
+      comma-separated `--leagues` value breaks it (the exact same bug class already fixed for `--entities` in the prior
+      session, never applied to `--leagues`, despite the launcher's own `--help` text documenting a comma-separated
+      usage example that was therefore never actually working). This almost certainly also explains the prior session's
+      confusing "my launch exited 0 but never produced a VM" finding above — it likely hit this same silent failure.
+      **Fixed at the root** (not worked around a second time): `deployment-service@2608f012e8` normalizes `--leagues`'s
+      commas to `+` before embedding, inside the launcher itself, so the documented comma syntax genuinely works for
+      every future caller. QG green, shipped via quickmerge. Retried with the fixed launcher: VM
+      `instr-backfill-sports-transfermarkt-20260813-104937` launched clean, confirmed via its own run.log:
+      `TRANSFER_RECORDS pass restricted to 3 league(s):     ARGENTINA_PRIMERA,LIGA_3,SERIE_A` — exactly the intended
+      scope. **Separately**: this session's own working tree hit a real (byte-identical, trivially-resolved) git
+      conflict on this exact doc from a stale local autostash; resolved cleanly, verified `ahead=0` before proceeding —
+      no content lost. **A second, unrelated dirty-tree blocker** (a 10+-hour-stale, clearly-abandoned
+      `cefi_inverse_contract_multipliers` WIP in `unified-api-contracts` from a peer session sharing this slot) was
+      blocking the shared tarball-freshness check; stashed (not committed under this session's name, not discarded —
+      named stash, fully recoverable) rather than touched/authored. Done when: master table `entity=transfer_records`
+      shows all 3 leagues with real rows, or a definitive honest-absence reason if genuinely empty.
 - [x] ✅ [DATA] P2. **PLAYER_VALUES full historical backfill VM reached a genuine terminal state — DONE, verified
       2026-08-13 (fresh interactive session).** VM `instr-backfill-sports-transfermarkt-20260812-181254` ran across 3
       consecutive ~4-hour monitoring windows (main-session-owned `run_in_background` watchdogs, re-armed twice after
