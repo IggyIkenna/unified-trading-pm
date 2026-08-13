@@ -1262,6 +1262,22 @@ reword (`…, then X` rather than `… \n + X`). Observed 2026-08-12 in `SUB_AGE
 remote" recovery step was silently split off into its own bullet by an otherwise-correct wrapper run. **After any
 prettier pass on a rules/plan file, re-read the diff for new `- `/`+ ` line starts you did not write.**
 
+**The general rule this is one instance of: a tool reads your PROSE as SYNTAX when it starts with a token that tool
+owns.** Three separate instances hit in one day (2026-08-12/13), all with the same shape and the same one-line fix:
+
+| what was written                                    | what parsed it            | how it broke                                         |
+| --------------------------------------------------- | ------------------------- | ---------------------------------------------------- |
+| a wrapped continuation starting `+ \`X\``           | prettier / CommonMark     | became a list item, splitting one rule into two      |
+| an explanatory comment starting `# noqa reason (…)` | ruff                      | parsed as a noqa DIRECTIVE → "unused noqa", gate red |
+| a `codex/`-prefixed shorthand inside prose          | the doc body-link checker | read as a repo path → "broken link", gate red        |
+
+In every case the CONTENT was correct and only the LEADING TOKEN was the problem, which is why they are easy to
+misdiagnose as the checker being wrong. **Do not start a comment, a wrapped line, or a sentence with a token a parser
+owns** (`#noqa`, `+`/`-`/`*`, a bare `path/`-looking string) — reword so the token sits mid-line
+(`Empty-string-fallback rationale (…)` rather than `# noqa reason (…)`). And note the recursion: the doc that first
+documented the prettier case tripped the body-link checker while being written, because it spelled the offending path
+literally.
+
 1. **Pre-format ALL formatters before `git add`:**
    ```bash
    bash scripts/hooks/prettier-autostage.sh <file>   # JSON, YAML, MD, etc. — version-guarded, never bare `npx prettier`

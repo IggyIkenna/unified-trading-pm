@@ -185,6 +185,42 @@ updated to reflect the new resolution order (registry-hit tests now assert the c
 test patches both the registry and catalogue to None to exercise a genuine double-miss). Shipped:
 `market-data-processing-service@ae23ee5c03`.
 
+## Finding 3 — `infer_cefi_quote_margin` misses dated-futures `@INV`/`@LIN` and OKX's `-SWAP` wire suffix — FIXED
+
+Discovered mid-4th-re-derive (2026-08-13/14): 6+ hours into the corpus re-walk, `non-zero rc` count on per-date
+subprocesses went from 0 → 29 starting EXACTLY at 2020-12-31→2021-01-01 and stayed nonzero every date after. Root cause,
+live-traced against `run.log`:
+
+1. `infer_cefi_quote_margin` (`canonical_writer_shaping.py:794-860`) resolved `margin_type` via
+   `instrument_id.endswith("@LIN")`/`endswith("@INV")` as step 1 (most authoritative). This is an EXACT suffix check —
+   it never matches a dated-future id, whose canonical shape is `@LIN|INV-YYYYMMDD` (`_build_canonical_future_key`).
+   Confirmed live: `KRAKEN-FUTURES:FUTURE:ETH-USD@INV-20210326` and `...-20210625` both fell through to step 7
+   (UNRESOLVED) despite carrying a perfectly valid `@INV` marker.
+2. Separately, OKX's own raw wire form for CeFi perpetual swaps (`<BASE>-USD-SWAP`, e.g. `TRX-USD-SWAP`, `XRP-USD-SWAP`)
+   has NO `@LIN`/`@INV` marker at all and doesn't match any of the other 5 heuristics either (doesn't end in `USD` — it
+   ends in `SWAP`). Confirmed live for 5 instruments: `BTC/ETH/LTC/TRX/XRP-USD-SWAP`.
+3. Both classes hit the SAME downstream symptom — `MalformedTickFieldError(field='margin_type', ...)` — 2,128 error
+   occurrences across the first ~400 dates of the 4th re-derive alone (7 distinct instruments, but recurring on EVERY
+   date each instrument has liquidation data, dating back to whenever these instruments/expiries started trading — not
+   new to this re-derive, a pre-existing gap in every prior liquidations run too).
+
+**Fix shipped**: `infer_cefi_quote_margin` now extracts the `@LIN`/`@INV` marker by splitting on `@` and taking the
+token before the next `-` (tolerates a trailing `-YYYYMMDD`), and adds a new step 7 — a symbol ending in `SWAP` (after
+the existing stablecoin check already ruled out linear `-USDT-SWAP`/`-USDC-SWAP`) resolves to `("USD", "inverse")`,
+OKX's own convention. 4 new tests (2 dated-future marker cases, OKX-SWAP inverse, and a regression guard that linear
+`-USDT-SWAP` still wins over the new heuristic). Gate green. Shipped: `market-data-processing-service@d5a0b6cdc5`.
+
+Since `liquidations_adapter.py`'s `base_asset` parsing (Finding 2's fix) already splits on `-` regardless of whether an
+`@` marker is present, `contract_size` resolution for all 7 instruments works correctly the moment `margin_type`
+resolves — no further code change needed (OKX-SWAP TRX/XRP/LTC → registry `_DEFAULT=10`, BTC/ETH → their specific
+values; KRAKEN-FUTURES dated futures → registry `UNIFORM=1`).
+
+**The 4th re-derive VM (`mdps-backfill-cefi-20260813-174138`) was killed and relaunched** once this fix landed — its
+tarball was staged before the fix shipped, so it would have kept failing on these 7 instruments for the rest of its
+~2223-date run. MDPS backfill skips already-`captured` manifest rows by default (no `--force` was passed), so the
+relaunch (`mdps-backfill-cefi-20260814-003509`) resumes efficiently rather than redoing the ~700+ already-completed
+days.
+
 ## Still open — NOT done yet
 
 - [x] [SCRIPT] P0. Wire the new UAC resolver into `liquidations_adapter.py`'s inverse-margin branch — done, see above.
@@ -197,14 +233,17 @@ test patches both the registry and catalogue to None to exercise a genuine doubl
 - [x] [DATA] P1. Finding 1b — FIXED AND VERIFIED (see above): new `cefi-catalogue-promote` VM launcher category
       (`deployment-service@a7561ac20c`), dry-run + operator-confirmed real run both completed clean, `catalog.parquet`
       promoted (433,791 rows). Blank `contract_size` on delisted CeFi derivatives: 271,838 → 10.
+- [x] [SCRIPT] P0. Finding 3 — FIXED (see above): `market-data-processing-service@d5a0b6cdc5`, 4th re-derive VM killed +
+      relaunched with the fix included.
 
 - [ ] [OPERATOR] P2. Decide whether to upgrade the Tardis subscription to "pro"/"business" tier — would let
       instruments-service source `contractMultiplier` directly instead of depending on a hand-maintained UAC registry
       that needs manual re-verification if a venue's face values ever change. Not urgent — the UAC registry is a
       complete, correct, cited fix for the CURRENT known instrument set.
-- [ ] [SCRIPT] P0. Re-run the liquidations re-derive (a 4th attempt) once the above are fixed, same 3-way verification
-      rigor as every prior attempt in this batch (log counters + manifest `written_at` + GCS `last_modified` — a clean
-      exit code alone has already proven insufficient twice this batch).
+- [ ] [SCRIPT] P0. Monitor the (relaunched) liquidations re-derive to completion, same 3-way verification rigor as every
+      prior attempt in this batch (log counters + manifest `written_at` + GCS `last_modified` — a clean exit code alone
+      has already proven insufficient multiple times this batch). Confirm zero non-zero-rc dates before calling this
+      closed.
 
 ## Lesson
 
