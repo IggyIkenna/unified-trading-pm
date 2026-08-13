@@ -166,9 +166,13 @@ bridges them; it does not extend one over the other.
       readable — the regression guard for the whole plan. Repo: unified-trading-library. —
       unified-trading-library@d50ca9ff65 (`test_data_writers_drain_before_manifest`,
       `test_drain_order_is_deterministic_within_a_priority`, `test_manifest_priority_is_last_in_the_enum`)
-- [ ] [TEST] P0. Test: a drain-flushed partial shard does not advance the PROGRESS frontier and does not set `captured`,
-      so `--force` resume re-attempts it. Repo: unified-trading-library. NOT covered by the shipped tests — those use
-      fake buffers; this one needs a real ManifestWriter+PROGRESS integration test.
+- [x] 8. ✅ [TEST] P0. Test: a drain-flushed partial shard does not advance the PROGRESS frontier and does not set
+      `captured`, so `--force` resume re-attempts it. Repo: unified-trading-library. —
+      unified-trading-library@c523dededa (QG green 103s, real run).
+      `test_drained_partial_shard_does_not_advance_progress_or_record_captured` drives a REAL `StreamingParquetWriter`
+      (not a fake buffer) through `write_chunk` → `drain_for_shutdown` and asserts `_vm_progress._max_seen` is unmoved;
+      `test_drain_does_not_touch_the_manifest_write_buffer` asserts `_WRITE_BUFFER` is unchanged. Closes the gap called
+      out on this todo when Phase 1a shipped.
 - [x] 5. ✅ [TEST] P0. Test: the drain registry chains a pre-existing SIGTERM handler instead of clobbering it,
       mirroring `_preemption_signal`'s existing contract. Repo: unified-trading-library. —
       unified-trading-library@d50ca9ff65 (`test_signal_handler_chains_instead_of_clobbering`,
