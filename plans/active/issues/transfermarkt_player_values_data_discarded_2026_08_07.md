@@ -719,3 +719,18 @@ possibly a rename that ripples into UAC/manifest data_type naming.
     rare spikes. `CONCURRENCY=4` (line 68) is hardcoded independent of machine type, so no cascading change needed. Not
     applied this session — filed below as a todo, since a running-VM resize/relaunch needs a fresh launch anyway (SPOT
     VMs don't support live resize).
+  - **Naming-error correction (found while running the audit's Step 2 manifest sweep) — "SERIE_A" was never a real
+    remaining-league target.** This doc's own tracking (every entry above referring to "ARGENTINA_PRIMERA, LIGA_3,
+    SERIE_A" as the 3 missing leagues) used the wrong provider-league key for Brazil: this codebase's canonical key is
+    `BRASILEIRAO` (`unified_api_contracts.canonical.domain.sports.league_data:413`) — `SERIE_A` is Italy's key, which
+    was never in scope. Direct master-table check (`sports_reference/master/entity=transfer_records/master.parquet`)
+    confirms `BRASILEIRAO` already has **5,431 real rows** and is one of the 29 already-`captured` leagues — it was done
+    all along, and every 502-failure attempt at "SERIE_A" this session was chasing a key that was never the actual gap.
+    Manifest confirms via `read_availability_index_safe()`: `ARGENTINA_PRIMERA` 2 `attempted_failed` rows (2026-08-12,
+    2026-08-13), `LIGA_3` 2 `attempted_failed` rows (same dates), both `error_reason="TimeoutError"` —
+    transient/self-healing class, not a genuine billing-waste pile-up (only 2 waves, not an unreasonable retry count).
+    **The real remaining TRANSFER_RECORDS scope is 2 leagues: `ARGENTINA_PRIMERA,LIGA_3`** — the next relaunch should
+    drop `SERIE_A` from `--leagues` entirely; it was never needed. (Secondary, non-urgent gap noted in passing:
+    `TimeoutError` has no explicit `VENUE_ERROR_MAP` entry for transfermarkt, so it silently falls to `UNCLASSIFIED`
+    rather than an intentional transient bucket — not fixed here, flagging for whoever next touches
+    `classify_venue_error()`.)
