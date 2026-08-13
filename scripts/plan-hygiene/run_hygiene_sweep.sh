@@ -113,9 +113,13 @@ if [ "$CI_MODE" = "--precommit" ]; then
     # gating but only fails on violations among these staged paths, so a pre-existing violation in an
     # unrelated plan never blocks this commit (RULE-11 blast-radius safety, same as frontmatter-schema
     # above).
+    # Same invocation also refuses a brand-new finalize plan whose depends_on names a parent
+    # already gated by a DIFFERENT existing finalize plan — the creation-time idempotency guard
+    # for duplicate_finalize_plans_created_for_one_parent_2026_08_06.md todo 1 (see the script's
+    # own printed output above for which case fired: missing companion vs. duplicate gate).
     python3 "$SCRIPT_DIR/../quality_gates/check_finalize_plan_coverage.py" --workspace-root "$(dirname "$PM_DIR")" --only "${STAGED_PLANS[@]}" \
       && echo "  ✅ Finalize-plan coverage (staged plans)" \
-      || { echo "  ❌ Finalize-plan coverage — a staged assigned_vm:planning plan has no gated finalize companion (task_template.md §4)"; PF=$(( PF + 1 )); }
+      || { echo "  ❌ Finalize-plan coverage — a staged assigned_vm:planning plan has no gated finalize companion, OR a staged finalize plan duplicates an existing gate (task_template.md §4)"; PF=$(( PF + 1 )); }
 
     # Evidence gates, --only-scoped (2026-08-09). These lived ONLY in the full quality-gates.sh,
     # so the CLAUDE.md-sanctioned pure-doc fast path (safe-doc-push.sh -> prek only) could land an

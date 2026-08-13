@@ -110,6 +110,67 @@ def test_only_with_multiple_paths_reports_every_violation_among_them(tmp_path: P
     assert rc == 1
 
 
+# ── duplicate-gate-at-creation (--only) ───────────────────────────────────────
+# Reconstructs the 2026-07-31 collision documented in
+# duplicate_finalize_plans_created_for_one_parent_2026_08_06.md: two finalize plans,
+# differently named, both `depends_on: [<same-parent>]` + `gate_on_depends: true`.
+
+
+def test_only_refuses_a_new_finalize_plan_that_duplicates_an_existing_gate(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md")
+    _write_plan(
+        active / "live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md",
+        extra_frontmatter=(
+            "depends_on: [live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31]\ngate_on_depends: true"
+        ),
+    )
+    # The second, near-duplicate-named finalize plan — the one actually being staged/committed.
+    new_finalize = _write_plan(
+        active / "live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize_2026_07_31.md",
+        extra_frontmatter=(
+            "depends_on: [live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31]\ngate_on_depends: true"
+        ),
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(new_finalize)])
+    assert rc == 1
+
+
+def test_only_allows_the_first_finalize_plan_for_a_parent(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    first_finalize = _write_plan(
+        active / "source_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(first_finalize)])
+    assert rc == 0
+
+
+def test_only_ignores_duplicate_gate_outside_scope(tmp_path: Path) -> None:
+    """Two finalize plans collide, but --only names an UNRELATED clean plan — blast-radius
+    safety (RULE-11): an in-corpus collision the current commit isn't touching must not block
+    it."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize_dup.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+    # A fully clean, unrelated plan (assigned_vm: NA is untouched by the coverage check) — the
+    # source_plan/finalize_dup collision above must not leak into this scoped check.
+    unrelated_clean = _write_plan(active / "unrelated_plan_2026_08_05.md", assigned_vm="NA")
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(unrelated_clean)])
+    assert rc == 0
+
+
 # ── default (no --only) mode stays corpus-wide + baseline-ratchet ────────────
 
 
