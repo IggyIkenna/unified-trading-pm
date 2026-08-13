@@ -16,7 +16,7 @@ summary: >-
   MAIN role specifically, and nothing addressing WHY context grows this fast in the first place (all existing work is
   reactive recovery, not root-cause prevention). This doc is that missing piece, filed with live evidence, not a
   re-statement of the existing worker-wedge doc.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -30,7 +30,7 @@ related:
 created: "2026-08-13"
 author: main (Claude Code, interactive session)
 parent_epic: orchestrator_master
-resolved_by:
+resolved_by: agent-orchestrator@acc41b1a00
 locked_by:
 source: >-
   Operator chat instruction, 2026-08-13: "make to-dos so I can keep track of what you've been trying to achieve,
@@ -44,6 +44,10 @@ depends_on: []
 ---
 
 # Main-role agent context saturation — the idle-streak compact gate structurally disadvantages the one role that never stays idle
+
+> **🟢 ARCHIVED 2026-08-14** — status=resolved. P1 fix shipped (`agent-orchestrator@acc41b1a00`); all 3 follow-up
+> investigation todos closed with real evidence (transcript-measured token-growth rate, 08-11 spike investigated and
+> disconfirmed, tmux_session_lost recurrence checked) rather than left open. See Progress Log for the full trail.
 
 ## What was measured (live, read-only, via SSM against `state.db` on the orchestrator VM, 2026-08-13 ~16:00-16:30Z)
 
@@ -104,15 +108,18 @@ applied to a role whose whole job structurally defeats the "3 consecutive idle t
 
 ## What is NOT yet established
 
-- Whether the ~23-31-minute time-to-saturation is itself abnormal (i.e., is main's context genuinely growing faster per
-  unit of real work than a comparable worker session would, or is this simply what a continuously-interrupted
-  coordinator role costs under the existing per-model learned-window arithmetic from the worker-wedge doc). Not measured
-  here — would need a token-growth-per-message-handled rate, not just wall-clock time to saturation.
+- ~~Whether the ~23-31-minute time-to-saturation is itself abnormal~~ — **measured, see todo below**: main's raw
+  tokens/min growth rate is NOT abnormally fast — if anything slightly slower than a worker's. The real driver is
+  duration, not rate: main runs continuously for hours with no natural task-boundary reset, unlike a worker whose
+  session is inherently bounded by task completion.
 - ~~Whether the 2026-08-11 68-spawns/day spike has its own distinct trigger~~ — **investigated, see todo below**: NOT
   the idle-gate mismatch (didn't exist yet that day) and NOT the whole-fleet kill-server bug (0 matching events); driven
   by 2,607 individual `tmux_session_lost` events that day, cause unconfirmed, not currently reproducing.
-- Whether the 16:22:49 `tmux_session_lost` false-positive-looking event recurs and is itself worth a targeted fix, or is
-  one-off noise.
+- ~~Whether the 16:22:49 `tmux_session_lost` false-positive-looking event recurs~~ — **checked, see todo below**: 3 more
+  `orch-agent-main` `tmux_session_lost` events occurred in the following 5 hours, but each landed within 1-6 minutes of
+  a `main_agent_autospawned` — a signature the ORIGINAL false positive did not have (no subsequent autospawn, same tmux
+  pane persisted). Reads as genuine respawns, not the same artifact recurring — not independently pane-verified
+  per-instance, so held as a read, not a proof.
 
 ## Todos
 
@@ -128,11 +135,22 @@ applied to a role whose whole job structurally defeats the "3 consecutive idle t
       last real work" rather than "idle since last activity of any kind", or lower the consecutive-tick requirement
       specifically for `role=main`. Done when: a traced main instance that is repeatedly ack-interrupted still reaches a
       forced compact within a bounded time of first hitting the guidance threshold (e.g. <10 min, not 14-40 min).
-- [ ] [INVESTIGATE] P2. Measure main's actual token-growth-per-handled-message rate against a worker's
-      token-growth-per-tool-call rate, to establish whether main's ~23-31-minute time-to-saturation is a genuinely
-      faster burn rate or an artifact of the role's message volume. Needed before proposing any context-reduction fix
-      (e.g. trimming what main's own system/role prompt carries) — don't optimize a rate that hasn't been measured
-      against a baseline.
+- [x] ✅ [INVESTIGATE] P2. **DONE 2026-08-13/14 — measured directly from session transcripts, hypothesis DISCONFIRMED.**
+      Parsed real `message.usage` records from two completed episodes: main's session
+      `d90087a1-b098-4f4a-8261-f2fe80225596` (19:29:09-21:27:38, 605 usage-bearing turns, excluding the known "synthetic
+      zero" tail-record measurement trap already documented in
+      `/plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md`) and a comparable
+      worker episode (slot 3, `81f1c644-7baf-4bb0-a615-045cd553013a`, 2026-08-11, 99 turns). **Main: ~2,070
+      tokens/min**, smooth/steady growth (long gaps between turns — waiting on the next real message). **Worker: ~3,281
+      tokens/min**, bursty (one 6-second gap alone added ~40K tokens during active tool-call chaining). Main's raw burn
+      rate is NOT abnormally fast — it is, if anything, slightly slower than a worker's mid-task rate. Also notable: a
+      fresh main spawn starts at ~54,666 tokens already loaded (its own bootstrap: role files,
+      `SUB_AGENT_MANDATORY_RULES.md`, the checkpoint doc), not near-zero. **Conclusion: main's saturation problem is
+      DURATION, not rate** — it runs continuously for hours with no natural task-boundary reset the way a worker's
+      task-scoped session gets, so a steady, unremarkable per-minute rate still accumulates to saturation over a long
+      enough unbroken stretch. This means a context-REDUCTION fix (trimming main's own system/role prompt) would not
+      meaningfully help; the already-shipped idle-gate fix (todo 1 above, letting main actually compact promptly instead
+      of stalling at 99%) is the right lever, not a burn-rate optimization.
 - [x] ✅ [INVESTIGATE] P2. **DONE 2026-08-13/14 — measured, hypothesis DISCONFIRMED, real cause still open.** Pulled
       08-11's event counts directly: `context_force_idle_gate_blocked` = **0** that day — the idle-gate mechanism this
       doc's own fix targets didn't exist yet (added ~08-09/08-10), so it structurally cannot explain the spike. Also NOT
@@ -144,8 +162,15 @@ applied to a role whose whole job structurally defeats the "3 consecutive idle t
       whatever drove this either self-resolved or was fixed by unrelated work already, but which fix (if any) is NOT
       confirmed. Leaving as a closed investigation with an honest "cause unknown, no longer reproducing" verdict rather
       than forcing it to fit this doc's own idle-gate hypothesis.
-- [ ] [INVESTIGATE] P3. Confirm whether the 16:22:49 `tmux_session_lost` on `orch-agent-main` (tmux pane creation
-      timestamp unchanged before/after) is a recurring liveness-check false-positive worth its own fix, or one-off.
+- [x] ✅ [INVESTIGATE] P3. **DONE 2026-08-13/14 — checked, does NOT look like the same recurring artifact.** 3 more
+      `orch-agent-main` `tmux_session_lost` events since 16:22:49 (17:08:27, 19:28:09, 21:30:01), each within 1-6
+      minutes of a `main_agent_autospawned` (17:14:35, 19:29:09, 21:30:24 respectively) — unlike the original 16:22:49
+      instance, which had NO subsequent autospawn and the same tmux pane (creation timestamp unchanged) persisted right
+      through it. The tight autospawn correlation on all 3 later instances reads as genuine respawns/recycles being
+      logged as `tmux_session_lost` (the event type doubles as a generic "this main instance is gone" marker, not
+      exclusively a death signal), not a repeat of the specific liveness-check false-positive caught live on 08-13. Not
+      independently pane-verified per-instance (would need a live capture at the moment of each event, not available
+      after the fact) — held as a read of the correlation pattern, not a proof.
 
 ## Progress Log
 
