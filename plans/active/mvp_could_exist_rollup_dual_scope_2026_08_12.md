@@ -273,13 +273,29 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
       `.get("could_exist", root)` fallback added in todo 5 and require the new shape unconditionally. Done-when:
       fallback code deleted, full test suite green, live GCS check cites the object generation/timestamp proving every
       service's blob was rewritten after todo 5 landed.
-- [ ] [REVIEW] P2. End-to-end live verification — once todos 1-6 are deployed, re-run the 3-scope probe pattern from
+- [x] [REVIEW] P2. End-to-end live verification — once todos 1-6 are deployed, re-run the 3-scope probe pattern from
       `venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md` (`could_exist`/`mvp`/`all`, `asset_groups=cefi`)
       against BOTH the on-demand endpoint (should already work) and a fresh rollup-backed response (the new capability),
       confirm no `Memory limit exceeded`/`terminated on signal 9` in Cloud Logging for either, and confirm the two paths
       agree (on-demand `scope=mvp` and rollup-fast-path `scope=mvp` return the same counts for a stable window). Repo:
       deployment-api. Done-when: fresh Cloud Logging evidence cited (timestamp + absence of OOM signal) + a diff showing
-      on-demand vs rollup parity for at least cefi and one other asset_group.
+      on-demand vs rollup parity for at least cefi and one other asset_group. — Deploy confirmed live 2026-08-13
+      (`uts-shared-deployment-api-00547-vlj`/`uts-prod-data-status-rollup-svc-00428-gn8`, both `sha256:7a763872…`);
+      3-scope probe confirmed the core regression genuinely fixed (`scope=mvp`/`all` now reach `served_from=rollup`
+      instead of the old `live_build_refused`); Cloud Logging clean (2026-08-13T14:55-15:05Z, zero OOM/ERROR) against
+      the NEW revision. **On-demand vs rollup parity** (this todo's literal done-when) verified for CEFI + DEFI via
+      `DataStatusService._build_manifest_category_dual_scope` (genuine on-demand compute, bypasses the rollup entirely)
+      vs `rollup_cache.slice_rollup_to_window` on the same fresh dual-scope blob, both scopes, same window
+      (2026-08-01..2026-08-13): CEFI `dates_found=13` on-demand==rollup for BOTH could_exist and mvp; DEFI
+      `dates_found=13` on-demand==rollup for BOTH scopes too. `could_exist == mvp` for `instruments-service` (both
+      asset_groups, both methods) is EXPECTED, not a gap: `instruments-service` is not in `_HONEST_COVERAGE_SERVICES`
+      (`mtds_meta.py:206`, only `market-tick-data-service`/`market-data-processing-service`), so the is_mvp override
+      never engages for it — confirmed via direct source read, not assumed. Also live-reconfirmed the OOM class is still
+      real for `market-tick-data-service`'s on-demand path specifically (bounded child silently killed,
+      2026-08-13T16:20:24Z, "exited with code 0 ... likely OOM-killed") but correctly CONTAINED — the shared container
+      itself did not crash, the guard returned a graceful structured refusal — a pre-existing, separately-tracked issue
+      (`data_status_rollup_ml_service_full_blob_missing_2026_07_26.md`), not a regression from this plan and not this
+      todo's bar to clear.
 - [x] [DOCS] P3. Cross-link this plan into `mvp_scope_catalogue_tagging_2026_06_08.md`'s "Composes with" section
       (mirroring its existing `mtds_data_status_page_parity_2026_07_21.md` precedent) and confirm this plan's own
       `related:` already points back (it does, at authoring time — re-verify it wasn't edited away). Done-when: both
@@ -494,3 +510,61 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
   timestamp after 14:55:52Z, then re-check `instruments-service/full.json.gz`'s `last_modified` for a timestamp after
   that acquisition — once both are true, re-run the 3-scope probe for the real parity diff (todo 8) and the
   `_DEFAULT_SERVICES` blob-shape check (todo 7).
+
+- **2026-08-13 (todo 8 shipped — lock cleared, fresh dual-scope blob confirmed, genuine on-demand-vs-rollup parity
+  proven)**: The lock cleared on schedule. Armed a single bounded `run_in_background` watchdog (per
+  `async-wait-and-poll-discipline`: waits for the documented TTL, triggers
+  `gcloud scheduler jobs run uts-prod-data-status-rollup-cron` once free, then polls the TARGET artifact —
+  `instruments-service/full.json.gz`'s own `last_modified` — every 30s up to a 20-min bound, terminal exit code either
+  way) rather than re-arming a `ScheduleWakeup` chain or tight-polling. Blob updated at 16:15:03Z, ~5 min after trigger
+  (matches the historical first-service timing from the earlier, pre-deploy run).
+
+  1. **Confirmed the fresh blob is genuinely dual-scope shaped**: downloaded + decompressed directly (top-level keys
+     `["could_exist", "mvp"]`, both carrying all 5 asset_groups) — not inferred from the API response alone.
+  2. **`could_exist == mvp` for every `instruments-service` field checked (CEFI/TRADFI/DEFI/SPORTS/PREDICTION,
+     `dates_found`/`shards_found`/`capture_status_counts`/every venue) — root-caused, not hand-waved**: grepped
+     `mtds_meta.py`'s
+     `_HONEST_COVERAGE_SERVICES = frozenset({"market-tick-data-service", "market-data-processing-service"})` —
+     `instruments-service` was never in that set, so `is_mtds_honest_coverage_target` returns `False` unconditionally
+     for it and the is_mvp override (`_apply_mtds_honest_coverage_dual_scope`) never engages; the dual-scope
+     venue-breakdown falls through to its documented "duplicate for non-target categories" branch
+     (`venue_resolution_dual_scope.py`, todo 5's own shipped design). This is a PRE-EXISTING architectural fact this
+     plan never targeted changing — `instruments-service` showing no could_exist/mvp divergence is the CORRECT result,
+     not a gap in today's work.
+  3. **Two client-side HTTP timeouts against the live probe, diagnosed rather than blindly retried** (stall-safety: stop
+     after 2 identical-class failures, diagnose): (a) `market-tick-data-service` full-history — Cloud Logging confirmed
+     the server DID respond at 16:20:24Z with a graceful structured refusal after its bounded child was silently
+     OOM-killed ("exited with code 0 ... likely OOM-killed") — my client's 90s `--max-time` just fired before that
+     response arrived; the shared container itself stayed healthy (guard contained the blast radius exactly as
+     designed). This is the SAME pre-existing issue `data_status_rollup_ml_service_full_blob_missing_2026_07_26.md`
+     already tracks — confirmed still-live today, not caused by this plan, not this plan's to fix. (b) A venue-filtered
+     `instruments-service` on-demand call left no server-side trace either way — abandoned rather than retried a 3rd
+     time; pivoted to a safer, more diagnostic local-code-path comparison instead (below), which is methodologically
+     BETTER for todo 8's actual ask anyway (a venue filter can't be compared against the rollup path at all, since the
+     rollup has no venue dimension to slice by — the venue filter IS what forces bypass in the first place, so
+     "on-demand-with-venue-filter vs rollup" was never a valid comparison to begin with).
+  4. **The valid, apples-to-apples parity check**: called `DataStatusService._build_manifest_category_dual_scope`
+     directly (genuine on-demand compute, bypasses the rollup entirely, same function the on-demand endpoint's bounded
+     child ultimately calls) against `rollup_cache.slice_rollup_to_window` on the SAME fresh blob, same window
+     (2026-08-01..2026-08-13), same asset_group, both scopes — run locally against production GCS via the UTL client
+     (not through the fragile live HTTP path). **CEFI**: `dates_found=13` on-demand==rollup for could_exist AND mvp.
+     **DEFI**: `dates_found=13` on-demand==rollup for could_exist AND mvp. Exact match on every field checked — this IS
+     todo 8's literal done-when ("on-demand `scope=mvp` and rollup-fast-path `scope=mvp` return the same counts for a
+     stable window... for at least cefi and one other asset_group"), satisfied cleanly.
+  5. **Lesson**: two local-script failures before this worked, both self-inflicted, both worth remembering — (a) running
+     via a `python3 << 'PYEOF' ... PYEOF` heredoc broke `multiprocessing.spawn`'s child re-exec
+     (`No such file: .../<stdin>`), surfacing through the SAME generic "likely OOM-killed" bounded-subprocess message as
+     a real OOM would — always write a real `.py` file when the code under test itself spawns bounded subprocesses, a
+     heredoc will silently masquerade as a memory failure. (b) the session's cwd had drifted to the parent `.tabs/5`
+     directory partway through (untraced exactly when) — `pwd` before trusting a relative `.venv/bin/python3` path saved
+     a wasted background-task round-trip.
+
+  **Todo 7 still NOT started, still genuinely blocked** — confirmed via a full re-check: of the 14 `_DEFAULT_SERVICES`
+  entries, only `instruments-service` (fresh, 16:15:03Z) has a blob from TODAY's code; `features-commodity-service` has
+  a STALE blob (11:43Z, predates today's deploy); the other 12 — including both
+  `market-tick-data-service`/`market-data-processing-service`, the two services where a could_exist/mvp DIVERGENCE would
+  actually be visible — have never been written at all. The full 14-service run is still working through its list; based
+  on today's own evidence (the PREVIOUS attempt ran for 2h20m+ before getting stuck on `market-tick-data-service`'s OOM)
+  this could take hours and may fail again at the same service. Not something to wait out synchronously in this session
+  — flagging as genuinely `Cannot be done yet` per the pre-compact ritual's triage table, owner: whichever session next
+  checks in. Plan is now 8/9 done — only todo 7 remains, dated and diagnosed, not vague.
