@@ -173,17 +173,25 @@ itself; the CVE doc keeps ownership of the `--ignore-vuln` allowlist.
       correctly names the violating package).
 - [x] ✅ [DOCS] P2. Once todo 1 lands, add a one-line pointer to this doc from the 9 referencing docs listed above so
       the next agent who hits the ImportError finds the owner instead of re-diagnosing it. ✅ 2026-08-13 — slot-6. Added
-      the pointer to all **10** active referencing docs (8 listed in the Prior-art section +
+      the pointer to **9 of the 10** active referencing docs (8 listed in the Prior-art section +
       `data_pipeline_reconciliation_skill_2026_07_20.md` + `fleet_venv_drift_after_pull_no_resync_2026_08_11.md`, both
       found via a fresh corpus grep for `iter_route_contexts`): `cve_affected_pinned_deps_remediation_2026_06_18.md`,
       `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`, `docs_reconcile_autonomous_sweep_2026_07_30.md`,
-      `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`,
       `uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md`,
       `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md`,
       `orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`,
-      `quality_gates_quickmerge_timing_baseline_2026_07_31.md`. Each got
+      `quality_gates_quickmerge_timing_baseline_2026_07_31.md` (7 shipped in `unified-trading-pm@d351f3ceb7`) +
+      `data_pipeline_reconciliation_skill_2026_07_20.md` + `fleet_venv_drift_after_pull_no_resync_2026_08_11.md` (2
+      shipped in the same commit; the SSOT flip itself also landed there). Each got
       `> **Owner for the stale-venv / \`iter_route_contexts\` ImportError**:
-      /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` at its mention site.
+      /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` at its mention site.     **`sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`is the ONE exception — pointer NOT added this     pass**: that doc's prettier-canonical form is 1008 lines > the 1000-line HARD plan cap (HEAD is 998L but     non-canonical), so staging ANY edit to it (even a pure pointer append) triggers a prettier reflow over the cap and     hard-fails plan-hygiene's`check_line_caps`.
+      Its pointer is tracked as the P3 todo below (split/fold the doc under the cap, then add the pointer).
+- [ ] [DOCS] P3. `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` is over the 1000-line plan hard cap in its
+      prettier-canonical form (1008L; HEAD 998L non-canonical) — any staged edit hard-fails `check_line_caps`. Split or
+      fold that doc below 1000L (e.g. fold the closed-out "Live-verification gotchas" and older Progress Log entries
+      into an archive sibling), then add the `> **Owner for the stale-venv / \`iter_route_contexts\` ImportError**:
+      /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` pointer at the Venv gotcha
+      (~line 888) that todo 5 could not land. Repo: unified-trading-pm.
 - [ ] [INVESTIGATE] P3. Three `*.stale-pre-history-rewrite-20260805T112453Z/` sibling directories (execution-service,
       instruments-service, market-data-processing-service, unified-trading-library) still carry their own 0.136.3 venvs
       in the slot. Confirm they are dead weight from the 2026-08-05 history rewrite and can be removed, or document why
