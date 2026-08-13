@@ -101,22 +101,48 @@ A silently-OOMing exit-code monitor never reaches its sentinel write (`_gcs.writ
 
 ## Not yet done
 
-- [ ] [SCRIPT] P1. Confirm via Cloud Logging history
-      (`gcloud logging read 'resource.labels.job_name="uts-prod-dp-exit-code-monitor" AND textPayload:"signal 9"'`) how
-      far back the OOM recurrence actually goes (single-session blip vs. sustained, like the meta-watchers timeout was).
-- [ ] [SCRIPT] P1. Bump `cpu`/`memory` on `data_pipeline_exit_code_monitor_job` in
-      `terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf` (mirror the heartbeat-watcher's 8Gi/cpu2 → 16Gi/cpu4
-      precedent in the same file — exit-code and heartbeat share the same "reads per-VM shards for the whole RUNNING
-      fleet" load pattern per that file's own comments) — apply live via `gcloud run jobs update` first (mirrors this
-      session's meta-watchers emergency-fix pattern) then backport to terraform, ship via `quality-gates.sh` →
-      `quickmerge.sh --agent --files`.
-- [ ] [SCRIPT] P2. Live-verify: watch `vm-census/exit-code-last-run.json` advance on schedule (every ~5 min) for at
-      least 3 consecutive cycles post-fix, and confirm no further `"signal 9"` entries in Cloud Logging.
+- [x] ✅ [SCRIPT] P1. **CONFIRMED (2026-08-13, slot 18)** — via Cloud Logging history, the OOM/signal-9 premise for this
+      job is **DISPROVEN**. 30-day `gcloud logging read` shows **ZERO** `signal 9` / `Container terminated` events
+      attributed to `uts-prod-dp-exit-code-monitor`. The signal-9 events the original finding saw on 08-09
+      (`14:54/16:09/16:10/23:34Z`) are attributed to `uts-shared-deployment-api-*` (revisions `-00490/-00491/-00499`), a
+      DIFFERENT job. The exit-code monitor actually ran **288 successful ~1-minute sweeps on 08-09**
+      (`gcloud run jobs executions list` — "Execution completed successfully in 1m.."), so it was NOT OOM-looping. Its
+      real failure modes since: **sweep-overlap** (chronic inability to finish within the `*/5` interval — the
+      structural root cause, already tracked separately in
+      `/plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md` with the P1 parallelize todo), then
+      **task timeouts** (08-11 executions "The configured timeout was reached"), then the cron was **PAUSED** (last
+      executions 08-11T15:40, "Cancelled by user"). Live job config today = 16Gi/4cpu/1800s (bumped live 2026-08-10 —
+      drift vs terraform 8Gi/2/900); cron scheduler = **PAUSED** `0 * * * *` (drift vs terraform `*/5 * * * *`). The
+      `exit-code-last-run.json` sentinel being stale since 08-10T05:41Z is because **the cron is paused**, not OOM.
+      Repo: deployment-service.
+- [ ] [SCRIPT] P1. Backport the ALREADY-LIVE 16Gi/cpu4/1800s config on `data_pipeline_exit_code_monitor_job` into
+      `terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf` (live job was bumped 2026-08-10 as an emergency fix;
+      terraform still reads 8Gi/cpu2/900 — pure IaC-vs-live drift). The OOM justification is DISPROVEN (see todo 1); the
+      real fix for the sweep being unable to finish is the parallelization todo in
+      `/plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`. This drift backport is bookkeeping
+      on the existing live config, not a new bump. Ship via `quality-gates.sh` → `quickmerge.sh --agent --files`. Repo:
+      deployment-service.
+- [ ] [SCRIPT] P2. **GATED on the cron being resumed** — live-verify the sentinel advances only once
+      `uts-prod-dp-exit-code-monitor-cron` is re-ENABLED; it is currently **PAUSED** (last execution 08-11T15:40), so
+      the sentinel is stale by definition of the cron not running. Verification target:
+      `vm-census/exit-code-last-run.json` advances on schedule for ≥3 consecutive cycles after resume, with no
+      `"signal     9"` entries. NOTE: before resuming, confirm the pause was deliberate (likely operator action to stop
+      the 08-10 alert storm while the overlap fix lands) — do NOT resume blind. Repo: deployment-service.
 - [ ] [SCRIPT] P2. Cross-check `#data-pipeline-alerts` for `DP_CRON_DID_NOT_FIRE::vm-census/exit-code-last-run.json`
-      during the stale window, confirming the meta-watchers' own cron-freshness detection correctly caught this (or, if
-      it didn't, treat that as a second finding).
+      during the stale/paused window, confirming the meta-watchers' own cron-freshness detection correctly caught this
+      (or, if it didn't, treat that as a second finding). **NOTE 2026-08-13**: meta-watchers is itself currently
+      OOM-killing every `*/15` run at 32Gi (`dp_meta_watchers_oom_at_32gi_2026_08_13.md`) and may never reach
+      `check_monitor_crons_fired` — so a missing `DP_CRON_DID_NOT_FIRE` may mean the cross-check never ran, not that the
+      detection is broken.
 
 ## Progress Log
+
+- 2026-08-13 (slot 18, infra): Confirmed via Cloud Logging history (todo 1) that the exit-code monitor is **NOT**
+  OOM-crash-looping — zero signal-9 events attributed to it in 30 days; 08-09 signal-9s were
+  `uts-shared-deployment-api-*`; it ran 288 successful ~1-min sweeps on 08-09. Real failure modes: sweep-overlap
+  (sibling doc, P1 parallelize todo), then timeouts, then cron **PAUSED** (08-11T15:40). Discovered the exit-code cron
+  is currently PAUSED + drifted live config (16Gi/4/1800 vs tf 8Gi/2/900) + a separate LIVE incident: `dp-meta-watchers`
+  OOM-killing every `*/15` run at 32Gi today — filed as `dp_meta_watchers_oom_at_32gi_2026_08_13.md`.
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
