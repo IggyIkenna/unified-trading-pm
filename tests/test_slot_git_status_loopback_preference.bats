@@ -155,7 +155,17 @@ _resolve_token() { # $1 = IS_LOOPBACK (0|1)
     # /api/slots/.../git-status route on it, so it just answers 200 for anything —
     # good enough to prove the request is sent WITHOUT crashing on an empty header
     # and that curl doesn't error building the command).
-    run bash -c '
+    #
+    # LOOPBACK_ORCH_URL must ALSO point at the fake server, set BEFORE sourcing (unlike
+    # the ORCH_URL override below, which only takes effect after the source-time probe
+    # already ran). Without it, the reporter's own startup probe (slot-git-status-report.sh
+    # line ~130) checks its DEFAULT http://localhost:8765/api/healthz instead. On the real
+    # orchestrator VM that default happens to answer (a live server on :8765), which
+    # papered over this bug there — but on a plain GH Actions runner nothing listens on
+    # :8765, so IS_LOOPBACK stayed 0, resolve_token_for_slot then required a real token
+    # (none exists in CI) and post_snapshot returned early via "[skip:no-token]" without
+    # ever POSTing — confirmed root cause of the 2026-08-13 quality-gates-v2 failure.
+    LOOPBACK_ORCH_URL="http://127.0.0.1:${HEALTH_PORT}" run bash -c '
         source "'"${REPORTER_ABS}"'" --workspace "'"${EMPTY_WS}"'" --quiet
         ORCH_URL="http://127.0.0.1:'"${HEALTH_PORT}"'"
         post_snapshot 99 "$(printf "repo\tmain\tclean\t0\t0\t0\tabc123\tlive-defi-rollout\t\t\t\n")"

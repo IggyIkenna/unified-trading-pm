@@ -79,12 +79,20 @@ teardown() {
     [ -n "${TMUX_TMPDIR:-}" ] && rm -rf "${TMUX_TMPDIR}" 2>/dev/null || true
 }
 
-# Portable mtime-as-epoch-seconds (2026-08-09: `stat -c %Y` is GNU-only and fails with
-# "illegal option -- c" on macOS BSD stat -- the production script under test here
-# (slot-git-status-report.sh) already has this exact fallback as stat_mtime_epoch(); this
-# test-local copy mirrors it rather than sourcing the reporter script for just this helper).
+# Portable mtime-as-epoch-seconds. GNU (`stat -c %Y`) MUST be tried first: on GNU
+# coreutils (every CI runner + this repo's Linux hosts), `stat -f %m FILE` does NOT
+# fail cleanly -- GNU's `-f` means "file-system status", so it silently treats `%m`
+# as a second file operand, prints a multi-line filesystem-info block to STDOUT (not
+# stderr, so `2>/dev/null` cannot suppress it) for the real file, and only THEN exits
+# non-zero -- by which point `$(... || stat -c %Y ...)` has already captured both the
+# garbage block and the correct fallback value concatenated together, breaking every
+# `[ "$after" -gt "$before" ]` integer comparison below ("integer expression expected",
+# confirmed 2026-08-13 CI run). BSD stat lacks `-c` entirely and fails cleanly (usage
+# error, no stdout), so GNU-first / BSD-fallback is the only order that is safe on
+# both platforms -- mirrors the already-correct order in stat_mtime_epoch()
+# (slot-git-status-report.sh) and qg-common.sh's equivalent helper.
 _stat_mtime_epoch() {
-    stat -f %m "$1" 2>/dev/null || stat -c %Y "$1" 2>/dev/null || true
+    stat -c %Y "$1" 2>/dev/null || stat -f %m "$1" 2>/dev/null || true
 }
 
 _write_claim() {

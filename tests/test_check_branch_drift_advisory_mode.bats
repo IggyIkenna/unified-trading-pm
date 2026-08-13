@@ -61,7 +61,14 @@ setup() {
 
 @test "behind origin, DRIFT_GATE_ADVISORY unset: hard-blocks (the case this hook exists for)" {
   cd "${WORK}/repo"
-  run bash "$HOOK"
+  # The hook itself hard-exits 0 unconditionally whenever CI/GITHUB_ACTIONS is set
+  # (check-branch-drift.sh line 17, "Skipped in CI") -- and this bats suite runs
+  # INSIDE a GitHub Actions runner for the real quality-gates-v2 job, which exports
+  # both ambiently. Without neutralizing them here, this test exercises the CI
+  # early-exit branch instead of the hard-block logic it claims to test (confirmed
+  # 2026-08-13: status was 0, not 1, under quality-gates-v2). Scoped the same way
+  # DRIFT_GATE_ADVISORY is scoped below -- only this invocation, not the whole shell.
+  CI= GITHUB_ACTIONS= run bash "$HOOK"
   [ "$status" -eq 1 ]
   [[ "$output" == *"BRANCH DRIFT"* ]]
   [[ "$output" == *"Human-only"* ]]
@@ -69,7 +76,8 @@ setup() {
 
 @test "behind origin, DRIFT_GATE_ADVISORY=1: warns and exits 0 (reconciling wrapper's own commit)" {
   cd "${WORK}/repo"
-  DRIFT_GATE_ADVISORY=1 run bash "$HOOK"
+  # See the CI-neutralization note on the previous test -- same reason needed here.
+  CI= GITHUB_ACTIONS= DRIFT_GATE_ADVISORY=1 run bash "$HOOK"
   [ "$status" -eq 0 ]
   [[ "$output" == *"ADVISORY"* ]]
 }
