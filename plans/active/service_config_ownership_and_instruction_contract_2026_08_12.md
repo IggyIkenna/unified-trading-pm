@@ -304,13 +304,25 @@ order actually fills against.
 
 ### Where the operator's sub-candle idea is still the right answer
 
-- [ ] [OPERATOR] P1. **Decide whether to build a sub-candle VWAP fill for cells that have finer candles but NO
-      book-summary columns.** `CandleBookColsMatcher` needs `BOOK_SUMMARY_COLUMNS` precomputed on the candle; where
-      those do not exist the cell falls back to `OHLC_BAR`, which is the naive tier. The operator's construction — fill
-      a 15m bar using the 15 one-minute candles inside it, VWAP'd and capped at a max share per sub-candle — is a
-      genuine third option **between** those two rungs, and nothing implements it (no sub-candle logic exists anywhere
-      in `matching_engine/`). Worth scoping only for cells where finer candles exist and book columns do not; measure
-      that population first.
+- [ ] [AGENT] P0. **DECIDED 2026-08-12 — build the sub-candle rung as a graded fallback, not a binary.** Operator:
+      _"some things won't have that as they never had tick data, so needs to handle both cases … it's making smarter
+      fallbacks, and only if no more granular candles to do the fallback then another fallback to the more basic version
+      is fine."_ The ladder becomes **book-columns → sub-candle VWAP → OHLC bar**, each rung used only when the one
+      above has no data. `CandleBookColsMatcher` needs `BOOK_SUMMARY_COLUMNS` precomputed on the candle, and cells that
+      never had tick data can never have them — today those drop straight to the naive tier, which is the gap. Nothing
+      sub-candle exists anywhere in `matching_engine/`. **The insertion is architecturally clean**:
+      `execution_fidelity(asset_group, venue, instrument_type, mode)` resolves the data-supported tier **declaratively
+      from the cell's MVP data_types in `MVP_SCOPE`** — not by probing storage — so "has 1m candles, lacks book columns"
+      is expressible as a decision-table rule. `clamp_tier()` already only ever clamps DOWN, so a new rung cannot
+      silently upgrade anything. **Two cautions for the implementer.** (1) `_TIER_RANK` is integer-ranked
+      `OHLC_BAR: 1 / CANDLE_BOOK_COLS: 2 /     L2_TICK: 3`; inserting between 1 and 2 means renumbering, which touches
+      every clamp comparison and any persisted tier value — prefer widening the scale over shifting existing numbers.
+      (2) Preserve the existing fail-loud guard: a cell not in `MVP_SCOPE` raises rather than degrading, because
+      "execution must never silently fall back to OHLC for a venue/instrument_type that is not even in the capture
+      universe" — the new rung must not become a soft landing for cells that should still raise.
+- [ ] [AGENT] P1. **Measure the population the new rung serves** — cells with finer candles but no book-summary columns
+      — so the build is sized against real coverage rather than assumed need. This informs, but no longer gates, the
+      work above.
 - [ ] [AGENT] P1. **If it is built, carry PB.8's correction — a share of candle VOLUME over-counts fillable volume.**
       `e2e-testing/scripts/paper_trading/_aggtrades_fidelity.py` (PB.8) already measured this against real Binance
       aggTrades: a resting maker only fills against trades that hit its level **on the filling side** (for a resting BUY
