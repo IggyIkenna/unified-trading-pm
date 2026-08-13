@@ -104,8 +104,9 @@ escalation.
       checkpoint if available (prior run `mdps-cefi-2021-20260810-052119` was killed mid-run at 2021-01-04, no terminal
       `EXIT_STATUS` — confirmed false-positive SILENT classification; real candle data already in GCS). Repo:
       deployment-service. **Shipped 2026-08-13** — VM `mdps-cefi-2021-20260813-173906` (e2-highmem-8 SPOT, 250GB,
-      full-year window) RUNNING; MDPS `process` is idempotent (skips dates with existing candles) so the relaunch
-      resumes from where the killed run stopped. Evidence:
+      full-year window) launched RUNNING, then **preempted 63s later (10:40:13, boot phase — nothing lost, MDPS
+      idempotent)**; relaunched as `mdps-cefi-2021-20260813-174236`, RUNNING. MDPS `process` is idempotent (skips dates
+      with existing candles) so the relaunch resumes from where the killed run stopped. Evidence:
       `gcloud compute instances list --filter="name~mdps-cefi-2021"` → RUNNING.
 
 ## Progress Log
@@ -122,3 +123,9 @@ escalation.
   SPOT + 250GB disk. Launched `launch-mdps-sharded-backfill.sh cefi --year 2021` → VM `mdps-cefi-2021-20260813-173906`
   RUNNING. MDPS `process` is idempotent (skips dates with existing candles) so the full-year relaunch resumes from the
   killed run's checkpoint (2021-01-04). Progress verification in-flight (run.log/heartbeat poll).
+- 2026-08-13 (same task, follow-up): First launch `mdps-cefi-2021-20260813-173906` was **SPOT-preempted at 10:40:13 UTC
+  (63s after insert — still in boot/tarball phase, no run.log written, zero work lost)**; `compute.instances.preempted`
+  systemevent + `--instance-termination-action=DELETE` auto-deleted it. This is the known
+  `cefi_track2_backfill_vm_preempted_no_recovery` class — the cefi sharded backfill launcher has no auto-relaunch, so
+  manual relaunch required. Relaunched as `mdps-cefi-2021-20260813-174236` (10:42:39 UTC), RUNNING alongside healthy
+  siblings (2022/2023/2024/2025). Progress verification continues on the new VM.
