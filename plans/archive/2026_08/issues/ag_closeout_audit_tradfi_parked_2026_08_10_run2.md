@@ -1,26 +1,27 @@
 ---
 doc_type: issue
-title: ag-closeout-audit tradfi parked findings 2026-08-10
+title: "ag-closeout-audit tradfi parked findings 2026-08-10 (Round 2, slot-24)"
 summary: >-
   Phase 0-2 audit of 27 tradfi-primary candidates (from 81 tradfi-tagged docs, 29 covering-plan + 25 multi-AG excluded).
   No batch13 draft warranted — genuinely orphaned docs are all operator-gated or conflicted. Phase 3 skipped.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: [ag-closeout-audit, tradfi, parked, orphan-audit]
+tags: [ag-closeout-audit, tradfi, parked, orphan-audit, round-2]
 related:
   - /plans/active/tradfi_consolidated_closeout_2026_07_18.md
-  - /plans/active/tradfi_satellite_ao_dispatch_batch11_2026_08_10.md
-  - /plans/active/tradfi_satellite_ao_dispatch_batch12_2026_08_10.md
+  - /plans/archive/2026_08/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md
+  - /plans/archive/2026_08/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md
 created: "2026-08-10"
 author: slot-24 (ag_closeout_auditor)
 priority: P3
 parent_epic: tradfi_master
 source: ag-closeout-audit tradfi Phase 0-2 2026-08-10 (dispatch agt-ab2792, slot-24)
 resolved_by:
+  safe_doc_push_isolation_drops_rename_deletions_2026_08_10 last todo — slug-collision reconciliation 2026-08-11
 locked_by:
 assigned_vm: NA
 execution_scope: local-only
@@ -28,7 +29,17 @@ drift_direction: advance-code
 depends_on: []
 ---
 
-# ag-closeout-audit tradfi — parked findings 2026-08-10
+> **📦 ARCHIVED 2026-08-11 (\_run2)** — this is Round 2 of the same-date tradfi closeout audit: an independent report
+> (slot-24, dispatch agt-ab2792) that landed at the SAME slug as the already-archived Round 1 report
+> (`ag_closeout_audit_tradfi_parked_2026_08_10.md`, built up across the day by slots 26/25/22), because the skill's
+> pre-write archive check didn't exist yet at authoring time (fixed `unified-trading-pm@ced0ff96b9`). Both rounds are
+> independently resolved — 0 open todos here, findings are informational only. Renamed off the colliding slug rather
+> than merged: the two reports audit disjoint candidate sets with no batchable follow-up in either, so there is nothing
+> to reconcile beyond giving each its own path. See
+> `/plans/archive/2026_08/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md` § "Full sweep" for the
+> reconciliation record (this was one of the "3 pairs" left on `ALLOWED_DUPLICATE_STEMS`).
+
+# ag-closeout-audit tradfi — parked findings 2026-08-10 (Round 2, slot-24)
 
 ## Resolved this run (mechanical fixes, shipped in-run)
 
@@ -86,7 +97,7 @@ are already `status: active` per the skill's Phase 3 rule). This unblocks 4 docs
 - ~~`plan_reconciler_findings_2026_08_06.md` — locked_by: plan_reconciler (run in progress).~~ **RESOLVED 2026-08-10**:
   `[unlock-plan]` granted by direct operator ruling; lock was stale (the run that set it had ended, 0 open todos).
   Archived, and the stale duplicate left at `plans/active/issues/` deleted. See
-  `/plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md` § "Full sweep".
+  `/plans/archive/2026_08/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md` § "Full sweep".
 - ~~`plan_reconciler_findings_tradfi_2026_08_09.md` — locked_by: plan_reconciler (agt-642862).~~ **RESOLVED
   2026-08-10**: same ruling, same disposition.
 - `tradfi_backfill_oom_remediation_2026_06_24.md` — 0 open, 12 done. locked_by: live-defi-rollout.

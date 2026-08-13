@@ -60,15 +60,13 @@ PM_DIR = Path(__file__).resolve().parents[2]
 # are only ever REMOVED (when the pair is genuinely reconciled), never added: if you are about to
 # add one, you are papering over a fresh create-only archival instead of fixing it.
 #
-# Per-pair verdicts and the reconciliation plan live in
-# plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md § "Full sweep".
+# Per-pair verdicts and the reconciliation record live in
+# plans/archive/2026_08/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md § "Full sweep".
+# The 3 ag_closeout_audit_{cefi,prediction,tradfi}_parked_2026_08_10.md pairs that lived here were
+# reconciled 2026-08-11 (cefi had no live active copy; prediction/tradfi active copies were split onto
+# distinct _run2 archive slugs) — this ratchet stays at just the intentional INDEX.md pair.
 ALLOWED_DUPLICATE_STEMS: frozenset[str] = frozenset(
     {
-        # Active copy is a NEWER, independently-authored /ag-closeout-audit report written at a slug
-        # that had already been archived; neither side is a stale copy of the other.
-        "ag_closeout_audit_cefi_parked_2026_08_10.md",
-        "ag_closeout_audit_prediction_parked_2026_08_10.md",
-        "ag_closeout_audit_tradfi_parked_2026_08_10.md",
         # An archived snapshot of the generated active-plan index; both copies are intentional.
         "INDEX.md",
     }

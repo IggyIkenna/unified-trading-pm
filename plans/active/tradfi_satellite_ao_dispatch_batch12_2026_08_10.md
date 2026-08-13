@@ -5,15 +5,16 @@ title:
   dispatch agt-a19d1f)
 summary: >-
   Satellite-batch extraction mirroring /ag-closeout-audit's pattern. This is the THIRD same-day tradfi tranche dispatch
-  (slot 26 all-mode → slot 25 sharded, both already parked in `ag_closeout_audit_tradfi_parked_2026_08_10.md`; this is
-  slot-22/dispatch agt-a19d1f). Rather than re-running the full 52-agent Phase 1 fan-out slot-25 already completed 4
-  hours prior (near-certain duplicate given almost nothing in the corpus changed in that window), this pass re-ran Phase
-  0.3's candidate generator fresh (55 candidates now vs. 52 then — the delta is 3 newly-tagged/newly-created docs, not a
-  re-scope) and diffed it against every one of the 17 currently-active tradfi covering docs' actual cited-doc text (not
-  just batch11's summary claim) to find anything genuinely uncited anywhere. Of 5 "never-cited" hits, 2 were already
-  fully triaged (in `ag_closeout_audit_tradfi_parked_2026_08_10.md` findings 1+4), 1 is correctly out-of-scope
-  (`dp_cron_did_not_fire_false_positive_burst_2026_08_10.md`, 5-tranche cross-cutting doc owned by `infra` per
-  `parent_epic: infrastructure_master`), 1 is operator-gated and already independently triaged by the CONCURRENT
+  (slot 26 all-mode → slot 25 sharded, both already parked in
+  `/plans/archive/2026_08/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md`; this is slot-22/dispatch agt-a19d1f).
+  Rather than re-running the full 52-agent Phase 1 fan-out slot-25 already completed 4 hours prior (near-certain
+  duplicate given almost nothing in the corpus changed in that window), this pass re-ran Phase 0.3's candidate generator
+  fresh (55 candidates now vs. 52 then — the delta is 3 newly-tagged/newly-created docs, not a re-scope) and diffed it
+  against every one of the 17 currently-active tradfi covering docs' actual cited-doc text (not just batch11's summary
+  claim) to find anything genuinely uncited anywhere. Of 5 "never-cited" hits, 2 were already fully triaged (in
+  `/plans/archive/2026_08/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md` findings 1+4), 1 is correctly
+  out-of-scope (`dp_cron_did_not_fire_false_positive_burst_2026_08_10.md`, 5-tranche cross-cutting doc owned by `infra`
+  per `parent_epic: infrastructure_master`), 1 is operator-gated and already independently triaged by the CONCURRENT
   cross-cutting tranche's own audit 10 minutes after slot-25's snapshot
   (`databento_ice_opra_subscription_ask_2026_08_09.md`, retagged `cross-cutting`→`tradfi` at
   `unified-trading-pm@ca9dd1cdac`, i.e. genuinely didn't exist as a tradfi candidate at slot-25's snapshot time — not a
@@ -32,7 +33,7 @@ related:
     /plans/active/issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch11_2026_08_10.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch11_2026_08_10_finalize.md,
-    /plans/active/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/02-data/honest-absence-downstream-handling.md,
   ]
@@ -63,7 +64,7 @@ source: >-
   the fresh never-cited set against slot-25's batch11 Deferred/Flagged text (read in full) and the existing same-day
   parked-findings doc to isolate genuinely new gaps. Only this one doc survived that diff as a real, unaddressed,
   AO-eligible orphan. Full methodology + the other 4 never-cited docs' disposition recorded in
-  `ag_closeout_audit_tradfi_parked_2026_08_10.md` (appended this pass).
+  `/plans/archive/2026_08/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md` (appended this pass).
 assigned_role: data_engineering
 effort: high
 sequential: false
@@ -122,8 +123,9 @@ venue-availability preflight gate) — no overlap.
 
 ## Not extracted this batch — the other 4 "never-cited" hits, and why
 
-- `issues/plan_reconciler_findings_2026_08_06.md` — already triaged (`ag_closeout_audit_tradfi_parked_2026_08_10.md`
-  finding 1: `archivable_now`-by-content but `locked_by`-blocked, `[OPERATOR]` todo already filed there). Not re-parked.
+- `issues/plan_reconciler_findings_2026_08_06.md` — already triaged
+  (`/plans/archive/2026_08/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md` finding 1: `archivable_now`-by-content
+  but `locked_by`-blocked, `[OPERATOR]` todo already filed there). Not re-parked.
 - `issues/plan_reconciler_findings_tradfi_2026_08_09.md` — already triaged (same parked doc, finding 4: stalled/
   abandoned `/plan-reconcile` run, `[OPERATOR]` todo already filed there). Not re-parked.
 - `issues/dp_cron_did_not_fire_false_positive_burst_2026_08_10.md` —
@@ -147,4 +149,4 @@ venue-availability preflight gate) — no overlap.
   1 conflict-clear item (2 todos) extracted from the 1 genuine gap found in slot-25's 4-hours-prior 52-candidate
   snapshot. Full same-day methodology (why a fresh 52-agent Phase 1 fan-out was NOT re-run, and how the gap was found
   instead) recorded in this pass's Phase 2 report and cross-referenced in
-  `ag_closeout_audit_tradfi_parked_2026_08_10.md`.
+  `/plans/archive/2026_08/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md`.

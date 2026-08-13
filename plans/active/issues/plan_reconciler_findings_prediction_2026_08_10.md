@@ -14,7 +14,11 @@ scope: [engineer, admin]
 tags: [role, plan_reconciler, reconciliation, plan-hygiene, prediction, sharded-run]
 related:
   [
+<<<<<<< HEAD
     /plans/archive/2026_08/issues/ag_closeout_audit_prediction_parked_2026_08_10_r2.md,
+=======
+    /plans/archive/2026_08/issues/ag_closeout_audit_prediction_parked_2026_08_10_run2.md,
+>>>>>>> 86f944c931 (docs(plans): reconcile last 3 ALLOWED_DUPLICATE_STEMS pairs — cefi/prediction/tradfi ag_closeout_audit slug collisions)
     /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
   ]
@@ -98,8 +102,9 @@ application (see Filed).
   equivalents `94f3ee11`/`15ed3104`/`76ee728` verified ancestors). Same pattern for pre-rebase citations
   (`e2e-testing@371ac1b`→`92d9a5d`, `is@afdb1ad6`→`fb474360`, `is@1fa9177f`→`511c4f0a`) across grace docs. Routed — the
   batch6_finalize's own reconcile todo 1 is the designated fixer; not false-progress (content IS shipped).
-- **`ag_closeout_audit_prediction_parked_2026_08_10.md` (P3, GRACE — not fixed)** — `:66` says batch10 archived
-  complete, `:160` calls batch10 "the live dispatch surface" (stale). Routed.
+- **`/plans/archive/2026_08/issues/ag_closeout_audit_prediction_parked_2026_08_10_run2.md` (P3, GRACE — not fixed;
+  renamed off its original slug-collision path 2026-08-11, line numbers below updated to match)** — `:75` says batch10
+  archived complete, `:172` calls batch10 "the live dispatch surface" (stale). Routed.
 - **`predictions_ml_walk_forward_and_arb_2026_06_20.md` (P3, GRACE — not fixed)** — `:150` cites
   `/codex/02-data/availability-manifest-and-data-status.md` line 1054 for the coverage formula; it is now at line 1136
   (text byte-identical). P3e line-anchor drift. Routed.

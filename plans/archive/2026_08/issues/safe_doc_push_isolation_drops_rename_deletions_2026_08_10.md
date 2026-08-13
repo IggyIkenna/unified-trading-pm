@@ -17,7 +17,7 @@ summary: >-
   copy — the run prints `isolation: named file not present in caller tree, skipping copy: <path>` and the deletion is
   dropped. So the documented-safe path is now create-only for ANY rename, and the SSOT's advice is actively wrong under
   the new default.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -33,7 +33,7 @@ related:
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-10"
-last_updated: "2026-08-10"
+last_updated: "2026-08-11"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -48,7 +48,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: slot-26 2026-08-11 — last todo (3-pair slug-collision reconciliation) closed, 0 open todos remain
 depends_on: []
 context_scope:
   [
@@ -60,6 +60,12 @@ source: >-
   Found during the 2026-08-10 autonomous ag-closeout close-out (slot 1) while verifying commit `8ac88720e6` against
   origin rather than trusting the ship script's exit code. `git show --name-status` showed 17 `A` and zero `D`.
 ---
+
+> **📦 ARCHIVED 2026-08-11** — all todos done, 0 open remain. The core defect (isolated mode dropping rename deletions +
+> reporting false success on a no-op push) was fixed across several sessions 2026-08-10
+> (`18ae9a4312`/`37bbd172be`/`91d559ee19`/`8e05ddfd9a`/`de262ff375`), and the resulting corpus-wide cleanup (the 10
+> duplicate pairs the bug produced, plus the 3 slug-collision pairs from the skill's own separate pre-fix recurrence) is
+> fully reconciled — see the sweep table and the final todo for the last 3 pairs. Archived per the 6-step ritual.
 
 # safe-doc-push isolated mode drops deletions → create-only archival commits
 
@@ -155,9 +161,10 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
       genuinely different reports and still need a per-doc merge decision — they stay on `ALLOWED_DUPLICATE_STEMS` until
       that happens — now tracked as the last [DOCS] P3 todo below, deliberately not bundled here.
 - [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-10 — `[unlock-plan]` GRANTED by direct operator ruling** (recorded in
-      `/plans/active/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md` § "Finding 3", where the ask was tracked; the
-      granted ruling is also stamped in each archived doc's banner). `plan_reconciler_findings_2026_08_06.md`
-      (`locked_by: plan_reconciler — run in progress`) and `plan_reconciler_findings_tradfi_2026_08_09.md`
+      `/plans/archive/2026_08/issues/ag_closeout_audit_tradfi_parked_2026_08_10_run2.md` § "Finding 3" — renamed off its
+      original slug-collision path 2026-08-11, where the ask was tracked; the granted ruling is also stamped in each
+      archived doc's banner). `plan_reconciler_findings_2026_08_06.md` (`locked_by: plan_reconciler — run in progress`)
+      and `plan_reconciler_findings_tradfi_2026_08_09.md`
       (`locked_by: plan_reconciler (agt-642862) since     2026-08-09T16:00:00Z`) each still carried their lock in the
       ACTIVE copy while an archived copy sat at `status: resolved` — so the archival had already been performed on the
       strength of an unlock nobody had issued. Both archived copies carried a banner asserting the `[unlock-plan]` had
@@ -182,17 +189,25 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
       the reverse direction of what this todo described: fix the archive copy's 2 refs, then delete the active copy.
       **Lesson**: a raw `diff` line count is not a measure of content divergence in a prose corpus that reflows — check
       `diff -w -B` before calling two documents different, or a reformat reads as 30 lines of lost work.
-- [ ] [DOCS] P3. **Reconcile the last 3 pairs — the `ag_closeout_audit_{cefi,prediction,tradfi}_parked_2026_08_10.md`
-      slug collisions.** These are the ONLY entries left on `ALLOWED_DUPLICATE_STEMS` besides the intentional
-      `INDEX.md`. Unlike the other seven, both sides here are REAL, independently-authored audit reports that happen to
-      share a slug: the archive copy is the earlier same-day run, the active copy a later one (cefi 61L vs 151L,
-      prediction 172L vs 115L, tradfi 95L vs 302L — note the size relationship is not consistent, so there is no "the
-      bigger one wins" shortcut). Verify with `diff -w -B` first (a raw `diff` overstates divergence here, per the todo
-      above). The RECURRENCE is already closed — the skill now checks `plans/archive/**` before writing a slug
-      (`unified-trading-pm@ced0ff96b9`) — so this is bounded cleanup of 3 existing docs, not an open-ended class. **Done
-      when**: each pair is either merged into one doc or split onto distinct slugs, both sides' findings are preserved
-      (neither run's findings may be dropped on the grounds that the other exists), referrers are repointed, and all 3
-      stems come off `ALLOWED_DUPLICATE_STEMS` leaving only `INDEX.md`.
+- [x] ✅ [DOCS] P3. **DONE 2026-08-11 — reconciled the last 3 pairs.** `cefi` needed no action: both rounds
+      (`ag_closeout_audit_cefi_parked_2026_08_10.md` + `..._r2.md`) were already independently archived with no live
+      active copy — the stem was just stale on the ratchet. `prediction` and `tradfi` were each split onto a distinct
+      `_run2` slug (`git mv` straight into `plans/archive/2026_08/issues/`, per the SKILL.md-sanctioned pattern — both
+      active copies carried 0 open checkboxes and no lock, so archiving-in-place rather than leaving a re-slugged doc in
+      `plans/active/` matches the cefi `_r2` precedent): `ag_closeout_audit_tradfi_parked_2026_08_10_run2.md` (was the
+      slot-24 active copy) and `ag_closeout_audit_prediction_parked_2026_08_10_run2.md` (was the slot-25 active copy).
+      Both `_run2` docs got an ARCHIVED banner citing the original (unrenamed) archived doc, `status: resolved`, and
+      `resolved_by` pointing at this todo — no findings from either side were dropped. Referrers repointed: 6
+      cross-references in `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` (content-verified as being about the
+      UNCHANGED 302-line archive doc, not the renamed one — confirmed via its "findings 1+4"/"appended this pass"
+      language, which only matches the 6-finding consolidated doc), 1 each in
+      `tradfi_satellite_ao_dispatch_batch11_     2026_08_10.md` and
+      `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` (same, unchanged archive path), 2 in
+      `plan_reconciler_findings_prediction_2026_08_10.md` (repointed to the new `_run2` path, including its `:66`/
+      `:160` line-anchor citations updated to `:75`/`:172` to match the banner-shifted line count), and this doc's own
+      todo-4 citation above. `ALLOWED_DUPLICATE_STEMS` shrunk to just `INDEX.md` in the same commit
+      (`scripts/plan-hygiene/check_create_only_archive_commits.py`). See the sweep table for the updated per-pair
+      verdicts.
 - [x] ✅ [SCRIPT] P2. **DONE 2026-08-10 — `unified-trading-pm@843df70447` (LDR, post-push ancestry verified; whole-tree
       re-gate green). Land the `ALLOWED_DUPLICATE_STEMS` 8→4 shrink** in
       `scripts/plan-hygiene/check_create_only_archive_commits.py` (drop `plan_reconciler_findings_2026_08_06.md`,
@@ -230,6 +245,19 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
   pairs; see the sweep table. **A caution for whoever picks up the 3 remaining todos**: the guard is now the corpus's
   only mechanical duplicate detector, and its `ALLOWED_DUPLICATE_STEMS` ratchet is the ONLY record that those 7 pairs
   are known-and-triaged rather than unnoticed. Removing a stem without actually reconciling the pair re-hides it.
+- **slot-26 2026-08-11 (todo 6, SHIPPED — last open todo, doc archived)**: Reconciled the final 3
+  `ALLOWED_DUPLICATE_STEMS` pairs. `cefi` needed no file changes (both rounds already independently archived, no live
+  active copy — the stem was simply stale). `tradfi` and `prediction` active copies were `git mv`'d straight into
+  `plans/archive/2026_08/issues/` under a distinct `_run2` slug (0 open checkboxes, unlocked, mirroring the cefi `_r2`
+  precedent rather than leaving a re-slugged doc in `plans/active/`), each with an ARCHIVED banner citing the original
+  archived doc it collided with. 9 referrer citations across 4 docs repointed for tradfi (content-verified per-citation
+  against which of the two docs each one actually meant — 6 of them, in
+  `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md`, turned out to cite the UNCHANGED 302-line archive doc, not the
+  renamed slot-24 copy, confirmed via "findings 1+4"/"appended this pass" language that only the 6-finding consolidated
+  doc has); 2 referrer citations repointed for prediction (including a line-anchor citation `:66`/`:160` → `:75`/`:172`
+  shifted by the banner insertion). `ALLOWED_DUPLICATE_STEMS` shrunk to just `INDEX.md`. With 0 open todos and unlocked,
+  this doc is archived in the same commit per the single-repo same-commit flip+archival sanction (RULES.md § 2); 6
+  corpus referrers to this doc's own path swept to the archive path.
 - **slot-1 2026-08-10 (ship log — two blockers hit, both worth knowing before the next attempt)**. The guard landed as
   `unified-trading-pm@689e10d281` only on the THIRD quickmerge attempt, and neither earlier failure was in the change:
   (a) **timing** — `❌ Quality gates must complete in <600s (took 724s work + 814s governor queue-wait = 1538s wall)`;
@@ -253,18 +281,18 @@ a mirrored path (`plans/archive/issues/` ↔ `plans/active/issues/`). Real archi
 mirrored-path assumption was blind to the majority of the corpus. Re-running the sweep by **basename across every
 `plans/archive/**` subdirectory** found 10:
 
-| pair (basename)                                              | verdict                                                                                           |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md`          | **RECONCILED** — active strictly stale (2 open todos are `[x]`+evidence in archive); deleted      |
-| `tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md` | **RECONCILED** — same shape, 3 stale open todos; deleted                                          |
-| `promote_ref_orphaned_on_manual_pr_close_2026_08_06.md`      | **INTENDED** — active is a documented redirect stub (`title: MOVED —`, `status: blocked`)         |
-| `plan_reconciler_findings_2026_08_06.md`                     | **RECONCILED** — `[unlock-plan]` granted 2026-08-10; lost `related:` ref restored, active deleted |
-| `plan_reconciler_findings_tradfi_2026_08_09.md`              | **RECONCILED** — `[unlock-plan]` granted 2026-08-10; active deleted                               |
-| `ag_closeout_audit_cefi_parked_2026_08_10.md`                | **SKILL DEFECT** — active is a NEWER, independent audit report re-created at an archived slug     |
-| `ag_closeout_audit_prediction_parked_2026_08_10.md`          | **SKILL DEFECT** — same                                                                           |
-| `ag_closeout_audit_tradfi_parked_2026_08_10.md`              | **SKILL DEFECT** — same                                                                           |
-| `ao_satellite_ao_dispatch_batch2_2026_07_30.md`              | **RECONCILED** — NOT diverged; the 30 lines were reflowed table text. Archive superset; deleted   |
-| `infra_satellite_ao_dispatch_batch7_2026_08_04.md`           | **RECONCILED** — the ARCHIVE copy held the 2 stale refs; fixed there, then active deleted         |
+| pair (basename)                                              | verdict                                                                                                                                               |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md`          | **RECONCILED** — active strictly stale (2 open todos are `[x]`+evidence in archive); deleted                                                          |
+| `tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md` | **RECONCILED** — same shape, 3 stale open todos; deleted                                                                                              |
+| `promote_ref_orphaned_on_manual_pr_close_2026_08_06.md`      | **INTENDED** — active is a documented redirect stub (`title: MOVED —`, `status: blocked`)                                                             |
+| `plan_reconciler_findings_2026_08_06.md`                     | **RECONCILED** — `[unlock-plan]` granted 2026-08-10; lost `related:` ref restored, active deleted                                                     |
+| `plan_reconciler_findings_tradfi_2026_08_09.md`              | **RECONCILED** — `[unlock-plan]` granted 2026-08-10; active deleted                                                                                   |
+| `ag_closeout_audit_cefi_parked_2026_08_10.md`                | **RECONCILED 2026-08-11** — no live active copy existed (both rounds already independently archived as-is); stem was stale, dropped from the ratchet  |
+| `ag_closeout_audit_prediction_parked_2026_08_10.md`          | **RECONCILED 2026-08-11** — active copy `git mv`'d to a distinct `_run2` archive slug, banner cites the original; 2 referrers repointed               |
+| `ag_closeout_audit_tradfi_parked_2026_08_10.md`              | **RECONCILED 2026-08-11** — active copy `git mv`'d to a distinct `_run2` archive slug, banner cites the original; 9 referrers repointed across 4 docs |
+| `ao_satellite_ao_dispatch_batch2_2026_07_30.md`              | **RECONCILED** — NOT diverged; the 30 lines were reflowed table text. Archive superset; deleted                                                       |
+| `infra_satellite_ao_dispatch_batch7_2026_08_04.md`           | **RECONCILED** — the ARCHIVE copy held the 2 stale refs; fixed there, then active deleted                                                             |
 
 **Three lessons this sweep paid for, worth more than the pair count:**
 

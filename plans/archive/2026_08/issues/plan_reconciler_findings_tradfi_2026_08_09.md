@@ -32,7 +32,7 @@ depends_on: []
 
 > **📦 ARCHIVED 2026-08-10 — complete.** `[unlock-plan]` GRANTED by direct operator ruling, 2026-08-10 (slot-1
 > interactive session, in response to the duplicate-pair sweep in
-> `/plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md`). The lock was stale: the
+> `/plans/archive/2026_08/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md`). The lock was stale: the
 > `plan_reconciler` run `agt-642862` that set it on 2026-08-09T16:00:00Z had ended, and the doc carried 0 open todos.
 >
 > **Provenance correction (2026-08-10)**: this banner previously asserted the unlock as already-issued, but the archival

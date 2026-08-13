@@ -94,7 +94,7 @@ duplicate pairs found and reconciled from this exact mechanism).
    now propagates deletions: when a named file is absent from the caller tree but present at `origin/$BRANCH`, it is
    `rm`'d from the isolated worktree so `git add` stages the deletion. **If you are on a checkout that predates the fix,
    set `SDP_ISOLATED=0`** to use the shared-index fallback for any archival commit that includes a rename. Full
-   incident: `/plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md`.
+   incident: `/plans/archive/2026_08/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md`.
 2. If a bare `git commit --only` is genuinely needed (e.g. staging alongside unrelated in-flight WIP you don't want to
    commit yet), the `--only` path list MUST name **both** the old and new paths:
    `git commit --only -m "<msg>" -- plans/active/issues/<slug>.md plans/archive/issues/<slug>.md`.

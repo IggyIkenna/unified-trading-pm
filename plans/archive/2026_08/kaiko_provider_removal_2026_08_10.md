@@ -175,8 +175,8 @@ copy, which this plan's scope note explicitly excludes.
    mid-session. The size-budget rule says condense and migrate to codex, never raise — so the rule was tightened to 156
    B and its rationale moved to the codex SSOT. Final 40,936 B.
 3. **Filed the `safe-doc-push` defect rather than fixing it inline** —
-   `/plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md`, P1, 5 todos. It touches a
-   fleet-wide ship script every repo and agent depends on; under rule 11 that wants its own regression test and
+   `/plans/archive/2026_08/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md`, P1, 5 todos. It touches
+   a fleet-wide ship script every repo and agent depends on; under rule 11 that wants its own regression test and
    blast-radius check, not a patch buried in a docs close-out. This is the ONE thing consciously not completed here.
 
 ### Defects introduced by this session and caught before hand-off
