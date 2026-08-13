@@ -260,3 +260,15 @@ source: >-
   `regen_backlog_from_plan.py` derived an AO-dispatchable task from a checkbox that explicitly self-labels "not
   AO-eligible" — the same dispatch-scope pattern as the batch14 re-derivation thrash; a guard that skips checkboxes
   self-declaring non-AO-eligibility would stop this class.
+- **backend_engineer (slot 21) 2026-08-13, same dispatch
+  `strategy_archetype_latency_deployment_profile_execution- 73c2e13d68fc` — RE-CONFIRMED not-AO-eligible, skipped with
+  GATED, no code action.** Second re-dispatch of the same checkbox to a fresh slot (first was slot 7, 2026-08-12).
+  Independently re-verified against live state, not just reading the prior entry: `configs/runtime-topology.yaml`
+  `isolation_policies.*` still reads `default: shared` (gap 2 unresolved), `archetypes/vol-market-making.md` still
+  declares `min_sla_tier: premium` against the mapping's `distributed` (gap 3 unresolved), and no new commit touches
+  `RUNTIME_TOPOLOGY_DECISIONS.md` or `configs/runtime-topology.yaml` since `ab157b54a1` — no operator ruling has landed
+  on (3)/(4), and no todo in this plan carries the (2) isolation-policy fix. Same conclusion as slot 7: all three
+  require operator judgment, not a worker guess. **This confirms the flagged dispatch-scope guard gap is still live** —
+  two independent slots have now burned a dispatch cycle each on a checkbox that self-declares "not AO-eligible" in its
+  own text. Recommend the guard fix (skip checkboxes whose text contains "not AO-eligible" / "operator ruling" at
+  backlog-regen time) get prioritized ahead of a third recurrence.
