@@ -309,6 +309,23 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       unilaterally. Also worth noting when that pass happens: the weekly Tue/Wed cadence's own empirical basis predates
       the transfer-window-gated fetch pattern (May vs. August 2026) and may no longer hold now that PLAYER_VALUES only
       fetches on window/trigger dates rather than a broader weekly pattern — not verified either way here.
+- [ ] [VM] P3. **`/vm-preemption-billing-waste-audit` finding (2026-08-13)**: this launcher family
+      (`launch-sports-transfermarkt-2020-06-floor-backfill-vm.sh`) never writes a `PROGRESS.json` checkpoint to
+      `vm-logs/{vm}/` — confirmed absent across all 4 VMs launched this session. Deviates from the documented spot-VM
+      checkpoint contract (`/codex/05-infrastructure/spot-vms-for-backfill.md`). Recovery has worked so far via
+      manifest/master-table diffing (safe due to idempotent dedup keys), but a preemption mid-run has no cheap way to
+      know exactly where it stopped without a fresh manifest read. **Done when**: either a PROGRESS.json writer is added
+      to this launcher's Python entrypoint (mirroring the pattern other spot-VM backfills use), or this doc records an
+      explicit, cited exception for why manifest-diff recovery is sufficient for this family.
+- [ ] [VM] P3. **`/vm-resource-rightsizing-check` finding (2026-08-13)**:
+      `launch-sports-transfermarkt-2020-06-floor-backfill-vm.sh` line 203 provisions `e2-standard-4` (4 vCPU/16GB) with
+      no sizing rationale in the launcher's own comments. Real `deployment_operational_data.resource_samples` telemetry
+      across 4 VMs (incl. a full 16h12m PLAYER_VALUES run, 955 samples) shows avg CPU 0.8-6.5%, max CPU 23.3%, avg mem
+      ~10-11.5%, peak mem 15% (~2.4GB of 16GB) — the workload is entirely RapidAPI-latency-bound, never CPU-bound.
+      **Done when**: relaunched at `e2-medium` (2 vCPU/4GB — verified against GCP's custom-machine-type memory-per-vCPU
+      cap) on the next TRANSFER_RECORDS resume, with a fresh telemetry check confirming it still comfortably covers the
+      ~2.4GB peak + the shallow mem-growth trend documented in the Progress Log below. `CONCURRENCY=4` (line 68) is
+      hardcoded independent of machine type — no cascading change needed there.
 
 ## Progress Log
 
@@ -671,3 +688,34 @@ possibly a rename that ripples into UAC/manifest data_type naming.
   and the run.log for `PLAYER_VALUES PASS COMPLETE` / `Traceback` before relaunching TRANSFER_RECORDS for
   `ARGENTINA_PRIMERA,LIGA_3,SERIE_A` — given the current trajectory, a check in ~3-4 hours is more likely to find it
   terminal than an immediate re-poll.
+- **2026-08-13 (interactive session): 3rd TRANSFER_RECORDS resume attempt for `ARGENTINA_PRIMERA,LIGA_3,SERIE_A` failed
+  again — this time via preemption on top of the same persistent 502 pattern — plus a
+  `/vm-preemption-billing-waste-audit` + `/vm-resource-rightsizing-check` pass on the whole VM family.** Live curl test
+  of one club per league (`serie_a=506`, `liga_3=25439`, `argc=3524`) confirmed RapidAPI itself was healthy (clean
+  `200`s) before relaunch, ruling out a persistent per-league API problem. Relaunched clean
+  (`instr-backfill-sports-transfermarkt-20260813-113134`) but its run.log shows 100% HTTP 502 on `/clubs/squad` and
+  `/clubs/profile` for the entire lifetime (6 consecutive retry-exhaustion cycles, zero rows written, zero master-table
+  progress) before it was **preempted** at `2026-08-13T11:42:21Z`
+  (`gcloud compute operations list --filter="operationType=compute.instances.preempted"`; confirmed gone via
+  `gcloud compute instances list --filter="name~transfermarkt"` → 0 items). Root cause for the 3-league failure itself
+  remains an open question — RapidAPI-side degradation windows concentrated on these 3 leagues' club IDs is the leading
+  theory (supported by the direct-curl-succeeded evidence) but not proven; no relaunch attempted this session, pending
+  either a longer RapidAPI-stability wait or operator input given 3 consecutive failures.
+  - **Preemption/billing-waste audit finding**: none of the 4 relevant VMs this session (`...142238`, `...104937`,
+    `...181254`, `...113134`) have a `PROGRESS.json` checkpoint file under their `vm-logs/{vm}/` GCS prefix — only
+    `LAUNCH_PARAMS.json`, `WATCHDOG_TRACE.log`, `run.log`, and (terminal VMs only) `EXIT_STATUS`. This deviates from the
+    documented spot-VM checkpoint contract (`/codex/05-infrastructure/spot-vms-for-backfill.md`); recovery has so far
+    relied on manifest/master-table diffing instead of a checkpoint file, which has been safe (idempotent writes) but is
+    an undocumented deviation. Not fixed this session — needs either a PROGRESS.json writer added to this launcher
+    family or an explicit documented exception; leaving as an open todo below rather than fixing blind.
+  - **Rightsizing verdict: `e2-standard-4` (4 vCPU/16GB) is measurably over-provisioned** — real telemetry from
+    `central-element-323112.deployment_operational_data.resource_samples` (not just the last-10-sample deployment-record
+    window): `...181254` (PLAYER_VALUES, full 16h12m run, 955 samples) avg CPU 2.35% (~0.09 vCPU), max 23.3% (brief);
+    avg mem 11.53% (~1.85GB), max mem 15.0% (~2.4GB) with a shallow ~11.1%→11.96% hourly drift over the run (real but
+    slow, 14GB+ headroom remains — not a leak). `...142238`/`...104937`/`...113134` all show the same pattern (avg CPU
+    0.8-6.5%, avg mem ~10-10.5%, flat). Workload is entirely network/RapidAPI-latency-bound, never CPU-bound, even
+    across the 16h run. No sizing rationale found in the launcher's own comments — a real finding, not a re-litigation.
+    Recommend `e2-medium` (2 vCPU/4GB): comfortable headroom over the observed 2.4GB peak + drift, 2 vCPU covers the
+    rare spikes. `CONCURRENCY=4` (line 68) is hardcoded independent of machine type, so no cascading change needed. Not
+    applied this session — filed below as a todo, since a running-VM resize/relaunch needs a fresh launch anyway (SPOT
+    VMs don't support live resize).
