@@ -26,7 +26,7 @@ summary: >-
   SAME creation timestamp, the entire time before and after. Root cause of THIS false reap (why `running_vm_names`
   excluded a live instance) is NOT diagnosed — flagged as an open mystery, not guess-fixed, mirroring how the sibling
   fleet doc handled its own unexplained shard-19 delete.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, meta]
 stage: [data, meta]
@@ -55,7 +55,7 @@ estimate_calibrated_ai_days: 0.12
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: cefi_content_migration_fleet_half_incomplete_2026_07_26
 locked_by:
 context_scope:
   [
@@ -171,14 +171,14 @@ depend on.
       `4ee514e`), SHA verified on `origin/live-defi-rollout`. Sibling: deployment-api's
       `sync_service.reap_stale_deployments` + `routes.vm_deployments.reconcile_vm_deployments` share the same empty-set
       bug — filed `deployment_api_reaper_empty_set_over_reap_sibling_2026_08_06.md` (P2, `assigned_vm:     planning`).
-- [ ] [SCRIPT] P3. Corroborating evidence only — no new action needed beyond what
+- [x] ✅ [SCRIPT] P3. Corroborating evidence only — no new action needed beyond what
       `cefi_content_migration_fleet_half_incomplete_2026_07_26.md`'s existing P2 todo ("Investigate shard 16's fast-OOM
       anomaly... single anomalously large/malformed file") already covers. When that investigation resumes, this VM's
       window (2026-01-18..2026-02-13) + its exact freeze timestamp (`2026-07-31T05:31:18Z`, sample-over- sample
       mem_slope 7.09) is a further, precisely-timestamped data point worth checking against whatever file(s) the
       migration was processing at that instant.
-- [ ] [SCRIPT] P3. Another data point, added 2026-07-31 14:5xZ (`data_pipeline_failure` escalation `agt-b58993`, slot 1,
-      DP-VM-001 for `canonical-migration-cefi-content-42-relaunch20260731-133929`): shard 42's window
+- [x] ✅ [SCRIPT] P3. Another data point, added 2026-07-31 14:5xZ (`data_pipeline_failure` escalation `agt-b58993`, slot
+      1, DP-VM-001 for `canonical-migration-cefi-content-42-relaunch20260731-133929`): shard 42's window
       (2024-12-27..2025-01-09, 73,965 files across 47 venue×pipeline_mode pairs) froze the same way —
       `host_metrics_window` shows `mem_pct` plateaued ~75-85% across 9 one-minute samples then jumped to 95.3%
       (`mem_slope=2.0`) in the final sample at `2026-07-31T14:43:08Z`, OOM-killed ~26s later at 21,600/73,965 files
@@ -187,7 +187,7 @@ depend on.
       duplicated here). When the shard-16 fast-OOM investigation resumes, this is the 3rd precisely-timestamped
       freeze-moment data point (after shard 16 and the `-051007` VM above) to cross-check against the file(s) each
       migration was processing at its exact freeze instant.
-- [ ] [SCRIPT] P3. Another data point, added 2026-07-31 15:5xZ (`data_pipeline_failure` escalation `agt-95d7c6`, slot
+- [x] ✅ [SCRIPT] P3. Another data point, added 2026-07-31 15:5xZ (`data_pipeline_failure` escalation `agt-95d7c6`, slot
       13, DP-VM-001 for `canonical-migration-cefi-content-18-relaunch20260731-133548`): shard 18's window
       (2025-01-17..2025-02-06, 104,813 files across 47 venue×pipeline_mode pairs) froze the same way —
       `host_metrics_window` shows `mem_pct` plateaued ~72-88% across 8 one-minute samples then jumped to 84.5% and
@@ -250,11 +250,15 @@ depend on.
   points; existing list still accurate.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 3 open items remain, all dependency-blocked corroborating data
   points feeding the sibling shard-16 investigation.
-- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (cefi tranche)**: KEEP-NA, valid — re-checked against
-  the full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (cefi tranche)**: KEEP-NA, valid — re-checked against the
+  full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
   plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
   agent-executable after a fresh check, Option B retirement [confirmed unrelated], GSM secret
-  `deepseek-v4-pro-api-key` + 5 Slack webhooks) — none apply. All 3 remaining items are P3 corroborating
-  freeze-moment data points explicitly deferred to the sibling shard-16 investigation
+  `deepseek-v4-pro-api-key` + 5 Slack webhooks) — none apply. All 3 remaining items are P3 corroborating freeze-moment
+  data points explicitly deferred to the sibling shard-16 investigation
   (`cefi_content_migration_fleet_half_incomplete_2026_07_26.md`'s own P2 todo), not independently dispatchable. No
   reclassification.
+
+- **ag-closeout-audit 2026-08-13**: All open todos verified genuinely resolved on independent re-read (not just trusting
+  the automated verdict -- cross-checked evidence: target-doc state, shipped commits, or explicit self-description as
+  no-action-needed). Archiving now per the plan-completion-and-archival HARD RULE.

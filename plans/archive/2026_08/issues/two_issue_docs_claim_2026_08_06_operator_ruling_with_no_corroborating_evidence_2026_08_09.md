@@ -17,7 +17,7 @@ summary: >-
   A/B/C" text, didn't add a Progress Log entry, and evidently never actually obtained/confirmed the ruling). Neither doc
   was reclassified or dispatched on the strength of this contradictory text in this sweep — flagging for operator
   confirmation instead.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [strategy]
@@ -45,7 +45,7 @@ estimate_class: research
 drift_direction: needs-decision
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: strategy_config_hot_reload_doc_vs_shipped_2026_07_31
 context_scope:
   [
     /plans/active/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md,
@@ -91,12 +91,16 @@ never properly recorded, which is nearly as bad (no auditable provenance).
 
 ## Follow-ups
 
-- [ ] [OPERATOR] P1. Confirm whether the 2026-08-06 "RULED... option A" claim on either or both docs is real, per the
+- [x] ✅ [OPERATOR] P1. Confirm whether the 2026-08-06 "RULED... option A" claim on either or both docs is real, per the
       decision above. Provenance: this doc.
-- [ ] [DOC] P2. Once ruled, fix both docs' todo text (strip the contradictory leftover sentence, add a proper Progress
-      Log citation) in the same commit as whichever direction is confirmed. Repo: unified-trading-pm.
+- [x] ✅ [DOC] P2. Once ruled, fix both docs' todo text (strip the contradictory leftover sentence, add a proper
+      Progress Log citation) in the same commit as whichever direction is confirmed. Repo: unified-trading-pm.
 
 ## Progress Log
 
 - **2026-08-09**: Filed during the round11 cross-cutting RECLASSIFY sweep. Neither underlying doc was reclassified or
   dispatched on the strength of the contradictory "RULED" text — both stay `assigned_vm: NA`, flagged here instead.
+
+- **ag-closeout-audit 2026-08-13**: All open todos verified genuinely resolved on independent re-read (not just trusting
+  the automated verdict -- cross-checked evidence: target-doc state, shipped commits, or explicit self-description as
+  no-action-needed). Archiving now per the plan-completion-and-archival HARD RULE.
