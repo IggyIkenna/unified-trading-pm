@@ -129,14 +129,21 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       completed `_SCHEDULED_ROLES` (was missing escalation_queue_reconciler/ci_reconciler/
       data_pipeline_alerts_reconciler — same latent misclassification class). Tests: sweep-time stamping (present +
       None), lifetime + windowed kind-split, role-group pinning. quality-gates.sh green. (repo: agent-orchestrator)
-- [ ] [BACKEND] P1. **Repair the NULL-provenance rows, and stop claiming they self-heal.** $68.89 of $212.02 lifetime
-      (32%, 35,975 turns, recorded 2026-08-04..08-06) carries `is_review_slot IS NULL`, and $62.72 carries
+- [x] ✅ [BACKEND] P1. **Repair the NULL-provenance rows, and stop claiming they self-heal.** $68.89 of $212.02 lifetime
+      (32%, 35,975 turns, recorded 2026-08-04..08-06) carries `is_review_slot IS NULL`, and
+      $62.72 carries
       `slot_id IS NULL` — those land in `worker` BY DEFAULT, not by measurement. The code comment asserting they
       "self-correct as soon as that row's file is next re-parsed" was corrected in @b4e3e74205: the sweep skips any file
       whose `(mtime, size)` fingerprint is unchanged and a finished session's transcript never changes again, so they
-      are never re-parsed. **Done when**: the affected files' `ProcessedTranscriptRow` fingerprints are cleared, one
-      re-sweep repopulates both columns, and the NULL counts are re-measured and recorded here. (repo:
-      agent-orchestrator)
+      are never re-parsed. **Done 2026-08-13 — agent-orchestrator@002126cb32 + live repair executed.** Added
+      `scripts/orchestrator/repair_null_provenance.py` (clear affected files' `ProcessedTranscriptRow` fingerprints →
+      one `_sweep_account` re-parses them and re-stamps `slot_id` / `is_review_slot` / `agent_kind` from the current
+      slot enumeration + config snapshot; dry-run by default, `--apply` / `--sweep`; 5 tests, QG green). Ran it live on
+      the fleet DB with `ORCHESTRATOR_REVIEW_SLOTS` unset (so `is_review_slot` stamps match the live server's `{2}`
+      resolution, not this shell's `{1}`): **before** 31,947 NULL `slot_id` rows ($62.72)
+      / 35,975 NULL `is_review_slot` rows ($68.89) → **after 0 / 0** across both accounts (flash + pro), fingerprints
+      re-upserted so the repaired files are skipped again on later ticks. Also corrected the two remaining "self-healing
+      contract" docstring phrasings in `server/orm.py`. (repo: agent-orchestrator)
 - [ ] [BACKEND] P1. **Discover transcripts by GLOB instead of enumerating live slot rows.** `_sweep_account` iterates
       `ss.list_slots(db)` and constructs `orch-slot-{N}` names, so anything not in that list is invisible forever —
       confirmed live: `orch-slot-97`/`orch-slot-99` have transcripts on disk that are never read, and
@@ -398,6 +405,17 @@ Progress Log).
   LDR->main promotion pipeline is repo hygiene, not the AO deploy path.
 
 ## Progress Log
+
+- **2026-08-13** — Executed the NULL-provenance repair (the open P1 todo). Shipped
+  `scripts/orchestrator/repair_null_provenance.py` + 5 tests (agent-orchestrator@002126cb32, QG green: 3589 pytest / 319
+  vitest), then ran it live on the fleet DB (`--apply --sweep`, `ORCHESTRATOR_REVIEW_SLOTS` unset so `is_review_slot`
+  stamps match the live server's `{2}` default — this shell's env had `ORCHESTRATOR_REVIEW_SLOTS=1`, which would have
+  mis-stamped review against the wrong slot). All 631 affected transcript files (53 flash / 578 pro sessions) still
+  existed on disk under `orch-slot-{1..16}`. Cleared their fingerprints, one re-sweep per account repopulated both
+  columns: NULL `slot_id` 31,947 ($62.72) → **0**, NULL `is_review_slot` 35,975 ($68.89) → **0**, verified independently
+  against the live DB. Fingerprints re-upserted, so the repaired files are skipped again on later ticks (the "does not
+  self-heal" trap won't recur). Also corrected the last two "self-healing contract" docstring phrasings in
+  `server/orm.py`.
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
