@@ -116,8 +116,19 @@ bridges them; it does not extend one over the other.
 - [ ] [SCRIPT] P1. Inventory every buffered writer in the fleet that can hold un-flushed rows — grep for
       `StreamingParquetWriter`, `StreamingShardFinalizer`, and any local accumulation before a GCS write. This is Phase
       1's registration list. Repo: unified-trading-library.
-- [ ] [OPERATOR] P1. Reconcile the slot-4 `unified-trading-pm` checkout — 1-ahead (an automated `chore(orphan-wip)`
-      inherit commit) / 153-behind `origin/live-defi-rollout`, with dirty files owned by a LIVE peer session
+- [x] ✅ [SCRIPT] P1. Reconcile the slot-4 `unified-trading-pm` checkout. **DONE 2026-08-13 —
+      `unified-trading-pm@25b9869550`.** No longer BLOCKED-OPERATOR-DECISION, and the diagnosis below was incomplete:
+      the checkout was not merely ahead/behind, it was in **DETACHED HEAD with an interactive rebase interrupted 3.2
+      hours earlier** (`.git/rebase-merge` present, `stopped-sha` = the `chore(orphan-wip)` commit). That — not any
+      dirty file — is what blocked plan commits repo-wide, because a resolved file inside a stalled rebase unblocks
+      nothing. The "LIVE peer session" premise had also gone stale: measured no live process, no `.agent-claim`, and a
+      3.2h-idle rebase = a DEAD claim, which the liveness rule says to inherit. Completing the rebase reattached
+      `live-defi-rollout` and landed the orphan-WIP commit carrying BOTH preserved blobs (`d45a1bdc68` codex,
+      `0dcaf67834` plan) — so those are now tracked on origin and need no `git cat-file` restore. Six conflicts were
+      resolved on a measured criterion rather than preference: 4 where `ours` matched origin byte-for-byte and `theirs`
+      did not, 1 pure whitespace re-wrap, and 1 where `theirs` was the older version missing a completed entry. Every
+      discarded side was backed up first. Original text follows for provenance — it named the checkout as 1-ahead /
+      153-behind with dirty files owned by a LIVE peer session
       (`tradfi_databento_account_billing_suspended_2026_08_09.md`,
       `tradfi_manifest_content_recovery_completion_2026_07_24.md`, untracked
       `cefi_tardis_pre_listing_filter_wrong_gcs_path_always_404s_2026_08_12.md`, `slack-data-pipeline-alerts-2h.json`).
