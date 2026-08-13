@@ -103,11 +103,12 @@ escalation.
       `mdps-cefi-2021-*` sharded MDPS CeFi backfill (`launch-mdps-sharded-backfill.sh cefi --year 2021`), resuming from
       checkpoint if available (prior run `mdps-cefi-2021-20260810-052119` was killed mid-run at 2021-01-04, no terminal
       `EXIT_STATUS` — confirmed false-positive SILENT classification; real candle data already in GCS). Repo:
-      deployment-service. **Shipped 2026-08-13** — VM `mdps-cefi-2021-20260813-173906` (e2-highmem-8 SPOT, 250GB,
-      full-year window) launched RUNNING, then **preempted 63s later (10:40:13, boot phase — nothing lost, MDPS
-      idempotent)**; relaunched as `mdps-cefi-2021-20260813-174236`, RUNNING. MDPS `process` is idempotent (skips dates
-      with existing candles) so the relaunch resumes from where the killed run stopped. Evidence:
-      `gcloud compute instances list --filter="name~mdps-cefi-2021"` → RUNNING.
+      deployment-service. **Shipped 2026-08-13** — VM `mdps-cefi-2021-20260813-174738` (e2-highmem-8 **on-demand**
+      250GB, full-year window) RUNNING. Three consecutive SPOT launches preempted at ~60-70s (boot phase, zero work
+      lost; no auto-relaunch for this launcher — `cefi_track2_backfill_vm_preempted_no_recovery` class), so the shard
+      was launched `--on-demand` per the SPOT SSOT's escape hatch (wave genuinely cannot absorb preemption). MDPS
+      `process` is idempotent (skips dates with existing candles) so the relaunch resumes from where the killed run
+      stopped. Evidence: `gcloud compute instances list --filter="name~mdps-cefi-2021"` → RUNNING (STANDARD).
 
 ## Progress Log
 
@@ -129,3 +130,10 @@ escalation.
   `cefi_track2_backfill_vm_preempted_no_recovery` class — the cefi sharded backfill launcher has no auto-relaunch, so
   manual relaunch required. Relaunched as `mdps-cefi-2021-20260813-174236` (10:42:39 UTC), RUNNING alongside healthy
   siblings (2022/2023/2024/2025). Progress verification continues on the new VM.
+- 2026-08-13 (same task, follow-up 2): Second SPOT attempt `mdps-cefi-2021-20260813-174236` ALSO preempted at 10:43:33
+  UTC (54s after insert); third `mdps-cefi-2021-20260813-174503` also preempted at 10:46:17 UTC (71s). All boot-phase
+  (no run.log, zero work lost). Three consecutive SPOT reclaims in ~~5 min on e2-highmem-8 while 2022-2025 siblings stay
+  RUNNING = transient SPOT capacity squeeze; no auto-relaunch for this launcher. **Decision**: launched the bounded 2021
+  year-shard `--on-demand` → `mdps-cefi-2021-20260813-174738` (STANDARD, 10:47:42 UTC) — runbook SPOT escape hatch for a
+  wave that cannot absorb repeated preemption; one-year shard cost is bounded (~~$35-70). Progress verification
+  in-flight.
