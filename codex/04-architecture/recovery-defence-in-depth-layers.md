@@ -122,27 +122,31 @@ Wrapped existing safety actions (don't duplicate — wrap the entry point):
 
 ### Layer 1 — LLM recovery-audit-signoff agent
 
-> **⚠️ CODE-DRIFT (2026-07-16) — the Layer-1 PRODUCER is currently ABSENT; a rewire is planned (not retired).** The
-> automated recovery-audit-signoff _agent_ (the producer described below) was removed as collateral when the
-> agent-orchestrator `recovery-audit` **worker-role** was deleted in the AO agent-kind consolidation
-> (`agents/recovery-audit.md` gone, `server/prompts.py` `NEVER_LAUNCH=frozenset()`). The **consuming half of Layer-1
-> remains fully live**: alerting-service ingests signoffs at `POST /safety-ops/signoffs` and still acts on
-> `DISPUTE_AUTOMATED_ACTION`→SAFE_MODE / `ESCALATE_TO_HUMAN`→shortened-ack
-> (`alerting_service/gateway/gateway_state.py`), and the DART Safety-Ops verdict feed renders them (currently backed by
-> `_mock_signoffs()` — no real producer). **So no LLM audit-signoff is produced in real time today** — a wrong automated
-> recovery action is caught only at Layer-5 human audit-ack, not by an automated DISPUTE→SAFE_MODE trip. **Operator
-> decision 2026-07-16: re-home the producer as a standalone signoff agent (NOT an AO worker-role) — DEFERRED** behind
-> the in-flight AO dispatch-correctness work. Tracking:
-> `plans/active/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`. The description below is the INTENDED
-> (rewire-target) design, not current runtime.
+> **✅ PRODUCER REWIRED 2026-08-13 — the Layer-1 producer is now the standalone
+> `deployment-service/scripts/recovery/recovery_audit_signoff_producer.py`.** The AO `recovery-audit` **worker-role**
+> remains removed (correct AO-roster outcome — do NOT restore `agents/recovery-audit.md`). The standalone producer
+> consumes PubSub `agent-recovery-actions` (topic + `-sub` subscription provisioned in
+> `deployment-service/terraform/gcp/main.tf`) and POSTs `RecoveryAuditSignoff`s to the live alerting-service
+> `POST /safety-ops/signoffs` ingest. The **consuming half of Layer-1 is fully live**: alerting-service ingests signoffs
+>
+> - acts on `DISPUTE_AUTOMATED_ACTION`→SAFE_MODE / `ESCALATE_TO_HUMAN`→shortened-ack
+>   (`alerting_service/gateway/gateway_state.py`), and the DART Safety-Ops verdict feed renders them (real producer
+>   data; `_mock_signoffs()` only in `CLOUD_MOCK_MODE=true`). The producer's verdict is a **closed deterministic rule
+>   set** (FAILED/BLOCKED_BY_LOOP_DETECTOR/verification-incomplete → ESCALATE_TO_HUMAN; verified-success → APPROVED;
+>   success-no-verification → APPROVED_WITH_NOTES); it does NOT emit DISPUTE_AUTOMATED_ACTION (that judgment is left to
+>   a future LLM/human pass). Tracking: `plans/active/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`. The
+>   description below is the design contract.
 
 Design owner: `plans/archive/ai_recovery_audit_signoff_agent_2026_05_23.plan.md` (archived). Prior agent template
-`agent-orchestrator/agents/recovery-audit.md` (deleted) — the rewire will stand up a standalone producer, not restore
-the AO worker-role. Registered contract: `role: custom, label: recovery-audit-signoff`.
+`agent-orchestrator/agents/recovery-audit.md` (deleted) — superseded by the standalone producer (NOT an AO worker-role).
+Registered contract: `role: custom, label: recovery-audit-signoff`.
 
-Polls every 60s; subscribes to PubSub `agent-recovery-actions`; for each new AgentActionEvent fetches parent
-IncidentEnvelope + runbook + recovery_verification result; decides verdict; writes RecoveryAuditSignoff to GCS at
-`gs://<kill-switch-audit>/incidents/{date}/{key}/signoffs/{event_id}.json`.
+Polls PubSub `agent-recovery-actions` (via the `agent-recovery-actions-sub` subscription); for each terminal
+AgentActionEvent decides a deterministic verdict from the event payload (closed rule set — see the banner above) and
+POSTs the RecoveryAuditSignoff to the live alerting-service `POST /safety-ops/signoffs`, which records it into the
+Incident Gateway state + drives the verdict-mandated gateway reaction. (The original design wrote signoffs to GCS at
+`gs://<kill-switch-audit>/incidents/{date}/{key}/signoffs/{event_id}.json`; the rewire routes through the HTTP ingest so
+the gateway + DART feed see each signoff immediately.)
 
 `SignoffVerdict` StrEnum (closed 4-set):
 

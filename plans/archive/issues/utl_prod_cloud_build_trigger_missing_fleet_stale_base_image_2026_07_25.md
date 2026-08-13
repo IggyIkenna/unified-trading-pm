@@ -419,3 +419,30 @@ base-image pipeline without confirming the correct source config/IAM/connection 
     (`echo "$trigger_output"`). Matches the function's other two echoes which already use `>&2`. Workflow YAML validated
     (`check_workflow_yaml_valid.py`: 59 workflows parse). Primary region health confirmed at dispatch time:
     `gcloud builds list --region=asia-northeast1` shows SUCCESS builds through 19:07Z (instrument + fleet) — no outage.
+
+- **2026-08-13 (slot 6, cicd) — FOURTH dispatch of the same re-escalation loop for `agt-774a0e`, re-verified LIVE ~1h
+  fresher than slot 28's snapshot, confirmed still-fixed. No new fix applied.** Same known gap as slots 14/28 flagged
+  (`cloud_build_router_failure` not in `_QG_SIGNAL_WALLS` → no auto-resolve signal → `verify_dispatched_escalations`
+  keeps re-dispatching on every deadline tick even though the wall cleared hours ago). Measured
+  2026-08-13T~19:55-20:10Z, live against GCP/GitHub (not trusting prior notes):
+  - **Trigger unchanged, still correctly configured**: `gcloud builds triggers describe unified-trading-library-prod` →
+    `e9da54bb-ca66-40f6-b5fd-5caff6bfebf1`, `createTime 2026-07-25T12:44:13Z`.
+  - **Base image EVEN FRESHER than slot 28's snapshot**: artifact registry now shows `0.81.2`/`0.81.2-74bd71873a4b` at
+    `UPDATE_TIME 2026-08-13T19:52:27Z` (vs. slot 28's `0.81.1` at `15:14:15Z`) — the pipeline has kept publishing
+    successfully in the intervening ~4.5h, not just held steady.
+  - **Recent trigger builds all SUCCESS**: `ae86ca67` (19:44:16Z) + `c78c8250` (19:43:09Z) SUCCESS; zero TIMEOUTs since
+    the governor-disable fix landed (last TIMEOUT was `42db60a4` at 13:13:02Z, pre-fix).
+  - **Router stderr-redirect fix (slot 26's `<SHA>` placeholder) confirmed LIVE by content**, resolving that doc gap:
+    `git show origin/main:.github/workflows/cloud-build-router.yml` AND `git show origin/live-defi-rollout:...` both
+    show `echo "Attempting build trigger in region: $region" >&2` (line 545) on both branches — the fix is shipped and
+    live, not just claimed.
+  - **No genuine router failures for UTL since**: `gh run list --workflow=cloud-build-router.yml --limit 15` shows all
+    `qg-passed` dispatches `success` except one `failure` at 20:03:24Z — inspected via
+    `gh run view 31738938409 --json jobs`: that failure is in the `freeze-check / check` job only, correctly deferring
+    `route-build` (skipped) via `defer-on-freeze` — an expected merge-freeze defer, not a build/router defect, and
+    unrelated to UTL specifically (repository_dispatch on `main`, no repo filter visible at this level).
+  - **No new code fix required — closing this dispatch as confirmed-already-fixed**, same verdict as slots 14/28.
+    Reiterating the standing follow-up (still out of cicd one-shot scope, now confirmed FOUR times over): wire a
+    worker-callable resolve action or a wall-specific `_poll_wall_resolution` signal for `cloud_build_router_failure` so
+    a genuinely-fixed instance stops re-dispatching fresh workers on every `RESOLUTION_DEADLINE_MINUTES` tick — the
+    actual fix has been done since ~15:14Z; every dispatch after that is queue overhead, not real work.

@@ -116,13 +116,18 @@ applied to a role whose whole job structurally defeats the "3 consecutive idle t
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Give the idle-streak compact gate a role-aware policy.** A short, bounded reply (an
-      `agent_replied` ack under some token/duration threshold) should not fully reset main's idle streak the way a real
-      multi-turn task would for a worker — main's whole role is to be interrupted briefly and return to idle, not to
-      work continuously. Candidate: count "idle since last real work" rather than "idle since last activity of any
-      kind", or lower the consecutive-tick requirement specifically for `role=main`. Done when: a traced main instance
-      that is repeatedly ack-interrupted still reaches a forced compact within a bounded time of first hitting the
-      guidance threshold (e.g. <10 min, not 14-40 min).
+- [x] ✅ [BACKEND] P1. **DONE 2026-08-13 — `agent-orchestrator@acc41b1a00`.** Gave the idle-streak compact gate a
+      role-aware policy: new `context_force_idle_observations_main` tunable (default 1), applied only to `role=main` in
+      `_maybe_force_compact`; `role=review` keeps the original 3-tick requirement unchanged (no evidence review has the
+      same problem). The two non-streak safety checks (`pane_input_pending`, `_pane_has_child_processes`) still run
+      unconditionally after the threshold is met, so this only removes the debounce-against-a-flicker margin, not the
+      don't-stomp-active-work guard. `quality-gates.sh` green: 3604 pytest (2 new/updated), 323 vitest. Original text
+      preserved below for provenance — a short, bounded reply (an `agent_replied` ack under some token/duration
+      threshold) should not fully reset main's idle streak the way a real multi-turn task would for a worker — main's
+      whole role is to be interrupted briefly and return to idle, not to work continuously. Candidate: count "idle since
+      last real work" rather than "idle since last activity of any kind", or lower the consecutive-tick requirement
+      specifically for `role=main`. Done when: a traced main instance that is repeatedly ack-interrupted still reaches a
+      forced compact within a bounded time of first hitting the guidance threshold (e.g. <10 min, not 14-40 min).
 - [ ] [INVESTIGATE] P2. Measure main's actual token-growth-per-handled-message rate against a worker's
       token-growth-per-tool-call rate, to establish whether main's ~23-31-minute time-to-saturation is a genuinely
       faster burn rate or an artifact of the role's message volume. Needed before proposing any context-reduction fix
@@ -139,3 +144,8 @@ applied to a role whose whole job structurally defeats the "3 consecutive idle t
 - 2026-08-13: filed per direct operator ask, live SSM evidence gathered and cited above (240-respawn historical count,
   7-day daily breakdown, one instance traced end-to-end through the idle-streak gate to its eventual forced compact). No
   fix attempted yet — this is the diagnosis, not the resolution.
+- 2026-08-13 (same session, follow-up per operator "fix everything"): shipped the P1 role-aware fix
+  (`agent-orchestrator@acc41b1a00`) within the hour of filing — see todo 1 above for the full change description.
+  Remaining 3 todos (token-growth-rate measurement, the 2026-08-11 spike explanation, and the transient
+  `tmux_session_lost` false-positive) are still open investigation, not fixes — no live-traced evidence yet on any of
+  them.
