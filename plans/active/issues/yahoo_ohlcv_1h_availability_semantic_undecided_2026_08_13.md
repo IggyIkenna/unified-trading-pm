@@ -56,24 +56,24 @@ context_scope:
   ]
 ---
 
-# tradfi ohlcv_1h has no availability semantic
+# tradfi ohlcv_1h availability semantic — FIXED (was: missing)
 
-## What is parked, and where
+## Nothing is parked any more — all of it shipped
 
-Two files, stashed under the named ref `slot4-PARKED-yahoo-ohlcv_1h-needs-availability-semantic-decision` in slot 4's
-`unified-api-contracts` checkout, with a file-level copy under the session scratchpad:
+**Everything described below is HISTORY.** An earlier revision of this doc said two files were "parked" in a named git
+stash in slot 4 with a copy in that session's scratchpad. Both of those locations are session/slot-local and are gone
+now; **do not go looking for them**. The work was unstashed, completed and landed in `unified-api-contracts@8f0903bb85`,
+so the content lives in git history where anyone can reach it:
 
-| file                                              | change                                                   |
-| ------------------------------------------------- | -------------------------------------------------------- |
-| `canonical/crosscutting/_source_priority_data.py` | adds `("tradfi","ohlcv_1h"): ["yahoo"]`                  |
-| `registry/market_data_categories.py`              | adds `"ohlcv_1h"` to the tradfi equities validity matrix |
+| file                                               | change                                                 | state                |
+| -------------------------------------------------- | ------------------------------------------------------ | -------------------- |
+| `canonical/crosscutting/_source_priority_data.py`  | adds `("tradfi","ohlcv_1h"): ["yahoo"]`                | ✅ shipped           |
+| `registry/market_data_categories.py`               | adds `"ohlcv_1h"` to the tradfi equity validity matrix | ✅ shipped           |
+| `canonical/crosscutting/availability_semantics.py` | adds `("tradfi","ohlcv_1h"): "tick_timestamp"`         | ✅ shipped (the fix) |
 
-Nothing was reverted and nothing was adjudicated on the author's behalf. It is parked precisely because the missing
-piece is a judgment, not a typo.
+## Why it blocked everything while it sat (resolved)
 
-## Why it blocks everything, not just itself
-
-The pair is registered as a source but has no availability semantic, so two symmetry invariants fail and take four more
+The pair was registered as a source with no availability semantic, so two symmetry invariants failed and took four more
 tests with them:
 
 ```
@@ -82,8 +82,9 @@ Era-B purge would break SOURCE_PRIORITY <-> AVAILABILITY_AT_SEMANTICS symmetry.
   SOURCE_PRIORITY-only: [('tradfi', 'ohlcv_1h')]; AVAILABILITY-only: []
 ```
 
-Six failures, one root. Because they are tree-wide, ANY unrelated `unified-api-contracts` ship is blocked while this
-sits — which is how it was found.
+Six failures, one root. Because they were tree-wide, ANY unrelated `unified-api-contracts` ship was blocked while it sat
+— which is how it was found. All six are green as of `8f0903bb85`; this is recorded so the next person who sees that
+error text recognises the shape, not because it is still happening.
 
 ## RESOLVED 2026-08-13 — `tick_timestamp`, shipped as `unified-api-contracts@8f0903bb85`. Never an open decision.
 
