@@ -46,28 +46,40 @@ verification found two DISTINCT further problems, neither caused by either of th
 Re-measured post-run: 56,238 shard-rows freshly captured in the run's wall-clock window (13:00-19:00 UTC), across only
 34 of the 64 target instruments. The other 30 have NO manifest trace for this run at all. Two separate causes:
 
-**1a. BYBIT stale-id-format — caller-side bug, not instruments-service's.** `BYBIT:PERPETUAL:BTCUSD` /
-`BYBIT:PERPETUAL:ETHUSD` (no hyphen, no `@INV`) cannot be produced by any current Tardis-adapter code path — the
-adapter's `_build_canonical_perpetual_key`
-(`instruments-service/instruments_service/reference_data/adapters/cefi/ tardis/parsing.py:871-874`) always emits
-`BYBIT:PERPETUAL:BTC-USD@INV`. Live-verified:
-`read_instruments_catalog_contract_size("cefi", "BYBIT", "BYBIT:PERPETUAL:BTC-USD@INV")` resolves fine; the bare
-no-hyphen form does not (misses all 3 of `instruments_catalog_reader.py`'s match strategies). **MDPS is somewhere
-threading the pre-2026-07 legacy id shape into the liquidations calc instead of the canonical one — not yet traced to
-the exact call site.** Fix: find where MDPS resolves `instrument_id_str` for BYBIT liquidations and correct it to the
-canonical `@INV` form (or add the legacy shape as a 4th match strategy in `instruments_catalog_reader.py` — the
-canonical-fix is preferred, don't paper over a real upstream id-hygiene gap).
+**1a. BYBIT stale-id-format — RESOLVED to a root cause: 2 orphaned STALE files, not a live code bug.**
+`BYBIT:PERPETUAL:BTCUSD` / `BYBIT:PERPETUAL:ETHUSD` (no hyphen, no `@INV`) cannot be produced by any current
+Tardis-adapter code path — the adapter's `_build_canonical_perpetual_key`
+(`instruments-service/instruments_service/reference_data/adapters/cefi/tardis/parsing.py:871-874`) always emits
+`BYBIT:PERPETUAL:BTC-USD@INV`. MDPS itself never constructs instrument ids — it faithfully reads whatever is already in
+the raw tick parquet's `instrument_id` column (`market_data_processing_service/app/core/live_workers_chain.py:953-1007`,
+`app/adapters/base_adapter.py:462-483`); every id-construction path was ruled out. **Live-traced to source**:
+`raw_tick_data/by_date/day=*/pipeline_mode=batch_tardis/asset_group=cefi/venue=BYBIT/`
+`instrument_type=perpetual/data_type=liquidations/BTCUSD.parquet` and `ETHUSD.parquet` (bucket
+`market-data-tick-cefi-prd-central-element-323112`) — the `instrument_id` COLUMN itself (not just the filename) is
+baked-in bare `BYBIT:PERPETUAL:BTCUSD`/`ETHUSD`, single generation, `last_modified=2026-07-08T04:16:55Z`, no subsequent
+generation on either object (verified via `gcs_describe_object`). Every SIBLING BYBIT instrument in the same date
+directories carries `last_modified=2026-07-19T...` (a canonicalization sweep that ran 11 days later) — these two files
+are orphans that BOTH the 2026-07-19 sweep AND the 2026-07-25/28 `cefi_migration_cutover_and_track8_completion` rewrite
+missed. **Fix: a targeted content-rewrite of exactly these 2 GCS objects** (rewrite the `instrument_id` column to
+canonical `BYBIT:PERPETUAL:BTC-USD@INV`/`ETH-USD@INV` form, mirroring what the 2026-07-19 sweep did for every other
+BYBIT instrument) — NOT a 4th match strategy in `instruments_catalog_reader.py` (papers over the real gap) and NOT an
+MTDS writer fix (the writer isn't currently producing this shape — single 2026-07-08 generation, no live recurrence).
 
-**1b. OKX-SWAP delisted instruments — capture-vs-rollup gap, NOT resolved, needs a live GCS check.** Tardis's own
+**1b. OKX-SWAP delisted instruments — RESOLVED to a root cause: rollup bug, confirmed NOT a capture gap.** Tardis's own
 `/v1/exchanges/okex-swap` metadata confirms `AVAX-USD-SWAP` (availableSince 2021-11-25, availableTo 2026-07-08) and
 `XLM-USD-SWAP` (availableSince 2020-05-11, availableTo 2025-08-16) are REAL, historically-active, now-delisted
-instruments — not fabricated/malformed ids. `instruments-service`'s per-date capture
-(`instrument_availability/by_date/day=.../venue=OKX-SWAP/instruments.parquet`) is point-in-time filtered
-(`process_fetch.py:343-361`), so only days captured DURING the active window would ever carry them. **Whether IS ever
-actually captured OKX-SWAP inside those windows, and whether `build_instrument_catalogue.py`'s rollup walked that far
-back, is unconfirmed** — the decisive check (not yet run): scan a handful of days in each delisted window for
-`raw_symbol` = `AVAX-USD-SWAP`/`XLM-USD-SWAP` in the per-date parquet; presence = rollup bug, absence = genuine capture
-gap needing a backfill.
+instruments — not fabricated/malformed ids. **Live GCS check across 5 representative in-window dates per instrument**
+(bucket `instruments-store-cefi-prd-central-element-323112`,
+`instrument_availability/by_date/day=<date>/pipeline_mode=batch_instruments_service/asset_group=cefi/venue=OKX-SWAP/instruments.parquet`,
+`raw_symbol` column) confirms `instruments-service`'s daily capture genuinely ran and correctly recorded BOTH symbols
+throughout their ENTIRE active windows — 5/5 dates hit for AVAX-USD-SWAP (2022–2026), 5/5 for XLM-USD-SWAP (2020–2025;
+the one expected miss, 2026-06-01, is honest absence since XLM delisted 2025-08-16). The source data is completely
+present; `instruments-service/scripts/build_instrument_catalogue.py`'s rollup is silently dropping both symbols when
+building the final `catalog.parquet` despite the daily captures having them. **The exact defective line was NOT pinned
+down** (candidates: `_aggregate_key`, `_canonicalize_cefi_perp_id`, `_is_removed_venue`, or the
+`available_to_datetime`/delisted-instrument handling around lines 1088-1710 — most likely a delisted/inactive instrument
+being silently excluded during aggregation) — needs a focused read of that rollup path against a
+DELISTED-but-historically-valid instrument to find where it's dropped, then a rollup re-run to backfill the catalogue.
 
 ## Finding 2 — contract_size silently WRONG for OKX (non-BTC) and Deribit BTC — FIXED
 
@@ -125,11 +137,21 @@ test patches both the registry and catalogue to None to exercise a genuine doubl
 
 - [x] [SCRIPT] P0. Wire the new UAC resolver into `liquidations_adapter.py`'s inverse-margin branch — done, see above.
       `market-data-processing-service@ae23ee5c03`.
-- [ ] [SCRIPT] P1. Trace exactly where MDPS threads the stale `BYBIT:PERPETUAL:BTCUSD`/`ETHUSD` id shape into the
-      liquidations calc (Finding 1a) and fix at the source (canonicalize before the catalogue-lookup call site).
-- [ ] [DATA] P1. Run the decisive per-date GCS check for Finding 1b (OKX AVAX/XLM delisted-instrument capture vs rollup
-      gap) — scan `instrument_availability/by_date/day=<in-window-date>/.../venue=OKX-SWAP/instruments.parquet` for
-      `raw_symbol` = `AVAX-USD-SWAP`/`XLM-USD-SWAP`; presence=rollup bug, absence=capture gap.
+- [ ] [DATA] P1. Finding 1a root-caused (see above) — write and run a targeted GCS content-rewrite for exactly the 2
+      orphaned objects (`.../venue=BYBIT/instrument_type=perpetual/data_type=liquidations/BTCUSD.parquet` and
+      `ETHUSD.parquet`, bucket `market-data-tick-cefi-prd-central-element-323112`, every `day=` partition): rewrite the
+      `instrument_id` column to canonical `BYBIT:PERPETUAL:BTC-USD@INV`/`ETH-USD@INV`, mirroring the 2026-07-19 sweep
+      that already did this for every sibling BYBIT instrument. Production GCS content mutation — confirm scope (which
+      `day=` partitions actually carry the bad shape) before writing, and prefer reusing/extending the 2026-07-19
+      sweep's own rewrite script over a new one if it still exists.
+- [ ] [SCRIPT] P1. Finding 1b root-caused (see above) — trace the exact defect in
+      `instruments-service/scripts/build_instrument_catalogue.py`'s rollup (prime suspects: `_aggregate_key`,
+      `_canonicalize_cefi_perp_id`, `_is_removed_venue`, or the `available_to_datetime`/delisted-instrument handling
+      ~lines 1088-1710 — a DELISTED-but-historically-valid instrument is likely being silently excluded during
+      aggregation) against the confirmed-present OKX-SWAP AVAX-USD-SWAP/XLM-USD-SWAP daily captures, fix it, then re-run
+      the rollup to backfill `catalog.parquet`. Affects the CANONICAL catalogue every consumer reads — verify no other
+      currently-delisted instrument across other venues/asset_groups is silently dropped the same way before considering
+      this closed.
 - [ ] [OPERATOR] P2. Decide whether to upgrade the Tardis subscription to "pro"/"business" tier — would let
       instruments-service source `contractMultiplier` directly instead of depending on a hand-maintained UAC registry
       that needs manual re-verification if a venue's face values ever change. Not urgent — the UAC registry is a
