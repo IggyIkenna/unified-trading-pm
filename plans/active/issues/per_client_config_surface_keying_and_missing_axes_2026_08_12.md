@@ -51,6 +51,8 @@ source: >-
   specifics go? general client name would be logical though for client specific params like what if they want different
   leverage etc and venue selection, coins". Answering it required a cross-repo code audit because no doc states which of
   the three config surfaces owns what.
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Per-client config: wrong primary key, and three missing axes

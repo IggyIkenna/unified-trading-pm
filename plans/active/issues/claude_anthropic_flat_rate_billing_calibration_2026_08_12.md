@@ -45,6 +45,8 @@ source: >-
   there is a plan around this for a max account... same for pro which is a different multiplier... together with our
   deepseek stuff we'd have good billing across Accounts and Task Token Usage and DeepSeek Wallet Reconciliation and our
   new widget Claude Wallet Reconciliation."
+execution_scope: local-only
+drift_direction: advance-code
 ---
 
 # Claude/Anthropic flat-rate billing calibration

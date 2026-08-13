@@ -46,6 +46,7 @@ depends_on:
 source: ["P2's Consumer-enumeration gating todo, dispatched to slot 32, 2026-08-12"]
 locked_by:
 locked_since:
+drift_direction: advance-code
 ---
 
 # Sports taxonomy P2 — consumer inventory
