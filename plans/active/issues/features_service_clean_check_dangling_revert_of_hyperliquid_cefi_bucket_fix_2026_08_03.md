@@ -20,6 +20,7 @@ summary: >-
   written down anywhere I could find. This doc exists so that question gets a real answer instead of silently
   evaporating with the stash.
 status: open
+archive_exempt: true # BRIDGE 2026-08-12: last open todo (P2 stash-drop) resolved moot -- the linked worktree it referenced no longer exists. Archival deferred to a separate follow-on pass (git-mv + referrer sweep), per the sanctioned flip-then-mv two-commit pattern in scripts/plan-hygiene/check_archive_candidates.sh.
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -110,14 +111,12 @@ problem with the fix that was never written down — which would be a genuine da
       corroborated correct in production (`features-delta-one-defi-20260803-055145` exit 0, slot-10's concurrent
       `055219`, and slot-4's DP-VM-001 pre-fix-timing trace in the Progress Log below). See the new Progress Log entry
       for the full ruling record.
-- [ ] [OPERATOR] P2. **Drop the ruled-abandoned stash** — `git stash drop` on the entry currently tagged
-      `orchestrator-slot-8-features_smoke_matrix_verification_findings-006` in the `features-service-clean-check` linked
-      worktree (`.tabs/8/features-service-clean-check`, gitdir
-      `.tabs/8/features-service/.git/worktrees/features-service-clean-check`). Re-resolve the exact stash index via
-      `git stash list | grep features_smoke_matrix_verification_findings-006` immediately before dropping — the index
-      shifts as the worktree accumulates more stashes (11 other unrelated stashes already sit alongside it as of
-      2026-08-03, see the P3 finding below). Human-only per this workspace's destructive-command guardrail — do not
-      execute autonomously. Done when: the stash is gone and `git stash list` in that worktree no longer shows it.
+- [x] ✅ [OPERATOR] P2. **MOOT — verified 2026-08-12.** The `features-service-clean-check` linked worktree
+      (`.tabs/8/features-service-clean-check`) no longer exists on disk, and `.tabs/8/features-service/.git/worktrees/`
+      is empty — the linked worktree was removed at some point after 2026-08-03. `git stash list` from
+      `.tabs/8/features-service` (the shared underlying repo) now returns zero entries, confirming the stash (and the 11
+      other unrelated ones noted alongside it) are already gone, not merely unreachable. Nothing left to drop; the
+      done-when condition ("the stash is gone") is independently satisfied.
 - [x] ✅ [SCRIPT] P3 (2026-08-03, slot-6). **Audit executed.** Found exactly one other `-clean-check` linked worktree in
       the whole workspace: `.tabs/8/features-service-clean-check` (confirmed via its `.git` gitdir pointer — no other
       repo under `.tabs/*` has a sibling `-clean-check` dir). Its working tree is currently clean
@@ -187,3 +186,10 @@ problem with the fix that was never written down — which would be a genuine da
   agent-orchestrator server-code change, outside this doc-only task's scope).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **2026-08-12 (operator, interactive session — blocked-question triage)**: verified the P2 stash-drop todo is moot —
+  `.tabs/8/features-service-clean-check` no longer exists on disk and `.tabs/8/features-service/.git/worktrees/` is
+  empty, so the linked worktree was removed at some point after 2026-08-03. `git stash list` from the shared underlying
+  repo (`.tabs/8/features-service`) now returns zero entries, confirming the stash (and the other 11 noted alongside it)
+  are already gone. Flipped the todo to done on that basis. This doc now has 0 open todos; setting
+  `archive_exempt: true` below rather than running the full archival ritual in this same pass — a separate follow-on
+  pass should do the git-mv + referrer sweep.
