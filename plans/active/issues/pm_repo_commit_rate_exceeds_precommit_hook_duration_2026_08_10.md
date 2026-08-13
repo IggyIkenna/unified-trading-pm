@@ -549,12 +549,12 @@ Directions, cheapest first — each is a todo below:
       unified-trading-pm@d85ad41fac.
 
       **Done when, confirmed**: the precommit sweep on one staged file is now **20.8s** total wall (measured 2026-08-12,
-                                  isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
-                                  down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
-                                  concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
-                                  single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
-                                  `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
-                                  nothing left to move out of the per-commit path. Repo: unified-trading-pm.
+                                      isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
+                                      down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
+                                      concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
+                                      single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
+                                      `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
+                                      nothing left to move out of the per-commit path. Repo: unified-trading-pm.
 
 - [x] ✅ [INFRA] P2. **Record the AO-vs-PM volume asymmetry in the codex** so the next person does not re-derive it —
       unified-trading-pm@baae1922bb. New § "1b. PM is the fleet's single write hotspot" in
@@ -728,10 +728,13 @@ Directions, cheapest first — each is a todo below:
       are genuinely unreachable). Tests: `scripts/quality_gates/test_check_plan_commit_sha_evidence.py` (7/7) — pushed,
       local-only-unpushed, and dangling-orphan cases, both with and without `require_reachable`. `ruff`/`basedpyright`
       clean. Repo: unified-trading-pm.
-- [ ] [INFRA] P2. **60 of 229 PM bats tests fail and NOTHING gates them.** Measured full run: 169 ok / 60 not ok. PM's
-      gate (`base-service.sh`) carries bats as warn-only for service repos; PM's own 30 bats files are not invoked by
-      its gate at all. None of the 60 are from this session's five new files. **Done when**: PM's bats suite is either
-      gated or its failures are ratcheted.
+- [x] ✅ [INFRA] P2. **60 of 229 PM bats tests fail and NOTHING gates them.** Measured full run: 169 ok / 60 not ok.
+      PM's gate (`base-service.sh`) carries bats as warn-only for service repos; PM's own 30 bats files are not invoked
+      by its gate at all. None of the 60 are from this session's five new files. **Done when**: PM's bats suite is
+      either gated or its failures are ratcheted. — unified-trading-pm@ef552936b3 (fixed both root-cause fixtures,
+      re-measured 0/320 clean, opted PM's own `quality-gates.sh` into `BATS_HARD_FAIL=1`; checkbox was stale — the fix
+      landed under this same commit but was never flipped here; caught + flipped 2026-08-13 while closing out the
+      sibling `pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`).
 
 ## Deferred work after 2026-08-12
 

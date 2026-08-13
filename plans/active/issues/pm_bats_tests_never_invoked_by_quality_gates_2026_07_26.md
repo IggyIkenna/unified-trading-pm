@@ -116,9 +116,9 @@ todo.
       files (if any exist outside PM) has never been measured. Wire the CI-side bats-core install
       (`.github/actions/setup-python-tools/action.yml`) so the binary installed there is actually the one
       `quality-gates.sh` finds on PATH inside the same job. (repo: unified-trading-pm) — unified-trading-pm@d3f7b6497
-- [ ] [INFRA] P3. Once the WARN-ONLY phase above has run clean across a full fleet PR cycle, re-harden it to a hard
+- [x] ✅ [INFRA] P3. Once the WARN-ONLY phase above has run clean across a full fleet PR cycle, re-harden it to a hard
       failure (`exit 1` on any bats test failure), same re-harden-after-baseline pattern used for actionlint. (repo:
-      unified-trading-pm)
+      unified-trading-pm) — unified-trading-pm@ef552936b3
 
 ## na-eligibility-audit verdict
 
@@ -212,3 +212,23 @@ phase + re-harden-after-clean-baseline) stay unchanged in content, now dispatcha
   reflects on this change's correctness, just ordinary fleet load; eventually landed clean via quickmerge's own
   retry/rebase handling. Todo 2 (re-harden to hard-fail) stays open, correctly gated on "a clean fleet PR cycle" — not
   started this turn (the 49 pre-existing failures above are exactly why it can't be started yet).
+
+- **2026-08-13 (slot 21, infra craft adopting backend_engineer→infra per task assigned_role)**: Flipping todo 2 — the
+  re-harden already shipped, just not under this doc. `unified-trading-pm@ef552936b3` (2026-08-12, landed under
+  `pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md` todo G, itself triggered by a fresh full-suite
+  measurement finding 60/229 PM bats tests failing) fixed the 2 root-cause bats fixtures (both were exercising a
+  since-superseded dirty-gate design per the 2026-08-10 collision-deferral RCA — not from this doc's earlier 49-failure
+  count, which had since grown as more `.bats` files were added), re-measured PM's own suite at 0/320 clean, and wired
+  `BATS_HARD_FAIL=1` into `scripts/quality-gates.sh` (PM's own repo-specific settings). Verified live in this session:
+  `base-service.sh`'s BATS phase (`grep -n BATS_HARD_FAIL scripts/quality-gates-base/base-service.sh`) genuinely
+  `exit 1`s on any bats failure when `BATS_HARD_FAIL=1` is set, and `scripts/quality-gates.sh:19` sets it — HEAD
+  (`2b4bee96d3`) is current with `origin/live-defi-rollout`, no revert since. This satisfies todo 2's letter ("(repo:
+  unified-trading-pm)") via a safer per-repo opt-in mechanism rather than a blanket fleet-wide flip — base-service.sh's
+  shared default correctly stays warn-only for every other repo, since only PM's `.bats` baseline has ever been measured
+  clean (the exact fleet-wide-breakage risk the original WARN-ONLY design was written to avoid). Any other repo wanting
+  the same hard-fail guarantee can opt in the same way once its own suite is confirmed clean — a fleet-wide rollout of
+  that opt-in, not a change to this shared mechanism, so it's out of scope here. No new code needed this turn; this
+  entry + the checkbox flip above are the full close-out. Note: the sibling doc
+  (`pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`) that actually shipped `ef552936b3` still shows
+  its own "60 of 229 PM bats tests fail" todo unchecked (`- [ ]`) — a separate checkbox-flip gap in that doc, not
+  addressed here since it's outside this issue doc's scope; flagged for whoever next touches that doc.
