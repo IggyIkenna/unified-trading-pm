@@ -269,6 +269,17 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
 - [ ] [INFRA] P2. Re-verify with a genuinely long clean window under the NEW (v2) instrumentation before any
       re-declaration of closure or archival — the prior "50min clean window" claim was contradicted by two further
       deaths the very next check, so the bar for the next closure claim should be materially higher than that.
+- [x] [INFRA] P0. Fourth gap (orphan tmux SERVER processes, distinct from the per-claude-process orphan sweep)
+      root-caused + fixed — DONE 2026-08-13, `agent-orchestrator@d813ef1703`, dry-run by default.
+- [ ] [OPERATOR] P2. Once `sweep_orphan_tmux_servers`'s dry-run logging shows zero false positives across a real
+      observation window on the live fleet (same graduation bar the existing per-claude-process sweep already cleared),
+      flip `tuning.orphan_tmux_server_sweep_dry_run` to live.
+- [ ] [INFRA] P3. quickmerge's retry-regate has a real display bug (found 2026-08-13, not fixed this session): the
+      failure-COUNT grep matches broad vocabulary (`❌|FAILED|ERROR|E `) but the failure-DISPLAY grep only matches
+      literal `❌`, so a real failure using different vocabulary (e.g. a plain `ruff format --check` failure) correctly
+      blocks the ship while showing nothing about why — cost real diagnostic time twice in a row before being traced by
+      reproducing `quality-gates.sh --no-fix` directly. Widen the display grep to match the same vocabulary as the count
+      grep (source: PM-wide symlinked `scripts/quickmerge.sh`).
 - [x] [INFRA] P0. Live-caught `tmpfs-disk-cleanup.sh`'s `rm -rf /tmp/ao-fleet-tmux` — DONE 2026-08-13 17:08Z, direct
       causal evidence via decoded `proctitle`, not just correlation. Corrected script deployed directly to the VM as
       immediate mitigation (independent of the blocked git push).
@@ -537,3 +548,19 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   job). This is direct evidence from the fixed script's own logging, not inference. One `ao_fleet_tmux_delete` auditd
   hit at 17:45:16Z doesn't line up with either cleanup run — likely another benign sibling-instance event (same class as
   the earlier `tmux-0` finding), not chased further given the now well-understood pattern.
+- 2026-08-13 18:43Z-20:20Z: **shipped the 4th-gap fix** — `agent-orchestrator@d813ef1703`, `sweep_orphan_tmux_servers()`
+  in `orphan_reap.py` (new `current_tmux_server_pid()` in `tmux_spawn.py`, same live-connect() resolution verified this
+  session; native `/proc/net/unix` + fd cross-reference for candidate discovery, no `ps`/`comm`/`lsof` dependency;
+  excludes the current server and anything with live children; honours `boot_grace_seconds`; wired into `TmuxPruner`'s
+  existing 60s loop; ships DRY-RUN by default `tuning.orphan_tmux_server_sweep_dry_run`, same graduation bar as the
+  existing per-claude-process sweep before an operator flips it live). 24 new/existing tests pass. Two real,
+  non-blocking diagnostic detours along the way: (1) a genuinely opaque quickmerge failure — `ruff format --check`
+  failed on `tmux_pruner.py` (a line-wrap issue in my own edit, agent-mode commits don't auto-fix), but quickmerge's own
+  retry-regate logic has a real bug — its failure-COUNT grep matches broad vocabulary (`❌|FAILED|ERROR|E `) while its
+  failure-DISPLAY grep only matches literal `❌`, so a plain ruff-format failure (no emoji in its own output) correctly
+  blocked the ship while showing NOTHING about why, twice in a row. Found by reproducing `quality-gates.sh --no-fix`
+  directly and diffing exit codes per check rather than trusting the truncated display. Logged as a follow-up, not fixed
+  in-session (out of this investigation's scope, would need tracking down the PM-wide symlinked source). (2) A first
+  quickmerge attempt failed with the same opaque symptom but turned out to be pure host contention (re-gate hit only the
+  duration budget) — resolved by simply re-running `quality-gates.sh` directly, which passed clean, before the SECOND
+  (genuine, ruff-format) failure surfaced on retry.
