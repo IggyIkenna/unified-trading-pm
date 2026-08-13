@@ -118,12 +118,28 @@ Group C's attribution then splits a **STRATEGY layer** (benchmark-fill decomposi
 **EXECUTION layer** (`live_fill − benchmark_fill` residual → `SLIPPAGE`, `FEES`). **This is what licenses a
 strategy-only backtest**: Group B needs no execution-service at all, because benchmark fills replace execution entirely.
 
-**So why send the price at all?** Because the contract is implemented **twice, independently** — 653 lines in
-strategy-service and a matching engine in execution-service — and two implementations of one definition can drift. When
-they drift, Group B's strategy alpha and Group C's execution alpha are measured against _different_ references while
-every individual number still looks correct, and the sum silently stops reconciling. Putting the reference price on the
-instruction makes the two sides provably identical rather than coincidentally equal. The operator's two mark modes
-(`STATIC_AT_SEND` vs `UPDATE_AS_UNDERLYING_MOVES`) then say which reference the sent price represents.
+**So why send the price at all?** Partly because it removes a duplicated computation — but the duplication is narrower
+than it first appears, and the correction matters for what to build.
+
+`BenchmarkMatcher` is **not** a general benchmark engine that re-derives the trade reference. It is one of five matchers
+(`L0` / `L1` / `L2` / `AMM` / `Benchmark`), scoped to **ALPHA_ZERO protocol interactions — LEND / STAKE / BORROW**, and
+it has two modes:
+
+| Mode                         | What it does                                                                                                                                                                                                                                         |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Benchmark-price (legacy)** | Instant fill at a **strategy-supplied** benchmark price, `price_impact_bps = 0`, "because the matcher assumes the strategy already absorbed any external impact accounting upstream"                                                                 |
+| **Lending (Phase 3B)**       | Routes through `LendingRateImpactCalculator` so backtest yield uses the **POST-trade** rate: `fill_price` is post-trade APY, `price_impact_bps` the signed rate delta (negative for SUPPLY/REPAY as utilisation drops, positive for BORROW/WITHDRAW) |
+
+So on the trade path execution **already consumes** a strategy-supplied benchmark rather than deriving one — sending the
+reference formalises what the legacy mode already assumes, rather than replacing a rival calculation.
+
+**What must NOT be collapsed into a pass-through:** the lending mode. The post-trade rate is a function of pool state
+and _your own size_, so strategy-service cannot compute it, and using the pre-trade rate would silently overstate
+lending and borrow yields. That matcher is not simulating a venue — it is modelling your own market impact on a real
+pool, which is exactly the part worth keeping.
+
+The operator's two mark modes (`STATIC_AT_SEND` vs `UPDATE_AS_UNDERLYING_MOVES`) then say which reference the sent price
+represents.
 
 **Corollary for the ε=0 spine:** `UPDATE_AS_UNDERLYING_MOVES` makes the reference time-varying, so a batch rerun must
 re-derive the identical series — pin it to the same tick source and assert it inside the `paper(W) == batch-rerun(W)`

@@ -215,10 +215,23 @@ exists to protect, and it is already implemented rather than aspirational.
       `strategy_service/engine/backtest/benchmark_fills.py` is a pure, bit-identical, 653-line Group-B implementation
       whose own docstring states it lives in strategy-service "because Group B replaces execution entirely". The real
       risk is therefore not disagreement-by-design but **drift between two implementations of one definition** — 653
-      lines here, `BenchmarkMatcher` there. When they drift, Group B's strategy alpha and Group C's execution alpha are
-      measured against different references while every number still looks correct and the sum stops reconciling.
-      Sending the reference on the instruction makes them provably identical rather than coincidentally equal.
-      **Recommendation: strategy-sent is authoritative; `BenchmarkMatcher` consumes it** rather than re-deriving.
+      lines here, `BenchmarkMatcher` there. **Second correction, 2026-08-12 (operator question "why not just make it a
+      no-op in execution-service"):** the duplication is narrower than the paragraph above assumed, and the operator's
+      instinct is right. `BenchmarkMatcher` is ONE of five matchers (`L0`/`L1`/`L2`/`AMM`/`Benchmark`), scoped to
+      **ALPHA_ZERO protocol ops — LEND/STAKE/BORROW**, and its benchmark-price mode is already "instant fill at a
+      **strategy-supplied** benchmark price, `price_impact_bps = 0`, because the matcher assumes the strategy already
+      absorbed any external impact accounting upstream" — i.e. **on the trade path it already consumes rather than
+      re-derives.** So sending the reference formalises the legacy mode's existing assumption; it does not displace a
+      rival calculation, and there is no independent trade-side benchmark engine to delete. **Recommendation:
+      strategy-sent is authoritative and the trade path becomes an explicit pass-through.**
+- [ ] [AGENT] P0. **G3a — do NOT no-op the lending path.** The same matcher's Phase-3B lending mode routes through
+      `LendingRateImpactCalculator` (`matching_engine/lending/rate_impact.py`) so backtest yield uses the **POST-trade**
+      rate: `fill_price` becomes post-trade APY and `price_impact_bps` the signed rate delta (negative for SUPPLY/REPAY
+      as utilisation drops, positive for BORROW/WITHDRAW). **strategy-service cannot compute this** — it is a function
+      of pool state and your own size — and using the pre-trade rate would silently **overstate lending and borrow
+      yields** on every recursive-carry and yield archetype. This matcher is not simulating a venue; it is modelling
+      own-size market impact on a real pool. Add a test asserting the lending path stays live if the trade path is
+      collapsed, so a future "make the benchmark matcher a pass-through" change cannot take the rate impact with it.
 
 ### Smaller execution-service items
 
@@ -233,6 +246,31 @@ exists to protect, and it is already implemented rather than aspirational.
 - [ ] [AGENT] P2. **Confirm the benchmark module's own consumers.** `metrics.py` is imported only by its siblings
       (`enhanced_comparison.py`, `ranking.py`) — verify the chain reaches a live/reporting caller rather than
       terminating in the benchmark package, so the alpha metrics are actually surfaced somewhere.
+
+## § H. Where transfers route — answered 2026-08-12, and the split is already correct
+
+Operator question: _"what do transfer instructions route to — exec service or strategy service?"_ **Both, and the
+division is the same intent-vs-method split as trades — no change needed.**
+
+| Stage                        | Service           | What it does                                                                                                                                                                                                                                                                                                                                                                   |
+| ---------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Emit** (decide + net)      | strategy-service  | `IntraClientRebalanceCoordinator` (`transfer_coordinator.py`) nets N strategies' requests for ONE client into the **minimum set of intents** — one per `client × {unordered venue pair} × asset × transfer_type` — summing signed amounts, dropping flows that cancel to zero, collapsing bidirectional flows to a single net direction. Emits canonical UAC `TransferIntent`. |
+| **Consume** (move + confirm) | execution-service | `execution_service.transfer_coordinator.TransferCoordinator` plus `engine/transfers/` — `live_custody_adapter.py` (the custody rail) and `confirmation_poller.py` (settlement confirmation)                                                                                                                                                                                    |
+
+**Why netting must sit strategy-side**: it requires seeing every strategy for one client at once, which is exactly the
+view execution-service does not have. Execution receives an already-minimal set of intents rather than N overlapping
+ones — the same reason strategy owns the reference price and not the algo.
+
+**The cross-client guard is enforced at BOTH layers deliberately** — `CrossClientTransferForbiddenError` is raised at
+strategy-side emit AND at execution-side consume
+([client-funds-isolation](/codex/04-architecture/client-funds-isolation.md)). That is defence in depth on the one rule
+with no acceptable failure mode, not redundancy to remove.
+
+- [ ] [AGENT] P2. **Verify the emit-side netting coordinator is actually wired** — the same declared-ahead-of-consumer
+      pattern found three times this session (`WalletMappingConfig`, `ClientsYaml`, `ExecutionPolicyArtifact`) means its
+      presence in the module tree is not evidence it runs. Check that a live rebalance path calls `add_request()` /
+      `emit_netted_intents()` rather than publishing per-strategy intents directly; if it does not, **the netting is not
+      happening in production** and every strategy's transfers reach execution un-netted.
 
 ## § E. Codex reconciliation (do AFTER § B–D land, per operator sequencing)
 
