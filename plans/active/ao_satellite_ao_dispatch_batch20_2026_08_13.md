@@ -79,7 +79,10 @@ source: >-
       covered AGs (ao/cefi/ci/cross-cutting/defi/infrastructure/prediction/sports/tradfi/ui) have an active coordinator
       (ao reopened 2026-08-12). Made the condition a standing sweep-time WARN in check_ag_closeout_linkage.py so a
       future archived-only-family-with-live-docs tranche surfaces before blocking a commit —
-      unified-trading-pm@a8d835e74e. Source: `plans/active/ao_consolidated_closeout_2026_08_12.md`
+      unified-trading-pm@a8d835e74e. Unit-test coverage for the WARN's `_has_active_single_ag_docs` predicate (which
+      decides "live docs" vs "genuinely retired tranche") added at unified-trading-pm@cbec983969 — this task's slot-12
+      worker duplicated a8d835e74e before discovering it had already shipped; only the tests were net-new and shipped.
+      Source: `plans/active/ao_consolidated_closeout_2026_08_12.md`
 - [ ] [CODE] P2. Identify and fix the source of the stray <repo>/<repo> self-referential symlinks created uniformly
       across every repo in the Mac base checkout at 2026-08-09 15:28, and clean up the existing ones Source:
       `plans/active/issues/mac_slot0_base_checkout_stuck_dirty_files_2026_08_11.md`
