@@ -629,3 +629,14 @@ possibly a rename that ripples into UAC/manifest data_type naming.
   override would be unsafe. **Whoever picks this up**: do NOT trust the ~87K figure — it's stale; re-check
   `x-ratelimit-requests-remaining` AND the PLAYER_VALUES VM's terminal state (`PASS COMPLETE`/`Traceback`/`status`)
   before relaunching.
+- **2026-08-13 (slot 21, data_engineering): PLAYER_VALUES terminal-state verify — NOT terminal yet, genuine progress
+  confirmed with concrete coverage numbers.** VM still `RUNNING` (03:25 UTC). `player_values` master table
+  (`sports_reference/master/entity=player_values/master.parquet`, 5,784 rows) now shows **`total_market_value_eur`
+  non-null on 2,083/5,784 rows (36%) across 19 distinct `canonical_league`s, and `players` non-null on 2,070/5,784** —
+  up from the 12 rows pre-backfill. (`market_value_eur` has no top-level column by design — it's nested inside the JSON
+  `players` column.) `PASS COMPLETE` = 0, `Traceback` = 0. This is real, continuing, shard-isolated progress, not a
+  stall — but the done-when (real coverage across the full 1,041-event 2020-06+ scope) is far from met (~36%). Skipped
+  with `reason_code=GATED`: the terminal-state condition is a monitoring window still open, not a blocker. **The quota
+  burn-rate risk noted in the entry above remains the thing to watch** — at ~40%-events-burned-to-45K-calls-remaining,
+  the tail may hit 429 quota exhaustion before `PASS COMPLETE`; whoever next sees a terminal state (or a
+  429/`record_failed` stall) should reconcile that against `x-ratelimit-requests-remaining` before any resume launch.
