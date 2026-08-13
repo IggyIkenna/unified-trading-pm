@@ -106,9 +106,13 @@ the active corpus without ever being done.
       duration floor added — `no-fallback` now SEV0 only at `outage >= expected_recovery_time_seconds`;
       N-consecutive-probes gate documented as producer contract. `alerting-service@324ffa5` (rule + tests),
       `unified-api-contracts@6f63637d` (schema docstring), `deployment-service@c5a8f4b6` (loader string + yaml ladder).
-- [ ] [BACKEND] P1. Wire the subscriber once the producer exists — a `*_event_handler.py` importing
+- [x] [BACKEND] P1. Wire the subscriber once the producer exists — a `*_event_handler.py` importing
       `evaluate_dependency_health` + `evaluate_dependency_recovered`, registered in `subscribers/alert_subscriber.py`,
-      following the `recon_freeze_event_handler` pattern.
+      following the `recon_freeze_event_handler` pattern. — ✅ **DONE**: `alerting-service@6ca1725a12` adds
+      `dependency_health_event_handler.py` (imports both rules, routes CRITICAL→pagerduty+telegram /
+      WARN+INFO→telegram) + `dependency_health_prober.py` (probe-driven producer deriving `current_outage_seconds` from
+      per-dependency last-healthy state behind an N-consecutive-failure gate, scaffold fail-open probes), registered in
+      `alert_subscriber._TYPED_HANDLERS` under `DEPENDENCY_DEGRADED`/`DEPENDENCY_RECOVERED`; 13 unit tests green.
 - [ ] [BACKEND] P1. **Add an integration test that fails if the path is unwired**, not another unit test of the
       function. It must drive a simulated outage from the producer's entry point and assert a routed alert. The existing
       unit test would pass unchanged today with the feature completely dead.
