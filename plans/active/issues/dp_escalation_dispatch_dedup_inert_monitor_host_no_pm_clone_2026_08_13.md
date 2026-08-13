@@ -112,12 +112,20 @@ Marked `assigned_vm: NA` — this is a design decision, not a worker-determinabl
 
 ## Todos
 
-- [ ] [DESIGN] P2. Operator/main-agent decision: pick A/B/C (or a variant) for where the dedup checkpoint + OPEN-issue
-      index live, so the gate closes on the monitor host. (A — durable GCS/orchestrator persistence — is the worker
-      recommendation.)
-- [ ] [CODE] P2. Implement the chosen fix in `deployment-service` `escalation.py` / `escalation_dedup.py` (+
-      `deployment-api` image change if B), then verify by re-firing a STATIC BACKLOG `DP_RUN_MOSTLY_EMPTY` and
-      confirming the dispatch is suppressed.
+- [x] ✅ [DESIGN] P2. Operator/main-agent decision: pick A/B/C (or a variant) for where the dedup checkpoint +
+      OPEN-issue index live, so the gate closes on the monitor host. RULED 2026-08-13: **Option A** — persist the
+      checkpoint to GCS (the monitor already has a storage client per this doc's own text) and resolve the OPEN-issue
+      match from there instead of a local `plans/active/issues/` walk. B is explicitly insufficient alone (ephemeral
+      checkpoint, lost on image rebuild) and C (orchestrator-side dedup) adds a cross-service hop for no benefit over A
+      when the monitor can already write GCS directly. This matches the filing worker's own recommendation; no new
+      information changes that call. Confirmed live 2026-08-13 via `escalation_queue` (`escalation_id=agt-f601e4`,
+      `attempts=46`, `reescalations=4`, `resolution=still_red_reescalated`) that the re-fire is still ongoing as of this
+      ruling — the CODE todo below is not cosmetic, it is actively burning worker sessions right now.
+- [ ] [CODE] P2. Implement the chosen fix (Option A) in `deployment-service` `escalation.py` / `escalation_dedup.py` —
+      persist the dispatch-dedup checkpoint to GCS instead of a local PM clone path, so `_resolve_pm_path` returning
+      None on the Cloud Run monitor host no longer disables the gate. Then verify by re-firing a STATIC BACKLOG
+      `DP_RUN_MOSTLY_EMPTY` and confirming the dispatch is suppressed. Not implemented in this session (design ruling
+      only) — deployment-service code change, needs its own scoped session.
 
 ## Verification this worker performed (no new data fix needed)
 
