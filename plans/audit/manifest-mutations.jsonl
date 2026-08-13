@@ -1786,3 +1786,5 @@
 {"timestamp": "2026-08-13T15:03:32Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "alerting-service=0.62.1 (branch=main, bump=patch)", "commit_sha": "955f3cdf6572aac8bd6cfa0969df8ccd91c9a3da"}
 {"timestamp": "2026-08-13T15:06:16Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "unified-trading-library=0.81.1 (branch=main, run=31713559515)", "commit_sha": "73c43619023efff8e0fa6877ceda2b96146f75ec"}
 {"timestamp": "2026-08-13T15:06:20Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "unified-trading-library=0.81.1 (branch=main, bump=patch)", "commit_sha": "73c43619023efff8e0fa6877ceda2b96146f75ec"}
+{"timestamp": "2026-08-13T15:10:59Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "greeks-service=0.18.20 (branch=main, run=31713988813)", "commit_sha": "381b6495546263b65d4a63adabfc94859e3639b9"}
+{"timestamp": "2026-08-13T15:11:03Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "greeks-service=0.18.20 (branch=main, bump=patch)", "commit_sha": "381b6495546263b65d4a63adabfc94859e3639b9"}
