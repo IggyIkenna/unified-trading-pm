@@ -31,6 +31,7 @@ os.environ.setdefault("DISABLE_AUTH", "true")
 os.environ.setdefault("GCP_PROJECT_ID", "mock-project")
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "mock-project")
 
+import _capability_gaps
 from _capability_gaps import extract_param_schema
 from unified_api_contracts.internal.architecture_v2.capability_manifest import (
     CapabilityManifest,
@@ -110,3 +111,45 @@ def test_param_schema_round_trips_into_serialised_manifest(
     assert list(block) == sorted(block)
     csb = {row["name"]: row for row in block["CARRY_STAKED_BASIS"]}
     assert csb["margin_buffer_pct"]["default"] == "0.20"
+
+
+def test_stale_venv_importerror_raises_loudly(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """An ImportError probing the strategy-service venv must raise, not degrade
+    to an empty schema (the ``assert 0 >= 29`` failure mode).
+
+    Does not require the real venv — the probe result is stubbed.
+    """
+    monkeypatch.setattr(
+        _capability_gaps,
+        "_run_service_probe",
+        lambda _root, _repo, _body, _kind: {
+            "ok": False,
+            "error": "param_schema: ImportError: cannot import name 'iter_route_contexts' from 'fastapi.routing'",
+            "err_type": "ImportError",
+        },
+    )
+    with pytest.raises(RuntimeError) as excinfo:
+        extract_param_schema(tmp_path)
+    msg = str(excinfo.value)
+    assert "ImportError" in msg
+    assert "strategy-service" in msg
+    assert ".venv" in msg
+    assert "Re-sync" in msg
+
+
+def test_non_import_probe_failure_still_yields_honest_gap(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """A non-ImportError probe failure (e.g. missing venv) keeps the honest
+    ``not_registered`` gap edge instead of raising."""
+    monkeypatch.setattr(
+        _capability_gaps,
+        "_run_service_probe",
+        lambda _root, _repo, _body, _kind: {
+            "ok": False,
+            "error": "param_schema: no .venv at /nonexistent/.venv/bin/python",
+            "err_type": "",
+        },
+    )
+    schema, nodes, edges = extract_param_schema(tmp_path)
+    assert schema == {}
+    assert len(nodes) == 1 and nodes[0].kind.value == "gap_registry"
+    assert len(edges) == 1

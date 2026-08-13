@@ -366,7 +366,8 @@ out = {{"ok": False}}
 try:
 {body}
 except Exception as e:  # noqa: BLE001 — probe must report failure as a typed gap
-    out = {{"ok": False, "error": "{kind}: " + type(e).__name__ + ": " + str(e)[:200]}}
+    out = {{"ok": False, "error": "{kind}: " + type(e).__name__ + ": " + str(e)[:200],
+           "err_type": type(e).__name__}}
 sys.stdout.write(json.dumps(out))
 """
 
@@ -838,6 +839,11 @@ def extract_param_schema(
     ``(param_schema, nodes, edges)``: ``param_schema`` keyed by archetype node_id
     (``StrategyArchetype`` value), plus an honest ``not_registered`` gap node/edge
     when the probe is unavailable (the manifest still generates without it).
+
+    An ``ImportError``/``ModuleNotFoundError`` while probing the sibling venv is
+    *not* a legitimate gap — it means the venv is stale/broken — so it raises
+    loudly (naming the venv path) rather than degrading to an empty schema that
+    downstream surfaces as ``assert 0 >= 29``.
     """
     body = (
         "    from strategy_service.engine.strategies.v2.param_schema import build_param_schema_registry\n"
@@ -846,6 +852,15 @@ def extract_param_schema(
     res = _run_service_probe(workspace_root, "strategy-service", body, "param_schema")
 
     if not res.get("ok"):
+        err = str(res.get("error", "param_schema probe unavailable"))
+        err_type = str(res.get("err_type", ""))
+        if err_type in ("ImportError", "ModuleNotFoundError"):
+            venv_python = workspace_root / "strategy-service" / ".venv" / "bin" / "python"
+            raise RuntimeError(
+                "param_schema probe ImportError — strategy-service venv is stale/broken "
+                f"({venv_python}): {err}. Re-sync it to its declared dependency floor "
+                "(e.g. `uv sync`) and re-run; never degrade to an empty schema."
+            )
         node_id = "service_registry:param_schema"
         gap_node = _node(
             CapabilityNodeKind.GAP_REGISTRY,
