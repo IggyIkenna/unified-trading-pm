@@ -95,14 +95,17 @@ the active corpus without ever being done.
 - [x] [BACKEND] P1. **Decide the producer — RESOLVED 2026-08-12: (b), a probe-driven producer in alerting-service,
       dispatched on the policy's own `test_method` field.** See "Producer decision" below for the evidence and the
       trade-off accepted.
-- [ ] [BACKEND] **P0. Put a duration floor on the no-fallback branch BEFORE any producer is wired.** As written,
+- [x] [BACKEND] **P0. Put a duration floor on the no-fallback branch BEFORE any producer is wired.** As written,
       `evaluate_dependency_health` ORs `not policy.fallback_available` into the CRITICAL branch with no minimum outage:
       any `outage > 0` — a single failed probe, 1 second — returns SEV0 `pagerduty+telegram`. **10 of 27 policies set
       `fallback_available: false`** (aave_v3, lido, gcp_pubsub, gcp_cloud_storage, gcp_secret_manager,
       gcp_artifact_registry, gcp_bigquery, redis_primary, gcp_cloud_sql, twilio_voice_sms), so wiring a prober today
       turns one flaky probe against Secret Manager into a 3am page. Fix: require N consecutive failed probes AND
       `outage >= expected_recovery_time_seconds` before the no-fallback escalation, so "no fallback" raises SEVERITY,
-      never bypasses DURATION. This is a correctness bug in the shipped rule, independent of the wiring.
+      never bypasses DURATION. This is a correctness bug in the shipped rule, independent of the wiring. — ✅ **DONE**:
+      duration floor added — `no-fallback` now SEV0 only at `outage >= expected_recovery_time_seconds`;
+      N-consecutive-probes gate documented as producer contract. `alerting-service@324ffa5` (rule + tests),
+      `unified-api-contracts@6f63637d` (schema docstring), `deployment-service@c5a8f4b6` (loader string + yaml ladder).
 - [ ] [BACKEND] P1. Wire the subscriber once the producer exists — a `*_event_handler.py` importing
       `evaluate_dependency_health` + `evaluate_dependency_recovered`, registered in `subscribers/alert_subscriber.py`,
       following the `recon_freeze_event_handler` pattern.
