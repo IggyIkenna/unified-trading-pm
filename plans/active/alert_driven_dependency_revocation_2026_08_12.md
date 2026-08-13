@@ -134,9 +134,14 @@ bridges them; it does not extend one over the other.
       `close()`, so a SIGTERM mid-shard flushes and uploads the partial parquet instead of discarding the buffer. Repo:
       unified-trading-library. — unified-trading-library@d50ca9ff65 (registers at construction, not first write, so a
       writer dying before its first flush is covered; deregisters in BOTH `close()` and `finalize_local()`)
-- [ ] [CODE] P0. Register `StreamingShardFinalizer`'s writer pool with the drain registry — its per-shard writers are
-      the same exposure with a wider blast radius (one row-group can span many shard keys). Repo:
-      unified-trading-library.
+- [x] 6. ✅ [CODE] P0. Register `StreamingShardFinalizer`'s writer pool with the drain registry — its per-shard writers
+      are the same exposure with a wider blast radius (one row-group can span many shard keys). Repo:
+      unified-trading-library. — **PLAN ASSUMPTION WAS WRONG; no pool code needed.** The pool is built out of
+      `StreamingParquetWriter` instances (`streaming_shard_finalizer.py` constructs them in `_route_row_groups`), and
+      those self-register at construction as of d50ca9ff65 — so every pooled shard writer is drainable already.
+      Registering the pool as well would be a redundant second layer and a double-drain risk. Closed with the proving
+      test instead: unified-trading-library@3378696710 (`test_streaming_parquet_writer_self_registers_and_deregisters`,
+      `test_empty_writer_drain_is_a_noop`)
 - [ ] [CODE] P0. Migrate `_preemption_signal` to install its handler THROUGH the drain registry rather than owning its
       own, so exactly one SIGTERM handler exists per process and the manifest buffer keeps its current guaranteed-drain
       semantics. Repo: unified-trading-library.
