@@ -4,10 +4,10 @@ title: data-status rollup worker never writes ml-service's full.json.gz (coverag
 summary: >-
   While diagnosing the uts-prod-data-status-rollup Cloud Run service (defi_satellite_ao_dispatch_batch1-032), found
   `gs://central-element-323112-data-status-rollups/ml-service/` carries only `coverage.json.gz` — `full.json.gz` is
-  absent — while every other `_DEFAULT_SERVICES` entry except the known market-tick-data-service gap (tracked
-  separately) got a fresh `full.json.gz` in the same cycle, including services processed AFTER ml-service in the
-  worker's sequential list (strategy-service, execution-service). This means ml-service's full-rollup step specifically
-  errors/is skipped, not a generic OOM-class or ordering artifact.
+  absent. Originally (2026-07-26) this was the ONLY gap beyond the known market-tick-data-service one. **STALE as of
+  2026-08-13**: 8 more `_DEFAULT_SERVICES` have since regressed with 2 new, previously-unseen exception classes
+  (`TypeError`/`AttributeError` on manifest columns; 2 more services newly timing out) — see the 2026-08-13 Progress Log
+  entry. Only 3 of 14 `_DEFAULT_SERVICES` currently produce a `full.json.gz` at all.
 status: open
 nature: issue
 asset_group: [cross-cutting]
@@ -20,10 +20,11 @@ related:
     /plans/active/data_status_cell_grid_rearchitecture_2026_07_18.md,
     /plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /plans/active/mvp_could_exist_rollup_dual_scope_2026_08_12.md,
   ]
 created: 2026-07-26
 author: unknown
-last_updated: 2026-07-26
+last_updated: 2026-08-13
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -184,19 +185,19 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       needs its own bound.
 
       **RESOLVED 2026-08-02 (slot 10)**: `deployment-api@34a596b`. Took the documented alternative to raising the
-              ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
-              means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
-              accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
-              `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
-              `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
-              `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
-              observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
-              `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
-              AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
-              isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
-              isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
-              "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
-              records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
+                  ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
+                  means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
+                  accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
+                  `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
+                  `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
+                  `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
+                  observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
+                  `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
+                  AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
+                  isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
+                  isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
+                  "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
+                  records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
 
 - [x] ✅ [INFRA] P3. The `data-status-rollup-worker` `GcsEventSink` (the
       `log_event(SERVICE_PROCESSED/SERVICE_FAILED, ...)` calls in `run_rollup`) has not written a new dated prefix under
@@ -390,8 +391,54 @@ worth closing the same way (isolate + surface the real error) rather than leavin
   SHAs + a fleet-wide unified-trading-ci CI fix unblocked along the way) documented in the sibling deploy-blocker doc's
   Resolution section.
 
+- **2026-08-13 (autonomous tick, `mvp_could_exist_rollup_dual_scope_2026_08_12.md` todo 7)**: **This doc's own summary
+  is now STALE and MISLEADING — correcting it here rather than leaving it to mislead the next reader.** The summary
+  claims "every other `_DEFAULT_SERVICES` entry except the known market-tick-data-service gap... got a fresh
+  `full.json.gz` in the same cycle" (true as of 2026-07-26). It is no longer true. Triggered a fresh rollup run today
+  (`gcloud scheduler jobs run uts-prod-data-status-rollup-cron`, 16:10:57Z) to verify todo 7's dual-scope-blob
+  precondition, and found **9 of the 14 `_DEFAULT_SERVICES` now fail with 2 exception classes this doc has never
+  mentioned**, confirmed via `gcloud logging read` on `uts-prod-data-status-rollup-svc`:
+  - `TypeError: '<' not supported between instances of 'NoneType' and 'str'` —
+    `features-delta-one-service`/`features-volatility-service`/`features-multi-timeframe-service`/
+    `features-cross-instrument-service`.
+  - `AttributeError: Can only use .str accessor with string values!` — `features-sports-service`/
+    `features-calendar-service`/`strategy-service`.
+  - `manifest rollup failed ... timed out after 420s` — `market-tick-data-service` (already tracked, separate doc)/
+    `market-data-processing-service` (NOT previously tracked)/`features-onchain-service` (NOT previously tracked).
+
+  **Confirmed pre-existing, not a regression from `mvp_could_exist_rollup_dual_scope_2026_08_12`'s dual-scope code**:
+  re-ran the SAME log query for the window BEFORE that plan's 2026-08-13T14:55:52Z deploy and found the identical error
+  signatures already firing as early as 10:38Z today (`features-calendar-service`) — well before any dual-scope code was
+  live. Root cause of WHEN this regressed between 2026-07-26 (doc's original finding: these 9 services were fine) and
+  today is **not yet diagnosed** — that's the next investigative step, not done here (this entry is the discovery, not
+  the fix).
+
+  **Only 3 of 14 `_DEFAULT_SERVICES` have EVER had a `full.json.gz`**: `instruments-service` (fresh, today's dual-scope
+  run), `features-commodity-service` (stale, 2026-08-13T11:43Z — predates the regression's earliest observed
+  occurrence), `execution-service` (stale, 2026-08-13T10:53Z — likely from BEFORE whatever broke the other 9, given it
+  succeeded that recently). `ml-service` remains never-written (this doc's original finding, still open). **Practical
+  implication for `mvp_could_exist_rollup_dual_scope_2026_08_12`'s todo 7** ("every `_DEFAULT_SERVICES` entry
+  regenerated in dual-scope shape"): that bar is now structurally unreachable without a SEPARATE fix to this broader
+  regression — 10 of 14 services (9 new + ml-service) cannot produce ANY `full.json.gz`, dual-scope or otherwise, until
+  this is root-caused and fixed. Flagging for operator awareness — this is bigger than one plan's transition-compat
+  cleanup todo.
+
 ## Follow-ups
 
+- [ ] [DATA] P1. **NEW (2026-08-13)**: root-cause + fix the `TypeError: '<' not supported between NoneType and str` /
+      `AttributeError: Can only use .str accessor with string values!` errors now failing 7 of 14 `_DEFAULT_SERVICES`
+      manifest-rollup builds (`features-delta-one-service`/`features-volatility-service`/
+      `features-multi-timeframe-service`/`features-cross-instrument-service`/`features-sports-service`/
+      `features-calendar-service`/`strategy-service`) — confirmed pre-existing (predates 2026-08-13T14:55:52Z, the
+      `mvp_could_exist_rollup_dual_scope_2026_08_12` plan's deploy), confirmed NOT present in this doc's original
+      2026-07-26 diagnosis (those 9 services worked then). Likely a manifest schema/dtype drift (a column expected to be
+      all-string now carries `None`/mixed dtype in at least one of these services' captured data) — start by bisecting
+      when it started (Cloud Logging history between 2026-07-26 and 2026-08-13) and which manifest column's values
+      changed shape.
+- [ ] [DATA] P2. **NEW (2026-08-13)**: `market-data-processing-service` and `features-onchain-service` now also timeout
+      at 420s (same failure mode as the already-tracked `market-tick-data-service` gap) — not previously documented as
+      failing in this doc. Confirm whether this is the SAME root cause as the tracked `market-tick-data-service` timeout
+      or a distinct one before folding them into that fix.
 - [ ] [DATA] P3. Live-verify ml-service's full.json.gz actually refreshes on a real */20 uts-prod-data-status-rollup
       cron cycle post-fix (deployment-api@aaa0d1d)
 - [x] ✅ [DATA] P1. Once

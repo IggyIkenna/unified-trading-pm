@@ -272,7 +272,13 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
       blob shape for every `_DEFAULT_SERVICES` entry (verify via a live GCS read, not an assumption), remove the
       `.get("could_exist", root)` fallback added in todo 5 and require the new shape unconditionally. Done-when:
       fallback code deleted, full test suite green, live GCS check cites the object generation/timestamp proving every
-      service's blob was rewritten after todo 5 landed.
+      service's blob was rewritten after todo 5 landed. **BLOCKED (2026-08-13, discovered this session)**: this
+      done-when is now structurally unreachable until a SEPARATE, larger regression is fixed —
+      `data_status_rollup_ml_service_full_blob_missing_2026_07_26.md` (see its 2026-08-13 Progress Log entry) — only 3
+      of 14 `_DEFAULT_SERVICES` currently produce a `full.json.gz` at all (10 fail: 7 with newly-discovered
+      TypeError/AttributeError manifest-column bugs, 3 with timeouts, 1 already-tracked ml-service gap). Confirmed
+      pre-existing, not caused by this plan's dual-scope code. Not something to fix inline here — that issue doc now
+      owns the root-cause + fix; this todo resumes once it's resolved.
 - [x] [REVIEW] P2. End-to-end live verification — once todos 1-6 are deployed, re-run the 3-scope probe pattern from
       `venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md` (`could_exist`/`mvp`/`all`, `asset_groups=cefi`)
       against BOTH the on-demand endpoint (should already work) and a fresh rollup-backed response (the new capability),
@@ -568,3 +574,22 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
   this could take hours and may fail again at the same service. Not something to wait out synchronously in this session
   — flagging as genuinely `Cannot be done yet` per the pre-compact ritual's triage table, owner: whichever session next
   checks in. Plan is now 8/9 done — only todo 7 remains, dated and diagnosed, not vague.
+
+- **2026-08-13 (autonomous tick — todo 7's blocker turned out much bigger than "just wait": a real, previously-untracked
+  cross-service regression, filed)**: Continued watching the triggered rollup run rather than re-asking the operator on
+  an unchanged state. It did NOT get stuck on the same OOM this time — it made real progress through the service list,
+  but surfaced **9 of 14 `_DEFAULT_SERVICES` failing with 2 exception classes never before documented**
+  (`TypeError: '<' not supported between NoneType and str`,
+  `AttributeError: Can only use .str accessor with string values!`, plus 2 newly-timing-out services). Confirmed via
+  direct log search that these errors ALREADY fired as early as 10:38Z today — well before this plan's 14:55:52Z deploy
+  — so this is NOT a dual-scope regression. Also found the existing tracker doc's own summary was now factually WRONG
+  (it claimed "every other `_DEFAULT_SERVICES` entry... got a fresh `full.json.gz`", true 2026-07-26, false today) —
+  corrected it in place per the misleading-doc HARD RULE rather than leaving it to mislead the next reader. Filed the
+  full finding + root-cause investigation as 2 new Follow-up todos in
+  `data_status_rollup_ml_service_full_blob_missing_2026_07_26.md` (that doc's existing scope — rollup-worker
+  service-coverage health — is the right home; not a new standalone doc) rather than attempting an inline fix: this is a
+  genuinely separate, larger investigation (which manifest column drifted dtype, in which of 7 services, since when
+  between 07-26 and today) that todo 7 itself cannot absorb. Only 3 of 14 `_DEFAULT_SERVICES` currently produce a
+  `full.json.gz` at all (`instruments-service`, `features-commodity-service`, `execution-service`) — todo 7's literal
+  "every entry" bar is structurally unreachable until that separate issue is fixed, not just a matter of more elapsed
+  time. Todo 7 stays open, now pointing at the right owning doc instead of a vague "wait longer."
