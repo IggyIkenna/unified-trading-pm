@@ -72,8 +72,10 @@ source: >-
 
 ## Todos
 
-- [ ] [CODE] P2. add slot/clone identification to every slot-cron-ff-pull.sh log verdict (five clones per repo currently
-      write indistinguishably into one log file) Source: `plans/active/issues/ff_pull_fleet_drift_rca_2026_08_11.md`
+- [x] [CODE] P2. ✅ add slot/clone identification to every slot-cron-ff-pull.sh log verdict (five clones per repo
+      currently write indistinguishably into one log file) — unified-trading-pm@c89e109ea7 + `_clone_tag` (slot-<N>/main
+      from cwd) prefixed on every `log()` verdict; 14/14 bats green. Source:
+      `plans/active/issues/ff_pull_fleet_drift_rca_2026_08_11.md`
 - [ ] [CODE] P2. confirm/fix ff-starvation-detect.sh's early exit on a detached HEAD (currently produces no verdict from
       either side, allowing unbounded drift) Source: `plans/active/issues/ff_pull_fleet_drift_rca_2026_08_11.md`
 - [ ] [CODE] P2. apply SUPERSEDED banners to the 3 retired-but-still-scanned codex docs per the workspace's stated

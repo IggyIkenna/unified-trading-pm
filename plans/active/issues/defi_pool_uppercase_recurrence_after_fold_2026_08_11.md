@@ -57,6 +57,9 @@ source: >-
   `defi_pool_rate_indices_dex_pool_fees_retirement-de3dd51056c2`); the todo was already NOT-DONE (slot-31 content-verify
   block) — this doc documents a second, independent blocking gap found while researching how to safely resolve the first
   one.
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # DeFi `instrument_type=POOL` recurrence after a verified fold — root cause unresolved
