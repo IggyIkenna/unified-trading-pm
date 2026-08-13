@@ -116,6 +116,21 @@ bridges them; it does not extend one over the other.
 - [ ] [SCRIPT] P1. Inventory every buffered writer in the fleet that can hold un-flushed rows — grep for
       `StreamingParquetWriter`, `StreamingShardFinalizer`, and any local accumulation before a GCS write. This is Phase
       1's registration list. Repo: unified-trading-library.
+- [ ] [OPERATOR] P1. Reconcile the slot-4 `unified-trading-pm` checkout — 1-ahead (an automated `chore(orphan-wip)`
+      inherit commit) / 153-behind `origin/live-defi-rollout`, with dirty files owned by a LIVE peer session
+      (`tradfi_databento_account_billing_suspended_2026_08_09.md`,
+      `tradfi_manifest_content_recovery_completion_2026_07_24.md`, untracked
+      `cefi_tardis_pre_listing_filter_wrong_gcs_path_always_404s_2026_08_12.md`, `slack-data-pipeline-alerts-2h.json`).
+      BLOCKED-OPERATOR-DECISION: resolving it requires deciding what happens to the peer's staged work, which the
+      liveness gate forbids an agent from doing unilaterally. Options: (a) wait for the peer session to land its work
+      then `git pull --rebase --autostash`; (b) operator adjudicates and reconciles now. Recommendation: (a) — nothing
+      is blocked by it, since every ship this session went through the isolated-worktree path unaffected by the
+      divergence.
+- [ ] [OPERATOR] P2. Bootstrap a `.venv` in this slot's `unified-trading-library` — absent, so every verification
+      round-trip is a full `quality-gates.sh` run (measured this session: 103s / 119s / 218s / 406s, plus a 74s
+      tests-slice). Roughly 20 minutes of one session's wall-clock went to gates for changes checkable in seconds
+      locally. This is the dominant cost on the remaining todos and Phase 6's 12 bad-VM scenarios will be the worst of
+      it.
 
 ## Phase 1 — The graceful-flush contract (HARD PREREQUISITE — no DEPS_DRAIN edge is armed before this)
 
@@ -316,6 +331,28 @@ bridges them; it does not extend one over the other.
       folder, banner, referrer sweep).
 
 ---
+
+## Deferred work after 2026-08-12
+
+Phase 1 closed 8 of 9 todos. Nothing below is half-shipped — every item is either untouched or operator-owned.
+
+| Item                                                                                                          | State / why deferred                                                                                                         | Blocked on                    |
+| ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| Phase 1c — wire drain registry into MTDS / MDPS / instruments-service / features-service backfill entrypoints | **Not done** — 4 repos = 4 separate gate runs; deliberately not started mid-context rather than left half-wired across repos | nobody                        |
+| Phase 1e — codex flush-contract doc                                                                           | **Not done** — small, follows 1c so the doc describes the shipped end state                                                  | nobody (do after 1c)          |
+| Phase 2 — `DependentAction` + `evaluate_revocation()`                                                         | **Not done** — the policy SSOT; unblocked, Phase 1's contract is in place                                                    | nobody                        |
+| Phase 3 — `RETRY_BUDGETS`                                                                                     | **Not done** — independent of Phase 2, can run in parallel                                                                   | nobody                        |
+| Phase 4 — push actuator                                                                                       | **Not done**                                                                                                                 | Phase 2 (needs the evaluator) |
+| Phase 5 — VM poll hook + Cloud Run skip gate                                                                  | **Not done**                                                                                                                 | Phase 2 + Phase 4             |
+| Phase 6 — 12 bad-VM scenarios                                                                                 | **Cannot be done yet** — needs the actuator and poll hook to exist before there is anything to assert against                | Phases 4-5                    |
+| Phase 7 — codex SSOT + archival                                                                               | **Cannot be done yet** — closes the plan                                                                                     | all phases                    |
+| slot-4 PM checkout divergence                                                                                 | **Operator-owned** — liveness gate forbids an agent reconciling a live peer's staged work                                    | operator                      |
+| `unified-trading-library` `.venv` bootstrap                                                                   | **Operator-owned** — environment setup                                                                                       | operator                      |
+
+**Recommended NEXT item: Phase 2** (`DependentAction` + `evaluate_revocation()`), not Phase 1c. Phase 1's graceful-flush
+contract — the hard prerequisite — is shipped and green, so the critical path now runs through the policy evaluator that
+Phases 4-6 all depend on. Phase 1c is real work but it only widens coverage of an already-correct mechanism; nothing
+downstream waits on it, whereas Phase 4, 5 and 6 all wait on Phase 2.
 
 ## Progress Log
 
