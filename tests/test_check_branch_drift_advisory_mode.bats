@@ -55,13 +55,17 @@ setup() {
   # would fetch) -- fetch first so the hook sees a truly-caught-up state.
   git fetch -q origin live-defi-rollout
   git reset -q --hard origin/live-defi-rollout
-  run bash "$HOOK"
+  run env -u GITHUB_ACTIONS -u CI bash "$HOOK"
   [ "$status" -eq 0 ]
 }
 
 @test "behind origin, DRIFT_GATE_ADVISORY unset: hard-blocks (the case this hook exists for)" {
   cd "${WORK}/repo"
-  run bash "$HOOK"
+  # -u GITHUB_ACTIONS -u CI: the hook's OWN first line unconditionally exits 0 when either
+  # is set ("Skipped in CI") -- and this bats suite itself always runs inside GitHub Actions,
+  # so without stripping them here every test below would exercise only that early-exit, never
+  # the actual drift-check logic this file exists to verify.
+  run env -u GITHUB_ACTIONS -u CI bash "$HOOK"
   [ "$status" -eq 1 ]
   [[ "$output" == *"BRANCH DRIFT"* ]]
   [[ "$output" == *"Human-only"* ]]
@@ -69,14 +73,14 @@ setup() {
 
 @test "behind origin, DRIFT_GATE_ADVISORY=1: warns and exits 0 (reconciling wrapper's own commit)" {
   cd "${WORK}/repo"
-  DRIFT_GATE_ADVISORY=1 run bash "$HOOK"
+  DRIFT_GATE_ADVISORY=1 run env -u GITHUB_ACTIONS -u CI bash "$HOOK"
   [ "$status" -eq 0 ]
   [[ "$output" == *"ADVISORY"* ]]
 }
 
 @test "SKIP_BRANCH_DRIFT still wins over DRIFT_GATE_ADVISORY (human override untouched)" {
   cd "${WORK}/repo"
-  SKIP_BRANCH_DRIFT=1 DRIFT_GATE_ADVISORY=0 run bash "$HOOK"
+  SKIP_BRANCH_DRIFT=1 DRIFT_GATE_ADVISORY=0 run env -u GITHUB_ACTIONS -u CI bash "$HOOK"
   [ "$status" -eq 0 ]
 }
 
