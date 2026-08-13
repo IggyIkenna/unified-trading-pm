@@ -68,20 +68,20 @@
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.49.3",
-    "deployment-api": "0.83.1",
-    "deployment-service": "0.129.15",
+    "deployment-api": "0.84.0",
+    "deployment-service": "0.129.16",
     "deployment-ui": "0.1.0",
     "execution-service": "0.67.0",
     "features-service": "0.81.3",
     "fund-administration-service": "0.9.32",
     "ibkr-gateway-infra": "0.5.1",
-    "instruments-service": "0.101.19",
+    "instruments-service": "0.101.20",
     "market-tick-data-service": "0.128.3",
     "system-integration-tests": "0.15.1",
     "unified-api-contracts": "0.114.10",
     "unified-trading-library": "0.81.0",
     "unified-trading-pm": "1.2.741",
-    "market-data-processing-service": "0.29.5",
+    "market-data-processing-service": "0.29.6",
     "e2e-testing": "0.41.3",
     "agent-orchestrator": "0.100.3",
     "greeks-service": "0.18.19",
@@ -2249,13 +2249,13 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.114.10",
-      "published_at": "2026-08-13T00:06:52Z",
+      "version": "0.115.0",
+      "published_at": "2026-08-13T13:07:09Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.101.19.dev1+g3f0814fba",
-      "published_at": "2026-08-12T22:04:39Z",
+      "version": "0.101.20.dev1+g273d5b85b",
+      "published_at": "2026-08-13T13:04:18Z",
       "registry": "artifact-registry"
     }
   }
