@@ -162,8 +162,8 @@ SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
 - **Rule-amnesia stop** — halt on `os.getenv()`/`pip install`/direct `git push`/skip-test suggestions. **No
   `python3 << EOF` for file analysis** (`re`-backtracking runaways) — use `rg`/`grep`. **CLAIM ≤ MEASUREMENT**: 0 hits ≠
   missing (runtime-resolved — READ the consumer; uncertain → ASK); a PROXY (line count, exit 0, green test, cached
-  `origin/`) ≠ the property — measure or say you didn't → `/codex/12-agent-workflow/measurement-claims-discipline.md`.
-  **Pane deep** (`tmux capture-pane -S -50`).
+  `origin/`) ≠ the property — measure or say you didn't → `…/measurement-claims-discipline.md`. **Pane deep**
+  (`tmux capture-pane -S -50`).
 - **Async-wait / poll / background-task discipline (HARD RULE — recurring "found asleep" class)**: never report a
   backgrounded task done before its real exit; rely on the tracked-task auto-re-invoke (don't poll harness tasks); poll
   only external work on a **progress metric** (flat = STALL → diagnose); don't over-watch / no-sawtooth / don't poll
@@ -173,12 +173,14 @@ SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
   (liveness `kill -0 <PID>`, no self-match); `ScheduleWakeup` / a dispatched sub-agent are NOT reliable wakes — arm your
   OWN `run_in_background` heartbeat watchdog (size-to-job — unbounded work ≤30-min, a KNOWN-duration VM job gets ONE
   monitor sized to its own documented duration, never a ≤30-min re-arm chain) in the SAME turn. SSOT:
-  `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
+  `…/async-wait-and-poll-discipline.md`.
 - **Batch independent tool calls — the trigger is PRE-call**: before any Bash/Read/Grep ask _what else will I want to
   know regardless of this answer_, and fold it into the SAME call (compound `&&`/`;`, several `tool_use` blocks per
   message, `replace_all` over serial Edits); only result-dependent calls stay sequential. Stating it as an outcome fails
   — a reminder acknowledged ~88×/session changed nothing. Measured: 57.3% collapsible, each a ~406k prefix re-read.
   SSOT: `/codex/06-coding-standards/tool-call-batching.md`.
+- **Use TodoWrite proactively for multi-thread/multi-step work** — keep it current as threads open/close (flip status in
+  real time), not only when the operator asks.
 - **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`).
 - **Pre-task plan/issue conflict check (HARD RULE)** — before ANY task grep `plans/active/`+`issues/`: plans go
   stale/superseded between daily `/plan-reconcile` sweeps: no-flag≠current; 0 hits ≠ clear (grep-then-read) — check
@@ -242,8 +244,8 @@ architecture (L0–L4)".
   via `/na-eligibility-audit`. **Line caps** (plans 500 soft/1000 hard; epics `plans/epics/*.md` 2000 hard flat — NO
   `umbrella:`/`locked_by`+todos exemption, 2026-07-24 ruling) are a REAL hard gate (ratchet-baselined,
   `check_line_caps.sh`) in the sweep AND prek `--precommit`: a plan/epic you stage must not be over its cap. SSOTs:
-  `codex/11-project-management/`, `/codex/08-workflows/estimation-calibration.md`,
-  `/codex/11-project-management/cross-reference-path-convention.md`.
+  `codex/11-project-management/` (`…/cross-reference-path-convention.md`),
+  `/codex/08-workflows/estimation-calibration.md`.
 
 ## Governance + safety HARD RULES
 
