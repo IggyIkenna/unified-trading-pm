@@ -73,7 +73,8 @@ Evaluated by `alerting_service.rules.evaluate_dependency_health(dependency_id, c
 outage < expected_recovery_time                              → None (no alert)
 outage in [expected, expected + warning_buffer]              → WARN
 outage in [warning+buffer, warning+buffer + human_inv_buffer (900s)] → SEV1
-outage > hard_escalation_seconds OR fallback_available=False → SEV0
+outage > hard_escalation_seconds                                  → SEV0
+outage >= expected_recovery_time AND fallback_available=False     → SEV0
 ```
 
 Ships as: `alerting-service@839cb5f` (`evaluate_dependency_health()` + `evaluate_dependency_recovered()`).
