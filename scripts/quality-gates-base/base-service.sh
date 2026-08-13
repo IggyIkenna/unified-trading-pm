@@ -1155,7 +1155,26 @@ PYEOF
             else
                 echo "  BATS: running ${#_BATS_FILES[@]} file(s) SERIALLY (GNU parallel absent or BATS_JOBS<=1)"
             fi
-            if bats "${_BATS_ARGS[@]}" "${_BATS_FILES[@]}" 2>&1; then
+            # SIMULATE_CI=1 (2026-08-13, ci_reconcile hardening): a local dev run of this gate
+            # has NEITHER GITHUB_ACTIONS NOR CI set — 3 real bats bugs shipped clean through a
+            # local run and quickmerge, then failed 100% deterministically the moment the SAME
+            # content hit the real GH Actions runner (a test invoking a script whose OWN "skip
+            # in CI" guard the test forgot to bypass; a test's ambient $HOME leaking a real
+            # ~/.orch_token that a clean CI runner never has; a test helper's stat-flag fallback
+            # only broken on Linux) — each one blocked every PM promote-PR QG slice for 12+ hours
+            # before being caught, because nothing local could ever have seen it. Exporting these
+            # two vars for JUST this subprocess (not the whole quality-gates.sh run, which may
+            # have its own unrelated CI-gated branches elsewhere) reproduces the exact ambient
+            # condition real CI runs under, catching this whole bug CLASS at commit time instead
+            # of a live-fire drill hours later. Opt-in, not default, since a genuinely-CI-only
+            # test (one that SHOULD only run in CI) would need its own separate skip logic this
+            # flag does not attempt to solve.
+            _BATS_ENV=()
+            if [ "${SIMULATE_CI:-0}" = "1" ]; then
+                echo "  BATS: SIMULATE_CI=1 — forcing GITHUB_ACTIONS=true CI=true for this run (catches the local-passes/CI-fails bug class before it ships)"
+                _BATS_ENV=(env GITHUB_ACTIONS=true CI=true)
+            fi
+            if "${_BATS_ENV[@]}" bats "${_BATS_ARGS[@]}" "${_BATS_FILES[@]}" 2>&1; then
                 log_ok "BATS tests PASSED (${#_BATS_FILES[@]} file(s))"
             elif [ "${BATS_HARD_FAIL:-0}" = "1" ]; then
                 log_fail "BATS: ${#_BATS_FILES[@]} file(s) — one or more tests failed (BATS_HARD_FAIL=1 for this repo — this suite is confirmed clean at baseline, so any failure here is a genuine regression)"

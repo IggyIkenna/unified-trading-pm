@@ -257,6 +257,26 @@ division is the same intent-vs-method split as trades — no change needed.**
 | **Emit** (decide + net)      | strategy-service  | `IntraClientRebalanceCoordinator` (`transfer_coordinator.py`) nets N strategies' requests for ONE client into the **minimum set of intents** — one per `client × {unordered venue pair} × asset × transfer_type` — summing signed amounts, dropping flows that cancel to zero, collapsing bidirectional flows to a single net direction. Emits canonical UAC `TransferIntent`. |
 | **Consume** (move + confirm) | execution-service | `execution_service.transfer_coordinator.TransferCoordinator` plus `engine/transfers/` — `live_custody_adapter.py` (the custody rail) and `confirmation_poller.py` (settlement confirmation)                                                                                                                                                                                    |
 
+### I/O, adaptor and routing are ENTIRELY execution-service (verified 2026-08-12)
+
+Operator asked to confirm rather than assume. Measured: **strategy-service has zero transfer I/O** — no
+`withdraw`/`custody`/`rpc`/`web3`/`send_transaction`/`bridge` anywhere in `transfer_coordinator.py` or
+`rebalance_emit_pipeline.py`, and `transfer_coordinator.py` is its only transfer-related module. The whole rail lives in
+`execution-service/execution_service/engine/transfers/`:
+
+| Piece                      | What it does                                                                                                                                                                                                                                                                   |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `adapter.py`               | The `TransferAdapter` Protocol — `execute_internal_transfer`, `execute_withdrawal`, `execute_onchain_transfer`, `get_transfer_status`, `get_balance` (all async), each taking an optional `FundTransferContext` for fund/share-class routing                                   |
+| `factory.py`               | Adapter selection **by `OperationalMode`**: BACKTEST/PAPER → `MockTransferAdapter` (instant, no credentials); LIVE/MANUAL → `CompositeTransferAdapter`. Its docstring states the discipline explicitly: _"Same code path for batch and live — adapter injection, not if/else"_ |
+| `CompositeTransferAdapter` | **The rail router**: CeFi operations (internal transfers, withdrawals, CeFi balance) → CCXT adapter; on-chain operations (custody transfers, on-chain balance) → custody adapter; status polling tries CCXT first, then custody                                                |
+| `live_ccxt_adapter.py`     | The CeFi rail                                                                                                                                                                                                                                                                  |
+| `live_custody_adapter.py`  | The on-chain / custody rail, resolving through `custody/factory.py::get_custody_provider` (Copper / CEFFU)                                                                                                                                                                     |
+| `confirmation_poller.py`   | Settlement confirmation                                                                                                                                                                                                                                                        |
+
+**Note for the § J6 enum union**: the live router branches on **CeFi-vs-on-chain**, not on any `TransferType` member. So
+the unioned enum must map cleanly onto those two rails (plus custody), or the classification and the routing will
+disagree — worth settling as part of the union rather than after it.
+
 **Why netting must sit strategy-side**: it requires seeing every strategy for one client at once, which is exactly the
 view execution-service does not have. Execution receives an already-minimal set of intents rather than N overlapping
 ones — the same reason strategy owns the reference price and not the algo.
