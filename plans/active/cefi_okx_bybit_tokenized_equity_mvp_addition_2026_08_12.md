@@ -99,10 +99,11 @@ and MVP-tagging needs.
       catalogue rollup — without this, the UAC universe+link registration above is necessary but not sufficient for the
       OKX symbols (the Bybit suffix form already works unmodified). Repo: instruments-service. —
       instruments-service@9ca5801a2 (prefix branch added; 7 classifier assertions; QG green 5385 passed)
-- [ ] [SCRIPT] P1. instruments-service — register an `InstrumentRecord` for each confirmed tokenized-equity symbol dated
-      to its REAL historical listing date from Todo 1 (not a blanket floor — mirrors the equity-perp sibling plan's own
-      per-symbol-date discipline, motivated by the same regime/coverage-window correctness concern that plan's Progress
-      Log documents for XAU/XAG/SPY). Repo: instruments-service.
+- [x] ✅ [SCRIPT] P1. instruments-service — register an `InstrumentRecord` for each confirmed tokenized-equity symbol
+      dated to its REAL historical listing date from Todo 1 (not a blanket floor — mirrors the equity-perp sibling
+      plan's own per-symbol-date discipline, motivated by the same regime/coverage-window correctness concern that
+      plan's Progress Log documents for XAU/XAG/SPY). Repo: instruments-service. — **NO CODE CHANGE NEEDED** (already
+      registered) + instruments-service@4eca07bac4 (regression test). See Progress Log.
 - [ ] [SCRIPT] P2. Once IS enumerates the new symbols, launch the CeFi Tardis/venue-native backfill for the
       tokenized-equity SPOT window (existing launcher — verify whether OKX/Bybit SPOT tokenized-equity trades ride the
       same Tardis archive as the equity perps, or need their own adapter check first). Repo: deployment-service.
@@ -219,3 +220,30 @@ new symbols") didn't call out — added as a dedicated `[SCRIPT]` todo rather th
   precedent 2026-06-23). `MVP_SCOPE_CONFIG_VERSION` 25 → **26**. QG-green (`quality-gates.sh --no-fix`, 382s, ALL
   PASSED). Tests: `TestTokenizedEquityMvpV26` in tests/unit/test_mvp_scope.py (5 cases) + version pin bumped. —
   unified-api-contracts@bfad33b58 (verified ancestor of origin/live-defi-rollout).
+
+- **2026-08-13 — Todo 5 (IS `InstrumentRecord` registration dated to real listing dates) COMPLETE — NO CODE CHANGE
+  NEEDED, the records were ALREADY registered.** Slot-7 backend_engineer worker. Live-probed the Tardis full-universe
+  enumeration (`TardisReferenceDataAdapter.get_instruments()`, no-auth `GET /v1/exchanges/{okex,bybit-spot}`): it
+  already emits a `SPOT_PAIR` `InstrumentRecord` for **every** confirmed tokenized-equity symbol, dated to its **real
+  per-symbol `availableSince`** (NOT a blanket venue floor — exactly the per-symbol-date discipline this todo asked for,
+  and the thing Todo 1's "Bybit has no `launchTime`" note said was unretrievable). Measured:
+
+  - **OKX-SPOT** — 106 `X<UNDERLYING>-USDT` spot tokens present with real dates (e.g. `XAAPL-USDT` 2026-07-15,
+    `XTSLA-USDT` 2026-07-16, `XCOIN-USDT` 2026-07-24), parsed as `base=X<UNDERLYING>` / `quote=USDT` /
+    `instrument_type=SPOT_PAIR`.
+  - **BYBIT-SPOT** — all 11 `xstocks` present (`AAPLXUSDT`→`AAPLX` 2025-07-01, `COINXUSDT`→`COINX` 2025-06-30,
+    `SPCXXUSDT`→`SPCXX` 2026-06-12, …). These per-symbol dates are the Tardis archive's own `availableSince` — the only
+    source for them (the venue's `instruments-info` endpoint has no `launchTime`), so the `2025-06-30→07-08` xstock
+    listing window is correctly resolved by Tardis, not left as a floor.
+
+  Root cause of the "why no code change" outcome: `_passes_asset_filter` is already FULL-UNIVERSE (operator 2026-06-23)
+  and `_TYPE_MAP["spot"]→SPOT_PAIR`, so the Tardis adapter needs no edit to enumerate the tokens; the per-symbol
+  `availableSince` flows through the existing `available_from_datetime` path into the catalogue, which the enumerator
+  then dates correctly (`date < available_from → EXPECTED_INSTRUMENT_NOT_LISTED`). The only durable artefact warranted
+  is a regression guard so a future re-introduction of a base-asset gate / type re-stamp / floor-date regression can't
+  silently drop or misdate these symbols. **Shipped**: `tests/unit/test_tokenized_equity_tardis.py`
+  (`TestTokenizedEquityTardisRegistration`, 2 mocked tests asserting OKX-X-token + Bybit-xstock records parse as
+  `SPOT_PAIR` with the exact real `available_from_datetime` values) — instruments-service@4eca07bac4 (QG-green, ALL
+  PASSED, verified ancestor of origin/live-defi-rollout). Note: the `is_equity_perp`/`tracks_equity` catalogue **tags**
+  for the OKX `X<UNDERLYING>` prefix form are a SEPARATE concern (the plan's own `_cefi_equity_tags` todo, now landed as
+  instruments-service@aa3ded23) — orthogonal to this InstrumentRecord-registration todo.
