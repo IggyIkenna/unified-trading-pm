@@ -341,14 +341,42 @@ fi
 # FROZEN_FLOOR_GATE_WARN=1 downgrades to warn. Deliberately NOT `uv lock --check` (treadmills on the
 # cosmetic semver `version =` bump). Editable/internal sibling deps are skipped (resolved on-disk).
 # SSOT: plans/active/cicd_consolidated_remaining_2026_06_24.md § 1.5b.
+# NOTE (found 2026-08-13 while adding the installed-floor gate below): the repo-path checks here
+# MUST use $PROJECT_ROOT, not $REPO_ROOT — in this codebase's qg-common.sh convention REPO_ROOT is
+# the WORKSPACE/slot dir (parent of the repo), PROJECT_ROOT is the actual repo root. Using
+# $REPO_ROOT/uv.lock here always resolved to a nonexistent path (the slot dir has no uv.lock of its
+# own), so this gate had been silently skipped for every repo, fleet-wide, since it was added —
+# never firing, never warning, never blocking. $REPO_ROOT is still correct for the FIRST line below
+# (locating the PM-hosted checker script under the workspace), just not for the target repo itself.
 _FLOOR_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scripts/quality_gates/check_lock_satisfies_pyproject.py"
-if [[ -f "$_FLOOR_GATE" && -f "$REPO_ROOT/uv.lock" && -x "$REPO_ROOT/.venv/bin/python" ]]; then
-    if "$REPO_ROOT/.venv/bin/python" "$_FLOOR_GATE" --repo "$REPO_ROOT"; then
+if [[ -f "$_FLOOR_GATE" && -f "$PROJECT_ROOT/uv.lock" && -x "$PROJECT_ROOT/.venv/bin/python" ]]; then
+    if "$PROJECT_ROOT/.venv/bin/python" "$_FLOOR_GATE" --repo "$PROJECT_ROOT"; then
         echo "✅ Frozen-lock floor gate: external uv.lock pins satisfy pyproject ranges"
     elif [ "${FROZEN_FLOOR_GATE_WARN:-0}" = "1" ]; then
         log_warn "Frozen-lock floor gate WARN (FROZEN_FLOOR_GATE_WARN=1; regenerate uv.lock to clear)"
     else
         log_fail "Frozen-lock floor gate: a uv.lock pin violates its pyproject range — run 'uv lock' (see above)"
+        exit 1
+    fi
+fi
+
+# ── Installed-distribution floor guardrail — a correctly-resolved lock does not guarantee the
+# INSTALLED venv matches it: a venv built before a floor bump and never re-synced keeps its stale
+# distribution even though pyproject.toml + uv.lock both already agree on the new floor (this is
+# what the frozen-lock gate above misses — it only checks the LOCK, not the venv). Root cause of
+# stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md: 20/21 fastapi-carrying venvs in
+# one slot were pinned+locked >=0.137.0 but had 0.136.3 physically installed. BLOCKS by default;
+# INSTALLED_FLOOR_GATE_WARN=1 downgrades to warn. Runs with .venv python so importlib.metadata
+# reads THIS venv's installed set, not the caller's; skipped if .venv is absent. Uses $PROJECT_ROOT
+# for the target repo (see the $REPO_ROOT/$PROJECT_ROOT note on the frozen-lock gate above).
+_INSTALLED_FLOOR_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scripts/quality_gates/check_installed_satisfies_pyproject.py"
+if [[ -f "$_INSTALLED_FLOOR_GATE" && -x "$PROJECT_ROOT/.venv/bin/python" ]]; then
+    if "$PROJECT_ROOT/.venv/bin/python" "$_INSTALLED_FLOOR_GATE" --repo "$PROJECT_ROOT"; then
+        echo "✅ Installed-distribution floor gate: installed packages satisfy pyproject ranges"
+    elif [ "${INSTALLED_FLOOR_GATE_WARN:-0}" = "1" ]; then
+        log_warn "Installed-distribution floor gate WARN (INSTALLED_FLOOR_GATE_WARN=1; re-sync the venv to clear)"
+    else
+        log_fail "Installed-distribution floor gate: an installed package violates its pyproject range — run 'uv sync --frozen' (see above)"
         exit 1
     fi
 fi
