@@ -564,3 +564,17 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   quickmerge attempt failed with the same opaque symptom but turned out to be pure host contention (re-gate hit only the
   duration budget) — resolved by simply re-running `quality-gates.sh` directly, which passed clean, before the SECOND
   (genuine, ruff-format) failure surfaced on retry.
+- 2026-08-13 19:49Z: **all four fixes confirmed live in production, clean window now 2h34m unbroken.**
+  `agent-orchestrator@d813ef1703` self-pulled to the VM (`orchestrator.service` restarted 19:30:19Z, both new call sites
+  present in the deployed file). Supervisor has been continuously attached to the SAME server (pid 3514516) since
+  17:14:30Z with zero switches — 2h34m straight. Zero real `ao_fleet_tmux_delete` auditd hits since 19:17Z. The fixed
+  `tmpfs-disk-cleanup.sh` has now survived its **fourth** real scheduled production run (19:38:06Z, reclaimed=12,
+  `ao-fleet-tmux` untouched, `skipped_protected` count consistent with the new denylist entry doing its job every single
+  time). This is now a genuinely strong, multi-signal, multi-hour, production-verified basis — materially beyond the bar
+  set after the previously-contradicted 50-minute claim. Not flipping `status: resolved`/archiving unprompted this tick
+  — that's a consequential, one-way action (`resolved_by` + immediate `git mv` to `plans/archive/issues/`) and this
+  doc's own history is four separate premature-closure corrections; surfacing this milestone to the operator as a
+  checkpoint rather than unilaterally closing. Note for whoever makes that call: the orphan-tmux-server reaper (4th gap)
+  is deliberately dry-run-only — it observes and logs, not a live safety net — so genuine resolution of the underlying
+  vulnerability class rests on the first three fixes continuing to hold, not on the reaper masking any future
+  recurrence.
