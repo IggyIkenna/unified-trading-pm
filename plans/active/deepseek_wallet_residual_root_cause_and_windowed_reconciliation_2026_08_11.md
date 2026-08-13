@@ -144,14 +144,19 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       / 35,975 NULL `is_review_slot` rows ($68.89) → **after 0 / 0** across both accounts (flash + pro), fingerprints
       re-upserted so the repaired files are skipped again on later ticks. Also corrected the two remaining "self-healing
       contract" docstring phrasings in `server/orm.py`. (repo: agent-orchestrator)
-- [ ] [BACKEND] P1. **Discover transcripts by GLOB instead of enumerating live slot rows.** `_sweep_account` iterates
-      `ss.list_slots(db)` and constructs `orch-slot-{N}` names, so anything not in that list is invisible forever —
-      confirmed live: `orch-slot-97`/`orch-slot-99` have transcripts on disk that are never read, and
-      `~/.claude/projects` (576 files, 118 MB) is never swept at all. Glob `~/.claude-configs/*/projects/*/*.jsonl` plus
-      `~/.claude/projects/*/*.jsonl` and derive `slot_id` from the directory name (`None` when it is not a slot dir).
-      Low dollar value today ($0.017) but it removes an entire silent-loss class by construction rather than by an
-      enumeration that drifts. **Done when**: a retired slot's transcripts are still swept, proven by a test. (repo:
-      agent-orchestrator)
+- [x] ✅ [BACKEND] P1. **SHIPPED — discover transcripts by GLOB instead of enumerating live slot rows
+      (agent-orchestrator@60fd7ba).** `_sweep_account` derived `orch-slot-{N}` session names from `ss.list_slots(db)`
+      and searched only those dirs, so anything not a live slot was invisible forever — confirmed live:
+      `orch-slot-97`/`orch-slot-99` have transcripts on disk no sweep ever read, and `~/.claude/projects` (576 files,
+      118 MB) was never swept at all. Discovery is now `deepseek_usage.discover_all_transcripts()`: glob
+      `<config_base>/*/projects/*/*.jsonl` plus `~/.claude/projects/*/*.jsonl`, with `slot_id` DERIVED from the
+      session-name dir (`orch-slot-{N}` -> N, `orch-agent-main` -> 0, anything else / the home tree -> `None` — still
+      swept, lands in `worker` by the same honest default every NULL-slot row gets). `_sweep_account` stamps
+      `slot_id`/`is_review_slot`/`agent_kind` from the discovered file instead of a live SlotRow; `agent_kind` snapshots
+      the DISCOVERED slot ids so a retired slot with a transcript gets the same stamping as a live one. Low dollar value
+      today ($0.017) but it removes an entire silent-loss class by construction rather than by an enumeration that
+      drifts. **Test proves the done-when**: a retired slot's transcripts (`orch-slot-97`) are still swept. QG green
+      (3590 python / 319 vitest). (repo: agent-orchestrator)
 - [ ] [BACKEND] P2. **Freeze the pre-observability gap as an explicit opening balance in the LIFETIME view.** Today the
       lifetime residual silently mixes unattributable pre-2026-08-04 spend with any live leak, so it can never reach
       zero and its movement is the only usable signal. Record the measured pre-ledger gap as a labelled opening balance
@@ -311,7 +316,7 @@ Progress Log).
 | Find the $12.44 (42.7%) unattributed 24h spend                                                                                                                          | **Superseded** — that specific 24h window is long past; re-measure fresh if the residual recurs                                                                                                                          | nobody                                                            |
 | Stamp `agent_kind` onto `deepseek_message_usage`                                                                                                                        | **Not done** — bounded backend work                                                                                                                                                                                      | nobody                                                            |
 | Repair NULL slot_id / is_review_slot rows (re-sweep)                                                                                                                    | **Not done** — needs fingerprints cleared first                                                                                                                                                                          | nobody                                                            |
-| Discover transcripts by glob, not slot enumeration                                                                                                                      | **Not done** — removes a silent-loss class by construction                                                                                                                                                               | nobody                                                            |
+| Discover transcripts by glob, not slot enumeration                                                                                                                      | **DONE 2026-08-13** — glob-based discovery shipped (agent-orchestrator@60fd7ba), retired slots swept, proven by test                                                                                                     | nobody                                                            |
 | Freeze the pre-observability opening balance                                                                                                                            | **Not done** — cosmetic until the live leak above is understood                                                                                                                                                          | nobody                                                            |
 | Windowed view in `DeepSeekWalletPanel.tsx`                                                                                                                              | **Not done** — needs `pw:L2` spec                                                                                                                                                                                        | nobody                                                            |
 | Fix the `uv.lock` churn cycle                                                                                                                                           | **Not done** — touches `setup.sh` sibling pinning + cron `[auto-clean]`, both fleet-load-bearing                                                                                                                         | operator scoping (my recommendation)                              |
@@ -405,6 +410,14 @@ Progress Log).
   LDR->main promotion pipeline is repo hygiene, not the AO deploy path.
 
 ## Progress Log
+
+- **2026-08-13** — Shipped glob-based transcript discovery (the open P1 todo, agent-orchestrator@60fd7ba).
+  `_sweep_account` now discovers transcripts via `deepseek_usage.discover_all_transcripts()` — glob
+  `<config_base>/*/projects/*/*.jsonl` + `~/.claude/projects/*/*.jsonl` — instead of deriving `orch-slot-{N}` names from
+  `ss.list_slots(db)`, so retired slots (`orch-slot-97`/`99`, confirmed live) and `~/.claude/projects` (576 files / 118
+  MB) are swept for the first time. `slot_id` is derived from the session-name dir (`orch-slot-{N}`→N,
+  `orch-agent-main`→0, non-slot/home→None, still swept); `is_review_slot`/`agent_kind` stamp from the DISCOVERED slot
+  ids. Test proves a retired slot's transcripts are still swept; QG green (3590 python / 319 vitest).
 
 - **2026-08-13** — Executed the NULL-provenance repair (the open P1 todo). Shipped
   `scripts/orchestrator/repair_null_provenance.py` + 5 tests (agent-orchestrator@002126cb32, QG green: 3589 pytest / 319
