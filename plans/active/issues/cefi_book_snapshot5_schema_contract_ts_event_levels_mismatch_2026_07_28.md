@@ -1007,3 +1007,8 @@ against the reproduction script.
   schema-contract since the 2026-07-31 checkpoint); numerator moved only in the healthy direction, so no repeat GCS
   read. This is the documented residual orchestrator re-escalation path, not a dedup regression — no code change, no
   GCS/manifest write, no VM launch (PM plan-doc append only).**
+- **2026-08-13 (data_pipeline_failure escalation worker, agt-f601e4, slot 7) — fan-out duplicate of the SAME
+  escalation_id already documented by slot 14 directly above; confirmed no code fix needed.** Byte-identical reading
+  (7,806/215,756 = 3.6%), already labeled STATIC BACKLOG. Re-verified all 11 fix commits still ancestors of
+  origin/live-defi-rollout (MTDS 339ca767/6bf568ee/2ddc6d4a/6a067cf1/6c6fab03, UAC 8db188fe/1c4d8864, deployment-service
+  a564cca/6f464325/9102eb9b/1b035c52) — all OK. No GCS read, no code change, no VM launch (PM plan-doc append only).**
