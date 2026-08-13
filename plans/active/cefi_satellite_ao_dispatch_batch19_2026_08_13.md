@@ -2,13 +2,16 @@
 doc_type: plan
 title: cefi satellite AO dispatch batch 19 — 2026-08-13
 summary: >-
-  Extraction batch from the cefi tranche's 2026-08-13 /na-eligibility-audit + /ag-closeout-audit full sweep — 40
-  conflict-cleared, bounded/deterministic items pulled directly from 10 source docs (RECLASSIFY_SPLIT bounded items from
-  the NA audit, orphaned_never_touched/orphaned_partial_coverage bounded items from the AG-closeout audit). Each todo
-  cites its exact source doc; the source docs themselves are NOT touched by this batch (checkbox reconciliation back
-  into each source doc happens in the paired finalize plan). Conflict-checked against every existing active
-  batch/finalize plan for this tranche via basename-citation cross-reference before drafting — no item here duplicates
-  ground an existing dispatched Todos entry already claims.
+  Extraction batch from the cefi tranche's 2026-08-13 /na-eligibility-audit + /ag-closeout-audit full sweep — 37 live
+  conflict-cleared, bounded/deterministic items (40 total todos, 3 marked out-of-scope, see below) pulled directly from
+  10 source docs (RECLASSIFY_SPLIT bounded items from the NA audit, orphaned_never_touched/orphaned_partial_coverage
+  bounded items from the AG-closeout audit). Rescoped 2026-08-13 (operator scoping instruction): 3 MDPS-backfill items
+  with no manifest-canonical/migration angle marked [x] OUT-OF-SCOPE (checkbox format per
+  todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md -- the source items remain open in their
+  own source docs, untouched by this batch). Each todo cites its exact source doc; the source docs themselves are NOT
+  touched by this batch (checkbox reconciliation back into each source doc happens in the paired finalize plan).
+  Conflict-checked against every existing active batch/finalize plan for this tranche via basename-citation
+  cross-reference before drafting — no item here duplicates ground an existing dispatched Todos entry already claims.
 status: draft
 nature: process
 asset_group: [cefi]
@@ -37,8 +40,8 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
-estimate_baseline_ai_days: 6.0
-estimate_calibrated_ai_days: 4.8
+estimate_baseline_ai_days: 5.6
+estimate_calibrated_ai_days: 4.4
 assigned_role: backend_engineer
 effort: medium
 drift_direction: advance-code
@@ -86,8 +89,11 @@ source: >-
       swallowed exception, a once-per-VM-lifetime guard misfiring, a stale path) and fixed, with a regression check that
       PROGRESS.json keeps advancing across >=20 consecutive chunks on a fresh run. Repo: deployment-service. Source:
       `plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`
-- [ ] [CODE] P2. Re-launch mdps-cefi-2021-* sharded MDPS CeFi backfill (launch-mdps-sharded-backfill.sh cefi
-      --year 2021) Source: `plans/active/issues/dp_vm_002_mdps_cefi_2021_silent_zero_false_positive_2026_08_11.md`
+- [x] [CODE] P2. Re-launch mdps-cefi-2021-* sharded MDPS CeFi backfill (launch-mdps-sharded-backfill.sh cefi
+      --year 2021) **OUT-OF-SCOPE FOR THIS BATCH (2026-08-13, operator scoping instruction)** — MDPS/features-service
+      backfill/recompute work is excluded from this batch unless manifest-canonical or migration-related. The underlying
+      item remains open in its own source doc, untouched by this batch/commit. Source:
+      `plans/active/issues/dp_vm_002_mdps_cefi_2021_silent_zero_false_positive_2026_08_11.md`
 - [ ] [CODE] P2. Capture Binance/OKX/Bybit indexPrice+markPrice+fundingRate as a first-class MTDS data_type (Phase 1b
       follow-up, market-tick-data-service) Source:
       `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
@@ -125,9 +131,15 @@ source: >-
       upstream Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [ ] [CODE] P2. Recompute the 2026-08-10 sports reference tables once instruments-service backfills that day Source:
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
-- [ ] [CODE] P2. Shard the slow date in the MDPS per-date backfill so one date cannot fail a complete run Source:
+- [x] [CODE] P2. Shard the slow date in the MDPS per-date backfill so one date cannot fail a complete run **OUT-OF-SCOPE
+      FOR THIS BATCH (2026-08-13, operator scoping instruction)** — MDPS/features-service backfill/recompute work is
+      excluded from this batch unless manifest-canonical or migration-related. The underlying item remains open in its
+      own source doc, untouched by this batch/commit. Source:
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
-- [ ] [CODE] P2. Rightsize the MDPS backfill VM class per the 2026-08-10 rightsizing HARD RULE Source:
+- [x] [CODE] P2. Rightsize the MDPS backfill VM class per the 2026-08-10 rightsizing HARD RULE **OUT-OF-SCOPE FOR THIS
+      BATCH (2026-08-13, operator scoping instruction)** — MDPS/features-service backfill/recompute work is excluded
+      from this batch unless manifest-canonical or migration-related. The underlying item remains open in its own source
+      doc, untouched by this batch/commit. Source:
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [ ] [CODE] P2. Fix empty instrument_id in the chain-bundle path (live_workers_streaming.py writing no manifest row)
       Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`

@@ -2,13 +2,18 @@
 doc_type: plan
 title: sports satellite AO dispatch batch 13 — 2026-08-13
 summary: >-
-  Extraction batch from the sports tranche's 2026-08-13 /na-eligibility-audit + /ag-closeout-audit full sweep — 21
-  conflict-cleared, bounded/deterministic items pulled directly from 10 source docs (RECLASSIFY_SPLIT bounded items from
-  the NA audit, orphaned_never_touched/orphaned_partial_coverage bounded items from the AG-closeout audit). Each todo
-  cites its exact source doc; the source docs themselves are NOT touched by this batch (checkbox reconciliation back
-  into each source doc happens in the paired finalize plan). Conflict-checked against every existing active
-  batch/finalize plan for this tranche via basename-citation cross-reference before drafting — no item here duplicates
-  ground an existing dispatched Todos entry already claims.
+  Extraction batch from the sports tranche's 2026-08-13 /na-eligibility-audit + /ag-closeout-audit full sweep — 16 live
+  conflict-cleared, bounded/deterministic items (21 total todos, 5 marked out-of-scope, see below) pulled directly from
+  10 source docs (RECLASSIFY_SPLIT bounded items from the NA audit, orphaned_never_touched/orphaned_partial_coverage
+  bounded items from the AG-closeout audit). Rescoped 2026-08-13 (operator scoping instruction): 5 MDPS/features-service
+  backfill/recompute items with no manifest-canonical/migration angle marked [x] OUT-OF-SCOPE (checkbox format per
+  todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md -- the source items remain open in their
+  own source docs, untouched by this batch; the manifest-corpus-empty features-service investigation item was KEPT live
+  -- manifest-canonical work is explicitly in scope even for features-service). Each todo cites its exact source doc;
+  the source docs themselves are NOT touched by this batch (checkbox reconciliation back into each source doc happens in
+  the paired finalize plan). Conflict-checked against every existing active batch/finalize plan for this tranche via
+  basename-citation cross-reference before drafting — no item here duplicates ground an existing dispatched Todos entry
+  already claims.
 status: draft
 nature: process
 asset_group: [sports]
@@ -37,8 +42,8 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
-estimate_baseline_ai_days: 3.1
-estimate_calibrated_ai_days: 2.5
+estimate_baseline_ai_days: 2.4
+estimate_calibrated_ai_days: 1.9
 assigned_role: backend_engineer
 effort: medium
 drift_direction: advance-code
@@ -73,9 +78,12 @@ source: >-
       _-historical-_ or loop-style caller) before relaunching, mirroring the existing 'if it re-fails the same way
       twice, STOP' pattern already in the runbook Source:
       `plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md`
-- [ ] [CODE] P2. Once instruments-service has written real 2026-08-10 sports_reference data, --force recompute the
+- [x] [CODE] P2. Once instruments-service has written real 2026-08-10 sports_reference data, --force recompute the
       sports features backfill for day=2026-08-10 (features-service) to replace the false
-      empty_confirmed(SOURCE_RETURNED_ZERO) rows the aborted 12:03 UTC run wrote Source:
+      empty_confirmed(SOURCE_RETURNED_ZERO) rows the aborted 12:03 UTC run wrote **OUT-OF-SCOPE FOR THIS BATCH
+      (2026-08-13, operator scoping instruction)** — MDPS/features-service backfill/recompute work is excluded from this
+      batch unless manifest-canonical or migration-related. The underlying item remains open in its own source doc,
+      untouched by this batch/commit. Source:
       `plans/active/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md`
 - [ ] [CODE] P2. Track F: root-cause why the features-service sfi_progressive manifest group is corpus-empty (1 manifest
       row) despite a documented 2020->today backfill window Source:
@@ -95,9 +103,12 @@ source: >-
 - [ ] [CODE] P2. Track V: execute the 5-part-proof-gated DELETE of the old raw-keyed league_id GCS objects (COPY+SWAP
       already done, reversibility-verified 604800s soft-delete window, unblocked since 2026-07-28) Source:
       `plans/active/sports_consolidated_closeout_2026_07_19.md`
-- [ ] [CODE] P2. Clamp the per-year sports features backfill launcher's current-year window to end_date = min(today-1,
+- [x] [CODE] P2. Clamp the per-year sports features backfill launcher's current-year window to end_date = min(today-1,
       {year}-12-31) so a current-day's not-yet-written upstream reference can never be a hard dependency at backfill
-      time -- repo: deployment-service (launcher config/logic change, single deterministic fix). Source:
+      time -- repo: deployment-service (launcher config/logic change, single deterministic fix). **OUT-OF-SCOPE FOR THIS
+      BATCH (2026-08-13, operator scoping instruction)** — MDPS/features-service backfill/recompute work is excluded
+      from this batch unless manifest-canonical or migration-related. The underlying item remains open in its own source
+      doc, untouched by this batch/commit. Source:
       `plans/active/issues/sports_features_2026_backfill_launch_window_was_today_2026_08_10.md`
 - [ ] [CODE] P2. Track upstream sports reference entity=fixtures for day=2026-08-10 until it exists under
       instruments-store-sports-prd; confirm the af-backfill historical backfill writes it when it reaches that date
@@ -107,8 +118,11 @@ source: >-
       fired ~19 features-sports-sports-* VMs (~8 with empty vm-logs) far beyond the RB-INFRA-RELAUNCH ≤2/(prefix,day)
       bound -- resource-waste investigation. Source:
       `plans/active/issues/sports_features_dp_vm_001_upstream_fixtures_gap_2026_08_10.md`
-- [ ] [CODE] P2. Recompute day=2026-08-10 sports features once upstream fixtures land -- the 15:42Z compute is sparse
-      (row_count 1-2/league, computed from partial upstream) and must not be treated as final. Source:
+- [x] [CODE] P2. Recompute day=2026-08-10 sports features once upstream fixtures land -- the 15:42Z compute is sparse
+      (row_count 1-2/league, computed from partial upstream) and must not be treated as final. **OUT-OF-SCOPE FOR THIS
+      BATCH (2026-08-13, operator scoping instruction)** — MDPS/features-service backfill/recompute work is excluded
+      from this batch unless manifest-canonical or migration-related. The underlying item remains open in its own source
+      doc, untouched by this batch/commit. Source:
       `plans/active/issues/sports_features_dp_vm_001_upstream_fixtures_gap_2026_08_10.md`
 - [ ] [CODE] P2. Verify the 2022 year-sharded features VM (features-sports-sports-2022-20260810-051126, no EXIT_STATUS,
       terminated mid-run) -- confirm 2022 features coverage in the availability index. Source:
@@ -127,16 +141,21 @@ source: >-
       (+fixtures_outcomes where scores are needed) -- instruments-service, a mechanical single-repo file-by-file repoint
       with a named, closed list. Source:
       `plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md`
-- [ ] [DATA] P2: root-cause why odds_features feature-export parquet is entirely missing for
+- [x] [DATA] P2: root-cause why odds_features feature-export parquet is entirely missing for
       2025-10-23/2025-11-11/2025-11-13 despite odds_horizon_bucket being re-derived (resolve env=dev discrepancy in the
-      features-service CLI first, per the doc's own explicit caution against --force before that) Source:
+      features-service CLI first, per the doc's own explicit caution against --force before that) **OUT-OF-SCOPE FOR
+      THIS BATCH (2026-08-13, operator scoping instruction)** — MDPS/features-service backfill/recompute work is
+      excluded from this batch unless manifest-canonical or migration-related. The underlying item remains open in its
+      own source doc, untouched by this batch/commit. Source:
       `plans/active/issues/sports_odds_horizon_bucket_reader_writer_path_mismatch_defeats_zombie_purge_2026_08_09.md`
 - [ ] [REVIEW] P2: locate and re-engage the owner of 'the bucket-cutover lane' referenced in reprocess_sports_odds.py's
       code comment (ceadb45c/2026-07-16), or confirm the comment is stale Source:
       `plans/active/issues/sports_odds_horizon_bucket_reader_writer_path_mismatch_defeats_zombie_purge_2026_08_09.md`
-- [ ] [CODE] P2. Re-run MDPS odds_horizon_bucket shard4 full-mode (resume-friendly, not --force) reprocess for
+- [x] [CODE] P2. Re-run MDPS odds_horizon_bucket shard4 full-mode (resume-friendly, not --force) reprocess for
       2025-01-01..2026-07-25 once the odds_api gap-backfill converges into that date range, to re-poll the ~20 remaining
-      honest-gap attempted_failed dates Source:
+      honest-gap attempted_failed dates **OUT-OF-SCOPE FOR THIS BATCH (2026-08-13, operator scoping instruction)** —
+      MDPS/features-service backfill/recompute work is excluded from this batch unless manifest-canonical or
+      migration-related. The underlying item remains open in its own source doc, untouched by this batch/commit. Source:
       `plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md`
 - [ ] [CODE] P2. Stream the sports consolidated-manifest read (pyarrow column projection + current-data_type filter
       applied before .to_pandas()) in build_sports_catalogue_from_manifest so the catalogue rollup's peak memory stops

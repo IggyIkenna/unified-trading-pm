@@ -3,12 +3,16 @@ doc_type: plan
 title: cross-cutting satellite AO dispatch batch 13 part 2 — 2026-08-13
 summary: >-
   Extraction batch from the cross-cutting tranche's 2026-08-13 /na-eligibility-audit + /ag-closeout-audit full sweep —
-  39 conflict-cleared, bounded/deterministic items pulled directly from 11 source docs (RECLASSIFY_SPLIT bounded items
-  from the NA audit, orphaned_never_touched/orphaned_partial_coverage bounded items from the AG-closeout audit). Each
-  todo cites its exact source doc; the source docs themselves are NOT touched by this batch (checkbox reconciliation
-  back into each source doc happens in the paired finalize plan). Conflict-checked against every existing active
-  batch/finalize plan for this tranche via basename-citation cross-reference before drafting — no item here duplicates
-  ground an existing dispatched Todos entry already claims.
+  37 live conflict-cleared, bounded/deterministic items (39 total todos, 2 marked out-of-scope, see below) pulled
+  directly from 11 source docs (RECLASSIFY_SPLIT bounded items from the NA audit,
+  orphaned_never_touched/orphaned_partial_coverage bounded items from the AG-closeout audit). Rescoped 2026-08-13
+  (operator scoping instruction): 2 MDPS/features-service-backfill duplicate items (already independently marked
+  out-of-scope in their home tranche batches) with no manifest-canonical/migration angle marked [x] OUT-OF-SCOPE
+  (checkbox format per todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md). Each todo cites
+  its exact source doc; the source docs themselves are NOT touched by this batch (checkbox reconciliation back into each
+  source doc happens in the paired finalize plan). Conflict-checked against every existing active batch/finalize plan
+  for this tranche via basename-citation cross-reference before drafting — no item here duplicates ground an existing
+  dispatched Todos entry already claims.
 status: draft
 nature: process
 asset_group: [cross-cutting]
@@ -38,8 +42,8 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
-estimate_baseline_ai_days: 5.8
-estimate_calibrated_ai_days: 4.7
+estimate_baseline_ai_days: 5.6
+estimate_calibrated_ai_days: 4.4
 assigned_role: infra
 effort: medium
 drift_direction: advance-code
@@ -108,10 +112,16 @@ source: >-
 - [ ] [CODE] P2. dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md -- parallelize
       exit_code_fleet_monitor.py/heartbeat_stall_watcher.py's sweep() via ThreadPoolExecutor Source:
       `plans/active/issues/plan_reconciler_findings_all_2026_08_12.md`
-- [ ] [CODE] P2. dp_vm_002_mdps_cefi_2021_silent_zero_false_positive_2026_08_11.md -- re-launch mdps-cefi-2021 sharded
-      backfill from checkpoint Source: `plans/active/issues/plan_reconciler_findings_all_2026_08_12.md`
-- [ ] [CODE] P2. sports_features_2026_backfill_launch_window_was_today_2026_08_10.md -- clamp per-year sports features
-      backfill launcher's end_date Source: `plans/active/issues/plan_reconciler_findings_all_2026_08_12.md`
+- [x] [CODE] P2. dp_vm_002_mdps_cefi_2021_silent_zero_false_positive_2026_08_11.md -- re-launch mdps-cefi-2021 sharded
+      backfill from checkpoint **OUT-OF-SCOPE FOR THIS BATCH (2026-08-13, operator scoping instruction)** —
+      MDPS/features-service backfill/recompute work is excluded from this batch unless manifest-canonical or
+      migration-related. The underlying item remains open in its own source doc, untouched by this batch/commit. Source:
+      `plans/active/issues/plan_reconciler_findings_all_2026_08_12.md`
+- [x] [CODE] P2. sports_features_2026_backfill_launch_window_was_today_2026_08_10.md -- clamp per-year sports features
+      backfill launcher's end_date **OUT-OF-SCOPE FOR THIS BATCH (2026-08-13, operator scoping instruction)** —
+      MDPS/features-service backfill/recompute work is excluded from this batch unless manifest-canonical or
+      migration-related. The underlying item remains open in its own source doc, untouched by this batch/commit. Source:
+      `plans/active/issues/plan_reconciler_findings_all_2026_08_12.md`
 - [ ] [CODE] P2. check_na_corpus_ratchet.py -diff-base fenced-code-block checkbox-overcounting bug (Section 3 log)
       Source: `plans/active/issues/plan_reconciler_findings_all_2026_08_12.md`
 - [ ] [CODE] P2. Item A -- retag deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md asset_group
