@@ -53,6 +53,22 @@ again — idempotent (no corruption), but pure wasted SPOT compute-hours.
 remaining 4 had already self-terminated between listing and deletion. Post-delete verification: zero
 `tradfi-bf-ice-idx-*` instances remain in the fleet.
 
+## Update 2026-08-13 — server recovered, but zero live workers (still not fully healthy)
+
+Re-checked live state ~12:30 UTC 2026-08-13 via direct SSM to the orchestrator host (`i-0c9b283b31d6b5ca7`,
+`ap-northeast-1`), independent of the operator's own report that AO was down at the time this session started:
+`systemctl` shows `orchestrator.service` **active running**, the `server.server:app` uvicorn process is up (PID 2506521,
+started 12:04 — recent), and `/api/healthz` on `:8765` answers `200`. So the central server itself is no longer in the
+`ConnectionRefusedError` state this doc originally found. **But** `tmux list-sessions` errors with
+`error connecting to /tmp/tmux-0/default (No such file or directory)` — there is no tmux server on the host at all,
+meaning **zero workers are actually running**, despite the live backlog (`check-ao-backlog-status.sh`) showing at least
+one task (`dependency_health_alerting_never_wired-376d92bc984b`) marked `status=dispatched`. That claim has nothing live
+behind it — a stale dispatch record, not an active worker. Net effect: the server answers health checks and the DB is
+readable, but the fleet is doing no work and any `escalate-*` CI job firing right now would dispatch into a black hole
+(silently queued, never picked up) rather than get a working agent. This is a DIFFERENT, narrower failure mode than the
+original "server down" finding and still open — worth the operator's own look at why the dispatch loop isn't spawning
+tmux workers despite the server process being healthy.
+
 ## Root cause — not fully identified, two obvious candidates ruled out
 
 - **`uts-prod-tradfi-wave-launcher-cron`** (Cloud Scheduler) is currently **PAUSED** — cannot be the active trigger.
@@ -73,7 +89,15 @@ remaining 4 had already self-terminated between listing and deletion. Post-delet
 
 - [ ] [OPERATOR] P1. Investigate why AO's central server is down (`ConnectionRefusedError` on its own host) — separate,
       likely more urgent issue than this billing-waste finding. See
-      `/codex/15-runbooks/safe-service-restart-procedures.md`'s fix-vs-not table before restarting.
+      `/codex/15-runbooks/safe-service-restart-procedures.md`'s fix-vs-not table before restarting. **Partially
+      superseded by the 2026-08-13 update above**: the server process itself has since recovered (healthy, answering
+      `/api/healthz`), but no tmux workers are running at all — the ORIGINAL "why did the server die" question may still
+      be open even though the server is currently up; investigate why the dispatch loop isn't spawning workers despite
+      the server being healthy.
+- [ ] [OPERATOR] P1. **New 2026-08-13**: with the server healthy but zero live tmux workers, confirm whether the
+      dispatch loop is actually attempting to spawn workers and failing silently, or not attempting at all — and
+      reconcile the `dependency_health_alerting_never_wired-376d92bc984b` task's stale `status=dispatched` claim (no
+      live session behind it) before it silently blocks that queue slot indefinitely.
 - [ ] [SCRIPT] P2. Determine whether any manual-launcher-invocation path (as opposed to `wave_launcher.py`'s automated
       dispatch) has a dedup/collision check against already-running VMs for the same shard — if not, consider whether
       one is worth adding given this is the second fleet-wide duplicate-VM billing-waste incident this week (different
