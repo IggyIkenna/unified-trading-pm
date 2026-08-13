@@ -29,6 +29,13 @@
 # DELIBERATELY NEVER TOUCHED (the denylist below is the load-bearing safety property):
 #   - /tmp/tmux-*            tmux server sockets. Removing these unaddresses every live
 #                            `orch-slot-N` session at once — a worse outage than a full disk.
+#   - /tmp/ao-fleet-tmux     the fleet's tmux server socket dir since the 2026-08-13
+#                            TMUX_TMPDIR isolation fix (ao_tmux_session_loss_mid_task_root_cause_2026_08_10)
+#                            moved it off the ambient `tmux-<uid>` path this script already denies —
+#                            same rationale as the entry above, just a name this list didn't know about
+#                            yet. The live open-handle check below is the actual safety net regardless of
+#                            basename, but a name match is a cheaper, blast-radius-scoped first line of
+#                            defense and should track every known tmux-socket home, not just the default one.
 #   - /tmp/systemd-private-* systemd per-unit private dirs for RUNNING units.
 #   - /tmp/snap-private-*    snap confinement dirs (the SSM agent itself lives behind one).
 #   - /tmp/.X11-unix, /tmp/.ICE-unix, and any other .*-unix socket dirs.
@@ -55,8 +62,9 @@ echo "${LOG_PREFIX} before: $(_usage_pct)% used, $(_avail_h) avail"
 _is_protected() {
     case "$1" in
         # `.*-unix` already covers .X11-unix / .ICE-unix / .font-unix — listing them separately
-        # is a shellcheck SC2222 dead branch, not extra safety.
-        tmux-* | systemd-private-* | snap-private-* | snap.* | .*-unix) return 0 ;;
+        # is a shellcheck SC2222 dead branch, not extra safety. `ao-fleet-tmux` added 2026-08-13:
+        # the fleet's tmux socket dir since the TMUX_TMPDIR isolation fix, doesn't match `tmux-*`.
+        tmux-* | ao-fleet-tmux | systemd-private-* | snap-private-* | snap.* | .*-unix) return 0 ;;
         *) return 1 ;;
     esac
 }
@@ -85,6 +93,10 @@ while IFS= read -r -d '' entry; do
     fi
     if rm -rf -- "$entry" 2>/dev/null; then
         removed=$((removed + 1))
+        # Per-path logging (2026-08-13): counts alone left a real incident forensically unrecoverable —
+        # no way to confirm after the fact whether a specific path was actually in a given run's reclaim
+        # set. journalctl retains this at the default vacuum policy far longer than the entry itself lived.
+        echo "${LOG_PREFIX} reclaimed: ${entry}"
     fi
 done < <(find /tmp -mindepth 1 -maxdepth 1 -mmin "+${AGE_MIN}" -print0 2>/dev/null)
 
