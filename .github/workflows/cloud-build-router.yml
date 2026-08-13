@@ -551,8 +551,14 @@ jobs:
               --branch="$BRANCH" \
               --substitutions="_VERSION=${VERSION},_BRANCH=${BRANCH},_SHA=${COMMIT_SHA},_PROJECT_ID=${GCP_PROJECT},_AR_HOST=${AR_HOST},_AR_REPO=unified-trading-system,_REPO_NAME=${REPO},_ENV=${ENV}" \
               --format="value(metadata.build.id)" \
-              2>/tmp/build_trigger_err.txt; then
-              trigger_output=$(cat /tmp/build_trigger_err.txt | grep -oP '[a-f0-9\-]{36}' | head -1 || true)
+              >/tmp/build_trigger_out.txt 2>/tmp/build_trigger_err.txt; then
+              # Build ID is written to STDOUT by --format; stderr carries only the auth
+              # preamble / errors. We previously read the ID out of /tmp/build_trigger_err.txt
+              # (stderr), which is ALWAYS empty on a successful invocation, so every successful
+              # trigger run fell through to "not-configured" — the false CRITICAL alert /
+              # escalation wall of 2026-08-13 (unified-trading-library builds WERE being created
+              # at matching timestamps but the router could never see the ID to poll them).
+              trigger_output=$(grep -oP '[a-f0-9\-]{36}' /tmp/build_trigger_out.txt | head -1 || true)
               if [ -n "$trigger_output" ]; then
                 echo "$trigger_output"
                 return 0
