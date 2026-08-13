@@ -113,9 +113,14 @@ the active corpus without ever being done.
       WARN+INFO→telegram) + `dependency_health_prober.py` (probe-driven producer deriving `current_outage_seconds` from
       per-dependency last-healthy state behind an N-consecutive-failure gate, scaffold fail-open probes), registered in
       `alert_subscriber._TYPED_HANDLERS` under `DEPENDENCY_DEGRADED`/`DEPENDENCY_RECOVERED`; 13 unit tests green.
-- [ ] [BACKEND] P1. **Add an integration test that fails if the path is unwired**, not another unit test of the
-      function. It must drive a simulated outage from the producer's entry point and assert a routed alert. The existing
-      unit test would pass unchanged today with the feature completely dead.
+- [x] ✅ [BACKEND] P1. **Add an integration test that fails if the path is unwired** — `alerting-service@7291beebe4`
+      (`tests/integration/test_dependency_health_wiring.py`). Drives a simulated sustained outage from
+      `DependencyHealthProber.probe_all()` (the producer entry point) and asserts a routed
+      `DEPENDENCY_DEGRADED_CRITICAL` (channels=pagerduty+telegram, pd_severity=critical) + a routed
+      `DEPENDENCY_RECOVERED` (channels=telegram) on a later healthy probe — with ONLY the router boundary
+      (`route_event_with_explicit_channels`) patched, so the real prober→handler→rule→router chain runs unmocked. 2/2
+      pass locally. The existing unit tests of `evaluate_dependency_health` would still pass with this path unwired;
+      this test fails unless every link is reached.
 - [ ] [DOCS] P2. `/codex/04-architecture/dependency-health-policy.md` reads as though the rule is live ("Ships as:
       `alerting-service@839cb5f`"). Add a status line stating it is contract-and-config only until the todos above land,
       so the next reader is not misled the way this doc misled me.
@@ -175,3 +180,8 @@ it would re-introduce the multi-emitter clock problem that ruled out (a).
   pointed at the owning plan as `plans/active/…` when it was archived to `plans/archive/2026_05/` in May. Shipped:
   `alerting-service@79beb47b0f` (docstring: NOT-WIRED banner + real input contract) and `deployment-service@2cd96940c8`
   (yaml header: real schema path + CONFIG-ONLY status).
+- 2026-08-13 (slot 18, backend_engineer) — Shipped the integration test (`alerting-service@7291beebe4`,
+  `tests/integration/test_dependency_health_wiring.py`): drives a simulated outage from
+  `DependencyHealthProber.probe_all()` and asserts a routed `DEPENDENCY_DEGRADED_CRITICAL` + `DEPENDENCY_RECOVERED`,
+  patching only the router boundary so the real producer→handler→rule→router chain runs. 2/2 pass. This closes the
+  "would pass with the path unwired" gap.
