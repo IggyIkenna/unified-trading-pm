@@ -111,9 +111,11 @@ idempotency guard silently no-ops re-park attempts (observed 4x/26x redundant re
       lands).
 - [ ] [OPERATOR] P2. `plans/active/issues/execution_service_ldr_provenance_bypass_backlog_2026_08_10.md` — choose
       resolution path for execution-service's 7 LDR quickmerge-provenance bypasses before the next promote PR.
-- [ ] [CODE] P1. `plans/active/issues/mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md` — add
-      `_CEFI_MVP_SHARDS`/SPORTS-equivalent override to `pipeline_e2e_check.py`'s `_venue_data_type_is_mvp()` (this doc
-      is `assigned_vm: planning` with nothing dispatchable as authored — AO-readiness gap too).
+- [x] ✅ [CODE] P1.
+      `/plans/archive/2026_08/issues/mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md` — add
+      `_CEFI_MVP_SHARDS`/SPORTS-equivalent override to `pipeline_e2e_check.py`'s `_venue_data_type_is_mvp()` —
+      market-tick-data-service@6105f0b0 (already shipped 2026-08-12); doc's own checkbox flipped + archived slot 14
+      2026-08-13.
 - [ ] [DATA] P2. `plans/active/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md` —
       once instruments-service writes real 2026-08-10 sports_reference data, `--force` recompute the sports features
       backfill for day=2026-08-10 to replace false `empty_confirmed` rows.
@@ -342,8 +344,9 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       ruling picked option 2, implemented @unified-trading-library@b3afeb8c4; doc archived)
 - [ ] [DOC] P3. (codex-drift) plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md — already
       self-tracked
-- [ ] [REVIEW] P3. (ao-readiness)
-      plans/active/issues/mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md — see Section 2
+- [x] ✅ [REVIEW] P3. (ao-readiness)
+      `/plans/archive/2026_08/issues/mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md` — see
+      Section 2; doc's fix shipped (market-tick-data-service@6105f0b0) + doc archived slot 14 2026-08-13, moot now.
 - [ ] [REVIEW] P3. (ao-readiness)
       plans/active/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md — low severity
 - [ ] [DOC] P3. (codex-drift)

@@ -22,7 +22,7 @@ summary: >-
   in the tool whose entire job is proving pipeline correctness. Workaround used this run: invoke pipeline_e2e_check.py
   once per --asset-group explicitly (which correctly engages the smoke_matrix.py fallback for CEFI/SPORTS) rather than a
   single unfiltered invocation.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, sports]
 stage: [data]
@@ -62,6 +62,10 @@ context_scope:
 ---
 
 # pipeline_e2e_check.py enumerate_mtds_shards() silently drops CEFI/SPORTS from a combined sweep
+
+> **🗄️ ARCHIVED 2026-08-13** — the one todo is `[x]`, zero remaining, `locked_by:` empty. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, a doc with every todo done archives
+> immediately.
 
 ## What I found
 
@@ -160,15 +164,21 @@ hand into one combined report afterward.
 
 ## Todos
 
-- [ ] [CODE] P1. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — Add `_CEFI_MVP_SHARDS` / a
-      SPORTS-equivalent hand-listed override to `market-tick-data-service/scripts/pipeline_e2e_check.py`'s
+- [x] ✅ [CODE] P1. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — Add `_CEFI_MVP_SHARDS`
+      / a SPORTS-equivalent hand-listed override to `market-tick-data-service/scripts/pipeline_e2e_check.py`'s
       `_venue_data_type_is_mvp()` (mirrors the existing `_TRADFI_MVP_SHARDS` shape) so it stops unconditionally
       returning `False` for CEFI/SPORTS venue×data_type cells that need a `base_ccy`/`league` the enumeration-time probe
       can't yet supply — this is the minimal fix (remediation option (a)). The more robust alternative (option (b), not
       required to close this todo but fixes the masking mechanism itself): change the "last-resort fallback" (line ~688)
       to fire per-asset_group instead of gating on the combined `shards` list's aggregate truthiness. Repo:
-      market-tick-data-service.
+      market-tick-data-service. — market-tick-data-service@6105f0b0 (already shipped 2026-08-12: adds
+      `_CEFI_MVP_SHARDS`/`_SPORTS_MVP_SHARDS` + regression test `tests/unit/test_pipeline_e2e_cefi_sports_mvp.py`).
 
 ## Progress Log
 
 - **context-scout 2026-08-07**: populated/refreshed context_scope (6 entries).
+- **slot 14, 2026-08-13**: verified live — `enumerate_mtds_shards(None, None, None, True, False)` now returns
+  `{CEFI, DEFI, PREDICTION, SPORTS, TRADFI}` (3126 shards total), confirming the fix from
+  market-tick-data-service@6105f0b0 closes this todo; that commit had shipped without flipping this checkbox. Flipping
+  now; all todos in this doc are done and it carries no `locked_by`, so archiving in a follow-up commit per the
+  plan-completion-and-archival HARD RULE.
