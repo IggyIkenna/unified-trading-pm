@@ -147,7 +147,7 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
       `test_per_instrument_cefi_is_provider.py::TestPerInstrumentCoverageDualScope` (could_exist-half parity, mvp
       monotonicity, found-set-computed-once via a `wraps=` spy) + `test_mtds_honest_coverage_dual_scope.py` (4 tests:
       parity, monotonicity, empty-dts, MDPS historical_coverage_gap). `quality-gates.sh` full green.
-- [ ] [BACKEND] P1. Coverage-summary engine dual-scope — add an `is_mvp` boolean mask to
+- [x] [BACKEND] P1. Coverage-summary engine dual-scope — add an `is_mvp` boolean mask to
       `_compute_capture_status_counts` (`coverage.py`), built via `filter_to_mvp`'s dedup-then-broadcast technique
       (evaluate `is_mvp` once per distinct axis-combo, NOT a per-row `.apply` — the exact pattern `filter_to_mvp`'s own
       docstring says avoids an OOM on a 26M-row cefi manifest), and double the four `.sum()` calls (masked vs unmasked)
@@ -157,7 +157,28 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
       the mask-reuse (not a second full pass over the DataFrame — assert the source DataFrame is read/decoded once, e.g.
       via a call-count assertion on the row-group iterator), and a peak-RSS measurement against a cefi-scale fixture
       (mirroring `venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md`'s measurement methodology) shows no
-      meaningful RSS increase over the current could_exist-only path.
+      meaningful RSS increase over the current could_exist-only path. — `deployment-api@8341483bbe` +
+      `deployment-api@d692a03cbe`. Implemented ADDITIVE (design decision from todo 2, logged below): new sibling module
+      `coverage_dual_scope.py` (`CoverageDualScopeMixin`, inserted between `CoverageStatusMixin` and
+      `MissingShardsMixin` in the mixin chain — adding the dual-scope code inline in `coverage.py` pushed it over the
+      900-line file gate). `_compute_is_mvp_mask` mirrors `filter_to_mvp`'s dedup-then-broadcast technique;
+      `_compute_capture_status_counts_dual_scope` builds the mask ONCE then reuses the UNCHANGED
+      `_compute_capture_status_counts` on the full index (could_exist) and the masked subset (mvp) — a cheap in-memory
+      second pass, not a second GCS/parquet read. `_build_coverage_for_cat_dual_scope` reads the manifest index ONCE for
+      both scopes; `_get_coverage_summary_sync_dual_scope` folds both scopes via the existing
+      `_fold_cat_entry_into_totals`. Every derived field OTHER than `capture_status_counts`/`completion_pct`/totals
+      (breakdowns, `latest_day_instruments`, `unique_instruments`) is NOT scope-narrowed — matches the todo's literal
+      wording; narrowing every field is a separate, larger design question. Memory-safety proof: since a live Cloud-Run
+      RSS measurement needs todo 5's rollup wiring deployed (out of scope here), substituted a portable deterministic
+      local proxy for the plan's "peak-RSS on a cefi-scale fixture" ask —
+      `test_is_mvp_call_count_scales_with_distinct_combos_not_row_count` proves `is_mvp` is called 4x (once per distinct
+      combo) on a 200k-row/4-distinct-combo fixture, not 200,000x (what a per-row `.apply` would do — the exact class
+      that OOM'd on the real cefi manifest). A live RSS/Cloud-Logging measurement against the real rollup path is folded
+      into todo 8's end-to-end verification, which already covers exactly that. Regression tests:
+      `test_coverage_summary_dual_scope.py` (9 tests across `_compute_capture_status_counts_dual_scope`,
+      `_build_coverage_for_cat_dual_scope`, `_get_coverage_summary_sync_dual_scope` — could_exist parity, mvp narrowing,
+      mask-called-once, empty-index, call-count-scaling, totals parity, mvp≤could_exist monotonicity).
+      `quality-gates.sh` full green both ships.
 - [ ] [BACKEND] P1. Dispatch-mode restructure — stop `_pick_dispatch_mode`'s `multi_cat_no_filters` gate
       (`manifest.py:541-567`) from branching on `scope == "could_exist"`; instead make the default venue-breakdown loop
       (`_build_venue_breakdown`/`_build_single_venue_entry` in `venue_resolution.py`/`breakdowns_core.py`, and Tier-2
