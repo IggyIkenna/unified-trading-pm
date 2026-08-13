@@ -670,7 +670,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "a9bbb1bb932e860c29466dabb1e6f511211f8dc3"
+      "ldr_ci_status_sha": "1001aa76a0ebe300f3fe1f30c80470261fc7d35f"
     },
     "ibkr-gateway-infra": {
       "promotion_model": "ldr_main",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "b9c9b2b57534ac4417cf381339b3515f729f023a"
+      "ldr_ci_status_sha": "7e4cbf9e9556e9956bd6c8d8e647b0270a5042dc"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
