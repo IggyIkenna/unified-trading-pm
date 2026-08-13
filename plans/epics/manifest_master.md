@@ -35,8 +35,8 @@ co_operators:
 codex_ssots:
 related_plans:
   - ../active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md
-  - ../active/data_completion_cefi_2026_07_15.md
-  - ../active/data_completion_cefi_2026_07_15_finalize_2026_07_27.md
+  - ../archive/2026_08/data_completion_cefi_2026_07_15.md
+  - ../archive/2026_08/data_completion_cefi_2026_07_15_finalize_2026_07_27.md
   - ../active/data_completion_defi_2026_07_15.md
   - ../active/data_completion_prediction_2026_07_15.md
   - ../active/data_completion_sports_2026_07_24.md
@@ -133,7 +133,7 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: CeFi E4→E8 orphan-sweep + legacy gap-fill +
 manifest rebuild — VM execution chain
 
-### [`data_completion_cefi_2026_07_15`](../active/data_completion_cefi_2026_07_15.md)
+### [`data_completion_cefi_2026_07_15`](../archive/2026_08/data_completion_cefi_2026_07_15.md)
 
 **status**: active · **estimate**: 2 cal AI-days (class: infra) **title**: Data completion to 100% — CeFi manifest
 canonicalisation + backfill (split from M-1)
@@ -193,7 +193,7 @@ migration_verification_orphan_safety_2026_06_10
 
 ## P2 — useful; opportunistic
 
-### [`data_completion_cefi_2026_07_15_finalize_2026_07_27`](../active/data_completion_cefi_2026_07_15_finalize_2026_07_27.md)
+### [`data_completion_cefi_2026_07_15_finalize_2026_07_27`](../archive/2026_08/data_completion_cefi_2026_07_15_finalize_2026_07_27.md)
 
 **status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
 
