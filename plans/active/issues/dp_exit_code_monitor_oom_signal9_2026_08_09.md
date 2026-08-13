@@ -137,6 +137,23 @@ A silently-OOMing exit-code monitor never reaches its sentinel write (`_gcs.writ
 
 ## Progress Log
 
+- 2026-08-13 (slot 29): Todo 3 (live-verify sentinel after resume) — checked whether it's safe to resume yet. Live
+  `gcloud scheduler jobs list --location=asia-northeast1` confirms `uts-prod-dp-exit-code-monitor-cron` is still
+  **PAUSED**, schedule already edited to `0 * * * *` (hourly — the "reduce cadence" fallback from
+  `dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`), but never resumed. `gcloud run jobs executions list` shows
+  every execution in the run-up to the 08-11T15:40 pause hit **"The configured timeout was reached"** at the full 1800s
+  (30 min) task timeout, even at the bumped 16Gi/4cpu — the sweep does not complete within 30 min. The sibling doc's P1
+  `ThreadPoolExecutor` parallelize todo is still open and unshipped (confirmed:
+  `grep -c ThreadPoolExecutor deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py` = 0 on current
+  HEAD). **Verdict: NOT safe to resume yet** — even at the reduced hourly cadence, a sweep that still needs >30 min will
+  keep hitting the 1800s timeout every cycle and the freshness sentinel will never advance, failing this todo's own
+  verification target before it even starts. Resuming now would not reproduce the original signal-9/overlap storm
+  (hourly cadence caps concurrent executions to ~1), but it also would not produce the "sentinel advances ≥3 consecutive
+  cycles" evidence this todo needs — that requires the sweep to actually finish, which requires the parallelize fix.
+  Skipping this todo GATED on `/plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`'s P1
+  landing; re-attempt resume-verify only after that ships (or after a task-timeout bump well past the sweep's real
+  duration, which is unmeasured since every observed run was killed at exactly 1800s).
+
 - 2026-08-13 (slot 18, infra): Confirmed via Cloud Logging history (todo 1) that the exit-code monitor is **NOT**
   OOM-crash-looping — zero signal-9 events attributed to it in 30 days; 08-09 signal-9s were
   `uts-shared-deployment-api-*`; it ran 288 successful ~1-min sweeps on 08-09. Real failure modes: sweep-overlap
