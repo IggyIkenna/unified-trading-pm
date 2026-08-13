@@ -126,27 +126,35 @@ bridges them; it does not extend one over the other.
 > not unwind a `with` block while atexit does not run on SIGKILL, which is the reasoning already written into
 > `_preemption_signal`'s own docstring. The fix is to generalise that module, not to invent a new mechanism.
 
-- [ ] [CODE] P0. Add a UTL drain registry — a process-wide registry of drainable buffers with a deterministic drain
-      order, lifted from `manifest_writer/_preemption_signal.py` so the signal-chaining and re-entrancy behaviour is
-      inherited rather than re-derived. Repo: unified-trading-library.
-- [ ] [CODE] P0. Register `StreamingParquetWriter` with the drain registry on construction and deregister on `close()`,
-      so a SIGTERM mid-shard flushes and uploads the partial parquet instead of discarding the buffer. Repo:
-      unified-trading-library.
+- [x] 1. ✅ [CODE] P0. Add a UTL drain registry — a process-wide registry of drainable buffers with a deterministic
+      drain order, lifted from `manifest_writer/_preemption_signal.py` so the signal-chaining and re-entrancy behaviour
+      is inherited rather than re-derived. Repo: unified-trading-library. — unified-trading-library@d50ca9ff65
+      (`lifecycle/drain_registry.py`; QG green, canary-proven that the 7048-test unit suite executes it)
+- [x] 2. ✅ [CODE] P0. Register `StreamingParquetWriter` with the drain registry on construction and deregister on
+      `close()`, so a SIGTERM mid-shard flushes and uploads the partial parquet instead of discarding the buffer. Repo:
+      unified-trading-library. — unified-trading-library@d50ca9ff65 (registers at construction, not first write, so a
+      writer dying before its first flush is covered; deregisters in BOTH `close()` and `finalize_local()`)
 - [ ] [CODE] P0. Register `StreamingShardFinalizer`'s writer pool with the drain registry — its per-shard writers are
       the same exposure with a wider blast radius (one row-group can span many shard keys). Repo:
       unified-trading-library.
 - [ ] [CODE] P0. Migrate `_preemption_signal` to install its handler THROUGH the drain registry rather than owning its
       own, so exactly one SIGTERM handler exists per process and the manifest buffer keeps its current guaranteed-drain
       semantics. Repo: unified-trading-library.
-- [ ] [CODE] P0. A partial shard flushed by drain MUST NOT be recorded `captured` — record the rows written and leave
-      the shard's capture_status unchanged so the resume re-attempts it. A drain that marks a partial shard complete is
-      fabrication-by-construction. Repo: unified-trading-library.
-- [ ] [TEST] P0. Test: SIGTERM mid-write flushes every registered buffer, in registry order, and the parquet is readable
-      — the regression guard for the whole plan. Repo: unified-trading-library.
+- [x] 3. ✅ [CODE] P0. A partial shard flushed by drain MUST NOT be recorded `captured` — record the rows written and
+      leave the shard's capture_status unchanged so the resume re-attempts it. A drain that marks a partial shard
+      complete is fabrication-by-construction. Repo: unified-trading-library. — unified-trading-library@d50ca9ff65
+      (`drain_for_shutdown()` writes bytes only; touches neither `record_captured` nor the PROGRESS frontier)
+- [x] 4. ✅ [TEST] P0. Test: SIGTERM mid-write flushes every registered buffer, in registry order, and the parquet is
+      readable — the regression guard for the whole plan. Repo: unified-trading-library. —
+      unified-trading-library@d50ca9ff65 (`test_data_writers_drain_before_manifest`,
+      `test_drain_order_is_deterministic_within_a_priority`, `test_manifest_priority_is_last_in_the_enum`)
 - [ ] [TEST] P0. Test: a drain-flushed partial shard does not advance the PROGRESS frontier and does not set `captured`,
-      so `--force` resume re-attempts it. Repo: unified-trading-library.
-- [ ] [TEST] P0. Test: the drain registry chains a pre-existing SIGTERM handler instead of clobbering it, mirroring
-      `_preemption_signal`'s existing contract. Repo: unified-trading-library.
+      so `--force` resume re-attempts it. Repo: unified-trading-library. NOT covered by the shipped tests — those use
+      fake buffers; this one needs a real ManifestWriter+PROGRESS integration test.
+- [x] 5. ✅ [TEST] P0. Test: the drain registry chains a pre-existing SIGTERM handler instead of clobbering it,
+      mirroring `_preemption_signal`'s existing contract. Repo: unified-trading-library. —
+      unified-trading-library@d50ca9ff65 (`test_signal_handler_chains_instead_of_clobbering`,
+      `test_signal_handler_never_raises_even_when_a_buffer_explodes`)
 - [ ] [CODE] P1. Wire the drain registry into the backfill entrypoints that currently install no SIGTERM handler at all
       — MTDS, MDPS, instruments-service and features-service backfill CLIs. A fleet grep for `signal.SIGTERM` finds
       handlers in long-running services but not in these. Repos: market-tick-data-service,
@@ -312,3 +320,58 @@ capability-probe tests exist to prevent repeating.
 
 Operator decisions recorded at the top of this doc. Phase 1 is the hard prerequisite: drain-only is only safe once every
 buffered writer flushes on signal, and today only the manifest debounce buffer does.
+
+### 2026-08-12 — Phase 1 implementation (in flight, gate pending)
+
+Written, not yet shipped (UTL `quality-gates.sh` running at time of writing — nothing below is claimed done until it is
+green and the checkboxes are flipped):
+
+- `unified_trading_library/lifecycle/drain_registry.py` — new. Weakref-held registry, `DrainPriority` IntEnum,
+  `drain_all()` that never raises, and a SIGTERM/SIGINT handler that CHAINS the previous handler (pattern lifted from
+  `manifest_writer/_preemption_signal.py` rather than re-derived, so the install-once / rollback / re-deliver semantics
+  are inherited).
+- `io/streaming_writer.py` — `StreamingParquetWriter` now installs the handler and registers itself at construction (not
+  at first write, so a writer that dies before its first flush is still covered), implements `drain_for_shutdown()`, and
+  deregisters in both `close()` and `finalize_local()`.
+- `tests/unit/test_drain_registry.py` — 10 tests.
+
+**Design decision worth not re-deriving: drain ORDER is a correctness property.** Data writers drain BEFORE manifest
+buffers, because the manifest records what the data writers wrote — draining the manifest first can record rows as
+`captured` that the writer then fails to upload, manufacturing the phantom-row class (DP-MANIFEST-003) out of the
+mechanism meant to prevent data loss. `DrainPriority.MANIFEST` is deliberately the max value and
+`test_manifest_priority_is_last_in_the_enum` is the machine guard on that.
+
+**Environment note for the next tick**: this slot's `unified-trading-library` checkout has NO `.venv`, so targeted
+`python -c` verification is not available there — go through `scripts/quality-gates.sh`, which owns env setup.
+
+### 2026-08-12 — Phase 1 partially SHIPPED at `unified-trading-library@d50ca9ff65`
+
+5 of 9 Phase-1 todos flipped. Still open: `StreamingShardFinalizer` pool registration, migrating `_preemption_signal` to
+install THROUGH the registry, the backfill-entrypoint wiring, the codex flush-contract doc, and the PROGRESS-frontier
+integration test (the shipped tests use fake buffers and do not cover it — called out inline on that todo rather than
+flipped).
+
+**Verification trap worth not repeating.** The gate suppresses unit-test output on success and separately echoes only
+the PM integration session (`6 passed, 2 deselected`). Reading that log I twice concluded the unit suite was not running
+and nearly filed a fabricated `base-library.sh` gate bug. It was wrong: a deliberately-failing canary test returned
+`1 failed, 7048 passed`, proving the suite runs and executes `tests/unit/test_drain_registry.py`. **Silence in the gate
+log is not evidence of non-execution** — if you need to know whether a test file runs, add a failing canary and read the
+exit code, don't read the log. `QG_SLICE=tests` does NOT make unit output visible either.
+
+**Green in 12s is the sentinel fast path**, not a full run — legitimate only when the tree is byte-identical to the last
+full green (removing the canary restored exactly that state). Do not accept a 12s green after a real edit.
+
+**Ship note**: quickmerge pre-flight refused (`unified-api-contracts: HAS UNCOMMITTED CHANGES`) because a LIVE peer
+session holds uncommitted UAC work in this shared slot. Used `--skip-preflight` (documented as a multi-agent safety
+check, explicitly NOT a quality gate) after confirming neither dirty UAC file is imported by this change —
+`drain_registry` imports no UAC at all. `--dep-branch` is HUMAN-ONLY and was not used. The peer's files were never
+touched.
+
+**Slot state (unresolved, operator-gated)**: the shared slot-4 `unified-trading-pm` checkout is 1-ahead / 153-behind
+`origin/live-defi-rollout`. The 1 ahead is an automated `chore(orphan-wip)` inherit commit. Four dirty files belong to a
+LIVE peer session (`tradfi_databento_account_billing_suspended_2026_08_09.md`,
+`tradfi_manifest_content_recovery_completion_2026_07_24.md`, an untracked
+`cefi_tardis_pre_listing_filter_wrong_gcs_path_always_404s_2026_08_12.md`, and `slack-data-pipeline-alerts-2h.json`).
+Per the liveness gate a live claim is PROTECT, so they were left untouched and every ship this session went through
+`safe-doc-push`/`quickmerge`'s isolated worktree, which reconciles against origin and is unaffected by the local
+divergence. Do NOT reconcile that checkout without the operator while the peer is live.
