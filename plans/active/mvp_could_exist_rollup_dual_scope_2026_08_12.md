@@ -122,11 +122,14 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
 
 ## Todos
 
-- [ ] [BACKEND] P0. Fix `manifest.py::get_manifest_status`'s fast-path gate to include `scope` in `any_row_filter` so a
+- [x] [BACKEND] P0. Fix `manifest.py::get_manifest_status`'s fast-path gate to include `scope` in `any_row_filter` so a
       non-default `scope` bypasses the could_exist-only rollup fast path until todo 6 below makes that path scope-aware.
       Add a regression test asserting `scope=mvp` with no other filters does NOT return could_exist-tagged data (assert
       on a fixture where the two scopes provably differ). Done-when: new test fails on the pre-fix code, passes after;
-      full `quality-gates.sh` green.
+      full `quality-gates.sh` green. — `deployment-api@af9025b784`. Extracted the gate into
+      `_manifest_status_any_row_filter` (kept `get_manifest_status` under the 50-line method-size gate). Added
+      `TestManifestStatusScopeFastPathGate` (3 tests: `scope=mvp` bypasses, `scope=all` bypasses, default `could_exist`
+      still fast-paths) mirroring the existing `TestManifestStatusVenueFilter` pattern. `quality-gates.sh` full green.
 - [ ] [BACKEND] P1. Tier-3 per-instrument single-pass dual-accumulate — change `_scoped_expected_instruments` and its
       caller chain (`per_instrument_coverage` in `instrument_coverage.py`, the per-dt loop in `mtds.py`) to compute
       `expected_count`/`found_count` for BOTH `could_exist` and `mvp` in one pass against the same
@@ -198,3 +201,16 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
   check surfaced the parent MVP-scope plan (this plan's `depends_on` was left `[]` since that plan's own shipped work is
   a prerequisite already satisfied, not in-flight work this plan waits on) and the still-open cefi/defi OOM issue, which
   is why the memory-safety constraint section above is load-bearing, not decorative.
+- **2026-08-13 (`/autonomous` run, todo 1 shipped)**: `deployment-api@af9025b784`. Re-confirmed both source issues
+  (`venue_year_coverage_cefi_oom_...`, `data_status_rollup_ml_service_full_blob_missing_...`) still `status: open` — the
+  memory-safety constraint stays live. Reading `instrument_coverage.py`/`mtds.py`/`coverage.py` for todos 2-3 confirmed
+  the plan's three-way cost-split analysis is accurate: `_compute_found_shards` (Tier-3) and the coverage-summary
+  4-state tally (`_compute_capture_status_counts`) are both genuinely scope-independent today, and neither
+  `mtds_honest_coverage_for_venue` nor `get_coverage_summary`'s wire shape currently carries a scope dimension.
+  Continuing todo-by-todo; will design todos 2-3 as ADDITIVE dual-scope functions (new `*_dual_scope` entry points
+  consumed only by the future rollup-worker wiring in todo 5) rather than reshaping `per_instrument_coverage`'s /
+  `_compute_capture_status_counts`'s existing single-scope return contract in place — the existing on-demand
+  `get_manifest_status`/`get_coverage_summary` HTTP responses are shipped, already-consumed wire contracts
+  (deployment-ui parses today's flat shape) that this plan does not target; reshaping them in place would silently break
+  that consumer. This satisfies each todo's own "existing tests pass unmodified" done-when criterion while still giving
+  the rollup worker a genuine single-pass dual-scope compute path.
