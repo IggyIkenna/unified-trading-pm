@@ -441,38 +441,56 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
   contains the `{could_exist, mvp}` split — check both deploy targets, not just the service, before starting todo 7.
   Plan is otherwise fully shipped (todos 1-6, 9 all done) — only these 2 deploy-gated items remain.
 
-- **2026-08-13 (todo 9 done; todo 8 attempted — genuinely blocked on deploy, not started)**:
-  - **Todo 9**: no edit needed, both directions of the bidirectional link already existed (added at this plan's
-    2026-08-12 authoring, never edited away) — verified via a direct grep of both files' current on-disk content, not
-    assumed from memory. Flipped.
-  - **Todo 8**: ran the 3-scope cefi probe against live prod
-    (`https://uts-shared-deployment-api-1060025368044. asia-northeast1.run.app/api/data-status/manifest`,
-    `service=instruments-service`, `asset_groups=cefi`, `start_date=2018-01-01`, `end_date=2026-08-13`, auth =
-    `X-API-Key` from the `deployment-api-api-key` GSM secret, one-at-a-time ≥16s apart, mirroring the prior probe
-    protocol in `venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md`). **Result: the live revision predates ALL
-    of today's work** (`uts-shared-deployment-api-00546-qcd`, image digest `sha256:7f0717f4…`, deployed
-    2026-08-13T13:12:40Z — before this session's first commit) — confirmed via
-    `gcloud run services describe`/`revisions describe`, not inferred from response shape alone. Evidence:
-    `scope=could_exist` served fast (200, 4.1s, `served_from=rollup, stale=true`); `scope=mvp` and `scope=all` BOTH
-    returned `mode=live_build_refused` (0.27-0.34s, no rollup attempted at all — the pre-todo-1
-    `_manifest_status_any_row_filter` scope bypass, not todo 6's new scope-threaded fast path) — i.e. the exact stale,
-    pre-plan behavior this whole plan exists to fix. This is NOT a regression or a bug in today's shipped code —
-    LDR→main promotion (cron, `*/15`) + the `deployment-api-main-deploy` Cloud Build trigger haven't run against today's
-    commits yet (the promotion is fleet-shared and single-concurrency; per CLAUDE.md, never hand-dispatch it to "check
-    your own promotion" — it starves the queue). Cloud Logging over the probe window (2026-08-13T14:05-14:24Z) shows
-    zero `Memory limit exceeded`/`signal 9`/`SIGABRT`/ERROR-severity entries for this service — a clean window, but
-    against the OLD revision, so it does NOT satisfy this todo's "confirm no OOM signal" bar for the NEW dual-scope code
-    path (nothing new ran). **Todo 8 is therefore genuinely NOT STARTABLE yet** — it is time-gated on an external,
-    automated deploy pipeline this session correctly should not force. Not flipping; not fabricating a parity result
-    from an undeployed revision. Deleted the locally-cached API-key file (`/tmp/uts_api_key.txt`) after the probe —
-    `shred -u`'d, not left on disk.
+- **2026-08-13 (autonomous tick — deploy landed, core fix confirmed live, todo 7's precondition further diagnosed)**:
+  Corrected a naming mistake from the prior entry: the rollup worker is NOT `uts-prod-data-status-rollup` as a Cloud Run
+  JOB — it is `uts-prod-data-status-rollup-svc`, an HTTP-triggered Cloud Run SERVICE hit by Cloud Scheduler job
+  `uts-prod-data-status-rollup-cron` (`*/20 * * * *`, not every 5 min as the worker's own module docstring claims — a
+  second, pre-existing doc/reality drift, not filed separately here since it's a one-line staleness, not a correctness
+  bug; worth a follow-up doc fix but not blocking). Also fixed a genuine content-duplication bug found in this same
+  edit: the prior "todo 9 done; todo 8 attempted" Progress Log entry had landed TWICE in the pushed commit (a
+  byte-for-byte near-duplicate, one copy with a stray space typo) — removed the duplicate, kept the clean copy.
+  1. **Both deploy targets now confirmed on today's code**: `uts-shared-deployment-api` latest revision
+     `uts-shared-deployment-api-00547-vlj` (image `sha256:7a763872…`, created 2026-08-13T14:54:39Z) and
+     `uts-prod-data-status-rollup-svc` latest revision `uts-prod-data-status-rollup-svc-00428-gn8` (SAME image digest
+     `sha256:7a763872…`, created 2026-08-13T14:55:52Z, tagged `deployment-api:3a66bfa` matching `origin/main`'s latest
+     `chore(promote)` commit) — both verified via `gcloud run services/revisions describe`, and the image content
+     independently confirmed via `git show origin/main:…rollup_cache.py | grep unwrap_scope_compat` (present) before
+     trusting the digest match alone.
+  2. **The core todo-8 bug is confirmed FIXED live**: re-ran the 3-scope cefi probe against `uts-shared-deployment-api`
+     (same protocol as the prior entry). `scope=mvp`/`scope=all` now BOTH reach the rollup fast path
+     (`served_from=rollup, mode=turbo`, ~4.3-4.6s) instead of the old `mode=live_build_refused` — the exact regression
+     this whole plan exists to fix. Cloud Logging for the probe window (2026-08-13T14:55-15:05Z) against
+     `uts-shared-deployment-api` shows zero `Memory limit exceeded`/`signal 9`/`SIGABRT`/ERROR-severity entries — a
+     clean window against the NEW revision this time (the prior entry's clean window was against the old revision, so
+     didn't count).
+  3. **`scope=mvp` and `scope=could_exist` currently return IDENTICAL numbers — this is EXPECTED, not a bug**: the
+     `instruments-service/full.json.gz` blob's `last_modified` is still `2026-08-13T13:44:37Z` (checked via the UTL
+     `get_storage_client().get_blob_metadata()`, never a `gsutil`/`gcloud storage` subprocess call — that's a hard
+     workspace ban on ad-hoc GCS object CLI ops) — i.e. still in the OLD flat (pre-todo-5) shape, so
+     `unwrap_scope_compat` correctly passes it through unchanged for every scope, per its own documented behavior. A
+     genuine on-demand-vs-rollup PARITY diff (this todo's actual done-when ask) is not yet meaningful until a fresh
+     dual-scope-shaped blob exists.
+  4. **Root cause of the still-stale blob, precisely diagnosed (not guessed)**: `uts-prod-data-status-rollup-cron`'s
+     15:00:00Z tick correctly SKIPPED (Cloud Logging: `"data-status rollup SKIPPED — a prior run is still in flight"`)
+     because a run started at **2026-08-13T13:40:50Z** (`rollup-run-f82b0d1d62474f2ca4589c13e813ab9e`, "rollup in
+     progress for 14 service(s)", 150-min TTL maintenance-window lock held until **2026-08-13T16:10:50Z**) is still
+     holding the overlap-guard lock — and that run started BEFORE today's 14:55:52Z deploy, so it is running the OLD
+     pre-dual-scope worker code and will write OLD-shape blobs when it finishes. The 14:20 and 14:40 cron ticks were
+     also correctly skipped for the same reason (all 3 skip log lines cite the identical lock holder). This is the
+     overlap guard working exactly as designed (maintenance-window CAS lock, root-caused for the
+     uts-prod-data-status-rollup-svc container OOM 2026-08-07) — not a bug, and NOT something to force-clear (killing
+     another run's lock to unblock this plan would be exactly the kind of "shortcut around an obstacle" the workspace
+     rules forbid).
+  5. **Todo 8 still not fully satisfiable, but for a narrower, better-understood reason than before**: the deploy step
+     is DONE; only the "on-demand vs rollup parity for a genuinely dual-scope blob" half remains, and it is purely a
+     function of waiting for the CURRENT in-flight (pre-deploy) rollup run to release its lock (≤2026-08-13T16:10:50Z)
+     and the NEXT run (which will pick up today's code) to complete. Not flipping — a same-numbers "parity" result from
+     an old-shape blob would be a misleading, not a genuine, done-when citation. Todo 7 inherits the identical
+     precondition, now dated precisely instead of open-ended.
 
-  **Remaining scope (todos 7-8, both genuinely time-gated)**: todo 8 needs the LDR→main promotion cycle + Cloud Build
-  deploy to land today's commits on `uts-shared-deployment-api` first — re-run the SAME 3-scope probe once that's
-  observably true (`gcloud run revisions describe` shows a creation timestamp after this session's last commit, or the
-  image digest changes from `sha256:7f0717f4…`), confirming `scope=mvp`/`all` now show `served_from=rollup` (not
-  `live_build_refused`) and citing a fresh clean Cloud Logging window against the NEW revision. Todo 7 additionally
-  needs the Cloud Run JOB `uts-prod-data-status-rollup` (a separate deploy target from the SERVICE checked above) to
-  have run at least once against ITS OWN redeployed dual-scope image, so every `_DEFAULT_SERVICES` blob actually
-  contains the `{could_exist, mvp}` split — check both deploy targets, not just the service, before starting todo 7.
-  Plan is otherwise fully shipped (todos 1-6, 9 all done) — only these 2 deploy-gated items remain.
+  **Remaining scope**: both todo 7 and todo 8 are now blocked on ONE concrete, dated condition — the in-flight rollup
+  run releasing its lock by 2026-08-13T16:10:50Z at the latest, then its successor completing with today's dual-scope
+  code. Re-check `uts-prod-data-status-rollup-svc`'s Cloud Logging for a `Maintenance window ACQUIRED` entry with a
+  timestamp after 14:55:52Z, then re-check `instruments-service/full.json.gz`'s `last_modified` for a timestamp after
+  that acquisition — once both are true, re-run the 3-scope probe for the real parity diff (todo 8) and the
+  `_DEFAULT_SERVICES` blob-shape check (todo 7).
