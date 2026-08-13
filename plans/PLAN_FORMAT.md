@@ -540,6 +540,45 @@ clone, not by trusting the self-report.
   (abbreviated forms like `mtds@...`/`uac@...` are ambiguous and are not matched at all — a soft-skip by construction,
   mirroring § 8b's "can't check it from here" posture for an absent Cloud Build auth).
 
+### 8d. Prod DATA-mutation evidence — mutation claims cite a verifiable artifact (HARD RULE — codified 2026-08-06)
+
+> **Why:** § 8b makes a build/deploy/promote completion machine-checkable (`cloudbuild=<id>` resolves via `gcloud builds
+> describe`), but a **prod data-mutation** completion — a restamp/backfill row count, a manifest backstamp, GCS object
+> renames/deletes, a terraform/tofu state op — had no analogous artifact: the `- [x]` rested on the worker's self-report
+> of running their own script. Review flagged this same class three independent times (tofu-state evidence gap, a
+> `do_rename` content-equality finding, a prediction restamp row-count claim). A mutation is exactly the class where a
+> wrong outcome is expensive and hard to reverse (the 2026-07-12 lost-1.02M-rows incident is precedent), so the operator
+> ruled 2026-08-06 to extend § 8b's evidence rigor to prod data mutations. SSOT:
+> `plans/active/issues/prod_mutation_evidence_artifact_gap_2026_08_03.md`.
+
+Any `- [x]` todo whose completion is a **prod data-mutation claim** — a restamp / backstamp / re-emit / backfill /
+purge / unphantom / canonicalize / demote / rename / delete / GCS-object rename-delete / terraform·tofu state op with a
+**measured outcome** (a row/object/shard/cell count, a manifest backstamp, a state-list before/after) — MUST cite a
+**data-mutation evidence artifact** on the checkbox line or its continuation lines:
+
+```markdown
+- [x] ✅ restamped 12,006 rows ... Evidence: vm-logs=pred-restamp-20260803T17/RESULT.json
+- [x] ✅ Deleted 28 legacy T-0 shards ... Evidence: manifest-delta=cefi/_index/2026-07-31.before.after
+- [x] ✅ GCS renames applied ... Evidence: gcs-op=central-element-323112:op-12345
+- [x] ✅ Removed the resource from tofu state ... Evidence: state-list=before.r7x/after.q2y
+- [x] ✅ Backfilled N shards ... Evidence: backfill-log=vm-logs/af-backfill-20260805/RESULT.json
+```
+
+- The artifact is a durable, independently-resolvable record of the mutation's outcome: a written manifest-delta row, a
+  `vm-logs/<unit>/RESULT.json`, a GCS operation id, a `terraform state list` before/after, a `backfill-log=<path>`, an
+  `operation-id=<id>`, or a `row-count-before/after`. What it must do is let a reviewer (human or agent) resolve the
+  outcome without trusting the worker's word — the same bar § 8b's build-id satisfies.
+- **A `cloudbuild=<id>` ref does NOT satisfy this rule** — a build id proves a build, not a data mutation.
+- **Enforced by** `unified-trading-pm/scripts/quality_gates/check_evidence_backed_completion.py` (PM post-gate),
+  **sub-rule C** (baselined ratchet): a `- [x]` asserting a prod mutation with a measured outcome but no data-mutation
+  artifact is flagged. Legacy claims are grandfathered in the baseline (`mutation_without_evidence_baseline`); a **NEW**
+  un-evidenced mutation claim pushes the count up → regression. Re-baseline with `--baseline-write` only after confirming
+  the flagged claim is genuine pre-existing drift, not a fresh un-evidenced mutation.
+- Scope: deliberately narrow — only the **mutation-with-measured-outcome** class (count-backed or an explicit `applied`
+  on a data-mutation verb, or a terraform/tofu state op) is checked. A code-ship claim (`<repo>@<sha>` + "QG green") is
+  NOT a mutation claim (its evidence is the commit + local QG sentinel, per § 8b/8c). Prose that merely mentions a
+  mutation verb without a measured outcome is not flagged.
+
 ### 9. UI Verification Gate (HARD RULE — codified 2026-05-23)
 
 Any todo tagged `[UI]` (see Cursor-Friendly Todo Checkboxes above) MUST NOT be ticked `- [x] ✅` until **both**

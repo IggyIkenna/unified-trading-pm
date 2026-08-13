@@ -191,3 +191,74 @@ class TestNotFoundVsUnavailable:
         violations = MOD._check_builds(blocks, region="us-central1", project="p", require_verification=True)
         assert len(violations) == 1
         assert violations[0].rule == "A-unverifiable"
+
+
+def _mutation_violations(block_text: str) -> list[object]:
+    blocks = MOD._iter_todo_blocks(block_text, Path("x.md"))
+    return MOD._check_mutations_without_evidence(blocks)
+
+
+class TestProdMutationEvidenceRuleC:
+    """Sub-rule C (2026-08-06 operator ruling, plans/PLAN_FORMAT.md § 8d): a `- [x]` asserting a
+    prod DATA mutation with a measured outcome must cite a data-mutation artifact (vm-logs=/
+    manifest-delta=/gcs-op=/state-list=/tofu-state=/...). A `cloudbuild=<id>` ref does NOT
+    satisfy it — a build id proves a build, not a data mutation."""
+
+    def test_restamp_with_row_count_flagged(self) -> None:
+        block = "- [x] ✅ restamped 12,006 target rows, 0 residual mismatched rows.\n"
+        violations = _mutation_violations(block)
+        assert len(violations) == 1
+        assert violations[0].rule == "C-mutation-without-evidence"
+
+    def test_purge_with_shard_count_flagged(self) -> None:
+        block = "- [x] ✅ Purged 28 legacy T-0 shards deleted.\n"
+        assert len(_mutation_violations(block)) == 1
+
+    def test_tofu_state_op_flagged(self) -> None:
+        block = "- [x] ✅ Removed the resource from tofu state.\n"
+        assert len(_mutation_violations(block)) == 1
+
+    def test_backfill_with_million_object_count_flagged(self) -> None:
+        block = "- [x] ✅ Backfilled 1.02M objects to the cefi _index.\n"
+        assert len(_mutation_violations(block)) == 1
+
+    def test_mutation_with_vm_logs_artifact_not_flagged(self) -> None:
+        block = "- [x] ✅ restamped 12,006 rows. Evidence: vm-logs=pred-restamp-20260803T17/RESULT.json\n"
+        assert _mutation_violations(block) == []
+
+    def test_mutation_with_manifest_delta_artifact_not_flagged(self) -> None:
+        block = "- [x] ✅ Deleted 28 legacy shards. Evidence: manifest-delta=cefi/_index/2026-07-31.before.after\n"
+        assert _mutation_violations(block) == []
+
+    def test_mutation_with_gcs_op_artifact_not_flagged(self) -> None:
+        block = "- [x] ✅ GCS renames applied. Evidence: gcs-op=central-element-323112:op-12345\n"
+        assert _mutation_violations(block) == []
+
+    def test_mutation_with_state_list_artifact_not_flagged(self) -> None:
+        block = "- [x] ✅ Removed the resource from tofu state. Evidence: state-list=before.r7x/after.q2y\n"
+        assert _mutation_violations(block) == []
+
+    def test_cloudbuild_ref_does_not_suppress_rule_c(self) -> None:
+        # A build id proves a build, not a data mutation — must still be flagged.
+        block = "- [x] ✅ restamped 12,006 rows. Evidence: cloudbuild=9159f9c7-2597-493a-89a3-7a56fdd1486c\n"
+        assert len(_mutation_violations(block)) == 1
+
+    def test_backfill_without_measured_outcome_not_flagged(self) -> None:
+        # "Launched the backfill VM" is not a mutation-with-measured-outcome claim.
+        block = "- [x] ✅ Launched features recompute VM fts-backfill-20260805 with no issues.\n"
+        assert _mutation_violations(block) == []
+
+    def test_code_ship_backfill_mention_not_flagged(self) -> None:
+        # A code task named "mtds-backfill branch" (no measured outcome) is not a mutation claim.
+        block = "- [x] Wire VM_FORCE_WINDOW into the mtds-backfill branch.\n"
+        assert _mutation_violations(block) == []
+
+    def test_analysis_block_drop_completed_not_flagged(self) -> None:
+        # Regression for the 2026-08-13 false-positive shape: generic `drop` + generic `completed`
+        # in an analysis/review block is NOT a data mutation.
+        block = (
+            "- [x] ✅ [REVIEW] P1. Post-window analysis + writeup, all writing into the same source "
+            "doc. Pull the post-window comparison (todo 9): real `$/task`, `$/plan`, avg turn count, "
+            "avg total tokens/task for pro vs flash over the full monitoring window — completed.\n"
+        )
+        assert _mutation_violations(block) == []
