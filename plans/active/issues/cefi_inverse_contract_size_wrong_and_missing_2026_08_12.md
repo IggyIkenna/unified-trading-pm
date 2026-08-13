@@ -103,17 +103,27 @@ Root cause, fully traced and verified against live code (not the sub-agent's wor
 `unified-api-contracts/unified_api_contracts/registry/cefi_inverse_contract_multipliers.py` —
 `resolve_cefi_inverse_contract_multiplier(venue, base_asset)`, sourced + cited against each venue's live public API
 (URLs + fetch date in the file's own comments), 34 new tests (`tests/unit/test_cefi_inverse_contract_multipliers.py`).
-Gate green for the new code (34/34 passed); the FULL-repo gate has one UNRELATED pre-existing failure
-(`test_priority_source_resolves_to_capability[fluid]` — a DeFi "Fluid" protocol capability-declaration gap that landed
-via the same `main`→LDR backmerge that hit this checkout mid-session, nothing to do with CeFi/liquidations) — noted here
-so it isn't confused with this fix; not this doc's scope to fix.
+Gate green for the new code (34/34 passed). The FULL-repo gate initially had one UNRELATED pre-existing failure
+(`test_priority_source_resolves_to_capability[fluid]`) — a DeFi "Fluid" protocol WIRE-REAL-CAPTURE commit
+(`unified-api-contracts@6ac0dafd`, a different live session/slot) had registered `fluid` in `SOURCE_PRIORITY` +
+`PipelineMode` but missed the one companion edit every sibling on-chain-RPC source (`spark`/`compound_v3`/`radiant`)
+also needed: adding it to `_COMPUTED_SERVICE_SOURCES` in `test_venue_source_adapter_parity.py` (fluid's oracle_prices
+capture is the same class — a pure on-chain `configs.oraclePriceOperate` eth_call, no vendor API). Genuinely blocking
+the shared LDR trunk's full gate for everyone, not just this fix, and narrowly scoped with 3 identical precedents to
+mirror exactly — fixed in the same ship rather than worked around. Shipped: `unified-api-contracts@49ad03df3d`.
+
+**Wired into MDPS**: `liquidations_adapter.py`'s inverse-margin branch now derives `base_asset` from the canonical
+`VENUE:TYPE:BASE-QUOTE@MARGIN` id shape and checks `resolve_cefi_inverse_contract_multiplier(venue, base_asset)` FIRST;
+the existing `read_instruments_catalog_contract_size` catalogue lookup is now the fallback for venues the static
+registry doesn't cover, with the same fail-closed `MalformedTickFieldError` on a double-miss. Existing adapter tests
+updated to reflect the new resolution order (registry-hit tests now assert the catalogue is NOT called; the catalog-miss
+test patches both the registry and catalogue to None to exercise a genuine double-miss). Shipped:
+`market-data-processing-service@ae23ee5c03`.
 
 ## Still open — NOT done yet
 
-- [ ] [SCRIPT] P0. Wire the new UAC resolver into `liquidations_adapter.py`'s inverse-margin branch (check
-      `resolve_cefi_inverse_contract_multiplier(venue, base_asset)` FIRST; fall back to the existing
-      `read_instruments_catalog_contract_size` catalogue lookup only for venues the static registry doesn't cover). Was
-      in progress when this session hit a context-limit checkpoint — not started.
+- [x] [SCRIPT] P0. Wire the new UAC resolver into `liquidations_adapter.py`'s inverse-margin branch — done, see above.
+      `market-data-processing-service@ae23ee5c03`.
 - [ ] [SCRIPT] P1. Trace exactly where MDPS threads the stale `BYBIT:PERPETUAL:BTCUSD`/`ETHUSD` id shape into the
       liquidations calc (Finding 1a) and fix at the source (canonicalize before the catalogue-lookup call site).
 - [ ] [DATA] P1. Run the decisive per-date GCS check for Finding 1b (OKX AVAX/XLM delisted-instrument capture vs rollup
