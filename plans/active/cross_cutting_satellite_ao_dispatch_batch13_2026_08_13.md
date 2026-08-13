@@ -124,13 +124,19 @@ source: >-
       `plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md`
 - [ ] [CODE] P2. Re-run hosted-baseline.sh to resync the derived cloud-build-router.yml snapshot with the live workflow
       Source: `plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md`
-- [ ] [DATA] P1. ml legacy variants — GCP `ml-models-store` (flat legacy) is the sole remaining bucket, already
-      5-part-proof-confirmed safe to delete (byte-parity + zero live readers, both independently re-verified
-      2026-07-25). The 2026-08-09 operator correction states the codex delete-safety rule (§3a) lets an agent execute
-      this hard-stop-#1 delete autonomously once a FRESH gcs_bucket_soft_delete_retention_seconds() check on the bucket
-      clears >=604800s — that check has never been run. Bounded action: run the fresh retention check; if it clears the
-      threshold, execute `gcloud storage rm -r gs://ml-models-store` + remove the (already-identified, zero) dead
-      TF/yaml references; if it does not clear, stop and re-flag human-only. Source:
+- [x] ✅ [DATA] P1. **MOOT — already deleted, confirmed live (2026-08-13, slot 29).** This todo's premise (run a fresh
+      retention check, then delete) was stale: the source doc's own 2026-08-12 docs-drift note records that
+      `ml-models-store` was already deleted 2026-08-08 (operator-authorized) via the sibling plan
+      `bucket_fold_ml_2026_07_17.md`'s "Delete sources" todo — this batch's extraction just hadn't picked that up. Fresh
+      live re-verification this session (not just trusting the note):
+      `gcloud asset search-all-resources     --scope=projects/central-element-323112 --query="name:ml-" --asset-types="storage.googleapis.com/Bucket"`
+      returns only `ml-store-test-central-element-323112` and `ml-store-prd-central-element-323112` (the folded
+      canonical buckets) — zero hits for `ml-models-store`, confirming the flat legacy bucket is gone. Dead
+      TF/yaml-reference half also re-confirmed clean: fresh
+      `grep -rn "ml-models-store\b" deployment-service/terraform deployment-service/configs deployment-api     unified-api-contracts`
+      across all 4 repos returns only comments/docstrings describing the already-executed fold (`outputs.tf`,
+      `_core.py`, a test docstring, `_ml_training_contract.py`) — no live resource declarations or resolver calls. No
+      retention check or delete action was needed or taken. Source:
       `plans/active/bucket_estate_consolidation_closeout_2026_07_24.md`
 - [ ] [CODE] P2. Confirm whether any CARRY_STAKED_BASIS/CARRY_BASIS_PERP paper run's fill-rate or slippage figures were
       cited in an actual promotion/sizing decision, and flag for re-check if so Source:
