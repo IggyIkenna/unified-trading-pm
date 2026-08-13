@@ -139,7 +139,34 @@ description advertises an "anti-ban engine" that spoofs headers/tool definitions
 a Max/Pro subscription can be used as a raw metered API. That is ToS evasion, not a billing-accuracy tool, and has no
 place in this pipeline regardless of how useful its data would be.
 
-## Open Question 1 ANSWERED (2026-08-13): no API exists — must sample `/usage` from a live session
+## CORRECTION (2026-08-13, same day, after live verification): both capture halves already exist
+
+The section below concluded "no API, must build a tmux `/usage` sampler" — that was WRONG, found by not checking this
+repo's own code before researching externally. Verified live on the VM: **`server/usage_poller.py` has been polling
+Anthropic's real `anthropic-ratelimit-unified-5h/7d-utilization` response headers since 2026-05-29**, persisting
+`weekly_pct`/`five_hour_pct`/`weekly_window_start` per account into `AccountUsageRow` + a full history table
+(`AccountUsageHistoryRow`, snapshotted every ~15-30 min). Confirmed 161 real history rows for sub-d/sub-e/sub-f going
+back to 2026-08-10. It even already has a TUI-reconcile fallback (`usage_tracker.fetch_usage_via_claude`, a
+`claude /usage` pexpect probe) for near-cap accounts where the header read under-reports — i.e. the tmux-driven approach
+this doc proposed building was ALSO already built, as a secondary path.
+
+**Token-side pricing already exists too.** `TaskUsageRow` captures every task's real token usage for ANY provider with a
+`claude_session_id` (not DeepSeek-only), written durably at `/done`, and — verified live — `spend_usd` is ALREADY
+populated for sub-d/sub-e/sub-f using `model_pricing.py`'s existing Anthropic rate cards (`claude-sonnet-5`,
+`claude-sonnet-4-6`, etc. all registered). Real numbers pulled live 2026-08-13: sub-d ≈$4.46, sub-e ≈$4.61, sub-f ≈$7.49
+in list-rate spend already sitting in `task_usage.spend_usd`.
+
+**Net effect: nothing needs to be CAPTURED. The entire remaining task is a computation joining two tables that already
+exist**, plus a dashboard widget — much closer to `deepseek_spend_probe.py` (a read-only reconciliation script) than to
+the DeepSeek proxy's capture-infrastructure buildout. Requirement 2 (crash-durability) is effectively MOOT for both
+halves: the %-limit poll is independent of any specific task/session (a killed tmux session doesn't affect the next
+periodic API poll), and `TaskUsageRow` is already the durable, provider-generic, written-at-`/done` record every other
+usage feature relies on — this initiative doesn't need its own new durability guarantee.
+
+**Lesson for next time**: grep the OWN codebase for prior art before researching externally — this was fully built and
+running in production for 2.5 months and I nearly proposed rebuilding it.
+
+## Open Question 1 (SUPERSEDED by the correction above, kept for the record) — no API exists — must sample `/usage` from a live session
 
 Researched directly (Anthropic's own docs + two open GitHub feature requests against `anthropics/claude-code`): **there
 is no programmatic way to read Max/Pro subscription weekly-limit-% for an account.**
@@ -229,24 +256,28 @@ work, noted here so it isn't rediscovered.
 
 ## Todo
 
-- [ ] [INVESTIGATE] P2. **Answer Open Question 2** — check whether the DeepSeek-style workload-sensitivity problem (a
-      ratio that looks stable over one window but isn't a true constant) applies to Claude's weekly-limit consumption
-      too, before treating any single calibration run as broadly reusable.
-- [ ] [BACKEND] P2. **Confirm sub-F/sub-D account identity mapping** against `accounts.json`/`.claude-accounts/*.env`
-      before using either as a calibration sample (Open Question 3). Sub-F (`odum2default@gmail.com`) replaces the
-      contaminated sub-E as of 2026-08-13.
-- [ ] [INVESTIGATE] P2. **Wait for sub-F's post-2026-08-13 weekly reset before treating it as a clean full-window
-      sample** — its reset was under 11 hours away at the time of the swap, so any usage before that reset is a partial
-      window only.
-- [ ] [BACKEND] P1. **Build the `/usage` tmux-driven periodic sampler** (new, concrete, per the architecture section
-      above) — attach to a live Claude Code session on the target account on a cadence, send `/usage`, capture-pane,
-      regex-parse session-%/weekly-%/reset-time, persist to a new table mirroring `deepseek_balance_history`. This is
-      the critical-path item: nothing else in this doc can be calibrated without it.
-- [ ] [BACKEND] P2. **Price captured Claude token usage at Anthropic list rates** — reuse `model_pricing.py` against the
-      already-generic transcript-sweep data (`server/deepseek_usage.py`'s `scan_session_usage`, confirmed
-      provider-agnostic) for a Claude account/window; no new capture needed for this half.
-- [ ] [INVESTIGATE] P3. **Measure whether the transcript-sweep crash-durability gap is real** for Claude accounts (a
-      session killed before its JSONL write flushes) before building any capture-then-relay proxy for the token side —
-      don't build Requirement 2's proxy speculatively if the gap turns out to not materialize in practice.
-- [ ] [BACKEND] P3. **Build the "Claude Wallet Reconciliation" dashboard widget** (Requirement 3) — blocked on the
-      `/usage` sampler landing real data first.
+~~Build a `/usage` tmux-driven sampler~~ / ~~price Claude tokens at list rates~~ — **NOT NEEDED, both already exist and
+already have real data** (see the CORRECTION section above). Revised todo list:
+
+- [x] [BACKEND] P2. **Confirm sub-F/sub-D account identity mapping** — DONE 2026-08-13, verified against accounts.json's
+      `primary_email` field (authoritative; the `id` slug for sub-e is cosmetically stale, already flagged in its own
+      label). sub-d-odum1default=odum1default@gmail.com=Pro, sub-e-odum2default=odum3default@gmail.com=Max20 (currently
+      contaminated), sub-f-odum2default=odum2default@gmail.com=Max20 — all match the operator's mapping.
+- [ ] [BACKEND] P1. **Build `compute_claude_wallet_reconciliation()`** (`server/state_store/slots.py`, mirroring
+      `compute_deepseek_wallet_window_reconciliation`) — per account/window: implied
+      $ = `weekly_pct/100 ×
+      (monthly_price × 7/31)` from `AccountUsageRow`/`AccountUsageHistoryRow`, actual $ =
+      `SUM(task_usage.spend_usd)` for that `account_id` where `completed_at` falls in the window, ratio = implied/actual
+      = the boost multiplier. Both inputs already exist and are already populated for sub-d/sub-e/sub-f.
+- [ ] [BACKEND] P1. **Route** `/api/accounts/claude/wallet-reconciliation` mirroring the DeepSeek route pair in
+      `server/routes/accounts.py`.
+- [ ] [FRONTEND] P1. **Build `ClaudeWalletPanel.tsx`** mirroring `DeepSeekWalletPanel.tsx`, wired into `App.tsx`, with
+      real Playwright L2 coverage per the workspace hard rule.
+- [ ] [INVESTIGATE] P2. **Run the reconciliation against sub-d (Pro, clean) and sub-f (Max, partial-week) real data once
+      built** — this both delivers Requirement 3 AND starts answering Open Question 2 (is the multiplier stable across
+      the two tiers/windows) with genuine numbers instead of the operator's rough $0.45 estimate.
+- [ ] [INVESTIGATE] P3. **Re-run once sub-f's window resets** (~2026-08-13 22:00 UTC, confirmed live via
+      `weekly_window_start=2026-08-06 22:00`) for a genuinely clean full-week Max sample — the pre-reset window is real
+      but partial (sub-f was already at weekly_pct=100% mid-window as of this check).
+- [ ] [OPERATOR] P3. **sub-e stays excluded** from calibration until it goes untouched interactively through a full
+      weekly reset (contamination noted above still stands).
