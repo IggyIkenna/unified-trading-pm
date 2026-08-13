@@ -190,6 +190,27 @@ if [[ "$(pwd -P)" != "$(cd "$_sdp_toplevel" && pwd -P)" ]]; then
   exit 2
 fi
 
+# ── F9 ISO-MERGE BASE (2026-08-12) ───────────────────────────────────────────────────────────
+# pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md F9: isolated mode's copy loop
+# below used to `cp` the caller's on-disk file straight into a worktree freshly checked out at
+# origin/<branch>, with no check for whether a peer had landed DIFFERENT content in that same
+# file since the caller last synced. That blind overwrite silently replaced the peer's landed
+# lines with the caller's own stale-based accumulation -- measured 12/18 markers lost across a
+# 4-worker/6-round stress run, repro: scripts/dev/repro-safe-doc-push-stale-local-clobber.sh.
+#
+# Captured HERE -- before any fetch/worktree-add -- because this is the last point where "HEAD"
+# still means the CALLER's own last-synced branch tip, i.e. what their on-disk edit is actually
+# based on. Isolated mode's own entry-fingerprint section (further down) runs inside the CHILD,
+# after the worktree is already checked out at fresh origin/<branch>; by then "HEAD:<path>" means
+# origin's current content, too late to tell "nothing changed" apart from "a peer moved this".
+_sdp_iso_base_blob() { git rev-parse -q --verify "HEAD:$1" 2>/dev/null || echo ABSENT; }
+_SDP_ISO_BASE_BLOBS=""
+for _sdp_ibf in "${FILES[@]}"; do
+  _SDP_ISO_BASE_BLOBS="${_SDP_ISO_BASE_BLOBS}$(_sdp_iso_base_blob "$_sdp_ibf")  ${_sdp_ibf}
+"
+done
+_sdp_iso_base_blob_of() { printf '%s\n' "$2" | awk -v f="$1" '$2 == f { print $1; exit }'; }
+
 # pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10 (F4): fingerprint the caller's
 # named files AT ENTRY so a non-success exit can tell "your content is still on disk, this really
 # was transient" apart from "your edits were reverted out from under you". Measured twice on
@@ -412,6 +433,23 @@ if [[ "$_SDP_ISOLATED_EFFECTIVE" != "0" && -z "${SDP_IN_ISOLATION:-}" ]]; then
         exit 2
       fi
       mkdir -p "$_sdp_iso_wt/$(dirname "$_f")" 2>/dev/null || true
+      # F9 (2026-08-12): origin/$BRANCH here is FRESH (just fetched above), so this worktree's
+      # checked-out copy of $_f is what a peer landed, if anyone did. Compare it against what the
+      # caller's edit was actually based on (_SDP_ISO_BASE_BLOBS, captured before any fetch) --
+      # equal means nobody touched this file since the caller last synced, blind copy is exactly
+      # as safe as it always was. Different means a peer's content is sitting in this worktree
+      # RIGHT NOW and a plain `cp` would silently erase it the moment we commit. Isolated mode's
+      # entire value proposition is speed on the common (no divergence) case; on the rare
+      # divergence case, abandon it in favour of the shared-index path below, which reconciles
+      # through git's own ancestor-aware 3-way merge (autostash_rebase_reconcile) and hard-stops
+      # on a genuine conflict -- proven, tested machinery, not reinvented here.
+      _sdp_iso_base="$(_sdp_iso_base_blob_of "$_f" "$_SDP_ISO_BASE_BLOBS")"
+      _sdp_iso_theirs="$(git rev-parse -q --verify "origin/${BRANCH}:${_f}" 2>/dev/null || echo ABSENT)"
+      if [[ "$_sdp_iso_base" != "$_sdp_iso_theirs" ]]; then
+        echo "  isolation: $_f changed on origin/${BRANCH} since your last sync (peer landed different content) — abandoning isolated mode for this run, falling back to shared-index reconcile so it merges through git rather than a blind copy" >&2
+        _sdp_copy_ok=false
+        continue
+      fi
       cp "$_f" "$_sdp_iso_wt/$_f" || _sdp_copy_ok=false
     done
     if [[ "$_sdp_copy_ok" == true ]]; then
