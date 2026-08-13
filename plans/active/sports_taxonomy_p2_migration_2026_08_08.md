@@ -7,10 +7,11 @@ summary: >-
   19-token instruments-service reference vocabulary, purges the retired `exchange_odds`/`fixed_odds` instrument_type
   values from both manifest rows and GCS objects, removes ODDS_API/FOOTYSTATS from the venue axis, and cleans the
   phantom populations the audit found (20,785 KALSHI cross-AG rows, 2,490 blank-venue IS rows, 111 `trades_inplay`
-  fossils). GATED on BOTH P1's contracts AND the in-flight API-Football entity campaign — renaming the registry while
-  that campaign's two remaining all-leagues backfills are running would make the fetch loop write tokens the registry no
-  longer expects. Prod deletes run agent-autonomously via the delete-safety §3a reversibility path (fresh same-run
-  soft-delete-retention check), per operator ruling 2026-08-08 — NOT via [OPERATOR] tags.
+  fossils — the live census showed 0 manifest rows + 1,197 real GCS objects, retired 2026-08-13). GATED on BOTH P1's
+  contracts AND the in-flight API-Football entity campaign — renaming the registry while that campaign's two remaining
+  all-leagues backfills are running would make the fetch loop write tokens the registry no longer expects. Prod deletes
+  run agent-autonomously via the delete-safety §3a reversibility path (fresh same-run soft-delete-retention check), per
+  operator ruling 2026-08-08 — NOT via [OPERATOR] tags.
 status: active
 nature: process
 asset_group: [sports]
@@ -130,12 +131,23 @@ than proceeding.
       seed 232,098** `trades`→`odds` with VERIFY=0 remaining on each surface. Tooling shipped
       `market-tick-data-service@071a5466`. Residual `trades` rows (merged 20 × `live_odds_api` `empty_confirmed`; seed
       362,753) are the documented P3-gated live-writer re-population, not incomplete scope — see Progress Log.
-- [ ] [DATA] P0. **Materialise the `in_play` column and retire `trades_inplay`.** 111 rows only (2022-09-07 →
+- [x] ✅ [DATA] P0. **Materialise the `in_play` column and retire `trades_inplay`.** 111 rows only (2022-09-07 →
       2022-11-09, blank venue) — a fossil, not a population. **Disposition rule PRE-SPECIFIED**: fold into `odds` with
       `in_play=true` when the backing object exists AND its parquet has `row_count > 0`; delete the manifest row when
       the object is absent or empty (bookkeeping residue). Report the split. Confirm the filename-scoped reader
       (`reprocess_sports_odds.py::_is_consumable_trades_blob` matches on FILENAME `inplay_ticks.parquet`) is updated in
-      the same change — this is exactly the consumer a data_type grep misses.
+      the same change — this is exactly the consumer a data_type grep misses. ✅ **DONE — live census 2026-08-13: the
+      manifest already carried 0 `trades_inplay` rows on ALL surfaces** (the plan's "111 fossil rows" were consumed
+      /relabeled before this todo ran); the GCS estate held **1,197** `data_type=trades_inplay/inplay_ticks.parquet`
+      objects (16 dates, 2022-09-07 → 2022-11-09) at real bookmaker venues × leagues, all verified non-empty
+      (`bm_minutes_to_kickoff < 0` = genuine post-kickoff). Fold tool shipped `market-tick-data-service@e5d43bc3e1`
+      (restamp_sports_trades_inplay_to_odds_2026_08_13.py) — **all 1,197 folded** to
+      `data_type=odds/inplay_ticks.parquet` with `in_play=true` content column (0 content_mismatch / 0 failed / 0 empty
+      residue), then sources deleted under the §3a fresh check (`soft_delete_retention_seconds=604800` ≥ 604800).
+      **Split: 1,197 folded / 0 manifest rows deleted** (none remained). Reader fix shipped
+      `market-data-processing-service@a9de0ff14b` — `_is_consumable_trades_blob` now EXPLICITLY excludes
+      `inplay_ticks.parquet` (the endswith-`ticks.parquet` matcher would otherwise consume the quarantined post-kickoff
+      population as pre-match trades). See Progress Log.
 - [ ] [DATA] P0. **Lowercase the instruments-service reference vocabulary** across all 19 tokens (`FIXTURES`,
       `FIXTURES_OUTCOMES`, `FIXTURES_SCHEDULE`, `FIXTURE_EVENTS`, `FIXTURE_LINEUPS`, `FIXTURE_STATS`, `INJURIES`,
       `MATCHES`, `ODDS`, `PLAYER_STATS`, `PLAYER_VALUES`, `PREDICTIONS`, `SFI_PROGRESSIVE_STATS`, `STANDINGS`, `TEAMS`,
@@ -232,3 +244,18 @@ than proceeding.
   migration (`sports_taxonomy_p3_consumers_2026_08_08`) flips the writers. Note: the census at dispatch time reported
   396,110 merged-index `trades` rows (not the plan's 375,257 title figure) — the title's figure is the earlier audit's
   captured-shard count; the migration re-stamped the full live population regardless.
+- **2026-08-13** — `trades_inplay` retirement (todo 2) complete. **Stale census corrected in-run:** the plan's "111
+  fossil rows / blank venue" premise was measured wrong — live probes showed **0 `trades_inplay` manifest rows on ALL 4
+  surfaces** (merged + seed × tick-data + instruments-store buckets) but **1,197 real
+  `data_type=trades_inplay/ inplay_ticks.parquet` GCS objects** (16 dates, 2022-09-07 → 2022-11-09) at real bookmaker
+  venues × leagues, all verified non-empty post-kickoff captures (`bm_minutes_to_kickoff < 0`). Fold tool
+  (`restamp_sports_trades_inplay_to_odds_2026_08_13.py`) shipped `market-tick-data-service@e5d43bc3e1`; execution folded
+  **all 1,197** objects to `data_type=odds/inplay_ticks.parquet` with the `in_play=true` content column materialised (0
+  content_mismatch / 0 failed / 0 empty residue) and deleted the sources under the §3a FRESH check
+  (`soft_delete_retention_seconds=604800` ≥ 604800). **Split: 1,197 folded / 0 manifest rows deleted** (none remained to
+  delete). The `trades_inplay` data_type token is retired on GCS (0 sources remain, verified). Reader fix shipped
+  `market-data-processing-service@a9de0ff14b` — `_is_consumable_trades_blob` explicitly excludes `inplay_ticks.parquet`
+  so the quarantined post-kickoff population can never be consumed as pre-match trades (the endswith-`ticks.parquet`
+  matcher previously would have). features-service/ml-service read only the PROCESSED `odds_horizon_bucket` path, never
+  this raw-tick prefix — unaffected. No live writer re-emits `trades_inplay` (verified: no MTDS adapter emits it), so
+  the retirement is durable.

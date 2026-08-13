@@ -80,8 +80,10 @@ source: >-
       from either side, allowing unbounded drift) — unified-trading-pm@bb75f3d5ce + new `FF-PULL DETACHED HEAD` verdict
       fires on behind>0 detached clone (before the false "clean→FF would succeed" exit); 12/12 bats green. Source:
       `plans/active/issues/ff_pull_fleet_drift_rca_2026_08_11.md`
-- [ ] [CODE] P2. apply SUPERSEDED banners to the 3 retired-but-still-scanned codex docs per the workspace's stated
-      convention Source:
+- [x] [CODE] P2. ✅ apply SUPERSEDED banners to the 3 retired-but-still-scanned codex docs — already present on origin,
+      no code change: data-catalogue-schema.md ⛔ banner @06a2301cb49 (2026-07-20) + ui-dependency-matrix.md &
+      ui-functionality-requirements.md 🟡 banners @8fcb74f6a51 (2026-05-13), each pointing at its successor, all
+      pre-dating this batch. Source:
       `plans/active/issues/codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md`
 - [ ] [CODE] P2. distinguish 'no-frontmatter' from 'frontmatter present but YAML-parse-error' in
       check_codex_doc_freshness.py's _parse_frontmatter/_check_parsed Source:

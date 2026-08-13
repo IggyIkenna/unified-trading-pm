@@ -169,3 +169,36 @@ def test_orphan_message_stays_generic_when_coordinator_active(pm_dir: Path) -> N
     msg = violations[orphan]
     assert "ARCHIVED" not in msg
     assert "may need reopening" not in msg
+
+
+def test_has_active_single_ag_docs_true_on_live_member(pm_dir: Path) -> None:
+    # A live (non-excluded-status) doc with exactly this single covered asset_group makes the
+    # tranche "has live docs" — the population whose commits the closeout gate screens.
+    live = pm_dir / "plans" / "active" / "issues" / "cefi_finding_2026_08_01.md"
+    live.write_text("x\n", encoding="utf-8")
+    all_docs = {live: {"asset_group": ["cefi"], "status": "active", "title": "x"}}
+    assert checker._has_active_single_ag_docs("cefi", all_docs) is True
+
+
+def test_has_active_single_ag_docs_false_when_closed_status(pm_dir: Path) -> None:
+    # A doc whose status is closed/terminal (resolved, archived, ...) is NOT a live doc —
+    # a tranche with only closed members needs no active coordinator.
+    closed = pm_dir / "plans" / "active" / "issues" / "cefi_finding_2026_08_01.md"
+    closed.write_text("x\n", encoding="utf-8")
+    all_docs = {closed: {"asset_group": ["cefi"], "status": "resolved", "title": "x"}}
+    assert checker._has_active_single_ag_docs("cefi", all_docs) is False
+
+
+def test_has_active_single_ag_docs_ignores_other_ag_and_multi_value(pm_dir: Path) -> None:
+    # Only docs tagged with THIS single covered asset_group count: another tranche's live doc
+    # is not evidence for cefi, and a multi-value doc is exempt by construction.
+    other = pm_dir / "plans" / "active" / "issues" / "defi_finding_2026_08_01.md"
+    other.write_text("x\n", encoding="utf-8")
+    multi = pm_dir / "plans" / "active" / "issues" / "cross_finding_2026_08_01.md"
+    multi.write_text("x\n", encoding="utf-8")
+    all_docs = {
+        other: {"asset_group": ["defi"], "status": "active", "title": "x"},
+        multi: {"asset_group": ["cefi", "defi"], "status": "active", "title": "x"},
+    }
+    assert checker._has_active_single_ag_docs("cefi", all_docs) is False
+    assert checker._has_active_single_ag_docs("defi", all_docs) is True

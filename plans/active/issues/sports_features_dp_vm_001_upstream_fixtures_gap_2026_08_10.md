@@ -112,9 +112,13 @@ locked_since:
       vm-logs, e.g. `-181406`) ≈ 12× the ≤2/(prefix,day) bound. Verify the self-heal actuator dedup
       (`launch_budget_registry`) and whether an external launcher loop is firing without real workloads. Resource-waste
       observation.
-- [ ] [DATA] P1. Recompute day=2026-08-10 sports features once upstream fixtures land — the 15:42Z compute is sparse
-      (row_count 1-2/league, computed from partial upstream). Per operator ruling, do NOT flip the parent
-      features-backfill item done until this recompute completes.
+- [x] [DATA] P1. ✅ Recompute day=2026-08-10 sports features once upstream fixtures land — DONE. Ran
+      `features-service --feature-family sports --operation compute --mode batch --date 2026-08-10 --skip-fetch --force`
+      (single-day, bounded) → exit 0, "Processing completed successfully",
+      `Wrote fixture_features: 69 total rows across     leagues` (up from the sparse 1-2/league), `ManifestWriter`
+      updated availability index (+98 entries). The parent features-backfill item can now be flipped done — the sparse
+      15:42Z compute is superseded by this full-upstream recompute. (The 15:42Z compute was sparse; recomputed
+      2026-08-13 once upstream fixtures_schedule/outcomes landed.)
 - [ ] [DATA] P3. Verify the 2022 year-sharded features VM (`features-sports-sports-2022-20260810-051126`): no
       EXIT_STATUS (terminated mid-run 07:15Z, skip-if-fresh only) — confirm 2022 features coverage in the availability
       index.
