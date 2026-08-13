@@ -126,6 +126,14 @@ bridges them; it does not extend one over the other.
       then `git pull --rebase --autostash`; (b) operator adjudicates and reconciles now. Recommendation: (a) — nothing
       is blocked by it, since every ship this session went through the isolated-worktree path unaffected by the
       divergence.
+- [ ] [OPERATOR] P0. Re-ship Phase 2 once the `unified-api-contracts` tree is green. BLOCKED-OPERATOR-DECISION: a LIVE
+      peer session holds uncommitted `_source_priority_data.py` + `registry/market_data_categories.py` in this shared
+      slot-4 checkout; their `("tradfi", "ohlcv_1h"): ["yahoo"]` addition has no availability semantic, so 6 tests fail
+      tree-wide and quickmerge correctly refuses. The liveness gate forbids an agent touching, committing or reverting
+      their work. Options: (a) wait for the peer to land it, then re-run
+      `quickmerge --agent --skip-preflight --files '<the 4 Phase-2 paths>'` — the code needs no changes; (b) operator
+      adjudicates the peer's work now. Recommendation: (a). Phase 2's content is preserved as git blobs (SHAs in the
+      Progress Log), so nothing is lost while it waits. Repo: unified-api-contracts.
 - [ ] [OPERATOR] P2. Bootstrap a `.venv` in this slot's `unified-trading-library` — absent, so every verification
       round-trip is a full `quality-gates.sh` run (measured this session: 103s / 119s / 218s / 406s, plus a 74s
       tests-slice). Roughly 20 minutes of one session's wall-clock went to gates for changes checkable in seconds
@@ -336,25 +344,77 @@ bridges them; it does not extend one over the other.
 
 Phase 1 closed 8 of 9 todos. Nothing below is half-shipped — every item is either untouched or operator-owned.
 
-| Item                                                                                                          | State / why deferred                                                                                                         | Blocked on                    |
-| ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| Phase 1c — wire drain registry into MTDS / MDPS / instruments-service / features-service backfill entrypoints | **Not done** — 4 repos = 4 separate gate runs; deliberately not started mid-context rather than left half-wired across repos | nobody                        |
-| Phase 1e — codex flush-contract doc                                                                           | **Not done** — small, follows 1c so the doc describes the shipped end state                                                  | nobody (do after 1c)          |
-| Phase 2 — `DependentAction` + `evaluate_revocation()`                                                         | **Not done** — the policy SSOT; unblocked, Phase 1's contract is in place                                                    | nobody                        |
-| Phase 3 — `RETRY_BUDGETS`                                                                                     | **Not done** — independent of Phase 2, can run in parallel                                                                   | nobody                        |
-| Phase 4 — push actuator                                                                                       | **Not done**                                                                                                                 | Phase 2 (needs the evaluator) |
-| Phase 5 — VM poll hook + Cloud Run skip gate                                                                  | **Not done**                                                                                                                 | Phase 2 + Phase 4             |
-| Phase 6 — 12 bad-VM scenarios                                                                                 | **Cannot be done yet** — needs the actuator and poll hook to exist before there is anything to assert against                | Phases 4-5                    |
-| Phase 7 — codex SSOT + archival                                                                               | **Cannot be done yet** — closes the plan                                                                                     | all phases                    |
-| slot-4 PM checkout divergence                                                                                 | **Operator-owned** — liveness gate forbids an agent reconciling a live peer's staged work                                    | operator                      |
-| `unified-trading-library` `.venv` bootstrap                                                                   | **Operator-owned** — environment setup                                                                                       | operator                      |
+| Item                                                                                                          | State / why deferred                                                                                                                                                                                                                                                                           | Blocked on                             |
+| ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Phase 1c — wire drain registry into MTDS / MDPS / instruments-service / features-service backfill entrypoints | **Not done** — 4 repos = 4 separate gate runs; deliberately not started mid-context rather than left half-wired across repos                                                                                                                                                                   | nobody                                 |
+| Phase 1e — codex flush-contract doc                                                                           | **Not done** — small, follows 1c so the doc describes the shipped end state                                                                                                                                                                                                                    | nobody (do after 1c)                   |
+| Phase 2 — `DependentAction` + `evaluate_revocation()`                                                         | **Written and gate-proven, CANNOT SHIP** — code + 26 tests are complete and pass; `quality-gates.sh` is red tree-wide from a LIVE peer's uncommitted `SOURCE_PRIORITY` edit, and quickmerge correctly refuses a red tree. Preserved as git blobs (SHAs in the Progress Log) so nothing is lost | live peer session landing its UAC work |
+| Phase 3 — `RETRY_BUDGETS`                                                                                     | **Not done** — independent of Phase 2, can run in parallel                                                                                                                                                                                                                                     | nobody                                 |
+| Phase 4 — push actuator                                                                                       | **Not done**                                                                                                                                                                                                                                                                                   | Phase 2 (needs the evaluator)          |
+| Phase 5 — VM poll hook + Cloud Run skip gate                                                                  | **Not done**                                                                                                                                                                                                                                                                                   | Phase 2 + Phase 4                      |
+| Phase 6 — 12 bad-VM scenarios                                                                                 | **Cannot be done yet** — needs the actuator and poll hook to exist before there is anything to assert against                                                                                                                                                                                  | Phases 4-5                             |
+| Phase 7 — codex SSOT + archival                                                                               | **Cannot be done yet** — closes the plan                                                                                                                                                                                                                                                       | all phases                             |
+| slot-4 PM checkout divergence                                                                                 | **Operator-owned** — liveness gate forbids an agent reconciling a live peer's staged work                                                                                                                                                                                                      | operator                               |
+| `unified-trading-library` `.venv` bootstrap                                                                   | **Operator-owned** — environment setup                                                                                                                                                                                                                                                         | operator                               |
 
-**Recommended NEXT item: Phase 2** (`DependentAction` + `evaluate_revocation()`), not Phase 1c. Phase 1's graceful-flush
-contract — the hard prerequisite — is shipped and green, so the critical path now runs through the policy evaluator that
-Phases 4-6 all depend on. Phase 1c is real work but it only widens coverage of an already-correct mechanism; nothing
-downstream waits on it, whereas Phase 4, 5 and 6 all wait on Phase 2.
+**Recommended NEXT item (revised 2026-08-13): Phase 1c**, because Phase 2 is written but unshippable while the UAC tree
+is red from a live peer's uncommitted work (see the Progress Log entry for 2026-08-13). Phase 1c touches four OTHER
+repos, so it is unaffected by the UAC block. Retry the Phase 2 ship the moment `git status` in `unified-api-contracts`
+shows `_source_priority_data.py` and `registry/market_data_categories.py` clean — the code needs no further work, only a
+green tree.
 
 ## Progress Log
+
+### 2026-08-13 — Phase 2 written and gate-proven; ship BLOCKED by a live peer's red tree
+
+**What exists.** `unified_api_contracts/canonical/crosscutting/dependency_revocation.py` — `DependentAction` (8 values,
+no `DEPS_KILL`), `EscalationTarget` (AUTO / AGENT / AGENT_URGENT / HUMAN), `RevocationPolicy`, `RevocationVerdict`,
+`resolve_dependents()`, `evaluate_revocation()`, plus both policy tables: `DP_FAILURE_MODE_ACTIONS` (all 53 registry
+ids) and `ALERT_CODE_ACTIONS` (all 89 `AlertCode` members). Exported from `canonical/crosscutting/__init__.py` and the
+top-level UAC namespace. 26 tests in `tests/internal/unit/test_dependency_revocation.py`.
+
+**Why it is a separate module rather than added to `instruments_preflight_dag` as the todo says.** That file is already
+589 lines and 141 registry entries would blow the file-size ratchet. The new module IMPORTS the DAG and inverts
+`INSTRUMENTS_PREFLIGHT_REQUIREMENTS` in `resolve_dependents()`, so the plan's actual requirement — "resolve the
+dependent set from the existing preflight graph rather than a new adjacency table" — holds exactly as written.
+Re-exporting the evaluator back through the DAG module would have created an import cycle, so consumers import from
+`unified_api_contracts` directly.
+
+**The ceiling guard has real teeth.** `DEPENDENT_LIFECYCLE_STRENGTH` maps every action to its effect on a DEPENDENT's
+lifecycle (0 self-scoped / 1 admission-scoped / 2 checkpoint-drain) and is validated as total at import. A future
+terminating action cannot be added without declaring a strength, and any strength above `DEPS_DRAIN` fails
+`test_no_verdict_ever_exceeds_the_drain_ceiling`. That is what makes the operator's drain-only decision mechanical
+rather than a comment.
+
+**Test execution PROVEN, not assumed.** Coverage output does not mention the new module, so a green gate alone would not
+have shown the file was collected. A canary (`assert 1 == 2`) produced
+`FAILED tests/internal/unit/test_dependency_revocation.py::test_canary_delete_me` with the passed-count unchanged at
+12736, proving all 26 real tests execute and pass. Canary removed. (Note for the next session: `assert False` trips ruff
+`B011` at the LINT stage and never reaches pytest — use `assert 1 == 2`.)
+
+**Why it cannot ship.** `quality-gates.sh` is red tree-wide: 6 failures, all caused by a LIVE peer session's uncommitted
+addition of `("tradfi", "ohlcv_1h"): ["yahoo"]` to `SOURCE_PRIORITY` in `_source_priority_data.py` (plus
+`registry/market_data_categories.py`), which has no matching availability semantic —
+`test_every_source_priority_pair_has_availability_semantic`, `test_all_source_priority_pairs_reachable_or_excluded`, and
+four `test_era_b_purge` cases. None of the six touch anything in this phase. quickmerge re-gates the whole tree and
+refuses, which is correct behaviour, not a bug. `--dep-branch` is HUMAN-ONLY and `--skip-tests` is a rule-amnesia stop,
+so there is no legitimate agent path through it.
+
+**Work preserved, not at risk.** The four files were written into the git object DB with `git hash-object -w` (safe: it
+touches no index, branch, or peer file). Recover any of them with `git cat-file -p <sha> > <path>`:
+
+| Blob SHA                                   | Path                                                                    |
+| ------------------------------------------ | ----------------------------------------------------------------------- |
+| `caff0238774a176f4bf75ec943d526943c999696` | `unified_api_contracts/canonical/crosscutting/dependency_revocation.py` |
+| `9b0320fe6a308cc10e43fdbad1e14ea019578c1d` | `tests/internal/unit/test_dependency_revocation.py`                     |
+| `d85e7855e3ae2e36b8489dd30c5c97464b7eb8ec` | `unified_api_contracts/canonical/crosscutting/__init__.py`              |
+| `e9ae531de5e533eb8bd15af5acb73fe87ea48062` | `unified_api_contracts/__init__.py`                                     |
+
+**One correction to a plan assumption.** The Phase 2 todo list says the alert→action map should be keyed on "`AlertCode`
+and DP registry_id identity". Both key spaces are implemented, and a test asserts they never collide — but note the DP
+id is the finer key on purpose: `DP-FETCH-007` / `DP-FETCH-009` both emit `DP_RUN_MOSTLY_EMPTY`, and `DP-RATE-001` /
+`DP-RATE-003` both emit `DP_SOURCE_RATE_LIMITED`. Keying on the event name would have silently merged four failure modes
+into two.
 
 ### 2026-08-12 — plan authored
 
