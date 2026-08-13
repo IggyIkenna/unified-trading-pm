@@ -584,12 +584,28 @@ just belongs on a different layer than instrument_type does, and conflating the 
       `venue=MORPHO, chain=ETHEREUM` (Morpho markets use per-market oracle contracts — enumerate the active markets'
       oracles). Done-when: single-day force-compute produces real `captured` rows for `MORPHO-ETHEREUM/oracle_prices`
       against the `-test-` bucket. (repo: market-tick-data-service)
-- [ ] [CODE] P2. **WIRE oracle_prices capture for RADIANT-ARBITRUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE).
-      Over-claims a `2022-07-25` genesis (`defi_venue_capabilities.py:111`), zero captured rows, phase `live` (only
-      RADIANT-ARBITRUM is `live`; RADIANT-BSC/ETHEREUM stay `pipeline`). Add a Radiant price-oracle branch to
-      `oracle_prices_handler.py` (+ constants) writing under `venue=RADIANT, chain=ARBITRUM` (Radiant is an Aave-V2 fork
-      — `getAssetPrice` on its lending-pool oracle). Done-when: single-day force-compute produces real `captured` rows
-      for `RADIANT-ARBITRUM/oracle_prices` against the `-test-` bucket. (repo: market-tick-data-service)
+- [x] ✅ [CODE] P2. **WIRE oracle_prices capture for RADIANT-ARBITRUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE,
+      recorded in this doc's Progress Log 2026-08-09,
+      `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`). Over-claims a `2022-07-25`
+      genesis (`defi_venue_capabilities.py:111`), zero captured rows, phase `live` (only RADIANT-ARBITRUM is `live`;
+      RADIANT-BSC/ETHEREUM stay `pipeline`). Add a Radiant price-oracle branch to `oracle_prices_handler.py` (+
+      constants) writing under `venue=RADIANT, chain=ARBITRUM` (Radiant is an Aave-V2 fork — `getAssetPrice` on its
+      lending-pool oracle). Done-when: single-day force-compute produces real `captured` rows for
+      `RADIANT-ARBITRUM/oracle_prices` against the `-test-` bucket. (repo: market-tick-data-service) — **DONE
+      2026-08-13**: shipped `market-tick-data-service@6ca7b356` (`origin/live-defi-rollout`, QG green): new
+      `_radiant_oracle_collection.py` module (mirrors `_aave`/`_spark`/`_compound`) + constants
+      (`_RADIANT_ORACLE_ADDRESS` + `_RADIANT_ORACLE_ASSETS` 6 reserves + `_RADIANT_EARLIEST_RESERVE_LISTING_DATE`) +
+      handler wiring in `process()`. Radiant's Arbitrum `LendingPoolAddressesProvider` (`0xa97684ea…b3cdb`) resolves
+      `getPriceOracle()` → `0xb56c2F0B…c7c7`, exposing the same `getAssetPrice(asset)` view as the AAVE/SPARK branches
+      (8-decimal USD per reserve, lifted from `AavePositionsMixin._ORACLE_ABI`); reserves + oracle address live-verified
+      2026-08-13 at block 493985139. **Done-when proven**: single-day force-compute for 2026-08-12 via the console
+      script
+      (`IS_TEST_RUN=true .venv/bin/market-tick-data-service --operation collect-oracle-prices --mode batch --asset-group defi --venues RADIANT --start-date 2026-08-12 --end-date 2026-08-12 --force`)
+      produced **6 real `captured` rows** for `RADIANT-ARBITRUM/oracle_prices` (dai, usdc, usdt, wbtc, weth, wsteth)
+      against the `-test-` bucket (`market-data-tick-defi-test-central-element-323112`, `pipeline_mode=batch_radiant`,
+      source=radiant) — verified in the run log
+      (`RADIANT-ARBITRUM:SPOT_ASSET:{dai,usdc,usdt,wbtc,weth,wsteth}.parquet`) + per-VM manifest shard (87 total/70 new
+      entries).
 - [ ] [CODE] P2. **WIRE oracle_prices capture for FLUID-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE).
       Over-claims a `2024-02-27` genesis (`defi_venue_capabilities.py:108`), zero captured rows, phase `live`. Add a
       Fluid price-oracle branch to `oracle_prices_handler.py` (+ constants) writing under `venue=FLUID, chain=ETHEREUM`
