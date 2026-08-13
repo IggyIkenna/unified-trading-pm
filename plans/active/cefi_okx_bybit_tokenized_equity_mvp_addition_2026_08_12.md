@@ -83,13 +83,21 @@ and MVP-tagging needs.
       set on each venue (equity-ticker heuristic match, mirroring the equity-perp query method above) — confirm OKX
       actually has this product class before assuming it does, and get every real per-symbol `listTime`/`launchTime` for
       both venues. Repo: instruments-service (findings → this plan's Progress Log).
-- [ ] [UAC] P1. Add confirmed tokenized-equity symbols to the CeFi instrument universe with
+- [x] ✅ [UAC] P1. Add confirmed tokenized-equity symbols to the CeFi instrument universe with
       `instrument_type=SPOT_PAIR` + a `tracks_equity=<canonical ticker>` link to the Databento real-equity twin,
       mirroring the `crypto_equity_link.tracks_equity()` pattern already shipped for equity perps
-      (`unified-api-contracts@e4606ac0` per the sibling plan). Repo: unified-api-contracts.
+      (`unified-api-contracts@e4606ac0` per the sibling plan). Repo: unified-api-contracts. —
+      unified-api-contracts@7e9a5b5d1 (see Progress Log for details + a newly-found instruments-service gap, tracked
+      below as a new todo).
 - [x] ✅ [UAC] P1. Add the confirmed symbols to the CeFi MVP scope rule (mirror how equity-perp bases were unioned into
       `CEFI_EQUITY_PERP_BASE_UNIVERSE`) so they count toward the MVP completeness denominator and are picked up by the
       standard capture/coverage tooling. Repo: unified-api-contracts. — unified-api-contracts@bfad33b58
+- [ ] [SCRIPT] P1. instruments-service — `_cefi_equity_tags` (`scripts/build_instrument_catalogue.py`) only handles the
+      Bybit `<TICKER>X` suffix form (`base[:-1]`); it has NO branch for the OKX `X<UNDERLYING>` prefix form. Add a
+      `base.startswith("X") and len(base) > 1 and base[1:] in CEFI_EQUITY_PERP_BASE_UNIVERSE` branch (mirroring the
+      existing suffix branch) so the 56 OKX tokens actually get `is_equity_perp=True`/`tracks_equity=...` stamped at
+      catalogue rollup — without this, the UAC universe+link registration above is necessary but not sufficient for the
+      OKX symbols (the Bybit suffix form already works unmodified). Repo: instruments-service.
 - [ ] [SCRIPT] P1. instruments-service — register an `InstrumentRecord` for each confirmed tokenized-equity symbol dated
       to its REAL historical listing date from Todo 1 (not a blanket floor — mirrors the equity-perp sibling plan's own
       per-symbol-date discipline, motivated by the same regime/coverage-window correctness concern that plan's Progress
@@ -101,6 +109,25 @@ and MVP-tagging needs.
       the above lands.
 
 ## Progress Log
+
+**2026-08-13 — Todo 2 (UAC universe + tracks_equity registration) COMPLETE.** Slot-6 data_engineering worker.
+`unified-api-contracts@7e9a5b5d1`. Added `MCD` (Bybit `MCDX`, McDonald's) to `CEFI_EQUITY_PERP_BASE_UNIVERSE` — the only
+underlying among the OKX-56 + Bybit-11 lists not already present in the existing equity-perp universe (every OKX X-token
+underlying was already there from the 2026-07-18 Binance widen + earlier batches). Extended
+`CRYPTO_EQUITY_PERP_TO_REAL_EQUITY` with 41 new self-mapped `tracks_equity` links (venue base == Databento DBEQ.BASIC
+ticker) for every confirmed underlying that lacked one. Deliberately excluded: **SPCX** (SpaceX, pre-IPO — stays
+standalone/`None` per the existing `STANDALONE_EQUITY_PERP_SYMBOLS` precedent) and **SKHY** (OKX `XSKHY` — already
+flagged in `CEFI_EQUITY_PERP_BASE_UNIVERSE`'s own comment as a mangled/unresolved Binance ticker with no confirmed real
+twin; not re-guessed here — honest-absence over inventing a link). 4 new unit tests added to
+`tests/unit/test_crypto_equity_link.py` mirroring the existing `test_binance_20260718_full_listing_widen_*` pattern.
+`quality-gates.sh` green (635s, ALL PASSED).
+
+**New finding, tracked as a new todo above**: `_cefi_equity_tags` (instruments-service
+`scripts/build_instrument_catalogue.py`) only has a branch for the Bybit `<TICKER>X` suffix form (`base[:-1]`) — it has
+NO branch for the OKX `X<UNDERLYING>` prefix form, so registering the OKX bases into the UAC universe alone will NOT
+make instruments-service auto-stamp `is_equity_perp`/`tracks_equity` for them at catalogue rollup (the Bybit suffix form
+works unmodified once the universe+link land). This is a real gap the plan's existing Todo 4 wording ("IS enumerates the
+new symbols") didn't call out — added as a dedicated `[SCRIPT]` todo rather than silently assumed covered.
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
