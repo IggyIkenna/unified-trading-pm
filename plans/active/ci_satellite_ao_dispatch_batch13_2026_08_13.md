@@ -85,9 +85,14 @@ source: >-
       ui-functionality-requirements.md 🟡 banners @8fcb74f6a51 (2026-05-13), each pointing at its successor, all
       pre-dating this batch. Source:
       `plans/active/issues/codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md`
-- [ ] [CODE] P2. distinguish 'no-frontmatter' from 'frontmatter present but YAML-parse-error' in
+- [x] ✅ [CODE] P2. distinguish 'no-frontmatter' from 'frontmatter present but YAML-parse-error' in
       check_codex_doc_freshness.py's _parse_frontmatter/_check_parsed Source:
-      `plans/active/issues/codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md`
+      `plans/active/issues/codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md` — ✅
+      `unified-trading-pm@a68d8b716d`: `_parse_frontmatter` now raises typed `FrontmatterParseError` (with the parser's
+      message) for present-but-unparseable frontmatter (missing closing delimiter / YAMLerror / non-mapping); genuinely
+      absent frontmatter still returns None. `_check_doc` + `main()` catch it and emit reason=`yaml-parse-error` with
+      detail instead of the misleading `no-frontmatter`. Blocks by default (fail-closed via `partition_by_agency`).
+      40/40 unit tests pass (14 new).
 - [ ] [CODE] P2. pull real AWS Cost Explorer / EC2 instance-hours data for the CI VM's 2026-07-27-present retry-storm
       window and compute an attributable $ figure (flagged extraction-ready since 2026-08-01, never actually dispatched)
       Source: `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`
