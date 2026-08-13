@@ -53,17 +53,48 @@ def load_declared_deps(pyproject_path: Path) -> list[Requirement]:
     return reqs
 
 
+def load_local_source_names(lock_path: Path) -> set[str]:
+    """Canonical names of every lock entry with an editable/path/directory/virtual source.
+
+    Mirrors check_lock_satisfies_pyproject.py's load_lock_pkgs is_local detection: covers every
+    internal sibling — both unified-* libraries AND service-named editables (e.g. e2e-testing /
+    system-integration-tests depend on execution-service, strategy-service as editable path
+    sources for cross-service tests). Those installs resolve from the on-disk sibling (often a
+    shallow/content-first clone with no tags, so hatch-vcs/setuptools-scm falls back to a
+    0.1.dev1+g<hash> version) — not from a registry pin, so this gate's floor check doesn't apply.
+    """
+    if not lock_path.is_file():
+        return set()
+    data = tomllib.loads(lock_path.read_text())
+    packages = data.get("package")
+    names: set[str] = set()
+    if not isinstance(packages, list):
+        return names
+    for pkg in packages:
+        if not isinstance(pkg, dict):
+            continue
+        name = pkg.get("name")
+        src = pkg.get("source")
+        is_local = isinstance(src, dict) and any(k in src for k in ("editable", "path", "directory", "virtual"))
+        if is_local and isinstance(name, str):
+            names.add(canonicalize_name(name))
+    return names
+
+
 def check_repo(root: Path) -> tuple[list[str], list[str]]:
     """Return (violations, warnings) for one repo, read against THIS interpreter's installed set."""
     pyproject = root / "pyproject.toml"
     if not pyproject.is_file():
         return [], []
+    local_sources = load_local_source_names(root / "uv.lock")
     violations: list[str] = []
     warnings: list[str] = []
     for req in load_declared_deps(pyproject):
         cname = canonicalize_name(req.name)
         if cname.startswith(INTERNAL_PREFIX):
             continue  # internal unified-* dep — editable install, version resolved on-disk
+        if cname in local_sources:
+            continue  # service-named editable/path sibling — resolved on-disk, floor N/A
         if not req.specifier:
             continue  # no constraint to violate
         try:

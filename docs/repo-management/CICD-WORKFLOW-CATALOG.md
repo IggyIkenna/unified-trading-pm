@@ -14,8 +14,8 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 
 | Workflow | Triggers | Concurrency | Mutates | Fires next |
 | -------- | -------- | ----------- | ------- | ---------- |
-| `cloud-build-failure-watcher` | schedule(0 * * * *) · manual | — | Slack | — |
-| `cloud-build-router` | dispatch:qg-passed | `cloud-build-router-<var>` | Firestore, Slack | change-freeze-check |
+| `cloud-build-failure-watcher` | schedule(*/30 * * * *) · manual | — | Slack | escalate-to-orchestrator |
+| `cloud-build-router` | dispatch:qg-passed | `cloud-build-router-<var>` | Firestore, Slack | change-freeze-check, escalate-to-orchestrator* |
 | `deterministic-promotion-conflict-resolve` | dispatch:promotion-conflict · manual | `det-resolve-<var>-<var>` | Slack | conflict-resolution-agent* |
 | `ldr-to-main-promote` | schedule(*/15 * * * *) · manual | `ldr-to-main-promote` | manifest, →LDR, opens-PR, merges-PR, Slack | escalate-to-orchestrator* |
 | `ldr-to-staging-promote` | manual | `ldr-to-staging-promote` | manifest, opens-PR, merges-PR, Firestore, Slack | deterministic-promotion-conflict-resolve*, quality-gates-v2 |
@@ -44,7 +44,7 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | -------- | -------- | ----------- | ------- | ---------- |
 | `hotfix-mode` | dispatch:set-hotfix-mode,clear-hotfix-mode | `manifest-update` | manifest, Slack | — |
 | `major-bump-issue-handler` | issue_comment | `<wf>-<ref>` cancel | manifest, →LDR, Slack | update-repo-version* |
-| `reconcile-release-tags` | schedule(*/30 * * * *) · dispatch:reconcile-release-tags · manual | `reconcile-release-tags` | opens-PR, Firestore, Slack | — |
+| `reconcile-release-tags` | schedule(*/30 * * * *) · dispatch:reconcile-release-tags · manual | `reconcile-release-tags` | opens-PR, Firestore, Slack | escalate-to-orchestrator* |
 | `request-major-bump` | manual | `<wf>-<ref>` cancel | Slack | — |
 | `semver-agent` | push[staging] · after:quality-gates-v2[staging] | `<wf>-<ref>` cancel | Slack | update-repo-version* |
 | `supersede-stale-dep-update-prs` | schedule(23 */2 * * *) · manual | `supersede-stale-dep-update-prs` | read-only | conflict-resolution-agent* |
@@ -86,15 +86,15 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | `agent-runner` | callable | — | read-only | escalate-to-orchestrator* |
 | `branch-health` | schedule(0 * * * *) · manual | `branch-health` cancel | Firestore, Slack | main-backmerge-to-ldr |
 | `ci-health` | schedule(0 * * * *) · dispatch:ci-failure-alert,glue-runner-health,ci-vm-resource-alert · manual | — | Firestore, Slack | — |
-| `cloud-build-router-aws` | dispatch:qg-passed | `cloud-build-router-aws-<var>` | Slack | change-freeze-check |
+| `cloud-build-router-aws` | dispatch:qg-passed | `cloud-build-router-aws-<var>` | Slack | change-freeze-check, escalate-to-orchestrator* |
 | `digest-drift-sweep` | schedule(0 */6 * * *) · manual | — | read-only | — |
-| `glue-pool-starvation-monitor` | manual | `glue-pool-starvation-monitor` cancel | Slack | — |
+| `glue-pool-starvation-monitor` | manual | `glue-pool-starvation-monitor` cancel | Slack | escalate-to-orchestrator* |
 | `glue-runner-health-monitor` | manual | `glue-runner-health-monitor` cancel | Slack | — |
 | `ldr-docs-gate` | schedule(0 * * * *) · manual | `ldr-docs-gate` | Slack | escalate-to-orchestrator |
 | `ldr-to-main-promote-fleet` | schedule(*/15 * * * *) · manual | `ldr-to-main-promote-fleet` | merges-PR, Firestore, Slack | — |
 | `promote-fleet-startup-failure-monitor` | schedule(*/15 * * * *) · manual | `promote-fleet-startup-failure-monitor` cancel | Slack | — |
 | `reconcile-staging-versions` | manual | `manifest-staging-versions-reconcile` | manifest | — |
-| `sit-gate-stuck-detector` | schedule(*/30 * * * *) · manual | `sit-gate-stuck-detector` cancel | Slack | — |
+| `sit-gate-stuck-detector` | schedule(*/30 * * * *) · manual | `sit-gate-stuck-detector` cancel | Slack | escalate-to-orchestrator* |
 | `stale-build-watcher` | schedule(0 * * * *) · manual | — | Slack | — |
 | `version-coherence-check` | schedule(*/30 * * * *) · manual | — | Firestore | — |
 | `version-registry-update` | dispatch:version-registry-update · manual | — | Firestore | — |
