@@ -307,3 +307,61 @@ base-image pipeline without confirming the correct source config/IAM/connection 
   `UPDATE_TIME` in the artifact registry, then flip todos 1+2 with evidence and `/done` the orchestrator task. IAM
   verified sufficient (the SA reached real INVALID_ARGUMENT, not PERMISSION_DENIED, on every test call — the router
   code's own comments flag PERMISSION_DENIED as a known separate failure mode, ruled out here).
+
+- **2026-08-13 (slot 7, cicd) — RECURRENCE: trigger existed + fired, but every build TIMEOUTed (governor flip). Root
+  cause was NOT a missing trigger this time.** The 2026-08-10 reservation-governor flip
+  (`unified-trading-pm@67c4c42f92`, "flip default mode token -> reservation fleet-wide") made the `quality-gates` step
+  in UTL's prod base-image build block forever in `[qg-governor] WAIT_RAM_LIVE` inside the ephemeral ~8GB `E2_HIGHCPU_8`
+  Cloud Build container — `avail < peak(5500MB unmeasured default) + floor(2048MB)` is permanently true there, and
+  `_qg_ledger_with_lock`/`_qg_try_reserve` admit-check on the CONTAINER's own `/proc/meminfo`, never a shared host.
+  Every `unified-trading-library-prod` build from the flip onward (2026-08-10T18:10Z last SUCCESS → every build since =
+  TIMEOUT at the 30-min timeout, base image stale 3 days) died in step `quality-gates`, not in any build step. **Two
+  fixes shipped (both on `live-defi-rollout` + `main` by content):**
+  1. `unified-trading-library@b8357437` — cloudbuild.yaml quality-gates step now exports
+     `QG_GOVERNOR_DISABLE=true QG_TOTAL_GOVERNOR_DISABLE=true` (the governor's own documented "CI / single-run" bypass —
+     an ephemeral single-build container has no shared multi-tenant host to coordinate with). Verified end-to-end:
+     post-promote trigger builds `af475bfa` + `d464a9ab` completed **SUCCESS** through the full QG (no WAIT_RAM_LIVE
+     hang), fresh base images republished 2026-08-13T15:12-15:14Z.
+  2. `unified-trading-pm@bddffcf6fb` — cloud-build-router.yml `trigger_build_in_region` now reads the build ID from
+     **stdout** (`>/tmp/build_trigger_out.txt`) instead of stderr.
+     `gcloud builds triggers run --format=value(metadata.build.id)` writes the ID to STDOUT on success; the old code
+     grepped `/tmp/build_trigger_err.txt` (always empty on success), so EVERY successful trigger invocation fell through
+     to the `not-configured` branch → false CRITICAL alert + this escalation with empty `build_error_detail`, even while
+     builds WERE being created (builds at 13:13/12:06/09:48 matching router invocations, all TIMEOUT). Verified live:
+     manual `gcloud builds triggers run` returned `77447139-b5c2-4ec9-a819-94927ee133b5` on stdout, stderr empty.
+     **Fleet scope**: among repos with QG-in-cloudbuild, only `unified-trading-library-prod` has a prod-deploy trigger
+     exercised today; `instruments-service-prod` is healthy (SUCCESS); the other service repos
+     (`execution/strategy/ml/ features-…-prod`) are build-only pre-cutover (no trigger). So the hang is UTL-specific,
+     not fleet-wide. Escalation `agt-774a0e` (wall_type `cloud_build_router_failure`) resolved; if this doc's
+     `escalate-utl-base-image-not-configured` fires again with a real (non-empty) error detail, read the error first —
+     NOT_FOUND means recreate the trigger; WAIT_RAM_LIVE/TIMEOUT means re-check the governor-disable export survived in
+     `cloudbuild.yaml`.
+
+- **2026-08-13 (slot 7, cicd) — RECURRENCE: trigger existed + fired, but every build TIMEOUTed (governor flip). Root
+  cause was NOT a missing trigger this time.** The 2026-08-10 reservation-governor flip
+  (`unified-trading-pm@67c4c42f92`, "flip default mode token -> reservation fleet-wide") made the `quality-gates` step
+  in UTL's prod base-image build block forever in `[qg-governor] WAIT_RAM_LIVE` inside the ephemeral ~8GB `E2_HIGHCPU_8`
+  Cloud Build container — `avail < peak(5500MB unmeasured default) + floor(2048MB)` is permanently true there, and
+  `_qg_ledger_with_lock`/`_qg_try_reserve` admit-check on the CONTAINER's own `/proc/meminfo`, never a shared host.
+  Every `unified-trading-library-prod` build from the flip onward (2026-08-10T18:10Z last SUCCESS → every build since =
+  TIMEOUT at the 30-min timeout, base image stale 3 days) died in step `quality-gates`, not in any build step. **Two
+  fixes shipped (both on `live-defi-rollout` + `main` by content):**
+  1. `unified-trading-library@b8357437` — cloudbuild.yaml quality-gates step now exports
+     `QG_GOVERNOR_DISABLE=true QG_TOTAL_GOVERNOR_DISABLE=true` (the governor's own documented "CI / single-run" bypass —
+     an ephemeral single-build container has no shared multi-tenant host to coordinate with). Verified end-to-end:
+     post-promote trigger builds `af475bfa` + `d464a9ab` completed **SUCCESS** through the full QG (no WAIT_RAM_LIVE
+     hang), fresh base images republished 2026-08-13T15:12-15:14Z.
+  2. `unified-trading-pm@bddffcf6fb` — cloud-build-router.yml `trigger_build_in_region` now reads the build ID from
+     **stdout** (`>/tmp/build_trigger_out.txt`) instead of stderr.
+     `gcloud builds triggers run --format=value(metadata.build.id)` writes the ID to STDOUT on success; the old code
+     grepped `/tmp/build_trigger_err.txt` (always empty on success), so EVERY successful trigger invocation fell through
+     to the `not-configured` branch → false CRITICAL alert + this escalation with empty `build_error_detail`, even while
+     builds WERE being created (builds at 13:13/12:06/09:48 matching router invocations, all TIMEOUT). Verified live:
+     manual `gcloud builds triggers run` returned `77447139-b5c2-4ec9-a819-94927ee133b5` on stdout, stderr empty.
+     **Fleet scope**: among repos with QG-in-cloudbuild, only `unified-trading-library-prod` has a prod-deploy trigger
+     exercised today; `instruments-service-prod` is healthy (SUCCESS); the other service repos
+     (`execution/strategy/ml/ features-…-prod`) are build-only pre-cutover (no trigger). So the hang is UTL-specific,
+     not fleet-wide. Escalation `agt-774a0e` (wall_type `cloud_build_router_failure`) resolved; if this doc's
+     `escalate-utl-base-image-not-configured` fires again with a real (non-empty) error detail, read the error first —
+     NOT_FOUND means recreate the trigger; WAIT_RAM_LIVE/TIMEOUT means re-check the governor-disable export survived in
+     `cloudbuild.yaml`.
