@@ -16,7 +16,7 @@ summary: >-
   whether that symbol existed yet, relying entirely on Tardis's own HTTP 400 + this workspace's downstream
   `classify_venue_error()` to turn that into `empty_confirmed` rather than `attempted_failed` (NOT verified in this pass
   — see open todo below).
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -48,6 +48,12 @@ depends_on: []
 ---
 
 # CeFi Tardis pre-listing filter reads the wrong GCS path (always 404s, fails open)
+
+> **🟢 ARCHIVED 2026-08-13 — RESOLVED** (status: resolved, 0 open todos, unlocked). Both todos done: (1) the reader's
+> GCS blob path fixed to the writer's real hive shape (`day=/pipeline_mode=/asset_group=/venue=`) —
+> `market-tick-data-service@b4ca5d7bdf`; (2) the downstream-classification question verified — a pre-listing symbol's
+> Tardis 400 (`code=140`/`300`, structural absence) is recorded as `empty_confirmed`, never `attempted_failed`, so the
+> manifest was NOT polluted (efficiency-only). See Progress Log.
 
 ## What I found
 
