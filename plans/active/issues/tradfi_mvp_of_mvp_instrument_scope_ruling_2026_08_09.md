@@ -144,9 +144,10 @@ in-scope relaunch this doc authorizes.
   "descope FX from tradfi wave-launcher" — reason not re-investigated here). The Treasury-INDEX, FRED, KRW/USD, and
   (once it exists) DXY backfills all need **manual** launcher invocation, same as the existing FX pattern — do not
   assume registering an instrument makes it auto-dispatch.
-- **FRED backfill likely already ran** — `plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md` records
-  the FRED macro backfill launched and verified 2026-07-30 (`tradfi-bf-fred-full-*`). Check the manifest for actual
-  coverage before re-launching; this may already be a completeness-verify task, not a fresh backfill.
+- **FRED backfill likely already ran** —
+  `plans/archive/2026_08/issues/macro_micro_econ_data_capture_audit_2026_06_05.md` records the FRED macro backfill
+  launched and verified 2026-07-30 (`tradfi-bf-fred-full-*`). Check the manifest for actual coverage before
+  re-launching; this may already be a completeness-verify task, not a fresh backfill.
 
 ## Disposition of currently-running infra (2026-08-09)
 
@@ -214,10 +215,10 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
       `test_extra_mvp_cells_exact_membership` updated to 8-triple). QG green.
 - [x] ✅ [DATA] P1. **NEW (2026-08-09)** — before launching anything: check the manifest for actual FRED coverage (the
       FRED macro backfill reportedly ran 2026-07-30 per
-      `plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md` — this may already be a verify-only task).
-      Then launch/verify full-history backfills for the CBOE Treasury yield-curve INDEX and KRW/USD (existing launchers,
-      manual invocation per "Known relaunch gotchas"), and DXY once its launcher exists (todo above). **EXTRACTED
-      2026-08-09 (round-9 combined RECLASSIFY + satellite-extraction sweep) →
+      `plans/archive/2026_08/issues/macro_micro_econ_data_capture_audit_2026_06_05.md` — this may already be a
+      verify-only task). Then launch/verify full-history backfills for the CBOE Treasury yield-curve INDEX and KRW/USD
+      (existing launchers, manual invocation per "Known relaunch gotchas"), and DXY once its launcher exists (todo
+      above). **EXTRACTED 2026-08-09 (round-9 combined RECLASSIFY + satellite-extraction sweep) →
       `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1 (now `[x]` ✅, archived)** —
       all 4 cells are Yahoo/FRED-sourced, not gated by the open Databento billing-suspension issue; the DXY launcher
       shipped same-day (see todo above, now `[x]`). Completion recorded there. **(na-eligibility-audit 2026-08-10,

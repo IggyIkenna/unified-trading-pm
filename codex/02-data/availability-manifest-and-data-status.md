@@ -164,8 +164,11 @@ exists** in that bucket. Each row represents one shard — a unit of data writte
 > **EXCLUDED** — SSOT [`honest-coverage-model.md`](honest-coverage-model.md) § Coverage formula); **never re-derives**
 > the expected set or genesis/launch/IS rules per consumer. DeFi pre-launch zero-rows are demoted to
 > `EXPECTED_PRE_VENUE_LAUNCH` by `DefiManifestRecorder.record_zero_rows` (UAC `DEFI_VENUE_LAUNCH_DATES`), enforced by
-> the A10c QG ratchet. Per-chain matters: a venue (e.g. AAVE_V3) has different launch/genesis dates per chain, so each
-> (venue, chain) shard is annotated independently — never collapse chains.
+> the A10c QG ratchet. **A second, distinct code path also produces this status** (added 2026-08-13, found via
+> blocked-question BLK-d59ebc8e): `DefiManifestRecorder.record_catalog_unavailable`
+> (`market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py:485`, wired into 11 handlers) —
+> confirm both paths stay consistent if either changes. Per-chain matters: a venue (e.g. AAVE_V3) has different
+> launch/genesis dates per chain, so each (venue, chain) shard is annotated independently — never collapse chains.
 
 Services write to the manifest via `ManifestWriter` (UTL). The deployment-api reads it via `read_availability_index()`.
 The deployment-ui renders it as the data status page.

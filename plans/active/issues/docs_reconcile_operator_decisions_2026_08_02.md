@@ -7,10 +7,10 @@ summary: >-
   Four findings across three docs-reconcile autonomous sweeps that the skill's own contract requires parking for the
   operator rather than auto-fixing: (1) what the 25-file `cursor-rules/` tree is actually FOR today, now that it's
   confirmed NOT synced to the real canonical `.cursor/rules/` tree (150 files, 0 overlap) -- an authority call about
-  intent, not a correctness call; (2) `plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md` carries
-  `locked_by: live-defi-rollout`, so its broken `source:` frontmatter entry (a brace-expansion path with a redundant
-  `unified-trading-pm/` prefix) cannot be auto-fixed per the HARD RULE against editing a locked doc's frontmatter
-  without sign-off; (3) added 2026-08-06 -- 14 `plans/active/issues/*.md` docs (incl. the same
+  intent, not a correctness call; (2) `plans/archive/2026_08/issues/macro_micro_econ_data_capture_audit_2026_06_05.md`
+  carries `locked_by: live-defi-rollout`, so its broken `source:` frontmatter entry (a brace-expansion path with a
+  redundant `unified-trading-pm/` prefix) cannot be auto-fixed per the HARD RULE against editing a locked doc's
+  frontmatter without sign-off; (3) added 2026-08-06 -- 14 `plans/active/issues/*.md` docs (incl. the same
   `macro_micro_econ_data_capture_audit_2026_06_05.md` from item 2) all carry a `locked_by`-gated, mechanically truncated
   `summary:` field (12 of 14 cut at exactly 200 chars mid-word/mid-link), pre-drafted replacements ready to apply on
   sign-off; (4) added 2026-08-08 -- credentials-matrix.md and credential-rotation-runbook.md, both `authoritative_for`
@@ -49,7 +49,7 @@ context_scope:
   [
     /codex/05-infrastructure/credentials-matrix.md,
     /codex/15-runbooks/credential-rotation-runbook.md,
-    /plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md,
+    /plans/archive/2026_08/issues/macro_micro_econ_data_capture_audit_2026_06_05.md,
     /plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md,
     /plans/active/issues/doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md,
     scripts/workspace/setup-cursor-rules-symlink.sh,
@@ -127,8 +127,9 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
 
 - [x] ✅ [DOCS] P3. **RESOLVED (operator ruling 2026-08-08, ao round-5 apply item 8: "Authorize").** Fix (or authorize
       fixing) the broken `source:` frontmatter entry in
-      `plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md` -- already applied as a side effect of an
-      earlier cleanup commit, re-verified live: all 6 leading-slash entries present, no brace-expansion remains.
+      `plans/archive/2026_08/issues/macro_micro_econ_data_capture_audit_2026_06_05.md` -- already applied as a side
+      effect of an earlier cleanup commit, re-verified live: all 6 leading-slash entries present, no brace-expansion
+      remains.
 
   That doc carries `locked_by: live-defi-rollout` in its own frontmatter — per the workspace HARD RULE, any edit
   touching a `locked_by:` doc's frontmatter needs operator sign-off, so this was NOT auto-fixed even though the fix

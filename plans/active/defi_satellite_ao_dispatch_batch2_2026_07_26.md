@@ -658,10 +658,10 @@ context_scope:
 
 ## Deferred — conflict-gated (genuinely unresolved, do not draft competing todos)
 
-- **`plans/active/issues/defi_code_codex_drift_2026_05_27.md`**: D15 ("HYPERLIQUID + ASTER are DEFI_VENUE_PHASE=pipeline
-  but perp_funding_handler actively collects them; reconcile the phase label (→ live, or confirm cefi-axis
-  classification)") is a DUPLICATE of already-tracked-but-undispatched ground, not genuinely orphaned. Live-code check
-  confirms D15's own premise is stale:...
+- **`plans/archive/2026_08/issues/defi_code_codex_drift_2026_05_27.md`**: D15 ("HYPERLIQUID + ASTER are
+  DEFI_VENUE_PHASE=pipeline but perp_funding_handler actively collects them; reconcile the phase label (→ live, or
+  confirm cefi-axis classification)") is a DUPLICATE of already-tracked-but-undispatched ground, not genuinely orphaned.
+  Live-code check confirms D15's own premise is stale:...
 - **`plans/active/issues/e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md`**: The one remaining open item in
   this doc — the unchecked `- [ ] [FEATURE] P2 delta_one funding_oi venue-aware annualisation` todo (features-service,
   thread venue through the delta_one calculator interface so non-8h venues like Hyperliquid annualise correctly) — is

@@ -444,11 +444,11 @@ per-venue closed-set classification (`FUNDING_ACCRUAL_MODEL` dict, `funding_accr
   instant to sum over. The correct accrual is a TIME-WEIGHTED AVERAGE (integral) of the continuously-observed rate over
   the holding interval: `integral[entry,exit] position_size(t) × rate(t) dt` (or, constant position size,
   `position_size × time_weighted_average(rate)`). **DERIBIT is the confirmed sole exception** (investigated 2026-07-28,
-  `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md` Finding 4): its ticker API exposes only
-  two scalars (`current_funding`/`funding_8h`), no next-funding-time field of any kind; its own education docs state
-  funding is "calculated in real time and transferred every few seconds"; a real 55,291-row production sample shows
-  `funding_rate` changing ~1,454 times across a single day with no discontinuity at 00:00/08:00/16:00 UTC or any other
-  boundary.
+  `plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md` Finding 4): its ticker API
+  exposes only two scalars (`current_funding`/`funding_8h`), no next-funding-time field of any kind; its own education
+  docs state funding is "calculated in real time and transferred every few seconds"; a real 55,291-row production sample
+  shows `funding_rate` changing ~1,454 times across a single day with no discontinuity at 00:00/08:00/16:00 UTC or any
+  other boundary.
 
 **Why this is informational today, not a computation branch**: the shared, live-wired funding-leg mechanism
 (`CanonicalDerivativeTickerFundingProvider.day_funding_fraction` → `paper_run_passive.build_paper_run_passive` /
@@ -634,9 +634,10 @@ Threshold: 1% of gross P&L or $1,000, whichever is larger.
 
 ## PnLAttribution Schema
 
-Per Hard Rule #4 (factor × layer dual axis), every attribution row carries BOTH `factor` and `layer`. The schema below
-is the row-level shape; `factors: dict[str, Decimal]` is the rollup view (used by the per-fill helpers in this doc and
-by reporting aggregators that don't need the layer split).
+Per Hard Rule #7 (factor × layer dual axis — CORRECTED 2026-08-13, this previously said #4, which is DeFi
+lending/borrowing yield indexes at line 82, not this rule), every attribution row carries BOTH `factor` and `layer`. The
+schema below is the row-level shape; `factors: dict[str, Decimal]` is the rollup view (used by the per-fill helpers in
+this doc and by reporting aggregators that don't need the layer split).
 
 ```python
 # unified_api_contracts.internal (simplified)
@@ -731,7 +732,7 @@ matrix.
 | `BORROW`                                                             | Same as `FINANCING` — collapse to `CARRY` (or formal `BORROW_INTEREST` factor add).                                                                                                                                                                                                                                                                                              |
 | `REBALANCE`                                                          | NOT a factor. Each rebalance fill decomposes into `DELTA` + `SLIPPAGE` + `FEES` per existing canonical set. `REBALANCE` belongs in `PnLMetadata.fill_reason` (fill metadata), not the attribution axis.                                                                                                                                                                          |
 | `HWM_CRYSTALLIZATION`                                                | NOT in `PnLAttributionRow`. Performance-fee crystallization is recognised via a separate `FeeRecognitionRow` table emitted by `wallet_treasury_client_flow_2026_05_10` Phase 5.G's `PerformanceFeeCrystallizedEvent`. `FeeRecognitionRow` joins into the NAV waterfall but does NOT participate in factor × layer decomposition (it's a fee accounting event, not a P&L driver). |
-| `STRATEGY_ALPHA + EXECUTION_ALPHA + SLIPPAGE + FEES + ...` flat enum | Hard Rule #4 violation. Two axes (factor, layer) — not one flat union.                                                                                                                                                                                                                                                                                                           |
+| `STRATEGY_ALPHA + EXECUTION_ALPHA + SLIPPAGE + FEES + ...` flat enum | Hard Rule #7 violation (CORRECTED 2026-08-13, previously said #4). Two axes (factor, layer) — not one flat union.                                                                                                                                                                                                                                                                |
 | `PNL_FACTOR_STAKING_YIELD`                                           | `CARRY_BASE` (wrapped non-rebasing LST) or `CARRY_BASE_REBASING` (rebasing LST). See § Reward P&L Factors for lifecycle.                                                                                                                                                                                                                                                         |
 | `PNL_FACTOR_RESTAKING_REWARD`                                        | `CARRY_AVS_CONTINUOUS`. See § Reward P&L Factors for lifecycle.                                                                                                                                                                                                                                                                                                                  |
 | `PNL_FACTOR_SEASONAL_REWARD`                                         | `CARRY_ISSUER_SEASONAL`. See § Reward P&L Factors for lifecycle.                                                                                                                                                                                                                                                                                                                 |

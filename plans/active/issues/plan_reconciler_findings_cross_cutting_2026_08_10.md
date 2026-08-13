@@ -224,9 +224,9 @@ Needs a live re-verify I didn't run, time-bounded this session:
 - Item H. `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` P9.2 — cites UAC version drift dated
   2026-06-20; the same doc's own later entries show UAC had already moved far past those versions two days later. High
   likelihood self-resolved, not independently re-checked against current UAC.
-- Item I. `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md` — frontmatter `status: open`,
-  `locked_by: live-defi-rollout`, but body is 100% done (20/20 checkboxes). Strong archive candidate once unlocked. Not
-  actioned this run (locked; prioritized the already-verified `bucket_iam` case instead).
+- Item I. `plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md` — frontmatter
+  `status: open`, `locked_by: live-defi-rollout`, but body is 100% done (20/20 checkboxes). Strong archive candidate
+  once unlocked. Not actioned this run (locked; prioritized the already-verified `bucket_iam` case instead).
 
 Script/tooling-level, backend_engineer scope, not a plan-doc fix:
 
@@ -299,9 +299,9 @@ diagnosed but did not apply. Re-verified 2026-08-10 (same day) before conversion
       UAC version-drift citation** (dated 2026-06-20) against current UAC — the doc's own later entries suggest it
       self-resolved days later, but this needs an independent live check, not an assumption.
 - [ ] [OPERATOR] P2. **Item I — unlock (`[unlock-plan]`) then archive
-      `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`** — verified 2026-08-10: 100% done (0
-      open / 20 closed checkboxes), `status: open`, `locked_by: live-defi-rollout` — a genuine stuck-archive-candidate,
-      not actioned this run (prioritized the already-verified `bucket_iam` case instead).
+      `plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`** — verified 2026-08-10: 100%
+      done (0 open / 20 closed checkboxes), `status: open`, `locked_by: live-defi-rollout` — a genuine
+      stuck-archive-candidate, not actioned this run (prioritized the already-verified `bucket_iam` case instead).
 - [ ] [SCRIPT] P2. **Item J — fix `check_na_corpus_ratchet.py`'s `--diff-base` fenced-code-block checkbox-overcounting
       bug** — verified 2026-08-10: `_CHECKBOX_RE` (line 79) is still a bare `^\s*[-*]\s*\[ \]` regex with no
       fence-awareness, so it double-counts checkbox-shaped text inside fenced code blocks. Open since 2026-08-02,

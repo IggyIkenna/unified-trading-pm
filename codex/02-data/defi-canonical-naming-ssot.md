@@ -45,7 +45,7 @@ referenced_by:
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
     /codex/04-architecture/solana-defi-coverage.md,
     /codex/04-architecture/token-wrapping-and-collateral.md,
-    plans/active/issues/defi_code_codex_drift_2026_05_27.md,
+    plans/archive/2026_08/issues/defi_code_codex_drift_2026_05_27.md,
     plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md,
     plans/audit/results/defi_c0_datastate_audit_2026_06_01.md,
   ]
@@ -135,14 +135,17 @@ pre-flight/dedup keying gap".
 On-chain perpetual CLOB exchanges are classified **`asset_group=cefi`** (UAC `VENUE_TO_ASSET_GROUP` /
 `VENUES_BY_ASSET_GROUP["cefi"]`), even though they settle on-chain — they trade the perp/hedge leg, not the DeFi
 long/stake/lend/AMM leg. **CeFi on-chain perps: `HYPERLIQUID` (HYPERLIQUID), `ASTER` (BSC), `EXTENDED` (STARKNET),
-`LIGHTER` (ZKSYNC)** — each has a cefi `SourceCapability` (`_cefi.py`) + a cefi venue-launch date + per-CEFI-instrument
-manifest shape (`venue, instrument_id, data_type, day`), and rides the **cefi backfill**, not the defi path. **No DeFi
-perp venue is currently live** — `GMX` (ARBITRUM/AVALANCHE), the sole DEX-pool-shaped venue in `DEFI_PERP_VENUES`, was
-REMOVED 2026-07-25 (see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`; `DRIFT` + `PACIFICA` were CULLED
-earlier — purged from the registry per the 2026-07-16 taxonomy ruling). **2026-06-25 alignment:** the
-instruments-service capture path (`engine/orchestrator/defi.py` `_SOLANA_DEFI_VENUES`/`_L2_DEX_PERP_VENUES`) had wrongly
-enumerated EXTENDED/PACIFICA/LIGHTER as defi → 1,802 contaminant defi `_index` rows; they were moved to
-`venue_core._CEFI_VENUES` (adapters relocated `adapters/defi/`→`adapters/cefi/`) and the contaminant rows purged. SSOT:
+`LIGHTER` (ZKSYNC), `KALSHI_PERP`, `POLYMARKET_PERP`** (the latter two added 2026-08-13 per the 2026-08-06 operator
+ruling in `defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md` — their `perp_funding` capture reroutes to
+`asset_group=cefi`, matching the shipped routing fix `market-tick-data-service@2aa23de5`) — each has a cefi
+`SourceCapability` (`_cefi.py`) + a cefi venue-launch date + per-CEFI-instrument manifest shape
+(`venue, instrument_id, data_type, day`), and rides the **cefi backfill**, not the defi path. **No DeFi perp venue is
+currently live** — `GMX` (ARBITRUM/AVALANCHE), the sole DEX-pool-shaped venue in `DEFI_PERP_VENUES`, was REMOVED
+2026-07-25 (see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`; `DRIFT` + `PACIFICA` were CULLED earlier
+— purged from the registry per the 2026-07-16 taxonomy ruling). **2026-06-25 alignment:** the instruments-service
+capture path (`engine/orchestrator/defi.py` `_SOLANA_DEFI_VENUES`/`_L2_DEX_PERP_VENUES`) had wrongly enumerated
+EXTENDED/PACIFICA/LIGHTER as defi → 1,802 contaminant defi `_index` rows; they were moved to `venue_core._CEFI_VENUES`
+(adapters relocated `adapters/defi/`→`adapters/cefi/`) and the contaminant rows purged. SSOT:
 `plans/active/instruments_foundation_completeness_2026_06_24.md`.
 
 ## `dex_pool_state` = EVM + Solana pool-state UNION under one data_type (CHANGE — operator-noted 2026-06-01)

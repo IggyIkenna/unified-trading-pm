@@ -5,7 +5,7 @@ summary: >-
   Actionable tracker for 13 code↔codex drifts (D1–D13) found re-reading the actual DeFi pipeline Python
   (MTDS/MDPS/UAC/features-service) against codex SSOTs — stale data-type names, legacy bucket prefixes, an unimported
   adapter, catalog gaps, banned-provider references, and more; full record in the companion audit-result doc.
-status: open
+status: resolved
 nature: process
 asset_group:
   [defi] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
@@ -34,8 +34,7 @@ source:
     /codex/02-data/defi-data-types-catalog.md,
   ]
 assigned_vm: planning
-resolved_by:
-archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
+resolved_by: main-agent (blocked-question BLK-02d1163f, 2026-08-13) -- D1-D13 all closed, 0 open todos
 locked_by:
 master:
   defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — slot-2 owns; §A writers + §F docs/SSOT
@@ -54,6 +53,10 @@ last_updated:
   '2026-07-10 (was: 2026-06-27 — verify-rerun-2 finding 50, corrected 2026-07-14 — body''s D10 todo documents "RESOLVED
   2026-07-10 (operator decision #9...)"; frontmatter never bumped)'
 ---
+
+> **ARCHIVED 2026-08-13** — D1-D13 all closed, 0 open todos. Archived via
+> `plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`'s follow-on pass (operator
+> ruling option B, BLK-02d1163f).
 
 # DeFi pipeline — code ↔ codex drift (audit 2026-05-27)
 
@@ -164,22 +167,22 @@ Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-veri
       2026-05-31) must be migrated into `asset_group=cefi` so data agrees with the code-level classification.
 
       **CLEAR for dispatch (2026-07-30, conflict-check)** — no other active doc claims this migration. **Flagging, not
-                                      blocking**: `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` still carries an unretracted
-                                      "intentional hybrid CEFI+DEFI" classification note for these venues that this doc itself calls out as "never
-                                      reconciled" against the later 06-21 operator ruling — worth a quick operator confirmation before/while scoping the
-                                      migration plan, not a hard block.
+                                          blocking**: `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` still carries an unretracted
+                                          "intentional hybrid CEFI+DEFI" classification note for these venues that this doc itself calls out as "never
+                                          reconciled" against the later 06-21 operator ruling — worth a quick operator confirmation before/while scoping the
+                                          migration plan, not a hard block.
 
-                                      **Migration plan filed 2026-08-02** (this item's remaining action):
-                                      `plans/archive/2026_08/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md` (archived 2026-08-07;
-                                      was `status: draft`, `assigned_vm: NA` per ask-before-creating default; mirrors
-                                      `solana_defi_legacy_migration_2026_05_27`'s gate pattern — Phase 1 audit+script, Phase 2 VM execution, Phase 3
-                                      manifest reconcile, Phase 4 operator-gated delete). Re-verified live 2026-08-02: legacy `asset_group=defi` corpus
-                                      confirmed still present (bounded per-day GCS checks, not a whole-corpus walk), writes stopped between 2026-06-05
-                                      and 2026-06-20 (frozen, no live-write race to coordinate a migration around). **The GCS/manifest migration itself
-                                      has NOT executed yet — that work now lives in the new plan's own todos, not here.**
-                                      **Migration COMPLETE 2026-08-06** — all 5 phases of the migration plan executed and verified: 7,599 objects
-                                      migrated defi→cefi (parity-verified, zero mismatches) + `asset_group=defi` originals deleted. Evidence:
-                                      market-tick-data-service@55d88025 (delete script + Phase 4/5 close-out). D15 is fully RESOLVED end-to-end.
+                                          **Migration plan filed 2026-08-02** (this item's remaining action):
+                                          `plans/archive/2026_08/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md` (archived 2026-08-07;
+                                          was `status: draft`, `assigned_vm: NA` per ask-before-creating default; mirrors
+                                          `solana_defi_legacy_migration_2026_05_27`'s gate pattern — Phase 1 audit+script, Phase 2 VM execution, Phase 3
+                                          manifest reconcile, Phase 4 operator-gated delete). Re-verified live 2026-08-02: legacy `asset_group=defi` corpus
+                                          confirmed still present (bounded per-day GCS checks, not a whole-corpus walk), writes stopped between 2026-06-05
+                                          and 2026-06-20 (frozen, no live-write race to coordinate a migration around). **The GCS/manifest migration itself
+                                          has NOT executed yet — that work now lives in the new plan's own todos, not here.**
+                                          **Migration COMPLETE 2026-08-06** — all 5 phases of the migration plan executed and verified: 7,599 objects
+                                          migrated defi→cefi (parity-verified, zero mismatches) + `asset_group=defi` originals deleted. Evidence:
+                                          market-tick-data-service@55d88025 (delete script + Phase 4/5 close-out). D15 is fully RESOLVED end-to-end.
 
 - [x] ✅ [CODE] P3. D7 — **SHIPPED** MTDS@d3e02228
       (`fix(mev): remove banned bloxroute relays + stale .bak from     mev_events_handler`): the 2 bloxroute URLs are

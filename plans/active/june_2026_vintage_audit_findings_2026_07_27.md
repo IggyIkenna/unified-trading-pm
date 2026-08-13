@@ -115,12 +115,12 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       the inverse of the one this §2 item's own dispatch text described.
 
       **DONE (na-eligibility-audit 2026-08-03)** — the doc has since genuinely closed: the reverted root-cause todo was
-                                                                                              completed for real 2026-07-28 (slot-15, root cause diagnosed via git/commit archaeology, corroborated against
-                                                                                              `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s own identical todo 52, confirmed checked there too), all 3
-                                                                                              todos are `[x]`, and the doc was unlocked + archived 2026-07-31 under the operator's `[unlock-plan]` ruling
-                                                                                              (`status: resolved`, banner: "the earlier 'todo 1's `[x]` was FALSE' note described a transient 2026-07-27 state
-                                                                                              that the 2026-07-28 completion superseded — it is no longer true"). Now at
-                                                                                              `plans/archive/issues/phantom_captures_defi_2026_06_28.md` for real.
+                                                                                                  completed for real 2026-07-28 (slot-15, root cause diagnosed via git/commit archaeology, corroborated against
+                                                                                                  `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s own identical todo 52, confirmed checked there too), all 3
+                                                                                                  todos are `[x]`, and the doc was unlocked + archived 2026-07-31 under the operator's `[unlock-plan]` ruling
+                                                                                                  (`status: resolved`, banner: "the earlier 'todo 1's `[x]` was FALSE' note described a transient 2026-07-27 state
+                                                                                                  that the 2026-07-28 completion superseded — it is no longer true"). Now at
+                                                                                                  `plans/archive/issues/phantom_captures_defi_2026_06_28.md` for real.
 
 - [x] ✅ [PLAN] P2. `plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md` — ARCHIVED
       2026-07-27 — unified-trading-pm@(this commit). All 3 stale items re-verified against current code (`understat.py`,
@@ -197,7 +197,7 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
 
 ## §3 — Migrate to a named July plan, then archive (15 docs)
 
-- [ ] [PLAN] P2. `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md` →
+- [ ] [PLAN] P2. `plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md` →
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (P1, legs a-e) +
       `instruments_completion_tracker_2026_07_06.md` (Stage 2a/2b GAP-4). Already migrated verbatim 2026-07-26; both
       successors still open — dual-track until they ship, then flip+archive. 2 items correctly left gated/latent, not

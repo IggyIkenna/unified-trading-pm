@@ -224,24 +224,24 @@ in this read-only audit pass (time-bounded scope).
       bucket confirm: on 2026-05-20, all 6 contested venues (+ DERIBIT/BYBIT) have real `derivative_ticker` objects
       under `batch_tardis`; probing 2026-05-25, 2026-06-15, 2026-07-01, 2026-07-15, 2026-08-01, 2026-08-03 finds
       **zero** `derivative_ticker` objects for ANY of the 8 venues on ANY of those dates. This exact cutoff is
-      independently corroborated by `/plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`'s own
-      2026-07-28 manifest census (line ~273: `BINANCE-FUTURES`/`OKX-SWAP`/`KRAKEN-FUTURES`/`BITGET-FUTURES` captured
-      through `2026-05-22`, `BYBIT`/`DERIBIT` through `2026-05-01`) — same population, same cutoff, two independent
-      methods (live GCS probe here vs. manifest census there). **Repointing to
-      `CanonicalDerivativeTickerFundingProvider` would not fix anything — its source is exactly as stale as
-      `CanonicalPerpFundingProvider`'s, because the DeFi-bucket copy is COMPUTED FROM this same CeFi `derivative_ticker`
-      corpus** (`perp_funding_corpus.py:254-255`'s own read side). Verified: the DeFi-bucket
-      `perp_funding`/`perp_daily_ctx` population for these venues also stops dead on **2026-05-22** (checked 2026-05-20
-      present, 2026-05-22 present, 2026-05-23 onward absent through 2026-08-03) — confirming the computed feed dried up
-      the same day its raw input did, not independently. **Disposition unchanged**: `no-still-authoritative` stands —
-      still do NOT delete the DeFi-bucket copies (no fresher alternative exists to repoint to). **New, more urgent
-      implication surfaced**: the live CARRY_BASIS_PERP/CARRY_FUNDING_DISPERSION strategy path has been reading a
-      completely frozen (zero new rows since 2026-05-22, over 2 months as of 2026-08-04) funding corpus for all 6
-      configured venues — this is a genuine live-data-staleness finding, not just a delete-safety question, and is filed
-      as a new todo in the doc that already owns this exact venue population + census
-      (`/plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`) rather than duplicated here. (The
-      ADDITIVE-FALLBACK investigation from 2026-08-04 — evaluating whether `CanonicalPerpFundingProvider` could gain a
-      CeFi-native additive fallback — was moved verbatim to the history doc,
+      independently corroborated by
+      `/plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`'s own 2026-07-28 manifest
+      census (line ~273: `BINANCE-FUTURES`/`OKX-SWAP`/`KRAKEN-FUTURES`/`BITGET-FUTURES` captured through `2026-05-22`,
+      `BYBIT`/`DERIBIT` through `2026-05-01`) — same population, same cutoff, two independent methods (live GCS probe
+      here vs. manifest census there). **Repointing to `CanonicalDerivativeTickerFundingProvider` would not fix anything
+      — its source is exactly as stale as `CanonicalPerpFundingProvider`'s, because the DeFi-bucket copy is COMPUTED
+      FROM this same CeFi `derivative_ticker` corpus** (`perp_funding_corpus.py:254-255`'s own read side). Verified: the
+      DeFi-bucket `perp_funding`/`perp_daily_ctx` population for these venues also stops dead on **2026-05-22** (checked
+      2026-05-20 present, 2026-05-22 present, 2026-05-23 onward absent through 2026-08-03) — confirming the computed
+      feed dried up the same day its raw input did, not independently. **Disposition unchanged**:
+      `no-still-authoritative` stands — still do NOT delete the DeFi-bucket copies (no fresher alternative exists to
+      repoint to). **New, more urgent implication surfaced**: the live CARRY_BASIS_PERP/CARRY_FUNDING_DISPERSION
+      strategy path has been reading a completely frozen (zero new rows since 2026-05-22, over 2 months as of
+      2026-08-04) funding corpus for all 6 configured venues — this is a genuine live-data-staleness finding, not just a
+      delete-safety question, and is filed as a new todo in the doc that already owns this exact venue population +
+      census (`/plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`) rather than
+      duplicated here. (The ADDITIVE-FALLBACK investigation from 2026-08-04 — evaluating whether
+      `CanonicalPerpFundingProvider` could gain a CeFi-native additive fallback — was moved verbatim to the history doc,
       `/plans/archive/2026_08/defi_cefi_venue_chain_axis_contamination_history_2026_07_28.md`.)
 
 - [x] ✅ [DATA] P1. **DONE 2026-08-10 (slot-8). Pipeline verified; promotion + cron already shipped
@@ -387,16 +387,16 @@ in this read-only audit pass (time-bounded scope).
       ParquetFile, not inference). 8,214,021 canonical `pool` rows present. No further action needed.
 
       **STALE — CONTRADICTED 2026-08-11 (slot 4, data_engineering).** This "0 remaining" claim no longer holds: a fresh
-              live read on 2026-08-11 (`plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` todo 1)
-              found **7,930,863** `instrument_type=POOL` (uppercase) captured rows in `data_type=dex_pool_swaps` — not zero, and
-              not a small residue. Root cause is NOT a recurred live-writer bug (verified: the only live `record_captured` call
-              site for `dex_pool_swaps` pool-grain rows passes lowercase `instrument_type="pool"` with a bare id,
-              `market-tick-data-service/cli/handlers/_dex_swaps_queries.py:174-182`) and is NOT `rebuild_defi_manifest.py`
-              re-emitting uppercase (its `parse_hive_path` unconditionally `.lower()`s `instrument_type`, added 2026-06-18,
-              `market-tick-data-service@3f5cc6e4`, well before the 2026-08-10 rebuild VM chain ran) — so the mechanism by which
-              this population regrew from 0 to 7.9M between 2026-08-05 and 2026-08-11 is UNRESOLVED. Full writeup + open
-              questions: `/plans/active/issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md`. Do not trust this P3
-              todo's "no further action needed" claim without reading that doc first.
+                  live read on 2026-08-11 (`plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` todo 1)
+                  found **7,930,863** `instrument_type=POOL` (uppercase) captured rows in `data_type=dex_pool_swaps` — not zero, and
+                  not a small residue. Root cause is NOT a recurred live-writer bug (verified: the only live `record_captured` call
+                  site for `dex_pool_swaps` pool-grain rows passes lowercase `instrument_type="pool"` with a bare id,
+                  `market-tick-data-service/cli/handlers/_dex_swaps_queries.py:174-182`) and is NOT `rebuild_defi_manifest.py`
+                  re-emitting uppercase (its `parse_hive_path` unconditionally `.lower()`s `instrument_type`, added 2026-06-18,
+                  `market-tick-data-service@3f5cc6e4`, well before the 2026-08-10 rebuild VM chain ran) — so the mechanism by which
+                  this population regrew from 0 to 7.9M between 2026-08-05 and 2026-08-11 is UNRESOLVED. Full writeup + open
+                  questions: `/plans/active/issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md`. Do not trust this P3
+                  todo's "no further action needed" claim without reading that doc first.
 
 ## Progress Log
 
