@@ -274,6 +274,33 @@ for _sd in "$SKILLS_SRC"/*/; do
     fi
 done
 
+# ── Heal repo-level self-referential symlinks (`<repo>/<repo> -> ../../<repo>`) ──
+# Same failure class as the skills/<name>/<name> junk above, at the REPO level: a per-repo symlink
+# tool that computes the target from inside the repo (or resolves a link THROUGH an existing dir
+# symlink) lands a self-named link `<repo>/<repo>` whose target `../../<repo>` is one `..` too deep —
+# so it either resolves back out of the checkout (broken) or to its own parent (self-referential).
+# Observed 2026-08-09 15:28: every repo root in the Mac base checkout carried one, uniformly stamped
+# (see /plans/active/issues/mac_slot0_base_checkout_stuck_dirty_files_2026_08_11.md). Cosmetic
+# (untracked — doesn't block FF) but inflates the dirty count and recurs until healed. The generator
+# is NOT any current/committed script (`../../$repo` has no hit in `git log --all -S`), so healing
+# here — the canonical self-healer every host runs on QG/setup/pm-pull — is the durable fix.
+# Narrow by construction: remove ONLY a symlink named after its own parent repo dir whose target is
+# the self-referential `../../<name>` signature, or that resolves to its own parent. Anything else
+# (a human-authored link, a foreign target) is left alone.
+for _d in "${WORKSPACE_ROOT}"/*/; do
+    [ -d "$_d" ] || continue
+    _name="$(basename "$_d")"
+    _link="${_d%/}/${_name}"
+    [ -L "$_link" ] || continue
+    _jt="$(readlink "$_link")"
+    _jr="$(_real_dir "$_link")"
+    _pr="$(_real_dir "$_d")"
+    if [ "$_jt" = "../../${_name}" ] \
+        || { [ -n "$_jr" ] && [ -n "$_pr" ] && [ "$_jr" = "$_pr" ]; }; then
+        rm -f "$_link" 2>/dev/null && echo "[link-claude-skills] pruned self-referential link ${_link} (target: ${_jt})"
+    fi
+done
+
 if [ -L "$_dest" ]; then
     # Already a symlink. Canonical + resolving → done. Anything else (abs path from an older
     # script, stale/broken target) → replace it.
