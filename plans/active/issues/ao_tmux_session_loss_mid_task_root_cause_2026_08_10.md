@@ -1,8 +1,8 @@
 ---
 doc_type: issue
 title: >-
-  Fleet dispatch:done gap is driven by unplanned tmux session loss mid-task, not watchdog kills — root cause not yet
-  found
+  Fleet dispatch:done gap driven by tmux session loss mid-task — ROOT CAUSE FOUND (tmux exit-empty self-termination),
+  fix shipped agent-orchestrator@ef5ba1e2cc, verifying over an observation window
 summary: >-
   Follow-up from shipping the Fleet Efficiency KPIs `dispatches/done` tile + a slot/role/day breakdown
   (agent-orchestrator@016abaff2f, @8a7a8c0fe0, @<pending>): operator asked why redispatch (retry) is so common and
@@ -135,6 +135,19 @@ memory and that's what kills sessions" as-is.
   only 7 of 142 redispatches (5%) show it. The other 69/142 (49%) that show SOME compact-related event are very likely
   coincidental co-occurrence, not causal.
 
+## ROOT CAUSE FOUND (2026-08-13) — see Progress Log for the full evidence chain
+
+**tmux's `exit-empty` option (default: on) — the shared server voluntarily self-terminates the instant session count
+transiently hits zero.** Caught live via a purpose-built `strace` supervisor
+(`agent-orchestrator/scripts/orchestrator/strace_tmux_server_supervisor.sh`) attached to the actual dying server PID:
+the trace shows `kill(<own_pid>, SIGTERM)` — self-directed, `si_pid` matches the traced pid exactly — then cleanup, then
+a clean `exit_group(0)`. No external SIGKILL, no crash signal, no OOM, no cgroup limit — this explains every "N slots
+die in the same tick" burst in this doc (one server exit takes every attached session down together) and why no death
+ever produced a core dump even after the LimitCORE fix (no fatal signal was ever involved to produce one). **Fix**:
+`agent-orchestrator@ef5ba1e2cc` sets `tmux set-option -g exit-empty off` on every session spawn (idempotent,
+server-global); also applied live to the then-current server as an immediate interim mitigation before the code fix
+landed. Verification (fix holding over an observation window with zero new bursts) is in progress — see Todo below.
+
 ## Todo
 
 - [ ] [INFRA] P2. **Get real tmux/system-level evidence for an unplanned loss**, not just orchestrator-side activity_log
@@ -211,14 +224,9 @@ memory and that's what kills sessions" as-is.
       `termination reported by proc_exit` for the process, and its long-lived (211s) DeepSeek-API TCP connection was
       simultaneously torn down via **RST, not FIN** — the signature of an abrupt, ungraceful termination (no time to
       close sockets), consistent with the standing uncatchable-signal hypothesis rather than a clean app exit; (d) no
-      `launchd`-attributed "exited due to SIGKILL sent by X" line exists for this PID — that attribution only covers
-      launchd-managed services, not a plain tmux child process, so the actual signal-sender remains unidentified via
-      `log show` alone. **Practical ceiling reached for post-hoc unified-log archaeology on this Mac** — getting the
-      actual sender needs either live kernel signal tracing (`dtrace`/`ktrace`, needs SIP considerations) attached
-      BEFORE the next death, or shifting the live-catch to the production Linux VM where core dumps are already enabled
-      and root access is available via SSM. **Done when**: a live-caught death's underlying cause is identified from
-      OS-level evidence (not just "confirmed absent again"), or enough sandbox runs accumulate that a pattern (timing,
-      account, task shape) emerges. Repo: agent-orchestrator.
+      `launchd`-attributed "exited due to SIGKILL sent by X" line — sandbox macOS archaeology hit its practical ceiling
+      here. **SUPERSEDED 2026-08-13** — root cause found via live `strace` on production (see "ROOT CAUSE FOUND"
+      section): tmux's own `exit-empty` self-termination, not an external signal at all. Repo: agent-orchestrator.
 - [x] [INFRA] P1. ~~New lead (2026-08-11, production breakthrough): find the tmux SERVER process's own resource
       envelope~~ — **CLOSED 2026-08-12, hypothesis REFUTED by direct live check.** `server/tmux_spawn.py`'s comments
       suggested the server likely sits OUTSIDE any per-service cgroup (unconfined) — checked directly the moment the
@@ -971,20 +979,16 @@ memory and that's what kills sessions" as-is.
   (`b9341d7ac6`) that a later peer push (`fc808eaecf`) then partially stale-base-overwrote — recovered via `patch`
   against origin tip against `b9341d7ac6`'s own diff, 3/4 hunks auto, 1 by hand; verified no content lost from any of
   the 3 contributing sessions, `check_conflict_markers.sh` PASS, todo count matched.
-- 2026-08-12 21:47Z (operator: "keep going until confirmed fixed at the AO level, /autonomous"): arming
-  `AUTONOMOUS_AGENT_RULES.md`'s completion loop — will not stop at diagnosis, termination condition is a shipped +
-  verified fix. Shipped `agent-orchestrator@3afe35f13a` (`scripts/orchestrator/strace_tmux_server_supervisor.sh`) and
-  launched it detached on the VM (`setsid nohup`, PID 250591) — keeps a live `strace -e trace=signal,exit,exit_group`
-  attached to whichever process is currently the tmux server, re-attaching on every respawn, so the next death gets
-  `+++ killed by SIGKILL +++` / a caught signal / a clean `exit_group` on the record instead of another silent gap.
-  While shipping it, found **6 more deaths in the 90min since the last check** (20:18, 20:21, 20:27, 20:38, 20:43,
-  21:06Z) — averaging ~1/10min right now, well above this doc's historical cadence; good news for actually catching one
-  live. Self-paced wakeup loop starts now to poll the strace log for the first captured transition.
-- 2026-08-12 22:38Z: **mistake — destroyed a live catch's own evidence.** Death #7 happened 22:36:57Z→22:38:15Z while
-  the armed strace WAS attached (pid 3382172, `-f` variant) and should have recorded it — but its log growth (`-f`
-  following every forked pane, 113MB→648MB in 14min) prompted a fix-and-redeploy, and the redeploy command killed the
-  old strace + `rm -f`'d its log in the SAME command, before ever reading it. Unrecoverable (tmpfs, no snapshot).
-  Corrective action taken: dropped `-f` (`agent-orchestrator@ee8de4c3d9` — only the top-level server pid's own signals
-  matter, not its forked children's, which was the entire volume problem) and added a standing rule for every future
-  tick: **never kill/delete an armed trace without grepping it for a fatal-signal match FIRST**, regardless of how
-  urgent the fix feels. Re-armed clean on the new server pid (1930233, 22:38:02Z) with the lighter trace.
+- 2026-08-12 21:47Z (operator: "keep going until confirmed fixed at the AO level, /autonomous"): armed
+  `AUTONOMOUS_AGENT_RULES.md`'s completion loop. Shipped a live `strace` supervisor (`agent-orchestrator@3afe35f13a`,
+  `scripts/orchestrator/strace_tmux_server_supervisor.sh`) that stays attached to whichever process is currently the
+  tmux server, re-attaching on every respawn. Found 6 deaths in the prior 90min (~1/10min, well above historical
+  cadence) — good odds of a live catch soon.
+- 2026-08-12 22:38Z: **mistake, corrected same tick** — death #7 (22:36:57Z→22:38:15Z) happened while the FIRST
+  supervisor variant (`-f`, following every forked pane) was attached and should have recorded it, but its log growth
+  (113MB→648MB/14min) prompted a fix-and-redeploy whose cleanup `rm -f`'d the log before it was ever read —
+  unrecoverable. Fixed (`agent-orchestrator@ee8de4c3d9`, dropped `-f` — only the top-level pid's own signals matter) and
+  added a standing rule: never kill/delete an armed trace without grepping it for a fatal-signal match FIRST.
+- 2026-08-13 00:06Z: **death #8 caught clean — ROOT CAUSE CONFIRMED.** See the "ROOT CAUSE FOUND" section above for the
+  full read. Fix shipped `agent-orchestrator@ef5ba1e2cc` (`exit-empty off` on every spawn) + applied live to the
+  then-current server as an immediate interim mitigation. Now watching for a no-burst observation window to verify.
