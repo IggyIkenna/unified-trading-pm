@@ -92,12 +92,13 @@ and MVP-tagging needs.
 - [x] ✅ [UAC] P1. Add the confirmed symbols to the CeFi MVP scope rule (mirror how equity-perp bases were unioned into
       `CEFI_EQUITY_PERP_BASE_UNIVERSE`) so they count toward the MVP completeness denominator and are picked up by the
       standard capture/coverage tooling. Repo: unified-api-contracts. — unified-api-contracts@bfad33b58
-- [ ] [SCRIPT] P1. instruments-service — `_cefi_equity_tags` (`scripts/build_instrument_catalogue.py`) only handles the
-      Bybit `<TICKER>X` suffix form (`base[:-1]`); it has NO branch for the OKX `X<UNDERLYING>` prefix form. Add a
+- [x] ✅ [SCRIPT] P1. instruments-service — `_cefi_equity_tags` (`scripts/build_instrument_catalogue.py`) only handles
+      the Bybit `<TICKER>X` suffix form (`base[:-1]`); it has NO branch for the OKX `X<UNDERLYING>` prefix form. Add a
       `base.startswith("X") and len(base) > 1 and base[1:] in CEFI_EQUITY_PERP_BASE_UNIVERSE` branch (mirroring the
       existing suffix branch) so the 56 OKX tokens actually get `is_equity_perp=True`/`tracks_equity=...` stamped at
       catalogue rollup — without this, the UAC universe+link registration above is necessary but not sufficient for the
-      OKX symbols (the Bybit suffix form already works unmodified). Repo: instruments-service.
+      OKX symbols (the Bybit suffix form already works unmodified). Repo: instruments-service. —
+      instruments-service@9ca5801a2 (prefix branch added; 7 classifier assertions; QG green 5385 passed)
 - [ ] [SCRIPT] P1. instruments-service — register an `InstrumentRecord` for each confirmed tokenized-equity symbol dated
       to its REAL historical listing date from Todo 1 (not a blanket floor — mirrors the equity-perp sibling plan's own
       per-symbol-date discipline, motivated by the same regime/coverage-window correctness concern that plan's Progress

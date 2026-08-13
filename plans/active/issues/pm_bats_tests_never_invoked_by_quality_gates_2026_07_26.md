@@ -232,3 +232,20 @@ phase + re-harden-after-clean-baseline) stay unchanged in content, now dispatcha
   (`pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`) that actually shipped `ef552936b3` still shows
   its own "60 of 229 PM bats tests fail" todo unchecked (`- [ ]`) — a separate checkbox-flip gap in that doc, not
   addressed here since it's outside this issue doc's scope; flagged for whoever next touches that doc.
+
+- **2026-08-13 (slot 29, cicd escalation `agt-3708db`, `ldr_qg_failure` on promote PR #2939)**: Dispatched against
+  `quality-gates-v2` run 31671452704 (head `d5af42ba`, 05:49Z) failing on the **tests slice** — three BATS suites red:
+  `test_slot_git_status_claim_heartbeat.bats` (4), `test_slot_git_status_loopback_preference.bats` (1),
+  `test_check_branch_drift_advisory_mode.bats` (2). Root causes per test: (a) `stat -f %m … || stat -c %Y …` — an
+  exit-code-only `||` chain that on GNU Linux contaminates command substitution with filesystem-info output → "integer
+  expression expected"; (b) `[[ "$output" == *"[ok] slot 99"* ]]` assertion on loopback-mode post_snapshot; (c) an empty
+  git clone in the drift-advisory fixture ("remote HEAD refers to nonexistent ref"). **ALL THREE were already fixed on
+  LDR by `unified-trading-pm@f032481745` (2026-08-13 12:53Z, "fix(tests): 3 bats suites deterministically failed only in
+  CI (GH Actions), never locally — blocked every PM promote-PR QG slice 12+ hours"), which landed ~7h BEFORE this
+  dispatch.** Verified live this session (all 2026-08-13 ~18:4xZ): `f032481745` is an ancestor of
+  `origin/live-defi-rollout` (`0eab535a`) and NOT of the failing head `d5af42ba` (which is an old ancestor of LDR) —
+  i.e. the run that escalated tested a stale pre-fix head; the 3 suites now pass 17/17 locally on LDR files; the
+  `quality-gates-v2` runs on `promote/*` heads since (18:21Z–18:35Z) are `success`, and promote PRs #2978–#2983 are all
+  MERGED — the LDR→main promotion pipeline is flowing again. **No code fix needed — closing this dispatch as
+  confirmed-already-fixed.** (Same shape as `agt-774a0e` slot-28 already-fixed close-out; if this wall re-dispatches,
+  the re-dispatch is the `ldr_qg_failure` auto-resolve gap, not a real regression.)
