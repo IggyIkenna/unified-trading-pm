@@ -1754,3 +1754,5 @@
 {"timestamp": "2026-08-13T12:06:23Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "unified-trading-library=0.81.0 (branch=main, bump=minor)", "commit_sha": "cf9cdaeecbfdb00d0043ae33513ebc1d02c86382"}
 {"timestamp": "2026-08-13T12:20:44Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "deployment-api=0.83.0 (branch=main, run=31699541138)", "commit_sha": "5efd541edb342e8483efdd9569781954989301f8"}
 {"timestamp": "2026-08-13T12:20:48Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "deployment-api=0.83.0 (branch=main, bump=minor)", "commit_sha": "5efd541edb342e8483efdd9569781954989301f8"}
+{"timestamp": "2026-08-13T12:26:28Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "execution-service=0.67.0 (branch=main, run=31700003605)", "commit_sha": "5a8aeef4df50a361ed4acdca1531b68f335c8a22"}
+{"timestamp": "2026-08-13T12:26:31Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "execution-service=0.67.0 (branch=main, bump=minor)", "commit_sha": "5a8aeef4df50a361ed4acdca1531b68f335c8a22"}
