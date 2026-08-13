@@ -248,77 +248,120 @@ bridges them; it does not extend one over the other.
 
 ## Phase 2 — The policy evaluator (one SSOT, no forked policy)
 
-- [ ] [CODE] P0. Add `DependentAction` to UAC as a closed StrEnum — NONE / SELF_RETRY / SELF_RESTART / SELF_DRAIN /
-      DEPS_HOLD / DEPS_DRAIN / FLEET_HALT / KILL_SWITCH. Deliberately 8 values: `DEPS_KILL` is absent by operator
-      decision. Repo: unified-api-contracts.
-- [ ] [CODE] P0. Add `evaluate_revocation()` to `instruments_preflight_dag` returning a `DependentAction` for a
+- [x] 11. ✅ [CODE] P0. Add `DependentAction` to UAC as a closed StrEnum — NONE / SELF_RETRY / SELF_RESTART / SELF_DRAIN
+      / DEPS_HOLD / DEPS_DRAIN / FLEET_HALT / KILL_SWITCH. Deliberately 8 values: `DEPS_KILL` is absent by operator
+      decision. Repo: unified-api-contracts. — unified-api-contracts@c206f910. 8 values; `DEPS_KILL` absent by operator
+      decision, guarded by `test_deps_kill_is_absent_from_the_action_vocabulary`.
+- [x] 12. ✅ [CODE] P0. Add `evaluate_revocation()` to `instruments_preflight_dag` returning a `DependentAction` for a
       (alert_code, affected_entity) pair — the single policy SSOT both delivery paths consult. Repo:
-      unified-api-contracts.
-- [ ] [CODE] P0. Build the alert→action map keyed on `AlertCode` and DP registry_id identity, never on severity tier —
-      four routing bugs found 2026-08-12 had a correct code at the wrong tier. Repo: unified-api-contracts.
-- [ ] [CODE] P0. Resolve the dependent set for an alert from the existing preflight graph rather than a new adjacency
-      table — the graph is already the SSOT for upstream-required-before-downstream. Repo: unified-api-contracts.
-- [ ] [TEST] P0. Test: every DP registry_id and every `AlertCode` resolves to exactly one `DependentAction` — the
+      unified-api-contracts. — unified-api-contracts@c206f910. **Deviation:** lives in a NEW
+      `canonical/crosscutting/dependency_revocation.py`, not inside `instruments_preflight_dag` — that file was already
+      589 lines and 142 registry entries would breach the file-size ratchet. The new module IMPORTS the DAG and inverts
+      `INSTRUMENTS_PREFLIGHT_REQUIREMENTS`, so the actual requirement (resolve dependents from the existing graph) holds
+      exactly; re-exporting back through the DAG would have created an import cycle.
+- [x] 13. ✅ [CODE] P0. Build the alert→action map keyed on `AlertCode` and DP registry_id identity, never on severity
+      tier — four routing bugs found 2026-08-12 had a correct code at the wrong tier. Repo: unified-api-contracts. —
+      unified-api-contracts@c206f910. `ALERT_CODE_ACTIONS` (89 members) + `DP_FAILURE_MODE_ACTIONS` (53 ids). Keyed on
+      the DP **id**, not the event name, because `DP-FETCH-007`/`009` share `DP_RUN_MOSTLY_EMPTY` and
+      `DP-RATE-001`/`003` share `DP_SOURCE_RATE_LIMITED` — keying on the event would have silently merged four failure
+      modes into two. `test_dp_ids_are_well_formed_and_the_two_key_spaces_do_not_overlap` proves the spaces cannot
+      collide.
+- [x] 14. ✅ [CODE] P0. Resolve the dependent set for an alert from the existing preflight graph rather than a new
+      adjacency table — the graph is already the SSOT for upstream-required-before-downstream. Repo:
+      unified-api-contracts. — unified-api-contracts@c206f910. `resolve_dependents()` inverts
+      `INSTRUMENTS_PREFLIGHT_REQUIREMENTS`; no second adjacency table exists, so the revocation edge set cannot disagree
+      with the admission gate it mirrors.
+- [x] 15. ✅ [TEST] P0. Test: every DP registry_id and every `AlertCode` resolves to exactly one `DependentAction` — the
       closed-set guard, mirroring `test_every_alert_code_has_a_specific_rule` shipped at
-      unified-api-contracts@76e144d5ca. Repo: unified-api-contracts.
-- [ ] [TEST] P0. Test: `evaluate_revocation` never returns a stronger action than DEPS_DRAIN for any input — the machine
-      guard that drain-only cannot silently become terminate. Repo: unified-api-contracts.
-- [ ] [TEST] P0. Test: a drain-blind VM prefix (from Phase 0) resolves to DEPS_HOLD, never DEPS_DRAIN. Repo:
-      unified-api-contracts.
+      unified-api-contracts@76e144d5ca. Repo: unified-api-contracts. — unified-api-contracts@c206f910.
+      `test_every_alert_code_has_a_dependent_action` + `test_every_dp_registry_id_has_a_dependent_action`. Registry ids
+      held as a literal (transcribed 2026-08-13) because UAC's CI does not check out unified-trading-pm — a test that
+      skipped on a missing file would be exactly the vacuous guard this mirrors.
+- [x] 16. ✅ [TEST] P0. Test: `evaluate_revocation` never returns a stronger action than DEPS_DRAIN for any input — the
+      machine guard that drain-only cannot silently become terminate. Repo: unified-api-contracts. —
+      unified-api-contracts@c206f910. `test_no_verdict_ever_exceeds_the_drain_ceiling` over all 142 identities. Its
+      teeth come from `DEPENDENT_LIFECYCLE_STRENGTH` being validated total at import: a future terminating action cannot
+      be added without declaring a strength, and any strength above the ceiling fails.
+- [x] 17. ✅ [TEST] P0. Test: a drain-blind VM prefix (from Phase 0) resolves to DEPS_HOLD, never DEPS_DRAIN. Repo:
+      unified-api-contracts. — unified-api-contracts@c206f910. `test_a_drain_blind_target_is_clamped_to_hold` asserts
+      the clamp AND that `clamped_from` records it, so a degraded edge stays visible. Made structural (a `drain_capable`
+      parameter) rather than data-driven, so it does not block on Phase 0's prefix census.
 
 ## Phase 3 — The retry budget registry (does not exist today)
 
 > A fleet grep for `max_retries` / `RETRY_BUDGET` / `max_attempts` finds nothing in UAC or `deployment_service`. "Three
 > attempts" is prose in `autonomous-recovery-matrix.md`, not a value anything reads.
 
-- [ ] [CODE] P0. Add `RetryBudget` to UAC — `max_attempts`, `backoff_base_seconds`, `backoff_multiplier`,
-      `max_backoff_seconds`, `give_up_action: DependentAction`. Repo: unified-api-contracts.
-- [ ] [CODE] P0. Add `RETRY_BUDGETS` keyed `(data_type, source)` plus `DEFAULT_RETRY_BUDGET_BY_ERROR_ACTION`, resolving
-      exact → `(data_type, "*")` → `ErrorAction` default. Mirrors how `VENUE_HEARTBEAT_THRESHOLDS` is already keyed.
-      Repo: unified-api-contracts.
-- [ ] [CODE] P0. Seed the defaults from the values already documented in `autonomous-recovery-matrix.md` — 3 attempts,
-      300→600→1200→3600s ladder — so the registry starts as a faithful transcription, not a redesign. Repo:
-      unified-api-contracts.
-- [ ] [CODE] P0. Set `max_attempts=0` for `MISSING_CREDENTIAL` so "never retry a missing key" is structural rather than
-      a convention someone can forget. Repo: unified-api-contracts.
-- [ ] [CODE] P0. Set Tardis `max_attempts=1` — it is already hard-capped at one concurrent VM per cloud and retries
-      storm the API. Repo: unified-api-contracts.
-- [ ] [CODE] P1. Set Databento budgets to fail closed on billing errors, consistent with the 3-datasets
-      billing-fail-closed rule. Repo: unified-api-contracts.
-- [ ] [TEST] P0. Test: resolution order falls back correctly through all three levels and every `ErrorAction` has a
-      default. Repo: unified-api-contracts.
+- [x] 18. ✅ [CODE] P0. Add `RetryBudget` to UAC — `max_attempts`, `backoff_base_seconds`, `backoff_multiplier`,
+      `max_backoff_seconds`, `give_up_action: DependentAction`. Repo: unified-api-contracts. —
+      unified-api-contracts@c206f910. Validates its own invariants at construction (no shrinking ladder, no ceiling
+      below floor, no negative attempts).
+- [x] 19. ✅ [CODE] P0. Add `RETRY_BUDGETS` keyed `(data_type, source)` plus `DEFAULT_RETRY_BUDGET_BY_ERROR_ACTION`,
+      resolving exact → `(data_type, "*")` → `ErrorAction` default. Mirrors how `VENUE_HEARTBEAT_THRESHOLDS` is already
+      keyed. Repo: unified-api-contracts. — unified-api-contracts@c206f910. Four-level resolution: exact →
+      `(data_type, "*")` → `("*", source)` → `ErrorAction` default. The vendor-wide level exists because the Tardis and
+      Databento caps are properties of the VENDOR, not of any data type.
+- [x] 20. ✅ [CODE] P0. Seed the defaults from the values already documented in `autonomous-recovery-matrix.md` — 3
+      attempts, 300→600→1200→3600s ladder — so the registry starts as a faithful transcription, not a redesign. Repo:
+      unified-api-contracts. — unified-api-contracts@c206f910. Measured `[300, 600, 1200, 2400, 3600]`, 3 attempts — a
+      faithful transcription, not a redesign.
+- [x] 21. ✅ [CODE] P0. Set `max_attempts=0` for `MISSING_CREDENTIAL` so "never retry a missing key" is structural
+      rather than a convention someone can forget. Repo: unified-api-contracts. — unified-api-contracts@c206f910.
+      Structural, plus `test_missing_credential_is_never_retried` across four sources.
+- [x] 22. ✅ [CODE] P0. Set Tardis `max_attempts=1` — it is already hard-capped at one concurrent VM per cloud and
+      retries storm the API. Repo: unified-api-contracts. — unified-api-contracts@c206f910. A retry ladder is the
+      one-concurrent-VM storm serialised.
+- [x] 23. ✅ [CODE] P1. Set Databento budgets to fail closed on billing errors, consistent with the 3-datasets
+      billing-fail-closed rule. Repo: unified-api-contracts. — unified-api-contracts@c206f910. Retrying re-attempts a
+      charge on a suspended account and yields 0-row runs indistinguishable from honest absence.
+- [x] 24. ✅ [TEST] P0. Test: resolution order falls back correctly through all three levels and every `ErrorAction` has
+      a default. Repo: unified-api-contracts. — unified-api-contracts@c206f910.
+      `test_resolution_falls_through_all_four_levels` + `test_every_error_action_has_a_default_budget`.
 - [ ] [CODE] P1. Replace the hardcoded retry counts in the adapter retry paths with `RETRY_BUDGETS` lookups so the
       registry is actually load-bearing, not decorative. Repos: instruments-service, market-tick-data-service.
 
 ## Phase 4 — The push actuator (ships without touching a single launcher)
 
-- [ ] [CODE] P0. Add a revocation actuator in `data_pipeline_monitors` that consults `evaluate_revocation()` and
-      delivers the verdict — it must carry NO policy branch of its own. Repo: deployment-service.
-- [ ] [CODE] P0. Deliver DEPS_DRAIN by writing a per-VM drain marker to the VM's `vm-logs/` prefix, not by terminating
-      the instance — the VM-side hook in Phase 5 observes the marker. Repo: deployment-service.
-- [ ] [CODE] P0. Deliver DEPS_HOLD by writing an admission-block marker the launcher preflight reads, so a held
-      dependent never starts. Repo: deployment-service.
+- [x] 25. ✅ [CODE] P0. Add a revocation actuator in `data_pipeline_monitors` that consults `evaluate_revocation()` and
+      delivers the verdict — it must carry NO policy branch of its own. Repo: deployment-service. —
+      deployment-service@e38b2a0e. Carries no policy branch;
+      `test_actuator_verdict_matches_the_evaluator_for_every_alert` iterates all 142 identities to prove it.
+- [x] 26. ✅ [CODE] P0. Deliver DEPS_DRAIN by writing a per-VM drain marker to the VM's `vm-logs/` prefix, not by
+      terminating the instance — the VM-side hook in Phase 5 observes the marker. Repo: deployment-service. —
+      deployment-service@e38b2a0e. `vm-logs/{target}/DRAIN_REQUESTED.json`. Nothing terminates.
+- [x] 27. ✅ [CODE] P0. Deliver DEPS_HOLD by writing an admission-block marker the launcher preflight reads, so a held
+      dependent never starts. Repo: deployment-service. — deployment-service@e38b2a0e.
+      `vm-census/admission-hold/{target}.json`.
 - [ ] [CODE] P0. Deliver FLEET_HALT by pausing the relevant Cloud Scheduler jobs, reusing the existing scheduler-pause
       path rather than a new mechanism — and emit `DP_CONSOLIDATOR_SCHEDULER_PAUSED`-style visibility so a halt is never
       silent. Repo: deployment-service.
-- [ ] [CODE] P0. Budget-bound every actuation per (alert_code, target, day) using the GCS-durable state pattern from
-      `relaunch_backfill_vm.py` — the tempdir-backed budget was discarded every 5 minutes on Cloud Run and the
-      documented cap never engaged. Repo: deployment-service.
-- [ ] [CODE] P0. Emit a resolved-bookend when a hold or drain is released, so a revocation that opened is visibly closed
-      in-channel per the alerting close-bookend rule. Repo: deployment-service.
-- [ ] [TEST] P0. Test: the actuator's verdict for every alert equals `evaluate_revocation()`'s — the anti-drift guard
-      proving there is no second policy. Repo: deployment-service.
-- [ ] [TEST] P0. Test: the actuator degrades to file_issue rather than crashing when its own dependencies are
-      unavailable, matching `_ACTUATORS_AVAILABLE`'s existing capability-probe contract. Repo: deployment-service.
-- [ ] [TEST] P0. Test: actuation budget survives a fresh container — the exact regression that made
-      `_MAX_RELAUNCHES_PER_DAY` a no-op. Repo: deployment-service.
+- [x] 28. ✅ [CODE] P0. Budget-bound every actuation per (alert_code, target, day) using the GCS-durable state pattern
+      from `relaunch_backfill_vm.py` — the tempdir-backed budget was discarded every 5 minutes on Cloud Run and the
+      documented cap never engaged. Repo: deployment-service. — deployment-service@e38b2a0e. `ShardedState`,
+      day-partitioned; `test_actuation_budget_survives_a_fresh_container` is the regression guard.
+- [x] 29. ✅ [CODE] P0. Emit a resolved-bookend when a hold or drain is released, so a revocation that opened is visibly
+      closed in-channel per the alerting close-bookend rule. Repo: deployment-service. — deployment-service@e38b2a0e.
+      `RevocationActuator.release()` + `test_release_clears_the_marker`.
+- [x] 30. ✅ [TEST] P0. Test: the actuator's verdict for every alert equals `evaluate_revocation()`'s — the anti-drift
+      guard proving there is no second policy. Repo: deployment-service. — deployment-service@e38b2a0e. The anti-drift
+      guard.
+- [x] 31. ✅ [TEST] P0. Test: the actuator degrades to file_issue rather than crashing when its own dependencies are
+      unavailable, matching `_ACTUATORS_AVAILABLE`'s existing capability-probe contract. Repo: deployment-service. —
+      deployment-service@e38b2a0e. `test_it_degrades_rather_than_crashing_when_storage_is_absent` +
+      `test_an_unknown_alert_degrades_instead_of_raising`.
+- [x] 32. ✅ [TEST] P0. Test: actuation budget survives a fresh container — the exact regression that made
+      `_MAX_RELAUNCHES_PER_DAY` a no-op. Repo: deployment-service. — deployment-service@e38b2a0e.
 
 ## Phase 5 — VM-side poll hook and Cloud Run skip gate (the fail-closed backstop)
 
-- [ ] [CODE] P0. Add a drain-marker poll to the VM tee-wrapper's heartbeat so a running VM observes DEPS_DRAIN and exits
-      at its next checkpoint. Repo: deployment-service.
-- [ ] [CODE] P0. Make the drain path call the Phase-1 drain registry before exiting, so observing the marker actually
-      flushes rather than merely stopping. Repo: deployment-service.
+- [x] 33. ✅ [CODE] P0. Add a drain-marker poll to the VM tee-wrapper's heartbeat so a running VM observes DEPS_DRAIN
+      and exits at its next checkpoint. Repo: deployment-service. — deployment-service@e38b2a0e.
+      `revocation_gate.drain_requested()` — one small object-exists read, safe per heartbeat tick.
+- [x] 34. ✅ [CODE] P0. Make the drain path call the Phase-1 drain registry before exiting, so observing the marker
+      actually flushes rather than merely stopping. Repo: deployment-service. — deployment-service@e38b2a0e.
+      `drain_and_exit()` calls `drain_all()` BEFORE exiting and returns 0 (a drained VM SUCCEEDED; a non-zero exit would
+      fire `DP_VM_EXIT_NONZERO` and page about a working system). `test_drain_actually_flushes_not_merely_exits` guards
+      it.
 - [ ] [CODE] P0. Add an admission check to the launcher preflight so a DEPS_HOLD marker prevents launch, and the refusal
       is logged with the alert that caused it. Repo: deployment-service.
 - [ ] [CODE] P0. Add the same admission check to the Cloud Run job entrypoints so a job in a bad-state window skips its
@@ -383,24 +426,24 @@ bridges them; it does not extend one over the other.
 
 Phase 1 closed 8 of 9 todos. Nothing below is half-shipped — every item is either untouched or operator-owned.
 
-| Item                                                                                                          | State / why deferred                                                                                                                                                                                                                                                                           | Blocked on                             |
-| ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| Phase 1c — wire drain registry into MTDS / MDPS / instruments-service / features-service backfill entrypoints | **Not done** — 4 repos = 4 separate gate runs; deliberately not started mid-context rather than left half-wired across repos                                                                                                                                                                   | nobody                                 |
-| Phase 1e — codex flush-contract doc                                                                           | **Not done** — small, follows 1c so the doc describes the shipped end state                                                                                                                                                                                                                    | nobody (do after 1c)                   |
-| Phase 2 — `DependentAction` + `evaluate_revocation()`                                                         | **Written and gate-proven, CANNOT SHIP** — code + 26 tests are complete and pass; `quality-gates.sh` is red tree-wide from a LIVE peer's uncommitted `SOURCE_PRIORITY` edit, and quickmerge correctly refuses a red tree. Preserved as git blobs (SHAs in the Progress Log) so nothing is lost | live peer session landing its UAC work |
-| Phase 3 — `RETRY_BUDGETS`                                                                                     | **Not done** — independent of Phase 2, can run in parallel                                                                                                                                                                                                                                     | nobody                                 |
-| Phase 4 — push actuator                                                                                       | **Not done**                                                                                                                                                                                                                                                                                   | Phase 2 (needs the evaluator)          |
-| Phase 5 — VM poll hook + Cloud Run skip gate                                                                  | **Not done**                                                                                                                                                                                                                                                                                   | Phase 2 + Phase 4                      |
-| Phase 6 — 12 bad-VM scenarios                                                                                 | **Cannot be done yet** — needs the actuator and poll hook to exist before there is anything to assert against                                                                                                                                                                                  | Phases 4-5                             |
-| Phase 7 — codex SSOT + archival                                                                               | **Cannot be done yet** — closes the plan                                                                                                                                                                                                                                                       | all phases                             |
-| slot-4 PM checkout divergence                                                                                 | **Operator-owned** — liveness gate forbids an agent reconciling a live peer's staged work                                                                                                                                                                                                      | operator                               |
-| `unified-trading-library` `.venv` bootstrap                                                                   | **Operator-owned** — environment setup                                                                                                                                                                                                                                                         | operator                               |
+| Item                                                                                                          | State / why deferred                                                                                                                                                                                                                                        | Blocked on           |
+| ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| Phase 1c — wire drain registry into MTDS / MDPS / instruments-service / features-service backfill entrypoints | **Not done** — 4 repos = 4 separate gate runs; deliberately not started mid-context rather than left half-wired across repos                                                                                                                                | nobody               |
+| Phase 1e — codex flush-contract doc                                                                           | **Not done** — small, follows 1c so the doc describes the shipped end state                                                                                                                                                                                 | nobody (do after 1c) |
+| Phase 2 — `DependentAction` + `evaluate_revocation()`                                                         | **DONE** — all 7 todos, unified-api-contracts@c206f910                                                                                                                                                                                                      | —                    |
+| Phase 3 — `RETRY_BUDGETS`                                                                                     | **7 of 8 done** (unified-api-contracts@c206f910) — the adapter retry-path replacement in IS/MTDS is the one left, so the registry is not yet load-bearing                                                                                                   | nobody               |
+| Phase 4 — push actuator                                                                                       | **8 of 9 done** (deployment-service@e38b2a0e) — FLEET_HALT currently delivers as a hold marker, not the Cloud Scheduler pause the todo specifies                                                                                                            | nobody               |
+| Phase 5 — VM poll hook + Cloud Run skip gate                                                                  | **2 of 7 done** (deployment-service@e38b2a0e, unified-trading-library@36714bfe97) — the gate module exists but nothing CALLS it yet: launcher preflight and the deployment-api Cloud Run entrypoints are unwired, and its two behaviour tests are unwritten | nobody               |
+| Phase 6 — 12 bad-VM scenarios                                                                                 | **Cannot be done yet** — needs the actuator and poll hook to exist before there is anything to assert against                                                                                                                                               | Phases 4-5           |
+| Phase 7 — codex SSOT + archival                                                                               | **Cannot be done yet** — closes the plan                                                                                                                                                                                                                    | all phases           |
+| slot-4 PM checkout divergence                                                                                 | **Operator-owned** — liveness gate forbids an agent reconciling a live peer's staged work                                                                                                                                                                   | operator             |
+| `unified-trading-library` `.venv` bootstrap                                                                   | **Operator-owned** — environment setup                                                                                                                                                                                                                      | operator             |
 
-**Recommended NEXT item (revised 2026-08-13): Phase 1c**, because Phase 2 is written but unshippable while the UAC tree
-is red from a live peer's uncommitted work (see the Progress Log entry for 2026-08-13). Phase 1c touches four OTHER
-repos, so it is unaffected by the UAC block. Retry the Phase 2 ship the moment `git status` in `unified-api-contracts`
-shows `_source_priority_data.py` and `registry/market_data_categories.py` clean — the code needs no further work, only a
-green tree.
+**Recommended NEXT item (revised 2026-08-14): finish Phase 5's wiring.** The actuator writes markers and the gate can
+read them, but nothing CALLS the gate yet — the mechanism is inert end-to-end. Wire `admission_blocked()` into the
+launcher preflight and the deployment-api Cloud Run entrypoints, then Phase 6's scenarios have something real to assert
+against. Every blocker that stalled 2026-08-13 is CLEARED: the peer landed its UAC work, and an automated slot-4 WIP
+rescue committed this plan's Phases 2-5 (`c206f910`, `e38b2a0e`).
 
 ## Progress Log
 
