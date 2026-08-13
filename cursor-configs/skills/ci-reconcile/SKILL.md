@@ -48,10 +48,22 @@ description:
   declaring done, not just once at session start — a single early Slack snapshot misses everything that fires later
   in a long session, and the read credential itself can expire mid-session without you noticing unless you retry. Under
   `/autonomous` this polls on an interval rather than doing one pass and stopping, since neither class has an
-  automated detector elsewhere. Trigger on `/ci-reconcile`, "unblock the CI alerts", "fix these
+  automated detector elsewhere. Also (2026-08-13): (o) a test that passes 100% locally but fails 100% deterministically
+  in GitHub Actions CI (a CI-skip guard the test forgot to bypass, an ambient-environment leak like a real `~/` token
+  file, a platform-specific command flag) — `SIMULATE_CI=1` (base-service.sh) now forces `GITHUB_ACTIONS=true CI=true`
+  for the bats subprocess so this class is caught locally at commit time; (p) a debounce/escalate mechanism scoped to a
+  single ephemeral unit (one PR number) that a DIFFERENT automated process (a drain/supersede bot) recycles on almost
+  the same cadence as the debounce window itself, making the escalation structurally unreachable — track the underlying
+  CONDITION across recycles (real run-history streak, no sleep) instead of one unit's lifetime. **When a fix reveals a
+  whole bug CLASS, not just one instance, the auto-fix mandate extends to building the structural prevention for that
+  class in the SAME pass** — a local dev-parity flag, a hardened detector, an extended liveness check — not just
+  patching the one instance and moving on; this is the highest-leverage thing this skill can do beyond firefighting
+  the reported alert. Every invocation independently sweeps BOTH the historical window since last checked AND live
+  ongoing alerts as they land — this is not optional add-on scope, it is what "reconcile" means here. Trigger on
+  `/ci-reconcile`, "unblock the CI alerts", "fix these
   Slack CI alerts at the root", "reconcile the pipeline", "why is Slack saying X but CI shows Y", "is the pipeline
   actually unblocked", "check if CI escalation caught this", "check the runner fleet / Cloud Build health", "make sure
-  nothing is left unresolved".
+  nothing is left unresolved", "harden this so it doesn't need an agent next time".
 ---
 
 # /ci-reconcile — fleet CI/CD reconciliation and root-cause fix
@@ -415,6 +427,43 @@ For every repo whose current `quality-gates-v2` conclusion is `failure`, pull th
   `"unresolved"` bucket the function already uses elsewhere for other unmeasurable conditions (never invent a new bucket
   when an existing one already means "couldn't tell this run"), and add a regression test pinning both branches (fetch
   failure → unresolved, confirmed-empty → still alarms) so the collapse can't silently return.
+- **(o) A test passes 100% locally, fails 100% deterministically the moment it runs on GitHub Actions CI — three real,
+  independent instances found the same day (2026-08-13, PM's bats suite)**. Tell: `git log -S`/`git blame` shows the
+  test file is unchanged for a while, the failure recurs identically across every subsequent unrelated LDR commit (i.e.
+  it's not content-dependent), and running the SAME test locally on a dev machine passes cleanly every time. Root causes
+  seen so far, all in this one incident: (1) the script UNDER TEST has its own
+  `[[ -n "$GITHUB_ACTIONS" || -n "$CI" ]] && exit 0` guard and the test invokes it without stripping those vars, so the
+  test only ever exercises the CI-skip early-exit inside real CI, never its own logic; (2) a test helper's
+  `stat -f %m ... || stat -c %Y ...` fallback chain assumes `-f` means "custom format" (BSD) but on GNU/Linux `-f` means
+  "filesystem info" — the `||` still technically fires but stdout is already contaminated, producing "integer expression
+  expected" rather than a clean pass/fail; (3) a test reads the AMBIENT `$HOME`/`/tmp` without pinning it to a hermetic
+  fake dir, so it passes locally by accidentally picking up a real credential file that only exists on a dev laptop and
+  never on a fresh CI runner. **Fix each instance directly**, but ALSO check whether `SIMULATE_CI=1` (added 2026-08-13
+  to `unified-trading-pm/scripts/quality-gates-base/base-service.sh` — forces `GITHUB_ACTIONS=true CI=true` for just the
+  bats subprocess) already covers this repo/suite; if the repo's own gate doesn't wire it in yet, that's the structural
+  fix per the "harden the class" mandate above, not a one-off patch. This is a genuinely different shape from (d)'s
+  "transient self-hosted-runner flake" — nothing here is transient, it is 100% reproducible given the right (or wrong)
+  environment, and a blind retry will never fix it.
+- **(p) A debounce/escalate mechanism scoped to a single ephemeral unit (one PR number, one run) gets structurally
+  starved because a DIFFERENT automated process recycles that exact unit on almost the same cadence as the debounce
+  window itself** (2026-08-13, PM's `promote_qg_failure` tier-2/tier-3 escalation). Tell: the escalation was BUILT and
+  SHIPPED correctly, the underlying condition it exists to catch recurred continuously and unambiguously for hours (or
+  longer), yet querying `GET /api/escalations/active` on AO shows ZERO matching `wall_type` entries ever fired — the
+  mechanism never once triggered despite having every opportunity to. Root cause: the job slept N minutes then
+  re-checked whether THAT SPECIFIC PR was still open+red — but a drain/supersede bot (e.g. `ldr-to-main-promote.yml`)
+  closes and replaces that exact PR on roughly the SAME N-minute cadence, so by the time the sleep ended the PR was
+  almost always already closed-as-superseded, read as "auto-resolved" even though a brand-new successor PR carrying the
+  IDENTICAL unfixed failure had already opened. Fix: stop sleeping and tracking one unit's lifetime — derive the
+  underlying condition's CONTINUOUS duration from real run/PR HISTORY instead (same "ground truth over sleep-and-hope"
+  principle as `sit_gate_stuck_detector.py`'s consecutive-tick streak, or reconcile-release-tags' stall-state), walking
+  backward through recent runs regardless of which ephemeral unit carried each one, stopping only at a genuine
+  `success`. This removes the sleep entirely (the natural recurrence of the recycling process IS the polling interval)
+  and is safe to re-fire on every subsequent invocation once past threshold — confirm the target's server-side
+  escalation-creation path already dedupes re-fires onto an open row (root_key / open-escalation matching) before
+  relying on that; if it doesn't, add a done-marker so re-fires don't mint duplicates. General shape: before trusting
+  any escalation/alert mechanism "fired zero times, so nothing must have qualified," check whether it COULD have fired
+  given the real incident timeline — a mechanism with zero true positives ever is worth suspecting on sight, the same
+  way a monitor with zero false positives ever is.
 
 ## 2. Fix (b), (c), (d) directly in the target repo
 
@@ -482,6 +531,17 @@ way as any other code fix (§ 2). If the gap is structural (a whole failure clas
 isn't running on the cadence it's supposed to), that's a finding for `plans/active/issues/<slug>_<date>.md` and an
 operator notification per the findings-triage HARD RULE — don't quietly patch around agent-orchestrator's own logic
 without understanding the design intent first.
+
+**AO's own liveness is a separate check from "is it answering health checks" — verify both every time an escalation was
+dispatched into it.** `/api/healthz` answering 200 and `orchestrator.service` showing `active running` only prove the
+SERVER process didn't crash; they prove nothing about whether its dispatch loop is actually spawning workers. Found live
+2026-08-13: the server was fully healthy by every process/HTTP signal while `tmux list-sessions` showed ZERO live worker
+sessions on the host, with several tasks sitting in `dispatched`/`queued` state that had nothing actually running behind
+them — any escalation fired during that window queued into a black hole. `check-ao-backlog- status.sh` (hardened the
+same day) now cross-checks this automatically and prints a `⚠️ WORKER-LIVENESS GAP` line whenever dispatched/queued
+tasks exist but tmux worker count is 0 — run it (or `/check-agent-orchestrator`) as part of this section's check, not
+just a bare `/api/healthz` curl, and treat a printed gap as a `[OPERATOR]` finding (AO's own dispatch-loop health is not
+this skill's repo to fix) rather than assuming a healthy-looking server means escalations are actually being worked.
 
 ## 6. Verify — full-fleet sweep AND full-monitor sweep, not just the repos/monitors that were named
 
