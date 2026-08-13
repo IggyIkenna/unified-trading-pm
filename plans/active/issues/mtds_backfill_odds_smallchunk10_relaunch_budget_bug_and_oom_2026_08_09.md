@@ -147,3 +147,17 @@ Two independent paths, not mutually exclusive:
   3rd data point (now via a different failure mode) supporting the same "don't blindly relaunch again" conclusion, plus
   a path-C suggestion (abandon `smallchunk10` specifically rather than resize/investigate it, since the main lineage
   already covers its date range) in the sibling doc's new entry.
+- **2026-08-12 (operator, interactive session)**: ruled option (2) investigate the odds_api bug rather than
+  resize/abandon. Investigation found the "BUNDESLIGA memory growth" framing was a mislabel -- the OOM recurs across
+  nearly every league (EPL, LA_LIGA, SERIE_A, LIGUE_1, EREDIVISIE, etc.), already under 15+ sessions of investigation in
+  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` since 2026-07-22, with the Python heap already ruled out via
+  tracemalloc; the real next step (a `memray --native` VM run) remains blocked on cost, unchanged by this session. While
+  investigating, found and fixed a real, previously-undocumented, separate bug: `odds_api_adapter.py`'s
+  `_fetch_all_leagues` matched a `--league` request by canonical-id-OR-raw-name, so `--league BUNDESLIGA` (Germany,
+  api_football_id=78) also silently fetched Austria (raw name "Bundesliga" too, api_football_id=218) -- doubling
+  fetch/memory/credit cost for that pairing and defeating the 2026-08-06 per-league VM isolation for it. Same collision
+  pattern affects Serie A/Brasileirao, Serie B/Brasileirao-Serie-B, Championship/Scottish-Championship, Primera-Division
+  Argentina/Chile, and the 3-way Super-League Greece/Switzerland/China. Fixed: canonical-id matching now takes priority,
+  raw-name is fallback-only for non-canonical requests -- `market-tick-data-service@719e4d0dd1` (10 new regression
+  tests, full quality-gates.sh green). Does not close this todo -- the general OOM root cause is still open, only this
+  additive amplifier is fixed.
