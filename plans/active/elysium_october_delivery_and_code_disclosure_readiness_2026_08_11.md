@@ -685,33 +685,21 @@ it.**
 
 ### H.12 Archetype reachability — the enum advertises 60, only 32 are instantiable (measured 2026-08-12)
 
-**This is the largest single deviation between what our documents imply and what strategy-service can actually run**,
-and it is the answer to "keep finding deviations between what we said we can deliver and the service as it is".
+**Largest single deviation between what our documents imply and what strategy-service can run.** Measured: 60 enum
+members, 32 factory-registered, so **28 are enum-declared but not instantiable** — 16 of 17 `VOL_*` (written and
+documented, but `factory.py` registers only `VOL_TRADING_OPTIONS`), 5 of 7 `MARKET_MAKING_*`, plus
+`ARBITRAGE_MEV_SANDWICH` and `VOL_0DTE_PIN_RISK`. The 4 `PORTFOLIO_*` are **correct by design** — they emit
+`AllocationDirective`, not per-trade signals; do not "fix" them.
 
-Enumerated all 60 `StrategyArchetype` members against three surfaces:
+**Superseded by a sharper measurement**, which found the overlap is worse than a two-surface count shows: only **13**
+archetypes have BOTH an engine and a param schema (19 engines have no schema; 22 schemas have no engine). Full set
+arithmetic, and the gate that should enforce it, live in
+[service_config_ownership_and_instruction_contract](/plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md)
+§ J7 — read that, not the counts above, when acting on this.
 
-| Surface                                       | Count  | Note                                                 |
-| --------------------------------------------- | ------ | ---------------------------------------------------- |
-| `StrategyArchetype` enum members              | **60** | What the enum advertises                             |
-| Engine files declaring `ARCHETYPE = …`        | **50** | 10 declare none                                      |
-| **Registered in `ARCHETYPE_ENGINE_REGISTRY`** | **32** | `get_v2_engine()` raises `KeyError` for the other 28 |
-
-**28 archetypes are enum-declared but not factory-registered.** Breakdown, because the causes differ:
-
-- **16 of 17 `VOL_*`** — `vol_trading/` holds ~30 modules and the engines DO declare their `ARCHETYPE`
-  (`VOL_DISPERSION`, `VOL_STRADDLE`, `VOL_CARRY`, `VOL_TERM_STRUCTURE_ARB`, `VOL_VARIANCE_SWAP`, …), but `factory.py`
-  imports `vol_trading` **once** and only `VOL_TRADING_OPTIONS` is registered and slot-emitted. The rest are written,
-  documented, and unreachable.
-- **5 of 7 `MARKET_MAKING_*`** — `INVENTORY_SKEW`, `ML_LEAN`, `PASSIVE_SPREAD`, `PREDICTION`, `QUEUE_MICROSTRUCTURE`.
-- **4 `PORTFOLIO_*`** — **correct by design, not a gap.** The Portfolio family produces `AllocationDirective` events
-  rather than per-trade signals, which `strategy-summary.md` already states. Do not "fix" these.
-- **`ARBITRAGE_MEV_SANDWICH`, `VOL_0DTE_PIN_RISK`** — neither engine nor registration.
-
-**Mitigating fact, established rather than assumed:** the factory **fails loudly** —
-`raise KeyError(f"no v2 engine registered for archetype {archetype.value}")`. So this is dead-but-safe code, NOT the
-silent-mis-routing bug that hit `SportsArbDutchingEngine` (which shared an archetype VALUE, so slots got the _wrong_
-engine). Nothing is silently trading the wrong strategy. The risk is disclosure, not correctness: a client engineer who
-enumerates the enum and tries to instantiate will hit `KeyError` on 28 of 60.
+**Mitigating fact, established rather than assumed:** the factory **fails loudly** (`raise KeyError`), so this is
+dead-but-safe code, not the silent-mis-routing class that hit `SportsArbDutchingEngine`. The risk is disclosure, not
+correctness.
 
 - [ ] [AGENT] P0. **Decide per unreachable archetype: register, or mark not-implemented in the enum's own docstrings.**
       A written-and-unreachable engine is worse than an absent one because the code implies capability the factory
@@ -722,10 +710,11 @@ enumerates the enum and tries to instantiate will hit `KeyError` on 28 of 60.
       an archetype the factory cannot build, the doc must say so via `implementation_status` (the frontmatter field
       already exists and `carry-funding-dispersion.md` uses `code-shipped`). An archetype doc reading as live when the
       factory raises `KeyError` is the doc-vs-code false consensus that already cost this session a day.
-- [ ] [AGENT] P1. **Client-document check before the repo is sent.** No client artefact should imply the full 60 are
-      runnable. The deep dive currently says "55 `on_tick` implementations", which is true of the tree and **not** the
-      same as instantiable — that number should be re-derived from the factory registry, or dropped per the no-totals
-      rule.
+- [x] [AGENT] P1. ✅ **Client-document check — VERIFIED CLEAN 2026-08-13.** Grepped all three published artifacts for
+      archetype/engine totals (`60|55|50|32` against archetypes/strategies/implementations/engines) and for the specific
+      "55 `on_tick` implementations" phrasing: **zero hits in any of them.** The no-totals rule is already being
+      honoured, so no artefact implies the full 60 are runnable. Re-run this grep before the repo is sent, since a total
+      is the easiest thing to reintroduce while editing.
 
 ### H.13 Instance cardinality — the role-slot model, measured across all 60 (2026-08-12)
 
@@ -906,8 +895,21 @@ Coverage across three surfaces now measured, and no two agree: **60** enum membe
 delivery plan, and this plan is at its 1000-line hard cap. Measurement lessons are in codex:
 [measurement-claims-discipline](/codex/12-agent-workflow/measurement-claims-discipline.md).
 
-**Recommended next: the 54-archetype sweep, instrument-axis selection, then instance-to-wallet binding** — the only work
-between here and an artifact pass writable once instead of twice.
+### State as of 2026-08-13 (supersedes the "recommended next" that stood here)
+
+All three blocking audits are CLOSED (54-archetype sweep · instrument-axis · instance-to-wallet). **All four transfer
+emit-side breaks are closed** — `unified-api-contracts@4663daf908` (enum union + rail mapping),
+`strategy-service@db6e38ae3a` (flag wiring), `strategy-service@46f8728472` (tick producer + dust-sweep/gas-reserve). One
+integration gap remains before transfers actually happen: nothing sources real `WalletBalance` rows.
+
+The service-boundary work found by those audits is owned by
+[service_config_ownership_and_instruction_contract](/plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md),
+not this plan — it carries §§ G–K (execution-service change surface, transfer routing, candle fills, the dual-path SSOT
+register, e2e fill-model reproducibility). Remaining work is split into three parallel-safe chunks there.
+
+**Artifacts were republished on new URLs 2026-08-13** — the previously-shared deep-dive link is stale and still renders
+a corrected claim. Current: deep dive `778c86ca-b08a-465b-af70-557bb84b25df` · platform architecture
+`2e6d16f4-bf84-4663-887f-c701c170fa61` · carve-out `c74f7608-33c1-4281-8fac-97acbb3272f6`.
 
 ## Progress Log
 
