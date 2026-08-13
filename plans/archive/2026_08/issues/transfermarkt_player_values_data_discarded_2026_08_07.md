@@ -21,7 +21,7 @@ summary: >
   plans/active/issues/sports_af_full_entity_completion_2026_08_03.md — that's a separate, correctly-behaving denominator
   issue; this is captured rows containing no signal). The `total_market_value_eur` team aggregate isn't persisted
   either, so even a coarse per-team value proxy is unavailable.
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [data]
@@ -46,7 +46,7 @@ execution_scope: orchestrator-agent
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-08-12
+last_updated: 2026-08-13
 locked_by:
 context_scope:
   [
@@ -55,7 +55,23 @@ context_scope:
     plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
   ]
 resolved_by:
+  instruments-service@3e87e99f+a47f4880 (per-player/team value persistence), instruments-service@3d7418bb (RapidAPI
+  squad-fetch players-field fix), instruments-service@3a3ce822fa->f0f76e12f2->44caa56b + deployment-service@9ba048f45a
+  (2020-06+ backfill scripts), instruments-service@1c2ac91a5b (--list-missing-leagues hardening),
+  deployment-service@2608f012e8+611d6a06d2+9dd95af7ef (launcher fixes/rightsizing/PROGRESS.json exception),
+  unified-trading-library@154e0803+86bd346d (classifier transfer-window gate)
 ---
+
+> **🟢 ARCHIVED 2026-08-13 — RESOLVED** (status: resolved, 0 open todos, unlocked). Root cause fixed
+> (instruments-service@3e87e99f+a47f4880: per-player `market_value_eur` + per-team `total_market_value_eur` now
+> persisted instead of discarded). Full 2020-06-01+ backfill complete and verified: PLAYER_VALUES 1,041/1,041 events,
+> TRANSFER_RECORDS 32/32 mappable Prediction-tier leagues (164,924 rows), per-player market-value field population
+> independently confirmed across all 32/32 leagues (453/456 teams, 14,979/16,896 players). Two adjacent findings
+> surfaced + resolved along the way: a launcher `--metadata` comma-parsing bug (deployment-service@2608f012e8), an
+> over-provisioned VM machine type caught by `/vm-resource-rightsizing-check` (deployment-service@611d6a06d2, now
+> defaults `e2-medium`), and a stale `legacy_reason_classifier` weekday-cadence gap (already fixed by a peer session,
+> `unified-trading-library@154e0803`, verified live here). See the Progress Log below for the full session-by-session
+> history.
 
 ## Finding
 
@@ -287,7 +303,8 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       deployment-service@9ba048f45a); launch confirmed running — VM
       `instr-backfill-sports-transfermarkt-20260812-181254` (full 1,041-event PLAYER_VALUES scope), independently
       verified via the checked P3 todo + Progress Log.
-- [ ] [DATA] P2. **New finding (2026-08-12): the legacy_reason_classifier's PLAYER_VALUES weekday-cadence branch
+- [x] ✅ [DATA] P2. **RESOLVED 2026-08-13 — already fixed by a peer session, verified live, todo just never flipped.**
+      **New finding (2026-08-12): the legacy_reason_classifier's PLAYER_VALUES weekday-cadence branch
       (`unified_trading_library/legacy_reason_classifier.py:266-276`, `TRANSFERMARKT_PLAYER_VALUES_UPDATE_WEEKDAYS` =
       Tue/Wed) never checks transfer-window state at all — it's a separate, older (shipped 2026-05-13, months before
       this doc's transfer-window fixes) rule that classifies an empty PLAYER_VALUES row as
@@ -308,15 +325,40 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       this doc's own note ("worth a look... before doing the manifest design pass") rather than picking a fix
       unilaterally. Also worth noting when that pass happens: the weekly Tue/Wed cadence's own empirical basis predates
       the transfer-window-gated fetch pattern (May vs. August 2026) and may no longer hold now that PLAYER_VALUES only
-      fetches on window/trigger dates rather than a broader weekly pattern — not verified either way here.
-- [ ] [VM] P3. **`/vm-preemption-billing-waste-audit` finding (2026-08-13)**: this launcher family
-      (`launch-sports-transfermarkt-2020-06-floor-backfill-vm.sh`) never writes a `PROGRESS.json` checkpoint to
-      `vm-logs/{vm}/` — confirmed absent across all 4 VMs launched this session. Deviates from the documented spot-VM
-      checkpoint contract (`/codex/05-infrastructure/spot-vms-for-backfill.md`). Recovery has worked so far via
-      manifest/master-table diffing (safe due to idempotent dedup keys), but a preemption mid-run has no cheap way to
-      know exactly where it stopped without a fresh manifest read. **Done when**: either a PROGRESS.json writer is added
-      to this launcher's Python entrypoint (mirroring the pattern other spot-VM backfills use), or this doc records an
-      explicit, cited exception for why manifest-diff recovery is sufficient for this family.
+      fetches on window/trigger dates rather than a broader weekly pattern — not verified either way here. **Resolution
+      (2026-08-13)**: `unified-trading-library@154e0803` (2026-08-12 20:59:59Z, i.e. shipped hours after this finding
+      was written, by a different session that never came back to flip this checkbox) already gates PLAYER_VALUES
+      through `is_transfer_data_expected()` BEFORE the weekday-cadence branch — `legacy_reason_classifier.py`'s
+      transfer-window condition is now
+      `source == "transfermarkt" and ("transfer" in data_type.lower() or data_type.upper() == "PLAYER_VALUES")`, and the
+      weekday-cadence branch's own comment confirms it "fires AFTER the window gate... so a window-gated PLAYER_VALUES
+      skip on a Tue/Wed gets EXPECTED_OUTSIDE_TRANSFER_WINDOW, not SOURCE_RETURNED_ZERO." The stale "year-round"
+      docstring claim is also gone (`unified-trading-library@86bd346d`, 2026-08-12 11:03:25+01:00). **Live-verified, not
+      just trusted from the commit message**: constructed the exact failure-mode row from this finding
+      (`venue=transfermarkt, data_type=PLAYER_VALUES`, a real Tuesday confirmed via
+      `is_transfer_data_expected("EPL", 2024-02-20)` to be outside a transfer window) and called
+      `classify_legacy_empty_row("sports", row)` directly — returns `EXPECTED_OUTSIDE_TRANSFER_WINDOW`, not
+      `SOURCE_RETURNED_ZERO`. The design-composition question this todo raised is answered: transfer-window state takes
+      priority over the weekday heuristic, exactly matching the transfer_records pattern. No further action needed — the
+      weekly-cadence-rule-empirical-basis question (whether Tue/Wed still holds post-window-gating) is now moot, since
+      it only ever fires for in-window days where an update was genuinely expected.
+- [x] ✅ [VM] P3. **RESOLVED 2026-08-13 — documented exception, not a build.** `/vm-preemption-billing-waste-audit`
+      finding (2026-08-13): this launcher family (`launch-sports-transfermarkt-2020-06-floor-backfill-vm.sh`) never
+      writes a `PROGRESS.json` checkpoint to `vm-logs/{vm}/` — confirmed absent across all 4 VMs launched this session.
+      Deviates from the documented spot-VM checkpoint contract (`/codex/05-infrastructure/spot-vms-for-backfill.md`).
+      Recovery has worked so far via manifest/master-table diffing (safe due to idempotent dedup keys), but a preemption
+      mid-run has no cheap way to know exactly where it stopped without a fresh manifest read. **Done when**: either a
+      PROGRESS.json writer is added to this launcher's Python entrypoint (mirroring the pattern other spot-VM backfills
+      use), or this doc records an explicit, cited exception for why manifest-diff recovery is sufficient for this
+      family. **Took the exception path**: this launcher and its Python entrypoint are both
+      `Lifecycle: temporary`/`oneoff`, `Delete-when: after this backfill     completes and this doc is closed out` — the
+      backfill IS now complete (PLAYER_VALUES 1,041/1,041, TRANSFER_RECORDS 32/32 mappable leagues, players field
+      verified 32/32, all above), so this doc closing out is imminent. Building new PROGRESS.json checkpoint infra into
+      code scheduled for deletion isn't worth it — manifest-diff recovery already has a clean track record: 2 genuine
+      SPOT preemptions this session (`...142238`, `...113134`), both recovered cleanly via the idempotent dedup keys (no
+      data loss, no double-counting, no manual reconciliation needed beyond a normal manifest read). Documented the
+      exception directly in the launcher's own header comment (`deployment-service@9dd95af7ef`, see Progress Log) so a
+      future audit finds the citation right where it looks, not just in this doc.
 - [x] ✅ [VM] P3. **`/vm-resource-rightsizing-check` finding (2026-08-13)**:
       `launch-sports-transfermarkt-2020-06-floor-backfill-vm.sh` line 203 provisioned `e2-standard-4` (4 vCPU/16GB) with
       no sizing rationale in the launcher's own comments. Real `deployment_operational_data.resource_samples` telemetry
@@ -796,3 +838,16 @@ possibly a rename that ripples into UAC/manifest data_type naming.
   field-population fix. This closes the last remaining caveat on this doc's original finding — every data-correctness
   question this doc opened (total_market_value_eur, per-player market_value_eur, TRANSFER_RECORDS coverage,
   PLAYER_VALUES 2020-06+ backfill) is now resolved across the full league universe.
+- **2026-08-13 (interactive session, continued): closed both remaining smaller todos.** [DATA] P2
+  (legacy_reason_classifier weekday-cadence design gap) was already fixed by a different peer session hours after the
+  finding was written (`unified-trading-library@154e0803` + `86bd346d`, both 2026-08-12) — that session never came back
+  to flip the checkbox. Verified live rather than trusting the commit message: constructed the exact failure-mode row
+  and confirmed `classify_legacy_empty_row` now returns `EXPECTED_OUTSIDE_TRANSFER_WINDOW` for a window-gated
+  PLAYER_VALUES skip on a cadence weekday, not `SOURCE_RETURNED_ZERO`. [VM] P3 (PROGRESS.json checkpoint gap) took the
+  documented-exception path rather than building new checkpoint infra: both the launcher and its Python entrypoint are
+  `Lifecycle: temporary`/`oneoff` and this backfill is now genuinely complete, so adding a checkpoint contract to code
+  about to be deleted isn't worth it — manifest-diff recovery already has a clean 2/2 track record recovering real
+  preemptions this session. Documented the exception in the launcher's own header comment
+  (`deployment-service@9dd95af7ef`) so it's visible at the point of audit, not just in this doc. **All todos in this doc
+  are now resolved** — the doc is a candidate for archival once the operator/next session confirms nothing else is
+  pending against it.
