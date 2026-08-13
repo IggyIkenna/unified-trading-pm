@@ -128,3 +128,61 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── duplicate-gate guard (todo 1, duplicate_finalize_plans_created_for_one_parent_2026_08_06) ──
+
+
+def test_only_refuses_a_second_finalize_plan_for_an_already_gated_parent(tmp_path: Path) -> None:
+    """Reconstructs the 2026-07-31 collision: two finalize plans, filenames differing only
+    by a redundant date suffix, both depends_on the SAME parent. Staging the second one
+    (the would-be duplicate) must be refused even though its filename doesn't collide with
+    the first — the guard keys on depends_on, not filename shape."""
+    active = _active_dir(tmp_path)
+    _write_plan(
+        active / "live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md",
+        extra_frontmatter=(
+            "depends_on: [live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31]\ngate_on_depends: true"
+        ),
+    )
+    second = _write_plan(
+        active / "live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize_2026_07_31.md",
+        extra_frontmatter=(
+            "depends_on: [live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31]\ngate_on_depends: true"
+        ),
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(second)])
+    assert rc == 1
+
+
+def test_only_passes_a_single_finalize_plan_gating_its_parent(tmp_path: Path) -> None:
+    """No collision: exactly one finalize plan gates this parent — must not be flagged as
+    a duplicate just because it's a finalize plan."""
+    active = _active_dir(tmp_path)
+    solo = _write_plan(
+        active / "some_parent_2026_08_11_finalize.md",
+        extra_frontmatter="depends_on: [some_parent_2026_08_11]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(solo)])
+    assert rc == 0
+
+
+def test_only_ignores_a_preexisting_duplicate_outside_scope(tmp_path: Path) -> None:
+    """RULE-11 blast-radius safety: a duplicate-gate pair exists in the corpus, but --only
+    names a DIFFERENT, unrelated clean plan — that commit must not be blocked by someone
+    else's pre-existing collision."""
+    active = _active_dir(tmp_path)
+    _write_plan(
+        active / "dup_parent_2026_08_11_finalize_a.md",
+        extra_frontmatter="depends_on: [dup_parent_2026_08_11]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "dup_parent_2026_08_11_finalize_b.md",
+        extra_frontmatter="depends_on: [dup_parent_2026_08_11]\ngate_on_depends: true",
+    )
+    unrelated = _write_plan(active / "unrelated_plan_2026_08_11.md", assigned_vm="NA")
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(unrelated)])
+    assert rc == 0
