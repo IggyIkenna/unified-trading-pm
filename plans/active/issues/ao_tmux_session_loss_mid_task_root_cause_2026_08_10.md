@@ -105,25 +105,15 @@ memory and that's what kills sessions" as-is.
   Caveat: this used the periodic `resource_history` sampler's nearest sample (up to 120s away), which could miss a
   genuinely brief (sub-sample-interval) spike — not a fully conclusive ruling-out.
 
-## What's confirmed but not yet root-caused
+## Other confirmed contributors (distinct from the root cause below)
 
-- The proximate event immediately preceding almost every redispatch is `tmux_session_lost` (94%), and the large majority
-  of ALL `tmux_session_lost` events (81%) have no planned-teardown explanation in the preceding minute — these are
-  genuinely abrupt.
-- 42% of all tmux losses hit a slot mid-task (not idle) — directly interrupting live work, which is exactly the
-  mechanism inflating `dispatches` without a matching `done` (the `dispatches/done` and per-role/slot/day breakdown
-  shipped this session: `agent-orchestrator@016abaff2f`, `@8a7a8c0fe0`).
-- **Context saturation is a real but MINOR contributor, not the ~43% it first looked like — narrowed same session (see
-  Progress Log).** The proactive path (`server/context_lifecycle.py`) works as designed: force `/pre-compact` (locates a
-  resume point) then force `/compact`, injected into the SAME live pane — a successful cycle never touches
-  `task_dispatched` at all (the task stays `dispatched` on the same session throughout), so it correctly does NOT show
-  up as a redispatch. The only genuine failure mode is `tmux_pruner.py`'s reactive path: a session that dies WHILE
-  already at/above `resume_fresh_context_pct` (the resume-eligibility ceiling) can't be resumed — resuming a session
-  already past the ceiling would just re-hit it — so it's requeued fresh instead, logged distinctly as
-  `context_saturated_session_lost_task_requeued`. Re-querying with the EXACT event (not any compact-flavored event
-  nearby, which mostly just means "a routine successful compact also happened somewhere in a long gap on a busy slot"):
-  only 7 of 142 redispatches (5%) show it. The other 69/142 (49%) that show SOME compact-related event are very likely
-  coincidental co-occurrence, not causal.
+- 94% of redispatches trace to `tmux_session_lost`; 42% hit a slot mid-task, inflating `dispatches` without a matching
+  `done` (KPI: `agent-orchestrator@016abaff2f`, `@8a7a8c0fe0`).
+- **Context saturation is a real but MINOR contributor, not the ~43% it first looked like.** The proactive path
+  (`server/context_lifecycle.py`) works as designed and correctly never shows up as a redispatch. Only genuine failure
+  mode: `tmux_pruner.py`'s reactive path can't resume a session that died already past the resume-eligibility ceiling,
+  so it requeues fresh (`context_saturated_session_lost_task_requeued`). Exact-event re-query: only 7/142 redispatches
+  (5%) — the other 69/142 showing SOME compact-related event is coincidental co-occurrence, not causal.
 
 ## ROOT CAUSE CONFIRMED + Two-layer fix (2026-08-13)
 
@@ -150,8 +140,11 @@ has-session/kill-session×2/kill-server sequence, sequential PIDs, ~5-15min cade
 restart), that task's OWN cleanup inherits the fleet's socket and kills it from inside. **Layer 2 (internal)**:
 `agent-orchestrator@56dcd21b4a` unsets `TMUX_TMPDIR` per worker shell — insufficient alone (tmux's auto-injected `$TMUX`
 var independently routes back to the fleet socket, priority over TMUX_TMPDIR) — completed by `886a4e6889` (also unset
-`TMUX`+`TMUX_PANE`). Verified against a REAL worker's `/proc/<pid>/environ`: zero `TMUX*`. Now watching an extended
-window for zero new `tmux_server_died` events to close this out.
+`TMUX`+`TMUX_PANE`). Verified against a REAL worker's `/proc/<pid>/environ`: zero `TMUX*`. **Transition-gap death caught
+13:00:19** (dashboard: slot 14 "died mid-task"): traced to slot **18**'s worker, alive since BEFORE the layer-2 restart
+— env is baked in at spawn, not hot-patched, so it kept the old TMUX vars. Fix code was correct; propagation wasn't
+complete. Force-recycled every live session (`kill-session`, never `kill-server`) so all pick up the fix now — verified
+a fresh one's `/proc/environ` clean. Watching for a clean window now.
 
 ## Todo
 
@@ -994,6 +987,7 @@ window for zero new `tmux_server_died` events to close this out.
 - 2026-08-13 11:18-12:05Z: root cause caught, cross-verified via strace `SO_PEERCRED` + `auditctl`. Layer-1 fix
   (`873821238b`, corrected `5dccbf97b1`) genuinely re-tested (real scenario, not readback) — survived.
 - 2026-08-13 12:30-12:58Z: operator caught it — deaths continued post-layer-1 (worker tasks inherit the fleet socket;
-  own tmux-touching tests kill it from inside). Layer-2 fix (`56dcd21b4a`, completed `886a4e6889` after catching `$TMUX`
-  also needed unsetting) verified against a REAL worker's `/proc/environ`. See "Two-layer fix" section above. Watching
-  for a clean window now.
+  own tmux-touching tests kill it from inside). Layer-2 fix (`56dcd21b4a`+`886a4e6889`, `$TMUX` also needed unsetting)
+  verified against a REAL worker's `/proc/environ`.
+- 2026-08-13 13:00-13:10Z: transition-gap death from a PRE-fix worker (slot 18) that never got layer-2 (env baked in at
+  spawn, not hot-patched). Force-recycled every live session so all pick up the fix now. See section above.
