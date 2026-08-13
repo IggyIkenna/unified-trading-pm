@@ -78,7 +78,7 @@
     "instruments-service": "0.101.19",
     "market-tick-data-service": "0.128.3",
     "system-integration-tests": "0.15.1",
-    "unified-api-contracts": "0.114.9",
+    "unified-api-contracts": "0.114.10",
     "unified-trading-library": "0.79.7",
     "unified-trading-pm": "1.2.741",
     "market-data-processing-service": "0.29.5",
@@ -402,7 +402,7 @@
         "large_file_count": 6,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "b9cbb1b14fce00bc3ad275380186393b1d0d8d00"
+      "ldr_ci_status_sha": "3bea74f07ba47b61ed46bc997810c4b6504cafa5"
     },
     "execution-service": {
       "promotion_model": "ldr_main",
@@ -905,7 +905,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "356bed5a6593fdaeb208b2452877b58f662057d2"
+      "ldr_ci_status_sha": "5d2583f67c1846a05406e7e612cc2ce67a7904e8"
     },
     "ml-service": {
       "promotion_model": "ldr_main",
@@ -1039,7 +1039,7 @@
         "warn_file_count": 10
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "4762c211ab1b7a3236bbd63e5bfa2ae8e6a14039"
+      "ldr_ci_status_sha": "ed6ff0782609b23a75d928bb01e0495e399944e8"
     },
     "system-integration-tests": {
       "promotion_model": "ldr_main",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "d63e00673b07fba8f6f65dd6ac95761a6f9c7b3a"
+      "ldr_ci_status_sha": "8b6acea8f9797f0ef3899cfeabc5c64d42d19110"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
@@ -1557,7 +1557,7 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server",
-      "ldr_ci_status_sha": "3afe35f13a5cd3e149840786ae26f85bba10f6ac"
+      "ldr_ci_status_sha": "e025b83d01dc69402009457e5df1f36abfe7bcef"
     },
     "unified-trading-ci": {
       "type": "infrastructure",
@@ -2249,8 +2249,8 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.114.9",
-      "published_at": "2026-08-12T19:36:33Z",
+      "version": "0.114.10",
+      "published_at": "2026-08-13T00:06:52Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {
