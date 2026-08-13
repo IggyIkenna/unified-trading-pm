@@ -607,7 +607,16 @@ process_repo() {
   MAIN_TREE=$(gh api "repos/$OWNER/$REPO/commits/main" \
     --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_MAIN")
   if [ "$LDR_TREE" = "$MAIN_TREE" ]; then
-    echo "SKIP $REPO: main tree == LDR tree (content-identical; any ahead_by is squash-accounting noise)"
+    # Self-document the squash-skew (2026-08-13, mtds_main_promotion_stall_and_qg_alert_
+    # redispatch_2026_08_11.md Finding 1): a squash promote replays the whole main..LDR range as
+    # ONE commit on main, so compare's ahead_by counts the ORIGINAL LDR SHAs the squash never
+    # replays — it grows with every LDR commit even when content is byte-identical. Printing the
+    # number makes "no successor PR opened" read as the CORRECT decision (main already carries LDR's
+    # content), not a stall. Measured 08-11→08-13: market-tick-data-service ahead_by 1384→1436 while
+    # trees stayed identical. Fail-OPEN to "?" on an API error — the SKIP verdict never depends on it.
+    _SKIP_AHEAD_BY=$(gh api "repos/$OWNER/$REPO/compare/main...live-defi-rollout" \
+      --jq '.ahead_by // 0' 2>/dev/null || echo "?")
+    echo "SKIP $REPO: main tree == LDR tree (content-identical; compare ahead_by=$_SKIP_AHEAD_BY is squash-accounting SHA noise, not unpromoted content — no successor PR is correct)"
     # Close any phantom open promote PRs (any promote/$REPO/* ref OR legacy live-branch head).
     PHANTOM_NUMS=$(gh pr list --repo "$OWNER/$REPO" --base main --state open \
       --json number,headRefName \
