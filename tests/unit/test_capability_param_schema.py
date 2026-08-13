@@ -135,8 +135,11 @@ def test_present_but_broken_strategy_venv_fails_loud(tmp_path: Path, monkeypatch
         }
 
     monkeypatch.setattr(capability_gaps_mod, "_run_service_probe", _broken_probe)
-    with pytest.raises(RuntimeError, match=r"iter_route_contexts.*strategy-service/\.venv"):
+    with pytest.raises(RuntimeError) as excinfo:
         extract_param_schema(tmp_path)
+    # Order-independent: the message carries the venv path BEFORE the ImportError text.
+    assert "strategy-service/.venv" in str(excinfo.value)
+    assert "iter_route_contexts" in str(excinfo.value)
 
 
 def test_absent_strategy_venv_stays_honest_gap(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
