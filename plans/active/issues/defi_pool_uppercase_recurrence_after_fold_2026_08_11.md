@@ -39,7 +39,7 @@ tags:
   [defi, manifest, pool-casing, dex-pool-swaps, data-correctness, ssot-contradiction, recurrence, root-cause-unresolved]
 related:
   [
-    /plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md,
+    /plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md,
     /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/canonical-cutover-register.md,
@@ -98,8 +98,8 @@ source: >-
      2026-08-11T23:00:56Z), none reverting the `parse_hive_path` lowercasing; confirmed both call sites
      (`instrument_type=p["itype"].lower()`, lines 370 + 395) intact at HEAD. A floating tarball is built from whatever
      HEAD is checked out when `create-code-tarballs.sh` last ran, so no snapshot in that window could have shipped
-     pre-N6a code. Full evidence: `/plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` Progress
-     Log, 2026-08-12 entry.
+     pre-N6a code. Full evidence: `/plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md`
+     Progress Log, 2026-08-12 entry.
    - ~~Whether the rebuild is a full index REPLACE or an UPSERT-onto-existing-index~~ — **RESOLVED 2026-08-12 (slot 32,
      data_engineering): UPSERT-onto-existing-index, NOT full-replace.** The rebuild's only index write is a per-VM shard
      (`_build_manifest_writer()` → `ManifestWriter(per_vm_shards=True)` → `_index/per_vm/{instance}.parquet`); the

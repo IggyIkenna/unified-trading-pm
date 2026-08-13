@@ -26,7 +26,7 @@ scope: [engineer, admin]
 tags: [defi, dex-pool-fees, retirement, data-correctness, phantom-premise, rebuild, manifest, honest-coverage]
 related:
   [
-    /plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md,
+    /plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md,
     /plans/archive/issues/defi_dex_pool_fees_retirement_recommendation_2026_08_04.md,
     /plans/active/issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
@@ -56,7 +56,7 @@ resolved_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md,
+    /plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md,
     /plans/archive/issues/defi_dex_pool_fees_retirement_recommendation_2026_08_04.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,

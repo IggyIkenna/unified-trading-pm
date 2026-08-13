@@ -8,7 +8,7 @@ summary: >-
   a batch-style extraction from `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`'s Todos section —
   reconciles evidence back into that doc's corresponding checkbox (and `defi_track01_...`'s R3 tracking, which this work
   also gates on), checks whether either source doc is now fully done, and archives this plan + its parent once complete.
-status: active
+status: archived
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -17,7 +17,7 @@ scope: [engineer, admin]
 tags: [defi, finalize, archival, retirement]
 related:
   [
-    /plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md,
+    /plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md,
     /plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md,
     /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
   ]
@@ -38,7 +38,7 @@ gate_on_depends: true
 sequential: true
 context_scope:
   [
-    /plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md,
+    /plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md,
     /plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -55,6 +55,10 @@ source: >-
 ---
 
 # Finalize the POOL/rate_indices/dex_pool_fees retirement plan
+
+> **ARCHIVED 2026-08-13** — all 2 todos done: re-verified the retirement plan's evidence live, reconciled it into both
+> source docs, and ran the 6-step archival ritual on the retirement plan + self-archived this finalize plan. Archived by
+> slot 14 (data_engineering).
 
 ## Todos
 
@@ -73,8 +77,9 @@ source: >-
       remaining open todos — `defi_distinct_values...` has 2 open (`spot_pair` cross-check, `<blank>` panel fix);
       `defi_track01...` has 4 open (R3 residual C2-C12 walk, R4 coverage, the TVL-fallback item, R3-run itself) —
       confirmed via `grep -c '^\s*- \[ \]'`, not assumed. Neither flagged as an archival candidate.
-- [ ] [DOC] P2. **Run the standard 6-step archival ritual on the retirement plan itself** (all todos done, unlocked) —
-      move to `plans/archive/2026_08/`, fix corpus-wide referrer paths (this finalize plan's own `related:`/`depends_on`
-      pointer and any other doc that cites the active path), per
-      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. Then self-archive this finalize plan the
-      same way once its own todos are done.
+- [x] ✅ [DOC] P2. **DONE 2026-08-13.** Ran the standard 6-step archival ritual on the retirement plan (all 9 todos
+      done, unlocked): `git mv` → `plans/archive/2026_08/`, archived-banner added, `status: archived`, corpus-wide
+      referrer paths repointed (6 docs citing the active path → archive path; verified zero remaining active-path refs),
+      no codex/CLAUDE contract changes needed (all data findings already tracked on their own issue docs). Then
+      self-archived this finalize plan the same way (both plans now `status: archived` under `plans/archive/2026_08/`).
+      INDEX regenerated.

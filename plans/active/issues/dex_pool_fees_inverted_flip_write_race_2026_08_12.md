@@ -27,7 +27,7 @@ scope: [engineer, admin]
 tags: [defi, dex-pool-fees, retirement, data-correctness, write-race, coordination, honest-coverage]
 related:
   [
-    /plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md,
+    /plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md,
     /plans/active/issues/dex_pool_fees_phantom_premise_false_real_mid_may_objects_2026_08_12.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md,
@@ -55,7 +55,7 @@ resolved_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md,
+    /plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md,
     /plans/active/issues/dex_pool_fees_phantom_premise_false_real_mid_may_objects_2026_08_12.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]

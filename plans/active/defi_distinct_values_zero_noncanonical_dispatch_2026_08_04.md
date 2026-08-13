@@ -624,8 +624,8 @@ tracking doc with real checkboxes — not duplicated here.)_
     (`market-tick-data-service@483eb895`), and relaunched (`-101545`) — see
     `/plans/active/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md`. The remaining
     retire/rollup/recheck steps now live in
-    `/plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` (this doc's Todos section, above)
-    rather than as prose here — do not trust either copy without a live status check.
+    `/plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` (this doc's Todos section,
+    above) rather than as prose here — do not trust either copy without a live status check.
 - **2026-08-10 (prose-findings formalization sweep)**: converted 3 prose findings into 3 formal todos (0 already
   resolved, so nothing cited-as-resolved-inline); added a `## Todos` section for the POOL/rate_indices/dex_pool_fees
   retirement sequencing (gated on `defi_track01`'s R3 rebuild VM, not duplicating that doc's own tracking), the

@@ -241,9 +241,9 @@ The main VM was then cycled onto the fully-fixed code (`canonical-migration-defi
 `e2-highmem-4`, resumed from `2025-11-28` since no `--chunk-days 90` boundary had completed yet) and **reached genuine
 terminal SUCCESS**: `exit_code=0`, all 5 chunks complete through `--end-date 2026-12-31`, 5,832,208 total shards, 255
 distinct dates, elapsed 12780.2s (~3h33m) — self-deleted cleanly via `VM_SHUTDOWN_ON_COMPLETION`. This satisfies the
-downstream gate in `/plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md`, which has been flipped
-`draft` → `active` (`unified-trading-pm@9f00ae4e02`) and is now AO-ingested (confirmed live via the backlog: 8 tasks
-queued across it + its `_finalize` companion).
+downstream gate in `/plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md`, which has
+been flipped `draft` → `active` (`unified-trading-pm@9f00ae4e02`) and is now AO-ingested (confirmed live via the
+backlog: 8 tasks queued across it + its `_finalize` companion).
 
 The GCS-shared-bucket-contention pattern surfaced by that same I/O test (a newcomer VM measured ~7-9x throttled vs. an
 already-running incumbent's ~8%-noise impact) is now a codified HARD RULE, not just this doc's finding:

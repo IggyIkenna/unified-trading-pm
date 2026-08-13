@@ -11,7 +11,7 @@ summary: >-
   `canonical-migration-defi-rebuild-20260810-093118` or its latest successor) reaches genuine terminal SUCCESS — flip to
   `active` only then; a draft plan is not ingested, so this avoids an AO worker claiming a todo whose precondition isn't
   met yet.
-status: active
+status: archived
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -59,6 +59,10 @@ source: >-
 
 # Retire legacy POOL / rate_indices / dex_pool_fees rows, refresh honest coverage, re-verify the panel
 
+> **ARCHIVED 2026-08-13** — all 9 todos done: POOL (uppercase) legacy rows retired (0 captured), `rate_indices` retired
+> (0 captured), `dex_pool_fees` retired (0 captured), fresh honest-coverage rollup written, Distinct Values panel
+> re-verified. Completion evidence in each todo below. Archived by the finalize worker (slot 14, data_engineering).
+
 ## Why `status: draft`
 
 Every todo below reads live state before acting and is genuinely mechanical — but the retirement steps (todos 2-4) are
@@ -85,11 +89,11 @@ picking this plan up cold should never trust the flip-time state without a fresh
       clause not triggered.
 
       Note for todo 2's worker: the direct pandas `read_availability_index(columns=..., filters=[("capture_status",
-                                                                      "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
-                                                                      fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
-                                                                      DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
-                                                                      `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
-                                                                      streaming footprint regardless of corpus size.
+                                                                          "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
+                                                                          fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
+                                                                          DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
+                                                                          `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
+                                                                          streaming footprint regardless of corpus size.
 
 - [x] ✅ [DATA] P1. **Root-cause the 0→7,930,863 `instrument_type=POOL` recurrence before any retirement resumes**
       (blocks the retirement todo below — main-agent-added 2026-08-11 per
