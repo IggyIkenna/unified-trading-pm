@@ -970,11 +970,10 @@ Execution isolation  a matching engine fills against real historical book state,
         approximately repeatable.
       </p>
       <p>
-        Execution alpha is reported with its uncertainty rather than as a point estimate: mean, standard error and a 95%
-        confidence interval, with a reliability flag that turns off once the sample is too thin to support a claim. It is
-        also decomposed across the life of an order — early, middle and late thirds, plus the cumulative curve — because
-        an algo that captures its benchmark on average while losing consistently in the final third is a different
-        problem from one that is simply noisy, and the average alone does not distinguish them.
+        What that yields per order is the execution residual itself: the difference between the live fill and the
+        benchmark fill, separated into slippage against the benchmark price and the fee surprise (actual against
+        modelled). Those are the two components that tell you whether an algo is paying away its edge, and they are
+        attributed per venue and per leg alongside the strategy-layer decomposition.
       </p>
       <div class="callout">
         <span class="tag">Worth agreeing in advance</span>

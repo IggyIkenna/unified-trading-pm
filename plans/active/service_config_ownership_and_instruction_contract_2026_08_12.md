@@ -266,11 +266,33 @@ strategy-side emit AND at execution-side consume
 ([client-funds-isolation](/codex/04-architecture/client-funds-isolation.md)). That is defence in depth on the one rule
 with no acceptable failure mode, not redundancy to remove.
 
-- [ ] [AGENT] P2. **Verify the emit-side netting coordinator is actually wired** — the same declared-ahead-of-consumer
-      pattern found three times this session (`WalletMappingConfig`, `ClientsYaml`, `ExecutionPolicyArtifact`) means its
-      presence in the module tree is not evidence it runs. Check that a live rebalance path calls `add_request()` /
-      `emit_netted_intents()` rather than publishing per-strategy intents directly; if it does not, **the netting is not
-      happening in production** and every strategy's transfers reach execution un-netted.
+- [x] [AGENT] P2. ✅ **VERIFIED 2026-08-12 — and the answer is worse than the hypothesis. NOT WIRED, and nothing emits
+      `TransferIntent` at all.** The todo asked whether transfers reach execution un-netted. They do not reach execution
+      **at any level**: a workspace-wide search for production `TransferIntent(` construction returns **zero hits**
+      outside the UAC class definition. `execution_service/transfer_coordinator.py`
+      `TransferCoordinator.execute(intent)` is a real consume-time entry point **with no live producer feeding it**.
+      **Three independent breaks, each fatal on its own:** (a) `enable_transfer_rebalancing` (`config.py:455`, default
+      `False`) is never set True outside tests — `colocated_engine.py:94-98` builds the worker target without ever
+      passing or reading it, so it always falls through to the `False` default at `client_worker.py:283`. (b) **Zero
+      non-test `TransferRequest(` construction sites.** The coordinator's own docstring example calls
+      `strat.compute_rebalance_transfers()` — **that method does not exist anywhere in the codebase**; the only hit is
+      the docstring itself. (c) **Nothing sends `REBALANCE_PERIOD_TICK`.** The only producer-side `pipe.send` in
+      strategy-service is `CREDENTIAL_ROTATED` (`client_admission_controller.py:215`), so
+      `_handle_rebalance_period_tick` (`client_worker.py:214`) never fires in production even if (a) and (b) were fixed.
+      The wrapper chain itself is genuine production code — `RebalanceEmitPipeline`
+      (`rebalance_emit_pipeline.py:73,76,99`) is instantiated in `client_worker.py:117` and carried on
+      `ClientContext.rebalance_pipeline` — which is exactly why reading the module tree suggested it worked.
+- [ ] [OPERATOR] P0. **Transfers do not execute in production — decide the path to live before funds move.** This is a
+      capability gap, not a bug in one function: the emit side has three disconnected breaks and the consume side has no
+      producer. Everything downstream of it — sweeps, intra-client rebalancing, the `sweep_threshold_usd` /
+      `min_eth_reserve` config fields (`config.py:461-470`, also unconsumed) — is inert. **Material for live trading**:
+      any strategy assuming its collateral can be moved between venues is assuming a path that does not run today.
+- [ ] [AGENT] P1. **Correct a false "done" claim in the archive.**
+      `/plans/archive/defi_transfers_and_gas_fees_2026_03_27.plan.md:237` records as DONE (2026-03-27) that a
+      `PortfolioRebalancer` at `strategy_service/engine/rebalancing/` was extended to emit TRANSFER instructions —
+      **neither that directory nor that class exists in the current tree.** An archived plan asserting a shipped
+      capability that was never shipped is the most expensive kind of stale doc, because archival implies it was
+      verified. Add a correction banner rather than editing the history silently.
 
 ## § I. Candle-based fills — the tier already exists; the sub-candle idea has a real niche
 
@@ -355,14 +377,86 @@ order actually fills against.
 | J3  | Benchmark fill          | benchmark-fills contract                                | implemented twice: `benchmark_fills.py` (Group B) + execution matchers (Group C)                 | One definition, two implementations, free to drift — § G3                                                      |
 | J4  | Execution algo names    | UAC `EXECUTION_ALGOS`                                   | `engine/instruction_convert.py` `"MARKET"`                                                       | A name the selector's validation has never heard of                                                            |
 | J5  | Strategy config loading | `engine/core/config_loader.py::ConfigLoader` (GCS/JSON) | `config.py::load_strategy_config` (local YAML) **plus a third** in `strategy_config_loader.py`   | **Two functions share the name `load_strategy_config`** with different substrates                              |
-| J6  | Transfer types          | `transfer_types.TransferType` (routing SSOT, 5)         | `architecture_v2.enums` (7), `BusTransferType` (5), `domain.defi.transfers` (6)                  | Four enums for one concept                                                                                     |
-| J7  | Archetype universe      | `StrategyArchetype` (60)                                | factory-registered (32), `PARAM_SCHEMA_REGISTRY` (35)                                            | Three surfaces disagree; nothing detects it                                                                    |
+| J6  | Transfer types          | `BusTransferType` (5) — the most load-bearing           | exec-svc `transfer_types` (5), `architecture_v2.enums` (7), `domain.defi.transfers` (6)          | **20 distinct values, 18 of them in exactly ONE enum** — the union IS the capability surface                   |
 
-- [ ] [AGENT] P0. **Delete the shadow `BookType` (J1) and import UAC's.** Worst row: not merely duplicated but a **stale
-      subset that silently blocks a shipped feature** — its `validate()` raises on anything outside `{L1_MBP, L2_MBP}`,
-      so a config selecting `CANDLE_BOOK_COLS` is rejected before reaching the matcher that implements it. Also breaches
-      the standing use-UAC-SSOT-types rule. Move its useful comment (`L1_MBP  # OHLCV-only mode`) onto the UAC enum — it
-      is the clearest statement anywhere of which tier is the bar-fill one.
+### J6 measured in full (2026-08-12) — and why this one is a BUILD, not a delete
+
+Four enums, **20 distinct values, and only two shared by more than one enum** (`BRIDGE` across three, `CEX_WITHDRAWAL`
+across two). Every one of the four carries unique members: A 3, B 6, C 4, D 5. **So no existing enum can be adopted
+as-is without losing capability** — this is the union-and-complete case from the rule above, not a delete.
+
+**Which is the real SSOT**: `BusTransferType` (`canonical.crosscutting.transfer_events`) — the only one re-exported at
+UAC top level, and the one routing BOTH services' `TransferCoordinator`. The plan previously named the exec-service
+`transfer_types.TransferType` as the routing SSOT; measurement says otherwise (that one is deep-path only, never
+re-exported, and one of its two importers carries a `# noqa: qg-deep-import`).
+
+**Aliases to merge** (same concept, different spelling — each pair currently fails equality): `CEX_WITHDRAW` /
+`CEX_WITHDRAWAL` · `ON_CHAIN` / `ON_CHAIN_TRANSFER` / `SAME_CHAIN` · `CEX_INTERNAL` / `INTERNAL_SUBACCOUNT` /
+`SUBACCOUNT_MOVE` · `BRIDGE` / `CROSS_CHAIN`. The `transfer_events.py` docstring **already flags the
+`CEX_WITHDRAW`/`CEX_WITHDRAWAL` pair as a known gap** and the fix was never made.
+
+**Unfinished capability the union preserves** — the members that exist in exactly one enum are stated intents, not dead
+code: `WRAP_UNWRAP`, `UNITY_WALLET_OP`, `IBKR_FUND_MOVE`, `CUSTODY_TRANSFER`, `SWEEP`, `REBALANCE`,
+`DEFI_DEPOSIT`/`DEFI_WITHDRAW`. **`architecture_v2.enums.TransferType` has ZERO importers workspace-wide** — an earlier
+read of this called it safe to delete; under the operator's rule it is the opposite, because its six unique members are
+the clearest surviving statement of what transfers were meant to support.
+
+- [ ] [AGENT] P0. **Union the four onto `BusTransferType`, then complete the build.** Preserve all 20 values, map the
+      four alias groups, and **split `CEX_WITHDRAWAL_DEPOSIT`** — it conflates direction into one member, so direction
+      is unrecoverable from the value; every other enum keeps withdraw and deposit separate. Sequence this WITH the
+      transfer capability work in § H, not separately: the union defines what "transfers work" has to mean, and § H
+      found that **nothing emits `TransferIntent` at all today**, so there is no migration risk from live data. | J7 |
+      Archetype universe | `StrategyArchetype` (60) | factory-registered (32), `PARAM_SCHEMA_REGISTRY` (35) |
+      **Measured: only 13 overlap.** 19 engines have no schema, 22 schemas have no engine, 6 have neither |
+
+### J7 measured in full (2026-08-12, registries loaded in Python — not grepped)
+
+The "60 / 32 / 35" framing understated this badly. The real overlap is **13**:
+
+- **19 engines with NO param schema** — `CARRY_BASIS_DATED`, `CARRY_BASIS_DATED_INV`, `CARRY_BASIS_PERP_INV`,
+  `CARRY_FUNDING_DISPERSION`, `CARRY_RECURSIVE_BORROW_LENDING_ONLY`, `EVENT_DRIVEN`, `LIQUIDATION_CAPTURE`,
+  `ML_DIRECTIONAL_*` (2), `RULES_DIRECTIONAL_*` (2), `STAT_ARB_*` (2), `TSMOM_BTC_CTA`, `ARBITRAGE_*` (5). These can
+  **execute** but their params bypass the validated path entirely, so a bad or missing param reaches a running strategy
+  silently.
+- **22 schemas with NO engine** — the entire `MARKET_MAKING_*` (5) and `VOL_*` (17) cluster. A config for these
+  validates successfully and then fails at dispatch, because `get_archetype_engine_class()` raises for every one. The
+  clustering says this is one unimplemented product family, not scattered rot — and it matches the vol family's dead
+  catalogue keys found separately.
+- **6 with neither** — `ARBITRAGE_MEV_SANDWICH`, `VOL_0DTE_PIN_RISK`, and the four `PORTFOLIO_*` members.
+
+**Consequence for work shipped earlier today**: the four governing sections were merged into all 35
+`PARAM_SCHEMA_REGISTRY` keys — so **22 of them landed on archetypes with no engine, while 19 executable archetypes got
+none.** Not harmful (the rows are `wired=False`), but the merge target should be the ENGINE set, not the schema set,
+once the two are reconciled.
+
+- [ ] [AGENT] P0. **Add the gate first, then reconcile.** `factory-registered ⊆ param-schema-covered` is the invariant
+      that matters (an engine with no schema is the dangerous direction); the reverse — a schema with no engine — should
+      warn rather than fail while the vol/market-making family is unbuilt.
+
+### The rule for resolving a dual path — operator ruling 2026-08-12
+
+> _"rather than deleting code that's not fully built, better to unify it to SSOT paths where duplication exists and
+> handle the union and complete the build. There's likely a reason the code build was started."_
+
+**The test is whether the duplicate carries UNIQUE MEMBERS or is a STRICT SUBSET.**
+
+| Shape                                                        | Action                                                                                   |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Strict subset of the SSOT, no unique members (J1 `BookType`) | **Delete and import the SSOT** — nothing is lost, and the subset was actively wrong      |
+| Carries members the SSOT lacks (J6 transfer enums)           | **Union into the SSOT, then complete the build** — each unique member is a stated intent |
+
+The second case is the common one and the easy mistake: an unused enum member is not dead weight, it is **a capability
+someone scoped and did not finish**. Deleting it silently discards the design decision along with the code.
+
+- [x] [AGENT] P0. ✅ **J1 resolved — shadow `BookType` deleted, UAC enum imported.** `execution-service@a75d953ece`,
+      gate green `--no-fix` (exit measured via redirect). This one qualified for deletion under the rule above: its two
+      members were a strict subset of UAC's six, so **no capability was lost**. Replaced with `validate_book_type()`
+      validating against the enum itself, so it cannot drift out of date again; added a regression test asserting every
+      UAC member validates, plus one naming `CANDLE_BOOK_COLS` specifically. **Severity corrected during the fix**: the
+      caller catches the `ValueError` and only logs (`domain_runners.py:77-80`), so this was a **false diagnostic, not a
+      hard block** — a valid `CANDLE_BOOK_COLS` or `AMM` config ran fine while being reported invalid. An earlier note
+      in this plan overstated it as blocking. The test suite had also locked the defect in place by asserting
+      `validate("AMM")` raises.
 - [ ] [AGENT] P1. **Add a "no shadow SSOT type" gate.** J1 and J6 are one defect class: a local class/enum redefining a
       name UAC owns. A mechanical check — any class whose name matches a UAC-exported symbol and is not an import —
       catches both at commit time, and is cheaper than the audit that eventually finds J8.
