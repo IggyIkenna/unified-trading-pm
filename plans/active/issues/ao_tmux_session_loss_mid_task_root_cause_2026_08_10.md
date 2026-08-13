@@ -1,8 +1,8 @@
 ---
 doc_type: issue
 title:
-  Fleet tmux session loss — ROOT CAUSE CONFIRMED, two-layer fix shipped, REOPENED (2 more whole-fleet bursts
-  post-"CLOSED", 2026-08-13)
+  Fleet tmux session loss — kill-server root cause fixed (2 layers); REOPENED after 2 more deaths, Layer-3 gaps found
+  and fixed, re-observing (2026-08-13)
 summary: >-
   Follow-up from shipping the Fleet Efficiency KPIs `dispatches/done` tile + a slot/role/day breakdown
   (agent-orchestrator@016abaff2f, @8a7a8c0fe0, @<pending>): operator asked why redispatch (retry) is so common and
@@ -148,6 +148,67 @@ var independently routes back to the fleet socket, priority over TMUX_TMPDIR) �
 complete. Force-recycled every live session (`kill-session`, never `kill-server`) so all pick up the fix now — verified
 a fresh one's `/proc/environ` clean. Watching for a clean window now.
 
+## 2026-08-13 (later) — closing verification CONTRADICTED; Layer-3 instrumentation gaps found
+
+The prior "CLOSING VERIFICATION"/"Status: CLOSED" entry below was premature — preserved as-is (not edited/deleted) per
+this doc's own stated methodology of keeping self-corrections visible rather than smoothing them over. Two more
+`tmux_server_died` events fired at 14:08:07Z and 14:30:28Z, discovered on the very next scheduled check.
+
+**Death #1 (14:08:07)**: `tmpfs-disk-cleanup.sh` (a host-wide `/tmp` age-based reclaim sweep, unrelated repo/epic —
+`infrastructure_master`) ran 14:08:01-14:08:04 and reclaimed 43 entries; the death fired 3s after it finished. Its
+protected-basename denylist knew the ambient `tmux-*` path but not `ao-fleet-tmux` (the NEW dir name the 2026-08-13
+Layer-1 fix introduced) — a real, independently-justified gap, fixed regardless of causation (see below). **But**
+causation for THIS specific death is NOT confirmed: live-testing proved the script's live-open-handle check (`lsof +D`,
+the actual load-bearing safety net per its own header) correctly detects a genuinely live listening socket, and the
+run's own `skipped_open=1` count is consistent with it having correctly protected `ao-fleet-tmux` that time. The timing
+correlation may be coincidental. Treat the denylist fix as defense-in-depth, not a proven root cause for this death.
+
+**Death #2 (14:30:28)**: NOT explained by `tmpfs-disk-cleanup` — zero runs of that service in the 14:25-14:35 window
+(confirmed via `journalctl`). Cause still genuinely unknown.
+
+**Instrumentation was itself broken, found while investigating**: the `strace_tmux_server_supervisor.sh` from 2026-08-12
+stayed attached to PID 4184652 since 13:01 and never advanced, missing both deaths' actual mechanism entirely. Root
+causes, each caught by live-testing the fix itself rather than trusting it on read-back:
+
+1. `ps -eo pid,comm | grep "tmux: server"` (the PID-attribution method used throughout this investigation, including in
+   `watch_tmux_server_lifecycle.sh`) is unreliable — live-verified returning ZERO matches at a moment when lsof
+   confirmed TWO processes genuinely held LISTEN sockets on the fleet path.
+2. The supervisor's `strace -p $PID` ran as a **blocking foreground call** — it only re-polled for a new PID after that
+   call returned. A tmux server whose socket FILE gets unlinked out from under it by an unrelated process (the actual
+   failure mode here — confirmed via `lsof`/`ss` showing the orphaned PID still holding an open fd on the now-unlinked
+   path) never receives a signal and never calls exit(), so the traced PID sits mute forever and the supervisor never
+   notices a new server has taken over.
+3. The existing `auditctl` watch (`tmux_exec_watch`, execve of `/usr/bin/tmux` only) is structurally blind to a plain
+   `rm`/`unlink` from an unrelated process against the socket path — it only ever watches tmux's own execve.
+4. First supervisor-rewrite attempt used `stat`'s inode vs. `lsof`'s NODE column for "who really holds this path right
+   now" — WRONG, live-verified: they are different numbering spaces for an AF_UNIX socket on this host (same socket
+   reported 3824444 via `stat`, 1271666385 via `lsof`, consistently). Worse, both `lsof +D` and `ss -xlp` only ever show
+   a socket's ORIGINAL bind-time path from kernel metadata cached in the socket struct — neither re-resolves at query
+   time, so an orphaned holder of a since-unlinked inode is indistinguishable from the real current listener under
+   either tool by inspection alone.
+
+**Fixes shipped**:
+
+- `agent-orchestrator@c817d30a35` + follow-up `cc996526e9`: supervisor rewritten to resolve the authoritative live PID
+  via an actual `connect()` — `tmux -S <socket> display-message -p '#{pid}'`, the one operation immune to
+  cached-metadata staleness since it does a real path lookup at call time — and to run `strace` in the background with
+  periodic re-poll instead of blocking foreground attach. Verified live: correctly attached to the genuinely-current
+  server (3560582) after redeploy.
+- `tmpfs-disk-cleanup.sh` (unified-trading-pm): added `ao-fleet-tmux` to the protected-basename denylist, plus per-path
+  reclaim logging (the prior count-only logging left this specific causation question forensically unrecoverable after
+  the fact — fixed going forward). **Ship status: BLOCKED** — this checkout is 296 commits behind origin with a live
+  peer session's genuine uncommitted WIP (confirmed: a second `claude` process, 7h+ accumulated CPU time, `--add-dir`
+  pointed at this exact slot) overlapping the incoming pull. Per this workspace's multi-agent-safety rule, not forced
+  past — deferred until the peer's WIP clears, edit is safe on local disk.
+- New `auditctl` rule armed on the VM:
+  `-a always,exit -S unlink,unlinkat,rmdir,rename,renameat -F dir=/tmp/ao-fleet-tmux -k ao_fleet_tmux_delete` — catches
+  the actor side (whoever deletes under the fleet socket dir) that the execve-only watch was blind to; the rewritten
+  supervisor covers the victim side.
+
+**Current state**: v2 supervisor live-attached to the genuinely-current server via connect()-based resolution; auditd
+delete-watch armed; tmpfs-cleanup fix written but not yet landed (peer collision). Re-observing before any further
+closure claim — the doc stays `status: open`.
+
 ## Todo
 
 All 32 items below predate the confirmed root cause (see "ROOT CAUSE CONFIRMED + Two-layer fix" above); each is
@@ -196,20 +257,30 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
 - [ ] [INFRA] P3. Consider documenting the `TMUX_TMPDIR`/`TMUX`/`TMUX_PANE` isolation pattern in codex
       (`/codex/05-infrastructure/`) as a standing rule for this shared multi-operator VM, so the NEXT service that
       spawns its own tmux-based fleet doesn't rediscover this the hard way.
-- [x] [INFRA] P1. Guard against the pre-spawn dirty-state gate ever committing raw unresolved git 3-way-merge
-      conflict-marker blocks as "orphan WIP" again — the exact corruption this doc's own recovery hit mid-investigation
-      (an inherited commit on this doc contained live conflict-marker blocks; recovered by hand, see the Progress Log
-      entry below). SHIPPED `agent-orchestrator@14184ca0ed`: new FM9 guard
-      (`server/worktree_clean_check/_conflict_markers.py`) refuses + quarantines a repo whose dirty tracked files
-      contain the paired open/close conflict-marker sentinel, wired into `commit_and_push_dirty_repos` next to the
-      existing FM2 wiped-index guard. Unit + end-to-end tests included; full `quality-gates.sh` green.
-- [ ] [INVESTIGATE] P0. Live-catch (strace `SO_PEERCRED` + `auditctl` execve, same method as the original root cause)
-      the sender of the two post-"CLOSED" whole-fleet bursts (14:08:21Z burst_size=6, 14:30:40Z burst_size=5 — see
-      Progress Log correction below). Prime suspect per the still-open audit todo above: a worker's OWN tmux-touching
-      test/tooling inheriting `TMUX_TMPDIR` and running a bare `kill-server` against the now-shared dedicated fleet
-      socket from the INSIDE, not an external ambient kill. Do not re-declare CLOSED without a fresh live catch or an
-      extended (multi-hour) zero-burst window, per this doc's own prior exit-empty and layer-1-alone false-closure
-      lessons.
+- [x] [INFRA] P0. Root-cause + fix supervisor's own PID-attribution mechanism (ps-grep unreliable, then
+      inode-vs-lsof-NODE comparison also wrong) — DONE 2026-08-13, live-connect() resolution shipped and verified
+      attached to the genuinely-current server.
+- [x] [INFRA] P1. Arm an auditd watch for deletes (not just execve) against the fleet socket dir — DONE 2026-08-13,
+      `ao_fleet_tmux_delete` armed on the VM.
+- [ ] [INFRA] P0. Root-cause death #2 (14:30:28) — NOT explained by `tmpfs-disk-cleanup` (zero runs in that window);
+      next occurrence should be caught live by the v2 supervisor or the new auditd delete-watch.
+- [ ] [INFRA] P1. Land the `tmpfs-disk-cleanup.sh` denylist+logging fix once the live peer session's uncommitted WIP in
+      `unified-trading-pm` clears — currently BLOCKED by a genuine checkout collision, not a defect in the fix itself.
+- [ ] [INFRA] P2. Re-verify with a genuinely long clean window under the NEW (v2) instrumentation before any
+      re-declaration of closure or archival — the prior "50min clean window" claim was contradicted by two further
+      deaths the very next check, so the bar for the next closure claim should be materially higher than that.
+- [x] [INFRA] P0. Live-caught `tmpfs-disk-cleanup.sh`'s `rm -rf /tmp/ao-fleet-tmux` — DONE 2026-08-13 17:08Z, direct
+      causal evidence via decoded `proctitle`, not just correlation. Corrected script deployed directly to the VM as
+      immediate mitigation (independent of the blocked git push).
+- [x] [INFRA] P0. Root-cause + fix the `ExecStartPre`-only-runs-once gap that let the isolation directory silently
+      degrade to the unprotected ambient socket for ~3h (split-brain) — DONE 2026-08-13, `tmux_spawn.py` now self-heals
+      the `TMUX_TMPDIR` directory before every spawn attempt, not just at service start.
+- [ ] [OPERATOR] P1. Decide how to clean up the orphaned ambient-socket session (pid 2934337 as of 2026-08-13, live
+      since 14:09:09, AO-invisible, wasteful but not actively harmful) — NOT manually killed per the standing "never
+      manually kill tmux" rule; needs an operator decision or AO-native reconciliation, not an ad-hoc kill.
+- [ ] [INFRA] P2. Consider whether AO needs its own periodic self-check that the fleet's actual live server pid matches
+      the isolated socket (not just per-slot `has-session`) — the split-brain here persisted ~3h because nothing was
+      cross-checking "is the CURRENT server on the path we think it's on."
 
 ## Progress Log
 
@@ -386,36 +457,56 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   layer-1-alone insufficient, layer-2-TMUX_TMPDIR-alone insufficient) are preserved above as the actual methodology, not
   smoothed over — each was caught by direct live re-testing before being trusted, per the operator's explicit standing
   objection to declaring victory on a readback rather than a real re-test.
-- 2026-08-13 ~16:15Z: **CORRECTION — the 13:51Z "Status: CLOSED" verdict above was premature.** Live query against
-  `activity_log` (`tmux_session_lost`, filtered to the whole-server-death signature `tmux_server_alive=false` +
-  `burst_size>1`) found TWO more whole-fleet bursts strictly AFTER the 13:51Z closing-verification window, both hitting
-  nearly the same slot set: **14:08:21Z** burst_size=6, slots `[1,7,14,15,18,21]`, `checkout_sha=18fc60b`; and
-  **14:30:40Z** burst_size=5, slots `[1,7,14,18,21]`, `checkout_sha=14184ca`. This is the identical whole-server-death
-  signature the doc's own root cause describes, not routine per-session churn (every other `tmux_session_lost` event in
-  this window, before and after these two bursts, shows `tmux_server_alive=true` — an ordinary single-pane loss). Found
-  while answering an operator dashboard question about slots showing a "died mid-task" badge while actively WORKING —
-  the badge (by design, see `dashboard/src/layout.tsx` `latestDoneOutcomeBySlot`) shows the most recent
-  COMPLETED-or-died attempt, not the in-flight one, so it correctly surfaced this stale-closure gap rather than being a
-  UI bug itself. **Current state as of this correction**: zero whole-server-death events since 14:30:40Z (~1h43m clean
-  at time of writing) — auto-heal recovered the fleet within ~1 minute both times (a respawned/healthy server was
-  already observed at 14:31:45Z). Re-titled doc from CLOSED to REOPENED rather than leaving a stale victory claim in
-  place. **Not yet investigated**: whether these two bursts predate full fleet-wide propagation of the layer-2 fix (some
-  slots/sessions may not have picked it up yet at 14:08/14:30) or represent a genuine gap in the fix itself — the
-  existing open todo above ("audit other repos for the SAME unscoped-tmux-fixture anti-pattern... not unique to
-  `test_slot_git_status_claim_heartbeat.bats`") already flags the plausible mechanism: a worker task whose OWN
-  tmux-touching test/tooling inherits `TMUX_TMPDIR` and issues a bare `kill-server` would now hit the fleet's shared
-  dedicated socket directly, defeating the isolation from the inside rather than the outside. This needs the same
-  strace/auditd live-catch treatment as the original finding before it can be re-closed — readback of these two bursts'
-  `account_snapshot`/`host_snapshot` alone does not identify the sender.
-- 2026-08-13 (post-closure hardening): the recovery work earlier in this Progress Log — an inherited pre-spawn commit on
-  this very doc that carried raw unresolved conflict-marker blocks straight into git history — was a real, reproducible
-  gap in `commit_and_push_dirty_repos` (the FM2 wiped-index/mass-deletion guard has no opinion about file CONTENT, only
-  porcelain shape). Shipped a dedicated guard rather than leaving it as a one-off recovery story:
-  `agent-orchestrator@14184ca0ed` adds FM9 (`_conflict_markers.py`) — refuses + quarantines any dirty tracked file
-  carrying the paired open/close conflict-marker sentinel, mirroring FM2's existing refuse-and-quarantine shape exactly.
-  New unit tests cover the positive signature, the markdown-horizontal-rule false-positive case (a bare `=` divider line
-  is deliberately NOT treated as a signature — mirrors the `check_conflict_markers.sh` false-positive class this same
-  doc's recovery already hit once), and an end-to-end `resolve_dirty_state` refusal. Full `quality-gates.sh` green (3582
-  pytest + 319 vitest), `ahead=0`, content verified on `origin/live-defi-rollout`. This is orthogonal to the tmux-death
-  root cause above (already CLOSED) — it hardens the recovery tooling this investigation happened to expose a real bug
-  in, not the tmux mechanism itself.
+- 2026-08-13 14:08Z-15:05Z: **the "CLOSED" claim above was contradicted** — 2 more deaths (14:08:07, 14:30:28) on the
+  very next scheduled check. Full writeup in the new section above ("closing verification CONTRADICTED"). In brief:
+  found and fixed a real gap in `tmpfs-disk-cleanup.sh`'s protected-basename list (didn't know about the Layer-1 fix's
+  new `ao-fleet-tmux` dir name) but could NOT confirm it caused death #1 specifically — the script's live-open-handle
+  safety net tested as working correctly, so the timing correlation may be coincidental; shipped as defense-in-depth
+  regardless, ship itself currently BLOCKED by a live peer session's uncommitted WIP in the shared `unified-trading-pm`
+  checkout (not forced past). Death #2 has no explanation yet. Separately found the investigation's own
+  `strace_tmux_server_supervisor.sh` had been stuck on an orphaned PID since 13:01, structurally blind to the actual
+  failure mode (a socket file getting unlinked out from under a still-running server, which delivers no signal and no
+  exit() to the traced PID) — root-caused two further mistakes in the FIRST rewrite attempt itself (unreliable
+  `ps`-comm-grep PID attribution, then a second wrong fix using `stat` inode vs. `lsof` NODE — different numbering
+  spaces, caught by testing the fix live rather than trusting it) before landing on connect()-based resolution
+  (`tmux -S <socket> display-message -p '#{pid}'`), which verified correctly attached to the genuinely-current server.
+  Armed a new auditd watch (`ao_fleet_tmux_delete`) covering the delete side the old execve-only watch never could.
+  **Status stays `open`.** Re-observing under the corrected instrumentation before any further closure claim — this is
+  the fourth time in this investigation that a "verified" fix was found incomplete on the next real-world re-test, which
+  is itself the strongest argument for keeping the bar for the NEXT closure claim materially higher than "no death in
+  the last N minutes."
+- 2026-08-13 15:05Z-16:38Z: **93 minutes clean under the corrected v2 instrumentation** — supervisor attached to pid
+  3560582 continuously since 15:05:18Z, zero switches; the new `ao_fleet_tmux_delete` auditd watch fired once
+  (16:10:24Z) and was run down to ground: `unlink()` calls under `/tmp/ao-fleet-tmux/tmux-0/` (root's own
+  `-L default`-resolved subdir — `auditctl`'s `dir=` filter does subtree matching, so a completely separate, harmless,
+  isolated tmux instance sharing only the parent `TMUX_TMPDIR` triggered it). Confirmed via `ls`: a root-owned `tmux-0/`
+  dir sitting beside our fleet's `tmux-1000/`, created exactly 16:10, untouched since — no risk to the fleet socket, and
+  a useful confirmation the watch's subtree matching works as expected rather than a new near-miss. Two independent
+  signals (supervisor attach-log, auditd delete-watch) now agree on a materially longer clean window than the
+  previously-contradicted 50-minute one. Still NOT declaring closure: the tmpfs-disk-cleanup.sh fix and this doc's own
+  correction remain unpushed (peer collision in `unified-trading-pm` unchanged) — per this doc's own stated bar, closure
+  needs both a long clean window AND the pending fixes actually landed, not just written locally.
+- 2026-08-13 17:08Z-17:15Z: **caught the tmpfs-disk-cleanup deletion live, unambiguously, and found a MORE SEVERE
+  compounding gap.** `ao_fleet_tmux_delete` fired at 17:08:06 with the decoded `proctitle` showing the literal argv
+  `rm -rf -- /tmp/ao-fleet-tmux`, `uid=0`, exactly on `tmpfs-disk-cleanup.timer`'s `:08`/`:38` cadence — this is a
+  DIRECT causal hit (not the ambiguous correlation from the 14:08:07 death), confirming the denylist fix is the real
+  fix, not just defense-in-depth. The live VM was still running the OLD (unfixed) script the whole time since the fix
+  was blocked from shipping — deployed the corrected script directly to `/usr/local/sbin/tmpfs-disk-cleanup.sh` via SSM
+  as an immediate mitigation, independent of the blocked git push. **Bigger finding while responding**:
+  `/tmp/ao-fleet-tmux` was gone and NOT recreated for 5+ minutes — traced to `orchestrator.service`'s
+  `ExecStartPre=mkdir -p $TMUX_TMPDIR` only running ONCE at service start, never again during its lifetime. Checked the
+  ambient default socket (`/tmp/tmux-1000/default`) and found it **actively LISTEN -held by pid 2934337 since 14:09:09**
+  — the respawn from the FIRST denylist-gap deletion earlier today (14:08:07) had silently fallen back to the
+  unprotected ambient socket (same silent-fallback behavior already known from the 2026-08-13 `ExecStartPre`
+  inert-deploy incident, just triggered by a different cause this time) and stayed there, live, for ~3 hours — a genuine
+  split-brain: slot 1's real session on the UNPROTECTED ambient socket the entire time the isolated socket was being
+  verified clean via the v2 supervisor. Manually `mkdir -p`'d the isolated directory (non-destructive, unblocks
+  correct-path recovery, does not touch any live session) — AO's own self-healing then correctly detected the stuck
+  spawn, reaped the orphan, and respawned slot 1 onto the isolated socket (17:14:35, verified new pid). Shipped the
+  durable fix: `agent-orchestrator@2e8b218103`, `tmux_spawn.py` now `os.makedirs($TMUX_TMPDIR, exist_ok=True)` before
+  EVERY spawn attempt, not relying on the one-time `ExecStartPre`. The old ambient-socket session (pid 2934337) is left
+  running, AO-invisible, wasteful but harmless — NOT manually killed, per the standing "never manually kill tmux" rule;
+  needs an operator-directed or AO-native cleanup, tracked as a new todo below. This is now the **third** distinct layer
+  this investigation has found beyond the original two (kill-server): a real-time-observed, directly-causal instance of
+  the tmpfs-disk-cleanup gap, PLUS a previously-unknown non-resilience gap in the isolation directory's own lifecycle
+  that let it silently degrade to the exact vulnerability the whole investigation exists to fix.
