@@ -1,6 +1,8 @@
 ---
 doc_type: issue
-title: Fleet tmux session loss — ROOT CAUSE CONFIRMED, two-layer fix VERIFIED and CLOSED (2026-08-13)
+title:
+  Fleet tmux session loss — ROOT CAUSE CONFIRMED, two-layer fix shipped, REOPENED (2 more whole-fleet bursts
+  post-"CLOSED", 2026-08-13)
 summary: >-
   Follow-up from shipping the Fleet Efficiency KPIs `dispatches/done` tile + a slot/role/day breakdown
   (agent-orchestrator@016abaff2f, @8a7a8c0fe0, @<pending>): operator asked why redispatch (retry) is so common and
@@ -201,6 +203,13 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
       (`server/worktree_clean_check/_conflict_markers.py`) refuses + quarantines a repo whose dirty tracked files
       contain the paired open/close conflict-marker sentinel, wired into `commit_and_push_dirty_repos` next to the
       existing FM2 wiped-index guard. Unit + end-to-end tests included; full `quality-gates.sh` green.
+- [ ] [INVESTIGATE] P0. Live-catch (strace `SO_PEERCRED` + `auditctl` execve, same method as the original root cause)
+      the sender of the two post-"CLOSED" whole-fleet bursts (14:08:21Z burst_size=6, 14:30:40Z burst_size=5 — see
+      Progress Log correction below). Prime suspect per the still-open audit todo above: a worker's OWN tmux-touching
+      test/tooling inheriting `TMUX_TMPDIR` and running a bare `kill-server` against the now-shared dedicated fleet
+      socket from the INSIDE, not an external ambient kill. Do not re-declare CLOSED without a fresh live catch or an
+      extended (multi-hour) zero-burst window, per this doc's own prior exit-empty and layer-1-alone false-closure
+      lessons.
 
 ## Progress Log
 
@@ -377,6 +386,27 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   layer-1-alone insufficient, layer-2-TMUX_TMPDIR-alone insufficient) are preserved above as the actual methodology, not
   smoothed over — each was caught by direct live re-testing before being trusted, per the operator's explicit standing
   objection to declaring victory on a readback rather than a real re-test.
+- 2026-08-13 ~16:15Z: **CORRECTION — the 13:51Z "Status: CLOSED" verdict above was premature.** Live query against
+  `activity_log` (`tmux_session_lost`, filtered to the whole-server-death signature `tmux_server_alive=false` +
+  `burst_size>1`) found TWO more whole-fleet bursts strictly AFTER the 13:51Z closing-verification window, both hitting
+  nearly the same slot set: **14:08:21Z** burst_size=6, slots `[1,7,14,15,18,21]`, `checkout_sha=18fc60b`; and
+  **14:30:40Z** burst_size=5, slots `[1,7,14,18,21]`, `checkout_sha=14184ca`. This is the identical whole-server-death
+  signature the doc's own root cause describes, not routine per-session churn (every other `tmux_session_lost` event in
+  this window, before and after these two bursts, shows `tmux_server_alive=true` — an ordinary single-pane loss). Found
+  while answering an operator dashboard question about slots showing a "died mid-task" badge while actively WORKING —
+  the badge (by design, see `dashboard/src/layout.tsx` `latestDoneOutcomeBySlot`) shows the most recent
+  COMPLETED-or-died attempt, not the in-flight one, so it correctly surfaced this stale-closure gap rather than being a
+  UI bug itself. **Current state as of this correction**: zero whole-server-death events since 14:30:40Z (~1h43m clean
+  at time of writing) — auto-heal recovered the fleet within ~1 minute both times (a respawned/healthy server was
+  already observed at 14:31:45Z). Re-titled doc from CLOSED to REOPENED rather than leaving a stale victory claim in
+  place. **Not yet investigated**: whether these two bursts predate full fleet-wide propagation of the layer-2 fix (some
+  slots/sessions may not have picked it up yet at 14:08/14:30) or represent a genuine gap in the fix itself — the
+  existing open todo above ("audit other repos for the SAME unscoped-tmux-fixture anti-pattern... not unique to
+  `test_slot_git_status_claim_heartbeat.bats`") already flags the plausible mechanism: a worker task whose OWN
+  tmux-touching test/tooling inherits `TMUX_TMPDIR` and issues a bare `kill-server` would now hit the fleet's shared
+  dedicated socket directly, defeating the isolation from the inside rather than the outside. This needs the same
+  strace/auditd live-catch treatment as the original finding before it can be re-closed — readback of these two bursts'
+  `account_snapshot`/`host_snapshot` alone does not identify the sender.
 - 2026-08-13 (post-closure hardening): the recovery work earlier in this Progress Log — an inherited pre-spawn commit on
   this very doc that carried raw unresolved conflict-marker blocks straight into git history — was a real, reproducible
   gap in `commit_and_push_dirty_repos` (the FM2 wiped-index/mass-deletion guard has no opinion about file CONTENT, only
