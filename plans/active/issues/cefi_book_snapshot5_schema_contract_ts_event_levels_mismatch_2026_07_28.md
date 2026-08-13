@@ -772,6 +772,9 @@ against the reproduction script.
   `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s still-open Option A recommendation for dedup at
   the orchestrator dispatch layer.
 
+> **Owner for the stale-venv / `iter_route_contexts` ImportError**:
+> /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
+
 - **2026-08-03 (data_pipeline_failure escalation worker, agt-e11908, slot 9) — 20th+ dispatch, SAME escalation_id
   (`agt-e11908`) as the entry directly above, dispatched to a second slot (slot 4 then slot 9) — the fifth confirmed
   exact-duplicate-escalation_id case (after `agt-ccb54c` 2026-07-30, `agt-0bf4a3` 2026-07-31, `agt-406c1f` 2026-07-31,

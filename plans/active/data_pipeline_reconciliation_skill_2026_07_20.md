@@ -682,6 +682,9 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
       `unified-trading-library` all to current HEAD) — `get_axis_value_census` now imports + is callable in-process. No
       new issue filed (would have duplicated the existing tracked doc). Local-venv-only change, nothing shipped.
 
+> **Owner for the stale-venv / `iter_route_contexts` ImportError**:
+> /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
+
 ---
 
 ## Deferred work after 2026-07-20

@@ -311,6 +311,10 @@ unrelated clusters:
    `param schema GAP: ImportError: cannot import name 'iter_route_contexts' from 'fastapi.routing'` in
    `strategy-service/.venv`. The exporter probes strategy-service's own venv by design, so a fastapi version skew there
    fails PM's gate. Fix belongs in strategy-service's dependency set.
+
+> **Owner for the stale-venv / `iter_route_contexts` ImportError**:
+> /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
+
 2. **1 × `scripts/quality_gates/test_check_repo_docs_ssot.py::test_live_corpus_has_zero_new_drift`** — all 6 flagged
    files live in `instruments-service-agentwork-sports-2026-07-13/`, a **stale agent scratch clone** sitting in the
    workspace root since 2026-07-13, untracked by PM. This looks like the same bug class `check_frontmatter_schema.py`

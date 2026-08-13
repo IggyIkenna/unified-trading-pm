@@ -171,8 +171,19 @@ itself; the CVE doc keeps ownership of the `--ignore-vuln` allowlist.
       both now print) and unified-trading-library (base-library.sh path), plus a synthetic negative-case smoke test
       (`.venv/bin/python check_installed_satisfies_pyproject.py --repo <fake-repo-with-impossible-floor>` → exit 1,
       correctly names the violating package).
-- [ ] [DOCS] P2. Once todo 1 lands, add a one-line pointer to this doc from the 9 referencing docs listed above so the
-      next agent who hits the ImportError finds the owner instead of re-diagnosing it.
+- [x] ✅ [DOCS] P2. Once todo 1 lands, add a one-line pointer to this doc from the 9 referencing docs listed above so
+      the next agent who hits the ImportError finds the owner instead of re-diagnosing it. ✅ 2026-08-13 — slot-6. Added
+      the pointer to all **10** active referencing docs (8 listed in the Prior-art section +
+      `data_pipeline_reconciliation_skill_2026_07_20.md` + `fleet_venv_drift_after_pull_no_resync_2026_08_11.md`, both
+      found via a fresh corpus grep for `iter_route_contexts`): `cve_affected_pinned_deps_remediation_2026_06_18.md`,
+      `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`, `docs_reconcile_autonomous_sweep_2026_07_30.md`,
+      `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`,
+      `uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md`,
+      `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md`,
+      `orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`,
+      `quality_gates_quickmerge_timing_baseline_2026_07_31.md`. Each got
+      `> **Owner for the stale-venv / \`iter_route_contexts\` ImportError**:
+      /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` at its mention site.
 - [ ] [INVESTIGATE] P3. Three `*.stale-pre-history-rewrite-20260805T112453Z/` sibling directories (execution-service,
       instruments-service, market-data-processing-service, unified-trading-library) still carry their own 0.136.3 venvs
       in the slot. Confirm they are dead weight from the 2026-08-05 history rewrite and can be removed, or document why

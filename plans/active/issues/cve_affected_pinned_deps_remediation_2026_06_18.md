@@ -251,17 +251,20 @@ gate is satisfied.
       fix is pending.
 
       **[2026-07-28 note, slot-6]**: the UTL `_IncludedRouter`/`.path` route-introspection fix landed today
-                  (`unified-trading-library@3b99d19d`, slot-12, `fastapi>=0.137/starlette>=1.3.1`, quickmerge to
-                  `live-defi-rollout`) — I hit the resulting `ImportError: iter_route_contexts` live in market-tick-data-service
-                  while running the `data-pipeline-check-mtds` MID-BACKFILL spot-check
-                  (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`). slot-3 independently found + filed the full
-                  analysis first and got the direction right (UTL + client-reporting-api are the ones DRIFTED from the
-                  `canonical-dependency-manifest.json` SSOT, not the ~10 repos still on the old bound) — see
-                  `issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md` (P0, `[OPERATOR]`-gated on choosing
-                  roll-forward vs revert, correctly not something a worker should pick unilaterally). I initially bumped
-                  market-tick-data-service's own `pyproject.toml` cap to unblock my task, then reverted that tracked change after
-                  finding slot-3's doc mid-session — same reasoning: direction isn't mine to pick. Left my local `.venv` on the
-                  newer fastapi (untracked, session-only) so my own check could proceed without prejudging the fleet decision.
+                      (`unified-trading-library@3b99d19d`, slot-12, `fastapi>=0.137/starlette>=1.3.1`, quickmerge to
+                      `live-defi-rollout`) — I hit the resulting `ImportError: iter_route_contexts` live in market-tick-data-service
+                      while running the `data-pipeline-check-mtds` MID-BACKFILL spot-check
+                      (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`). slot-3 independently found + filed the full
+                      analysis first and got the direction right (UTL + client-reporting-api are the ones DRIFTED from the
+                      `canonical-dependency-manifest.json` SSOT, not the ~10 repos still on the old bound) — see
+                      `issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md` (P0, `[OPERATOR]`-gated on choosing
+                      roll-forward vs revert, correctly not something a worker should pick unilaterally). I initially bumped
+                      market-tick-data-service's own `pyproject.toml` cap to unblock my task, then reverted that tracked change after
+                      finding slot-3's doc mid-session — same reasoning: direction isn't mine to pick. Left my local `.venv` on the
+                      newer fastapi (untracked, session-only) so my own check could proceed without prejudging the fleet decision.
+
+> **Owner for the stale-venv / `iter_route_contexts` ImportError**:
+> /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
 
                   **[2026-07-28 note, slot-7/cicd escalation `agt-db0abf`]**: hit the same `ImportError: iter_route_contexts` as a
                   hard `quality-gates-v2` red blocking ml-service's LDR→main promotion PR #306 (not a side-effect of an
@@ -323,8 +326,8 @@ gate is satisfied.
       investigation); exploratory lock upgrade reverted. Repo: alerting-service.
 
       **SUPERSEDED (2026-07-30, conflict-check)** — `plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md:571-581`
-                  already carries a near-identical `[TEST] P3` todo for this same test, same repo, same reproduction method. Do not
-                  re-dispatch from here.
+                      already carries a near-identical `[TEST] P3` todo for this same test, same repo, same reproduction method. Do not
+                      re-dispatch from here.
 
 - [x] ✅ [SCRIPT] P2. **aiohttp / vcrpy unblock — biggest CVE cluster — DONE 2026-06-23.** vcrpy 8.2.1 confirmed
       aiohttp-3.14-compatible (`MockStream` rewritten; UAC 649-cassette suite green on 3.14.1, conftest shim removed).
@@ -353,14 +356,14 @@ gate is satisfied.
       commit the sibling ignore-drop todo cites).
 
       **Superseded-note correction (2026-07-30 conflict-check, now stale)**: the note below originally pointed at
-                  `plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred § item 2 ("batch 4 deferred infra
-                  items into the NEXT infra batch"). That bundling never materialized as a dispatched batch — this item got
-                  resolved independently and sooner via the ignore-list re-audit instead. Leaving the historical note below for
-                  context but it no longer describes where to look for this specific item.
+                      `plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred § item 2 ("batch 4 deferred infra
+                      items into the NEXT infra batch"). That bundling never materialized as a dispatched batch — this item got
+                      resolved independently and sooner via the ignore-list re-audit instead. Leaving the historical note below for
+                      context but it no longer describes where to look for this specific item.
 
-                  ~~**SUPERSEDED (2026-07-30, conflict-check)** — named verbatim in
-                  `plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own Deferred § item 2, explicitly queued for
-                  "the NEXT infra batch." Do not re-dispatch from here.~~
+                      ~~**SUPERSEDED (2026-07-30, conflict-check)** — named verbatim in
+                      `plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own Deferred § item 2, explicitly queued for
+                      "the NEXT infra batch." Do not re-dispatch from here.~~
 
 - [x] ✅ [SCRIPT] P3. **DONE — already resolved, checkbox reconciled 2026-07-31 (slot 14).** Same stale-SUPERSEDED
       pattern as the two sibling todos above in this doc: the referenced batch never actually bundled this item —
@@ -383,38 +386,38 @@ gate is satisfied.
       per-dep.
 
       **2026-07-31 fresh full-fleet pip-audit re-verification (slot-3) — zero real gaps, checkbox left open (inherently
-                  unbounded scope).** Ran `.venv/bin/python -m pip_audit --format json` against all 17 repos available in this
-                  slot (agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service,
-                  e2e-testing, features-service, greeks-service, instruments-service, market-data-processing-service,
-                  market-tick-data-service, strategy-service, system-integration-tests, trading-agent-service,
-                  unified-api-contracts, unified-trading-library, unified-trading-pm). **First pass found "vulnerabilities" in 6
-                  repos** (alerting-service, client-reporting-api, deployment-api, greeks-service, strategy-service,
-                  trading-agent-service — idna/msgpack/pip/pyasn1/pydantic-settings/setuptools/starlette/twisted/ujson, all
-                  already-tracked advisories) — **investigated before reporting, and it was a THIRD false-positive class this doc
-                  hadn't hit yet** (distinct from the pyenv-shim false lead documented above): this slot's per-repo `.venv`s
-                  predate the 2026-07-30 fleet-wide CVE-fix commits and were never re-synced (`.venv/pyvenv.cfg` mtime older than
-                  `uv.lock` mtime in every flagged repo); each repo's own `pyproject.toml`/`uv.lock` already carried the correct
-                  fixed floors the whole time. `uv sync --frozen` in each of the 6 repos (env-only — no lock/pyproject content
-                  changed, `git status --porcelain` confirms zero diff in all 6) resolved the drift; **re-running pip-audit
-                  afterward: all 17 repos report "No known vulnerabilities found."** This is a genuine, useful confirmation (the
-                  fleet-wide bump really is complete, not just claimed) but does NOT close this todo — the todo's own scope is the
-                  much broader non-CVE "latest compatible version, one dep at a time" audit (per the operator's 2026-06-18
-                  scope-broadening note above), which is inherently open-ended (new dep releases ship continuously) and can't be
-                  marked "done" by any single pass. Recommend treating this as a standing/recurring check rather than a
-                  one-shot-closeable todo. Directly closes the separate, properly-bounded e2e-testing/system-integration-tests
-                  todo below (same sweep covered both, per that todo's own done-when bar) — see that todo's flip.
+                      unbounded scope).** Ran `.venv/bin/python -m pip_audit --format json` against all 17 repos available in this
+                      slot (agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service,
+                      e2e-testing, features-service, greeks-service, instruments-service, market-data-processing-service,
+                      market-tick-data-service, strategy-service, system-integration-tests, trading-agent-service,
+                      unified-api-contracts, unified-trading-library, unified-trading-pm). **First pass found "vulnerabilities" in 6
+                      repos** (alerting-service, client-reporting-api, deployment-api, greeks-service, strategy-service,
+                      trading-agent-service — idna/msgpack/pip/pyasn1/pydantic-settings/setuptools/starlette/twisted/ujson, all
+                      already-tracked advisories) — **investigated before reporting, and it was a THIRD false-positive class this doc
+                      hadn't hit yet** (distinct from the pyenv-shim false lead documented above): this slot's per-repo `.venv`s
+                      predate the 2026-07-30 fleet-wide CVE-fix commits and were never re-synced (`.venv/pyvenv.cfg` mtime older than
+                      `uv.lock` mtime in every flagged repo); each repo's own `pyproject.toml`/`uv.lock` already carried the correct
+                      fixed floors the whole time. `uv sync --frozen` in each of the 6 repos (env-only — no lock/pyproject content
+                      changed, `git status --porcelain` confirms zero diff in all 6) resolved the drift; **re-running pip-audit
+                      afterward: all 17 repos report "No known vulnerabilities found."** This is a genuine, useful confirmation (the
+                      fleet-wide bump really is complete, not just claimed) but does NOT close this todo — the todo's own scope is the
+                      much broader non-CVE "latest compatible version, one dep at a time" audit (per the operator's 2026-06-18
+                      scope-broadening note above), which is inherently open-ended (new dep releases ship continuously) and can't be
+                      marked "done" by any single pass. Recommend treating this as a standing/recurring check rather than a
+                      one-shot-closeable todo. Directly closes the separate, properly-bounded e2e-testing/system-integration-tests
+                      todo below (same sweep covered both, per that todo's own done-when bar) — see that todo's flip.
 
-                  **2026-07-31 (slot-4) — second same-day independent re-verification, same conclusion, PARKING to stop
-                  zero-new-info redispatch churn.** `uv sync --frozen` + `.venv/bin/python -m pip_audit` in
-                  unified-trading-library: "No known vulnerabilities found" (49th+ package audited clean, confirms slot-3's
-                  pass a few hours earlier). Also ran `pip list --outdated` — dozens of packages have newer releases
-                  available, none CVE-flagged; per the operator's own scope note this is explicitly "no mass updates,
-                  validating QG per dep," which is a genuinely unbounded, continuous task, not a single-session-closeable
-                  checkbox. Two independent same-day passes now agree there is zero new information to act on. Rather than
-                  leave this open to be re-dispatched again with the same non-outcome (async-wait/poll-discipline waste),
-                  skipping this slot's instance with `reason_code: PARKED` to arm the fleet-scoped dispatch cooldown per
-                  `ao_dispatch_cooldown_and_park_2026_07_20` — checkbox intentionally left unflipped (closing it would be
-                  dishonest; the audit scope is inherently ongoing, not complete).
+                      **2026-07-31 (slot-4) — second same-day independent re-verification, same conclusion, PARKING to stop
+                      zero-new-info redispatch churn.** `uv sync --frozen` + `.venv/bin/python -m pip_audit` in
+                      unified-trading-library: "No known vulnerabilities found" (49th+ package audited clean, confirms slot-3's
+                      pass a few hours earlier). Also ran `pip list --outdated` — dozens of packages have newer releases
+                      available, none CVE-flagged; per the operator's own scope note this is explicitly "no mass updates,
+                      validating QG per dep," which is a genuinely unbounded, continuous task, not a single-session-closeable
+                      checkbox. Two independent same-day passes now agree there is zero new information to act on. Rather than
+                      leave this open to be re-dispatched again with the same non-outcome (async-wait/poll-discipline waste),
+                      skipping this slot's instance with `reason_code: PARKED` to arm the fleet-scoped dispatch cooldown per
+                      `ao_dispatch_cooldown_and_park_2026_07_20` — checkbox intentionally left unflipped (closing it would be
+                      dishonest; the audit scope is inherently ongoing, not complete).
 
 - [x] ✅ [SCRIPT] P2. **DONE 2026-07-30.** Dropped all 9 now-resolvable `QG_PIP_AUDIT_COMMON_IGNORES` entries
       (`CVE-2026-4539`/pygments, `PYSEC-2026-215`/idna, `CVE-2026-3219`/`CVE-2026-6357`/`PYSEC-2026-196`/pip,

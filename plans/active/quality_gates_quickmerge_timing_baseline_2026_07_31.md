@@ -155,11 +155,16 @@ content changes.
   dependency-version-cap bump broke `fastapi.routing.iter_route_contexts` fleet-wide across several repos
   (`market-tick-data-service` hit the identical error live per that doc's 2026-07-28 entry); unified-trading-pm's
   capability-schema tests probe `strategy-service/.venv` directly so they inherit the break. **Not this plan's issue to
-  fix** — already owned, already in-flight elsewhere. **Practical consequence**: `quickmerge.sh` cannot ship ANYTHING on
-  unified-trading-pm right now, not just this plan's fix — there is no skip-tests escape hatch for quickmerge by design
-  (`--skip-tests`/`--skip-typecheck`/`--skip-codex` are hard-disabled there, WS-L #1014). The real fixes stay as local
-  uncommitted changes for now (safe — nothing lost) until that CVE issue clears; re-attempt quickmerge then to get the
-  Stage 4/5 numbers and a real ship.
+  fix** — already owned, already in-flight elsewhere.
+
+> **Owner for the stale-venv / `iter_route_contexts` ImportError**:
+> /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
+
+**Practical consequence**: `quickmerge.sh` cannot ship ANYTHING on unified-trading-pm right now, not just this plan's
+fix — there is no skip-tests escape hatch for quickmerge by design (`--skip-tests`/`--skip-typecheck`/`--skip-codex` are
+hard-disabled there, WS-L #1014). The real fixes stay as local uncommitted changes for now (safe — nothing lost) until
+that CVE issue clears; re-attempt quickmerge then to get the Stage 4/5 numbers and a real ship.
+
 - **2026-07-31 — docs-only retest deferred, not just quickmerge.** Since quickmerge didn't land, the 3 real fix files
   (`.py`/`.yml`/`.sh`, all non-doc extensions) are STILL uncommitted diffs in the working tree — and `_QG_DOCS_ONLY`
   requires the ENTIRE changeset to be doc-extension files. Stashing them away again (as before) would just reintroduce

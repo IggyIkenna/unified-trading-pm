@@ -162,6 +162,9 @@ this checkout unrelated to this change —
 `ImportError: cannot import name 'iter_route_contexts' from 'fastapi.routing'`), but the drift-guard test only reads
 `VENUES_BY_ASSET_GROUP["defi"]`, which this change never touches, so it cannot be affected by this diff.
 
+> **Owner for the stale-venv / `iter_route_contexts` ImportError**:
+> /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
+
 ## Recommended decision
 
 - [x] ✅ [CODE] P2. **Close the UAC registry gap itself** — `unified-api-contracts@7b96791e`. **Close the UAC registry
