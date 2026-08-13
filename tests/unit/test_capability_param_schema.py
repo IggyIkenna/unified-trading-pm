@@ -37,6 +37,8 @@ from unified_api_contracts.internal.architecture_v2.capability_manifest import (
     ParamSchemaSpec,
 )
 
+_STRATEGY_REPO = "strategy-service"
+
 _WORKSPACE_ROOT = Path(__file__).resolve().parents[3]
 _STRATEGY_VENV = _WORKSPACE_ROOT / "strategy-service" / ".venv" / "bin" / "python"
 
@@ -110,3 +112,50 @@ def test_param_schema_round_trips_into_serialised_manifest(
     assert list(block) == sorted(block)
     csb = {row["name"]: row for row in block["CARRY_STAKED_BASIS"]}
     assert csb["margin_buffer_pct"]["default"] == "0.20"
+
+
+def test_present_but_broken_strategy_venv_fails_loud(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A PRESENT but broken strategy-service venv must raise, never empty-schema.
+
+    Regression for issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md:
+    a stale venv below its declared fastapi floor surfaces as an ImportError inside the
+    probe. The old swallow converted that into an empty schema (``assert 0 >= 29``); the
+    fix fails the gate loudly with the underlying message + the offending venv path.
+    """
+    import _capability_gaps as capability_gaps_mod
+
+    fake_venv = tmp_path / _STRATEGY_REPO / ".venv" / "bin" / "python"
+    fake_venv.parent.mkdir(parents=True)
+    fake_venv.write_text("")  # exists() -> True; the probe itself is monkeypatched away
+
+    def _broken_probe(*_args: object, **_kwargs: object) -> dict[str, object]:
+        return {
+            "ok": False,
+            "error": "param_schema: ImportError: cannot import name 'iter_route_contexts' from 'fastapi.routing'",
+        }
+
+    monkeypatch.setattr(capability_gaps_mod, "_run_service_probe", _broken_probe)
+    with pytest.raises(RuntimeError, match=r"iter_route_contexts.*strategy-service/\.venv"):
+        extract_param_schema(tmp_path)
+
+
+def test_absent_strategy_venv_stays_honest_gap(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A genuinely-absent strategy-service venv keeps the typed ``not_registered`` gap.
+
+    Honest absence is not a defect: the manifest still generates with a gap node/edge
+    instead of the schema. Only a present-but-broken venv (stale floor) must fail loud.
+    """
+    import _capability_gaps as capability_gaps_mod
+
+    def _absent_probe(*_args: object, **_kwargs: object) -> dict[str, object]:
+        return {
+            "ok": False,
+            "error": f"param_schema: no .venv at {tmp_path / _STRATEGY_REPO / '.venv' / 'bin' / 'python'}",
+        }
+
+    monkeypatch.setattr(capability_gaps_mod, "_run_service_probe", _absent_probe)
+    schema, nodes, edges = extract_param_schema(tmp_path)
+    assert schema == {}
+    assert len(nodes) == 1
+    assert len(edges) == 1
+    assert edges[0].reason and "no .venv" in edges[0].reason

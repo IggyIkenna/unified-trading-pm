@@ -836,8 +836,11 @@ def extract_param_schema(
     from each engine's actual ``*_param(params, "<name>", <default>)`` default
     surface (Phase B inventory), never re-typed by hand in the exporter. Returns
     ``(param_schema, nodes, edges)``: ``param_schema`` keyed by archetype node_id
-    (``StrategyArchetype`` value), plus an honest ``not_registered`` gap node/edge
-    when the probe is unavailable (the manifest still generates without it).
+    (``StrategyArchetype`` value). A present-but-broken sibling venv (stale
+    dependency floor, ImportError) RAISES with the underlying message + the venv
+    path — the schema must never degrade to an empty ``{}`` (which surfaced as
+    ``assert 0 >= 29``); only a genuinely-absent venv emits an honest
+    ``not_registered`` gap node/edge (the manifest still generates without it).
     """
     body = (
         "    from strategy_service.engine.strategies.v2.param_schema import build_param_schema_registry\n"
@@ -846,6 +849,23 @@ def extract_param_schema(
     res = _run_service_probe(workspace_root, "strategy-service", body, "param_schema")
 
     if not res.get("ok"):
+        error = str(res.get("error", "param_schema probe unavailable"))
+        venv_python = workspace_root / "strategy-service" / ".venv" / "bin" / "python"
+        if venv_python.exists():
+            # The sibling venv EXISTS but the probe failed — a stale venv below its
+            # declared dependency floor surfaces here as an ImportError (e.g.
+            # ``fastapi.routing.iter_route_contexts`` missing below 0.137). That is a
+            # defect, not honest absence — fail the gate loudly with the underlying
+            # message + the offending venv path, never degrade to an empty schema
+            # that surfaces as ``assert 0 >= 29``. See
+            # issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md.
+            raise RuntimeError(
+                f"param_schema probe against {venv_python} failed: {error}. "
+                "Re-sync the strategy-service venv to its declared dependency floor "
+                "(`uv sync`) and re-run."
+            )
+        # Honest absence — no sibling venv, so the manifest still generates with a
+        # typed gap node instead of the schema.
         node_id = "service_registry:param_schema"
         gap_node = _node(
             CapabilityNodeKind.GAP_REGISTRY,
@@ -859,9 +879,9 @@ def extract_param_schema(
             relation=REL_PARAM_SCHEMA_GAP,
             status=CapabilityEdgeStatus.NOT_REGISTERED,
             gap_type=CapabilityGapType.MISSING_EXTRACTION,
-            reason=str(res.get("error", "param_schema probe unavailable")),
+            reason=error,
         )
-        logger.warning("  param schema GAP: %s", res.get("error"))
+        logger.warning("  param schema GAP: %s", error)
         return {}, [gap_node], [gap_edge]
 
     raw = res.get("param_schema", {})
