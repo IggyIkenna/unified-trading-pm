@@ -9,7 +9,7 @@ summary: >-
   back into each source doc happens in the paired finalize plan). Conflict-checked against every existing active
   batch/finalize plan for this tranche via basename-citation cross-reference before drafting — no item here duplicates
   ground an existing dispatched Todos entry already claims.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -67,19 +67,19 @@ source: >-
 
 # cross-cutting satellite AO dispatch batch 13 — 2026-08-13
 
-> **`status: draft` — NOT ingested/dispatched.** Flip to `status: active` only after operator review. Every todo below
-> was classified bounded/deterministic (worker-determinable outcome, no open design/judgment call) by the 2026-08-13
-> full-sweep audit and conflict-checked against this tranche's existing active batches before being drafted here.
+> **Operator-approved 2026-08-13 — `status: active`, dispatchable.** Every todo below was classified
+> bounded/deterministic (worker-determinable outcome, no open design/judgment call) by the 2026-08-13 full-sweep audit
+> and conflict-checked against this tranche's existing active batches before being drafted here.
 
 ## Todos
 
-- [ ] [INFRA] P2 - enumerate every live Cloud Run service's actual runtime SA + role set into the registry (bounded
+- [ ] [INFRA] P2. enumerate every live Cloud Run service's actual runtime SA + role set into the registry (bounded
       audit) Source: `plans/active/issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`
-- [ ] [INFRA] P3 - document which live services rely on the default-compute-SA and what secrets/buckets they can
+- [ ] [INFRA] P3. document which live services rely on the default-compute-SA and what secrets/buckets they can
       therefore reach (bounded documentation task) Source:
       `plans/active/issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`
-- [ ] [DIAG] P2 - verify the exact CME instrument_id string format for FUTURE contracts against the live catalogue
-      before implementing tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md's already-ruled fix Source:
+- [ ] [DIAG] P2. verify the exact CME instrument_id string format for FUTURE contracts against the live catalogue before
+      implementing tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md's already-ruled fix Source:
       `plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md`
 - [ ] [CODE] P2. Diagnose how strategy-service's LDR HEAD went gate-red (clean-checkout re-run + git log -S on the
       introducing commits) Source:
@@ -105,15 +105,15 @@ source: >-
       Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
 - [ ] [CODE] P2. Retry the tradfi attempted_failed cells (13 cells / ~12.5k rows) surfaced by the digest Source:
       `plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`
-- [ ] [INFRA] P3 - disambiguate 'the planning VM' in monitoring/docs; always name the instance ID or a stable label
+- [ ] [INFRA] P3. disambiguate 'the planning VM' in monitoring/docs; always name the instance ID or a stable label
       Source: `plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`
-- [ ] [INFRA] P3 - wire an automated deploy/sync for glue-runner-crash-loop-watchdog.sh so a repo fix reaches the host
+- [ ] [INFRA] P3. wire an automated deploy/sync for glue-runner-crash-loop-watchdog.sh so a repo fix reaches the host
       Source: `plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`
-- [ ] [BACKEND] P2 - document the circular-dependency gap (scheduled workflow runs from default branch) in ci-cd-flow.md
+- [ ] [BACKEND] P2. document the circular-dependency gap (scheduled workflow runs from default branch) in ci-cd-flow.md
       Source: `plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`
-- [ ] [BACKEND] P2 - sweep the fleet for the same 'set -uo pipefail' + RC=$? -e trap via the given rg command Source:
+- [ ] [BACKEND] P2. sweep the fleet for the same 'set -uo pipefail' + RC=$? -e trap via the given rg command Source:
       `plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`
-- [ ] [BACKEND] P2 - add a meta-assertion that any job publishing a notify-consumed verdict output emits it on the
+- [ ] [BACKEND] P2. add a meta-assertion that any job publishing a notify-consumed verdict output emits it on the
       failure path too Source:
       `plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`
 - [ ] [CODE] P2. Pass --build-arg SETUPTOOLS_SCM_PRETEND_VERSION=$$VERSION in strategy-service and greeks-service
@@ -132,7 +132,7 @@ source: >-
 - [ ] [CODE] P2. Confirm whether any CARRY_STAKED_BASIS/CARRY_BASIS_PERP paper run's fill-rate or slippage figures were
       cited in an actual promotion/sizing decision, and flag for re-check if so Source:
       `plans/active/cross_cutting_strategy_execution_determinism_2026_07_26.md`
-- [ ] [CODE] P2 - make reconcile_release_tags.py's _source_touched() per-repo-source_dir-aware instead of using a flat
+- [ ] [CODE] P2. make reconcile_release_tags.py's _source_touched() per-repo-source_dir-aware instead of using a flat
       repo-wide _NON_FUNCTIONAL_PATH_RE allowlist Source:
       `plans/active/issues/ibkr_gateway_infra_release_tag_stall_2026_08_11.md`
 - [ ] [CODE] P2. Make claim/heartbeat behaviour under test injectable so the common cases can be covered without a real
@@ -285,7 +285,7 @@ source: >-
 - [ ] [CODE] P2. Parallelize per-VM GCS reads in sweep() (exit_code_fleet_monitor.py + heartbeat_stall_watcher.py) via
       ThreadPoolExecutor, target <5min sweep, keep classify/route/emit sequential; fallback to reduced cron cadence if
       not shippable Source: `plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`
-- [ ] [DIAG] P2 - run launch-measure-honest-coverage-vm.sh --oom-monitor for a fresh right-sizing verification Source:
+- [ ] [DIAG] P2. run launch-measure-honest-coverage-vm.sh --oom-monitor for a fresh right-sizing verification Source:
       `plans/active/issues/honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md`
 - [ ] [CODE] P2. UNPAUSE uts-prod-dp-exit-code-monitor-cron in the documented order (verify deploy image carries
       ecd6d2bd90, tombstone-backfill the 393 names, then unpause) Source:

@@ -9,7 +9,7 @@ summary: >-
   into each source doc happens in the paired finalize plan). Conflict-checked against every existing active
   batch/finalize plan for this tranche via basename-citation cross-reference before drafting — no item here duplicates
   ground an existing dispatched Todos entry already claims.
-status: draft
+status: active
 nature: process
 asset_group: [ui]
 stage: [data]
@@ -57,9 +57,9 @@ source: >-
 
 # ui satellite AO dispatch batch 4 — 2026-08-13
 
-> **`status: draft` — NOT ingested/dispatched.** Flip to `status: active` only after operator review. Every todo below
-> was classified bounded/deterministic (worker-determinable outcome, no open design/judgment call) by the 2026-08-13
-> full-sweep audit and conflict-checked against this tranche's existing active batches before being drafted here.
+> **Operator-approved 2026-08-13 — `status: active`, dispatchable.** Every todo below was classified
+> bounded/deterministic (worker-determinable outcome, no open design/judgment call) by the 2026-08-13 full-sweep audit
+> and conflict-checked against this tranche's existing active batches before being drafted here.
 
 ## Todos
 
@@ -74,7 +74,7 @@ source: >-
 - [ ] [CODE] P2. Root-fix the per-service coverage BucketNamingError for
       features-calendar/ml-service/features-cross-instrument Source:
       `plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md`
-- [ ] [DOC] P3: Add a one-line cross-file conflict-check note to
+- [ ] [DOC] P3. Add a one-line cross-file conflict-check note to
       ui_satellite_ao_dispatch_batch3_finalize_2026_08_09.md's todo 1, naming
       ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md's still-open todo 4 as a same-file
       (artifact_pipeline_observability_2026_07_17.md) dispatch-collision risk. Source:
