@@ -20,6 +20,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import check_finalize_plan_coverage as _checker  # type: ignore[import-not-found]
+import pytest
 from check_finalize_plan_coverage import main  # type: ignore[import-not-found]
 
 
@@ -128,3 +129,82 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── duplicate finalize gates (issue 2026-08-06) ─────────────────────────────
+
+
+def _finalize_plan(path: Path, parent: str, status: str = "active") -> Path:
+    """A plan with depends_on + gate_on_depends: true gating `parent` (status active by
+    default; pass status="superseded" to model a de-raced loser)."""
+    extra = f"depends_on: [{parent}]\ngate_on_depends: true"
+    if status != "active":
+        extra += f"\nstatus: {status}"
+    return _write_plan(path, extra_frontmatter=extra)
+
+
+def test_default_mode_regresses_on_a_duplicate_gate(tmp_path: Path) -> None:
+    """Two live finalize plans gating one parent is a race — flag it (baseline 0)."""
+    active = _active_dir(tmp_path)
+    _finalize_plan(active / "parent_2026_08_05_finalize.md", "parent_2026_08_05")
+    _finalize_plan(active / "parent_2026_08_05_finalize_2026_08_05.md", "parent_2026_08_05")
+
+    rc = main(["--workspace-root", str(tmp_path)])
+    assert rc == 1
+
+
+def test_duplicate_gate_ignores_a_terminal_loser(tmp_path: Path) -> None:
+    """One active + one superseded finalize plan is NOT a race — the superseded loser can't
+    dispatch, and excluding it lets the de-race commit itself pass the check."""
+    active = _active_dir(tmp_path)
+    _finalize_plan(active / "parent_2026_08_05_finalize.md", "parent_2026_08_05")
+    _finalize_plan(
+        active / "parent_2026_08_05_finalize_2026_08_05.md",
+        "parent_2026_08_05",
+        status="superseded",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path)])
+    assert rc == 0
+
+
+def test_duplicate_gates_only_flag_reports_parent_count(tmp_path: Path) -> None:
+    """`--duplicate-gates` is the sweep's hard-check shape: 1 on a duplicate, 0 on clean."""
+    active = _active_dir(tmp_path)
+    _finalize_plan(active / "a_finalize.md", "a_2026_08_05")
+    _finalize_plan(active / "a_finalize_2026_08_05.md", "a_2026_08_05")
+
+    rc = main(["--workspace-root", str(tmp_path), "--duplicate-gates"])
+    assert rc == 1
+
+    clean = _active_dir(tmp_path / "clean")
+    _finalize_plan(clean / "b_finalize.md", "b_2026_08_05")
+    rc = main(["--workspace-root", str(tmp_path / "clean"), "--duplicate-gates"])
+    assert rc == 0
+
+
+def test_only_creation_guard_flags_a_second_live_finalize_plan(tmp_path: Path) -> None:
+    """Staging a NEW finalize plan for an already-gated parent fails the --only guard."""
+    active = _active_dir(tmp_path)
+    _finalize_plan(active / "parent_2026_08_05_finalize.md", "parent_2026_08_05")
+    second = _finalize_plan(active / "parent_2026_08_05_finalize_2026_08_05.md", "parent_2026_08_05")
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(second)])
+    assert rc == 1
+
+
+def test_only_creation_guard_does_not_block_a_preexisting_gate(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A de-race edit (staging a plan that ALREADY gated the parent at HEAD) must not be
+    blocked — otherwise porting a todo into the survivor / superseding the loser deadlocks
+    on this very check."""
+    active = _active_dir(tmp_path)
+    _finalize_plan(active / "parent_2026_08_05_finalize.md", "parent_2026_08_05")
+    second = _finalize_plan(active / "parent_2026_08_05_finalize_2026_08_05.md", "parent_2026_08_05")
+
+    # HEAD already has `second` gating the parent (simulates editing an existing duplicate,
+    # not creating a new one).
+    head_fm = "---\nstatus: active\ndepends_on: [parent_2026_08_05]\ngate_on_depends: true\n---\n"
+    monkeypatch.setattr(_checker, "_head_text", lambda pm_root, path: head_fm)
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(second)])
+    assert rc == 0

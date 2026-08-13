@@ -479,6 +479,19 @@ run_check "Terminal-status-archived (plan/issue docs -> plans/archive/, ratchet)
 # leaves behind). The 5 current pairs are reconciled by the issue doc's P2 todo; never lower this to
 # advisory to make the sweep pass.
 run_check "Create-only archival guard (archive/active duplicate pairs)" hard python3 "$SCRIPT_DIR/check_create_only_archive_commits.py" --quiet
+# Duplicate finalize gates (issue 2026-08-06) — two or more LIVE ARCHIVAL finalize plans
+# (slug contains `finalize`, `depends_on` + `gate_on_depends: true`, non-terminal status)
+# gating the SAME parent would both become dispatchable on one tick and race the identical
+# archival ritual (file move + corpus-wide referrer fixup against one target). `_gated_slugs`
+# dedupes by construction so the coverage check can't surface it; this groups live archival
+# finalize plans by each `depends_on` slug and flags parents gated by >1. Scoped to `finalize`
+# slugs — phase-sequenced plans reuse `depends_on + gate_on_depends: true` for legitimate DAG
+# edges and do different work, so they don't race a sibling archival. Same shrinking-ratchet
+# shape as the checks above (duplicate_gate_count in finalize_plan_coverage_baseline.yaml):
+# hard-fails only on a NEW duplicate-gated parent, never on pre-existing debt. Reported as a
+# parent count (0 = clean), the same way the orphan count is.
+# SSOT: plans/active/issues/duplicate_finalize_plans_created_for_one_parent_2026_08_06.md.
+run_check "Duplicate finalize gates (parent gated by >1 live finalize plan, ratchet)" hard python3 "$SCRIPT_DIR/../quality_gates/check_finalize_plan_coverage.py" --duplicate-gates --workspace-root "$(dirname "$PM_DIR")"
 # assigned_vm:NA corpus size ratchet (operator directive 2026-07-27) — the NA backlog (doc count +
 # open-todo count over assigned_vm:NA + status in {active,open}) must not grow unattended. Most NA
 # content is genuinely operator-gated/judgment work and correctly stays NA — the point is not to
