@@ -108,9 +108,9 @@ applied to a role whose whole job structurally defeats the "3 consecutive idle t
   unit of real work than a comparable worker session would, or is this simply what a continuously-interrupted
   coordinator role costs under the existing per-model learned-window arithmetic from the worker-wedge doc). Not measured
   here — would need a token-growth-per-message-handled rate, not just wall-clock time to saturation.
-- Whether the 2026-08-11 68-spawns/day spike has its own distinct trigger (a burst of real fleet activity that day
-  driving more main interruptions) or is a symptom of this same idle-gate mismatch compounding under load. Not
-  investigated.
+- ~~Whether the 2026-08-11 68-spawns/day spike has its own distinct trigger~~ — **investigated, see todo below**: NOT
+  the idle-gate mismatch (didn't exist yet that day) and NOT the whole-fleet kill-server bug (0 matching events); driven
+  by 2,607 individual `tmux_session_lost` events that day, cause unconfirmed, not currently reproducing.
 - Whether the 16:22:49 `tmux_session_lost` false-positive-looking event recurs and is itself worth a targeted fix, or is
   one-off noise.
 
@@ -133,9 +133,17 @@ applied to a role whose whole job structurally defeats the "3 consecutive idle t
       faster burn rate or an artifact of the role's message volume. Needed before proposing any context-reduction fix
       (e.g. trimming what main's own system/role prompt carries) — don't optimize a rate that hasn't been measured
       against a baseline.
-- [ ] [INVESTIGATE] P2. Explain the 2026-08-11 68-spawns/day spike specifically (10x the 08-07/08/09 baseline) — pull
-      that day's `agent_message_sent`/`agent_replied` volume for role=main and check whether it correlates with the
-      respawn count, which would support (not yet prove) the idle-gate-mismatch hypothesis directly.
+- [x] ✅ [INVESTIGATE] P2. **DONE 2026-08-13/14 — measured, hypothesis DISCONFIRMED, real cause still open.** Pulled
+      08-11's event counts directly: `context_force_idle_gate_blocked` = **0** that day — the idle-gate mechanism this
+      doc's own fix targets didn't exist yet (added ~08-09/08-10), so it structurally cannot explain the spike. Also NOT
+      the whole-fleet kill-server bug from `/plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`
+      — 0 of that day's events carry the `tmux_server_alive=false` whole-server-death signature. The real mechanical
+      driver: **2,607** individual `tmux_session_lost` events fleet-wide that single day (61 scoped directly to
+      `orch-agent-main`), a rate wildly above every other sampled window this session (single-to-low-double-digits per
+      30min). Not chased further — current live rates (checked 2026-08-13 ~16:00-20:00Z) are back to normal, suggesting
+      whatever drove this either self-resolved or was fixed by unrelated work already, but which fix (if any) is NOT
+      confirmed. Leaving as a closed investigation with an honest "cause unknown, no longer reproducing" verdict rather
+      than forcing it to fit this doc's own idle-gate hypothesis.
 - [ ] [INVESTIGATE] P3. Confirm whether the 16:22:49 `tmux_session_lost` on `orch-agent-main` (tmux pane creation
       timestamp unchanged before/after) is a recurring liveness-check false-positive worth its own fix, or one-off.
 
