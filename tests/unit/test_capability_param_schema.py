@@ -110,3 +110,36 @@ def test_param_schema_round_trips_into_serialised_manifest(
     assert list(block) == sorted(block)
     csb = {row["name"]: row for row in block["CARRY_STAKED_BASIS"]}
     assert csb["margin_buffer_pct"]["default"] == "0.20"
+
+
+def test_broken_strategy_venv_probe_fails_loud(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A present-but-broken strategy-service venv must fail loud, not emit ``{}``.
+
+    Regression for the swallowed-ImportError defect (issue
+    ``stale_service_venvs_below_declared_fastapi_floor``): a stale venv (fastapi
+    below the declared floor) made ``extract_param_schema`` return ``{}``,
+    surfacing downstream as ``assert 0 >= 29``. A present venv whose probe fails
+    must raise with the underlying message + the offending venv path.
+    """
+    import _capability_gaps as cap_gaps
+
+    venv_python = tmp_path / "strategy-service" / ".venv" / "bin" / "python"
+    venv_python.parent.mkdir(parents=True)
+    venv_python.write_text("")  # venv present → probe failure is an env defect
+
+    def _broken_probe(workspace_root: Path, repo: str, body: str, kind: str) -> dict[str, object]:
+        return {
+            "ok": False,
+            "error": f"{kind}: ImportError: cannot import name 'iter_route_contexts' from 'fastapi.routing'",
+        }
+
+    monkeypatch.setattr(cap_gaps, "_run_service_probe", _broken_probe)
+    with pytest.raises(RuntimeError, match="param schema probe of strategy-service venv FAILED"):
+        extract_param_schema(tmp_path)
+
+
+def test_absent_strategy_venv_stays_graceful_gap(tmp_path: Path) -> None:
+    """A genuinely-absent venv keeps the NOT_REGISTERED gap (manifest still generates)."""
+    schema, nodes, _edges = extract_param_schema(tmp_path)
+    assert schema == {}
+    assert any(n.node_id == "service_registry:param_schema" for n in nodes)

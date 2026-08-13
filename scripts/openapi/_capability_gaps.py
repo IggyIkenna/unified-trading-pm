@@ -836,8 +836,14 @@ def extract_param_schema(
     from each engine's actual ``*_param(params, "<name>", <default>)`` default
     surface (Phase B inventory), never re-typed by hand in the exporter. Returns
     ``(param_schema, nodes, edges)``: ``param_schema`` keyed by archetype node_id
-    (``StrategyArchetype`` value), plus an honest ``not_registered`` gap node/edge
-    when the probe is unavailable (the manifest still generates without it).
+    (``StrategyArchetype`` value).
+
+    Raises :class:`RuntimeError` when the strategy-service ``.venv`` is present but
+    the probe fails (an environment defect — stale deps raising ImportError, probe
+    timeout/crash): the schema must NEVER silently degrade to empty, which surfaces
+    downstream as ``assert 0 >= 29`` and costs a full QG cycle to diagnose. The
+    honest ``not_registered`` gap node/edge is emitted only when the venv is
+    genuinely absent (the manifest still generates without it).
     """
     body = (
         "    from strategy_service.engine.strategies.v2.param_schema import build_param_schema_registry\n"
@@ -846,23 +852,36 @@ def extract_param_schema(
     res = _run_service_probe(workspace_root, "strategy-service", body, "param_schema")
 
     if not res.get("ok"):
-        node_id = "service_registry:param_schema"
-        gap_node = _node(
-            CapabilityNodeKind.GAP_REGISTRY,
-            node_id,
-            "Archetype param schema",
-            registry="param_schema",
-        )
-        gap_edge = CapabilityEdge(
-            from_node_id=node_id,
-            to_node_id=node_id,
-            relation=REL_PARAM_SCHEMA_GAP,
-            status=CapabilityEdgeStatus.NOT_REGISTERED,
-            gap_type=CapabilityGapType.MISSING_EXTRACTION,
-            reason=str(res.get("error", "param_schema probe unavailable")),
-        )
-        logger.warning("  param schema GAP: %s", res.get("error"))
-        return {}, [gap_node], [gap_edge]
+        error = str(res.get("error", "param_schema probe unavailable"))
+        venv_python = workspace_root / "strategy-service" / ".venv" / "bin" / "python"
+        if not venv_python.exists():
+            # Honest absence — no strategy-service .venv in this workspace. Keep
+            # the typed gap (NOT_REGISTERED) so the manifest still generates; the
+            # unit tests skip this path via ``requires_strategy_venv``.
+            node_id = "service_registry:param_schema"
+            gap_node = _node(
+                CapabilityNodeKind.GAP_REGISTRY,
+                node_id,
+                "Archetype param schema",
+                registry="param_schema",
+            )
+            gap_edge = CapabilityEdge(
+                from_node_id=node_id,
+                to_node_id=node_id,
+                relation=REL_PARAM_SCHEMA_GAP,
+                status=CapabilityEdgeStatus.NOT_REGISTERED,
+                gap_type=CapabilityGapType.MISSING_EXTRACTION,
+                reason=error,
+            )
+            logger.warning("  param schema GAP: %s", error)
+            return {}, [gap_node], [gap_edge]
+        # The venv is present but the probe failed — an environment defect (stale
+        # deps → ImportError, probe timeout/crash), never a genuine "not
+        # registered" absence. Fail LOUD with the underlying message + the
+        # offending venv path instead of degrading to an empty schema that
+        # surfaces downstream as `assert 0 >= 29` (silent-placeholder rule,
+        # /codex/02-data/data-pipeline-correctness-hard-rule.md).
+        raise RuntimeError(f"param schema probe of strategy-service venv FAILED: {error}\n  venv: {venv_python}")
 
     raw = res.get("param_schema", {})
     param_schema: dict[str, list[ParamSchemaSpec]] = {}
