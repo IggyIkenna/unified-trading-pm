@@ -364,3 +364,30 @@ base-image pipeline without confirming the correct source config/IAM/connection 
   explicit worker-callable resolve action wired into `/done`/`one_shot_complete`, or (b) a wall-specific poll signal
   (e.g. "latest build for this trigger is SUCCESS and newer than the escalation's `created_at`") added to
   `_poll_wall_resolution`.
+
+- **2026-08-13 (slot 28, cicd) — THIRD dispatch of escalation `agt-774a0e` (same re-escalation loop), re-verified LIVE
+  and confirmed already-fixed. No new fix applied.** Per cicd.md's known-gap note for `cloud_build_router_failure` (not
+  in `_QG_SIGNAL_WALLS` → no auto-resolve signal → deadline re-escalation keeps dispatching fresh workers), verified the
+  wall's real-world state directly rather than trusting prior session notes or ancestry. Findings (all measured
+  2026-08-13T18:35Z):
+  - **Trigger exists + correctly configured**: `gcloud builds triggers describe unified-trading-library-prod` →
+    `e9da54bb-ca66-40f6-b5fd-5caff6bfebf1`, `filename: cloudbuild.yaml`, `createTime 2026-07-25T12:44:13Z`.
+  - **Base image FRESH**: artifact registry `unified-trading-library/unified-trading-library` shows
+    `0.81.1-564391d1434d`/`latest` at `UPDATE_TIME 2026-08-13T15:14:15Z` — today, not the 07-23 stale baseline.
+  - **Post-fix builds SUCCESS**: `af475bfa` + `d464a9ab` SUCCESS (15:06–15:13Z); the only TIMEOUTs are pre-fix
+    (12:07/13:13, before the governor-disable export landed); a 15:16Z build CANCELLED (superseded, no TIMEOUT).
+  - **Governor-disable export LIVE in content**: `git show origin/main:cloudbuild.yaml` (fresh fetch) contains
+    `QG_GOVERNOR_DISABLE=true QG_TOTAL_GOVERNOR_DISABLE=true` — verified by content grep, not ancestry (squash-promote
+    makes `merge-base --is-ancestor` unreliable, per this doc's own established caveat).
+  - **Router stdout fix LIVE**: `.github/workflows/cloud-build-router.yml` on BOTH `origin/live-defi-rollout` and
+    `origin/main` reads the build ID from `/tmp/build_trigger_out.txt` (stdout) via `--format=value(metadata.build.id)`,
+    with the stale stderr-read commented as the bug (lines ~553–571).
+  - **Router runs green since**: cloud-build-router runs 18:21–18:34Z all `conclusion: success`; the sampled runs
+    dispatched `market-data-processing-service` / `unified-api-contracts` / `deployment-service` — NO UTL dispatch
+    occurred after the 15:14Z image, so no new build was expected; the trigger→publish path is proven by the
+    15:06–15:14Z SUCCESS builds it produced after slot 7's fix.
+  - **No new code fix required — closing this dispatch as confirmed-already-fixed.** Re-iterating slot 14's follow-up
+    recommendation (still out of cicd one-shot scope): `cloud_build_router_failure` needs either (a) a worker-callable
+    resolve action wired into `/done`/`one_shot_complete`, or (b) a wall-specific poll signal in `_poll_wall_resolution`
+    (e.g. latest trigger build SUCCESS and newer than the escalation `created_at`), so a genuinely-fixed instance stops
+    re-dispatching fresh workers every `RESOLUTION_DEADLINE_MINUTES` tick.
