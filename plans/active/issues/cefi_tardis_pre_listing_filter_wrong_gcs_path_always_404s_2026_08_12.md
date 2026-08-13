@@ -93,12 +93,13 @@ Tardis fetch that reaches this function, not just an occasional-missing-snapshot
 
 ## Action items
 
-- [ ] [SCRIPT] P2. **Fix the reader's blob path** to match the writer's actual hive shape
+- [x] ✅ [SCRIPT] P2. **Fix the reader's blob path** to match the writer's actual hive shape
       (`day=.../pipeline_mode=.../     asset_group=.../venue=...`) — needs `pipeline_mode` and `asset_group` values
       threaded into `_resolve_symbols` (asset_group is always "cefi" for this call site; pipeline_mode needs sourcing
       from the caller's own context, likely `batch_tardis` for this code path — confirm against a live writer call
       before hardcoding). Add a regression test asserting the constructed blob path matches `writers.py`'s real shape
-      (string-level parity, not just "the read doesn't throw"). Repo: market-tick-data-service.
+      (string-level parity, not just "the read doesn't throw"). Repo: market-tick-data-service. —
+      market-tick-data-service@b4ca5d7bdf
 - [ ] [DATA] P2. **Verify the downstream classification question above** — confirm whether a live Tardis 400 for an
       actual pre-listing symbol currently lands as `empty_confirmed` or `attempted_failed` in the manifest (read
       `classify_venue_error()`'s Tardis-error-code branch, or check a real manifest sample for a known pre-listing
@@ -112,3 +113,10 @@ Tardis fetch that reaches this function, not just an occasional-missing-snapshot
   (`cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Phase 2 todo 4) — not fixed in this pass (out of that
   task's scope; that task instead worked around it by supplying an accurate, cohorted START_DATE per venue/symbol-group
   rather than relying on this filter). No code changed by this doc.
+- 2026-08-13: fixed todo 1 — added `instruments_availability_blob_path()` (threads
+  `PipelineMode.BATCH_INSTRUMENTS_SERVICE`
+  - `asset_group="cefi"` into the hive-shaped blob path) and switched `_resolve_symbols_from_by_date_snapshot`'s
+    pre-listing read to it; added string-level parity regression tests confirming the constructed path matches the
+    writer's real hive shape. QG green on `market-tick-data-service`, shipped via quickmerge, verified on
+    origin/live-defi-rollout — market-tick-data-service@b4ca5d7bdf. Todo 2 (downstream `classify_venue_error()`
+    manifest-correctness question) is still open.
