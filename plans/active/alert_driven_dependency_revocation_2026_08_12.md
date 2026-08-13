@@ -144,7 +144,15 @@ bridges them; it does not extend one over the other.
       `test_empty_writer_drain_is_a_noop`)
 - [ ] [CODE] P0. Migrate `_preemption_signal` to install its handler THROUGH the drain registry rather than owning its
       own, so exactly one SIGTERM handler exists per process and the manifest buffer keeps its current guaranteed-drain
-      semantics. Repo: unified-trading-library.
+      semantics. Repo: unified-trading-library. **Sharpened 2026-08-12 — this is an ORDERING-FRAGILITY fix, not a
+      cosmetic one.** With two independent chained handlers, drain order is decided by install order:
+      `manifest_writer/__init__` installs at IMPORT, `drain_registry` installs when the first `StreamingParquetWriter`
+      is CONSTRUCTED (later), so the later-installed registry handler runs first and chains to the manifest's —
+      data-writers-then-manifest, the correct order, but only by accident of sequence. A process that constructs a
+      writer BEFORE importing `manifest_writer` inverts it and flushes manifest rows asserting `captured` for data not
+      yet uploaded. Migrating makes the order structural (`DrainPriority`) instead of incidental. Preserve the public
+      `install_preemption_signal_handler` name — `manifest_writer/__init__` exports it and
+      `tests/unit/test_manifest_writer_preemption_signal_handler.py` exercises it directly.
 - [x] 3. ✅ [CODE] P0. A partial shard flushed by drain MUST NOT be recorded `captured` — record the rows written and
       leave the shard's capture_status unchanged so the resume re-attempts it. A drain that marks a partial shard
       complete is fabrication-by-construction. Repo: unified-trading-library. — unified-trading-library@d50ca9ff65
