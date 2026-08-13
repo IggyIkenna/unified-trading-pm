@@ -1012,3 +1012,11 @@ against the reproduction script.
   (7,806/215,756 = 3.6%), already labeled STATIC BACKLOG. Re-verified all 11 fix commits still ancestors of
   origin/live-defi-rollout (MTDS 339ca767/6bf568ee/2ddc6d4a/6a067cf1/6c6fab03, UAC 8db188fe/1c4d8864, deployment-service
   a564cca/6f464325/9102eb9b/1b035c52) — all OK. No GCS read, no code change, no VM launch (PM plan-doc append only).**
+- **2026-08-13 (data_pipeline_failure escalation worker, agt-f601e4, slot 18) — fan-out duplicate (slots 14/7/15
+  closed); no code fix; fresh bounded GCS read from THIS host confirms static backlog.** All 11 fix commits still
+  ancestors of origin/live-defi-rollout (same set as slot 7) — OK. Unlike slot 15's host (403'd), this host read the
+  cefi manifest (pyarrow row-group filters, 6G cap): full-history af=295,765; max attempted_at=2026-08-11T14:47Z (2d,
+  ZERO rows last 24h — more static than the alert's "1d"); zero `"schema contract violated"` since 2026-07-31T04:02Z;
+  per-day decay 597→392→2180(08-08, known ASTER stale-tarball burst)→453→18→10→0. Re-fire = the filed dedup-inert gap
+  (`dp_escalation_dispatch_dedup_inert_monitor_host_no_pm_clone_2026_08_13.md`, [CODE] P2, Option A ruled), not a data
+  regression. No code change, no GCS/manifest write, no VM launch (PM plan-doc append only).**

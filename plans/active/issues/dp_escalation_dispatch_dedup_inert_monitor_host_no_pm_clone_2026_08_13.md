@@ -137,3 +137,12 @@ Marked `assigned_vm: NA` — this is a design decision, not a worker-determinabl
 - GCS was not re-read from this host (the `unified-trading-sa` ADC here lacks access to the prod
   `market-data-tick-cefi-prd` bucket — HTTP 403), so the "zero new schema-contract rows past 2026-07-31" claim rests on
   the source issue doc's own prior live reads + the ancestor checks above, not a fresh query this session.
+
+## Progress Log
+
+- **2026-08-13 (data_pipeline_failure escalation worker, agt-f601e4, slot 18) — same escalation_id re-fired again today
+  (after slots 14/7/15); corroborates this doc's [CODE] P2 urgency.** This dispatch's fresh bounded GCS read succeeded
+  from the worker host (slot 15's could not — 403) and independently confirms zero new `attempted_failed` in the last
+  24h (max attempted_at 2026-08-11, 2d old) and zero `"schema contract violated"` rows since 2026-07-31 — the re-fire is
+  100% dedup-inertia (the `_resolve_pm_path`-returns-None path), not a data regression. Worker sessions keep being
+  burned until the Option A [CODE] P2 todo lands.
