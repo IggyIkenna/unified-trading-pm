@@ -130,14 +130,23 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
       `_manifest_status_any_row_filter` (kept `get_manifest_status` under the 50-line method-size gate). Added
       `TestManifestStatusScopeFastPathGate` (3 tests: `scope=mvp` bypasses, `scope=all` bypasses, default `could_exist`
       still fast-paths) mirroring the existing `TestManifestStatusVenueFilter` pattern. `quality-gates.sh` full green.
-- [ ] [BACKEND] P1. Tier-3 per-instrument single-pass dual-accumulate — change `_scoped_expected_instruments` and its
+- [x] [BACKEND] P1. Tier-3 per-instrument single-pass dual-accumulate — change `_scoped_expected_instruments` and its
       caller chain (`per_instrument_coverage` in `instrument_coverage.py`, the per-dt loop in `mtds.py`) to compute
       `expected_count`/`found_count` for BOTH `could_exist` and `mvp` in one pass against the same
       `_compute_found_shards` found-set, returning a `{could_exist: dt_entry, mvp: dt_entry}` pair instead of one
       `dt_entry`. Done-when: existing Tier-3 coverage tests pass unmodified for `could_exist`, new tests assert the
       `mvp` entry's expected_count is a subset consistent with `is_mvp` filtering, and a monotonicity test asserts
       `mvp_expected_count <= could_exist_expected_count` for every fixture case (mirrors the existing
-      `mvp ≤ could_exist ≤ all` pattern from `test_route_venue_year_coverage_scope.py`).
+      `mvp ≤ could_exist ≤ all` pattern from `test_route_venue_year_coverage_scope.py`). — `deployment-api@a79397b8ec`.
+      Implemented as ADDITIVE functions (design decision, logged 2026-08-13 below): `per_instrument_coverage_dual_scope`
+      (`instrument_coverage.py`, shares the found-set via a new `_build_tier3_entry` helper extracted verbatim from the
+      existing single-scope function — zero behavior change to `per_instrument_coverage` itself) and
+      `mtds_honest_coverage_for_venue_dual_scope` (`mtds.py`, via `_mtds_derived_entry_counts_dual_scope`).
+      Tier-2/seeded dts (no per-instrument grain) share one computed entry across both scope keys via a defensive
+      shallow-copy (never the same dict object — an aliasing bug caught + fixed before shipping). Regression tests:
+      `test_per_instrument_cefi_is_provider.py::TestPerInstrumentCoverageDualScope` (could_exist-half parity, mvp
+      monotonicity, found-set-computed-once via a `wraps=` spy) + `test_mtds_honest_coverage_dual_scope.py` (4 tests:
+      parity, monotonicity, empty-dts, MDPS historical_coverage_gap). `quality-gates.sh` full green.
 - [ ] [BACKEND] P1. Coverage-summary engine dual-scope — add an `is_mvp` boolean mask to
       `_compute_capture_status_counts` (`coverage.py`), built via `filter_to_mvp`'s dedup-then-broadcast technique
       (evaluate `is_mvp` once per distinct axis-combo, NOT a per-row `.apply` — the exact pattern `filter_to_mvp`'s own
