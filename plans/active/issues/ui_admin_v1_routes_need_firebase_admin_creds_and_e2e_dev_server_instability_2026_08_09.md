@@ -15,7 +15,10 @@ summary: >-
   both when self-started and when Playwright's own `webServer` manages it.
 status: open
 nature: issue
-asset_group: [infrastructure]
+asset_group:
+  [ui] # corrected 2026-08-13 (/ag-closeout-audit full sweep) -- was [infrastructure]. Content is exclusively
+  # unified-trading-system-ui's own E2E testing infra (e2e/playwright/firebase-admin/dev-server-stability),
+  # same shape as artifact_pipeline_observability_2026_07_17.md's identical 2026-07-30 infra->ui correction.
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer]
