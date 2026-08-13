@@ -126,3 +126,46 @@ def test_index_is_built_once_and_reused(pm_dir: Path, monkeypatch: pytest.Monkey
     checker.resolve_related_entry("still_nothing", from_path)
 
     assert calls["n"] == 1
+
+
+def test_orphan_message_names_archived_coordinator(pm_dir: Path) -> None:
+    # An orphan whose AG's closeout family resolves ONLY to an archived coordinator gets a
+    # message that NAMES the archived match + flags the tranche may need reopening — not the
+    # generic "no path" (regression for ao_consolidated_closeout_2026_08_12.md P2: an archived
+    # coordinator took a 10-day investigation to surface; the refused commit must name it).
+    archived = pm_dir / "plans" / "archive" / "2026_07" / "ao_consolidated_closeout_2026_07_25.md"
+    archived.parent.mkdir(parents=True, exist_ok=True)
+    archived.write_text("# ao\nbody that does not mention the orphan stem\n", encoding="utf-8")
+
+    orphan = pm_dir / "plans" / "active" / "issues" / "ao_live_doc_2026_08_01.md"
+    orphan.write_text("x\n", encoding="utf-8")
+    all_docs = {orphan: {"asset_group": ["ao"], "status": "active", "title": "x"}}
+    all_bodies = {orphan: "body\n"}
+    family = {"ao": {archived}}
+
+    violations = checker._orphans_for(all_docs, all_bodies, family)
+    msg = violations[orphan]
+    assert "ARCHIVED" in msg
+    assert "ao_consolidated_closeout_2026_07_25.md" in msg
+    assert "may need reopening" in msg
+
+
+def test_orphan_message_stays_generic_when_coordinator_active(pm_dir: Path) -> None:
+    # When the tranche has a LIVE coordinator (plans/active), the orphan message stays the
+    # generic "no path" — an active coordinator means the fix is a related: link, not a reopen.
+    active = pm_dir / "plans" / "active" / "ao_consolidated_closeout_2026_08_12.md"
+    active.write_text("# ao\nbody\n", encoding="utf-8")
+    archived = pm_dir / "plans" / "archive" / "2026_07" / "ao_consolidated_closeout_2026_07_25.md"
+    archived.parent.mkdir(parents=True, exist_ok=True)
+    archived.write_text("# ao\nbody\n", encoding="utf-8")
+
+    orphan = pm_dir / "plans" / "active" / "issues" / "ao_live_doc_2026_08_01.md"
+    orphan.write_text("x\n", encoding="utf-8")
+    all_docs = {orphan: {"asset_group": ["ao"], "status": "active", "title": "x"}}
+    all_bodies = {orphan: "body\n"}
+    family = {"ao": {active, archived}}
+
+    violations = checker._orphans_for(all_docs, all_bodies, family)
+    msg = violations[orphan]
+    assert "ARCHIVED" not in msg
+    assert "may need reopening" not in msg

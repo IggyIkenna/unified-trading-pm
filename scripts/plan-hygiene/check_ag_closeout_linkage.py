@@ -34,6 +34,11 @@ ASSET_GROUP enum; see check_frontmatter_schema.py) and already supports multi-va
   to `plans/active` (archived docs can never be live orphans). A tranche whose family
   resolves to genuinely ZERO docs anywhere prints a loud UNENFORCED warning on every run
   (never a silent no-op `continue`) — a family of zero must never read as "nothing to check".
+- A tranche whose closeout family resolves ONLY to ARCHIVED docs (coordinator archived, not yet
+  reopened — `ao` 2026-07-25 -> 2026-08-12) is still a valid link target, but an orphan whose
+  AG's coordinator is archived gets a violation message that NAMES the archived match and flags
+  "the tranche may need reopening", instead of the generic "no path" that cost a 10-day
+  diagnosis (finding: `ao_consolidated_closeout_2026_08_12.md`).
 
 TWO signals count as "findable", checked together because a same-day investigation
 (2026-07-25) found real docs missed by either signal alone:
@@ -118,6 +123,14 @@ MAX_HOPS = 3
 # cancelled, or completed doc is already closed; flagging it as an unlinked orphan is noise.
 # Mirrors generate_ag_closeout_audit_candidates.py's EXCLUDED_STATUS.
 EXCLUDED_STATUS = frozenset({"archived", "cancelled", "complete", "false-positive", "resolved", "superseded"})
+
+
+def _is_active_path(p: Path) -> bool:
+    """True when a doc lives under `plans/active` (a LIVE coordinator), False when it lives
+    under `plans/archive` (an archived one). Lets an orphan's violation message distinguish an
+    archived-coordinator tranche (may need reopening) from a live one (just needs a link)."""
+    return (PM_DIR / "plans" / "active") in p.parents
+
 
 TARGET_DIRS = ("plans/active", "plans/active/issues")
 # Where a closeout family doc can physically live — broader than TARGET_DIRS, since an
@@ -337,7 +350,21 @@ def _orphans_for(
             continue
 
         relpath = path.relative_to(PM_DIR).as_posix()
-        violations[path] = f"{relpath}: asset_group=[{ag}] has no path (graph or mention) to its closeout family"
+        # Archived-coordinator signal (ao_consolidated_closeout_2026_08_12.md P2): when this
+        # tranche's closeout family resolves ONLY to archived docs — the coordinator was
+        # archived and never reopened — the generic "no path" message hides the real diagnosis
+        # (the 2026-08 incident took a 10-day investigation to surface). Name the archived
+        # match so the refused commit reads in one line: the tranche may need reopening.
+        if not any(_is_active_path(p) for p in family):
+            archived_names = ", ".join(sorted(p.name for p in family))
+            msg = (
+                f"{relpath}: asset_group=[{ag}] has no path (graph or mention) to its closeout "
+                f"family — the only closeout-family match(es) are ARCHIVED ({archived_names}); "
+                f"the tranche may need reopening"
+            )
+        else:
+            msg = f"{relpath}: asset_group=[{ag}] has no path (graph or mention) to its closeout family"
+        violations[path] = msg
 
     return violations
 
