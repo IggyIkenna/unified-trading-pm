@@ -137,3 +137,6 @@ Parent plan's P10-B (operator round-3, 2026-07-17) already shipped: `CATALOG_COL
   verdict. Sole open todo remains resolved by the dated `✅ OPERATOR RULING 2026-08-08` banner, implemented by
   `sports_taxonomy_p3_consumers_2026_08_08.md`, independently re-confirmed today by
   `sports_satellite_ao_dispatch_batch11_2026_08_09.md`. Checkbox flips via that plan's finalize sibling. No flip here.
+- **ag-closeout-audit 2026-08-13**: a same-session ag-closeout-audit classifier flagged this doc archivable_now,
+  contradicting this doc's OWN round7/round11 na-eligibility-audit KEEP-NA rulings above ("not re-litigated").
+  Independently re-verified wrong and overturned before any archival action. Stays open, untouched.
