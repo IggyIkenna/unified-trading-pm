@@ -272,7 +272,54 @@ with no acceptable failure mode, not redundancy to remove.
       `emit_netted_intents()` rather than publishing per-strategy intents directly; if it does not, **the netting is not
       happening in production** and every strategy's transfers reach execution un-netted.
 
-## § E. Codex reconciliation (do AFTER § B–D land, per operator sequencing)
+## § I. Candle-based fills — the tier already exists; the sub-candle idea has a real niche
+
+Operator question: _"do we have a matcher for OHLCV? … the OHLCV fill in execution service would be smarter using the
+smaller candles where they exist … VWAP of those smaller candles adjusted for our max % of each candle we think we can
+fill at. Is that what an L0 fill is, or is that just trades?"_
+
+**L0 is not it.** `L0_TOB` is top-of-book only — scraped bookmakers and odds aggregators, best bid/offer with sizes,
+**fill-or-reject with no partial fills**. Neither trades nor candles.
+
+**The concern is exactly tier 1, and tier 2 is the already-built fix.** `ExecutionFidelityTier` has three rungs, rank-
+clamped in `utils/fidelity_selector.py`:
+
+| Tier               | Rank | BookType           | Fill basis                                                |
+| ------------------ | ---- | ------------------ | --------------------------------------------------------- |
+| `OHLC_BAR`         | 1    | `L1_MBP`           | bar fill — the naive tier the operator is wary of         |
+| `CANDLE_BOOK_COLS` | 2    | `CANDLE_BOOK_COLS` | **precomputed intra-bar book summary — walks real depth** |
+| `L2_TICK`          | 3    | `L2_MBP`           | full L2 walk via NautilusTrader                           |
+
+`CandleBookColsMatcher` (`matching_engine/candle_book_cols.py`) consumes Plan-1 book-summary columns on the processed
+candle — `book_spread_bps_tw_mean` for fill price, `book_mid_close` for the reference, and per-level
+`book_{bid,ask}_qty_L{1..5}_tw_mean` for liquidity. It computes `best_ask = mid_close + half_spread`,
+`total_depth = Σ ask_qty_L1..L5`, and prices a fill as `best ± (quantity / total_depth) × half_spread` on the adverse
+side — linear impact in `quantity/total_depth`, justified as the closed-form expectation of walking uniformly
+distributed depth at the average level price. **It rejects on zero depth rather than assuming unlimited fill**, which is
+precisely the failure mode the operator named. It is a pure function, explicitly so the ε=0 spine survives a promotion
+from `OHLC_BAR` to `CANDLE_BOOK_COLS`.
+
+**So it walks DEPTH, not traded volume** — a strictly better basis than a share-of-volume cap, because depth is what an
+order actually fills against.
+
+### Where the operator's sub-candle idea is still the right answer
+
+- [ ] [OPERATOR] P1. **Decide whether to build a sub-candle VWAP fill for cells that have finer candles but NO
+      book-summary columns.** `CandleBookColsMatcher` needs `BOOK_SUMMARY_COLUMNS` precomputed on the candle; where
+      those do not exist the cell falls back to `OHLC_BAR`, which is the naive tier. The operator's construction — fill
+      a 15m bar using the 15 one-minute candles inside it, VWAP'd and capped at a max share per sub-candle — is a
+      genuine third option **between** those two rungs, and nothing implements it (no sub-candle logic exists anywhere
+      in `matching_engine/`). Worth scoping only for cells where finer candles exist and book columns do not; measure
+      that population first.
+- [ ] [AGENT] P1. **If it is built, carry PB.8's correction — a share of candle VOLUME over-counts fillable volume.**
+      `e2e-testing/scripts/paper_trading/_aggtrades_fidelity.py` (PB.8) already measured this against real Binance
+      aggTrades: a resting maker only fills against trades that hit its level **on the filling side** (for a resting BUY
+      at L: aggressive SELLS at price ≤ L, `isBuyerMaker=True`), while total candle volume includes the other side and
+      trades away from L. So a flat "25% of the candle" participation cap is optimistic by a measurable ratio. The
+      sibling `_fill_backtest.py` (PB.7) already prototypes the participation model itself — 15m bars, `PART = 0.25`,
+      three policies (`full` / `single_shot` / `requote`) — and quantifies the liquidity drag versus the full-fill
+      ideal. **Both are `Lifecycle: campaign` scripts whose delete-when condition is "the fill-model decision is made
+      and the winner shipped"** — so the decision above is the thing actually blocking their retirement.
 
 - [ ] [AGENT] P1. **Update `/codex/04-architecture/execution-policy.md`** to state the `(client_id, slot_label)` keying
       and the loader/reload story once § B lands — and to say plainly that the registry was declared-but-unwired until
@@ -282,6 +329,63 @@ with no acceptable failure mode, not redundancy to remove.
       currently states this in one place, which is why it took a code audit to answer.
 - [ ] [AGENT] P2. **Reconcile `/codex/06-coding-standards/config-reloader-pattern.md`** against the measured reality —
       three reloaders in execution-service, two in strategy-service, and the per-service `config.py` inconsistency.
+
+## § J. Dual-path register — operator directive 2026-08-12: one SSOT per consumed thing
+
+> _"make sure codex and code has SSOT for things — no dual paths for same data consumption"_. This register exists
+> because **three of my own wrong statements this session were symptoms of dual paths**: I could not tell which of two
+> surfaces was authoritative because both existed and neither said it wasn't. Each row is a defect, not a design.
+
+| #   | Consumed thing          | SSOT                                                    | Dual path (the problem)                                                                          | Measured consequence                                                                                           |
+| --- | ----------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| J1  | **`book_type`**         | UAC `BookType` StrEnum — SIX members                    | `execution_service/cli/domain_runners.py:36` — a **shadow class**, TWO members, own `validate()` | **Rejects `CANDLE_BOOK_COLS`, `AMM`, `ALPHA_ZERO`, `L0_TOB`** — this CLI path cannot select the candle matcher |
+| J2  | Strategy slot catalogue | `target_universe/catalog_*.py`                          | `archetype_slots_defi.py`                                                                        | The two disagree on whether SOL staked basis is runnable                                                       |
+| J3  | Benchmark fill          | benchmark-fills contract                                | implemented twice: `benchmark_fills.py` (Group B) + execution matchers (Group C)                 | One definition, two implementations, free to drift — § G3                                                      |
+| J4  | Execution algo names    | UAC `EXECUTION_ALGOS`                                   | `engine/instruction_convert.py` `"MARKET"`                                                       | A name the selector's validation has never heard of                                                            |
+| J5  | Strategy config loading | `engine/core/config_loader.py::ConfigLoader` (GCS/JSON) | `config.py::load_strategy_config` (local YAML) **plus a third** in `strategy_config_loader.py`   | **Two functions share the name `load_strategy_config`** with different substrates                              |
+| J6  | Transfer types          | `transfer_types.TransferType` (routing SSOT, 5)         | `architecture_v2.enums` (7), `BusTransferType` (5), `domain.defi.transfers` (6)                  | Four enums for one concept                                                                                     |
+| J7  | Archetype universe      | `StrategyArchetype` (60)                                | factory-registered (32), `PARAM_SCHEMA_REGISTRY` (35)                                            | Three surfaces disagree; nothing detects it                                                                    |
+
+- [ ] [AGENT] P0. **Delete the shadow `BookType` (J1) and import UAC's.** Worst row: not merely duplicated but a **stale
+      subset that silently blocks a shipped feature** — its `validate()` raises on anything outside `{L1_MBP, L2_MBP}`,
+      so a config selecting `CANDLE_BOOK_COLS` is rejected before reaching the matcher that implements it. Also breaches
+      the standing use-UAC-SSOT-types rule. Move its useful comment (`L1_MBP  # OHLCV-only mode`) onto the UAC enum — it
+      is the clearest statement anywhere of which tier is the bar-fill one.
+- [ ] [AGENT] P1. **Add a "no shadow SSOT type" gate.** J1 and J6 are one defect class: a local class/enum redefining a
+      name UAC owns. A mechanical check — any class whose name matches a UAC-exported symbol and is not an import —
+      catches both at commit time, and is cheaper than the audit that eventually finds J8.
+- [ ] [AGENT] P1. **For every remaining row, name the SSOT in codex and mark the other path.** Where both must exist for
+      a real reason (Group B / Group C in J3), **state in both places which is authoritative and why**. A dual path
+      documented as intentional stops costing an auditor an hour; an undocumented one costs it every time.
+
+## § K. e2e fill models → execution-service reproducibility (operator ask 2026-08-12)
+
+Question: are e2e's candle-matching mechanisms reproducible inside execution-service across different candle-matching
+assumptions? **Mechanisms: mostly yes. Parameterisation: no — and the missing knob is the one that matters most.**
+
+| e2e assumption (`scripts/paper_trading/_ledgers.py`)                                                                                                                            | execution-service equivalent                                                                                                             | Reproducible?                 |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| Taker IOC — VWAP-walk recorded book depth, accumulate quote-notional per level                                                                                                  | `L2Matcher` (L2 walk) / `CandleBookColsMatcher` (depth walk, linear impact)                                                              | ✅ yes                        |
+| Maker resting at mid ∓ `MAKER_IMPROVE_BP` (1bp), filled by trades that cross the limit                                                                                          | `TradeMatcher` passive path — `PASSIVE_ORDER_TYPES`, "simulates our order resting in the book and getting hit by" trade data, `is_maker` | ✅ mechanism exists           |
+| Candle-based fill without tick data                                                                                                                                             | `CandleBookColsMatcher`                                                                                                                  | ✅ yes                        |
+| **Participation cap — "a resting maker captures at most 25% of the volume that trades THROUGH its limit each 1m"**, per-strategy (`cs` 25% / `basis` 100% / `short` 25%, PB.12) | **nothing** — zero occurrences of `participation` anywhere in `matching_engine/`                                                         | ❌ **NOT expressible**        |
+| Fallback ladder: book-walk fails → next-1m open + flat `TAKER_SLIP_BP`; no 1m bar → `unfilled-no1m`                                                                             | not modelled as a tiered fallback                                                                                                        | ❌ needs verification / build |
+| `real_slip` guard so a genuine VWAP walk does not double-count synthetic slip                                                                                                   | no equivalent flag found                                                                                                                 | ❌                            |
+
+- [ ] [AGENT] P0. **Add a participation cap to the passive fill path.** This is the single knob that separates e2e's
+      model from execution-service's, it is per-strategy in e2e (PB.12 tuned it: high-turnover `cs` 25%, `basis` 100%),
+      and PB.7 measured that ignoring it is exactly the "liquidity drag" gap versus the full-fill ideal. Without it,
+      execution-service's passive fills are the optimistic model PB.7 was built to disprove.
+- [ ] [AGENT] P0. **Carry PB.8's correction into the cap's definition.** The cap must apply to volume that crosses the
+      limit **on the filling side** (for a resting BUY at L: aggressive SELLS at price ≤ L, `isBuyerMaker=True`), not to
+      total candle volume — `_ledgers.py` already resolves the maker fill "against the REAL aggTrades flow that crossed
+      our limit (true volume-at-price)", so the corrected model is already written down, not merely measured.
+- [ ] [AGENT] P1. **Route the per-strategy fill assumptions through the execution-policy `then_params`** rather than a
+      new config surface — this is precisely what that artifact is for, and it ties § K to § B/§ G1: the policy registry
+      being unwired is _why_ per-strategy fill parameterisation has nowhere to live today.
+- [ ] [AGENT] P2. **Then retire the campaign scripts.** `_fill_backtest.py` and `_aggtrades_fidelity.py` both carry
+      `Lifecycle: campaign` with delete-when "the fill-model decision is made + the winner is shipped". They are the
+      decision record; once the cap and its side-filter ship, they go.
 
 ## § F. Artifacts (do LAST, per operator sequencing)
 
