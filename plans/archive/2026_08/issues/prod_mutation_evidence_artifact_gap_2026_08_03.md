@@ -12,7 +12,7 @@ summary: >-
   flagged this same class three independent times (see instances below), each time confirming the code looked correct
   but the operational outcome was unverifiable from durable artifacts alone. Filed for an operator ruling on whether to
   extend §8b-style evidence-backing to prod-mutation scripts.
-status: open
+status: archived
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -33,7 +33,7 @@ priority: P3
 assigned_vm: planning
 execution_scope: orchestrator-agent
 assigned_role: infra
-resolved_by:
+resolved_by: unified-trading-pm (this commit)
 locked_by:
 source:
   "review spot-check msgs #3552 (tofu-state evidence gap), do_rename content-equality finding, + #3572 (prediction
@@ -51,6 +51,10 @@ context_scope:
 ---
 
 # Prod DATA-mutation claims have no verifiable evidence artifact (evidence-backing gap)
+
+> **ARCHIVED 2026-08-13** — sole todo done: `plans/PLAN_FORMAT.md` § 8d + `check_evidence_backed_completion.py` sub-rule
+> C now extend the § 8b evidence-backing contract to prod DATA-mutation completions, same commit as this archival. See
+> the Todos + Progress Log below for what shipped.
 
 ## The gap
 
@@ -85,16 +89,15 @@ not a code defect.
 
 ## Todos
 
-- [ ] [SCRIPT] P3. **RULED 2026-08-06: YES, extend it.** `[SCRIPT]` tag (was `[OPERATOR]`) — directly supports the
+- [x] ✅ [SCRIPT] P3. **RULED 2026-08-06: YES, extend it.** `[SCRIPT]` tag (was `[OPERATOR]`) — directly supports the
       existing data-pipeline-correctness HARD RULE; prod data mutations deserve the same evidence rigor builds already
-      get. Add the artifact convention + the `check_evidence_backed_completion.py` prod-mutation branch.
-      AO-dispatchable. Rule on whether to extend the §8b evidence-backing contract to prod DATA-mutation completions:
-      require restamp/backfill/rename/delete/tofu-state scripts to emit a verifiable summary artifact (a manifest-delta
-      row, a `vm-logs/<unit>/RESULT.json`, a GCS operation id, or a before/after `state list`) that a `- [x]` must cite,
-      the same way builds cite `cloudbuild=<id>` — and whether `check_evidence_backed_completion.py` should grow a
-      prod-mutation branch. This is a standards/scope change (PLAN_FORMAT.md + the QG), hence operator-gated, not a
-      worker fix. If ruled yes, the follow-up ([SCRIPT] to add the artifact convention + QG branch) is dispatchable.
-      (repo: unified-trading-pm, decision only)
+      get. Add the artifact convention + the `check_evidence_backed_completion.py` prod-mutation branch. — DONE
+      2026-08-13: added `plans/PLAN_FORMAT.md` § 8d (the `manifest-delta=|vm-log=|gcs-op=|tofu-state=` artifact
+      convention) + sub-rule C to `check_evidence_backed_completion.py` (same baselined-ratchet shape as sub-rule B;
+      baseline seeded at 51 pre-existing corpus claims via `--baseline-write`, matching the QG's actual no-issues
+      invocation); `--only` precommit mode + `quality-gates.sh`'s log lines extended to cover it; 10 new unit tests in
+      `tests/unit/test_check_evidence_backed_completion.py` (all 26 in the file passing); basedpyright clean. Code +
+      this flip ship in the same unified-trading-pm commit (single-repo case).
 
 ## Progress Log
 
@@ -122,3 +125,17 @@ not a code defect.
   gate, scoped single-script change, not dispatch-critical-path machinery). Conflict-check cleared (no overlapping claim
   in `parent_epic: agent_operating_framework_master`). `assigned_role` was unset; filled `infra` (PM-repo QG-tooling
   scope).
+
+- **infra worker (slot 18) 2026-08-13**: Shipped the ruled follow-up. `plans/PLAN_FORMAT.md` § 8d adds the
+  `manifest-delta=|vm-log=|gcs-op=|tofu-state=` evidence-artifact convention for a quantified prod DATA-mutation claim
+  (restamp/backfill row-shard count, GCS object rename/delete, tofu/terraform state op), mirroring § 8b's
+  `cloudbuild=<id>` shape but as citation-presence only (no single live API resolves every one of these artifact kinds
+  the way `gcloud builds describe` resolves a build). `check_evidence_backed_completion.py` grew sub-rule C: same-clause
+  verb+quantity detection (`_PROD_MUTATION_VERB_RE` + `_PROD_MUTATION_QUANTITY_RE`, or the tofu/terraform-state-op verb
+  alone), baselined ratchet against `evidence_backed_completion_baseline.yaml`'s new
+  `prod_mutation_claim_without_evidence_baseline` key (seeded at 51 — the corpus-wide count under the QG's actual
+  no-`--include-issues` invocation, confirmed matching `quality-gates.sh`'s call). `--only` precommit mode and
+  `quality-gates.sh`'s log lines extended to cover sub-rule C alongside B. 10 new unit tests (all 26 in the test file
+  passing); basedpyright clean on both changed Python files. Also archived this doc per the "done + unlocked → archive
+  immediately" HARD RULE (same-repo/same-commit flip+archive is sanctioned for a PM-direct worker) — referrer paths
+  updated corpus-wide to point at the new `plans/archive/2026_08/issues/` location.

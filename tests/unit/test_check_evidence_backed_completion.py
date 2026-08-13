@@ -191,3 +191,63 @@ class TestNotFoundVsUnavailable:
         violations = MOD._check_builds(blocks, region="us-central1", project="p", require_verification=True)
         assert len(violations) == 1
         assert violations[0].rule == "A-unverifiable"
+
+
+def _rule_c_violations(block_text: str) -> list[object]:
+    blocks = MOD._iter_todo_blocks(block_text, Path("x.md"))
+    return MOD._check_prod_mutation_claims_without_evidence(blocks)
+
+
+class TestSubRuleCProdMutationEvidence:
+    """Sub-rule C (plans/archive/2026_08/issues/prod_mutation_evidence_artifact_gap_2026_08_03.md, RULED
+    2026-08-06, PLAN_FORMAT.md § 8d): a quantified prod DATA-mutation claim (restamp/backfill row
+    or shard count, GCS object rename/delete count, tofu/terraform state op) with no
+    `manifest-delta=`/`vm-log=`/`gcs-op=`/`tofu-state=` Evidence token is flagged."""
+
+    def test_restamp_row_count_without_evidence_flagged(self) -> None:
+        block = "- [x] Restamped 12,006 rows to the corrected instrument_id, 0 residual mismatches.\n"
+        violations = _rule_c_violations(block)
+        assert len(violations) == 1
+        assert violations[0].rule == "C-prod-mutation-claim-without-evidence"  # type: ignore[attr-defined]
+
+    def test_backfilled_shards_without_evidence_flagged(self) -> None:
+        block = "- [x] Backfilled 340 shards for the sports asset_group, all capture_status=captured.\n"
+        assert len(_rule_c_violations(block)) == 1
+
+    def test_gcs_object_rename_with_count_without_evidence_flagged(self) -> None:
+        block = "- [x] Renamed 40 GCS objects to the canonical path, verified content-equality.\n"
+        assert len(_rule_c_violations(block)) == 1
+
+    def test_tofu_state_removal_without_evidence_flagged(self) -> None:
+        block = "- [x] Removed the orphaned bucket resource from tofu state, apply now clean.\n"
+        assert len(_rule_c_violations(block)) == 1
+
+    def test_manifest_delta_evidence_suppresses(self) -> None:
+        block = "- [x] Restamped 12,006 rows. Evidence: manifest-delta=sports/2026-08-01/shard-004\n"
+        assert _rule_c_violations(block) == []
+
+    def test_vm_log_evidence_suppresses(self) -> None:
+        block = "- [x] Backfilled 340 shards. Evidence: vm-log=vm-logs/backfill-sports-01/RESULT.json\n"
+        assert _rule_c_violations(block) == []
+
+    def test_gcs_op_evidence_suppresses(self) -> None:
+        block = "- [x] Renamed 40 GCS objects. Evidence: gcs-op=rename-batch-2026-08-13-001\n"
+        assert _rule_c_violations(block) == []
+
+    def test_tofu_state_evidence_suppresses(self) -> None:
+        block = "- [x] Removed the orphaned bucket from tofu state. Evidence: tofu-state=12-resources-before/11-after\n"
+        assert _rule_c_violations(block) == []
+
+    def test_unquantified_backfill_design_discussion_not_flagged(self) -> None:
+        # A bare mention with no accompanying quantity is design discussion, not a completion claim.
+        block = "- [x] Decided to backfill the missing venue coverage in a follow-up plan.\n"
+        assert _rule_c_violations(block) == []
+
+    def test_unrelated_quantity_in_different_clause_not_flagged(self) -> None:
+        # Same-clause-proximity discipline mirrors sub-rule B: a quantity in an unconnected later
+        # clause must not combine with an earlier verb to fabricate a claim.
+        block = (
+            "- [x] Renamed the config helper function for clarity. The corpus now has 12,006 total "
+            "files across the fleet.\n"
+        )
+        assert _rule_c_violations(block) == []

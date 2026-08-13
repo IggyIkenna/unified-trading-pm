@@ -232,11 +232,11 @@ production data.
   operator confirmation, not just chat-level agreement; the `--apply` EXECUTION itself is explicitly withheld this tick
   — human-owned, given it's a THIRD mass rewrite of a contested ~1.4M-row population, requires loosening the script's
   own STOP-ON-SURPRISE safety guard, and has no verifiable before/after evidence artifact for a mutation this size (see
-  `prod_mutation_evidence_artifact_gap_2026_08_03.md`). One hard, non-negotiable prerequisite applies regardless of who
-  ultimately signs off: fix the seeding-function staleness FIRST. Acted on that — closed `-002` for real this time
-  (`instruments-service@47a631ff`, full QG green, see `-002` above) and closed `-004` (cross-reference). `-001` (the
-  casing-direction decision) and `-003` (the `--apply` itself) stay OPEN, still gated on the human operator — no
-  manifest write attempted this session.
+  `archive/2026_08/issues/prod_mutation_evidence_artifact_gap_2026_08_03.md`, archived 2026-08-13). One hard,
+  non-negotiable prerequisite applies regardless of who ultimately signs off: fix the seeding-function staleness FIRST.
+  Acted on that — closed `-002` for real this time (`instruments-service@47a631ff`, full QG green, see `-002` above) and
+  closed `-004` (cross-reference). `-001` (the casing-direction decision) and `-003` (the `--apply` itself) stay OPEN,
+  still gated on the human operator — no manifest write attempted this session.
 - 2026-08-03 (slot-11): dispatched `-002` independently (concurrently with slot-7, before their `47a631ff` landed on
   origin), then found on rebase that slot-7 had already shipped the same seeder-side fix. Reconciling, found `47a631ff`
   left a SECOND, still-live half of the same bug: `_rollup_present_bundle_grain` (the present-set/`_build_present_set`
@@ -279,5 +279,7 @@ production data.
   STOP-ON-SURPRISE ceiling to bracket the ~1.4M-row population) is now unblocked but was NOT executed this session — it
   is a third mass rewrite of a contested, already-twice-flipped production population, requires loosening a safety
   guard, and per this doc's own 2026-08-03 slot-7 note has no verifiable before/after evidence artifact yet
-  (`prod_mutation_evidence_artifact_gap_2026_08_03.md`). Left for a dedicated execution pass (VM/orchestrator dispatch,
-  since this doc is `assigned_vm: planning`) rather than run ad hoc from an interactive session.
+  (`archive/2026_08/issues/prod_mutation_evidence_artifact_gap_2026_08_03.md`, archived 2026-08-13 — the evidence-
+  artifact convention it asked for now exists via PLAN_FORMAT.md § 8d). Left for a dedicated execution pass
+  (VM/orchestrator dispatch, since this doc is `assigned_vm: planning`) rather than run ad hoc from an interactive
+  session.

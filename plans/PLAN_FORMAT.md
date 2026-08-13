@@ -119,7 +119,7 @@ thinking_tier: max | high | medium | mechanical | off | none # optional — exte
 last_updated: YYYY-MM-DD
 locked_by: live-defi-rollout | NA
 locked_since: YYYY-MM-DD
-context_scope: [/codex/path/to/ssot.md, plans/active/related-doc.md] # elective minimal reading-list; see doc-frontmatter-schema.md — populate this YOURSELF at authoring time (task_template.md §2a), don't just leave it for the next /context-scout sweep
+context_scope: [/codex/06-coding-standards/quality-gates.md, plans/active/related-doc.md] # elective minimal reading-list (illustrative real-doc example); see doc-frontmatter-schema.md — populate this YOURSELF at authoring time (task_template.md §2a), don't just leave it for the next /context-scout sweep
 depends_on: [epic-slug, plan-slug-YYYY_MM_DD] # prerequisites; enables ordering + gates archival
 supersedes: [old-plan-slug] # list of plans made obsolete by this one
 superseded_by: [new-plan-slug] # list of plans that replaced this one
@@ -539,6 +539,43 @@ clone, not by trusting the self-report.
 - Scope is deliberately narrow: only `<repo>@<sha>` where `<repo>` is an EXACT sibling-clone directory name is checked
   (abbreviated forms like `mtds@...`/`uac@...` are ambiguous and are not matched at all — a soft-skip by construction,
   mirroring § 8b's "can't check it from here" posture for an absent Cloud Build auth).
+
+### 8d. Prod DATA-mutation evidence — restamp/backfill/rename/tofu-state claims cite a resolvable artifact (HARD RULE — codified 2026-08-13)
+
+> **Why:** § 8b/8c machine-check build and commit-SHA claims, but a prod DATA-mutation completion (restamped N rows,
+> backfilled N shards, renamed/deleted M GCS objects, removed a resource from tofu/terraform state) had NO analogous
+> artifact — the claim rested entirely on the worker's self-report of running their own script. Review independently
+> flagged this same class 3× (tofu-state, `do_rename`, prediction restamp row-counts — see
+> `plans/archive/2026_08/issues/prod_mutation_evidence_artifact_gap_2026_08_03.md`). RULED 2026-08-06: extend the § 8b
+> evidence-backing contract to this class.
+
+Any `- [x]` todo whose completion is a **quantified prod DATA-mutation claim** — a restamp/backfill row or shard
+count, a GCS object rename/delete count, or a terraform/tofu state operation — MUST cite one of the following
+structured evidence tokens on the checkbox line or its continuation lines:
+
+```markdown
+- [x] ✅ ... restamped 12,006 rows ... Evidence: manifest-delta=<shard-or-row-id>
+- [x] ✅ ... renamed 40 GCS objects ... Evidence: gcs-op=<operation-id-or-manifest>
+- [x] ✅ ... removed X from tofu state ... Evidence: tofu-state=<before/after state-list count or ref>
+- [x] ✅ ... backfilled N shards ... Evidence: vm-log=<vm-logs/<unit>/RESULT.json path>
+```
+
+- `manifest-delta=` — a written manifest-delta row/shard id the mutation produced (the writer materialises this the
+  same run it makes the change — never re-derived after the fact).
+- `vm-log=` — a durable `vm-logs/<unit>/RESULT.json` (or equivalent) path a reviewer can open directly.
+- `gcs-op=` — a GCS operation id, or a path to a written before/after object inventory, for a rename/delete.
+- `tofu-state=` — a before/after `terraform state list` count or ref proving the state change actually landed.
+- Multiple tokens and additional kinds are allowed. Unlike § 8b's `cloudbuild=<id>`, there is no single live API that
+  resolves every one of these token kinds — this is a **citation-presence** check (a reviewer must be able to open the
+  cited artifact), not a live-verified one.
+- **Enforced by** `unified-trading-pm/scripts/quality_gates/check_evidence_backed_completion.py` sub-rule C: a
+  baselined ratchet (same `evidence_backed_completion_baseline.yaml` as sub-rule B, its own
+  `prod_mutation_claim_without_evidence_baseline` key) — pre-existing corpus drift is grandfathered, a NEW quantified
+  prod-mutation claim with no evidence token regresses the gate. Re-baseline with `--baseline-write` only after
+  confirming a flagged claim is genuine pre-existing debt, not a fresh over-claim.
+- Scope is deliberately narrow: a bare mention of "backfill"/"restamp"/"renamed" with no accompanying quantity (a
+  design discussion, not a completion claim) does NOT trigger this rule — same same-clause-proximity discipline as
+  § 8b's sub-rule B, so an unrelated numeric mention elsewhere in a long todo block doesn't false-positive.
 
 ### 9. UI Verification Gate (HARD RULE — codified 2026-05-23)
 
