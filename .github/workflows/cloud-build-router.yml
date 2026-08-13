@@ -534,7 +534,15 @@ jobs:
 
           trigger_build_in_region() {
             local region="$1"
-            echo "Attempting build trigger in region: $region"
+            # CRITICAL: this diagnostic MUST go to stderr. The caller captures the
+            # function's STDOUT as the build ID (`BUILD_ID=$(trigger_build_in_region ...)`),
+            # so any echo to stdout here pollutes BUILD_ID with non-ID text. Observed
+            # 2026-08-13 (escalation agt-cb29da): the echoed string was captured as the
+            # "build ID", the multiline value corrupted every subsequent $GITHUB_OUTPUT
+            # entry (build_region / build_exit_code / build_failure_reason arrived EMPTY),
+            # and the empty build_region then fired the escalate-regional-fallback job
+            # spuriously while the real build actually SUCCEEDED in the primary region.
+            echo "Attempting build trigger in region: $region" >&2
 
             local trigger_output=""
             # --branch is REQUIRED for a repositoryEventConfig (2nd-gen GitHub-connection) trigger
