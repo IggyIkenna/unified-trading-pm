@@ -65,14 +65,15 @@ context_scope:
 
 ## Todos
 
-- [ ] [INFRA] P3. **Make finalize-plan creation idempotent at the point of creation.** Before writing a new
-      `<parent>_finalize*.md`, re-derive `check_finalize_plan_coverage.py::_gated_slugs()` over the CURRENT corpus and
-      refuse if the parent is already gated by an existing finalize plan — regardless of that plan's filename shape. The
-      two colliding files differ only by a redundant `_2026_07_31` suffix, so any guard keyed on the exact expected
-      filename would have missed this; key it on the `depends_on` relationship, which is the real contract. **Done
-      when**: the creation path (or a pre-commit/QG check standing in for it) refuses to add a second finalize plan
-      whose `depends_on` names a parent already covered by an existing `gate_on_depends: true` plan, verified against a
-      reconstructed copy of this doc's own 2026-07-31 collision.
+- [x] ✅ [INFRA] P3. **Make finalize-plan creation idempotent at the point of creation.** —
+      unified-trading-pm@6cd104bfc2. Before writing a new `<parent>_finalize*.md`, re-derive
+      `check_finalize_plan_coverage.py::_gated_slugs()` over the CURRENT corpus and refuse if the parent is already
+      gated by an existing finalize plan — regardless of that plan's filename shape. The two colliding files differ only
+      by a redundant `_2026_07_31` suffix, so any guard keyed on the exact expected filename would have missed this; key
+      it on the `depends_on` relationship, which is the real contract. **Done when**: the creation path (or a
+      pre-commit/QG check standing in for it) refuses to add a second finalize plan whose `depends_on` names a parent
+      already covered by an existing `gate_on_depends: true` plan, verified against a reconstructed copy of this doc's
+      own 2026-07-31 collision.
 
 - [ ] [INFRA] P3. **Add a corpus-wide duplicate-gate detector to the hygiene sweep.** Flag any parent slug named in the
       `depends_on` of MORE THAN ONE `gate_on_depends: true` plan. This is cheap (the sweep already parses every plan's
@@ -131,3 +132,18 @@ just picking a winner by filename.
   directly once all 3 todos clear.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+
+- **2026-08-13 (worker, slot 15) — todo 1 shipped, unified-trading-pm@6cd104bfc2.** Added
+  `_find_duplicate_gate_creation_violations()` to `check_finalize_plan_coverage.py`, wired into its existing `--only`
+  precommit path (`run_hygiene_sweep.sh` already invokes this script `--only "${STAGED_PLANS[@]}"` on every commit
+  touching a staged plan — no new wiring needed, just a third check added to the same call). A staged finalize plan
+  (`depends_on` + `gate_on_depends: true`) whose `depends_on` names a parent slug already covered by a DIFFERENT
+  existing finalize plan is now refused, keyed on the `depends_on` relationship via `_gated_slugs()`'s same logic (never
+  the filename), exactly as the done-when required. Verified against a reconstructed copy of this doc's own 2026-07-31
+  collision: `test_only_refuses_a_new_finalize_plan_that_duplicates_an_existing_gate` builds the same parent + two
+  differently-named finalize plans both `depends_on: [<parent>]` + `gate_on_depends: true`, asserts the second one is
+  refused (`rc == 1`); companion tests confirm the FIRST finalize plan for a parent still passes and that an
+  out-of-scope collision elsewhere in the corpus doesn't leak into an unrelated `--only` commit (RULE-11 blast-radius
+  safety). 10/10 tests green (`.venv/bin/pytest scripts/quality_gates/test_check_finalize_plan_coverage.py -q`). Todos 2
+  (corpus-wide duplicate-gate-at-rest detector in the hygiene sweep) and 3 (one-time corpus sweep with that detector)
+  are separate backlog items — left open here, not touched by this commit.
