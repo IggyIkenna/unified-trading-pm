@@ -185,19 +185,19 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       needs its own bound.
 
       **RESOLVED 2026-08-02 (slot 10)**: `deployment-api@34a596b`. Took the documented alternative to raising the
-                  ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
-                  means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
-                  accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
-                  `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
-                  `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
-                  `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
-                  observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
-                  `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
-                  AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
-                  isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
-                  isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
-                  "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
-                  records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
+                      ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
+                      means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
+                      accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
+                      `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
+                      `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
+                      `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
+                      observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
+                      `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
+                      AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
+                      isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
+                      isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
+                      "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
+                      records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
 
 - [x] ✅ [INFRA] P3. The `data-status-rollup-worker` `GcsEventSink` (the
       `log_event(SERVICE_PROCESSED/SERVICE_FAILED, ...)` calls in `run_rollup`) has not written a new dated prefix under
@@ -423,9 +423,18 @@ worth closing the same way (isolate + surface the real error) rather than leavin
   this is root-caused and fixed. Flagging for operator awareness — this is bigger than one plan's transition-compat
   cleanup todo.
 
+- **data_engineering (slot-2) 2026-08-13T18:20Z**: root-caused + fixed the `[DATA] P1` follow-up (the TypeError /
+  AttributeError class failing 7 of 14 rollup services). Both error classes traced to the SAME two lines in
+  `breakdowns_domain.py` `_build_single_feature_group_entry` (L441 `.str.len()` + L444 `sorted(unique())`), triggered by
+  a data-shape change in the features buckets (timeframe/feature_group/chain columns now all-null float64 or mixed
+  None+str). Fixed via `fillna("").astype(str)` dtype-normalization at all three sites + regression tests. Shipped
+  `deployment-api@31e1affb65`, full QG green, verified on origin. See the todo's own resolution note for the full
+  evidence chain. Note: the separate `[DATA] P2` timeouts (MDPS / features-onchain) + `[DATA] P3` live re-verification
+  remain open.
+
 ## Follow-ups
 
-- [ ] [DATA] P1. **NEW (2026-08-13)**: root-cause + fix the `TypeError: '<' not supported between NoneType and str` /
+- [x] ✅ [DATA] P1. **NEW (2026-08-13)**: root-cause + fix the `TypeError: '<' not supported between NoneType and str` /
       `AttributeError: Can only use .str accessor with string values!` errors now failing 7 of 14 `_DEFAULT_SERVICES`
       manifest-rollup builds (`features-delta-one-service`/`features-volatility-service`/
       `features-multi-timeframe-service`/`features-cross-instrument-service`/`features-sports-service`/
@@ -434,7 +443,21 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       2026-07-26 diagnosis (those 9 services worked then). Likely a manifest schema/dtype drift (a column expected to be
       all-string now carries `None`/mixed dtype in at least one of these services' captured data) — start by bisecting
       when it started (Cloud Logging history between 2026-07-26 and 2026-08-13) and which manifest column's values
-      changed shape.
+      changed shape. **ROOT-CAUSED + FIXED 2026-08-13 (slot 2)**: `deployment-api@31e1affb65`. Both error classes traced
+      to the SAME two lines in `breakdowns_domain.py` `_build_single_feature_group_entry` — L441
+      `fg_df["timeframe"]     .str.len()` raises `AttributeError` on an all-null float64 `timeframe` column
+      (features-sports/calendar + strategy-service via the `feature_group` guard L879); L444
+      `sorted(fg_df["timeframe"].unique())` raises `TypeError` over a mixed `None`+`str` column
+      (features-delta-one/volatility/multi-timeframe/cross-instrument). Reproduced live against prod buckets (all 7
+      confirmed). Regression started 2026-08-11T18:04Z (Cloud Logging earliest occurrence) — before the 08-13 dual-scope
+      deploy, and the code is byte-identical to pre-refactor (07-31 was pure code motion) — so the trigger is a
+      DATA-SHAPE change in the features buckets (these columns now carry nulls/ mixed dtype). Fix: dtype-normalize via
+      `fillna("").astype(str)` before `.str.len()`/`sorted()` at all three sites (timeframe L441/L444, `chain` guard
+      L858, `feature_group` guard L879) — nulls → `""` (contributes 0 to len / dropped by the falsy guard), preserving
+      honest absence. Regression tests: `tests/unit/test_v4_sub_dimensions_chain_gated_on_defi.py` (all-null float64,
+      mixed None+str, clean-strings, v4 guards). 58 targeted tests pass; full QG green; verified on origin. Live `*/20`
+      cycle re-verification is the next `[DATA] P3`-style follow-up (the deploy gate: LDR→main promote + Cloud Run
+      build).
 - [ ] [DATA] P2. **NEW (2026-08-13)**: `market-data-processing-service` and `features-onchain-service` now also timeout
       at 420s (same failure mode as the already-tracked `market-tick-data-service` gap) — not previously documented as
       failing in this doc. Confirm whether this is the SAME root cause as the tracked `market-tick-data-service` timeout
