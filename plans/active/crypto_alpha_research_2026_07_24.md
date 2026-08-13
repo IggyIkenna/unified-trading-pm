@@ -106,14 +106,22 @@ context_scope:
 > explicitly excluded from the general "unpause/relax/complete-in-full" theme applied elsewhere in this pass; these 16
 > items stay `BLOCKED-OPERATOR-DECISION` indefinitely and are not retagged.
 
-- Short sleeve: re-cast as a basis tail-hedge · re-evaluate book weight (15%→smaller/0) · wire the R8 confirmed-momentum
-  short gate into production · ship the de-risk overlay + 12% short.
-- Basis: deployable = liquid-only carry · re-present + size on RAW economics (not vol-normed) · filled-to-capacity +
-  capped slow-momentum (180–365d) allocator.
-- Momentum: add a confirmed long+short TS-MOMENTUM leg · maker-WIDTH sweep · per-strategy execution sweep (basis+short).
-- Universe + risk: ADV/depth capacity gating · time-average the liquidity scan · funding-regime monitor + dynamic basis
-  sizing · `h32` next-weak-leg · apply cs-denoise + tsmom-long-only to the production legs.
-- [STRATEGY] Accelerate the non-crypto archetypes (TradFi/sports/prediction) for genuine bear-regime alpha.
+- [BLOCKED-OPERATOR-DECISION] Short sleeve: re-cast as a basis tail-hedge · re-evaluate book weight (15%→smaller/0) ·
+  wire the R8 confirmed-momentum short gate into production · ship the de-risk overlay + 12% short.
+- [BLOCKED-OPERATOR-DECISION] Basis: deployable = liquid-only carry · re-present + size on RAW economics (not
+  vol-normed) · filled-to-capacity + capped slow-momentum (180–365d) allocator.
+- [BLOCKED-OPERATOR-DECISION] Momentum: add a confirmed long+short TS-MOMENTUM leg · maker-WIDTH sweep · per-strategy
+  execution sweep (basis+short).
+- [BLOCKED-OPERATOR-DECISION] Universe + risk: ADV/depth capacity gating · time-average the liquidity scan ·
+  funding-regime monitor + dynamic basis sizing · `h32` next-weak-leg · apply cs-denoise + tsmom-long-only to the
+  production legs.
+- [BLOCKED-OPERATOR-DECISION] [STRATEGY] Accelerate the non-crypto archetypes (TradFi/sports/prediction) for genuine
+  bear-regime alpha.
+
+> **CORRECTED 2026-08-12 (/plan-reconcile)**: the "Reviewed 2026-07-28" banner above claimed these 16 items "stay
+> `BLOCKED-OPERATOR-DECISION` indefinitely" but the tag was never literally written on the list items themselves
+> (verified: `grep -c BLOCKED-OPERATOR-DECISION` on this section returned 0 before this edit). Added the tag to each of
+> the 5 bullet groups above so the doc's claim and its content agree.
 
 ---
 

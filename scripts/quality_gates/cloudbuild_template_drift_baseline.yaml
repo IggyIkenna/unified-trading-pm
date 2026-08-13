@@ -13,8 +13,20 @@
 # deployment-api's vendor-deps/deploy/redeploy-monitor-jobs steps) is
 # expected to live here PERMANENTLY, baselined rather than "fixed".
 #
-# SSOT: plans/active/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md
-# + plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md.
+# `--update-baseline` REFUSES to raise a count, and the refusal is SILENT: it
+# prints the observed (higher) number and leaves this file unchanged. That is
+# the ratchet working, not a failed write — do not go looking for a bug in the
+# writer. If a count needs to go up, the change should not land in that shape.
+#
+# Enforced at TWO points since 2026-08-12: fleet-wide in unified-trading-pm's
+# quality-gates.sh (catches a TEMPLATE edit that leaves consumers behind), and
+# scoped to the consumer in quality-gates-base/base-service.sh STEP 5.108 +
+# base-ui.sh [5.108] (catches a CONSUMER edit at the point it is introduced,
+# instead of as a fleet-wide PM commit block on an unrelated agent's machine).
+#
+# SSOT: /plans/archive/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md
+# + /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md
+# + /plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md (consumer-side wiring).
 note:
   "Seeded 2026-07-28 (ci_satellite_ao_dispatch_batch1 [INFRA] P2). Ratcheted DOWN 2026-08-06 by
   ci_satellite_ao_dispatch_batch5 todo 1 (cloudbuild empty-tag-guard rollout: template forward-ports + guard

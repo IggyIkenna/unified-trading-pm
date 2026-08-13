@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [defi, backfill, manifest, mtds, pipeline-mode, execution, data-correctness, live-trading]
 related:
   [
-    ../active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+    /plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     /plans/archive/2026_06/defi_governance_params_refresh_2026_06_20.md,
     /plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
     ../archive/2026_06/defi_mtds_subgraph_and_adapter_fixes_2026_06_20.md,
@@ -54,7 +54,7 @@ related_plans:
   - ../active/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md
   - ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md
   - ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20_finalize_2026_07_27.md
-  - ../active/defi_satellite_ao_dispatch_batch10_2026_08_06.md
+  - /plans/archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06.md
   - ../archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06_finalize.md
   - ../active/defi_satellite_ao_dispatch_batch11_2026_08_09.md
   - ../active/defi_satellite_ao_dispatch_batch11_2026_08_09_finalize.md
@@ -279,7 +279,7 @@ Covers:
   reconciled vs the instruments-side which already had them cefi"). The later, UAC-SSOT-backed classification is carried
   by `plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md` (lines 71-75: "LIGHTER / EXTENDED / PACIFICA
   are CeFi, NOT DeFi (v10 decision #4) — do NOT backfill them here. Any older plan treating them as DeFi is stale and
-  SUBORDINATE"). Synced per `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (finding 37).
+  SUBORDINATE"). Synced per `plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (finding 37).
 - **DeFi data pipeline E2E**: features-onchain → strategy → execution. 8 archetypes pass Phase 1 batch e2e (per
   `defi_e2e_pipeline`).
 - **MTDS DeFi slice to 100%**: per-(asset_group=defi, chain, venue/protocol, data_type, instrument_id, day). Chain is a
@@ -339,12 +339,12 @@ todo block below maps to one of these homes — nothing dropped, nothing flipped
 
 | Former inline block                                                                                                                                                                                                                 | Disposition                                                                                                                     | Home (the live, dispatchable plan)                                                                                                                                                                                                                                                                                                               |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Governance parameters refresh (Aave/Compound/Morpho event listener → time-versioned `governance_params` parquet → APR-calc + sizing migration + new UAC `GOVERNANCE_PARAMS_CHANGED`)                                                | **EXTRACTED (net-new)**                                                                                                         | [`defi_governance_params_refresh_2026_06_20`](../active/defi_governance_params_refresh_2026_06_20.md)                                                                                                                                                                                                                                            |
+| Governance parameters refresh (Aave/Compound/Morpho event listener → time-versioned `governance_params` parquet → APR-calc + sizing migration + new UAC `GOVERNANCE_PARAMS_CHANGED`)                                                | **EXTRACTED (net-new)**                                                                                                         | [`defi_governance_params_refresh_2026_06_20`](/plans/archive/2026_06/defi_governance_params_refresh_2026_06_20.md)                                                                                                                                                                                                                               |
 | Hardcoded on-chain-derivable values audit (Cat-A derive-SSOT + CI citation gate; Cat-B fallback removal, blocked on governance Phase 2) + Fork-1 prep residuals (Pyth-Hermes coverage SSOT, local-fallback drift sweep)             | **EXTRACTED (net-new)**                                                                                                         | [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](/plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)                                                                                                                                                                                                   |
 | DEX-swaps subgraph schema-mismatch rewrite (PancakeSwap/SushiSwap/Aerodrome/Camelot) + Compound V3 Messari rewrite (Bug 2) + Hyperliquid OHLCV stub + Extended-Starknet unblocking + CLOB asset_group classification                | **EXTRACTED (net-new)**                                                                                                         | [`defi_mtds_subgraph_and_adapter_fixes_2026_06_20`](../archive/2026_06/defi_mtds_subgraph_and_adapter_fixes_2026_06_20.md)                                                                                                                                                                                                                       |
 | DeFi full-batch E2E validation + per-handler coverage + Phase-D historical carry tracer (2022→today × 7 archetypes) + Lighter/Pacifica backfill final-state verify + SolidlyCL golden-swap validation (P2)                          | **EXTRACTED (net-new)**                                                                                                         | [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md)                                                                                                                                                                                                                      |
-| `mtds-s4-10` rescan-all-manifests + LIGHTER `perp_funding` (A5) + DeFi per-chain/per-venue launch dates + DEX per-chain launch-date + on-chain features + DeFi single-walk / G1 backfill / coverage rollup                          | **OWNED ELSEWHERE — do not duplicate**                                                                                          | [`defi_manifest_canonicalisation_2026_06_01`](../active/defi_manifest_canonicalisation_2026_06_01.md) (DeFi manifest/coverage master; the manifest-migration rescan rides `infrastructure_master` / `master_data_canonicalisation_migration_catalogue_2026_06_07`)                                                                               |
-| `source=` provenance / row-level source column for DeFi                                                                                                                                                                             | **OWNED ELSEWHERE — do not duplicate**                                                                                          | [`data_source_provenance_all_asset_groups_2026_06_01`](../active/data_source_provenance_all_asset_groups_2026_06_01.md) (DeFi is an explicit 🔴 RED stamping gap there)                                                                                                                                                                          |
+| `mtds-s4-10` rescan-all-manifests + LIGHTER `perp_funding` (A5) + DeFi per-chain/per-venue launch dates + DEX per-chain launch-date + on-chain features + DeFi single-walk / G1 backfill / coverage rollup                          | **OWNED ELSEWHERE — do not duplicate**                                                                                          | [`defi_manifest_canonicalisation_2026_06_01`](/plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md) (DeFi manifest/coverage master; the manifest-migration rescan rides `infrastructure_master` / `master_data_canonicalisation_migration_catalogue_2026_06_07`)                                                                  |
+| `source=` provenance / row-level source column for DeFi                                                                                                                                                                             | **OWNED ELSEWHERE — do not duplicate**                                                                                          | [`data_source_provenance_all_asset_groups_2026_06_01`](/plans/archive/2026_07/data_source_provenance_all_asset_groups_2026_06_01.md) (DeFi is an explicit 🔴 RED stamping gap there)                                                                                                                                                             |
 | Per-adapter `available_at` stamping for DeFi adapters + DeFi feature_groups → UAC `FEATURE_REQUIRED_INPUTS`                                                                                                                         | **OWNED ELSEWHERE — do not duplicate**                                                                                          | [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md) Phase 1/4 (archived plan; the in-flight stamping refactor banner above coordinates it)                                                                                                                            |
 | Solana LST MTDS coverage gap (jitoSOL/mSOL ~monthly granularity) + Pyth-Hermes jitoSOL pre-2023-10 scope                                                                                                                            | **OWNED ELSEWHERE — named successors**                                                                                          | archived `plans/archive/issues/lst_apr_sourcing_method_validated_2026_05_14.md` + `plans/archive/solana_restaking_rewards_coverage_2026_05_13.md`; the manifest-coverage side rides `defi_manifest_canonicalisation_2026_06_01` (the Pyth-Hermes scope decision is also tracked in `defi_onchain_derivable_values_and_date_drift_2026_06_20` P1) |
 | The 12 "End-state at May 23" bare cutover success-criteria checkboxes (live-trading / venue subsets / custody / alerting / kill-switches / batch-vs-live recon / AWS↔GCP parity / gas-lending-staking discipline / scenario matrix) | **ROUTED TO MASTER**                                                                                                            | [`master_to_live_defi_2026_05_23`](/plans/archive/2026_07/master_to_live_defi_2026_05_23.md) (Groups F/G cutover gates — these are cutover criteria, not implementation units; tracked there, not re-extracted)                                                                                                                                  |
@@ -624,10 +624,10 @@ these venues.
       `captured` for ~370 (Lighter) + ~310 (Pacifica) day-symbol shards.
 
       ```bash
-                                                                                                                                                                                                                                      gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
-                                                                                                                                                                                                                                      ```
+                                                                                                                                                                                                                                              gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
+                                                                                                                                                                                                                                              ```
 
-                                                                                                                                                                                                                                      [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
+                                                                                                                                                                                                                                              [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
 
 ### Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates missing)
 
@@ -786,7 +786,7 @@ lending-indices VM is ready to re-launch. Operator-owned step.
 > error was swallowed). These bugs produced ~100K+ fake `empty_confirmed SOURCE_RETURNED_ZERO` manifest rows. The
 > manifest is being cleaned via `scripts/reset_source_returned_zero_manifest.py`. **Wait for cleanup to finish +
 > manifest consolidator to rebuild before relaunching.** Issue:
-> `plans/active/issues/mtds_defi_handler_bugs_source_returned_zero_cleanup_2026_05_23.md`.
+> `plans/archive/issues/mtds_defi_handler_bugs_source_returned_zero_cleanup_2026_05_23.md`.
 
 **Audit 2026-05-08 (Tab 14, defi-fork1-prep-audit-tab)**: 4-bug-class diagnostic audit ran across the full Fork 1
 data-source surface BEFORE Ikenna's D4 launches. Results filed at
@@ -870,7 +870,7 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 > SUPERSEDED 2026-05-20); the Pacifica/Lighter rows' "declare DEFI venue capabilities" phrasing (audit notes below) is
 > the same stale premise — read as CeFi. Later, UAC-SSOT-backed classification:
 > `plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md` lines 71-75. Synced per
-> `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (finding 37).
+> `plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (finding 37).
 
 - [x] **[SUPERSEDED]** [AGENT] P0. ~~**Extended** — UAC: add to `VENUES_BY_ASSET_GROUP['defi']`. Adapter:
       `_fetch_extended_rest` + history.~~ — EXTENDED-STARKNET correctly classified as CEFI (DEX perp), not DEFI
@@ -915,7 +915,7 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 > cutover ships on `CLOUD_KMS_ENCRYPTED` (HSM-backed CMK); June-1 flips per-wallet to `COPPER_MPC` / CEFFU per POD scope
 > (Fireblocks OUT OF SCOPE — operator ruling 2026-07-12 reaffirming the POD codification; was: "COPPER_MPC /
 > FIREBLOCKS_MPC on client-provided creds"; see
-> [`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`](../active/issues/plan_reconciliation_operator_decisions_2026_07_11.md)
+> [`plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md`](/plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md)
 > §A2 finding 376). Operator-action checklist:
 > [`/codex/15-runbooks/custody-onboarding-checklist.md`](/codex/15-runbooks/custody-onboarding-checklist.md). Per-wallet
 > schema:
@@ -937,7 +937,7 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
       will never arrive because POD scope is Copper + CEFFU only (Fireblocks OUT OF SCOPE). Superseded successor plan
       `plans/active/fireblocks_copper_client_integration_2026_06_01.md` covers Copper (still in scope); its
       Fireblocks-specific content is likewise descoped. See
-      `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 376.
+      `plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 376.
 
 ### Audit findings 2026-05-07 — folded from session wrapper
 
@@ -998,9 +998,9 @@ exist at a 5th layout the prober doesn't know about (extend the prober + the aud
 > Priority #3 (PROTOCOL_LAUNCH_DATES tightening) →
 > [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](/plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md) +
 > launch-date population in
-> [`defi_manifest_canonicalisation_2026_06_01`](../active/defi_manifest_canonicalisation_2026_06_01.md); Priority #4
-> (ASTER genesis/funding audit) → operator decision tracked in `defi_manifest_canonicalisation_2026_06_01` (ASTER launch
-> date) + the adapter-fix plan. Do NOT dispatch from here.
+> [`defi_manifest_canonicalisation_2026_06_01`](/plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md);
+> Priority #4 (ASTER genesis/funding audit) → operator decision tracked in `defi_manifest_canonicalisation_2026_06_01`
+> (ASTER launch date) + the adapter-fix plan. Do NOT dispatch from here.
 
 Source issue archived. Audit identified 13.6k actionable (non-legit) missing rows across 7 buckets. Priorities #1+#5
 fold into the lending-indices section above; priorities #2-#4 below remain pending. Coordinate with
@@ -1171,16 +1171,16 @@ shipping with the Fork-1 prep batches below).
       then dies).
 
       Blocks `create-code-tarballs.sh --asset-group DEFI` from `.tabs` worktrees (which have `features-service` not
-                                                                                                                                                                                                                                      `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
-                                                                                                                                                                                                                                      (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
-                                                                                                                                                                                                                                      VM ran current code without a refresh.
+                                                                                                                                                                                                                                              `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
+                                                                                                                                                                                                                                              (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
+                                                                                                                                                                                                                                              VM ran current code without a refresh.
 
-                                                                                                                                                                                                                                      Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
-                                                                                                                                                                                                                                      (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
-                                                                                                                                                                                                                                      `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
+                                                                                                                                                                                                                                              Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
+                                                                                                                                                                                                                                              (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
+                                                                                                                                                                                                                                              `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
 
-                                                                                                                                                                                                                                      Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
-                                                                                                                                                                                                                                      (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
+                                                                                                                                                                                                                                              Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
+                                                                                                                                                                                                                                              (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
 
 - [x] ✅ [SCRIPT] P1. **Wire `ManifestFreshnessCache` into `lending_indices_handler` + sibling MTDS DeFi backfill
       handlers (no manifest-freshness skip → backfill re-downloads already-`captured` days; slot-3 finding
@@ -1262,12 +1262,12 @@ Phase 3.D.5 v2 enumerator (must handle CLOB venues).
       vs the instruments-side which already had them cefi"). Later, UAC-SSOT-backed classification carried by
       `plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md` lines 71-75. Checkbox left as-is (this edit is
       a drift annotation only; checkbox-state reconciliation is a separate finding class). Synced per
-      `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (finding 37).
+      `plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (finding 37).
 - [ ] [SCRIPT] P1. **Phase 5 — Extended unblocking.** Starknet RPC template + OHLCV adapter for Extended. Blocked until
       Phase 1 ships Starknet chain entry + Phase 4 asset_group decision.
 - [ ] [SCRIPT] P1. Fix HYPERLIQUID adapter stub — currently raises `NotImplementedError` for `fetch_historical_ohlcv`.
       Wire to real Hyperliquid Info API endpoint. **DEFERRED**: not on critical path for paper-trade cutover (perp hedge
-      leg uses Binance/Bybit/OKX first). Issue: plans/active/issues/emerging_perp_venue_adapters_broken_2026_05_13.md
+      leg uses Binance/Bybit/OKX first). Issue: plans/archive/issues/emerging_perp_venue_adapters_broken_2026_05_13.md
 
 ### Hardcoded on-chain-derivable values audit (migrated from `defi_eliminate_hardcoded_onchain_derivable_values_2026_05_08`) — SUPERSEDED 2026-06-20 (history only; see § "Workstream routing (restructured 2026-06-20)")
 
@@ -1352,9 +1352,9 @@ auto-row-reclassification.
 ### Governance parameters refresh (migrated from `defi_protocol_governance_parameters_refresh_2026_05_08`) — SUPERSEDED 2026-06-20 (history only; see § "Workstream routing (restructured 2026-06-20)")
 
 > **EXTRACTED**: all open Phases 1-5 + the new UAC `GOVERNANCE_PARAMS_CHANGED` event →
-> [`defi_governance_params_refresh_2026_06_20`](../active/defi_governance_params_refresh_2026_06_20.md). This plan GATES
-> the Cat-B fallback removal in `defi_onchain_derivable_values_and_date_drift_2026_06_20` Phase 3. Do NOT dispatch from
-> here.
+> [`defi_governance_params_refresh_2026_06_20`](/plans/archive/2026_06/defi_governance_params_refresh_2026_06_20.md).
+> This plan GATES the Cat-B fallback removal in `defi_onchain_derivable_values_and_date_drift_2026_06_20` Phase 3. Do
+> NOT dispatch from here.
 
 Source issue archived. Aave/Compound/Morpho parameters (LTV, liquidation threshold, rate-curve kinks, borrow caps)
 frozen at discovery time today; no refresh path. Live trading risk: governance change between discovery + execution
@@ -1544,12 +1544,12 @@ hedge legs span CME + CeFi + DeFi spot/perp/future combos and the live infra is 
       / Optimism / Polygon / Base / Avalanche / Solana / BSC / Gnosis) drive both strategy-decision preflight + P&L
       attribution as the `GAS` factor; (b) lending — `liquidity_index` / `variable_borrow_index` captured per-block from
       Aave V3 / Compound V3 / Spark / Radiant subgraphs (per
-      `plans/active/issues/aave_irm_slope_capture_dropped_2026_05_12.md` end-to-end fix mtds@`4b38a9b` + uac@`bd9c202` +
-      features-service@`e292a4d4`); CARRY_LENDING_SUPPLY / CARRY_LENDING_BORROW P&L factors derived from index growth ×
-      per-block aToken/debt-token balance reads (no APY proxy); (c) staking — both wrapped (wstETH/weETH/jitoSOL
-      price-delta) and rebasing (stETH balance-delta) attribution paths wired; CEX collateral form discipline
-      (Bybit/Deribit rebasing; OKX wrapped; Drift native non-rebasing) baked into archetype `_build_legs` perp-venue
-      dispatch.
+      `plans/archive/issues/aave_irm_slope_capture_dropped_2026_05_12.md` end-to-end fix mtds@`4b38a9b` +
+      uac@`bd9c202` + features-service@`e292a4d4`); CARRY_LENDING_SUPPLY / CARRY_LENDING_BORROW P&L factors derived from
+      index growth × per-block aToken/debt-token balance reads (no APY proxy); (c) staking — both wrapped
+      (wstETH/weETH/jitoSOL price-delta) and rebasing (stETH balance-delta) attribution paths wired; CEX collateral form
+      discipline (Bybit/Deribit rebasing; OKX wrapped; Drift native non-rebasing) baked into archetype `_build_legs`
+      perp-venue dispatch.
 - [ ] **Scenario regression matrix passing** (Group F item 17.5, added 2026-05-12): 16-cell matrix (2 cutover archetypes
       × ~8 registered scenarios each) all `ScenarioOutcomeResult.passed == True` before live cutover.
       `ScenarioMatrixRunner` emits `matrix.parquet` as Phase 9 pre-cutover evidence. Source plan:
@@ -1761,7 +1761,7 @@ forward-write gap close-out
 
 **status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
 
-### [`defi_satellite_ao_dispatch_batch10_2026_08_06`](../active/defi_satellite_ao_dispatch_batch10_2026_08_06.md)
+### [`defi_satellite_ao_dispatch_batch10_2026_08_06`](/plans/archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06.md)
 
 **status**: active · **estimate**: 2.88 cal AI-days (class: infra) **title**: DeFi satellite AO batch 10 —
 ag-closeout-audit defi tranche orphan extraction (2026-08-06)
@@ -1802,7 +1802,15 @@ ag-closeout-audit defi tranche orphan extraction (2026-08-06)
 
 ## P3 — backlog; revisit quarterly
 
-_(no plans currently assigned at this priority)_
+_(no PLANS currently assigned at this priority — the auto-generated block above only lists real plan docs. The 5 items
+below are orphaned P3 backlog work with no tracked plan/issue doc anywhere in the corpus; hand-added 2026-08-13 per
+blocked-question BLK-02d1163f so they aren't lost, not auto-generated.)_
+
+- [ ] AWS SNS/SQS mirroring (post-cutover backlog item, no scoping done yet).
+- [ ] Cross-cloud WIF (workload identity federation) for DeFi compute.
+- [ ] CEFFU integration / LTV-tuning follow-up.
+- [ ] DeFi-data vendor credential rotation backlog.
+- [ ] Firebase SA JSON — retire or rotate, no scoping done yet.
 
 ## Cross-references
 
@@ -1879,8 +1887,8 @@ gate MET.
 - `cefi_venue_universe_expansion_2026_05_01.plan.md` (DEX-perp half) — Lighter / Extended / Pacifica re-classified to
   DeFi asset_group (**STALE 2026-07-11**: reversed by v10 decision #4 — these venues are CeFi, NOT DeFi; see
   `plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md` lines 71-75; synced per
-  `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` finding 37); CeFi venues (Bitfinex / Bitget
-  / Kraken) lifted into `cefi_master`.
+  `plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` finding 37); CeFi venues (Bitfinex /
+  Bitget / Kraken) lifted into `cefi_master`.
 - `venue_axis_asset_group_vocabulary_2026_04_25.plan.md` (1 absorbed item) — `poolGetSnapshots` historical-TVL DeFi-pool
   query item lifted into "Tail-chain / mid-tier protocol coverage" above; remaining 2 absorbed items
   (`venue_start_dates` deletion + dashboard SSOT verify) folded into `infrastructure_master`.

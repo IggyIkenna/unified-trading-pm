@@ -41,8 +41,14 @@
 # Hosts without a working systemd --user instance (confirmed 2026-07-27: `systemd-run`
 # reports available but the scope launch itself silently fails on some hosts) fall back to
 # an RSS-poll cap: the command runs in its own session (`setsid`), and a background monitor
-# polls its real resident memory (/proc/<pid>/status VmRSS) every few seconds, SIGKILLing the
-# whole process group the first time RSS exceeds the cap.
+# polls its real resident memory every few seconds, SIGKILLing the whole process group the
+# first time RSS exceeds the cap. RSS is read via /proc/<pid>/status (Linux) when available,
+# else via `ps -o rss=` (macOS/BSD — no /proc there at all, confirmed 2026-08-12: the ORIGINAL
+# /proc-only fallback silently degraded to fully-unwrapped/advisory-only on every macOS host,
+# meaning this wrapper enforced NOTHING on the operator's own laptop — exactly the host class
+# a concurrent multi-tab session most needs it on. `ps -o rss=` needs no elevated permissions
+# and works identically on macOS and Linux, so it is also used as the Linux fallback if /proc
+# is ever unreadable for some reason.
 #
 # This used to be a per-process RLIMIT_AS hard cap via `ulimit -v` instead — REMOVED
 # 2026-08-03 (/plans/archive/2026_08/read_availability_index_slim_read_oom_at_defi_scale_2026_08_01.md Todo 2):
@@ -100,25 +106,47 @@ if [[ $# -eq 0 ]]; then
     exit 2
 fi
 
-# RSS-poll fallback: launches "$@" in its own session/process group (setsid), polls its
-# real VmRSS every ANALYSIS_POLL_INTERVAL_S seconds (default 2), and SIGKILLs the whole
-# group the first time RSS exceeds the cap. Runs when systemd-run/cgroups aren't
-# available — see the header comment for why this replaced the old RLIMIT_AS/ulimit -v
-# fallback (it's virtual-address-space accounting, not physical residency, and fails
-# spuriously on pyarrow/grpc-heavy workloads well below the intended cap).
+# RSS-poll fallback: launches "$@" in its own process group, polls its real RSS every
+# ANALYSIS_POLL_INTERVAL_S seconds (default 2), and SIGKILLs the whole group the first time
+# RSS exceeds the cap. Runs when systemd-run/cgroups aren't available — see the header
+# comment for why this replaced the old RLIMIT_AS/ulimit -v fallback (it's virtual-address-
+# space accounting, not physical residency, and fails spuriously on pyarrow/grpc-heavy
+# workloads well below the intended cap).
+#
+# Process-group isolation via bash job control (`set -m`), NOT `setsid` — confirmed
+# 2026-08-12: `setsid` is a Linux util-linux tool with NO macOS equivalent, so the original
+# `setsid "$@" &` line failed outright on every macOS host and this whole fallback silently
+# never engaged (macOS fell straight through to the fully-unwrapped/advisory-only branch —
+# this wrapper enforced NOTHING on the operator's own laptop, exactly the host class that
+# needs it most). Under `set -m`, bash gives a backgrounded job its own new process group
+# with PID==PGID (same property `setsid` provides), so `kill -- -$cmd_pid` below still kills
+# the whole group — verified working identically on macOS and Linux, no external binary.
+_read_rss_kb() {
+    local pid="$1"
+    if [[ -r "/proc/$pid/status" ]]; then
+        awk '/^VmRSS:/{print $2}' "/proc/$pid/status" 2>/dev/null
+    else
+        # macOS/BSD (no /proc): `ps -o rss=` reports RSS in KB directly, portable, no
+        # elevated permissions needed. Also the fallback if /proc is present but unreadable.
+        ps -o rss= -p "$pid" 2>/dev/null | tr -d ' '
+    fi
+}
+
 _run_with_rss_poll_cap() {
     local mem_cap_kb="$1"
     shift
     local poll_interval="${ANALYSIS_POLL_INTERVAL_S:-2}"
 
-    setsid "$@" &
+    set -m
+    "$@" &
     local cmd_pid=$!
+    set +m
 
     (
         while kill -0 "$cmd_pid" 2>/dev/null; do
             sleep "$poll_interval"
             local rss_kb
-            rss_kb="$(awk '/^VmRSS:/{print $2}' "/proc/$cmd_pid/status" 2>/dev/null || true)"
+            rss_kb="$(_read_rss_kb "$cmd_pid")"
             if [[ -n "$rss_kb" ]] && (( rss_kb > mem_cap_kb )); then
                 echo "🛑 [run-bounded-analysis] RSS ${rss_kb}K exceeded cap ${mem_cap_kb}K — killing process group ${cmd_pid}" >&2
                 kill -KILL -- "-${cmd_pid}" 2>/dev/null || true
@@ -150,12 +178,14 @@ if [[ "$MEM_CAP" != "0" ]]; then
     else
         echo "⚠️  [run-bounded-analysis] systemd-run unavailable on this host (macOS / no user systemd instance)" >&2
         MEM_CAP_KB="$(_mem_cap_to_kb "$MEM_CAP")"
-        if [[ -n "$MEM_CAP_KB" ]] && [[ -r /proc/self/status ]] && command -v setsid >/dev/null 2>&1; then
+        if [[ -n "$MEM_CAP_KB" ]] && { [[ -r /proc/self/status ]] || command -v ps >/dev/null 2>&1; }; then
             USE_RSS_POLL=1
-            echo "    → falling back to an RSS-poll cap: ~${MEM_CAP} (${MEM_CAP_KB}K), polled every ${ANALYSIS_POLL_INTERVAL_S:-2}s" >&2
+            RSS_SOURCE="/proc"; [[ -r /proc/self/status ]] || RSS_SOURCE="ps"
+            echo "    → falling back to an RSS-poll cap (source: ${RSS_SOURCE}): ~${MEM_CAP} (${MEM_CAP_KB}K), polled every ${ANALYSIS_POLL_INTERVAL_S:-2}s" >&2
         else
-            # /proc or setsid unavailable (e.g. macOS) — no enforcement mechanism at all.
-            echo "    → RSS-poll fallback unavailable on this host too (needs /proc + setsid) — running fully UNWRAPPED, advisory only" >&2
+            # Neither /proc nor `ps` can report RSS — genuinely no enforcement mechanism
+            # available (should be rare; `ps` is near-universal on Unix-likes).
+            echo "    → RSS-poll fallback unavailable on this host too (needs /proc or ps) — running fully UNWRAPPED, advisory only" >&2
             echo "    → keep the analysis genuinely bounded (streamed/chunked read) rather than relying on a cap" >&2
         fi
     fi

@@ -2,10 +2,12 @@
 doc_type: codex-ssot
 title: portfolio-allocator-service
 summary:
-  "portfolio-allocator-service: one instance per client owning strategy-scope capital allocation, runs one of 8
-  allocator archetypes (FIXED/PNL_WEIGHTED/SHARPE_WEIGHTED/RISK_PARITY/KELLY/MIN_CVAR/REGIME_AWARE/MANUAL) and emits
-  versioned AllocationDirective events per cadence; reads PBMS NAVs + risk kill-switches; guard rails, shadow mode,
-  cross-share-class NAV conversion; does NOT move venue capital or rebalance positions."
+  "The portfolio allocator: one instance per client owning strategy-scope capital allocation, runs ONE allocator
+  archetype drawn from two groups — generic weighting engines (FIXED/PNL_WEIGHTED/SHARPE_WEIGHTED/RISK_PARITY/KELLY/
+  MIN_CVAR/REGIME_AWARE/MANUAL) and per-archetype RANK allocators that select and weight along an axis (coin/venue/
+  protocol/expiry/LST), including the two dispersion allocators — and emits versioned AllocationDirective events per
+  cadence; reads PBMS NAVs + risk kill-switches; guard rails, shadow mode, cross-share-class NAV conversion; does NOT
+  move venue capital or rebalance positions. Currently HOSTED INSIDE strategy-service, not yet a separate repo."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -21,7 +23,7 @@ related:
     /codex/04-architecture/capital-structure-and-regulatory.md,
   ]
 created: 2026-04-17
-authoritative_for: [portfolio-allocator-service, 8 allocator archetypes]
+authoritative_for: [portfolio-allocator-service, allocator archetypes]
 referenced_by:
   [
     /codex/03-services/venue-capability-registry.md,
@@ -35,9 +37,16 @@ code_refs:
 
 # portfolio-allocator-service
 
-> **What it is:** The new service that owns the **strategy scope** of capital allocation. One instance per client, runs
-> one of 8 allocator archetypes, emits `AllocationDirective` events per cadence. Not inside strategy-service — separate
-> service with its own lifecycle, versioning, replay, and UI.
+> **What it is:** The component that owns the **strategy scope** of capital allocation. One instance per client, runs
+> one allocator archetype, emits `AllocationDirective` events per cadence.
+>
+> **⚠️ WHERE IT ACTUALLY LIVES (corrected 2026-08-12).** This doc previously said "Not inside strategy-service —
+> separate service with its own lifecycle, versioning, replay, and UI." **That describes the target, not the present.**
+> The code is at `strategy_service/portfolio_allocator/` and its own `__init__.py` states the placement is pragmatic for
+> the v2 migration, with a dedicated `portfolio-allocator-service` repo as the target — and **no such repo exists**
+> (verified 2026-08-12 against the 26-repo estate). The import surface is deliberately stable so the sub-package can
+> move in-tree with zero call-site changes when the split happens. Read "separate service" below as the destination;
+> anyone looking for the repo today will not find one.
 
 ## Responsibilities
 
@@ -57,20 +66,69 @@ code_refs:
 - **Not responsible for:** moving venue capital (transfer-rebalance), rebalancing positions (strategies do this
   themselves)
 
-## 8 Allocator archetypes
+## Allocator archetypes — two groups
 
-| #   | Archetype         | Allocation rule                    |
-| --- | ----------------- | ---------------------------------- |
-| 1   | `FIXED`           | Constant weights                   |
-| 2   | `PNL_WEIGHTED`    | Weight ∝ trailing P&L              |
-| 3   | `SHARPE_WEIGHTED` | Weight ∝ trailing Sharpe           |
-| 4   | `RISK_PARITY`     | Weight ∝ 1/vol                     |
-| 5   | `KELLY`           | Fractional Kelly across strategies |
-| 6   | `MIN_CVAR`        | Minimize tail risk                 |
-| 7   | `REGIME_AWARE`    | Swap weights per detected regime   |
-| 8   | `MANUAL`          | Human-in-loop                      |
+> **No total is given here on purpose.** This doc claimed "8 allocator archetypes" in its title, summary,
+> `authoritative_for` facet and this heading while `ALLOCATOR_ARCHETYPE_REGISTRY` had **more than twice that** — and the
+> code's own `portfolio_allocator/__init__.py` docstring agreed with the wrong number, so doc and code corroborated each
+> other into a false consensus. **That is how the entire rank-allocator layer, including both dispersion allocators,
+> stayed invisible to a reader working from this SSOT** (measured 2026-08-12). The registry is the oracle:
+> `grep 'AllocatorArchetype\.' strategy_service/portfolio_allocator/archetypes.py`.
 
-Each archetype is a separate engine class. One engine per archetype. One allocator instance picks one archetype.
+### Group 1 — generic weighting engines
+
+Weight a set of strategy instances by a portfolio statistic. Axis-agnostic.
+
+| Archetype         | Allocation rule                    |
+| ----------------- | ---------------------------------- |
+| `FIXED`           | Constant weights                   |
+| `PNL_WEIGHTED`    | Weight ∝ trailing P&L              |
+| `SHARPE_WEIGHTED` | Weight ∝ trailing Sharpe           |
+| `RISK_PARITY`     | Weight ∝ 1/vol                     |
+| `KELLY`           | Fractional Kelly across strategies |
+| `MIN_CVAR`        | Minimize tail risk                 |
+| `REGIME_AWARE`    | Swap weights per detected regime   |
+| `MANUAL`          | Human-in-loop                      |
+
+### Group 2 — per-archetype RANK allocators (Phase 8)
+
+**This is the layer that makes "weights on coins / venues / protocols" work.** Each ranks a candidate universe along an
+axis, filters by a metric threshold, truncates to top-N and weights by the metric — so axis selection and axis weighting
+are one operation. Implemented in `portfolio_allocator/archetypes_rank.py` over a shared `BaseRankAllocator`.
+
+| Archetype                         | Axis (group → member)  | Ranking metric        |
+| --------------------------------- | ---------------------- | --------------------- |
+| `CARRY_FUNDING_RANK`              | coin                   | funding APY           |
+| `CARRY_BASIS_PERP_RANK`           | coin → venue           | basis APY             |
+| `CARRY_BASIS_DATED_RANK`          | coin → venue (+expiry) | dated basis APY       |
+| `CARRY_STAKED_BASIS_RANK`         | LST → venue            | staked basis APY      |
+| `CARRY_RECURSIVE_STAKED_RANK`     | LST → venue            | recursive staked APY  |
+| `YIELD_STAKING_SIMPLE_RANK`       | protocol               | staking APY           |
+| `YIELD_ROTATION_LENDING_RANK`     | protocol               | lending supply APY    |
+| `CARRY_FUNDING_DISPERSION_RANK`   | coin (single-stage)    | raw perp funding bps  |
+| `ARBITRAGE_PRICE_DISPERSION_RANK` | venue                  | cross-venue price gap |
+
+Two shapes: **single-stage** (rank across the whole cohort, no grouping — the dispersion allocators) and **hierarchical
+2-stage** (`_hierarchical_rank_weight`: group by axis token, score group by `avg(metric)`, filter, truncate to
+`top_n_groups`, then within each surviving group filter and truncate to `top_n_per_group`).
+
+Each archetype is a separate engine class. One engine per archetype. **One allocator instance picks one archetype.**
+
+## How composition actually works — two levels, no composite archetype
+
+A "composite strategy" is **not** a single archetype holding a basket, and there is no composition concept above the
+instance. `StrategyInstanceDefinition` carries ONE `archetype_id` and ONE `capital_budget_amount` **by design**:
+
+1. **Across instances** — the allocator weights many single-archetype instances via `target_weights` in one
+   `AllocationDirective` per client per tick, then `apply_guard_rails` constrains those weights by per-weight cap,
+   turnover, correlation and **family + category diversification**. "Weights on archetypes" is expressed as weights on
+   instances plus family-level guard rails.
+2. **Within an axis** — a Group-2 rank allocator selects and weights across coins/venues/protocols.
+
+A long/short basket is therefore N instances of one archetype, each emitting its own leg, coordinated by a shared
+cross-sectional signal — see
+[`carry-funding-dispersion`](/codex/09-strategy/architecture-v2/archetypes/carry-funding-dispersion.md), which is
+exactly this shape.
 
 ### `FIXED`
 

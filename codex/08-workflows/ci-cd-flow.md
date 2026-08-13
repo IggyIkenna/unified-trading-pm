@@ -608,8 +608,10 @@ promote PR** (the breaking-gate narrows SIT dispatch, never QG).
   `# @contract-surface`-tagged module-level registry dict** (fixed 2026-07-31, see below). **Not breaking** = additive,
   docstring, comment, reformat, reorder, move-across-modules, an ADDED key/member/inner-key on a tagged registry
   constant. Regression-guarded by `tests/unit/test_detect_breaking_change.py`.
-- **Registry data-dict contract surface** (closes `breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`,
-  fixed 2026-07-31): a plain module-level dict/list/set constant (e.g. UAC's
+- **Registry data-dict contract surface** (the P1 item of
+  `breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md` was fixed 2026-07-31; the issue doc itself stays
+  `status: open` — an operator ruling 2026-08-08 added a new consumer-QG promote-fan-out follow-up, tracked as that
+  doc's own `[SCRIPT] P2` todo): a plain module-level dict/list/set constant (e.g. UAC's
   `INSTRUMENT_TYPES_BY_VENUE: dict[str, set[str]]`) keeps the SAME exported name and the SAME annotation even when its
   literal CONTENTS silently lose a member — invisible to every check above (the 2026-07-07 `23fa3a99` incident: bare
   `"OKX"` losing `"SPOT_PAIR"` from `INSTRUMENT_TYPES_BY_VENUE` broke instruments-service's `build_expected('cefi')`,

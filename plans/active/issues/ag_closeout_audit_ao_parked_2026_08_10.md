@@ -29,7 +29,7 @@ related:
     /plans/active/issues/context_scope_sufficiency_measurement_2026_08_08.md,
     /plans/active/issues/operator_ruling_record_ao_round5_apply_session_2026_08_08.md,
     /plans/active/review_agent_evidence_gated_write_capability_2026_08_09.md,
-    /plans/active/ao_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch11_2026_08_09.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch13_2026_08_09.md,
     /plans/active/ao_satellite_ao_dispatch_batch15_finalize_2026_08_09.md,
     /plans/active/ao_satellite_ao_dispatch_batch17_2026_08_10.md,
@@ -48,8 +48,8 @@ author:
   sharded mode)"
 last_updated: "2026-08-10"
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: infra
 estimate_baseline_ai_days: 0.1
@@ -241,6 +241,9 @@ left only in ephemeral chat/return text.
       6-step ritual — all 3 todos done + unlocked, own Progress Log already flags it archival-eligible.
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - **2026-08-10** — `/ag-closeout-audit all` run (autonomous mode, task-less one-off, slot 26). Phase 0: corpus-wide
   `check_ag_closeout_linkage.py` orphan sweep (38 total at run start) found 6 ao-tranche linkage-only gaps (all

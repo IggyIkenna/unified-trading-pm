@@ -39,10 +39,11 @@ tags:
   [defi, manifest, pool-casing, dex-pool-swaps, data-correctness, ssot-contradiction, recurrence, root-cause-unresolved]
 related:
   [
-    /plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md,
+    /plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md,
     /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/canonical-cutover-register.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-11"
 parent_epic: manifest_master
@@ -98,11 +99,16 @@ source: >-
      2026-08-11T23:00:56Z), none reverting the `parse_hive_path` lowercasing; confirmed both call sites
      (`instrument_type=p["itype"].lower()`, lines 370 + 395) intact at HEAD. A floating tarball is built from whatever
      HEAD is checked out when `create-code-tarballs.sh` last ran, so no snapshot in that window could have shipped
-     pre-N6a code. Full evidence: `/plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` Progress
-     Log, 2026-08-12 entry.
-   - Whether the rebuild is a full index REPLACE or an UPSERT-onto-existing-index — if upsert, any pre-existing
-     uppercase rows that survived the 2026-08-05 fold (or were written between 2026-08-05 and the rebuild by some path
-     not covered above) would simply pass through untouched rather than being reintroduced by the rebuild itself.
+     pre-N6a code. Full evidence: `/plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md`
+     Progress Log, 2026-08-12 entry.
+   - ~~Whether the rebuild is a full index REPLACE or an UPSERT-onto-existing-index~~ — **RESOLVED 2026-08-12 (slot 32,
+     data_engineering): UPSERT-onto-existing-index, NOT full-replace.** The rebuild's only index write is a per-VM shard
+     (`_build_manifest_writer()` → `ManifestWriter(per_vm_shards=True)` → `_index/per_vm/{instance}.parquet`); the
+     consolidator merges shards into the canonical `_index/availability_index.parquet` asynchronously (last-attempted-
+     write wins per dedup key — UTL `_writer.py` + `_read_index.py::_read_and_merge_per_vm_shards`). The rebuild never
+     deletes/rewrites rows its scan doesn't touch and `parse_hive_path` lowercases `instrument_type`, so the 7.9M
+     uppercase rows were PRESENT pre-rebuild (by 2026-08-10) and passed through untouched — narrowing the recurrence
+     window to the 08-05→08-10 pre-rebuild gap. Full evidence: the plan's Progress Log, 2026-08-12 entry.
    - Whether physical GCS objects with a genuinely uppercase `instrument_type=POOL/` path segment exist on disk at all
      (a `gcs_describe_object`/`list_blobs` sample under that literal prefix would settle this directly).
 

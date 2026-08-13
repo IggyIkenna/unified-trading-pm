@@ -159,8 +159,8 @@ the data manifest, despite the filename).
 
 ## Track 5 — Build/test tooling + CI-cost · P2/P3
 
-**Sources**: [ui_build_warm_cache_2026_06_17.md](/plans/active/ui_build_warm_cache_2026_06_17.md) (UI build warm-cache
-to keep QG builds incremental) ·
+**Sources**: [ui_build_warm_cache_2026_06_17.md](/plans/archive/2026_08/ui_build_warm_cache_2026_06_17.md) (UI build
+warm-cache to keep QG builds incremental) ·
 [issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md](/plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md)
 (pytest `DEPLOYMENT_ENV` test-pollution race, reproduces even serially) ·
 [capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md](/plans/active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
@@ -230,7 +230,7 @@ unblocked on a CI runner.
   unambiguous CI/CD-pipeline-mechanics-only (no cross-AG scope) and retagged to bare `[ci]`:
   [/plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md](/plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md)
   (GitHub Actions self-hosted-runner strand blocking LDR→main promotion),
-  [/plans/active/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md](/plans/active/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md)
+  [/plans/archive/2026_08/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md](/plans/archive/2026_08/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md)
   (CI alert-tuning incident), and the
   [/plans/archive/2026_08/ci_satellite_ao_dispatch_batch8_2026_08_09.md](/plans/archive/2026_08/ci_satellite_ao_dispatch_batch8_2026_08_09.md)
   +finalize pair (batch-extraction docs are single-tranche by construction). Left 2 unretagged as genuinely ambiguous

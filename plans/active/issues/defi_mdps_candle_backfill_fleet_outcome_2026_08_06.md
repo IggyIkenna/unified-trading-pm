@@ -31,6 +31,7 @@ source:
 assigned_vm: planning
 assigned_role: data_engineering
 resolved_by:
+archive_exempt: true # BRIDGE 2026-08-12: the SUPERSEDED-dedup conversion above (todo relocated to meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md) collapsed this doc's own checkbox count to 0-open, but real remaining work still lives in that other doc -- this is a relocation, not completion. Do NOT archive; leave open pending that doc's own closure, then re-triage.
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -106,13 +107,24 @@ measured empirically.
       instruments may keep each date under the 1800s cap by reducing contention). Repo: deployment-service. —
       mdps-defi-2025-20260807-203541 + mdps-defi-2026-20260807-203541 RUNNING (SPOT, MAX_WORKERS=4,
       run-ts=20260807-203541)
-- [ ] [DATA] P3. **Investigate raising the per-date subprocess timeout** from 1800s for DeFi — the `STALL_TIMEOUT_SEC`
-      launcher-level watchdog was correctly set to 7200s, but the inner per-date timeout (hardcoded in MDPS
-      `process_handler.py`) is 1800s. DeFi years with 10K+ instruments can legitimately exceed 30 min per date. Repo:
-      market-data-processing-service.
+- [x] ~~[DATA] P3.~~ **SUPERSEDED 2026-08-10 (/plan-reconcile 2026-08-12 dedup)** — duplicate-tracked as a real `- [ ]`
+      checkbox in `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` (also
+      `assigned_vm: planning`), which cites this doc by name and carries a measured done-when condition. Two
+      independently dispatchable copies of the same todo risked double-dispatch (both docs `assigned_vm: planning`).
+      Converted to a non-ingestable pointer line here per `task_template.md` finding H — the meta-plan batch doc owns
+      the live checkbox; do not dispatch from here. Original text: **Investigate raising the per-date subprocess
+      timeout** from 1800s for DeFi — the `STALL_TIMEOUT_SEC` launcher-level watchdog was correctly set to 7200s, but
+      the inner per-date timeout (hardcoded in MDPS `process_handler.py`) is 1800s. DeFi years with 10K+ instruments can
+      legitimately exceed 30 min per date. Repo: market-data-processing-service.
 
 ## Progress Log
 
 - **context-scout 2026-08-07**: populated context_scope (5 entries).
 - **slot-6 2026-08-07**: P2 done — launched mdps-defi-2025-20260807-203541 and mdps-defi-2026-20260807-203541 as SPOT
   VMs (e2-standard-8, MAX_WORKERS=4, zone=asia-northeast1-c). Both RUNNING verified via gcloud.
+- **2026-08-12 (/plan-reconcile)**: converted the sole remaining P3 todo to a non-checkbox EXTRACTED pointer (dedup fix
+  — it was duplicate-tracked as a live checkbox in `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, both
+  docs `assigned_vm: planning`). This doc now has 0 open `- [ ]` checkboxes but is NOT archive-eligible — the work isn't
+  done, only relocated. Flagging for the next `/na-eligibility-audit`/archive pass to re-triage this doc (e.g. confirm
+  `assigned_vm` should move off `planning` now that it holds no dispatchable item) rather than reclassifying
+  unilaterally here.

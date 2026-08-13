@@ -59,9 +59,9 @@ source:
   building a hash-computation helper (importing body_content_hash directly, not reimplementing it) to embed correct
   [body-hash:...] tags in this run's own new markers; noticed recomputed hashes never matched prior markers' stored
   values even on docs with zero real content drift, traced to the root cause below"
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 estimate_class: refactor
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.12
@@ -165,6 +165,9 @@ perfectly uniform in the docs this pass touched.
       passes.
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - 2026-08-10 (na-eligibility-audit, tradfi tranche, dispatch agt-a70469): filed while building this run's own
   hash-computation helper; empirically verified via a minimal repro importing the real function (not a

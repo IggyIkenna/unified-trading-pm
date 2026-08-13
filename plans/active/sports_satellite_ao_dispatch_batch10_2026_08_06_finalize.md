@@ -68,7 +68,12 @@ context_scope:
       todo 3 (LC_TARBALL_FRESHNESS proposal) lands, flip the doc's sole open [INFRA] P3 checkbox and archive the doc
       (all substantive items are closed). Source:
       `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`. Done when: the checkbox is flipped with
-      the proposal citation and the doc is archived.
+      the proposal citation and the doc is archived. **CORRECTED 2026-08-12 (/plan-reconcile)**: "all substantive items
+      are closed" is WRONG — do not archive on that basis. `sports_taxonomy_p2_migration_2026_08_08_finalize.md` (newer,
+      2026-08-08, cites a specific dated audit) found the source doc's own "RESOLVED 2026-08-05: live panel confirmed at
+      venues/instrument_types/data_types/ chains all 0/0 non-canonical" claim was produced by exclusion sets, not actual
+      canonicalisation — a false all-clear, not a genuine resolution. Read that finding before flipping/archiving; the
+      source doc likely needs a dated correction, not a clean close.
 - [ ] [DATA] P1. Reconcile `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md` — once batch-10 todo 4 (verify-then-fix
       blank fixture_id) lands, flip the doc's blank-fixture_id checkbox per the outcome (fix shipped + evidence, or
       fixed-already + citation); the 2,436-shard reconcile + CLV-retrain items stay open (conflict/time-gated). Source:
@@ -88,8 +93,11 @@ context_scope:
 
 - **context-scout 2026-08-07**: populated context_scope (2 entries) — `*_finalize` gate doc, genuinely code-free (every
   todo is a checkbox-reconciliation against 4 named source docs or the archival ritual itself); the gating parent batch
-  plus the archival-discipline codex doc are the minimal set. Note: this doc's own citations of the archival-discipline
-  doc (line 79's `source:` field and the "Codex SSOTs" section above) both point at
-  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, which does not resolve — the real path is
-  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (used in context_scope above). Not fixed here
-  (out of this skill's scope, a prose correction for `/plan-reconcile`).
+  plus the archival-discipline codex doc are the minimal set.
+
+> **CORRECTED 2026-08-12 (/plan-reconcile)**: the note above (originally claiming the archival-discipline codex path
+> "does not resolve") was itself wrong — `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` exists
+> and matches the path cited in this doc's frontmatter `source:` field, the "Codex SSOTs" section below, and
+> `context_scope` above; all three citations already agree. Evidence:
+> `ls /codex/12-agent-workflow/plan-completion-and-archival-discipline.md` → file present (21468 bytes). No path
+> correction needed.

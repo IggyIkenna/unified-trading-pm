@@ -23,6 +23,8 @@ jobs:
     if: |
       github.event.pull_request.merged == true &&
       startsWith(github.event.pull_request.head.ref, 'auto-resolve/')
+    outputs:
+      blocked_pr: ${{ steps.blocked-pr.outputs.blocked_pr }}
 
     steps:
       - name: Check for AUTO_RETRY_PROMOTION marker
@@ -39,6 +41,21 @@ jobs:
             echo "retry=false" >> "$GITHUB_OUTPUT"
             echo "No AUTO_RETRY_PROMOTION marker in PR #$PR_NUMBER — skipping"
           fi
+
+      - name: Extract the blocked PR this one supersedes
+        # Alert-tracing fix (2026-08-12): the ONLY producer of auto-resolve/* PRs
+        # (auto_resolve_version_promote.sh) always stamps "Supersedes stuck staging->main PR
+        # #<N>" in the body — that number was already there, just never surfaced in the Slack
+        # notify step below, so a reader watching #ci-failures had no way to connect a
+        # branch-health "PR #<N> BLOCKED/CONFLICTING" alert to this "conflict resolved" one; both
+        # named a different PR number with nothing linking them. Empty when absent (never blocks
+        # the retry-promotion step above on a body-format miss).
+        id: blocked-pr
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          BLOCKED="$(echo "$PR_BODY" | grep -oE 'stuck [a-zA-Z-]+->[a-zA-Z-]+ PR #[0-9]+' | grep -oE '[0-9]+' | head -1 || true)"
+          echo "blocked_pr=${BLOCKED}" >> "$GITHUB_OUTPUT"
 
       - name: Wait for GitHub state to settle
         if: steps.check-marker.outputs.retry == 'true'
@@ -99,9 +116,15 @@ jobs:
     if: always() && needs.retry-promotion.result == 'success'
     uses: ./.github/workflows/notify-slack.yml
     with:
-      message:
-        "Conflict resolved — retrying staging→main promotion | PR #${{ github.event.pull_request.number }}: ${{
-        github.event.pull_request.title }} | ${{ github.event.pull_request.html_url }}"
+      # blocked_pr present -> explicit "resolves #<old> via #<new>" so a reader can trace this
+      # back to the branch-health BLOCKED/CONFLICTING alert that named the same old PR number
+      # (2026-08-12 alert-tracing fix — see the blocked-pr step above for why this was missing).
+      message: >-
+        ${{ needs.retry-promotion.outputs.blocked_pr != '' && format('Conflict resolved — PR #{0} (was
+        BLOCKED/CONFLICTING) is now resolved via auto-resolve PR #{1}, retrying staging→main promotion | {2}',
+        needs.retry-promotion.outputs.blocked_pr, github.event.pull_request.number, github.event.pull_request.html_url)
+        || format('Conflict resolved — retrying staging→main promotion | PR #{0}: {1} | {2}',
+        github.event.pull_request.number, github.event.pull_request.title, github.event.pull_request.html_url) }}
       severity: "INFO"
       conclusion: ${{ needs.retry-promotion.result }}
       recovery: true # genuine recovery — a blocking promotion conflict was resolved (keep; message says "resolved" lowercase, no marker)

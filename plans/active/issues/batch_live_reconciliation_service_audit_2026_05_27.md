@@ -44,7 +44,8 @@ source:
   ]
 assigned_vm: planning
 resolved_by:
-locked_by: live-defi-rollout
+archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
+locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
@@ -386,6 +387,13 @@ leave). The strategy-service surface is the more complete one and is real today;
 - G3 (P2) stage4 agent dispatch to trading-agent-service is markdown-only. **Still genuinely open as of 2026-07-27** —
   no successor plan tracks this; rehomed as an explicit todo in
   `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`. [→§7.1-6]
+  > **CORRECTED 2026-08-12 (/plan-reconcile)**: superseded — §10's 2026-07-28 todo RESCOPED G3 (see below, "RESCOPED,
+  > still open") and pointed it to `/plans/archive/issues/blrs_g3_g10_rescope_2026_07_28.md`; that rescope was then
+  > operator-ruled 2026-07-29 (a daily-scheduled LLM analysis job, not a trading-agent-service endpoint) and DONE at its
+  > own scope per `citadel_paper_batch_live_reconciliation_2026_06_19.md`'s `P2.BLRS2` (was G3) entry — see
+  > `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md` for the build-phase follow-ups. This line's "still
+  > genuinely open"/"no successor plan tracks this" framing is stale; kept verbatim below only as the historical §7.1
+  > record.
 - G4 ✅ DONE (BLRS@43e88ea, shipped via `issue_docs_remediation_sweep_2026_06_02.md` §D3/G4 — corrected 2026-07-27, this
   doc previously re-litigated it as open for 7 weeks after it shipped) `soak_mode` built: producer-side
   `ReconConfig.soak_mode` flag + alerting-service `recon_drift_event_handler` CRITICAL→PagerDuty suppression landed
@@ -616,3 +624,10 @@ defect, just confirming the coupling is daily, not real-time.
   `related:`/`source:` codex list. Added the `batch-live-reconciliation-service/` source dir (previously absent despite
   this being a service-code audit) and dropped two secondary codex docs to stay within the 2-6 cap.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **2026-08-12** — `locked_by`/`locked_since` cleared (corpus-wide fix, operator ruling Option B, interactive session
+  2026-08-12; see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md). This doc has
+  0 open todos, so clearing the placeholder lock immediately makes it archive-eligible. Per the ruling's explicit scope
+  ("do NOT auto-archive in this same pass"), archival itself is deferred to a separate follow-on pass; bridged with
+  `archive_exempt: true` (the sanctioned flip-then-mv two-commit pattern documented in
+  `scripts/plan-hygiene/check_archive_candidates.sh`) so this commit doesn't trip the archive-candidates pre-commit
+  gate. The follow-on pass should drop `archive_exempt` and `git mv` this doc to `plans/archive/[issues/]`.

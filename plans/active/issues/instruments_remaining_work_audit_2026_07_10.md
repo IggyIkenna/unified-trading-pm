@@ -207,7 +207,7 @@ Real code fixes / features needed (not backfills, not pure doc drift).
 10. **Fleet data-acquisition health sweep 2026-06-21** — no checkboxes; several fixable bugs not confirmably shipped
     (prediction venue-case mismatch, Pyth Hermes hex-encoding, sports ODDS_API completeness-check false-flag, zero-byte
     footystats log, `book_snapshot`/`book_snapshot_5` SOURCE_PRIORITY key mismatch, mtds version-surface drift blocking
-    QG) `plans/active/issues/fleet_data_acquisition_health_2026_06_21.md`
+    QG) `plans/archive/2026_08/issues/fleet_data_acquisition_health_2026_06_21.md`
 
 11. **instruments-service's `--run-tag` CLI flag doesn't do what its help text says**
     `/plans/archive/issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md` (archived 2026-07-28, resolved
@@ -508,9 +508,10 @@ Cross-doc / cross-registry contradiction, drift, or design-authority gaps.
    contradiction (`CARRY_BASIS_PERP_INV`/`CARRY_STAKED_BASIS`); awaiting strategy-owner decision (add cells vs. trim
    doc).
 
-5. **DeFi pipeline — code↔codex drift (audit 2026-05-27)** `plans/active/issues/defi_code_codex_drift_2026_05_27.md`
-   D1–D9/D13/D14 done; 2 open: D10 (6 DeFi venues `phase=live` with no backing capabilities — needs operator confirm),
-   D15 (HYPERLIQUID/ASTER phase-label reconciliation).
+5. **DeFi pipeline — code↔codex drift (audit 2026-05-27)**
+   `plans/archive/2026_08/issues/defi_code_codex_drift_2026_05_27.md` D1–D9/D13/D14 done; 2 open: D10 (6 DeFi venues
+   `phase=live` with no backing capabilities — needs operator confirm), D15 (HYPERLIQUID/ASTER phase-label
+   reconciliation).
 
 6. **instruments-service quality-gates.sh RED on LDR HEAD — CEFI expected-universe drift**
    `/plans/archive/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md` — 0 open todos. P0 fix/verify done

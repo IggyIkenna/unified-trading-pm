@@ -27,8 +27,8 @@ related:
 created: "2026-08-07"
 last_updated: "2026-08-07"
 parent_epic: deployment_and_user_management_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.1
@@ -59,8 +59,10 @@ depends_on: []
 ## Flips verified (HARD evidence — blocked by lock)
 
 All 4 are in `data_status_tab_and_downloads_remediation_2026_06_16.md` (75h old, non-grace, but **locked**:
-`locked_by: live-defi-rollout` since 2026-06-16). Each todo's own text already cites CODE-SHIPPED
-`deployment-ui@80c547d`, verified reachable on `origin/live-defi-rollout` this run:
+`locked_by: live-defi-rollout` since 2026-06-16). **CORRECTED 2026-08-12 (/plan-reconcile)**: only items 1-3's own text
+cites CODE-SHIPPED `deployment-ui@80c547d` — item 4 does not (see its entry below), so treat items 1-3 as the verified
+missed-flip candidates and item 4 as a separate, genuinely-unshipped todo. SHA verified reachable on
+`origin/live-defi-rollout` this run:
 
 - `git merge-base --is-ancestor 80c547d origin/live-defi-rollout` → ✅ confirmed
 - Commit: `80c547d fix(data-status): venue re-fetch + de-dupe data-type panels + pagination size selector; pin Node>=22`
@@ -71,8 +73,14 @@ All 4 are in `data_status_tab_and_downloads_remediation_2026_06_16.md` (75h old,
    (legacy date-range panel removed)") — SHA verified, not flipped.
 3. **`- [ ] [UI] P2. Pagination visible-count selector`** (line: "CODE-SHIPPED deployment-ui@`80c547d` (`DateList` size
    selector)") — SHA verified, not flipped.
-4. **`- [ ] [UI] P3. Rollup-difference clarity`** (line: "CODE-SHIPPED deployment-ui@`80c547d`") — SHA verified, not
-   flipped.
+4. **`- [ ] [UI] P3. Rollup-difference clarity`** — ~~(line: "CODE-SHIPPED deployment-ui@`80c547d`") — SHA verified, not
+   flipped.~~ **CORRECTED 2026-08-12 (/plan-reconcile)**: false attribution. Checked
+   `data_status_tab_and_downloads_remediation_2026_06_16.md`'s actual "Rollup-difference clarity" todo (and its full git
+   history via `git log -p --follow`) — it has never carried a `CODE-SHIPPED deployment-ui@80c547d` citation; it reads
+   "(audit §F, by-design): optional small UI note/tooltip … — deployment-ui" with no commit citation at all, i.e. it is
+   a distinct, genuinely-unshipped todo. The `80c547d` SHA belongs only to items 1-3 above (venue filter,
+   duplicate-panel collapse, pagination selector). This item should never have been listed alongside the 3 genuine
+   missed-flip candidates.
 
 **Action blocked**: `locked_by: live-defi-rollout` on the parent doc prevents autonomous flip. Operator should either
 confirm the lock is genuine (and flip these manually) or unlock the doc so the next reconciler run can auto-flip.
@@ -161,6 +169,9 @@ None — all 15 ui-tranche docs were identified and their grace/lock/open-todo s
 were not read end-to-end (active work in flight, <12h old — reading them for context is safe but modifying them is not).
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - **2026-08-07** — plan_reconciler dispatch agt-a40e5f, sharded to `tranche=ui`. 15 docs in scope, 11 grace-protected, 2
   locked, 1 stale draft, 1 overview-with-active-children. 4 verified missed-flip candidates (HARD evidence, blocked by

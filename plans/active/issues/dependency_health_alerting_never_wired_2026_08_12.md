@@ -28,8 +28,8 @@ related:
 created: 2026-08-12
 last_updated: "2026-08-12"
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 1.0
@@ -149,6 +149,9 @@ results, which already exist — should be folded in as a second input later; it
 it would re-introduce the multi-emitter clock problem that ruled out (a).
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - 2026-08-12 — Filed. Found while correcting `live-deployment-monitoring.md`, which listed `DEPENDENCY_DEGRADED` in its
   lifecycle-events table. It is an alerting-service AlertCode, not a lifecycle event a workload emits — a category

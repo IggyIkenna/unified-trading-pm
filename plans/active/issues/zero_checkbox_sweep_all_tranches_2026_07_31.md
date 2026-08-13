@@ -115,9 +115,10 @@ and this doc is the register it writes to.
 
 1. `plans/active/issues/stash_audit_reports/stash-audit-ip-172-31-5-118-20260730.md` — `status: resolved`,
    `nature: record`. A dated host stash-audit table. Pure historical record; a todo here would be fabricated work.
-2. `plans/active/issues/instruments_service_sports_footystats_uac_overlap_qg_red_2026_07_30.md` — `status: superseded`.
-   Its own "## Todos" section states the bullets are **kept as plain bullets deliberately, so backlog regen does not
-   double-dispatch this duplicate**; the real tracked todos live in the superseding doc.
+2. `plans/archive/2026_08/issues/instruments_service_sports_footystats_uac_overlap_qg_red_2026_07_30.md` —
+   `status: resolved` (archived 2026-08-12). Its own "## Todos" section states the bullets are **kept as plain bullets
+   deliberately, so backlog regen does not double-dispatch this duplicate**; the real tracked todos live in the
+   superseding doc.
 3. `plans/active/issues/sports_fixture_events_refetch_progress_2026_07_25.md` — **TRAP, read before touching.** Its
    checkbox has been removed **twice** (DEDUP NOTE 2026-07-25T06:44Z and DEDUP NOTE 2 2026-07-29) precisely because
    `regen_backlog_from_plan.py`'s `_UNCHECKED_RE` was deriving a SECOND live AO task tracking the SAME VM as the parent

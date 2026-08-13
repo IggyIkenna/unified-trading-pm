@@ -163,16 +163,20 @@ reasoning above.
       instId) for subscription. The just-shipped parity test (`market-tick-data-service@d964dce4`) also uses the wrong
       `AAPL-USD_UM-310613` wire form for its AAPL parity case. All 104 xperp subscriptions silently fail at 0 rows. New
       `[DATA] P1` todo added below.
-- [ ] [DATA] P1. **Add `_XPERP` infix support to OKX-FUTURES wire-format handling** (`market-tick-data-service`). In
-      `okx_futures_ws.py`: (1) extend `_OKX_FUTURES_WIRE_RE` to match `BASE-USD_UM_XPERP-YYMMDD` (add optional `_XPERP`
-      after `_UM`) and set infix group to linear; (2) update `_instrument_to_okx_futures_inst_id` to emit
-      `AAPL-USD_UM_XPERP-{yymmdd}` for xperp instruments (operator decision needed: how to distinguish xperp vs
-      non-xperp linear contracts from the canonical id alone — the canonical `@LIN-YYYYMMDD` shape is shared by
-      `BTC-USD_UM-260814` and `AAPL-USD_UM_XPERP-310613`; options: (a) lookup via instruments-service at subscribe time,
-      (b) encode `_XPERP` in the instFamily field, (c) use expiry heuristic: >3 years = xperp). **Also update**
-      `tests/unit/test_okx_futures_live_batch_id_parity.py` to add `AAPL-USD_UM_XPERP-310613` ↔
-      `OKX-FUTURES:FUTURE:AAPL-USD@LIN-20310613` parity. Source: `[RESEARCH] P2` above (2026-08-07). Needs `[OPERATOR]`
-      decision on (a)/(b)/(c) before implementation — tagging `[OPERATOR]` until decided.
+- [ ] [OPERATOR] P1. **CORRECTED 2026-08-12 (/plan-reconcile)** — retagged `[DATA]` → `[OPERATOR]`: this todo's own text
+      (below) says "Needs `[OPERATOR]` decision ... tagging `[OPERATOR]` until decided," and the doc's own 2026-08-09
+      na-eligibility-audit entry independently confirms "genuine operator-gated design work" — the bracket tag was never
+      actually updated to match. **Add `_XPERP` infix support to OKX-FUTURES wire-format handling**
+      (`market-tick-data-service`). In `okx_futures_ws.py`: (1) extend `_OKX_FUTURES_WIRE_RE` to match
+      `BASE-USD_UM_XPERP-YYMMDD` (add optional `_XPERP` after `_UM`) and set infix group to linear; (2) update
+      `_instrument_to_okx_futures_inst_id` to emit `AAPL-USD_UM_XPERP-{yymmdd}` for xperp instruments (operator decision
+      needed: how to distinguish xperp vs non-xperp linear contracts from the canonical id alone — the canonical
+      `@LIN-YYYYMMDD` shape is shared by `BTC-USD_UM-260814` and `AAPL-USD_UM_XPERP-310613`; options: (a) lookup via
+      instruments-service at subscribe time, (b) encode `_XPERP` in the instFamily field, (c) use expiry heuristic: >3
+      years = xperp). **Also update** `tests/unit/test_okx_futures_live_batch_id_parity.py` to add
+      `AAPL-USD_UM_XPERP-310613` ↔ `OKX-FUTURES:FUTURE:AAPL-USD@LIN-20310613` parity. Source: `[RESEARCH] P2` above
+      (2026-08-07). Needs `[OPERATOR]` decision on (a)/(b)/(c) before implementation — tagging `[OPERATOR]` until
+      decided.
 
 ## Progress Log (na-eligibility-audit)
 

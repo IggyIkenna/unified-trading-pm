@@ -163,3 +163,29 @@ Mechanical, bounded remediation — not a design/judgment call:
   agent hand-authoring a multi-paragraph annotation near a checkbox: use a top-level blockquote banner (matching the
   style already used elsewhere in this corpus for dated correction banners), not a nested checkbox-continuation
   paragraph, or expect to re-fight this bug on every commit attempt.
+- **Re-measured 2026-08-12 (slot 3, hit while shipping an unrelated cloudbuild change) — ON THIS DOC'S OWN METRIC, the
+  corpus is IMPROVING.** `bash scripts/plan-hygiene/check_prosewrap_padding.sh` (no args, the comparable measurement):
+  **2808 violating lines against a baseline of 3655**, itself already ratcheted down from the 4472 seeded on 08-03. So
+  remediation is landing: 4472 -> 3655 -> 2808. Current worst single line in the ACTIVE corpus is **1150 leading spaces
+  in a 1257-char line (~91% padding)** in
+  `/plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`. This doc's headline "1290
+  spaces" instance is gone from the active corpus by ARCHIVAL, not repair — its file now sits at
+  `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`.
+
+  **Correcting my own first version of this entry (shipped `unified-trading-pm@d6026f40dc`), which claimed "82 -> 100
+  docs affected, count went UP".** That was a CLAIM > MEASUREMENT error: I counted checkbox-continuation lines indented
+
+  > =10 across `plans/**` + `codex/**`, whereas this doc's 82 came from `check_prosewrap_padding.sh` at its own
+  > INDENT_THRESHOLD of 14 and over a different file set (it includes `plans/epics/`). Two different metrics, so the
+  > comparison never supported a trend — and on the metric that IS comparable the direction is the opposite one. The
+  > same error applied to "worst case DOWN 1290 -> 1150": different files, and the drop is archival rather than repair.
+  > **Rule this re-teaches: when re-measuring someone else's number, run THEIR tool, not your own approximation of it.**
+
+- **Hand-repair has a measured half-life of exactly one commit — quantifying "temporary".** Dedented one doc's
+  continuation block from 26 spaces to the 6-space list-content indent, verified word-content byte-identical, and
+  shipped it. On the very next prettier pass (the same ship) it came back at **10**. Growth per pass is +4 and the
+  reflow is non-idempotent regardless of where you start, so dedenting does NOT establish a fixed point — it only resets
+  the accumulator. Correcting a claim I made in that commit message (`unified-trading-pm@017bdf4901`), which said the
+  dedent gave "the formatter a fixed point": it does not, and the measurement above disproves it. The only durable fix
+  is the one this doc already recommends — author the annotation as a top-level blockquote so there is no nested
+  continuation for the printer to re-indent.

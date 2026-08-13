@@ -33,8 +33,8 @@ created: "2026-08-05"
 author: interactive session (/autonomous)
 priority: P1
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 sequential: false
 depends_on: []
 locked_by:
@@ -207,6 +207,9 @@ the highest-priority open question.
       since-lost session; this doc's script + numbers are the real, shipped, adversarially-reviewed lineage).
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - **na-eligibility-audit 2026-08-09** (infra tranche) [body-hash:b72408acd156806a]: KEEP-NA, valid — the `[DATA] P1`
   relaunch item is `[x]` (see stale-check entry below). Sole remaining item (`[DATA] P2`, update the sibling defi-domain

@@ -50,8 +50,9 @@ estimate_calibrated_ai_days: 1.2
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-locked_by: live-defi-rollout
-locked_since: 2026-07-11
+archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
+locked_by:
+locked_since:
 source:
   ["/autonomous 2026-07-11 prediction canonicalisation drive — surfaced 2 cross-cutting bugs + per-AG CF-audit state"]
 resolved_by:
@@ -163,6 +164,19 @@ actively-running backfill fleet) — `tradfi_v9_stage1_finish_2026_07_06.md`'s o
 the second (consolidated) is not — see that doc's own correction below. cefi/defi/sports/pred are not separately
 confirmed clean on the "consolidated" precondition either (no fresh audit found either way beyond tradfi's) — treat
 RESUME-runbook readiness as unconfirmed fleet-wide, not just tradfi-gated.
+
+> **CORRECTED 2026-08-12 (/plan-reconcile)**: this section is stale as of 2026-07-14 — the RESUME-runbook (task `-003`)
+> was actually EXECUTED 2026-07-16 (`tradfi_v9_stage1_finish_2026_07_06.md` task -003 Progress Log, "operator-authorized
+> 'drive the re-stamp, then resume' dispatch"). Net result: the 14 DeFi-priority crons were resumed first (3
+> `defi-fwd-*` live-poll crons verified genuinely live again, `exit_code=0`); the 11 `uts-prod-mtds-collect-*`
+> daily-batch crons hit a confirmed systemic shared-UTL date-default bug and were re-paused (same root cause as
+> `group_c_cloud_run_job_failures_triage_2026_07_16.md` Cluster 5); the rest of the GCP runbook was resumed where
+> targets still existed (2 SUCCEEDED, 4 pre-existing-broken re-paused, 7 no target, 2 already independently retired);
+> all 26 AWS EventBridge rules were enabled then immediately disabled again on a shared IAM `logs:CreateLogStream` gap
+> (`aws_consolidator_batch_logstream_iam_gap_2026_07_16.md`). Task -003's own verdict: "the resume runbook is DONE —
+> driven for real, every item verified or correctly flagged — but 'DeFi collection is fully live again' is FALSE; only
+> the near-real-time leg is restored." So "unconfirmed fleet-wide" above no longer holds — it was run, with a specific,
+> tracked partial-success outcome, not left untouched.
 
 **master_data_canonicalisation_migration_catalogue (finding 152)**: its own Gate-State Board (refreshed 2026-07-12, G4
 🟢 all 5 AGs, RESUME-runbook text unchanged/still correctly conditional) was checked against this adjudication and found
@@ -287,3 +301,10 @@ defi source/schema-int) are code+rebuild work still homed in each AG's tracking 
   (whole-standalone-bucket GCS delete for defi/tradfi/sports) is explicitly 'hard-stop, never-autonomous' operator
   sign-off per the delete-safety protocol; `locked_by: live-defi-rollout` noted, not touched.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.
+- **2026-08-12** — `locked_by`/`locked_since` cleared (corpus-wide fix, operator ruling Option B, interactive session
+  2026-08-12; see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md). This doc has
+  0 open todos, so clearing the placeholder lock immediately makes it archive-eligible. Per the ruling's explicit scope
+  ("do NOT auto-archive in this same pass"), archival itself is deferred to a separate follow-on pass; bridged with
+  `archive_exempt: true` (the sanctioned flip-then-mv two-commit pattern documented in
+  `scripts/plan-hygiene/check_archive_candidates.sh`) so this commit doesn't trip the archive-candidates pre-commit
+  gate. The follow-on pass should drop `archive_exempt` and `git mv` this doc to `plans/archive/[issues/]`.

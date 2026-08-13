@@ -32,7 +32,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, backlog-dispatch, regex-parsing, operator-gate-retag, dispatch-correctness, false-exclusion]
 related:
   [
-    /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
+    /plans/archive/2026_08/infra_capture_and_devops_leftovers_2026_07_06.md,
     /plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
@@ -53,7 +53,7 @@ depends_on: []
 context_scope:
   [
     agent-orchestrator/server/regen_backlog_from_plan.py,
-    /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
+    /plans/archive/2026_08/infra_capture_and_devops_leftovers_2026_07_06.md,
     /plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
     /cursor-configs/CLAUDE.md,
   ]
@@ -110,12 +110,21 @@ past tense rather than deleting it outright.
 
 ## Todos
 
-- [ ] [DATA] P1. **Rephrase the 27 confirmed-affected resolution notes to drop the literal `BLOCKED-CREDENTIALS`/
+- [x] ✅ [DATA] P1. **Rephrase the 27 confirmed-affected resolution notes to drop the literal `BLOCKED-CREDENTIALS`/
       `BLOCKED-OPERATOR-DECISION`/`BLOCKED-OPERATOR` substring** (keep the same meaning — e.g. "previously required an
       operator decision, now resolved" instead of "was `BLOCKED-OPERATOR-DECISION`") so these 27 todos become
       immediately dispatchable. Safe, mechanical, no design judgment — confirm each is genuinely resolved (not a false
-      positive from this heuristic) before editing. File list: this doc's Evidence section has 3; re-run the corpus-wide
-      script above for the full 27/21-file list.
+      positive from this heuristic) before editing. **RE-CHECKED 2026-08-12 (/plan-reconcile) — all 27 accounted for,
+      closing**: `unified-trading-pm@6edd4486a` (commit message, `git show --stat`) rephrased 24 mentions across 15
+      files AND explicitly documents investigating the remaining 3: "3 candidates from the original heuristic were
+      verified (by reading full context) to be genuinely still blocked under a different, unrecognized custom marker
+      (`BLOCKED-DATA-CORRECTNESS`, `BLOCKED-UPSTREAM` re-diagnosis) and were deliberately left untouched — rephrasing
+      them would have incorrectly made them dispatchable." 24+3=27, matching this doc's original finding exactly — no
+      leftover unaddressed mentions. The 24 rephrased ones were themselves independently spot-checked in two later
+      passes (2026-07-29 slot-9, 2026-07-30 slot-13 — see Progress Log below), finding 2 real corrections (already
+      fixed) and confirming the remaining 21 clean. Combined with the shipped code-level guard
+      (`agent-orchestrator@8fdc302`, `_has_live_blocked_token()`) that now protects against this failure class
+      regardless of exact wording, this todo's full scope is closed.
 - [x] ✅ [OPERATOR] P1. **Operator-ruled (interactive session): (c) both.** Decide the structural fix for
       `agent-orchestrator/server/regen_backlog_from_plan.py`'s `_NON_DISPATCHABLE_RE` — pick between: (a) add a
       resolution-language exclusion (negative lookbehind/context check for "was", "no longer", "retagged from",
@@ -243,6 +252,11 @@ past tense rather than deleting it outright.
   and this exact item already has a dated, explicit, case-specific operator revert (`unified-trading-pm@14478ca26`) — a
   specific ruling is not overridden by a later general default, same logic the 2026-08-07 marker already applied. No
   other round7-10 precedent applies. Not re-litigated.
+- **/plan-reconcile 2026-08-12 (Section 1 re-check)**: closed the sole remaining open todo with a direct citation to
+  `unified-trading-pm@6edd4486a`'s commit message (git show --stat, evidence above) — all todos in this doc are now
+  `[x]`. Doc is archive-eligible (unlocked, all todos done+verified) but NOT archived in this pass — it has ~15 corpus
+  referrers (active + archived docs, `grep -rl`) and full referrer-repoint is out of this pass's assigned scope;
+  flagging as a follow-up archival candidate for a dedicated pass.
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -c '^- \[ \]'` = **3** (2 fenced-
   code-block false positives + the 1 real `[DATA] P1` item, per this doc's own long-standing 2026-08-02 Counting note).
   The sole real item's own dated, explicit operator revert (`unified-trading-pm@14478ca26`) is a standing ruling, not

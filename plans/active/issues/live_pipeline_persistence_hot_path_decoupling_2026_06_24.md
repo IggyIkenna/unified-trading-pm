@@ -10,9 +10,7 @@ summary:
   decoupling shipped (LiveEventFacadeSink default at websocket_runner.py:242); status blocked because the durable
   warm-tier (Pub/Sub→Cloud-Storage→GCS parts→daily aggregate) is NOT yet built — tracked in
   mtds_plan_reconciliation_2026_06_29 § Section F M-C7."
-status:
-  open # corrected 2026-08-10 (plan_reconciler) — the blocking condition (dead compaction job) is live-verified
-  # resolved; only item (4) of the sole open todo remains (paper==batch-rerun re-test). (was: blocked)
+status: open
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -31,10 +29,10 @@ source:
     market-data-processing-service/market_data_processing_service/app/core/live_aggregator.py,
     unified-api-contracts/unified_api_contracts/events/streaming.py,
   ]
-assigned_vm: NA
+assigned_vm: planning
 resolved_by: live_data_persistence_central_event_log_2026_06_25.md # ANNOTATION 2026-07-14 (verify-rerun-2 finding 21): doc-frontmatter-schema.md requires resolved_by only when status=resolved, but status here is `blocked` per the 2026-06-30 body banner (hot-path decoupling shipped; durable warm-tier still not built) — left populated as a forward-pointer to the plan that partially resolved this issue rather than cleared, because this doc is locked_by: live-defi-rollout (annotate-not-flip per HARD GATE, not a status/archival edit); re-evaluate resolved_by when unlocking for archival
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_by:
+locked_since:
 context_scope:
   [
     /codex/02-data/live-data-persistence-and-event-log.md,
@@ -249,6 +247,15 @@ per-tick files). This issue doc is the problem-record; the plan is the executabl
       GCS.
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
+
+- **CORRECTED 2026-08-12 (/plan-reconcile)** — moved the 2026-08-10 status-correction note out of the frontmatter
+  `status:` scalar (was split across a scalar line + 2 YAML comment lines, fragile for simple `status:`-line parsers)
+  into this Progress Log: **corrected 2026-08-10 (plan_reconciler)** — the blocking condition (dead compaction job) is
+  live-verified resolved; only item (4) of the sole open todo remains (paper==batch-rerun re-test). (was: `blocked`).
+  `status:` is now a clean single-line `open` scalar; no content changed, only representation.
 
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped in the actual active successor plan
   (`live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`, which now carries the remaining compaction-job

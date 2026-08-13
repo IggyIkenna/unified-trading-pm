@@ -51,14 +51,14 @@ related:
     /plans/archive/issues/manifest_index_read_oom_canonical_cache_2026_06_24.md,
     /plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md,
     /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
-    /plans/active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
+    /plans/archive/2026_08/data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
     /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     /plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md,
     /plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md,
     /plans/active/data_status_catalogue_true_source_phase2_2026_07_24.md,
     /plans/active/data_status_cell_grid_rearchitecture_2026_07_18.md,
     /plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md,
-    /plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
+    /plans/archive/2026_08/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
   ]
 created: "2026-08-09"
 last_updated: "2026-08-09"
@@ -130,7 +130,7 @@ designed+implemented+wired.
 (per-AG manifest-consolidator backlog/throughput + "did the run produce its expected data" verdict; open: the v2
 truthful merged-per-tick histogram, currently DESCOPED pending WS-H's structured-progress spine, + the deployments-page
 split) +
-[data_feed_sla_registry_and_active_self_healing_2026_06_19.md](/plans/active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md)
+[data_feed_sla_registry_and_active_self_healing_2026_06_19.md](/plans/archive/2026_08/data_feed_sla_registry_and_active_self_healing_2026_06_19.md)
 (open: build the single declarative SLA registry consolidating scattered freshness thresholds, plus active
 re-fetch-on-stale self-healing).
 
@@ -181,7 +181,7 @@ re-checked before dispatch (do not surface pre-migration data through the UI, pe
 (DP_* events have no PubSub→subscriber→router path to `#data-pipeline-alerts`) ·
 [archive/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md](/plans/archive/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md)
 (nightly cron VM undersized + launcher SSOT drift across 4 conflicting launcher artifacts → partial `coverage.json`) ·
-[issues/live_mode_event_sink_topic_missing_2026_06_21.md](/plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md)
+[issues/live_mode_event_sink_topic_missing_2026_06_21.md](/plans/archive/2026_08/issues/live_mode_event_sink_topic_missing_2026_06_21.md)
 (fleet-wide latent bug: live-mode lifecycle event sink publishes to non-existent PubSub topics, MTDS/MDPS).
 
 **Close-out criterion**: all 4 alerting bugs fixed + verified live (the false-positive fix, the missing PubSub route,
@@ -228,14 +228,14 @@ smoke-green foundation gate would be premature).
 - **2026-08-09**: forked verbatim from `cross_cutting_consolidated_closeout_2026_07_25.md`'s 2026-08-09 line-cap trim
   (parent had grown to 1007 lines, over the 1000L hard cap). No content changes beyond the move itself.
 - **2026-08-10 (prose-findings formalization sweep)**: full read for unconverted actionable prose — none found. This
-  doc's own design is a pure pointer/index layer: each Track's "Sources"/"Close-out criterion" prose describes
-  aggregate close-out conditions over OTHER docs' own tracked `- [ ]` checkboxes, and the doc explicitly states "this
-  doc does not duplicate that map" (see header note). There is no orphaned action item here that isn't already a real
-  checkbox in one of the 15 `related:` source docs. 0 prose findings converted, 0 already-resolved citations needed —
-  no genuinely-actionable content of THIS doc's own to formalize.
+  doc's own design is a pure pointer/index layer: each Track's "Sources"/"Close-out criterion" prose describes aggregate
+  close-out conditions over OTHER docs' own tracked `- [ ]` checkboxes, and the doc explicitly states "this doc does not
+  duplicate that map" (see header note). There is no orphaned action item here that isn't already a real checkbox in one
+  of the 15 `related:` source docs. 0 prose findings converted, 0 already-resolved citations needed — no
+  genuinely-actionable content of THIS doc's own to formalize.
 - **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: KEEP-NA, valid — not an ARCHIVE
-  candidate despite 0 open todos of its own. This is a standing closeout-tracking hub (Tracks 14, 18-22), not a
-  findings ledger: by design it never duplicates its 15 source docs' own checkboxes, and several sources are
-  confirmed still genuinely open on direct read (Track 14's DeFi-handlers-zero-concurrency refactor, Track 19's
-  residual forks, Track 20's data-status items). Persists until its Tracks close, per its own "Close-out criterion"
-  per Track. Doc stays `assigned_vm: NA`.
+  candidate despite 0 open todos of its own. This is a standing closeout-tracking hub (Tracks 14, 18-22), not a findings
+  ledger: by design it never duplicates its 15 source docs' own checkboxes, and several sources are confirmed still
+  genuinely open on direct read (Track 14's DeFi-handlers-zero-concurrency refactor, Track 19's residual forks, Track
+  20's data-status items). Persists until its Tracks close, per its own "Close-out criterion" per Track. Doc stays
+  `assigned_vm: NA`.

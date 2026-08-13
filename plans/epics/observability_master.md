@@ -28,7 +28,7 @@ related:
     ../archive/2026_05/physical_pager_research_and_webhook_prototype_2026_05_23.md,
     ../archive/2026_05/incident_runbooks_and_evidence_store_2026_05_23.md,
     ../archive/2026_05/deployment_ui_safety_ops_tab_2026_05_23.md,
-    ../active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
+    /plans/archive/2026_08/data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
   ]
 created: 2026-05-21
 name: observability_master
@@ -49,7 +49,7 @@ related_plans:
   - ../archive/2026_08/alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07_finalize_2026_08_09.md
   - ../active/artifact_pipeline_observability_2026_07_17.md
   - ../active/consolidator_throughput_backlog_monitor_2026_07_09.md
-  - ../active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md
+  - /plans/archive/2026_08/data_feed_sla_registry_and_active_self_healing_2026_06_19.md
   - ../active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md
   - ../active/data_pipeline_alerts_batch_remediation_2026_07_15.md
   - ../active/data_pipeline_self_healing_completion_residual_2026_07_24.md
@@ -104,7 +104,7 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`data_feed_sla_registry_and_active_self_healing_2026_06_19`](../active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md)
+### [`data_feed_sla_registry_and_active_self_healing_2026_06_19`](/plans/archive/2026_08/data_feed_sla_registry_and_active_self_healing_2026_06_19.md)
 
 **status**: active · **estimate**: 3.0 cal AI-days (class: design) **title**: Data-feed SLA registry (single SSOT) +
 active feed self-healing

@@ -154,9 +154,30 @@ def test_reconcile_succeeds_when_only_some_repos_unreadable(tmp_path: Path, monk
         return None if repo == "repo-a" else 'dynamic = ["version"]\n[tool.hatch.version]\nsource = "vcs"\n'
 
     monkeypatch.setattr(rrt, "_main_pyproject", _fake)
-    monkeypatch.setattr(rrt, "_highest_existing_tag", lambda owner, repo: (1, 0, 0))
+    monkeypatch.setattr(rrt, "_highest_existing_tag", lambda owner, repo: ((1, 0, 0), True))
     monkeypatch.setattr(rrt, "_commits_ahead_of_tag", lambda owner, repo, tag: 0)
     monkeypatch.setattr(rrt, "_newest_tag_age_days", lambda owner, repo, tag: 0.5)
 
     rc = rrt.reconcile("IggyIkenna", mpath, dry_run=True, max_creates=0, fail_on_stall=False)
     assert rc == 0
+
+
+# ── _reconcile_dynamic_repo: API failure must never read as "confirmed zero tags" ─────────────
+# (2026-08-12, deployment_api_release_tag_stall_false_positive_2026_08_12.md): a transient
+# `gh api repos/.../tags` failure was misclassified as "dynamic versioning but NO v* tag exists
+# at all" — a false CRITICAL for a repo that had a brand-new tag pushed 32 minutes earlier.
+
+
+def test_dynamic_repo_api_failure_is_unresolved_not_stalled(monkeypatch) -> None:
+    monkeypatch.setattr(rrt, "_highest_existing_tag", lambda owner, repo: (None, False))
+    bucket, tag_ref, detail = rrt._reconcile_dynamic_repo("IggyIkenna", "deployment-api")
+    assert bucket == "unresolved"
+    assert tag_ref == ""
+    assert detail == ""
+
+
+def test_dynamic_repo_confirmed_zero_tags_is_still_stalled(monkeypatch) -> None:
+    monkeypatch.setattr(rrt, "_highest_existing_tag", lambda owner, repo: (None, True))
+    bucket, _tag_ref, detail = rrt._reconcile_dynamic_repo("IggyIkenna", "deployment-api")
+    assert bucket == "stalled"
+    assert detail == "dynamic versioning but NO v* tag exists at all"

@@ -246,7 +246,7 @@ below rather than duplicated here.
       `/plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md` (its
       `[DOCS]     P2` item only — items 2-4, the operator-decision cluster, are NOT in scope). Repo: unified-trading-pm.
 
-- [ ] [BACKEND] P3. **Thread the already-shipped `self_declared_complete` kick-classification signal
+- [x] ✅ [BACKEND] P3. **Thread the already-shipped `self_declared_complete` kick-classification signal
       (`agent-orchestrator/server/worker_liveness/__init__.py`, computed ~line 717 via `_SELF_DECLARED_COMPLETE_RE`,
       currently only logged to the activity event ~line 814) through to `_maybe_auto_respawn_stuck_slot` /
       `_respawn.py::maybe_auto_respawn_stuck_slot`** (currently called at `__init__.py:836` with no knowledge of this
@@ -263,7 +263,11 @@ below rather than duplicated here.
       flow) — plus the full existing `worker_liveness`/`_respawn` test suite still passes and `quality-gates.sh` is
       green before shipping. Source:
       `/plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md` (its
-      residual-risk finding). Repo: agent-orchestrator.
+      residual-risk finding). Repo: agent-orchestrator. — agent-orchestrator@687cad2d00 (threaded
+      `self_declared_complete` through `_maybe_auto_respawn_stuck_slot`; a task-less self-declared-complete escalating
+      slot is now idle-reaped via `_reap_idle_session` even with `queued_undispatched > 0` — no duplicate-worker spawn.
+      Regression tests `test_self_declared_complete_queued_work_reaped_not_respawned` +
+      `test_queued_work_escalating_not_self_declared_takes_respawn_path`; QG green)
 
 - [x] ✅ [BACKEND] P2. **Close the connection-release-proof gap on
       `orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md`'s still-open "Determine root cause: connection

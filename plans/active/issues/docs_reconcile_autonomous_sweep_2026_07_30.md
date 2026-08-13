@@ -200,7 +200,7 @@ fails `check_doc_body_links.py`.
 
 ### P1-D. Unterminated bold span renders a whole block bold in a live issue doc
 
-`plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md:429` opens
+`plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md:429` opens
 `**Original investigation (2026-07-28) — from-scratch raw-column derivation, investigated and STOPPED:` and never closes
 the span before the paragraph ends at :434. The following line then repeats "and STOPPED (not built) because…", so this
 looks like a botched edit rather than a pure formatting slip — deciding whether the duplicated clause should be deleted
@@ -253,10 +253,10 @@ terminology, not broken links.
       the rule aspirational pending a successor sync script) or delete the rule outright, since the script it names does
       not exist anywhere. (repo: `unified-trading-pm`)
 - [x] ✅ [DOC] P1. **Fix the unterminated bold span (P1-D)** at
-      `/plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md:429` — the span never closes before
-      the paragraph ends at :434 and the next line repeats the "and STOPPED (not built) because…" clause, so this is a
-      botched edit, not a formatting slip. Decide whether the duplicated clause is deleted or the bold merely closed (a
-      content call — do not guess). (repo: `unified-trading-pm`) **RESOLVED — `unified-trading-pm@7509ec538`
+      `/plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md:429` — the span never closes
+      before the paragraph ends at :434 and the next line repeats the "and STOPPED (not built) because…" clause, so this
+      is a botched edit, not a formatting slip. Decide whether the duplicated clause is deleted or the bold merely
+      closed (a content call — do not guess). (repo: `unified-trading-pm`) **RESOLVED — `unified-trading-pm@7509ec538`
       (2026-07-31, slot-3), "fix unterminated bold span + duplicated clause in perp_funding_data_semantics_and_cadence".
       Verified 2026-08-03 (na-eligibility-audit): target doc now shows one correctly-closed bold span at line 466-467
       with no duplicate clause (grep confirms only one "and STOPPED" occurrence in the 883-line file). This item was
@@ -395,5 +395,5 @@ blocked from its documented ship path whenever any unrelated repo in the workspa
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
   **1**, matching. Sole surviving item (`.cursor/rules/misc/sync-system.mdc:14` — strip the `DO:` line vs. delete the
   rule outright) remains an explicit human decision on a rule whose backing script no longer exists; the other 3 of the
-  original 4 P1-C rows were independently resolved/moot by 2026-08-08, correctly narrowing this item without a
-  whole-doc flip. No new bounded content on independent re-read.
+  original 4 P1-C rows were independently resolved/moot by 2026-08-08, correctly narrowing this item without a whole-doc
+  flip. No new bounded content on independent re-read.

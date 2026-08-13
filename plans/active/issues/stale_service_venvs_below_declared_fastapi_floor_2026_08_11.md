@@ -34,9 +34,9 @@ source:
     "2026-08-11 — surfaced while shipping an unrelated cursor-configs/settings.json cleanup: quickmerge Stage 3 re-gate
     hard-failed with `6 failed, 1961 passed in 33.21s`, none of the failures related to the staged file",
   ]
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-08-11
@@ -158,6 +158,9 @@ itself; the CVE doc keeps ownership of the `--ignore-vuln` allowlist.
       they are retained.
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 **2026-08-11** — Filed. Surfaced while shipping an unrelated `cursor-configs/settings.json` cleanup: `quickmerge.sh`
 Stage 3 re-gate returned `6 failed, 1961 passed, 11 skipped in 33.21s` with none of the failures touching the staged

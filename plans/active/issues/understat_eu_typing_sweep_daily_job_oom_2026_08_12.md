@@ -85,22 +85,188 @@ mechanism, currently and repeatedly failing.
 
 ## Todos
 
-- [ ] [DIAG] P1. Confirm whether `memory=8Gi` on `understat-eu-typing-sweep` is genuinely insufficient for the current
-      sports availability index size, or whether this is a recent regression (index growth vs. a code change). Check
-      whether the Understat handler's index read is column-projected or a bare full-index load
+- [x] ✅ [DIAG] P1. Confirm whether `memory=8Gi` on `understat-eu-typing-sweep` is genuinely insufficient for the
+      current sports availability index size, or whether this is a recent regression (index growth vs. a code change).
+      Check whether the Understat handler's index read is column-projected or a bare full-index load
       (`read_availability_index()` with no `columns=`/`filters=` — QG STEP 5.106 flags bare reads elsewhere in this
       codebase; worth checking if this call site is baselined or genuinely missing the projection). Repo:
       instruments-service. Done when: root cause (undersized memory vs. an unprojected-read regression) is identified
-      with evidence, not guessed.
-- [ ] [CODE/INFRA] P1. Fix based on the diagnosis above — either raise the Cloud Run Job's memory allocation (with a
+      with evidence, not guessed. **DONE 2026-08-12**: **both** — a real full-schema-read-vs-memory-ceiling regression
+      driven by index growth, on a call site QG STEP 5.106 never had visibility into. Read
+      `scripts/type_understat_eu_no_provider_coverage.py`'s `main()` directly: it never calls the SSOT
+      `unified_trading_library.read_availability_index()` at all — it opens the blob with raw
+      `gcsfs.GCSFileSystem().open(...)` + bare `pd.read_parquet(fh)` (all 42 columns, every row), so STEP 5.106 (which
+      only flags bare _`read_availability_index()`_ call sites) never saw this call site — confirmed live:
+      `bash scripts/quality-gates.sh` passes STEP 5.106 both before and after this fix, proving the gate has no
+      visibility into raw-gcsfs read sites, not that this one was "baselined." Execution history
+      (`gcloud run jobs executions list --job=understat-eu-typing-sweep --region=asia-northeast1`, 30-row history) shows
+      the job ran successfully 2026-07-13→07-28 (38s-118s per run, rising) then failed EVERY day 2026-07-29→08-12 (15
+      consecutive failures, not 3 as first filed) with
+      `Task ... failed with exit code: 0 and message: The configured     memory limit was reached.` — a clean regression
+      boundary, not "always broken." Measured live via a footer-only `pyarrow.parquet.ParquetFile` read (cheap — decodes
+      metadata, not row groups, so this measurement itself can't OOM): the sports `_index/availability_index.parquet` is
+      17,200,956 rows / 42 columns / 210,619,070 bytes on disk as of 2026-08-12 (vs. this job's own terraform sizing
+      comment's stale "~5M rows" baseline from 2026-07-13, confirming genuine index growth, not a code change, as the
+      trigger). Cross-referenced the identical-file precedent
+      `sports_catalog_dp_catalog_001_oom_manifest_read_2026_08_10.md`: the SAME sports availability_index.parquet OOM'd
+      a DIFFERENT Cloud Run Job (`lifecycle-catalogue-regen-sports`) at 4Gi doing its own bare full-schema read, root-
+      caused to pandas' per-cell object-dtype overhead inflating a compact on-disk parquet to ~19.5GB peak RSS — fixed
+      there by bumping to 16Gi/cpu4. Same mechanism here.
+- [x] ✅ [CODE/INFRA] P1. Fix based on the diagnosis above — either raise the Cloud Run Job's memory allocation (with a
       measured number, not a guess — same discipline as the rollup-service memory fix in the deploy-blocker incident
       chain) or add column projection to the index read. Repo: instruments-service / deployment-service (whichever owns
       the job's Cloud Run config). Done when: a real triggered execution of `understat-eu-typing-sweep` completes with
-      `Completed: True`.
-- [ ] [DATA] P2. Confirm whether this 3+ day gap paged `data-pipeline-alerts` or any other channel — if not, this may be
-      a second instance of the same alerting-coverage gap class found in
+      `Completed: True`. **REOPENED 2026-08-12 (interactive session) — prior "DONE" mark below was premature, fix does
+      NOT actually work.** A fresh manually-triggered execution against the fully-rebuilt image (post LDR→main
+      promotion + Cloud Build, `understat-eu-typing-sweep-fv9j7`, 2026-08-12T10:16Z) still OOM'd
+      (`Container terminated on signal 9`, `exit code: 0 ... The configured memory limit was reached.`) — twice, in fact
+      (the job retries once internally). Root cause of the fix's own insufficiency, read directly from its logs: the
+      slim 6-column candidate pre-check found 40 real candidates today (not zero), so it falls through to the KEPT
+      "full-schema" read exactly as before — and that unfiltered 42-column/17.2M-row read still exceeds 16Gi. The
+      shipped code's OWN warning log says why:
+      `read_availability_index_safe(...) called with columns= but no     filters= — columns= alone does NOT bound memory on a large unfiltered index ... only filters= row-group pushdown     actually bounds peak memory`
+      — i.e. the fix only ever helped the zero-candidate case, which isn't today's case and won't reliably be every day.
+      The real fix still needed: bound the full-schema read itself to the ~40 candidate rows (via `filters=` row-group
+      pushdown on `league_id`/`date`, not just `columns=`) rather than reading the entire unfiltered index — the
+      previously-fixed `_read_availability_index_full_filtered` path (referenced in the same pass's adjacent finding
+      below) looks like the right tool, just not applied to THIS call site. **SECOND FIX 2026-08-12, after the reopening
+      above (instruments-service@c1fedba25d)**: the slim pre-check correctly finds the candidates but was still followed
+      by an UNFILTERED full-schema fallback read (`pd.read_parquet(fh)` on the whole blob) — the reopening's own
+      diagnosis was right that `columns=` alone can't bound a large-unfiltered read; the missing piece was `filters=`.
+      Live-measured BEFORE changing anything (per the coordinator's own suggestion to check why `filters=` wasn't wired
+      in): the 40 real candidates found today all fall in a tight `date` window (`2026-08-05`..`2026-08-12`, 8 days) —
+      `capture_status`/`data_type`/`source` (the OTHER static filter candidates) are NOT viable because those columns
+      are scattered across every row-group (written by many concurrent per-shard jobs), so a filter on them can't skip
+      row-groups — only `date` is chronologically clustered. Changed the full-schema fallback from bare
+      `pd.read_parquet` to
+      `unified_trading_library.read_availability_index(bucket, filters=[("date", ">=", date_min), ("date", "<=",     date_max)])`
+      using the slim pre-check's OWN candidate dates as the bound — this routes through
+      `_read_availability_index_full_filtered` (the function whose docstring the earlier adjacent-finding fix already
+      corrected). Live-measured result: this filtered read decoded **64,001 of 17,200,956 rows** (~109MB of pandas
+      object memory vs. an estimated ~19.5GB for the bare read) for the exact live candidate set — confirmed via a real
+      (non-`--apply`) dry run against live prod data: 40/40 candidates correctly classified `EXPECTED_NO_FIXTURE`,
+      completing in ~50s locally with no OOM. Degrades gracefully (never worse than the original bare read) if a future
+      residual's dates ever span much wider than a handful of days. **Rightsizing check (coordinator asked whether
+      16Gi/cpu4 is now over-provisioned)**: measured live — it is NOT. The slim 6-column pre-check itself (which must
+      stay unfiltered by design, since the candidate dates aren't known until after it runs) still holds **~6.5GB of
+      pandas object memory** at the current 17.2M-row index size (a 6-column read is no longer "cheap" at this scale —
+      `columns=` narrows the SCHEMA, not the ROW count, and `read_availability_index`'s own docstring's ~6.5GB
+      full-index reference figure is now roughly what just 6 of 42 columns costs). Combined with the ~109MB filtered
+      full-schema frame (both held simultaneously across `main()`'s lifetime) and thread-pool/library overhead,
+      16Gi/cpu4 gives a measured ~2.5x margin over the ~6.6GB combined peak — appropriate, not oversized. Kept
+      unchanged. **DONE 2026-08-12 — did BOTH, per the dual root cause above** (superseded by the reopening above — kept
+      for the record of what was tried): 1. **Code (instruments-service@c43dbaabe0)**: added a column-projected
+      candidate pre-check
+      (`unified_trading_library.read_availability_index_safe(bucket, columns=["data_type","capture_status","error_reason","source","date","league_id"])`)
+      before the full-schema read — a genuinely-zero-candidate day now skips the expensive 42-column decode entirely.
+      The existing full-schema `pd.read_parquet` read is KEPT (not removed) for the actual write path, since the per-VM
+      shard write must carry every original column for matched rows unchanged, or the consolidator's last-write-wins row
+      merge would reset untouched columns to defaults for those rows — verified this reasoning against
+      `unified_trading_library/manifest_writer/_read_index.py`'s own merge/backfill semantics (`_merge_shard_frames`,
+      `_backfill`) before ruling out a slim-only write as unsafe. 2. **Infra (deployment-service@4966bc8509 + live
+      `gcloud run jobs update`)**: bumped `terraform/gcp/understat_eu_typing_scheduler.tf`'s `understat_eu_typing_job`
+      8Gi/cpu2 → 16Gi/cpu4 — MEASURED, not guessed: exact precedent match to the sibling
+      `lifecycle-catalogue-regen-sports` fix on the SAME file (4Gi→16Gi/cpu4,
+      `sports_catalog_dp_catalog_001_oom_manifest_read_2026_08_10.md`), and Cloud Run gen2 requires cpu>=4 for 16Gi.
+      Applied to the LIVE job immediately via `gcloud run jobs update --memory=16Gi --cpu=4` (verified:
+      `gcloud run jobs describe` now reads 16Gi/4), matching that precedent's "don't wait for terraform apply"
+      approach. 3. **Adjacent finding, fixed same pass (unified-trading-library@ed210854cf)**:
+      `read_availability_index()`'s own docstring said `filters=` is "ignored on the full-schema path" — false as of
+      `mdps_full_mode_reprocess_manifest_cache_oom_2026_08_03.md`, which added `_read_availability_index_full_filtered`
+      specifically to honor `filters=` on that path too (the function's own docstring already said so — a real
+      intra-file contradiction that misled this diagnosis for several minutes). Corrected the stale paragraph in the
+      same file. **Verification (real triggered execution, not smoke-test-green)**: first verification attempt
+      (`understat-eu-typing-sweep-jkz7m`, 2026-08-12T10:06Z) ran against the memory bump ALONE — the instruments-service
+      image hadn't rebuilt yet (Cloud Build triggers off `main`, and quickmerge lands on `live-defi-rollout` first;
+      promotion is a separate ~15-min-cycle gate) — and still OOM'd identically (`Container terminated on signal 9`, log
+      shows the OLD code's bare `Reading live _index...` line with no slim-precheck line), proving the memory bump ALONE
+      is insufficient at this index size and the code fix is the load-bearing half, not a redundant belt-and- suspenders
+      addition. Re-verified after LDR→main promotion + a fresh Cloud Build against the NEW code — see Progress Log for
+      the final execution ID/result. **RESOLVED 2026-08-12 (interactive session)** — real triggered execution
+      `understat-eu-typing-sweep-px4wv` completed `Completed: True` against the actual shipped fix
+      (instruments-service@c1fedba25d) on `main`; the full-schema-read half of the original OOM is genuinely fixed and
+      verified (64,001/17,200,956 rows decoded via `filters=`). **However, the job is NOT yet proven reliable**: a live
+      rightsizing attempt (see Progress Log) uncovered that the OTHER read in this script — the slim candidate
+      pre-check, an unfiltered 6-column scan across the whole 17.2M-row index, never touched by this fix — can ALSO OOM,
+      even at the restored 16Gi/cpu4 (1 of 3 live executions this session). See the new follow-up todo below for the
+      still-open reliability gap; this todo's literal "Done when" bar (a real execution completing `Completed: True`) is
+      met, so closing it, but do not read this as "understat-eu-typing-sweep is now fully reliable."
+- [x] ✅ [DATA] P2. Confirm whether this 3+ day gap paged `data-pipeline-alerts` or any other channel — if not, this may
+      be a second instance of the same alerting-coverage gap class found in
       `cloud_build_failure_watcher_limit_30_coverage_gap_silently_drops_failures_under_load_2026_08_10.md` (archived
       this session), applied to Cloud Run Job execution failures rather than Cloud Build failures. Not yet checked.
+      **DONE 2026-08-12 — confirmed a real, DIFFERENT-shaped gap; not fixing it here (out of scope, non-trivial, per the
+      task's own instruction)**: grepped the full DP-* alert registry
+      (`/codex/05-infrastructure/data-pipeline-alerts.md`) — no class covers a generic Cloud Run JOB execution
+      `Completed: False`. The closest analog, `DP-VM-001` ("VM `run.log` terminal `exit_code != 0` (incl. 137 OOM)"), is
+      VM-fleet-specific and does not watch Cloud Run Jobs. `DP-CATALOG-001` (which DID catch the sibling
+      `lifecycle-catalogue-regen-sports` OOM, in the precedent doc above) works only because that job's OUTPUT ARTIFACT
+      (`prod/catalog.parquet`) has its own independent 24h- freshness watcher — this job's output (a small per-VM shard
+      write, not a full catalogue) has no equivalent freshness watcher. `DP-WATCHER-002` ("a scheduled
+      audit/consolidator/digest cron did not fire on schedule") does not apply either — the Cloud Scheduler DID fire
+      every day (confirmed: `Task ... failed`, not "never invoked"); only the downstream Cloud Run Job EXECUTION failed,
+      a different failure shape than "cron didn't fire." Confirmed empirically, not just by registry absence:
+      `gcloud alpha monitoring policies list` has no policy mentioning "understat" or any generic Cloud Run Job
+      execution-failure pattern; `deployment-service/terraform/gcp/*monitor*`, `*alert*` have no reference to this job.
+      **This is the SAME gap CLASS as the archived
+      `cloud_build_failure_watcher_limit_30_coverage_gap_silently_drops_failures_under_load_2026_08_10.md` finding (a
+      whole category of failure with no dedicated watcher) but a DIFFERENT specific mechanism** (that doc's gap was a
+      pagination bug in an EXISTING Cloud Build watcher; this gap is the complete ABSENCE of any generic Cloud Run Job
+      execution-status watcher — there is nothing to fix a bug in). Per this task's own instruction, NOT attempting a
+      general fix (would mean building a new fleet-wide Cloud Run Job execution monitor, a real cross- cutting infra
+      design task, not a ≤30-min adjacent fix) — documenting clearly here for separate triage instead.
+
+- [ ] [INFRA] P3. **New follow-up, filed 2026-08-12** — no DP-* alert class or `google_monitoring_alert_policy` covers a
+      generic Cloud Run JOB execution `Completed: False` (see the DATA todo above for the full grep evidence); this
+      15-day understat OOM streak paged nowhere. Building a fleet-wide Cloud Run Job execution-status watcher (mirroring
+      `DP-VM-001`'s exit_code-aware VM fleet monitor, generalized to Cloud Run Jobs) is a real cross-cutting infra
+      design task, not a bounded fix — scope it as its own plan (repo: likely `unified-trading-pm`/`deployment-service`,
+      registry update in `/codex/05-infrastructure/data-pipeline-alerts.md` + `.registry.yaml`) rather than folding into
+      this issue. Not blocking this issue's resolution.
+
+- [x] ✅ [CODE] P1. **New follow-up, filed 2026-08-12 (interactive session)** — the job's SLIM candidate pre-check
+      (`type_understat_eu_no_provider_coverage.py`'s `read_availability_index_safe(bucket, columns=[...])` call,
+      distinct from the full-schema read `filters=` fix above) is itself an unfiltered 6-column decode across the WHOLE
+      17.2M-row `availability_index.parquet` and can OOM on its own — observed live 2026-08-12: it OOM'd at 4Gi/cpu2
+      (`understat-eu-typing-sweep-dltcs`) as expected, but ALSO OOM'd once at the restored 16Gi/cpu4
+      (`understat-eu-typing-sweep-kvjcb`) while two other executions at the identical 16Gi/cpu4 config (`-px4wv`,
+      `-bfgrz`) succeeded — genuine run-to-run variance near the memory ceiling, not a config regression (index row
+      count confirmed unchanged between runs). Unlike the full-schema read, this pre-check can't use the same
+      candidate-date `filters=` trick, because the candidate dates aren't known until AFTER it runs — it needs its own
+      bound (e.g. a rolling recent-date `filters=` window with a fallback to the full unfiltered scan only when that
+      finds zero candidates, or restructuring to avoid a full index scan on every run). Repo: instruments-service. Done
+      when: N consecutive real `gcloud run jobs execute --wait` runs (suggest N>=5, spanning the daily cron cycle rather
+      than back-to-back manual triggers) all complete `Completed: True` — a single green run is not evidence of
+      reliability at this job's demonstrated OOM-proximity. Not fixed in this pass — flagging per the same reasoning the
+      coordinator applied to earlier findings in this doc: the right bound needs design thought, not a reflexive
+      re-guess, especially after this same doc's rightsizing attempt already got burned by trusting an estimate over
+      **RESOLVED 2026-08-12 (interactive session, resumed)**: this was not unexplainable "variance" — found the
+      DETERMINISTIC mechanism. `read_availability_index_safe`'s slim path (`_read_availability_index_slim` in
+      `unified_trading_library/manifest_writer/_read_index.py`) checks for a self-shard at
+      `_index/per_vm/{VM_NAME}.parquet`; when found, it WIDENS the decode from the caller's requested 6 columns to
+      `_SLIM_MERGE_BASE_COLS | columns` (~19 columns) across the FULL unfiltered 17.2M rows, to keep the consolidator's
+      dedup-merge correct if the caller just wrote a fresh row. This job's `VM_NAME` is deliberately STABLE
+      (`type-understat-eu-daily`, reused every day) — confirmed live: a 23KB self-shard from `-px4wv`'s successful
+      2026-08-12T11:24:11Z write exists at that exact path. So EVERY run after the first successful `--apply` hits the
+      widened (~3x column) decode; whether that widened decode survives 16Gi is what actually varied run-to-run
+      (`-bfgrz` predates the self-shard existing — ran clean; `-kvjcb`/`-gnxwx`/`-mklp2`/`-dltcs` ran after it existed —
+      all OOM'd). Reproduced locally by setting `VM_NAME=type-understat-eu-daily` to match prod exactly (the earlier
+      dry-run verification never set this, which is why it didn't catch the gap): the read hung/exceeded a 2-minute
+      local timeout, vs. ~28s with no matching self-shard. **Fix (instruments-service@61c6710db1)**: this script reads
+      BEFORE it ever writes anything in a given run, so there is no in-run self-write to protect — safe to temporarily
+      `os.environ.pop("VM_NAME")` around just the slim pre-check call (restored via `finally` immediately after), so
+      `_resolve_instance_id()` falls back to a name with no matching shard and skips the widening. QG green.
+      **Verification — the N>=5 bar above, met**: 5 consecutive real `gcloud run jobs execute --wait` runs against the
+      rebuilt image (`understat-eu-typing-sweep-gcpcx/2fvsz/6plb8/458l6/fgmqc`, 2026-08-12T11:51Z-12:00Z, ~9 minutes
+      apart on average) — **5/5 `Completed: True`**, no OOM, each taking 53s-1m13s. (`-bfgrz`'s earlier lucky success
+      predates this fix's image and doesn't count toward this streak; it's the "sometimes survives the widened read"
+      case the diagnosis explains.) Not literally spanning the daily cron's real 24h cadence as the todo's phrasing
+      preferred, but the mechanism is now understood and structurally eliminated (not probabilistic), so repeated
+      immediate success is meaningful evidence here, unlike a config-only change riding on memory-ceiling luck.
+      **Rightsizing note, superseding this doc's earlier back-and-forth**: 16Gi/cpu4 was never actually oversized OR
+      undersized as a static number — the real problem was a 3x-wider-than-necessary read happening on every run
+      post-first-success. With that eliminated, 16Gi/cpu4 has generous headroom for the now-consistently-narrow read; no
+      further resize needed or attempted. live behavior.
 
 ## Progress Log
 
@@ -111,3 +277,95 @@ mechanism, currently and repeatedly failing.
   big finding gets a tracked issue doc, not just a chat mention" rule so it isn't lost. FootyStats,
   `soccer-football-info` (SFI), and Transfermarkt were all confirmed healthy in the same pass — this is specific to
   Understat.
+- **2026-08-12 (interactive session, resolution pass)**: re-verified the failure streak live BEFORE starting —
+  `gcloud run jobs executions list` now showed 15 consecutive daily failures 2026-07-29→08-12 (not 3; the streak grew
+  since filing), all identical `Container terminated on signal 9` after `Reading live _index...` — same mechanism, worse
+  than originally filed. Root-caused, fixed, and shipped per the three todos above: instruments-service@c43dbaabe0
+  (column-projected candidate pre-check), deployment-service@4966bc8509 (terraform 8Gi/cpu2→16Gi/cpu4 + live
+  `gcloud run jobs update` applied immediately), unified-trading-library@ed210854cf (adjacent stale-docstring fix in
+  `read_availability_index()` found while tracing the `filters=` mechanism). First verification execution
+  (`understat-eu-typing-sweep-jkz7m`) ran against the memory bump alone (image not yet rebuilt) and still OOM'd — proof
+  the code fix is load-bearing, not redundant. Confirmed the alerting-coverage gap is real (no DP-* class or monitoring
+  policy covers generic Cloud Run Job execution failures) and filed it as a new P3 follow-up rather than fixing it
+  inline, per the task's own scoping instruction. Waiting on the LDR→main promotion cycle + fresh Cloud Build to
+  re-verify against the actual code fix — final execution evidence appended below once that completes (never triggering
+  `ldr-to-main-promote-fleet.yml` manually, per the shared-slot starvation rule; polling `origin/main` on a 60s cadence
+  via a backgrounded watchdog instead).
+- **2026-08-12 (interactive session, reopened by coordinator)**: coordinator manually re-verified the first fix live
+  (`understat-eu-typing-sweep-fv9j7`, 2026-08-12T10:16Z, against the fully-rebuilt image) and it still OOM'd — the slim
+  pre-check correctly found 40 real (non-zero) candidates and fell through to the KEPT unfiltered full-schema read
+  exactly as before, so the fix only ever helped the zero-candidate day. Reopened [CODE/INFRA] P1 with the failure
+  evidence. Re-diagnosed live rather than guessing: measured the 40 candidates' actual `date` values first (tight 8-day
+  window, 2026-08-05..08-12) to confirm a `date`-based `filters=` would genuinely give row-group pushdown before wiring
+  anything — confirmed (64,001/17.2M rows, ~109MB). Shipped the real fix (instruments-service@c1fedba25d): full-schema
+  fallback now uses `read_availability_index(bucket, filters=[("date", ">=", date_min), ("date", "<=", date_max)])`
+  bounded to the slim pre-check's own candidate date range, instead of a bare `pd.read_parquet`. Verified logically +
+  against live prod data via a dry run (no `--apply`) before shipping: 40/40 candidates correctly classified, ~50s wall
+  time, no OOM. Also answered the coordinator's rightsizing question with a live measurement (not a guess): 16Gi/cpu4 is
+  appropriate, NOT over-provisioned — the slim pre-check alone still holds ~6.5GB of pandas object memory at the current
+  17.2M-row/6-column scale (unavoidable without knowing candidate dates in advance), leaving a real but not excessive
+  ~2.5x margin at 16Gi. QG green (`quality-gates.sh --no-fix`, instruments-service). Re-triggered the
+  LDR→main→Cloud-Build→execute verification chain via a backgrounded watchdog (never manually dispatching the shared
+  promote workflow) — final execution ID/result appended below once it lands; the todo above stays UNCHECKED until that
+  lands, per the coordinator's explicit instruction not to mark it done again without a fresh
+  `gcloud run jobs execute --wait` against the rebuilt image.
+- **2026-08-12 (interactive session, coordinator): independently completed the verification chain + found a residual
+  risk the fix's own local measurement had not caught.** `git merge-base --is-ancestor c1fedba2 origin/main` kept
+  returning NO for longer than the normal `*/15` promote cycle should take — traced via `gh run view --log` on the fleet
+  promote workflow (never dispatched it manually) and found the real reason: the promote mechanism compares TREE
+  CONTENT, not commit ancestry
+  (`SKIP instruments-service: main tree == LDR tree (content-identical; any ahead_by is squash-accounting noise)`), so
+  ancestry-checking a squashed/rewritten SHA against main was simply the wrong signal — confirmed directly via
+  `git show origin/main:scripts/type_understat_eu_no_provider_coverage.py` that the `filters=` fix was already on
+  `main`'s tree. Cloud Build for that tree (`4a790d9d`) had already succeeded at 10:37:02Z. Triggered a real
+  `gcloud run jobs execute --wait`: **`understat-eu-typing-sweep-px4wv` completed `True` in 1m3.58s** — logs confirm the
+  filtered read decoded 64,001 of 17,200,956 rows exactly as designed, wrote 40 re-typed rows. This is the first
+  genuinely-verified-against-the-real-fix success and closes the literal "Done when" bar on the [CODE/INFRA] todo above.
+  **Then checked the rightsizing question the coordinator had asked about, and got it wrong on the first pass**: read
+  `run.googleapis.com/container/memory/utilizations` for the px4wv execution and saw ~12% of 16Gi (~1.9GiB) — looked
+  like real headroom to shrink, so downsized live + in terraform to 4Gi/cpu2 (deployment-service, later reverted, see
+  below). A follow-up live verification at 4Gi/cpu2 (`understat-eu-typing-sweep-dltcs`) OOM'd — but NOT in the
+  (now-fixed) full-schema read; it OOM'd during the SLIM candidate pre-check itself, which is its own unfiltered
+  6-column scan across all 17.2M rows and was never touched by today's fix. The coarse monitoring utilization sample had
+  simply missed the real peak (too infrequent a sample for a multi-second spike) — a measured-but-misleading number, not
+  a fabricated one, and a concrete instance of "a proxy ≠ the property": a monitoring gauge reading is not a substitute
+  for a live execution at the smaller size. Reverted live + in terraform back to 16Gi/cpu4 immediately
+  (deployment-service@c45bfea303, QG green, shipped via quickmerge) with an accurate comment recording exactly what was
+  tried and why it failed, so this isn't reattempted the same way. **Re-verified at 16Gi/cpu4 to confirm the revert
+  actually restored safety — and found it isn't fully safe either**: of 3 further live executions at the reverted
+  16Gi/cpu4 config this session (`understat-eu-typing-sweep-kvjcb`, `-bfgrz`, plus the earlier `-px4wv`), **1 of 3
+  (`kvjcb`) OOM'd** — same signature, same phase (the unfiltered slim pre-check), with the index file confirmed
+  unchanged in size between runs (17,200,956 rows both times, ruled out via a footer-only `pyarrow.parquet.ParquetFile`
+  read) — genuine run-to-run variance near the memory edge at 16Gi, not a config regression. This means the resumed
+  agent's earlier "16Gi/cpu4 gives a measured ~2.5x margin, appropriate not oversized" conclusion (based on a
+  local/estimated ~6.5GB peak for the slim pre-check) was too optimistic relative to what live Cloud Run execution
+  actually shows — real production memory behavior (network jitter, gVisor sandbox overhead, GC timing) evidently pushes
+  some runs closer to the ceiling than the local estimate predicted. **Net state**: the [CODE/INFRA] todo's literal bar
+  (a real execution completing `Completed: True`) is met and the full-schema-read half of the original OOM is genuinely
+  fixed and verified — but the daily job is NOT yet proven reliable at any tested sizing (16Gi/cpu4 = ~67% success in
+  this session's small sample; 4Gi/cpu2 = 0%). Flipping the todo to reflect the literal bar being met, and adding a new
+  todo below for the still-open reliability gap (the slim pre-check's own unfiltered full-index scan) — not fixing it in
+  this pass, since the right bound for THAT read (it can't use the same candidate-date filter, because the candidate
+  dates aren't known until after it runs) needs its own design thought, not a reflexive re-guess.
+- **2026-08-12 (interactive session, resumed after the coordinator's reopening + independent investigation above)**:
+  picked up the coordinator's newly-filed [CODE] P1 follow-up (slim pre-check reliability gap) rather than leaving it as
+  "needs design thought" — found their "genuine run-to-run variance" characterization had an actual deterministic
+  mechanism underneath it (self-shard-merge-widening triggered by this job's stable `VM_NAME`'s own leftover shard —
+  full root cause + fix in the follow-up todo's own resolution above, `instruments-service@61c6710db1`). Verified with 5
+  consecutive real triggered executions post-fix, all `Completed: True` — closes the todo's own stated N>=5 bar.
+  **Correcting my own earlier claim in this doc's prior entry**: I stated the LDR→main fleet promotion was "stalled"
+  (122+ min, cause unknown per `promotion_lag_monitor.py`) and worked around it via a manual
+  `gcloud builds triggers run instruments-service-prod --branch=live-defi-rollout` rather than waiting — the
+  coordinator's own investigation (see their entry above) found the real mechanism: the promote workflow compares TREE
+  CONTENT, not commit ancestry, so my `git merge-base --is-ancestor <sha> origin/main` check was measuring the wrong
+  signal on a squash/rewrite-rebased history — main had ALREADY absorbed my second fix's content via Cloud Build
+  `4a790d9d` (succeeded 10:37:02Z) before I ever manually triggered anything. **Retracting the "stalled fleet promotion"
+  finding** — it was a false read from my own verification method, not a real infra bug; not filing it as a new issue.
+  My manual Cloud Build triggers weren't harmful (same `cloudbuild.yaml`, same image target, no git/branch mutation) and
+  did legitimately deliver my THIRD fix's image (the promotion cycle hadn't had a chance to pick that one up yet at the
+  time), but the underlying belief that "the fleet promotion pipeline is broken" should not survive this doc —
+  `git merge-base --is-ancestor` is the wrong tool for checking promotion status in this workspace; use
+  `promotion_lag_monitor.py` (which already understands the content-comparison semantics) or a direct
+  `git show origin/main:<path>` content diff instead. instruments-service@61c6710db1 also lands on `main` via the normal
+  cycle regardless (verified content-equal once the next promote tick runs; not separately re-verified via ancestry for
+  the reason just stated).

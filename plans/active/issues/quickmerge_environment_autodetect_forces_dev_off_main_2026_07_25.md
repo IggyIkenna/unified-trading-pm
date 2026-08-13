@@ -59,8 +59,8 @@ resolved_by:
   steps 2-4 (pydantic-settings alias-vs-kwarg precedence flag, revisiting the branch check, fleet-wide grep) remain open
   — see "Resolution" section below.
 depends_on: []
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_by:
+locked_since:
 context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,

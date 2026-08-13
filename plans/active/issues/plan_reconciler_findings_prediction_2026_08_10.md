@@ -14,8 +14,9 @@ scope: [engineer, admin]
 tags: [role, plan_reconciler, reconciliation, plan-hygiene, prediction, sharded-run]
 related:
   [
-    /plans/active/issues/ag_closeout_audit_prediction_parked_2026_08_10.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_prediction_parked_2026_08_10_r2.md,
     /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-10"
 author: plan_reconciler

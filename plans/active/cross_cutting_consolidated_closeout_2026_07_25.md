@@ -655,7 +655,7 @@ batch)
   [`agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`](/plans/archive/2026_08/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md)
   (archived 2026-08-09, resolved),
   [`deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md`](/plans/active/issues/deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md),
-  [`glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md`](/plans/active/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md),
+  [`glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md`](/plans/archive/2026_08/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md),
   [`glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`](/plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md),
   [`image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md`](/plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md),
   [`mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md`](/plans/active/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md),

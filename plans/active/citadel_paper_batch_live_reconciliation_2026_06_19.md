@@ -141,9 +141,16 @@ are identified (2) and the ledger exists (3).
 > the phases below — it adds no new dispatches; the canonical todos stay in-phase. **UPDATE 2026-08-08**: 7 of the
 > register's § A items (incl. P2.1/P2.2) had their canonical `- [ ]` checkboxes MOVED to
 > `citadel_satellite_ao_dispatch_batch1_2026_08_08.md` (operator-authorized extraction) — the phases below now carry
-> non-ingestable pointer lines for those 7, not the live checkbox. The 3 items still tracked here as real open
-> checkboxes are P2.7.3 (operator-gated), P9.2 (dependency-blocked), and P2.11.15 (held back on a conflict-check
-> duplicate-claim finding — see register § A).
+> non-ingestable pointer lines for those 7, not the live checkbox. The 4 items still tracked here as real open
+> checkboxes are P2.7.3 (operator-gated), P9.2 (dependency-blocked), P2.11.15 (held back on a conflict-check
+> duplicate-claim finding — see register § A), and P2.11.18 sub-part (b) (the cs-retrain remainder that composes with
+> P2.11.15 — same held-back reason). **CORRECTED 2026-08-12 (/plan-reconcile)**: P2.1/P2.2 themselves are no longer open
+> in the satellite batch either — both SHIPPED the same day they were extracted:
+> `issues/fill_completed_event_schema_break_live_defi_2026_08_08.md` cites execution-service@08808415 (P2.1) and
+> strategy-service@f1a98416 (P2.2, 2026-08-08). Update the satellite batch's own checkbox state if it still shows these
+> open. **ALSO CORRECTED 2026-08-12 (/plan-reconcile)**: P2.11.18's remaining sub-part (b) was previously a bare bullet
+> with no `- [ ]` syntax (real open work invisible to checkbox tallies) — given real checkbox syntax below (line ~580),
+> so the true open-checkbox count here is 4, not 3.
 
 **A — Agent-shippable infra/code (NO operator gate — a VM/agent can ship these) — EXTRACTED 2026-08-08:**
 
@@ -573,29 +580,32 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
   becomes the proper playwright-dir regression for the archetype. Repo: unified-api-contracts (+ UI sync). Confirm the
   exact venue/asset-group capability profile with the operator (CeFi-only BTC, or the DeFi+CeFi hybrid). **EXTRACTED
   2026-08-08** → moved verbatim to `citadel_satellite_ao_dispatch_batch1_2026_08_08.md`.
-- **[CODE] P2.11.18.** Add the intraday BTC mean-reversion signal as a cs ML feature (research 2026-06-22, root
-  `_ic_test.py`). A short-horizon reversion z-score (`zscore = -(close - rolling_mean) / rolling_std`, anchors 60m + 4h
-  on the canonical OHLCV) has a stable Spearman IC ≈ +0.05 vs forward 15m–1h returns, positive across all horizons +
-  every recent year (2022-26). It is intraday-microstructure information the daily-horizon delta_one features do NOT
-  capture (orthogonal), so it should ADD to the pooled-LightGBM cs ensemble. NOTE: the signal is NOT standalone-
-  tradeable (its alpha is inside the execution-cost band — see the research arc: daily Monday-wick edge decayed,
-  migrated to 1h, but realistic 1.5bp-taker fills cap it at a marginal +1.14 Sharpe); its value is as a FEATURE (here) +
-  an execution-timing overlay (P2.11.19), where it never pays its own round-trip. Implement: add the reversion z-score
-  feature spec(s) to the features-service `delta_one/app/features/registry.py` (new `feature_group` or extend an
-  existing momentum/reversion group; bump `formula_version`; HIVE-partition + footer metadata per the
-  feature-formula-versioning SSOT), compute + write to the feature corpus, then retrain + validate the cs model (does it
-  lift cs Sharpe / reduce the 2026 drag — composes with P2.11.15). No lookahead (trailing window, shifted). Repo:
-  features-service (feature) + cs-model retrain. Evidence: IC table in `_ic_test.py`. STEP 1 ✅ SHIPPED 2026-06-22 —
-  features-service@1110ee1d. `reversion_zscore_60m`/`reversion_zscore_240m` added to delta_one's `anomaly` calculator +
-  `registry_specs.yaml` (clip ±5, `min_periods=bars` so NO partial-window/no-lookahead, honest NaN until filled), 6
-  `test_anomaly` unit tests GREEN, full QG passed (402s), on origin LDR (Tier-C drain → staging). REMAINING (downstream
-  operational/ML — both feature specs (reversion @1110ee1d + BTC trend @653cf158) are on LDR promoting; these run AFTER
-  the spec deploy): (a) corpus recompute; (b) cs retrain (composes with P2.11.15's longer-horizon retrain — do both in
-  one train); (c) `features-status --check-drift` verification. **EXTRACTED 2026-08-08, SCOPE- TRIMMED** → sub-parts (a)
-  corpus recompute + (c) drift-check moved verbatim to `citadel_satellite_ao_dispatch_batch1_2026_08_08.md`; sub-part
-  (b) the cs retrain stays HERE (not extracted) because it composes with P2.11.15 below, which the satellite batch's
-  conflict-check found duplicates `crypto_alpha_research_2026_07_24.md`'s own open `[RESEARCH] P2` todo — see register §
-  A for the full citation.
+- [ ] [CODE] P2.11.18. **CORRECTED 2026-08-12 (/plan-reconcile)** — added missing `- [ ]` checkbox syntax; this bullet
+      was previously a bare (non-ingestable) line even though real open work remains (sub-part (b) below), so it was
+      silently excluded from every checkbox-count/register tally. Add the intraday BTC mean-reversion signal as a cs ML
+      feature (research 2026-06-22, root `_ic_test.py`). A short-horizon reversion z-score
+      (`zscore = -(close - rolling_mean) / rolling_std`, anchors 60m + 4h on the canonical OHLCV) has a stable Spearman
+      IC ≈ +0.05 vs forward 15m–1h returns, positive across all horizons + every recent year (2022-26). It is
+      intraday-microstructure information the daily-horizon delta_one features do NOT capture (orthogonal), so it should
+      ADD to the pooled-LightGBM cs ensemble. NOTE: the signal is NOT standalone- tradeable (its alpha is inside the
+      execution-cost band — see the research arc: daily Monday-wick edge decayed, migrated to 1h, but realistic
+      1.5bp-taker fills cap it at a marginal +1.14 Sharpe); its value is as a FEATURE (here) + an execution-timing
+      overlay (P2.11.19), where it never pays its own round-trip. Implement: add the reversion z-score feature spec(s)
+      to the features-service `delta_one/app/features/registry.py` (new `feature_group` or extend an existing
+      momentum/reversion group; bump `formula_version`; HIVE-partition + footer metadata per the
+      feature-formula-versioning SSOT), compute + write to the feature corpus, then retrain + validate the cs model
+      (does it lift cs Sharpe / reduce the 2026 drag — composes with P2.11.15). No lookahead (trailing window, shifted).
+      Repo: features-service (feature) + cs-model retrain. Evidence: IC table in `_ic_test.py`. STEP 1 ✅ SHIPPED
+      2026-06-22 — features-service@1110ee1d. `reversion_zscore_60m`/`reversion_zscore_240m` added to delta_one's
+      `anomaly` calculator + `registry_specs.yaml` (clip ±5, `min_periods=bars` so NO partial-window/no-lookahead,
+      honest NaN until filled), 6 `test_anomaly` unit tests GREEN, full QG passed (402s), on origin LDR (Tier-C drain →
+      staging). REMAINING (downstream operational/ML — both feature specs (reversion @1110ee1d + BTC trend @653cf158)
+      are on LDR promoting; these run AFTER the spec deploy): (a) corpus recompute; (b) cs retrain (composes with
+      P2.11.15's longer-horizon retrain — do both in one train); (c) `features-status --check-drift` verification.
+      **EXTRACTED 2026-08-08, SCOPE- TRIMMED** → sub-parts (a) corpus recompute + (c) drift-check moved verbatim to
+      `citadel_satellite_ao_dispatch_batch1_2026_08_08.md`; sub-part (b) the cs retrain stays HERE (not extracted)
+      because it composes with P2.11.15 below, which the satellite batch's conflict-check found duplicates
+      `crypto_alpha_research_2026_07_24.md`'s own open `[RESEARCH] P2` todo — see register § A for the full citation.
 - [x] ✅ [CODE] P2.11.19. **Reversion execution-timing model — SHIPPED 2026-06-22: execution-service@4b8dc545.** New
       `backtest_v2/reversion_timing.py` (`time_reversion_fill`): the research z-score `-(p−mean_W)/std_W` times the fill
       to the first over-extension bar in the trade's favour (BUY at z>thr / SELL at z<−thr) within the window, **CLAMPED
@@ -863,6 +873,10 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
   section-C move) — never orphaned, removed from this register's listing as still-open-here. This doc's own open-todo
   count drops from 10 to 3 (P2.7.3, P9.2, P2.11.15); the extracted 7 are now tracked + dispatchable in the satellite
   doc. This doc's `assigned_vm: NA` classification is UNCHANGED and remains correct (P2.7.3 alone still justifies it).
+  **CORRECTED 2026-08-12 (/plan-reconcile)**: that "3" undercounts by 1 — P2.11.18's scope-trimmed retrain sub-step
+  ("stays here" per this same entry) was never given `- [ ]` checkbox syntax, so it was silently absent from every count
+  including this one. True count was 4, not 3; see the register § above (line ~144) and the now-checkboxed bullet at
+  P2.11.18.
 - **operator ruling 2026-08-08** (NA-corpus blocker digest, cross-cutting round 5, id=47): re-confirmed — live wallet +
   custody (Copper/CEFFU) approval not yet ready, P2.7.3 stays `BLOCKED-OPERATOR-DECISION` pending. No change to status;
   the paper↔batch-rerun ε=0 proof (P2.7.1/P2.7.2) remains unaffected since it does not depend on live custody.

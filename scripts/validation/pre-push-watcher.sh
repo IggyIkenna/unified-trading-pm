@@ -29,8 +29,12 @@ MAX_ATTEMPTS=3
 ATTEMPT=1
 
 # Temporary files for capturing output
-ERROR_LOG=$(mktemp /tmp/act-errors-XXXXXX.log)
-ACT_OUTPUT=$(mktemp /tmp/act-output-XXXXXX.log)
+# Trailing X's, no suffix: BSD mktemp only substitutes X's at the END of the template, so
+# `/tmp/act-errors-XXXXXX.log` would be taken LITERALLY — a fixed filename shared by every
+# concurrent run, and any run that died before its cleanup trap would wedge all later runs
+# with "mkstemp failed: File exists". Measured 2026-08-12 via the same pattern elsewhere.
+ERROR_LOG=$(mktemp /tmp/act-errors-XXXXXX)
+ACT_OUTPUT=$(mktemp /tmp/act-output-XXXXXX)
 
 # Cleanup on exit
 cleanup() {

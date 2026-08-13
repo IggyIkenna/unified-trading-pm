@@ -166,8 +166,10 @@ post-merge. Re-ran the checks fresh rather than trusting the citation above:
       scoped down to `TIER_A_CI_FAILING`, checked via a new `tier_a_merge_gate_ok()` immediately before each of the 3
       merge-(re-)arm sites (mirrors `provenance_check_ok()`'s existing re-check-before-every-arm pattern) — PR
       creation/content-gate/SIT-gate/ label-check all proceed unconditionally now; only the act of arming auto-merge
-      stays blocked while red. **Committed locally, not yet pushed** — held pending the operator's live CI-blockage fix;
-      verify this landed on origin before treating the deadlock as resolved.
+      stays blocked while red. **VERIFIED 2026-08-12 (/plan-reconcile): landed on origin** —
+      `git log origin/live-defi-rollout -S "tier_a_merge_gate_ok"` finds `b53eade639`, and `tier_a_merge_gate_ok()` is
+      confirmed live in `scripts/cicd/ldr_to_main_fleet_promote.sh` on origin (defined line 450, called at 1151/1230).
+      The deadlock is resolved.
 - [ ] [OPERATOR] P3. **Decide whether to pin the push-time UAC re-verification to the exact commit the PR validated
       against** (Suggested resolution path #3), instead of content-first re-resolving UAC at HEAD — this would eliminate
       the PR-time-vs-push-time content race at its source rather than only unblocking its downstream deadlock. A design
@@ -201,8 +203,9 @@ scope).
   `## Todos` above, both tagged `[OPERATOR]` per the existing `too_large_or_risky` classification from
   `ag_closeout_audit_ci_parked_2026_08_10.md`. This directly resolves the gap the 2026-08-10 na-eligibility-audit
   verdict above flagged (TRAP CONFIRMED: prose-only remaining work, never converted).
-- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: KEEP-NA, valid — both open todos are explicitly
-  `[OPERATOR]`-tagged and the doc's own text states neither is a bounded, worker-executable fix: todo 1 needs an
-  owner/operator scoping call before any worker touches a shared, fleet-wide, high-blast-radius promotion gate
-  (`ag_closeout_audit_ci_parked_2026_08_10.md`'s own conflict-check already classified this `too_large_or_risky`); todo
-  2 is a design call on `unified-api-contracts` dependency-resolution semantics for CI. Doc stays NA.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: KEEP-NA, valid — **CORRECTED 2026-08-12
+  (/plan-reconcile)**: this said "both open todos" but `git log` shows todo 1 (line 162) had already been flipped `[x]`
+  by `unified-trading-pm@b53eade639` (13:09 UTC) before this audit entry was written (`6c20c0b503`, 14:49 UTC) — only
+  todo 2 (line 173) was actually open at filing time. Todo 2 is explicitly `[OPERATOR]`-tagged and the doc's own text
+  states it is not a bounded, worker-executable fix: a design call on `unified-api-contracts` dependency-resolution
+  semantics for CI. Doc stays NA.

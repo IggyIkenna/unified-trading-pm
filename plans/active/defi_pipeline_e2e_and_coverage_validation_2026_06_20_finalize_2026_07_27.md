@@ -54,8 +54,12 @@ context_scope:
 
 # defi_pipeline_e2e_and_coverage_validation_2026_06_20 — finalize
 
-> **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todos are done (or on explicit
-> operator direction to start reconciling early). Machine-gated via `depends_on` + `gate_on_depends: true`.
+> **CORRECTED 2026-08-12 (/plan-reconcile)**: this line previously read "STATUS: `draft` — NOT dispatched",
+> contradicting the frontmatter (`status: active`). Per `unified-trading-pm@233ebd6148` ("remove redundant status:draft
+> double-gate on finalize plans"), a finalize plan's `depends_on` + `gate_on_depends: true` already machine-holds its
+> todos until the upstream is done — a separate body-level `status: draft` is a stale double-gate. Frontmatter
+> `status: active` is correct; this plan is machine-gated on `defi_pipeline_e2e_and_coverage_validation_2026_06_20.md`
+> (1 todo — `phase_d_gate.py` re-run — still open as of this check).
 
 ## Todos
 

@@ -162,13 +162,25 @@ market-tick-data-service, not MDPS) to additionally emit or re-key per-contract 
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Decide between option (a) and (b) above** (or propose a third path) for unblocking CBOE
-      VX-futures `ohlcv_15m`/`ohlcv_24h` aggregation without reopening the CME combo/`SchemaContractNotFoundError` crash
-      `market-data-processing-service@68f95f6` was shipped to close. Once decided, re-scope
-      `tradfi_satellite_ao_dispatch_batch9_2026_08_09.md` todo 2 (or a fresh satellite-batch todo) to the concrete
-      implementation path chosen. Repo: unified-trading-pm (decision) + market-data-processing-service +
-      unified-api-contracts (implementation once decided). Done when: the operator/owner has picked (a), (b), or a third
-      option, and a properly-scoped follow-up todo exists citing this doc.
+- [x] ✅ [OPERATOR] P2. **Decide between option (a) and (b) above.** RULED 2026-08-13 (blocked-question BLK-963d4046 /
+      BLK-op-mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h-8434bcefad43): **option (a)** — a
+      CBOE/VIX-scoped carve-out in
+      `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`/`_INSTRUMENT_TYPES_EXCLUDED_FROM_COARSE_TIMEFRAMES` keyed on
+      `(venue, instrument_type)` rather than `instrument_type` alone, keeping the CME combo exclusion intact. This is
+      the doc's own recommended path (narrowest blast radius, matches the 2026-08-07 ruling's "MDPS-owned,
+      general-purpose" framing) — option (b) is a bigger, more invasive change outside MDPS-only scope, and neither the
+      ruling nor this re-read surfaced a third path worth taking instead.
+- [ ] [CODE] P2. **Implement option (a)**: extend the exclusion/allow-list to key on `(venue, instrument_type)`, admit
+      CBOE `underlying=VIX` at `futures_chain` grain for `ohlcv_15m`/`ohlcv_24h` while CME combo/calendar-spreads stay
+      excluded, then build the bundle-aware manifest-write path resolving the shard-identity question in "Why it
+      matters" above (the manifest's captured CBOE ohlcv_1m/1s rows already carry `instrument_id=CBOE:FUTURE:VIX` even
+      under the `futures_chain` path segment — that FUTURE-shaped id is the natural candidate for the aggregated row's
+      identity too, but confirm against how downstream `vix_features` consumers actually key off it before assuming).
+      Re-scope `tradfi_satellite_ao_dispatch_batch9_2026_08_09.md` todo 2 to this concrete path once picked up. Repo:
+      market-data-processing-service + unified-api-contracts. Not implemented in this session (design ruling only) —
+      needs its own scoped session with the live manifest available to verify against. Done when:
+      `ohlcv_15m`/`ohlcv_24h` requests for CBOE VIX futures produce real candles without reopening the CME combo
+      `SchemaContractNotFoundError` crash.
 
 # Progress Log
 

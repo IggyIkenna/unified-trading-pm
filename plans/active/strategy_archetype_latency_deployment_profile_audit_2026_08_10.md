@@ -42,6 +42,7 @@ assigned_role: quant_dev
 effort: high
 drift_direction: advance-code
 depends_on: []
+archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
 locked_by:
 locked_since:
 context_scope:
@@ -346,12 +347,15 @@ collapsing them into one number the way the archived doc did.
   rules-directional / stat-arb-pairs) → `co_located_vm` → `min_sla_tier: premium`, and premium's 40ms
   `latency_budget_ms` does NOT cover any of their real requirements (MM <100ms / arb <200-300ms /
   basis+ML+rules+stat-arb ms-realm inter-leg gap) — a real, unresolved framework gap the execution plan's derivation
-  must surface as a warning/exception (execution plan todo 6). The binding contract also fixes the
-  `client-isolation-sla-and-runtime-profiles.md` §6 row set (7 inconsistent rows → premium/co-located,
-  `EVENT_SETTLED_SPORTS` label resolution, ~37 missing rows), the stale `archetypes/*.md` runtime frontmatter (5
-  values + 5 invalid `min_sla_tier` enums that raise on the `SLATier()` cast), and the interpretation ruling that
-  `latency_budget_ms` is a decision-segment budget, not a total-E2E promise (order-to-fill is venue-controlled, 20-70ms
-  floor). Medium/High families (vol-trading / event-driven / portfolio) → `distributed` / standard, covered by premium.
-  The 2 single-sided carry exceptions (`YIELD_ROTATION_LENDING`, `YIELD_STAKING_SIMPLE`) → `Medium`/`distributed`. VOL
-  edge-case override (`VOL_MARKET_MAKING`, `VOL_0DTE_GAMMA_SCALPING`) deferred with a stated default (`distributed`) so
-  it cannot block the rollout.
+  must surface as a warning/exception (execution plan todo 8 — **CORRECTED 2026-08-12 (/plan-reconcile)**: was cited as
+  "todo 6", but a P1 todo was inserted at position 7 in that plan on 2026-08-12, pushing the matching "Cross-check
+  against the SLA-tier gap the audit plan may have flagged" todo from 6 to 8; verified against
+  `strategy_archetype_latency_deployment_profile_execution_2026_08_10.md`'s current numbered todo list). The binding
+  contract also fixes the `client-isolation-sla-and-runtime-profiles.md` §6 row set (7 inconsistent rows →
+  premium/co-located, `EVENT_SETTLED_SPORTS` label resolution, ~37 missing rows), the stale `archetypes/*.md` runtime
+  frontmatter (5 values + 5 invalid `min_sla_tier` enums that raise on the `SLATier()` cast), and the interpretation
+  ruling that `latency_budget_ms` is a decision-segment budget, not a total-E2E promise (order-to-fill is
+  venue-controlled, 20-70ms floor). Medium/High families (vol-trading / event-driven / portfolio) → `distributed` /
+  standard, covered by premium. The 2 single-sided carry exceptions (`YIELD_ROTATION_LENDING`, `YIELD_STAKING_SIMPLE`) →
+  `Medium`/`distributed`. VOL edge-case override (`VOL_MARKET_MAKING`, `VOL_0DTE_GAMMA_SCALPING`) deferred with a stated
+  default (`distributed`) so it cannot block the rollout.

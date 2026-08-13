@@ -28,9 +28,9 @@ priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 6
-last_updated: 2026-08-09
-locked_by: live-defi-rollout
-locked_since: 2026-05-25
+last_updated: 2026-08-10 # CORRECTED 2026-08-12 (/plan-reconcile): was 2026-08-09, stale against the 2026-08-10 Phase-B checkbox flip commit (`27bc008065`/`a2044b27ae`)
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
@@ -811,5 +811,7 @@ Two bare `DEFERRED` mentions, re-audited 2026-07-21:
   MDPS 1h/BITGET-SPOT audit — audit complete, backfill dispatched-but-blocked upstream), updated the corresponding
   2026-07-27 banner items 1 + 6 to match, and corrected the stale `usdc_idle_yield_apy_bps` checkbox (line 715) whose
   text still framed the confirm-half as open when the 2026-08-08 round5-cross-cutting-audit had already settled it — now
-  scoped to the genuinely-open wiring half only. 2 genuinely open items remain (Phase B MDPS top-up; the yield-stub
-  wiring half) so `status` stays `active`, not `resolved`.
+  scoped to the genuinely-open wiring half only. **CORRECTED 2026-08-12 (/plan-reconcile)**: this originally said "2
+  genuinely open items remain (Phase B MDPS top-up; the yield-stub wiring half)" — Phase B MDPS top-up was itself
+  flipped `[x]` 2026-08-10 (E2E verified, commit `eb096a69b7`). Only 1 genuinely open item remains (the yield-stub
+  wiring half, line 751) so `status` stays `active`, not `resolved`.

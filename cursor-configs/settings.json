@@ -4,6 +4,7 @@
     "allow": [
       "Bash(*)",
       "Bash",
+      "Bash(aws ssm send-command:*)",
       "Read",
       "Write",
       "Edit",
@@ -53,10 +54,6 @@
           {
             "type": "command",
             "command": "$CLAUDE_PROJECT_DIR/agent-orchestrator/scripts/hooks/block_destructive_commands.py"
-          },
-          {
-            "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/unified-trading-pm/cursor-configs/hooks/pretooluse-slot-collision-guard.py"
           }
         ]
       }

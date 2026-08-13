@@ -416,3 +416,15 @@ regression) is worse.**
   advance (the `agt-40f31f` case); plus module-level unit tests for frontmatter matching, checkpoint comparison, and the
   surgical checkpoint upsert (including the edge case where the checkpoint block is the LAST frontmatter field). Shipped
   `deployment-service@1b035c52`. Both todos above flipped `[x]`.
+- **2026-08-12 (data_pipeline_failure escalation worker, agt-5c3186, slot 14) — `(cefi, book_snapshot_5)`'s 26th+
+  dispatch: the SAME escalation_id already handled today by slots 2 and 7, fanned out to a 3rd slot — the recurring
+  one-event→multi-slot spawn class again.** No code fix needed (duplicate of the static-backlog investigation; all three
+  schema-contract fixes + the materiality + dedup fixes still hold, re-verified ancestor-of-origin). Two new
+  corroborations for the still-open Option A/B/C decision: (1) the dedup/checkpoint mechanism STILL did not suppress
+  this dispatch — the checkpoint was written by slot 7 only AFTER this dispatch was generated (it sat ~1h+ in a 415-task
+  backlog queue), i.e. the known checkpoint-write-lag, not a regression of `9102eb9b`; (2) the source issue doc
+  `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md` has now hit its 1000-line HARD cap
+  (996-line doc + an 18-line Progress Log append = 1014 → `check_line_caps` pre-commit REJECTED the commit) — future
+  re-dispatches of this condition can no longer append a Progress Log entry at all, so every re-dispatch now burns a
+  full worker session with no audit-trail home. Both facts raise the urgency of the operator/main-agent call on Option
+  A/B/C.

@@ -961,6 +961,273 @@ jobs:
   # unset ⇒ no page). At live cutover the operator sets the variable `true`, which RE-ARMS this alert so a
   # genuine out-of-order deploy (a dependency left behind while the fleet is actually deploying) pages again.
   # This neither enables nor blocks any deploy — it only silences a noise alert about the pre-cutover state.
+  # ── ESCALATE TO AN AGENT (2026-08-12) ───────────────────────────────────────────────────
+  # Previously Slack-only across every failure mode below — confirmed via a fleet-wide audit
+  # of every CRITICAL/WARNING-posting workflow cross-referenced against an actual
+  # escalate-to-orchestrator dispatch. One job per failure mode, each mirroring its
+  # corresponding notify-* job's exact `if:` condition so the two never drift apart. This
+  # workflow already runs IN unified-trading-pm, so dispatch targets ${{ github.repository }}
+  # directly (no cross-repo targeting needed, unlike a caller repo's own workflow). All route
+  # to the generic cicd worker via wall_type=cloud_build_router_failure — a routing failure
+  # (not a build failure) is a CI/DevOps judgment call, not a distinct remediation shape
+  # worth its own role. SSOT: codex/04-architecture/agent-orchestrator-ci-escalation-wall-types.md.
+  #
+  # notify-instruments-build-data-pipeline and notify-utl-base-image-recovered are
+  # deliberately NOT mirrored here: the former shares build_exit_code with
+  # escalate-build-failed/escalate-build-poll-exhausted below (a second escalation would be a
+  # pure duplicate dispatch for the same condition, routed to a different Slack channel only);
+  # the latter is a green recovery bookend with nothing to fix. record-cloud-build-result is
+  # bookkeeping, not an alert.
+  escalate-tier-check:
+    name: Escalate — Tier Check Warning
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.tier_check_passed == 'false' &&
+      vars.CLOUD_BUILD_PROD_DEPLOY_EXPECTED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch cloud_build_router_failure escalation
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping" && exit 0
+          GH_TOKEN="${GH_PAT}" gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=${{ needs.route-build.outputs.repo }}" \
+            -f "client_payload[pr_number]=0" \
+            -f 'client_payload[wall_type]=cloud_build_router_failure' \
+            -f "client_payload[context]=Tier-Ordered Deploy Warning: ${{ needs.route-build.outputs.repo }} v${{ needs.route-build.outputs.version }} (env ${{ needs.route-build.outputs.env }}) has un-released blocking deps: ${{ needs.route-build.outputs.blocking_repos }}. Diagnose whether these deps genuinely need releasing first or the tier-order check itself is misconfigured." \
+            -f 'client_payload[model]=sonnet' \
+            >/dev/null 2>&1 && echo "escalated" || echo "::warning::escalation dispatch failed (non-fatal)"
+
+  escalate-health-check-failed:
+    name: Escalate — Health Check FAILED
+    needs: [route-build]
+    if: always() && needs.route-build.outputs.health_check_passed == 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch cloud_build_router_failure escalation
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping" && exit 0
+          GH_TOKEN="${GH_PAT}" gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=${{ needs.route-build.outputs.repo }}" \
+            -f "client_payload[pr_number]=0" \
+            -f 'client_payload[wall_type]=cloud_build_router_failure' \
+            -f "client_payload[context]=Post-Deploy Health Check FAILED: ${{ needs.route-build.outputs.repo }} v${{ needs.route-build.outputs.version }} (env ${{ needs.route-build.outputs.env }}), URL ${{ needs.route-build.outputs.health_check_service_url }} — timed out after 5 min. Diagnose whether the deploy is genuinely unhealthy or the health-check itself is misconfigured (wrong path, timeout too short)." \
+            -f 'client_payload[model]=sonnet' \
+            >/dev/null 2>&1 && echo "escalated" || echo "::warning::escalation dispatch failed (non-fatal)"
+
+  escalate-smoke-test-failed:
+    name: Escalate — Smoke Test FAILED
+    needs: [route-build]
+    if: always() && needs.route-build.outputs.smoke_test_passed == 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch cloud_build_router_failure escalation
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping" && exit 0
+          GH_TOKEN="${GH_PAT}" gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=${{ needs.route-build.outputs.repo }}" \
+            -f "client_payload[pr_number]=0" \
+            -f 'client_payload[wall_type]=cloud_build_router_failure' \
+            -f "client_payload[context]=Post-Deploy Smoke Test FAILED: ${{ needs.route-build.outputs.repo }} v${{ needs.route-build.outputs.version }} (env ${{ needs.route-build.outputs.env }}) — /health passed but /readiness or response shape failed. Diagnose the readiness/response-shape regression." \
+            -f 'client_payload[model]=sonnet' \
+            >/dev/null 2>&1 && echo "escalated" || echo "::warning::escalation dispatch failed (non-fatal)"
+
+  escalate-emergency-resume:
+    name: Escalate — Emergency Order Flow Resume
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.kill_switch_halted == 'true' &&
+      needs.route-build.outputs.build_exit_code != '0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch cloud_build_router_failure escalation
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping" && exit 0
+          GH_TOKEN="${GH_PAT}" gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=${{ needs.route-build.outputs.repo }}" \
+            -f "client_payload[pr_number]=0" \
+            -f 'client_payload[wall_type]=cloud_build_router_failure' \
+            -f 'client_payload[context]=EMERGENCY: order flow was resumed after a failed deploy (order flow had been halted pre-deploy). Investigate the build failure immediately — this is the highest-priority cloud-build-router escalation.' \
+            -f 'client_payload[model]=opus' \
+            >/dev/null 2>&1 && echo "escalated" || echo "::warning::escalation dispatch failed (non-fatal)"
+
+  escalate-regional-fallback:
+    name: Escalate — Regional Fallback Used
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.build_triggered == 'true' &&
+      needs.route-build.outputs.build_region != 'asia-northeast1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch cloud_build_router_failure escalation
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping" && exit 0
+          GH_TOKEN="${GH_PAT}" gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=${{ needs.route-build.outputs.repo }}" \
+            -f "client_payload[pr_number]=0" \
+            -f 'client_payload[wall_type]=cloud_build_router_failure' \
+            -f "client_payload[context]=Cloud Build Regional Fallback: ${{ needs.route-build.outputs.repo }} (env ${{ needs.route-build.outputs.env }}) — primary region asia-northeast1 failed, build ran in fallback region ${{ needs.route-build.outputs.build_region }}. Diagnose why the primary region is unavailable." \
+            -f 'client_payload[model]=sonnet' \
+            >/dev/null 2>&1 && echo "escalated" || echo "::warning::escalation dispatch failed (non-fatal)"
+
+  escalate-build-failed:
+    name: Escalate — Build FAILED
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_exit_code == '1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch cloud_build_router_failure escalation
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping" && exit 0
+          GH_TOKEN="${GH_PAT}" gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=${{ needs.route-build.outputs.repo }}" \
+            -f "client_payload[pr_number]=0" \
+            -f 'client_payload[wall_type]=cloud_build_router_failure' \
+            -f "client_payload[context]=Cloud Build ${{ needs.route-build.outputs.build_failure_reason }}: ${{ needs.route-build.outputs.repo }} (env ${{ needs.route-build.outputs.env }}, branch ${{ needs.route-build.outputs.branch }}, region ${{ needs.route-build.outputs.build_region }}). Log: ${{ needs.route-build.outputs.build_log_url }}. Diagnose the actual build failure (read the Cloud Build log) and fix the root cause on live-defi-rollout." \
+            -f 'client_payload[model]=sonnet' \
+            >/dev/null 2>&1 && echo "escalated" || echo "::warning::escalation dispatch failed (non-fatal)"
+
+  escalate-build-poll-exhausted:
+    name: Escalate — Build Poll Exhausted
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_exit_code == '2'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch cloud_build_router_failure escalation
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping" && exit 0
+          GH_TOKEN="${GH_PAT}" gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=${{ needs.route-build.outputs.repo }}" \
+            -f "client_payload[pr_number]=0" \
+            -f 'client_payload[wall_type]=cloud_build_router_failure' \
+            -f "client_payload[context]=Cloud Build poll exhausted after 60 attempts: ${{ needs.route-build.outputs.repo }} — build still running or unresponsive. Log: ${{ needs.route-build.outputs.build_log_url }}. Check the build's real state directly (gcloud builds describe) — it may have completed after the poll gave up, or be genuinely stuck." \
+            -f 'client_payload[model]=sonnet' \
+            >/dev/null 2>&1 && echo "escalated" || echo "::warning::escalation dispatch failed (non-fatal)"
+
+  escalate-build-not-configured:
+    name: Escalate — Build Trigger Not Configured
+    needs: [route-build]
+    if: |
+      always() &&
+      vars.CLOUD_BUILD_PROD_DEPLOY_EXPECTED == 'true' &&
+      needs.route-build.outputs.env == 'prod' &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_triggered == 'false' &&
+      needs.route-build.outputs.build_failure_reason == 'not-configured'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch cloud_build_router_failure escalation
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping" && exit 0
+          GH_TOKEN="${GH_PAT}" gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=${{ needs.route-build.outputs.repo }}" \
+            -f "client_payload[pr_number]=0" \
+            -f 'client_payload[wall_type]=cloud_build_router_failure' \
+            -f "client_payload[context]=Cloud Build Trigger Not Configured: ${{ needs.route-build.outputs.repo }} (env ${{ needs.route-build.outputs.env }}, project ${{ needs.route-build.outputs.gcp_project }}). Provision the ${{ needs.route-build.outputs.repo }}-prod Cloud Build trigger (gcloud builds triggers create github — NOT create-cloud-build-feature-triggers.sh, which only creates feat/* triggers)." \
+            -f 'client_payload[model]=sonnet' \
+            >/dev/null 2>&1 && echo "escalated" || echo "::warning::escalation dispatch failed (non-fatal)"
+
+  escalate-permission-denied:
+    name: Escalate — Build Trigger Permission Denied
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_triggered == 'false' &&
+      needs.route-build.outputs.build_failure_reason == 'permission-denied'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch cloud_build_router_failure escalation
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping" && exit 0
+          GH_TOKEN="${GH_PAT}" gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=${{ needs.route-build.outputs.repo }}" \
+            -f "client_payload[pr_number]=0" \
+            -f 'client_payload[wall_type]=cloud_build_router_failure' \
+            -f "client_payload[context]=Cloud Build Trigger PERMISSION_DENIED: ${{ needs.route-build.outputs.repo }} (env ${{ needs.route-build.outputs.env }}) — the ${{ needs.route-build.outputs.repo }}-${{ needs.route-build.outputs.env }} trigger EXISTS but github-actions-deploy@central-element-323112 lacks roles/cloudbuild.builds.editor. FIX: gcloud projects add-iam-policy-binding central-element-323112 --member=serviceAccount:github-actions-deploy@central-element-323112.iam.gserviceaccount.com --role=roles/cloudbuild.builds.editor (self-service IAM grant, no operator gate needed)." \
+            -f 'client_payload[model]=sonnet' \
+            >/dev/null 2>&1 && echo "escalated" || echo "::warning::escalation dispatch failed (non-fatal)"
+
+  escalate-utl-base-image-not-configured:
+    name: Escalate — UTL Base-Image Trigger Not Configured
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo == 'unified-trading-library' &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_triggered == 'false' &&
+      needs.route-build.outputs.build_failure_reason == 'not-configured'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch cloud_build_router_failure escalation
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping" && exit 0
+          GH_TOKEN="${GH_PAT}" gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f 'client_payload[repo]=unified-trading-library' \
+            -f "client_payload[pr_number]=0" \
+            -f 'client_payload[wall_type]=cloud_build_router_failure' \
+            -f "client_payload[context]=unified-trading-library-prod Cloud Build trigger did not fire — the base image every service Dockerfile FROMs has stopped republishing. Error: ${{ needs.route-build.outputs.build_error_detail }}. If NOT_FOUND, recreate the unified-trading-library-prod trigger in central-element-323112/asia-northeast1 (mirror instruments-service-prod). Any other error means the trigger exists but cloud-build-router.yml's trigger_build_in_region call itself is failing — check that first. See plans/active/issues/utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md." \
+            -f 'client_payload[model]=sonnet' \
+            >/dev/null 2>&1 && echo "escalated" || echo "::warning::escalation dispatch failed (non-fatal)"
+
   notify-tier-check:
     name: Slack — Tier Check Warning
     needs: [route-build]

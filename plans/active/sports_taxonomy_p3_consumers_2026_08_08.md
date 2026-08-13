@@ -309,6 +309,24 @@ spelling variant survives, which is the entire point of the panel". It does not.
       the consumer a `data_type` grep does not find; it must move in the same change as the rename per the codex rename
       rule.
 
+      > **CORRECTED 2026-08-12 (/plan-reconcile)**: this todo has now been prematurely dispatched 4x
+          > (slots 22/15/10/30, 2026-08-09 → 2026-08-11 Progress Log entries above) — each dispatch independently
+          > re-verified P2's `odds_horizon_bucket` re-stamp is still unshipped and skipped back with `reason_code: GATED`.
+          > The durable `auto_park` is confirmed structurally not holding (slot-30 entry: `auto_park.manual_park`'s
+          > idempotency guard no-ops re-park attempts against a stale cooldown marker) — flagged as an operator-attention
+          > AO mechanism bug in `plans/active/issues/plan_reconciler_findings_all_2026_08_12.md`'s summary, not this doc's
+          > fix to make. Root authoring gap (per CLAUDE.md: "partial parallelism isn't expressible in one plan → SPLIT"):
+          > this single todo needs `depends_on`+`gate_on_depends: true` onto P2's re-stamp todo, but this plan has 14
+          > other (mostly done) todos with no such constraint — plan-level gating would over-gate them. Tracked below so
+          > the fix isn't lost as one-off Progress Log prose.
+
+- [ ] [OPERATOR] P3. **Split this ML PATH-PREFIX loader-migration todo into its own single-todo plan**, gated via
+      `depends_on: [sports_taxonomy_p2_migration_2026_08_08]` + `gate_on_depends: true` on P2's `odds_horizon_bucket`
+      re-stamp todo, so it stops re-dispatching until the rename lands (per CLAUDE.md's documented SPLIT pattern for
+      partial-plan gating). Tagged `[OPERATOR]` because authoring a new plan requires the "AO plan or human plan?"
+      ask-first ruling (CLAUDE.md § Plans) — not a worker-determinable call. **Done when**: the split plan exists, is
+      properly gated, and this todo is removed from this plan (superseded by the split).
+
 ### Betfair Exchange
 
 - [x] ✅ [CODE] P1. **Build the Betfair Exchange adapter scaffold + UAC contract** (operator ruling 2026-08-08, per this
@@ -422,14 +440,14 @@ spelling variant survives, which is the entire point of the panel". It does not.
   present on `origin/main`. Live AO backlog (read-only via SSM) holds tasks for every one, one already dispatched to a
   worker. The gates release WITHOUT a human: `gate_on_depends` is machine-managed by `_wire_gate_on_depends_prereqs`,
   which also covers a zero-backlog-task upstream via a derived `gate-upstream-open:<stem>` condition — and P2's second
-  gate, `/plans/active/issues/sports_af_full_entity_completion_2026_08_03.md`, is itself `assigned_vm: planning` with 3
-  open `[SCRIPT]` todos, so nothing in the chain waits on an operator to release it. **One real gap found and fixed**:
-  this plan's Betfair scaffold todo had NEVER been ingested. Its own closing sentence ("Do NOT mark this
-  `BLOCKED-CREDENTIALS`") tripped `_has_live_blocked_token`, so regen classified the todo non-dispatchable — while the
-  same todo's text asserted it was "Fully AO-completable with no operator step". Rewritten in
-  `unified-trading-pm@a134a45948`; re-verified with regen's REAL parser, not a re-implementation: P3 14/15 -> 15/15, and
-  all 8 docs now parse 75/75. Corpus-wide the same silent drop hits 47 todos across 37 AO docs (14 of them parse to ZERO
-  dispatchable todos) — filed as
+  gate, `/plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md`, is itself
+  `assigned_vm: planning` with 3 open `[SCRIPT]` todos, so nothing in the chain waits on an operator to release it.
+  **One real gap found and fixed**: this plan's Betfair scaffold todo had NEVER been ingested. Its own closing sentence
+  ("Do NOT mark this `BLOCKED-CREDENTIALS`") tripped `_has_live_blocked_token`, so regen classified the todo
+  non-dispatchable — while the same todo's text asserted it was "Fully AO-completable with no operator step". Rewritten
+  in `unified-trading-pm@a134a45948`; re-verified with regen's REAL parser, not a re-implementation: P3 14/15 -> 15/15,
+  and all 8 docs now parse 75/75. Corpus-wide the same silent drop hits 47 todos across 37 AO docs (14 of them parse to
+  ZERO dispatchable todos) — filed as
   `/plans/archive/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md`, NOT hand-triaged,
   because three prior regex-widening fixes all regressed. Ingestion of the fixed todo lands on the next plan-regen tick
   (~30 min default); no operator action.

@@ -893,7 +893,7 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
 
 - Master plan: [`master_to_live_defi_2026_05_23.md`](../archive/2026_07/master_to_live_defi_2026_05_23.md).
 - Write-gate cluster:
-  [`writegate_honest_coverage_endtoend_2026_05_06.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.md).
+  [`writegate_honest_coverage_endtoend_2026_05_06.md`](../archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md).
 - Asset_group vocabulary:
   [`venue_axis_asset_group_vocabulary_2026_04_25.md`](../archive/venue_axis_asset_group_vocabulary_2026_04_25.plan.md).
 - Per-asset-group umbrellas: `cefi_master`, `defi_master`, `tradfi_master`, `sports_master`, `predictions_master`.

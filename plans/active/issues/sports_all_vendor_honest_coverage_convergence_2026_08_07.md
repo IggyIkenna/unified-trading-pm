@@ -27,7 +27,7 @@ scope: [engineer, admin]
 tags: [sports, honest-coverage, data-correctness, odds-api, mtds, multi-vendor]
 related:
   [
-    plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
+    plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
     plans/active/issues/transfermarkt_player_values_data_discarded_2026_08_07.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-coverage-model.md,
@@ -39,7 +39,12 @@ parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 sequential: false
-depends_on: []
+depends_on: [sports_odds_api_scattered_multiyear_gaps_2026_07_27]
+gate_on_depends:
+  true # added 2026-08-12 (/plan-reconcile) — this doc's "babysit the mtds-backfill-odds-* fleet" todo
+  # and sports_odds_api_scattered_multiyear_gaps_2026_07_27.md's P1 backfill todo both independently dispatch the SAME
+  # live odds_api backfill VM fleet with no linkage, which already caused a real concurrency-guard-violation incident.
+  # Gate this doc's overlapping VM-management work behind the older, actively-dispatching doc resolving first.
 locked_by:
 locked_since:
 supersedes:

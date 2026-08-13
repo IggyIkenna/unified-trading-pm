@@ -702,17 +702,18 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
       `gcs_bucket_soft_delete_retention_seconds()` ≥604800s check before any object deletion (codex delete-safety §3a);
       no `[OPERATOR]` gate needed per that carve-out. Repo: market-tick-data-service.
 
-      **STATUS 2026-08-10 (slot 2) — TOOLING GAP, not started.** The 4b-i merge script
-                  (`market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`) is **explicitly shape
-                  #3/#3b-only** ("shape #4 ... OUT OF SCOPE here" per its own docstring; it needs the sanctioned Tier-2 SPOT-VM single
-                  walk). **A shape-#4 merge script must be built first** (mirror the 4b-i read-transform-write-per-cell + additive-only
-                  pattern, consume `enumerate_shape4_prediction_trades_2026_08_04.py`'s corpus extent, add `--delete-legacy` after
-                  content-verify Part 1/2 + a FRESH `gcs_bucket_soft_delete_retention_seconds()` ≥604800s gate per delete-safety §3a),
-                  then run the merge+delete as a VM-scale operation (1,126,358 objects / 348 days — never the shared host). Also
-                  re-verify 4b-i's own delete-pass state (the 2026-08-06 slot-4 entry recorded "delete pass has effectively never run —
-                  273 legacy-present days remaining" for 4b-i's shapes) so the two delete passes don't double-cover. Next dispatch:
-                  build the shape-#4 merge script (QG + quickmerge), launch the migration VM, verify 0-loss content check + post-delete
-                  verification.
+      **STATUS 2026-08-12 (slot 18) — FINDING + FIX + RELAUNCH IN FLIGHT.** VM `...-201105` (slot-25's launch) COMPLETED
+          EXIT_STATUS=0 (TOTALS: 1,126,358 objects / 563,173 cids, canonical_already_enriched=1,126,338,
+          legacy_objects_deleted=326,848). **Post-run verify: delete leg INCOMPLETE (29%)** — the shipped script's
+          `_canonical_ts_seconds()` mis-converts canonical `timestamp` when it's int64 unix-seconds (the 2026-01-15+
+          writer format; `pd.to_datetime` misreads seconds-as-ns → every key ≈1s) → `_metadata_matches` false-negatives
+          → 100% of cells wrongly refused on 2026-01-15..2026-04-14 (+4 2025 days) = **94 days / 775,406 objects kept**.
+          FIX SHIPPED: `market-tick-data-service@5271ea7c` (int64 passthrough, +2 tests, QG green) +
+          `deployment-service@b9cbb1b1` (tarball build also broken — 11G gitignored `.tmp/count_check_*` inflated the
+          tarball to 7.7G, overflowed /tmp, shipped stale tarball; added `--exclude='.tmp'`). MTDS tarball republished
+          pinned `5271ea7c` (content-verified). **RELAUNCHED VM `canonical-migration-prediction-shape4-merge-20260812-221112`**
+          (on-demand, full `--apply --delete-legacy`, full range) — retention gate 604800s PASSED, DEPLOYMENT_STARTED,
+          running. Checkbox flips after this VM completes + post-delete verify (final counts in Progress Log).
 
 - [x] ✅ [DATA] P2. **Characterize the shape-#4 subset-divergent cells (canonical ⊂ shape #4)** — discovered 2026-08-10
       (slot 25, 4b-iii dry-run): ~10% of cells (9/85 on day 2025-03-14, e.g. `0x58b3...`, `market_type=range_bracket`)

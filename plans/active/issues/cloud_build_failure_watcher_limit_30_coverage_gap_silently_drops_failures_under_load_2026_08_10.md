@@ -34,13 +34,13 @@ created: 2026-08-10
 author: claude-agent
 priority: P1
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by: unified-trading-pm@<pending-quickmerge-sha, filled at ship>
+resolved_by: unified-trading-pm@5078a6c31e # CORRECTED 2026-08-12 (/plan-reconcile): filled from git log — "fix(ci): raise cloud-build-failure-watcher's --limit=30 coverage gap..." (2026-08-11)
 source:
   User asked, after the uts-prod-data-status-rollup-svc deploy blocker was fixed, why the 5+ hour silent failure never
   paged data-pipeline-alerts or any CI/live Slack channel, and to diagnose + fix it via /autonomous.
@@ -117,6 +117,9 @@ Fixed both the immediate gap and its recurrence risk:
       not urgent, the logic was traced + syntax-validated but not executed against a live gap condition this session.
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - **2026-08-10 (interactive session, /autonomous)**: root-caused live via direct comparison of the 15:23:06Z watcher
   tick's job log against the actual failing build's timestamp, then confirmed the mechanism by directly measuring the

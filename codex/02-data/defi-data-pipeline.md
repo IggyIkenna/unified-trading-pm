@@ -35,7 +35,7 @@ referenced_by:
     /codex/02-data/defi-canonical-naming-ssot.md,
     /codex/02-data/defi-data-types-catalog.md,
     /codex/02-data/instrument-pipeline-defi.md,
-    plans/active/issues/defi_code_codex_drift_2026_05_27.md,
+    plans/archive/2026_08/issues/defi_code_codex_drift_2026_05_27.md,
     plans/audit/instructions/defi_master_audit_instructions.md,
   ]
 owner:
@@ -73,7 +73,7 @@ Each row: what a codex SSOT claims, what the code/GCS actually does (with citati
 drift, banned `bloxroute` relay, RADIANT-unbacked-live, governance handler dup) is in the audit record
 [`plans/audit/results/defi_pipeline_code_codex_drift_2026_05_27`](../../plans/audit/results/defi_pipeline_code_codex_drift_2026_05_27.md).
 Actionable items tracked in
-[`issues/defi_code_codex_drift_2026_05_27`](../../plans/active/issues/defi_code_codex_drift_2026_05_27.md).
+[`issues/defi_code_codex_drift_2026_05_27`](../../plans/archive/2026_08/issues/defi_code_codex_drift_2026_05_27.md).
 
 | #      | Area                             | Codex SSOT says                                                                                                                              | Code / GCS reality (2026-05-27)                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Verdict                                                        | Fix                                                                                                                                                                              |
 | ------ | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -312,7 +312,7 @@ dex_pool_state ──► onchain pool-invariant-drift / concentrated-liquidity-I
 ## 9. Pointers
 
 - Drift action items:
-  [`issues/defi_code_codex_drift_2026_05_27`](../../plans/active/issues/defi_code_codex_drift_2026_05_27.md)
+  [`issues/defi_code_codex_drift_2026_05_27`](../../plans/archive/2026_08/issues/defi_code_codex_drift_2026_05_27.md)
 - Pipeline spine: [`data-lineage-MTDS-features-ml`](data-lineage-MTDS-features-ml.md)
 - Data types: [`defi-data-types-catalog`](defi-data-types-catalog.md),
   [`defi-data-type-taxonomy`](defi-data-type-taxonomy.md)

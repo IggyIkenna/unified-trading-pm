@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [plan-hygiene, audit, refactor, data-correctness, defi, observability, reconciliation]
 related:
   [
-    plans/active/issues/defi_code_codex_drift_2026_05_27.md,
+    plans/archive/2026_08/issues/defi_code_codex_drift_2026_05_27.md,
     plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md,
     plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md,
     plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md,
@@ -38,7 +38,7 @@ source:
     plans/active/issues/api_host_chronic_impairment_2026_05_29.md,
     plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
     plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md,
-    plans/active/issues/defi_code_codex_drift_2026_05_27.md,
+    plans/archive/2026_08/issues/defi_code_codex_drift_2026_05_27.md,
     plans/active/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md,
     plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md,
     plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md,
@@ -49,17 +49,17 @@ source:
   ]
 assigned_vm: NA
 resolved_by:
-locked_by: live-defi-rollout
+locked_by:
 context_scope:
   [
-    /plans/active/issues/defi_code_codex_drift_2026_05_27.md,
+    /plans/archive/2026_08/issues/defi_code_codex_drift_2026_05_27.md,
     /plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md,
     /plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md,
     /plans/archive/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md,
     /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
   ]
 execution_scope: local-only
-locked_since: 2026-06-02
+locked_since:
 estimate_class: brand-new
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4
@@ -449,7 +449,7 @@ verified complete**.
       `"execution-service"` but `cli/backtest.py` writes `"execution-services"` (plural); one producer must use one
       canonical `service_name`. Source: e2e-pipeline-manifest-wiring (smaller findings). **DONE (na-eligibility-audit
       2026-08-03)** — closed via `plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md:405`: DONE 2026-08-03
-      (slot-4, backend_engineer), `execution-service@8479a77f`, normalized every `service_name` producer to canonical
+      (slot-4, backend_engineer), `execution-service@9f7370b9`, normalized every `service_name` producer to canonical
       singular `"execution-service"`.
 - [x] ✅ [BUILD] P2. **RESOLVED — closed via `infra_satellite_ao_dispatch_batch1_2026_07_26.md` todo #10 (2026-08-01,
       slot-5).** Both fixes predate this todo's own dispatch: `MANIFEST_ALIGNMENT_SKIP=true`

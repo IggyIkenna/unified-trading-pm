@@ -39,10 +39,10 @@ archetype: CARRY_BASIS_DATED
 family: CARRY_AND_YIELD
 venue_universe: [CME, DERIBIT, OKX, BYBIT]
 topology_requirements:
-  isolation: { execution-service: isolated }
-  co_location: []
+  isolation: { execution-service: isolated, strategy-service: isolated }
+  co_location: [execution-service, strategy-service]
   latency_budget_ms: 150
-  min_sla_tier: standard
+  min_sla_tier: premium
 ---
 
 # Archetype: `CARRY_BASIS_DATED`

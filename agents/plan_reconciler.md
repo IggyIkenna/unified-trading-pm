@@ -17,7 +17,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [role, plan_reconciler, reconciliation, plan-hygiene, boot-prompt, scheduled, multi-agent, adversarial-verify]
-related: [plan_health.md, cicd.md, RULES.md]
+related: [/agents/plan_health.md, /agents/cicd.md, /agents/RULES.md]
 created: 2026-06-27
 role: plan_reconciler
 model: sonnet
@@ -294,8 +294,9 @@ For MISSED-FLIP candidates the evidence bar is explicit — the refuter attacks 
 - **SOFT (NEVER sufficient alone)**: another doc says it's done; a Progress Log paragraph claims completion; the epic's
   checkbox is ticked. Soft-only evidence is a CONTRADICTION to report (docs disagree about doneness), NOT a flip.
 
-Small candidate counts you may verify inline (you are opus/max); larger sets fan out verifier sub-agents (≤10 parallel,
-read-only, `SUB_AGENT_MANDATORY_RULES.md` at spawn top). Record the confirmed/refuted tally for the coverage report.
+Small candidate counts you may verify inline (you are sonnet/max — see this doc's own `model: sonnet` frontmatter and
+CLAUDE.md's 2026-08-08 ruling, opus is manual-only); larger sets fan out verifier sub-agents (≤10 parallel, read-only,
+`SUB_AGENT_MANDATORY_RULES.md` at spawn top). Record the confirmed/refuted tally for the coverage report.
 
 STEP 5 — APPLY only the CONFIRMED, conservatively. CHECKPOINT after EACH sub-check (and at least every ~10 min): append
 results to your run-findings doc, `npx prettier --write` the .md files you touched, `git add` them BY NAME, commit with

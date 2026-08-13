@@ -40,7 +40,7 @@ topology_requirements:
   isolation: { execution-service: isolated, strategy-service: isolated }
   co_location: [execution-service, strategy-service]
   latency_budget_ms: 10
-  min_sla_tier: ultra-premium
+  min_sla_tier: premium
 ---
 
 # Archetype: `MARKET_MAKING_QUEUE_MICROSTRUCTURE`

@@ -149,7 +149,13 @@ sweep here.
       env var override (lc_gcloud_create lacks this param — either add it or document the pd-balanced default is
       sufficient), (3) launchers using `--metadata-from-file` (e.g. strategy-test shutdown script — cannot migrate until
       lc_gcloud_create supports it or the feature is dropped). **Done when**: a dedicated plan is authored and
-      dispatched covering the full remaining corpus.
+      dispatched covering the full remaining corpus. _(ao-readiness clarification 2026-08-12 (/plan-reconcile): this
+      todo itself is bounded AO work — "author + dispatch a fan-out plan" is the sanctioned pattern per CLAUDE.md
+      "Fanning out work = a tracked plan todo," and the migration SHAPE is already operator-ruled (option (a),
+      2026-08-06). The two genuinely open design forks inside tiers (2)/(3) — add `--boot-disk-type` param support vs.
+      document the pd-balanced default as sufficient; add `--metadata-from-file` support vs. drop that migration target
+      — are NOT for the authoring worker to decide unilaterally; the new plan must carry them as their own
+      `[REVIEW]`/`[OPERATOR]` todos, not silently resolve them while drafting.)_
 
 ## Progress Log
 

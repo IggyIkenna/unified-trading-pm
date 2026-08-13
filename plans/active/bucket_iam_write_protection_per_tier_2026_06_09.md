@@ -30,8 +30,9 @@ estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
 last_updated: 2026-07-31
-locked_by: live-defi-rollout
-locked_since: 2026-06-09
+archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
@@ -87,9 +88,15 @@ The IAM model keys off the **actual** bucket env suffix produced by the mandated
 - **4 effective name tiers (`dev`/`stg`/`prd` + ephemeral `test`); staging is DISTINCT (`-stg-`), not folded into dev.**
 - **`mock` is NOT a name suffix** — it is `CLOUD_MOCK_MODE` + scenario prefixes _inside_ buckets.
 - **Two drift facts blocking clean sync:**
-  - **Codex stale**: [bucket-isolation-model.md](/codex/05-infrastructure/bucket-isolation-model.md) §4 claims "staging
-    shares the dev tier" (3-tier via `get_bucket_environment`) — **contradicts** `resolve_bucket_name`. Resolver is the
-    mandated SSOT → doc must be corrected (P3 below).
+  - **Codex stale (RESOLVED)**: [bucket-isolation-model.md](/codex/05-infrastructure/bucket-isolation-model.md) §4 used
+    to claim "staging shares the dev tier" (3-tier via `get_bucket_environment`) — **contradicted**
+    `resolve_bucket_name`. Resolver is the mandated SSOT → doc needed correcting (P3 below).
+    > **CORRECTED 2026-08-12 (/plan-reconcile)**: both drift facts are landed — codex §1/§4 now states staging is its
+    > own `-stg-` tier (NOT dev) with `get_bucket_environment()` marked Retired, and §8's heading now reads "PARTIALLY
+    > ENFORCED — new SAs scoped, god-SA still unconditioned" (not "designed"). Evidence:
+    > `git log -S"staging is its own" --format=%h\ %ad\ %s -- /codex/05-infrastructure/bucket-isolation-model.md` →
+    > `0ce85509ca 2026-06-29`; §8 heading + §8.5 read live in the current file. Both corrections landed; nothing further
+    > to verify here.
   - **Group A vs B differ TODAY**: Group A (raw — `market-data-tick`, `instruments-store`) is **env-tiered live**
     (canonicalisation migrations already run on `…-prd-central-element-323112`); Group B (derived — `features-*`,
     `strategy-store`, `execution-store`, `ml-*`) is **env-split ROLLED BACK** (non-env-split today), and its named
@@ -339,11 +346,11 @@ Two independent gates because Group A and Group B are at different stages:
       stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                                                                                                                                                                                                                                                                                                                                                                                                                              > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                                                                                                                                                                                                                                                                                                                                                                                                                              > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                                                                                                                                                                                                                                                                                                                                                                                                                              > (or any other role) without going through terraform at all. See
-                                                                                                                                                                                                                                                                                                                                                                                                                                              > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                                                                                                                                                                                                                                                                                                                                                                                                                              > actually complete until that doc's P1/P2 also land.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                      > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                                                                                                                                                                                                                                                                                                                                                                                                                      > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                                                                                                                                                                                                                                                                                                                                                                                                                      > (or any other role) without going through terraform at all. See
+                                                                                                                                                                                                                                                                                                                                                                                                                                                      > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                                                                                                                                                                                                                                                                                                                                                                                                                      > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking

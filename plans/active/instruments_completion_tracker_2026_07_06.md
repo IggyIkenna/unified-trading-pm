@@ -182,8 +182,9 @@ mode-split + C2 direction (Ikenna 07-03) · v10→v12 MVP drift (defi-only, bann
 ## Stage 0 — Unblock (decisions + plan consolidation)
 
 - [x] [DESIGN] P0. **D1–D3 decided** (see Decision Gates) — **hard gate on Stage 2** (all three decided 2026-07-06)
-- [ ] [ADMIN] P1. Plan consolidation (from `/plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md`
-      §F.1) — **REASSESSED 2026-07-06**:
+- [x] ✅ [ADMIN] P1. **DONE — flipped 2026-08-12 (/plan-reconcile), pure doc-hygiene: all 3 sub-items below were already
+      independently done and evidenced.** Plan consolidation (from
+      `/plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md` §F.1) — **REASSESSED 2026-07-06**:
   - [x] **merge `path_to_100pct` → `data_completion` = ✅ ALREADY DONE** (superseded + archived 2026-06-30;
         `data_completion` § "Folded-in from `path_to_100pct`"; only the DEDUP residual remains = the Stage-5 item).
   - [x] **flip `instruments_catalogue_incremental_rollup` → completed** — was: `⛔ DO NOT FLIP` (its lone open item was
@@ -561,11 +562,13 @@ reconciling + signing off, not redoing.)_
       todos `[x]`: operator decided DELETE (2026-07-18), then deleted — `instruments-service@650dd4b7` (removed
       `api/data_status.py` + route registration + its unit test; re-verified no workspace caller at delete time; IS gate
       green, 4559 passed).
-- [ ] [CODE] P2. Build a generic manifest-reprocessing utility (11 near-identical one-off reclassify scripts written
+- [x] ✅ [CODE] P2. **DONE — flipped 2026-08-12 (/plan-reconcile), correcting the stale "genuinely unbuilt"
+      annotation.** Build a generic manifest-reprocessing utility (11 near-identical one-off reclassify scripts written
       across instruments-service + market-tick-data-service in 8 weeks; codex's own `script-homes.md` says a recurring
-      need like this should graduate to a permanent tool). See
-      `issues/manifest_reprocessing_generic_utility_2026_07_07.md`. **STILL OPEN (reconciled 2026-07-28)** — not covered
-      by any named archived child; genuinely unbuilt.
+      need like this should graduate to a permanent tool). `issues/manifest_reprocessing_generic_utility_2026_07_07.md`:
+      RESOLVED 2026-07-30, all 4 todos done — `select_shards_for_reprocess()` designed + built, wired as an IS CLI
+      subcommand, 13 one-offs left in place as historical record. Archived:
+      `/plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md`.
 
 ---
 

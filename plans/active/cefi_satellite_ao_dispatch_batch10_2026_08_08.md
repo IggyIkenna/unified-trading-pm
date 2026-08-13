@@ -70,6 +70,7 @@ assigned_role: data_engineering
 effort: high
 sequential: false
 drift_direction: advance-code
+archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
 locked_by:
 locked_since:
 supersedes:
@@ -215,8 +216,9 @@ context_scope:
   the doc's dominant remaining gate).
 - **`issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md`** — remaining item(s)
   need an operator decision on catalogue-orphan disposition; not a checkable-fact audit.
-- **`issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md`** — a Tardis credential/billing entitlement
-  upgrade, or alternatively an operator judgment call accepting reduced scope; neither is worker-bounded.
+- ~~`issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md`~~ — **STALE, RESOLVED + ARCHIVED 2026-08-12**:
+  this entry was drafted before the same-day 2026-08-08 re-probe found the Tardis `lighter` entitlement gap gone; all
+  todos closed, doc archived to `plans/archive/2026_08/issues/`. No longer operator-gated.
 - **`archive/issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md`** — the shipped fix's
   residual todo is an operator sign-off/verification step, not further code work.
 - **`issues/cefi_onchain_perp_forward_capture_outage_2026_08_03.md`** — **RESOLVED + ARCHIVED 2026-08-09**: re-verified

@@ -52,9 +52,23 @@ unconditional FAIL, never baseline-able — the comparison itself is
 unavailable, and treating that as "clean" would be the "None means it's
 fine" mistake the rollout tool's own guard was written to avoid.
 
-**NOT wired into ``scripts/quality-gates.sh``** (deliberate — see the gated
-finalize plan ``ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md``). Run
-standalone until that wiring is decided.
+Wired into quality gates at TWO points, deliberately:
+
+  * ``unified-trading-pm/scripts/quality-gates.sh`` runs it FLEET-WIDE (no
+    ``--repo``), which catches the other direction — a TEMPLATE edit in PM that
+    leaves consumers behind.
+  * ``quality-gates-base/base-service.sh`` STEP 5.108 and ``base-ui.sh``
+    ``[5.108]`` run it scoped to the CONSUMER (``--repo <this repo>``), so a
+    cloudbuild.yaml edit fails in the repo that introduced it.
+
+The consumer-scoped half was added 2026-08-12 after the PM-only wiring let a
+consumer land drift with a green gate and surface it as a fleet-wide PM commit
+block on an unrelated agent's machine, twice in two days. SSOT:
+``/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md``.
+(This docstring previously said "NOT wired into quality-gates.sh ... run
+standalone until that wiring is decided" — stale since the PM wiring landed, and
+it is why the consumer-side gap read as an open design question rather than a
+gap.)
 
 Usage::
 
@@ -177,7 +191,7 @@ def write_baseline(counts: dict[str, int], existing: Baseline, path: Path | None
         "# deployment-api's vendor-deps/deploy/redeploy-monitor-jobs steps) is\n"
         '# expected to live here PERMANENTLY, baselined rather than "fixed".\n'
         "#\n"
-        "# SSOT: plans/active/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md\n"
+        "# SSOT: plans/archive/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md\n"
         "# + plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md.\n"
     )
     body = yaml.safe_dump(
@@ -260,7 +274,10 @@ def scan_drift(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Cloud Build template-vs-consumer drift ratchet (standalone, NOT wired into quality-gates.sh)."
+        description=(
+            "Cloud Build template-vs-consumer drift ratchet. Runs fleet-wide in unified-trading-pm's "
+            "quality-gates.sh, and scoped to a single consumer (--repo) in base-service.sh STEP 5.108 / base-ui.sh."
+        )
     )
     parser.add_argument(
         "--workspace-root",
@@ -314,9 +331,18 @@ def main(argv: list[str] | None = None) -> int:
         if rd.count > allowed:
             over = rd.dropped[allowed:] if allowed < len(rd.dropped) else rd.dropped
             sample = "; ".join(over[:10])
+            # NOT a diff. The baseline stores only an integer per repo (`Baseline.counts`),
+            # so this checker CANNOT know which markers are new — `over` is simply the tail
+            # of the ordered marker list. Labelling it "New" was actively misleading: on
+            # 2026-08-12 it surfaced `vendor-deps` (pre-existing intentional drift, named as
+            # such in the baseline file's own header) as new, and a reader built a table
+            # attributing the failure to two steps when only one had changed.
             failures.append(
                 f"[FAIL] {repo} ({rd.template}): {rd.count} drift marker(s) > baseline {allowed}. "
-                f"New/over-baseline marker(s): {sample}" + (" ..." if len(over) > 10 else "")
+                f"Marker(s) above the baseline COUNT — POSITIONAL, i.e. the last {len(over)} by file order, "
+                f"NOT necessarily the ones that changed (the baseline stores a count, not marker identities; "
+                f"to find what actually changed, diff this repo's cloudbuild.yaml against its last known-good "
+                f"revision): {sample}" + (" ..." if len(over) > 10 else "")
             )
         elif rd.count < allowed:
             info_lines.append(
@@ -346,12 +372,21 @@ def main(argv: list[str] | None = None) -> int:
     for line in failures:
         print(line, file=sys.stderr)
     if failures:
+        # Both failure shapes start "[FAIL] <repo>" — the drift one continues " (<template>):",
+        # the unparseable one continues ":". Strip either so the repo name is clean.
+        offenders = ", ".join(sorted({line.split()[1].rstrip(":") for line in failures if len(line.split()) > 1}))
         print(
-            "\n-> A consumer's cloudbuild.yaml carries content its mapped template does not — the next "
-            "`rollout-cloudbuild.py --apply` on this repo would either be refused (would-drop-content guard) "
-            "or, if the guard is ever bypassed, silently regress it. Forward-port the fix into the template, "
-            "or if the drift is intentional per-repo customization, ratchet the baseline (`--update-baseline`). "
-            "SSOT: plans/active/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md. "
+            f"\n-> THE OFFENDING CONTENT IS IN: {offenders}. If you are shipping unified-trading-pm, this is "
+            "NOT your change: this checker is a post-gate in PM's quality-gates.sh, so a consumer repo's drift "
+            "fails PM's gate, withholds the .qg_last_passed_sha sentinel, and blocks EVERY PM code ship on "
+            "every host until it is drained. Fix it in the repo named above.\n"
+            "-> What it means: that consumer's cloudbuild.yaml carries content its mapped template does not, so "
+            "the next `rollout-cloudbuild.py --apply` on it would either be refused (would-drop-content guard) "
+            "or, if the guard is ever bypassed, silently regress it.\n"
+            "-> Remedy: forward-port the content into the template. `--update-baseline` is SHRINK-ONLY and will "
+            "REFUSE to raise a count — silently: it prints the observed (higher) number and leaves the file "
+            "unchanged, which reads like a failed write. It is not a way to unblock a ship.\n"
+            "-> SSOT: /plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md. "
             "Baseline: unified-trading-pm/scripts/quality_gates/cloudbuild_template_drift_baseline.yaml "
             "(NEVER raise a count).",
             file=sys.stderr,

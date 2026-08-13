@@ -24,7 +24,7 @@ authoritative_for: [agent async-wait and poll cadence discipline, background-tas
 referenced_by:
   [/codex/04-architecture/cross-venue-prediction-arb-detection.md, /codex/06-coding-standards/sub-agent-workflow.md]
 owner:
-last_reviewed: 2026-08-07
+last_reviewed: 2026-08-12
 code_refs:
 ---
 
@@ -384,9 +384,41 @@ watchdog** that:
 The ≤30-min re-invoke cost is trivial compared to a multi-hour dormancy + wasted quota. This is the redundant backstop
 that a single "dispatch and rely on sub-agent completion" pattern is missing.
 
+**SCOPE of the ≤30-min figure (codified 2026-08-12, see incident below) — it is for UNBOUNDED/unknown-duration work, NOT
+a KNOWN multi-hour job.** This rule was codified against the 2026-06-24 quota-ramp incident, where the sub-agent's own
+expected runtime was unknown/short and a silent early death was the risk. It does NOT mean "re-invoke a fresh sub-agent
+turn every ≤30 min for the life of the job" — for a job with a DOCUMENTED expected duration (e.g. any
+`vm-launcher-runbook.md` category, which states per-launcher durations from ~15 min to 1-6+ hours), a chain of ≤30-min
+sub-agent re-arms is the wrong pattern: each re-arm is a full sub-agent turn round-trip, and each one is a fresh
+opportunity for the "resumed sub-agent ends its turn, reads as finished to the parent" failure below to silently stall
+the chain — exactly what a multi-hour job maximizes the odds of hitting repeatedly. **For a job with a known/ documented
+expected duration, use § "Don't over-watch + no-sawtooth"'s "ONE long event-driven monitor" pattern instead**, sized to
+that duration (poll interval ≈ 10-20% of expected duration, floor ~5 min, no fixed 30-min re-arm-forever ceiling) — a
+single tracked `run_in_background` loop that reads GROUND TRUTH directly (VM RUNNING state, `run.log` progress/mtime +
+exit_code — not the sub-agent's self-report) and exits only on a real terminal state. This converts N required
+round-trips (one per ≤30-min tick, compounding failure risk each time) into ONE.
+
+**Incident, 2026-08-12 (this exact conflict, live):** a sub-agent dispatched to launch + monitor a
+`canonical-migration-tradfi-*` VM (documented 1-6h duration class) followed the ≤30-min-heartbeat rule literally — armed
+a series of short (10-30 min) watchdogs, each correctly self-reporting and re-arming for several rounds, but each also
+requiring the parent to notice its "completed" notification and manually resend a continuation. On one round the chain
+went quiet with no further notification until the OPERATOR had to prompt ("surely run by now") — the exact "operator
+finds me asleep" class this whole doc exists to prevent, hit specifically because a multi-hour-class job was being
+watched with a short-cycle-reset pattern designed for a short/unknown-duration one.
+
 Composes with § "Watcher coverage" (terminal verdict every path) + § "Don't over-watch + no-sawtooth" (one bounded
-heartbeat that does REAL verification each tick, not many 5-min arm-check-arm cycles) + § "Wake sources"
-(`run_in_background` completion is reliable; a dispatched sub-agent's completion is NOT if it dies silently).
+heartbeat that does REAL verification each tick, not many 5-min arm-check-arm cycles — THIS is the correct pattern for a
+known-duration VM-scale job, not the ≤30-min sub-agent-heartbeat pattern above) + § "Wake sources" (`run_in_background`
+completion is reliable; a dispatched sub-agent's completion is NOT if it dies silently).
+
+**On Agent-Orchestrator (tmux) workers specifically**: this laptop-side failure mode does not apply the same way —
+`agents/worker.md`'s `/progress` heartbeat (every ~5 min, server flags stale at 25 min) is already duration-independent
+(a heartbeat ping is cheap and does not require the underlying job to finish, unlike a sub-agent re-arm which requires
+ending and restarting a full reasoning turn) — see `worker.md`'s own composability note ("plan the check-in cadence
+around the heartbeat requirement, not around how often the underlying job's own progress changes", § "run_in_background
+alone does not make a long job immune to a session kill" above). An AO worker launching a VM-scale job should keep
+sending its normal ~5-min `/progress` heartbeat throughout — including while long-idle waiting on VM progress — rather
+than adopt the laptop-side ≤30-min-sub-agent-heartbeat pattern at all.
 
 ## A background `Workflow()` run can be silently stopped mid-run with no completion record — verify by direct measurement, never trust self-report (codified 2026-07-24)
 

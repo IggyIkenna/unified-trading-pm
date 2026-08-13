@@ -83,6 +83,33 @@ jobs:
             --state-file .sit-gate-stuck-alert-state.json \
             --current "${{ steps.scan.outputs.stuck }}" >> "$GITHUB_OUTPUT"
 
+  # ── Escalate to an agent (2026-08-12) ─────────────────────────────────────────────────
+  # Previously Slack-only — see reconcile-release-tags.yml's escalate job for the audit +
+  # rationale (same pattern). SSOT: codex/04-architecture/agent-orchestrator-ci-escalation-wall-types.md.
+  escalate:
+    needs: check
+    if: needs.check.outputs.stuck == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch sit_gate_stuck escalation
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          REPORT: ${{ needs.check.outputs.report }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping escalation dispatch" && exit 0
+          GH_TOKEN="${GH_PAT}" gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=${{ github.event.repository.name }}" \
+            -f "client_payload[pr_number]=0" \
+            -f 'client_payload[wall_type]=sit_gate_stuck' \
+            -f "client_payload[context]=sit-gate-stuck-detector found a SIT-gate-block streak: ${REPORT}. Run: ${RUN_URL}. Diagnose why ldr-to-main-promote-fleet.yml is stuck on sit-gate/fleet-green for the named repo(s) — check whether this is the known dedup-suppression treadmill (sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md) or a genuinely stuck SIT run." \
+            -f 'client_payload[model]=sonnet' \
+            >/dev/null 2>&1 && echo "escalated sit_gate_stuck to orchestrator" \
+            || echo "::warning::orchestrator escalation dispatch failed (non-fatal — Slack alert still fires)"
+
   notify:
     needs: check
     if: needs.check.outputs.stuck == 'true'

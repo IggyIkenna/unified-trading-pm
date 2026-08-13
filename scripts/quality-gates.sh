@@ -11,6 +11,12 @@ SOURCE_DIR="scripts"
 # Prior floor: 70%. Re-set to 69% — will ratchet back up as coverage is restored.
 MIN_COVERAGE=69
 RUN_INTEGRATION=true
+# BATS_HARD_FAIL: PM's own .bats suite re-measured 2026-08-12 at 0 failures (was 60; both
+# root causes fixed rather than left ratcheted — see
+# pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md todo G). Opting in here
+# (per-repo, base-service.sh's shared default stays WARN-only for every other repo) means a
+# future bats failure on THIS repo genuinely blocks the gate instead of silently warning.
+BATS_HARD_FAIL=1
 PYTEST_WORKERS=${PYTEST_WORKERS:-}  # default: max(1, cpu_count//4) computed by base script
 # Wire the checker-adjacent test_*.py files that live next to their checkers under scripts/
 # (scripts/quality_gates/, scripts/cicd/, scripts/docs/) into the TESTS phase. Plain `testpaths`
@@ -698,16 +704,22 @@ fi
 # Origin: plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group B
 # Walks cutover-critical codex surfaces (codex/02-data, /04-architecture, /05-infrastructure,
 # /11-project-management) and asserts every *.md has last_reviewed: + is ≤90 days old.
-# Current baseline 188 — ratchet down by adding last_reviewed: YYYY-MM-DD to codex docs as touched.
+# Ratchet down by adding last_reviewed: YYYY-MM-DD to codex docs as touched.
+# AGENCY SPLIT (2026-08-12): only AUTHORING defects (missing/invalid last_reviewed: or
+# frontmatter) fail the gate. Docs that merely AGED past the window print an owner-grouped
+# digest and do NOT block — staleness fires on the calendar, in cohorts, on changes that
+# never touched the doc. Digest output is intentionally NOT sent to /dev/null.
+# SSOT: /plans/active/issues/qg_ratchets_block_unrelated_ships_2026_08_12.md
 CODEX_FRESHNESS_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_codex_doc_freshness.py"
 if [ -f "$CODEX_FRESHNESS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
-    echo "Running Codex doc freshness check (ratchet mode)..."
-    if python3 "$CODEX_FRESHNESS_CHECKER" --workspace-root "$WORKSPACE_ROOT" --staleness-days 90 >/dev/null; then
-        log_success "Codex doc freshness check passed (at-or-below baseline)"
+    echo "Running Codex doc freshness check (ratchet mode; staleness advisory)..."
+    if python3 "$CODEX_FRESHNESS_CHECKER" --workspace-root "$WORKSPACE_ROOT" --staleness-days 90; then
+        log_success "Codex doc freshness check passed (no new authoring violations)"
     else
         echo "❌ Codex doc freshness regression — see CLAUDE.md § 'Post-Plan-Phase Codex Audit (HARD RULE)'" >&2
-        echo "   Add 'last_reviewed: YYYY-MM-DD' to any new codex doc in 02-data/04-architecture/05-infrastructure/11-project-management, OR" >&2
-        echo "   if intentional debt, re-baseline with: python3 ${CODEX_FRESHNESS_CHECKER} --workspace-root \$WORKSPACE_ROOT --baseline-write" >&2
+        echo "   A doc you touched is missing 'last_reviewed: YYYY-MM-DD' or has invalid frontmatter." >&2
+        echo "   Add the field to that doc. Do NOT --baseline-write to silence it: staleness no longer" >&2
+        echo "   blocks, so a failure here is an authoring defect in the change you are shipping." >&2
         _post_gate_fail "codex-doc-freshness"
     fi
 fi
@@ -1136,9 +1148,16 @@ if [ -f "$CLOUDBUILD_TEMPLATE_DRIFT_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; 
     if python3 "$CLOUDBUILD_TEMPLATE_DRIFT_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
         log_success "Cloud Build template-vs-consumer drift ratchet passed (at-or-below baseline)"
     else
-        echo "❌ Cloud Build template drift regression — a consumer's cloudbuild.yaml carries content its template does not." >&2
-        echo "   Forward-port the fix into the template, OR" >&2
-        echo "   if intentional per-repo customization, re-baseline with: python3 ${CLOUDBUILD_TEMPLATE_DRIFT_CHECKER} --update-baseline" >&2
+        echo "❌ Cloud Build template drift — THE OFFENDING CONTENT IS IN ANOTHER REPO (named in the [FAIL] line above)." >&2
+        echo "   This is almost certainly NOT the change you are shipping. This check is fleet-wide: a consumer" >&2
+        echo "   repo's cloudbuild.yaml drifting from its template fails THIS gate, so no .qg_last_passed_sha" >&2
+        echo "   sentinel is written and quickmerge refuses EVERY unified-trading-pm code ship, on every host," >&2
+        echo "   until that other repo is drained. Fix it there; do not try to route around it here." >&2
+        echo "   Forward-port the content into unified-trading-pm/configs/cloudbuild-*-template.yaml." >&2
+        echo "   NOTE: --update-baseline is SHRINK-ONLY and silently REFUSES to raise a count (it prints the" >&2
+        echo "   higher number and leaves the file unchanged). It is not an unblock path." >&2
+        echo "   Consumer-side prevention: base-service.sh STEP 5.108 / base-ui.sh [5.108] now fail in the" >&2
+        echo "   consumer's OWN gate, so new drift should be caught there before it ever reaches this one." >&2
         _post_gate_fail "cloudbuild-template-drift"
     fi
 fi

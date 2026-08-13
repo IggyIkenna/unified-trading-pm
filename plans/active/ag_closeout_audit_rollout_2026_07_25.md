@@ -115,7 +115,13 @@ context_scope:
       2026-07-26" table listed "Apply recommendations across the 70-item batch," "Flip each tranche's newly-drafted
       batchN/finalize pair to active," and the "Mass flip" itself all as "Not started"; Round 8's own Deferred table
       confirms the mass-flip for cefi/defi/tradfi/prediction/sports batch/finalize pairs is still only "Partially done"
-      (tradfi re-verified active; cefi/defi/prediction/sports batches not re-verified).
+      (tradfi re-verified active; cefi/defi/prediction/sports batches not re-verified). > **CORRECTED 2026-08-12
+      (/plan-reconcile)**: this "mass-flip all 5 AGs at once" framing is itself stale per the > doc's own audit trail —
+      na-eligibility-audit round7 (2026-08-08, line ~991) and round11 (2026-08-09, line > ~1000) both find cefi has
+      since moved to incremental scheduled-timer batches (batch10+), not a manual > all-5-AGs mass-flip, and both
+      recommend a dedicated cross-cutting close+archive pass rather than continuing to > track this as a live todo. Not
+      archived here — that dedicated pass is out of this single-item's scope; content > left as-is below, this
+      annotation exists so the next reader doesn't re-litigate the same staleness.
 
 ## Progress Log
 
@@ -988,16 +994,16 @@ real, active, AO-dispatchable work — the batched-decisions gate that held it b
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item is the mass-flip gated on the operator personally
   running /ag-closeout-audit + /plan-reconcile.
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, stale — the sole open todo's "mass-flip
-  all 5 AGs at once" framing is superseded by reality (cefi alone is now at incremental batch10, scheduled-timer-
-  produced, not a manual mass-flip). Not flipped/archived here — 6-asset_group cross-cutting doc, out of a cefi-scoped
-  sweep's authority; recommend a dedicated cross-cutting pass close + archive this doc (line-cap-tight already).
-- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (cefi tranche)**: KEEP-NA, valid — re-checked against
-  the full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, stale — the sole open todo's "mass-flip all 5
+  AGs at once" framing is superseded by reality (cefi alone is now at incremental batch10, scheduled-timer- produced,
+  not a manual mass-flip). Not flipped/archived here — 6-asset_group cross-cutting doc, out of a cefi-scoped sweep's
+  authority; recommend a dedicated cross-cutting pass close + archive this doc (line-cap-tight already).
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (cefi tranche)**: KEEP-NA, valid — re-checked against the
+  full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
   plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
   agent-executable after a fresh check, Option B retirement [confirmed unrelated — a different PM-reconciler/
-  semver-agent scope entirely], GSM secret `deepseek-v4-pro-api-key` + 5 Slack webhooks) — none of these touch the
-  sole open todo's actual blocker, which is structural (a stale "mass-flip all 5 AGs" framing) not credential/IAM/
-  tiering-shaped. Reaffirms round7's own verdict: this is a 6-asset_group cross-cutting doc explicitly flagged as
-  out of a single-tranche sweep's authority — not actioned here, still recommend a dedicated cross-cutting close +
-  archive pass. Doc stays NA.
+  semver-agent scope entirely], GSM secret `deepseek-v4-pro-api-key` + 5 Slack webhooks) — none of these touch the sole
+  open todo's actual blocker, which is structural (a stale "mass-flip all 5 AGs" framing) not credential/IAM/
+  tiering-shaped. Reaffirms round7's own verdict: this is a 6-asset_group cross-cutting doc explicitly flagged as out of
+  a single-tranche sweep's authority — not actioned here, still recommend a dedicated cross-cutting close + archive
+  pass. Doc stays NA.

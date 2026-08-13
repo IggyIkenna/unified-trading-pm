@@ -151,7 +151,7 @@
 
     <p class="standfirst">
       A reading guide for the repository itself. It gives the exact contracts the strategy emits, the complete
-      configuration surface, how to halt it, how capital and collateral move through Copper, what can be read back out,
+      configuration surface, how to halt it, how capital and collateral move through custody, what can be read back out,
       and what an external strategy would have to implement to sit in the same slot. Every contract below is the real
       declaration, not a paraphrase.
     </p>
@@ -501,9 +501,10 @@ strategy_config:
         <span class="tag">Read this in the repository, not from here</span>
         <p>
           The committed file carries a header marking the risk thresholds as conservative pre-cutover placeholders
-          pending final operator sign-off, and the values will move before go-live. Treat the numbers above as
-          illustrative of the <em>shape</em> of the configuration; the thresholds themselves are still being finalised as
-          part of the October readiness work.
+          pending final operator sign-off. The distinction matters: the schema, the unit conventions and the
+          three-level health-factor ladder are settled — what remains is a risk-appetite decision on the specific
+          numbers, which is an operator sign-off rather than an engineering change. Treat the values above as
+          illustrative of the <em>shape</em> of the configuration, and read the live numbers from the file itself.
         </p>
       </div>
 
@@ -612,11 +613,13 @@ DefiModeConfig              MlModeConfig</div>
 
   <!-- 05 -->
   <section id="s5">
-    <div class="sec-head"><span class="num">05</span><h2>Capital, collateral and Copper</h2></div>
+    <div class="sec-head"><span class="num">05</span><h2>Capital, collateral and custody</h2></div>
     <p class="lede">
       The strategy never names a rail. It asks for a balance to exist somewhere, and a layered set of coordinators and
-      adapters resolves that into either an exchange transfer or an on-chain movement signed through custody. Copper sits
-      at the custody end, and its ClearLoop service is what lets collateral be traded at a venue without leaving custody.
+      adapters resolves that into either an exchange transfer or an on-chain movement signed through custody. Two
+      custodians sit at that end — <strong>Copper</strong>, whose ClearLoop service lets collateral be traded at a venue
+      without leaving custody, and <strong>Ceffu</strong>, which provides the equivalent for Binance. Which one a given
+      venue resolves to is configuration, not strategy logic.
     </p>
     <div class="keypoints">
       <div><b>Netted before emitted</b><span><code>IntraClientRebalanceCoordinator</code> nets offsetting requests per pair before any intent is produced</span></div>
@@ -661,8 +664,8 @@ DefiModeConfig              MlModeConfig</div>
           <text x="918" y="146" style="fill:var(--ink-3);font-family:var(--sans);font-size:10.5px">internal transfer · withdrawal</text>
 
           <rect x="904" y="190" width="236" height="52" rx="4" style="fill:var(--surface);stroke:var(--g-data);stroke-width:1.4"/>
-          <text x="918" y="210" style="fill:var(--ink);font-family:var(--sans);font-size:11.5px;font-weight:600">Custody — Copper</text>
-          <text x="918" y="228" style="fill:var(--ink-3);font-family:var(--sans);font-size:10.5px">on-chain send · ClearLoop mirror</text>
+          <text x="918" y="210" style="fill:var(--ink);font-family:var(--sans);font-size:11.5px;font-weight:600">Custody — Copper / Ceffu</text>
+          <text x="918" y="228" style="fill:var(--ink-3);font-family:var(--sans);font-size:10.5px">on-chain send · ClearLoop / OES mirror</text>
 
           <line x1="20" y1="264" x2="1140" y2="264" style="stroke:var(--rule);stroke-width:1"/>
           <text x="20" y="286" style="fill:var(--ink-3);font-family:var(--sans);font-size:11.5px">The strategy names an asset, a source, a destination and a cost bound. Every decision about HOW is taken to the right of the coordinator.</text>
@@ -676,7 +679,7 @@ DefiModeConfig              MlModeConfig</div>
         <figcaption>
           <b>Figure 1 — capital movement, decision to settlement.</b> Netting happens before an intent exists, so
           offsetting moves never reach a venue. The coordinator is the only entry point, which is where client isolation
-          and idempotency are enforced. Rail selection is last, and is the only place that knows about Copper or CCXT.
+          and idempotency are enforced. Rail selection is last, and is the only place that knows about Copper, Ceffu or CCXT.
         </figcaption>
       </figure>
 
@@ -714,14 +717,21 @@ mock · local_key · cloud_kms · <b>copper</b> · ceffu</div>
       </p>
 
       <div class="callout">
-        <span class="tag">Where Copper and ClearLoop actually sit</span>
+        <span class="tag">Where Copper, ClearLoop and Ceffu actually sit</span>
         <p>
-          Our code talks to <strong>Copper</strong>. Collateral is posted into Copper custody, and Copper's
-          <strong>ClearLoop</strong> service mirrors that collateral onto the exchange so it can be traded without ever
-          leaving custody — which is the property that matters for counterparty risk. ClearLoop is therefore Copper's
-          mechanism rather than a separate integration on our side: you will find <code>copper.py</code> in the
-          execution service and no ClearLoop-specific code path, and that is by design. The instruction the strategy
-          emits is <code>TransferInstructionV2</code>, which names neither.
+          Our code talks to <strong>Copper</strong> and to <strong>Ceffu</strong>. Collateral posted into Copper custody
+          is mirrored onto the exchange by Copper's <strong>ClearLoop</strong> service so it can be traded without ever
+          leaving custody — the property that matters for counterparty risk. For Binance the same role is played by
+          Ceffu's off-exchange settlement. In both cases the mirroring is the <em>custodian's</em> mechanism rather than a
+          separate integration on our side: you will find <code>copper.py</code> and <code>ceffu.py</code> in the
+          execution service and no ClearLoop-specific code path, and that is by design.
+        </p>
+        <p>
+          The consequence worth understanding is that a move between two venues under the same custodian is a mirroring
+          instruction to that custodian and no coin moves at all; a move that crosses custodians unmirrors on one side,
+          settles on-chain between the two, and re-mirrors on the other. The instruction the strategy emits is
+          <code>TransferInstructionV2</code>, which names none of this — and position and P&amp;L tracking is identical
+          whether the collateral is mirrored or held directly, because the mirrored balance is what is tracked.
         </p>
       </div>
 
@@ -935,6 +945,35 @@ mock · local_key · cloud_kms · <b>copper</b> · ceffu</div>
         What you would see is the attribution surface from §06 applied to your idea: P&amp;L split across decision,
         execution and funding, per venue and per leg. That split is usually the interesting part, because it separates
         "the idea was right" from "the idea was implementable".
+      </p>
+
+      <h3>How strategy alpha is separated from execution alpha</h3>
+      <p>
+        That separation is not a reporting convention applied afterwards — it is how the backtest is constructed. A
+        <em>benchmark fill</em> is the answer to a single question: if this order filled with zero market impact at the
+        benchmark reference price, what would the fill look like? The reference is defined per instruction and per algo
+        — mid at arrival for a sweep, the time-weighted mid over the window for a TWAP, pool mid at the target block for
+        a protected swap. One contract defines it, and two isolations use it:
+      </p>
+      <div class="code"><i># The same benchmark reference, used two ways</i>
+Strategy isolation   benchmark fills ARE the fills. Zero execution alpha by
+                     construction, so what remains is the strategy's own edge.
+                     Runs against pipeline history with no execution stack at all.
+
+Execution isolation  a matching engine fills against real historical book state,
+                     and the benchmark is the reference it is measured against.
+                     What remains is execution alpha: slippage, fees, timing.</div>
+      <p>
+        The consequence is that a strategy's measured edge does not silently inherit an execution choice it did not make,
+        and execution quality is not credited or blamed for market direction. The fill engine is a pure function — the
+        same inputs produce bit-identical outputs — so the strategy-side number is reproducible rather than
+        approximately repeatable.
+      </p>
+      <p>
+        What that yields per order is the execution residual itself: the difference between the live fill and the
+        benchmark fill, separated into slippage against the benchmark price and the fee surprise (actual against
+        modelled). Those are the two components that tell you whether an algo is paying away its edge, and they are
+        attributed per venue and per leg alongside the strategy-layer decomposition.
       </p>
       <div class="callout">
         <span class="tag">Worth agreeing in advance</span>

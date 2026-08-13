@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [vm-preemption, billing-waste, auto-recovery, sports, api-football, big-finding]
 related:
   [
-    /plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
+    /plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
     /plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
@@ -198,21 +198,21 @@ changes, and should resolve which of them is the real cause.
       `_DATA_VM_PREFIXES` fix.
 
       Cross-referenced `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md` per this todo's own pointer: that
-                  incident is a **different root cause**, not this one — `cefi-queue-*` VM names already contain `cefi` and were
-                  always visible to `_is_data_vm()`; that doc's chain of preemptions instead traced to missing `PROGRESS.json`
-                  checkpoint emission + a `VM_TASK` collision + a `WORKER_STALLED` watchdog kill. Same failure SHAPE
-                  (preempted/killed, no auto-recovery), genuinely different mechanism — noting this here so a future investigator
-                  doesn't assume they're the same bug.
+                          incident is a **different root cause**, not this one — `cefi-queue-*` VM names already contain `cefi` and were
+                          always visible to `_is_data_vm()`; that doc's chain of preemptions instead traced to missing `PROGRESS.json`
+                          checkpoint emission + a `VM_TASK` collision + a `WORKER_STALLED` watchdog kill. Same failure SHAPE
+                          (preempted/killed, no auto-recovery), genuinely different mechanism — noting this here so a future investigator
+                          doesn't assume they're the same bug.
 
-                  **Fix**: added all 29 prefixes to `_DATA_VM_PREFIXES`, split into a new `vm_classification.py` module (the
-                  addition pushed `cli.py` to 975 lines, over the repo's 930-line `MAX_FILE_LINES` gate — extracted
-                  `_asset_group_for_vm`/`_is_data_vm`/`_DATA_VM_PREFIXES` following the same precedent as `meta_targets.py`'s
-                  2026-07-13 split; `cli.py` re-imports them aliased to their original names so every existing call site, incl.
-                  tests, is unchanged). Added a permanent regression guard,
-                  `test_data_vm_prefixes_cover_every_relaunchable_launcher`, asserting every CURRENT AND FUTURE
-                  `LAUNCHER_FOR_VM_PREFIX` entry with a real launcher resolves `True` through `_is_data_vm()` — closes this bug
-                  class going forward, not just today's 31 instances. Full `deployment-service` `quality-gates.sh` green (230s,
-                  sentinel matches `16938c1`), 313/313 unit tests pass. Shipped via quickmerge, verified on origin.
+                          **Fix**: added all 29 prefixes to `_DATA_VM_PREFIXES`, split into a new `vm_classification.py` module (the
+                          addition pushed `cli.py` to 975 lines, over the repo's 930-line `MAX_FILE_LINES` gate — extracted
+                          `_asset_group_for_vm`/`_is_data_vm`/`_DATA_VM_PREFIXES` following the same precedent as `meta_targets.py`'s
+                          2026-07-13 split; `cli.py` re-imports them aliased to their original names so every existing call site, incl.
+                          tests, is unchanged). Added a permanent regression guard,
+                          `test_data_vm_prefixes_cover_every_relaunchable_launcher`, asserting every CURRENT AND FUTURE
+                          `LAUNCHER_FOR_VM_PREFIX` entry with a real launcher resolves `True` through `_is_data_vm()` — closes this bug
+                          class going forward, not just today's 31 instances. Full `deployment-service` `quality-gates.sh` green (230s,
+                          sentinel matches `16938c1`), 313/313 unit tests pass. Shipped via quickmerge, verified on origin.
 
 ## Progress Log
 

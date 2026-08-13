@@ -30,8 +30,8 @@ resolved_by: ""
 locked_by: ""
 created: 2026-08-11
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: small
 estimate_baseline: 0.05
@@ -97,7 +97,18 @@ escalation.
    `launch-mdps-sharded-backfill.sh cefi --year 2021` to resume from checkpoint if available, or from genesis.
 3. **Close this escalation** — confirmed false positive from a now-fixed detector gap.
 
+## Todos
+
+- [ ] [INFRA] P2. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — Re-launch the
+      `mdps-cefi-2021-*` sharded MDPS CeFi backfill (`launch-mdps-sharded-backfill.sh cefi --year 2021`), resuming from
+      checkpoint if available (prior run `mdps-cefi-2021-20260810-052119` was killed mid-run at 2021-01-04, no terminal
+      `EXIT_STATUS` — confirmed false-positive SILENT classification; real candle data already in GCS). Repo:
+      deployment-service.
+
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - 2026-08-11: Read escalation context, domain SSOTs, and classifier code. Accessed VM run.log from GCS. Confirmed 21,847
   POLARS AGGREGATED lines. Root cause: pre-fix `_PROGRESS_RE` missing POLARS AGGREGATED — fix already shipped. Filed

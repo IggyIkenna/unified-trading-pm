@@ -20,6 +20,21 @@ name: cloud-build-failure-watcher
 # carrier cooldown posts ONCE — collapsing the boundary-overlap double-fire to a single,
 # transition-based alert (alert_quality_audit_2026_06_18 item: route via carrier + transition).
 #
+# 2026-08-12 revert: the Phase-3 cost throttle (*/30 -> hourly) never widened
+# LOOKBACK_MINUTES (still 20) to match — a 20-min lookback on a 60-min cron leaves a
+# ~40-min BLIND SPOT every hour (builds created in roughly [tick+20, tick+60) are covered
+# by NEITHER the tick that just fired NOR the next one), silently reopening exactly the
+# gap this watcher exists to close. The throttle's cost premise was also never actually
+# true for this workflow: unified-trading-pm is a PUBLIC repo, so ubuntu-latest minutes
+# here are free/unlimited regardless of cron frequency — there was no cost to save.
+# Reverted to */30 (restoring the original 2x-overlap, zero-gap design the comments above
+# already describe) rather than raising LOOKBACK_MINUTES, since faster detection is pure
+# upside once the cost premise is gone. Before ever throttling a poller's schedule for
+# "ci-cost" again: (1) confirm the repo is actually private (gh api repos/<o>/<r> --jq
+# '.visibility') — GH Actions minutes on public repos are free on any runner regardless of
+# frequency; (2) if a real cron-interval change is still warranted, widen any
+# lookback/dedup window in the SAME change so coverage isn't silently split.
+#
 # DEFAULT-BRANCH GOTCHA: GitHub `schedule:` triggers fire ONLY from the DEFAULT branch
 # (main). This workflow is INERT on live-defi-rollout until it reaches main via the
 # standing LDR->main promote (ldr-to-main-promote.yml). Use workflow_dispatch to run
@@ -31,7 +46,7 @@ name: cloud-build-failure-watcher
 
 on:
   schedule:
-    - cron: "0 * * * *" # hourly (Phase-3 ci-cost 2026-07-17; watcher backstop — was */30, before that */15)
+    - cron: "*/30 * * * *" # reverted 2026-08-12 (see comment above) — hourly + 20min lookback left a ~40min gap
   workflow_dispatch:
 
 permissions:
@@ -483,15 +498,13 @@ jobs:
       pr_number: 0
       wall_type: cloud_build_failure
       context:
-        "cloud-build-failure-watcher detected a Cloud Build FAILURE/TIMEOUT/INTERNAL_ERROR/EXPIRED
-        for ${{ matrix.repo }} in the last ~20m. GH Actions quality-gates-v2 can be green while
-        this repo's Cloud Build image pipeline is broken -- they are separate pipelines. Diagnose
-        via `gcloud builds list --project=central-element-323112 --filter='substitutions.REPO_NAME=\"${{
-        matrix.repo }}\" OR substitutions._REPO_NAME=\"${{ matrix.repo }}\"' --limit=5` (check both
-        --region=asia-northeast1 and the global pool) then `gcloud builds log <build-id>` for the
-        failing step's actual error. Fix on live-defi-rollout (cloudbuild.yaml / a dependency
-        lock file / Dockerfile, per what the log shows), verify quality-gates.sh --no-fix green,
-        ship via quickmerge."
+        'cloud-build-failure-watcher detected a Cloud Build FAILURE/TIMEOUT/INTERNAL_ERROR/EXPIRED for ${{ matrix.repo
+        }} in the last ~20m. GH Actions quality-gates-v2 can be green while this repo''s Cloud Build image pipeline is
+        broken -- they are separate pipelines. Diagnose via `gcloud builds list --project=central-element-323112
+        --filter=''substitutions.REPO_NAME="${{ matrix.repo }}" OR substitutions._REPO_NAME="${{ matrix.repo }}"''
+        --limit=5` (check both --region=asia-northeast1 and the global pool) then `gcloud builds log <build-id>` for the
+        failing step''s actual error. Fix on live-defi-rollout (cloudbuild.yaml / a dependency lock file / Dockerfile,
+        per what the log shows), verify quality-gates.sh --no-fix green, ship via quickmerge.'
       authoring_slot: "cloud-build-failure-watcher"
       model: sonnet
     secrets: inherit

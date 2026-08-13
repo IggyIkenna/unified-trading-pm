@@ -17,7 +17,7 @@ tags: [sports, migration, finalize, archival, delete-safety, exception-sets]
 related:
   [
     /plans/active/sports_taxonomy_p2_migration_2026_08_08.md,
-    /plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
+    /plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
     /plans/active/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]

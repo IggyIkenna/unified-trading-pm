@@ -121,6 +121,22 @@ work."_ That guidance was never wired into `wave_launcher.py` itself or into its
 dispatching the out-of-scope cells (and duplicating the in-scope ones) every cycle since the ruling was written the same
 day.
 
+> **CORRECTED 2026-08-12 (/plan-reconcile)**: the "observed local `ps aux` shell-wrapper PIDs... are the Cloud Run Job's
+> container process" attribution two paragraphs above is wrong. Live re-verification 2026-08-12:
+> `gcloud run jobs executions list --job=uts-prod-tradfi-wave-launcher --region=asia-northeast1` shows the last
+> execution was `2026-06-25 00:49:53 UTC` — the Cloud Run Job had already been dormant for 6 weeks by the time of this
+> doc's 2026-08-09 observations, so those processes could not have been it. The actual mechanism (confirmed by
+> `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md`, re-verified live 2026-08-12 in
+> `issues/tradfi_backfill_oom_remediation_2026_06_24.md` and
+> `issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`) is an undocumented HOST cron on the monitor host.
+> This also means the "STOPGAP (option 1) confirmed LIVE" action item below is a misattribution:
+> `gcloud scheduler jobs describe`'s `userUpdateTime` field (`2026-06-24T22:44:03.047172Z`, checked live 2026-08-12)
+> shows the Cloud Scheduler job had already been PAUSED since 2026-06-24 — a month and a half before this doc's
+> investigation even started — so finding it `PAUSED` on 2026-08-09 was not this doc's action or a result of it; it was
+> already-paused, unrelated state. The two genuine interventions this doc made were the `kill -TERM` calls on the live
+> (host-cron-spawned) `wave_launcher.py` processes at ~06:08Z and ~09:00Z (see "ACTION TAKEN" and Progress Log below) —
+> those were real and did work as reactive stopgaps; the Cloud Scheduler pause was not.
+
 **Compounding impact on other in-scope work**: this cron's repeated `--force` launches keep the shared `tradfi-bf-*`
 singleton lock (`launch-tradfi-backfill-vm.sh`'s `_check_singleton_lock`) continuously occupied, which is directly
 blocking `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` todo #2's operator-authorized ES_OPT launch (>2hrs blocked
@@ -138,10 +154,14 @@ this cron is paused or fixed, the singleton lock may never naturally clear.
       — if anyone re-enables the job before option 2 lands, the exact same violation reproduces. Leaving option 2 as a
       still-open follow-up (not re-added as a new checkbox here since it duplicates this item's own text — track it via
       re-opening this line if the job is ever re-enabled without the code fix).
-- [ ] [INFRA] P2. **Determine whether the NASDAQ/NYSE 2023/2024 relaunch (and the CME duplicates) should be individually
-      killed** once the cron itself is paused/fixed (3-signal staleness check + operator sign-off — don't blind-kill
-      live in-progress work). Repo: deployment-service. **3-signal check DONE 2026-08-09 ~13:07Z (slot-7) — see Progress
-      Log; escalated final kill/no-kill call to operator via `/blocked` BLK-19380fd8, not resolved here.**
+- [ ] [OPERATOR] P2. **CORRECTED 2026-08-12 (/plan-reconcile): retagged `[INFRA]` → `[OPERATOR]`** — this doc's own
+      Progress Log repeatedly states the kill/no-kill call "is not mine to make" and is a "scope/cost-tradeoff judgment
+      call, not a technical one" (see the 13:07Z and 12:47Z entries below), which is exactly the `[OPERATOR]` bar (a
+      genuine business/value judgment with no data-derivable answer), not an `[INFRA]` mechanical task. **Determine
+      whether the NASDAQ/NYSE 2023/2024 relaunch (and the CME duplicates) should be individually killed** once the cron
+      itself is paused/fixed (3-signal staleness check + operator sign-off — don't blind-kill live in-progress work).
+      Repo: deployment-service. **3-signal check DONE 2026-08-09 ~13:07Z (slot-7) — see Progress Log; escalated final
+      kill/no-kill call to operator via `/blocked` BLK-19380fd8, not resolved here.**
 
 ## ACTION TAKEN (2026-08-09 ~06:08Z) — killed the live `wave_launcher.py` process (not any VM)
 
@@ -274,3 +294,14 @@ in-flight VMs (which stay hands-off per the separate staleness-check rule).
   Databento API-call spend they're each individually accruing (not measured here). No further action taken on these 14 —
   waiting on the operator's separate answer. This P2 todo's duplicate-VM sub-item is now closed (evidence above); the
   NASDAQ/NYSE/CME-new-year sub-item stays open pending that answer.
+- **/plan-reconcile 2026-08-12**: corrected the "Cloud Run Job's container process" misattribution above (see CORRECTED
+  banner) — the mechanism observed/killed on 2026-08-09 was the host cron, not the Cloud Scheduler/Cloud Run Job (which
+  was independently confirmed dormant since 2026-06-25). **Residual gap flagged, not resolved here**: the underlying
+  host-cron dispatch mechanism itself (as distinct from the two individually-killed process instances) was never
+  identified or paused by this doc's actions. Live check today (2026-08-12,
+  `gcloud compute operations list --filter="operationType=insert AND targetLink~'tradfi-bf-'"`) shows
+  `tradfi-bf-cme-ohlcv-1m-*` launches continuing on the same ~3h cadence, including a `nq-2022` shard — NQ is not on
+  this ruling's in-scope CME list (`BTC, ETH, MBT, MET` + `ES` only per
+  `issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`'s table). Not independently investigated further here
+  (outside this pass's assigned scope) — surfacing as a live, evidence-backed, possibly-still-active scope question for
+  operator/owner attention, not a settled finding.

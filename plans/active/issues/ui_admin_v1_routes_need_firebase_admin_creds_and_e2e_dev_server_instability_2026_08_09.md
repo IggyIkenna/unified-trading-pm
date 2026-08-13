@@ -28,6 +28,7 @@ related:
     unified-trading-system-ui/lib/firebase-admin.ts,
     unified-trading-system-ui/lib/api/mock-handler.ts,
     unified-trading-system-ui/.github/workflows/ci.yml,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-09"
 author: slot-28 (data_engineering, adopted infra craft per task assigned_role)

@@ -39,7 +39,7 @@ related_plans:
   - ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md
   - ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md
   - ../active/cefi_ml_directional_continuous_live_2026_06_20.md
-  - ../active/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08.md
+  - ../archive/2026_08/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08.md
   - ../active/cefi_satellite_ao_dispatch_batch10_2026_08_08.md
   - ../active/cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize.md
   - ../archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07.md
@@ -717,9 +717,9 @@ tokenized stocks (Binance/OKX/Bybit) — equity basis/dispersion arb
 
 **status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
 
-### [`cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08`](../active/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08.md)
+### [`cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08`](../archive/2026_08/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08.md)
 
-**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: >-
+**status**: resolved (archived 2026-08-12) · **estimate**: 0.16 cal AI-days (class: infra) **title**: >-
 
 ## P3 — backlog; revisit quarterly
 

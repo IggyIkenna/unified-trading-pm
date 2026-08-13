@@ -28,7 +28,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, dispatch, todo-ordering, task-affinity, live-incident, park]
 related:
   - /plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md
-  - /plans/active/issues/ao_park_disposition_blocked_answer_no_follow_through_2026_07_31.md
+  - /plans/archive/2026_08/issues/ao_park_disposition_blocked_answer_no_follow_through_2026_07_31.md
   - /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md
 created: 2026-08-08
 author: agt-22de53 (main)

@@ -146,6 +146,22 @@ details: `/plans/archive/issues/pipeline_e2e_check_missing_env_flag_test_bucket_
 
 ## Heavy COMPUTE/MEMORY on the shared planning-vm (HARD RULE, added 2026-07-27)
 
+> **Scope correction (2026-08-12): this ALSO applies to the operator's own laptop, not just the shared planning-vm/AO-
+> orchestrator VM.** The rule as originally titled names only "the shared planning-vm" — but the laptop is ITSELF a
+> shared host in this workspace's per-tab-worktrees model (multiple concurrent interactive tab sessions, each able to
+> dispatch its own sub-agents doing ad-hoc analysis). Real incident, 2026-08-12: several sub-agents investigating a
+> TradFi backfill each independently downloaded the full tradfi consolidated manifest
+> (`_index/availability_index.parquet`, ~14.29M rows) to the laptop for coverage checks, concurrent with other tabs
+> doing similar large pandas/pyarrow reads — the resulting host-wide RAM pressure triggered `quality-gates.sh`'s own
+> governor-watchdog to SIGTERM an unrelated, legitimate QG run in a different repo/tab. Separately found the same
+> session that `scripts/dev/run-bounded-analysis.sh` — the designated fix for exactly this — had ZERO actual enforcement
+> on macOS: `setsid` (used for process-group isolation) doesn't exist there at all, so the RSS-poll fallback's launch
+> line failed silently and every run degraded to "fully UNWRAPPED, advisory only." **Both fixed 2026-08-12**: the
+> wrapper now uses bash job control (`set -m`) instead of `setsid` (portable, no external binary), and reads RSS via
+> `ps -o rss=` when `/proc` is absent (macOS/BSD) — verified end-to-end on a real macOS host, new regression test
+> `scripts/dev/test-run-bounded-analysis.sh`. The remedies below now apply identically on the shared planning-vm OR a
+> laptop session with other tabs open, and "cap it" actually enforces on both platforms.
+>
 > **Scope correction (2026-08-01): this is NOT limited to throwaway "ad-hoc scratchpad" scripts.** The original wording
 > below (and its own incident) made it read that way, and that reading is exactly why the rule didn't stop the next two
 > occurrences: `instruments-service/scripts/expand_defi_pool_catalogue_from_manifest_2026_07_31.py` (43.6GB RSS, real

@@ -33,7 +33,7 @@ related:
     /cursor-configs/skills/context-scout/SKILL.md,
     /scripts/plan-hygiene/generate_context_scope_inventory.py,
     /plans/active/data_completion_defi_2026_07_15.md,
-    /plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
+    /plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]

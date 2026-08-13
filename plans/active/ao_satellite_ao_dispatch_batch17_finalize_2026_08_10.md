@@ -69,10 +69,12 @@ source: >-
       (`_CHECKPOINT_MIN_INTERVAL_SECONDS = 2.0` + always-flush-final-day `is_last_day` gate) is present in the commit
       AND still on the current LDR file `scripts/backfill_defi_dex_pool_swaps_source_correction.py:112,530` (not
       reverted by any later commit). Done-when MET.
-- [ ] [REVIEW] P0. **Reconcile verified evidence into the source doc's own checkbox** —
-      `orphaned_wip_slot12_slot8_recovery_2026_08_04.md`'s sole remaining todo, replacing the redirect-pointer with real
-      completion evidence (commit sha + ancestor-verification, or the equivalence citation). **Done when**: the source
-      checkbox carries real evidence, not a bare pointer.
+- [x] ✅ [REVIEW] P0. **DONE — flipped 2026-08-12 (/plan-reconcile), citing todo 3's own evidence.** Reconcile verified
+      evidence into the source doc's own checkbox — `orphaned_wip_slot12_slot8_recovery_2026_08_04.md`'s sole remaining
+      todo, replacing the redirect-pointer with real completion evidence (commit sha + ancestor-verification, or the
+      equivalence citation). Evidence: `unified-trading-pm@883f11bc62` (this same doc's todo 3, 2026-08-10 slot 23,
+      "market-data-processing-service@5b30f41 re-verified an ancestor of origin/live-defi-rollout"). The source doc was
+      already archived by todo 4 below with this reconciliation folded in.
 - [x] ✅ [REVIEW] P0. **Archive the source doc** — confirm all 3 of its todos are now `[x]` (todos 1-2 were already done
       pre-extraction; this finalize closes todo 3), then run the 6-step archival ritual: banner
       `/plans/archive/2026_08/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md`, move to

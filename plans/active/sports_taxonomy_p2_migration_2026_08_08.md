@@ -22,7 +22,8 @@ related:
   [
     /plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md,
     /plans/active/sports_taxonomy_p4_backfill_2026_08_08.md,
-    /plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
+    /plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
+    /plans/active/sports_taxonomy_p2_consumer_inventory_2026_08_12.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/four-surface-reconciliation-procedure.md,
   ]
@@ -62,8 +63,8 @@ locked_since:
 
 > **🔴 DOUBLE-GATED.** `gate_on_depends: true` on BOTH
 > `/plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md` (contracts must exist first) AND
-> `/plans/active/issues/sports_af_full_entity_completion_2026_08_03.md` (the in-flight API-Football campaign must
-> converge first). That second gate is not optional — see below.
+> `/plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md` (the in-flight API-Football campaign
+> must converge first). That second gate is not optional — see below.
 
 ## Why the API-Football gate exists
 
@@ -95,21 +96,40 @@ than proceeding.
 
 ### Consumer enumeration (must complete before any re-stamp)
 
-- [ ] [REVIEW] P0. **Enumerate every consumer of each token being renamed, per the P1-authored codex rename rule.**
+- [x] ✅ [REVIEW] P0. **Enumerate every consumer of each token being renamed, per the P1-authored codex rename rule.**
       Minimum surfaces to enumerate — do NOT stop at a grep, READ each candidate consumer (features-service reads
       bucketed odds by PATH PREFIX, not by data_type column, so a data_type grep will miss it): MTDS writers + rebuild
       scripts, MDPS `canonical_writer`/`canonical_writer_shaping`, IS producers + `enumerate_expected_universe.py`,
       features-service `sports_feature_loader._ODDS_BUCKETED_PREFIXES`, ml-service sports loaders, deployment-api
       distinct-values + data-status, and the honest-coverage measurer. Output a checked-in consumer inventory; the
-      re-stamp todos below cite it. **This todo gates every todo in the next section.**
+      re-stamp todos below cite it. **This todo gates every todo in the next section.** — Consumer inventory checked in
+      at `/plans/active/sports_taxonomy_p2_consumer_inventory_2026_08_12.md`, produced via 7 parallel per-repo passes
+      (MTDS, MDPS, instruments-service, UAC, features-service, ml-service, deployment-api), each checking all 5 binding
+      types the codex rule names (path-prefix, filename, registry-membership, config-dict-key, literal value) — not a
+      grep. Key findings: `enumerate_expected_universe.py`'s override-dict pattern is a proven prior-incident precedent
+      (a partial `odds_horizon_bucket` lowercase already caused a 209,526-row zero-overlap manifest mismatch) and is the
+      mechanism the re-stamp todos should route the vocabulary lowercasing through, not a new translation layer; the
+      plan's own "`league_id=` is canonical" assumption is CONTRADICTED by UAC's actual path builder (it writes
+      `league=`) — re-verify before the sweep todo runs; `odds_horizon_bucket` and `ODDS_API` are coupled in MTDS's
+      freshness-preflight logic and must be re-verified together; features-service has 3 independent copies + ml-service
+      1 more independent copy of the same raw-odds path logic; ml-service has a pre-existing FOOTYSTATS-venue
+      classification bug worth fixing in passing. `strategy-service` was not searched — stated explicitly as an
+      uncovered repo, not silently omitted. P3's ML-loader-migration todo remains parked pending the actual re-stamp
+      landing (this todo is enumeration only, not the re-stamp).
 
 ### The re-stamps (each is a four-surface change — path, parquet content, manifest row, catalogue render)
 
-- [ ] [DATA] P0. **Re-stamp `trades` → `odds` across 375,257 shards (2020-06-06 → present).** Largest population in the
-      estate. Both the GCS path segment `data_type=trades` and the manifest `data_type` column must move together —
+- [x] ✅ [DATA] P0. **Re-stamp `trades` → `odds` across 375,257 shards (2020-06-06 → present).** Largest population in
+      the estate. Both the GCS path segment `data_type=trades` and the manifest `data_type` column must move together —
       path==manifest on data_type is the standing MDPS contract. Run in-region on a VM per the VM-launcher runbook,
       never locally; SPOT with progress-checkpoint resume (never replay from START_DATE on preemption). Verify with a
-      MEASURED count of target artifacts created, entity-scoped, on `time_created` — not an activity check.
+      MEASURED count of target artifacts created, entity-scoped, on `time_created` — not an activity check. ✅ **DONE —
+      VM `canonical-migration-sports-trades-to-odds-20260812-223215` exit 0** (3rd attempt; the first two died on the
+      comma-formatted progress-regex stall, fixed `deployment-service@9d4f0769`). GCS restamp copied **382,137**
+      `data_type=odds` objects (0 failed / 0 content_mismatch), then manifest-swap relabeled **merged 396,115 + legacy
+      seed 232,098** `trades`→`odds` with VERIFY=0 remaining on each surface. Tooling shipped
+      `market-tick-data-service@071a5466`. Residual `trades` rows (merged 20 × `live_odds_api` `empty_confirmed`; seed
+      362,753) are the documented P3-gated live-writer re-population, not incomplete scope — see Progress Log.
 - [ ] [DATA] P0. **Materialise the `in_play` column and retire `trades_inplay`.** 111 rows only (2022-09-07 →
       2022-11-09, blank venue) — a fossil, not a population. **Disposition rule PRE-SPECIFIED**: fold into `odds` with
       `in_play=true` when the backing object exists AND its parquet has `row_count > 0`; delete the manifest row when
@@ -199,3 +219,16 @@ than proceeding.
 - **2026-08-08** — Authored. Double-gate on P1 + the API-Football campaign set at authoring time; protective cross-plan
   banner already landed on that campaign (`unified-trading-pm@3bb3214bdf`). Delete posture set to §3a
   reversibility-qualified per operator ruling, NOT [OPERATOR] tags.
+- **2026-08-13** — `trades` → `odds` re-stamp (todo 1) complete. Tooling
+  (`restamp_sports_trades_to_odds_2026_08_12.py` + `manifest_swap_trades_to_odds_2026_08_12.py` +
+  `census_sports_trades_to_odds_scope_2026_08_12.py`) shipped `market-tick-data-service@071a5466`; VM-launcher
+  `sports-trades-to-odds` category + comma-stall-regex fix shipped `deployment-service@9d4f0769`. Execution: VM
+  `canonical-migration-sports-trades-to-odds-20260812-223215` exit 0 — GCS restamp copied 382,137 `data_type=odds`
+  objects (0 failed / 0 content_mismatch), manifest swap relabeled merged 396,115 + legacy seed 232,098 `trades`→`odds`
+  (VERIFY=0 remaining each). **P3-gated residual (expected, not incomplete scope):** the live forward-poll writer still
+  emits `data_type=trades` rows — post-run census shows merged index at 20 `trades` rows (all
+  `ODDS_API`/`live_odds_api`/`empty_confirmed`) and the frozen legacy seed re-populated to 362,753 `trades` on the next
+  consolidator cycle, per the manifest-swap's own KNOWN PHASED-STATE caveat. Re-run the swap after P3's consumer
+  migration (`sports_taxonomy_p3_consumers_2026_08_08`) flips the writers. Note: the census at dispatch time reported
+  396,110 merged-index `trades` rows (not the plan's 375,257 title figure) — the title's figure is the earlier audit's
+  captured-shard count; the migration re-stamped the full live population regardless.

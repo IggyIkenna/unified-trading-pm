@@ -44,7 +44,7 @@ context_scope:
     /codex/02-data/carry-venue-live-integration-reference.md,
     /plans/active/cross_venue_funding_reversion_research_2026_07_24.md,
     /plans/archive/2026_08/carry_strategy_ensemble_productionization_2026_07_24.md,
-    /plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
+    /plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
     /codex/04-architecture/wallet-hierarchy-and-capital-flow.md,
   ]
 ---
@@ -109,7 +109,7 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
 - **2026-06-16** — Data-quality spot-checks vs exchange APIs: GCS funding **values match Binance exactly**; found a
   **one-settlement offset** in `funding_timestamp` pairing → switched to day-mean (offset-robust). Found UTL
   `FUNDING_PERIODS_PER_DAY` disagrees with UAC `perp_funding_cadence` (Aster/Deribit 8× wrong). Both filed →
-  `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`.
+  `plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`.
 - **2026-06-16** — Full 2026-YTD run (2026-01-01 → 05-20, 30 coins, 6 venues incl Aster-API): 140 days, venue coverage
   100% except Hyperliquid 85.7% (May GCS gaps). **Avg net carry 12.2% APY · cumulative 4.80% (13.0% annualised) GROSS.**
   Tie-diversification expanded the basket to ~13.2 coins/day, 2.5 rotations/day. Most-held: NEAR / LINK / UNI / AVAX /
@@ -130,7 +130,7 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   data_type), not per-venue. **Aster margining = USDC/USDT-only (CROSS); rejects spot-coin AND LST collateral**
   (`venue_collateral.py`) — so Aster is a stablecoin-margined funding-short only; no same-venue cash-and-carry, no
   staking leg. ETH staked-basis works on Bybit/OKX/Deribit (stETH/wstETH collateral). Filed to the Aster todo in
-  `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`.
+  `plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`.
 - **2026-06-16** — Deribit FIX: its stored `funding_rate` is the 8h figure (≈ API interest_8h), annualise at 8h not 1h
   (was 8× over) + ±200% winsor. Switched returns to **LINEAR (non-compounded)** — daily interest summed, mean×365
   annualisation (operator; matches UAC linear convention). Split into **3 strategies** (staked basis / funding
@@ -205,14 +205,14 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
       today. **Repo: market-tick-data-service + deployment-service.**
 
       **SUPERSEDED-IN-PLACE (plan_reconciler 2026-08-10).** The backfill VM this todo asked for ran and partially
-          completed (see the 2026-06-16 log entries below).
+              completed (see the 2026-06-16 log entries below).
 
-          Aave V3 wrote for Arbitrum/Avalanche/Base. ETH coverage is spotty (429-throttled).
+              Aave V3 wrote for Arbitrum/Avalanche/Base. ETH coverage is spotty (429-throttled).
 
-          Remaining scope is narrower now. It is tracked by the "Complete Aave-Ethereum lending backfill" todo under
-          "Open data gaps (part 2)" below (same gap, refined after the first run's real result).
+              Remaining scope is narrower now. It is tracked by the "Complete Aave-Ethereum lending backfill" todo under
+              "Open data gaps (part 2)" below (same gap, refined after the first run's real result).
 
-          Leaving this checkbox open since the work is genuinely not done. Do not dispatch both todos independently.
+              Leaving this checkbox open since the work is genuinely not done. Do not dispatch both todos independently.
 
 - **2026-06-16** — 🟢 **VM RUNNING — Aave + lending-indices backfill** `mtds-lending-indices-20260616-225256`
   (e2-standard-4, asia-northeast1-c). Verdict from investigation: Aave V3 is a **config-run, not new code** — `aave_v3`
@@ -553,7 +553,7 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
 ## Findings filed
 
 - Data-correctness (cadence registry inconsistency / `funding_timestamp` offset / no historical cadence tracker / Aster
-  backfill) → `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`.
+  backfill) → `plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`.
 
 ## Execution structures + capital efficiency (operator design 2026-06-16)
 
@@ -651,17 +651,17 @@ Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget,
 
       **NOT FLIPPING, clarifying only (plan_reconciler 2026-08-10).** The e2e-testing/harness half is verified done.
 
-          Shipped commit `e2e-testing@6e2ffb8`. Confirmed live today in `drift_funding_reader.py` and
-          `install_driftpy_venv.sh`.
+              Shipped commit `e2e-testing@6e2ffb8`. Confirmed live today in `drift_funding_reader.py` and
+              `install_driftpy_venv.sh`.
 
-          This matches item 7 of the carry-venue-live-integration-reference codex doc, which already carries its own
-          DONE-for-e2e marker.
+              This matches item 7 of the carry-venue-live-integration-reference codex doc, which already carries its own
+              DONE-for-e2e marker.
 
-          This todo's own `Repo:` tag also names "mtds drift handler" — the same scope as the next todo below
-          (Production Drift funding in MTDS).
+              This todo's own `Repo:` tag also names "mtds drift handler" — the same scope as the next todo below
+              (Production Drift funding in MTDS).
 
-          It is genuinely unclear whether this duplicates that todo or tracks something narrower. That is a merge/close
-          call, not an evidence-checkable fact, so both stay open. Routed in this run's findings doc.
+              It is genuinely unclear whether this duplicates that todo or tracks something narrower. That is a merge/close
+              call, not an evidence-checkable fact, so both stay open. Routed in this run's findings doc.
 
 - [ ] [STRATEGY] P2. Live/paper **history carve-out** (operator 2026-06-17): no funding history for a venue → WARN + use
       the current snapshot (+ whatever spot history exists); never block a venue/coin for missing history. EWMA gate

@@ -100,6 +100,34 @@ _run_ff_multi() {
         ' _ "$@"
 }
 
+# Push a NEW commit to the bare "origin" that also touches tracked.txt, then fetch it into
+# the repo's own origin/live-defi-rollout ref WITHOUT touching local HEAD -- simulates a
+# concurrent push landing between two cron ticks (real Phase-1 prefetch behaviour), so the
+# repo is left both diverged AND colliding on the same path its own local dirt touches.
+_push_colliding_commit_to_origin() {
+    local repo="$1" bare
+    # `origin` is set to a RELATIVE path ("../remote.git", see _make_synced_repo) -- resolve
+    # it to absolute before cloning from an unrelated tmp cwd, or the clone 404s (status 128).
+    bare="$(cd "${repo}" && git rev-parse --show-toplevel)/../remote.git"
+    bare="$(cd "${bare}" && pwd)"
+    (
+        local tmp
+        tmp="$(mktemp -d)"
+        # -b live-defi-rollout: the bare repo's HEAD symref defaults to "master" (never
+        # created -- _make_synced_repo only ever pushes "live-defi-rollout"), so a plain
+        # `git clone` checks out nothing and a commit here would build on an unrelated
+        # history, rejected by the push below as non-fast-forward.
+        git clone -q -b live-defi-rollout "${bare}" "${tmp}/writer" 2>/dev/null
+        cd "${tmp}/writer" || exit 1
+        git config user.email w@w.w
+        git config user.name w
+        printf 'v3-from-origin\n' >tracked.txt
+        git add -A && git commit -qm "origin advances tracked.txt"
+        git push -q origin HEAD:live-defi-rollout
+    )
+    git -C "${repo}" fetch -q origin live-defi-rollout
+}
+
 @test "slot-cron-ff-pull.sh has valid bash syntax" {
     run bash -n "$FF_CRON_ABS"
     [ "$status" -eq 0 ]
@@ -148,12 +176,19 @@ _run_ff_multi() {
 }
 
 @test "item 5: two consecutive dirty ticks on the same repo -> confirmed, second tick == skip:dirty" {
+    # Confirmed dirt alone no longer skips (COLLISION-DEFERRAL, 2026-08-10 fleet-drift RCA,
+    # see slot-cron-ff-pull.sh's own comment at "Step 5.5") -- the skip additionally requires
+    # the confirmed-dirty tracked path to actually collide with the incoming diff, so this
+    # fixture must ALSO diverge origin with a competing change to the same file, or the
+    # confirmed-second-tick can never reach [skip:dirty] (it stops earlier, at
+    # already-up-to-date, since nothing pushed anything new).
     repo="$(_make_synced_repo)"
     printf 'v2\n' > "${repo}/tracked.txt"
     run _run_ff_one "${repo}"          # tick 1: unconfirmed
     [ "$status" -eq 0 ]
     [[ "$output" != *'"ff_pull_last_result":"skip:dirty"'* ]]
-    run _run_ff_one "${repo}"          # tick 2: this repo's own prior streak now >= 1 -> confirmed
+    _push_colliding_commit_to_origin "${repo}"
+    run _run_ff_one "${repo}"          # tick 2: streak >= 1 (confirmed) AND a real collision -> skip
     [ "$status" -eq 0 ]
     [[ "$output" == *'"ff_pull_last_result":"skip:dirty"'* ]]
     [[ "$output" == *'"dirty_consecutive_ticks":2'* ]]
@@ -192,11 +227,17 @@ _run_ff_multi() {
     # Tick 2 (sweep 2, same result file -> state carries forward): repo X is dirty AGAIN
     # (its own second consecutive tick -> correctly confirms) AND, in the SAME sweep, repo Y
     # -- a different, previously-clean repo -- becomes dirty for the very first time ever.
+    # repo X also needs a genuine collision to reach [skip:dirty] under the collision-gated
+    # design (see the sibling "two consecutive dirty ticks" test's comment) -- repo Y does
+    # NOT get this treatment, since its own tick must stay unconfirmed regardless.
+    _push_colliding_commit_to_origin "${repoX}"
     printf 'v2\n' > "${repoY}/tracked.txt"
     run _run_ff_multi "${repoX}" "${repoY}"
     [ "$status" -eq 0 ]
-    # repo X: correctly confirmed on its own second consecutive dirty tick.
-    [[ "$output" == *"[skip:dirty]"* ]]
+    # repo X: correctly confirmed on its own second consecutive dirty tick, with a real
+    # collision -- checked via the result-file JSON (authoritative), not the log line, since
+    # the collision-gated path logs "[skip:dirty-collision]" rather than plain "[skip:dirty]".
+    [[ "$output" == *'"ff_pull_last_result":"skip:dirty"'* ]]
     # repo Y: must get its OWN one-tick grace (dirty:unconfirmed) on this, its first dirty
     # tick -- independent of repo X's already-confirmed state in the SAME sweep. The bug
     # instead fires [skip:dirty] for repo Y here too (no [dirty:unconfirmed] line at all),

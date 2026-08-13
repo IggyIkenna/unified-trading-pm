@@ -1,18 +1,16 @@
-violation_count: 6
+violation_count: 3
 rule: codex-doc-freshness
 source: "CLAUDE.md \xA7 'Post-Plan-Phase Codex Audit (HARD RULE)' +
   governance_qg_automation_gaps_post_cutover_2026_05_12.md\
   \ \xA7 Group B"
+# Shrunk 6 -> 3 on 2026-08-12: data-catalogue-schema.md, ui-dependency-matrix.md and
+# ui-functionality-requirements.md are `status: superseded` with a named successor, so they are
+# now exempt-retired rather than baselined debt (see _is_retired_with_successor). This is a
+# ratchet-DOWN by removing entries; no --baseline-write was used and no entry was added.
 baseline_files:
-  - path: codex/02-data/data-catalogue-schema.md
-    reason: stale
   - path: codex/04-architecture/capital-flow-model.md
     reason: stale
   - path: codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md
     reason: stale
   - path: codex/05-infrastructure/ui-architecture.md
-    reason: stale
-  - path: codex/05-infrastructure/ui-dependency-matrix.md
-    reason: stale
-  - path: codex/05-infrastructure/ui-functionality-requirements.md
     reason: stale

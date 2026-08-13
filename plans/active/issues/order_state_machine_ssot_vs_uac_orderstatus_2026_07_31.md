@@ -99,12 +99,16 @@ Interim mitigation already applied: both codex docs now carry a ⚠️ block sta
 
 ## Follow-ups
 
-- [ ] [CODE] P2. **RULED 2026-08-06 (operator), option A: advance the contract.** `[CODE]` tag (was `[OPERATOR]`) — add
-      `FAIL_OUTBOUND` + `RECONCILED` to UAC `OrderStatus`, rename `PENDING`/`OPEN` → `PENDING_NEW`/`NEW`. This is a
-      breaking, fleet-wide UAC change — every consumer of `OrderStatus` needs auditing for the rename, not just an
-      additive enum extension. Scope this as its own tracked rollout (consumer audit + migration, not a one-line enum
-      edit) before dispatching. Rule between A / B / C above for the order-lifecycle enum. Provenance: codex freshness
-      re-review shard-B, 2026-07-31.
+- [ ] [CODE] P2. **RULED 2026-08-06 (operator), option A: advance the contract — CONFIRMED 2026-08-12 (/plan-reconcile,
+      operator confirmed interactively).** `[CODE]` tag (was `[OPERATOR]`) — add `FAIL_OUTBOUND` + `RECONCILED` to UAC
+      `OrderStatus`, rename `PENDING`/`OPEN` → `PENDING_NEW`/`NEW`. This is a breaking, fleet-wide UAC change — every
+      consumer of `OrderStatus` needs auditing for the rename, not just an additive enum extension. Scope this as its
+      own tracked rollout (consumer audit + migration, not a one-line enum edit) before dispatching. Provenance: codex
+      freshness re-review shard-B, 2026-07-31. This todo previously carried the identical self-contradiction as the
+      sibling `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` finding (RULED opening line vs undecided closing
+      line, no Progress Log ruling record) — resolved 2026-08-12: the operator confirmed option A is the standing
+      ruling. The breaking UAC change itself is NOT done here — only the doc-level contradiction is resolved; the
+      rollout (consumer audit + migration + enum change) remains open work.
 - [ ] [TEST] P2. Once ruled, create `execution-service/tests/unit/orders/test_state_machine.py` (the doc's declared
       `verifier:`, never written) asserting the enum members match the codex state table, so this cannot silently
       diverge again.

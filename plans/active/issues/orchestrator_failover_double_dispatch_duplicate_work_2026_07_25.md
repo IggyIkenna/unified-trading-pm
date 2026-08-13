@@ -221,8 +221,8 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
   claim-time/concurrent-build race is real (worth the backend look at whether @7911083 covers concurrent-claim), but its
   BLAST RADIUS on this occurrence was contained to wasted worker cycles on the two losing slots, not a duplicate
   landing. Loose end from this incident was a stale wrong-SHA citation in
-  `/plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md` (cited `840c816d` instead of the winner
-  `fd9efc85`) — corrected 2026-08-03 (unified-trading-pm@8c75172e5).
+  `/plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md` (cited `840c816d` instead of the
+  winner `fd9efc85`) — corrected 2026-08-03 (unified-trading-pm@8c75172e5).
 
 ## Progress Log
 

@@ -7,8 +7,11 @@ summary: >-
   source doc's checkboxes independently once its batch-3 todo lands, then re-check the Deferred
   operator-gated/conflict-gated/non-batchable items for any that have since cleared), then archives batch3 via the
   standard 6-step ritual. Also carries the follow-up for batch3's non-actioned findings (2 archivable_now docs to
-  archive + 1 exclude_cross_cutting mistag to confirm retagged). status: draft — activated only after its parent batch3
-  is operator-approved and dispatched.
+  archive + 1 exclude_cross_cutting mistag to confirm retagged). **CORRECTED 2026-08-12 (/plan-reconcile)**: this
+  summary previously said "status: draft — activated only after its parent batch3 is operator-approved and dispatched" —
+  stale boilerplate contradicting the frontmatter `status: active` below; the parent batch3 was dispatched and is now
+  archived (`plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md`), so `active` is correct and
+  current.
 status: active
 nature: process
 asset_group: [defi]

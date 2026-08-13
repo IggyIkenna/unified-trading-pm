@@ -21,8 +21,8 @@ estimate_class: research
 estimate_baseline_ai_days: 55.0
 estimate_calibrated_ai_days: 66.0
 last_updated: 2026-07-13 # split into 5 AO child plans, see Progress Log
-locked_by: live-defi-rollout
-locked_since: 2026-06-15
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on:

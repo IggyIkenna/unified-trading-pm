@@ -31,7 +31,7 @@ related:
     /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md,
   ]
 created: 2026-08-10
-last_updated: "2026-08-10"
+last_updated: "2026-08-12"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -228,19 +228,28 @@ Directions, cheapest first — each is a todo below:
 
 ## Todos
 
-- [ ] [INFRA] P0. **Make the pre-commit drift gate advisory for reconciling wrappers.** Add an explicit opt-in (e.g.
-      `DRIFT_GATE_ADVISORY=1`) that `check-branch-drift.sh` honours by WARNING instead of exiting 1, and set it in
-      `safe-doc-push.sh` and `scripts/quickmerge.sh` around their own commit calls only — both already rebase before
-      pushing, so the invariant the gate protects is still enforced, just after the commit rather than before it. A bare
-      `git commit` by a human keeps the hard block, and the existing human-only `SKIP_BRANCH_DRIFT=1` override is
-      untouched. **Done when**: a commit driven by either wrapper proceeds while behind origin, the wrapper's
-      post-commit rebase still runs, a bare `git commit` while behind still hard-fails, and a regression test covers all
-      three. Repo: unified-trading-pm.
-- [ ] [INFRA] P0. **Fix the F2 misclassification.** `commit_failure_is_retriable()` must treat a prek failure whose only
-      signal is `- files were modified by this hook` (with no hook reporting a content violation) as RETRIABLE —
-      re-stage the named files and retry — rather than exiting 6 with "Do NOT re-run this script". **Done when**: a
-      simulated autofix-only prek failure re-stages and retries to success, a genuine content rejection still exits 6
-      with the hook's remedy line, and both are covered by tests. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P0. **Make the pre-commit drift gate advisory for reconciling wrappers.** DONE — the code shipped
+      2026-08-10 in unified-trading-pm@e59d4750fa (same-day as this doc's filing) but this checkbox was never flipped;
+      caught while re-triaging this doc 2026-08-12. `check-branch-drift.sh` honours `DRIFT_GATE_ADVISORY=1` by WARNING
+      and exiting 0 instead of hard-blocking; `safe-doc-push.sh` and `scripts/quickmerge.sh` both `export` it
+      immediately before their own `git commit` call and `unset` it immediately after (verified: both scripts contain
+      the export/unset pair). A bare `git commit` (the flag unset) still hard-fails, and `SKIP_BRANCH_DRIFT=1` is
+      untouched. **What was actually missing**: the regression test this todo's own "Done when" required. Added
+      unified-trading-pm@bdc6c3ab52 — `tests/test_check_branch_drift_advisory_mode.bats` (5/5): not-behind exits 0
+      regardless of the flag, behind+unset hard-blocks, behind+advisory warns and exits 0, `SKIP_BRANCH_DRIFT` still
+      wins, and a static containment check that both wrappers scope the export/unset to their own commit call. Repo:
+      unified-trading-pm.
+- [x] ✅ [INFRA] P0. **Fix the F2 misclassification.** DONE — shipped 2026-08-10 in unified-trading-pm@e59d4750fa
+      alongside the drift-advisory todo above, same unflipped-checkbox gap. `commit_failure_is_retriable()` now returns
+      RETRIABLE as soon as it sees `files were modified by this hook`, before even looking at hook ids — by design a
+      mixed failure (autofix text plus a genuine unresolved violation in the same run) also classifies RETRIABLE; the
+      worst case is one extra attempt, since the retry re-stages the autofix and the _next_ attempt (no longer carrying
+      that text) correctly exits 6 on the surviving violation. **What was actually missing**: test coverage for the F2
+      case itself — the existing test file only covered pure content rejections and pure drift, not the autofix signal.
+      Added unified-trading-pm@bdc6c3ab52 — two new cases in `tests/test_safe_doc_push_failure_classification.bats` (9/9
+      total): autofix-only is RETRIABLE, and autofix-plus-content-rejection is RETRIABLE by design (pinned so the
+      deliberate one-extra-attempt tradeoff is never mistaken for a bug and "fixed" into a false hard-stop). Repo:
+      unified-trading-pm.
 - [x] ✅ [INFRA] P0. **The silent-revert class also hits `quickmerge.sh`, and safe-doc-push's own "already landed"
       heuristic converts it into a FALSE SUCCESS.** DONE 2026-08-11 — unified-trading-pm@91d559ee19. **Root cause was
       not a missing check but a one-argument call-site bug.** `autostash_guard_bound_backlog` (tree-wip-guard.sh) takes
@@ -382,23 +391,36 @@ Directions, cheapest first — each is a todo below:
       environment-only form does NOT pass. Tests: `tests/test_pretooluse_slot_collision_guard.bats` (17; only 6 are
       blocking cases — the rest pin the false-positive surface the operator explicitly paid for), plus the 10 existing
       session-start tests still green.
-- [ ] [INFRA] P2. **A liveness check built on `pgrep` substring matching is unsound on this shared host.** Measured
-      2026-08-11: a watcher using `pgrep -f "quality-gates.sh --no-fix" | head -1` matched an ARBITRARY FOREIGN process
-      — this host runs several concurrent QG invocations across slots, and the zsh `eval` wrappers' own command lines
-      contain the literal pattern, so the check also self-matches. The watcher waited on an unrelated slot's process and
-      its result said nothing about the run it was meant to track. Structurally the same class as this todo's own
-      subject: two sessions sharing observable host state with no scoping key. Any liveness/collision check needs a
-      scoping key (PID ownership via `$$`/ancestry, a file-based own-task handle, or a unique marker), not a
-      command-line pattern — the collision hook already gets this partly right via ancestor-exclusion. **Done when**:
-      the workspace's liveness-check helpers are audited for pattern-only matching and the unsound ones carry a scoping
-      key, with a regression test. Repo: unified-trading-pm. SSOT:
-      `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
-- [ ] [INFRA] P0. **Stop `safe-doc-push.sh` exiting 5 with the caller's edits silently reverted.** Before any
-      non-success exit, compare the named files on disk against the content the script was invoked with (hash them at
-      entry); if they no longer match, do not print "transient, not a defect — re-run" — print the recovering
-      `git stash` ref and exit with a distinct code meaning "your edits are in the stash, not on disk". **Done when**:
-      an induced exhausted-retries run with a reverted tracked file reports the stash ref instead of the transient
-      message, and a test covers the entry-hash comparison. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P2. **A liveness check built on `pgrep` substring matching is unsound on this shared host.**
+      unified-trading-pm@37d7095041. Audited every standing `pgrep`-based liveness/collision helper in
+      `scripts/`/`cursor-configs/` (grep for `pgrep -f`/`pgrep -af`, ~15 files). Most are one-shot lookups or already
+      exact-PID-scoped (`_ancestor_pids`/`_cwd_of` in `cursor-configs/hooks/lib/slot-collision-detect.sh`, already fixed
+      by the earlier session-collision todo). Found one genuinely unsound LOOP-shaped liveness check gating a
+      destructive action: `scripts/dev/slot-cron-ff-pull.sh`'s `_resync_venv_if_lock_moved` decided whether to skip a
+      `uv sync --frozen` (which this same issue doc's own P1 lesson says can PRUNE a live environment) via
+      `pgrep -af 'pytest|quality-gates|basedpyright' | grep -qF "${PWD}"` — a substring test against the matched
+      process's argv TEXT, not its actual cwd. The dangerous direction is a false negative (a live gate invoked via a
+      relative path or wrapper, whose argv never literally spells out `${PWD}`, goes undetected and `uv sync` runs
+      concurrently with it). Fixed by reusing `_cwd_of` from the already-existing collision-detect library — exact cwd
+      match per candidate PID, portable macOS/Linux, with a substring fallback only if the library is missing. The
+      originally-cited incident itself (`pgrep -f "quality-gates.sh --no-fix" | head -1`) was an ad-hoc watcher written
+      live in a 2026-08-11 session, not standing repo code — nothing to fix there; the SSOT
+      (`/codex/12-agent-workflow/async-wait-and-poll-discipline.md` §4) already documents that class. Tests:
+      `tests/test_slot_cron_ff_pull_venv_resync_liveness.bats` (6/6) — exact-cwd match triggers the gate, a
+      path-prefix-only match (the old bug's false-positive-by-substring shape) does not, no candidates / multiple
+      candidates both behave correctly, and the substring pattern is confirmed gone from the primary path. Repo:
+      unified-trading-pm. SSOT: `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
+- [x] ✅ [INFRA] P0. **Stop `safe-doc-push.sh` exiting 5 with the caller's edits silently reverted.** DONE — shipped
+      2026-08-10 in unified-trading-pm@e59d4750fa, same unflipped-checkbox gap as the two todos above.
+      `_sdp_fingerprint_named()` hashes every named file at entry (`_SDP_ENTRY_FINGERPRINT`);
+      `_sdp_warn_if_content_vanished()` re-hashes before the exhausted-retries message and, on a mismatch, prints a loud
+      warning naming `git stash list` / `git show 'stash@{0}:<path>'` and the run exits **10** instead of the
+      plain-transient **5**. **What was actually missing**: the "Done when"'s own test requirement — a
+      `test_tree_wip_guard.bats` comment claimed this was "already covered" but no test anywhere exercised
+      `_sdp_fingerprint_named`/`_sdp_warn_if_content_vanished`. Added unified-trading-pm@bdc6c3ab52 — new
+      `tests/test_safe_doc_push_entry_hash_reverted_edits.bats` (3/3, sed-extracted harness against a real git repo,
+      same pattern as the failure-classification test): unchanged file compares clean, a file reverted to HEAD mid-run
+      is caught and names the recovery ref, a file deleted mid-run (ABSENT) is caught too. Repo: unified-trading-pm.
 - [x] ✅ [INFRA] P0. **Break F6 — stop the hook chain fighting a peer session's unstaged WIP.** DONE 2026-08-10 —
       isolated-worktree mode is now the DEFAULT in `safe-doc-push.sh` (`SDP_ISOLATED=0` escapes; setup failure degrades
       to the legacy path rather than blocking). Proven 6/6 vs legacy 0/6 under peer noise. Original text: An isolated
@@ -410,6 +432,72 @@ Directions, cheapest first — each is a todo below:
       way `prek stash/restore race detected` is already treated (`exit 7` with a diagnosis) instead of silently
       retrying. **Done when**: a commit succeeds with unrelated foreign dirty files present in the checkout, and a
       regression test creates foreign unstaged WIP and proves the caller's commit still lands. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P1. **prek's patch cache (`~/.cache/prek/patches/`) is host-global, not per-worktree — hardened
+      regardless of confirmed root-cause status.** DONE 2026-08-12 — unified-trading-pm@62d1a42613. `quickmerge.sh` and
+      `safe-doc-push.sh` now scope `PREK_HOME` per isolated worktree (verified live: a fresh `PREK_HOME` dir gets
+      populated independently); the expensive, reusable subdirs (`repos`/`hooks`/`tools`/`cache`, ~20MB+ of installed
+      hook environments) are symlinked in from a per-repo shared cache (`~/.cache/qm-iso-prek/<repo>`, mirroring the
+      venv-cache pattern) so isolation doesn't reinstall every hook repo per commit; `patches`/`scratch` are left
+      unlinked so prek creates them fresh, private to the run. Kept because it's a genuine, verified isolation
+      improvement (reduces host-global state sharing) and every repo in the fleet gets it for free via the
+      `scripts/quickmerge.sh` symlink architecture — but **retitled and downgraded from P0** because the NEXT todo
+      falsifies the theory that this was ever the cause of the originally-reported symptom. Do not cite this as "the
+      fix" for a revert — it closes a real, separate risk that was never actually confirmed to have fired.
+- [x] ✅ [INFRA] P0. **The PREK_HOME hypothesis does NOT explain the originally-reported reverts — falsified by direct
+      test, not just argued away.** Investigated 2026-08-12 (challenged by a peer agent's review, which was correct to
+      push back). Built `scripts/dev/repro-prek-cross-worktree-race.sh`: two genuinely separate `git worktree`s, one
+      slow hook, racing a file that exists independently at each worktree's own path — the specific mechanism the
+      PREK_HOME fix was supposed to close. Ran it BOTH with a shared `PREK_HOME` (the pre-fix shape) and with isolated
+      `PREK_HOME` (the fix): **both came back clean, zero cross-worktree corruption, no fix needed to prevent it.** The
+      classic prek stash/restore race does not cross worktree boundaries via a shared patches directory, tested directly
+      rather than assumed. Went further: built a REAL same-file concurrency test against the actual `safe-doc-push.sh`
+      (2 independent clones + a disposable bare origin, not a synthetic repro) — two workers editing the SAME file
+      concurrently, both non-overlapping lines (both edits correctly preserved via the existing rebase-retry reconcile)
+      and overlapping lines (loud `rebase --abort` + exit 3, "genuine content collision, not contention" — never a
+      silent drop). **7 distinct mechanisms tested this session, all clean**: cross-worktree ×2 PREK_HOME modes,
+      same-file non-overlapping, same-file overlapping, plus the earlier-session single-shared-tree classic race
+      (already covered by `repro-prek-stash-restore-race.sh`). Could not reproduce the originally-reported corruption
+      through any constructible mechanism without the original raw `safe-doc-push.sh` output (only a hash-only summary
+      survived from the original two occurrences). Strongest remaining lead, not yet confirmed: the affected file
+      (`ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`) had an ACTIVE `UU` conflict in this shared checkout at
+      investigation time, under heavy legitimate concurrent-peer commit traffic (5+ commits same day, unrelated
+      investigation) — a shared-checkout collision against an actively-committing peer is a far more mundane explanation
+      than a prek bug, but unconfirmed without the original logs. **Done when**: either the original logs surface and
+      pin the mechanism down, or it recurs and the new forensic dump (next todo) captures it live. Repo:
+      unified-trading-pm.
+- [x] ✅ [INFRA] P1. **Make the next occurrence self-diagnosing instead of leaving a hash-only summary.** DONE
+      2026-08-12 — unified-trading-pm@340bae9f60. All three revert-detection call sites in `quickmerge.sh`
+      (`_qm_content_vanished`, `_qm_assert_entry_change_landed`) and `safe-doc-push.sh`
+      (`_sdp_warn_if_content_vanished`, `_sdp_guard_already_landed_claim`, `_sdp_assert_entry_change_landed`) now write
+      a durable, timestamped forensic snapshot the moment a revert is detected — entry fingerprints, entry HEAD blobs,
+      current disk fingerprint, current HEAD, last 3 commits touching each named file, full `git status --porcelain`,
+      `git stash list`, recent `prek/patches` listing, `git worktree list` — to
+      `~/.cache/{sdp,qm}-forensics/revert-<ts>-<pid>.log`. Best-effort, never blocks the caller. Verified: existing
+      regression coverage (`tests/test_safe_doc_push_entry_hash_reverted_edits.bats` 10/10,
+      `tests/test_quickmerge_landed_content_assertion.bats`) still passes unchanged, and a direct manual invocation of
+      the dump function confirmed correct, rich output. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P0. **F9 — isolated mode's copy loop blindly `cp`'d the caller's on-disk file over a freshly-fetched
+      origin/$BRANCH worktree with no check for peer divergence, silently clobbering a peer's already-landed content.**
+      Found 2026-08-12. FIXED 2026-08-12, unified-trading-pm@f8d1ad47f1. **Root cause, precisely located**: the
+      isolated-worktree copy loop (`scripts/dev/safe-doc-push.sh`, the `for _f in "${FILES[@]}"`loop inside the     isolation branch) did`cp
+      "$_f" "$_sdp_iso_wt/$_f"` unconditionally for every tracked file — no comparison against
+      what the freshly-checked-out worktree already held. If a peer landed different content in that file since the
+      caller's last sync, the cp silently replaced it. `_sdp_reconcile_caller_duplicates` (the ORIGINAL suspect, still
+      real and still narrower-than-ideal by design) only runs AFTER the push, to sync the caller's OWN copy back — it
+      was never the mechanism that caused the loss; the loss happened before that function is ever reached. **Measured
+      before the fix**: 4 workers × 6 rounds (24 ship attempts) against one shared file, no re-pull between a worker's
+      own rounds — 12 of 18 markers vanished from the final tree despite being individually reported LANDED. Repro:
+      `scripts/dev/repro-safe-doc-push-stale-local-clobber.sh` (permanent, re-runnable). **Fix, built**: capture each
+      named file's blob at the caller's OWN pre-fetch HEAD (`_SDP_ISO_BASE_BLOBS`, captured before isolation's `git
+      fetch`/`worktree add` — the only point where "HEAD" still means the caller's last-synced tip, not origin's fresh
+      state). In the copy loop, compare that base blob against `origin/$BRANCH`'s CURRENT blob for the same path     (fetched moments earlier). Equal ⇒ nobody touched the file since the caller's last sync, blind copy stays exactly     as safe as before (the common case, unchanged). Different ⇒ a peer moved the file; abandon isolated mode for THIS     run (`_sdp_copy_ok=false`) and fall through to the existing shared-index fallback path, which reconciles through     git's own ancestor-aware 3-way merge machinery (ff-only / `--rebase
+      --autostash`) and hard-stops loudly (exit 3,     "needs a human") on a genuine content conflict — proven, already-tested machinery, not reinvented. This is a     hybrid of the two options originally sketched: it never silently drops content (option b's guarantee) without     needing a hand-rolled merge-conflict detector, by reusing git's real reconcile path instead (simpler and more     robust than option a's proposed direct blob-level `git
+      merge-file`). **Verified**: `bash
+      -n` + shellcheck clean     (only 2 pre-existing, unrelated warnings elsewhere in the file); full existing bats regression suite (10 files,     39/39) passes unchanged, including all 3 isolated-mode-specific suites (untracked-duplicate, deletion-propagates,     identity-preserved); the repro script run TWICE post-fix: **0/11 confirmed-landed markers missing from the final     tree, both times** (workers whose local copy diverged hit real conflicts via the shared-index fallback and failed     loudly with rc=3, rather than any push silently succeeding while clobbering a peer's content). **quickmerge.sh     checked for the same mechanism and confirmed NOT vulnerable** (its isolated-worktree copy loop has the identical     blind-`cp`shape at line ~1032, but its worktree is created at the caller's local`HEAD`, and — critically —     STAGE 0.4's not-behind gate (`_qm_stage_0_4_not_behind_gate`, called unconditionally at line 1571, which the     isolated child also reaches after re-exec, before any commit) already fetches origin and either fast-forwards     cleanly, blocks loudly on `ahead=0` working-tree overlap (`PRECOMMIT_WORKING_TREE_CONFLICT`, exit 1 — this is the     exact F9-shaped scenario), or blocks loudly on a genuine rebase conflict (`BEHIND_DIVERGED_CONFLICT`/    `AUTOSTASH_POP_CONFLICT`,
+      exit 1) — every branch either succeeds cleanly or hard-stops, no silent-proceed path exists. No fix needed there;
+      this was a real check, not an assumption. **Done when**: repro script shows 0 missing markers post-fix (met,
+      twice) and the sibling ship script is checked for the same class of defect (met — quickmerge.sh confirmed clean by
+      trace, not just assumed). Repo: unified-trading-pm.
 - [x] ✅ [INFRA] P0. **Fix F7 — resolve the repo root from git, not from the directory name.** DONE 2026-08-10 — new
       `scripts/quality_gates/_pm_root.py` resolves by CONTENT (`plans/` + `scripts/quality_gates/` present), applied to
       13 call sites across 11 scripts; verified it resolves correctly given a bogus workspace root and that
@@ -421,12 +509,16 @@ Directions, cheapest first — each is a todo below:
       otherwise fails for every agent that adopts it. **Done when**: the commit- SHA evidence check passes from a
       worktree with an arbitrary directory name, an unresolvable repo root produces a distinct loud error, and a
       regression test runs the check from a differently-named worktree. Repo: unified-trading-pm.
-- [ ] [INFRA] P1. **Make `prettier-autostage.sh` format regardless of drift.** Formatting is idempotent and has no
-      dependency on origin's state; the current "skipping format while behind" guard is what prevents the fast path from
-      ever self-correcting (F3). If the reflow-residue concern behind that guard is still real, satisfy it by formatting
-      AFTER the wrapper's reconcile step rather than by declining to format at all. **Done when**: the guard is removed
-      or moved after reconcile, a formatted-while-behind commit does not leave residue that breaks slot FF-sync, and the
-      F3 loop is demonstrably broken. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P1. **Make `prettier-autostage.sh` format regardless of drift.** DONE — shipped 2026-08-10 in
+      unified-trading-pm@aa1f445933 (same session as the three todos above, same unflipped-checkbox gap — this is why it
+      kept hitting live on 2026-08-11/12 even though the fix had already landed the day before). Rather than
+      unconditionally removing the guard, it now mirrors `check-branch-drift.sh`'s own advisory mode: the "skip while
+      behind" branch is itself gated on `DRIFT_GATE_ADVISORY:-0 != 1`, so under a reconciling wrapper (whose commit the
+      drift gate will not block) formatting proceeds while behind, and the residue protection stays intact for a bare
+      `git commit`. **What was actually missing**: test coverage proving the F3 loop is actually broken. Added
+      unified-trading-pm@bdc6c3ab52 — new `tests/test_prettier_autostage_advisory_mode.bats` (2/2): behind+unset still
+      skips (residue protection intact), behind+`DRIFT_GATE_ADVISORY=1` does NOT skip and falls through past the drift
+      check entirely. Repo: unified-trading-pm.
 - [x] ✅ [INFRA] P1. **Re-derive the push-governor's validation cap from measured host cores.** DONE 2026-08-10 —
       `_push_gov_validate_default_k()` now mirrors `qg-host-governor.sh`'s `max(2, floor(cores/4))`; measured 8 -> 2 on
       the 10-core operator host. Original text: `push-host-governor.sh` admits a fixed K=8 validation-phase tokens.
@@ -435,20 +527,51 @@ Directions, cheapest first — each is a todo below:
       `max(2, floor(cores/4))` derivation instead of a constant. **Done when**: the cap is core-derived, and a measured
       before/after shows per-run sweep wall time on a loaded host materially closer to its idle 18.6s. Repo:
       unified-trading-pm.
-- [ ] [INFRA] P1. **Shrink the 118s critical section itself** — profile `run_hygiene_sweep.sh --precommit` per sub-check
-      and move anything whose cost is corpus-wide-but-not-staged-file-dependent out of the per-commit path (to the
-      hourly sweep or the promote-PR QG). The gate set only needs to be _sound for the staged files_ at commit time.
-      **Done when**: the measured precommit sweep on one staged file is materially below the measured commit
-      inter-arrival time, with a per-check timing table recorded in this doc's Progress Log. Repo: unified-trading-pm.
-- [ ] [INFRA] P2. **Record the AO-vs-PM volume asymmetry in the codex** so the next person does not re-derive it — fold
-      F1's table and the "PM is the fleet's single write hotspot" explanation into
-      `/codex/12-agent-workflow/host-concurrency-and-commit-provenance.md`, alongside the existing concurrency-cap
-      rules. **Done when**: the codex doc carries the measured rates, the dated measurement, and the structural reason.
-      Repo: unified-trading-pm.
-- [ ] [DOC] P2. **Document the working sequence (reconcile → format → commit) in
-      `/codex/05-infrastructure/per-tab-worktrees.md`** as the supported recipe for a contended doc push, and
-      cross-reference F4 so an agent seeing exit 5 checks `git stash list` before believing "transient, re-run". **Done
-      when**: the codex doc carries the recipe and the exit-5 caveat. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P1. **Shrink the 118s critical section itself.** Re-profiled 2026-08-12 (per-check timestamp method,
+      same as the original 2026-08-10 profiling) and found the top cost was NOT residual contention or an
+      intrinsically-expensive check — it was two SELF-INFLICTED regressions from earlier sessions, both fixed and
+      shipped this session: - `check_plan_commit_sha_evidence.py --only`: **57s**, because `main()` verified every
+      citation in the WHOLE corpus (not just staged files) even in `--only` mode — always true, but harmless until todo
+      5 above added a `require_reachable` reachability check (2 extra git subprocess calls) for every self-citation, of
+      which this corpus has hundreds. Fix: `--only` mode now skips verification entirely for citations outside the
+      staged paths, since their violation status is filtered out and never reported anyway. `--only` run: 57s → 2.4s.
+      Baseline (full-corpus) mode unaffected (unchanged 56.8s, off the precommit path). Tests:
+      `scripts/quality_gates/test_check_plan_commit_sha_evidence.py` (+2, 9/9 total) — proves `--only` mode never calls
+      the verifier for an unstaged citation, and baseline mode still verifies everything.
+      unified-trading-pm@4e8447bd21. - `check_ag_closeout_linkage.py`: **42.7s** (31.1s of it kernel/syscall time),
+      because `resolve_related_entry`'s legacy-form fallback ran a fresh `rglob` over the whole corpus PER `related:`
+      ENTRY across every doc — with ~750 docs each carrying several entries, hundreds of full recursive directory walks
+      per run. Fix: one `rglob("*.md")` walk building a memoized basename index; `resolve_related_entry` does O(1) dict
+      lookups against it instead, with identical resolution semantics (verified via A/B diff of full-corpus output,
+      byte-identical before/after). Run: 42.7s → 1.95s (`--only`), 2.2s (baseline). Tests:
+      `scripts/plan-hygiene/test_check_ag_closeout_linkage.py` (7 new) — both fallback forms, the plans/-only scoping
+      the bare-slug form has always had, and that the index is built exactly once per process.
+      unified-trading-pm@d85ad41fac.
+
+      **Done when, confirmed**: the precommit sweep on one staged file is now **20.8s** total wall (measured 2026-08-12,
+                                      isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
+                                      down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
+                                      concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
+                                      single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
+                                      `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
+                                      nothing left to move out of the per-commit path. Repo: unified-trading-pm.
+
+- [x] ✅ [INFRA] P2. **Record the AO-vs-PM volume asymmetry in the codex** so the next person does not re-derive it —
+      unified-trading-pm@baae1922bb. New § "1b. PM is the fleet's single write hotspot" in
+      `/codex/12-agent-workflow/host-concurrency-and-commit-provenance.md` carries F1's measured table (118s loaded vs
+      18.6s idle-worktree, 60-80s commit inter-arrival, 1318/59/152 commits-per-24h for PM/AO/MTDS), the dated
+      measurement (2026-08-10), and the structural reason (Commit+Push+Flip means every agent in every repo writes to
+      PM, so a fixed critical section safe at AO's ~1 commit/24min is unsafe at PM's ~1/60s) — plus which two
+      mitigations actually landed against it (`DRIFT_GATE_ADVISORY`, isolated-worktree-by-default), so a reader isn't
+      left wondering if the 118s number is still live. Repo: unified-trading-pm.
+- [x] ✅ [DOC] P2. **Document the working sequence (reconcile → format → commit) in
+      `/codex/05-infrastructure/per-tab-worktrees.md`** — unified-trading-pm@baae1922bb. New subsection "The working
+      commit order — reconcile → format → commit" under the existing "Committing from a contended checkout" section:
+      states the recipe, walks through why any OTHER order re-forms the F1/F2/F3 closed loop, notes the sanctioned
+      scripts don't need it spelled out by hand (they set `DRIFT_GATE_ADVISORY=1` themselves) so this is for a bare
+      `git commit` workaround specifically, and cross-references F4's exit-5-vs-exit-10 distinction right next to the
+      existing "Exit codes worth recognising" list so an agent seeing "transient, re-run" reads the actual exit code
+      before believing it. Repo: unified-trading-pm.
 
 - [x] [INFRA] P1. **Cross-repo evidence citations still go stale on rebase.** ✅ Done — neither option in the original
       framing was needed. `scripts/dev/reconcile-sha-citations.sh` gained a second pass that asks a question requiring
@@ -467,16 +590,20 @@ Directions, cheapest first — each is a todo below:
       a service repo with a heavier suite and confirm the cached venv stays valid across a dependency bump. **Done
       when**: two repos pass an isolated `--isolated` quickmerge end-to-end and the cache is shown to refresh on a lock
       change. Repo: unified-trading-pm.
-- [ ] [INFRA] P2. **Slot 2's PM checkout is wedged and cannot receive any of these fixes.** **STALE 2026-08-12: slot 2
-      is 3 commits behind origin, not 81 — measured directly. Re-verify the wedge before acting on the number in this
-      todo.** 81 commits behind, blocked on 4 unresolved conflict markers in
-      `scripts/plan-hygiene/na_corpus_baseline.yaml` plus 22 dirty files (~86 min stale at 2026-08-10, no
-      `.agent-claim`). Deliberately NOT resolved by this session — it is another session's in-flight work and the
-      inherit path assumes CLEAN WIP, not a live conflict. **Done when**: the conflict is resolved by its owner (or
-      explicitly abandoned) and slot 2 fast-forwards. Owner: whoever owns that WIP. Repo: unified-trading-pm.
-- [ ] [INFRA] P3. **`check_chain_set_inclusion` has 3 failing tests, pre-existing.** Verified failing identically at the
-      pre-F7 baseline `c7fe11851a`; untouched by this session. Recorded so the next person does not mistake them for
-      isolation fallout. **Done when**: triaged or fixed. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P2. **Slot 2's PM checkout is wedged and cannot receive any of these fixes.** CLOSED 2026-08-12 —
+      re-verified directly
+      (`git -C .tabs/2/unified-trading-pm fetch origin live-defi-rollout && git rev-list     HEAD..origin/live-defi-rollout --count`
+      → 0; `git status --porcelain` → 0 lines; 0 `UU`/`AA`/`DD` entries). Slot 2 is fully fast-forwarded and clean — not
+      the 81-commits/4-conflict-markers/22-dirty-files state this todo was originally filed against, and not even the
+      3-behind state the 2026-08-12 STALE note found. The "Done when" (owner resolves the conflict, slot 2
+      fast-forwards) has happened; nothing further to do here. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P3. **`check_chain_set_inclusion` has 3 failing tests, pre-existing.** RE-VERIFIED 2026-08-12: all 3
+      tests now PASS (`test_invariant_holds_on_live_uac`, `test_returns_violation_when_genesis_orphan`,
+      `test_returns_violation_when_gas_fee_chain_id_orphan`), and running the check directly confirms the invariant it
+      guards: `MAINNET_CHAIN_IDS ⊇ CHAIN_GENESIS_DATES ⊇ GAS_FEE_CHAIN_START_DATES`. `test_invariant_holds_on_live_uac`
+      reads live `unified-api-contracts` registry data, so this was fixed by unrelated UAC data work landing between the
+      2026-08-10 baseline (`c7fe11851a`) and now, not by anything in this session. No code or test change needed —
+      triaged and confirmed already fixed. Repo: unified-trading-pm.
 
 - [x] [INFRA] P1. **Isolated mode left the caller holding a stale untracked duplicate.** ✅ Done — reported live by a
       peer session minutes after isolation shipped: a NEW file pushed from the private worktree never becomes tracked in
@@ -568,46 +695,80 @@ Directions, cheapest first — each is a todo below:
       "every content check passed … Do NOT go looking for a content bug" while one was failing. A false all-clear is
       worse than the false alarm it replaced. Hardened to also match pytest-style `FAILED`/`ERROR`/`E`-prefixed lines,
       not just the emoji.
-- [ ] [INFRA] P0. **BLOCKED: a peer's uncommitted UTL edit red-lines every PM quality gate on this host.** **RE-TRIAGE
-      2026-08-12: the stated blocker is GONE — re-verify and close or re-scope.** Measured:
-      `git -C unified-trading-library status --porcelain` is empty, and PM's full `quality-gates.sh` passed four times
-      on this host on 2026-08-11/12 (287s and 305s runs among them). Nothing is currently blocked by this. Left open
-      rather than flipped because the original author may have intended a durable guard, not just the one incident.
-      `tests/unit/test_capability_verdict_matrix.py::test_fixture_matches_live_engine_registry` dies with
-      `ImportError: cannot import name '_per_vm_shard_backlog' from 'unified_trading_library.manifest_writer._state'`.
-      Measured: the symbol IS on `origin/live-defi-rollout`, is ABSENT from the local working file, and the UTL clone is
-      `behind=0` with 6 dirty files — so an uncommitted local edit removed it. NOT reverted: that is foreign WIP, and
-      destroying it is the exact harm this issue doc exists to stop. **Owner: whoever holds that UTL WIP.** Until it is
-      committed or parked, no PM ship can gate green from this checkout. **Done when**: the symbol resolves again and
-      the test passes.
-- [ ] [INFRA] P1. **One dead evidence citation red-lines the whole repo's promote flow.** `4f901b9916` (written by
+- [x] ✅ [INFRA] P0. **BLOCKED: a peer's uncommitted UTL edit red-lines every PM quality gate on this host.** CLOSED
+      2026-08-12 — the premise is not just gone, it is superseded. Re-verified:
+      `git -C unified-trading-library status     --porcelain` is still empty, `behind=0`/`ahead=0` against origin. The
+      cited test, `tests/unit/test_capability_verdict_matrix.py::test_fixture_matches_live_engine_registry`, does not
+      exist anywhere in the current UTL tree (`grep -rl test_fixture_matches_live_engine_registry .` — zero hits; the
+      file itself has no delete history either, so it was never actually committed). `_per_vm_shard_backlog` was
+      legitimately relocated out of `_state.py` into its own module by a real, shipped, unrelated commit —
+      `77fef206 fix(manifest-writer): stop the real OOM driver in the per-VM shard flush path … Extracted     _per_vm_shard_backlog.py from _state.py (pure code motion) to stay under the file-size cap`
+      — and every current import site (`manifest_writer/__init__.py`, `tests/unit/test_per_vm_shard_backlog.py`) already
+      points at the new module; that test suite passes 6/6. There was never a "durable guard" to preserve here: the
+      failure was tied to a specific peer's WIP against a specific pre-refactor file layout, both of which are gone, and
+      the refactor made the old import path meaningless rather than merely fixing a revert. Nothing is blocked. Repo:
+      unified-trading-pm.
+- [x] ✅ [INFRA] P1. **One dead evidence citation red-lines the whole repo's promote flow.** `4f901b9916` (written by
       slot-12 at 16:50, a SHA that never existed here — the pre-rebase id of its own commit) failed
       `check_plan_commit_sha_evidence` corpus-wide, failing PM's gate, failing the promote PR — the "QG slice(s) FAILED
-      | unified-trading-pm" → "PROMOTION LAG cause unknown" pair repeating hourly all day. Repaired to `72adcb234c`. The
-      orphan-healing reconciler CANNOT fix this form: the SHA never existed locally, so there is no object to patch-id
-      match. **Done when**: quickmerge refuses to commit a `- [x]` whose citation does not resolve against origin at
-      commit time, closing it at the source instead of corpus-wide hours later.
-- [ ] [INFRA] P2. **60 of 229 PM bats tests fail and NOTHING gates them.** Measured full run: 169 ok / 60 not ok. PM's
-      gate (`base-service.sh`) carries bats as warn-only for service repos; PM's own 30 bats files are not invoked by
-      its gate at all. None of the 60 are from this session's five new files. **Done when**: PM's bats suite is either
-      gated or its failures are ratcheted.
+      | unified-trading-pm" → "PROMOTION LAG cause unknown" pair repeating hourly all day. Repaired to `72adcb234c`.
+      Re-confirmed 2026-08-12: corpus is clean (0 unresolvable citations, 2887 checked) — the specific incident stays
+      resolved. **The structural "Done when" is now DONE too** — unified-trading-pm@b7ba752839.
+      `check_plan_commit_sha_evidence.py`'s existence-only test (`git cat-file -t <sha>`) is exactly why this slipped
+      past precommit: it passes for ANY loose object, including a commit a rebase already rewrote away, which is
+      precisely the shape both `4f901b9916` and the sibling `0f9b8a65ca` incident took (see
+      `plans/active/issues/plan_commit_sha_evidence_unresolvable_0f9b8a65ca_2026_08_10.md`).
+      `reconcile-sha-citations.sh` already explains why the precommit check itself cannot validate a SELF-citation to
+      the very commit being created (it doesn't exist yet) — so the fix scopes a STRICTER test to self-citations only:
+      `<repo>@<sha>` where `<repo>` is this repo's own name must now be an ancestor of some `origin/*` ref or of local
+      `HEAD` (`_is_reachable_from_any_branch`), not merely a present object. A cross-repo citation keeps the weaker test
+      (PM does not control when a sibling repo pushes). This directly rejects a guessed/pre-rebase self-citation AT
+      COMMIT TIME instead of letting it land and fail corpus-wide hours later; re-ran the full corpus after the change
+      and confirmed 0 regressions (2887 citations, 0 unresolvable — the change is additive-only for self-citations that
+      are genuinely unreachable). Tests: `scripts/quality_gates/test_check_plan_commit_sha_evidence.py` (7/7) — pushed,
+      local-only-unpushed, and dangling-orphan cases, both with and without `require_reachable`. `ruff`/`basedpyright`
+      clean. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P2. **60 of 229 PM bats tests fail and NOTHING gates them.** Measured full run: 169 ok / 60 not ok.
+      PM's gate (`base-service.sh`) carries bats as warn-only for service repos; PM's own 30 bats files are not invoked
+      by its gate at all. None of the 60 are from this session's five new files. **Done when**: PM's bats suite is
+      either gated or its failures are ratcheted. — unified-trading-pm@ef552936b3 (fixed both root-cause fixtures,
+      re-measured 0/320 clean, opted PM's own `quality-gates.sh` into `BATS_HARD_FAIL=1`; checkbox was stale — the fix
+      landed under this same commit but was never flipped here; caught + flipped 2026-08-13 while closing out the
+      sibling `pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`).
+
+## Deferred work after 2026-08-12
+
+| Item                                                                                            | State / why deferred                                                                                                                                                                                                                                                                                                                                                           | Blocked on                                                                      |
+| ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| F9 — fix isolated mode's blind-copy clobber                                                     | **Done 2026-08-12** — real root cause pinpointed (the copy loop, not `_sdp_reconcile_caller_duplicates`), fixed, verified twice against the repro (0/11 missing both runs), full regression suite green, sibling script (quickmerge.sh) checked and confirmed not vulnerable by the same mechanism.                                                                            | n/a — closed                                                                    |
+| Confirm F9 is (or isn't) the ORIGINAL reported mechanism                                        | **Cannot be done yet** — the original report's raw `safe-doc-push.sh` logs no longer exist; only a hash-only summary survived. The new forensic-dump tooling makes the NEXT occurrence self-diagnosing, but there is nothing to check now. Moot either way now: the vulnerability F9 identified is fixed regardless of whether it was the ORIGINAL incident's exact mechanism. | a recurrence, captured live via the new forensics dump (informational only now) |
+| Root-cause the isolated-worktree basedpyright false-positive (separate, already-closed finding) | **Closed as accepted-with-workaround**, not reopened — listed here only so a reader doesn't conflate it with F9; different investigation, different doc (archived).                                                                                                                                                                                                            | n/a — intentionally not being pursued                                           |
+
+**Recommended next item**: none open with no external blocker — every actionable item in this doc is closed. The one
+remaining row (confirming F9 against the original report) is blocked on a recurrence that may never come, and is no
+longer load-bearing since the fix stands on its own measured evidence.
 
 ## Deferred work after 2026-08-10
 
-| Item                                                              | State / why deferred                                                                                                   | Blocked on               |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| ~~Cross-repo citation reconciliation~~                            | **DONE 2026-08-10** — unified-trading-pm@7f9bd2a366; reachability + patch-id, neither design option needed             | —                        |
-| `fix_prosewrap_padding.py` line-scoping                           | **Not done** — precondition for auto-wiring it; today it rewrites whole files (10 of 25 sampled plans)                 | nobody; pick it up       |
-| quickmerge isolation back to laptop-default                       | **Not done** — proven on one repo/host only; wants a second repo + cache-invalidation check                            | nobody; pick it up       |
-| Slot 2 unwedge                                                    | **Operator-owned** — live conflict in another session's WIP, must not be resolved by a third party                     | that WIP's owner         |
-| `check_chain_set_inclusion` 3 failures                            | **Not done** — pre-existing, unrelated to this work                                                                    | nobody; low priority     |
-| PM CI green (ldr-docs-gate, na_corpus ratchet promotion deadlock) | **Cannot be done yet** — separate CI/promotion defects already being worked by a peer (two issue docs in slot 2's WIP) | that peer's work landing |
+| Item                                                              | State / why deferred                                                                                                                                                                                                                                            | Blocked on               |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| ~~Cross-repo citation reconciliation~~                            | **DONE 2026-08-10** — unified-trading-pm@7f9bd2a366; reachability + patch-id, neither design option needed                                                                                                                                                      | —                        |
+| ~~`fix_prosewrap_padding.py` line-scoping~~                       | **CORRECTED 2026-08-12 (/plan-reconcile): DONE** — unified-trading-pm@a29967623a; fixer now takes the check's flagged line set, leaves everything else alone (byte-identical repair on pre-existing corruption vs whole-file mode, per the Todos section above) | —                        |
+| quickmerge isolation back to laptop-default                       | **Not done** — proven on one repo/host only; wants a second repo + cache-invalidation check                                                                                                                                                                     | nobody; pick it up       |
+| Slot 2 unwedge                                                    | **Operator-owned** — live conflict in another session's WIP, must not be resolved by a third party                                                                                                                                                              | that WIP's owner         |
+| `check_chain_set_inclusion` 3 failures                            | **Not done** — pre-existing, unrelated to this work                                                                                                                                                                                                             | nobody; low priority     |
+| PM CI green (ldr-docs-gate, na_corpus ratchet promotion deadlock) | **Cannot be done yet** — separate CI/promotion defects already being worked by a peer (two issue docs in slot 2's WIP)                                                                                                                                          | that peer's work landing |
 
-| UTL `_per_vm_shard_backlog` foreign WIP | **Operator-owned** — uncommitted edit in a sibling clone; reverting it
-destroys another agent's work | that WIP's owner | | Commit-time citation-resolves-against-origin gate | **Not done** —
-closes the dead-citation class at source | nobody; pick it up | | PM bats: 60/229 failing, ungated | **Not done** —
-pre-existing, none from this session | nobody; pick it up | | Release-tag stall (7 repos), UTL prod trigger, glue runner
-228 restarts | **Not done** — untouched CI groups from the alert audit | nobody; pick it up |
+| Item                                                                    | State / why deferred                                                                                                                                                                                                                                                | Blocked on         |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| UTL `_per_vm_shard_backlog` foreign WIP                                 | **Operator-owned** — uncommitted edit in a sibling clone; reverting it destroys another agent's work                                                                                                                                                                | that WIP's owner   |
+| ~~Commit-time citation-resolves-against-origin gate~~                   | **CORRECTED 2026-08-12 (/plan-reconcile): DONE** — unified-trading-pm@b7ba752839; `check_plan_commit_sha_evidence.py` now requires a self-citation `<repo>@<sha>` to be reachable from `origin/*`/local `HEAD`, not merely a present loose object (see Todos above) | —                  |
+| PM bats: 60/229 failing, ungated                                        | **Not done** — pre-existing, none from this session                                                                                                                                                                                                                 | nobody; pick it up |
+| Release-tag stall (7 repos), UTL prod trigger, glue runner 228 restarts | **Not done** — untouched CI groups from the alert audit                                                                                                                                                                                                             | nobody; pick it up |
+
+> **CORRECTED formatting 2026-08-12 (/plan-reconcile)**: this table's rows were previously merged into unwrapped run-on
+> paragraph text (a prosewrap-style line-wrap corruption — ironic given this doc's own subject matter) and have been
+> restored to proper Markdown table rows above, content unchanged apart from the 2 DONE corrections noted.
 
 **Recommended next item**: unblock the UTL import — it red-lines every PM gate on this host, so nothing else can ship
 until it clears. Then the commit-time citation gate, which removes the largest recurring cause of PM promote-flow
@@ -669,6 +830,21 @@ reconciliation, the previous recommendation, shipped 2026-08-10.)
   goes from zero to complete. Note the peer-noise writer is load-bearing: an earlier run against a CLEAN checkout scored
   5/6 for legacy and proved nothing — foreign UNSTAGED WIP is what makes prek's patch save/restore collide with the
   hook's own autofix, which is the F6 mechanism.
+- **2026-08-12 (re-triage: four P0/P1 todos were already shipped code-wise, just never flipped)**: working this doc's
+  remaining open todos in order, found that todos 1-4 (drift-gate-advisory, F2 misclassification, exit-5 silent revert,
+  prettier-autostage mirroring) were ALL already implemented — in unified-trading-pm@e59d4750fa and @aa1f445933, both
+  landed 2026-08-10, the same day this doc was filed — but the checkboxes were left unchecked. That is why F3's
+  "skipping format while behind origin" message kept firing live on 2026-08-11/12 even though the mirror fix predates
+  both incidents: the fix was live, the _symptom quoted in the dispatch_ was a stale citation, not a live gap. What was
+  genuinely missing in every case was the test coverage each todo's own "Done when" required — verified by grepping
+  `tests/` for every mechanism name (`DRIFT_GATE_ADVISORY`, `files were modified by this hook`,
+  `_SDP_ENTRY_FINGERPRINT`, a prettier-autostage test file) and finding zero hits before this session. Added four bats
+  files/additions (19 new test cases total) exercising each mechanism directly against real git repos, all green. One
+  test written for the F2 case initially asserted the WRONG expected behavior (that a mixed autofix+content-rejection
+  failure should be DETERMINISTIC) — running it against the real code showed it is RETRIABLE by design, per the
+  function's own comment; corrected the test rather than the code, and documented why so the deliberate
+  one-extra-attempt tradeoff is not later "fixed" into a false hard-stop.
+
 - **2026-08-10 (four self-inflicted defects the harness caught, all pre-land)**: recorded because they are the argument
   for the harness existing. (1) `safe-doc-push` gated on `[[ ! -d .git ]]`, but `.git` is a FILE in a linked worktree —
   isolation re-execs into a worktree, so the child exited 2 and EVERY invocation would have failed; fixed via
@@ -680,3 +856,77 @@ reconciliation, the previous recommendation, shipped 2026-08-10.)
   before it was killed by hand; fixed, plus a `SDP_ISO_DEPTH` backstop that hard-fails at depth >= 1 (exit 11) so a
   future handshake bug cannot repeat that blast radius. (4) the first harness had no peer-noise writer and so tested the
   easy case. None of these were reachable by reading the diff.
+
+- **2026-08-12 (todos 5 and 6 closed)**: `check_plan_commit_sha_evidence.py` now requires self-citations to be reachable
+  from a branch, not merely present as an object — closes the structural "Done when" for the dead-citation todo
+  (unified-trading-pm@b7ba752839, 7/7 new tests). Hit the same self-citation chicken-and-egg problem while authoring
+  this: quickmerge's precommit gate hard-blocks a literal `<repo>@PENDING` token, so citing the very commit being
+  created has to be a two-step ship (land the code first, then flip the checkbox with the real landed SHA) — the earlier
+  todos 1-4 doc flip worked around this the same way. Also hit a live instance of this doc's own F4/loss-guard subject
+  while shipping todo 5: quickmerge's reconcile reported this file's uncommitted edit as "GONE (content changed during
+  the reconcile)" mid-run — the edit was NOT actually lost (verified present and intact immediately after, 22 checked +
+  8 unchecked todos, no truncation), so the warning fired on a transient mid-reconcile state rather than a real loss
+  this time; recorded here rather than silently ignored, since a false-positive "GONE" warning is itself worth a future
+  look if it recurs. Todo 6: re-verified both stale BLOCKED items live — the UTL `_per_vm_shard_backlog` import is not
+  just unblocked (`git status --porcelain` empty) but the whole premise is superseded: the symbol was legitimately
+  relocated to its own module by commit `77fef206` (a real, shipped, unrelated refactor), the cited test file no longer
+  exists anywhere in the tree, and the replacement test suite passes 6/6. Slot 2 is now 0 commits behind origin with 0
+  dirty files (previously 81-behind/4-conflict-markers, then 3-behind per the 2026-08-12 STALE note) — fully
+  fast-forwarded. Both closed as resolved, not re-scoped: neither retained a "durable guard" purpose once checked, since
+  each was tied to a specific incident/file-layout that a legitimate later commit or the WIP's owner had already
+  superseded.
+
+- **2026-08-12 (todo B closed — the "118s" cost was two self-inflicted regressions, not intrinsic)**: re-profiled the
+  precommit sweep expecting to find corpus-wide checks to relocate out of the per-commit path (the todo's own framing).
+  Instead found the dominant costs were regressions THIS SESSION and an earlier one introduced:
+  `check_plan_commit_sha_evidence.py --only` (57s — todo 5's `require_reachable` reachability check running against
+  every self-citation in the whole corpus, not just staged files) and `check_ag_closeout_linkage.py` (42.7s, 31.1s
+  kernel time — a fresh corpus-wide `rglob` per legacy-form `related:` entry, pre-existing, unrelated to this session).
+  First lesson: a "shrink the critical section" todo should re-measure before assuming the original 2026-08-10 breakdown
+  (Operator-ruling evidence/depends_on-DAG/Terminal-status/Line-caps) still holds two days and several fixes later — it
+  did not. Second: my OWN fix for todo 5 introduced exactly the kind of regression this todo exists to catch, caught
+  only because I profiled again rather than trusting the "Done when" was satisfied by shipping the reachability check
+  alone. Per-check timing before fix: `plan-commit-sha-evidence` 57.0s, `check_ag_closeout_linkage` 26.0s (first pass,
+  host also running a concurrent quickmerge — see below), `check_archive_candidates` 5.0s, `finalize-plan-coverage`
+  1.0s. After both fixes, on an otherwise-idle host: total precommit sweep **20.8s** (down from 118s original / 85s this
+  session's own noisy first re-measurement), no single check over 4s. Also caught mid-session: my FIRST re-measurement
+  attempt (85s, then later a noisy 146s) was inflated by a background quickmerge I had running concurrently in the SAME
+  worktree while trying to measure an "idle" baseline — exactly the "8 concurrent hook chains inflate 19s to 118s"
+  contention mechanism F1 already describes, self-inflicted by not waiting for my own background ship to finish before
+  profiling. Fixes: unified-trading-pm@4e8447bd21 (SHA-evidence), unified-trading-pm@d85ad41fac (AG-closeout linkage).
+
+- **2026-08-12 (F9 found — the real mechanism, or at least a real one, after 3 sessions of clean negatives)**: a peer
+  agent's review correctly challenged the PREK_HOME fix as unverified against the actual reported symptom (see the
+  earlier-shipped correction to that todo). Built and ran a genuine stress test — 4 independent clones, 6 rounds each,
+  all shipping to the SAME shared file via the real `safe-doc-push.sh`, no re-pull between a worker's own rounds — and
+  it reproduced real, repeated data loss (12/18 confirmed-landed markers missing from the final tree) on a clean,
+  uninterrupted run. Traced to `_sdp_reconcile_caller_duplicates` only refreshing a caller's local copy against
+  reformatting-equivalent content, never genuinely different peer content — full mechanism and fix direction in the new
+  F9 todo above. Nearly mis-attributed this to a git-rebase bug before catching that the loop's own zsh execution
+  environment (not bash — `mapfile` doesn't exist, and bare `$var:literal` triggers zsh's history-modifier parsing and
+  silently mangles the string) had corrupted an earlier diagnostic trace, producing "0 lines everywhere" garbage that
+  briefly looked like a much stranger finding than it was. Promoted the stress harness as
+  `scripts/dev/repro-safe-doc-push-stale-local-clobber.sh`. Explicitly NOT claiming this is confirmed to be the original
+  reported mechanism — the raw logs from that report no longer exist — but it is the first REAL, reproducible data-loss
+  mechanism found in 3 sessions of testing, and the fix is not yet built.
+
+- **2026-08-12 (F9 fixed, and the earlier root-cause attribution corrected)**: the earlier entry above named
+  `_sdp_reconcile_caller_duplicates` as the mechanism; that was wrong in a specific, useful way — that function only
+  runs AFTER a successful push, to sync the CALLER's own copy back, and could not have caused the measured loss on its
+  own. Re-reading the isolation copy loop line by line found the actual defect one step earlier:
+  `cp "$_f" "$_sdp_iso_wt/$_f"` ran unconditionally, with no comparison against what the just-fetched worktree already
+  held for that path — so a peer's freshly-landed content sitting right there in the worktree got silently overwritten
+  the moment the caller's stale local copy was cp'd on top of it, before `_sdp_reconcile_caller_duplicates` ever runs.
+  Fixed by capturing the caller's true pre-fetch base blob per file (the one point where "HEAD" still means the caller's
+  own last sync, before isolation's own fetch/worktree-add), comparing it against origin's current blob right before the
+  copy, and — on any mismatch — abandoning isolated mode for that run and falling through to the existing shared-index
+  path, which reconciles through git's own ancestor-aware merge machinery and hard-stops loudly on a real conflict
+  instead of guessing. Verified: full bats suite (39/39, unchanged), and the stress-test repro run twice post-fix — 0/11
+  confirmed-landed markers missing both times (down from 12/18 missing pre-fix), with the divergent workers now failing
+  loudly (rc=3) instead of any push silently clobbering a peer. Per the standing "roll it out everywhere, not just one
+  place" instruction from earlier this session: traced quickmerge.sh's isolated mode for the identical blind-`cp` shape
+  (found at line ~1032) and confirmed — by reading STAGE 0.4's not-behind gate, not by assuming — that it is NOT
+  vulnerable: that gate runs unconditionally before any commit, even in the isolated child, and every one of its
+  branches (fast-forward, `ahead=0` working-tree-overlap block, or genuine rebase-conflict block) either succeeds
+  cleanly or hard-stops with `exit 1` — no silent-proceed path exists there. No fix needed in quickmerge.sh; this was
+  checked, not skipped. Full detail in the F9 todo above.

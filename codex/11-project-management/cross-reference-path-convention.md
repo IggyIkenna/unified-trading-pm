@@ -99,13 +99,16 @@ The hygiene check is deterministic: does this path exist, is it in the right for
 `/plan-reconcile`'s AO-dispatch-readiness + contradiction-sweep phases are the right home for these — see
 `cursor-configs/skills/plan-reconcile/SKILL.md`.
 
-## Archival must update referrers — the gap this exposed
+## Archival must update referrers — gap closed
 
-`CLAUDE.md`'s "5-step archival ritual" (migrate DEFERRED → banner → codex-alignment check → update CLAUDE.md/codex →
-clear lock) does not name a "update every referrer's path" step — checked 2026-07-23, it was never there to break.
-Empirically, `plans/archive/` holds 1,564 files, so plans DO get physically moved by some process — meaning a
-leading-slash-rooted reference to a plan that later gets archived-by-move (`/plans/active/<slug>.md` →
-`/plans/archive/<year_month>/<slug>.md`) still breaks; the leading-slash convention fixes reference fragility from the
-CITING file moving, not from the TARGET moving. Archival must add a 6th step: grep the corpus for every referrer of the
-doc being archived/moved/renamed, and update each one's reference to the new path — tracked as its own todo, see the
-issue doc above.
+Checked 2026-07-23: the then-current 5-step archival ritual (migrate DEFERRED → banner → codex-alignment check → update
+CLAUDE.md/codex → clear lock) did not name a "update every referrer's path" step. Empirically, `plans/archive/` holds
+1,564+ files, so plans DO get physically moved by some process — meaning a leading-slash-rooted reference to a plan that
+later gets archived-by-move (`/plans/active/<slug>.md` → `/plans/archive/<year_month>/<slug>.md`) still breaks; the
+leading-slash convention fixes reference fragility from the CITING file moving, not from the TARGET moving.
+
+**This gap is now closed**: the ritual's SSOT, `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` §
+"The 6-step archival ritual", carries the fix as step 5 — "Update every referrer's path corpus-wide" (grep the whole
+corpus for the old doc's path and fix each hit, including migrating any cited fact/number into a codex SSOT rather than
+repointing the citation at the archived plan itself). See that doc for the full ritual and the referrer-fixup detail;
+don't duplicate it here.

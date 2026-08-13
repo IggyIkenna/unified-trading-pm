@@ -81,7 +81,10 @@ ships TS types only, from already-committed `*.openapi.json/yaml`, not a fresh a
 original plan's operator mandate, no new CI infrastructure was built to work around this — the todo stayed open, blocked
 on a `.venv-workspace`-capable CI runner being provisioned (operator action).
 
-- [ ] [SCRIPT] P1. Fresh full run of `generate-unified-openapi.sh`; commit regenerated outputs; verify
+- [x] ✅ [SCRIPT] P1. **DONE — flipped 2026-08-12 (/plan-reconcile).** Fresh full run completed + committed via
+      `venv_workspace_openapi_regen_batch11_findings_2026_08_09.md` todo 1: `unified-api-contracts@7896deda`,
+      `check_openapi_drift.py` QG green (301s, sentinel matched HEAD), verified `7896deda` an ancestor of
+      `origin/live-defi-rollout`. Fresh full run of `generate-unified-openapi.sh`; commit regenerated outputs; verify
       `check_openapi_drift.py` quality gate is green and actually fires on synthetic drift. **PARTIAL 2026-06-11
       (capability-exporter, slot-4):** UAC-importable outputs regenerated + committed — `ui-reference-data.json`
       (byte-identical to committed = already current post-Phase-0), `capability-manifest.json` (new,
@@ -126,17 +129,21 @@ risk that held it back rather than working around it. This checkbox stays open h
 finding.
 
 **RECONCILED 2026-08-09 (batch 11 finalize twin) — checkbox stays OPEN, `BLOCKED-EXTRACTION-REGRESSION`, nothing
-committed.** Batch 11's todo 1 ran to completion but landed on its own explicitly-valid blocked outcome, not a shipped
-commit: `.venv-workspace` was fixed (root cause was `setup-workspace-venv.sh` never applying a repo's own
-`[tool.uv].override-dependencies` during editable installs, permanently blocking `execution-service` and its dependents
-— fixed and shipped at `unified-trading-pm@026a84d6f6`), every real service now imports cleanly, and
-`generate-unified-openapi.sh` ran end-to-end producing a fresh `unified-trading-system.openapi.json` that improved on
-every metric (473→628 paths, 105→353 schemas, no regression). But the mandatory extraction-count checkpoint caught a
-genuine per-metric regression on `config-registry.json`: `total_repos` 19→14 (though `total_configs` rose 26→30) versus
-the committed baseline. Root-caused (not auto-resolved): the 7 "missing" repos are exactly the phantom per-family
-services (`features-calendar-service`, `features-commodity-service`, `features-cross-instrument-service`,
-`features-delta-one-service`, `features-multi-timeframe-service`, `features-sports-service`, `ml-inference-service`)
-that `generate_config_registry.py`'s own header comment says were consolidated 2026-06-11 into
+committed.** **CORRECTED 2026-08-12 (/plan-reconcile)**: this "nothing committed" status is now stale.
+`issues/venv_workspace_openapi_regen_batch11_findings_2026_08_09.md` (same day) shows the regen was actually committed
+and shipped: `unified-api-contracts@7896deda` (verified an ancestor of `origin/live-defi-rollout`). See that doc for the
+current outcome — the extraction is done, not blocked. Batch 11's todo 1 ran to completion but landed on its own
+explicitly-valid blocked outcome, not a shipped commit: `.venv-workspace` was fixed (root cause was
+`setup-workspace-venv.sh` never applying a repo's own `[tool.uv].override-dependencies` during editable installs,
+permanently blocking `execution-service` and its dependents — fixed and shipped at `unified-trading-pm@026a84d6f6`),
+every real service now imports cleanly, and `generate-unified-openapi.sh` ran end-to-end producing a fresh
+`unified-trading-system.openapi.json` that improved on every metric (473→628 paths, 105→353 schemas, no regression). But
+the mandatory extraction-count checkpoint caught a genuine per-metric regression on `config-registry.json`:
+`total_repos` 19→14 (though `total_configs` rose 26→30) versus the committed baseline. Root-caused (not auto-resolved):
+the 7 "missing" repos are exactly the phantom per-family services (`features-calendar-service`,
+`features-commodity-service`, `features-cross-instrument-service`, `features-delta-one-service`,
+`features-multi-timeframe-service`, `features-sports-service`, `ml-inference-service`) that
+`generate_config_registry.py`'s own header comment says were consolidated 2026-06-11 into
 `features-service`/`ml-service` monorepos — the committed baseline predates that consolidation-aware script update and
 was never regenerated since, which is the whole premise of this Residual. Per the batch11 todo's own non-discretionary
 checkpoint rule, the worker discarded the generated outputs (`git checkout --`) rather than commit and did not override

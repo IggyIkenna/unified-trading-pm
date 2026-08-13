@@ -2,8 +2,9 @@
 doc_type: codex-ssot
 title: TradFi Data Types Catalog
 summary:
-  Catalog of the 9 MTDS TradFi data types (ohlcv_1s/1m/15m/24h; tbbo/trades/mbp_10 DEFERRED; corporate_action_confirmed,
-  earnings_result, macro_result) — sources, per-venue genesis floors, shard keys, and coverage axes.
+  Catalog of the 10 MTDS TradFi data types (ohlcv_1s/1m/15m/24h; tbbo/trades/mbp_10 DEFERRED;
+  corporate_action_confirmed, earnings_result, macro_result) — sources, per-venue genesis floors, shard keys, and
+  coverage axes.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -22,7 +23,7 @@ created: 2026-05-24
 authoritative_for: [MTDS TradFi data_type catalog, TradFi deferred tick-data suppression (tbbo/trades/mbp_10)]
 referenced_by: [/codex/02-data/README.md, /codex/02-data/tradfi-databento-sourcing-ssot.md]
 owner:
-last_reviewed: 2026-05-24
+last_reviewed: 2026-08-12
 code_refs:
 ---
 
@@ -33,9 +34,10 @@ code_refs:
 
 ## Overview
 
-MTDS collects TradFi market data in 9 distinct data types across market data, reference data, and macro domains. Each
-data type maps to one MTDS CLI operation (`--operation collect-<type>`), one or more venues, and a canonical GCS path
-under the TradFi tick-data bucket.
+MTDS collects TradFi market data in 10 distinct data types across market data, reference data, and macro domains
+(`ohlcv_1s` was added 2026-06-18 as data type 1b, alongside `ohlcv_1m`, without renumbering the rest — see § "1b.
+ohlcv_1s" below). Each data type maps to one MTDS CLI operation (`--operation collect-<type>`), one or more venues, and
+a canonical GCS path under the TradFi tick-data bucket.
 
 `trades` and `tbbo` are **DEFERRED to post-cutover** — OHLCV-only MVP per operator direction 2026-05-15 (see
 `plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`). `mbp_10` is also deferred (L2 order book). All three are
@@ -221,16 +223,16 @@ historical CME reference windows are preserved in `_DEFERRED_VENUE_DATA_TYPE_COV
 
 ### 7. corporate_action_confirmed
 
-| Field               | Value                                                                                                                      |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| **CLI operation**   | `collect-corporate-actions` (corporate_action_handler)                                                                     |
-| **Sources**         | Polygon.io corporate actions API (`api.polygon.io/v3/reference/dividends`, `/splits`)                                      |
-| **Shard key**       | venue × date (one shard per exchange per day)                                                                              |
-| **Instrument type** | `equity`                                                                                                                   |
-| **Status**          | Production (reference data; daily batch)                                                                                   |
-| **Schema fields**   | symbol, ts_event, venue, action_type, ex_date, record_date, pay_date, ratio, from_factor, to_factor, cash_amount, currency |
-| **Venues**          | NASDAQ, NYSE, ICE                                                                                                          |
-| **Requires**        | `polygon-api-key` (Secret Manager)                                                                                         |
+| Field               | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **CLI operation**   | `collect-corporate-actions` (corporate_action_handler)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| **Sources**         | Polygon.io corporate actions API (`api.polygon.io/v3/reference/dividends`, `/splits`) — **⚠ Polygon.io (`Massive-fka-Polygon.io`) is a fleet-wide BANNED vendor** per `/CLAUDE.md` § "Removed vendors" (operator ruling 2026-07-19/2026-08-02/2026-08-03 removed it as the TradFi market-data + instruments-service reference-data source). This specific `corporate_action_confirmed` path is a DIFFERENT code path (`features-service/features_service/calendar/adapters/polygon_corporate_actions_adapter.py`) that those removal passes never touched — verified 2026-08-12 still live/wired/tested in the checked-out repo. Not re-verified against live prod traffic this pass; flagging the ban-vs-still-wired contradiction rather than asserting either "removed" or "still fine to use." |
+| **Shard key**       | venue × date (one shard per exchange per day)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **Instrument type** | `equity`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| **Status**          | Production (reference data; daily batch)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| **Schema fields**   | symbol, ts_event, venue, action_type, ex_date, record_date, pay_date, ratio, from_factor, to_factor, cash_amount, currency                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **Venues**          | NASDAQ, NYSE, ICE                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **Requires**        | `polygon-api-key` (Secret Manager)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 Confirmed corporate actions — stock splits, reverse splits, cash dividends, spin-offs. `action_type` is a closed set:
 `split`, `dividend`, `spinoff`. `ex_date` is the ex-dividend / ex-split date (the day the action takes effect on price).
@@ -282,17 +284,17 @@ for macro-regime signals and by strategy-service for rate-sensitivity modelling.
 
 ## Venue Coverage Matrix
 
-| venue    | MVP data_types             | status     | notes                                                                                 |
-| -------- | -------------------------- | ---------- | ------------------------------------------------------------------------------------- |
-| CBOE     | ohlcv_15m                  | Production | Options index only (limited Databento subscription)                                   |
-| CME      | ohlcv_1m                   | Production | Databento GLBX.MDP3; genesis floor **2020-01-01**; tbbo + mbp_10 post-cutover         |
-| FX       | ohlcv_24h                  | Production | Daily only (cost envelope); G10 crosses via FRED + Yahoo Finance                      |
-| ICE      | (DXY only)                 | Production | **Yahoo Finance (DXY), NOT Databento** — IFUS/IFEU out of subscription (UAC@5480f5d5) |
-| NASDAQ   | ohlcv_1m                   | Production | Equity venue; Databento floor 2023-04-15; trades post-cutover                         |
-| NYSE     | ohlcv_1m                   | Production | Equity venue; Databento floor 2023-04-15; trades post-cutover                         |
-| FRED     | macro_result               | Production | All FRED series IDs registered in UAC `registry/capability_declarations/_tradfi.py`   |
-| POLYGON  | corporate_action_confirmed | Production | Dividends/splits via reference data APIs; `polygon-api-key` required                  |
-| YFINANCE | earnings_result            | Production | Earnings actuals/estimates (`YFinanceEarningsAdapter`); keyless                       |
+| venue    | MVP data_types             | status     | notes                                                                                                                                                                                                           |
+| -------- | -------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CBOE     | ohlcv_15m                  | Production | Options index only (limited Databento subscription)                                                                                                                                                             |
+| CME      | ohlcv_1m                   | Production | Databento GLBX.MDP3; genesis floor **2020-01-01**; tbbo + mbp_10 post-cutover                                                                                                                                   |
+| FX       | ohlcv_24h                  | Production | Daily only (cost envelope); G10 crosses via FRED + Yahoo Finance                                                                                                                                                |
+| ICE      | (DXY only)                 | Production | **Yahoo Finance (DXY), NOT Databento** — IFUS/IFEU out of subscription (UAC@5480f5d5)                                                                                                                           |
+| NASDAQ   | ohlcv_1m                   | Production | Equity venue; Databento floor 2023-04-15; trades post-cutover                                                                                                                                                   |
+| NYSE     | ohlcv_1m                   | Production | Equity venue; Databento floor 2023-04-15; trades post-cutover                                                                                                                                                   |
+| FRED     | macro_result               | Production | All FRED series IDs registered in UAC `registry/capability_declarations/_tradfi.py`                                                                                                                             |
+| POLYGON  | corporate_action_confirmed | Production | Dividends/splits via reference data APIs; `polygon-api-key` required. **⚠ Polygon.io is a fleet-wide banned vendor (see §7 note) — this row is about the banned DATA VENDOR, not the unrelated Polygon CHAIN.** |
+| YFINANCE | earnings_result            | Production | Earnings actuals/estimates (`YFinanceEarningsAdapter`); keyless                                                                                                                                                 |
 
 ---
 
@@ -319,7 +321,7 @@ for macro-regime signals and by strategy-service for rate-sensitivity modelling.
 | Secret Manager key  | Data types                                                                             |
 | ------------------- | -------------------------------------------------------------------------------------- |
 | `databento-api-key` | ohlcv_1m, ohlcv_15m, tbbo (deferred), trades (deferred), mbp_10 (deferred)             |
-| `polygon-api-key`   | corporate_action_confirmed (dividends/splits only)                                     |
+| `polygon-api-key`   | corporate_action_confirmed (dividends/splits only) — banned-vendor caveat, see §7      |
 | `fred-api-key`      | macro_result (public FRED API available but rate-limited; Secret Manager key for prod) |
 | _(none — keyless)_  | earnings_result (yfinance via `YFinanceEarningsAdapter`)                               |
 

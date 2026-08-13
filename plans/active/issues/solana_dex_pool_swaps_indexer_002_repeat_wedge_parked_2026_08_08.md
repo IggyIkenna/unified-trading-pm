@@ -98,9 +98,14 @@ tier=1/priority=20 pool and got re-picked by the very next free slot).
       `market-tick-data-service@3619f9e2` (ORCA Whirlpool fetch+decoder, 24 tests, QG green), and
       `/plans/active/solana_dex_pool_swaps_indexer_2026_08_08.md` item 2 is already checked off. There is nothing left
       to redispatch — `unpark` would just release a parked-but-already-complete task back into rotation for no reason.
-- [ ] [REVIEW] P3. Once unparked and re-dispatched, independently verify via
-      `GET /api/activity?task=solana_dex_pool_swaps_indexer-002` (or per-slot) that it completes a full boot->work->done
-      cycle without re-wedging. Repo: unified-trading-pm (verification + checkbox flip only).
+- [ ] [REVIEW] P3. **CORRECTED 2026-08-12 (/plan-reconcile)**: the todo above (todo 3) already established there is
+      nothing left to unpark — the underlying indexer task shipped and `unpark` would just release a
+      parked-but-already-complete task back into rotation for no reason. This todo's premise ("once unparked") therefore
+      does not currently apply; only relevant if `solana_dex_pool_swaps_indexer-002` is independently unparked/reused
+      for unrelated future work. If that never happens, this todo is moot and should be closed alongside todo 3. Once
+      unparked and re-dispatched, independently verify via `GET /api/activity?task=solana_dex_pool_swaps_indexer-002`
+      (or per-slot) that it completes a full boot->work->done cycle without re-wedging. Repo: unified-trading-pm
+      (verification + checkbox flip only).
 
 ## Progress log
 

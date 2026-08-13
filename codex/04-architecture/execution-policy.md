@@ -169,6 +169,15 @@ Strategies may use the cost model at emission time (for net-edge go/no-go); exec
 
 ## Policy registry
 
+> **SPEC, not shipped (verified 2026-08-12).** The REST surface below does not exist. What exists is
+> `execution-service/execution_service/v2/execution_policies.py`: the artifact dataclasses (`ExecutionPolicyArtifact` /
+> `AppliesTo` / `PolicyRule`), content-hashing, and the full first-match-wins / default-deny rule evaluator — faithful
+> to this doc's contract, and **with zero consumers.** The types appear only in `v2/__init__.py` re-export plumbing;
+> `register()` is in-memory, there is no `client_id` / `slot_label` keying, no GCS loader and no hot reload. Separately,
+> the `config_algorithm` hook that would carry a resolved policy into `selector.select_algorithm()` is threaded through
+> three levels and **supplied by no call site**. So policies are currently a correct artifact nothing evaluates. Wiring
+> plan: `/plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` §§ B, G.
+
 Registry service holds all published policies:
 
 ```
@@ -266,10 +275,10 @@ After N ticks, promote shadow to primary if exec-alpha improves.
 If a resolved algo or param is invalid (algo deprecated, param out of range), execution emits `POLICY_RESOLUTION_FAILED`
 and falls back to `execution_policy_fallback_ref` if declared, else `INSTRUCTION_REJECTED_EXECUTION`.
 
-> **SPEC, not shipped (verified 2026-07-31).** Neither `POLICY_RESOLUTION_FAILED` nor
-> `INSTRUCTION_REJECTED_EXECUTION` exists in code. The shipped analogue on the RISK side is
-> `INSTRUCTION_REJECTED_RISK` (UAC `canonical/crosscutting/risk_rule/_events.py`) — the execution-side counterparts
-> still need to be added to the instruction-lifecycle event set.
+> **SPEC, not shipped (verified 2026-07-31).** Neither `POLICY_RESOLUTION_FAILED` nor `INSTRUCTION_REJECTED_EXECUTION`
+> exists in code. The shipped analogue on the RISK side is `INSTRUCTION_REJECTED_RISK` (UAC
+> `canonical/crosscutting/risk_rule/_events.py`) — the execution-side counterparts still need to be added to the
+> instruction-lifecycle event set.
 
 ## Security / change control
 

@@ -12,7 +12,7 @@ summary: >-
   established batch6/7/8/9 precedent of NOT drafting into docs whose parent_epic routes ownership elsewhere). Conflict
   -checked against every active tradfi covering doc plus the cross-cutting governance_sweep_deferred_followups conflict
   batch8 already found (still unresolved) — zero NEW collisions found among this batch's own 14 todos.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -33,7 +33,7 @@ related:
 created: "2026-08-10"
 last_updated: "2026-08-10"
 parent_epic: tradfi_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: local-only
 priority: P1
 estimate_class: infra
@@ -227,10 +227,12 @@ different tranche by `parent_epic` (`## Flagged`, following the established batc
 
 ## Deferred — operator-gated (a ruling unblocks these; unchanged, NOT re-asked if already asked)
 
-- **`issues/tradfi_databento_account_billing_suspended_2026_08_09.md`** — operator must pay the outstanding Databento
-  bill; vendor restores account-wide access. Gates `data_completion_tradfi_2026_07_15.md` items 4/5/6/9,
-  `tradfi_phase_d_terminal_gate_2026_07_24.md`'s P0/P1. **Escalating this prominently in the Phase 2 report** — it has
-  sat blocked since 2026-08-09 and gates multiple other orphaned docs' items.
+- ~~`issues/tradfi_databento_account_billing_suspended_2026_08_09.md`~~ — **RESOLVED 2026-08-10 13:05:30 UTC**
+  (`unified-trading-pm@5ed8364ccb`): `metadata.list_datasets()` succeeded (29 datasets, no auth/suspended error),
+  corroborated by real metered pulls (GLBX.MDP3 ES.FUT, XCBF.PITCH VX.FUT) the same day. This entry was drafted 01:24:46
+  UTC that morning, before the 13:05 resolution — corrected 2026-08-12 (/plan-reconcile). The formerly-gated items
+  (`data_completion_tradfi_2026_07_15.md` 4/5/6/9, `tradfi_phase_d_terminal_gate_2026_07_24.md` P0/P1) are
+  billing-unblocked; any remaining hold on them is from an unrelated gate (see that gate doc directly).
 - **`issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`** item 3 (P2-OPERATOR-DECISION) — genuine design
   call on which `canonicalize_raw_tradfi_id` reverse-derivation direction consumers actually need; interim skip-marked
   test, not worker-determinable.

@@ -171,7 +171,8 @@ SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
   `time_created` not `updated`), NEVER activity** — an entity-agnostic check passes for hours while the target writes
   ZERO rows; monitors read terminal `exit_code` + manifest counts + log-mtime → a TERMINAL **measured** verdict
   (liveness `kill -0 <PID>`, no self-match); `ScheduleWakeup` / a dispatched sub-agent are NOT reliable wakes — arm your
-  OWN `run_in_background` heartbeat watchdog (≤30-min) in the SAME turn. SSOT:
+  OWN `run_in_background` heartbeat watchdog (size-to-job — unbounded work ≤30-min, a KNOWN-duration VM job gets ONE
+  monitor sized to its own documented duration, never a ≤30-min re-arm chain) in the SAME turn. SSOT:
   `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 - **Batch independent tool calls — the trigger is PRE-call**: before any Bash/Read/Grep ask _what else will I want to
   know regardless of this answer_, and fold it into the SAME call (compound `&&`/`;`, several `tool_use` blocks per
@@ -360,9 +361,10 @@ architecture (L0–L4)".
   sonnet-tier dispatch (DeepSeek = baseline fallback). SSOT: `/codex/15-runbooks/safe-service-restart-procedures.md`.
 - **AO scheduled jobs (systemd timers / status model / capacity queue)?** `dispatched` = spawn receipt, NOT completion
   (`agent_exit_reason == "lifecycle-complete"` is done); `git pull` does NOT reinstall a timer — re-run
-  `sudo bash scripts/install-<job>-timer.sh`; `no_capacity` is legacy (queue-on-no-capacity default);
-  `quarantined/timeout/error` page, `dispatched/queued` don't. SSOT:
-  `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md`.
+  `bash scripts/install-<job>-timer.sh` (**no `sudo`** — CORRECTED 2026-08-12 (/plan-reconcile): all 8 installers
+  converted to `systemd --user` units 2026-08-08 (`agent-orchestrator@c3a85c3b4`) and now hard-fail under `sudo`, per
+  the codex SSOT below); `no_capacity` is legacy (queue-on-no-capacity default); `quarantined/timeout/error` page,
+  `dispatched/queued` don't. SSOT: `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
   IS→MTDS→features-onchain→strategy→execution; Pyth Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT:
   `/codex/04-architecture/defi-execution-overview.md`.

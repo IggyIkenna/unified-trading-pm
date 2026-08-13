@@ -508,8 +508,8 @@ credits. Tracked todos below.
       backfill VMs (`sfi-backfill-20260806-140815`,`-20260807-101503`,`-20260807-123519`) — all completed cleanly
       despite hitting real transient errors mid-run, each correctly shard-isolated without stalling. No code change
       needed. Distinct low-frequency data-quality finding (JSON truncation, not a hang) filed as
-      `/plans/active/issues/sfi_progressive_stats_json_truncation_2026_08_09.md`. Repo: instruments-service (verified,
-      no change needed) / deployment-service (verified, no change needed).
+      `/plans/archive/2026_08/issues/sfi_progressive_stats_json_truncation_2026_08_09.md`. Repo: instruments-service
+      (verified, no change needed) / deployment-service (verified, no change needed).
 - [ ] [SCRIPT] P2. **DEFERRED** — the silent-worker watchdog (already a pending residual) is the systemic fix for the
       gas/sfi "VM RUNNING but work-process silent, log-tee daemon alive" class: detect work-process silence (run.log
       object mtime frozen N min while VM RUNNING) and auto-kill+alert, distinct from the existing heartbeat watchdog.

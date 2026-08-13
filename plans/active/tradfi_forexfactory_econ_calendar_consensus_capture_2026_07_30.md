@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [tradfi, macro, economic-calendar, consensus, forexfactory, scraper, features-service]
 related:
   [
-    /plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md,
+    /plans/archive/2026_08/issues/macro_micro_econ_data_capture_audit_2026_06_05.md,
     /plans/archive/2026_07/macro_econ_adapter_scaffolds_2026_06_09.md,
     /plans/archive/issues/tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md,
     /plans/archive/corporate_actions_+_earnings_to_calendar_56d63c2c.plan.md,

@@ -14,7 +14,7 @@ scope: [engineer, admin]
 tags: [role, plan_reconciler, reconciliation, plan-hygiene, ci, sharded-run]
 related:
   [
-    /plans/active/issues/plan_reconciler_findings_ci_2026_08_09.md,
+    /plans/archive/2026_08/issues/plan_reconciler_findings_ci_2026_08_09.md,
     /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
   ]
 created: "2026-08-10"
@@ -330,7 +330,7 @@ Writable set (32 docs, outside 12h grace):
 - plans/active/issues/operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md
 - plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md
 - plans/active/issues/plan_reconciler_ci_late_findings_2026_08_06.md
-- plans/active/issues/plan_reconciler_findings_ci_2026_08_09.md
+- plans/archive/2026_08/issues/plan_reconciler_findings_ci_2026_08_09.md
 - plans/active/issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md
 - plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md
 - plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md
@@ -344,7 +344,7 @@ Writable set (32 docs, outside 12h grace):
 - plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
 - plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md
 - plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md
-- plans/active/ui_build_warm_cache_2026_06_17.md
+- plans/archive/2026_08/ui_build_warm_cache_2026_06_17.md
 
 **6 parallel read-only hunter sub-agents** (sonnet, `SUB_AGENT_MANDATORY_RULES.md` pasted in full at each spawn),
 covering all 30 of the 32 writable docs not already fully read directly by me

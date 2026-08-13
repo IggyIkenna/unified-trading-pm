@@ -150,6 +150,41 @@ test was wrong. **The test is not "does this feel like a judgment call?" — it 
 they conflict, which side is authoritative and why, and options with the recommendation marked FIRST. Recurring classes
 get ONE class-level question with per-item exceptions (the 16-row fold table was approved as a single question).
 
+### No-defer default (added 2026-08-12) — every finding resolves to fix-or-ask, never a wholesale backlog dump
+
+**Real gap this closes**: the 2026-08-12 full-corpus run surfaced 121 contradictions + 43 done-but-unchecked/zero-
+checkbox docs, correctly drove all 6 P0 + 37 P1 + 4 judgment calls to resolution — then wrote the remaining ~150 P2/P3
+items into a findings doc's "compact backlog" section verbatim, untouched, "for a future pass." That is a violation of
+this skill's own no-silent-drop principle (Phase 5.9), just with a longer fuse — a finding sitting unfixed AND unasked
+in a doc nobody is pinged to read is exactly as lost as one dropped from the report.
+
+**Every confirmed finding, at every severity, must land on exactly one of three outcomes in the SAME run** — there is no
+fourth "log it for later" outcome as a default:
+
+1. **Auto-fix** per Phase 4's table (this covers most P2/P3 — stale banners, frontmatter drift, dangling refs, checkbox
+   mismatches are all provable-from-evidence, so FIX them, don't just describe them).
+2. **Ask** (interactive) — see routing below. High volume is a batching problem, not a reason to skip: a cluster of
+   near-identical low-severity findings (e.g. "N docs have a stale `last_updated`") is ONE class-level question, not N
+   individual ones and not zero.
+3. **Escalate** (autonomous/AO) — a `BLOCKED-OPERATOR-DECISION` entry per class (or per item if the class doesn't
+   generalize), same mechanism Phase 4 already uses for P0/P1 judgment calls, extended to every severity.
+
+A findings doc enumerating remaining items is still fine as the durable RECORD of what happened to each — it just can't
+be the disposition itself. If a run genuinely runs out of budget/time before finishing the fix-or-ask pass on the full
+backlog, that is allowed, but it must be stated OUT LOUD to the operator (interactive: say so in the Phase 6 report and
+name what's left) or in the issue doc's header (autonomous: an explicit `PARTIAL — remaining items not yet resolved`
+banner, not a silent "Section 3" with no disposition marker) — never presented as if the run finished when a few hundred
+items were only ever catalogued.
+
+**Route by mode, same split as the rest of this skill:**
+
+- **Interactive (operator in a laptop session)**: the MAIN agent — not a sub-agent — asks directly in the chat, batched
+  per the rule above. Sub-agents may VERIFY and PROPOSE a fix, but the ask itself goes through the main agent so the
+  operator only ever sees one coherent Q&A stream, not N parallel sub-agent prompts.
+- **Autonomous / AO-dispatched**: escalate to a human via the AO escalation queue exactly as Phase 4 already does for
+  P0/P1 — this is not new machinery, only a wider scope (every severity, not just the ones that used to feel like "real"
+  judgment calls).
+
 ## Phase 0 — deterministic inventory (cheap, no agents)
 
 Write a throwaway script (scratchpad, NOT the repo; line-based frontmatter parse, no regex backtracking, never
@@ -556,10 +591,11 @@ hourly cadence because a whole-corpus run MEASURED 4175s (69.6min) on 2026-07-30
 past the 15-min inter-job stagger the hourly schedule assumed; the unit's `TimeoutStartSec` went 2450 → 6000 in the same
 change. If a run ever needs more than ~2h, shard it by tranche (this skill already supports that) rather than growing
 one monolithic run's budget again. The timer POSTs `{"mode": "reconcile"}` to `/api/plan-health/dispatch`, which spawns
-the worker (opus / effort max / thinking on) on a free Max-plan slot. The autonomous contract above (no pauses, auto-fix
-only, park rulings, notify on big findings) is exactly the non-interactive behaviour that daily worker runs under. This
-skill (`/plan-reconcile`) stays directly invocable interactively any time — the timer is additive, not a replacement for
-an on-demand run.
+the worker (sonnet / effort max / thinking on — CORRECTED 2026-08-13, this previously said opus, stale against
+`agents/plan_reconciler.md`'s own `model: sonnet` frontmatter and CLAUDE.md's 2026-08-08 "opus is manual-only" ruling)
+on a free Max-plan slot. The autonomous contract above (no pauses, auto-fix only, park rulings, notify on big findings)
+is exactly the non-interactive behaviour that daily worker runs under. This skill (`/plan-reconcile`) stays directly
+invocable interactively any time — the timer is additive, not a replacement for an on-demand run.
 
 ## Codex SSOTs
 

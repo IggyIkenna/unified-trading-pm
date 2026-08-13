@@ -330,17 +330,82 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
 
 ## Deferred work after 2026-08-12
 
-| item                                                               | state / why deferred                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | blocked on                                                                                                                                                                                                                         |
-| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`scripts/dev/audit-stash-pile.sh` retention class — ✅ SHIPPED** | **✅ Done — unified-trading-pm@b2b77fa9a2** (verified on origin by marker: 4 `stale-autostash` + 5 `prune-age-days` occurrences in the origin blob; `ahead=0`). Re-verified against the regrown pile before shipping: 14d -> 0 droppable, 1d -> 22 droppable/8 protected, 0 -> exact pre-change parity (30 WIP), non-integer -> exit 2, 0 safety-snapshots ever auto-dropped.                                                                                                                                                                               | Nothing — the "blocker" below was never real. Full green QG (exit 0) then quickmerge.                                                                                                                                              |
-| **Codex freshness gate RED, fleet-wide**                           | **✅ Not a blocker — this row was wrong.** The 6-doc RED was a checker bug, not debt: the baseline stores repo-relative paths while the old checker emitted workspace-relative ones, so every already-baselined violation re-reported as NEW. Fixed on origin as `9343990a17`; a `git pull` (this slot was 32 behind) flipped the verdict to `✅ At-or-below baseline (0 new; 6 known, 6 at baseline)` with no doc edited. The tell was the count: all 6 "new" violations were exactly the 6 known-at-baseline ones — a set-mismatch signature, not ageing. | Nothing. Two follow-ups (gate should exempt retired docs; endgame for the 3 `status: superseded` docs) are tracked in `/plans/active/issues/codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md`. |
-| **3 peer issue docs still untracked**                              | **Not done.** `ao_done_gate_…2026_08_02`, `infra_satellite_batch10_…2026_08_09`, `tradfi_finding_e1_…2026_08_03` — valid frontmatter, open todos, untracked up to 10 days. Rescue attempted; blocked by `check_ag_closeout_linkage` (each single-AG doc needs a path to its AG closeout plan, and **no `ao_consolidated_closeout` plan exists** for the `[ao]` one). Left exactly as found — no worse off than the prior 10 days.                                                                                                                           | Deciding the `[ao]` closeout target, or creating one.                                                                                                                                                                              |
-| **Parked MTDS duplicate refactor**                                 | **Operator-owned.** Preserved as slot-3 stash `slot3-mtds-superseded-by-b13e3a2b-20260812`; believed fully superseded by `b13e3a2b`.                                                                                                                                                                                                                                                                                                                                                                                                                        | Operator confirmation — see `/plans/active/issues/mtds_duplicate_file_split_refactor_two_sessions_2026_08_12.md`.                                                                                                                  |
+| item                                                               | state / why deferred                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | blocked on                                                                                                                                                                                                                         |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`scripts/dev/audit-stash-pile.sh` retention class — ✅ SHIPPED** | **✅ Done — unified-trading-pm@b2b77fa9a2** (verified on origin by marker: 4 `stale-autostash` + 5 `prune-age-days` occurrences in the origin blob; `ahead=0`). Re-verified against the regrown pile before shipping: 14d -> 0 droppable, 1d -> 22 droppable/8 protected, 0 -> exact pre-change parity (30 WIP), non-integer -> exit 2, 0 safety-snapshots ever auto-dropped.                                                                                                                                                                                                                                                                               | Nothing — the "blocker" below was never real. Full green QG (exit 0) then quickmerge.                                                                                                                                              |
+| **Codex freshness gate RED, fleet-wide**                           | **✅ Not a blocker — this row was wrong.** The 6-doc RED was a checker bug, not debt: the baseline stores repo-relative paths while the old checker emitted workspace-relative ones, so every already-baselined violation re-reported as NEW. Fixed on origin as `9343990a17`; a `git pull` (this slot was 32 behind) flipped the verdict to `✅ At-or-below baseline (0 new; 6 known, 6 at baseline)` with no doc edited. The tell was the count: all 6 "new" violations were exactly the 6 known-at-baseline ones — a set-mismatch signature, not ageing.                                                                                                 | Nothing. Two follow-ups (gate should exempt retired docs; endgame for the 3 `status: superseded` docs) are tracked in `/plans/active/issues/codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md`. |
+| **3 peer issue docs still untracked**                              | **Not done.** `ao_done_gate_…2026_08_02`, `infra_satellite_batch10_…2026_08_09`, `tradfi_finding_e1_…2026_08_03` — valid frontmatter, open todos, untracked up to 10 days. Rescue attempted; blocked by `check_ag_closeout_linkage` (each single-AG doc needs a path to its AG closeout plan, and **no `ao_consolidated_closeout` plan exists** for the `[ao]` one). ✅ **Done — all three committed in `be586ce87b`.** Correction to this row's own claim: two `ao_consolidated_closeout` plans DID exist, both ARCHIVED; none was ACTIVE. Fixed by opening `/plans/active/ao_consolidated_closeout_2026_08_12.md` and adding the missing `infra` mention. | Nothing.                                                                                                                                                                                                                           |
+| **Parked MTDS duplicate refactor**                                 | ✅ **Done.** Operator ran the drop 2026-08-12 (agents are guardrail-blocked from `git stash drop`, correctly). Verified after: `git stash list` empty in market-tick-data-service, tree clean. Archived first as stash sha `1129da62` in the bundle.                                                                                                                                                                                                                                                                                                                                                                                                        | Operator confirmation — see `/plans/active/issues/mtds_duplicate_file_split_refactor_two_sessions_2026_08_12.md`.                                                                                                                  |
 
-**Recommended NEXT item** (revised 2026-08-12, after the two rows above closed): the 3 peer issue docs still untracked.
-The freshness gate never needed the 6 re-reviews this table asked for, and the retention guard has shipped — so the only
-work left here that loses something if ignored is the untracked docs, which carry open todos and exist on exactly one
-disk.
+**All four rows of this table are now closed** (final revision 2026-08-12). Nothing in it is at risk; the entries are
+kept as the record of what each turned out to be, because two of the four were wrong in instructive ways.
+
+**Recommended NEXT item** (written 2026-08-12, ✅ **since DONE** — kept for provenance): the P2 in
+`/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md` — make consumer-vs-template drift
+fail in the CONSUMER's own gate. Shipped `unified-trading-pm@2b4bee96d3` as `base-service.sh` STEP 5.108 + `base-ui.sh`
+`[5.108]`. Both `[SCRIPT] P3`s below (stash-report frontmatter, slot-aware `--host` default) shipped in the same commit.
+
+Doing that work surfaced a defect worth more than any of the three: `mktemp /tmp/name-XXXX.md` does not substitute — BSD
+`mktemp` expands only TRAILING X's — so four call sites in this repo were creating a FIXED filename in a shared `/tmp`.
+Two concurrent runs collide 100% of the time and a run that dies before cleanup wedges every later run host-wide. It
+failed two PM gates in a row here while a peer slot gated concurrently, and it presents as a flake, so re-running
+"works" often enough to keep it alive. Fixed in the same commit; see the `[DOCS] P3` in the cloudbuild issue doc for the
+codex write-up.
+
+## Operator rulings + actions 2026-08-12
+
+- **Retention default changed to 2 days (48h), not 14.** Operator ruling: drop >48h AND make it the default so it is
+  automatic. ✅ **SHIPPED `unified-trading-pm@c92375f05b`**, verified on origin by marker (`STASH_PRUNE_AGE_DAYS:-2`
+  present in the origin blob). It was briefly held by the fleet-wide commit block in
+  `/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`, resolved by its owning session
+  the same morning. The SWEEP below ran before the ship, using the new default from the working copy. 14 was chosen to
+  mirror `stash-pile-detect.sh`'s `STASH_WARN_AGE_DAYS`, and that symmetry was simply wrong for this pile — measured the
+  same day, a 14d cutoff made **0 of 30** entries droppable while the pile still regrew past `safe-doc-push`'s "extreme"
+  threshold within ONE day and quarantined a live push. The binding constraint is the ship scripts' COUNT threshold, not
+  the detector's age warn.
+  - Deliberate consequence, recorded in the script: with a 2d prune the detector's AGE warn (`oldest_days > 14`) can now
+    essentially never fire, because nothing survives to 14 days. Its COUNT warn carries the signal. Re-check that
+    pairing if the prune horizon is ever raised.
+- **Sweep run in slot 3 at the new default**: 8 dropped, 26 surfaced as genuine-WIP, everything archived to a gc-proof
+  bundle first. PM pile 31 → 23. All 8 were 3-day-old `autostash` entries; every one of the classification guards held
+  (no captured-untracked entry and no `safety-snapshot`/`quarantine` label was in the drop set).
+- **The parked MTDS stash could NOT be dropped by an agent.** Operator approved dropping
+  `slot3-mtds-superseded-by-b13e3a2b-20260812` (superseded by `market-tick-data-service@b13e3a2b`, verified an ancestor
+  of origin, and captured in the archive bundle as stash sha `1129da62`). The attempt was refused by this workspace's
+  own PreToolUse guardrail, which hard-bans `git stash drop` for autonomous workers. **That refusal is correct and was
+  not worked around** — the hook's stated remedy is to escalate to the operator, so the drop is an operator action.
+  - **Asymmetry worth knowing**: the guardrail matches the text of commands an agent types, so
+    `audit-stash-pile.sh --apply` drops stashes freely while a hand-typed `git stash drop` is blocked. That is a
+    defensible line — the script archives first and classifies conservatively, an ad-hoc command does neither — but it
+    is a line drawn by tool shape, not by risk, and nothing currently documents it.
+
+## Follow-ups found 2026-08-12 (pre-compact audit)
+
+- [x] ✅ [SCRIPT] P3. **`audit-stash-pile.sh` now emits conformant frontmatter.** — unified-trading-pm@2b4bee96d3.
+      Validated by running the real checkers over a generated report: `check_frontmatter_yaml` + `check_frontmatter.sh`
+      clean, `check_frontmatter_schema` "1995 docs, zero frontmatter violations (docspec HARD+SOFT)" with the new report
+      in scope. Emitted at the END of the run, not in the header block, because `summary:` quotes the real counts.
+
+      **Two corrections to this todo's own premises, both measured 2026-08-12.** (1) The claim that the surface is
+          enforced is FALSE — a frontmatter-less doc there is not review-blocking; `check_frontmatter_schema` skips it
+          entirely (stripping the frontmatter moved the corpus 1995 → 1994 docs and still printed "zero violations"). The
+          real cost is INVISIBILITY to the documented L0→L4 retrieval model, which finds docs by grepping L1 facets: 3 of
+          the 6 reports in that directory were unfindable by `rg -l '^doc_type: issue'`. (2) The "either/or" was wrong —
+          BOTH happen. The three tracked reports were hand-frontmattered; the two untracked ones (`Mac-20260811`,
+          `Mac-20260812`, both slot 3's) have no frontmatter and were never committed.
+
+          **Trap worth keeping**: adding frontmatter naively would have CORRUPTED every report. The summary table was
+          spliced in at a fixed `head -n 7` / `tail -n +8` offset, which any header-length change silently breaks. Replaced
+          with a marker-anchored `awk` substitution that hard-fails if the marker is missing, rather than emitting a report
+          with no summary.
+
+- [x] ✅ [SCRIPT] P3. **Default `--host` label is now slot-aware.** — unified-trading-pm@2b4bee96d3. Derives
+      `<hostname -s>-slot<N>` by sourcing `scripts/hooks/slot-identity-lib.sh` and reusing its `…/.tabs/<N>/<repo>` path
+      rule — the same derivation that stamps commit identity — rather than a second copy of that regex. A non-slot
+      checkout resolves to `main` and keeps the bare host label, preserving the AO VM's existing
+      `ip-172-31-5-118-<date>` shape. Verified by running the script: archive root resolved to
+      `.stash-archive-Mac-slot3-20260812`. The stale header line telling you to pass `--host` was removed in the same
+      commit — it was a warning that existed because the default was wrong.
 
 **Lesson worth keeping from this table's own errors**: two of its four rows were wrong in the same direction — both
 declared work blocked by an external condition that a `git pull` dissolved. Both were written from a checkout 32 commits

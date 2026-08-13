@@ -45,8 +45,9 @@ source: >-
   CLI support) was verified FALSE before filing — see "What I found" below.
 drift_direction: advance-code
 depends_on: []
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
+locked_by:
+locked_since:
 resolved_by:
 context_scope:
   [
@@ -142,11 +143,16 @@ to _also_ unblock the bridge_events historical backfill, and so nobody re-invest
       **PRECONDITION CONFIRMED SHIPPED 2026-07-29 (batch closeout pass)**: `bridge_events_handler.py:265` now calls
       `assert_defi_catalog_fresh(..., mode=("live" if _run_tag == "live" else "batch"))` —
       `market-tick-data-service@c38e1b3f` ("fix: thread mode= into assert_defi_catalog_fresh for 9 remaining DeFi
-      handlers") already landed this exact fix, `bridge_events_handler.py` included. **Still open**: the actual
+      handlers") already landed this exact fix, `bridge_events_handler.py` included. ~~**Still open**: the actual
       verification run (`--start-date 2021-11-11 --end-date <today>`) is a real multi-year production capture backfill
       against live GCS/instruments-catalog — not attempted this session (out of a bounded doc-closeout pass's scope;
       genesis-to-present is a real data-capture operation, not a code check). Left `- [ ]` for whoever schedules the
-      actual backfill run.
+      actual backfill run.~~ **CORRECTED 2026-08-12 (/plan-reconcile)**: that "Still open" text was stale leftover from
+      before the checkbox above was flipped `[x]` — the verification run actually happened. Per this doc's own Progress
+      Log (`backfill-launched 2026-08-07`, slot-12): VM `mtds-bridge-events-backfill` launched SPOT
+      2026-08-07T18:09:29Z, health-verified processing from the 2021-11-11 ACROSS genesis with zero
+      `UPSTREAM_INSTRUMENTS_CATALOG_STALE` errors — both genesis-date and zero-stale-failure criteria confirmed; the
+      checkbox flip lives in `defi_satellite_ao_dispatch_batch10_2026_08_06.md`. Nothing left `- [ ]` here.
 
 ## Progress Log
 
@@ -182,3 +188,10 @@ to _also_ unblock the bridge_events historical backfill, and so nobody re-invest
   item marked `[x]` done, 2026-08-07 entry confirms the backfill VM launched SPOT, health-verified, zero
   UPSTREAM_INSTRUMENTS_CATALOG_STALE errors. No prose-only remaining-work trap found on a full read. Doc stays
   `assigned_vm: NA`.
+- **2026-08-12** — `locked_by`/`locked_since` cleared (corpus-wide fix, operator ruling Option B, interactive session
+  2026-08-12; see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md). This doc has
+  0 open todos, so clearing the placeholder lock immediately makes it archive-eligible. Per the ruling's explicit scope
+  ("do NOT auto-archive in this same pass"), archival itself is deferred to a separate follow-on pass; bridged with
+  `archive_exempt: true` (the sanctioned flip-then-mv two-commit pattern documented in
+  `scripts/plan-hygiene/check_archive_candidates.sh`) so this commit doesn't trip the archive-candidates pre-commit
+  gate. The follow-on pass should drop `archive_exempt` and `git mv` this doc to `plans/archive/[issues/]`.

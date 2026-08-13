@@ -250,3 +250,37 @@ doc + today's `data_pipeline_reconciliation_cefi_2026_08_09.md` report rather th
   via `cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md` todos 1+2 (`deployment-service@b44166be`,
   `deployment-service@10df4a3c7`, both verified on origin). Doc stays open — `[DIAG] P2` + `[OPERATOR] P1` remain
   genuinely open (operator-gated unblock decision + oom-monitor diagnostic).
+- **2026-08-12 (slot 14, data_engineering, task `defi_pool_rate_indices_dex_pool_fees_retirement`) — NEW OOM on the
+  post-rebuild manifest, and the daily cron has been silently MISSING coverage.json for 08-11 AND 08-12**: a manual
+  rollup launch (`measure-honest-coverage-20260812-211215`, default `e2-highmem-4` / 32 GiB) OOM-killed reading the
+  **defi primary manifest at 158,267,760 rows** (run.log: cefi 27.8M rows completed fine → defi SELECTED 158,267,760
+  rows → `bash: line 1: 4852 Killed ... measure_honest_coverage.py --asset-group all`, `command exited rc=137`;
+  EXIT_STATUS = `137`). The 08-10 00:37 success predated the defi rebuild
+  (`canonical-migration-defi-rebuild-20260810-204358`, terminal SUCCESS 2026-08-11); the post-rebuild defi index is now
+  ~158M rows, which the script's one-AG-at-a-time bounded-column read cannot fit in 32 GiB. **Bucket check: no
+  `coverage.json` under `2026-08-11/` or `2026-08-12/`** in `gs://central-element-323112-honest-coverage/` — this is now
+  the OOM-class signal the launcher's own 2026-08-09 post-launch-verification hardening was built to catch (it correctly
+  reported FAILURE on the launcher exit, not blind success). The machine-type unblock that succeeded 08-10 (32 GiB) is
+  now stale post-rebuild. **Immediate remediation attempted 2026-08-12**: relaunched
+  `measure-honest-coverage-20260812-2*` on `e2-highmem-8` (64 GiB) with `--oom-monitor` (this issue doc's own
+  `[DIAG] P2` diagnostic, combined with the unblock) to get a fresh `coverage.json` written and to capture peak-RSS to
+  identify the peak AG read. Awaiting terminal state. Note: the `[OPERATOR] P1` immediate-unblock ruling referenced
+  `--machine-type e2-highmem-4`; that specific ruling is now demonstrably insufficient post-rebuild (the 08-12 32 GiB
+  run OOM'd), so the 64 GiB relaunch is a mechanical escalation of the SAME sanctioned unblock decision, not a new scope
+  — flagged here for operator visibility.
+- **2026-08-12 (slot 14, data_engineering, same task) — SECOND, INDEPENDENT root cause found: the nightly cron was ALSO
+  broken by the 2026-08-11 `get_storage_client` refactor, independent of the OOM.** The 64 GiB relaunch
+  (`measure-honest-coverage-20260812-212755`) computed **ALL 5 asset groups cleanly** (memory fix works — defi 158M rows
+  included), then crashed on the final write: `_write_output` still called `blob.upload_from_string(...)` (google.cloud
+  API), which UTL's `GCSBlobHandle` does NOT expose —
+  `AttributeError: 'GCSBlobHandle' object has no attribute 'upload_from_string'`, `command exited rc=1`. Same-class
+  regression in `_get_blob_updated` (`client.bucket(...).get_blob` →
+  `'GCSBucketHandle' object has no attribute 'get_blob'`, logged as a warn-only). **Both were missed by
+  `instruments-service@02cc9055` (2026-08-11, "replace google.cloud/boto3 imports with get_storage_client across scripts
+  tier")** — it swapped the import but left the google.cloud-style method calls on the UTL handles. This is the
+  definitive explanation for the 08-11/08-12 missing `coverage.json`: even with enough memory, the rollup could compute
+  but never write. **FIXED + SHIPPED 2026-08-12: `instruments-service@4bb2164e`** (use `client.upload_bytes(...)` and
+  `client.get_blob_metadata(...)`; `last_modified` ISO-8601 re-parsed to a UTC-aware datetime; 44 unit tests pass incl.
+  the attempted_failed enumeration-key test). Relaunching the rollup on `e2-highmem-8` with the fix to get the fresh
+  `coverage.json`. This is a cross-cutting (all 5 AGs) honest-coverage availability bug — recommended a regression test
+  asserting the write path uses the UTL upload API (present in the fix's test update).

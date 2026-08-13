@@ -362,16 +362,13 @@ NOT AO and are deliberately out of scope here.
       two so the same task can never reach two agents); test the exact race (resume in-flight when the invariant tick
       fires → invariant defers, no release).** **➡️ MOVED 2026-07-20 to `ao_worker_lifecycle_reap_2026_07_20.md` — do
       NOT action here.**
-- [ ] [INFRA] P0. **Root-cause the 96/day `tmux_session_lost` rate** (or record it as accepted churn). The 07-17
-      incident was 5 losses in one second (backend/tmux blip); today's rate is 96/24h with 158 `worker_polling_dead`.
-      Either find the driver (backend restarts? host pressure? tmux server?) or record the rate as expected with the
-      lifecycle machinery absorbing it. Source: doc #3 timeline + this session's measurement. **Gate**: a named cause
-      with evidence, or a recorded accepted-churn decision with the measured baseline. **⛔ SEQUENCED 2026-07-20 — do
-      NOT start this before the prereq-reaper P0 lands.** That reaper (`ao_dispatch_liveness_p0_2026_07_20.md`) kills
-      freshly-spawned sessions and is a live candidate for a share of this churn; its last todo re-measures the rate
-      against the 192-events-since-07-18 baseline. **This todo stays HERE and owns the root-cause hunt** — it resumes
-      only if the re-measure shows the rate did not drop. Starting now means measuring the same churn twice and possibly
-      chasing a driver that the P0 fix removes.
+- [x] ✅ [INFRA] P0. **SUPERSEDED 2026-08-12 (/plan-reconcile) — ownership retagged to the newer, deeper SSOT.**
+      ~~Root-cause the 96/day `tmux_session_lost` rate (or record it as accepted churn)...~~ This todo's own root-cause
+      hunt is superseded by `/plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md` (created
+      2026-08-10, far more specific/evidence-backed, and explicitly cited by
+      `ao_scheduled_job_reserve_and_staggering_2026_08_04.md` as "the live SSOT going forward"). This doc never
+      cross-referenced that newer investigation. Closing here with a pointer, per the same pattern the sibling doc
+      already applied to its own overlapping item — see the newer doc for current status.
 
 ### Phase 3 — spawn/park visibility (code + policy)
 

@@ -56,6 +56,7 @@ jobs:
       action: ${{ steps.promote.outputs.action }}
       pr: ${{ steps.promote.outputs.pr }}
       arm_failed: ${{ steps.promote.outputs.arm_failed }}
+      superseded_red_prs: ${{ steps.promote.outputs.superseded_red_prs }}
     steps:
       # Token-pool split (sprawl consolidation 2026-06-27):
       # checkout uses GITHUB_TOKEN (same-repo read + LDR push, which is unprotected).
@@ -300,19 +301,35 @@ jobs:
             echo "  frozen-head: $PROMOTE_HEAD → ${LDR_SHA:0:12} (tree ${LDR_TREE:0:12}) — PR opens from this immutable ref"
             # Superseded-ref cleanup: when LDR advances, the previous tick's ref is stale. Close its
             # open PR and delete the ref so orphan promote/* branches don't accumulate.
+            # Asymmetric-alerting fix (2026-08-12, ci_reconcile hardening): a stale promote PR whose
+            # own quality-gates-v2 run FAILED already posted a CRITICAL Slack alert (python-quality-
+            # gates-v2's own notifier). Closing it here as superseded is the correct, automatic
+            # resolution — the fresh $PROMOTE_HEAD ref carries the up-to-date content — but until now
+            # that resolution was recorded ONLY as a GitHub PR comment, never Slack. A reader watching
+            # #ci-failures saw the CRITICAL and nothing else, with no way to tell "auto-resolved" from
+            # "still broken" without going to GitHub. SUPERSEDED_RED_PRS accumulates any closed PR
+            # that was actually red so the notify-superseded-red job below can post the missing INFO
+            # bookend — skipped entirely for the common case of closing a PR that was never red (that
+            # is routine promote-cadence churn, not something #ci-failures ever alerted on).
+            SUPERSEDED_RED_PRS=""
             for _STALE_HEAD in $(gh pr list --repo "$OWNER/$REPO" --base main --state open \
                 --json headRefName \
                 --jq ".[] | select(.headRefName | startswith(\"promote/$REPO/\")) | select(.headRefName != \"$PROMOTE_HEAD\") | .headRefName" 2>/dev/null); do
               _STALE_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head "$_STALE_HEAD" \
                 --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
               if [ -n "$_STALE_NUM" ] && [ "$_STALE_NUM" != "null" ]; then
+                _STALE_WAS_RED=$(gh pr view "$_STALE_NUM" --repo "$OWNER/$REPO" --json statusCheckRollup \
+                    --jq '[.statusCheckRollup[]? | select(.conclusion=="FAILURE" or .conclusion=="TIMED_OUT")] | length > 0' \
+                    2>/dev/null || echo "false")
                 gh pr close "$_STALE_NUM" --repo "$OWNER/$REPO" \
                   --comment "Closed by the PM Option-B drain bot: superseded by a newer LDR tip (new ref: \`$PROMOTE_HEAD\`)." 2>/dev/null || true
-                echo "  closed superseded promote PR #$_STALE_NUM (head=$_STALE_HEAD)"
+                echo "  closed superseded promote PR #$_STALE_NUM (head=$_STALE_HEAD, was_red=$_STALE_WAS_RED)"
+                [ "$_STALE_WAS_RED" = "true" ] && SUPERSEDED_RED_PRS="${SUPERSEDED_RED_PRS:+${SUPERSEDED_RED_PRS} }#$_STALE_NUM"
               fi
               GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X DELETE "repos/$OWNER/$REPO/git/refs/heads/$_STALE_HEAD" >/dev/null 2>&1 \
                 && echo "  deleted orphan promote ref refs/heads/$_STALE_HEAD" || true
             done
+            echo "superseded_red_prs=$SUPERSEDED_RED_PRS" >> "$GITHUB_OUTPUT"
             BODY="PM Option-B auto-drain: live-defi-rollout → main ($FILES changed file(s)) from the immutable per-SHA ref \`$PROMOTE_HEAD\` @ ${LDR_SHA:0:12}. Sweeps sanctioned direct pushes (docs(plans) flips, scripts/.github carve-out) to main. Merges when quality-gates-v2 passes. SSOT: ldr-to-main-promote.yml."
             # PAT-authored, NOT App-authored — an App-created promote PR deadlocks in
             # `action_required` forever (see [2] in the frozen-head block above).
@@ -552,4 +569,28 @@ jobs:
       # only unified-trading-pm itself, so the key is stable without needing a repo suffix.
       dedup_key: ldr-main-arm-failed-pm
       cooldown_min: 60
+    secrets: inherit
+
+  # Asymmetric-alerting fix (2026-08-12): closes the missing RESOLVED bookend for a promote PR
+  # that posted a CRITICAL "QG slice(s) FAILED" alert and was then auto-closed as superseded by a
+  # newer LDR tip (normal drain-bot behaviour, not a real defect — the branch was just cut before
+  # a later LDR commit landed). Without this, a reader of #ci-failures sees the CRITICAL and never
+  # learns it self-resolved short of checking GitHub directly. dedup_key includes the PR number(s)
+  # so this is a genuine per-event post, never suppressed by an unrelated prior cooldown; short
+  # cooldown_min since the key is already unique per occurrence.
+  notify-superseded-red:
+    name: Slack — QG-failed promote PR auto-resolved via supersede
+    needs: [promote-ldr-to-main]
+    if: always() && needs.promote-ldr-to-main.outputs.superseded_red_prs != ''
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: >
+        PM LDR→main auto-drain bot: closed promote PR(s) ${{ needs.promote-ldr-to-main.outputs.superseded_red_prs }} as
+        superseded by a newer LDR tip — RESOLVED, not left broken. Each had posted a CRITICAL QG-slice-failed alert on
+        this channel; the failure was a promote-cadence race (the branch was cut before a later LDR edit landed, so the
+        promote diff would have regressed main relative to current LDR) — not a code defect. The fresh promote PR (${{
+        needs.promote-ldr-to-main.outputs.pr }}) carries the up-to-date content. SSOT: ldr-to-main-promote.yml.
+      recovery: true
+      dedup_key: ldr-main-superseded-red-pm-${{ needs.promote-ldr-to-main.outputs.superseded_red_prs }}
+      cooldown_min: 5
     secrets: inherit

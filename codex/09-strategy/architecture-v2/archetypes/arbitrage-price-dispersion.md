@@ -60,10 +60,10 @@ venue_universe:
     POLYMARKET,
   ]
 topology_requirements:
-  isolation: { execution-service: isolated }
-  co_location: []
+  isolation: { execution-service: isolated, strategy-service: isolated }
+  co_location: [execution-service, strategy-service]
   latency_budget_ms: 150
-  min_sla_tier: standard
+  min_sla_tier: premium
 ---
 
 # Archetype: `ARBITRAGE_PRICE_DISPERSION`

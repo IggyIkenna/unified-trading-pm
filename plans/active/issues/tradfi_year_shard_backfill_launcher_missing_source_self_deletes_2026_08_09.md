@@ -49,7 +49,14 @@ calibrated_ai_days: 0.2
 assigned_role: infra
 resolved_by:
 locked_by:
-depends_on: []
+depends_on: [tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09]
+gate_on_depends: true
+# 2026-08-12 (/plan-reconcile): wired a real machine gate — the sole remaining open todo's `BLOCKED-ON:` free-text
+# marker does not match `_BLOCKED_TOKEN_RE`'s alternation (verified against the regex quoted live in
+# blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md — `ON` is not one of the recognized
+# tokens), so it was never actually suppressing dispatch. This is a genuine same-corpus dependency (case b per that
+# issue doc's own decision rule), and every other todo in this doc is already `[x]`, so whole-doc gating is safe
+# (nothing else is over-gated).
 ---
 
 # tradfi year-shard backfill launcher missing --source — self-deletes within minutes

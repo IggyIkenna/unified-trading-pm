@@ -27,9 +27,9 @@ referenced_by:
     /codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
   ]
 owner: workspace-platform
-last_reviewed: 2026-07-27
+last_reviewed: 2026-08-12
 code_refs:
-last_updated: 2026-07-09
+last_updated: 2026-08-12
 related_codex: [/codex/05-infrastructure/plan-aware-merge-resolution.md, ../../cursor-configs/CLAUDE.md]
 ---
 
@@ -1389,6 +1389,30 @@ Isolation symlinks `.venv` / `.venv-workspace` / `node_modules` from the caller'
 `quality-gates.sh` resolves the repo's own `.venv` and a fresh worktree has none (gitignored). Without that symlink
 isolation would silently turn every quickmerge into a QG failure.
 
+**Isolation also gives each run its own `PREK_HOME` (2026-08-12, `unified-trading-pm@62d1a42613`) — a real hardening,
+NOT a confirmed fix for any specific observed corruption.** prek's default cache (`~/.cache/prek`) is host-global, not
+per-worktree — its `patches/` subdir is where an unstaged-change stash/restore cycle lives around each hook batch, and
+two fully-separate isolated worktrees on the same host funnel through that ONE shared directory in principle. **A direct
+repro (`scripts/dev/repro-prek-cross-worktree-race.sh`) tested this exact mechanism — two separate worktrees, racing,
+with a shared vs. isolated `PREK_HOME` — and it came back clean BOTH ways: cross-worktree corruption via a shared
+patches dir does not reproduce, isolated or not.** A same-file concurrency test against the real `safe-doc-push.sh`
+(non-overlapping edits: both preserved via the existing rebase-retry; overlapping edits: loud abort, never silent loss)
+was also clean. So this hardening is kept because host-global cache sharing across worktrees is bad isolation hygiene
+regardless, and it's free (every repo gets it via the `quickmerge.sh` symlink) — but do NOT cite it as "the fix" for a
+specific revert report; that connection was tested and falsified. See
+`/plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md` for the full elimination trail
+(7 mechanisms tested) and the still-open root cause. Both `quickmerge.sh` and `safe-doc-push.sh` export a per-run
+`PREK_HOME` (`$TMPDIR/{qm,sdp}-iso-$$/prek-home`) into the isolated re-exec — `repos`/`hooks`/`tools`/`cache` (the
+expensive hook-environment installs, not part of the race) are symlinked in from a shared per-repo cache
+(`~/.cache/qm-iso-prek/<repo>`, mirroring the venv-cache pattern), while `patches`/`scratch` are left for prek to create
+fresh, private to that one run.
+
+**If a revert IS ever detected again**, both scripts now dump a forensic snapshot automatically
+(`unified-trading-pm@340bae9f60`) — entry fingerprints, HEAD state, recent commits on the named files, `git status`,
+stash list, prek patches listing, worktree list — to `~/.cache/{sdp,qm}-forensics/revert-<ts>-<pid>.log` the moment
+detection fires. The 2026-08-12 investigation only had a hash-only summary to work from, which was not enough to
+distinguish the real mechanism from 7 tested-and-cleared candidates; this closes that gap for next time.
+
 ### Exit codes worth recognising
 
 - **`safe-doc-push` exit 10** — retries exhausted **and** your named files no longer match what you handed the script.
@@ -1400,6 +1424,33 @@ isolation would silently turn every quickmerge into a QG failure.
   safe.
 - **`safe-doc-push` exit 6** — deterministic content rejection. Fix the content; re-running cannot help. Note a hook
   merely AUTOFIXING files is no longer classified here — that is retried automatically.
+
+### The working commit order — reconcile → format → commit (codified 2026-08-12)
+
+The order **reconcile → format → commit** is what `safe-doc-push.sh` / `quickmerge.sh` already do internally, and it is
+the recipe an agent should reach for by hand if working around a contended doc push
+(`pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`, F3). The three links compose into a closed loop if
+taken in any other order:
+
+1. Behind origin → prettier's own drift guard declines to format (residue protection for a bare `git commit`, since a
+   formatted-then-blocked commit would leave reflow debris in the tree).
+2. Unformatted content gets committed anyway → the hygiene hook autofixes it on the way in.
+3. That autofix trips prek's `files were modified by this hook` → without the F2 fix this used to report a false
+   DETERMINISTIC failure and refuse to re-run — over a tree that was one retry away from succeeding.
+
+Reconciling FIRST (so the drift guard is satisfied before formatting runs) breaks link 1; formatting BEFORE committing
+means the hygiene hook has nothing left to autofix, which breaks link 3 even without the F2 fix. Both
+`safe-doc-push.sh`/`quickmerge.sh` now also set `DRIFT_GATE_ADVISORY=1` around their own commit call
+(`check-branch-drift.sh` WARNs instead of hard-blocking on drift, since the wrapper's post-commit rebase enforces the
+same invariant a few seconds later) and `prettier-autostage.sh` honours the same flag, so the sanctioned scripts do not
+need this sequence spelled out by hand — a bare, unwrapped `git commit` on a contended checkout still does.
+
+**The exit-5 caveat this recipe exists to prevent an agent from ignoring**: `safe-doc-push`'s exit-5 wording ("Exhausted
+N attempts … this is transient, not a defect. Re-run.") is safe ONLY because the script fingerprints your named files at
+entry and checks that fingerprint before printing it — if it does NOT match, the script instead exits **10** and names
+the recovering `git stash` ref (see "Exit codes worth recognising" above). An agent who sees the word "transient" and
+reflexively re-runs without first checking which exit code it actually was can re-ship whatever is on disk NOW, which
+may not be what they intended. Read the exit code, not just the word "transient".
 
 ### Verifying a change to any of this
 

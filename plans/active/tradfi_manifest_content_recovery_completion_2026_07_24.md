@@ -355,7 +355,7 @@ context_scope:
 > priority is getting this resolved properly, with any new code change tracked here, not done ad hoc.
 
 - [x] ✅ [DATA] P1. **Survey raw-tick source availability — DONE 2026-07-27 (slot 14)** —
-      market-data-processing-service@fcfaa5e. Delimiter-descent survey
+      market-data-processing-service@86e27ef. Delimiter-descent survey
       (`scripts/survey_tradfi_quarantine_raw_source_2026_07_27.py`): 712 days, 4,451 cells, 0 unparsed. **3,123 (70.2%)
       recoverable / 1,328 (29.8%) unrecoverable** (no raw ticks in `batch_databento`/`batch_massive`/`batch_yahoo`).
       Report: `market-data-processing-service/scripts/_tradfi_quarantine_raw_source_survey_2026_07_27.json`.
@@ -905,6 +905,31 @@ before concluding it's a real blocker.
 - **PA-2021 palladium backfill**: confirmed still `RUNNING` (`tradfi-bf-cme-ohlcv-1m-pa-2021-20260722-160825`, launched
   08:08Z), serial console shows steady ~60s-cadence `gsutil` heartbeat activity — alive, not stalled. Not yet confirmed
   complete.
+- **2026-08-12 (backfill-monitor dispatch) — KRX row-capture verification CLOSED, false alarm.** A separate audit
+  flagged this exact launch as suspicious: 2,949 manifest rows `capture_status=captured` for KRX ohlcv_24h but
+  `row_count` summing to only 24 across all 17,044 KRX rows. Directly opened 8 real parquet files at their canonical
+  path
+  (`raw_tick_data/by_date/day={D}/pipeline_mode=batch_yahoo/asset_group=tradfi/venue=KRX/instrument_type=equity/ data_type=ohlcv_24h/{instrument_id}.parquet`),
+  spread from 2019-01-02 to 2026-08-11 across all 3 tickers (005380/005930/000660) — every single one contains exactly 1
+  genuine daily OHLCV bar with plausible open/high/low/close/volume for the correct ticker/date (e.g. Samsung 2019-08-14
+  close=36995.74, vol=8,750,135). **The underlying KRX backfill is real and complete for the `captured` cells — no
+  re-launch needed.** Root cause of the suspicious manifest signal: the `row_count` MANIFEST COLUMN itself is not being
+  populated for these writes (7 of 8 sampled `captured` rows show `manifest row_count=0.0` despite the file having 1
+  real row; only the most recent sample, 2026-08-11, correctly shows `row_count=1.0`) — a manifest-field population bug,
+  not a data-absence bug. **New tracked follow-up** (not fixed this session — root cause line not isolated, needs its
+  own investigation):
+  - [ ] [SCRIPT] P2. Find and fix why `row_count` is written as 0 for historical KRX (and possibly other Yahoo-sourced
+        `ohlcv_24h`) `captured` manifest rows despite the underlying parquet genuinely containing data — likely an older
+        `record_captured(...)` call site never passed a real count (vs. the `record_captured_from_counts(...)` helper
+        that exists in `unified_trading_library/manifest_writer/_writer_captured.py`). Check whether this is already
+        fixed forward (the most recent 2026-08-11 KRX row correctly shows `row_count=1`) and the gap is purely
+        historical rows never backfilled, or whether it's still live-broken for some write path. Scope: confirm whether
+        this affects only KRX or other Yahoo/`ohlcv_24h` venues (CBOE-indices, FX, ICE/DXY) before assuming KRX-only.
+        This bug is a standing false-alarm risk for any future manifest-driven completeness audit that trusts
+        `row_count` at face value. **Verification method note**: do the row_count/content check via individual
+        single-object parquet reads (as done here) or VM-side, never a local full `_index/availability_index.parquet`
+        download (14.29M rows — violates the local heavy-I/O hard rule; this session did it twice before being corrected
+        by the operator mid-task).
 
 ---
 

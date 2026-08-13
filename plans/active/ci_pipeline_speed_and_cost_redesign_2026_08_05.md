@@ -122,17 +122,21 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       (see new todo below) rather than assume the cause.
 - [x] ✅ [INFRA] P1. **Measure current LDR→main wall-clock, per repo** — measured 2026-08-05 against `execution-service`
       (heavy), `greeks-service` (light), `agent-orchestrator`, `unified-trading-pm`, sampling 08-02/03/04 PRs (excludes
-      the 08-05 incident). **Result: the 3-5min target is already beaten by 10-50x for most of the fleet** —
-      PR-open-to-merge is 4-16 seconds for every repo running "direct" mode (execution-service #544/#541, greeks-service
-      #404/#402, agent-orchestrator #781/#774), because the required checks
-      (`quality-gates-v2`/`sit-gate/fleet-green`/`quickmerge-provenance`) reference/reuse QG state that already ran when
-      the commit landed on LDR — the heavy test/lint slices (1-2+ hrs sometimes) are NOT re-run inside the promotion
-      PR's lifetime. **The real structural floor is invisible to "open→merge"**: it's the ~15-min promotion-cron cadence
-      that decides WHEN a PR gets opened at all (before `createdAt`), giving an average ~7.5min PRE-PR latency not
-      captured by this metric. **Outlier: PM runs a different "auto-drain" mode** with genuine 4s-34min variance even on
-      clean days (PM #2088 = 4s, #2199 = 14m52s, #2266 = 33m48s) — looks like real retry/backoff churn in that mode, not
-      cron-related; worth checking `ldr-to-main-promote-fleet.yml`'s auto-drain retry logic if a tight fleet-wide floor
-      matters, separate from PM's ubuntu-latest billing-driver investigation above (different root cause, same repo).
+      the 08-05 incident). **Result: the narrow open→merge slice of the 3-5min target is already beaten by 10-50x for
+      most of the fleet** (**CORRECTED 2026-08-12 /plan-reconcile**: qualified "open→merge" — this todo's own next
+      finding below shows the real end-to-end latency, ~7.5min pre-PR + this slice, EXCEEDS the 3-5min target once the
+      invisible promotion-cron cadence is counted; the two claims measure different spans and are not in tension once
+      scoped, but the headline previously read as an unqualified target-beaten claim) — PR-open-to-merge is 4-16 seconds
+      for every repo running "direct" mode (execution-service #544/#541, greeks-service #404/#402, agent-orchestrator
+      #781/#774), because the required checks (`quality-gates-v2`/`sit-gate/fleet-green`/`quickmerge-provenance`)
+      reference/reuse QG state that already ran when the commit landed on LDR — the heavy test/lint slices (1-2+ hrs
+      sometimes) are NOT re-run inside the promotion PR's lifetime. **The real structural floor is invisible to
+      "open→merge"**: it's the ~15-min promotion-cron cadence that decides WHEN a PR gets opened at all (before
+      `createdAt`), giving an average ~7.5min PRE-PR latency not captured by this metric. **Outlier: PM runs a different
+      "auto-drain" mode** with genuine 4s-34min variance even on clean days (PM #2088 = 4s, #2199 = 14m52s, #2266 =
+      33m48s) — looks like real retry/backoff churn in that mode, not cron-related; worth checking
+      `ldr-to-main-promote-fleet.yml`'s auto-drain retry logic if a tight fleet-wide floor matters, separate from PM's
+      ubuntu-latest billing-driver investigation above (different root cause, same repo).
 - [x] ✅ [INFRA] P1. **Find PM's dominant GitHub-hosted (`ubuntu-latest`) cost driver — FOUND AND FIXED, 2026-08-05.**
       The `workflow_call` hypothesis was WRONG (corrected via search of GitHub's own billing docs): reusable-workflow
       minutes bill to the CALLING repo, not the file's home repo — confirmed all 24 other repos' calls into

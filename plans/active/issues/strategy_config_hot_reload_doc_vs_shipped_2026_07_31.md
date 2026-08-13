@@ -94,11 +94,15 @@ stating that the allow-list and error type do not exist and that the instrument 
 
 ## Follow-ups
 
-- [ ] [CODE] P2. **RULED 2026-08-06 (operator), option A: implement the documented guard.** `[CODE]` tag (was
-      `[OPERATOR]`) — build the safe-field allow-list + `UnsafeConfigChangeError` as originally designed, closing the
-      real gap that any field can currently hot-swap into a live paper/live trading strategy. AO-dispatchable. Rule
-      between A / B / C — specifically, confirm whether a live instrument-universe swap is position-state-safe.
-      Provenance: codex freshness re-review shard-B, 2026-07-31.
+- [ ] [CODE] P2. **RULED 2026-08-06 (operator), option A: implement the documented guard — CONFIRMED 2026-08-12
+      (/plan-reconcile, operator confirmed interactively).** `[CODE]` tag (was `[OPERATOR]`) — build the safe-field
+      allow-list + `UnsafeConfigChangeError` as originally designed, closing the real gap that any field can currently
+      hot-swap into a live paper/live trading strategy. AO-dispatchable. Provenance: codex freshness re-review shard-B,
+      2026-07-31. This todo previously carried a self-contradiction (opening line claimed RULED, closing line still
+      called it a 3-way undecided design call, with no Progress Log entry recording an actual ruling event) — resolved
+      2026-08-12: the operator confirmed option A is the standing ruling. The implementation itself (safe-field
+      allow-list + guard) is NOT done here — this only resolves the doc-level contradiction; the code change remains
+      open, AO-dispatchable work.
 - [x] [DOC] P3. Document `VersionGovernanceReloader` + `StrategyDirectiveReloader` in
       `/codex/04-architecture/live-strategy-config-hot-reload.md` — both are shipped and currently absent from the SSOT.
       -- CLOSED (na-eligibility-audit 2026-08-01): already done —

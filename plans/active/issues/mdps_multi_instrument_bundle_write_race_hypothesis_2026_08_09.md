@@ -62,6 +62,16 @@ context_scope:
 
 # MDPS multi-instrument candle bundle write — possible last-writer-wins race (hypothesis)
 
+> **CORRECTED 2026-08-12 (/plan-reconcile)**: title/summary still frame this as an open, unconfirmed cross-write-race
+> hypothesis — but the doc's own 2026-08-10 Progress Log entry already REFUTED it by code reading:
+> `_blob_matches_data_type_partition` + `_build_candle_output_path` give BTC/ETH distinct output paths, so the
+> hypothesized last-writer-wins collision cannot occur as described. The single-symbol SYMPTOM this doc was chasing is
+> real but a DIFFERENT, broader defect (WITHIN-bundle: 7 raw contracts collapsing to 1 emitted, confirmed on both BYBIT
+> and DERIBIT) — not a cross-write race, so not fixable via merge-on-write/per-cell serialization. Title/summary kept
+> verbatim (existing cross-refs); see the "Hypothesis (as stated) REFUTED by current-code reading" entry below for
+> ground truth. Sole remaining todo (line ~127) is still open, gated on the post-fix relaunch's per-underlying
+> contract-count audit.
+
 ## What I found
 
 While independently corroborating the Track-7 VM relaunch (`mdps-backfill-cefi-20260808-095136`) and the already-fixed

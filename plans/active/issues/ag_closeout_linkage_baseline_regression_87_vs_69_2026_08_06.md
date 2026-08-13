@@ -170,7 +170,10 @@ family, which is exactly the failure mode this gate exists to catch.
       design call. Keep additive/opt-in (no-flag preserves the full-corpus ratchet). AO-dispatchable, no operator
       decision needed. (was: "Consider whether `check_ag_closeout_linkage.py` should gain a `--tranche <name>` filter" —
       a real, measured cost this run incurred: the scan surfaced 80 non-cefi orphans irrelevant to a cefi-scoped
-      dispatch.)
+      dispatch.) **RECOVER-INSTEAD-OF-RE-IMPLEMENT 2026-08-13 (main)**: this implementation ALREADY EXISTS as the
+      committed-but-unpushed `925233d2ba` in slot 22's `.tabs/22/unified-trading-pm` worktree (clean, ahead=1) — do NOT
+      re-implement. Recover + push it (see `plans/active/issues/orphan_wip_ship_2026_08_13.md`), then flip THIS todo
+      done with that SHA.
 
 ## Codex SSOTs
 
@@ -228,7 +231,7 @@ the triage given their concentration.
   filter to `check_ag_closeout_linkage.py`) was explicitly annotated by the 2026-08-08 round5-cross-cutting-audit as
   "direct existing precedent, not a novel design call... AO-dispatchable, no operator decision needed" (mirrors the
   already-shipped `generate_ag_closeout_audit_candidates.py --tranche` flag). Live-verified the script has no
-  `--tranche` arg today, so the todo is genuinely still open, not stale. Conflict-check: no active plan has an open
-  todo to build this feature (2 finalize docs cite `check_ag_closeout_linkage.py --tranche prediction` in a "Done
-  when" clause, but that's a citation error confusing it with `generate_ag_closeout_audit_candidates.py`'s real flag).
-  Exempt from the finalize-twin requirement per `check_finalize_plan_coverage.py`'s single-open-todo carve-out.
+  `--tranche` arg today, so the todo is genuinely still open, not stale. Conflict-check: no active plan has an open todo
+  to build this feature (2 finalize docs cite `check_ag_closeout_linkage.py --tranche prediction` in a "Done when"
+  clause, but that's a citation error confusing it with `generate_ag_closeout_audit_candidates.py`'s real flag). Exempt
+  from the finalize-twin requirement per `check_finalize_plan_coverage.py`'s single-open-todo carve-out.

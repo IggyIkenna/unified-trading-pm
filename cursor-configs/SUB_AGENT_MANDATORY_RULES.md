@@ -104,9 +104,10 @@ cross-repo / SSOT contradiction / kill-switch / batch≠live) → **NOTIFY THE O
 Never report a backgrounded task done before its real exit; rely on the tracked-task auto-re-invoke (don't poll harness
 tasks); poll external work only on a **progress metric** (flat = STALL → diagnose); reach a TERMINAL **measured**
 verdict (liveness `kill -0 <PID>`, no self-match) — `ScheduleWakeup`/a dispatched sub-agent are NOT reliable wakes, arm
-your OWN `run_in_background` heartbeat watchdog (≤30-min). **Never `gh workflow run ldr-to-main-promote-fleet.yml` to
-check if your repo promoted** — starves its one shared slot (measured 2+ hr livelock); read `promotion_lag_monitor.py`
-or `gh pr list --search "chore(promote)"`. SSOT: `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
+your OWN `run_in_background` heartbeat watchdog (size-to-job). **Never `gh workflow run ldr-to-main-promote-fleet.yml`
+to check if your repo promoted** — starves its one shared slot (measured 2+ hr livelock); read
+`promotion_lag_monitor.py` or `gh pr list --search "chore(promote)"`. SSOT:
+`/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 
 ## When YOU spawn sub-agents
 

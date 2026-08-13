@@ -36,7 +36,7 @@ referenced_by:
     plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md,
   ]
 owner:
-last_reviewed:
+last_reviewed: 2026-08-12
 code_refs: [strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py]
 ---
 
@@ -132,12 +132,12 @@ capture-scope cap.
 
 ### TradFi (data capture: scoped; backtest scope: same)
 
-> **🟡 Known-stale section (flagged `tradfi_docs_reconciliation_findings_2026_07_21.json`, not yet rewritten below):**
-> VIX 15m and Barchart preload were retired 2026-06-23; CBOE BTC options on IBIT were declined by the operator
-> 2026-07-14. **The "fixed-income... out of MVP" line below is ALSO wrong as of 2026-08-09** — the CBOE daily Treasury
-> yield-curve INDEX and the FRED macro series are both operator-ruled MVP (2026-07-21 "+409 expansion" and 2026-08-09
-> respectively); only CME Treasury **bond futures** (ZN/ZB/ZF/ZT) stay out of MVP. Current SSOT:
-> `/codex/02-data/mvp-scope-canonical.md` and
+> **✅ Corrected 2026-08-12** (was flagged `tradfi_docs_reconciliation_findings_2026_07_21.json`, now rewritten below):
+> Barchart preload was retired 2026-06-23 (VIX 15m cash-index gap now Yahoo-rolling-60d only); CBOE BTC options on IBIT
+> were declined by the operator 2026-07-14. The "fixed-income... out of MVP" line was also wrong as of 2026-08-09 — the
+> CBOE daily Treasury yield-curve INDEX and the FRED macro series are both operator-ruled MVP (2026-07-21 "+409
+> expansion" and 2026-08-09 respectively); only CME Treasury **bond futures** (ZN/ZB/ZF/ZT) stay out of MVP. Current
+> SSOT: `/codex/02-data/mvp-scope-canonical.md` and
 > `/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`.
 
 **Backtest universe** (operator clarification 2026-05-13: **SPY NOT included** — ES futures has more trading hours; ES
@@ -145,9 +145,10 @@ is the canonical S&P 500 surface):
 
 - **S&P 500**: CME ES futures (front-month + back-months) + ES.OPT options (**weeklies + dailies + standard expiries**
   all in scope per operator direction)
-- **BTC-related**: NASDAQ IBIT (BlackRock spot BTC ETF) + CME MBT (micro BTC futures) + CBOE BTC options on IBIT
+- **BTC-related**: NASDAQ IBIT (BlackRock spot BTC ETF) + CME MBT (micro BTC futures)
 - **ETH-related**: NASDAQ ETHA (BlackRock spot ETH ETF) + CME MET (micro ETH futures)
-- **VIX 15m** (CBOE): vol regime feature
+- **VIX**: CFE/VX futures (Databento `XCBF.PITCH`) for the futures curve; VIX 15m **cash index** gap-filled via
+  Yahoo-rolling-60d + honest gap (Barchart preload retired 2026-06-23, no longer a source — see banner above)
 - **Commodity futures + ETFs for cross-instrument carry / arb** (per operator direction 2026-05-13: "natural gas, gold,
   and other futures commodities are there for cross-instrument carry / arb"):
   - **Gold**: GLD (ETF) + CME GC (futures, front-month + back-months)
@@ -156,11 +157,13 @@ is the canonical S&P 500 surface):
   - **Other commodities**: as needed by `paired_price_dispersion` calculator pair specs (owner: `defi_master` Fork 1 +
     features-cross-instrument-service)
 
-**TradFi data capture**: Databento bulk (S&P + crypto-ETF + commodity-futures universe) + Yahoo (VIX 15m gap window) +
-Barchart preload (VIX 15m historical). All per UAC `SOURCE_PRIORITY` rules.
+**TradFi data capture**: Databento bulk (S&P + crypto-ETF + commodity-futures universe + `XCBF.PITCH` CFE/VX futures) +
+Yahoo (VIX 15m cash-index gap window). Barchart preload is **retired** (2026-06-23) — no longer a source. All per UAC
+`SOURCE_PRIORITY` rules.
 
 **Out of TradFi MVP** (post-cutover): full ETF universe (NYSE GBTC / ETHE etc. cleanup), individual equities beyond S&P
-500 components, fixed-income.
+500 components, CME Treasury **bond futures** (ZN/ZB/ZF/ZT). **Not out of MVP as of 2026-08-09** (corrected per the
+banner above): the CBOE daily Treasury yield-curve INDEX and FRED macro series are both operator-ruled MVP.
 
 ### Sports (data capture: unconstrained; backtest scope: Top-5 European football)
 

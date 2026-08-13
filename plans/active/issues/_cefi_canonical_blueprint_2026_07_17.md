@@ -1,11 +1,21 @@
 # CeFi Canonical-Completeness — FINAL EXECUTION BLUEPRINT (2026-07-17)
 
+> **🟢 RESOLVED-BY-REFERENCE 2026-07-29 (retag) — corrected 2026-08-12 (/plan-reconcile).** This blueprint's execution
+> DID start and finish via the forked plan `cefi_migration_cutover_and_track8_completion_2026_07_25.md` (archived,
+> status: complete, all 5 apply/verify todos closed, residual gap CLOSED 2026-07-28 with cited live-verified proof). The
+> banner below is kept only as historical context for what the blueprint originally specified — it is NOT an
+> in-flight/must-read-first warning anymore; see the archived successor plan for the actual execution record.
+>
+> <details><summary>Original 2026-07-17 banner (historical)</summary>
+>
 > **🟡 In-flight refactor + drain-gated GCS cutover.** This blueprint is the settled execution plan for the
 > canonical-completeness program (parent: `cefi_residual_followups_after_honest_done_2026_07_17.md`
 > §"Canonical-completeness program"). It makes cefi tick data canonical across ALL FOUR surfaces — (A) GCS filename, (B)
 > parquet `instrument_id` column, (C) manifest `instrument_id` key, (D) reader resolution — by keying every surface off
 > the instruments-service catalogue map read as DATA. Any agent touching cefi MTDS write/read paths, the cefi manifest,
 > features/MDPS cefi reads, or launching cefi VMs must read this first.
+>
+> </details>
 
 **Verdict of the adversarial review: `NEEDS-REDESIGN`.** This blueprint is that redesign. It supersedes the raw D1–D4
 specs wherever they conflict with the review. The single largest change: **every surface keys off ONE 3-tuple map
@@ -655,6 +665,8 @@ catalogue verify gate is green.**
       apply/verify todos ran to completion — `status: complete`, "verified all 5 todos [x], residual gap explicitly
       CLOSED 2026-07-28 with cited live-verified proof," archived).** This blueprint's execution DID start and finish
       via that forked plan; the sign-off this todo asked for is superseded by that plan's own completed apply/verify
-      chain, not merely promised. **Confirm open questions #1-#5 (the blockers) closed + Phase -1 catalogue verify gate
-      green before any `--apply`** — this blueprint's execution has not started; every Phase 0/1 code fix and Phase 1
-      migration script above is still unshipped pending that sign-off.
+      chain, not merely promised. **CORRECTED 2026-08-12 (/plan-reconcile)**: the sentence that followed here through
+      2026-08-12 read "this blueprint's execution has not started; every Phase 0/1 code fix and Phase 1 migration script
+      above is still unshipped pending that sign-off" — directly contradicting the resolved-by-reference clause
+      immediately above it. That was unedited leftover boilerplate from before the 2026-07-29 retag and is struck as
+      stale/wrong; the forked-plan completion record is the current truth.

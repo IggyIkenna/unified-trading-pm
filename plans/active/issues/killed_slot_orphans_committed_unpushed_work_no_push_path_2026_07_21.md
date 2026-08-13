@@ -169,6 +169,23 @@ review(slot1)'s behalf per the async-wait/stuck-recovery watchdog guidance.
   unbuilt `[INFRA] P2` reclaim-and-push todo would automate; main is barred from push/respawn, so remediation routes
   through that todo + operator action. Second same-day recurrence (slot 10 ~02:33Z, slot 5 ~04:48Z) — the gap is
   actively recurring.
+- **2026-08-12 (review agt-8d220e, from review git-health) — 3 new DIVERGED recurrences, all `unified-trading-pm` on
+  ip-172-31-5-118, slots 22/26/27.** Same class as 2026-07-25 (slots 10/5) and 2026-08-04 (slots 4/10): all three slots
+  are paused/`worker_alive=false` with no live tmux, each holding ONE committed-but-unpushed commit on
+  `live-defi-rollout` while ~261-306 commits behind origin (HEAD not an ancestor; ff-cron cannot fast-forward a diverged
+  tree). Worktrees otherwise CLEAN (no uncommitted loss). Main confirmed read-only and does NOT push (standing precedent
+  — reclaim-and-push is the open `[INFRA]` P2 diverged-heal item, still unbuilt per the 2026-08-10 verdict). Orphans:
+  - **slot 22** — `925233d2ba` [slot-22·planning]
+    `feat(plan-hygiene): add opt-in --tranche filter to check_ag_closeout_linkage.py` — ahead=1 / behind=261.
+  - **slot 26** — `86f944c931` [slot-26·planning] `docs(plans): reconcile last 3 ALLOWED_DUPLICATE_STEMS pairs` —
+    ahead=1 / behind=305.
+  - **slot 27** — `40d71294fc` [slot-27·planning]
+    `chore(orphan-wip): inherited WIP from predecessor on slot 27 at 2026-08-11T21:06:02Z` (an inheritance commit that
+    itself never landed) — ahead=1 / behind=306. **NOT preserved on origin**: `git ls-remote` shows NO `wip-preserve/*`
+    ref for any of the three shas — all three are genuinely at-risk (same class as slot-4's `78a3d05fc`, 2026-08-04) if
+    the clones are reclaimed/wiped. This sharpens the open `[INFRA]` diverged-heal item further: a second incident where
+    the preserve-half did NOT fire for diverged killed-slot orphans (this trio + slot-4), reinforcing the 2026-08-04
+    recommendation to preserve (not just attempt-push) every diverged dead-slot orphan in the unconditional sweep.
 
 ## Progress Log
 

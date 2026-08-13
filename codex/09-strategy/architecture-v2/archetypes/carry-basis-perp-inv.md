@@ -40,10 +40,10 @@ archetype: CARRY_BASIS_PERP_INV
 family: CARRY_AND_YIELD
 venue_universe: [AAVE, MORPHO, HYPERLIQUID, BYBIT]
 topology_requirements:
-  isolation: { execution-service: isolated }
-  co_location: []
+  isolation: { execution-service: isolated, strategy-service: isolated }
+  co_location: [execution-service, strategy-service]
   latency_budget_ms: 300
-  min_sla_tier: standard
+  min_sla_tier: premium
 ---
 
 # Archetype: `CARRY_BASIS_PERP_INV`
@@ -114,8 +114,8 @@ R_usdc = u × (usdc_margin_buffer / base)                  (HL pays ~0; Bybit fl
 R_net  = R_lend + R_fund + R_usdc − gas − slippage
 
 Worked example (wstETH/WETH E-Mode, ltv=0.93, d=8, S=3.2%, B=2.4%, f=+12% APR):
-  R_lend ≈ 6.0%   R_fund ≈ +12.0%   R_usdc ≈ 0   drag ≈ 0.6%
-  R_net  ≈ 17.4%   [HIGH confidence on R_lend; MED on R_fund — regime-variable]
+  R_lend ≈ 7.88%   R_fund ≈ +12.0%   R_usdc ≈ 0   drag ≈ 0.6%
+  R_net  ≈ 19.28%   [HIGH confidence on R_lend; MED on R_fund — regime-variable]
 ```
 
 ## Config schema
@@ -180,12 +180,14 @@ Two-phase opening per `LegController.update(slot, tick, execution_mode=LEADER_HE
 plus one CeFi perp-hedge `AtomicLeg` sized via `unified_trading_library.risk.net_delta.residual_hedge_size()`
 (strategy-service@f2ac7fdf). Execution-service's `execution_service/algo_library/recursive_loop_runner.py` gives
 `RecursiveLoopOrchestrator` its first real production caller, including `PerpLegConfig` reconstruction
-(execution-service@2352a17e). **`PerpHedgeSizer.compute_rebalance()`/`.compute_margin_topup()` (its own 5-min poll-cycle
-design, `perp_hedge_sizer.py:60-63`) still has NO live-reachable caller** — a 2026-08-09 audit of execution-service
-confirmed no suitable existing poller/scheduler mechanism exists (`HealthFactorMonitor` is a structurally-matching
-primitive but itself has zero production callers; no Cloud-Scheduler endpoint exists). The rebalance mechanism is
-tracked as an open `[DESIGN]` decision: `/plans/active/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md`. Full
-build plan: `/plans/archive/2026_08/recursive_loop_orchestrator_wiring_2026_08_09.md`.
+(execution-service@2352a17e). **`PerpHedgeSizer.compute_rebalance()`/`.compute_margin_topup()` now has a live caller
+(2026-08-12)**: `PerpHedgeMonitorLifecycle` (one `PerpHedgeMonitor` per open Family-2 position, `HealthFactorMonitor`-
+pattern 300s poll loop) is wired at `execution-service/execution_service/api/app.py` startup/shutdown
+(execution-service@afd0166b), dispatching rebalance/margin-topup intents through `PerpHedgeDispatchRouter` into the SAME
+`RecursiveLoopOrchestrator` path `recursive_loop_runner.py` uses — no second instruction sink. The
+`PerpHedgeFetchProvider` production-fetch seam and real on-chain execution wiring were tracked + completed via
+`/plans/archive/2026_08/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md`. Full build plan:
+`/plans/archive/2026_08/recursive_loop_orchestrator_wiring_2026_08_09.md`.
 
 ## Funding-regime degradation policy
 

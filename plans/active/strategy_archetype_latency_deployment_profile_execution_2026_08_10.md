@@ -91,17 +91,70 @@ source: >-
       / `InstanceResourceSizing` + `derive_instance_resource_sizing()` / `derive_resource_sizing()` and a
       `--live-config` CLI flag in `deployment_service/deployment_profile_derivation.py`; fails loud
       (`MissingLiveConfigError`) when a routed archetype has no live-config row. — deployment-service@9116a2fe
-- [ ] [SCRIPT] P2. **Regression test**: two archetypes with different required deployment_profiles must NOT get silently
-      collapsed onto one shared instance, and the derivation must be idempotent (same active-archetype-set in → same
-      deployment-plan out, no drift between repeated runs with unchanged input).
-- [ ] [SCRIPT] P2. **Regression test**: the reverse case — archetypes sharing the SAME deployment_profile requirement
-      (e.g. two `Low`-category archetypes) should be able to co-locate per the existing `co_location_rules` structure,
-      and the derivation should correctly union them onto shared infrastructure rather than over-provisioning one
-      instance per archetype.
-- [ ] [DATA] P2. **Cross-check against the SLA-tier gap the audit plan may have flagged** (any archetype family whose
-      real latency requirement exceeds even the `premium` tier's 40ms budget) — if the audit found such a gap, this
-      plan's derivation logic must surface it as an explicit warning/exception rather than silently under- provisioning;
-      if the audit found no such gap, this todo is a no-op confirmation, not new work.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-12 (slot 18, backend_engineer) — already covered, no new code needed.** Verified
+      (not assumed) that `tests/unit/test_deployment_profile_derivation.py` already carries exactly this coverage,
+      landed with todo 3's own commit: `test_different_profiles_never_collapse_onto_one_instance` asserts a Low +
+      Medium/High archetype pair derives 2 separate instances (never collapsed onto one), and
+      `test_derivation_is_idempotent_and_order_independent` asserts `derive_required_deployment_profiles` is both
+      order-independent (forward vs reversed input lists produce an equal result) and idempotent (repeated calls on
+      unchanged input produce an equal result) — both properties this todo asks for.
+      `git log -- tests/unit/     test_deployment_profile_derivation.py` confirms these two tests were added in
+      `deployment-service@13223da3` (todo 3, not new here). Ran the full `bash scripts/quality-gates.sh` on current HEAD
+      (`52936f60`, fresh-pulled) to confirm genuinely green today, not relying on the historical landing:
+      `✅ ALL QUALITY GATES PASSED (336s)`, sentinel `.qg_last_passed_sha=52936f608b68cbf114f62e2272e12289773c7c72`. No
+      code changes shipped this todo — the regression coverage already existed; this flip corrects the tracked-vs-actual
+      gap.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-12 (slot 18, backend_engineer) — already covered, no new code needed.** The reverse
+      case is covered by `test_same_profile_archetypes_union_onto_one_instance`
+      (`deployment-service/tests/unit/test_deployment_profile_derivation.py:68`): two `Low`-category archetypes
+      (`MARKET_MAKING_CONTINUOUS` + `ARBITRAGE_PRICE_DISPERSION`) union onto ONE `co_located_vm` instance
+      (`len(instances)==1`), never over-provisioned per archetype — exactly this todo's requirement. Complemented by
+      `test_co_located_archetypes_sum_load_units_on_shared_instance` (:174), which additionally asserts the sizing sums
+      across the two co-located archetypes on that shared instance. Both landed with todo 3's commit
+      (`deployment-service@13223da3`, `git log -- tests/unit/test_deployment_profile_derivation.py` confirms). Ran the
+      full `bash scripts/quality-gates.sh` on current HEAD (`52936f60`, fresh-pulled) to confirm genuinely green today:
+      `✅ ALL QUALITY GATES PASSED (307s)`, sentinel `.qg_last_passed_sha=52936f608b68cbf114f62e2272e12289773c7c72`. No
+      code shipped this todo — coverage already existed; this flip corrects the tracked-vs-actual gap.
+- [x] ✅ [DOC] P1. **DONE 2026-08-12 (slot 18, backend_engineer) — unified-trading-pm@<SHA>.** Rebuilt
+      `/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md` §6 from a 10-row family-label table to a
+      60-row table keyed by the actual `StrategyArchetype` enum values, each row derived from
+      `ARCHETYPE_TO_DEPLOYMENT_PROFILE` (34 `co_located_vm`→premium/co-located/strategy-isolated; 26
+      `distributed`→standard/shared-OK). Fixed the stale `archetypes/*.md` runtime frontmatter — the 5 enumerated stale
+      values (`CARRY_BASIS_PERP`, `RULES_DIRECTIONAL_CONTINUOUS`, `ML_DIRECTIONAL_CONTINUOUS`, `STAT_ARB_PAIRS_FIXED`,
+      `ARBITRAGE_PRICE_DISPERSION`) + 5 invalid `min_sla_tier` enum values (`high` ×4 MEV + `ultra-premium` ×1
+      queue-microstructure) → all `premium`/co-located. Also corrected a further 14 stale `Low`→`co_located_vm` docs the
+      decision artifact's "5 stale" count had under-enumerated (binding contract item 1 requires EVERY
+      `Low`→`co_located_vm` archetype to declare `premium` + `co_location: [execution, strategy]`), and added the
+      missing `topology_requirements` block to `carry-funding-dispersion.md`. 25 archetype docs edited total; 0
+      invalid/missing `min_sla_tier` values remain across the active registry.
+- [x] ✅ [DOC] P2. **Residual gap (1) — two missing archetype docs — DONE 2026-08-12 (slot 16, backend_engineer).**
+      Authored `/codex/09-strategy/architecture-v2/archetypes/tsmom-btc-cta.md` and
+      `/codex/09-strategy/architecture-v2/archetypes/arbitrage-sports-dutching.md` from engine source
+      (`strategy_service/engine/strategies/v2/rules_directional/tsmom_btc_cta.py` +
+      `strategy_service/engine/strategies/v2/arbitrage_structural/sports_arb_dutching.py`), each carrying the
+      runtime-enforced `topology_requirements` frontmatter (`premium` / co-located / strategy-isolated, matching
+      `ARCHETYPE_TO_DEPLOYMENT_PROFILE`) so `topology_enforcement.load_topology_requirements()` no longer raises
+      `FileNotFoundError` for either. Updated the README gap table to a closed-gap statement. —
+      unified-trading-pm@b3eefb806d.
+- [ ] [DOC] P2. **Residual gaps (2)(3)(4) — still open, each a judgment call / operator ruling, not AO-eligible.** (2)
+      `runtime-topology.yaml` `isolation_policies.strategy-service` `default: shared` — but the (now-correct)
+      `co_located_vm` archetype docs declare `strategy-service: isolated`, so `_check_isolation()` would raise "topology
+      declares default=shared" on boot; the decision artifact's item 6 commits the execution plan to wire a
+      per-archetype strategy isolation section into runtime-topology.yaml but no todo here carries it (affects MM too —
+      pre-existing). (3) VOL edge-case docs (`vol-market-making`, `vol-0dte-gamma-scalping`, `vol-0dte-pin-risk`)
+      declare `premium` while the mapping says `distributed` — the decision artifact defers the first two to "keep
+      distributed unless evidence is decisive"; needs an operator ruling. (4) `portfolio-*` + single-sided `yield-*`
+      docs declare `basic` while the decision artifact's §6 says `standard` (arguably `basic` is correct for
+      non-executing allocation/staking). Repo: unified-trading-pm (codex + configs/runtime-topology.yaml).
+- [ ] [DATA] P2. **CORRECTED 2026-08-12 (/plan-reconcile): de-conditionalized — the audit's answer is now known.**
+      Original text was written before the audit plan landed and hedged with "may have flagged"/"if the audit found such
+      a gap." The audit's binding decision artifact (`strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`
+      todo 8, `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`) has since answered this definitively: **YES, a
+      real gap exists** — every Low-category family's real E2E latency requirement (MM <100ms / arb <200-300ms /
+      basis+ML+rules+stat-arb ms-realm inter-leg gap) EXCEEDS the `premium` SLA tier's 40ms `latency_budget_ms` budget.
+      **Cross-check against this SLA-tier gap**: this plan's derivation logic must surface it as an explicit
+      warning/exception rather than silently under-provisioning — this is confirmed real work, not a no-op confirmation
+      branch.
 - [ ] [DOC] P3. **Update `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`** (or wherever the audit plan's decision
       artifact landed) with a note that the archetype↔deployment link is now live-derived, not manually maintained,
       cross-referencing the new code paths added by this plan.
@@ -166,3 +219,56 @@ source: >-
 - 2026-08-10: Plan created, gated on the paired audit plan's decision artifact. Implements the operator's "union of
   registered deployments from union of registered archetypes, resources derived live from configuration" design
   verbatim.
+
+- **backend_engineer (slot 18) 2026-08-12**: Todo 5 done. Dispatched this exact regression-test todo; found it already
+  satisfied by tests landed alongside todo 3 (`deployment-service@13223da3`) —
+  `test_different_profiles_never_collapse_onto_one_instance`
+  - `test_derivation_is_idempotent_and_order_independent` in `tests/unit/test_deployment_profile_derivation.py`. Did not
+    assume historical passing still holds: fresh-pulled to current HEAD (`52936f60`) and ran the full
+    `bash scripts/quality-gates.sh` for deployment-service, which exercises this suite — green,
+    `.qg_last_passed_sha=52936f608b68cbf114f62e2272e12289773c7c72`. No new code shipped for this todo; flip corrects a
+    tracked-vs-actual gap (coverage existed, checkbox didn't reflect it). Todo 6 (the reverse co-location regression
+    case) is a separate todo, also already covered by `test_same_profile_archetypes_union_onto_one_instance` in the same
+    file — not flipped here since it wasn't this dispatch's todo; whoever picks up todo 6 can verify + flip it the same
+    way.
+
+- **backend_engineer (slot 18) 2026-08-12**: Todo 6 done. The reverse co-location regression case — archetypes sharing
+  the SAME `deployment_profile` requirement must union onto shared infra, not over-provision one instance per archetype
+  — is already covered by `test_same_profile_archetypes_union_onto_one_instance`
+  (`deployment-service/tests/unit/test_deployment_profile_derivation.py:68`), landed alongside todo 3
+  (`deployment-service@13223da3`). Two `Low`-category archetypes (`MARKET_MAKING_CONTINUOUS` +
+  `ARBITRAGE_PRICE_DISPERSION`) derive exactly ONE `co_located_vm` instance holding both;
+  `test_co_located_archetypes_sum_load_units_on_shared_instance` (:174) additionally asserts the per-instance sizing
+  sums across both. Verified genuinely green today (not assumed from history): fresh-pulled to HEAD (`52936f60`) and ran
+  the full `bash scripts/quality-gates.sh` for deployment-service — `✅ ALL QUALITY GATES PASSED (307s)`, sentinel
+  `.qg_last_passed_sha=52936f608b68cbf114f62e2272e12289773c7c72`. No new code shipped; flip corrects a tracked-vs-actual
+  gap.
+- **backend_engineer (slot 7) 2026-08-12, dispatch
+  `strategy_archetype_latency_deployment_profile_execution-73c2e13d68fc` — verified not-AO-eligible, skipped with GATED,
+  no code action.** Dispatcher offered the residual-gaps todo (2)(3)(4), which self-labels "each a judgment call /
+  operator ruling, not AO-eligible". Confirmed against the checkbox text + this plan's Progress Log: (3) `vol-*` docs
+  declare `premium` vs the mapping's `distributed` — the decision artifact defers to "keep distributed unless evidence
+  is decisive" and no ruling has landed; (4) `portfolio-*`/single-sided `yield-*` docs declare `basic` vs
+  decision-artifact §6 `standard` — a judgment call the checkbox itself flags ("arguably `basic` is correct for
+  non-executing allocation/staking"). Both genuinely need an operator ruling; a worker flipping either way would be
+  making the ruling itself, which is not AO-eligible. (2) is a real boot-time inconsistency
+  (`isolation_policies.strategy-service` `default: shared` vs the corrected `co_located_vm` docs declaring
+  `strategy-service: isolated` → `_check_isolation()` would raise on boot) whose fix the decision artifact's item 6
+  commits to but which **no todo in this plan carries** — flagged here for the plan owner / main agent to track as its
+  own todo (touches live `configs/runtime-topology.yaml` + the isolation model, a design/config decision, not a bounded
+  doc edit). No code shipped; checkbox left `[ ]` (correctly — it is not AO-done). **Flag for main/operator**:
+  `regen_backlog_from_plan.py` derived an AO-dispatchable task from a checkbox that explicitly self-labels "not
+  AO-eligible" — the same dispatch-scope pattern as the batch14 re-derivation thrash; a guard that skips checkboxes
+  self-declaring non-AO-eligibility would stop this class.
+- **backend_engineer (slot 21) 2026-08-13, same dispatch
+  `strategy_archetype_latency_deployment_profile_execution- 73c2e13d68fc` — RE-CONFIRMED not-AO-eligible, skipped with
+  GATED, no code action.** Second re-dispatch of the same checkbox to a fresh slot (first was slot 7, 2026-08-12).
+  Independently re-verified against live state, not just reading the prior entry: `configs/runtime-topology.yaml`
+  `isolation_policies.*` still reads `default: shared` (gap 2 unresolved), `archetypes/vol-market-making.md` still
+  declares `min_sla_tier: premium` against the mapping's `distributed` (gap 3 unresolved), and no new commit touches
+  `RUNTIME_TOPOLOGY_DECISIONS.md` or `configs/runtime-topology.yaml` since `ab157b54a1` — no operator ruling has landed
+  on (3)/(4), and no todo in this plan carries the (2) isolation-policy fix. Same conclusion as slot 7: all three
+  require operator judgment, not a worker guess. **This confirms the flagged dispatch-scope guard gap is still live** —
+  two independent slots have now burned a dispatch cycle each on a checkbox that self-declares "not AO-eligible" in its
+  own text. Recommend the guard fix (skip checkboxes whose text contains "not AO-eligible" / "operator ruling" at
+  backlog-regen time) get prioritized ahead of a third recurrence.

@@ -19,7 +19,11 @@ stage: [data]
 repos: [instruments-service, market-tick-data-service, unified-trading-pm]
 scope: [engineer]
 tags: [sports, api-football, backfill, completion, data-correctness]
-related: [/plans/active/issues/sports_af_full_entity_completion_2026_08_03.md]
+related:
+  [
+    /plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+  ]
 created: "2026-08-10"
 author: main agent (agt-fe67fd) — routing the slot-25 re-census residual (2026-08-10)
 source: sports_af_full_entity_completion_2026_08_03.md slot-25 re-census progress entry (2026-08-10)
@@ -43,9 +47,10 @@ depends_on: []
       lock — one `af-backfill-*` VM at a time against the shared API key, self-check the lock before launching),
       resuming from each entity's `PROGRESS.json` checkpoint where present. Done when: a fresh re-census shows every
       in-scope entity at ~0 needed (only genuine honest-absence floors remain, e.g. FIXTURE_EVENTS' ~1,943-stub
-      pattern), i.e. the re-census gate in `/plans/active/issues/sports_af_full_entity_completion_2026_08_03.md` can
-      pass. Then unpark/flip the re-census condition (`auto_unpark__sports_af_full_entity_completion-9798da269f23`) so
-      it dispatches and closes that doc. (repo: instruments-service / market-tick-data-service)
+      pattern), i.e. the re-census gate in
+      `/plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md` can pass. Then unpark/flip the
+      re-census condition (`auto_unpark__sports_af_full_entity_completion-9798da269f23`) so it dispatches and closes
+      that doc. (repo: instruments-service / market-tick-data-service)
 
 ## Progress Log
 

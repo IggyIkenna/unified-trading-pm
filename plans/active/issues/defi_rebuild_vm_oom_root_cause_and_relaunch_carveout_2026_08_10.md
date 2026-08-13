@@ -42,8 +42,8 @@ created: "2026-08-10"
 author: unknown
 last_updated: "2026-08-10"
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 source: >-
   Interactive `/autonomous` session 2026-08-10, discovered while root-causing why the DeFi manifest rebuild VM chain
@@ -241,9 +241,9 @@ The main VM was then cycled onto the fully-fixed code (`canonical-migration-defi
 `e2-highmem-4`, resumed from `2025-11-28` since no `--chunk-days 90` boundary had completed yet) and **reached genuine
 terminal SUCCESS**: `exit_code=0`, all 5 chunks complete through `--end-date 2026-12-31`, 5,832,208 total shards, 255
 distinct dates, elapsed 12780.2s (~3h33m) — self-deleted cleanly via `VM_SHUTDOWN_ON_COMPLETION`. This satisfies the
-downstream gate in `/plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md`, which has been flipped
-`draft` → `active` (`unified-trading-pm@9f00ae4e02`) and is now AO-ingested (confirmed live via the backlog: 8 tasks
-queued across it + its `_finalize` companion).
+downstream gate in `/plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md`, which has
+been flipped `draft` → `active` (`unified-trading-pm@9f00ae4e02`) and is now AO-ingested (confirmed live via the
+backlog: 8 tasks queued across it + its `_finalize` companion).
 
 The GCS-shared-bucket-contention pattern surfaced by that same I/O test (a newcomer VM measured ~7-9x throttled vs. an
 already-running incumbent's ~8%-noise impact) is now a codified HARD RULE, not just this doc's finding:
@@ -275,3 +275,8 @@ already-running incumbent's ~8%-noise impact) is now a codified HARD RULE, not j
 - Sibling tracker gating downstream POOL/rate_indices/dex_pool_fees retirement work on this VM reaching terminal state:
   `/plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`.
 - Runbook invoked: `/codex/15-runbooks/incidents/rb_infra_relaunch.md`.
+
+## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).

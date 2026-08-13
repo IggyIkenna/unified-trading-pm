@@ -22,7 +22,7 @@ scope: [engineer]
 tags: [vm-preemption, billing-waste, spot-capacity, cross-cutting, big-finding]
 related:
   [
-    /plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
+    /plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
     /plans/archive/issues/af_backfill_preemption_auto_recovery_not_firing_2026_08_04.md,
     /plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,

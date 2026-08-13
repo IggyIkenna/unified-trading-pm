@@ -111,6 +111,9 @@ context_scope:
     /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
+dp_escalation_checkpoint:
+  max_attempted_at: "2026-08-12T00:00:00Z"
+  checked_at: "2026-08-12T17:30:00Z"
 ---
 
 # CeFi `book_snapshot_5` schema-contract mismatch -- root cause + fix (2026-07-28)
@@ -962,3 +965,50 @@ against the reproduction script.
   still-open Option A/B/C territory at the orchestrator dispatch layer (the per-doc dedup-gap fix, `9102eb9b`, only
   suppresses re-dispatch on a stale checkpoint across ticks — it has no mechanism for one tick fanning the same
   escalation_id out to multiple slots simultaneously, a different bug class).
+- **2026-08-12 (data_pipeline_failure escalation worker, agt-5c3186, slot 2) — 25th+ dispatch: STATIC BACKLOG confirmed
+  via a fresh bounded live read (not just the alert label); no code fix needed.** Received another `DP_RUN_MOSTLY_EMPTY`
+  (DP-FETCH-009) CRITICAL page for `(cefi, book_snapshot_5)`: 8,060/227,194 = 3.5% (abs>=500 path), alert context
+  labeled "STATIC BACKLOG — only 11 attempted_failed row(s) in the last 1d (below the 500-row materiality floor); a
+  decaying trickle on already-tracked backlog, not a fresh regression." No issue doc pre-linked
+  (`Filed issue: (none — alert carries the details)`); found this doc via the standard pre-task plan/issue
+  conflict-check grep. Re-verified all nine fix commits are still ancestors of `origin/live-defi-rollout` (fresh
+  `git fetch` in all three repos): MTDS `339ca767`/`6bf568ee`/`2ddc6d4a`/`6a067cf1`/`6c6fab03`, UAC
+  `8db188fe`/`1c4d8864`, deployment-service `a564cca`/`6f464325` — all OK. Because this reading's _denominator_
+  (227,194) differs from the ~958k "attempted" figures seen on dispatches 23-24 (the alert's recent-window aggregate vs
+  this doc's lifetime totals — a windowing difference, not a new condition), did a fresh bounded live read rather than
+  trusting the label alone (UTL `download_from_storage` + pyarrow predicate-pushdown, no subprocess gcloud, ~450MB
+  manifest read at ~5MB peak memory): (1) **lifetime** totals reproduce the known backlog — 295,765 `attempted_failed` /
+  1,249,722 `attempted` (23.7%), i.e. the 8,060 alert numerator is a recent-window reading of the same decaying backlog,
+  consistent with the 18,999 → 8,670 → 8,060 trend across the last three dispatches; (2) **last-24h = 4
+  `attempted_failed` rows** (not even the alert's 11 — the alert was computed on a slightly earlier/rolling window), all
+  `error_reason` ∈ {`Connection timeout to host https`, `[Errno 32] Broken pipe`} on OKX-SPOT/OKX-SWAP/OKX-FUTURES —
+  ordinary transient network noise, zero schema-contract signatures; (3) **last-7d decay**: 833 (08-06) → 392 (08-07) →
+  2180 (08-08) → 453 (08-09) → 18 (08-10) → 10 (08-11) → 4 (08-12) — the 08-08 bump is the same known
+  404-tail/backfill-wave class this doc already documents, not a new mechanism; (4) **zero `"schema contract violated"`
+  rows newer than the last verified checkpoint** (`2026-07-31T04:18:05Z`); the all-time max `attempted_at` for that
+  error_reason is `2026-07-31T04:02:18Z` — all three root-cause fixes (contract shape, ts_event derivation, nullable
+  levels) plus both alerting-layer fixes continue to hold under production load. **Conclusion: no code fix needed** —
+  this is a duplicate/re-evaluated dispatch of the same already-fully-investigated static-backlog condition, the
+  residual af being the same historical backlog a normal idempotent backfill re-attempt is working down. Session cost:
+  doc reads + git-ancestor batch check (9 commits) + one bounded live read + this Progress Log append, no GCS/manifest
+  write, no VM launch, no code change (PM plan-doc append only). Pinged `dp-fleet-monitor` (authoring slot) with this
+  outcome.
+- **2026-08-12 (data_pipeline_failure escalation worker, agt-5c3186, slot 32) — 4th slot for this escalation_id (after
+  slots 2/7/14): fan-out duplicate of the same already-investigated static-backlog condition; confirmed no code fix
+  needed — slot-2 entry above did the fresh bounded live read (last-24h = 4 transient network rows, zero
+  schema-contract), nothing new since; 1-line audit-trail close-out only (doc at its 1000-line cap), no GCS read, no VM
+  launch, no code change.**
+- **2026-08-12 (data_pipeline_failure escalation worker, agt-f601e4, slot 14) — 27th+ dispatch, NEW escalation_id
+  (orchestrator re-escalation of root agt-e488d1): same static-backlog close-out, no code fix needed.** Reading
+  7,806/215,756 = 3.6% (abs>=500) continues the documented decay (18,999 → 8,670 → 8,060 → 7,806); alert already labels
+  it STATIC BACKLOG, no new activity in 1d. Re-verified all 11 fix commits still ancestors of origin/live-defi-rollout
+  (MTDS 339ca767/6bf568ee/2ddc6d4a/6a067cf1/6c6fab03, UAC 8db188fe/1c4d8864, deployment-service
+  a564cca/6f464325/9102eb9b/1b035c52) — all OK. Slot-2 entry above (today) already did the fresh bounded live read (zero
+  schema-contract since the 2026-07-31 checkpoint); numerator moved only in the healthy direction, so no repeat GCS
+  read. This is the documented residual orchestrator re-escalation path, not a dedup regression — no code change, no
+  GCS/manifest write, no VM launch (PM plan-doc append only).**
+- **2026-08-13 (data_pipeline_failure escalation worker, agt-f601e4, slot 7) — fan-out duplicate of the SAME
+  escalation_id already documented by slot 14 directly above; confirmed no code fix needed.** Byte-identical reading
+  (7,806/215,756 = 3.6%), already labeled STATIC BACKLOG. Re-verified all 11 fix commits still ancestors of
+  origin/live-defi-rollout (MTDS 339ca767/6bf568ee/2ddc6d4a/6a067cf1/6c6fab03, UAC 8db188fe/1c4d8864, deployment-service
+  a564cca/6f464325/9102eb9b/1b035c52) — all OK. No GCS read, no code change, no VM launch (PM plan-doc append only).**

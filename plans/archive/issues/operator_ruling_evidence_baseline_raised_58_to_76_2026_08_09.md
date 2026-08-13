@@ -104,7 +104,13 @@ third party at all without fabricating the citation the gate exists to catch.
       session's legitimate 76 → 53 ratchet-DOWN. Repo: unified-trading-pm.
 - [x] ✅ [SCRIPT] P2. **KEEP-NA-STALE, citation-closed 2026-08-09 (na-corpus-hygiene pass).** Keep ratcheting: 53 → 0 —
       content already extracted verbatim into `ao_satellite_ao_dispatch_batch13_2026_08_09.md` todo 1. Tracked there
-      going forward, not duplicated here.
+      going forward, not duplicated here. **CORRECTED 2026-08-12 (/plan-reconcile) — real completion evidence (was a
+      bare redirect pointer):** `ao_satellite_ao_dispatch_batch13_2026_08_09.md` todo 1 shipped and was verified by its
+      finalize plan (`ao_satellite_ao_dispatch_batch13_finalize_2026_08_09.md`, "Re-verify batch13's done-claim against
+      reality" todo): corpus-wide `python3 scripts/quality_gates/check_plan_operator_ruling_evidence.py` →
+      `Unsourced operator-ruling citations: 2 (baseline 2)` — matches batch13's claimed final baseline (52→4→2) exactly,
+      the ratchet held at 0 new violations, and the 2 residual lines are batch13's own named deliberately-unrecoverable
+      citations, not a regression.
 
 ## Progress Log
 

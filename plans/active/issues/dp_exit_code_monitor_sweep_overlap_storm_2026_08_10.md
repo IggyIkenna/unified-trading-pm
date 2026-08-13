@@ -29,8 +29,8 @@ created: 2026-08-10
 author: data_pipeline_alerts_reconciler (scheduled 6-hourly sweep, slot 18)
 parent_epic: agent_operating_framework_master
 priority: P1
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: refactor
 assigned_role:
 drift_direction: advance-code
@@ -103,6 +103,16 @@ Fallback if parallelization is not immediately shippable: reduce the exit-code c
 (e.g. `*/15` or `*/30`) so fewer executions overlap — but that trades detection latency (a VM dying at T+0 won't be seen
 until the next sweep) and is a stopgap, not the root fix.
 
+## Todos
+
+- [ ] [BACKEND] P1. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — Parallelize the per-VM
+      I/O in `sweep()` (`deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py` +
+      `heartbeat_stall_watcher.py`) via `ThreadPoolExecutor` over the independent GCS reads (precedent: `cli.py`).
+      Target: sweep completes in <5 min so cron overlap collapses to ~1 execution. Parallelize only the pure reads; keep
+      classify/route/emit sequential to preserve the shared-state discipline (findings sink, `_EMITTED_THIS_SWEEP`,
+      RESOLVED bookend). Fallback if not immediately shippable: reduce cron cadence to match sweep duration (stopgap
+      only, trades detection latency). Repo: deployment-service.
+
 ## Related
 
 - `/plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md` — the exit-code-monitor OOM (signal 9)
@@ -111,3 +121,8 @@ until the next sweep) and is a stopgap, not the root fix.
 - This sweep ALSO shipped (2026-08-10): meta-watchers defi-index streaming read + incremental tracker persist,
   preemption-relaunch GCS budget + 900s launcher timeout, GONE_NO_CAPTURE false-positive fixes (POLARS AGGREGATED +
   launcher-host exemption), and the DP_SOURCE_RATE_LIMITED cooldown.
+
+## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).

@@ -38,10 +38,10 @@ archetype: LIQUIDATION_CAPTURE
 family: ARBITRAGE_STRUCTURAL
 venue_universe: [AAVE_V3, COMPOUND_V3, EULER, MORPHO, KAMINO]
 topology_requirements:
-  isolation: { execution-service: isolated }
-  co_location: []
+  isolation: { execution-service: isolated, strategy-service: isolated }
+  co_location: [execution-service, strategy-service]
   latency_budget_ms: 150
-  min_sla_tier: standard
+  min_sla_tier: premium
 ---
 
 # Archetype: `LIQUIDATION_CAPTURE`

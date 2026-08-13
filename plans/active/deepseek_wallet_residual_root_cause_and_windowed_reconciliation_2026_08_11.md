@@ -30,10 +30,10 @@ related:
     /codex/12-agent-workflow/measurement-claims-discipline.md,
   ]
 created: 2026-08-11
-last_updated: 2026-08-11
+last_updated: 2026-08-12
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 2
@@ -160,12 +160,64 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       free), transcripts are 77G, and the fleet burns ~1,225 files/day at ~3.4 MB each (~4.2 GB/day) — a 30-day
       extension would consume essentially all remaining free space. **Done when**: the setting is pinned and the
       disk-headroom figures are re-checked at the time of the change. (repo: unified-trading-pm)
-- [ ] [OPERATOR] P3. **Decide whether to fund request-level accounting at a proxy.** The only class the transcript
-      design can NEVER see is tokens billed with no transcript line — a pane killed mid-stream, a request that errors
-      after generation, a retry. Routing DeepSeek traffic through a local pass-through proxy would log every response's
-      usage block when it returns, independent of whether the client survived to write the transcript. Measured cost of
-      NOT doing it is currently ~$0.07-$0.16 per crash-loop episode, so this is a judgment call about observability, not
-      a cost-recovery case. Revisit if the first true 24h residual is materially above the ~$0.13 skew floor.
+- [x] ✅ [BACKEND] P0. **SHIPPED + DEPLOYED 2026-08-12 — standalone DeepSeek native-usage capture proxy, live and
+      verified against real traffic.** Supersedes the P3 "decide whether to fund" framing below — the case stopped being
+      a small crash-loop edge case once the root cause (next todo) was found: it's the ONLY way to capture correct
+      per-task token splits at all, not a $0.07-$0.16/episode nice-to-have. **What it is**:
+      `server/deepseek_native_proxy_server.py` + `server/deepseek_native_translate.py`, a separate systemd service
+      (`deepseek-native-proxy`, port 8767, loopback-only) that DeepSeek-account CLI workers point `ANTHROPIC_BASE_URL`
+      at instead of `https://api.deepseek.com/anthropic` directly. It translates Anthropic-Messages<->DeepSeek-native
+      `/chat/completions`, captures DeepSeek's real usage block
+      (`prompt_cache_hit_tokens`/`prompt_cache_miss_tokens`/`reasoning_tokens`) into a new `DeepSeekNativeUsageRow`
+      table BEFORE relaying the response (durable even if the pane dies immediately after), streams content
+      chunk-by-chunk in real time (NOT buffer-then-replay — an earlier draft buffered the whole turn, which would have
+      gone silent long enough to trip the OTHER open P0's spawn-heartbeat watchdog; fixed before any deploy), and fails
+      open to a raw `/anthropic` passthrough on any internal error so a bug here degrades to today's behavior rather
+      than breaking a conversation. Separate process (not mounted in `orchestrator.service`) specifically to avoid
+      adding new load to the process the tmux-crash investigation (sibling issue doc) is watching. **Library research**:
+      checked UniClaudeProxy/claudex/deepclaude/LiteLLM/OpenRouter as reuse candidates — all rejected, none preserve
+      DeepSeek's native cache-hit/miss split (confirmed live for UniClaudeProxy and, via a real GitHub issue, for
+      OpenRouter specifically). Hand-rolled instead, using their SSE/tool-call translation shape only as reference.
+      **Deploy chain, each step real and verified, not assumed**: shipped `agent-orchestrator@85232486e3` (proxy +
+      streaming fix), installed + enabled the systemd unit on the VM, redirected the `deepseek-v4-pro` canary account's
+      `ANTHROPIC_BASE_URL` — discovered this doesn't stick on its own: `server/creds_env_poller.py` re-syncs each
+      account's `.env` from a cloud creds bucket (`uts-orchestrator-creds-427895769566`, S3) on a timer and silently
+      reverted the local edit. Fixed at the actual source of truth via a small script using
+      `unified_trading_library.cloud_interface.download_from_storage`/`upload_to_storage` (the sanctioned SDK path — a
+      raw `aws s3 cp` attempt was correctly blocked by this workspace's own guardrail hook). Verified end-to-end against
+      REAL live traffic: `deepseek_native_usage` now holds real captured rows with the true cache-hit split (one turn:
+      86,400 cache-hit tokens out of 88,132 total — 98% — while the OLD `deepseek_message_usage` table shows
+      `cache_read_input_tokens=0` for the same session/window, the exact defect this whole investigation chased).
+      **Second bug found + fixed the same day**: the `claude_session_id` correlation key (needed to join native usage
+      back to a specific task) came back NULL on every row — the extraction regex was built from a static cli.js
+      decompile that turned out to be WRONG for the CLI version actually in production. Sniffed real loopback traffic
+      (`tcpdump -i lo`) to get the actual live shape — `metadata.user_id` is a JSON-ENCODED STRING
+      (`{"device_id":...,"account_uuid":...,"session_id":"<uuid>"}`), not the plain `user_A_account_B_session_Q` string
+      the decompile found. Fixed (`agent-orchestrator@6f37771`), landed on the VM via `ao-self-pull`, but (learned live)
+      **`ao-self-pull.sh` only restarts the `orchestrator` unit, never this new standalone service** — had to manually
+      `systemctl restart deepseek-native-proxy` to pick up the fix. Verified: first row after restart carries a real
+      populated `claude_session_id`. **Still open, tracked below**: `deepseek-v4-flash` is deliberately NOT yet migrated
+      (canary-first, one account at a time); `deepseek_native_usage` has no `spend_usd` column, so dollar-level "think
+      vs. reality" reconciliation from native data needs a follow-up step; a `reasoning_tokens` UI-wiring pass surfaced
+      4 pre-existing, unrelated Playwright e2e failures (see todo below). Rollback if needed: restore any
+      `deepseek-v4-<model>.env.bak-canary-*` backup in `~/.claude-accounts/` on the VM and re-run the same
+      creds-bucket-fix script in reverse (swap old/new `ANTHROPIC_BASE_URL` values).
+- [x] ✅ [BACKEND] P1. **SHIPPED 2026-08-12 — `reasoning_tokens` wired into every existing token-breakdown display, with
+      real Playwright L2 coverage.** `agent-orchestrator@bb05ece096`. Touched 9 backend response shapes across 5 route
+      files + 6 frontend components (no shared type existed anywhere for these fields, Python or TS, so this was
+      genuinely N separate touches, not one). Joined via `claude_session_id` against the new `DeepSeekNativeUsageRow`
+      table (a new query-helper trio in `server/state_store/slots.py`, following the existing
+      `window_task_usage_totals`/`list_task_usage` pattern). **Null-vs-zero handling is load-bearing and tested**: zero
+      matching native-usage rows -> `None`/"—" (never `0`, which would falsely claim "measured zero reasoning" when the
+      truth is "never captured"); a captured row whose own `reasoning_tokens` is genuinely 0 contributes a real `0` to
+      an otherwise-real sum. Real Playwright L2 run (not just `tsc`/`vitest`, which was an initial gap caught before
+      shipping per this workspace's UI-testing hard rule): `deepseek-per-turn-metrics.spec.ts` +
+      `fleet-token-cache-badge.spec.ts`, 8 passed. A full-suite sanity pass found 4 pre-existing, unrelated failures
+      (`provider-badge.spec.ts`, `switch-account.spec.ts`, `switch-model.spec.ts`, `thinking-flag-honesty.spec.ts` —
+      same root cause: a `hasText: "#1"` selector substring-matching "#10"/"#11" rows generated by this machine's real
+      `.tabs/<N>` sibling checkouts) — correctly left unfixed as out-of-scope, flagged here instead of silently hidden.
+      **Follow-up todo, small and clear**: anchor those 4 files' selectors to `/^#1\D/` the same way this task's own fix
+      did in `fleet-token-cache-badge.spec.ts`. (repo: agent-orchestrator, dashboard)
 
 - [x] ✅ [BACKEND] P0. **ROOT-CAUSED — 82% of the "42.7% unattributed" was a PHANTOM TOP-UP, not lost spend.** Row id 6
       ($10.00, 2026-08-11 11:13Z, note "erro is previous top up sum") recorded a top-up that never happened.
@@ -197,44 +249,118 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       $4.9177
       stored, pro $6.4081 vs $6.4082 — the arithmetic is exact. Tool: `deepseek_spend_probe.py --capture`
       (agent-orchestrator@fab845c1df).
-- [ ] [OPERATOR] P1. **Verify the DeepSeek rate card against DeepSeek's own usage page — the residual is now a rate
-      question.** With capture at 99.93% and the rate-card arithmetic exact, the remaining ~14% must be a per-token rate
-      that does not match what DeepSeek actually bills. A SINGLE window cannot say which rate is wrong: closing the
-      $2.09 gap needs input x1.25, OR output x2.26, OR cache_read x2.43 — all three fit equally well. What
-      separates them is a token mix that VARIES, so this pairs with the daily-series todo below. Compare our 24h
-      totals (flash 22,892,972 in / 3,046,702 out / 307,019,392 cache-read = $4.9177;
-      pro 11,480,931 / 929,470 / 166,986,240 = $6.4082) against platform.deepseek.com's usage page for the same window.
-      **Done when**: each published rate is confirmed or corrected in `model_pricing.py` with the source cited. (repo:
-      agent-orchestrator)
-- [ ] [DATA] P1. **Re-measure the 24h residual daily for a week — and regress it to identify WHICH rate is wrong.** One
-      window is one datapoint, and this one ran at low volume ($14.50 real vs ~$122/24h on 2026-08-11), where a fixed
-      unattributable component looks proportionally huge and a proportional one does not. Beyond that
-      fixed-vs-proportional split, the series answers a sharper question: with 7 readings whose token MIX differs,
-      regressing real_spend on (input, output, cache_read) tokens yields coefficients that ARE the true per-token rates
-      — which is the only way to distinguish the three equally-good single-window fits above without vendor ground
-      truth. Run `deepseek_spend_probe.py` (its `reconciliation` block emits every window at once). **Done when**: 7
-      daily readings are recorded with volume and token mix alongside residual, and the regression either names the
-      mispriced rate or shows the residual is not rate-shaped. (repo: agent-orchestrator, read-only)
+- [x] ✅ [BACKEND] P0. **DeepSeek bills on a measured 3-MINUTE LAG — and that lag is NOT the residual.**
+      Cross-correlating per-minute card cost against per-minute wallet drawdown gives a single sharp peak: r = -0.11 at
+      lag 0, -0.06 at 1, +0.08 at 2, **+0.74 at lag 3**, +0.42 at 4, then noise (|r| < 0.24) out to 30 min. So a turn's
+      cost reaches the balance ~3 minutes after the transcript records it. This matters for any window shorter than ~1h
+      and for any bucketed analysis, but it does NOT explain the level gap: LAG-ALIGNED, paired-minute totals still give
+      drawdown/card = **1.1712**, essentially identical to the 24h window's 1.168. The gap is a LEVEL effect, not a
+      timing one. Probe: `/tmp/lag.py` pattern, folded into `deepseek_spend_probe.py`.
+- [x] ✅ [BACKEND] P0. **Which rate is wrong is NOT identifiable from the data we have — recorded so nobody re-runs
+      it.** Attempted directly rather than waiting on the 7-day series: bucket the existing 1-minute balance series and
+      regress real drawdown on (input, output, cache_read) tokens per model. It FAILS, for a measurable reason.
+      Unaligned buckets fit noise — the 6-free-parameter solution returns NEGATIVE rates (pro.input -0.023/M at 5-min
+      buckets, flash.cache_read -0.0025/M at 10-min), which are physically impossible, and the bucket ratio drifts 0.82
+      -> 0.93 -> 0.94 as buckets widen from 5 -> 10 -> 15 min, which is the signature of the 3-min lag above, not of a
+      rate. Aligning by the measured lag and demanding full drawdown coverage per bucket leaves only **3 buckets at 10
+      min, 2 at 15, 1 at 20** — fewer observations than free parameters, so the system is underdetermined no matter
+      which estimator is used. Root cause of the shortage: all usable spend sits in ONE burst (2026-08-11 07:46-09:30Z)
+      with one token mix; the fleet has been idle since. **Identification needs days whose token MIX differs**, which is
+      exactly what the daily cron now accumulates — it is a data-availability limit, not an analysis one.
+- [x] ✅ [OPERATOR] P1. **VERIFIED 2026-08-12 — the rate card is CORRECT; the candidate multipliers above (input
+      x1.25/output x2.26/cache_read x2.43) were noise, not a real mispriced rate.** Compared vendor's own token counts
+      (`platform.deepseek.com`, 4 model-days: flash/pro x 08-10/08-11) against our rate card: vendor tokens priced at
+      our UNCHANGED rates reproduce vendor's own stated dollar cost to the cent on all 4 — flash 08-10
+      $34.97
+      predicted/actual, pro 08-10 $45.07/$45.06, flash 08-11 $32.30/$32.30 exact, pro 08-11 $47.18/$47.18.
+      Also cross-checked directly against `api-docs.deepseek.com/quick_start/pricing` — published rates byte-identical
+      to `model_pricing.py`. The real cause (see the proxy todo above): DeepSeek's `/anthropic` compat endpoint discards
+      the native cache-hit/miss split server-side before any response reaches us — a categorization defect, not a
+      pricing one. `model_pricing.py` needed no change.
+- [x] ✅ [DATA] P1. **CLOSED, superseded by the finding above — do not re-run the daily-series regression for "which
+      rate."** There is no mispriced rate to identify. The daily-residual cron log is still useful for other purposes
+      (tracking real-vs-attributed spend over time) but regressing it against (input, output, cache_read) would only
+      ever recover coefficients that compensate for the categorization defect, not true rates.
 
 ## Deferred work after 2026-08-12
 
-**Recommended NEXT item**: find where the 42.7% goes. It is the operator's stated success criterion, and every other
-item here is secondary to it.
+**Recommended NEXT item**: the Claude/Anthropic flat-rate billing calibration project (new, see
+`/plans/active/issues/claude_anthropic_flat_rate_billing_calibration_2026_08_12.md`) — everything in the DeepSeek column
+below is now shipped and deployed; flash is only pending live-traffic re-verification once the fleet resumes (see
+Progress Log).
 
-| Item                                                     | State / why deferred                                                                                     | Blocked on                           |
-| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| Find the $12.44 (42.7%) unattributed 24h spend           | **Not done** — real work, nothing blocking it                                                            | nobody                               |
-| Re-measure the 24h residual daily x7                     | **Cannot be done yet** — one reading per day by construction; the series is the point, not any one value | elapsed time                         |
-| Stamp `agent_kind` onto `deepseek_message_usage`         | **Not done** — bounded backend work; also a prime suspect for the 42.7%                                  | nobody                               |
-| Repair NULL slot_id / is_review_slot rows (re-sweep)     | **Not done** — needs fingerprints cleared first; also a prime suspect                                    | nobody                               |
-| Discover transcripts by glob, not slot enumeration       | **Not done** — removes a silent-loss class by construction                                               | nobody                               |
-| Freeze the pre-observability opening balance             | **Not done** — cosmetic until the live leak above is understood                                          | nobody                               |
-| Windowed view in `DeepSeekWalletPanel.tsx`               | **Not done** — needs `pw:L2` spec                                                                        | nobody                               |
-| Fix the `uv.lock` churn cycle                            | **Not done** — touches `setup.sh` sibling pinning + cron `[auto-clean]`, both fleet-load-bearing         | operator scoping (my recommendation) |
-| Flip `QG_ENFORCE_FRESH_VENV` to default on               | **Cannot be done yet** — strictly downstream of the churn fix                                            | the churn fix                        |
-| Anthropic Wallet Reconciliation (5 todos)                | **Not done** — filed in the anthropic calibration plan; AO-dispatched                                    | nobody                               |
-| Request-level proxy accounting for DeepSeek              | **Operator-owned** — a cost/observability judgement, not a defect                                        | operator decision                    |
-| Peer conflicts left in two shared clones (see issue doc) | **Operator-owned** — another session's WIP; not mine to resolve                                          | the sessions that own them           |
+| Item                                                                                                                                                                    | State / why deferred                                                                                                                                                                                                     | Blocked on                                                        |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| Migrate `deepseek-v4-flash` onto the native proxy                                                                                                                       | **DONE 2026-08-12** — `.env` + creds-bucket-absent path confirmed durable; live-traffic re-verification pending, fleet was paused (31/34 slots) right after the switch — see Progress Log                                | fleet resume (operator confirmed ~5-10min out as of last message) |
+| Compute `spend_usd` on `deepseek_native_usage`                                                                                                                          | **DONE 2026-08-12** — shipped, then a real pricing-model bug found+fixed (see Progress Log); verified against hand-calculation to the exact dollar                                                                       | nobody                                                            |
+| Fix the response cache-split never reaching the CLI (old-table `cache_read_input_tokens` staying 0 even through the fixed proxy)                                        | **DONE 2026-08-12** — real gap found via live comparison against vendor's dashboard; fixed, deployed, verified with fresh production rows                                                                                | nobody                                                            |
+| Wire DeepSeek-native `reasoning_tokens` into every existing token-breakdown UI surface                                                                                  | **DONE 2026-08-12** — 9 backend response shapes + 5 frontend components, real Playwright L2 coverage (not just tsc/vitest), dashboard bundle rebuilt on the VM (was stale since Aug 6)                                   | nobody                                                            |
+| Implement `/v1/messages/count_tokens` on the native proxy                                                                                                               | **Not done** — confirmed live 404s in the proxy journal; CLI calls this for context-window pressure decisions, currently silently failing for pro (and soon flash) traffic                                               | nobody                                                            |
+| Document the streaming fail-safe's narrower guarantee (mid-stream failures can no longer cleanly fall back to `/anthropic` passthrough once real bytes are on the wire) | **Not done** — the code handles it safely (skips the DB write, closes the SSE stream cleanly) but this design tradeoff isn't written up anywhere outside chat/commit history                                             | nobody                                                            |
+| Fix the 4 pre-existing `#1`/`#10`/`#11` selector-collision e2e failures                                                                                                 | **Not done** — small, clear, same fix pattern already demonstrated in one sibling file                                                                                                                                   | nobody                                                            |
+| Find the $12.44 (42.7%) unattributed 24h spend                                                                                                                          | **Superseded** — that specific 24h window is long past; re-measure fresh if the residual recurs                                                                                                                          | nobody                                                            |
+| Stamp `agent_kind` onto `deepseek_message_usage`                                                                                                                        | **Not done** — bounded backend work                                                                                                                                                                                      | nobody                                                            |
+| Repair NULL slot_id / is_review_slot rows (re-sweep)                                                                                                                    | **Not done** — needs fingerprints cleared first                                                                                                                                                                          | nobody                                                            |
+| Discover transcripts by glob, not slot enumeration                                                                                                                      | **Not done** — removes a silent-loss class by construction                                                                                                                                                               | nobody                                                            |
+| Freeze the pre-observability opening balance                                                                                                                            | **Not done** — cosmetic until the live leak above is understood                                                                                                                                                          | nobody                                                            |
+| Windowed view in `DeepSeekWalletPanel.tsx`                                                                                                                              | **Not done** — needs `pw:L2` spec                                                                                                                                                                                        | nobody                                                            |
+| Fix the `uv.lock` churn cycle                                                                                                                                           | **Not done** — touches `setup.sh` sibling pinning + cron `[auto-clean]`, both fleet-load-bearing                                                                                                                         | operator scoping (my recommendation)                              |
+| Flip `QG_ENFORCE_FRESH_VENV` to default on                                                                                                                              | **Cannot be done yet** — strictly downstream of the churn fix                                                                                                                                                            | the churn fix                                                     |
+| Claude/Anthropic flat-rate billing calibration (new, separate initiative)                                                                                               | **Not done** — full scope captured 2026-08-12 in `/plans/active/issues/claude_anthropic_flat_rate_billing_calibration_2026_08_12.md`; needs a plan-destination decision (AO-dispatched vs human) before real work starts | operator scoping decision                                         |
+| Peer conflicts left in shared clones (unified-trading-pm)                                                                                                               | **Operator-owned** — other sessions' WIP incl. a live merge conflict (`ff-starvation-detect.sh`) observed 2026-08-12; not mine to resolve                                                                                | the sessions that own them                                        |
+
+- **2026-08-12 (continued, full proxy build + deploy + 3 real bugs found live)** — Implemented, deployed, and verified
+  the DeepSeek native-usage-capture proxy end-to-end (design decided earlier this same day, see the P1 todo above).
+  Shipped as `agent-orchestrator@85232486e3` (base build) → `4e2d7b34b6` (streaming buffer→real-time fix, found before
+  rollout: full-response buffering would have gone silent for an entire DeepSeek turn, colliding with the OTHER open
+  P0's spawn-heartbeat watchdog which specifically checks for live pane output) → `6f37771` (session-correlation:
+  `metadata.user_id` turned out to be a JSON-encoded string, not the plain-string shape a cli.js decompile had predicted
+  — corrected against REAL live traffic via loopback tcpdump, not another guess) → `ff72f0a958` (spend_usd pricing bug:
+  was pricing by the CLI's self-declared request `model` field instead of `account_id` — this fleet already had
+  documented precedent for that exact divergence in `deepseek_usage_poller.py`'s existing filter) → `ff72f0a958`+one
+  more (the cache-split-never-reaches-the-CLI bug: the proxy's OWN response to the CLI dumped DeepSeek's combined
+  `prompt_tokens` straight into `input_tokens` with `cache_read_input_tokens` always 0, so the OLD table — which is what
+  the wallet dashboard actually reads — stayed just as wrong as before the proxy existed, even for proxy-routed traffic;
+  found by directly comparing old-table vs native-table rows for the same live session). Deployment required a manual
+  systemd install (`deepseek-native-proxy.service`, port 8767, standalone process specifically to avoid adding load to
+  `orchestrator.service` while the OTHER P0 was investigating resource-contention crashes) plus, non-obviously, a
+  SEPARATE manual restart of `orchestrator.service` itself the first time a DB-schema migration was needed — the
+  standalone proxy process never runs `create_all_tables()`/migrations itself, only `orchestrator.service`'s own startup
+  does, and `ao-self-pull.sh` only auto-restarts `orchestrator`, never the proxy — so BOTH need a manual bump after any
+  code change that touches the DB schema, and the proxy needs one after any change at all (self-pull moves the checkout
+  but never restarts it). Also found and fixed: the `.env`-based credential redirect for `deepseek-v4-pro` didn't stick
+  on the first attempt — `server/creds_env_poller.py` treats an S3 creds bucket as source of truth and silently reverts
+  any local-only edit on its next ~5min poll tick; the durable fix required updating the BUCKET object too (via
+  `unified_trading_library.cloud_interface.upload_to_storage`, the sanctioned SDK path — a raw `aws s3 cp` attempt was
+  correctly blocked by this workspace's subprocess-S3-ops hook). For `deepseek-v4-flash`'s later migration, the bucket
+  object didn't exist at all (404) — confirmed the poller silently skips a missing remote object without touching the
+  local file, so flash's redirect only needed the local `.env` edit, no bucket write. Also found and fixed, unrelated
+  pre-existing bug noticed while editing flash's `.env`: `CLAUDE_ACCOUNT_LABEL=deepseek-v4-pro` was copy-pasted into the
+  flash file (cosmetic, display-only, but wrong). Separately wired DeepSeek-native `reasoning_tokens` (visible for the
+  first time ever — the old capture path silently drops it) into every existing token-breakdown UI/API surface (9
+  backend response shapes, 5 frontend components), with real Playwright L2 coverage per this workspace's UI hard rule
+  (not just `tsc`/`vitest`) — caught a real pre-existing e2e selector-collision bug (`#1` substring-matching
+  `#10`/`#11`) in the one file it touched along the way (see the new deferred-table entry for the 3 sibling files still
+  affected). Also discovered and fixed a separate deploy gap: the dashboard's static build (`dashboard/dist/`) was stale
+  since 2026-08-06 — restarting `orchestrator.service` (Python backend) does NOT rebuild the frontend bundle, so all of
+  today's UI changes would have been invisible in a real browser until a manual `npm run build` — done, confirmed via a
+  fresh `tsc`-clean build. **Net result, confirmed with real production data, hand-verified against DeepSeek's own
+  dashboard**: for `deepseek-v4-pro`, our `spend_usd` now matches a hand-calculation from our own stored tokens × the
+  (already-correct) rate card to the exact cent, and raw cache-hit/cache-miss token counts land within ~2% of DeepSeek's
+  own dashboard for the same hour. `deepseek-v4-flash` is migrated (env + label fixed) but unverified against live
+  traffic — the fleet dropped to 31/34 slots paused (almost certainly the OTHER open P0's own mitigation work) right
+  after the switch, before any real flash turn could exercise it.
+- **2026-08-12 (continued) — new initiative captured, not yet started.** Operator proposed a parallel project: derive an
+  effective $-per-token "boost multiplier" for flat-rate Claude/Anthropic subscriptions (Max $200/mo, Pro
+  $20/mo)
+  by comparing Anthropic's own %-of-weekly-limit signal (converted to an implied $ figure via day-prorated
+  subscription cost) against our own captured token usage priced at Anthropic's published list rates for the SAME clean,
+  AO-only-usage account and window — plus the same crash-durability guarantee already built for DeepSeek (capture usage
+  even if a tmux session dies before completing), applied to Claude accounts, feeding a new "Claude Wallet
+  Reconciliation" dashboard widget alongside the existing DeepSeek one. Full scope captured verbatim in
+  `/plans/active/issues/claude_anthropic_flat_rate_billing_calibration_2026_08_12.md` rather than left in chat. **Not
+  started** — needs a plan-destination decision (AO-dispatched vs human, per this workspace's ask-before-creating rule)
+  and some open design questions (see that issue doc) resolved first.
 
 ## Session lessons 2026-08-12 (carry these — each cost real time)
 
@@ -270,6 +396,9 @@ item here is secondary to it.
 
 ## Progress Log
 
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
+
 - **2026-08-11** — Investigated the operator's "off by a factor" hypothesis. Killed four candidate causes by measurement
   (see table above). Established the residual is a historical stock, not a flow, via a live 50-minute drawdown window
   (ratio 1.045). Found the real blocker on the operator's success criterion: no balance history existed anywhere, so a
@@ -282,3 +411,21 @@ item here is secondary to it.
   installed against a `pyproject.toml` requiring `>=0.137.0` (lock pins 0.140.7), so `tests/conftest.py` could not
   import and the ENTIRE python suite was unable to run. `uv sync` repaired it. Worth a broader check that other slots
   are not silently in the same state.
+- **2026-08-12** — Root-caused the residual to a DeepSeek-server-side categorization defect (not a rate, not a
+  measurement gap), built and deployed the fix (a native-usage capture proxy), found and fixed two real bugs along the
+  way (a credential-poller silently reverting the fix, a wrong session-correlation format), and wired the newly visible
+  `reasoning_tokens` field through the whole dashboard with real Playwright coverage. Full detail is in the two `[x]`
+  todos above (proxy deploy chain, reasoning_tokens wiring) — not repeated here. Net effect: DeepSeek accounting is now
+  demonstrably correct going forward for `deepseek-v4-pro` (verified against live traffic); `flash` and dollar-level
+  (`spend_usd`) reconciliation are the two open follow-ups.
+- **2026-08-12 (pre-compact)** — Real near-miss: this exact plan doc's edits from earlier the same session (the two
+  `[x]` todos above) had been made on disk but never committed/pushed, then the local `unified-trading-pm` checkout
+  turned out to be hundreds of commits stale (`HEAD=40f7e896`, far behind `origin/live-defi-rollout`) with an unrelated
+  session's live merge conflict (`UU scripts/dev/ff-starvation-detect.sh`) sitting in the same shared working tree — the
+  file briefly appeared to not exist on disk at all (not in HEAD, not in the index, not in the one `autostash` stash
+  entry). Recovered by fetching the file fresh from `origin/live-defi-rollout` (which DID have it, current local HEAD
+  just didn't) and reapplying the edits from this conversation's own record, then shipping via `safe-doc-push.sh`'s
+  isolated-worktree mode, which builds from origin and never needed the local HEAD to be correct at all. Lesson: on this
+  shared checkout, "the file isn't where I left it" can mean "your local HEAD is stale," not "it was deleted" — check
+  `git show origin/<branch>:<path>` before assuming loss, and prefer the isolated-worktree ship scripts specifically
+  because they don't depend on local HEAD being sane.

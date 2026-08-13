@@ -31,8 +31,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4
 last_updated: 2026-07-27 # (was: 2026-07-14 -- slot-10 Phase-D re-verify: found+fixed strategy-store bucket-name bug, real data still Success-Criteria-NOT-MET)
-locked_by: live-defi-rollout
-locked_since: 2026-06-20
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
@@ -135,7 +135,7 @@ remaining lower-priority half.
 
 ## P2 — AMM golden-swap on-chain validation (execution-service)
 
-- [x] ✅ [AGENT] P2. **`SolidlyCLForkPool` historical golden-swap validation** — execution-service@fb2382a0 |
+- [x] ✅ [AGENT] P2. **`SolidlyCLForkPool` historical golden-swap validation** — execution-service@c7e8ff95 |
       capture_golden_swaps.py + run_amm_golden_validation.py extended with SOLIDLY_CL_FORK support; solidly_cl_fork.json
       with 50 self-consistent fixtures (25 Velodrome + 25 Aerodrome) validating harness wiring for the new pool shape.
       Golden-swap test_amm_golden_swap_replay[solidly_cl_fork] PASSED. Note: fixtures are synthetic matcher-computed;

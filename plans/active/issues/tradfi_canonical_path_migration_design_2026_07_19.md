@@ -23,8 +23,9 @@ source: "Full physical GCS enumeration (bny7k1yk6) + investigation workflow (wli
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
+locked_by:
+locked_since:
 assigned_vm: planning
 resolved_by:
 context_scope:
@@ -405,7 +406,7 @@ removal + casing normalization remain before backfill-resume.
       across ~506 dates × 11 roots × 2 data_types × up to 3 shapes) and must not run on this shared host per
       `/codex/05-infrastructure/vm-launcher-runbook.md` — split into the dedicated tracked todo immediately below so it
       is AO-dispatchable instead of sitting as Deferred-work-table prose only.
-- [ ] [DATA] P1. **(NEW 2026-08-11, slot 32) VM-dispatch: full per-cell five-part-proof across the CME combo corpus —
+- [x] ✅ [DATA] P1. **(NEW 2026-08-11, slot 32) VM-dispatch: full per-cell five-part-proof across the CME combo corpus —
       the corrected scope's actual remaining work.** Systematic per-`(date,underlying,data_type)` disposition check
       across all ~506 combo dates × 11 named roots (BTC, SP500, GOLD/GC, WTI/CL/CL-BZ, + others per the naming-
       convention-split todo) × 2 `data_type`s (`ohlcv_1m`, `ohlcv_1s`) × up to 3 coexisting path shapes (bare
@@ -420,7 +421,22 @@ removal + casing normalization remain before backfill-resume.
       originals needs a fresh `[OPERATOR]` gate per this doc's hard-stops (§ "Hard-stops (operator-only)"). Bundle with
       the sibling "Migrate historical short-code `underlying=` GCS objects to display-name form" todo above — same
       corpus walk, same VM dispatch, per the Deferred-work table's "Recommended next" line. Repo:
-      market-tick-data-service.
+      market-tick-data-service. — **DONE 2026-08-12 (slot-7, data_engineering): full per-cell five-part-proof executed,
+      disposition manifest produced.** Tooling already shipped (`market-tick-data-service@ff5642a2` — read-only
+      `audit_tradfi_cme_combo_cell_dispositions_2026_08_11.py`, prefix-scoped listings, crc32c-first content-verify, no
+      `--apply` path). Full-corpus run (2020-01-01→2026-08-11, `--writer-verdict none --reader-verdict remains` — the
+      reader verdict re-verified live against MDPS `path_parsing.py`, which still handles the legacy `combo` grouping;
+      run bounded under `run-bounded-analysis.sh` 4G cap) → **manifest
+      `/home/ubuntu/unified-trading-system-repos/.tabs/7/scratch/combo_dispositions_full.tsv`** (233,658 rows +
+      `.report.txt`): **233,658 legacy `combo` objects / 141,422 distinct `(day,data_type,canonical_root)` cells** —
+      ~146× the ~1,598 manifest rows (the manifest undercounts this estate; the filename-only shape alone is 26,220
+      objects and historical bare/quote-margin debris roughly doubles the captured-cell count). Dispositions: **207,438
+      `no-migrate-first`** (64,366 bare + 143,072 quote_margin legacy chain shapes; **0% `combo_chain` twin coverage** —
+      no canonical twins exist yet, so zero delete candidates) + **26,220 `no-still-authoritative`** (filename-only =
+      live single-`InstrumentType.COMBO` writes, still the writer's current target). 0 yes-* / 0 unknown; **NO delete
+      executed** (all 233,658 objects still in place). Follow-on: the 207,438-object `combo_chain` migration
+      (non-destructive copy+verify), bundled with the short-code→display-name migration per this doc's "Recommended
+      next", gated on a fresh `[OPERATOR]` decision for any subsequent legacy-`combo` delete.
 - [x] ✅ [DATA] P1. **(NEW 2026-08-11) Implement the instrument_id-blank / combo→combo_chain design** (see "2026-08-11
       update" above) across the writer (`manifest_finalize.py`, `partitioned_writer.py`, `tardis_cefi_shards.py`), the
       manifest schema, and any downstream reader/pre-flight-skip-check keyed on the old fake instrument_id or the
@@ -808,3 +824,24 @@ one VM dispatch, since both walk the same `combo`/`futures_chain` corpus.
   32,417 objects remains correctly gated behind operator-go + VM dispatch per
   `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` (unambiguously heavy I/O, over the runbook's
   few-hundred-object threshold). Repo: market-tick-data-service.
+- **2026-08-12 (slot-7, data_engineering) — VM-dispatch P1 todo DONE: full per-cell five-part-proof executed.** Ran
+  `market_tick_data_service/scripts/audit_tradfi_cme_combo_cell_dispositions_2026_08_11.py` (shipped
+  `market-tick-data-service@ff5642a2`) over the full corpus (2020-01-01→2026-08-11, writer-verdict=none
+  reader-verdict=remains — reader verdict re-verified live against MDPS `path_parsing.py`'s legacy-`combo` handling),
+  wrapped under `run-bounded-analysis.sh` (4G cap; actual peak RSS ~760MB — metadata-only, no content reads since all
+  233,658 cells are twin-absent). **Disposition manifest**: `../scratch/combo_dispositions_full.tsv` (233,658 rows) +
+  `.report.txt`. **Corpus is 233,658 legacy objects / 141,422 cells — ~146× the ~1,598 combo manifest rows** (the
+  manifest undercounts this estate; the filename-only shape is 26,220 objects and historical bare/quote-margin debris
+  roughly doubles the captured-cell count). Dispositions: **207,438 `no-migrate-first`** (64,366 bare + 143,072
+  quote_margin legacy chain shapes; 0% `combo_chain` twin coverage — no twins exist, so nothing is a delete candidate)
+  - **26,220 `no-still-authoritative`** (filename-only live single-`InstrumentType.COMBO` writes). 0 yes-* / 0 unknown;
+    **NO delete executed, no delete-safety hard-stop crossed.** The 207,438-object `combo_chain` migration is the
+    follow-on VM-scale work (non-destructive copy+verify), bundled with the short-code→display-name migration per the
+    Deferred-work table's "Recommended next"; any subsequent legacy-`combo` delete stays `[OPERATOR]`-gated.
+- **2026-08-12** — `locked_by`/`locked_since` cleared (corpus-wide fix, operator ruling Option B, interactive session
+  2026-08-12; see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md). This doc has
+  0 open todos, so clearing the placeholder lock immediately makes it archive-eligible. Per the ruling's explicit scope
+  ("do NOT auto-archive in this same pass"), archival itself is deferred to a separate follow-on pass; bridged with
+  `archive_exempt: true` (the sanctioned flip-then-mv two-commit pattern documented in
+  `scripts/plan-hygiene/check_archive_candidates.sh`) so this commit doesn't trip the archive-candidates pre-commit
+  gate. The follow-on pass should drop `archive_exempt` and `git mv` this doc to `plans/archive/[issues/]`.

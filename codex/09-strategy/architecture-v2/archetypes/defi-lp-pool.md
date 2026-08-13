@@ -36,9 +36,10 @@ archetype: DEFI_LP_POOL
 family: MARKET_MAKING
 venue_universe: [CURVE, BALANCER_V2, BALANCER_V3]
 topology_requirements:
-  isolation: { execution-service: shared }
+  isolation: { execution-service: isolated, strategy-service: isolated }
+  co_location: [execution-service, strategy-service]
   latency_budget_ms: 1000
-  min_sla_tier: standard
+  min_sla_tier: premium
 ---
 
 # Archetype: `DEFI_LP_POOL`

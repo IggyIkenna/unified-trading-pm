@@ -328,6 +328,88 @@ jobs:
   # Mirror of GCP notify-build-not-configured — alerts when a CodeBuild project
   # is missing for the repo+env. Gate behind CLOUD_BUILD_PROD_DEPLOY_EXPECTED
   # (same opt-in var as GCP router) so pre-cutover noise is suppressed.
+  # ── ESCALATE TO AN AGENT (2026-08-12) ───────────────────────────────────────────────────
+  # Previously Slack-only — see cloud-build-router.yml's own escalate-* jobs for the full
+  # audit + rationale (same pattern, same wall_type — the AWS and GCP routers are the same
+  # conceptual failure class). SSOT: codex/04-architecture/agent-orchestrator-ci-escalation-wall-types.md.
+  escalate-build-not-configured:
+    name: Escalate — AWS Build Not Configured
+    needs: [route-build]
+    if: |
+      always() &&
+      vars.CLOUD_BUILD_PROD_DEPLOY_EXPECTED == 'true' &&
+      needs.route-build.outputs.env == 'prod' &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_triggered == 'false' &&
+      needs.route-build.outputs.build_failure_reason == 'not-configured'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch cloud_build_router_failure escalation
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping" && exit 0
+          GH_TOKEN="${GH_PAT}" gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=${{ needs.route-build.outputs.repo }}" \
+            -f "client_payload[pr_number]=0" \
+            -f 'client_payload[wall_type]=cloud_build_router_failure' \
+            -f "client_payload[context]=AWS CodeBuild Not Configured: ${{ needs.route-build.outputs.repo }} (env ${{ needs.route-build.outputs.env }}). Provision CodeBuild project ${{ needs.route-build.outputs.repo }}-${{ needs.route-build.outputs.env }} in ap-northeast-1 with buildspec.aws.yaml." \
+            -f 'client_payload[model]=sonnet' \
+            >/dev/null 2>&1 && echo "escalated" || echo "::warning::escalation dispatch failed (non-fatal)"
+
+  escalate-build-failed:
+    name: Escalate — AWS Build FAILED
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_exit_code == '1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch cloud_build_router_failure escalation
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping" && exit 0
+          GH_TOKEN="${GH_PAT}" gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=${{ needs.route-build.outputs.repo }}" \
+            -f "client_payload[pr_number]=0" \
+            -f 'client_payload[wall_type]=cloud_build_router_failure' \
+            -f "client_payload[context]=AWS CodeBuild ${{ needs.route-build.outputs.build_failure_reason }}: ${{ needs.route-build.outputs.repo }} (env ${{ needs.route-build.outputs.env }}, branch ${{ needs.route-build.outputs.branch }}). Log: ${{ needs.route-build.outputs.build_log_url }}. Diagnose the actual build failure (read the CodeBuild log) and fix the root cause on live-defi-rollout." \
+            -f 'client_payload[model]=sonnet' \
+            >/dev/null 2>&1 && echo "escalated" || echo "::warning::escalation dispatch failed (non-fatal)"
+
+  escalate-build-poll-exhausted:
+    name: Escalate — AWS Build Poll Exhausted
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_exit_code == '2'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch cloud_build_router_failure escalation
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping" && exit 0
+          GH_TOKEN="${GH_PAT}" gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=${{ needs.route-build.outputs.repo }}" \
+            -f "client_payload[pr_number]=0" \
+            -f 'client_payload[wall_type]=cloud_build_router_failure' \
+            -f "client_payload[context]=AWS CodeBuild poll exhausted after 60 attempts: ${{ needs.route-build.outputs.repo }} — build still running or unresponsive. Log: ${{ needs.route-build.outputs.build_log_url }}. Check the build's real state directly — it may have completed after the poll gave up, or be genuinely stuck." \
+            -f 'client_payload[model]=sonnet' \
+            >/dev/null 2>&1 && echo "escalated" || echo "::warning::escalation dispatch failed (non-fatal)"
+
   notify-build-not-configured:
     name: Slack — AWS Build Not Configured
     needs: [route-build]

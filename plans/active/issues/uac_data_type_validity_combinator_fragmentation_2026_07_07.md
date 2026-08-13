@@ -280,6 +280,16 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Progress Log
 
+- **2026-08-12** — **SPARK-ETHEREUM oracle_prices capture wired (the decomposed per-pair todo), done + shipped.**
+  Shipped `market-tick-data-service@845bd085` (`_spark_oracle_collection.py` + wiring) +
+  `unified-api-contracts@e34b0f44` (BATCH_SPARK / SOURCE_MODE_CAPABILITY["spark"]={BATCH} / SOURCE_PRIORITY +
+  EMISSION_LATENCY_MS_BY_SOURCE entries) + `unified-trading-library@4580f481` (SPARK venue override in
+  `_VENUE_OVERRIDES` — without it the write path mislabeled every SPARK row as `batch_pyth_hermes`). SparkLend
+  AaveOracle `0x8105f69D9C41644c6A0803fDA7D03Aa70996cFD9` (canonical spark-address-registry `AAVE_ORACLE`); 10 reserves
+  live-verified 2026-08-12 at block 25740221 (eth_call getAssetPrice != 0; sUSDS reverts → excluded). Done-when proven:
+  single-day force-compute 2026-08-11 against the `-test-` defi bucket (`IS_TEST_RUN=true`) produced 10 real `captured`
+  SPARK-ETHEREUM/oracle_prices rows (source=spark, pipeline_mode=batch_spark), verified in the `_index/per_vm/` manifest
+  shards + canonical `batch_spark` parquet paths. QG green on all 3 repos.
 - **2026-08-05** — **Second pass on the Layer-1↔Layer-2 reconciliation (the open DESIGN todo).** Re-ran
   `defi_actual_data_types_not_declared_valid()` against current UAC — 40 undeclared pairs across 38 venues (up from the
   doc's original 31, due to additional venues registered since 2026-07-10). Added 10 data_type declarations to 8
@@ -442,6 +452,79 @@ just belongs on a different layer than instrument_type does, and conflating the 
     declaration gap (declare `oracle_prices` valid for the AAVE oracle protocol in `PROTOCOL_CAPABILITIES`), NOT
     removing the genesis. The 2026-08-05 `defi_actual_data_types_not_declared_valid()` audit flagged it as
     "actual⊄theoretical", which is a Layer-1 under-declaration, not proof the genesis is wrong.
+- **2026-08-12 (slot 16, data_engineering): COMPOUND_V3-ETHEREUM oracle_prices capture — CODE COMPLETE + verified, ship
+  blocked on the pre-existing MTDS LDR red (RB-fc1bb5dd).** Wired the Comet getPrice branch: new
+  `_compound_oracle_collection.py` + constants + handler wiring + preflight sentinel + regression tests in
+  `market-tick-data-service` (all under `market_tick_data_service/cli/handlers/`). Design: query cUSDCv3 (base=USDC →
+  USD-native getPrice) AND cWETHv3 (base=WETH → WETH-quoted, converted ×ETH/USD Chainlink feed at the same noon block),
+  dedup per-asset preferring the USD-native market — markets + assets **live-verified 2026-08-12 at block 25731615 via
+  eth_call** (cWBTCv3/cLINKv3/cUNIv3/cUSDTv3 at older addresses are retired — excluded). ~12 priceable assets (WBTC,
+  cbBTC, rsETH, USDe from cUSDCv3; rETH, osETH, rswETH, tBTC, ETHx, wOETH, USDC, USDT from cWETHv3); deUSD/sdeUSD
+  excluded by a USD sanity floor (mis-scaled feeds price at ~1e-08). **UAC/UTL registration was ALREADY shipped by a
+  parallel session** (`unified-api-contracts@3c39d9cf` BATCH_COMPOUND_V3 + SOURCE_PRIORITY entry +
+  SOURCE_MODE_CAPABILITY; `unified-trading-library@09038982` `_VENUE_OVERRIDES["COMPOUND_V3"]`) — no re-registration
+  needed. `source=compound_v3`, `pipeline_mode=batch_compound_v3` (manifest emit via
+  `pipeline_mode_for_source("compound_v3", ...)`; write path via the venue override). Done-when (single-day
+  force-compute vs the `-test-` bucket) NOT yet run — the code is written + passes QG (only the pre-existing
+  `test_lending_indices_handler.py::test_collect_protocol_chain_writes_canonical_partition_compound` failure remains,
+  which blocks the commit), but the MTDS ship lane is RED on that pre-existing issue
+  (`/plans/archive/2026_08/issues/mtds_qg_red_lending_indices_compound_pipeline_mode_drift_2026_08_12.md`, blocker
+  RB-fc1bb5dd, now RESOLVED). **Adjacent finding (raised for the other doc)**: the UTL venue-only overrides
+  (`AAVE`/`SPARK`/`COMPOUND_V3` → BATCH_*) mislabel `lending_indices` as `batch_aave`/`batch_spark`/`batch_compound_v3`
+  instead of `batch_onchain_subgraph` for ALL THREE venues (verified via `derive_pipeline_mode_for_row`); the correct
+  mechanism is `_VENUE_DT_OVERRIDES` scoped per `(venue, "oracle_prices")`, but scoping it changes AAVE/SPARK derivation
+  too (migration implication) — left to the other doc's P0/escalation rather than fixed unilaterally here.
+- **2026-08-12 (slot 16, continued): MTDS ship lane unblocked.** The pre-existing MTDS red was fixed on origin by the
+  escalation (`market-tick-data-service@6a039e5242` — threads the SSOT pipeline_mode through the lending_indices write
+  path; QG green) AND the UTL root-cause P1 was shipped by a peer (`unified-trading-library@b3b2c440` — moved
+  SPARK/COMPOUND_V3 oracle overrides to per-data_type `_VENUE_DT_OVERRIDES`, so lending_indices/liquidations/risk_params
+  derive batch_onchain_subgraph/batch_onchain_rpc per SOURCE_PRIORITY while oracle_prices stays batch_compound_v3). I
+  independently applied the same COMPOUND_V3-scoped fix, QG-verified it (green), then REVERTED it as redundant once
+  b3b2c440 landed. My COMPOUND_V3 oracle capture code (entry above) is QG-verified; ship of MTDS + the done-when
+  force-compute vs the `-test-` bucket in flight.
+- **2026-08-12 (slot 16, continued): QG gate-fixes applied — ship READY, QG b8rnzc0zs in flight.** The first full QG
+  (bpfqruhiw) failed 2 hard gates on the compound code, both now fixed: (1) `oracle_prices_handler.py` hit 924 lines
+  (>900 cap) — fixed by moving the in-handler `_collect_compound_oracle_rows` helper into
+  `_compound_oracle_collection.py` as a module function
+  `collect_compound_oracle_rows(handler, recorder, target_date_str, noon_ts, run_tag)` (a `TYPE_CHECKING` import avoids
+  the circular import; the 1-line call keeps `process()` under the 50-line method cap) → handler now 899 lines; (2) STEP
+  5.97 flagged 19 uncited Ethereum contract addresses in `_oracle_prices_constants.py` (the COMPOUND section) — fixed by
+  adding `# DERIVED 2026-08-12 ethereum <source>` to each (the checker accepts ANY same-line comment containing the
+  literal word `DERIVED`; checker now reports `0 == baseline`). ruff clean; pyright clean (the only isolated-file
+  warning — `_PYTH_HERMES_LATEST_URL` unused — is a false positive: the test file imports it, so the project-wide QG
+  pyright run resolves it). **PENDING (next actions, in order)**: (1) QG b8rnzc0zs green → commit the 5 compound files
+  (`_compound_oracle_collection.py` new; `_oracle_prices_constants.py`, `_oracle_prices_preflight.py`,
+  `oracle_prices_handler.py`, `tests/unit/test_oracle_prices_handler.py` modified) + quickmerge-ship (also carries the
+  pre-existing unpushed Task-2 commit `34bc0bbb`); (2) run the done-when — single-day force-compute vs the `-test-`
+  bucket (`IS_TEST_RUN=true` +
+  `--operation collect-oracle-prices --mode batch --asset-group defi --start-date <D> --end-date <D> --force`, D after
+  2023-08-17) and confirm `COMPOUND_V3-ETHEREUM/oracle_prices` `captured` rows; (3) flip todo line 522
+  `WIRE oracle_prices capture for COMPOUND_V3-ETHEREUM` with `<repo>@<sha>` + evidence + `docs(plans):` commit. **Also
+  fixed**: the QG's TESTS phase then failed one PRE-EXISTING AAVE test (`test_batch_run_still_collects_aave`) because it
+  patched the OLD handler-namespace imports `oracle_prices_handler.collect_compound_branch` / `emit_compound_manifest` —
+  both removed when the wrapper moved into the module. Patched `oracle_prices_handler.collect_compound_oracle_rows`
+  (return `[]`) and dropped the emit patch (internal to the mocked fn). Lesson: tests that isolate one oracle branch by
+  mocking sibling branches patch whatever names the handler module actually imports — an import-consolidation refactor
+  breaks them; check every `patch(...)` target.
+- **2026-08-12 (slot 16, continued): SHIPPED + DONE-WHEN PROVEN.** Compound V3 oracle capture landed on origin:
+  `market-tick-data-service@f21da6c3` (`feat(defi): wire COMPOUND_V3-ETHEREUM oracle_prices capture (Comet getPrice)`)
+  - the previously-unpushed Task-2 commit (rebased as `6105f0b0`) — both on `origin/live-defi-rollout`, ahead=0, tree
+    clean. **Done-when PROVEN**: single-day force-compute for **2026-08-12** via the console script
+    (`.venv/bin/market-tick-data-service --operation collect-oracle-prices --mode batch --asset-group defi --start-date 2026-08-12 --end-date 2026-08-12 --force`,
+    `IS_TEST_RUN=true`) collected **12 real captured rows** for `COMPOUND_V3-ETHEREUM/oracle_prices` — written to the
+    `-test-` bucket
+    (`market-data-tick-defi-test-central-element-323112/raw_tick_data/by_date/day=2026-08-12/pipeline_mode=batch_compound_v3/ asset_group=defi/venue=COMPOUND_V3/chain=ETHEREUM/instrument_type=spot_asset/data_type=oracle_prices/ COMPOUND_V3-ETHEREUM:SPOT_ASSET:{wbtc,cbbtc,rseth,usde,reth,oseth,rsweth,tbtc,ethx,woeth,usdc,usdt}.parquet`,
+    1 row each) + manifest `record_captured` per feed (per-VM shard: 81 total/64 new entries). source=compound_v3,
+    pipeline_mode=batch_compound_v3. deUSD/sdeUSD excluded by the USD sanity floor; removed/inactive Comet asset slots
+    skipped per-slot (shard isolation) — both expected. **Ship incident**: quickmerge STAGE 0 cascade realigned
+    `unified-trading-library`'s local `live-defi-rollout` (was `383d8fb5815d`, divergent) to origin `5507aff3` and a
+    stash-pop of pre-existing dirty WIP conflicted on `pipeline_mode_resolver.py` + its test (files this session does
+    not own). Restored those 2 files to origin's version (HEAD); the WIP remains preserved in `unified-trading-library`
+    stash@{0} (`cascade-1319235-live-defi-rollout`) for its owner — do NOT `git stash drop` it. Ship then succeeded.
+    **Lesson (measurement trap)**: `python -m market_tick_data_service.cli.main` is a NO-OP — main.py has no
+    `if __name__ == "__main__":` guard, so it imports (printing 2 config lines from UTL DomainValidationService) and
+    exits 0 running nothing; the real entries are the console script `.venv/bin/market-tick-data-service` or
+    `python -m market_tick_data_service` (`__main__.py`). Use the console script for all done-when/force-compute runs.
 
 ## Follow-ups
 
@@ -461,33 +544,68 @@ just belongs on a different layer than instrument_type does, and conflating the 
 > CONTRADICTS this doc's "roll back — genesis on the wrong venue key" claim; the roll-back todo now gates on a live-
 > manifest check before removing anything.
 
-- [ ] [CODE] P2. **WIRE oracle_prices capture for SPARK-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE, not
-      roll-back). Over-claims a `2024-01-01` genesis in `DEFI_VENUE_DATA_TYPE_CAPABILITIES`
+- [x] ✅ [CODE] P2. **WIRE oracle_prices capture for SPARK-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE,
+      not roll-back — recorded in this doc's Progress Log 2026-08-09,
+      `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`). Over-claims a `2024-01-01`
+      genesis in `DEFI_VENUE_DATA_TYPE_CAPABILITIES`
       (`unified-api-contracts/.../registry/defi_venue_capabilities.py:109`) with zero captured rows; venue phase is
       `live`. Add a Spark price-oracle collection branch to
       `market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py` (+ per-protocol oracle
       contract addresses/ABI in `_oracle_prices_constants.py`) that writes `oracle_prices` under
       `venue=SPARK, chain=ETHEREUM` (Spark uses an Aave-V3-fork oracle — `getAssetPrice`). Done-when: a single-day
       force-compute produces real `captured` rows for `SPARK-ETHEREUM/oracle_prices` (prove against the `-test-` defi
-      bucket via the `/data-pipeline-check-mtds` smoke path). (repo: market-tick-data-service)
-- [ ] [CODE] P2. **WIRE oracle_prices capture for COMPOUND_V3-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL
-      CAPTURE). Over-claims a `2022-08-14` genesis (`defi_venue_capabilities.py:93`), zero captured rows, phase `live`.
-      Add a Compound-V3 price-oracle branch to `oracle_prices_handler.py` (+ `_oracle_prices_constants.py`) writing
-      under `venue=COMPOUND_V3, chain=ETHEREUM` (Compound V3 markets read a per-market Chainlink-based price feed).
-      Done-when: single-day force-compute produces real `captured` rows for `COMPOUND_V3-ETHEREUM/oracle_prices` against
-      the `-test-` bucket. (repo: market-tick-data-service)
+      bucket via the `/data-pipeline-check-mtds` smoke path). (repo: market-tick-data-service) — **DONE 2026-08-12**:
+      shipped `market-tick-data-service@845bd085` + `unified-api-contracts@e34b0f44` +
+      `unified-trading-library@4580f481` (all on `origin/live-defi-rollout`; QG green each). SparkLend AaveOracle
+      (0x8105f6…cFD9, spark-address-registry) branch in `_spark_oracle_collection.py`; 10 reserves live-verified
+      2026-08-12 at block 25740221 (eth_call getAssetPrice != 0; sUSDS reverts → excluded). **Done-when proven**:
+      single-day force-compute for 2026-08-11 against the `-test-` defi bucket (`IS_TEST_RUN=true`) produced 10 real
+      `captured` SPARK-ETHEREUM/oracle_prices rows (source=spark, pipeline_mode=batch_spark) — verified in the
+      `_index/per_vm/` manifest shards + canonical `batch_spark` parquet paths.
+- [x] ✅ [CODE] P2. **WIRE oracle_prices capture for COMPOUND_V3-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL
+      CAPTURE, not roll-back — recorded in this doc's Progress Log 2026-08-09,
+      `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`). Over-claims a `2022-08-14`
+      genesis (`defi_venue_capabilities.py:93`), zero captured rows, phase `live`. Add a Compound-V3 price-oracle branch
+      to `oracle_prices_handler.py` (+ `_oracle_prices_constants.py`) writing under `venue=COMPOUND_V3, chain=ETHEREUM`
+      (Compound V3 markets read a per-market Chainlink-based price feed). Done-when: single-day force-compute produces
+      real `captured` rows for `COMPOUND_V3-ETHEREUM/oracle_prices` against the `-test-` bucket. (repo:
+      market-tick-data-service) — **DONE 2026-08-12**: shipped `market-tick-data-service@f21da6c3` (Comet getPrice
+      branch in `_compound_oracle_collection.py`; constants + preflight sentinel; module split for the 900-line cap).
+      Done-when proven: 2026-08-12 force-compute via the console script
+      (`.venv/bin/market-tick-data-service --operation collect-oracle-prices --mode batch --asset-group defi --start-date 2026-08-12 --end-date 2026-08-12 --force`,
+      `IS_TEST_RUN=true`) produced **12 real `captured` rows** for `COMPOUND_V3-ETHEREUM/oracle_prices` on the `-test-`
+      bucket (`market-data-tick-defi-test-central-element-323112`, `pipeline_mode=batch_compound_v3`,
+      source=compound_v3) — verified in the run log (12 writes to
+      `COMPOUND_V3-ETHEREUM:SPOT_ASSET:{wbtc,cbbtc,rseth,usde,reth,oseth,rsweth, tbtc,ethx,woeth,usdc,usdt}.parquet`) +
+      per-VM manifest shard (81 total/64 new entries).
 - [ ] [CODE] P2. **WIRE oracle_prices capture for MORPHO-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE).
       Over-claims a `2024-01-08` genesis (`defi_venue_capabilities.py:99`), zero captured rows, phase `live`. Add a
       Morpho-Blue price-oracle branch to `oracle_prices_handler.py` (+ constants) writing under
       `venue=MORPHO, chain=ETHEREUM` (Morpho markets use per-market oracle contracts — enumerate the active markets'
       oracles). Done-when: single-day force-compute produces real `captured` rows for `MORPHO-ETHEREUM/oracle_prices`
       against the `-test-` bucket. (repo: market-tick-data-service)
-- [ ] [CODE] P2. **WIRE oracle_prices capture for RADIANT-ARBITRUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE).
-      Over-claims a `2022-07-25` genesis (`defi_venue_capabilities.py:111`), zero captured rows, phase `live` (only
-      RADIANT-ARBITRUM is `live`; RADIANT-BSC/ETHEREUM stay `pipeline`). Add a Radiant price-oracle branch to
-      `oracle_prices_handler.py` (+ constants) writing under `venue=RADIANT, chain=ARBITRUM` (Radiant is an Aave-V2 fork
-      — `getAssetPrice` on its lending-pool oracle). Done-when: single-day force-compute produces real `captured` rows
-      for `RADIANT-ARBITRUM/oracle_prices` against the `-test-` bucket. (repo: market-tick-data-service)
+- [x] ✅ [CODE] P2. **WIRE oracle_prices capture for RADIANT-ARBITRUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE,
+      recorded in this doc's Progress Log 2026-08-09,
+      `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`). Over-claims a `2022-07-25`
+      genesis (`defi_venue_capabilities.py:111`), zero captured rows, phase `live` (only RADIANT-ARBITRUM is `live`;
+      RADIANT-BSC/ETHEREUM stay `pipeline`). Add a Radiant price-oracle branch to `oracle_prices_handler.py` (+
+      constants) writing under `venue=RADIANT, chain=ARBITRUM` (Radiant is an Aave-V2 fork — `getAssetPrice` on its
+      lending-pool oracle). Done-when: single-day force-compute produces real `captured` rows for
+      `RADIANT-ARBITRUM/oracle_prices` against the `-test-` bucket. (repo: market-tick-data-service) — **DONE
+      2026-08-13**: shipped `market-tick-data-service@6ca7b356` (`origin/live-defi-rollout`, QG green): new
+      `_radiant_oracle_collection.py` module (mirrors `_aave`/`_spark`/`_compound`) + constants
+      (`_RADIANT_ORACLE_ADDRESS` + `_RADIANT_ORACLE_ASSETS` 6 reserves + `_RADIANT_EARLIEST_RESERVE_LISTING_DATE`) +
+      handler wiring in `process()`. Radiant's Arbitrum `LendingPoolAddressesProvider` (`0xa97684ea…b3cdb`) resolves
+      `getPriceOracle()` → `0xb56c2F0B…c7c7`, exposing the same `getAssetPrice(asset)` view as the AAVE/SPARK branches
+      (8-decimal USD per reserve, lifted from `AavePositionsMixin._ORACLE_ABI`); reserves + oracle address live-verified
+      2026-08-13 at block 493985139. **Done-when proven**: single-day force-compute for 2026-08-12 via the console
+      script
+      (`IS_TEST_RUN=true .venv/bin/market-tick-data-service --operation collect-oracle-prices --mode batch --asset-group defi --venues RADIANT --start-date 2026-08-12 --end-date 2026-08-12 --force`)
+      produced **6 real `captured` rows** for `RADIANT-ARBITRUM/oracle_prices` (dai, usdc, usdt, wbtc, weth, wsteth)
+      against the `-test-` bucket (`market-data-tick-defi-test-central-element-323112`, `pipeline_mode=batch_radiant`,
+      source=radiant) — verified in the run log
+      (`RADIANT-ARBITRUM:SPOT_ASSET:{dai,usdc,usdt,wbtc,weth,wsteth}.parquet`) + per-VM manifest shard (87 total/70 new
+      entries).
 - [ ] [CODE] P2. **WIRE oracle_prices capture for FLUID-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE).
       Over-claims a `2024-02-27` genesis (`defi_venue_capabilities.py:108`), zero captured rows, phase `live`. Add a
       Fluid price-oracle branch to `oracle_prices_handler.py` (+ constants) writing under `venue=FLUID, chain=ETHEREUM`
@@ -538,6 +656,13 @@ just belongs on a different layer than instrument_type does, and conflating the 
       resumable-from-measured-progress (SSOT `/codex/05-infrastructure/spot-vms-for-backfill.md`) — re-running never
       double-writes. Done-when: each newly- wired `(venue, data_type)` pair has real `captured` rows in the prod defi
       availability index. (repo: market-tick-data-service)
+- [ ] [CODE] P3. **Add `if __name__ == "__main__":` guard to `market_tick_data_service/cli/main.py`** — found 2026-08-12
+      while running the COMPOUND_V3 done-when: `python -m market_tick_data_service.cli.main` imports the module
+      (printing 2 config lines from UTL DomainValidationService) and exits 0 running nothing, because main.py has no
+      `__main__` guard. Only the console script `.venv/bin/market-tick-data-service` (or
+      `python -m     market_tick_data_service` via `__main__.py`) actually dispatches. The guard makes `-m` behave like
+      the console script — removes a recurring footgun for ad-hoc force-compute/done-when runs. (repo:
+      market-tick-data-service)
 
 > **2026-08-06 archive-candidate audit**: The DESIGN P2 31-pair todo is marked [x] but its own evidence and the
 > 2026-08-05 Progress Log state 'Operator decision still needed: which of the now-reconciled pairs to wire a real

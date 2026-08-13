@@ -16,7 +16,7 @@ repos: [deployment-service]
 scope: [engineer, admin]
 parent_epic: infrastructure_master
 priority: P1
-assigned_vm: NA
+assigned_vm: planning
 tags: [ci, qg, test-flake, test-isolation, fleet-blocking]
 related:
   - /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md
@@ -29,7 +29,7 @@ resolved_by:
 created: 2026-08-10
 supersedes: null
 superseded_by: null
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
@@ -84,7 +84,24 @@ Bisect `test_dp_recovery_actuators.py` against its suite predecessors to find th
 mock/registry/env that an earlier test file doesn't restore), then add the missing cleanup. Likely candidates to run the
 actuator file after: the `*_relaunch*` / fleet-monitor / dp-alerts test files.
 
+## Todos
+
+- [ ] [BACKEND] P1. **ADDED 2026-08-12 (/plan-reconcile) — this doc held a P1 FLEET-BLOCKING claim with zero tracked
+      todos, violating the "every follow-up is a `- [ ]` todo, never prose" HARD RULE.** Bisect
+      `test_dp_recovery_actuators.py`'s full-suite state contamination against its predecessor test files (candidates:
+      `*_relaunch*` / fleet-monitor / dp-alerts suites; regression window commits `b501a5e5`, `b34e85a2`, `4ca051ea`,
+      `dd7b62e1`), find the shared-state leak (module-level mock/registry/env an earlier test file doesn't restore), add
+      the missing cleanup. Before starting: re-run `quality-gates.sh` full to confirm this is still live — 2 days have
+      passed since filing and it may have self-resolved via an unrelated fix. Done when: full-suite QG passes with all
+      11 named tests green, or the regression is confirmed already fixed with a cited commit sha. Repo:
+      deployment-service.
+
 ## Status
 
 - 2026-08-10: filed by slot 25 (data_engineering, 4b-iii) — QG-blocked on shipping `e25dcfb3`. Not slot-25's fix to make
   (foreign test area, outside dispatch scope). Operator/recovery-area owner to pick up or explicitly delegate.
+
+## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).

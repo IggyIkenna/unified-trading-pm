@@ -31,7 +31,7 @@ source:
   ]
 assigned_vm: planning
 resolved_by:
-locked_by: live-defi-rollout
+locked_by:
 context_scope:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,

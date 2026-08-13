@@ -324,17 +324,17 @@ last_updated: 2026-06-27
 
 ## Deferred work after 2026-08-10
 
-| item                                                                                                              | state / why deferred                                                                                                                                                                                                                                                                                                                                  | blocked-on                              |
-| ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| **deployment-service ship** (#1 relaunch state + #2/#3/#5/#6 alert accuracy)                                      | **Not done.** Code complete, lint clean, 392 tests pass, all files under the 960 cap. Gate FAILS on the basedpyright ratchet: `1268 errors > BASEDPYRIGHT_MAX_ERRORS=1259` — the two extractions (`_captured_reader.py`, `_classify.py`) added ~9 type errors above baseline. Ratchets only go DOWN, so these must be fixed, not baselined.           | nobody — pick up directly               |
-| **agent-orchestrator ship** (#17)                                                                                 | **Not done.** Gate GREEN (`AO_QG_EXIT=0`), sentinel==HEAD, 6 files intact. Quickmerge BLOCKED `PRECOMMIT_WORKING_TREE_CONFLICT behind=107`. A `git pull --ff-only` autostash re-apply then left `UU tests/test_autospawn.py` — **foreign WIP in this shared checkout, NOT ours**. Deliberately NOT resolved (never touch a dirty file you don't own). | resolve/park the foreign conflict first |
-| **features-service ship** (#14)                                                                                   | **Not done.** Gate GREEN (`FS_QG_EXIT=0`, 18,387 passed). Quickmerge was mid auto-retry (`sentinel invalid — a peer pushed`, retry 1/3) at checkpoint. Likely just needs a re-run.                                                                                                                                                                    | transient peer-push race                |
-| **liquidations P0 root cause**                                                                                    | **Not done.** Operator approved FULL remediation (fix + re-drive ~150k cells). Diagnosis is NOT yet complete — see the reversal in the Progress Log below.                                                                                                                                                                                            | nobody — highest-value next item        |
-| **#9 chain relabel migration**                                                                                    | **Not done.** Part 2 of the operator's "both, sequenced". Entity-rename scope.                                                                                                                                                                                                                                                                        | needs #8 live first (shipped)           |
-| **#13 date sharding, #15 rightsizing, #11 empty instrument_id, #18 shellcheck flake, #19 test-hermeticity guard** | **Not done.** All scoped, none started.                                                                                                                                                                                                                                                                                                               | nobody                                  |
-| **AO ledger live verification**                                                                                   | **Cannot be done yet** in-session — SSM `send-command` failed on parameter quoting (access is fine: valid IAM identity, `i-0c9b283b31d6b5ca7` = `agent-orchestrator-vm-1`, running). Retry with a JSON parameter file.                                                                                                                                | mechanical retry                        |
-| **Cross-cloud WIF for the AO VM**                                                                                 | **Operator-owned.** The AO VM has NO GCP identity at all (AWS EC2, no ADC, no SA key, no WIF pool). Blocks the #17 timer from ever being installed.                                                                                                                                                                                                   | operator                                |
-| **liquidations remediation execution**                                                                            | **Operator-owned** at the backfill step (re-driving ~150k cells is a VM launch + cost decision under delete-safety/launch gating).                                                                                                                                                                                                                    | operator, after root cause              |
+| item                                                                                                              | state / why deferred                                                                                                                                                                                                                                                                                                                               | blocked-on                       |
+| ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| **deployment-service ship** (#1 relaunch state + #2/#3/#5/#6 alert accuracy)                                      | **Not done.** Code complete, lint clean, 392 tests pass, all files under the 960 cap. Gate FAILS on the basedpyright ratchet: `1268 errors > BASEDPYRIGHT_MAX_ERRORS=1259` — the two extractions (`_captured_reader.py`, `_classify.py`) added ~9 type errors above baseline. Ratchets only go DOWN, so these must be fixed, not baselined.        | nobody — pick up directly        |
+| **agent-orchestrator ship** (#17)                                                                                 | **CORRECTED 2026-08-12 (/plan-reconcile): DONE.** This row was a stale pre-compaction snapshot — the doc's own checked `[x]` todo (line 187, "Make /data-pipeline-alerts-reconcile AO-schedulable") cites resolving evidence `agent-orchestrator@0eb0da5`, `AO_QG_EXIT=0`, 3,364/0 tests, matching this row's own gate figures, proving it landed. | shipped — landed                 |
+| **features-service ship** (#14)                                                                                   | **CORRECTED 2026-08-12 (/plan-reconcile): DONE.** Stale pre-compaction snapshot — the doc's own checked `[x]` todo (line 172, honest-absence fix) cites the identical `FS_QG_EXIT=0, 18,387 passed` figure with a landed sha `features-service@692ce76b`, proving it shipped.                                                                      | shipped — landed                 |
+| **liquidations P0 root cause**                                                                                    | **Not done.** Operator approved FULL remediation (fix + re-drive ~150k cells). Diagnosis is NOT yet complete — see the reversal in the Progress Log below.                                                                                                                                                                                         | nobody — highest-value next item |
+| **#9 chain relabel migration**                                                                                    | **Not done.** Part 2 of the operator's "both, sequenced". Entity-rename scope.                                                                                                                                                                                                                                                                     | needs #8 live first (shipped)    |
+| **#13 date sharding, #15 rightsizing, #11 empty instrument_id, #18 shellcheck flake, #19 test-hermeticity guard** | **Not done.** All scoped, none started.                                                                                                                                                                                                                                                                                                            | nobody                           |
+| **AO ledger live verification**                                                                                   | **Cannot be done yet** in-session — SSM `send-command` failed on parameter quoting (access is fine: valid IAM identity, `i-0c9b283b31d6b5ca7` = `agent-orchestrator-vm-1`, running). Retry with a JSON parameter file.                                                                                                                             | mechanical retry                 |
+| **Cross-cloud WIF for the AO VM**                                                                                 | **Operator-owned.** The AO VM has NO GCP identity at all (AWS EC2, no ADC, no SA key, no WIF pool). Blocks the #17 timer from ever being installed.                                                                                                                                                                                                | operator                         |
+| **liquidations remediation execution**                                                                            | **Operator-owned** at the backfill step (re-driving ~150k cells is a VM launch + cost decision under delete-safety/launch gating).                                                                                                                                                                                                                 | operator, after root cause       |
 
 **Recommended NEXT item: the liquidations root cause** — it is the only finding still actively degrading (~150k
 attempted_failed cells accruing), and its diagnosis just reversed, so nobody should act on the old hypothesis.
@@ -572,27 +572,85 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       fix, and `deployment-service-code @ decdf98fb2a5`, the launcher fix just shipped — same-session tarball turnaround
       confirmed fast enough to pick up a fix shipped minutes earlier). Verified via `run.log`: `MDPS_DATE_CONCURRENCY=4`
       correctly threaded (3-4 dates processing concurrently), correctly scoped to the 64 instrument_ids +
-      `liquidations` + the 4 timeframes, catalogue loaded (431,890 rows, contract_size present). **Not a rubber-stamp
-      verification** — read real per-date outcomes, not just "still running": some dates 5xxx-genuine successes, some
-      `MalformedTickFieldError(field=contract_size)` (honest catalog-miss fail-closed, working as designed — e.g.
-      `DERIBIT:PERPETUAL:BTC-PERPETUAL`/`ETH-PERPETUAL`, DIFFERENT instrument_ids than the `@INV`-suffixed ones
-      targeted, so not evidence of scope leakage), and a **separate, pre-existing bug** found on some `KRAKEN-FUTURES`
-      sub-daily (15m/1h/4h) shards: `SCHEMA_VALIDATION_FAILED` on `open/high/low/close        NOT NULL` — the real cause
-      is
-      `aggregate_from_15s_efficient: N NaN values in 'open' input column — adapter        density bug, expected LOCF-dense base candles`,
-      i.e. sparse liquidation events don't densify cleanly at high-frequency timeframes. This is UNRELATED to the
-      inverse-notional fix (contract_size computation itself succeeds; the OHLC columns fail), doesn't corrupt anything
-      (a failed write leaves the prior captured row exactly as-is, per the captured-outranks-tie-break already
-      documented above), and doesn't block the 1d timeframe (the large majority of the target population — 3,030 of
-      4,463 shards). Filed as a new P2 todo below rather than chased down in this session (out of scope, pre-existing,
-      non-blocking, non-corrupting). 5. **Left running, not yet complete.** VM covers 2020-01-01 to 2026-01-31 across
-      all 64 instrument_ids — a multi-hour job, not something to babysit synchronously. **Next verification step for
-      whoever picks this up**: re-run the manifest query in this todo's evidence (DuckDB over
-      `_index/availability_index.parquet` filtered
-      `data_type='liquidations' AND capture_status='captured' AND margin_type='inverse'`) and spot-check a few
-      `written_at` timestamps AFTER this launch for correct `liquidation_notional_usd` magnitude (method: compare
-      `notional/liquidation_count` against the linear reference for the same day/venue, per the original P0 finding
-      above) before flipping this checkbox `[x]`. Do NOT flip on "VM still running" or "exit code 0" alone.
+      `liquidations` + the 4 timeframes, catalogue loaded (431,890 rows, contract_size present). 5. **RAN TO COMPLETION
+      (2026-08-12T05:42Z, all 2223 dates) BUT FIXED ZERO SHARDS — correcting an earlier WRONG in-session claim of
+      partial success.** The mid-run spot-check above (read while the job was still running) sampled a handful of error
+      lines, correctly diagnosed two REAL failure classes, and was then wrongly generalized to "the fix works, only a
+      narrow sub-daily bug blocks some shards, 1d is fine (the majority)." **That was never verified against the actual
+      outcome and was wrong.** Post-completion verification (this same continuation, after being asked "is liquidations
+      done"): parsed the full `run.log` (`grep liquidations complete.*succeeded` across all 2,197 per-date summary
+      lines) — **0 of 33,686 attempted (instrument x timeframe) writes succeeded, fleet-wide, every venue, every
+      timeframe.** Confirmed three ways, not just the counter: (a) manifest re-query shows the 1d timeframe's newest
+      `written_at` for the inverse population is `2026-08-11T21:57Z` — BEFORE this VM even launched; (b) direct
+      `gcs_describe_object` on `OKX-SWAP:PERPETUAL:BTC-USD@INV` day=2022-01-29 1d (a shard this job explicitly
+      requested) shows `last_modified=2026-08-11T20:43:36Z` — the AMBIENT fleet's write from the day before, untouched
+      by this job; (c) the sub-daily failure classes are real but their combined volume (15m/1h/4h only —
+      `SCHEMA_VALIDATION_FAILED` 59,290 + `MalformedTickFieldError` 39,132 + generic `candle write failed` 10,074)
+      already exceeds 100% coverage of those three timeframes many times over, i.e. NOTHING got through even there.
+      **The 1d timeframe (the majority of the target population) is the more serious open question**: it almost never
+      appears in a success line, error line, or `ERRORS` block anywhere in the 96 MB log — correction to an even earlier
+      "NEVER appears" overclaim in this same entry: a targeted re-query found exactly **20** genuine `attempted_failed`
+      1d rows for the 64 target instruments, all `MalformedTickFieldError` (honest catalog-miss, mostly pre-2022 dates),
+      written at scattered points throughout the run (02:10-05:29Z) — so 1d IS reachable and DOES sometimes get
+      attempted. But 20 out of a target population whose 1d slice alone is ~3,030 shards means **~99% of target 1d
+      shard-days have literally zero trace of ever being attempted** — not captured, not attempted_failed, not
+      empty_confirmed. That's the real mystery, and two follow-up checks this session ruled OUT as the explanation: (1)
+      **not a raw-data-availability/density gap** — `OKX-SWAP:PERPETUAL:BTC-USD@INV` (the running example) has 1,513
+      MTDS-captured liquidation-tick days, row_count range 1-45,993 (median 49, mean 348), and the specific untouched
+      reference day (2022-01-29) has 74 raw tick rows — solidly non-sparse, and this exact instrument+day was
+      successfully computed by the ambient fleet BEFORE this job ran (real notional value already confirmed), so raw
+      data plainly exists and is adequate; the job still never touched it. (2) **not scoped to my job alone** —
+      re-querying with NO instrument filter (all venues, all instruments, entire manifest) found ZERO 1d liquidations
+      captures fleet-wide with `written_at` inside the run window (2026-08-12T01:00-06:00Z), i.e. even the ~47-VM
+      ambient fleet running concurrently produced no 1d liquidation writes in that window either. That's either a
+      genuinely fleet-wide 1d-liquidations outage during this window, or the same underlying bug affecting every VM that
+      picked up the current tarball. Root cause NOT YET FOUND: `candle_write_mixin.py`'s `not force and blob_exists()`
+      skip guard (the obvious suspect) is shared code across all timeframes and correctly gates on `force`, so it
+      doesn't explain a near-total 1d silence while 15m/1h/4h at least attempt (and fail) everything — needs someone to
+      actually trace the 1d-specific aggregation/scheduling branch (likely NOT `aggregate_from_15s_efficient`, which is
+      what throws the sub-daily density error, and likely upstream of the per-timeframe write call entirely, e.g. in
+      whatever decides which timeframes to even enqueue for a given instrument+date) rather than assume it is the same
+      code path as the sub-daily bug. **This P0 remains OPEN — 0% of the ~4,463-5,232-shard (population moves) target
+      population is fixed.** Nothing was corrupted (failed/skipped writes leave prior rows untouched, confirmed above),
+      but nothing was corrected either. **Next steps, not yet done**: (i) find why 1d attempts almost never happen under
+      `--force` — likely the actual P0 blocker, more central than the sub-daily density bug, and worth checking whether
+      it's also silently degrading the AMBIENT fleet's normal (non-`--force`) 1d coverage, not just this scoped
+      re-derive; (ii) fix the sub-daily `aggregate_from_15s_efficient` NaN-density issue (P2 below) since it blocks 100%
+      of 15m/1h/4h too, not the minority case originally described; (iii) only then re-launch and re-verify with the
+      SAME rigor as this correction (parse `run.log`'s aggregate succeeded/attempted counts and spot-check GCS object
+      `last_modified` directly — a "VM completed" or "some dates showed success in a sample" signal is NOT sufficient,
+      both were tried and both were misleading here). **(i) SOLVED 2026-08-12 (this continuation): root cause found and
+      fixed.** Traced via an Explore sub-agent, then independently verified line-by-line against the live code before
+      shipping. The service's internal/legacy timeframe vocabulary is `"24h"` for daily bars — UAC's own
+      `TIMEFRAME_SECONDS`/`TIMEFRAMES` registry
+      (`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:92-101`) has **no `"1d"` key at
+      all**, only `"24h"`. `MDPS_TIMEFRAMES=1d,15m,1h,4h` (this job's exact invocation) bridges the literal token `"1d"`
+      straight into `--timeframes` with zero validation (`cli/main.py:315-317`; `--timeframes` has no `choices=`
+      constraint, unlike `--data-types`). That `"1d"` then reaches the actual scheduling filter,
+      `BaseAdapter.get_valid_output_timeframes()` (`app/adapters/base_adapter.py:164-168`,
+      `TIMEFRAME_SECONDS.get(tf, 0) >= base_secs`) — a dict-miss on the unrecognized `"1d"` key silently defaults to
+      `0`, which reads as _finer than any base granularity_ (backwards — `"1d"` is the coarsest timeframe there is), so
+      `"1d"` is dropped from the work list before any candle math runs, for every instrument-file, every date. Confirmed
+      this is the actual call path: `process_category()` in `orchestration_service.py:169` **always** routes the
+      caller's explicit `--timeframes` list through `config.resolve_timeframes()` (not conditionally, per a 2026-07-26
+      fix for a related sports-scoping bug) — verified `resolve_timeframes()` had no asset-group ceiling for CEFI, so
+      the literal `"1d"` token passed through unchanged into the adapter filter. **Not a downstream consequence of the
+      15m/1h/4h `aggregate_from_15s_efficient` NaN-density bug (P1 below)** — the two bugs are independent; `"1d"` is
+      filtered out of the timeframe list before any aggregation code is ever reached. The ~20 genuine `attempted_failed`
+      1d rows found in the run.log are explained too: `orchestration_service.py`'s dependency-skip/live-gap-gate paths
+      (`_record_expected_unattempted_on_skip`, `_gate_live_gap_data_types`) write manifest rows using
+      `config.resolve_timeframes()`'s result directly, bypassing the adapter-level filter — those only fire on the small
+      minority of dates with a genuine upstream-MTDS skip or live-connectivity gate, matching "~20 out of ~3,030."
+      **Fixed at the two points that need it, not worked around**: (1) `market-data-processing-service@c9d14458fa` —
+      `config.resolve_timeframes()` now normalizes `"1d"→"24h"` in the candidate list before the
+      (asset-group-conditional) ceiling check, so the single choke point every explicit `--timeframes`/`MDPS_TIMEFRAMES`
+      call passes through fixes every asset_group uniformly; (2) defense-in-depth, same commit —
+      `BaseAdapter.get_valid_output_timeframes()` also normalizes `"1d"→"24h"` before its `TIMEFRAME_SECONDS` lookup, so
+      the same dict-miss-defaults-to-0 failure mode can't silently recur for any future caller that reaches the adapter
+      filter directly. Gate green (55s), shipped via quickmerge, `ahead=0` verified. **Not yet done**: re-launch the P0
+      re-derive — blocked on (ii) below (the sub-daily density bug still fails 15m/1h/4h 100%), and this fix alone does
+      not retroactively correct anything already on GCS; a fresh `--force` run is still required once both bugs are
+      closed.
 - [ ] [OPERATOR] P1. Full re-drive of the remaining cells once `contract_size` lands. The failure population has GROWN
       since the plan's original 150,182: measured 355,818 MDPS liquidation failures at 14:19Z (352,409
       `SCHEMA_VALIDATION_FAILED` + 3,409 `MalformedTickFieldError`), split LIN 335,931 / INV 12,822 / neither 7,065 —
@@ -617,16 +675,48 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       re-pinned rather than widened blind — but whether a combo chain should carry `expiration` is a real domain
       question nobody has answered. Surfaced 2026-08-11 by the pin failing the whole MDPS suite, which is exactly its
       job.
-- [ ] [SCRIPT] P2. **Liquidations sub-daily (15m/1h/4h) candles fail schema validation on sparse-event days —
-      pre-existing, unrelated to the inverse-notional fix.** Found 2026-08-12 running the P0 re-derive:
-      `KRAKEN-FUTURES:PERPETUAL:{BTC,ETH,LTC,XRP}-USD@INV` (and likely others) throw `SCHEMA_VALIDATION_FAILED` on
-      `open/high/low/close NOT NULL` at 15m/1h/4h. Root cause per the log:
-      `aggregate_from_15s_efficient: N NaN values in 'open' input column — adapter density bug, expected LOCF-dense     base candles`.
-      Liquidation events are sparse (unlike continuous trades), so many 15s base-candle buckets have no price data and
-      the aggregator's LOCF-density assumption doesn't hold. Does NOT affect 1d (the majority of the liquidations
-      population) and does NOT corrupt anything (a failed write leaves the prior row untouched, per the
-      captured-outranks tie-break documented above) — but it silently caps how much of the sub-daily wrong-inverse
-      population the P0 re-derive can actually fix. Evidence:
+- [x] ✅ [SCRIPT] P1. **Liquidations sub-daily (15m/1h/4h) candles fail schema validation on sparse-event days —
+      pre-existing, unrelated to the inverse-notional fix, and TOTAL not partial.** UPGRADED P2->P1 and corrected
+      2026-08-12: originally described (from a mid-run sample) as affecting "some KRAKEN-FUTURES shards" while 1d was
+      unaffected. Full-log analysis after the P0 re-derive VM completed shows this is not a minority edge case: EVERY
+      15m/1h/4h attempt in the entire run failed (`SCHEMA_VALIDATION_FAILED` 59,290 + `MalformedTickFieldError` 39,132 +
+      generic `candle write failed` 10,074 across all venues), and separately, 1d itself never wrote anything either
+      (see the P0 todo's corrected finding — a different, not-yet-diagnosed silent no-op, not this bug). Root cause of
+      the sub-daily failures per the log:
+      `aggregate_from_15s_efficient: N NaN values in 'open' input column — adapter density bug, expected LOCF-dense base candles`.
+      **ROOT CAUSE CORRECTED 2026-08-12 (this continuation) — the `aggregate_from_15s_efficient` WARNING is a real
+      symptom but a red herring for causality, not the actual failure mechanism.** Traced via an Explore sub-agent, then
+      every load-bearing claim independently re-verified against the live code before shipping (contract build, schema
+      fallback chain, adapter behavior — 5 separate greps/reads). The actual chain: (1) `CefiLiquidationsAdapter`
+      (`app/adapters/cefi/liquidations_adapter.py`) never calls `_finalize_session_grid` — by design, confirmed correct:
+      liquidations have no "prior close" concept, so LOCF-forward-filling a stale liquidation price would fabricate
+      data, exactly what the UAC `liq_agg` contract avoids by declaring NO `open`/`high`/`low`/`close` columns at all
+      (`liq_shape=True` branch, `unified-api-contracts/.../_candle_contracts.py`), only
+      `liquidation_count`/`liquidation_notional_usd`. (2) The bug is in the SEPARATE legacy pre-flight validator:
+      `mdps_ohlc_is_nullable()` (`canonical_writer_shaping.py`) loops the contract's columns looking for `open`; when
+      the contract has no such column (liq_agg's case) the loop falls through to the SAME `None` sentinel used for
+      "contract lookup failed entirely" — conflating two different things. (3) `get_schema_for_data_type()`
+      (`schemas/output_schemas.py`) treats `ohlc_nullable is None` as "fall back to the non-nullable
+      `PROCESSED_CANDLE_SCHEMA` default." (4) That schema declares `open`/`high`/`low`/`close` `nullable=False`
+      unconditionally — so a liquidation-free window's structurally-NaN OHLC (the adapter always emits the
+      `open`/`high`/`low`/`close` fields, NaN-filled when there's no event, since `CandleOutput` is a shared dataclass)
+      fails validation and the WHOLE SHARD's write is aborted, not just the offending bar — explaining "100% of
+      15m/1h/4h" (small windows → near-certain to contain an all-empty sub-window) vs "1d/24h less likely but not
+      immune" (whole-day all-empty is rarer but not impossible for a thin instrument). **This is NOT scoped to 15m/1h/4h
+      — 1m/5m are structurally identical (same `aggregate_from_15s_efficient` input frame, same validator chain, and
+      smaller windows make an all-empty window MORE likely, not less) and 24h/1d hits the identical mechanism once
+      actually scheduled (see the P0 todo's separate 1d-scheduling fix above — that fix makes 24h reachable again, and
+      this fix is what keeps it from then failing the same way).** **Fixed, not worked around**:
+      `market-data-processing-service@c3ec4d52a5` — `mdps_ohlc_is_nullable()` now returns `True` (nullable) when the
+      contract resolves but declares no `open` column at all, distinct from the lookup-failure branch which correctly
+      keeps returning `None`. This is a general fix (any future no-OHLC contract shape gets the same correct treatment),
+      not a liquidations-specific special case. Added 5 regression tests (`test_schema_robustness.py`) —
+      `mdps_ohlc_is_nullable` for liquidations across 15m/1h/4h/1d, plus an end-to-end NaN-OHLC-candle validation test
+      mirroring the existing derivative_ticker/book_snapshot_5 regression pattern (book_snapshot_5's non-nullable
+      behavior is unaffected — it still has an explicit `open` column with `nullable=False`, untouched by this branch).
+      34/34 tests pass, gate green (60s), shipped. Does NOT corrupt anything (a failed write leaves the prior row
+      untouched, per the captured-outranks tie-break documented above) — it blocked 100% of sub-daily liquidations
+      writes fleet-wide (not just the wrong-inverse re-derive) until this fix. Evidence:
       `gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-cefi-20260812-015953/run.log`.
 
 ## Deferred work after 2026-08-11
@@ -646,6 +736,26 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
 **Recommended NEXT item (updated 2026-08-11): re-derive the ~4,113 wrong-inverse shards in place.** deployment-service
 already shipped (`0c38c00d`, row above) and `contract_size` landed — nothing else blocks this. It is a scoped overwrite
 (`--force`/`--skip-existing`, no GCS delete, no manifest surgery) per the P0 todo's per-venue breakdown.
+
+## Deferred work after 2026-08-12
+
+| item                                                                                     | state / why deferred                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | blocked-on                                               |
+| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| **Wrong inverse notional already on GCS** (~5,232 shards, population moves — re-measure) | **First attempt FAILED — 0% fixed** (2223-date VM, 0/33,686 writes succeeded). Both root causes now ✅ **FIXED 2026-08-12**: (1) `"1d"` vs `"24h"` spelling mismatch silently dropped the 1d timeframe from scheduling entirely (`market-data-processing-service@c9d14458fa`); (2) a legacy schema-validator fallback wrongly enforced non-null OHLC on liq_agg (which has no OHLC concept at all), failing 100% of 1m/5m/15m/1h/4h/24h writes on any liquidation-free sub-window (`market-data-processing-service@c3ec4d52a5`). Both gate-green, both verified against live code before shipping, 34/34 unit tests pass. Nothing blocks a re-launch now — see the P0 todo for full evidence. | nobody — re-launch the re-derive with 3-way verification |
+| ~~**VM fleet billing waste (411 duplicate year-shard VMs)**~~                            | ✅ **RESOLVED 2026-08-12.** Reaped via the sanctioned tombstone-then-delete tool after confirming the exit-code monitor was still paused (no relaunch-storm risk). 485/467 running → 69/51 running. Full write-up in `mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`'s second remediation section.                                                                                                                                                                                                                                                                                                                                                               | done                                                     |
+| ~~**`launch-mdps-backfill-vm.sh --date-concurrency` broken**~~                           | ✅ **FIXED 2026-08-12** — `deployment-service@decdf98fb2`. The flag appended a nonexistent CLI flag onto the wrong entrypoint; fixed to prepend `MDPS_DATE_CONCURRENCY` as an env var instead, matching every other narrow-scope filter in the same launcher. Every prior use of this lever was silently a no-op.                                                                                                                                                                                                                                                                                                                                                                             | done                                                     |
+| ~~**Stale/superseded uncommitted docs from a predecessor session**~~                     | ✅ **RESOLVED 2026-08-12.** 6 dirty files surveyed; 4 were already-archived duplicates on origin (dropped, not shipped — shipping would have recreated dead copies contradicting the real archived versions), 2 were genuine (1 recovered a retag lost to a concurrent stale-base commit, 1 a new stash-audit report) and shipped `9c3cfc9b21`. A large raw JSON data dump in the repo root was deleted (never belonged in git).                                                                                                                                                                                                                                                              | done                                                     |
+| **VM fleet wedge root cause (why ~398 VMs hung mid-shutdown in one hour)**               | **Not done.** Carried forward unchanged from 2026-08-11 — the reap above treats a symptom (duplicates), not this cause.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | nobody                                                   |
+| **Cross-cloud WIF for the AO VM · #9/#13/#15/#11/#18 · other 2026-08-10/11 findings**    | **Not done.** Carried forward unchanged from the 2026-08-11 table above — not touched this continuation.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | operator (WIF) / nobody (rest)                           |
+
+**Recommended NEXT item (updated 2026-08-12, both fixes shipped): re-launch the P0 re-derive.** Both blockers are
+SOLVED: (1) the 1d silent-skip (`"1d"`/`"24h"` spelling mismatch, `market-data-processing-service@c9d14458fa`) and (2)
+the sub-daily/24h schema-validation false-reject (a legacy fallback wrongly enforcing non-null OHLC on liq_agg's no-OHLC
+shape, `market-data-processing-service@c3ec4d52a5` — confirmed to affect 1m/5m too, not just 15m/1h/4h, though neither
+was requested by the failed run). Re-launch with `--force --data-types liquidations --timeframes "1d 4h 1h 15m"` (the
+same scope as before — 1m/5m were never part of the wrong-inverse population) and verify with the SAME three-way rigor
+as the correction above (run.log counters + manifest `written_at` + direct GCS `last_modified` — a "VM completed" signal
+alone was proven misleading here) before declaring the re-derive done.
 
 ## Lessons from the 2026-08-10/11 continuation — each cost real time
 
@@ -716,3 +826,44 @@ already shipped (`0c38c00d`, row above) and `contract_size` landed — nothing e
     Resolving from `origin` and then `git checkout stash@{0} -- <one-file>` for the genuinely-needed peer file avoided a
     third blind retry and confirmed the peer's content was already on origin (0-line diff) before leaving the stash in
     place, untouched, for its owner.
+21. **"VM ran to completion" and "a mid-run log sample looked fine" are BOTH insufficient proof of success — this cost a
+    wrong claim that had to be corrected in-session.** Mid-run, a handful of error lines were read, correctly diagnosed
+    as two real-but-survivable failure classes, and wrongly generalized to "the fix mostly works." After the VM's own
+    `VM_SHUTDOWN_ON_COMPLETION` self-delete (a clean exit signal), the ACTUAL verification was: sum every
+    `X/Y succeeded` counter across the full log (0/33,686), cross-check a specific GCS object's `last_modified` directly
+    (untouched since before the job), and re-query the manifest for `written_at` inside the run window. Only that
+    combination caught that the real result was 0% fixed, not "mostly working." A completion signal or a favorable
+    sample proves the job didn't crash — it proves nothing about whether it did its job.
+22. **A launcher's `DRY_RUN=true` env var can mean something completely different from what the name implies.** On
+    `launch-mdps-backfill-vm.sh`, `DRY_RUN=true` skips ONLY the tarball-freshness safety check — it still creates a
+    real, live, `--force`-executing VM if the positional `MODE` arg is `full`. Used once expecting a safe
+    command-construction test; got a real (harmlessly failed, but real) launch instead. There is no actual "print the
+    command, touch nothing" mode in this script — read the flag's own code, don't infer behavior from its name.
+23. **When a "why isn't X being processed" mystery shows up, check density/data-availability directly before assuming a
+    code bug (and vice versa) — both directions were verified empirically here, not guessed.** The instinct "maybe we
+    just don't have the underlying data for those shards" was checked directly (MTDS capture count, row_count
+    distribution, and the specific untouched shard's own tick count) and cleanly ruled out — which then correctly
+    redirected the investigation to an unresolved code-path question instead of a data-completeness one.
+24. **A `dict.get(key, 0)` silent default is a landmine when the dict is a controlled vocabulary and the key comes from
+    an uncontrolled caller.** The 1d-timeframe bug wasn't a missing feature or an aggregation edge case — it was
+    `TIMEFRAME_SECONDS.get("1d", 0)` returning `0` for an unrecognized spelling and that `0` reading as "finer than base
+    granularity" (backwards for what should be the COARSEST timeframe), so a filter meant to drop overly-fine requests
+    silently dropped the one request that should never have qualified for dropping at all. The service had TWO spellings
+    for the same concept ("1d" UAC-canonical vs "24h" legacy-internal) with a one-way normalizer (`24h→1d`) that only
+    ran at schema-lookup/manifest time — nothing normalized the OTHER direction at the scheduling layer, and
+    `--timeframes` had no `choices=` validation to catch the mismatch loud. A sub-agent (Explore) traced this end-to-end
+    from the CLI env-var bridge down to the exact `.get(tf, 0) >= base_secs` comparison in one pass; every claimed
+    file:line was independently re-verified against the live code before the fix shipped — cheap insurance (4 grep/read
+    calls) against shipping a fix for a bug that wasn't actually there.
+25. **A logged WARNING at the point of suspicion is not proof of causality — trace to the actual hard failure, don't
+    stop at the loudest symptom.** The sub-daily bug's own log line
+    (`aggregate_from_15s_efficient: N NaN values in 'open' input column`) looked like an obvious smoking gun and the
+    plan's original theory built directly on it ("LOCF-density assumption doesn't hold for sparse liquidations"). The
+    real defect was two validator layers downstream — a schema lookup silently conflating "no OHLC column in this
+    contract" with "contract lookup failed" — and the aggregator's own null-skipping roll-up rules were already correct.
+    The WARNING and the failure were correlated (same root sparsity) but not causally linked; asking "does the code that
+    logs the warning actually RAISE, or does something else downstream?" (it only `logger.warning`s, never raises —
+    visible right in the same function) was the thread that unraveled the wrong theory. Same discipline as lesson 24:
+    every claim from the tracing sub-agent was re-verified against the live contract-builder, schema-fallback, and
+    schema-definition code before the fix shipped — a plausible, detailed, wrong theory reads identically to a correct
+    one until checked.

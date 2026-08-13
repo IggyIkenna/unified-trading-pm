@@ -76,6 +76,14 @@ context_scope:
   ]
 ---
 
+> **CORRECTED 2026-08-12 (/plan-reconcile)**: the summary above ("CLOSED at honest-done ... operator accepted current
+> coverage 50.79%") is STALE. `cefi_consolidated_closeout_2026_07_18.md` Track 2 REVERSED that acceptance the very next
+> day (2026-07-18, autonomous ruling within documented intent): the archival's premise was a verified-false ~350x
+> throughput-collapse code bug, since fixed and measured live — coverage work has been actively ongoing since (multiple
+> satellite batches; fresh coverage measured 44.96% pre-backfill baseline 2026-07-27, 48.90% window-scoped 2026-08-09,
+> both presupposing the reversal, not the original acceptance). This doc's own non-Tardis residuals below are unaffected
+> and remain valid follow-ups; only the "program closed at 50.79%, accepted" framing is wrong.
+
 # CeFi residual follow-ups after honest-done close-out
 
 > **Context**: `plans/archive/2026_07/cefi_completion_program_2026_07_15.md` closed at honest-done on 2026-07-17 —

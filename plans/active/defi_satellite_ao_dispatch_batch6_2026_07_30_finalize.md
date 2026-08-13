@@ -55,7 +55,12 @@ context_scope:
 
 # DeFi satellite AO batch 6 — finalize
 
-**status: draft — activated only after its parent batch6 is operator-approved and dispatched.**
+> **CORRECTED 2026-08-12 (/plan-reconcile)**: this line previously read "status: draft — activated only after its parent
+> batch6 is operator-approved and dispatched", contradicting the frontmatter (`status: active`). Per
+> `unified-trading-pm@233ebd6148` ("remove redundant status:draft double-gate on finalize plans"), a finalize plan's
+> `depends_on` + `gate_on_depends: true` already machine-holds its todos until the upstream is done — a separate
+> body-level `status: draft` is a stale double-gate. Frontmatter `status: active` is correct; this plan is machine-gated
+> on `defi_satellite_ao_dispatch_batch6_2026_07_30.md` (1 of 26 todos still open as of this check).
 
 ## Todos
 

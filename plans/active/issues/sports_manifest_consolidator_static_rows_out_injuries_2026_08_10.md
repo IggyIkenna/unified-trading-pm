@@ -212,11 +212,17 @@ correct; the fix is config (mirror defi's 3600s timeout + 4200s TTL). Filed as P
       execution merged normally. No concurrent live holder existed during the window (only lock_acquired events 00:49:55
       / 01:30:54 / 02:10:58). Lock logic works as designed; the recurring enabler (task timeout 1800s < real merge+retry
       duration) is a deployment-service config issue → P3.1.
-- [ ] [DOCS] P3. If confirmed as a genuine, recurring consolidator defect (not just an upstream freshness-skip bug each
-      time), consider whether `census_all_af_entities_completion_2026_08_03.py` and
-      `census_fixture_stats_lineups_widening_volume_2026_07_31.py` should cross-check a live VM's own progress marker
-      (e.g. `[[VM_PROGRESS]]`) against the canonical read and warn when they diverge, rather than silently trusting a
-      potentially-stale canonical snapshot.
+- **[DOCS] P3. CANCELLED 2026-08-12 (/plan-reconcile) — conditional premise did not hold.** Original text: "If confirmed
+  as a genuine, recurring consolidator defect (not just an upstream freshness-skip bug each time), consider whether
+  `census_all_af_entities_completion_2026_08_03.py` and `census_fixture_stats_lineups_widening_volume_2026_07_31.py`
+  should cross-check a live VM's own progress marker (e.g. `[[VM_PROGRESS]]`) against the canonical read and warn when
+  they diverge, rather than silently trusting a potentially-stale canonical snapshot." The trigger condition is this
+  same doc's own todo 1, resolved above as **"RESOLVED, no code change"** — the root cause was confirmed NOT a genuine
+  recurring consolidator defect (structurally immune to the odds_api collision class; a self-recovering artifact of a
+  wide-range backfill VM re-scanning already-covered ground). Since the premise never held, the conditional census
+  cross-check enhancement was never triggered. If the census-vs-VM-progress cross-check is still wanted as
+  general-purpose defense-in-depth independent of this specific (now-closed) incident, that is a fresh, unconditional
+  proposal for the operator to scope — not a re-opening of this todo.
 - [ ] [SCRIPT] P3.1. Bump the `instruments-sports` manifest-consolidator Cloud Run task timeout from 1800s to 3600s AND
       its `CONSOLIDATOR_LOCK_TTL_SECONDS` from 2400s to 4200s (mirroring the `market-data-defi` per-bucket override
       pattern) so a legitimately-running merge + CAS-retry re-merge (~15–20 min/cycle at current 72–75-shard /

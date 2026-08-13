@@ -56,8 +56,16 @@ context_scope:
 
 # tradfi_manifest_content_recovery_completion_2026_07_24 — finalize
 
-> **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todos are done (or on explicit
-> operator direction to start reconciling early). Machine-gated via `depends_on` + `gate_on_depends: true`.
+> **CORRECTED 2026-08-12 (/plan-reconcile)**: the banner below was stale — it predates the 2026-07-30 no-double-gate
+> finding (recorded in `/cursor-configs/skills/ag-closeout-audit/SKILL.md`) that this doc's own
+> `last_updated: 2026-07-30` reflects. This doc is correctly authored `status: active` from the start per that
+> convention: `gate_on_depends: true` already machine-holds every todo below regardless of the parent plan's own
+> draft/active status, so a manual `draft` gate on this doc would be redundant. Frontmatter `status: active` (line 12)
+> was already correct; only this stale prose banner needed fixing.
+
+> **STATUS: `active`, machine-held.** This doc's own todo is gated via `depends_on` + `gate_on_depends: true` on
+> `tradfi_manifest_content_recovery_completion_2026_07_24.md` — it will not be worked until that plan's todos are done
+> (or on explicit operator direction to start reconciling early), regardless of this doc's own `active` status.
 
 ## Todos
 

@@ -19,8 +19,8 @@ created: "2026-08-10"
 author: slot-26
 source:
   - agt-af22dd (DP-VM-001 escalation)
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
 parent_epic: infrastructure_master
@@ -118,3 +118,15 @@ tomorrow's run once instruments-service writes it. (A mid-run read of the run.lo
 - The reference-table exporter classifies a GCS-missing upstream as `SOURCE_RETURNED_ZERO` with a fabricated
   `http_status=200` fetch-evidence — a real evidence-semantics defect worth its own fix (thread an upstream-missing
   signal rather than reporting a clean 2xx+0).
+
+## Todos
+
+- [ ] [DATA] P2. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — Once instruments-service
+      writes real 2026-08-10 `sports_reference` data, `--force` recompute the sports features backfill for
+      `day=2026-08-10` to replace the false `empty_confirmed(SOURCE_RETURNED_ZERO)` rows the aborted 12:03 run recorded
+      (the upstream was merely lagging, not confirmed-absent). Repo: features-service.
+
+## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).

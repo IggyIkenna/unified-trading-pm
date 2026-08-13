@@ -427,7 +427,32 @@ _resync_venv_if_lock_moved() {
     git diff --quiet "${prev_sha}" HEAD -- uv.lock 2>/dev/null && return 0
     # Never rewrite site-packages under a peer mid-run — same rule the manual sweep
     # followed. A skipped repo is picked up on a later tick, when it is idle.
-    if pgrep -af 'pytest|quality-gates|basedpyright' 2>/dev/null | grep -qF "${PWD}"; then
+    #
+    # NOT `pgrep -af 'pytest|quality-gates|basedpyright' | grep -qF "${PWD}"` (fixed
+    # 2026-08-12, pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md todo A):
+    # `grep -qF "${PWD}"` is a SUBSTRING test against the matched process's full command
+    # line, not "this process's cwd is here" — the same pattern-only-matching class the
+    # async-wait-and-poll SSOT already names (§4, the `_ens_persist.py` self-match
+    # incident). A false NEGATIVE here (failing to detect a genuinely-live gate) is the
+    # dangerous direction: `uv sync --frozen` would then run concurrently with it, and this
+    # doc's own P1 lesson is that a `uv sync --frozen` CAN prune the live environment.
+    # `_cwd_of` (cursor-configs/hooks/lib/slot-collision-detect.sh, portable macOS/Linux) asks
+    # each candidate PID's REAL cwd instead of pattern-matching its argv.
+    _pgrep_lib="${_SLOT_CRON_PGREP_LIB:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/cursor-configs/hooks/lib/slot-collision-detect.sh}"
+    _gate_here=0
+    if [[ -f "${_pgrep_lib}" ]]; then
+        # shellcheck source=/dev/null
+        source "${_pgrep_lib}"
+        _here_real="$(readlink -f "${PWD}" 2>/dev/null || echo "${PWD}")"
+        for _cand_pid in $(pgrep -f 'pytest|quality-gates|basedpyright' 2>/dev/null || true); do
+            [[ "$(_cwd_of "${_cand_pid}")" == "${_here_real}" ]] && { _gate_here=1; break; }
+        done
+    else
+        # Library missing (e.g. a checkout without cursor-configs/) — degrade to the old
+        # substring heuristic rather than silently skipping the guard entirely.
+        pgrep -af 'pytest|quality-gates|basedpyright' 2>/dev/null | grep -qF "${PWD}" && _gate_here=1
+    fi
+    if [[ "${_gate_here}" == "1" ]]; then
         log "[venv-skip] ${repo_name} — uv.lock moved but a test/gate is running here; resync deferred to a later tick"
         return 0
     fi

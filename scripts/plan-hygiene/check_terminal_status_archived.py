@@ -135,6 +135,12 @@ def _run_only(paths: list[str], quiet: bool) -> int:
         p = Path(raw)
         if not p.is_absolute():
             p = Path.cwd() / p
+        # Resolve symlinks before relative_to() in _check_one(): PM_DIR is built via
+        # Path(__file__).resolve(), but an unresolved `p` (Path.cwd() reflects the shell's
+        # un-resolved $PWD, e.g. macOS /var/... vs the real /private/var/...) makes
+        # p.relative_to(PM_DIR) raise ValueError even though both point at the same file.
+        # Hit live 2026-08-12 running --precommit from a /var/folders/... worktree.
+        p = p.resolve()
         v = _check_one(p)
         if v is not None:
             violations.append(v)

@@ -32,7 +32,7 @@ referenced_by:
     /codex/02-data/defi-venue-protocol-catalogue.md,
     /codex/04-architecture/drift-v2-data-sources.md,
     /codex/15-runbooks/backfill-completion-playbook.md,
-    plans/active/issues/defi_code_codex_drift_2026_05_27.md,
+    plans/archive/2026_08/issues/defi_code_codex_drift_2026_05_27.md,
   ]
 owner:
 last_reviewed: 2026-07-24
@@ -264,7 +264,7 @@ Aave V3 FlashLoan events. Captures flash loans including amount, premium (fee), 
 | **Sources**         | Lido REST API (`api.lido.fi/v1/protocol/steth/apr/sma`), EtherFi REST API, DefiLlama (`api.llama.fi/protocol/eigenlayer`) |
 | **Shard key**       | venue × chain × date                                                                                                      |
 | **Instrument type** | `spot_asset` (written as `SPOT_ASSET`)                                                                                    |
-| **Status**          | Implemented, unscheduled                                                                                                  |
+| **Status**          | Production (bumped 2026-08-13 — scheduler-wiring shipped 2026-07-26, leaf-verification shipped 2026-08-05, both live)     |
 | **Schema fields**   | symbol, ts_event, venue, chain, apy, apy_7d, apy_30d                                                                      |
 | **Protocols**       | LIDO-ETHEREUM (stETH), ETHERFI-ETHEREUM (weETH), EIGENLAYER-ETHEREUM                                                      |
 

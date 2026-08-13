@@ -154,23 +154,79 @@ Kill-switch semantics for `kill_switch_fire`:
 
 ## 6. Archetype → topology requirements (strategy v2)
 
-Every archetype doc in `codex/09-strategy/architecture-v2/families/` gains a `topology_requirements` block declaring its
-demands. Strategy-service refuses to start if the materialised deployment does not satisfy them.
+Every archetype doc in `codex/09-strategy/architecture-v2/archetypes/` carries a `topology_requirements` block declaring
+its demands. Strategy-service refuses to start if the materialised deployment does not satisfy them (runtime reader:
+`strategy_service/topology_enforcement.py::load_topology_requirements()`).
 
-| Archetype                 | execution | strategy  | co-location                    | min SLA  |
-| ------------------------- | --------- | --------- | ------------------------------ | -------- |
-| MARKET_MAKING_CONTINUOUS  | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
-| ARBITRAGE_STRUCTURAL      | isolated  | shared OK | no                             | standard |
-| ML_DIRECTIONAL_CONTINUOUS | isolated  | shared OK | no                             | standard |
-| ML_DIRECTIONAL_EVENT      | isolated  | shared OK | no                             | standard |
-| CARRY_BASIS_PERP          | isolated  | shared OK | no                             | standard |
-| CARRY_STAKED_BASIS        | isolated  | shared OK | no                             | standard |
-| RULES_DIRECTIONAL         | isolated  | shared OK | no                             | basic    |
-| EVENT_SETTLED_SPORTS      | isolated  | shared OK | no                             | standard |
-| STAT_ARB_PAIRS            | isolated  | shared OK | no                             | standard |
-| VOL_TRADING               | isolated  | shared OK | no                             | standard |
+The table is the per-archetype projection of the binding decision artifact
+(`/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` § "2026-08-10 — FINAL DECISION ARTIFACT") and the machine
+mapping `unified_api_contracts.ARCHETYPE_TO_DEPLOYMENT_PROFILE`. Derivation rule: every `Low`→`co_located_vm` archetype
+requires `strategy: isolated` + `co-location: yes` + `min SLA: premium`; every `Medium`/`High`→`distributed` archetype
+requires `strategy: shared OK` + `co-location: no` + `min SLA: standard`. (Execution is always isolated. Strategy
+isolation is the differentiator.)
 
-(Execution is always isolated. Strategy isolation is the differentiator.)
+| Archetype                             | execution | strategy  | co-location                    | min SLA  |
+| ------------------------------------- | --------- | --------- | ------------------------------ | -------- |
+| `ML_DIRECTIONAL_CONTINUOUS`           | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `ML_DIRECTIONAL_EVENT_SETTLED`        | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `RULES_DIRECTIONAL_CONTINUOUS`        | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `RULES_DIRECTIONAL_EVENT_SETTLED`     | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `TSMOM_BTC_CTA`                       | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `CARRY_BASIS_DATED`                   | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `CARRY_BASIS_DATED_INV`               | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `CARRY_BASIS_PERP`                    | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `CARRY_BASIS_PERP_INV`                | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `CARRY_FUNDING_DISPERSION`            | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `CARRY_STAKED_BASIS`                  | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `CARRY_STAKED_BASIS_DATED`            | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `CARRY_RECURSIVE_STAKED`              | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `CARRY_RECURSIVE_BORROW_LENDING_ONLY` | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `YIELD_ROTATION_LENDING`              | isolated  | shared OK | no                             | standard |
+| `YIELD_STAKING_SIMPLE`                | isolated  | shared OK | no                             | standard |
+| `ARBITRAGE_PRICE_DISPERSION`          | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `ARBITRAGE_SPORTS_DUTCHING`           | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `LIQUIDATION_CAPTURE`                 | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `ARBITRAGE_MEV_SANDWICH`              | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `ARBITRAGE_MEV_JIT_LIQUIDITY`         | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `ARBITRAGE_MEV_BACKRUN`               | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`    | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `ARBITRAGE_CROSS_DOMAIN_EVENT`        | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `MARKET_MAKING_CONTINUOUS`            | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `MARKET_MAKING_EVENT_SETTLED`         | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `MARKET_MAKING_PASSIVE_SPREAD`        | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `MARKET_MAKING_INVENTORY_SKEW`        | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `MARKET_MAKING_ML_LEAN`               | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `MARKET_MAKING_QUEUE_MICROSTRUCTURE`  | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `MARKET_MAKING_PREDICTION`            | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `DEFI_LP_CONCENTRATED`                | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `DEFI_LP_POOL`                        | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `DEFI_LP_VAULT`                       | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `EVENT_DRIVEN`                        | isolated  | shared OK | no                             | standard |
+| `VOL_TRADING_OPTIONS`                 | isolated  | shared OK | no                             | standard |
+| `VOL_ARB_RV_IV`                       | isolated  | shared OK | no                             | standard |
+| `VOL_SPREAD_STRUCTURES`               | isolated  | shared OK | no                             | standard |
+| `VOL_CARRY`                           | isolated  | shared OK | no                             | standard |
+| `VOL_OVERLAY_COVERED_CALLS`           | isolated  | shared OK | no                             | standard |
+| `VOL_OVERLAY_PROTECTIVE_PUT`          | isolated  | shared OK | no                             | standard |
+| `VOL_STRADDLE`                        | isolated  | shared OK | no                             | standard |
+| `VOL_SYNTHETIC_DELTA`                 | isolated  | shared OK | no                             | standard |
+| `VOL_MARKET_MAKING`                   | isolated  | shared OK | no                             | standard |
+| `VOL_ML_LEAN`                         | isolated  | shared OK | no                             | standard |
+| `VOL_0DTE_GAMMA_SCALPING`             | isolated  | shared OK | no                             | standard |
+| `VOL_0DTE_PIN_RISK`                   | isolated  | shared OK | no                             | standard |
+| `VOL_TERM_STRUCTURE_ARB`              | isolated  | shared OK | no                             | standard |
+| `VOL_TERM_STRUCTURE_SLOPE`            | isolated  | shared OK | no                             | standard |
+| `VOL_DISPERSION`                      | isolated  | shared OK | no                             | standard |
+| `VOL_VARIANCE_SWAP`                   | isolated  | shared OK | no                             | standard |
+| `VOL_LEAPS_CONVEXITY`                 | isolated  | shared OK | no                             | standard |
+| `VOL_CROSS_ASSET_SPREAD`              | isolated  | shared OK | no                             | standard |
+| `VOL_RATIO_SPREAD`                    | isolated  | shared OK | no                             | standard |
+| `STAT_ARB_PAIRS_FIXED`                | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `STAT_ARB_CROSS_SECTIONAL`            | isolated  | isolated  | yes (exec+strategy on same VM) | premium  |
+| `PORTFOLIO_MULTI_STRATEGY`            | isolated  | shared OK | no                             | standard |
+| `PORTFOLIO_RISK_PARITY`               | isolated  | shared OK | no                             | standard |
+| `PORTFOLIO_FACTOR_ALLOCATION`         | isolated  | shared OK | no                             | standard |
+| `PORTFOLIO_TACTICAL_OVERLAY`          | isolated  | shared OK | no                             | standard |
 
 ## 7. Worked examples
 

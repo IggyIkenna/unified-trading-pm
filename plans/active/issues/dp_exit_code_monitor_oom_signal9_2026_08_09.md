@@ -35,8 +35,8 @@ created: 2026-08-09
 author: sub-agent (Claude Code session, dispatched to diagnose DP_RUN_MOSTLY_EMPTY re-nag cadence)
 parent_epic: agent_operating_framework_master
 priority: P1
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: infra
 assigned_role:
 drift_direction: advance-code
@@ -117,6 +117,9 @@ A silently-OOMing exit-code monitor never reaches its sentinel write (`_gcs.writ
       it didn't, treat that as a second finding).
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - 2026-08-09: Filed as a side-discovery from the `dp-meta-watchers` DP_RUN_MOSTLY_EMPTY re-nag investigation. Not fixed
   in this session (out of scope) — this doc exists so the finding isn't lost as a chat aside.

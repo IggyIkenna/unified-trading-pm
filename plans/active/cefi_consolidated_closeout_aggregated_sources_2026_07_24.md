@@ -515,15 +515,10 @@ context_scope:
 - **Newly discovered (completeness check, 2026-07-24)** — cefi-tagged docs (`asset_group: [..., cefi, ...]`) not
   previously named in this section; several are already discussed in Track 1-7 above with full detail, but are listed
   here too so this section alone stays a complete open-todo index:
-  - [`plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md`](/plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md)
-    (status: active, 9 open — 3 P1 shown, 6 P2/P3 capped)
-    - **[DATA] P1.** Retrofit the ~48 DeFi adapters that build `instrument_key` as an ad hoc f-string to
-      `build_canonical_instrument_id`.
-    - **[DATA] P1.** Resolve the non-canonical TYPE-token question before retrofitting the above
-      (VAULT/SUPPLY/BORROW/etc. aren't real InstrumentType values).
-    - **[DATA] P1.** Fix the "no VENUE:TYPE: wrap at all" gap in both Prediction adapters (Kalshi/Polymarket store bare
-      raw provider ids).
-    - +6 more P2/P3 — see file for the rest.
+  - [`plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md`](/plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md)
+    (status: resolved, 0 open — **CORRECTED 2026-08-12 (/plan-reconcile)**: archived 2026-08-06, all 14 todos `[x]` with
+    real evidence; this entry previously said "active, 9 open" and listed 3 already-shipped P1s + a stale "+6 more"
+    pointer, all now stale)
   - [`plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`](/plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md)
     (status: active, 22 open — 14 P0/P1 shown, 8 P2 capped)
     - **[UAC] P0.** Map the index perps (SPXUSDT/NAS100/SPYUSDT/XAUUSDT) to the CME index-future canonical, carrying the
@@ -614,9 +609,10 @@ context_scope:
     — all todos checked, but `status: open` — 2 operator-gated `--apply` production data-mutation sign-offs still
     pending (relabel ~2.59M/3.13M raw-symbol Tardis manifest rows to canonical ids; purge ~49,720 stale-shape
     `expected_unattempted` rows), deliberately never captured as separate checkboxes. NOT closed/archived/record-only.
-  - [`plans/active/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md`](/plans/active/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md)
-    - **[BLOCKED-CREDENTIALS] P1.** Tardis prod API key only has free-tier/preview entitlement for `lighter` exchange
-      historical CSVs — needs operator subscription upgrade or an accepted-limitation ruling.
+  - [`plans/archive/2026_08/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md`](/plans/archive/2026_08/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md)
+    — **RESOLVED + ARCHIVED 2026-08-12** (was BLOCKED-CREDENTIALS): the Tardis `lighter` entitlement gap was re-probed
+    live 2026-08-08 and found gone; LIGHTER-ZKSYNC `derivative_ticker` re-launch verified (16,491 captured rows),
+    Layer-1 confirms it's no longer among cefi's missing tuples.
   - [`plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md`](/plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md)
     (status: open, 14 open — this is Track 1's own source doc, see Track 1 above for context; 11 P0/P1 shown, 3 P2
     capped)

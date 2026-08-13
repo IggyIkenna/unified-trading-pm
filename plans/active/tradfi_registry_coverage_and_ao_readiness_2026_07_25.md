@@ -255,19 +255,19 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
       non-zero count). (repo: instruments-service)
 
       **ATTEMPTED 2026-07-30 — NOT completed, aborted for shared-host safety.** Ran the exact command live
-                                                                          (`GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python
-                                                                          scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run`, `instruments-service`). The
-                                                                          manifest load (`merge_canonical_with_outstanding_shards` over the 5,894,011-row `market-data-tick-tradfi-prd`
-                                                                          `_index` + its outstanding `_index/per_vm/` shards — tradfi has an extensive VM-launch history) drove the process
-                                                                          to ~13GB RSS with growing swap (5.9Gi to 9.3Gi on a 15Gi-total shared host, other sessions concurrently active)
-                                                                          and zero log progress past "Loading manifest" for 6+ minutes — flat progress reads as a stall, not
-                                                                          slow-but-working, per the async-wait-discipline SSOT. Killed it (`kill -9`) before risking an OOM crash or
-                                                                          thrashing badly enough to hurt other concurrent work on the shared host, rather than waiting indefinitely. This is
-                                                                          the same heavy-compute-on-shared-host class the infra codex gates to a dedicated VM — tradfi's corpus size makes
-                                                                          this a genuinely heavier operation than the ruling's "the dry-run is runnable now" framing assumed. Cross-filed in
-                                                                          `data_completion_tradfi_2026_07_15.md`'s `⑫ FOLLOW` todo. **Recommended next step**: re-run on a dedicated VM (or
-                                                                          scope down via `--start-date`/`--end-date`/`--venues` to shrink the per-VM-shard merge) rather than the shared
-                                                                          host. No `--apply` was ever reached; nothing was mutated.
+                                                                              (`GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python
+                                                                              scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run`, `instruments-service`). The
+                                                                              manifest load (`merge_canonical_with_outstanding_shards` over the 5,894,011-row `market-data-tick-tradfi-prd`
+                                                                              `_index` + its outstanding `_index/per_vm/` shards — tradfi has an extensive VM-launch history) drove the process
+                                                                              to ~13GB RSS with growing swap (5.9Gi to 9.3Gi on a 15Gi-total shared host, other sessions concurrently active)
+                                                                              and zero log progress past "Loading manifest" for 6+ minutes — flat progress reads as a stall, not
+                                                                              slow-but-working, per the async-wait-discipline SSOT. Killed it (`kill -9`) before risking an OOM crash or
+                                                                              thrashing badly enough to hurt other concurrent work on the shared host, rather than waiting indefinitely. This is
+                                                                              the same heavy-compute-on-shared-host class the infra codex gates to a dedicated VM — tradfi's corpus size makes
+                                                                              this a genuinely heavier operation than the ruling's "the dry-run is runnable now" framing assumed. Cross-filed in
+                                                                              `data_completion_tradfi_2026_07_15.md`'s `⑫ FOLLOW` todo. **Recommended next step**: re-run on a dedicated VM (or
+                                                                              scope down via `--start-date`/`--end-date`/`--venues` to shrink the per-VM-shard merge) rather than the shared
+                                                                              host. No `--apply` was ever reached; nothing was mutated.
 
 - [ ] [BACKEND] P2. **NEW 2026-07-25 (plan-reconcile) — track the KRX name-column "STILL OPEN" work as a real todo, not
       just prose behind a checked box.** The KRX name-column code (4/4 read surfaces) shipped 2026-07-20 —
@@ -352,7 +352,14 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
     `consolidator_throughput_backlog_monitor_2026_07_09.md`) remain `status: open`/`active` with their own open todos.
     Since `gate_on_depends: true` requires BOTH prerequisites done and neither is, the gate is genuinely unmet — this is
     the `gate_on_depends: true` class of draft (a real prerequisite), not a simple operator-approval draft. **Not
-    flipped** — stays `assigned_vm: NA` / `status: draft`.
+    flipped** — stays `assigned_vm: NA` / `status: draft`. **RE-VERIFIED 2026-08-12 (/plan-reconcile, per operator
+    direction to check the prerequisites in practice before deciding which control wins against the 2026-08-07 "flip all
+    8" ruling)**: still unmet. Dependency 1 (`tradfi_manifest_content_recovery_completion_2026_07_24.md`) has the same
+    open P1 todo unchanged since 2026-08-08 (the 1,328-cell unrecoverable-population write-off decision). Dependency 2
+    (`tradfi_backfill_throughput_followups_2026_07_24.md`) is half-resolved: its OOM-remediation owning doc is
+    content-complete (0 open checkboxes, status label just never flipped), but
+    `consolidator_throughput_backlog_monitor_2026_07_09.md` still carries 2 real open todos. The mechanical gate
+    correctly wins over the blanket ruling — this doc stays draft/NA until both prerequisites genuinely close.
 
 ## Codex SSOTs (read before touching a phase)
 

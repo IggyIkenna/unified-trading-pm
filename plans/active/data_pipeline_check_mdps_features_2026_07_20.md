@@ -195,16 +195,17 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       multi-cell round-trip (force+skip, all AGs × venues × data_types × timeframes, report written) — the mechanism is
       proven (see todo 8 above) but the SKILL DRIVER ITSELF has never survived long enough (5 independent reproductions
       across 2 sessions, both ad-hoc interactive and AO-managed persistent workers) to produce one clean automated
-      verdict beyond a single scoped cell. **GATED on prerequisite condition `mdps-e2e-shared-host-teardown-fixed`**
-      (set by main/operator; tracks `issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md` — fleet-wide
-      shared-host RAM contention silently killing background processes mid-run, 32s-520s in, not tied to elapsed time; a
-      distinct but likely-related mechanism from the `WorkerLivenessWatchdog` heartbeat-silent kill documented for the
-      original ~19-minute reproduction in `/codex/04-architecture/agent-orchestrator-worker-liveness.md`). Do NOT
-      attempt this todo until that condition flips green — re-attempting blind just wastes another cycle on the same
-      wall. **RE-VERIFIED 2026-07-27 (slot-10)**: `issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`
-      is still `status: open`; no evidence the `mdps-e2e-shared-host-teardown-fixed` condition has flipped. Not
-      re-attempted — would be the 6th reproduction of the same known failure mode. Skipped rather than burning another
-      cycle; re-check once the operator/main flips the condition.
+      verdict beyond a single scoped cell. **RULED 2026-08-12**: split into a gated companion plan — see todo below.
+      **GATED on prerequisite condition `mdps-e2e-shared-host-teardown-fixed`** (set by main/operator; tracks
+      `issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md` — fleet-wide shared-host RAM contention
+      silently killing background processes mid-run, 32s-520s in, not tied to elapsed time; a distinct but
+      likely-related mechanism from the `WorkerLivenessWatchdog` heartbeat-silent kill documented in
+      `/codex/04-architecture/agent-orchestrator-worker-liveness.md`). Do NOT attempt until that condition flips green.
+      **RE-VERIFIED 2026-07-27 (slot-10)**: still `status: open`, condition not flipped — not re-attempted (would be the
+      6th reproduction of the same known failure); re-check once the operator/main flips it.
+- [ ] [REVIEW] P2. Split the P0 item above into its own plan gated on
+      `shared_host_ram_exhaustion_kills_background_qg_2026_07_27` (`depends_on`+`gate_on_depends: true`), per the
+      2026-08-12 ruling.
 - **[DATA] P0. 9.** RUN + VALIDATE `/data-pipeline-check-features` e2e: multi-day input window per family, prove
   force+skip for every MVP feature shard (all families × valid AGs). Report written. **Non-checkbox rollup header —
   restructured 2026-07-27 (slot-3)**, same pattern as todo 11's split: the run against CEFI:delta_one surfaced and

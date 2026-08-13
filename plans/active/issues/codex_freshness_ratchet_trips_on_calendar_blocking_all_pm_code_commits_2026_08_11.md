@@ -156,18 +156,64 @@ reading. All three name their replacement, so the machine already has everything
 
 ## Todos (added 2026-08-12)
 
-- [ ] [SCRIPT] P2. **Exempt formally-retired docs from the staleness window in `check_codex_doc_freshness.py`.**
-      Proposal: skip `status: superseded|deprecated|archived`, but ONLY when the doc names its replacement
-      (`superseded_by` non-empty) — so the exemption rewards pointing at the successor instead of becoming a way to mute
-      the gate by editing one field. Docs affected today: the 3 tabled above. Keep them counted in the report as
-      `exempt-retired` rather than dropping them silently, so the surface stays visible. This is a governance-semantics
-      change to a gate, so it needs an explicit operator OK before shipping, not just a green run — raise it, don't
-      merge it unilaterally. Repo: unified-trading-pm. Done when: the checker distinguishes retired from stale, and
-      `codex_doc_freshness_baseline.yaml` shrinks by exactly the retired docs (baseline is shrink-only — no
-      `--baseline-write`).
+- [x] [SCRIPT] P2. ✅ **Exempt formally-retired docs from the staleness window in `check_codex_doc_freshness.py`** —
+      operator-approved and SHIPPED 2026-08-12, `unified-trading-pm@c92375f05b`. Verified on origin by marker
+      (`_is_retired_with_successor` present; `violation_count: 3` in the baseline blob), not by exit code. The commit
+      was briefly held by an unrelated fleet-wide ratchet failure
+      (`/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`), resolved by its owning
+      session the same morning. `_is_retired_with_successor()` skips `superseded|deprecated|archived` ONLY when a
+      non-empty `superseded_by` is present; the exempt set is PRINTED as `exempt-retired` rather than dropped silently.
+      Baseline ratcheted DOWN 6 → 3 by removing exactly the 3 retired entries (hand-edited removal — no
+      `--baseline-write`, nothing added). Gate verified green under BOTH invocation styles (standalone
+      `--workspace-root .` and quality-gates.sh's parent-root form):
+      `✅ At-or-below baseline (0 new; 3 known, 3 at     baseline)`. 26 unit tests pass, including the mute-button guard
+      (retired WITHOUT a successor stays stale), a `status: current` + stray `superseded_by` case,
+      list/empty-list/blank-string successors, case-insensitivity, and a non-string `status` that must neither crash nor
+      exempt. **Original proposal, for the record:** Proposal: skip `status: superseded|deprecated|archived`, but ONLY
+      when the doc names its replacement (`superseded_by` non-empty) — so the exemption rewards pointing at the
+      successor instead of becoming a way to mute the gate by editing one field. Docs affected today: the 3 tabled
+      above. Keep them counted in the report as `exempt-retired` rather than dropping them silently, so the surface
+      stays visible. This is a governance-semantics change to a gate, so it needs an explicit operator OK before
+      shipping, not just a green run — raise it, don't merge it unilaterally. Repo: unified-trading-pm. Done when: the
+      checker distinguishes retired from stale, and `codex_doc_freshness_baseline.yaml` shrinks by exactly the retired
+      docs (baseline is shrink-only — no `--baseline-write`). **Measured surprise on implementation**: the exempt set is
+      **5**, not the 3 this issue predicted — `bucket-naming-and-config.md` and `sports-integration-plan.md` are also
+      retired-with-successor, but were still inside the 90d window so they had never surfaced as violations. They would
+      have expired later and cost another round of the same pointless review. That is the argument for fixing the rule
+      rather than the 3 instances: the instance list was never the real population.
 - [ ] [DEVOPS] P3. **Decide the endgame for the 3 retired docs above, independent of the gate change.** A `superseded`
       doc that still sits on a cutover-critical surface is discoverable by grep and can mislead an agent into
       implementing against it. Options: SUPERSEDED banner at the top pointing at the replacement (the workspace's stated
       convention), or archival off the scanned surface. All three name a replacement, so the successor is always
       recoverable and no doc here is orphaned — this is a tidiness and grep-noise decision, not a data-loss one. Repo:
+      unified-trading-pm.
+
+## Update 2026-08-12 — a fourth failure mode: a genuine YAML syntax error reports as "no-frontmatter"
+
+Hit live authoring a NEW codex doc (`agent-orchestrator-ci-escalation-wall-types.md`). The gate reported
+`no-frontmatter` — which reads as "you forgot the `---` block" — but the file plainly had one. `_parse_frontmatter()`
+(line ~122) wraps `yaml.safe_load(raw)` in `except yaml.YAMLError: return None`, and `_check_parsed()` maps ANY `None`
+to the SAME `"no-frontmatter"` reason regardless of whether frontmatter was truly absent or present-but-unparseable —
+confirmed by direct reproduction: `_parse_frontmatter()` returned `None`, but manually running `text.find("\n---\n", 4)`
+found the closing delimiter fine (`end=1584`); the actual failure was `yaml.safe_load` raising
+`ScannerError: could not find expected ':'` on the `summary:` field, whose plain (unquoted, no `>-`/`|` block indicator)
+multi-line value contained a literal `": "` inside a sentence ("WALL_TYPES accepts: what triggers it") — YAML's
+plain-scalar grammar treats an internal `": "` as a would-be mapping-key separator. Fixed the doc (added `>-` to
+`summary:`, and removed the ambiguous colon besides) — confirmed via `check_codex_doc_freshness.py --workspace-root .`
+going from 1 new violation to 0.
+
+**The transferable lesson**: same shape as the two Updates above (a real-looking violation whose true cause is a
+checker/mechanism bug, not the named doc's content) — but this one is a plain code smell (broad `except` collapsing two
+distinct failure classes into one ambiguous verdict), not a data/path bug, so it is a different fix. Before trusting a
+`no-frontmatter` verdict on a doc that visibly HAS a `---` block: run `_parse_frontmatter()` directly (or just
+`yaml.safe_load` the block) to see the REAL exception — the ratchet's own message will send you looking for a missing
+delimiter that was never missing.
+
+- [ ] [SCRIPT] P3. **Distinguish "no-frontmatter" from "frontmatter present but failed to parse" in
+      `check_codex_doc_freshness.py`.** Give `_parse_frontmatter()` a way to signal which case occurred (e.g. return a
+      sentinel/raise a typed exception the caller catches, or a `(fm, reason)` tuple) so `_check_parsed()` can emit a
+      distinct violation reason (`"yaml-parse-error"` with the caught exception's message as `detail`) instead of
+      silently reusing `"no-frontmatter"` for both. Low urgency (P3) since the underlying doc-authoring bug is what
+      actually blocks a commit either way — this is purely about the diagnostic pointing the next person at the right
+      fix on the first read instead of a false "you're missing the frontmatter block entirely" lead. Repo:
       unified-trading-pm.

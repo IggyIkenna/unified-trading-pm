@@ -29,7 +29,8 @@ tags: [sports, pipeline-e2e-check, checker-template, candle-write, odds-horizon-
 related:
   [
     /plans/archive/2026_08/issues/mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md,
-    /plans/active/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md,
+    /plans/archive/2026_08/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-08-10"
 author: mdps_sports_chain_bundle_multi_venue_partition_mismatch-05aa5ad81aad (slot-31, data_engineering)

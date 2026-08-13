@@ -360,6 +360,61 @@ For every repo whose current `quality-gates-v2` conclusion is `failure`, pull th
   A promote bot's `ahead_by`/PR-dirty state climbing over hours despite "successful" scheduled ticks is the live symptom
   — the bot's own per-tick "success" conclusion just means the workflow didn't crash while failing to actually merge
   anything.
+- **(l) A poller's cron interval was throttled down without widening its lookback/dedup window to match, silently
+  reopening the exact detection gap the window exists to close** (2026-08-12). Tell: a `schedule:` workflow computes
+  `alertable` from a time-bounded query (`createTime >= now - LOOKBACK_MINUTES`, or equivalent) and its own header
+  comment states an overlap invariant (e.g. "we look back 20 minutes on a 30-minute cron — overlap so a build created
+  right at a tick boundary is never missed") — check whether the LIVE cron still matches the interval that invariant
+  assumes. `cloud-build-failure-watcher.yml` was throttled `*/30 -> */15... -> hourly` (2026-07-17, "Phase-3 ci-cost")
+  but `LOOKBACK_MINUTES` stayed `20` — on an hourly cron, only `[tick-20, tick]` is ever queried, leaving
+  `[tick, tick+40)` (roughly 40 of every 60 minutes) covered by NEITHER the tick that just ran nor the next one. Cloud
+  Build failures are invisible to every GH-Actions-based watcher (this file's own header comment: "GCB image builds run
+  OUTSIDE GitHub Actions"), so this watcher was the ONLY line of defense for that class — a live, unnoticed ~67% blind
+  spot since the throttle landed, caught only because a real failure happened to land in the lucky window. **Before ever
+  throttling a poller's schedule for cost: confirm the cost premise is real first** —
+  `gh api repos/<owner>/<repo> --jq '.visibility'`; GitHub Actions minutes on `ubuntu-latest` (or any GH-hosted runner)
+  are FREE AND UNLIMITED for public repos regardless of frequency, so a throttle on a public-repo workflow saves nothing
+  and only costs detection latency. `cloud-build-failure-watcher.yml` lives in `unified-trading-pm`, which went public
+  2026-08-06 — the 2026-07-17 throttle's cost rationale had been moot for over a month. If a genuine cost-motivated
+  interval change is still warranted on an actually-private repo, widen the lookback/dedup window in the SAME change so
+  the overlap invariant keeps holding — never change one side of that pair alone. Self-hosting is not a substitute fix
+  for a public repo either: a comment in `ldr-to-main-promote.yml` (dated 2026-08-07) explicitly warns against it —
+  self-hosted runners on a public repo are a fork-PR security exposure, on top of buying nothing over the already-free
+  `ubuntu-latest` minutes.
+- **(m) A stale/superseded promote PR that had posted a CRITICAL alert gets auto-closed with no matching Slack
+  resolution — the closing bot recorded it as a GitHub PR comment only** (2026-08-12). Tell: a promote/drain bot
+  (`ldr-to-main-promote.yml`, `ldr-to-main-promote-fleet.yml`) closes an old promote PR when a newer LDR tip supersedes
+  it — completely normal, correct behaviour (the branch was cut before a later LDR commit landed; merging the stale PR
+  would have regressed the target relative to current LDR) — but if that PR's own `quality-gates-v2` run had FAILED, it
+  already triggered a CRITICAL "QG slice(s) FAILED" post via the per-repo QG workflow's own notifier. The close step's
+  `gh pr close ... --comment "..."` only reaches GitHub, never Slack, so a reader of `#ci-failures` sees the CRITICAL
+  and nothing else — exactly the § 0d asymmetric-alerting gap, but here the fix is mechanical rather than just a
+  reporting caveat: **the closing bot already has everything it needs (the stale PR number, the reason) to post the
+  missing bookend itself.** Root fix (ported into `ldr-to-main-promote.yml`): before closing, check
+  `gh pr view <stale_num> --json statusCheckRollup` for a `FAILURE`/`TIMED_OUT` conclusion; if found, accumulate the PR
+  number and fire a `recovery: true` INFO post via `notify-slack.yml` naming the closed PR(s) and the fresh replacement
+  — skipped entirely for the common case of closing a PR that was never red (that's routine promote-cadence churn, not
+  something `#ci-failures` ever alerted on, and posting there too would just be noise). Generalizes: any bot that
+  CLOSES/SUPERSEDES an artifact which may have triggered a standing-channel alert should check for that alert's
+  precondition before closing and post the matching resolution — don't assume "closing it" is self-evidently visible to
+  whoever is watching the alert channel.
+- **(n) A detector helper returns a bare `None`/empty for two different conditions — "the check ran and confirmed
+  nothing" vs. "the check itself failed to run" — and the caller treats both as the former** (2026-08-12,
+  `deployment_api_release_tag_stall_false_positive_2026_08_12.md`). Tell: `reconcile_release_tags.py`'s
+  `_highest_existing_tag()` returned bare `Version | None` — `None` both when `gh api repos/.../tags` genuinely failed
+  (`rc != 0`) AND when a successful fetch found zero matching tag names — and the caller (`_reconcile_dynamic_repo`)
+  read `highest is None` as a confirmed "dynamic versioning but NO v* tag exists at all" CRITICAL. A transient `gh api`
+  hiccup fired that exact message for `deployment-api`, which in fact had a tag minted 32 minutes earlier (confirmed
+  live: re-running the identical `gh api repos/<o>/<r>/tags` call immediately after found the tag with zero issues — the
+  failure was a one-off, not a structural regex/matching bug). This is the same shape as (i)/(k) — an ambiguous return
+  value collapsing "checked, genuinely clear" and "couldn't check" into one signal — but at the return-type level rather
+  than a regex/allowlist level. Before trusting any detector's `None`/empty/zero-count verdict as a real "nothing
+  found": read the function that produced it and confirm it structurally CANNOT return that same value on a fetch
+  failure. If it can, that's the bug — fix it by making the two cases distinguishable in the return type (here:
+  `tuple[Version | None, bool]`, second value = fetch succeeded), route the fetch-failure case to the SAME
+  `"unresolved"` bucket the function already uses elsewhere for other unmeasurable conditions (never invent a new bucket
+  when an existing one already means "couldn't tell this run"), and add a regression test pinning both branches (fetch
+  failure → unresolved, confirmed-empty → still alarms) so the collapse can't silently return.
 
 ## 2. Fix (b), (c), (d) directly in the target repo
 

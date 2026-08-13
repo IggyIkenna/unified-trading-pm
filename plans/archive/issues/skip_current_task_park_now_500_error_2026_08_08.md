@@ -4,11 +4,11 @@ title: "POST /api/slots/{N}/skip-current-task returns 500 when park_now:true —
 summary: >-
   Live-hit 2026-08-08 (slot 16) -- calling POST /api/slots/16/skip-current-task with reason_code=GATED and park_now=true
   against a real queued task (sports_af_full_entity_completion-018, backed by an active
-  plans/active/issues/sports_af_full_entity_completion_2026_08_03.md checkbox row) returned a bare Internal Server Error
-  / HTTP 500 on two consecutive attempts. The IDENTICAL call with park_now omitted (defaults false) against the SAME
-  task succeeded (HTTP 200, task_skipped plus fleet_cooldown_armed=true), and the task remained the slot's current_task
-  across both failed attempts (confirmed by the retry payload's task_id still matching) -- consistent with the exception
-  being raised and the session_scope() transaction rolling back before ss.clear_slot_assignment ever ran.
+  plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md checkbox row) returned a bare Internal
+  Server Error / HTTP 500 on two consecutive attempts. The IDENTICAL call with park_now omitted (defaults false) against
+  the SAME task succeeded (HTTP 200, task_skipped plus fleet_cooldown_armed=true), and the task remained the slot's
+  current_task across both failed attempts (confirmed by the retry payload's task_id still matching) -- consistent with
+  the exception being raised and the session_scope() transaction rolling back before ss.clear_slot_assignment ever ran.
   server/routes/slots_ops.py's skip_current_task calls auto_park.manual_park(...) only when park_now=True (the else
   branch, maybe_auto_park, is what the plain-skip path exercises and that one worked) -- narrows the fault to
   server/auto_park.py manual_park or something it calls (park_condition_name / ss.set_prerequisite / ss.mark_parked) for
@@ -22,7 +22,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [agent-orchestrator, skip-current-task, park_now, auto_park, 500-error, bug]
-related: [/plans/active/issues/sports_af_full_entity_completion_2026_08_03.md]
+related: [/plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md]
 created: 2026-08-08
 author: slot-16
 last_updated: 2026-08-08
