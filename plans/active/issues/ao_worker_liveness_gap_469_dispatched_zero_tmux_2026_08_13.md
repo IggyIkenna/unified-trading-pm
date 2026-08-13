@@ -68,16 +68,20 @@ health is not this skill's repo to fix").
 
 ## Not yet done
 
-- [ ] [OPERATOR] P1. Confirm whether this is a live, ongoing outage or already self-recovered — re-run
-      `check-ao-backlog-status.sh` and check `tmux list-sessions` on the VM again; if still zero with a growing
-      `dispatched`/`queued` count, escalate per CLAUDE.md's "big finding" rule (this is exactly that class: AO is the
-      "critical service (AO first)" the codebase's own runbook prioritizes).
-- [ ] [BACKEND] P2. If it recurs, root-cause why AutoSpawn/failover/watchdog (stated in CLAUDE.md to be "ON" and to
-      self-heal) did not spawn a single worker for 469 queued tasks. Check orchestrator service logs
-      (`journalctl -u orchestrator.service`) around the observed window for a dispatch-loop crash/hang distinct from the
-      HTTP-health-check process.
+- [ ] [OPERATOR] P1. **CONFIRMED ONGOING AND WORSENING as of 17:09Z re-check** (below) — this needs the escalation this
+      doc's original todo 1 only conditionally called for. `journalctl -u orchestrator.service` on the VM for a
+      dispatch-loop crash/hang distinct from the HTTP-health-check process; restart the dispatch loop if a hang is
+      confirmed (per CLAUDE.md's safe-restart runbook, not an ad-hoc kill).
+- [ ] [BACKEND] P2. Root-cause why AutoSpawn/failover/watchdog (stated in CLAUDE.md to be "ON" and to self-heal) has not
+      spawned a single worker for a growing backlog. Check orchestrator service logs around the observed window for a
+      dispatch-loop crash/hang distinct from the HTTP-health-check process.
 
 ## Progress Log
 
 - 2026-08-13: Filed from a `/ci-reconcile` run's §5 AO-escalation cross-check. Not independently root-caused or fixed —
   CLAUDE.md states the orchestrator self-heals and this skill's own scope excludes AO's dispatch-loop internals.
+- 2026-08-13T17:09Z: Re-checked per operator prompt. NOT self-recovered — WORSENED: `dispatched+queued` grew 469→612,
+  `TOTAL_TASKS` grew 3325→3470 (~145 more tasks queued in under an hour), `LIVE_WORKER_SESSIONS` still 0
+  (`tmux list-sessions` still errors with no server on the VM). This is now a confirmed live, ongoing, growing outage,
+  not a transient blip — escalating per CLAUDE.md's "big finding" rule (AO is the CLAUDE.md-named "critical service (AO
+  first)").
