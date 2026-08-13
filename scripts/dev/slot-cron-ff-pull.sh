@@ -26,7 +26,9 @@
 #      script mutates local state; FF-only never loses work.
 #
 # Never destructive. Never runs `merge --no-ff`, never `rebase`, never `reset --hard`.
-# Exits 0 always (cron-safe). Per-repo status logged to stdout + the rotating log file.
+# Exits 0 always (cron-safe). Per-repo status logged to stdout + the rotating log file, each
+# verdict tagged with its clone identity (slot-<N> or main) so the five clones of each repo
+# that share one log are attributable (see _clone_tag / ff_pull_fleet_drift_rca_2026_08_11).
 #
 # Usage:
 #   slot-cron-ff-pull.sh                        # current slot, default branch
@@ -143,7 +145,27 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-log()      { printf '[%s] %s\n' "$(date -u +%H:%M:%SZ)" "$*"; }
+# Clone identification on every log verdict (ff_pull_fleet_drift_rca_2026_08_11). Five clones of
+# each repo (the top-level main clone + .tabs/<N> slot clones) write into ONE shared log file, and
+# the repo_name basename alone made them indistinguishable — a `skip:dirty` verdict from slot-2's
+# clone read as if it belonged to slot-1's, which is exactly the misdiagnosis that briefly claimed
+# "the cron won't FF clean repos". ff_one() pushds into the repo it is acting on, so the current
+# directory at each log() call IS the physical clone producing that verdict; derive a short
+# slot-<N>/main tag from it so every line is attributable to the exact clone (paired with the
+# repo_name already in each verdict, this fully resolves a clone). Pure builtins — no external
+# basename — because log() is a hot path across a 5-min cron sweep of every repo × every slot.
+_clone_tag() {
+    local dir="${1:-$PWD}" slot_id
+    dir="${dir%/}"
+    if [[ "${dir}" == *"/.tabs/"* ]]; then
+        slot_id="${dir#*/.tabs/}"
+        slot_id="${slot_id%%/*}"
+        printf 'slot-%s' "${slot_id}"
+    else
+        printf 'main'
+    fi
+}
+log()      { printf '[%s] [%s] %s\n' "$(date -u +%H:%M:%SZ)" "$(_clone_tag)" "$*"; }
 log_quiet(){ [[ "${QUIET}" -eq 0 ]] && log "$@" || true; }
 
 # Acquire lock (skip silently if another instance is running).
