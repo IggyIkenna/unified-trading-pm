@@ -282,3 +282,60 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
   (deployment-ui parses today's flat shape) that this plan does not target; reshaping them in place would silently break
   that consumer. This satisfies each todo's own "existing tests pass unmodified" done-when criterion while still giving
   the rollup worker a genuine single-pass dual-scope compute path.
+- **2026-08-13 (`/autonomous` run, PRE-COMPACT CHECKPOINT — todos 1-5 shipped, 5/9 done)**: Session hit ~70% context;
+  checkpointing per the workspace pre-compact ritual before continuing. All 5 shipped commits verified
+  `ahead=0`/`behind=0` against `origin/live-defi-rollout` on BOTH `deployment-api` and `unified-trading-pm` (fetch +
+  `git rev-list --count` both directions, both zero) — nothing pushed this session is at risk. Shipped SHAs:
+  `deployment-api@af9025b784` (todo 1), `@a79397b8ec` (todo 2), `@8341483bbe`+`@d692a03cbe` (todo 3), `@ae87730877`
+  (todo 4), `@24b9f575a9` (todo 5).
+
+  **Lessons carried forward (would otherwise be re-learned):**
+  1. **QG method/file size gates bite on every dual-scope addition** — every todo's first QG pass failed on either the
+     900-line file cap or the 50-line method cap from the new dual-scope code, never on logic. The fix pattern that
+     worked every time: extract the dual-scope logic into a NEW sibling mixin file (mirroring the existing single-scope
+     split pattern already used throughout `data_status/`), inserted into the SAME single linear mixin chain (never
+     multiple inheritance — Python MRO technically allows it, but this codebase's whole
+     `self._method`-resolves-statically-under-basedpyright-strict convention depends on ONE line). New links this
+     session: `coverage_dual_scope` (between `coverage`/`missing_shards`), `venue_resolution_dual_scope` (between
+     `venue_resolution`/`coverage`), `manifest_category_builder_dual_scope` (between
+     `manifest_category_builder`/`manifest_status_helpers`).
+  2. **Dict comprehensions with a scope-independent value trip ruff C420** (`{k: v for k in DUAL_SCOPES}` where `v`
+     doesn't depend on `k`) — AND `dict.fromkeys(DUAL_SCOPES, v)` is the suggested fix but is WRONG here: it aliases the
+     SAME object across both scope keys, so mutating one scope's dict in-place corrupts the other. Real bug caught twice
+     this session before shipping (todo 2's Tier-2/seeded dt-entry sharing, then again in the same shape). Fix: a plain
+     `for scope in DUAL_SCOPES: result[scope] = dict(shared_value)` loop — no C420 trigger, no aliasing.
+  3. **The `qg-empty-fallback` noqa marker is workspace-custom, not a real ruff code** — ruff prints a benign "Invalid
+     noqa directive" WARNING for it (pre-existing convention, not something I introduced or need to fix), separate from
+     and never the cause of an actual gate FAILURE. Don't chase those warnings.
+  4. **A real banned-pattern catch**: `payload.get("could_exist", {})` in the rollup worker's telemetry line tripped the
+     codex-compliance "empty dict/list fallback — fail fast" gate. Fixed with direct indexing (`payload["could_exist"]`)
+     since the key is guaranteed by the function's own return contract — a missing key should raise loud, not silently
+     report 0.
+  5. **Shared-checkout collision is real and active** (2 other live sessions confirmed in this same slot at session
+     start) — `safe-doc-push.sh` hit the SAME stash-conflict pattern (git conflict markers landing IN the plan file on a
+     failed autostash pop) on 2 separate flips this session, always resolved by manually reconstructing the todo block
+     from both fragments (never blind-overwrite either side) and retrying. Also hit ONE genuine untracked-file collision
+     (`plans/archive/2026_08/ci_escalation_coverage_expansion_2026_08_12.md`, mtime >120s = dead claim per the
+     liveness-gate rule) — moved aside to `/tmp/uts_slot5_setaside/` (never deleted), retried, and the file correctly
+     reappeared via origin's own version on the next pull. Both are DOCUMENTED, expected failure modes of this
+     workspace's shared-checkout model, not something to escalate.
+  6. **One flaky test observed and confirmed**:
+     `test_route_deployments_inventory.py::test_list_cloud_run_services_degrades_on_gcp_error` failed once (unrelated
+     area — Cloud Run inventory GCP-error handling, nothing to do with `data_status/`), reproduced green on an immediate
+     clean re-run before shipping todo 4. Logged here in case it recurs — not filed as an issue doc yet (single
+     occurrence, not reproduced a 2nd time).
+  7. **Design decision (holds through todo 5, will keep holding for 6-8)**: every dual-scope function this plan adds is
+     ADDITIVE (new function/file, old single-scope one untouched) rather than reshaping an existing return contract in
+     place. This is why "existing tests pass unmodified" held for every todo's done-when despite the scale of new code,
+     and why the already-shipped on-demand `get_manifest_status`/`get_coverage_summary` HTTP endpoints carry zero risk
+     from any of this work.
+
+  **Remaining scope (todos 6-9, not started this tick):** todo 6 (`rollup_cache.py` scope-aware reads — add a real
+  `scope=` param to the 6 reader functions, replacing the `unwrap_could_exist_compat` transition shim's could_exist-only
+  behavior with genuine scope selection) is the natural next unit — same file the compat shim already touched, moderate
+  size. Todo 7 (delete the compat shim) is gated on todo 6 shipping AND a live GCS check proving every
+  `_DEFAULT_SERVICES` blob was regenerated in the new shape — cannot start until then. Todo 8 (end-to-end live
+  verification: on-demand vs rollup parity, Cloud Logging OOM absence check against `uts-shared-deployment-api`)
+  requires live production access/deploy visibility this session hasn't exercised yet — genuinely the
+  highest-uncertainty remaining unit. Todo 9 (docs cross-link) is trivial, can go anytime. Resuming session should pick
+  up todo 6 next.
