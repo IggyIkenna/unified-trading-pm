@@ -87,9 +87,9 @@ and MVP-tagging needs.
       `instrument_type=SPOT_PAIR` + a `tracks_equity=<canonical ticker>` link to the Databento real-equity twin,
       mirroring the `crypto_equity_link.tracks_equity()` pattern already shipped for equity perps
       (`unified-api-contracts@e4606ac0` per the sibling plan). Repo: unified-api-contracts.
-- [ ] [UAC] P1. Add the confirmed symbols to the CeFi MVP scope rule (mirror how equity-perp bases were unioned into
+- [x] ✅ [UAC] P1. Add the confirmed symbols to the CeFi MVP scope rule (mirror how equity-perp bases were unioned into
       `CEFI_EQUITY_PERP_BASE_UNIVERSE`) so they count toward the MVP completeness denominator and are picked up by the
-      standard capture/coverage tooling. Repo: unified-api-contracts.
+      standard capture/coverage tooling. Repo: unified-api-contracts. — unified-api-contracts@bfad33b58
 - [ ] [SCRIPT] P1. instruments-service — register an `InstrumentRecord` for each confirmed tokenized-equity symbol dated
       to its REAL historical listing date from Todo 1 (not a blanket floor — mirrors the equity-perp sibling plan's own
       per-symbol-date discipline, motivated by the same regime/coverage-window correctness concern that plan's Progress
@@ -179,3 +179,15 @@ and MVP-tagging needs.
   today; 45+ more underlyings need the link map extended — incl. the CRCL/COIN/HOOD/CRWD/DELL/ORCL/IBM/LLY/MCD set where
   the real-equity DBEQ.BASIC twin exists). SpaceX tokens (XSPCX / SPCXX) → `tracks_equity=""` standalone, mirroring the
   SPCX pre-IPO handling.
+
+- **2026-08-13 — Todo 3 (MVP scope rule) COMPLETE: tokenized-equity SPOT bases unioned into `CeFiMvpRule.base_ccys`.**
+  Slot-29 data_engineering worker. New UAC SSOT `CEFI_TOKENIZED_EQUITY_BASE_UNIVERSE` (67 RAW venue bases — 56 OKX
+  `X<UNDERLYING>` tokens + 11 Bybit `<TICKER>X` xstocks, per Todo 1's live-queried set) in
+  `unified_api_contracts/registry/cefi_instrument_universe.py`, exported via `registry/__init__.py` + the package root,
+  and unioned into `CeFiMvpRule.base_ccys` in `_mvp_scope_rules.py` (mirroring how equity-perp bases ride
+  `CEFI_EQUITY_PERP_BASE_UNIVERSE`). **Perp-gate carve-out**: their SPOT_PAIR cells are perp-gate-EXEMPT in
+  `_mvp_scope_capture.is_in_mvp_capture_universe` (they have NO perp leg) via a `STAKING_SPOT_EXCEPTION`-style carve-out
+  — a base ∈ the tokenized set is captured on ANY venue that lists it, regardless of `has_perp_for_base` (operator
+  precedent 2026-06-23). `MVP_SCOPE_CONFIG_VERSION` 25 → **26**. QG-green (`quality-gates.sh --no-fix`, 382s, ALL
+  PASSED). Tests: `TestTokenizedEquityMvpV26` in tests/unit/test_mvp_scope.py (5 cases) + version pin bumped. —
+  unified-api-contracts@bfad33b58 (verified ancestor of origin/live-defi-rollout).

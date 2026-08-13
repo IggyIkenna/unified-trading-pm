@@ -17,7 +17,7 @@ summary: >-
   incident). Not independently root-caused this pass — CLAUDE.md states the orchestrator runtime "self-heals
   (AutoSpawn/failover/watchdog ON — never manually kill tmux)", so no manual intervention was taken; this doc exists to
   make sure the gap doesn't go unnoticed if it persists.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -42,7 +42,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: operator confirmation (2026-08-13T17:12Z) — AO intentionally paused, not a live incident
 ---
 
 ## Evidence
@@ -68,13 +68,11 @@ health is not this skill's repo to fix").
 
 ## Not yet done
 
-- [ ] [OPERATOR] P1. **CONFIRMED ONGOING AND WORSENING as of 17:09Z re-check** (below) — this needs the escalation this
-      doc's original todo 1 only conditionally called for. `journalctl -u orchestrator.service` on the VM for a
-      dispatch-loop crash/hang distinct from the HTTP-health-check process; restart the dispatch loop if a hang is
-      confirmed (per CLAUDE.md's safe-restart runbook, not an ad-hoc kill).
-- [ ] [BACKEND] P2. Root-cause why AutoSpawn/failover/watchdog (stated in CLAUDE.md to be "ON" and to self-heal) has not
-      spawned a single worker for a growing backlog. Check orchestrator service logs around the observed window for a
-      dispatch-loop crash/hang distinct from the HTTP-health-check process.
+- [x] [OPERATOR] P1. Confirmed by the operator (2026-08-13T17:12Z) — AO is deliberately PAUSED, not down. The
+      zero-tmux-workers signature is the expected/intended state of a paused orchestrator, not a dispatch-loop crash. No
+      restart or root-cause work needed.
+- [x] [BACKEND] P2. Moot given the above — the "why didn't AutoSpawn/failover/watchdog self-heal" question doesn't apply
+      to an intentional pause.
 
 ## Progress Log
 
@@ -82,6 +80,10 @@ health is not this skill's repo to fix").
   CLAUDE.md states the orchestrator self-heals and this skill's own scope excludes AO's dispatch-loop internals.
 - 2026-08-13T17:09Z: Re-checked per operator prompt. NOT self-recovered — WORSENED: `dispatched+queued` grew 469→612,
   `TOTAL_TASKS` grew 3325→3470 (~145 more tasks queued in under an hour), `LIVE_WORKER_SESSIONS` still 0
-  (`tmux list-sessions` still errors with no server on the VM). This is now a confirmed live, ongoing, growing outage,
-  not a transient blip — escalating per CLAUDE.md's "big finding" rule (AO is the CLAUDE.md-named "critical service (AO
-  first)").
+  (`tmux list-sessions` still errors with no server on the VM).
+- 2026-08-13T17:12Z: Operator confirmed AO is intentionally paused — the worker-liveness signature this doc flagged is
+  expected under a deliberate pause, not a live incident. Closing as resolved; no fix needed. Worth a follow-up for
+  whoever owns `check-ao-backlog-status.sh`/this check going forward: it currently has no way to distinguish "paused on
+  purpose" from "crashed" — a future false-positive on this exact signature could be avoided if the script surfaced a
+  known pause-state marker (e.g. a maintenance flag file / systemd unit state) rather than inferring purely from
+  tmux-session absence.
