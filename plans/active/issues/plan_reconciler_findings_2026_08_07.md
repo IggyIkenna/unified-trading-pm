@@ -27,8 +27,8 @@ related:
 created: "2026-08-07"
 last_updated: "2026-08-07"
 parent_epic: deployment_and_user_management_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.1
@@ -169,6 +169,9 @@ None — all 15 ui-tranche docs were identified and their grace/lock/open-todo s
 were not read end-to-end (active work in flight, <12h old — reading them for context is safe but modifying them is not).
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - **2026-08-07** — plan_reconciler dispatch agt-a40e5f, sharded to `tranche=ui`. 15 docs in scope, 11 grace-protected, 2
   locked, 1 stale draft, 1 overview-with-active-children. 4 verified missed-flip candidates (HARD evidence, blocked by

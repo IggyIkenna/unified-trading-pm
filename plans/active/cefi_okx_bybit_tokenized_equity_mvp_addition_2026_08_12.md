@@ -23,8 +23,8 @@ related:
 created: 2026-08-12
 last_updated: 2026-08-12
 parent_epic: cefi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 3
@@ -101,6 +101,9 @@ and MVP-tagging needs.
       the above lands.
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - 2026-08-12: plan created (human/local track per operator ruling — AO's central server is confirmed down at authoring
   time, per `plans/active/issues/dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md`). Equity-perp listing-date

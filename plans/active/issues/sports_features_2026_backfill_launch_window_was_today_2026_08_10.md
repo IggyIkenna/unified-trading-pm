@@ -37,8 +37,8 @@ related:
 created: "2026-08-10"
 author: slot-6
 last_updated: "2026-08-10"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 source: >-
   DP_VM_EXIT_NONZERO escalation agt-af22dd (fleet exit-code monitor → orchestrator), VM
   features-sports-sports-2026-20260810-051126 (depl a35d016a-3b9d-480d-9f47-d055a751577d), 2026-08-10.
@@ -115,3 +115,8 @@ launch window.
       sports features backfill launcher's current-year window to `end_date = min(today-1, {year}-12-31)` so a
       current-day's not-yet-written upstream reference can never be a hard dependency at backfill time (the four
       corrected-window runs on 2026-08-10 already demonstrate the intended window). Repo: deployment-service (launcher).
+
+## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).

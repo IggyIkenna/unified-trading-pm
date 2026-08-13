@@ -32,8 +32,8 @@ related:
 created: 2026-08-11
 last_updated: 2026-08-12
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 2
@@ -395,6 +395,9 @@ Progress Log).
   LDR->main promotion pipeline is repo hygiene, not the AO deploy path.
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - **2026-08-11** — Investigated the operator's "off by a factor" hypothesis. Killed four candidate causes by measurement
   (see table above). Established the residual is a historical stock, not a flow, via a live 50-minute drawdown window

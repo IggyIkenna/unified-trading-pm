@@ -42,8 +42,8 @@ created: "2026-08-10"
 author: unknown
 last_updated: "2026-08-10"
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 source: >-
   Interactive `/autonomous` session 2026-08-10, discovered while root-causing why the DeFi manifest rebuild VM chain
@@ -275,3 +275,8 @@ already-running incumbent's ~8%-noise impact) is now a codified HARD RULE, not j
 - Sibling tracker gating downstream POOL/rate_indices/dex_pool_fees retirement work on this VM reaching terminal state:
   `/plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`.
 - Runbook invoked: `/codex/15-runbooks/incidents/rb_infra_relaunch.md`.
+
+## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).

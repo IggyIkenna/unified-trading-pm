@@ -21,8 +21,8 @@ created: 2026-08-03
 author: unknown
 last_updated: "2026-08-09"
 parent_epic: plan_hygiene_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 assigned_role: cicd
 priority: P2
 estimate_class: research
@@ -119,6 +119,9 @@ deliberately bumped by someone who has confirmed the new occurrence is legitimat
       inconsistent signal cost time to understand during this session.
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - **context-scout 2026-08-03**: populated context_scope (4 entries) — root-caused the exact ratchet mechanism: this
   issue's own "Recommended next step" points at `scripts/quality-gates-base/base-service.sh` STEP 5.95, but that shared

@@ -33,8 +33,8 @@ related:
 created: 2026-07-31
 author: unknown
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: infra
 drift_direction: advance-code
@@ -133,6 +133,9 @@ repeated per-incident coaching.
       agent-orchestrator)
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - 2026-07-31 08:49Z (main-agent agt-9f21bc): filed from review-role msg 2939. Non-blocking, work shipped correct both
   times, pure detection/sequencing-discipline gap → P3. Set `assigned_vm: NA` per the ASK-BEFORE-CREATING hard rule;

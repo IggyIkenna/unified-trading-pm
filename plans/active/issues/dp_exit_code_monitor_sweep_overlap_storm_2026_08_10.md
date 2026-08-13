@@ -29,8 +29,8 @@ created: 2026-08-10
 author: data_pipeline_alerts_reconciler (scheduled 6-hourly sweep, slot 18)
 parent_epic: agent_operating_framework_master
 priority: P1
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: refactor
 assigned_role:
 drift_direction: advance-code
@@ -121,3 +121,8 @@ until the next sweep) and is a stopgap, not the root fix.
 - This sweep ALSO shipped (2026-08-10): meta-watchers defi-index streaming read + incremental tracker persist,
   preemption-relaunch GCS budget + 900s launcher timeout, GONE_NO_CAPTURE false-positive fixes (POLARS AGGREGATED +
   launcher-host exemption), and the DP_SOURCE_RATE_LIMITED cooldown.
+
+## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).

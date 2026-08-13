@@ -30,8 +30,8 @@ resolved_by: ""
 locked_by: ""
 created: 2026-08-11
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: small
 estimate_baseline: 0.05
@@ -106,6 +106,9 @@ escalation.
       deployment-service.
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - 2026-08-11: Read escalation context, domain SSOTs, and classifier code. Accessed VM run.log from GCS. Confirmed 21,847
   POLARS AGGREGATED lines. Root cause: pre-fix `_PROGRESS_RE` missing POLARS AGGREGATED — fix already shipped. Filed

@@ -27,8 +27,8 @@ related:
 created: 2026-08-12
 last_updated: "2026-08-12"
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
@@ -118,6 +118,9 @@ fault:
       reasoning currently exists only in commit messages.
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - 2026-08-12 — Filed. Two consecutive days of clock-triggered blocking, plus a generated-baseline race between two
   agents who both did the correct thing independently. The immediate instances were absorbed into the baseline with the

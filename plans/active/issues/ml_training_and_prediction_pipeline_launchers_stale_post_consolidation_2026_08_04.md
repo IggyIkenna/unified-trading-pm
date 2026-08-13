@@ -34,8 +34,8 @@ created: 2026-08-04
 author: unknown
 last_updated: 2026-08-04
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 0.6
@@ -158,6 +158,9 @@ the sibling doc's own decision thread — todo 1 needed no A/B/C fold-in at all 
       repointed, `run_hygiene_sweep.sh` green.
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - **context-scout 2026-08-06**: populated context_scope (4 entries — added the doc's own two named launcher scripts,
   `launch-ml-training-vm.sh` and `launch-prediction-pipeline-vm.sh`, alongside the pre-existing S1-a sibling issue and

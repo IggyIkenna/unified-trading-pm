@@ -38,8 +38,8 @@ source: >-
   features-sports-sports-2026-20260810-051126, 2026-08-10
 resolved_by: ""
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 0.5
@@ -128,3 +128,8 @@ locked_since:
   was deleted during setup (no run.log — no work started); no further relaunch performed. Direct launcher run (not the
   actuator), so the ≤2/(prefix,day) bound was not consumed. Net effect: none — a stale-dispatch artifact, reverted; the
   operator's do-not-relaunch decision stands.
+
+## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).

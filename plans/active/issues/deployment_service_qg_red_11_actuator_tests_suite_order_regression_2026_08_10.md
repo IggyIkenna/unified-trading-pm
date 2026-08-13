@@ -16,7 +16,7 @@ repos: [deployment-service]
 scope: [engineer, admin]
 parent_epic: infrastructure_master
 priority: P1
-assigned_vm: NA
+assigned_vm: planning
 tags: [ci, qg, test-flake, test-isolation, fleet-blocking]
 related:
   - /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md
@@ -29,7 +29,7 @@ resolved_by:
 created: 2026-08-10
 supersedes: null
 superseded_by: null
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
@@ -100,3 +100,8 @@ actuator file after: the `*_relaunch*` / fleet-monitor / dp-alerts test files.
 
 - 2026-08-10: filed by slot 25 (data_engineering, 4b-iii) — QG-blocked on shipping `e25dcfb3`. Not slot-25's fix to make
   (foreign test area, outside dispatch scope). Operator/recovery-area owner to pick up or explicitly delegate.
+
+## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).

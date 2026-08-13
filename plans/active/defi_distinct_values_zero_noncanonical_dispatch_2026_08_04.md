@@ -47,8 +47,8 @@ created: "2026-08-04"
 last_updated: "2026-08-10" # CORRECTED 2026-08-12 (/plan-reconcile): was stale "2026-08-07" — git log shows the doc was
 # substantively edited 2026-08-10 (b3241ef496, OOM root-cause + relaunch + retirement-plan extraction)
 parent_epic: manifest_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 3
@@ -257,6 +257,9 @@ tracking doc with real checkboxes — not duplicated here.)_
       for the enumeration-key bug, `instruments-service@8b59e8ba2`). Repo: instruments-service or deployment-api.
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - **2026-08-08 (sub-agent dispatch, Balancer composite-venue scope check)**: dispatched to build/dry-run/ship a fold
   script for the "Balancer composite-venue naming" Deferred-work row below (`BALANCER-{BASE,ETHEREUM,OPTIMISM,POLYGON}`,

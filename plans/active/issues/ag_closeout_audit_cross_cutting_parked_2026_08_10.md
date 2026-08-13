@@ -76,8 +76,8 @@ author:
   cross-cutting tranche, iterative-drain follow-up) -- Round 3"
 last_updated: "2026-08-10"
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 0.6
@@ -198,20 +198,21 @@ source: >-
       accurate — genuinely cross-cutting (external-data-vendor > credential ask, per CLAUDE.md's "external data is
       always available" rule), still open, still not AO-eligible. > Correctly stays a cross-cutting action item.
 - [x] ✅ [OPERATOR] P2. **CLOSED 2026-08-10 — NOT orphaned; real coverage exists.** This doc's own Round-2 note already
-      corrected the verdict: `/plans/active/infra_capture_and_devops_leftovers_2026_07_06.md` (`status: active`,
-      `assigned_vm: planning`) cites the source issue doc by path and keeps its own matching `[INFRA] P1` open checkbox
-      for the identical item. The spec ask is still real but is tracked there, so it must not be double-tracked here.
-      Original text preserved for record. Was: **Supply the rate-limit-probe engineering spec** (finding 5,
-      `rate_limit_probe_vm_authorized_no_design_spec_2026_08_09.md`) — vendor/endpoint, request pattern, disposable-IP
-      mechanism, stop criteria. > **Round 2 note — CORRECTED, not just retagged**: this doc IS actually covered by an
-      active plan Round 1 didn't > check — `infra_capture_and_devops_leftovers_2026_07_06.md` (status: active,
-      assigned_vm: planning) explicitly > cites this exact issue doc by path (line 356) and keeps its own matching
-      `[INFRA] P1` open checkbox for the > identical item, dated the same day.
-      `cross_cutting_consolidated_closeout_2026_07_25.md`'s own Track 3 (lines > 243-257) already lists this as one of
-      that plan's known remaining items too. Verdict corrected to > `archivable_after_planned_work` — real coverage
-      exists, this is not actually an uncovered/operator-only gap > the way Round 1 framed it. The engineering-spec ask
-      itself is still real and outstanding (an operator still > needs to supply it), but it is being tracked by
-      `infra_capture_and_devops_leftovers_2026_07_06.md`, not > orphaned. Left unchecked here for continuity only.
+      corrected the verdict: `/plans/archive/2026_08/infra_capture_and_devops_leftovers_2026_07_06.md` (was
+      `status: active`, `assigned_vm: planning` at the time of this note; since archived) cites the source issue doc by
+      path and keeps its own matching `[INFRA] P1` open checkbox for the identical item. The spec ask is still real but
+      is tracked there, so it must not be double-tracked here. Original text preserved for record. Was: **Supply the
+      rate-limit-probe engineering spec** (finding 5, `rate_limit_probe_vm_authorized_no_design_spec_2026_08_09.md`) —
+      vendor/endpoint, request pattern, disposable-IP mechanism, stop criteria. > **Round 2 note — CORRECTED, not just
+      retagged**: this doc IS actually covered by an active plan Round 1 didn't > check —
+      `infra_capture_and_devops_leftovers_2026_07_06.md` (status: active, assigned_vm: planning) explicitly > cites this
+      exact issue doc by path (line 356) and keeps its own matching `[INFRA] P1` open checkbox for the > identical item,
+      dated the same day. `cross_cutting_consolidated_closeout_2026_07_25.md`'s own Track 3 (lines > 243-257) already
+      lists this as one of that plan's known remaining items too. Verdict corrected to > `archivable_after_planned_work`
+      — real coverage exists, this is not actually an uncovered/operator-only gap > the way Round 1 framed it. The
+      engineering-spec ask itself is still real and outstanding (an operator still > needs to supply it), but it is
+      being tracked by `infra_capture_and_devops_leftovers_2026_07_06.md`, not > orphaned. Left unchecked here for
+      continuity only.
 - [x] ✅ [OPERATOR] P3. **CARRIED 2026-08-10 →
       `/plans/active/issues/operator_action_items_consolidated_2026_08_08.md`.** A human-held credential (finding U
       class (ii)); now tracked on the single consolidated operator list. Original text preserved for record. Was:
@@ -362,6 +363,9 @@ currently-active cross-cutting batches' open todos — zero overlap) AO-eligible
 destination — ASK BEFORE CREATING" HARD RULE.
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - **2026-08-10** — `/ag-closeout-audit all` run (autonomous mode, task-less one-off, slot 26). Phase 0: corpus-wide
   `check_ag_closeout_linkage.py` confirmed 6 cross-cutting orphans (unchanged before/after this tranche's own linkage

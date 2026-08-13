@@ -60,12 +60,12 @@ source: >-
   [slot-4·laptop]) between task assignment and execution (high-velocity shared repo). This session's contribution:
   diagnosed + fixed the resulting promote PR's (#952) net-new blanket-pyright-suppression-header regression, confirmed
   the empty-string-fallback ratchet was already clean, and shipped both fixes.
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
   "market-tick-data-service@b13e3a2b (reader routing + 3 tests + file split); market-tick-data-service@ccb84c57c9 (this
   session — blanket-suppression-header narrow-ignore conversion, shipped via quickmerge)"
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
@@ -233,6 +233,9 @@ would have been wrong per the `git add -A` ban.
       plan-completion-and-archival-discipline rule.
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - **2026-08-11 (this session)**: Filed retrospectively — the reader-routing + test fixes + file split (b13e3a2b) were
   already shipped by a parallel session before this task's diagnosis phase completed (high-velocity shared repo,

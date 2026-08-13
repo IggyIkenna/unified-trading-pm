@@ -46,8 +46,8 @@ source: >-
   run.log via UTL StorageClient
   (`gs://deployment-scripts-central-element-323112/vm-logs/mdps-cefi-2019-20260810-023141/run.log`) and tracing the
   exact comparison via a dedicated sub-agent read of market-data-processing-service source.
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 drift_direction: fix
 estimate_class: bug
 estimate_baseline: 0.3
@@ -122,6 +122,9 @@ line.
       for any shard whose failure resolves to this exact root cause.
 
 ## Progress Log
+
+**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
+`assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - 2026-08-12 (slot-3, agt-68d94a): diagnosed root cause from run.log, shipped the fix (`cc65f076ae`), relaunched the
   2019 CeFi shard with the fix live, filed this doc for the blast-radius follow-up.
