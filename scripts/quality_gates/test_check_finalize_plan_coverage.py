@@ -128,3 +128,55 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── duplicate finalize gate (create-time idempotency guard) ──────────────────
+
+
+def test_only_refuses_a_second_finalize_gater_with_redundant_filename_suffix(tmp_path: Path) -> None:
+    """Reconstructs the 2026-07-31 collision: two finalize plans gate the SAME parent,
+    differing only by a redundant `_2026_07_31` suffix — a filename-keyed guard would
+    miss it, but the depends_on-relationship key catches it."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_plan_2026_07_31.md")
+    _write_plan(
+        active / "parent_plan_2026_07_31_finalize.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_07_31]\ngate_on_depends: true",
+    )
+    colliding = _write_plan(
+        active / "parent_plan_2026_07_31_finalize_2026_07_31.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_07_31]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(colliding)])
+    assert rc == 1
+
+
+def test_only_passes_for_a_single_gater(tmp_path: Path) -> None:
+    """A lone finalize plan gating an otherwise-uncovered parent is not a duplicate."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_plan_2026_07_31.md")
+    lone = _write_plan(
+        active / "parent_plan_2026_07_31_finalize.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_07_31]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(lone)])
+    assert rc == 0
+
+
+def test_default_mode_regresses_on_a_duplicate_gate(tmp_path: Path) -> None:
+    """Corpus-wide mode flags a parent named by >1 gate_on_depends: true plan."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_plan_2026_07_31.md")
+    _write_plan(
+        active / "parent_plan_2026_07_31_finalize.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_07_31]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "parent_plan_2026_07_31_finalize_2026_07_31.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_07_31]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path)])
+    assert rc == 1

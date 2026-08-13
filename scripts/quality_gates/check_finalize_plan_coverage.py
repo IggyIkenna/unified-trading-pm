@@ -35,7 +35,17 @@ way, most with their upstream already done and archived weeks earlier. Fix: auth
 finalize plans `status: active` from the start (`ag-closeout-audit` SKILL.md corrected the
 same day). This check ratchets that fix so it can't silently regress.
 
-Exit-code semantics: 0 = at/below baseline (both checks); 1 = regression (either check);
+Third check (added 2026-08-13, same script — the create-time idempotency guard,
+`duplicate_finalize_plans_created_for_one_parent_2026_08_06.md`): a parent slug named in the
+`depends_on` of MORE THAN ONE `gate_on_depends: true` plan is a duplicate finalize gate — two
+plans racing the same archival. The 2026-07-31 pair differed only by a redundant filename
+suffix, so any guard keyed on the expected filename would miss it; key on the `depends_on`
+relationship instead. Wired into `--only` (precommit) mode only for now — it refuses to stage
+a second finalize plan whose parent is already gated. (The corpus-wide at-rest detector that
+reports a duplicate-gated-parent count in `run_hygiene_sweep.sh --ci` is a separate follow-on
+todo in the same issue doc.)
+
+Exit-code semantics: 0 = at/below baseline (all checks); 1 = regression (any check);
 2 = arg/IO error.
 """
 
@@ -115,9 +125,14 @@ def _is_finalize_plan(fm: dict[str, object]) -> bool:
     return bool(has_deps and gate is True)
 
 
-def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
-    """Every plan-slug named in some OTHER plan's depends_on + gate_on_depends: true."""
-    out: set[str] = set()
+def _gated_parents(all_plans: list[Coverage]) -> dict[str, list[Path]]:
+    """parent-slug -> the finalize plans (`gate_on_depends: true`) gating on it.
+
+    A parent with more than one entry is a duplicate finalize gate — two plans racing the
+    same archival. The `depends_on` relationship is the real contract, not the finalize
+    plan's filename shape (the 2026-07-31 pair differed only by a redundant `_2026_07_31`
+    suffix)."""
+    out: dict[str, list[Path]] = {}
     for cov in all_plans:
         if not _is_finalize_plan(cov.frontmatter):
             continue
@@ -126,8 +141,30 @@ def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
             continue
         for dep in cast(list[object], depends_on):
             if isinstance(dep, str):
-                out.add(dep.strip())
+                out.setdefault(dep.strip(), []).append(cov.path)
     return out
+
+
+def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
+    """Every plan-slug named in some OTHER plan's depends_on + gate_on_depends: true."""
+    return set(_gated_parents(all_plans))
+
+
+def _find_duplicate_gate_violations(active_dir: Path) -> list[Path]:
+    """Finalize plans gating on a parent that is ALREADY gated by another finalize plan.
+
+    Returns every finalize-plan file in such a multi-gater group (deterministically sorted).
+    The create-time `--only` (precommit) mode filters this to the staged paths and refuses a
+    NEW second gater; keying on the `depends_on` relationship (not the expected filename) is
+    what catches the 2026-07-31 pair, whose two colliding files differed only by a redundant
+    `_2026_07_31` suffix.
+    """
+    all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
+    dup: set[Path] = set()
+    for gaters in _gated_parents(all_plans).values():
+        if len(gaters) > 1:
+            dup.update(gaters)
+    return sorted(dup)
 
 
 def _find_violations(active_dir: Path) -> list[Path]:
@@ -186,6 +223,7 @@ def _write_baseline(
     baseline_path: Path,
     violations: list[Path],
     draft_gate_violations: list[Path],
+    duplicate_gate_violations: list[Path],
     workspace_root: Path,
 ) -> None:
     def _rels(paths: list[Path]) -> list[str]:
@@ -200,12 +238,14 @@ def _write_baseline(
     payload: dict[str, object] = {
         "violation_count": len(violations),
         "draft_gate_violation_count": len(draft_gate_violations),
+        "duplicate_gate_violation_count": len(duplicate_gate_violations),
         "rule": "finalize-plan-coverage",
         "source": (
             "task_template.md §4 'Every AO-dispatched plan needs a gated finalize plan' (operator ruling 2026-07-24)"
         ),
         "baseline_files": _rels(violations),
         "draft_gate_baseline_files": _rels(draft_gate_violations),
+        "duplicate_gate_baseline_files": _rels(duplicate_gate_violations),
     }
     baseline_path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
 
@@ -274,6 +314,7 @@ def main(argv: list[str] | None = None) -> int:
 
     violations = _find_violations(active_dir)
     draft_gate_violations = _find_draft_gate_violations(active_dir)
+    duplicate_gate_violations = _find_duplicate_gate_violations(active_dir)
 
     if only is not None:
         # --only: resolve each given path the same way (relative-to-cwd or absolute both work,
@@ -285,7 +326,8 @@ def main(argv: list[str] | None = None) -> int:
         only_resolved = {Path(o).resolve() for o in only}
         violations = [v for v in violations if v.resolve() in only_resolved]
         draft_gate_violations = [v for v in draft_gate_violations if v.resolve() in only_resolved]
-        if not violations and not draft_gate_violations:
+        duplicate_gate_violations = [v for v in duplicate_gate_violations if v.resolve() in only_resolved]
+        if not violations and not draft_gate_violations and not duplicate_gate_violations:
             print("✅ finalize-plan-coverage (--only): clean.")
             return 0
         if violations:
@@ -302,6 +344,14 @@ def main(argv: list[str] | None = None) -> int:
             )
             for v in draft_gate_violations:
                 print(f"  - {v}")
+        if duplicate_gate_violations:
+            print(
+                "❌ Duplicate finalize gate(s): a second finalize plan gates on a parent already covered by an"
+                " existing gate_on_depends: true plan (keyed on the depends_on relationship, not filename — see"
+                " duplicate_finalize_plans_created_for_one_parent_2026_08_06.md):"
+            )
+            for v in duplicate_gate_violations:
+                print(f"  - {v}")
         return 1
 
     print(
@@ -312,12 +362,16 @@ def main(argv: list[str] | None = None) -> int:
         f"Scanned plans/active/ for finalize plans redundantly stuck at status: draft — "
         f"{len(draft_gate_violations)} violation(s)."
     )
+    print(
+        f"Scanned plans/active/ for duplicate finalize gates (parent named by >1 gate_on_depends plan) — "
+        f"{len(duplicate_gate_violations)} violation(s)."
+    )
 
     if baseline_write:
-        _write_baseline(baseline_path, violations, draft_gate_violations, workspace_root)
+        _write_baseline(baseline_path, violations, draft_gate_violations, duplicate_gate_violations, workspace_root)
         print(
-            f"✅ Wrote baseline ({len(violations)} coverage / {len(draft_gate_violations)} draft-gate "
-            f"violations) to {baseline_path}"
+            f"✅ Wrote baseline ({len(violations)} coverage / {len(draft_gate_violations)} draft-gate / "
+            f"{len(duplicate_gate_violations)} duplicate-gate violations) to {baseline_path}"
         )
         return 0
 
@@ -349,14 +403,33 @@ def main(argv: list[str] | None = None) -> int:
         if len(draft_gate_violations) > 20:
             print(f"  ... + {len(draft_gate_violations) - 20} more")
 
+    if duplicate_gate_violations:
+        print(
+            "\nDuplicate finalize gate(s) — a parent slug named in the depends_on of MORE THAN ONE"
+            " gate_on_depends: true plan (keyed on the depends_on relationship, not filename — see"
+            " duplicate_finalize_plans_created_for_one_parent_2026_08_06.md):"
+        )
+        for v in duplicate_gate_violations[:20]:
+            try:
+                rel = v.relative_to(workspace_root)
+            except ValueError:
+                rel = v
+            print(f"  - {rel}")
+        if len(duplicate_gate_violations) > 20:
+            print(f"  ... + {len(duplicate_gate_violations) - 20} more")
+
     if strict:
-        if violations or draft_gate_violations:
-            print(f"\n❌ STRICT: {len(violations)} coverage + {len(draft_gate_violations)} draft-gate violation(s).")
+        if violations or draft_gate_violations or duplicate_gate_violations:
+            print(
+                f"\n❌ STRICT: {len(violations)} coverage + {len(draft_gate_violations)} draft-gate + "
+                f"{len(duplicate_gate_violations)} duplicate-gate violation(s)."
+            )
             return 1
         return 0
 
     baseline = _load_baseline_count(baseline_path, "violation_count")
     draft_gate_baseline = _load_baseline_count(baseline_path, "draft_gate_violation_count")
+    duplicate_gate_baseline = _load_baseline_count(baseline_path, "duplicate_gate_violation_count")
     regressed = False
     if len(violations) > baseline:
         print(
@@ -378,9 +451,26 @@ def main(argv: list[str] | None = None) -> int:
             f"\n⚠️  Improvement: {len(draft_gate_violations)} < baseline {draft_gate_baseline}. Re-baseline to codify."
         )
 
+    if len(duplicate_gate_violations) > duplicate_gate_baseline:
+        print(
+            f"\n❌ Regression: {len(duplicate_gate_violations)} > baseline {duplicate_gate_baseline}. A second"
+            " finalize plan gated on a parent already covered by an existing gate_on_depends: true plan —"
+            " supersede one (port any unique todo into the survivor first), see"
+            " duplicate_finalize_plans_created_for_one_parent_2026_08_06.md."
+        )
+        regressed = True
+    elif len(duplicate_gate_violations) < duplicate_gate_baseline:
+        print(
+            f"\n⚠️  Improvement: {len(duplicate_gate_violations)} < baseline {duplicate_gate_baseline}."
+            " Re-baseline to codify."
+        )
+
     if regressed:
         return 1
-    print(f"\n✅ At baseline ({baseline} coverage / {draft_gate_baseline} draft-gate).")
+    print(
+        f"\n✅ At baseline ({baseline} coverage / {draft_gate_baseline} draft-gate / "
+        f"{duplicate_gate_baseline} duplicate-gate)."
+    )
     return 0
 
 
