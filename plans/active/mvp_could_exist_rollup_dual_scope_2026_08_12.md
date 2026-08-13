@@ -234,13 +234,40 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
       deferred to todo 8's end-to-end live verification, which already covers exactly that. Fixed 5 existing
       `test_rollup_worker.py` tests whose mocks targeted the old single-scope call sites this change replaced.
       `quality-gates.sh` full green.
-- [ ] [BACKEND] P1. `rollup_cache.py` scope-aware reads — add a `scope: CoverageScope = "could_exist"` parameter to
+- [x] [BACKEND] P1. `rollup_cache.py` scope-aware reads — add a `scope: CoverageScope = "could_exist"` parameter to
       `read_coverage_rollup_if_fresh`/`_allow_stale`/`slice_rollup_to_window`/`slice_asset_group`/`slice_venue`/
       `filter_coverage_to_asset_groups`, defaulting to `could_exist` (backward-compatible for every existing caller) and
       selecting the matching sub-object from todo 5's dual-scope blob shape. Done-when: existing rollup-cache tests pass
       unmodified with the default, new tests cover `scope="mvp"` returning the MVP sub-object, and `manifest.py`'s
       rollup fast path (todo 1's fix) actually threads its `scope` param through to these readers instead of dropping
-      it.
+      it. — `deployment-api@f16002ad45`. Renamed `rollup_cache.unwrap_could_exist_compat` ->
+      `unwrap_scope_compat(payload, scope="could_exist")` (also handles `scope="all"` -> selects the `could_exist` half,
+      per `_coverage_scope.py`'s "all is identical to could_exist at this layer" ruling; idempotent — a no-op on an
+      already-scope-selected payload, since a single-scope response shape never carries both top-level `could_exist` AND
+      `mvp` keys). Added `scope` params (plain `str`, not the routes-layer `CoverageScope` — services stay decoupled
+      from routes, matching todo 1/4's precedent) to
+      `read_coverage_rollup_if_fresh`/`_allow_stale`/`slice_rollup_to_window`/`filter_coverage_to_asset_groups`
+      (rollup_cache.py) AND — not literally named in this todo but required for `manifest.py`'s fast path to have
+      anything to thread scope INTO — the sibling manifest-blob readers `data_status_service._read_rollup_if_fresh`/
+      `_read_rollup_allow_stale` (full.json.gz, a separate file from rollup_cache.py's coverage.json.gz readers), both
+      now scope-keying their in-process cache entries so a `could_exist` read and an `mvp` read for the same service
+      cache independently. Deliberately did NOT add an inert `scope` param to `slice_asset_group`/`slice_venue` — they
+      operate strictly BELOW the scope-split boundary (one already-scope-selected category/venue subtree), so a scope
+      param there would be dead plumbing; `unwrap_scope_compat`'s idempotency means scope-selection safely happens
+      exactly once, at whichever entry point receives the raw dual-scope blob. **Correctness completion, not just
+      plumbing**: removed the `scope != "could_exist"` bypass from `_manifest_status_any_row_filter` (added in todo 1,
+      whose own docstring said "until todo 6") — now that the rollup itself is genuinely scope-aware, forcing every
+      non-could_exist request onto the slow on-demand path would have made this todo's plumbing dead code at the one
+      real production call site. `mvp`/`all` requests now use the rollup fast-path exactly like `could_exist` does, with
+      `scope` threaded into both the read and the slice. Added `scope: str = "could_exist"` field to
+      `_ManifestBuildRequest` (manifest_status_helpers.py) to carry it through. Rewrote
+      `TestManifestStatusScopeFastPathGate`'s 3 tests (they encoded the old "scope bypasses" behavior — now test "scope
+      threads through and still fast-paths") + added a 4th regression guard (a real row filter still bypasses,
+      independent of scope) + 2 fixed call-arg-assertion tests in `test_manifest_source.py`/
+      `test_data_status_service.py` that broke from adding the scope arg. New `TestRollupCacheScopeAwareReads` (9 tests)
+      covers `unwrap_scope_compat`'s could_exist/mvp/all/old-flat-shape behavior + cache independence for both reader
+      pairs. `quality-gates.sh` full green (one method-size trim: `get_manifest_status`'s docstring compacted to stay
+      under the 50-line cap after adding `scope=scope,` to its request construction).
 - [ ] [BACKEND] P2. Transition compat cleanup — once todo 6 ships and a fresh rollup run has produced the new dual-scope
       blob shape for every `_DEFAULT_SERVICES` entry (verify via a live GCS read, not an assumption), remove the
       `.get("could_exist", root)` fallback added in todo 5 and require the new shape unconditionally. Done-when:
@@ -339,3 +366,46 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
   requires live production access/deploy visibility this session hasn't exercised yet — genuinely the
   highest-uncertainty remaining unit. Todo 9 (docs cross-link) is trivial, can go anytime. Resuming session should pick
   up todo 6 next.
+
+- **2026-08-13 (todo 6 shipped)**: `deployment-api@f16002ad45`. Full details in todo 6's own checkbox text above; key
+  points not repeated there:
+  1. **A deliberate, documented deviation from the todo's literal function list**: the todo named 6 rollup_cache.py
+     functions to gain a `scope` param, but `manifest.py`'s rollup fast path — the actual production consumer this todo
+     exists to unblock — calls `data_status_service._read_rollup_if_fresh`/`_read_rollup_allow_stale` (a SEPARATE file,
+     full.json.gz readers), not the named coverage.json.gz readers. Those two got the same treatment even though not
+     literally named, because without it `slice_rollup_to_window`'s new `scope` param would have had nothing upstream to
+     select from (the old code path unconditionally collapsed to `could_exist` before the slice ever saw the payload).
+     Read this as "the todo's list was written before todo 5's file split was fully accounted for" rather than a scope
+     creep — the alternative (leaving the fast path's own readers could_exist-only) would have made this todo
+     functionally a no-op at its one real call site.
+  2. **A second deviation, also load-bearing**: removed the `scope != "could_exist"` bypass from
+     `_manifest_status_any_row_filter` (todo 1). This wasn't in the todo's done-when text either, but todo 1's own
+     docstring explicitly said the bypass was needed "until todo 6" — leaving it in place after shipping todo 6 would
+     have meant the new scope-aware rollup path was reachable only via direct unit tests, never via the real
+     `get_manifest_status` entry point. Chose to complete the correctness fix rather than ship inert plumbing.
+  3. **Idempotent unwrap as the safety net for scope-selection-happens-once uncertainty**: rather than trying to prove
+     exactly ONE call site does the could_exist/mvp selection for every code path, `unwrap_scope_compat` was designed to
+     be a safe no-op when handed an already-scope-selected (old-shape) payload — so scope selection can safely happen at
+     more than one layer (read-time AND slice-time) without double-selecting or corrupting data. This is why
+     `slice_rollup_to_window` calling `unwrap_scope_compat` a second time after the read layer already selected is
+     correct, not redundant-and-risky.
+  4. **All 9 remaining test failures after the first edit pass were ONE root cause, not nine**: `_ManifestBuildRequest`
+     (a frozen slots dataclass) had no `scope` field, so `req.scope` in the new fast-path code raised `AttributeError` —
+     this cascaded through every test that exercises `get_manifest_status` at all (not just the scope-specific ones).
+     Fixed by adding `scope: str = "could_exist"` as a new field + threading it at construction. Worth remembering: when
+     a single attribute-access typo breaks 9 tests across 3 files, check for ONE shared root cause before assuming 9
+     separate regressions.
+  5. **`quality-gates.sh` full green on the first sweep after the fix** — one method-size trim needed
+     (`get_manifest_status` hit 51 lines against the 50-line cap after adding `scope=scope,` to the request
+     construction; fixed by compacting its docstring to one line, not by extracting a new helper — the method was
+     already at a sensible decomposition boundary, so trimming prose was the right-sized fix, not more indirection).
+
+  **Remaining scope (todos 7-9, not started this tick):** todo 7 (delete the `unwrap_scope_compat` transition shim) is
+  gated on a live GCS check proving every `_DEFAULT_SERVICES` blob was regenerated in the dual-scope shape since todo 5
+  shipped — cannot start until then, genuinely time-gated (needs the 5-min-cron rollup worker to have actually run
+  against production at least once post-todo-5). Todo 8 (end-to-end live verification against Cloud Logging) requires
+  live production access/deploy visibility this session hasn't exercised yet — still the highest-uncertainty remaining
+  unit. Todo 9 (docs cross-link) is trivial, can go anytime, has no dependency on 7/8. Resuming session should pick up
+  todo 8 next (todo 7's live-GCS precondition likely isn't satisfied yet purely from elapsed time since todo 5 shipped
+  earlier today; todo 8's own live-verification pass is a natural place to ALSO check todo 7's precondition while
+  already looking at production).
