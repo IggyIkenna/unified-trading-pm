@@ -36,8 +36,9 @@ assigned_role:
 drift_direction: advance-code
 depends_on: []
 locked_by:
+archive_exempt: true
 resolved_by:
-last_updated: 2026-08-10
+last_updated: 2026-08-13
 locked_since:
 source: >-
   Found during the 2026-08-10 scheduled /data-pipeline-alerts-reconcile sweep. Live evidence: `gcloud run jobs
@@ -105,8 +106,8 @@ until the next sweep) and is a stopgap, not the root fix.
 
 ## Todos
 
-- [ ] [BACKEND] P1. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — Parallelize the per-VM
-      I/O in `sweep()` (`deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py` +
+- [x] [BACKEND] P1. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — ✅ Parallelize the
+      per-VM I/O in `sweep()` (`deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py` +
       `heartbeat_stall_watcher.py`) via `ThreadPoolExecutor` over the independent GCS reads (precedent: `cli.py`).
       Target: sweep completes in <5 min so cron overlap collapses to ~1 execution. Parallelize only the pure reads; keep
       classify/route/emit sequential to preserve the shared-state discipline (findings sink, `_EMITTED_THIS_SWEEP`,
@@ -126,3 +127,18 @@ until the next sweep) and is a stopgap, not the root fix.
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
+
+**backend_engineer 2026-08-13** (slot-28): shipped the P1 parallelization — `ThreadPoolExecutor` fan-out of the per-VM
+GCS reads in both `exit_code_fleet_monitor.sweep()` (running-census captured reads + terminated-VM base signals) and
+`heartbeat_stall_watcher.sweep()` (run.log/shards/sidecar/mtime liveness reads), `_SWEEP_IO_MAX_WORKERS=32`;
+classify/route/emit + auto-kill stay sequential (shared `finding_sink` + PubSub + per-sweep kill cap preserved).
+`deployment-service@069ced1412`, QG green.
+
+**archive_exempt: true reason (slot-28, 2026-08-13)** — this doc's only todo (the P1 above) is now shipped, so it reads
+0-open/some-done and `check_archive_candidates --only` would demand immediate archival. It is NOT being `git mv`'d in
+this task because it remains the SOURCE doc for still-open DERIVED todos in OTHER active plans — the duplicate
+"parallelize sweep()" dispatches in `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` (P2) and
+`..._batch13b_2026_08_13.md` (P2), and the "genuine unresolved" entry in `plan_reconciler_findings_all_2026_08_12.md`
+§2. Archiving the source out from under those would orphan their references; closing/retiring them is a
+`/plan-reconcile` coordination, not a single-worker flip. Drop `archive_exempt: true` and `git mv` to
+`plans/archive/2026_08/issues/` once those derived todos are reconciled.
