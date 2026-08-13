@@ -156,9 +156,21 @@ itself; the CVE doc keeps ownership of the `--ignore-vuln` allowlist.
       the AO VM's own runtime venv: **ZERO below the `>=0.137.0` floor**. Every fastapi venv is 0.140.7
       (`unified-trading-pm` 0.141.1 in 25 slots); `iter_route_contexts` present in the installed 0.140.7. The 0.136.3
       staleness was slot-5-only and is gone fleet-wide. Full per-slot table in Progress Log.
-- [ ] [SCRIPT] P1. Add a preflight/QG check that fails when an installed distribution is below the floor its own
+- [x] ✅ [SCRIPT] P1. Add a preflight/QG check that fails when an installed distribution is below the floor its own
       `pyproject.toml` declares. The 20-venv drift persisted for weeks precisely because nothing compares installed
-      versions against declared pins.
+      versions against declared pins. ✅ 2026-08-13 — unified-trading-pm@45d9248d68. Added
+      `scripts/quality_gates/check_installed_satisfies_pyproject.py` (runs with the target venv's own python so
+      `importlib.metadata` reads that venv's actual installed set) and wired it into `base-service.sh` +
+      `base-library.sh` right after the existing frozen-lock floor gate; blocks by default,
+      `INSTALLED_FLOOR_GATE_WARN=1` to downgrade. **Bonus finding**: the pre-existing frozen-lock floor gate
+      (`check_lock_satisfies_pyproject.py`'s wiring) had a latent bug — it checked `$REPO_ROOT/uv.lock` /
+      `$REPO_ROOT/.venv`, but in this codebase's `qg-common.sh` convention `REPO_ROOT` is the WORKSPACE/slot dir, not
+      the repo root (that's `PROJECT_ROOT`) — so it had been silently no-op'ing for every repo, fleet-wide, since it was
+      added, never actually firing. Fixed both gates to use `PROJECT_ROOT`. Verified green end-to-end on
+      unified-trading-pm (base-service.sh path, `✅ Frozen-lock floor gate` + `✅ Installed-distribution floor     gate`
+      both now print) and unified-trading-library (base-library.sh path), plus a synthetic negative-case smoke test
+      (`.venv/bin/python check_installed_satisfies_pyproject.py --repo <fake-repo-with-impossible-floor>` → exit 1,
+      correctly names the violating package).
 - [ ] [DOCS] P2. Once todo 1 lands, add a one-line pointer to this doc from the 9 referencing docs listed above so the
       next agent who hits the ImportError finds the owner instead of re-diagnosing it.
 - [ ] [INVESTIGATE] P3. Three `*.stale-pre-history-rewrite-20260805T112453Z/` sibling directories (execution-service,
