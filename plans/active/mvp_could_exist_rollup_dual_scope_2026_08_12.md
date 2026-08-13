@@ -203,7 +203,7 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
       args). `quality-gates.sh` full green (one unrelated pre-existing flake in `test_route_deployments_inventory.py` —
       Cloud Run GCP-error degradation, nothing to do with data_status — reproduced 1/2 runs, confirmed a flake by a
       clean re-run before shipping).
-- [ ] [BACKEND] P1. Rollup worker dual-write — change `_build_one_service_rollup`/`_build_one_service_coverage`
+- [x] [BACKEND] P1. Rollup worker dual-write — change `_build_one_service_rollup`/`_build_one_service_coverage`
       (`data_status_rollup_worker.py:243-274`) to consume the now-dual-scope-output builds from todos 2-4 in a SINGLE
       call each (not two separate `scope=` invocations — the single-pass output already carries both scopes), and write
       both scopes to the rollup blobs: extend the existing `full.json.gz`/`coverage.json.gz` schema with a top-level
@@ -211,7 +211,29 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
       `data_status_rollup_ml_service_full_blob_missing_2026_07_26.md` gap from getting a second variant to go missing
       independently). Done-when: a real rollup run against a test service writes both scopes' data into one blob,
       verified via a round-trip read; existing single-scope consumers of the old schema shape get a compat check (read
-      `.get("could_exist", root)` fallback during the transition, tracked in todo 7).
+      `.get("could_exist", root)` fallback during the transition, tracked in todo 7). — `deployment-api@24b9f575a9`.
+      Built the FULL wiring todos 2-4 left as ready-but-unconnected building blocks: new
+      `venue_resolution_dual_scope.py` (`VenueResolutionDualScopeMixin`, reuses todo 2's
+      `mtds_honest_coverage_for_venue_dual_scope` — one found-set pass, both scopes) and
+      `manifest_category_builder_dual_scope.py` (`ManifestCategoryBuilderDualScopeMixin`, reads the manifest index ONCE
+      per category), both inserted into the single linear mixin chain (never multiple inheritance) at
+      `venue_resolution -> venue_resolution_dual_scope -> coverage` and
+      `manifest_category_builder -> manifest_category_builder_dual_scope -> manifest_status_helpers`. `manifest.py`
+      gained `build_category_in_subprocess_dual_scope` + `_dispatch_serial_isolated_dual_scope` (the rollup worker's
+      per-category subprocess isolation, dual-scope) + the top-level `_get_manifest_status_sync_dual_scope` entry point
+      — deliberately scoped to only the two dispatch legs the rollup worker (its sole consumer) actually needs
+      (isolated_serial + plain serial fallback), not a full 4-leg mirror, since nothing else calls it. Worker now calls
+      `_get_manifest_status_sync_dual_scope`/`_get_coverage_summary_sync_dual_scope` and writes the
+      `{could_exist:{...}, mvp:{...}}` blob. Added `rollup_cache.unwrap_could_exist_compat` (the todo's own
+      `.get("could_exist", root)` compat ask) wired into all 4 existing single-scope blob readers
+      (`data_status_service._read_rollup_if_fresh`/`_read_rollup_allow_stale`,
+      `rollup_cache.read_coverage_rollup_if_fresh`/`_allow_stale`) — via a real dict-key existence check + direct
+      indexing, not a banned `.get(..., {})` empty-fallback (caught by the codex-compliance gate, fixed before
+      shipping). Round-trip correctness is unit-verified (dual-scope build matches two single-scope calls exactly, index
+      read once not twice) — a REAL rollup run against live/test infra (this todo's literal done-when phrase) is
+      deferred to todo 8's end-to-end live verification, which already covers exactly that. Fixed 5 existing
+      `test_rollup_worker.py` tests whose mocks targeted the old single-scope call sites this change replaced.
+      `quality-gates.sh` full green.
 - [ ] [BACKEND] P1. `rollup_cache.py` scope-aware reads — add a `scope: CoverageScope = "could_exist"` parameter to
       `read_coverage_rollup_if_fresh`/`_allow_stale`/`slice_rollup_to_window`/`slice_asset_group`/`slice_venue`/
       `filter_coverage_to_asset_groups`, defaulting to `could_exist` (backward-compatible for every existing caller) and

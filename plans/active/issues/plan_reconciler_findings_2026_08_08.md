@@ -148,7 +148,12 @@ the operator, not resolved by this run.
       2026-08-09 (interactive session, sub-agent dispatch) — YES, purged, and it stays purged.** See "Massive-purge
       reconciliation, 2026-08-09" in the Progress Log below for the full evidence chain (doc archaeology + a live
       bounded prefix-scoped GCS check).
-- [ ] [OPERATOR] P1. **Is DeFi `collect-dex-pools`/`collect-dex-swaps` live capture currently STOPPED or RUNNING?**
+- [x] ✅ [OPERATOR] P1. **CADENCE RULED 2026-08-12 (operator, interactive session — see this doc's own
+      plan_reconciler_findings_2026_08_08.md Progress Log): stay daily-only.** Keep the current partial-live state
+      (daily `dex_swaps` cron; `dex_pools` and both 5-min forward-fill jobs paused) rather than resuming the paused
+      5-min polling — lower operational overhead until Track 1-3 land. The architecture question below (batch-by-design,
+      not a regression) was already resolved 2026-08-09; this closes the remaining cadence preference. **Original
+      finding: is DeFi `collect-dex-pools`/`collect-dex-swaps` live capture currently STOPPED or RUNNING?**
       `plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md:68,195,338` (last touched 2026-08-06) says
       ALL DeFi capture is STOPPED, with `collect-dex-pools` gated-paused behind Track-8 and its own "RESUME the stopped
       DeFi capture VMs/crons" todo still unchecked — vs.
@@ -383,3 +388,7 @@ one hunter this run. The 262 grace-protected docs were correctly excluded per th
     2026-08-09, not just by trusting doc prose). Lower/flagged on the broader "is the whole migration done" question the
     investigation surfaced as a side-finding — that one is evidenced but not independently live-verified this session,
     so it is flagged rather than asserted as fact. Flipped this todo done, retagged `[OPERATOR]` → `[DOC]`.
+- **2026-08-12 (operator, interactive session — blocked-question triage)**: ruled the remaining DeFi
+  `dex_pools`/`dex_swaps` cadence question — stay on the current daily-only capture (daily `dex_swaps` cron; `dex_pools`
+  and both 5-min forward-fill jobs stay paused) rather than resuming 5-min polling, until Track 1-3 land. Flipped the P1
+  todo done on that basis.
