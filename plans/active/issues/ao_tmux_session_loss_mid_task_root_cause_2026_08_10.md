@@ -1,8 +1,8 @@
 ---
 doc_type: issue
 title: >-
-  Fleet dispatch:done gap driven by tmux session loss mid-task — ROOT CAUSE FOUND (tmux exit-empty self-termination),
-  fix shipped agent-orchestrator@ef5ba1e2cc, verifying over an observation window
+  Fleet dispatch:done gap driven by tmux session loss mid-task — self-directed-signal mechanism CONFIRMED, but
+  exit-empty fix FALSIFIED by live re-test; auditd tmux-execve watch now armed to find the real trigger
 summary: >-
   Follow-up from shipping the Fleet Efficiency KPIs `dispatches/done` tile + a slot/role/day breakdown
   (agent-orchestrator@016abaff2f, @8a7a8c0fe0, @<pending>): operator asked why redispatch (retry) is so common and
@@ -135,18 +135,19 @@ memory and that's what kills sessions" as-is.
   only 7 of 142 redispatches (5%) show it. The other 69/142 (49%) that show SOME compact-related event are very likely
   coincidental co-occurrence, not causal.
 
-## ROOT CAUSE FOUND (2026-08-13) — see Progress Log for the full evidence chain
+## Mechanism CONFIRMED, root TRIGGER still open — exit-empty fix FALSIFIED (2026-08-13)
 
-**tmux's `exit-empty` option (default: on) — the shared server voluntarily self-terminates the instant session count
-transiently hits zero.** Caught live via a purpose-built `strace` supervisor
-(`agent-orchestrator/scripts/orchestrator/strace_tmux_server_supervisor.sh`) attached to the actual dying server PID:
-the trace shows `kill(<own_pid>, SIGTERM)` — self-directed, `si_pid` matches the traced pid exactly — then cleanup, then
-a clean `exit_group(0)`. No external SIGKILL, no crash signal, no OOM, no cgroup limit — this explains every "N slots
-die in the same tick" burst in this doc (one server exit takes every attached session down together) and why no death
-ever produced a core dump even after the LimitCORE fix (no fatal signal was ever involved to produce one). **Fix**:
-`agent-orchestrator@ef5ba1e2cc` sets `tmux set-option -g exit-empty off` on every session spawn (idempotent,
-server-global); also applied live to the then-current server as an immediate interim mitigation before the code fix
-landed. Verification (fix holding over an observation window with zero new bursts) is in progress — see Todo below.
+**Confirmed, reproduced twice via live `strace`**: the death is always a SELF-directed `kill(<own_pid>, SIGTERM)`
+(si_pid matches the traced pid) then a clean `exit_group(0)` — never external SIGKILL/crash/OOM/cgroup, why no death
+ever produced a core dump even post-LimitCORE. **Open: WHY it self-signals.** `exit-empty` looked confirmed but was
+FALSIFIED by re-test: `agent-orchestrator@ef5ba1e2cc` + a live `set-option -g exit-empty off` (readback-confirmed) on
+the exact pid that died the same way ~20min later anyway; both times the reaped children appear AFTER the self-kill
+line, i.e. a consequence of shutdown, not sessions naturally reaching zero. Full-filesystem grep (repo + `/opt` +
+`/etc/systemd` + `/usr/local` + crontab) found no `kill-server`/`pkill tmux` script anywhere. **Now armed**: `auditctl`
+on every tmux execve (`tmux_exec_watch`) — if some process (maybe another session on this shared VM) runs
+`tmux kill-server`, the next occurrence shows its full argv + parent ancestry. Cross-reference: the "n=3 utempter
+pty-registration burst" finding further below in this doc is very likely the SAME phenomenon, not yet reconciled with
+this trace evidence. `exit-empty off` KEPT as harmless hardening, no longer claimed sufficient.
 
 ## Todo
 
@@ -989,6 +990,8 @@ landed. Verification (fix holding over an observation window with zero new burst
   (113MB→648MB/14min) prompted a fix-and-redeploy whose cleanup `rm -f`'d the log before it was ever read —
   unrecoverable. Fixed (`agent-orchestrator@ee8de4c3d9`, dropped `-f` — only the top-level pid's own signals matter) and
   added a standing rule: never kill/delete an armed trace without grepping it for a fatal-signal match FIRST.
-- 2026-08-13 00:06Z: **death #8 caught clean — ROOT CAUSE CONFIRMED.** See the "ROOT CAUSE FOUND" section above for the
-  full read. Fix shipped `agent-orchestrator@ef5ba1e2cc` (`exit-empty off` on every spawn) + applied live to the
-  then-current server as an immediate interim mitigation. Now watching for a no-burst observation window to verify.
+- 2026-08-13 00:06Z-00:38Z: death #8 confirmed the self-kill mechanism, fix shipped, briefly declared root cause found —
+  then death #9 FALSIFIED it (same signature on the exact pid I'd live-confirmed `exit-empty off` on, ~20min earlier).
+  Self-corrected rather than let the wrong claim stand — full detail + next step (`auditctl` tmux-execve watch, now
+  armed) in the "Mechanism CONFIRMED, root TRIGGER still open" section above. Kept the exit-empty fix (harmless either
+  way), retracted the "verified" claim. Loop continues, not done.
