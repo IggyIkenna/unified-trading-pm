@@ -99,11 +99,14 @@ escalation.
 
 ## Todos
 
-- [ ] [INFRA] P2. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — Re-launch the
+- [x] ✅ [INFRA] P2. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — Re-launch the
       `mdps-cefi-2021-*` sharded MDPS CeFi backfill (`launch-mdps-sharded-backfill.sh cefi --year 2021`), resuming from
       checkpoint if available (prior run `mdps-cefi-2021-20260810-052119` was killed mid-run at 2021-01-04, no terminal
       `EXIT_STATUS` — confirmed false-positive SILENT classification; real candle data already in GCS). Repo:
-      deployment-service.
+      deployment-service. **Shipped 2026-08-13** — VM `mdps-cefi-2021-20260813-173906` (e2-highmem-8 SPOT, 250GB,
+      full-year window) RUNNING; MDPS `process` is idempotent (skips dates with existing candles) so the relaunch
+      resumes from where the killed run stopped. Evidence:
+      `gcloud compute instances list --filter="name~mdps-cefi-2021"` → RUNNING.
 
 ## Progress Log
 
@@ -113,3 +116,9 @@ escalation.
 - 2026-08-11: Read escalation context, domain SSOTs, and classifier code. Accessed VM run.log from GCS. Confirmed 21,847
   POLARS AGGREGATED lines. Root cause: pre-fix `_PROGRESS_RE` missing POLARS AGGREGATED — fix already shipped. Filed
   this issue doc.
+- 2026-08-13 (slot 18, task `dp_vm_002_mdps_cefi_2021_silent_zero_false_positive-c8740a565448`): Re-launched the missing
+  `mdps-cefi-2021` shard. Pre-checks: no existing `mdps-cefi-2021` VM in GCP/AWS; `mdps-cefi-` prefix already registered
+  in `vm_prefix_registry.py` (EPHEMERAL_BATCH); launcher preview confirmed e2-highmem-8 (DP-VM-002 OOM mitigation) +
+  SPOT + 250GB disk. Launched `launch-mdps-sharded-backfill.sh cefi --year 2021` → VM `mdps-cefi-2021-20260813-173906`
+  RUNNING. MDPS `process` is idempotent (skips dates with existing candles) so the full-year relaunch resumes from the
+  killed run's checkpoint (2021-01-04). Progress verification in-flight (run.log/heartbeat poll).
