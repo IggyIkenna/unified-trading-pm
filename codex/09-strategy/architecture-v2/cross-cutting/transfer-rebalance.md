@@ -14,7 +14,7 @@ scope: [engineer, admin]
 tags: [defi, cefi, execution, strategy, reconciliation, uac]
 related:
   [
-    portfolio-allocator.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md,
     /codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md,
     ../../../04-architecture/capital-flow-model.md,
     ../../../04-architecture/transfer-architecture.md,
@@ -44,6 +44,28 @@ code_refs:
 > target, the transfer/rebalance service moves capital between venues (same chain via `TRANSFER`, cross-chain via
 > `BRIDGE`, CEX-to-CEX via internal transfer or withdrawal+deposit). Event-driven, target-state-based, idempotent.
 
+> ## ⚠️ IMPLEMENTATION STATUS (verified 2026-08-12) — this doc describes the DESIGN; most of it does not run yet
+>
+> **Nothing emits `TransferIntent` in production.** A workspace-wide search finds zero production construction sites
+> outside the UAC class definition. execution-service's `TransferCoordinator.execute(intent)` is a real consume-time
+> entry point **with no live producer**. The whole rail below it is built and adapter-injected; the near end is
+> disconnected. Read this doc as the target, not the current behaviour.
+>
+> | Break                                                                                                | Status                                      |
+> | ---------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+> | `enable_transfer_rebalancing` never forwarded — `make_worker_target`'s `False` default always won    | ✅ FIXED `strategy-service@db6e38ae3a`      |
+> | Four competing transfer-type enums, no shared vocabulary                                             | ✅ FIXED `unified-api-contracts@4663daf908` |
+> | Nothing sends `REBALANCE_PERIOD_TICK`, so `_handle_rebalance_period_tick` never fires                | ✅ FIXED `strategy-service@46f8728472`      |
+> | `compute_rebalance_transfers()` does not exist — zero non-test `TransferRequest(` construction sites | ✅ FIXED `strategy-service@46f8728472`      |
+>
+> **All four original breaks are closed. One integration gap remains before transfers actually happen**: nothing sources
+> real `WalletBalance` rows to feed `compute_rebalance_transfers()` — no DeFi wallet-balance tracker exists (see §
+> "Sweep and gas reserve"). The computation is correct and tested; it has no live input.
+>
+> Live plan:
+> [service-config-ownership-and-instruction-contract](/plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md)
+> § H.
+
 ## Scope
 
 Transfer/rebalance is the _venue scope_ of capital movement. It moves capital between venues **within one strategy** (or
@@ -64,22 +86,70 @@ A rebalance cycle fires when:
    venues
 5. **Post-fill imbalance** — after a large one-sided fill, pre-funding on another venue is depleted
 
-## Transfer types
+## Transfer types — `BusTransferType`, 13 members (UNIONED 2026-08-12)
 
-| Type                     | When                                   | Mechanism                           |
-| ------------------------ | -------------------------------------- | ----------------------------------- |
-| `INTERNAL_SUBACCOUNT`    | Binance master → subaccount            | Binance internal API                |
-| `CEX_WITHDRAWAL_DEPOSIT` | Binance → OKX (same chain)             | withdraw on-chain; deposit on-chain |
-| `ON_CHAIN_TRANSFER`      | DeFi wallet → DeFi wallet (same chain) | EVM/Solana transaction              |
-| `BRIDGE`                 | ETH on Arbitrum → ETH on Optimism      | Across/Stargate/LayerZero/etc.      |
-| `WRAP_UNWRAP`            | ETH ↔ wstETH, USDC ↔ aUSDC             | Token wrapping                      |
-| `UNITY_WALLET_OP`        | Unity deposit / withdrawal             | Unity API                           |
-| `IBKR_FUND_MOVE`         | IBKR cash allocation                   | IBKR internal                       |
+> **This table previously listed the 7 members of `architecture_v2.enums.TransferType`.** That enum was one of FOUR
+> competing transfer-type enums (20 distinct values, 18 of them in exactly one enum); they were unioned onto
+> `BusTransferType` — the SSOT, `unified_api_contracts.canonical.crosscutting.transfer_events` — in
+> `unified-api-contracts@4663daf908`. **Use these names; the old ones no longer exist as a shared vocabulary.**
+> `CEX_WITHDRAWAL_DEPOSIT` in particular was SPLIT, because it conflated direction into one value.
+
+| Member             | Rail       | When                                  | Mechanism                           |
+| ------------------ | ---------- | ------------------------------------- | ----------------------------------- |
+| `CEX_WITHDRAW`     | `cefi`     | leaving a CeFi venue                  | exchange withdrawal API (CCXT)      |
+| `CEX_DEPOSIT`      | `on_chain` | funding a CeFi venue                  | send to the venue's deposit address |
+| `SUBACCOUNT_MOVE`  | `cefi`     | Binance master → subaccount           | venue internal API                  |
+| `ON_CHAIN`         | `on_chain` | wallet → wallet, same chain           | EVM/Solana transaction              |
+| `BRIDGE`           | `on_chain` | ETH on Arbitrum → ETH on Optimism     | Across/Stargate/LayerZero/etc.      |
+| `WRAP_UNWRAP`      | `on_chain` | ETH ↔ wstETH, USDC ↔ aUSDC            | token wrapping                      |
+| `DEFI_DEPOSIT`     | `on_chain` | into a DeFi protocol                  | protocol deposit                    |
+| `DEFI_WITHDRAW`    | `on_chain` | out of a DeFi protocol                | protocol withdrawal                 |
+| `CUSTODY_TRANSFER` | `on_chain` | custody-held wallet movement          | custody provider (Copper / CEFFU)   |
+| `SWEEP`            | `on_chain` | dust consolidation to the main wallet | see § "Sweep and gas reserve"       |
+| `REBALANCE`        | `on_chain` | venue-balance correction              | as routed                           |
+| `UNITY_WALLET_OP`  | `other`    | Unity deposit / withdrawal            | Unity API                           |
+| `IBKR_FUND_MOVE`   | `other`    | IBKR cash allocation                  | IBKR internal                       |
+
+**The `rail` column is not decoration — it is in the type.** `BUS_TRANSFER_TYPE_RAIL` and `bus_transfer_type_rail()`
+classify every member, because execution-service's live `CompositeTransferAdapter` routes on **CeFi-vs-on-chain**, not
+on the transfer type. Emitting a type whose rail cannot service it is the failure this mapping exists to prevent. Note
+the deliberate asymmetry: `CEX_WITHDRAW` is `cefi` (an API call) while `CEX_DEPOSIT` is `on_chain` (a chain transaction
+to the venue's address). `UNITY_WALLET_OP` and `IBKR_FUND_MOVE` fit neither rail — hence the third `other` value,
+matching [transfer-architecture](/codex/04-architecture/transfer-architecture.md)'s standing "no manual/acknowledged
+transfer path" finding for exactly those two.
 
 ## Transfer type router
 
-Each transfer request is classified into one of the 7 types based on source/destination venue + asset + chain. See
-memory `project_autonomous_recovery_and_transfers_2026_04_16.md` + codex `autonomous-recovery-matrix.md`.
+Each request is classified into one of the 13 members above from source/destination venue + asset + chain, then routed
+by its rail. See [autonomous-recovery-matrix](/codex/04-architecture/autonomous-recovery-matrix.md).
+
+_(A pointer here to an agent `memory/` file was removed 2026-08-12: agent memory is BANNED workspace-wide, is per-cwd,
+and was never readable by anyone else — so that reference had never resolved for any reader.)_
+
+## Sweep and gas reserve — the concrete model behind `SWEEP`
+
+Two config fields define this, and their own descriptions are the spec (`strategy-service/strategy_service/config.py`):
+
+- **`sweep_threshold_usd`** (default `10.0`) — _"USD threshold below which wallet balances are swept to the main
+  wallet"_. Dust consolidation, not portfolio rebalancing.
+- **`min_eth_reserve`** (default `0.05`) — _"Minimum ETH balance to maintain in DeFi wallets for gas (in ETH)"_. A floor
+  to top UP to, not a target to trade around.
+
+This is **threshold logic, not a judgment call**, which is why it is buildable without a further design decision. A
+sweep must never take a wallet below `min_eth_reserve` — gas is what makes the next transfer possible, so sweeping it is
+self-defeating.
+
+**Correction 2026-08-12 — the balance source is NOT `venue_balance_tracker.py::get_all_balances()`.** An earlier
+revision of this section named it, from a symbol-name match without reading the returned type. That method returns UAC's
+`VenueBalance` from `internal/domain/sports/arb_config.py` — the **sports-betting** balance (`is_exchange`, "Betfair,
+Matchbook", float `balance`/`available`/`locked`), which carries **no asset and no chain**, so it is structurally unable
+to express per-asset gas reserves. Do not force a fit.
+
+`compute_rebalance_transfers()` (`strategy_service/transfer_coordinator.py`, shipped `strategy-service@46f8728472`)
+therefore takes a purpose-built **`WalletBalance`** (venue / asset / amount / usd_value / chain_id) as an explicit
+parameter. **No production caller is wired yet**, because no DeFi wallet-balance tracker exists to source real
+`WalletBalance` rows — the computation is correct and tested, and connecting it to live balances is a further
+integration step. That gap is the honest remaining distance between "transfers compute" and "transfers happen".
 
 ## Target-state protocol
 

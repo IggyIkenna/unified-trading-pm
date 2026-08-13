@@ -34,7 +34,7 @@ does_not:
   - Run the daily deep plan/codex reconciliation (that is plan_reconciler.md — keep scoped to making the gate green)
 triggers:
   - POST /api/escalate from GHA with wall_type in {merge_conflict, label_mismatch, sit_failure, ldr_qg_failure,
-    plan_health}
+    plan_health, cloud_build_router_failure}
 escalation_to: main
 temperament_base: decisive
 ---
@@ -168,6 +168,33 @@ WHAT TO DO BY wall type:
     plan/codex/cross-plan reconciliation + auto-archive is the **plan_reconciler** worker's job
     (`unified-trading-pm/agents/plan_reconciler.md`, mode=reconcile, daily systemd timer) — NOT this gate-failure
     handler; keep this path scoped to making the gate green.
+- **cloud_build_router_failure**: `unified-trading-pm/.github/workflows/cloud-build-router.yml` failed to trigger (or
+  verify) a `<repo>-prod` Cloud Build for `$REPO`. Read `route-build`'s job log first
+  (`gh run view <run_id> --repo IggyIkenna/unified-trading-pm --log`) for the actual `gcloud builds triggers run` error,
+  then classify:
+  - **`NOT_FOUND`**: the `<repo>-prod` trigger doesn't exist in `central-element-323112`/`asia-northeast1` — recreate it
+    mirroring a healthy sibling (e.g. `instruments-service-prod`'s config: GitHub App connection, `main` branch push
+    filter, `cloudbuild.yaml` path). GCP infra action — do it directly (self-service IAM per RULES.md §5), don't defer
+    to an `[OPERATOR]` tag.
+  - **`TIMEOUT` / build stuck in `quality-gates` step**: check whether the repo's `cloudbuild.yaml` quality-gates step
+    exports `QG_GOVERNOR_DISABLE=true QG_TOTAL_GOVERNOR_DISABLE=true` — an ephemeral single-build Cloud Build container
+    has no shared host for the reservation governor to admit against, so without this bypass every build hangs in
+    `WAIT_RAM_LIVE` until the 30-min build timeout.
+  - **Empty/blank error detail on a CRITICAL alert**: don't assume `NOT_FOUND` —
+    `gcloud builds triggers run --format=value(metadata.build.id)` writes the build ID to STDOUT on success; if the
+    router script reads the ID from a stderr file, every SUCCESSFUL trigger looks like a failure. Check
+    `trigger_build_in_region`'s actual stdout/stderr handling before assuming the trigger itself is broken.
+  - **Before diagnosing from scratch**: this exact wall recurred twice for `unified-trading-library` on 2026-07-25 and
+    2026-08-13 — read `plans/archive/issues/utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md`'s
+    Progress Log first; it has both prior root causes + fixes. **Known gap**: this wall type has no auto-poll resolution
+    signal (`escalation.py`'s `_poll_wall_resolution` — not in `_QG_SIGNAL_WALLS`), so a genuinely-fixed instance can
+    still re-dispatch fresh workers on the deadline-reescalation cycle; if you find the wall already resolved on
+    arrival, verify LIVE (fresh build/image timestamps, `cloudbuild.yaml` content on `origin/main` — never trust
+    `merge-base --is-ancestor` across a squash-promote), note it in the issue doc, and close out — don't force a
+    redundant fix.
+  - Fix on `live-defi-rollout` for the target repo (quickmerge) + `.github/**` router fixes in `unified-trading-pm`
+    (direct-push carve-out); verify end-to-end (`gcloud builds triggers run` or wait for the next real push, poll to
+    `SUCCESS`, confirm a fresh `UPDATE_TIME` in the artifact registry) before declaring done.
 
 AVAILABLE SKILLS (documented commands; a real skill-dispatch framework comes later):
 

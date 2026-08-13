@@ -9,7 +9,7 @@ summary: >-
   back into each source doc happens in the paired finalize plan). Conflict-checked against every existing active
   batch/finalize plan for this tranche via basename-citation cross-reference before drafting — no item here duplicates
   ground an existing dispatched Todos entry already claims.
-status: draft
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [data]
@@ -59,9 +59,9 @@ source: >-
 
 # infrastructure satellite AO dispatch batch 16 — 2026-08-13
 
-> **`status: draft` — NOT ingested/dispatched.** Flip to `status: active` only after operator review. Every todo below
-> was classified bounded/deterministic (worker-determinable outcome, no open design/judgment call) by the 2026-08-13
-> full-sweep audit and conflict-checked against this tranche's existing active batches before being drafted here.
+> **Operator-approved 2026-08-13 — `status: active`, dispatchable.** Every todo below was classified
+> bounded/deterministic (worker-determinable outcome, no open design/judgment call) by the 2026-08-13 full-sweep audit
+> and conflict-checked against this tranche's existing active batches before being drafted here.
 
 ## Todos
 
@@ -85,7 +85,7 @@ source: >-
 - [ ] [CODE] P2. Fix prod_terraform_drift_backlog_reconcile_2026_07_24.md:177's dangling 'finding W' citation to point
       at the actual section name in orchestrator-cloud-identity-self-service.md. Source:
       `plans/active/issues/plan_reconciler_findings_infra_2026_08_10.md`
-- [ ] [INFRA] P2 - Verify quickmerge isolation on a second (service) repo with a heavier suite and confirm the cached
+- [ ] [INFRA] P2. Verify quickmerge isolation on a second (service) repo with a heavier suite and confirm the cached
       venv (~/.cache/qm-iso-venv/<repo>) refreshes correctly across a dependency-lock bump, before flipping
       laptop-default isolation back on. Done when: two repos pass an isolated --isolated quickmerge end-to-end and the
       cache is shown to refresh on a lock change. Source:
@@ -93,12 +93,12 @@ source: >-
 - [ ] [CODE] P2. Coordinated pip-audit dependency bump for pyarrow 23.0.0->24.0.0 (needs a PM canonical-range widen,
       same pattern as the already-shipped lxml unit) + twisted/mako/ujson in-range bumps, execution-service +
       unified-trading-pm Source: `plans/active/codex_violations_ratchet_to_five_2026_06_10.md`
-- [ ] [SCRIPT] P2 - Fix _VERDICT_MARKER_LINE_RE (or replace with a proper multi-line-block strip) in
+- [ ] [SCRIPT] P2. Fix _VERDICT_MARKER_LINE_RE (or replace with a proper multi-line-block strip) in
       generate_na_doc_tranche_inventory.py so a marker's full continuation-line span is excluded from
       body_content_hash(); add the stated regression test asserting hash-before ==
       hash-after-writing-the-declared-hash-marker; verify against real multi-line markers in the corpus. Source:
       `plans/active/issues/na_eligibility_multiline_marker_continuation_lines_never_stripped_from_hash_2026_08_10.md`
-- [ ] [SCRIPT] P3 - Once fixed, spot-check docs with old (pre-fix) markers to confirm the next na-eligibility-audit run
+- [ ] [SCRIPT] P3. Once fixed, spot-check docs with old (pre-fix) markers to confirm the next na-eligibility-audit run
       correctly reports incremental_skip: true when no real content changed. Source:
       `plans/active/issues/na_eligibility_multiline_marker_continuation_lines_never_stripped_from_hash_2026_08_10.md`
 - [ ] [CODE] P2. Make the swallowed ImportError loud in unified-trading-pm/scripts/quality_gates/_capability_gaps.py

@@ -13,7 +13,7 @@ summary: >-
   source doc happens in the paired finalize plan). Conflict-checked against every existing active batch/finalize plan
   for this tranche via basename-citation cross-reference before drafting — no item here duplicates ground an existing
   dispatched Todos entry already claims.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -67,9 +67,9 @@ source: >-
 
 # cross-cutting satellite AO dispatch batch 13b — 2026-08-13
 
-> **`status: draft` — NOT ingested/dispatched.** Flip to `status: active` only after operator review. Every todo below
-> was classified bounded/deterministic (worker-determinable outcome, no open design/judgment call) by the 2026-08-13
-> full-sweep audit and conflict-checked against this tranche's existing active batches before being drafted here.
+> **Operator-approved 2026-08-13 — `status: active`, dispatchable.** Every todo below was classified
+> bounded/deterministic (worker-determinable outcome, no open design/judgment call) by the 2026-08-13 full-sweep audit
+> and conflict-checked against this tranche's existing active batches before being drafted here.
 
 ## Todos
 

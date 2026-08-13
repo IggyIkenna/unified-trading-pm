@@ -9,8 +9,9 @@ summary: >-
   that does isn't in this workspace's current subscription. Fixed via a reverse-engineered, sourced UAC registry
   (unified-api-contracts@49ad03df3d), wired into MDPS (market-data-processing-service@ae23ee5c03). A SEPARATE finding —
   30/64 target instruments got ZERO successful writes the entire re-derive run, not intermittent — splits into a BYBIT
-  stale-id-format bug (caller-side, MDPS threads a pre-migration id shape) and an OKX-SWAP delisted-instrument
-  capture/rollup gap (not yet resolved).
+  stale-id-format bug (RESOLVED: no fix needed, already-shipped code handles it) and an OKX-SWAP delisted-instrument
+  catalogue-rollup gap (RESOLVED: new cefi-catalogue-promote VM launcher, dry-run + real run both clean, verified in
+  prod). All that remains: a 4th liquidations re-derive to confirm the full chain end-to-end.
 status: open
 nature: issue
 asset_group: [cefi]
@@ -116,6 +117,22 @@ lesson for the future**: any new `CATALOG_COLUMNS` addition needs an immediate o
 asset_group, not just waiting for the next scheduled incremental cron — the incremental engine cannot structurally
 backfill a new field onto a frozen/out-of-window row.
 
+**FIXED AND VERIFIED IN PRODUCTION (2026-08-13).** Added a new `cefi-catalogue-promote` category to
+`deployment-service/scripts/vm/launch-canonical-migration-vm.sh` (mirroring the existing `defi-catalogue-promote`
+pattern exactly — `deployment-service@a7561ac20c`). Dry-run first
+(`canonical-migration-cefi-catalogue-promote-20260813-160254`, on-demand after 2 consecutive SPOT preemptions in
+`asia-northeast1-c`): full 44,573-snapshot corpus walk, clean exit_code=0, monotonic guard
+`new=433791 current=431649 decision=ACCEPT`. Then the real run
+(`canonical-migration-cefi-catalogue-promote-20260813-165827`, on-demand, operator-confirmed before the production
+write): `CATALOGUE_PROMOTED` event, 433,791 rows written to
+`gs://instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet`, exit_code=0. **Live-verified
+post-write**: both `OKX-SWAP:PERPETUAL:AVAX-USD@INV` and `...:XLM-USD@INV` now show `contract_size=1` (no longer blank);
+the CeFi-wide blank count across all delisted derivative rows dropped from 271,838 to **10** (99.996% resolved — the
+residual 10 are a separate, out-of-scope edge case not investigated further here). Note: the catalogue's raw value of
+`1` for OKX-SWAP non-BTC alts is still the OLD wrong-default (Finding 2's root cause) — this does not matter for
+correctness, since Finding 2's fix makes `liquidations_adapter.py` check the UAC static registry FIRST (which correctly
+resolves OKX-SWAP non-BTC to `10`) and only falls back to this catalogue for venues the registry doesn't cover.
+
 ## Finding 2 — contract_size silently WRONG for OKX (non-BTC) and Deribit BTC — FIXED
 
 Root cause, fully traced and verified against live code (not the sub-agent's word alone):
@@ -177,12 +194,10 @@ test patches both the registry and catalogue to None to exercise a genuine doubl
       (BTCUSD/ETHUSD × stale-column/no-column) via BYBIT's UNIFORM registry entry + the symbol-based margin_type
       heuristic. A GCS content-rewrite script was written, dry-run-verified (2,879 objects), then deleted unapplied once
       live testing proved it unnecessary.
-- [ ] [DATA] P1. Finding 1b root-caused precisely (see above, corrected from an earlier wrong hypothesis) — run ONE
-      `instruments-service/scripts/build_instrument_catalogue.py --asset-group cefi --mode full` to backfill
-      `contract_size` onto all 271,838 delisted CeFi derivative rows currently blank (no code change needed; this is the
-      script's own designed self-heal path for a newly-added `CATALOG_COLUMNS` field). This is a full by_date corpus
-      re-walk for CeFi — heavy I/O, run on a VM per the workspace's heavy-I/O rule, not the operator's laptop. Verify
-      post-run: 0 delisted CeFi derivative rows with blank `contract_size`.
+- [x] [DATA] P1. Finding 1b — FIXED AND VERIFIED (see above): new `cefi-catalogue-promote` VM launcher category
+      (`deployment-service@a7561ac20c`), dry-run + operator-confirmed real run both completed clean, `catalog.parquet`
+      promoted (433,791 rows). Blank `contract_size` on delisted CeFi derivatives: 271,838 → 10.
+
 - [ ] [OPERATOR] P2. Decide whether to upgrade the Tardis subscription to "pro"/"business" tier — would let
       instruments-service source `contractMultiplier` directly instead of depending on a hand-maintained UAC registry
       that needs manual re-verification if a venue's face values ever change. Not urgent — the UAC registry is a
