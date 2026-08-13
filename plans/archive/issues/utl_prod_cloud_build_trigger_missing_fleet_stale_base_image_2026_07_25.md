@@ -391,3 +391,31 @@ base-image pipeline without confirming the correct source config/IAM/connection 
     resolve action wired into `/done`/`one_shot_complete`, or (b) a wall-specific poll signal in `_poll_wall_resolution`
     (e.g. latest trigger build SUCCESS and newer than the escalation `created_at`), so a genuinely-fixed instance stops
     re-dispatching fresh workers every `RESOLUTION_DEADLINE_MINUTES` tick.
+
+- **2026-08-13 (slot 26, cicd) — NEW root cause on this SAME router, escalation `agt-cb29da` (instruments-service
+  `cloud_build_router_failure`, created 15:44Z): `trigger_build_in_region` captures its own diagnostic echo as the build
+  ID → false `escalate-regional-fallback` fire. NOT a regional outage, NOT a missing trigger.** Diagnosed from run
+  31714102246's route-build log (`gh run view 31714102246 --log`):
+  - `trigger_build_in_region()` line ~537 does `echo "Attempting build trigger in region: $region"` to **STDOUT**, and
+    the caller captures `BUILD_ID=$(trigger_build_in_region "$REGION")` (line 596) — so `BUILD_ID` = the echo text, NOT
+    the UUID. Log evidence: `Cloud Build triggered: Attempting build trigger in region: asia-northeast1` and
+    `Polling Cloud Build Attempting build trigger in region: asia-northeast1` (the real build `c11ca060-…` DID start —
+    `gcloud builds list` shows it SUCCESS in asia-northeast1 at 15:12:32Z). The poll loop then
+    `gcloud builds describe "<garbage>"` → UNKNOWN → burns the full 30-min poll.
+  - The multiline `build_id` value written to `$GITHUB_OUTPUT` corrupts the file parse for every output written AFTER
+    it: job-level `build_region`, `build_exit_code`, `build_failure_reason` all arrive EMPTY (confirmed via the
+    `Record UTL Cloud Build result` job reading `build_triggered=true build_exit_code= failure_reason=`, and the
+    `escalate-regional-fallback` Slack message rendering `Build ran in fallback region: ` with nothing after the colon).
+  - `escalate-regional-fallback`'s gate is `build_triggered=='true' && build_region != 'asia-northeast1'` — with an
+    EMPTY build_region the condition is true, so it fires a false `cloud_build_router_failure` escalation whose context
+    literally reads "primary region asia-northeast1 failed, build ran in fallback region ." (trailing blank).
+  - **This is a REGRESSION surfaced by slot 7's stdout-read fix (`unified-trading-pm@bddffcf6fb`, 2026-08-13)**: before
+    it, every invocation fell through to `not-configured` (build_triggered=false, no escalation); after it, the real
+    build path is exercised and the latent stdout-pollution now produces build_triggered=true with empty downstream
+    outputs. Same wall also fired a false UTL escalation (`agt-774a0e` re-dispatches that slots 14/28 confirmed as
+    "already-fixed" — those WERE this bug, not a stale check).
+  - **Fix** `unified-trading-pm@<SHA>`: redirect the diagnostic to stderr
+    (`echo "Attempting build trigger in region: $region" >&2`) so the function's only stdout is the build ID
+    (`echo "$trigger_output"`). Matches the function's other two echoes which already use `>&2`. Workflow YAML validated
+    (`check_workflow_yaml_valid.py`: 59 workflows parse). Primary region health confirmed at dispatch time:
+    `gcloud builds list --region=asia-northeast1` shows SUCCESS builds through 19:07Z (instrument + fleet) — no outage.
