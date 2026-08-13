@@ -254,28 +254,61 @@ work, noted here so it isn't rediscovered.
    `CLAUDE_ACCOUNT_LABEL` copy-paste bug found and fixed the same day as this doc, for one recent example).
 4. ~~Plan destination~~ **ANSWERED 2026-08-13** — human-driven, see the dedicated section above.
 
-## Todo
+## Requirement 3 SHIPPED (2026-08-13) — real calibration numbers, live in production
 
-~~Build a `/usage` tmux-driven sampler~~ / ~~price Claude tokens at list rates~~ — **NOT NEEDED, both already exist and
-already have real data** (see the CORRECTION section above). Revised todo list:
+`compute_claude_wallet_reconciliation()` (`server/state_store/account_usage.py`), the
+`/api/accounts/claude/wallet-reconciliation` route, and `ClaudeWalletPanel.tsx` (wired into all 3 dashboard view sites)
+are built, tested (6 backend unit tests, 14 vitest, 3 real Playwright L2 e2e tests, all passing), shipped
+(`agent-orchestrator@616450ffac` + a same-day follow-up fix `agent-orchestrator@7a38b4bb06`), deployed to the VM, and
+verified against real production data.
+
+**Real bug caught and fixed via live verification, same day**: the first deploy computed
+`boost_multiplier = implied/actual`. Every real account read back <1 (0.03x-0.48x), which inverts the intended meaning —
+flat-rate subscriptions are cheap relative to metered API pricing BY DESIGN, so `actual_spend_usd` (list-rate-priced
+captured tokens) is always the LARGER number, not `implied_spend_usd`. Fixed to `boost_multiplier = actual/implied` (how
+many multiples of the prorated subscription "budget" the real token usage would cost at metered rates). This is exactly
+the class of bug this session's whole DeepSeek investigation trained for: build against real data, don't trust the first
+number that comes back just because the pipeline ran without erroring.
+
+**Real numbers, pulled live 2026-08-13 ~12:49 UTC** (all mid-window, none yet a clean complete week):
+
+| account                             | tier  | weekly % | implied $ | actual $ (list-rate) | boost           |
+| ----------------------------------- | ----- | -------- | --------- | -------------------- | --------------- |
+| sub-a (ikennaigboaka)               | pro   | 46%      | $2.08     | $29.60               | **14.25x**      |
+| sub-b (iggy2london)                 | max20 | 98%      | $44.26    | $730.45              | **16.50x**      |
+| sub-c (ikenna-odum)                 | max20 | 100%     | $45.16    | $1455.53             | **32.23x**      |
+| sub-d (odum1default, Pro test acct) | pro   | 23%      | $1.04     | $1088.19             | **1047.64x** ⚠️ |
+| sub-e (odum3default, contaminated)  | max20 | 11%      | $4.97     | $9.46                | 1.90x           |
+| sub-f (odum2default, Max test acct) | max20 | 100%     | $45.16    | $699.73              | **15.49x**      |
+| sub-g (alpavoltratrading)           | max20 | 99%      | $44.71    | $105.68              | 2.36x           |
+
+**sub-d's 1047x is a genuine outlier, not a data bug** (unpriced_turns=0, real captured tokens, real weekly_pct read) —
+worth flagging to the operator directly, not just filed as a curiosity: either Pro's weekly_pct denominator is measuring
+something very different from Max's (e.g. Pro's 5h/weekly cap tracks message COUNT more than token volume, so a
+token-heavy workload on Pro barely moves the %, while the SAME workload on Max would move weekly_pct much more), or Pro
+accounts are systematically the most "boosted" tier by a wide margin. The 5 max20 accounts cluster in a much narrower
+1.9x-32x band. This is direct empirical evidence for Open Question 2 (is the multiplier workload/tier-stable) — it is
+NOT tier-stable; Pro and Max20 read on completely different scales and must be calibrated/reported separately, never
+averaged together.
+
+## Todo
 
 - [x] [BACKEND] P2. **Confirm sub-F/sub-D account identity mapping** — DONE 2026-08-13, verified against accounts.json's
       `primary_email` field (authoritative; the `id` slug for sub-e is cosmetically stale, already flagged in its own
       label). sub-d-odum1default=odum1default@gmail.com=Pro, sub-e-odum2default=odum3default@gmail.com=Max20 (currently
       contaminated), sub-f-odum2default=odum2default@gmail.com=Max20 — all match the operator's mapping.
-- [ ] [BACKEND] P1. **Build `compute_claude_wallet_reconciliation()`** (`server/state_store/slots.py`, mirroring
-      `compute_deepseek_wallet_window_reconciliation`) — per account/window: implied
-      $ = `weekly_pct/100 ×
-      (monthly_price × 7/31)` from `AccountUsageRow`/`AccountUsageHistoryRow`, actual $ =
-      `SUM(task_usage.spend_usd)` for that `account_id` where `completed_at` falls in the window, ratio = implied/actual
-      = the boost multiplier. Both inputs already exist and are already populated for sub-d/sub-e/sub-f.
-- [ ] [BACKEND] P1. **Route** `/api/accounts/claude/wallet-reconciliation` mirroring the DeepSeek route pair in
+- [x] [BACKEND] P1. **Build `compute_claude_wallet_reconciliation()`** — DONE 2026-08-13,
+      `server/state_store/account_usage.py`, `agent-orchestrator@616450ffac` + fix `@7a38b4bb06`.
+- [x] [BACKEND] P1. **Route** `/api/accounts/claude/wallet-reconciliation` — DONE 2026-08-13,
       `server/routes/accounts.py`.
-- [ ] [FRONTEND] P1. **Build `ClaudeWalletPanel.tsx`** mirroring `DeepSeekWalletPanel.tsx`, wired into `App.tsx`, with
-      real Playwright L2 coverage per the workspace hard rule.
-- [ ] [INVESTIGATE] P2. **Run the reconciliation against sub-d (Pro, clean) and sub-f (Max, partial-week) real data once
-      built** — this both delivers Requirement 3 AND starts answering Open Question 2 (is the multiplier stable across
-      the two tiers/windows) with genuine numbers instead of the operator's rough $0.45 estimate.
+- [x] [FRONTEND] P1. **Build `ClaudeWalletPanel.tsx`** — DONE 2026-08-13, wired into `App.tsx` at all 3 sites, real
+      Playwright L2 coverage (`dashboard/tests/e2e/claude-wallet-reconciliation.spec.ts`, 3 tests).
+- [x] [INVESTIGATE] P2. **Run the reconciliation against real data** — DONE 2026-08-13, see table above. Answers Open
+      Question 2: the multiplier is NOT tier-stable (Pro reads ~1000x, Max20 reads ~2-32x) — never average across tiers.
+- [ ] [OPERATOR] P1. **Investigate the sub-d 1047x outlier** — is Pro's weekly_pct denominator measuring something
+      fundamentally different from Max20's (message-count-weighted vs token-volume-weighted), or is Pro genuinely this
+      much more "boosted"? Needs either an Anthropic-side answer or more Pro-tier samples to know if 1047x is typical or
+      a fluke of this specific window's workload mix.
 - [ ] [INVESTIGATE] P3. **Re-run once sub-f's window resets** (~2026-08-13 22:00 UTC, confirmed live via
       `weekly_window_start=2026-08-06 22:00`) for a genuinely clean full-week Max sample — the pre-reset window is real
       but partial (sub-f was already at weekly_pct=100% mid-window as of this check).
