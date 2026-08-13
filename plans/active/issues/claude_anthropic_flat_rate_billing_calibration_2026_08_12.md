@@ -11,7 +11,11 @@ summary: >-
   account delivers vs. metered API pricing. Also requires the same crash-durability guarantee already built for DeepSeek
   (capture usage even if a tmux session dies before completing a turn), and a new "Claude Wallet Reconciliation"
   dashboard widget mirroring the existing DeepSeek one. Captured here in full rather than left in chat, per this
-  workspace's session-checkpoint discipline — NOT YET SCOPED INTO A REAL PLAN, see open questions below.
+  workspace's session-checkpoint discipline. **2026-08-13**: plan destination confirmed human-driven, and the
+  data-source open question resolved — no API exists for the %-of-weekly-limit signal, it requires a new tmux
+  `/usage`-driving sampler (see dedicated sections below). Critical-path implementation work (the sampler) has NOT yet
+  been built — this doc still tracks an unimplemented initiative, now with a concrete architecture instead of open
+  questions.
 status: open
 nature: issue
 asset_group: [ao]
@@ -55,8 +59,9 @@ method:
    entirely to fleet work) over a **known window** (e.g., 7 days within August).
 2. Compute that window's **prorated subscription budget**: `monthly_price × (window_days / 31)`. Worked example from the
    operator: `$200 × (7/31) ≈ $45.16` for a Max account over one week.
-3. Read Anthropic's own **%-of-weekly-limit-used** signal for that account/window (however it's actually exposed — see
-   Open Question 1 below, this is not yet confirmed to have a clean API).
+3. Read Anthropic's own **%-of-weekly-limit-used** signal for that account/window — **Open Question 1 answered
+   2026-08-13, see the dedicated section below: there is no API for this, it must be read from a live `/usage` command
+   in an active Claude Code session.**
 4. Multiply: `% used × prorated budget = implied $ spent` — e.g., operator's own example, "if we use 1% on a task that's
    $0.45 roughly spent" (1% × $45.16 ≈ $0.45).
 5. Separately, compute what that SAME window's actual captured token usage would cost at **Anthropic's published
@@ -134,6 +139,49 @@ description advertises an "anti-ban engine" that spoofs headers/tool definitions
 a Max/Pro subscription can be used as a raw metered API. That is ToS evasion, not a billing-accuracy tool, and has no
 place in this pipeline regardless of how useful its data would be.
 
+## Open Question 1 ANSWERED (2026-08-13): no API exists — must sample `/usage` from a live session
+
+Researched directly (Anthropic's own docs + two open GitHub feature requests against `anthropics/claude-code`): **there
+is no programmatic way to read Max/Pro subscription weekly-limit-% for an account.**
+[`Expose Max plan usage limits via Claude Code API/SDK` (issue #32796)](https://github.com/anthropics/claude-code/issues/32796)
+and
+[`Feature request: claude usage command / API endpoint for Max subscription limits` (issue #44328)](https://github.com/anthropics/claude-code/issues/44328)
+are both open, unresolved asks for exactly this — confirming Anthropic has not shipped it. The Rate Limits API
+(`/v1/organizations/rate_limits`) and Usage & Cost API are a DIFFERENT product surface (metered API-key/org billing),
+not subscription plan limits, and do not return this number. The %-used figure (session bar + weekly bar, both
+all-models and Sonnet-only cuts) is **only ever rendered by the `claude` CLI itself**, via the `/usage` slash command
+inside an active session, or on claude.ai's Settings → Usage page (UI-only there too).
+
+**Architecture implication — this is not a proxy-shaped problem.** A network proxy captures request/response traffic;
+`/usage` is a CLIENT-SIDE UI render with no corresponding API call to intercept. The only way to get this number is to
+actively DRIVE a live Claude Code session on the target account: send `/usage` into a running session's pane, capture
+the rendered output, and regex-parse the session/weekly percentages out of it — the same tmux `capture-pane` pattern
+already used elsewhere in this workspace (see CLAUDE.md's "Pane deep" rule), not a new technique, but a genuinely
+different capture mechanism from Requirement 2's token-usage proxy. Two independent, differently-shaped mechanisms are
+needed for the two halves of the ratio:
+
+- **Token-side (the $ actually billed at list rates)**: already fully available via the existing generic
+  transcript-sweep (`server/deepseek_usage.py`'s `scan_session_usage`, confirmed provider-agnostic 2026-08-13) — no new
+  capture needed for this half at all, only new PRICING logic (Anthropic list rates × captured tokens for a Claude
+  account, reusing `model_pricing.py` the same way the DeepSeek `spend_usd` fix did).
+- **Limit-side (the %-of-weekly-limit signal)**: needs a NEW periodic sampler — a small script/cron-style job that, on a
+  cadence (e.g. hourly, mirroring `deepseek_balance_history`'s sampling pattern in
+  `deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`), attaches to (or spawns) a live
+  Claude Code session on the target account, sends `/usage`, captures the pane text, parses out session-%/weekly-%/
+  reset-time, and persists it to a new table (analogous to `deepseek_balance_history`). This sampler is real,
+  well-scoped new work — not yet built.
+
+This also reframes Requirement 2's crash-durability ask: the token-usage half needs no new proxy (transcript-sweep
+already covers it, provider-agnostic), so the ONLY open crash-durability question is whether transcript-sweep's EXISTING
+gap (a session killed before its JSONL write flushes) is a real, measured loss for Claude accounts the way it was
+hypothesized to be — not yet measured; see updated Todo list.
+
+## Plan destination ANSWERED (2026-08-13): human-driven, confirmed by operator
+
+Per the ask-before-creating-a-plan hard rule (Open Question 4): operator confirmed **human-driven** (`assigned_vm: NA`),
+not AO-dispatched, and asked to "update existing claude billing plans around this and action as human" — i.e. proceed
+directly in operator-present sessions like this one, not scope into background-AO-executed work.
+
 ## Requirement 3: new "Claude Wallet Reconciliation" dashboard widget
 
 Per-account breakdown, mirroring the existing `DeepSeekWalletPanel.tsx`/`deepseek-wallet-reconciliation` routes in shape
@@ -165,10 +213,8 @@ work, noted here so it isn't rediscovered.
 
 ## Open questions — resolve before this is a real, scoped plan
 
-1. **How is "%-of-weekly-limit-used" actually exposed for a given account/window?** Is there an Anthropic Console API
-   that returns this programmatically, or does it require a manual check in Anthropic's own UI per account per window?
-   This determines whether the whole pipeline can be automated or needs a recurring manual data-entry step. Not yet
-   investigated as of this doc's creation.
+1. ~~How is "%-of-weekly-limit-used" actually exposed for a given account/window?"~~ **ANSWERED 2026-08-13** — no API,
+   see the dedicated section above; needs a tmux `/usage`-driving sampler.
 2. **Is the "boost multiplier" actually stable enough to be useful, or does it vary by usage mix the same way the
    DeepSeek cache-hit ratio did?** The DeepSeek investigation this same day found that a workload-dependent ratio
    (cache-hit rate) is NOT safe to extrapolate across different periods/task mixes — worth checking whether Claude's
@@ -179,13 +225,10 @@ work, noted here so it isn't rediscovered.
    sub-D=`odum1default@gmail.com`=Pro against the actual `accounts.json`/`.claude-accounts/*.env` mapping before using
    either as a calibration sample; this workspace has hit real account-identity mixups before (the DeepSeek
    `CLAUDE_ACCOUNT_LABEL` copy-paste bug found and fixed the same day as this doc, for one recent example).
-4. **Plan destination** — per this workspace's HARD RULE, ask the operator explicitly whether this becomes an
-   AO-dispatched plan or a human-driven one before authoring the real plan doc; do not default silently.
+4. ~~Plan destination~~ **ANSWERED 2026-08-13** — human-driven, see the dedicated section above.
 
 ## Todo
 
-- [ ] [OPERATOR] P2. **Answer Open Question 1** — confirm whether Anthropic exposes %-of-weekly-limit-used
-      programmatically (Console API) or only via manual UI check, before any automation gets scoped.
 - [ ] [INVESTIGATE] P2. **Answer Open Question 2** — check whether the DeepSeek-style workload-sensitivity problem (a
       ratio that looks stable over one window but isn't a true constant) applies to Claude's weekly-limit consumption
       too, before treating any single calibration run as broadly reusable.
@@ -195,10 +238,15 @@ work, noted here so it isn't rediscovered.
 - [ ] [INVESTIGATE] P2. **Wait for sub-F's post-2026-08-13 weekly reset before treating it as a clean full-window
       sample** — its reset was under 11 hours away at the time of the swap, so any usage before that reset is a partial
       window only.
-- [ ] [OPERATOR] P2. **Decide plan destination** (AO-dispatched vs human) before authoring the real implementation plan
-      (Open Question 4) — per this workspace's ask-before-creating-a-plan hard rule.
-- [ ] [BACKEND] P3. **Scope the Claude crash-durability capture mechanism** — confirm the simpler
-      transparent-capture-then-relay design (no translation layer needed, unlike DeepSeek's proxy) is sufficient before
-      implementation.
+- [ ] [BACKEND] P1. **Build the `/usage` tmux-driven periodic sampler** (new, concrete, per the architecture section
+      above) — attach to a live Claude Code session on the target account on a cadence, send `/usage`, capture-pane,
+      regex-parse session-%/weekly-%/reset-time, persist to a new table mirroring `deepseek_balance_history`. This is
+      the critical-path item: nothing else in this doc can be calibrated without it.
+- [ ] [BACKEND] P2. **Price captured Claude token usage at Anthropic list rates** — reuse `model_pricing.py` against the
+      already-generic transcript-sweep data (`server/deepseek_usage.py`'s `scan_session_usage`, confirmed
+      provider-agnostic) for a Claude account/window; no new capture needed for this half.
+- [ ] [INVESTIGATE] P3. **Measure whether the transcript-sweep crash-durability gap is real** for Claude accounts (a
+      session killed before its JSONL write flushes) before building any capture-then-relay proxy for the token side —
+      don't build Requirement 2's proxy speculatively if the gap turns out to not materialize in practice.
 - [ ] [BACKEND] P3. **Build the "Claude Wallet Reconciliation" dashboard widget** (Requirement 3) — blocked on the
-      calibration method (Open Questions 1-2) being confirmed workable first.
+      `/usage` sampler landing real data first.
