@@ -26,7 +26,7 @@ related:
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
   ]
 created: 2026-08-12
-last_updated: 2026-08-12
+last_updated: 2026-08-13
 parent_epic: orchestrator_master
 priority: P2
 assigned_vm: NA
@@ -67,21 +67,31 @@ method:
 7. Once calibrated, apply the multiplier to **backfill more accurate effective-cost numbers** for Claude usage generally
    — i.e., convert list-price-equivalent token costs into "real value extracted from the subscription."
 
-## Named test accounts (operator-specified, 2026-08-12)
+## Named test accounts (operator-specified, 2026-08-12; sub-E swap 2026-08-13)
 
-The operator has committed to NOT using these two accounts for interactive/laptop sessions, specifically so they stay
-"clean" AO-only samples for this calibration — **since their most recent weekly reset**, both accounts have been
-AO-only:
+The operator has committed to NOT using the clean sample account(s) for interactive/laptop sessions, specifically so
+they stay "clean" AO-only samples for this calibration:
 
-- **sub-E, `odum3default@gmail.com`** — **Max** plan ($200/mo).
-- **sub-D, `odum1default@gmail.com`** — **Pro** plan ($20/mo). (Operator's message names "Ikenna — sub D" for this one;
-  the exact account-label mapping should be double-checked against `accounts.json`/the `.claude-accounts/*.env` files
-  before use, same as every DeepSeek account-identity check this workspace has needed all session.)
+- **sub-E, `odum3default@gmail.com`** — **Max** plan ($200/mo). **CONTAMINATED as of 2026-08-13** — the operator had to
+  use this account directly on their laptop ("i gotta use account odum3 right now else we can't even get any work done
+  on my laptop") to keep working, which invalidates it as a clean AO-only sample for the CURRENT weekly window. Do not
+  use any Max-tier data from this account's current window for calibration; it remains a valid sample again only after
+  its next weekly reset, and only if it goes untouched interactively from that reset forward.
+- **sub-F, `odum2default@gmail.com`** — **elected as the replacement clean Max-tier sample**, operator instruction
+  2026-08-13. Already configured to allow AO jobs (no setup needed). Its weekly reset is **under 11 hours away as of the
+  2026-08-13 instruction** — meaning any AO-only usage accrued on sub-F before that reset is itself a partial/short
+  window, and a genuinely clean full-week sample won't be available until the reset AFTER that one. Use sub-F in place
+  of sub-E everywhere below.
+- **sub-D, `odum1default@gmail.com`** — **Pro** plan ($20/mo), unaffected by this swap. (Operator's message names
+  "Ikenna — sub D" for this one; the exact account-label mapping should be double-checked against `accounts.json`/the
+  `.claude-accounts/*.env` files before use, same as every DeepSeek account-identity check this workspace has needed all
+  session.)
 
 **Caveat directly from the operator, stated as a known risk, not an aside**: "the issue is when we use those accounts
 locally on my laptop skews the results" — i.e., the calibration is only valid for a window where the account was
-GENUINELY AO-only. Any future accidental laptop use of sub-E/sub-D would contaminate that account as a calibration
-sample going forward until its next weekly reset.
+GENUINELY AO-only. The sub-E contamination above is exactly this risk materializing, not a hypothetical — treat any
+future accidental laptop use of sub-F/sub-D the same way: it contaminates that account as a calibration sample going
+forward until its next weekly reset.
 
 ## Requirement 2: crash-durability for Claude usage capture, same as DeepSeek
 
@@ -102,6 +112,28 @@ full Anthropic<->DeepSeek-native protocol translation. Confirm this simpler arch
 scoping real implementation work — don't reflexively clone the full DeepSeek proxy's translation-layer complexity where
 it isn't needed.
 
+**Alternative worth checking before building (2026-08-13 research)**: the `claude` CLI has built-in,
+Anthropic-sanctioned OpenTelemetry export (`CLAUDE_CODE_ENABLE_TELEMETRY=1`) that emits token usage/cost metrics
+natively — see public examples `zcquant/claude-code-monitor` and `TechNickAI/claude_telemetry` on GitHub. No network
+interception needed at all if this covers what we need. Caveat: it's SDK-level instrumentation inside the CLI's own
+process, so it likely shares the same "died before flushing" crash-durability risk our capture-then-relay proxy design
+exists to avoid by sitting at the network layer instead — confirm which failure mode OTel spans actually protect against
+(do they flush per-turn, or only at session end?) before treating this as a substitute for the simple capture-then-relay
+proxy above, rather than a possible source to cross-check it against.
+
+**Also checked (2026-08-13): no public repo, proxy or otherwise, can recover a separate thinking-token count.**
+Confirmed directly against a real transcript with extended thinking enabled AND via Anthropic's own docs
+(`platform.claude.com/docs/en/build-with-claude/extended-thinking`): thinking tokens count toward `max_tokens` and are
+folded into `output_tokens` with no distinct field in the `usage` response object. A proxy only sees what's actually on
+the wire — since Anthropic's own API response never carries a separate thinking-token count, nothing external (ours or a
+third party's) can produce one. See the "Known gap" section above for the full finding; this rules out "just intercept
+it like DeepSeek" as an approach to closing that specific gap.
+
+**Steer clear of `kobie3717/claude-oauth-proxy`-style tools** if this space gets researched further — its own
+description advertises an "anti-ban engine" that spoofs headers/tool definitions to evade Anthropic's abuse detection so
+a Max/Pro subscription can be used as a raw metered API. That is ToS evasion, not a billing-accuracy tool, and has no
+place in this pipeline regardless of how useful its data would be.
+
 ## Requirement 3: new "Claude Wallet Reconciliation" dashboard widget
 
 Per-account breakdown, mirroring the existing `DeepSeekWalletPanel.tsx`/`deepseek-wallet-reconciliation` routes in shape
@@ -111,6 +143,25 @@ but for Claude accounts:
 - actual token usage × Anthropic's published list rates (already computable from existing captured data +
   `model_pricing.py`, no new capture needed for this half)
 - the derived ratio/multiplier needed to align the two — "how much boost we're getting" from the flat-rate plan
+
+## Known gap: Claude thinking/reasoning tokens have no source value (confirmed 2026-08-13)
+
+The operator asked whether the fleet/agent-type view's 🧠 reasoning-token badge (built this session for DeepSeek) also
+covers native Claude accounts. Investigated and confirmed **it structurally cannot yet**: the badge itself
+(`TokenUsageBadge` in `dashboard/src/components.tsx`) and its typing (`dashboard/src/types.ts`) are provider-agnostic —
+they render for any non-null `reasoning_tokens`. The gap is upstream: every value feeding it today comes exclusively
+from `deepseek_native_usage` via `server/state_store/slots.py`'s `deepseek_native_reasoning_tokens_by_session`/
+`_for_session`/`deepseek_native_reasoning_window_totals`, called from `server/routes/agents.py`,
+`server/routes/ state.py`, and `server/routes/backlog.py`. Checked a real live transcript with extended thinking enabled
+(`thinking` content blocks present): Anthropic's actual `usage` JSON block (`input_tokens`,
+`cache_creation_input_tokens`, `cache_read_input_tokens`, `output_tokens`, `server_tool_use`, `service_tier`,
+`cache_creation`) carries **no distinct thinking-token field** — unlike DeepSeek's
+`completion_tokens_details. reasoning_tokens`, Anthropic folds thinking tokens into `output_tokens` with no separate
+breakout in the transcript usage object it writes. `TaskUsageRow`/`record_task_usage` also has no `reasoning_tokens`
+column to persist one into even if a source existed. This is not a missed wiring step — there is currently no source
+value to wire. Extending the badge to Claude accounts needs either a different Anthropic API surface (unconfirmed to
+exist) or accepting this can't be split out from `output_tokens` today; out of scope for this doc's core calibration
+work, noted here so it isn't rediscovered.
 
 ## Open questions — resolve before this is a real, scoped plan
 
@@ -124,10 +175,10 @@ but for Claude accounts:
    %-of-limit consumption per token is similarly workload-sensitive (e.g., does heavy cache-read usage consume the
    weekly limit differently than heavy fresh-input usage?) before treating any single calibration as broadly applicable,
    rather than a periodically-recalibrated, explicitly-dated figure.
-3. **Account-identity confirmation** — verify sub-E=`odum3default@gmail.com`=Max and sub-D=`odum1default@gmail.com`=Pro
-   against the actual `accounts.json`/`.claude-accounts/*.env` mapping before using either as a calibration sample; this
-   workspace has hit real account-identity mixups before (the DeepSeek `CLAUDE_ACCOUNT_LABEL` copy-paste bug found and
-   fixed the same day as this doc, for one recent example).
+3. **Account-identity confirmation** — verify sub-F=`odum2default@gmail.com`=Max (replacing contaminated sub-E) and
+   sub-D=`odum1default@gmail.com`=Pro against the actual `accounts.json`/`.claude-accounts/*.env` mapping before using
+   either as a calibration sample; this workspace has hit real account-identity mixups before (the DeepSeek
+   `CLAUDE_ACCOUNT_LABEL` copy-paste bug found and fixed the same day as this doc, for one recent example).
 4. **Plan destination** — per this workspace's HARD RULE, ask the operator explicitly whether this becomes an
    AO-dispatched plan or a human-driven one before authoring the real plan doc; do not default silently.
 
@@ -138,8 +189,12 @@ but for Claude accounts:
 - [ ] [INVESTIGATE] P2. **Answer Open Question 2** — check whether the DeepSeek-style workload-sensitivity problem (a
       ratio that looks stable over one window but isn't a true constant) applies to Claude's weekly-limit consumption
       too, before treating any single calibration run as broadly reusable.
-- [ ] [BACKEND] P2. **Confirm sub-E/sub-D account identity mapping** against `accounts.json`/`.claude-accounts/*.env`
-      before using either as a calibration sample (Open Question 3).
+- [ ] [BACKEND] P2. **Confirm sub-F/sub-D account identity mapping** against `accounts.json`/`.claude-accounts/*.env`
+      before using either as a calibration sample (Open Question 3). Sub-F (`odum2default@gmail.com`) replaces the
+      contaminated sub-E as of 2026-08-13.
+- [ ] [INVESTIGATE] P2. **Wait for sub-F's post-2026-08-13 weekly reset before treating it as a clean full-window
+      sample** — its reset was under 11 hours away at the time of the swap, so any usage before that reset is a partial
+      window only.
 - [ ] [OPERATOR] P2. **Decide plan destination** (AO-dispatched vs human) before authoring the real implementation plan
       (Open Question 4) — per this workspace's ask-before-creating-a-plan hard rule.
 - [ ] [BACKEND] P3. **Scope the Claude crash-durability capture mechanism** — confirm the simpler
