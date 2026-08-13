@@ -73,8 +73,11 @@ source: >-
 
 ## Todos
 
-- [ ] [INFRA] P2. enumerate every live Cloud Run service's actual runtime SA + role set into the registry (bounded
-      audit) Source: `plans/active/issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`
+- [x] ✅ [INFRA] P2. enumerate every live Cloud Run service's actual runtime SA + role set into the registry (bounded
+      audit) — deployment-service@f5ad937bee (2026-08-13 full read-only audit: 25 live Cloud Run rows / 23 distinct
+      services across 9 runtime SAs enumerated into `live_runtime_bindings` + `live_runtime_sa_roles` sections; YAML
+      validated; QG green; quickmerge landed on LDR) Source:
+      `plans/active/issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`
 - [ ] [INFRA] P3. document which live services rely on the default-compute-SA and what secrets/buckets they can
       therefore reach (bounded documentation task) Source:
       `plans/active/issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`
