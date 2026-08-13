@@ -78,8 +78,8 @@ source: >-
 - [x] ✅ [CODE] P2. Check whether the other archived tranches have the same latent gap — CONFIRMED no gap: all 10
       covered AGs (ao/cefi/ci/cross-cutting/defi/infrastructure/prediction/sports/tradfi/ui) have an active coordinator
       (ao reopened 2026-08-12). Made the condition a standing sweep-time WARN in check_ag_closeout_linkage.py so a
-      future archived-only-family-with-live-docs tranche surfaces before blocking a commit. Source:
-      `plans/active/ao_consolidated_closeout_2026_08_12.md`
+      future archived-only-family-with-live-docs tranche surfaces before blocking a commit —
+      unified-trading-pm@a8d835e74e. Source: `plans/active/ao_consolidated_closeout_2026_08_12.md`
 - [ ] [CODE] P2. Identify and fix the source of the stray <repo>/<repo> self-referential symlinks created uniformly
       across every repo in the Mac base checkout at 2026-08-09 15:28, and clean up the existing ones Source:
       `plans/active/issues/mac_slot0_base_checkout_stuck_dirty_files_2026_08_11.md`
