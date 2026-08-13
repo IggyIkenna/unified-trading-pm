@@ -35,6 +35,20 @@ way, most with their upstream already done and archived weeks earlier. Fix: auth
 finalize plans `status: active` from the start (`ag-closeout-audit` SKILL.md corrected the
 same day). This check ratchets that fix so it can't silently regress.
 
+Third check (added 2026-08-13, same script — the create-time idempotency guard,
+`duplicate_finalize_plans_created_for_one_parent_2026_08_06.md`): a parent named in the
+`depends_on` of MORE THAN ONE finalize-shaped gater (slug `<parent>_finalize*`) is a duplicate
+finalize gate — two plans racing the same archival. The 2026-07-31 pair differed only by a
+redundant filename suffix, so any guard keyed on the exact expected filename would miss it;
+key on the `depends_on` relationship + the `<parent>_finalize*` slug shape instead. A
+phase-sequenced plan that happens to gate on an earlier phase (e.g. `sports_taxonomy_p4_backfill`
+depending on `sports_taxonomy_p2_migration`) is NOT a duplicate — the live corpus has many
+legitimate multi-gater relationships, so only finalize-shaped gaters are counted. Wired into
+`--only` (precommit) mode only: it refuses to stage a SECOND `<parent>_finalize*` companion
+whose parent is already covered by an existing one. (The corpus-wide at-rest detector that
+reports a duplicate-gated-parent count in `run_hygiene_sweep.sh --ci` is a separate follow-on
+todo — todo 2 of the same issue doc.)
+
 Exit-code semantics: 0 = at/below baseline (both checks); 1 = regression (either check);
 2 = arg/IO error.
 """
@@ -115,9 +129,14 @@ def _is_finalize_plan(fm: dict[str, object]) -> bool:
     return bool(has_deps and gate is True)
 
 
-def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
-    """Every plan-slug named in some OTHER plan's depends_on + gate_on_depends: true."""
-    out: set[str] = set()
+def _gated_parents(all_plans: list[Coverage]) -> dict[str, list[Path]]:
+    """parent-slug -> the finalize plans (`gate_on_depends: true`) gating on it.
+
+    A parent with more than one entry is a duplicate finalize gate — two plans racing the
+    same archival. The `depends_on` relationship is the real contract, not the finalize
+    plan's filename shape (the 2026-07-31 pair differed only by a redundant `_2026_07_31`
+    suffix)."""
+    out: dict[str, list[Path]] = {}
     for cov in all_plans:
         if not _is_finalize_plan(cov.frontmatter):
             continue
@@ -126,8 +145,46 @@ def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
             continue
         for dep in cast(list[object], depends_on):
             if isinstance(dep, str):
-                out.add(dep.strip())
+                out.setdefault(dep.strip(), []).append(cov.path)
     return out
+
+
+def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
+    """Every plan-slug named in some OTHER plan's depends_on + gate_on_depends: true."""
+    return set(_gated_parents(all_plans))
+
+
+def _is_finalize_for_parent(gater_slug: str, parent_slug: str) -> bool:
+    """Is this gater a `<parent>_finalize*` companion for the given parent?
+
+    Finalize-shaped (slug starts with `<parent>_finalize`), which is what distinguishes a
+    duplicate archival companion from a phase-sequenced plan that happens to gate on an
+    earlier phase (e.g. `sports_taxonomy_p4_backfill` gates on `sports_taxonomy_p2_migration`
+    but is NOT a duplicate finalize plan for it — the live corpus has many such legitimate
+    multi-gater relationships, and keying on the filename shape avoids flagging them)."""
+    return gater_slug.startswith(f"{parent_slug}_finalize")
+
+
+def _find_duplicate_gate_violations(active_dir: Path) -> list[Path]:
+    """Finalize plans gating on a parent that is ALREADY gated by another `<parent>_finalize*`
+    companion.
+
+    Counts only gaters whose own slug is finalize-shaped for the parent they gate
+    (`_is_finalize_for_parent`) — a second gater with an unrelated slug is a different plan,
+    not a duplicate finalize. Returns every finalize-shaped gater in such a multi-companion
+    group (deterministically sorted). The create-time `--only` (precommit) mode filters this
+    to the staged paths and refuses a NEW second companion; keying on the `depends_on`
+    relationship + the finalize-shaped slug (not the exact expected filename) is what catches
+    the 2026-07-31 pair, whose two colliding files differed only by a redundant `_2026_07_31`
+    suffix.
+    """
+    all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
+    dup: set[Path] = set()
+    for parent, gaters in _gated_parents(all_plans).items():
+        finalize_shaped = sorted(g for g in gaters if _is_finalize_for_parent(g.stem, parent))
+        if len(finalize_shaped) > 1:
+            dup.update(finalize_shaped)
+    return sorted(dup)
 
 
 def _find_violations(active_dir: Path) -> list[Path]:
@@ -274,6 +331,7 @@ def main(argv: list[str] | None = None) -> int:
 
     violations = _find_violations(active_dir)
     draft_gate_violations = _find_draft_gate_violations(active_dir)
+    duplicate_gate_violations = _find_duplicate_gate_violations(active_dir)
 
     if only is not None:
         # --only: resolve each given path the same way (relative-to-cwd or absolute both work,
@@ -285,7 +343,11 @@ def main(argv: list[str] | None = None) -> int:
         only_resolved = {Path(o).resolve() for o in only}
         violations = [v for v in violations if v.resolve() in only_resolved]
         draft_gate_violations = [v for v in draft_gate_violations if v.resolve() in only_resolved]
-        if not violations and not draft_gate_violations:
+        # Create-time idempotency guard (duplicate_finalize_plans_created_for_one_parent_2026_08_06.md
+        # todo 1): a STAGED finalize plan whose parent is ALREADY covered by an existing
+        # gate_on_depends: true plan is a duplicate — refuse before it can race the same archival.
+        duplicate_gate_violations = [v for v in duplicate_gate_violations if v.resolve() in only_resolved]
+        if not violations and not draft_gate_violations and not duplicate_gate_violations:
             print("✅ finalize-plan-coverage (--only): clean.")
             return 0
         if violations:
@@ -301,6 +363,14 @@ def main(argv: list[str] | None = None) -> int:
                 " flip to status: active, see task_template.md §4):"
             )
             for v in draft_gate_violations:
+                print(f"  - {v}")
+        if duplicate_gate_violations:
+            print(
+                "❌ Duplicate finalize gate(s): a staged finalize plan gates on a parent already covered by an"
+                " existing gate_on_depends: true plan (keyed on the depends_on relationship, not filename — see"
+                " duplicate_finalize_plans_created_for_one_parent_2026_08_06.md):"
+            )
+            for v in duplicate_gate_violations:
                 print(f"  - {v}")
         return 1
 

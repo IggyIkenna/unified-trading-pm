@@ -128,3 +128,84 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── duplicate finalize gate — create-time idempotency guard (--only / precommit) ──
+
+
+def test_only_refuses_a_second_finalize_gater_with_redundant_filename_suffix(tmp_path: Path) -> None:
+    """Reconstructs the 2026-07-31 collision: two finalize plans gate the SAME parent,
+    differing only by a redundant `_2026_07_31` suffix — a filename-keyed guard would
+    miss it, but the depends_on-relationship key catches it."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_plan_2026_07_31.md")
+    _write_plan(
+        active / "parent_plan_2026_07_31_finalize.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_07_31]\ngate_on_depends: true",
+    )
+    colliding = _write_plan(
+        active / "parent_plan_2026_07_31_finalize_2026_07_31.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_07_31]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(colliding)])
+    assert rc == 1
+
+
+def test_only_passes_for_a_single_gater(tmp_path: Path) -> None:
+    """A lone finalize plan gating an otherwise-uncovered parent is not a duplicate."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_plan_2026_07_31.md")
+    lone = _write_plan(
+        active / "parent_plan_2026_07_31_finalize.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_07_31]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(lone)])
+    assert rc == 0
+
+
+def test_only_ignores_a_pre_existing_duplicate_outside_scope(tmp_path: Path) -> None:
+    """RULE-11 blast-radius safety, same as the existing unrelated-violation test: a
+    pre-existing duplicate gate elsewhere in the corpus must not block staging a clean
+    plan for a DIFFERENT parent (the live corpus carries multi-gater relationships today;
+    todo 2's corpus-wide detector will surface those as debt, not this create-time guard)."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_a_2026_07_31.md")
+    _write_plan(
+        active / "parent_a_2026_07_31_finalize.md",
+        extra_frontmatter="depends_on: [parent_a_2026_07_31]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "parent_a_2026_07_31_finalize_2026_07_31.md",  # pre-existing duplicate, NOT staged
+        extra_frontmatter="depends_on: [parent_a_2026_07_31]\ngate_on_depends: true",
+    )
+    _write_plan(active / "parent_b_2026_08_01.md")
+    staged = _write_plan(
+        active / "parent_b_2026_08_01_finalize.md",
+        extra_frontmatter="depends_on: [parent_b_2026_08_01]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(staged)])
+    assert rc == 0
+
+
+def test_only_passes_for_a_phase_sequenced_gater_on_an_already_finalized_parent(tmp_path: Path) -> None:
+    """The live-corpus refinement: a phase-sequenced plan that gates on a parent already
+    covered by its OWN `<parent>_finalize*` companion is legitimate work sequencing, NOT a
+    duplicate (e.g. `sports_taxonomy_p4_backfill` depends_on `sports_taxonomy_p2_migration`
+    which already has `..._p2_migration_finalize`). Staging the legitimate finalize companion
+    must pass."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "phase_p2_migration_2026_08_08.md")
+    legit = _write_plan(
+        active / "phase_p2_migration_2026_08_08_finalize.md",
+        extra_frontmatter="depends_on: [phase_p2_migration_2026_08_08]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "phase_p4_backfill_2026_08_08.md",  # different phase, NOT finalize-shaped for p2
+        extra_frontmatter="depends_on: [phase_p2_migration_2026_08_08]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(legit)])
+    assert rc == 0
