@@ -612,3 +612,20 @@ possibly a rename that ripples into UAC/manifest data_type naming.
     the other session's word for it) that `GREEK_SUPER_LEAGUE` genuinely has no Transfermarkt provider mapping
     (`get_provider_league_id("GREEK_SUPER_LEAGUE", "transfermarkt")` returns `None` live) — correctly excluded from
     every resume list.
+- **2026-08-13 (slot 21, data_engineering): TRANSFER_RECORDS resume todo pre-flight — confirmed still GATED, and
+  refreshed a rotted quota figure.** Re-verified the PLAYER_VALUES VM
+  (`instr-backfill-sports-transfermarkt-20260812-181254`) is still `RUNNING` and making genuine progress, not stalled:
+  run.log = 1,427,468 bytes / 9,310 lines, `snapshot player_values` = 418 events written (of ~1,041), currently at
+  season=2021, `PASS COMPLETE` = 0, `Traceback` = 0, 2,090 `rows written` lines — dominated by the documented RapidAPI
+  502 exponential-backoff retries (up to 10 attempts/club). `transfer_records` master table confirmed 29/32 leagues /
+  146,449 rows — `ARGENTINA_PRIMERA`, `LIGA_3`, `SERIE_A` still absent. No concurrent launcher/backfill process on the
+  host. **Live RapidAPI quota re-check (this session): `x-ratelimit-requests-remaining` = 45,226 / 120,000 — down from
+  the ~87K this doc's launch note assumed on 2026-08-12.** The PLAYER_VALUES VM has burned ~42K calls to reach only ~40%
+  of its event scope, because the 502-retry amplification inflates per-event call cost well above the ~39.7K total-call
+  estimate. **Burn-rate risk**: at this rate the PLAYER_VALUES leg may exhaust quota before finishing, leaving little/no
+  headroom for the TRANSFER_RECORDS resume. Skipped the resume todo with `reason_code=GATED` — the launcher's own
+  singleton lock (`^instr-backfill-sports-` filter matches the running VM) refuses a concurrent Transfermarkt VM, and
+  the lock's own rationale ("stacking onto ANY other Transfermarkt VM is a real quota risk") confirms a `--force`
+  override would be unsafe. **Whoever picks this up**: do NOT trust the ~87K figure — it's stale; re-check
+  `x-ratelimit-requests-remaining` AND the PLAYER_VALUES VM's terminal state (`PASS COMPLETE`/`Traceback`/`status`)
+  before relaunching.
