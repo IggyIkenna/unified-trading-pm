@@ -152,7 +152,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "59de296ae379b8a3371edfde05925b04ecb86cfd"
+      "ldr_ci_status_sha": "29b963f28c76f96a102b77710328eee4cb384d80"
     },
     "batch-live-reconciliation-service": {
       "promotion_model": "ldr_main",
@@ -402,7 +402,7 @@
         "large_file_count": 6,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "3bea74f07ba47b61ed46bc997810c4b6504cafa5"
+      "ldr_ci_status_sha": "48ba264b52fd1fd11b636726645aaf3bcfd6166b"
     },
     "execution-service": {
       "promotion_model": "ldr_main",
@@ -897,7 +897,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 47,
         "large_file_count": 0,
@@ -905,7 +905,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "6ca7b356ef9c92656ddc62c2982e457465fa5f08"
+      "ldr_ci_status_sha": "042639673188407cd864cda31e039e6311700add"
     },
     "ml-service": {
       "promotion_model": "ldr_main",
@@ -1327,14 +1327,14 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 0,
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "dcfb73a453cc806c2d2ca83b2176aa7281feff31"
+      "ldr_ci_status_sha": "0dc43996ddd3294f10b08cb1b74060dfa134e70b"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
@@ -1557,7 +1557,7 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server",
-      "ldr_ci_status_sha": "06bc8ee0b05b4d75df73914a46bde561df32976f"
+      "ldr_ci_status_sha": "f4cee77cf5a1b2acc7a0a5127a1221c0d7f50496"
     },
     "unified-trading-ci": {
       "type": "infrastructure",
