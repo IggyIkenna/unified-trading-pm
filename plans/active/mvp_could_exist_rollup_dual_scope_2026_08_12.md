@@ -179,14 +179,30 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
       `_build_coverage_for_cat_dual_scope`, `_get_coverage_summary_sync_dual_scope` — could_exist parity, mvp narrowing,
       mask-called-once, empty-index, call-count-scaling, totals parity, mvp≤could_exist monotonicity).
       `quality-gates.sh` full green both ships.
-- [ ] [BACKEND] P1. Dispatch-mode restructure — stop `_pick_dispatch_mode`'s `multi_cat_no_filters` gate
+- [x] [BACKEND] P1. Dispatch-mode restructure — stop `_pick_dispatch_mode`'s `multi_cat_no_filters` gate
       (`manifest.py:541-567`) from branching on `scope == "could_exist"`; instead make the default venue-breakdown loop
       (`_build_venue_breakdown`/`_build_single_venue_entry` in `venue_resolution.py`/`breakdowns_core.py`, and Tier-2
       `_tier2_dt_entry`) carry an `is_mvp` per-cell tag the same shape as todo 2/3, so `scope="mvp"` gets the SAME fast
       dispatch path (process-pool/isolated-serial) as `could_exist` instead of falling back to a slower path. Done-when:
       a dispatch-mode unit test asserts `scope="mvp"` with no other filters selects the same dispatch mode as
       `scope="could_exist"` for an otherwise-identical request (currently they diverge); existing dispatch-mode tests
-      for `could_exist`/`all` pass unmodified.
+      for `could_exist`/`all` pass unmodified. — `deployment-api@ae87730877`. Scoping finding logged BEFORE implementing
+      (verified by direct read, not guessed): `_build_and_override_venue_breakdown` already threads `scope` into
+      `_apply_mtds_override_if_target` → `mtds_honest_coverage_for_venue(scope=scope)` for MTDS honest-coverage-target
+      categories — the "is_mvp per-cell tag" the todo describes was SHIPPED by
+      `mvp_scope_catalogue_tagging_2026_06_08.md`, not missing. The actual, sole reason `scope="mvp"` diverged onto the
+      slower `thread_pool` leg was `build_category_in_subprocess`'s fixed positional signature never accepting `scope`
+      at all — so it silently defaulted to `could_exist` inside the fork/subprocess, which is why `_pick_dispatch_mode`
+      had to gate the fast paths on `scope == "could_exist"` in the first place. Fix: added `scope: str = "could_exist"`
+      to `build_category_in_subprocess` (threaded through `_dispatch_via_process_pool`/`_dispatch_serial_isolated`),
+      then dropped the `scope` check from `_pick_dispatch_mode` entirely (parameter removed, not just unused) —
+      non-MTDS-target categories keep their pre-existing, documented could_exist-only limitation (unchanged on EVERY
+      dispatch leg, not a regression). Regression tests: `TestManifestDispatchModeScopeParity` (4 tests —
+      `scope=mvp`/`could_exist` both select `process_pool` via `_dispatch_category_builds`, `_pick_dispatch_mode`'s
+      signature has no `scope` param, a real row filter still forces `thread_pool`, `ctx.scope` reaches `pool.submit`'s
+      args). `quality-gates.sh` full green (one unrelated pre-existing flake in `test_route_deployments_inventory.py` —
+      Cloud Run GCP-error degradation, nothing to do with data_status — reproduced 1/2 runs, confirmed a flake by a
+      clean re-run before shipping).
 - [ ] [BACKEND] P1. Rollup worker dual-write — change `_build_one_service_rollup`/`_build_one_service_coverage`
       (`data_status_rollup_worker.py:243-274`) to consume the now-dual-scope-output builds from todos 2-4 in a SINGLE
       call each (not two separate `scope=` invocations — the single-pass output already carries both scopes), and write
