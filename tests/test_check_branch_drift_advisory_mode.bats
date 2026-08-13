@@ -22,6 +22,15 @@
 setup() {
   REPO_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
   HOOK="${REPO_ROOT}/scripts/hooks/check-branch-drift.sh"
+  # The hook itself unconditionally exits 0 whenever GITHUB_ACTIONS or CI is set (its own
+  # "Skipped in CI" early-out, scripts/hooks/check-branch-drift.sh line 17) — and this test
+  # SUITE runs inside GitHub Actions, so GITHUB_ACTIONS=true is already set in this very
+  # process. Without stripping it, every invocation below takes that early-out regardless
+  # of DRIFT_GATE_ADVISORY / actual drift, which defeats the whole point of unit-testing
+  # the hook's drift logic (2026-08-13 CI regression — the CI-skip early-out isn't
+  # something to route around when testing, since env -u only affects the hook's own
+  # subshell here, not the real pre-commit invocation this hook actually runs under).
+  HOOK_CMD=(env -u GITHUB_ACTIONS -u CI bash "${HOOK}")
 
   WORK="${BATS_TEST_TMPDIR}"
   git init -q --bare "${WORK}/origin.git"
@@ -55,13 +64,13 @@ setup() {
   # would fetch) -- fetch first so the hook sees a truly-caught-up state.
   git fetch -q origin live-defi-rollout
   git reset -q --hard origin/live-defi-rollout
-  run bash "$HOOK"
+  run "${HOOK_CMD[@]}"
   [ "$status" -eq 0 ]
 }
 
 @test "behind origin, DRIFT_GATE_ADVISORY unset: hard-blocks (the case this hook exists for)" {
   cd "${WORK}/repo"
-  run bash "$HOOK"
+  run "${HOOK_CMD[@]}"
   [ "$status" -eq 1 ]
   [[ "$output" == *"BRANCH DRIFT"* ]]
   [[ "$output" == *"Human-only"* ]]
@@ -69,14 +78,14 @@ setup() {
 
 @test "behind origin, DRIFT_GATE_ADVISORY=1: warns and exits 0 (reconciling wrapper's own commit)" {
   cd "${WORK}/repo"
-  DRIFT_GATE_ADVISORY=1 run bash "$HOOK"
+  DRIFT_GATE_ADVISORY=1 run "${HOOK_CMD[@]}"
   [ "$status" -eq 0 ]
   [[ "$output" == *"ADVISORY"* ]]
 }
 
 @test "SKIP_BRANCH_DRIFT still wins over DRIFT_GATE_ADVISORY (human override untouched)" {
   cd "${WORK}/repo"
-  SKIP_BRANCH_DRIFT=1 DRIFT_GATE_ADVISORY=0 run bash "$HOOK"
+  SKIP_BRANCH_DRIFT=1 DRIFT_GATE_ADVISORY=0 run "${HOOK_CMD[@]}"
   [ "$status" -eq 0 ]
 }
 

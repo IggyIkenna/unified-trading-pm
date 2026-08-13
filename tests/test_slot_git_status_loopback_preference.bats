@@ -155,9 +155,21 @@ _resolve_token() { # $1 = IS_LOOPBACK (0|1)
     # /api/slots/.../git-status route on it, so it just answers 200 for anything —
     # good enough to prove the request is sent WITHOUT crashing on an empty header
     # and that curl doesn't error building the command).
+    #
+    # IS_LOOPBACK must be forced to 1 here — resolve_token_for_slot() only tolerates a
+    # missing token when IS_LOOPBACK=1 (line 463), and the top-level probe run at source
+    # time resolves IS_LOOPBACK against the REAL default loopback URL (nothing listening
+    # on a CI runner), not the throwaway server ORCH_URL is overridden to below — so
+    # without this override resolve_token_for_slot took the off-VM branch, failed to find
+    # a token (correctly, since HOME/TOKEN_FILE aren't isolated from the empty-token case
+    # either), and post_snapshot short-circuited on [skip:no-token] before ever POSTing
+    # (2026-08-13 CI regression).
     run bash -c '
         source "'"${REPORTER_ABS}"'" --workspace "'"${EMPTY_WS}"'" --quiet
         ORCH_URL="http://127.0.0.1:'"${HEALTH_PORT}"'"
+        IS_LOOPBACK=1
+        HOME="'"${FAKE_HOME}"'"
+        TOKEN_FILE=""
         post_snapshot 99 "$(printf "repo\tmain\tclean\t0\t0\t0\tabc123\tlive-defi-rollout\t\t\t\n")"
     '
     [ "$status" -eq 0 ]
