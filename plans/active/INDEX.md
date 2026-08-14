@@ -852,7 +852,7 @@ by hand._
   — Cross-AG registry foundation. Adds a route axis (aggregator/broker/direct) and a mode axis (batch/live) to
   VENUE_DATA_TYPE_CAPABILITIES so an aggregator-served venue reads as a venue WITH an adapter, folds in the…
 
-### ao (37)
+### ao (38)
 
 - [`anthropic_per_task_actual_spend_and_account_calibration_2026_08_10`](./anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md)
   — The task-usage dashboard's $ column is blank for 1,993 of 2,622 completed task_usage rows (100% of Anthropic rows)
@@ -869,6 +869,9 @@ by hand._
   — Gated closeout for `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md` — machine-held via
   `depends_on` + `gate_on_depends: true` until all 17 of that doc's remaining todos (14 per-row REOPEN-or-FLIP
   verdicts + 3 follow-ups)…
+- [`ao_human_fleet_integration_2026_08_15`](./ao_human_fleet_integration_2026_08_15.md) — Ikenna and Harsh already work
+  from per-tab worktrees, the same Claude accounts, and the same plan-driven backlog AO itself dispatches from. This
+  plan gives their interactive laptop sessions a real presence in AO — a registered slot, a…
 - [`ao_open_work_consolidated_tracker_2026_08_14`](./ao_open_work_consolidated_tracker_2026_08_14.md) — One place to see
   every genuinely-still-open todo across the ~44 AO-subject-matter plans/issues audited 2026-08-14 (agent-orchestrator
   dispatch, backlog, worker lifecycle, scheduled jobs, escalation queue, VM infra) — produced by a 5-agent…
@@ -984,7 +987,7 @@ by hand._
   does NOT satisfy its done_definition — today the only action is a conversational ping. This plan gives review two
   narrow,…
 
-### ci (12)
+### ci (11)
 
 - [`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`](./capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
   — Small follow-up plan forking the 2 residual items left open when `capability_wizard_and_manifest_2026_06_11.md`
@@ -1021,9 +1024,6 @@ by hand._
 - [`qg_host_adaptive_resource_governor_2026_07_14`](./qg_host_adaptive_resource_governor_2026_07_14.md) — Replace
   quality-gates.sh's fixed-K host-concurrency token bucket with a host-adaptive admission controller that reads each
   host's real MemTotal/MemAvailable + physical cores at runtime and admits a QG heavy phase only when BOTH a RAM…
-- [`self_hosted_runner_public_repo_revert_2026_08_05`](./self_hosted_runner_public_repo_revert_2026_08_05.md) — 17 of
-  the 25-repo self-hosted CI fleet are PUBLIC GitHub repos, confirmed intentional by the operator 2026-08-05 — GitHub
-  Actions is unmetered on GitHub-hosted runners for public repos, so their self-hosted CI can revert to ubuntu-latest…
 - [`test_impact_fleet_wide_measurement_and_rollout_2026_08_03`](./test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md)
   — Extends a 4-repo commit-classification sample (execution-service, features-service, instruments-service,
   market-data-processing-service) to all ~23 Python fleet repos, to turn the selective-test-execution design's savings

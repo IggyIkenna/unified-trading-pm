@@ -41,7 +41,7 @@ tags: [ci-cd, promotion-blocked, self-hosted-runners, glue-runners, regression, 
 related:
   [
     /plans/archive/2026_08/issues/alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md,
-    /plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md,
+    /plans/archive/2026_08/self_hosted_runner_public_repo_revert_2026_08_05.md,
     /plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md,
     /plans/archive/2026_08/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md,
   ]
@@ -67,7 +67,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md,
+    /plans/archive/2026_08/self_hosted_runner_public_repo_revert_2026_08_05.md,
     /plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md,
   ]
 ---

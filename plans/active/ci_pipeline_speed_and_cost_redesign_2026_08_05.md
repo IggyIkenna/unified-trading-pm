@@ -153,7 +153,7 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       tranche)**: `unified-trading-pm@c8cd56251e` ("full-revert unified-trading-pm's self-hosted workflows to
       ubuntu-latest") set `self_hosted_runner_labels` back to `""` 2 days later, for an unrelated reason — PM went
       public and free GitHub-hosted runners became available (see
-      `/plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md` todo 24). Live-reverified:
+      `/plans/archive/2026_08/self_hosted_runner_public_repo_revert_2026_08_05.md` todo 24). Live-reverified:
       `.github/workflows/quality-gates-v2.yml:58` currently reads `self_hosted_runner_labels: ""`. This fix is NOT the
       mechanism behind PM's current billing — the "Expected impact" note below misattributes it; PM's
       near-$0 CI bill (if

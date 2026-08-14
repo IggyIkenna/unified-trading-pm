@@ -23,7 +23,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md,
+    /plans/archive/2026_08/self_hosted_runner_public_repo_revert_2026_08_05.md,
     /plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]

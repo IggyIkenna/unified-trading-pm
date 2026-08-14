@@ -110,3 +110,31 @@ deliberate decision rather than changed mid-session.
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **2026-08-14 (slot 15, corroborating downstream symptom)**: while shipping an unrelated 1-line
+  `market-tick-data-service` fix (`infra_satellite_ao_dispatch_batch16_2026_08_13.md`), hit 12 consecutive
+  `bash scripts/quality-gates.sh` invocations (background-mode, this AWS host — not the laptop this doc's original
+  measurement was taken on) all terminated externally (`status: killed`, no traceback in the captured log) before
+  completing, under confirmed heavy fleet-wide QG concurrency (15-19 concurrent `quality-gates.sh` processes,
+  `load average` 5-7 on a shared host). Ruled out via direct investigation: (a) NOT a governor logic bug — `bash -x`
+  tracing confirmed the per-repo `flock`-based token wait (`_qg_try_repo_token`,
+  `~/unified-trading-system-repos/.benchmarks/qg-governor-total/repo/<repo>/slot.N`) works correctly and was
+  legitimately serializing against another slot's concurrent MTDS run; (b) NOT host-wide OOM — `free -h` consistently
+  showed 20+Gi "available" throughout; (c) NOT a background-task silence-timeout — a heartbeat-wrapped attempt printing
+  output every 20s still died within ~20s of launch. One attempt did survive ~19min (reaching the governor's own
+  periodic "queued Ns" print) before also eventually dying. Net: still unresolved which exact mechanism kills the
+  process (a cgroup CPU/mem-pressure eviction under the 0%-idle/high-sys-CPU thrashing this doc's root cause already
+  documents is the leading hypothesis, given it fits the "instance cap doesn't model fan-out" mechanism above without
+  needing a new root cause) — flagging as a probable DOWNSTREAM SYMPTOM of the same root cause rather than opening a
+  separate issue, since the fix candidates above (cap on aggregate fan-out) would likely also resolve this. Not actioned
+  (same "deliberately not hot-patched" blast-radius reasoning applies); MTDS fix left committed locally (`d6ca0a67`)
+  pending a successful QG run, tracked as a follow-up in `infra_satellite_ao_dispatch_batch16_2026_08_13.md`.
+- **2026-08-14 (operator root-cause lead, via BLK-cec1d239 answer)**: `orchestrator.service` on this host restarted at
+  `2026-08-14T23:45:18Z` — roughly 1 minute before the blocked question above was filed — and `systemctl status` for
+  that cgroup showed peak memory 23.0G / peak swap 20.0G. This matches the exact incident class RULES.md § "Bound memory
+  BEFORE running any heavy script" already documents (3 prior same-shape outages where a heavy subprocess's memory
+  footprint got a background QG/analysis run externally killed on this shared host) even though this session's own
+  point-in-time `free -h` snapshots looked clear throughout — a transient spike during/around a service restart would
+  not show up in a later snapshot taken after the spike subsided. This more directly explains the "silent external kill,
+  no traceback" signature than the CPU-thrash hypothesis above (both may be contributing factors under the same root
+  umbrella of "the instance cap doesn't model real resource cost"). Operator noted it's worth checking whether other
+  slots hit the same kill pattern in the same window — not verified in this pass.

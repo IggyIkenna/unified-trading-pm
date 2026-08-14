@@ -75,9 +75,9 @@ self-hosted-routed workflow and run arbitrary code with this box's ambient AWS/G
 threat than anything the mitigation ladder below addresses. `unified-trading-pm` was flipped public 2026-08-06 while
 still routing ~8 workflows to this pool — a real P0 exposure, live-confirmed CLOSED: PM's ~40 self-hosted-routed
 workflows were fully reverted to `ubuntu-latest` (`unified-trading-pm@c8cd56251e`,
-`/plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md` todo 24), and `self-hosted-qg-repos.txt` itself
-documents PM's removal from the list 2026-08-07. **Standing invariant going forward: never register a self-hosted runner
-pool on a public repo.** The standing live check —
+`/plans/archive/2026_08/self_hosted_runner_public_repo_revert_2026_08_05.md` todo 24), and `self-hosted-qg-repos.txt`
+itself documents PM's removal from the list 2026-08-07. **Standing invariant going forward: never register a self-hosted
+runner pool on a public repo.** The standing live check —
 `grep -lE '^\s*runs-on: \[self-hosted' .github/workflows/*.yml | xargs grep -lE '^\s*(pull_request|pull_request_target):'`
 — must return **zero** matches in any repo before it is added to `self-hosted-qg-repos.txt`; re-verified zero in
 `unified-trading-pm` 2026-08-09 as part of this update. This incident is the concrete lesson behind that invariant — the

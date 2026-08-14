@@ -32,7 +32,7 @@ related:
     /plans/active/issues/semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md,
     /plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md,
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
-    /plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md,
+    /plans/archive/2026_08/self_hosted_runner_public_repo_revert_2026_08_05.md,
   ]
 created: "2026-08-13"
 last_updated: "2026-08-13"
@@ -457,10 +457,24 @@ source: >-
       file present, block executes every run). Issue-doc/source-plan checkbox reconciliation deferred to
       `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` per this batch's own header (source docs not touched
       here). Evidence: `unified-trading-pm@85c8ce933c`.
-- [ ] [CODE] P2. Re-measure GitHub Actions billing for the 17+PM reverted repos (should read $0/unmetered) and the
+- [x] ✅ [CODE] P2. Re-measure GitHub Actions billing for the 17+PM reverted repos (should read
+      $0/unmetered) and the
       self-hosted VM's steady-state load average before vs. after, via the already-proven github-billing-token GSM
       secret + aws ce get-cost-and-usage procedure Source:
-      `plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md`
+      `plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md` — ✅ **DONE 2026-08-14 (slot 20, infra), no
+      code change (PM-only, docs).** Billing: pulled real Aug-2026 GitHub Enhanced Billing usage data
+      (`github-billing-token` GSM secret) for all 18 target repos — `netAmount` was **$0.00
+      every day 08-06 through 08-13** (8 consecutive clean days), confirming the public-repo-unmetered premise held in
+      practice. Load: the OLD shared host (`i-0c9b283b31d6b5ca7`, this session's own VM) now measures 6.38/6.34/6.78
+      (down from the historical 25-65+ range) with zero `github-glue-runner-*` units left on it. The NEW dedicated
+      escalation VM (`i-042a6332509482556`, where the pools actually live post-2026-08-05 split) could not be
+      re-measured — `aws ssm` `StartSession`/`SendCommand` both `AccessDeniedException` for this worker's AWS identity
+      (`ikenna-worker`), the same documented non-self-fixable IAM-gap class as `ce:GetCostAndUsage`
+      (`/codex/05-infrastructure/billing-cost-observability.md`) — used the AWS CE fallback only where it already exists
+      (not attempted here; GitHub billing needed no AWS CE call at all, since it reads GSM + the GitHub API directly).
+      Full write-up: `plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` 2026-08-14
+      Progress Log entry; source plan's own todo 20 flipped in the same turn
+      (`plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md`).
 
 ## Deferred
 

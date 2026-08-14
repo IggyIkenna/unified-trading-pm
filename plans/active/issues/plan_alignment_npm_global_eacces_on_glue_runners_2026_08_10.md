@@ -37,7 +37,7 @@ tags: [ci-cd, self-hosted-runners, workflow-templates, npm, permissions, plan-al
 related:
   [
     /plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md,
-    /plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md,
+    /plans/archive/2026_08/self_hosted_runner_public_repo_revert_2026_08_05.md,
   ]
 created: 2026-08-10
 author: claude (interactive session, slot-3 CI audit)
