@@ -188,10 +188,15 @@ source: >-
       cron/Workflow trigger), reopened 2026-08-08 with the underlying stall independently reconfirmed real via a live
       availability_index re-check; the operator-blocking premise that originally parked it was resolved the same day.
       Source: `plans/active/issues/defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md`
-- [ ] [CODE] P2. Verify whether the declining DeFi shard-density trend (Dec2025-Feb2026 ~28,000 shards/day →
+- [x] [CODE] P2. ✅ Verify whether the declining DeFi shard-density trend (Dec2025-Feb2026 ~28,000 shards/day →
       2026-06-30..07-19 ~934/day, a >30x drop assumed but never confirmed to reflect venue retirement) is genuine or an
       actual capture gap — bounded cross-check with an explicit done-when already stated in the doc. Source:
-      `plans/active/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md`
+      `plans/active/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md` — MIXED result: distinct
+      venue count fell only ~31% (54.54→37.55/day) vs a >26x total shard drop, so venue retirement alone doesn't explain
+      the magnitude; the dominant data_types (`dex_pool_state`+`dex_pool_swaps`, pool-grain not venue-grain) are
+      directionally consistent with named in-flight retirements but not confirmed at the pool-count level. Full evidence
+      in the source doc's Track todo; follow-up filed at
+      `plans/active/issues/defi_dex_pool_density_drop_pool_level_followup_2026_08_14.md`.
 - [ ] [CODE] P2. Run /data-pipeline-check-is and /data-pipeline-check-mtds 3x each (baseline/mid-backfill/final) across
       the defi backfill using --day 2026-07-01 (operator-unparked 2026-08-08, exact commands already specified in the
       doc) — launcher-driven VM check, worker-executable, not yet dispatched anywhere Source:
