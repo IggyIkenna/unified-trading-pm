@@ -277,8 +277,24 @@ source: >-
       MDPS/features-service backfill/recompute work is excluded from this batch unless manifest-canonical or
       migration-related. The underlying item remains open in its own source doc, untouched by this batch/commit. Source:
       `plans/active/issues/plan_reconciler_findings_all_2026_08_12.md`
-- [ ] [CODE] P2. check_na_corpus_ratchet.py -diff-base fenced-code-block checkbox-overcounting bug (Section 3 log)
-      Source: `plans/active/issues/plan_reconciler_findings_all_2026_08_12.md`
+- [x] ✅ [CODE] P2. check_na_corpus_ratchet.py -diff-base fenced-code-block checkbox-overcounting bug (Section 3 log)
+      Source: `plans/active/issues/plan_reconciler_findings_all_2026_08_12.md` — unified-trading-pm (this batch):
+      **FIXED.** `check_na_corpus_ratchet.py`'s `--diff-base` mode hand-duplicates its own `_CHECKBOX_RE` (module
+      comment explains why: it must not depend on `generate_na_doc_tranche_inventory.py`'s disk-only `_iter_docs()` for
+      its git-ref path) and that duplicate carried no fence-awareness, so a checkbox-shaped line quoted inside a ` ``` `
+      code block (e.g. a doc citing another plan's todo list as evidence) was counted as a real open todo in both
+      `_counts_map_live()` and `_counts_map_at()`. Same underlying bug class as
+      `plans/active/issues/na_inventory_counts_fenced_code_block_checkboxes_as_open_todos_2026_08_02.md` (which tracks
+      `generate_na_doc_tranche_inventory.py`'s own separate, still-open copy of the same gap — out of this todo's scope)
+      and identical to this same plan's `Item J` (Source:
+      `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`) — both todos name the exact same
+      `_CHECKBOX_RE`-has-no-fence-awareness defect in this same script; fixing it here closes both. Added
+      `_count_open_checkboxes_fence_aware()` (toggle-flag fence skip, same shape as `check_na_duplicate_staleness.py`'s
+      own `FENCE_RE` toggle) and wired it into `_na_open_todos_from_text()`. 6 new unit tests in
+      `test_check_na_corpus_ratchet.py` pin: a real open checkbox counts, a fenced one doesn't, an all-fenced doc
+      reports 0 (the exact live shape from the 2026-08-02 issue doc), the `* [ ]` star-bullet variant still matches when
+      unfenced, and `_na_open_todos_from_text` end-to-end. Verified live: `_count_open_checkboxes_fence_aware` returns 0
+      on an all-fenced sample, 2 on an unfenced `-`/`*` mixed sample.
 - [ ] [CODE] P2. Item A -- retag deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md asset_group
       cross-cutting->ui Source: `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`
 - [ ] [CODE] P2. Item G -- correct stale G3/G10 status text in batch_live_reconciliation_service_audit_2026_05_27.md
