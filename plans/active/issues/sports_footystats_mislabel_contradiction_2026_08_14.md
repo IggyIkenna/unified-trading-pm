@@ -216,14 +216,21 @@ already-identified wrong fix (creating duplicate manifest rows) rather than reso
       the legacy seed's un-renamed 20,095 rows back in. "0 stale remaining" and "19,782 shards present today" are both
       accurate readings of their respective moments; the gap between them is the legacy-seed omission, not a
       re-measurement error or a live writer.
-- [ ] [DATA] P1. **Before any future purge/rename of the `ODDS_API`/`batch_footystats` population lands** (routed to
+- [x] ✅ [DATA] P1. **Before any future purge/rename of the `ODDS_API`/`batch_footystats` population lands** (routed to
       `sports_taxonomy_p2_migration_2026_08_08.md` per the Recommended decision above): the fix MUST also re-stamp or
       purge the matching rows in `_index/per_vm/_legacy_seed.parquet` (20,095 rows, live-confirmed 2026-08-14, slot-30)
       in the SAME change as the merged-index operation — the manifest consolidator (`unified-trading-library`'s
       `manifest_consolidator.consolidate()`, `_seed_legacy_if_needed`) always re-merges this shard on every cycle, and
       this is confirmed to be exactly why the 2026-07-27 `manifest_swap_venue_restamp_2026_07_27.py` run's "VERIFY
       stale_remaining=0" did not stick — it only ever touched the merged index. Any operation that repeats that mistake
-      will silently revert again. (repo: market-tick-data-service or wherever the next purge/rename tool is built)
+      will silently revert again. (repo: market-tick-data-service or wherever the next purge/rename tool is built) —
+      **DONE 2026-08-14 (slot-30), routed as instructed**: `sports_taxonomy_p2_migration_2026_08_08.md` had already
+      closed its own "Re-attribute the ODDS_API and FOOTYSTATS venue rows" todo (2026-08-14, slot-26) without
+      discovering this legacy-seed residue — that closure verified `venue=FOOTYSTATS` reached 0 rows but never
+      re-checked `venue=ODDS_API AND pipeline_mode=batch_footystats` itself. Added a new P1 todo directly beneath that
+      closed one in that plan carrying this exact requirement (both-layers purge, do-not-rename-straight guidance,
+      citation back to this doc) so the next worker to touch that population has it in-plan, not just in this issue doc.
+      `unified-trading-pm@<see /done evidence>`.
 - [ ] [DATA] P2. Live-content-verify whether `LADBROKES_UK`/`SPORT888` under `batch_footystats`/`odds_horizon_bucket`
       are a genuine casing/alias duplicate (safe to fold, mirroring the existing `SPORTS_VENUE_FOLD` entries) or a
       content-distinct feed (like UNIBET_UK/UNIBET_EU turned out to be) before building any restamp tooling for this
