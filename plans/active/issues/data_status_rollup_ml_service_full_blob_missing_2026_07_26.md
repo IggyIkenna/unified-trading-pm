@@ -185,19 +185,19 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       needs its own bound.
 
       **RESOLVED 2026-08-02 (slot 10)**: `deployment-api@34a596b`. Took the documented alternative to raising the
-                                      ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
-                                      means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
-                                      accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
-                                      `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
-                                      `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
-                                      `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
-                                      observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
-                                      `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
-                                      AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
-                                      isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
-                                      isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
-                                      "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
-                                      records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
+                                          ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
+                                          means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
+                                          accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
+                                          `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
+                                          `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
+                                          `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
+                                          observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
+                                          `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
+                                          AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
+                                          isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
+                                          isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
+                                          "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
+                                          records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
 
 - [x] ✅ [INFRA] P3. The `data-status-rollup-worker` `GcsEventSink` (the
       `log_event(SERVICE_PROCESSED/SERVICE_FAILED, ...)` calls in `run_rollup`) has not written a new dated prefix under
@@ -510,9 +510,30 @@ worth closing the same way (isolate + surface the real error) rather than leavin
   heavy-I/O-belongs-on-a-VM rule made self-serving it without operator sign-off the wrong call; escalated in-chat
   instead.
 
-- **data_engineering (slot-21) 2026-08-14T03:22Z**: dispatched onto this doc's P0 follow-up; live-reconfirmed the SILENT
-  STALL still active (streak=168 cycles at 02:52:41Z, climbing) — the prior session's "escalated in-chat" was not a
-  tracked dashboard escalation, so filed a formal `/blocked` (BLK-838e73de) with the two options from the P0's own text.
+- **2026-08-14 (continuation, P0 root cause CORRECTED — the alert's generic "mtime predates cutoff" text was misleading
+  for this specific incident)**: operator asked to check why the blind spot recurred before authorizing the
+  force-consolidate. Read `gcloud logging read` around the 01:22:42 lock-reclaim rather than trusting the alert's static
+  message: the incremental cutoff logic was NOT skipping the shards — it found them as changed and started a real
+  `duckdb_merge` (`chunks=105 date_range=2018-01-01..2026-08-13` against a 159M-row canonical). The actual mechanism:
+  `gcloud run jobs describe` showed the job's `timeoutSeconds=3600`, below the real merge duration for this now-much-
+  larger corpus (canonical grew to 159M rows / 7.3GB since the archived 2026-08-05 incident) — every attempt gets killed
+  by the platform deadline before finishing, orphans the lock, and the next cron tick (after the separate 4200s lock TTL
+  passes) reclaims it and repeats the same doomed attempt forever. Confirmed via two log windows an hour apart
+  (01:22-01:26 and 02:26-02:35) showing the identical lock-reclaim → merge-start → (never completes) → next-tick-skip
+  shape twice in a row. This means a bare `--force` retry through the normal Cloud Run trigger would have hit the
+  identical wall — `force=True` does the same shape of full-date-range chunked merge, just against all shards instead of
+  only the changed ones, so duration is comparable, not the fix by itself. **Operator confirmed proceeding** ("yes check
+  the incremental mtime cutoff then force and consolidation"). Started building a one-off remediation
+  (`gcloud run jobs execute ... --task-timeout=10800 --force`, waiting for the orphaned lock to clear first) — **aborted
+  before it fired** on discovering the conflict below: a PEER SESSION had independently already dispatched a formal,
+  properly-engineered fix for this exact P0 through the correct channel while this investigation was in progress. Ceded
+  to that fix rather than risk two concurrent force-consolidates racing the same canonical/lock — see the next entry for
+  what actually ran. This entry's own root-cause finding (timeout-vs-duration mismatch, not a cutoff bug) stands
+  independently and is genuinely new evidence the peer's entry does not itself cover.
+- **data_engineering (slot-21) 2026-08-14T03:22Z**: dispatched onto this doc's P0 follow-up (from the FIRST P0 entry
+  above, before the root-cause-correction entry immediately above this one existed); live-reconfirmed the SILENT STALL
+  still active (streak=168 cycles at 02:52:41Z, climbing) — the prior session's "escalated in-chat" was not a tracked
+  dashboard escalation, so filed a formal `/blocked` (BLK-838e73de) with the two options from the P0's own text.
   **Operator answered Option A** ("launch a dedicated VM now and run `consolidate(bucket, force=True)` with a bounded
   `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT`, verify live" — ruled not operator-gated per Data Pipeline Correctness Is The
   Heartbeat, since the staleness is actively growing). Built a new one-off launcher
@@ -527,36 +548,45 @@ worth closing the same way (isolate + surface the real error) rather than leavin
   read — the workspace GCS-object-CLI ban applies to reads too) polling every 90s for the `=== VM setup complete ===`
   terminal marker, 2400s ceiling. **Result pending** — see the next Progress Log entry for the verified outcome; do not
   treat this entry alone as confirmation the stall cleared.
+- **2026-08-14 (this session, resolving the shared-checkout conflict above)**: on pushing this doc's own root-cause
+  entry, hit a real (not transient) git conflict against the peer entry above, which had landed in between. Confirmed
+  via `TaskOutput` that this session's own one-off remediation script (`force_consolidate_defi.sh`) had NOT yet fired
+  its `gcloud run jobs execute` call (still in its lock-wait poll loop) and stopped it via `TaskStop` before it could —
+  no collision occurred, the peer's VM-based force-consolidate is the one actually running. This session's remediation
+  attempt is superseded and will not be resumed; the peer's `defi-manifest-force-consolidate-20260814-031954` VM is now
+  the sole in-flight fix. Merged both Progress Log entries above in (approximate) chronological order rather than
+  dropping either — this session's root-cause trace and the peer's dispatch+launch are complementary, not duplicate.
 
 ## Follow-ups
 
-- [ ] [DATA] P0. **NEW (2026-08-14) — LIVE INCIDENT, UNPAGED, OPERATOR DECISION NEEDED.**
+- [ ] [DATA] P0. **NEW (2026-08-14) — LIVE INCIDENT, UNPAGED. ROOT-CAUSED 2026-08-14 (see Progress Log): NOT the
+      mtime-cutoff blind spot the generic alert text suggested — a merge-duration-vs-execution-timeout mismatch.**
       `market-data-tick-defi-prd-central-element-323112`'s manifest-consolidator (Cloud Run job
       `uts-prod-manifest-consolidator-market-data-defi`, region `asia-northeast1`) is in a genuine `SILENT STALL`
       (`unified_trading_library/manifest_consolidator.py:1441` `_check_consolidation_stall`, log emitted at
-      `:1492-1500`, event `MANIFEST_CONSOLIDATION_STALLED` at `:1502-1518`): 16 real per-VM shards have been sitting
-      unmerged for 150+ consecutive 1-minute cycles (confirmed live via `gcloud logging read`, streak climbing in real
-      time as of 2026-08-14T02:26-02:35Z) — the consolidated `_index/availability_index.parquet` (7.3GB) hasn't been
-      rewritten in 7+ hours (age=25408s at the 2026-08-14 check, vs. `AG_STALENESS_BUDGET_SEC["defi"]=3600s`). The job
-      itself is "succeeding" every cycle (`success=True shards=0 ... error=locked`) because the incremental mtime-cutoff
-      logic (blind spot documented at `manifest_consolidator.py:408-420`) is silently skipping the pending shards, not
-      because nothing needs merging. **This is NOT the same incident as the archived
-      `/plans/archive/issues/defi_manifest_consolidator_stale_lock_silent_stall_2026_08_05.md`** — that one was a
-      calibration false-positive (fixed by raising `manifest_consolidator_stall_alert_cycles["market-data-defi"]` from
-      10 to 90 cycles); the CURRENT streak (150+) already exceeds that raised 90-cycle threshold, so this is either a
-      genuine recurrence or new merge-duration drift, not the same false alarm. **No alerting pipes this to on-call**:
-      `MANIFEST_CONSOLIDATION_STALLED` is not in `codex/05-infrastructure/data-pipeline-alerts.registry.yaml` and no
-      Cloud Logging sink/alert-policy exists on the raw `CRITICAL` log — this session is very likely the first to
-      notice. **Named remedy exists but is NOT safe to self-serve blind**: `consolidate(bucket, force=True)`
-      (`manifest_consolidator.py:685`, docstring `:686-708`) full-rebuilds canonical + every shard, but its own
-      docstring (`:703-706`) warns to pair it with a high `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT` on a big-RAM host — this
-      exact bucket class previously caused a 16GiB OOM on an unbounded pandas concat/sort (`:476-496`) and a 2099-shard
-      OOM/SIGKILL that orphaned a lock (`:382-386`). Per the workspace's heavy-I/O rule, a force-consolidate of a 7.3GB
-      index with this OOM history should run on a properly-sized VM, not laptop-local. **Escalated to the operator
-      in-chat 2026-08-14 rather than self-served** — flagged as cross-cutting (other consumers of this bucket's manifest
-      beyond the rollup worker are also reading a 7+ hour stale index) and needing a human call on whether to
-      force-consolidate now vs. investigate the recurrence first (was there a genuine bulk shard rewrite/drop that
-      produced the predates-cutoff mtimes?). Blocks the P2 below.
+      `:1492-1500`): 16 real per-VM shards sat unmerged for 150+ consecutive 1-minute cron ticks (streak climbing in
+      real time as of 2026-08-14T02:26-02:35Z), the 7.3GB `_index/availability_index.parquet` unrewritten for 7+ hours.
+      **Corrected root cause (live logs, not the alert's generic text)**: the incremental cutoff logic is working
+      correctly — `gcloud logging read` around a lock-reclaim (01:22:42) showed the merge DID find changed shards and
+      DID start a real duckdb merge (`phase=duckdb_merge_start ... chunks=105 date_range=2018-01-01..2026-08-13` against
+      a 159,036,875-row canonical), but that merge never completes: the job's own `timeoutSeconds=3600`
+      (`gcloud run     jobs describe`) kills the task attempt before the ~70min+ real merge duration finishes, orphaning
+      `_index/consolidator.lock`, which then sits until the 4200s lock TTL passes and the next cron tick reclaims it and
+      repeats the identical doomed attempt — an infinite retry loop, not a silent skip. **This is NOT the same incident
+      as the archived `/plans/archive/issues/defi_manifest_consolidator_stale_lock_silent_stall_2026_08_05.md`** (that
+      one was a stall-alert-threshold miscalibration, no lock/timeout issue) — the corpus has grown since (159M rows
+      now) and the real merge duration has outgrown the job's fixed 3600s deadline. **No alerting pipes this to
+      on-call**: `MANIFEST_CONSOLIDATION_STALLED` is not in `codex/05-infrastructure/data-pipeline-alerts.registry.yaml`
+      and no Cloud Logging sink/alert-policy exists on the raw `CRITICAL` log. **Remediation in flight 2026-08-14 —
+      running via a PEER SESSION's dedicated VM, not a Cloud Run job retry**: a parallel session independently filed a
+      formal `/blocked` (BLK-838e73de), got operator sign-off, and launched
+      `defi-manifest-force-consolidate-20260814-031954` (e2-highmem-8, `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT=16GB`,
+      `asia-northeast1-c`) via the new `deployment-service/scripts/vm/launch-defi-manifest-force-consolidate-vm.sh`
+      launcher (`deployment-service@2f1c7597`) — a properly-sized, registered launcher rather than a bare Cloud Run
+      re-execute (which this session confirmed would hit the same 3600s-timeout wall the root-cause trace found). This
+      session's own one-off `gcloud run jobs execute --task-timeout=10800` attempt was aborted before firing on
+      discovering the peer's already-in-flight fix, to avoid two concurrent force-consolidates racing the same
+      canonical/lock. See Progress Log for the live run's outcome once it completes. Blocks the P2 below.
 - [x] ✅ [DATA] P1. **NEW (2026-08-13)**: root-cause + fix the `TypeError: '<' not supported between NoneType and str` /
       `AttributeError: Can only use .str accessor with string values!` errors now failing 7 of 14 `_DEFAULT_SERVICES`
       manifest-rollup builds (`features-delta-one-service`/`features-volatility-service`/
