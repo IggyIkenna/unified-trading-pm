@@ -112,10 +112,16 @@ source: >-
       (dated 2026-08-07) no longer matches any live rollup — the underlying population has moved substantially across
       the many DeFi canonicalization fixes that landed 2026-08-08..08-13; not independently reproduced, not material to
       the drift-vs-legitimate verdict.
-- [ ] [CODE] P2. Fix the deployment-api/instruments-service Distinct Values panel's <blank> instrument_type badge to
+- [x] [CODE] P2. ✅ Fix the deployment-api/instruments-service Distinct Values panel's <blank> instrument_type badge to
       exclude capture_status=empty_confirmed rows (mirrors the already-shipped attempted_failed enumeration-key fix,
       instruments-service@8b59e8ba2) Source:
-      `plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`
+      `plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` — already shipped
+      `instruments-service@1e82416a` (verified on origin/live-defi-rollout): added
+      `_is_fully_empty_confirmed_leaf`/`_drop_blank_instrument_type_fully_empty_confirmed` in
+      `scripts/measure_honest_coverage.py`, scoped to drop only the BLANK `instrument_type` key from
+      `by_venue_instrument_type` when its entire row-set is `empty_confirmed`; a mixed leaf (real captured/
+      attempted_failed rows alongside empty_confirmed) keeps its full counts. Checkbox reconciliation only — no new code
+      change needed for this batch.
 - [ ] [CODE] P2. Add aggregator-routes as the 9th migrate_defi_full_v9_canonical.py migrator spec (per the 2026-08-08
       operator decision already ruling it a dedicated bucket, mirroring the shipped gas-fees/liquidations 7th/8th specs)
       Source: `plans/active/defi_migration_audit_log_2026_07_24.md`
