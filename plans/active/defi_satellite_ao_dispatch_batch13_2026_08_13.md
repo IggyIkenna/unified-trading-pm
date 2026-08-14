@@ -143,9 +143,19 @@ source: >-
       adjacent stale-todo fallout (gas-fees manifest-rebuild-scope, delete-after-migration, aggregator-routes-9th-spec)
       filed at `plans/active/issues/defi_migration_dedicated_bucket_architecture_retired_2026_08_14.md`. Source:
       `plans/active/defi_migration_audit_log_2026_07_24.md`
-- [ ] [CODE] P2. Wire gas_fees into the manifest could-exist denominator as a per-chain expected cell (IS
+- [x] [CODE] P2. ✅ Wire gas_fees into the manifest could-exist denominator as a per-chain expected cell (IS
       enumerate_expected_universe + deployment-api/UI data-status), the (b) half of the already-registered gas-fees
-      manifest todo Source: `plans/active/defi_migration_audit_log_2026_07_24.md`
+      manifest todo Source: `plans/active/defi_migration_audit_log_2026_07_24.md` — `instruments-service@e866ca1ac5`.
+      Extended `_yield_v2_defi_pre_launch_rows`'s chain-level gas_fees venue-grain pass (previously pre-genesis-only) to
+      also seed `expected_unattempted` cells for the LIVE/post-genesis window, one per `(chain, day)` (blank
+      `instrument_type`/`instrument_id`, matching the chain-grain manifest atom `gas_fee_handler` actually records at).
+      Verified `gas_fees` is already in `DATA_TYPES_BY_ASSET_GROUP["defi"]` and `(defi, spot_asset, gas_fees)` is
+      already validity-matrix-eligible (two independent injection points in `market_data_categories.py`) — neither
+      needed a code change, only the enumerator's live-window generation gap did. deployment-api reads the manifest the
+      enumerator seeds rather than re-deriving coverage, so no downstream deployment-api/UI change was needed. New unit
+      test `test_defi_v2_gas_fees_chain_level_pre_genesis_and_live_window` covers legacy-mode (present_set absent),
+      uncaptured live-window seeding, and per-atom suppression when already in the manifest. Full `quality-gates.sh`
+      green (235/235 tests in the v2 enumerator suite).
 - [ ] [CODE] P2. Live-verify DP-LIVE-003 correctly RESOLVES (posts a checkbox RESOLVED bookend) for whichever of
       findings 3-10 get relaunched, per the doc's own [SCRIPT] P3 todo Source:
       `plans/active/issues/dp_cron_did_not_fire_false_positive_burst_2026_08_10.md`
