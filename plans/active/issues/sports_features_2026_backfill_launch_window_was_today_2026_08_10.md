@@ -46,6 +46,7 @@ assigned_role: data
 drift_direction: advance-code
 locked_by:
 locked_since:
+archive_exempt: true
 supersedes:
 superseded_by:
 resolved_by:
@@ -117,10 +118,11 @@ launch window.
 
 ## Todos
 
-- [ ] [CONFIG] P2. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — Clamp the per-year
+- [x] ✅ [CONFIG] P2. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — Clamp the per-year
       sports features backfill launcher's current-year window to `end_date = min(today-1, {year}-12-31)` so a
       current-day's not-yet-written upstream reference can never be a hard dependency at backfill time (the four
       corrected-window runs on 2026-08-10 already demonstrate the intended window). Repo: deployment-service (launcher).
+      — deployment-service@3a18bc5ce0
 
 ## Progress Log
 
@@ -128,3 +130,8 @@ launch window.
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **slot-11 2026-08-14**: fixed `launch-features-sharded-backfill.sh`'s `launch_year_shard()` — the current-year branch
+  was hardcoded to `year == "2026"` (a second staleness bug) and set `end_date` to _today_ instead of clamping to
+  `min(today-1, year-12-31)`. Now compares against `date -u +%Y` dynamically and clamps via lexical ISO-8601 string
+  comparison against `date -u -d 'yesterday'`. Verified `bash -n` clean, `quality-gates.sh` green (sentinel=3a18bc5c),
+  shipped via quickmerge — deployment-service@3a18bc5ce0.
