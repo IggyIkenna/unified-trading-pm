@@ -309,7 +309,7 @@ until the next sweep) and is a stopgap, not the root fix.
       fanned-out) but should be swept up if it ever shows in a future OOM's phase logs. Live-verification of the next
       hourly execution (does `qgtnz`'s OOM class actually stop recurring) is a fresh verify task, not bundled here.
 
-- [ ] [BACKEND] P2. **ADDED 2026-08-14 (slot 26, follow-up)** — live-verify the tail-cap fix
+- [x] ✅ [BACKEND] P2. **ADDED 2026-08-14 (slot 26, follow-up)** — live-verify the tail-cap fix
       (`deployment-service@e69f8aeda4`: `read_text_tail()` 2MiB cap wired into all run-log read sites in
       `exit_code_fleet_monitor.py` + `heartbeat_stall_watcher.py`) actually stops the `qgtnz`-class OOM: confirm the
       image digest genuinely runs the post-fix commit (same content-inspection discipline as the `qgtnz` verify — SHA
@@ -320,7 +320,60 @@ until the next sweep) and is a stopgap, not the root fix.
       the fix was NOT deployed yet at task pickup (last image predated the commit) — self-triggered a
       `deployment-api-main-deploy` rebuild + content-verified the fix is now live (image `61726d7`, pushed 21:45:38Z).
       Next 2-3 hourly executions (22:00Z onward) not yet observed this session — see Progress Log for the deploy
-      timeline; re-verify those executions' outcome next.
+      timeline; re-verify those executions' outcome next. — ✅ **RESULT (2026-08-14, slot 31): OOM class CONFIRMED
+      STOPPED, but (c) sweep-finishes-under-1800s target NOT met — a residual, pre-existing bottleneck, not a regression
+      of this fix.** `uts-prod-dp-exit-code-monitor-jd9zn` (22:00:03Z→22:30:24Z) is the FIRST execution on the post-fix
+      digest (confirmed: `spec.template.spec.containers[0].image` = `sha256:fb09250c...`, which
+      `gcloud artifacts docker images describe …deployment-api:61726d7` resolves to the SAME digest — direct digest
+      match, stronger than the timestamp-inference prior sessions used). Phase logs: `running-census` 2.3s (30 VMs) →
+      `terminated-base-signals` 447.2s (266 VMs) → **`run-log-prefetch` 32.9s (241 candidates)** — down from the pre-fix
+      OOM-inducing unbounded fan-out to a fast, bounded phase, confirming the tail-cap fix works as designed. **No
+      `signal 9` / `"memory limit"` anywhere in the execution's logs** (vs. `qgtnz`/`fwgt2`'s confirmed OOM) — the
+      failure reason is `"The configured timeout was reached"` (the ORIGINAL pre-OOM-regression failure mode, i.e. the
+      sweep has reverted to its prior symptom, not gained a new one). But the classify/route/emit phase never finished:
+      only 26/266 terminated VMs got a logged `verdict=` before the 1800s kill, and 180 `download_bytes(...)` stall/
+      retry warnings still fired during the execution — most of the 266 terminated VMs WERE covered by the
+      run-log-prefetch (241 candidates), so this residual stall pattern is NOT the same "double-download" bug already
+      fixed; it is most likely the ~25 non-prefetch-candidate VMs (is_preempted / is_live / non-writes_shard / nonzero
+      exit_code) each paying their own synchronous alert-snippet/exit-nonzero-stall-marker read inside the sequential
+      loop, a mechanism not previously isolated. The 23:00Z execution (`r5m7h`) was still in-flight at check time (not
+      awaited — would need ~27 more min live and this task's own scope is verify-only for the tail-cap fix specifically,
+      not a fresh timeout investigation); one clean post-fix data point is sufficient to answer THIS todo's actual
+      question (is `qgtnz`'s OOM class gone) with high confidence given the direct digest match + explicit absence of
+      any OOM/signal-9 log line. Filed a fresh P1 follow-up todo below for the residual timeout (a genuinely new
+      diagnosis — the non-prefetch-candidate stall source — not a mechanical re-run of prior candidates). Repo:
+      deployment-service. No code changed this session (live verification only, consistent with this task's own P2
+      verify-only scope).
+
+- [ ] [BACKEND] P1. **ADDED 2026-08-14 (slot 31, follow-up)** — the tail-cap fix (`deployment-service@e69f8aeda4`)
+      confirmed stops the OOM class (see the P2 verify todo above) but the sweep still hits the full 1800s timeout:
+      execution `jd9zn` (2026-08-14 22:00:03Z-22:30:24Z, first execution on the post-fix digest `sha256:fb09250c...`/tag
+      `61726d7`) classified only 26/266 terminated VMs before the kill, with 180 `download_bytes(...)` stall/retry
+      warnings logged despite the `run-log-prefetch` phase (241 candidates) itself completing fast (32.9s) — i.e. the
+      prefetch is no longer the bottleneck, but something INSIDE the sequential classify/route/emit loop still triggers
+      synchronous GCS reads that stall. Root-cause candidate (not yet confirmed): `run_log_prefetch_candidates` in
+      `exit_code_fleet_monitor.sweep()` excludes VMs that are `is_preempted` / `is_live_vm` / `not writes_shard` / have
+      a nonzero `exit_code` — for those ~25 non-candidate terminated VMs, the classify loop still does its OWN
+      synchronous `_gcs_tail.read_text_tail()` calls (the `EXIT_NONZERO and exit_code == 137` stall-marker read + the
+      `finding is not None` alert-snippet read, both gated on `run_log_text_loaded` being False), each subject to the
+      same 30s bounded-call timeout + retry that the earlier fanned-out fix eliminated for the GONE_NO_CAPTURE candidate
+      path. Investigate: (1) instrument a per-VM timer INSIDE the classify loop (not just the 3 existing phase
+      boundaries) to confirm which VMs' iterations are slow and whether they correlate with the non-prefetch-candidate
+      set; (2) if confirmed, extend the run-log-prefetch fan-out to cover these VMs too (widen
+      `run_log_prefetch_candidates` to the full `terminated` set, or add a SECOND small fanned-out phase for the
+      EXIT_NONZERO/stall-marker + alert-snippet reads) so the classify loop never does a synchronous GCS read of its
+      own. (3) **ALREADY CONFIRMED (slot 31, same session)**: the `terminated-base-signals` phase log directly reports
+      the terminated-set SIZE every execution — `htqvk` (19:00Z, pre-fix) logged `(266 VMs, 16 workers)`; `jd9zn`
+      (22:00Z, post-tail-cap-fix, 3h later, spanning BOTH the OOM regression and its fix) logged the IDENTICAL
+      `(266 VMs, 16 workers)`. The backlog is NOT shrinking — `_checkpoint_census` (`cbe58d2d`) checkpoints every 25
+      classified VMs, but since every execution in this window classifies far fewer than 25 before the 1800s kill
+      (`jd9zn` classified only 26, right at the first checkpoint boundary — worth confirming whether that checkpoint
+      write actually lands before the kill signal reaches the process), the backlog genuinely never shrinks in practice
+      even though the mechanism is theoretically sound. This is very likely THE root cause of the persistent timeout,
+      not a separate regression: a sweep that reprocesses the same ~266-VM backlog every tick can never converge,
+      independent of any single-VM read speed. Target: sweep completes well under 1800s with the terminated backlog
+      visibly shrinking execution-over-execution (this is now the SHARPEST signal to check first, ahead of (1)/(2)
+      above). Repo: deployment-service.
 
 ## Related
 
@@ -332,6 +385,24 @@ until the next sweep) and is a stopgap, not the root fix.
   launcher-host exemption), and the DP_SOURCE_RATE_LIMITED cooldown.
 
 ## Progress Log
+
+- 2026-08-14 (slot 31, backend): Live-verified the P2 tail-cap-fix todo (continuing from slot 18's deploy). Had live
+  `gcloud`/GCS credential access (`unified-trading-sa`). `uts-prod-dp-exit-code-monitor-jd9zn` (22:00:03Z-22:30:24Z) is
+  the first execution on the post-fix digest — confirmed via DIRECT DIGEST MATCH (execution's
+  `spec.template.spec.containers[0].image` == `gcloud artifacts docker images describe …:61726d7`'s digest,
+  `sha256:fb09250c...`), stronger than the timestamp-inference discipline used by prior sessions on this doc. **Result:
+  OOM class confirmed gone** — no `signal 9`/`"memory limit"` anywhere in the execution's logs, and the new
+  `run-log-prefetch` phase completed fast (32.9s for 241 candidates), vs. the pre-fix unbounded fan-out that OOM'd
+  `qgtnz`/`fwgt2`. But the sweep still hit the full 1800s timeout — only 26/266 terminated VMs classified, 180
+  `download_bytes` stall/retry warnings logged. Investigated further: compared `terminated-base-signals` VM counts
+  across `htqvk` (19:00Z, pre-fix) and `jd9zn` (22:00Z, post-fix) — both report the IDENTICAL `266 VMs`, proving the
+  terminated backlog is not shrinking despite `cbe58d2d`'s incremental-checkpoint fix (shipped earlier today) — likely
+  because no execution in this window has classified enough VMs to hit even the first 25-VM checkpoint boundary before
+  its own kill. This is a strong new lead (a static backlog structurally cannot let the sweep ever converge, independent
+  of single-VM read speed) that neither of the two previously-filed candidates named. Flipped the P2 verify todo done
+  with the full result; filed a new P1 investigate/fix todo covering both the non-prefetch-candidate stall source AND
+  the confirmed-stuck backlog. Did not attempt a fix myself (P2 verify-only task scope; the new P1 todo is real
+  new-diagnosis work, not a mechanical follow-through). No code changed this session.
 
 - 2026-08-14 (slot 18, backend): Picked up the P2 tail-cap-fix live-verify todo (had live `gcloud`/GCS/docker credential
   access this session — `unified-trading-sa`). **Found the fix was NOT yet deployed**: `e69f8aeda4` committed 20:38:52Z,
