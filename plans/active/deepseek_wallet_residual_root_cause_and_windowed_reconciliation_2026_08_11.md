@@ -184,14 +184,13 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       `fmtWindowBalance` shows both `balance_at_start_sampled_at`/`balance_at_end_sampled_at` so the true differenced
       span is visible rather than assumed to match the request. pw:L2 ✓ — regression:
       `dashboard/tests/e2e/deepseek-wallet-reconciliation.spec.ts` (4 passed, 14.0s, verified this session).
-- [ ] [INFRA] P2. **Pin `cleanupPeriodDays: 30` explicitly in `cursor-configs/settings.json`.** Measured 2026-08-11: the
-      setting is absent from every settings file (all grep hits were Claude Code's own `cache/changelog.md`), so
-      retention runs on an upstream default that the same changelog shows has already had two behaviour-changing bugs
-      (`--setting-sources` without `user` silently ignoring it; `0` silently disabling persistence). Pinning costs one
-      line and removes the drift risk. **Do NOT raise it to 60** without new disk: the VM is at 82% (551G/678G, 127G
-      free), transcripts are 77G, and the fleet burns ~1,225 files/day at ~3.4 MB each (~4.2 GB/day) — a 30-day
-      extension would consume essentially all remaining free space. **Done when**: the setting is pinned and the
-      disk-headroom figures are re-checked at the time of the change. (repo: unified-trading-pm)
+- [x] ✅ [INFRA] P2. **Already pinned — `cleanupPeriodDays: 30` is the first key in `cursor-configs/settings.json`,
+      landed by `ea53432c4e` ("chore(config): revert transcript retention to 30 days").** Verified 2026-08-14:
+      `git status --porcelain cursor-configs/settings.json` is clean (no drift), and `git log --follow` confirms the
+      line is committed, not a local-only edit. **Disk headroom re-checked at 2026-08-14**: `df -h /` on the same shared
+      host (`ip-172-31-5-118`, 678G filesystem, matching the plan's original 551G/678G reading) now shows **521G/678G
+      used (77%), 157G free** — up from 127G free on 2026-08-11, so the 30-day pin remains safe and there is still no
+      headroom to raise it to 60 without new disk. (repo: unified-trading-pm)
 - [x] ✅ [BACKEND] P0. **SHIPPED + DEPLOYED 2026-08-12 — standalone DeepSeek native-usage capture proxy, live and
       verified against real traffic.** Supersedes the P3 "decide whether to fund" framing below — the case stopped being
       a small crash-loop edge case once the root cause (next todo) was found: it's the ONLY way to capture correct

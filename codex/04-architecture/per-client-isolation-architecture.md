@@ -33,7 +33,7 @@ referenced_by:
     /codex/04-architecture/wallet-hierarchy-and-capital-flow.md,
   ]
 owner:
-last_reviewed: 2026-05-20
+last_reviewed: 2026-08-14
 code_refs:
 ---
 
@@ -213,7 +213,33 @@ clients:
 ```
 
 Loaded at supervisor boot; hot-reloadable via `ClientLifecycleEvent.REGISTER` (operator pushes new entry to bus;
-supervisor appends to runtime client list and spawns the new worker).
+supervisor appends to runtime client list and spawns the new worker) — this REGISTERS a new client; it does not make an
+EXISTING client's param values (e.g. leverage) hot-reloadable, which today requires a VM restart because `clients.yaml`
+is a git file baked into the deployment, not a GCS-backed reloadable config (see § "Config surface ownership" below).
+
+---
+
+## Config surface ownership — which of the three per-client-shaped files owns what
+
+Three files in the codebase look like they could hold per-client policy. Only one does; resolved by a 2026-08-12
+cross-repo audit (`plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md`) after an
+operator question found no doc stated the ownership split:
+
+| Surface                                                        | What it actually holds                                                                                                                                              | Live?                                                                                   |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `wallet-config/{chain_env}/wallet_mapping.json`                | Wallet ADDRESSES: `custodian` → `chain_env` → `share_class` → one treasury wallet + trading wallets, plus 3 treasury knobs (`reserve_pct`, `min/max_threshold_pct`) | **No** — schema + path constant only, zero consumers                                    |
+| `deployment-service/configs/strategy/{archetype}/clients.yaml` | **THE per-client surface** documented above — `client_id`, `shard_id`, `venue_creds_kms_path`, `min_balance_per_venue`, `risk_limits`                               | **Yes** — validated by `ClientsYaml.model_validate_yaml()` at `StrategySupervisor` boot |
+| `strategy_service/configs/*.yaml`                              | Per-STRATEGY config (e.g. `carry_staked_basis.yaml`) — no client dimension                                                                                          | Yes, but not a client surface                                                           |
+
+Two known gaps in the live surface, not yet fixed (tracked in the issue doc above, not restated here): it is keyed
+**(archetype, shard) → [client]** rather than client-first, so one client running N archetypes has no single file
+answering "what is this client configured to do?"; and `ClientsYamlEntry`/`ClientRiskLimits` are `extra="forbid"` with
+no leverage, venue-selection, or coin-universe field, so none of those are expressible without a schema change. Operator
+ruling 2026-08-12 (same issue doc, § "Target state") sets the eventual replacement key as **`(client_id, slot_label)`**
+— the same pair the event-tag 9-tuple already carries
+([strategy-identity-versioning](/codex/06-coding-standards/strategy-identity-versioning.md)) — governing every
+strategy-service config surface, not just today's 7-field `clients.yaml`; that migration is still in progress, so this
+doc's "Clients Configuration" section above reflects the CURRENT live shape, not the target one.
 
 ---
 
