@@ -34,6 +34,9 @@ source:
     "sports_taxonomy_p2_migration_2026_08_08.md todo 'Fold footystats ODDS (6,306 captured) + odds (16,207 captured)
     into a single odds'",
   ]
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # footystats uppercase `ODDS` is phantom, not real — contradicts the P2 todo's own premise
