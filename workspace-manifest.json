@@ -2075,7 +2075,7 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT passed — validated + unlocked",
+    "locked_reason": "SIT failed — open for fixes",
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
