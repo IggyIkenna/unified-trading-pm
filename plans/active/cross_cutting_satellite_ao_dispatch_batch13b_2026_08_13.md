@@ -208,8 +208,22 @@ source: >-
       per-`slot_label` breakdown table, and the two lighter KPI-card list views). Full inventory + reuse recommendations
       recorded in the source issue doc's 2026-08-14 Progress Log entry; its own checkbox flipped there too. No code
       changes — read-before-build mining pass, per the todo's own scope.
-- [ ] [CODE] P2. Verify current DeFi canonical-migration-defi-rebuild fleet completion and consolidated-manifest
-      freshness state Source: `plans/active/issues/pipeline_smoke_sweep_findings_2026_07_20.md`
+- [x] ✅ [CODE] P2. Verify current DeFi canonical-migration-defi-rebuild fleet completion and consolidated-manifest
+      freshness state Source: `plans/active/issues/pipeline_smoke_sweep_findings_2026_07_20.md` — unified-trading-pm
+      (this batch): **BOTH VERIFIED LIVE 2026-08-14, no code changes needed.** (1) Fleet completion: zero live
+      `canonical-migration*` VMs (`gcloud compute instances list`); full GCS `vm-logs/` listing (via
+      `get_storage_client()`, no gsutil) shows `canonical-migration-defi-rebuild-20260810-204358` is the latest
+      `-rebuild-*` entry, no relaunch since; its raw `run.log` independently confirms terminal SUCCESS (`rc=0`,
+      `exit_code=0`, `total_shards: 5832208`, all 5 chunks through `2026-12-31`, elapsed 12780.2s) — matching
+      `defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md`'s "Resolution" section. (2) Manifest
+      freshness: live read of `market-data-tick-defi-prd-central-element-323112`'s consolidated
+      `_index/availability_index.parquet` blob age ≈250s at check time — well inside DeFi's 3600s
+      `AG_STALENESS_BUDGET_SEC` override, only 2 outstanding per-VM shards. **Byproduct finding, fixed same commit**:
+      while tracing the rebuild chain, found the OOM doc mislabeled which VM actually OOM'd (`-180141` was cited, but
+      the real OOM signature — `rc=137` — belongs to `-141813`; `-180141` was instead killed by the unrelated
+      rogue-delete incident documented in `claude_code_agent_deletes_active_canonical_migration_vm_2026_08_10.md`) —
+      corrected inline + Progress Log entry added to that doc. Full evidence trail in that doc's 2026-08-14 Progress Log
+      entry.
 - [ ] [CODE] P2. Determine the root cause of sports data being ~4 weeks stale Source:
       `plans/active/issues/pipeline_smoke_sweep_findings_2026_07_20.md`
 - [ ] [CODE] P2. dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md -- parallelize
