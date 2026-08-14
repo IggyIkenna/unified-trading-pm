@@ -940,13 +940,23 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
       `ThreadedResolver`/`pandas`/`pyarrow` native symbols near the top — absent in the 2026-08-14 baseline, so their
       appearance (or continued absence) at a reproducing scale is the discriminating test. Repo:
       market-tick-data-service.
-- [ ] [INFRA] P2. **Root-cause which fleet watchdog reaped a `mtds-backfill-odds-` VM ~13min after its automatic task
-      completed despite `VM_SHUTDOWN_ON_COMPLETION=false`** (2026-08-14 VM1 finding above). Not SPOT preemption (checked
-      `compute.instances.preempted` in the same window — absent; the delete is a plain `v1.compute.instances.delete`).
-      Most likely a heartbeat-staleness monitor in `deployment-service/deployment_service/data_pipeline_monitors/`
-      reaping a VM whose automatic-task heartbeat stopped even though a human/agent was still doing manual follow-up —
-      not confirmed (too short a window for `vm_zombie_watchdog.py`'s >4h check). Matters fleet-wide: "launch, then
-      disable auto-shutdown for manual work" is not a safe pattern today. **Done when**: the specific watchdog +
-      threshold for the `EPHEMERAL_BATCH` `mtds-backfill-odds-` prefix is identified, and either documented with the
-      correct way to keep a VM alive for manual work, or fixed to respect a deliberate `VM_SHUTDOWN_ON_COMPLETION`
-      override. Repo: deployment-service.
+- [x] ✅ [INFRA] P2. **DONE 2026-08-14 (interactive session).** Root cause confirmed by direct code read (not the >4h
+      guess this todo originally assumed — that figure doesn't exist anywhere in `vm_zombie_watchdog.py`; it's a mix-up
+      with the `mtds-live-`/`canonical-migration-` `PREFIX_IDLE_THRESHOLDS` overrides, which don't apply to
+      `mtds-backfill-odds-`). Two independent kill paths in `deployment-service/scripts/vm/vm_zombie_watchdog.py`'s
+      standing fleet daemon (polls every ~5min per its own `INTERVAL` default), BOTH triggerable regardless of
+      `VM_SHUTDOWN_ON_COMPLETION` (that flag only suppresses the VM's own in-guest self-delete; neither of these is
+      wired to read it): (1) `_evaluate_vm`'s `zombie_finished_not_shutdown` check — once the workload's `EXIT_STATUS`
+      file appears (written on bootstrap-task completion) and stays present past `--finished-grace` (**default 10.0
+      min**), the VM is killed outright, and the code's own comment explicitly names "post-mortem-mode VM left for
+      debugging" as one of the cases this is DESIGNED to catch; (2) the general heartbeat-stale check, global default
+      `--heartbeat-stale=15.0 min` / `--min-age=15.0 min` (no `mtds-backfill-odds-` entry in `PREFIX_IDLE_THRESHOLDS`).
+      Path (1)'s 10-min grace matches the observed ~13-min reap almost exactly. **Fixed**: extended the pre-existing
+      `keep=true` label (previously only honored by the separate TERMINATED-VM reaper) to also opt a RUNNING VM out of
+      BOTH checks (`_is_kept()` helper + wiring into `_list_watchable_vms`'s existing daemon-opt-out filter, 6 new unit
+      tests in `test_vm_zombie_watchdog.py`, extensive in-code comment making clear this is a supervised/temporary
+      opt-out, NOT a way to sidestep legitimate zombie-killing of a genuinely hung/OOM'd VM — per operator feedback
+      during this same session). Shipped `deployment-service@8c3b0895bf` (QG-green, landed on `live-defi-rollout`).
+      **Documented usage**: `gcloud compute instances add-labels <vm> --zone=<zone> --labels=keep=true` immediately
+      before starting actively-supervised manual work on a finished/RUNNING backfill VM; remove the label (or delete the
+      VM) the moment that work ends.
