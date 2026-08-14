@@ -549,12 +549,12 @@ Directions, cheapest first — each is a todo below:
       unified-trading-pm@d85ad41fac.
 
       **Done when, confirmed**: the precommit sweep on one staged file is now **20.8s** total wall (measured 2026-08-12,
-                                      isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
-                                      down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
-                                      concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
-                                      single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
-                                      `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
-                                      nothing left to move out of the per-commit path. Repo: unified-trading-pm.
+                                              isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
+                                              down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
+                                              concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
+                                              single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
+                                              `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
+                                              nothing left to move out of the per-commit path. Repo: unified-trading-pm.
 
 - [x] ✅ [INFRA] P2. **Record the AO-vs-PM volume asymmetry in the codex** so the next person does not re-derive it —
       unified-trading-pm@baae1922bb. New § "1b. PM is the fleet's single write hotspot" in
@@ -929,4 +929,30 @@ reconciliation, the previous recommendation, shipped 2026-08-10.)
   vulnerable: that gate runs unconditionally before any commit, even in the isolated child, and every one of its
   branches (fast-forward, `ahead=0` working-tree-overlap block, or genuine rebase-conflict block) either succeeds
   cleanly or hard-stops with `exit 1` — no silent-proceed path exists there. No fix needed in quickmerge.sh; this was
-  checked, not skipped. Full detail in the F9 todo above.
+
+- **2026-08-14 (docs-reconcile, slot 10) — possible F9 recurrence, or a distinct mechanism, post-fix**: shipping a
+  single-file, single-hunk doc fix (`/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md`, rejoining a
+  sentence split by a blank-line paren break) silently no-op'd **4 consecutive times** before landing on the 5th
+  attempt. Sequence: (1) `safe-doc-push.sh` reported the classic quarantine failure this doc already documents ("24/39+
+  autostash entries... quarantining current dirty tree"; `THE PUSH LANDED BUT YOUR CHANGE DID NOT`) — twice, each with
+  fresh on-disk verification of my intended content immediately before the run; (2) switched to `quickmerge.sh --agent`,
+  which committed locally (all prek hooks genuinely passed) but got blocked on push by an UNRELATED pre-existing red
+  (`workflow-template-parity`, traced to `unified-api-contracts/image-build-gate.yml` drift — confirmed pre-existing via
+  `detect_template_drift.py`, nothing to do with this doc); (3) manually `git add` + `git commit` the same file straight
+  after re-verifying the fix was on disk via `grep` — the resulting commit's `git diff HEAD~1 HEAD -- <path>` was
+  **empty** (no-op commit, confirmed via `git log -- <path>` not listing it and `git show origin/HEAD:<path>` after push
+  still showing the pre-fix content) — repeated once more with the same result. Unlike the F9 mechanism (a peer's
+  freshly-landed content being clobbered by the caller's stale copy), this was the CALLER's OWN edit vanishing before
+  `git add` ever ran, on a slot with no other session touching this file path — the on-disk `grep` check right before
+  `git add` was reliably positive each time, yet the object that ended up in the commit was reliably the unedited
+  original. Root cause NOT identified (out of this skill's/role's charter to dig into ship-tooling internals further) —
+  flagging as a genuinely new instance/shape for whoever picks up F-series work next, since it reproduced AFTER the F9
+  fix and through a code path (plain `git add`+`commit`, no `safe-doc-push.sh`/`quickmerge.sh` involved) that shouldn't
+  be touched by either fix. **Eventually landed** (5th attempt) via a fully atomic sequence in one Bash call —
+  `git fetch` + ancestor-check, a Python script performing the read-assert-replace-write in one process (no Edit-tool
+  round-trip), `grep`-verify on disk, `git add`+`commit`+`push`, then `git fetch` +
+  `git show origin/<branch>:<path> | grep` on a marker string unique to the fix, per this doc's own "verify against
+  origin, never the exit code" rule — confirmed landed at `unified-trading-pm@d307287cf3`. No other file in the same
+  session (6 of 7 docs-reconcile fixes, all also doc-only, one also via `safe-doc-push.sh`) hit this — it was isolated
+  to this one file across this one ~15-minute window, consistent with a transient extreme-churn window rather than a
+  per-file defect. checked, not skipped. Full detail in the F9 todo above.

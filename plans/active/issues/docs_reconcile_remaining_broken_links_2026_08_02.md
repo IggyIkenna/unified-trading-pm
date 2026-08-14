@@ -248,6 +248,24 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
       sizing context to either reconcile the two totals or add an explicit "these measure different things because X"
       caveat.
 
+## New from 2026-08-14 sweep — 2 genuinely-ambiguous count/content discrepancies, no confident single fix
+
+- [ ] [DOCS] P2. `/codex/06-coding-standards/README.md` states two different service counts for what may or may not be
+      the same population: line 51 ("Cloud SDK isolation... **Status:** [IMPLEMENTED] and enforced across all 14
+      services") vs line 731 ("T4 | 19 services (instruments-service → monitoring pipeline)" in the Tier promotion
+      criteria table). Not auto-fixed: could be genuine drift (the service count grew 14→19 since the Status line was
+      last stamped and it was never updated) OR a legitimate scope difference (cloud-SDK-isolation-enforced count vs.
+      total current T4-tier count, if some newer services haven't had that specific gate rolled out yet) — determining
+      which needs someone who knows the current SDK-isolation rollout state, not a mechanical count reconciliation.
+- [ ] [DOCS] P2. `/codex/02-data/defi-data-types-catalog.md`'s "Protocol Coverage Matrix" (near end of file, rows for
+      UNISWAP_V2/V3/V4, AAVE_V3, MORPHO) still lists the pre-rename legacy `data_type=` strings verbatim
+      (`swap_events, pool_state`, `lending_metrics`) with no "was X" annotation, while the doc's own staleness banner
+      (line 49-50) claims these were renamed to `dex_swaps`/`dex_pool_state`/`lending_indices` "in this rev" and every
+      other section (§1-3) correctly shows "canonical; was X". Not auto-fixed: this doc's naming history has multiple
+      later reversals recorded in its own body (line 65-67: "the `dex_pool_state`→`dex_pools` pending D14 direction is
+      REVERSED — `dex_pools`/`dex_swaps` are retired"), so which name the matrix SHOULD show today isn't obvious without
+      deeper context on which rename pass the matrix was last synced to.
+
 ## Progress Log
 
 - 2026-08-02 (docs_reconciler, dispatch agt-0b4ee1): filed. See sibling issues
@@ -478,3 +496,42 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   remaining 15 items are the same accumulated set of genuine VALID_JUDGMENT calls (ambiguous dead-link successors, a
   root-README pass explicitly scoped out, a design observation the doc's own text says "not proposing a fix here")
   re-verified across 6+ prior audit passes since 2026-08-02 — no new bounded item found on this independent re-read.
+- **docs-reconcile 2026-08-14** (one-off `docs_reconciler` boot, slot 10, no `pm_repo_path` in the boot message so this
+  slot's own `unified-trading-pm` clone was treated as the target). Phase 0 all clean (parity/frontmatter 2005
+  docs/generator/body-links 2051 docs; freshness `--strict` = 5 violations, all either exempt-retired (5) or already
+  within the ratcheted baseline / calendar-advisory non-blocking — no gap). `doc_body_link_baseline.yaml` down to 18
+  `known_broken` (from 24 on 2026-08-10) — re-verified all 18 directly via `find`, none moved, all still genuinely dead
+  or placeholder-prose (per `doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md`'s already-tracked
+  false-positive class); `doc_reference_baseline.yaml` still empty. Scoped Phase 1 to the ~54 codex/doctrine files
+  touched since the last verified-clean point (2026-08-12T21:06, commit `ddfd555ae0` — a docs-reconcile run that, per
+  its own commit message, WAS this skill but never logged a Progress Log entry in this or the operator-decisions doc;
+  noting the gap, not chasing it further) — 3 parallel structural/self-consistency hunters, every candidate
+  independently re-verified by direct read/re-derivation before acting. **7 genuinely-new findings, all confirmed +
+  fixed**: (1) `solana-defi-coverage.md` — an orphaned `lst_rates` table-row fragment stranded inside a blockquote
+  (broken pipe-table syntax, no header, disconnected from the actual "Restaking data type taxonomy" table 7 lines
+  above); (2) `carry-staked-basis.md` — a sentence split by a blank-line paren break + spurious bullet ("(+
+  Deribit/stETH" / blank line / "- Bybit/stETH)."); (3) `cursor-configs/CLAUDE.md` itself — a missing opening `**` bold
+  marker ("venue lists + adapter KEYS are UAC data**" had no matching opener), verified directly against this session's
+  own loaded system-prompt copy of the file; (4) `prediction-markets.md` — its "Integration gaps" section still listed
+  G2 ("instrument ID convention") as an open gap in the G1-G7 range, contradicting the SAME doc's own "Instrument ID
+  Convention" section 220 lines earlier stating G2 was RESOLVED 2026-08-14 and deleted from the register (cross-checked
+  against `prediction-markets-codification-gaps.md`, confirmed no G2 entry); (5)
+  `carry-venue-live-integration-reference.md` — frontmatter summary said "13 venues", the funding-endpoints table
+  actually has 14 (recounted directly); (6) `defi-venue-protocol-catalogue.md` — `last_reviewed: 2026-09-10`, a FUTURE
+  date (impossible for a past-review field, and inconsistent with the doc's own body "Last updated 2026-05-12" four
+  lines later) — corrected to match the doc's own self-reported update date; (7) `04-architecture/README.md` —
+  "features-service (calendar family)" duplicated as both step 2 and step 5 of the "topologically sorted" Execution
+  Order list (a linear ordering can't legitimately repeat a node) — removed the duplicate, renumbered. 2 additional
+  candidates investigated and found genuinely ambiguous (needs a human, not a mechanical fix) — filed above as new
+  findings rather than guessed at. 1 candidate (the already-tracked `mvp-universe-per-asset-group.md` two-totals P1 item
+  above) re-confirmed still open by an independent hunter, not re-filed. Shipping this batch hit a **severe,
+  reproducible ship-tooling failure** on 1 of the 7 files (`carry-staked-basis.md`) — 4 consecutive silent no-op ships
+  (2× `safe-doc-push.sh` quarantine-drop, 1× `quickmerge.sh` blocked on an unrelated pre-existing red, 1× plain
+  `git commit` producing an empty diff despite a positive on-disk `grep` immediately before `git add`) before landing on
+  a 5th, fully-atomic attempt — logged as a new, dated instance in
+  `pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`'s Progress Log (not this doc's scope) since it
+  reproduced AFTER that doc's F9 fix and via a code path neither F9 nor its fix touches. The other 6 files shipped
+  cleanly via `safe-doc-push.sh` first try: `unified-trading-pm@c7f57a4415`; the 7th landed separately at
+  `unified-trading-pm@d307287cf3`. Broken-link/collision/summary-quality/doctrine-consistency hunters not re-run
+  corpus-wide this pass (all confirmed clean within the last 4 days by the 2026-08-08/09/10 dispatches; scoped to the
+  touched-file set per the established "skip a redundant full fan-out" precedent from 2026-08-08's 4th dispatch).
