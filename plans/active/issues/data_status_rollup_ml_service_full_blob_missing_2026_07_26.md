@@ -185,19 +185,19 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       needs its own bound.
 
       **RESOLVED 2026-08-02 (slot 10)**: `deployment-api@34a596b`. Took the documented alternative to raising the
-                                              ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
-                                              means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
-                                              accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
-                                              `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
-                                              `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
-                                              `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
-                                              observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
-                                              `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
-                                              AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
-                                              isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
-                                              isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
-                                              "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
-                                              records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
+                                                  ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
+                                                  means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
+                                                  accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
+                                                  `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
+                                                  `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
+                                                  `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
+                                                  observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
+                                                  `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
+                                                  AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
+                                                  isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
+                                                  isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
+                                                  "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
+                                                  records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
 
 - [x] ✅ [INFRA] P3. The `data-status-rollup-worker` `GcsEventSink` (the
       `log_event(SERVICE_PROCESSED/SERVICE_FAILED, ...)` calls in `run_rollup`) has not written a new dated prefix under
@@ -582,6 +582,15 @@ worth closing the same way (isolate + surface the real error) rather than leavin
 
 ## Follow-ups
 
+- [x] ✅ [DATA] P1. **NEW (2026-08-14), split out of the P0 below**: `MANIFEST_CONSOLIDATION_STALLED` is emitted
+      (`log_event(severity="ERROR")`) by the manifest consolidator's stall detector but has zero consumer anywhere in
+      alerting-service, so it never pages on-call. **FIXED 2026-08-14 (slot 15)**: `alerting-service@da8226325c`. Added
+      `handle_manifest_consolidation_stalled_payload` to `alerting_service/rules/consolidator_rules.py` (pages CRITICAL
+      — PagerDuty + Telegram — on the first occurrence, no breaker needed since the emitter itself only fires after its
+      own no-progress streak already crosses its alert threshold), wired into `alert_subscriber.py`'s `_TYPED_HANDLERS`
+      dispatch dict, regression tests added (`tests/unit/rules/test_consolidator_rules.py`). Full QG green, verified on
+      origin. This closes the "goes unpaged" half of the P0 incident below — it does NOT fix the underlying stall
+      itself, which is still active (see the P0's own Progress Log entry, 2026-08-14T05:15Z).
 - [ ] [DATA] P0. **NEW (2026-08-14) — LIVE INCIDENT, UNPAGED. ROOT-CAUSED 2026-08-14 (see Progress Log): NOT the
       mtime-cutoff blind spot the generic alert text suggested — a merge-duration-vs-execution-timeout mismatch.**
       `market-data-tick-defi-prd-central-element-323112`'s manifest-consolidator (Cloud Run job
@@ -598,18 +607,9 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       repeats the identical doomed attempt — an infinite retry loop, not a silent skip. **This is NOT the same incident
       as the archived `/plans/archive/issues/defi_manifest_consolidator_stale_lock_silent_stall_2026_08_05.md`** (that
       one was a stall-alert-threshold miscalibration, no lock/timeout issue) — the corpus has grown since (159M rows
-      now) and the real merge duration has outgrown the job's fixed 3600s deadline. **Alerting gap CLOSED 2026-08-14
-      (slot 15)**: `alerting-service@da8226325c`. Confirmed the UTL emitter side was already correct
-      (`manifest_consolidator.py`'s `_check_consolidation_stall` already called
-      `log_event(MANIFEST_CONSOLIDATION_STALLED, severity="ERROR", ...)` — this doc's original "not in
-      data-pipeline-alerts.registry.yaml" framing undersold the gap: that registry isn't even this event family's
-      routing mechanism, `alerting-service/alerting_service/rules/consolidator_rules.py` is (a dedicated closed-set
-      dispatcher for `CONSOLIDATOR_DOWN`/`MANIFEST_CONSOLIDATION_FAILED`/`CONSOLIDATOR_RECOVERED` — confirmed via code
-      read that an unhandled event name there is logged and DROPPED, never alerted). `MANIFEST_CONSOLIDATION_STALLED`
-      had zero handler in that dispatcher — added one (pages CRITICAL/PagerDuty+Telegram on first occurrence, no breaker
-      needed since the emitter's own streak threshold already gates it), wired into `alert_subscriber.py`'s
-      `_TYPED_HANDLERS`, regression tests added. This closes the "unpaged" half of the incident going forward; it does
-      NOT fix the underlying stall itself (still active — see Progress Log 2026-08-14T05:11Z re-check: index still stuck
+      now) and the real merge duration has outgrown the job's fixed 3600s deadline. **Alerting gap CLOSED 2026-08-14 —
+      see the dedicated P1 todo above** (`alerting-service@da8226325c`); that fix is the "goes unpaged" half only and
+      does NOT resolve the stall itself (still active — see Progress Log 2026-08-14T05:11Z re-check: index still stuck
       at `2026-08-13T19:28:24Z`, lock still being actively re-acquired). **Remediation in flight 2026-08-14 — running
       via a PEER SESSION's dedicated VM, not a Cloud Run job retry**: a parallel session independently filed a formal
       `/blocked` (BLK-838e73de), got operator sign-off, and launched `defi-manifest-force-consolidate-20260814-031954`
