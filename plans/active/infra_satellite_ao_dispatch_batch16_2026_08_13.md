@@ -130,9 +130,14 @@ source: >-
       source issue doc's flipped todo + 2026-08-14 Progress Log entry). Also filed
       `plans/active/issues/execution_service_contributing_doc_stale_2026_08_14.md` (unrelated stale-doc finding hit
       while picking the verification vehicle).
-- [ ] [CODE] P2. Coordinated pip-audit dependency bump for pyarrow 23.0.0->24.0.0 (needs a PM canonical-range widen,
+- [x] ✅ [CODE] P2. Coordinated pip-audit dependency bump for pyarrow 23.0.0->24.0.0 (needs a PM canonical-range widen,
       same pattern as the already-shipped lxml unit) + twisted/mako/ujson in-range bumps, execution-service +
-      unified-trading-pm Source: `plans/active/codex_violations_ratchet_to_five_2026_06_10.md`
+      unified-trading-pm Source: `plans/active/codex_violations_ratchet_to_five_2026_06_10.md` — RE-INVESTIGATED
+      2026-08-14: mako/twisted/ujson were already at their fixed versions (untracked earlier pass); pyarrow 23.0.1's
+      only cited advisory is already fixed at this version and live pip-audit + a full `QG_SLICE=lint-codex` run show
+      zero vulnerabilities fleet-default, so the PM canonical-range widen has no live security driver and was NOT
+      executed. execution-service@bb49911d27 ratchets `CODEX_MAX_VIOLATIONS` 3→0 on the strength of this; full writeup
+      in the source doc's own flipped todo.
 - [ ] [SCRIPT] P2. Fix _VERDICT_MARKER_LINE_RE (or replace with a proper multi-line-block strip) in
       generate_na_doc_tranche_inventory.py so a marker's full continuation-line span is excluded from
       body_content_hash(); add the stated regression test asserting hash-before ==

@@ -190,24 +190,25 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
       sandbox's no-new-privileges flag) — plausibly a missing browser system dependency specific to this host, not this
       repo's test code. Recommend a follow-up check on a normal dev/CI host before treating `pw:L2` as fully green for
       this spec; the spec itself mirrors a previously-shipped, presumably-passing pattern exactly.
-- [x] ✅ [BACKEND] P3. **Retagged 2026-08-09 (was `[OPERATOR] [BACKEND]`) — the source todo this was extracted from
-      (`deepseek_flash_ab_routing_test_2026_08_05.md:447` todo 25) already dropped `[OPERATOR]` in favor of plain
-      `[BACKEND]`; this copy's tag was stale, not the underlying work, which remains open (see below).** Extend
-      `agent-orchestrator/scripts/orchestrator/backfill_task_usage.py` to cover one-off completions lost during a prior
-      deploy window, then run it. Operator already ruled "run the backfill" (2026-08-08, ao round-5 apply session, item
-      3). The live script's `backfill()` is keyed purely off `SlotHistoryRow`, so one-off tasks (`AgentRow`-only,
-      `task_id=f"one-off:{agent_id}"`) have zero candidates today — add a second candidate source selecting `AgentRow`
-      rows in the affected window (`registered_at` between the `de73f93` and `acd6d70` deploy timestamps) lacking a
-      `TaskUsageRow`, deriving `assigned_at`/`completed_at` from `AgentRow` state (mirroring the one-off capture logic
-      `deepseek_usage.build_task_usage_snapshot` already uses), merged into the same
-      `_match_usage`/`record_task_usage(backfilled=True)` path. Tagged `[OPERATOR]`-adjacent since the `--apply` step
-      mutates live production rows directly via SSM — same provenance as `deepseek_flash_ab_routing_test_2026_08_05.md`
-      todo 16's `repair_unpriced_deepseek_spend.py --apply` run. **Done when**: the extension ships with a regression
-      test (a one-off candidate with no `SlotHistoryRow` gets matched and backfilled), a live dry-run report is
-      reviewed, `--apply` runs via SSM against the live orchestrator VM, and the affected window's one-off
-      `TaskUsageRow` count is verified non-zero (or genuinely unmatched due to transcript rotation — report either way).
-      Source: `/plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md:447` (todo 25). Repo:
-      agent-orchestrator. — agent-orchestrator@463ee10. Extended `backfill_task_usage.py` with a second candidate source
+- [x] ✅ [BACKEND] P3. Extend `agent-orchestrator/scripts/orchestrator/backfill_task_usage.py` to cover one-off
+      completions lost during a prior deploy window, then run it. **Retagged 2026-08-09 (was `[OPERATOR] [BACKEND]`, now
+      plain `[BACKEND]`) — the source todo this was extracted from (`deepseek_flash_ab_routing_test_2026_08_05.md:447`
+      todo 25) already dropped `[OPERATOR]` in favor of plain `[BACKEND]`; this copy's tag was stale, not the underlying
+      work, which remains open (see below).** Operator already ruled "run the backfill" (2026-08-08, ao round-5 apply
+      session, item 3). The live script's `backfill()` is keyed purely off `SlotHistoryRow`, so one-off tasks
+      (`AgentRow`-only, `task_id=f"one-off:{agent_id}"`) have zero candidates today — add a second candidate source
+      selecting `AgentRow` rows in the affected window (`registered_at` between the `de73f93` and `acd6d70` deploy
+      timestamps) lacking a `TaskUsageRow`, deriving `assigned_at`/`completed_at` from `AgentRow` state (mirroring the
+      one-off capture logic `deepseek_usage.build_task_usage_snapshot` already uses), merged into the same
+      `_match_usage`/`record_task_usage(backfilled=True)` path. Originally tagged `[OPERATOR]`-adjacent since the
+      `--apply` step mutates live production rows directly via SSM — same provenance as
+      `deepseek_flash_ab_routing_test_2026_08_05.md` todo 16's `repair_unpriced_deepseek_spend.py --apply` run (retagged
+      to plain `[BACKEND]` above to match the source todo). **Done when**: the extension ships with a regression test (a
+      one-off candidate with no `SlotHistoryRow` gets matched and backfilled), a live dry-run report is reviewed,
+      `--apply` runs via SSM against the live orchestrator VM, and the affected window's one-off `TaskUsageRow` count is
+      verified non-zero (or genuinely unmatched due to transcript rotation — report either way). Source:
+      `/plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md:447` (todo 25). Repo: agent-orchestrator. —
+      agent-orchestrator@463ee10. Extended `backfill_task_usage.py` with a second candidate source
       (`_load_one_off_candidates` + `_match_one_off_usage` + `_slot_id_from_transcript`): archived one_shot/scheduled
       AgentRows registered in the deploy window (reflog-pinned to `de73f93` 2026-08-06 09:22:53Z → `acd6d70` 16:05:58Z)
       lacking a `TaskUsageRow`, each matched by resolving its OWN transcript via `claude_session_id` (globally-unique

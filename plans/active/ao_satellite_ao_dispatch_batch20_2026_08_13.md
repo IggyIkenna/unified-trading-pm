@@ -334,12 +334,31 @@ source: >-
       `execution_scope: local-only` — no code change needed. DOCS P3: fix orchestrator_vm_e2e_hardening_2026_07_24.md's
       self-contradictory assigned_vm:NA + execution_scope:orchestrator-agent frontmatter to local-only Source:
       `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
-- [ ] [CODE] P2. DOCS P3: update deepseek_flash_ab_routing_test_2026_08_05.md's stale Deferred-table rows for todos
-      2/4/17b Source: `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
-- [ ] [CODE] P2. DOCS P3: repoint plans/epics/orchestrator_master.md's 2 stale referrers to the archived batch4_finalize
-      path Source: `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
-- [ ] [CODE] P2. DOCS P3: fix ao_satellite_ao_dispatch_batch12_2026_08_09.md todo formatting (meta-commentary on first
-      line + [BACKEND]-vs-[OPERATOR]-adjacent tag mismatch) Source:
+- [x] ✅ [CODE] P2. DOCS P3: update deepseek_flash_ab_routing_test_2026_08_05.md's stale Deferred-table rows for todos
+      2/4/17b — unified-trading-pm (this commit): the 3 rows read "Not done" while each item's own todo entry earlier in
+      the doc already recorded it DONE via `ao_satellite_ao_dispatch_batch12_2026_08_09.md` (todo 2:
+      `agent-orchestrator@4d27bc1`, todo 4: `agent-orchestrator@26f8a49`, todo 17b: `agent-orchestrator@64a0291`) —
+      updated all 3 rows to cite the same SHAs/dates and point back at each todo's own entry. Source:
+      `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
+- [x] ✅ [CODE] P2. DOCS P3: repoint plans/epics/orchestrator_master.md's 2 stale referrers to the archived
+      batch4_finalize path — unified-trading-pm@(this commit): fixed both hits (L53 `related_plans` frontmatter list
+      entry, L476 section-header link) in `plans/epics/orchestrator_master.md`, repointing
+      `../active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md` (confirmed no longer exists at that path) to
+      `../archive/2026_08/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md` (confirmed real archive path);
+      mirrored the existing batch5/batch6/batch7 archived-referrer link precedent already in the same file (link path
+      only, `**status**: active` prose left as-is per that precedent). Not touching the source doc's own copy of this
+      todo here — per this batch's stated design ("checkbox reconciliation back into each source doc happens in the
+      paired finalize plan"). Source: `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
+- [x] ✅ [CODE] P2. DOCS P3: fix ao_satellite_ao_dispatch_batch12_2026_08_09.md todo formatting (meta-commentary on
+      first line + [BACKEND]-vs-[OPERATOR]-adjacent tag mismatch) — unified-trading-pm (this commit): in
+      `plans/archive/2026_08/ao_satellite_ao_dispatch_batch12_2026_08_09.md`'s `backfill_task_usage.py` todo, moved the
+      tag-history meta-commentary ("Retagged 2026-08-09 (was `[OPERATOR] [BACKEND]`) …") off the todo's literal first
+      physical line — it now opens with the real instruction ("Extend
+      `agent-orchestrator/scripts/orchestrator/backfill_task_usage.py` …"), with the retag note following as the second
+      sentence. Reconciled the tag mismatch: the body's "Tagged `[OPERATOR]`-adjacent since the `--apply` step mutates
+      live production rows directly via SSM" claim predated the retag and no longer matched the checkbox's actual
+      `[BACKEND]` tag — reworded to "Originally tagged `[OPERATOR]`-adjacent … (retagged to plain `[BACKEND]` above to
+      match the source todo)" so the body is internally consistent with the checkbox tag. Source:
       `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
 - [ ] [CODE] P2. BACKEND P3: add sequential/gate_on_depends ordering between
       ao_model_main_agent_as_first_class_slot_2026_08_10.md's 2 same-file open todos Source:

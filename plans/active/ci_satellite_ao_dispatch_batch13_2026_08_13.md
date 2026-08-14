@@ -289,11 +289,20 @@ source: >-
       see `plans/active/issues/unified_api_contracts_image_build_gate_template_lag_blocks_all_pm_commits_2026_08_14.md`
       for the full finding + resolution (grandfathered via `--baseline-write-allow-additions`, same reasoning as this
       doc's own vendor-deps precedent).
-- [ ] [CODE] P2. fix/annotate the ~23 basedpyright errors in
+- [x] ✅ [CODE] P2. fix/annotate the ~23 basedpyright errors in
       deployment_service/sports_trigger_{evaluation,periodic,scheduler,state}.py to drop BASEDPYRIGHT_MAX_ERRORS back to
       <=1293 (coordinate file-family ownership with sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md first,
       per the doc's own conflict-check note) Source:
-      `plans/active/issues/deployment_service_basedpyright_ratchet_exceeded_sports_trigger_2026_08_08.md`
+      `plans/active/issues/deployment_service_basedpyright_ratchet_exceeded_sports_trigger_2026_08_08.md` — ✅ **ALREADY
+      DONE, confirmed 2026-08-14 (slot 26, infra), no new code change.** The coordination conflict this todo's own text
+      flags was real, not hypothetical: `deployment-service@71871454` (2026-08-08 15:21, same day as the issue doc's
+      filing) — `fix(types): resolve basedpyright reportUnknown* cascade in sports_trigger_* (1295->1259, ratchet down)`
+      — already fixed all 4 named files and ratcheted `BASEDPYRIGHT_MAX_ERRORS` down to 1259 (well under this todo's
+      <=1293 bar). Live-verified, not assumed: `scripts/quality-gates.sh:134` reads `BASEDPYRIGHT_MAX_ERRORS=1259` on
+      current HEAD, and a fresh `.venv/bin/basedpyright` run scoped to the 4 named files reports
+      `0 errors, 0 warnings, 0 notes`. Checkbox reconciliation back into the source issue doc is out of scope for this
+      satellite batch (per this doc's own header) — deferred to
+      `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`.
 - [ ] [CODE] P2. Disable/fix the 4 named vacuous crons (sit-debounce-trigger, freeze-deferred-build-replay,
       fix-approval-timeout, supersede-stale-dep-update-prs) -- the bounded sub-part of the F4 item, separable from
       digest-drift-sweep's open-ended non-convergence investigation Source:

@@ -354,13 +354,23 @@ unchanged:
       pre/post); legacy_strategy_mapping 1,048→172 loader + 55-row YAML SSOT + byte-equality pin test (registry.py
       precedent); portfolio archetypes 958→112 + base/simple/rank modules; zero caller churn, zero patch targets,
       basedpyright strict 0; budget stays 4 (file-size was excluded-dir hidden debt, honestly removed).
-- [ ] [CODE] P2. **pip-audit follow-ups surfaced 2026-06-12 (execution unit)** — pyarrow 23.0.0 fix needs 24.0.0 but PM
-      canonical caps `<24.0.0` (workspace-constraints.toml:80) → coordinated widen unit like the lxml one; + twisted
-      25.5.0 (fix 26.4.0 = major, via binance-futures-connector), mako 1.3.12 + ujson 5.12.1 in-range bumps. Repos:
-      unified-trading-pm + execution-service (+lockers). **REHOME CHECK 2026-07-27**: no
-      `infra_*_satellite_ao_dispatch_batch2*` plan exists yet (`ls plans/active/ | grep -i 'infra.*batch2'` → empty) —
-      staying open here per the fallback instruction rather than pointing at a plan that doesn't exist. Rehome into
-      batch2's own drafting pass once it exists.
+- [x] ✅ [CODE] P2. **RE-INVESTIGATED + CLOSED 2026-08-14** (`infra_satellite_ao_dispatch_batch16_2026_08_13.md` unit) —
+      live state no longer matches this todo's 2026-06-12 diagnosis: execution-service's `pyproject.toml`/`uv.lock`
+      already carry mako 1.3.12, twisted 26.4.0, ujson 5.13.0 (all at or above the cited fix versions — shipped in an
+      untracked earlier pass); only pyarrow stayed at 23.0.1 (PM canonical still caps `<24.0.0`). A live pip-audit run
+      (no `--ignore-vuln` extras — `QG_PIP_AUDIT_COMMON_IGNORES` is empty fleet-wide) plus a full `QG_SLICE=lint-codex`
+      run on execution-service both came back **zero vulnerabilities / zero ❌** — pyarrow 23.0.1's only cited advisory
+      (PYSEC-2026-113) is already fixed at this version and no other live CVE requires 24.0.0. **Verdict: the PM
+      canonical-range widen is NOT executed** — there is no live security driver for it, and forcing a major pyarrow
+      bump with none would be unjustified churn. execution-service's `CODEX_MAX_VIOLATIONS` ratcheted 3→0 in the same
+      unit — execution-service@bb49911d27 (fn-size + hardcoded-project-id-prod classes also independently cleared).
+      Re-open only if a future pip-audit run reports a genuine pyarrow finding. Original: **pip-audit follow-ups
+      surfaced 2026-06-12 (execution unit)** — pyarrow 23.0.0 fix needs 24.0.0 but PM canonical caps `<24.0.0`
+      (workspace-constraints.toml:80) → coordinated widen unit like the lxml one; + twisted 25.5.0 (fix 26.4.0 = major,
+      via binance-futures-connector), mako 1.3.12 + ujson 5.12.1 in-range bumps. Repos: unified-trading-pm +
+      execution-service (+lockers). **REHOME CHECK 2026-07-27**: no `infra_*_satellite_ao_dispatch_batch2*` plan exists
+      yet (`ls plans/active/ | grep -i 'infra.*batch2'` → empty) — staying open here per the fallback instruction rather
+      than pointing at a plan that doesn't exist. Rehome into batch2's own drafting pass once it exists.
 - [x] ✅ [CODE] P2. **CLOSED 2026-08-09 (`/ag-closeout-audit infra` daily run) — DONE, stale checkbox reconciled.**
       Domain-client base-gate check was retargeted **2026-07-30** — verified live in
       `scripts/quality-gates-base/base-service.sh:1416-1426` today: "NO separate `unified_domain_client` package
