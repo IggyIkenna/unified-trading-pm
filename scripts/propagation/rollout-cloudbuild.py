@@ -29,6 +29,19 @@ template hasn't learned yet (template lag, or intentional per-repo drift) is
 left untouched rather than silently regressed. Defaults to a dry run; writing
 requires an explicit --apply.
 
+Also refuses to write when the render would drop a consumer-only
+`substitutions` key — see find_dropped_substitution_keys(). This is a SEPARATE
+guard from find_dropped_markers()/_cloudbuild_markers(): those two feed
+check_cloudbuild_template_drift.py's baseline-gated ratchet too (it reuses
+this module's own rendering + diff functions as the single source of truth),
+so adding `substitutions` to THEM would also raise that ratchet's count for
+every consumer already carrying legitimate per-repo substitutions, against a
+shrink-only baseline that requires an operator-sanctioned re-seed to raise
+(see plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md).
+find_dropped_substitution_keys() is therefore only ever called from this
+script's own --apply write path, never from the drift checker, so it protects
+`--apply` without touching the ratchet baseline.
+
 Usage:
     python rollout-cloudbuild.py [--apply] [--dry-run] [--repo NAME]
 
@@ -217,6 +230,39 @@ def find_dropped_markers(live_content: str, new_content: str) -> list[str] | Non
     return diagnostics
 
 
+def _substitution_keys(data: dict) -> set[str]:
+    subs = data.get("substitutions")
+    if not isinstance(subs, dict):
+        return set()
+    return set(subs.keys())
+
+
+def find_dropped_substitution_keys(live_content: str, new_content: str) -> list[str] | None:
+    """Diagnose `substitutions` keys the LIVE file carries that the freshly
+    rendered NEW content is about to drop.
+
+    Deliberately NOT folded into find_dropped_markers()/_cloudbuild_markers()
+    — see the module docstring's "Also refuses to write..." section for why:
+    those two are reused by check_cloudbuild_template_drift.py's baseline
+    ratchet, and this function is not, so it can guard --apply without
+    requiring a baseline re-seed.
+
+    Returns a list of human-readable diagnostics (empty list = nothing
+    dropped), or None if the comparison itself could not be made (yaml
+    module unavailable, or either document fails to parse as a dict) — the
+    caller treats None conservatively (refuse rather than overwrite blind),
+    matching find_dropped_markers()'s own contract.
+    """
+    live_data = _parse_cloudbuild_yaml(live_content)
+    if live_data is None:
+        return None
+    new_data = _parse_cloudbuild_yaml(new_content)
+    if new_data is None:
+        return None
+    dropped = sorted(_substitution_keys(live_data) - _substitution_keys(new_data))
+    return [f"substitutions key dropped: {key}" for key in dropped]
+
+
 def add_deploy_via_dispatch_comment(content: str) -> str:
     """Insert deploy-via-dispatch comment after first line if not present."""
     if "deploy-via-dispatch" in content or "deploys-via-dispatch" in content.lower():
@@ -361,6 +407,26 @@ def main() -> int:
                     file=sys.stderr,
                 )
                 for diag in dropped:
+                    print(f"    {diag}", file=sys.stderr)
+                would_regress += 1
+                continue
+            dropped_subs = find_dropped_substitution_keys(live_content, content)
+            if dropped_subs is None:
+                print(
+                    f"  WOULD-DROP-CONTENT CHECK UNAVAILABLE ({repo_name}) — cannot parse the existing"
+                    " cloudbuild.yaml (or the yaml module is missing); refusing an unverifiable overwrite.",
+                    file=sys.stderr,
+                )
+                would_regress += 1
+                continue
+            if dropped_subs:
+                print(
+                    f"  WOULD DROP CONTENT ({repo_name}) — the rendered template is missing `substitutions`"
+                    " key(s) the live file already carries; refusing to write. Forward-port the"
+                    " substitution into the template or reconcile this repo's cloudbuild.yaml first:",
+                    file=sys.stderr,
+                )
+                for diag in dropped_subs:
                     print(f"    {diag}", file=sys.stderr)
                 would_regress += 1
                 continue
