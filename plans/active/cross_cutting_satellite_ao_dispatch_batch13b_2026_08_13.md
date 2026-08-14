@@ -113,8 +113,16 @@ source: >-
       narrower-scoped standalone run never saw. Full mechanism + code-line citations documented in the issue doc's todo
       3 and as a code comment at `market-tick-data-service/scripts/quality-gates.sh` (diff-scoped-attribution helper
       docstring). Issue doc flipped `status: open -> resolved` (all 3 todos closed).
-- [ ] [CODE] P2. Resolve the diff base to the branch's own last-gated point instead of a fixed origin/main proxy Source:
-      `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md`
+- [x] ✅ [CODE] P2. Resolve the diff base to the branch's own last-gated point instead of a fixed origin/main proxy
+      Source: `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md` —
+      unified-trading-pm@715a90d7ac: `run_hygiene_sweep.sh`'s `DIFF_BASE_REF` now resolves from the triggering CI event
+      instead of a fixed `origin/main` — a `push` (only fires on `push:[main]`) uses the event's `before` SHA read from
+      `$GITHUB_EVENT_PATH`; a `pull_request` uses its own `$GITHUB_BASE_REF`; any other trigger
+      (`workflow_dispatch`/schedule/unset, incl. the LDR-health-check dispatches and the cron entrypoint) stays
+      baseline+buffer. Both resolved refs are best-effort fetched then only applied once verified locally, so an
+      unresolvable base fails safe to baseline+buffer rather than reading all pre-existing debt as new. Promote-PR
+      exclusion unchanged, still wins over base resolution. Verified via 5 simulated scenarios (push/PR/promote-PR/
+      workflow_dispatch/unresolvable-SHA) against the extracted resolution block — all matched expected behavior.
 - [ ] [CODE] P2. Add a detector for a non-convergeable (monotonically-growing-violation-count) ratchet gate distinct
       from an ordinary retryable failure Source:
       `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md`
