@@ -139,10 +139,13 @@ source: >-
       compacting instead of overflowing. New pinning test
       `test_worker_precompact_unknown_command_alerts_and_falls_back_to_compact`; QG green (3613 passed, dashboard 336
       passed). Source: `plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md`
-- [ ] [CODE] P2. Write (or document inline in config.py) a read-only readout script for the flash-vs-pro
+- [x] ✅ [CODE] P2. Write (or document inline in config.py) a read-only readout script for the flash-vs-pro
       deepseek_flash_route_fraction split so the code's own 're-measure rather than trusting this block' instruction has
-      an actual method to carry out, not just a query an agent has to re-derive from scratch Source:
-      `plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md`
+      an actual method to carry out, not just a query an agent has to re-derive from scratch —
+      agent-orchestrator@ae44244c7f: new `scripts/orchestrator/deepseek_flash_pro_split_readout.py` (permanent
+      lifecycle), joins `activity_log` spawn/dispatch `account_id` rows against `accounts.json`'s declared
+      `AccountDef.variant` to report the live flash/pro split per event type + an aggregate percentage; QG green (3658
+      passed, basedpyright/ruff clean). Source: `plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md`
 - [ ] [CODE] P2. Stamp agent_kind onto deepseek_message_usage at sweep time so scheduled/escalation spend is split out
       from the mislabeled 'Worker (backlog tasks)' bucket Source:
       `plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`

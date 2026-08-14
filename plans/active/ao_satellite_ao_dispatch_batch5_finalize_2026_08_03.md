@@ -89,13 +89,18 @@ source: >-
       `reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md` (item 1 only). **Done when**: every one of
       those flips is committed with the `docs(plans):` prefix and cites the real commit sha (or, for the read-only/
       verification-only items, the reproduction evidence).
-- [ ] [INFRA] P0. **Re-check whether any of the 29 declined-orphan docs' NAMED gate has cleared since 2026-08-03, and
+- [x] ✅ [INFRA] P0. **Re-check whether any of the 29 declined-orphan docs' NAMED gate has cleared since 2026-08-03, and
       spin any newly-conflict-clear items into batch 6** — walk the batch's own "Deferred — full per-doc disposition"
       section category by category: has any operator-gated design fork been ruled since? Has any credential/host-access
       gap closed? Has the worker-liveness/watchdog cluster's own sequencing advanced far enough to free up one of its
       claimed docs? Per this skill's iterative-drain methodology, re-check the SPECIFIC named gate on each, don't
       re-derive the classification from scratch. **Done when**: each of the 29 is marked cleared-and-moved (naming the
-      new batch-6 plan/todo) or still-gated with the current reason — no entry left unstated.
+      new batch-6 plan/todo) or still-gated with the current reason — no entry left unstated. **DONE 2026-08-14** — all
+      31 (not 29; see count-discrepancy note in Progress Log) re-checked against the live corpus. 16 CLEARED, 2
+      partially progressed but still gated, 13 still-gated unchanged. Zero new batch-6 items needed: every clearance was
+      already independently caught and dispatched by the standing daily `/na-eligibility-audit` + `/ag-closeout-audit`
+      cadence between 2026-08-03 and today, not sitting idle waiting on this re-check. Full per-doc disposition in
+      Progress Log below.
 - [ ] [REVIEW] P0. **Archive every source doc that has reached zero open todos, and repoint any referrer.** At minimum
       re-check all 10 source docs named in todo 2 above for whether their OTHER (non-batched) items are also closed —
       several (e.g. `orchestrator_db_pool_exhaustion_state_poll_stall`,
@@ -182,3 +187,76 @@ source: >-
           answer (confirmed-obtained-at-the-time, or retroactively obtained now). This is folded into this finalize
           plan's own todo 2 (source-doc reconciliation) rather than spun out separately, since todo 2 already touches
           this exact source doc's `[DOCS] P2` item.
+- **2026-08-14 (infra, slot 7) — todo 3, full re-check of the declined-orphan set's named gates:**
+  - **Count discrepancy noted, not acted on**: this todo's own text says "29 declined-orphan docs"; the batch-5 plan's
+    "Deferred" section header and its own Ledger-check arithmetic (both) say **31**. Enumerated the section's full
+    per-category list directly (`grep -oE` style recount, same method the source doc's 2026-08-06 self-correction used)
+    — it lists exactly 31 doc names. Used 31 as ground truth; the "29" in this todo's own text is stale/wrong and not
+    itself worth a separate follow-up (a wording slip, not a corpus defect).
+  - **Method**: for each of the 31, confirmed current file location + `status:`/`assigned_vm:`, then for anything still
+    `open` extracted real Progress-Log entry dates (not incidental citation-date substrings) to find genuine
+    post-2026-08-03 activity, then read that activity in full where present.
+  - **CLEARED — now fully archived (12 of 31)**, meaning every todo on the doc (including the declined-orphan item) is
+    done and the doc itself is closed: `ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26`,
+    `backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30`,
+    `orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29`,
+    `wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21` (archived 2026-08-08, all 3 todos incl. the P3
+    operator sign-off gate), `orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25`,
+    `git_health_not_clean_since_pinned_constant_2026_07_27`,
+    `ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29`,
+    `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29`,
+    `mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30`,
+    `qg_owner_gate_full_workspace_rglob_walk_hangs_quickmerge_2026_07_31`,
+    `review_role_boot_read_unconfirmed_stuck_loop_2026_08_01`,
+    `tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03`. No batch-6 item needed — nothing left to move.
+  - **CLEARED — 0 open todos, `status: open` still (archival pending elsewhere) (4 of 31)**:
+    `blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24` (2026-08-10: "all 4 build todos now checked off";
+    `archive_exempt: true` to preserve cross-refs for a companion plan); `long_lived_vm_logs_not_backed_up_2026_07_02`
+    (2026-08-11/12: last item shipped + verified, `locked_by` cleared, `archive_exempt: true` pending a dedicated
+    follow-on archival pass per the corpus-wide lock-clearing ruling);
+    `utl_shared_clone_commits_repeatedly_reset_2026_07_22` (its declined items 4 and 5 specifically — both now `[x]`,
+    fixed 2026-08-09 `unified-trading-pm@4c7d0dba6`; a NEW item 9 was found during that same audit and stays open, but
+    it is not part of what was declined here);
+    `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01` (its declined items 2-4 — the whole doc
+    now reads 0 open checkboxes, confirmed via `grep -cE '^\s*- \[ \]'` = 0; `status: open` is itself now stale — this
+    doc is an archive candidate, in scope for this finalize plan's own todo 4 below, not restated as a new finding). No
+    batch-6 item needed for any of these four — the work already shipped via the standing daily
+    `/na-eligibility-audit` + direct-dispatch cadence, not via this re-check.
+  - **PARTIALLY PROGRESSED, still gated (2 of 31)**: `deepseek_claude_blended_provider_routing_2026_07_28` — the
+    operator provisioned the GSM secret `deepseek-v4-pro-api-key` on 2026-08-09, unblocking exactly one of the 5
+    declined items (`[INFRA] P2` re-sourcing todo); that item was already extracted to
+    `ao_satellite_ao_dispatch_batch14_2026_08_09.md` by the same-day audit round — already moved, no new batch-6 action
+    needed. The other 4 items (2 operator-review production pilots, 1 CLI-version design call, 1
+    `accounts.json`-is-gitignored data check) remain genuinely gated, re-confirmed as recently as the 2026-08-10
+    full-tranche sweep. `orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02` — most items now `[x]`
+    (enforcement mechanism decided + implemented 2026-08-05, a stale checkbox fixed); 2 remain open and still gated: one
+    `[DIAG] P2` best-effort root-cause item, one `[OPERATOR] P2` item explicitly needing root-access
+    `dmesg`/`journalctl -k` access this checkout doesn't have.
+  - **STILL GATED, unchanged since 2026-08-03 (13 of 31)** — re-verified each has either zero real Progress-Log activity
+    after 2026-08-03, or activity that re-confirmed the SAME original reason without resolving it:
+    `ao_backlog_no_collision_gate_long_running_driver_todos_2026_08_02` (no post-08-03 activity),
+    `ao_boot_stub_session_vars_field_name_mismatch_2026_08_02` (no post-08-03 activity),
+    `orchestrator_vm_e2e_hardening_2026_07_24` (no post-08-03 activity),
+    `ao_residuals_after_dispatch_hardening_2026_07_17` (no post-08-03 activity — 3 prior UI-design attempts still stand
+    as the operator-gated blocker), `blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28` (no
+    post-08-03 activity), `ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24` (no post-08-03
+    activity), `regen_positional_task_ids_not_content_stable_2026_07_17` (`assigned_vm: NA`, banner-guarded
+    local-only-homed fleet-core rewrite per BLK-29884333 option A — the 2026-07-28 ruling this doc already carries
+    predates and is unchanged by this re-check), `backlog_park_lost_across_sibling_todo_insertion_2026_07_30` (no
+    post-08-03 activity — "consider whether to build an alerting surface at all" fork still unresolved),
+    `killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21` (re-confirmed KEEP-NA on 2026-08-09/08-10
+    passes — genuine architectural fork, AutoSpawn re-prioritization vs. dedicated reaper, judgment-gated by 2 cited
+    prior data-loss near-misses), `slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25` (re-confirmed
+    KEEP-NA on 2026-08-10 — live-dispatch-critical-path watchdog/context-lifecycle code, still actively being
+    characterized as of its own 2026-08-08 entries),
+    `nohup_detached_background_process_killed_by_orphan_reap_2026_07_27` (no post-08-03 activity),
+    `cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29` (re-confirmed KEEP-NA through 2026-08-10 —
+    the fleet-wide `/done`-endpoint identity-matching surgery remains explicitly declined-for-now, corroborated by
+    `/ag-closeout-audit ao` batch12's independent same-day too-large-or-risky classification),
+    `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27` (last activity 2026-08-01/02, predates the
+    2026-08-03 cutoff).
+  - **Net result**: 16/31 cleared (12 fully archived, 4 at zero-open-todos), 2/31 partially progressed but still gated,
+    13/31 unchanged. Zero new batch-6 spin-outs — every genuine clearance this pass found had already been independently
+    caught and actioned by the standing `/na-eligibility-audit`/`/ag-closeout-audit` cadence between 2026-08-03 and
+    today, confirming that cadence (not this one-time finalize re-check) is the load-bearing mechanism for keeping the
+    declined-orphan set from going stale.

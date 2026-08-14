@@ -136,9 +136,19 @@ source: >-
       root_key-chain walk + a full wiring test asserting the first-miss immediate page). Evidence:
       `bash scripts/quality-gates.sh` green (3640 pytest passed, 336 vitest passed); quickmerge verified `197c5ca52`
       ancestor of `origin/live-defi-rollout`.
-- [ ] [CODE] P2. Fix the ldr-to-main-promote.yml rate mismatch that lets a fast-failing check manufacture an unbounded
-      stream of superseded PRs Source:
-      `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md`
+- [x] ✅ [CODE] P2. Fix the ldr-to-main-promote.yml rate mismatch that lets a fast-failing check manufacture an
+      unbounded stream of superseded PRs Source:
+      `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md` —
+      unified-trading-pm@7840229ddf: the doomed-run detector superseded an in-flight promote PR on the FIRST tick that
+      observed any failed QG-slice check-run, even mid-run — since `checks` fails in ~3.5min, ticks are 15min apart, and
+      LDR gets ~4 commits/3min, every tick minted a fresh frozen head and restarted validation from zero (measured PR
+      #2713→#2717, 5 PRs in ~35min), and this path never reached the genuine-failure escalation (only fires from the
+      completed-run MSTATE=blocked branch, which a doomed-and-closed PR never gets to). Now requires
+      DOOMED_STREAK_THRESHOLD=3 consecutive doomed observations of the SAME open PR (tracked via the bot's own
+      "doomed-tick" PR comments — a fresh PR after supersede starts back at 0) before superseding, and fires the same
+      ldr_main_qg_failure orchestrator escalation once confirmed. Evidence: `bash scripts/quality-gates.sh` green
+      (sentinel = HEAD 99bfba4a9); YAML + embedded bash syntax verified (`python3 -c yaml.safe_load` + `bash -n` on the
+      extracted `run:` block); quickmerge verified `7840229ddf` ancestor of `origin/live-defi-rollout`.
 - [ ] [CODE] P2. Extend the proven --diff-base pattern to check_ag_closeout_linkage Source:
       `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md`
 - [ ] [CODE] P2. Make check_ui_api_flow_coverage.py hard-fail instead of silently exiting 0 when its manifest file is
