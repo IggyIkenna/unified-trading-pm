@@ -183,8 +183,16 @@ source: >-
       (`max_position_usd`/`max_drawdown_pct`/`max_order_size_usd`), notes `min_balance_per_venue` lives on
       `ClientsYamlEntry` (not inside `risk_limits`), removes the nonexistent `max_leverage`, and points at
       `unified_api_contracts.canonical.domain.strategy.clients_yaml_schema` as the schema SSOT.
-- [ ] [CODE] P2. Instantiate or explicitly waive clients.yaml for every factory-registered archetype that can run
-      Source: `plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md`
+- [x] ✅ [CODE] P2. Instantiate or explicitly waive clients.yaml for every factory-registered archetype that can run
+      Source: `plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md` —
+      deployment-service@e355c14ad3: strategy-service's `clients_yaml_coverage.uncovered_archetypes()` gate (already
+      shipped, with its own test `test_clients_yaml_coverage_gate.py`) measured 30 of 32 factory-registered archetypes
+      with neither a `clients.yaml` nor a waiver. Created `clients_waiver.yaml` under
+      `deployment-service/configs/strategy/{archetype}/` for all 30 (only `carry_staked_basis` and
+      `arbitrage_price_dispersion` have real per-client data — no fabricated client entries). Verified
+      `uncovered_archetypes()` now returns `[]`. `bash scripts/quality-gates.sh` green (sentinel = HEAD
+      `e355c14ad3875c4af73d67a7010e6c42d0aea5ad`); quickmerge verified `e355c14ad3` ancestor of
+      `origin/live-defi-rollout`.
 - [x] ✅ [CODE] P2. Record the resolved per-client config surface ownership in codex
       (per-client-isolation-architecture.md) Source:
       `plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md` — unified-trading-pm: added
