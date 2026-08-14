@@ -48,7 +48,7 @@ locked_since:
 context_scope:
   [
     /plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md,
-    /plans/active/issues/dp_meta_watchers_oom_at_32gi_2026_08_13.md,
+    /plans/archive/2026_08/issues/dp_meta_watchers_oom_at_32gi_2026_08_13.md,
     deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
     /codex/05-infrastructure/data-pipeline-alerts.md,
   ]
@@ -149,9 +149,9 @@ A silently-OOMing exit-code monitor never reaches its sentinel write (`_gcs.writ
       paused for at least another day (resumed by someone else sometime before slot 15's 08-14 check per this doc's own
       Progress Log — exact resume timestamp not captured by either session). **This IS the second finding**: the
       alerting gap from 08-12T19:06Z onward lines up exactly with
-      `/plans/active/issues/dp_meta_watchers_oom_at_32gi_2026_08_13.md`'s live incident (meta-watchers OOM-killing every
-      `*/15` run at 32Gi, confirmed ongoing through 2026-08-13, root-caused + fixed 2026-08-14 slot 14 —
-      `deployment-service@f425eb12b3`) — the meta sweep was dying before reaching `check_monitor_crons_fired`, so the
+      `/plans/archive/2026_08/issues/dp_meta_watchers_oom_at_32gi_2026_08_13.md`'s live incident (meta-watchers
+      OOM-killing every `*/15` run at 32Gi, confirmed ongoing through 2026-08-13, root-caused + fixed 2026-08-14 slot 14
+      — `deployment-service@f425eb12b3`) — the meta sweep was dying before reaching `check_monitor_crons_fired`, so the
       cross-check silently stopped running for that whole window rather than the detection logic itself being broken.
       Folded this same finding into that doc's twin todo (its own todo 2) rather than filing a third issue doc — the
       root cause is already tracked + fixed there.
@@ -215,8 +215,9 @@ A silently-OOMing exit-code monitor never reaches its sentinel write (`_gcs.writ
   filtered for `exit-code`. Detection worked correctly for the 08-09 window (6 alerts + a clean RESOLVED at 19:38:25Z)
   and for the start of the 08-10/08-11 pause window (7 more alerts through 08-11T01:11Z), but went silent after one last
   alert at 08-12T19:05:30Z (3683m/61.4h stale) for the rest of the window despite the cron staying paused — a real gap,
-  attributable to `/plans/active/issues/dp_meta_watchers_oom_at_32gi_2026_08_13.md`'s concurrent live OOM incident (the
-  meta sweep was dying before reaching `check_monitor_crons_fired`, confirmed by that doc's own timeline: the incident
-  was live through 08-13 and only root-caused + fixed 08-14 slot 14, `deployment-service@f425eb12b3`). Folded the same
-  finding + evidence into that doc's twin todo 2 rather than filing a third issue doc — no code change needed here, the
-  root cause is already tracked and fixed there. No repos touched by this session (findings-only cross-check).
+  attributable to `/plans/archive/2026_08/issues/dp_meta_watchers_oom_at_32gi_2026_08_13.md`'s concurrent live OOM
+  incident (the meta sweep was dying before reaching `check_monitor_crons_fired`, confirmed by that doc's own timeline:
+  the incident was live through 08-13 and only root-caused + fixed 08-14 slot 14, `deployment-service@f425eb12b3`).
+  Folded the same finding + evidence into that doc's twin todo 2 rather than filing a third issue doc — no code change
+  needed here, the root cause is already tracked and fixed there. No repos touched by this session (findings-only
+  cross-check).

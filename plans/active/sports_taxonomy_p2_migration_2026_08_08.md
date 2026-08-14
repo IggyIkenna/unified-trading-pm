@@ -148,14 +148,19 @@ than proceeding.
       `market-data-processing-service@a9de0ff14b` — `_is_consumable_trades_blob` now EXPLICITLY excludes
       `inplay_ticks.parquet` (the endswith-`ticks.parquet` matcher would otherwise consume the quarantined post-kickoff
       population as pre-match trades). See Progress Log.
-- [ ] [DATA] P0. **Lowercase the instruments-service reference vocabulary** across all 19 tokens (`FIXTURES`,
+- [x] ✅ [DATA] P0. **Lowercase the instruments-service reference vocabulary** across all 19 tokens (`FIXTURES`,
       `FIXTURES_OUTCOMES`, `FIXTURES_SCHEDULE`, `FIXTURE_EVENTS`, `FIXTURE_LINEUPS`, `FIXTURE_STATS`, `INJURIES`,
       `MATCHES`, `ODDS`, `PLAYER_STATS`, `PLAYER_VALUES`, `PREDICTIONS`, `SFI_PROGRESSIVE_STATS`, `STANDINGS`, `TEAMS`,
       `WEATHER`, `XG`, `XG_SHOTS`, `ODDS_HORIZON_BUCKET`). Only after the API-Football campaign has converged (the
       `gate_on_depends` above enforces this, but re-verify at run time — a gate is not a substitute for looking).
       **SPLIT 2026-08-14 (BLK-8436a1a6, operator-approved Option A)**: census + risk-analysis this session found the
       scope far larger and riskier than the 1h estimate — see the new dedicated todo immediately below and the Progress
-      Log. This todo now tracks ONLY the split decision; the physical work moved to that todo.
+      Log. This todo now tracks ONLY the split decision; the physical work moved to that todo. ✅ **CLOSED 2026-08-14
+      (slot-26)** — the delegated physical-work todo directly below is done (`instruments-service@3637252f81`,
+      `f2586ada09`, VM `canonical-migration-sports-19token-restamp-20260814-045346` ran to completion, 0 uppercase-token
+      rows remaining) and its own closing verification todo is also done (live `check_shard_freshness` cross-check, 0
+      case-driven spurious missing/stale) — this split-tracking todo's sole remaining scope was already satisfied by
+      those two; nothing further to do under it.
 - [x] ✅ [DATA] P0. **[OPERATOR] Execute the 19-token lowercase re-stamp on a dedicated VM (in-region, SPOT +
       progress-checkpoint resume) — census + code diff prepared 2026-08-14, execution not yet run.** Scope, in ONE
       atomic change (must land together, per the analysis below): 1. Metadata-only manifest re-stamp: rewrite
@@ -308,12 +313,14 @@ than proceeding.
       `SPORTS_IS_DATA_TYPE_LOWERCASE_FORM`'s and `canonical_sports_is_data_type()`'s own docstrings in
       `unified_api_contracts/canonical/domain/sports/league_data.py` still said "not yet wired into live enumeration" —
       stale since `f2586ada09` wired it. Corrected — `unified-api-contracts@4b8529e6a7`.
-- [ ] [SCRIPT] P2. **Delete the two one-off migration scripts** now that the physical re-stamp is verified complete (0
+- [x] [SCRIPT] P2. **Delete the two one-off migration scripts** now that the physical re-stamp is verified complete (0
       uppercase-token rows remaining, confirmed twice):
       `instruments-service/scripts/restamp_sports_19token_lowercase_2026_08_14.py` and
       `instruments-service/scripts/census_sports_19token_lowercase_scope_2026_08_14.py`. Both are lifecycle-marked
       one-offs (per `/codex/06-coding-standards/script-homes.md`) whose job is done; keep them only until this todo is
-      picked up, then delete via quickmerge.
+      picked up, then delete via quickmerge. ✅ Deleted (no external consumers — grep confirmed the only references were
+      self-referential header/docstring comments in the restamp script itself); QG green
+      (`0b1adeaf44736353d9d733ad28160b2953d51cb7`) before commit — `instruments-service@c1cc730772`.
 - [x] ✅ [DATA] P0. **Draft + locally validate the 19-token re-stamp's step 1 (manifest relabel script) — NOT
       execution.** Per operator interim guidance on BLK-20f1ba56 ("write + locally validate, stop short of VM
       launch/live execution"): shipped `instruments-service@5ec75509`
@@ -331,10 +338,16 @@ than proceeding.
       since cleared. **The `[OPERATOR]` execute todo directly above stays intentionally UNCHECKED** — no VM was
       launched, no live write was attempted; BLK-20f1ba56 remains open pending the operator's actual go/no-go on the
       launch, and steps 2-3 still need code written (scoped, not yet drafted) before that launch can happen.
-- [ ] [DATA] P0. **Fold footystats `ODDS` (6,306 captured) + `odds` (16,207 captured) into a single `odds`.** These are
-      the same vendor population under two spellings; `source=footystats` remains the discriminator against the odds_api
-      population. Note the UAC comment calling the uppercase set "4 stale empty rows" is FALSE — expect 6,306 real
-      shards.
+- [x] ✅ [DATA] P0. **Fold footystats `ODDS` (6,306 captured) + `odds` (16,207 captured) into a single `odds`.** These
+      are the same vendor population under two spellings; `source=footystats` remains the discriminator against the
+      odds_api population. Note the UAC comment calling the uppercase set "4 stale empty rows" is FALSE — expect 6,306
+      real shards. **CLOSED 2026-08-14 (slot-26)** — `ODDS` was one of the 19 tokens in the reference-vocabulary restamp
+      above; live re-census of `instruments-store-sports-prd-central-element-323112`'s
+      `_index/availability_index.parquet` (columns `data_type`/`source`/`capture_status`, no filter assumptions) shows
+      **zero** `data_type=ODDS` rows of any status remain — only lowercase `odds` exists, `source=footystats`+`captured`
+      = 30,498 (grown past this todo's 2026-08-08 6,306+16,207=22,513 count, as expected — real capture continued
+      between the audit and the restamp). Fold is a genuine side effect of the 19-token restamp, not assumed: verified
+      live, not from the prior mapping-code read alone.
 - [ ] [DATA] P0. **Move `odds_horizon_bucket` (135,980 shards) onto the `odds` + `horizon` model.** Three writers emit
       it today (MDPS 121,762 / MTDS 14,656 / IS 1,106) at two different grains — 123,642 attributed to venue=ODDS_API
       plus ~12,000 spread per-bookmaker. Re-attribute to the correct per-bookmaker venue and collapse the double-count;
