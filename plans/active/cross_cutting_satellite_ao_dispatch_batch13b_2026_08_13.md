@@ -295,8 +295,14 @@ source: >-
       reports 0 (the exact live shape from the 2026-08-02 issue doc), the `* [ ]` star-bullet variant still matches when
       unfenced, and `_na_open_todos_from_text` end-to-end. Verified live: `_count_open_checkboxes_fence_aware` returns 0
       on an all-fenced sample, 2 on an unfenced `-`/`*` mixed sample.
-- [ ] [CODE] P2. Item A -- retag deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md asset_group
-      cross-cutting->ui Source: `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`
+- [x] ✅ [CODE] P2. Item A -- retag deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md
+      asset_group cross-cutting->ui Source: `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md` —
+      unified-trading-pm (this batch): retagged `asset_group: [cross-cutting]` → `[ui]` in
+      `plans/archive/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md` (dominant owner
+      — deployment-api repo, both broken tests, and the re-ship target) plus a `sports` cross-reference note on todo 2
+      (its fix touches a sports-domain registry despite the doc's own tag), per
+      `ag_closeout_audit_cross_cutting_parked_2026_08_06.md`'s `[WORKER REC]`. Progress Log entry added to the target
+      doc.
 - [ ] [CODE] P2. Item G -- correct stale G3/G10 status text in batch_live_reconciliation_service_audit_2026_05_27.md
       citing the successor doc Source: `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`
 - [ ] [CODE] P2. Item H -- live re-verify citadel_paper_batch_live_reconciliation_2026_06_19.md P9.2's UAC version-drift

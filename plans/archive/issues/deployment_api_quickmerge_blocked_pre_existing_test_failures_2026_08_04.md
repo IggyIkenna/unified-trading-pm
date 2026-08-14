@@ -8,7 +8,7 @@ summary: >-
   blocks ANY commit to deployment-api via quickmerge right now, not just this one.
 status: resolved
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ui]
 stage: [meta]
 repos: [deployment-api]
 scope: [engineer, admin]
@@ -101,7 +101,13 @@ ladder ("ambiguous → diagnose both sides," not "fix blind").
       accurate for its scope — the further 34→39 growth happened via later, separately-dated, already-cited commits
       after that doc's archival, so no edit to the archived doc is needed (it is a frozen historical record of the 30→34
       decision, not a living tracker of the registry's current size). Evidence:
-      `deployment-api@59f5cbe8bc831e3d02ab037019b1a7ff06fda31e` (already-landed fix, verified not new).
+      `deployment-api@59f5cbe8bc831e3d02ab037019b1a7ff06fda31e` (already-landed fix, verified not new). **Sports
+      cross-reference note (added on retag, 2026-08-14):** this todo's fix operates on
+      `SPORTS_MARKET_TOKEN_ACCEPTED_NONCANONICAL_INSTRUMENT_TYPES` — a `sports`-domain registry in
+      `unified-api-contracts` — even though this doc's own `asset_group` is now `[ui]` (dominant owner: the
+      `deployment-api` repo, both broken tests, and the re-ship target). See
+      `sports_instrument_type_market_token_ssot_gap_2026_07_28.md` for the sports-side ruling the accepted count derives
+      from.
 - [x] ✅ [INFRA] P2. Once both above are fixed, re-attempt shipping
       `deployment_api/routes/deployments_inventory/__init__.py` + its test (the CI-escalation-runner VM classification
       fix, currently sitting locally uncommitted in this session's `.tabs/2/deployment-api` checkout) via quickmerge.
@@ -143,3 +149,8 @@ ladder ("ambiguous → diagnose both sides," not "fix blind").
   `test_build_aws_inventory_classifies_ci_escalation_runner_as_live` present in
   `deployment-api/tests/unit/test_route_deployments_inventory_aws.py`. All 3 todos now done — flagged ARCHIVE CANDIDATE
   in this audit's report (not archived here).
+- **2026-08-14 (retag, `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md` Item A)**: retagged
+  `asset_group: [cross-cutting]` → `[ui]` — dominant owner is the `deployment-api` repo (both broken tests plus the
+  re-ship target all live there), per `ag_closeout_audit_cross_cutting_parked_2026_08_06.md`'s `[WORKER REC]` and
+  `plan_reconciler_findings_cross_cutting_2026_08_10.md`'s Item A. Added a `sports` cross-reference note to todo 2 (its
+  fix touches a sports-domain registry in `unified-api-contracts` even though the doc itself is now tagged `ui`).
