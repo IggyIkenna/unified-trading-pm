@@ -372,8 +372,16 @@ source: >-
       added, incl. a same-stamp 30-doc cohort proving a partial (not all-or-nothing) tip at the un-jittered cutover day
       and full tip 13 days later, and a same-relative-path cross-worktree-prefix identity check.
       `.venv/bin/python3 -m pytest` on the test file: 51/51 green.
-- [ ] [CODE] P2. Write up the correctness-ratchet-vs-hygiene-ratchet distinction (currently only in commit messages) as
-      a doc Source: `plans/active/issues/qg_ratchets_block_unrelated_ships_2026_08_12.md`
+- [x] ✅ [CODE] P2. Write up the correctness-ratchet-vs-hygiene-ratchet distinction (currently only in commit messages)
+      as a doc Source: `plans/active/issues/qg_ratchets_block_unrelated_ships_2026_08_12.md` — unified-trading-pm (this
+      batch): new SSOT `/codex/06-coding-standards/ratchet-correctness-vs-hygiene.md` — defines the two kinds (a
+      correctness ratchet asserts a claim TRUE, must never be re-baselined by a passer-by; a hygiene ratchet tracks
+      calendar/prose debt, may be absorbed with the debt named in the commit), gives the one-question decision test, a
+      worked-examples table (evidence-backed-completion, adapter contract regression, CODEX_MAX_VIOLATIONS, SHA
+      reachability = correctness; codex-doc-freshness `stale`, cross-reference links, prosewrap = hygiene), and notes
+      how it composes with (not duplicates) `check_codex_doc_freshness.py`'s existing clock-vs-authoring split. Linked
+      from `quality-gates.md`'s `related:`. Source doc's own todo intentionally left untouched per this batch's stated
+      policy (checkbox reconciliation into source docs happens in the paired finalize plan).
 - [ ] [CODE] P2. Implement the safe-field allow-list + UnsafeConfigChangeError guard in
       strategy-service/strategy_service/config_reloaders.py per the operator-confirmed 2026-08-12 ruling (option A)
       Source: `plans/active/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`

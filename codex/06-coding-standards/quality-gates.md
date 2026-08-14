@@ -28,6 +28,7 @@ related:
     /codex/06-coding-standards/testing.md,
     /codex/06-coding-standards/setup-standards.md,
     /codex/06-coding-standards/semver.md,
+    /codex/06-coding-standards/ratchet-correctness-vs-hygiene.md,
   ]
 created: 2026-03-27
 authoritative_for:
