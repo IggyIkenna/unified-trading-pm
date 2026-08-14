@@ -100,15 +100,14 @@ Layer 6: Strategy & Execution
 2.  features-service (calendar family) owns corporate actions (dividends, splits, earnings, macro results)
 3.  market-tick-data-service
 4.  market-data-processing-service
-5.  features-service (calendar family)
-6.  features-service (delta-one family)
-7.  features-service (volatility family)
-8.  features-service (onchain family)
-9.  features-service (sports family) (SPORTS only)
-10. ml-training-service
-11. ml-inference-service
-12. strategy-service
-13. execution-service
+5.  features-service (delta-one family)
+6.  features-service (volatility family)
+7.  features-service (onchain family)
+8.  features-service (sports family) (SPORTS only)
+9.  ml-training-service
+10. ml-inference-service
+11. strategy-service
+12. execution-service
 ```
 
 Services at the same layer (e.g., features-calendar and features-delta-one) may run in parallel if their upstream
