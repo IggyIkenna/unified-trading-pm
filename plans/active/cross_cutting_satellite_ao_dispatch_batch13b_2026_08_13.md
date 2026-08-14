@@ -310,8 +310,16 @@ source: >-
       `[x]`) and `citadel_paper_batch_live_reconciliation_2026_06_19.md`'s `P3.BLRS3` (flipped `[x]`), matching the
       existing G3 correction's format/style. **G3 needed no change** — a prior `/plan-reconcile` pass already corrected
       its status line on 2026-08-12.
-- [ ] [CODE] P2. Item H -- live re-verify citadel_paper_batch_live_reconciliation_2026_06_19.md P9.2's UAC version-drift
-      citation against current UAC Source: `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`
+- [x] ✅ [CODE] P2. Item H -- live re-verify citadel_paper_batch_live_reconciliation_2026_06_19.md P9.2's UAC
+      version-drift citation against current UAC Source:
+      `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md` — unified-trading-pm@f32a181dcc:
+      **RE-VERIFIED live 2026-08-14 — self-resolved, no fix needed.** The cited `unified-api-contracts=0.26.0` (local)
+      vs `0.27.0` (main) pairing from the 2026-06-20 provenance no longer exists at any version: UAC's current tag is
+      `v0.124.0`; strategy-service's `pyproject.toml` constraint `unified-api-contracts>=0.123.0,<1.0.0` (path/editable
+      dep, not a frozen pin) is satisfied. Live check-only run of `run-version-alignment.sh` (no `--fix`) confirms
+      "Alignment OK" — no strategy-service/UAC drift flagged. Two unrelated, currently-open drift conditions exist (PM
+      self-version drift; a fleet-wide 21-repo local-vs-origin/main `staging_versions` lag) but neither is the cited
+      pairing — out of scope. P9.2 in the target doc flipped `[x]` with the full re-verify citation.
 - [ ] [CODE] P2. Item J -- fix check_na_corpus_ratchet.py's --diff-base fenced-code-block checkbox-overcounting regex
       bug Source: `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`
 - [ ] [CODE] P2. Item K -- add the missing backlog todo to
