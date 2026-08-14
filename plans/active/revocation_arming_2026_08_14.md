@@ -158,6 +158,23 @@ source:
       lightweight path is not, and a per-launcher census is needed to say which real VMs are uncovered. Either add the
       admission check to the `lc_` helper (it needs no venv — it can curl the marker) or document the lightweight path
       as deliberately ungated. Repo: deployment-service.
+- [ ] [CODE] P1. **The dependency-fan-out half of `targets_for_finding()` stays dormant for the non-VM findings Phase 6
+      tested, not just for future emitters generally** — found 2026-08-14 by a second session reading this commit's own
+      diffs before relaying "is this actually fine" back to the operator. `targets_for_finding()` needs EITHER `vm_name`
+      OR `upstream_entity` to produce a target; confirmed via
+      `grep -n "upstream_entity" meta_watchers.py     consolidator_scheduler_watcher.py` → zero hits. `DP-MANIFEST-001`
+      (consolidator-down) and `DP-CATALOG-001` (catalogue-stale) — 2 of the 4 P0 scenarios the archived plan's Phase 6
+      tests actually exercise — carry neither field in their `PipelineFinding.details` (they are not VM-lifecycle
+      alerts, so no `vm_name`; `upstream_entity` is never set by either watcher). So even once every todo above ships,
+      those two will resolve **zero actuation targets** in production — the VM-lifecycle family (DP-VM-001/002/003,
+      which is what is actually firing live right now) will genuinely work; the fan-out family will look armed (todos
+      ticked, tests green, the anti-inertness guard satisfied) but stay silently inert for these two, the exact "built ≠
+      called" shape this plan already named once. Fix: have
+      `meta_watchers.check_consolidator_liveness`/`check_catalogue_freshness` and
+      `consolidator_scheduler_watcher.check_consolidator_scheduler_paused` stamp `details["upstream_entity"]` (the UAC
+      entity name the failed check corresponds to — e.g. `"instrument-catalog"` for catalogue-stale) so
+      `targets_for_finding()`'s existing `resolve_dependents()` path actually has something to resolve against. Repo:
+      deployment-service.
 
 ## Progress Log
 
