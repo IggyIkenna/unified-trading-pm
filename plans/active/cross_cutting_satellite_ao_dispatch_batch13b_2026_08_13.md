@@ -418,8 +418,13 @@ source: >-
       this is DISTINCT from the v9-column scope of this todo and is already tracked under the existing active defi
       venue-canonicalization plans (e.g. `plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`,
       `plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md`), so no new issue doc filed here.
-- [ ] [CODE] P2. Key execution policies by (client_id, slot_label) — §B Source:
-      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
+- [x] ✅ [CODE] P2. Key execution policies by (client_id, slot_label) — §B Source:
+      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` — **ALREADY SHIPPED, no new code
+      needed (verified 2026-08-14).** `execution-service@c2053c47` already implements this: `v2/policy_resolver.py`'s
+      `binding_key(client_id, slot_label)` (`f"{client_id}:{slot_label}"`) plus `ExecutionPolicyResolver` (bindings dict
+      keyed by that pair → `policy_ref`, resolved via `resolve()`/`resolve_config_algorithm()`) and
+      `v2/policy_spec.py`'s `ExecutionPolicyDomainConfig.bindings` (the GCS-hosted binding table, same key shape).
+      Confirmed live in the current worktree; `c2053c47` verified an ancestor of `origin/live-defi-rollout`.
 - [ ] [CODE] P2. Give the execution-policy registry a GCS loader + DomainConfigReloader subscription — §B Source:
       `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
 - [ ] [CODE] P2. Wire policy evaluation into the live execution path (select_algorithm takes config_algorithm from the
