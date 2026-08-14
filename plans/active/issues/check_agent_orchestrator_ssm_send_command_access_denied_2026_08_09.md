@@ -113,8 +113,21 @@ on shared AWS infra, not something to self-grant.
   exact same SSM read path to query `escalation_queue` directly (no HTTP endpoint exposes historical/resolved escalation
   rows — only `POST /api/escalate` and `GET /api/escalations/active`, the latter active-only). Flagging the
   cross-dependency here so the `[OPERATOR]` grant below is understood to unblock two independent tasks, not one.
-- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since
-  round9. The sole open item is an IAM policy grant to a specific human-named identity (`ikenna-worker`) on shared AWS
-  infra — the doc's own text is explicit this is "not something to self-grant," and the IAM-self-service precedent
-  (orchestrator service accounts granting themselves a missing role) does not extend to a human-named IAM user
-  needing a grant from a different identity, which also cannot read its own attached policies to self-diagnose.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since round9.
+  The sole open item is an IAM policy grant to a specific human-named identity (`ikenna-worker`) on shared AWS infra —
+  the doc's own text is explicit this is "not something to self-grant," and the IAM-self-service precedent (orchestrator
+  service accounts granting themselves a missing role) does not extend to a human-named IAM user needing a grant from a
+  different identity, which also cannot read its own attached policies to self-diagnose.
+- **2026-08-14 (slot-15, infra)**: THIRD independent confirmation, and a scope correction to a task that initially
+  misdiagnosed this. Working `ci_satellite_ao_dispatch_batch13-e30f435b0c68` ("PROVE the CI bootstrap script on a real
+  bare host"), a throwaway EC2 instance never registered with SSM (`aws ssm describe-instance-information` returned
+  empty `PingStatus`) — that was first logged as an unresolved per-instance/AMI mystery. Re-tested directly against BOTH
+  the real CI-runner VM (`i-042a6332509482556`) and the central planning VM (`i-0c9b283b31d6b5ca7`): identical
+  `AccessDeniedException` on `ssm:SendCommand`/`ssm:DescribeInstanceInformation` for `ikenna-worker`, plus
+  `iam:ListAttachedUserPolicies`/`iam:ListUserPolicies` denied (confirms no self-inspection, no self-grant). This is the
+  same fleet-wide identity gap, not a per-instance fault — corrected the misleading "root cause NOT diagnosed" framing
+  in `/plans/active/ci_satellite_ao_dispatch_batch13_2026_08_13.md` in the same turn. **Third independent consumer now
+  blocked on this grant**: `/check-agent-orchestrator` (original), the `[BACKEND] P2` historical-sample audit needing
+  direct `escalation_queue` reads (slot-18), and now the CI-bootstrap bare-host proof (any approach that needs to run a
+  command on a private-IP-only EC2 instance with no SSH key hits the identical wall). Task released GATED, not
+  re-dispatched blind — resume only after this grant lands.

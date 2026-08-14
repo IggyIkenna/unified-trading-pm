@@ -230,17 +230,23 @@ source: >-
       the SSM-latest-AMI path. 2. IAM instance-profile association confirmed correctly `associated`
       (`aws ec2 describe-iam-instance-profile-associations`) and the instance reached `running` state promptly, but
       **SSM Agent never registered** (`aws ssm describe-instance-information` returned empty `PingStatus` for ~5 min of
-      polling) — genuinely unresolved, root cause NOT diagnosed (candidates: this specific AMI's SSM agent service not
-      enabled by default the way stock Canonical images are; `subnet-fc09eca6` lacking an outbound route/NAT/SSM VPC
-      interface endpoint for a box with no public EIP — the real CI-runner VM also has no EIP per the runbook, so if
-      THIS is the cause, the runbook itself is missing a step). Next session: diagnose this BEFORE relaunching blindly —
-      check `aws ec2 get-console-output` for cloud-init/ssm-agent errors once boot completes, and confirm whether the
-      runbook's own VM has working SSM today
-      (`aws ssm describe-instance- information --filters Key=InstanceIds,Values=i-042a6332509482556`) as a sanity
-      baseline. 3. **Terminated the instance** (`i-0e2421dbfaa547d4e`) rather than leave an unverified, IAM-privileged
-      box running unattended across a session boundary — nothing was proven on it yet (bootstrap-ci-host.sh was never
-      actually run), so nothing of value was lost by tearing down. 4. **Validated plan for the GH-runner-registration
-      leg, not yet executed**: use
+      polling) — at the time this read as an unresolved per-instance/AMI mystery (candidates floated: SSM agent not
+      enabled on this AMI; subnet lacking a NAT/SSM VPC endpoint for a no-EIP box). **CORRECTED 2026-08-14 (slot 15,
+      infra), same-session resume**: that framing was WRONG — root-caused by testing SSM directly against the KNOWN
+      -WORKING real CI-runner VM (`i-042a6332509482556`) and the central planning VM (`i-0c9b283b31d6b5ca7`): BOTH
+      `aws ssm describe-instance-information` and `aws ssm send-command` fail the identical `AccessDeniedException` for
+      the `ikenna-worker` IAM user, and `iam:ListAttachedUserPolicies`/`iam:ListUserPolicies` are ALSO denied (no
+      self-inspection path, so no self-grant either). This is not a per-instance/AMI/subnet problem — it is the **exact
+      same pre-existing, already-filed, twice-reconfirmed fleet-wide gap** documented in
+      `/plans/active/issues/check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09.md` (filed 2026-08-09,
+      reconfirmed 2026-08-09 by slot-18). This task's entire bare-host-proof approach depends on `aws ssm send-command`
+      to reach a private-IP-only instance (no SSH key provisioned) — so it is blocked on that SAME `[OPERATOR]` grant,
+      not on anything a relaunch/AMI-swap/subnet-fix can resolve. **Do not re-diagnose SSM registration on a future
+      relaunch** — the fix is the operator IAM grant in that issue doc; re-attempt this task only after it lands. 3.
+      **Terminated the instance** (`i-0e2421dbfaa547d4e`) rather than leave an unverified, IAM-privileged box running
+      unattended across a session boundary — nothing was proven on it yet (bootstrap-ci-host.sh was never actually run),
+      so nothing of value was lost by tearing down. 4. **Validated plan for the GH-runner-registration leg, not yet
+      executed** (still correct, apply once the SSM grant lands): use
       `GH_PAT=$(aws secretsmanager get-secret-value --secret-id GH_PAT --query SecretString --output text)`
       (`setup-glue-runners.sh`'s documented "LEGACY... host with no ADC" path — the SAME mechanism
       `launch-central-brain-aws.sh`'s own user-data already uses) rather than the GCP-Secret-Manager `GH_TOKEN_SECRET`
@@ -253,9 +259,10 @@ source: >-
       key is NOT recommended for a throwaway host (see 4 above) — the toolchain-only check (`gcloud` installed +
       resolvable, which `bootstrap-ci-host.sh`'s own `verify()` already covers) is the safe bar for THIS leg unless the
       operator wants a dedicated non-production test GCP service-account minted specifically for this class of
-      verification (a decision, not something to improvise solo). Released back to the queue GATED-equivalent (task
-      boundary hit before completion, not a blocker) — the next pickup should re-launch per the recipe above, diagnose
-      the SSM gap FIRST, then proceed through steps 4-5.
+      verification (a decision, not something to improvise solo). Released back to the queue GATED (genuinely blocked on
+      the operator-gated SSM IAM grant above, confirmed fleet-wide, not a task-boundary artifact) — the next pickup
+      should check that issue doc's status FIRST; once granted, re-launch per the recipe above and proceed through steps
+      4-5 directly (no SSM re-diagnosis needed).
 - [ ] [CODE] P2. implement the consumer-QG promote fan-out gate in UAC's promote-gate workflow (per the 2026-08-08
       operator ruling; design + target consumer already specified in the doc) Source:
       `plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`
