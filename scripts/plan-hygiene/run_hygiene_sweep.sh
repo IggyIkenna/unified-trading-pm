@@ -411,6 +411,12 @@ run_check "Frontmatter validity"             hard "$SCRIPT_DIR/check_frontmatter
 run_check "Todo format (priority + canonical)" hard "$SCRIPT_DIR/check_todo_format.sh"
 run_check "Runbook governance fields"        hard python3 "$SCRIPT_DIR/check_runbook_fields.py"
 run_check "No conflict markers (mid-line + mangled)" hard "$SCRIPT_DIR/check_conflict_markers.sh"
+# Settings symlink hygiene (2026-08-11 finding) — cursor-configs/settings.json (the team SSOT for
+# hooks/mcpServers/env) must never sit dirty from an uncommitted local mutation in any clone, and
+# .claude/settings.local.json must never be a symlink (the exact vector that let a heal-step write
+# silently strip a hook from the SSOT — see claude_settings_symlink_writeback_drops_hooks_2026_08_11.md).
+# Absolute check, not a ratchet — zero violations is the only correct state across the fleet.
+run_check "Settings symlink hygiene (cursor-configs/settings.json + settings.local.json)" hard "$SCRIPT_DIR/check_settings_symlink_hygiene.sh"
 run_check "No prettier emphasis-mangling"    hard "$SCRIPT_DIR/check_prettier_mangling.sh"
 # Prettier proseWrap continuation-padding gate — a DISTINCT prettier corruption class from the
 # emphasis-mangling check above (non-idempotent reflow of a 2nd+ paragraph nested inside a list
