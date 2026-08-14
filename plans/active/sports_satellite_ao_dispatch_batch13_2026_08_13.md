@@ -73,10 +73,11 @@ source: >-
 
 ## Todos
 
-- [ ] [CODE] P2. Add a short callout to /codex/15-runbooks/incidents/rb_infra_relaunch.md instructing a worker to check
-      whether a failing VM's launcher family has a supervising wrapper (grep deployment-service/scripts/vm/ for a
+- [x] ✅ [CODE] P2. Add a short callout to /codex/15-runbooks/incidents/rb_infra_relaunch.md instructing a worker to
+      check whether a failing VM's launcher family has a supervising wrapper (grep deployment-service/scripts/vm/ for a
       _-historical-_ or loop-style caller) before relaunching, mirroring the existing 'if it re-fails the same way
-      twice, STOP' pattern already in the runbook Source:
+      twice, STOP' pattern already in the runbook — added as new Procedure step 3 (renumbering the old 3/4 to 4/5),
+      citing the root-cause example doc. unified-trading-pm@<SHA> Source:
       `plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md`
 - [x] [CODE] P2. Once instruments-service has written real 2026-08-10 sports_reference data, --force recompute the
       sports features backfill for day=2026-08-10 (features-service) to replace the false

@@ -59,10 +59,19 @@ The `context` field repeats this in prose; **prefer the structured fields**.
 2. **Resolve the launcher** if `relaunch_launcher` is empty:
    `deployment_service.data_pipeline_monitors.launcher_registry.resolve_launcher_for_vm(vm_name)` (longest-prefix
    match). A `None` result = an unrecoverable prefix → STOP, file an issue, page (do not guess a launcher).
-3. **Re-run the launcher** from `deployment-service/scripts/vm/<relaunch_launcher>` with the registry's tags
+3. **Check for a supervising wrapper before relaunching.** Some VM families are already driven by a self-managed retry
+   wrapper — grep `deployment-service/scripts/vm/` for a `*-historical-*` or loop-style caller of the resolved launcher
+   (e.g. `launch-expected-universe-v2-historical-backfill-vm.sh` wraps `launch-expected-universe-v2-vm.sh`). If one
+   exists, check `DeploymentsRegistry` for recent same-prefix launches: an actively-cycling wrapper is already retrying
+   the same window sequentially (respecting its own singleton lock) on its own known-retriable exit codes. A manual
+   out-of-band relaunch in that case races the wrapper and risks a duplicate concurrent run — do NOT relaunch; confirm
+   the wrapper is still converging and stand down instead. Mirrors the "if it re-fails the SAME way twice, STOP" pattern
+   below — easy to skip past under dispatch pressure, so check this explicitly, not just when a relaunch fails.
+   Root-cause example: `/plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md`.
+4. **Re-run the launcher** from `deployment-service/scripts/vm/<relaunch_launcher>` with the registry's tags
    (`VM_ASSET_GROUP=<asset_group>`, the task/mode/date metadata the launcher expects). The launcher streams durable GCS
    logs + registers a deployment heartbeat, so the relaunch is **never fire-and-forget**.
-4. **Verify STARTED at T+60s** (deployment-registry heartbeat + `gcloud compute instances describe <vm_name>` = RUNNING)
+5. **Verify STARTED at T+60s** (deployment-registry heartbeat + `gcloud compute instances describe <vm_name>` = RUNNING)
    and **PROGRESS at T+10min** (per the no-fire-and-forget rule). If it re-fails the SAME way twice, the shard is wedged
    (network partition / unbounded HTTP hang) — STOP relaunching, file an issue to fix the root cause (almost always an
    outbound call lacking `timeout=`).
