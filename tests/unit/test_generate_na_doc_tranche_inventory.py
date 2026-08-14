@@ -474,6 +474,50 @@ def test_body_content_hash_stable_across_context_scout_marker_line():
     assert MOD.body_content_hash(before) == MOD.body_content_hash(after_context_scout_touch)
 
 
+def test_body_content_hash_stable_across_own_multiline_marker():
+    """A multi-line na-eligibility-audit verdict marker's OWN continuation lines must not
+    change the hash -- the bug from
+    na_eligibility_multiline_marker_continuation_lines_never_stripped_from_hash_2026_08_10.md:
+    `_VERDICT_MARKER_LINE_RE` only ever stripped the single line carrying the date stamp, so a
+    marker's declared `[body-hash:...]` (computed from the body BEFORE the marker existed) never
+    matched a hash recomputed immediately after writing that exact marker, because the recompute
+    saw the marker's own continuation lines and the old regex never stripped them.
+
+    This is the minimal repro from that issue doc, verbatim: hash before the marker is written
+    must equal the hash recomputed after writing a marker (with its own correct pre-write hash
+    embedded) that spans more than one line.
+    """
+    body0 = "# doc\n\nSome real content.\n\n## Progress Log\n\n- 2026-08-01: doc created.\n"
+    h0 = MOD.body_content_hash(body0)
+    marker1 = (
+        f"- **na-eligibility-audit 2026-08-09** [body-hash:{h0}]: **KEEP-NA, valid --\n"
+        "  a two-line continuation\n"
+        "  explaining why.**\n"
+    )
+    body1 = body0 + marker1
+    h1 = MOD.body_content_hash(body1)
+    assert h1 == h0, f"marker continuation lines leaked into the hash: h0={h0} h1={h1}"
+
+
+def test_body_content_hash_multiline_marker_stops_at_next_bullet():
+    """The multi-line strip must not over-strip into an unrelated NEXT bullet/paragraph that
+    happens to follow the marker without an intervening blank line -- a shape observed live in
+    this corpus (this doc's own Progress Log): an unbulleted marker line, an unindented
+    continuation line, a blank line, then an unrelated `- ` bullet that merely mentions the
+    skill's name in passing. The unrelated bullet's content must survive the strip.
+    """
+    real = (
+        "**na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE -- flipped\n"
+        "`assigned_vm: NA -> planning` after full-sweep classification.\n"
+        "\n"
+        "- 2026-08-10 (na-eligibility-audit, tradfi tranche): filed while building this run's own\n"
+        "  hash-computation helper.\n"
+    )
+    stripped = MOD._VERDICT_MARKER_LINE_RE.sub("", real)
+    assert "hash-computation helper" in stripped
+    assert "RECLASSIFY_WHOLE" not in stripped
+
+
 def test_incremental_skip_true_when_stored_hash_matches(monkeypatch, tmp_path):
     """A doc with a [body-hash:…] marker whose stored hash equals the current body hash
     must report incremental_skip=True — the primary (no-git) skip path.
