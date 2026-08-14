@@ -37,7 +37,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
+    /plans/archive/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: 2026-07-25
@@ -56,7 +56,8 @@ locked_by:
 depends_on: []
 ---
 
-> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's archive-on-resolve rule. Fixed: `agent-orchestrator@c72197d`.
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule. Fixed: `agent-orchestrator@c72197d`.
 
 # spawn_base_role stale-display when a different-role agent adopts a session already stuck at a prior one-off role
 
@@ -86,11 +87,11 @@ prior one-off role's strings in place.
       actual identity whenever it differs from the stuck value — compared on `AgentRow.agent_kind` (falling back to
       `role`), NOT `AgentRow.role` directly: `role` is the coarse chat-thread field ("main"/"review"/"custom" — every
       typed one-off registers under `role="custom"`), so comparing on `role` would have false-fired on every
-      genuinely-still-alive SAME occupant; `agent_kind` is the specific identity a live SAME occupant's own
-      registration always sets equal to `spawn_base_role` (confirmed by reading `escalation.py`/`plan_health.py`'s
-      registration call sites). `boot_slot`'s own display-string construction was also fixed to read
-      `spawn_base_role` AFTER the liveness check (it previously captured it before, which would have shown the
-      stale value even with the refresh in place). Regression tests:
+      genuinely-still-alive SAME occupant; `agent_kind` is the specific identity a live SAME occupant's own registration
+      always sets equal to `spawn_base_role` (confirmed by reading `escalation.py`/`plan_health.py`'s registration call
+      sites). `boot_slot`'s own display-string construction was also fixed to read `spawn_base_role` AFTER the liveness
+      check (it previously captured it before, which would have shown the stale value even with the refresh in place).
+      Regression tests:
       `test_boot_typed_role_gate.py::test_spawn_base_role_refreshes_to_owning_agent_kind_on_different_role_adoption`
       (the exact live incident — slot stuck at `cicd`, a live `review` agent owns the session) +
       `::test_spawn_base_role_untouched_when_owning_agent_kind_matches` (regression guard — a genuine same-occupant

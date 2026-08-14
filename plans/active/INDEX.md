@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 296 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 294 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -846,7 +846,7 @@ by hand._
   — Cross-AG registry foundation. Adds a route axis (aggregator/broker/direct) and a mode axis (batch/live) to
   VENUE_DATA_TYPE_CAPABILITIES so an aggregator-served venue reads as a venue WITH an adapter, folds in the…
 
-### ao (42)
+### ao (40)
 
 - [`anthropic_per_task_actual_spend_and_account_calibration_2026_08_10`](./anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md)
   — The task-usage dashboard's $ column is blank for 1,993 of 2,622 completed task_usage rows (100% of Anthropic rows)
@@ -925,13 +925,6 @@ by hand._
   scheduled dispatch agt-23935a). Phase 0 re-derived the tranche's 41 current members via…
 - [`ao_satellite_ao_dispatch_batch3_finalize_2026_07_31`](./ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md) —
   Gated closeout for ao_satellite_ao_dispatch_batch3_2026_07_31.md — machine-held via depends_on + gate_on_depends until
-  every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE source issue doc(s)
-  (the…
-- [`ao_satellite_ao_dispatch_batch5_2026_08_03`](./ao_satellite_ao_dispatch_batch5_2026_08_03.md) — FIFTH AO-dispatch
-  batch for the `ao` topic tranche, produced by the `/ag-closeout-audit ao` skill run (2026-08-03, autonomous mode,
-  scheduled dispatch, real `Workflow` fan-out over all 41 currently mechanically-flagged never-cited…
-- [`ao_satellite_ao_dispatch_batch5_finalize_2026_08_03`](./ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md) —
-  Gated closeout for ao_satellite_ao_dispatch_batch5_2026_08_03.md — machine-held via depends_on + gate_on_depends until
   every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE source issue doc(s)
   (the…
 - [`ao_satellite_ao_dispatch_batch8_2026_08_08`](./ao_satellite_ao_dispatch_batch8_2026_08_08.md) — EIGHTH AO-dispatch

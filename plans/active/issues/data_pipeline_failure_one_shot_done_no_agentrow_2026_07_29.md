@@ -51,7 +51,7 @@ source: "data_pipeline_failure escalation worker, slot 10, escalation_id agt-790
 last_updated: 2026-07-29
 context_scope:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_2026_08_03.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
     agent-orchestrator/server/escalation.py,
     agent-orchestrator/server/routes/slots_worker.py,

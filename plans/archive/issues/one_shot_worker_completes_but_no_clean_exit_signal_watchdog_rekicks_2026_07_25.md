@@ -21,9 +21,8 @@ summary: >-
   (a) wastes watchdog cycles, (b) masks whether the slot is genuinely free for redispatch, and (c) risks re-nudging an
   agent that has explicitly declared completion. Distinct root cause from the context_pct≈75 compact-confirmation wedge
   (that is a compact-submission wedge on slot 4; this is a one-shot completion-exit-signal gap on slot 2).
-status: open
+status: resolved
 nature: issue
-archive_exempt: true
 asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
@@ -61,6 +60,7 @@ execution_scope: local-only
 estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
+  agent-orchestrator (2026-07-29, both todos shipped and re-verified by batch5_finalize's own todo1 2026-08-14)
 locked_by:
 context_scope:
   [
@@ -73,6 +73,12 @@ depends_on: []
 ---
 
 # One-shot worker finishes but does not exit/signal completion cleanly → watchdog re-kicks it
+
+> **🟢 ARCHIVED 2026-08-14 — RESOLVED (both todos `[x]`, unlocked).** Both todos shipped 2026-07-29 (the completion-exit
+> classification fix, plus the flagged residual-risk note); re-verified against reality by
+> `ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md`'s own todo 1 (2026-08-14). `archive_exempt: true` un-set per
+> that finalize plan's todo 4 (source-doc archival) — the exemption was only ever holding this doc for the finalize pass
+> to run.
 
 ## Evidence (operator-reported + main read-only inspection, 2026-07-25)
 
@@ -194,7 +200,7 @@ confirmed, recurrence-prone, and points at a real one-shot-lifecycle exit-signal
   `test_queued_work_escalating_not_self_declared_takes_respawn_path`) in `tests/test_worker_liveness.py`; full
   `quality-gates.sh` green.
 - **2026-08-12 (archive-exempt marker)**: doc now has 0 open todos — NOT archived here because archival of batch5 source
-  docs is owned by the paired finalize plan (`/plans/active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md`,
-  `gate_on_depends`-held) which reconciles evidence back into every source doc and runs archival. Set
-  `archive_exempt: true` so the `check_archive_candidates` hook stops flagging this doc until finalize runs; un-set at
-  finalize time.
+  docs is owned by the paired finalize plan
+  (`/plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md`, `gate_on_depends`-held) which
+  reconciles evidence back into every source doc and runs archival. Set `archive_exempt: true` so the
+  `check_archive_candidates` hook stops flagging this doc until finalize runs; un-set at finalize time.

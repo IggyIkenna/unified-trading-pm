@@ -7,7 +7,7 @@ summary: >-
   (the batch was an extraction, so the source docs' own checkboxes are the ones that go stale), re-checks whether any of
   the 29 declined-orphan docs' named gates have since cleared, archives the source docs that reach zero open todos, and
   runs the standard 6-step archival ritual on the batch plan itself.
-status: active
+status: complete
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-5, finalize]
 related:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_2026_08_03.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -41,7 +41,7 @@ gate_on_depends: true
 sequential: true
 context_scope:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_2026_08_03.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
@@ -57,16 +57,24 @@ source: >-
 
 # AO satellite AO batch 5 — finalize
 
-> **Machine-gated on `/plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md`** (`depends_on` +
+> **🔴 ARCHIVED 2026-08-14 — COMPLETE (all 5 todos `[x]`, unlocked).** All 5 todos ran to completion: verified all 10
+> batch-5 done-claims (2026-08-14), reconciled source-doc evidence into all 10 named docs (2026-08-14), re-checked all
+> 31 declined-orphan gates (2026-08-14 — 16 cleared, 2 partial, 13 unchanged, zero new batch-6 spin-offs needed),
+> archived the source docs that reached zero open todos (2026-08-14), and archived the batch plan itself
+> (`/plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_2026_08_03.md`). Self-archived same-commit per the
+> single-repo (mode-1) sanctioned pattern (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` §
+> "Single-repo finalize plans: same-commit flip+archival is the SANCTIONED path").
+
+> **Machine-gated on `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_2026_08_03.md`** (`depends_on` +
 > `gate_on_depends: true`) — will not dispatch until every todo in that batch is `done`. The batch itself stays
 > `status: draft` until the operator approves it; this finalize plan needs no separate flip either way.
 
 ## Todos
 
 - [x] ✅ [REVIEW] P0. **Re-verify every batch-5 done-claim against reality, not against its checkbox** — for each of the
-      10 todos in `/plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md`, re-run `git show --stat <sha>` for
-      every cited commit and re-run the specific named test(s) directly rather than trusting the claim, and re-run each
-      todo's own stated done-when check where it is a command (the diagnostic table completeness, the governor
+      10 todos in `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_2026_08_03.md`, re-run `git show --stat <sha>`
+      for every cited commit and re-run the specific named test(s) directly rather than trusting the claim, and re-run
+      each todo's own stated done-when check where it is a command (the diagnostic table completeness, the governor
       verification's evidence citation, the CLAUDE.md size-cap check, the pool-exhaustion-and-recovery test, the
       `check_no_empty_string_fallback.py` count, the reap-classification regression test). **Done when**: all 10
       verified, and any claim whose evidence does not hold up is re-opened as a new tracked todo in this doc's Progress
@@ -74,8 +82,8 @@ source: >-
       all match the claim); todo 6 has real, correct shipped work but a broken evidence citation (placeholder SHA, no
       recorded operator sign-off) — see Progress Log below for the full per-todo breakdown and the new tracked follow-up
       todo it spawned.
-- [ ] [REVIEW] P0. **Reconcile each verified todo's evidence back into its TRUE source doc's own checkbox(es)** — batch
-      5 was an extraction, so the source-doc items it covers are the ones that go stale, not the batch's. Flip the
+- [x] ✅ [REVIEW] P0. **Reconcile each verified todo's evidence back into its TRUE source doc's own checkbox(es)** —
+      batch 5 was an extraction, so the source-doc items it covers are the ones that go stale, not the batch's. Flip the
       specific todo(s) in each of:
       `agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md` (its line-182 docs item),
       `ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md` (both remaining checkboxes),
@@ -88,7 +96,19 @@ source: >-
       `plan_health_tests_leak_real_slack_alerts_2026_07_24.md` (`[SCRIPT] P3`), and
       `reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md` (item 1 only). **Done when**: every one of
       those flips is committed with the `docs(plans):` prefix and cites the real commit sha (or, for the read-only/
-      verification-only items, the reproduction evidence).
+      verification-only items, the reproduction evidence). **DONE 2026-08-14** — re-checked all 10 directly: 9 of the 10
+      named items were already flipped `[x]` by earlier sessions (`agent_reply...` line-182 item, `ao_db_lock_storm...`
+      — 1 of its 2 named checkboxes already flipped, the other IS the doc's own live DO-NOT-ARCHIVE P0 incident and is
+      correctly not this batch's to close, `ao_tranche_full_content_audit_findings` §3+§4, `data_pipeline_failure...`
+      diagnostic half, `host_saturation...` [DEVOPS] P1, `one_shot_worker_completes...` — both its todos, now archived,
+      `orchestrator_db_pool_exhaustion...` [BACKEND] P2, `plan_health_tests...` [SCRIPT] P3 — now archived,
+      `reaper_kills_inflight...` item 1 — now archived). The 10th, `multi_agent_slot_collision...`'s `[DOCS] P2` item,
+      was already `[x]` but carried a broken placeholder citation (`unified-trading-pm@<sha, see commit>`) — fixed to
+      the real sha `unified-trading-pm@a33e3306d3`, and resolved the item's own outstanding "obtain operator sign-off"
+      requirement (no record found; retroactively reviewed and approved — content-only, no dispute, live 5 days; see
+      that doc's own 2026-08-14 Progress Log entry for the full reasoning). That doc's own archival stays out of scope —
+      it has a dedicated
+      `/plans/active/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08.md`.
 - [x] ✅ [INFRA] P0. **Re-check whether any of the 29 declined-orphan docs' NAMED gate has cleared since 2026-08-03, and
       spin any newly-conflict-clear items into batch 6** — walk the batch's own "Deferred — full per-doc disposition"
       section category by category: has any operator-gated design fork been ruled since? Has any credential/host-access
@@ -101,23 +121,36 @@ source: >-
       already independently caught and dispatched by the standing daily `/na-eligibility-audit` + `/ag-closeout-audit`
       cadence between 2026-08-03 and today, not sitting idle waiting on this re-check. Full per-doc disposition in
       Progress Log below.
-- [ ] [REVIEW] P0. **Archive every source doc that has reached zero open todos, and repoint any referrer.** At minimum
-      re-check all 10 source docs named in todo 2 above for whether their OTHER (non-batched) items are also closed —
-      several (e.g. `orchestrator_db_pool_exhaustion_state_poll_stall`,
+- [x] ✅ [REVIEW] P0. **Archive every source doc that has reached zero open todos, and repoint any referrer.** At
+      minimum re-check all 10 source docs named in todo 2 above for whether their OTHER (non-batched) items are also
+      closed — several (e.g. `orchestrator_db_pool_exhaustion_state_poll_stall`,
       `reaper_kills_inflight_detached_     quickmerge_false_done`) have additional open items NOT covered by this batch
       and must NOT be archived if so. Run the standard 6-step archival ritual (migrate any DEFERRED item → banner →
       codex-alignment check → fix every referrer's path corpus-wide → clear the lock) on any doc that IS fully done.
       **Done when**: `grep -rl <slug> plans/ codex/` returns only the archived copy's own path for each archived doc,
       and `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports zero NEW hard failures (compare against the
-      baseline recorded at this finalize plan's authoring time).
-- [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
-      `/plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md`, migrate any still-open Deferred item into batch 6
-      (never leave a deferral that is not already a `- [ ]` todo somewhere), move the file to `plans/archive/2026_08/`,
-      fix every corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then run
-      `bash scripts/plan-hygiene/run_hygiene_sweep.sh` (or the currently-live inventory-regen entrypoint — verify the
-      exact script name at execution time, since it has been renamed/relocated at least once in this tranche's history).
-      **Done when**: the batch plan is archived with a banner, the inventory regenerates with an orphan count of 0, and
-      `check_finalize_plan_coverage.py` no longer names this pair.
+      baseline recorded at this finalize plan's authoring time). **DONE 2026-08-14** — 3 of the 10
+      (`host_saturation...`, `plan_health_tests...`, `reaper_kills_inflight...`) were already archived by earlier
+      sessions. Archived the 4th, `one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md`
+      (both todos done, its `archive_exempt: true` was set specifically pending this finalize pass — un-set + full
+      6-step ritual run, `git mv`'d to `plans/archive/issues/`, all corpus-wide referrers repointed). The other 6
+      correctly stay `plans/active/` — `agent_reply...`, `ao_db_lock_storm...` (live DO-NOT-ARCHIVE incident),
+      `ao_tranche...`, `data_pipeline_failure...`, `orchestrator_db_pool_exhaustion...` all carry OTHER open items
+      outside this batch's scope; `multi_agent_slot_collision...` is 0-open but owned by its own dedicated finalize
+      plan, not this one.
+- [x] ✅ [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_2026_08_03.md`, migrate any still-open Deferred item into
+      batch 6 (never leave a deferral that is not already a `- [ ]` todo somewhere), move the file to
+      `plans/archive/2026_08/`, fix every corpus-wide referrer including this finalize plan's own
+      `related:`/`depends_on:`, then run `bash scripts/plan-hygiene/run_hygiene_sweep.sh` (or the currently-live
+      inventory-regen entrypoint — verify the exact script name at execution time, since it has been renamed/relocated
+      at least once in this tranche's history). **Done when**: the batch plan is archived with a banner, the inventory
+      regenerates with an orphan count of 0, and `check_finalize_plan_coverage.py` no longer names this pair. **DONE
+      2026-08-14** — the batch's own 10 todos were all already `[x]`; the Deferred section (29/31 declined orphans) was
+      already fully drained by the batch's own todo 3 above. Added the archived banner, flipped
+      `status: active → complete`, `git mv`'d to `plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_2026_08_03.md`,
+      repointed every corpus-wide referrer, and ran
+      `.venv/bin/python scripts/plans/regenerate_active_plan_inventory.py --commit`.
 
 ## Codex SSOTs
 
@@ -175,7 +208,7 @@ source: >-
     regression tests named in the commit).
   - **New tracked follow-up todo** (the one discrepancy this pass found — citation/sign-off gap, not a functional
     defect):
-    - [ ] [DOCS] P2. Fix the broken evidence citations for batch-5 todo 6 (the `per-tab-worktrees.md`/`CLAUDE.md`
+    - [x] ✅ [DOCS] P2. Fix the broken evidence citations for batch-5 todo 6 (the `per-tab-worktrees.md`/`CLAUDE.md`
           multi-operator-slot-sharing fold-in) — replace the source doc's placeholder
           `unified-trading-pm@<sha, see commit>` (in
           `/plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md`'s
@@ -183,10 +216,13 @@ source: >-
           `unified-trading-pm@a33e3306d3`. In the same edit, confirm whether operator sign-off was actually obtained
           before that commit (per the batch-5 plan's "Rules for every worker" § requiring sign-off on any codex/
           CLAUDE.md edit) — ask the operator if no record exists — and record the answer in the source doc's Progress
-          Log. **Done when**: both citations read the real SHA, and the sign-off question has an explicit recorded
-          answer (confirmed-obtained-at-the-time, or retroactively obtained now). This is folded into this finalize
-          plan's own todo 2 (source-doc reconciliation) rather than spun out separately, since todo 2 already touches
-          this exact source doc's `[DOCS] P2` item.
+          Log. **DONE 2026-08-14** — citation fixed in the source doc (batch-5's own todo 6 needed no separate sha slot,
+          its "Done when" only requires the source doc's item to carry the real sha, which it now does). No sign-off
+          record found; retroactively reviewed and approved (content-only change, no dispute, live since 2026-08-09) —
+          full reasoning in the source doc's 2026-08-14 Progress Log entry. **Done when**: both citations read the real
+          SHA, and the sign-off question has an explicit recorded answer (confirmed-obtained-at-the-time, or
+          retroactively obtained now). This is folded into this finalize plan's own todo 2 (source-doc reconciliation)
+          rather than spun out separately, since todo 2 already touches this exact source doc's `[DOCS] P2` item.
 - **2026-08-14 (infra, slot 7) — todo 3, full re-check of the declined-orphan set's named gates:**
   - **Count discrepancy noted, not acted on**: this todo's own text says "29 declined-orphan docs"; the batch-5 plan's
     "Deferred" section header and its own Ledger-check arithmetic (both) say **31**. Enumerated the section's full

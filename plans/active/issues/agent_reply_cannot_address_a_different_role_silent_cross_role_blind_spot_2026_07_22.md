@@ -207,10 +207,11 @@ too large.
       `6c4e57b8a0483de2616d58fe5c034a54914288e4` ("docs(agents): mirror peer-vs-operator reply-routing from main.md STEP
       2B into review.md STEP 2", slot-13, 2026-08-08T09:52:16Z) — content matches exactly (`Closes:` trailer names this
       doc's DOCS P2 item).
-- [ ] [DOCS] P3. **Archive this doc** once `/plans/active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md` todo 2
-      (its reconciliation + archival step, gated behind batch5's own activation) runs — see the 2026-08-08 Progress Log
-      entry below for why this doc is not self-archiving. This todo just makes that already-stated intent a tracked item
-      instead of prose, per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 2.
+- [ ] [DOCS] P3. **Archive this doc** once
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md` todo 2 (its reconciliation +
+      archival step, gated behind batch5's own activation) runs — see the 2026-08-08 Progress Log entry below for why
+      this doc is not self-archiving. This todo just makes that already-stated intent a tracked item instead of prose,
+      per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 2.
 
 ## Progress Log
 
@@ -255,16 +256,15 @@ too large.
 - **2026-08-08 (ao round-5 operator Q&A apply session, item 4)**: operator delegated the P3 sign-off conflict-check
   judgment back to Claude (see the flipped todo above for the full ruling text + conflict-check evidence). All 4 todos
   on this doc are now `[x]`. **Not self-archiving**:
-  `/plans/active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md` todo 2 explicitly claims reconciliation +
-  archival ownership for this exact doc (names it by slug, "flip the specific todo(s)...
+  `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md` todo 2 explicitly claims
+  reconciliation + archival ownership for this exact doc (names it by slug, "flip the specific todo(s)...
   `agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md`"), gated behind batch5 (both
   currently `status: draft`, pending operator activation) — leaving archival to that plan to avoid a concurrent-archival
   collision once it dispatches.
-- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — the sole remaining item is
-  the "archive this doc" tracking todo, still correctly owned by
-  `ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md` todo 2. Verified live: batch5 and batch5_finalize are now
-  BOTH `status: active`/`assigned_vm: planning` (the operator activation this doc's own note was waiting on has since
-  happened) — batch5_finalize is machine-gated (`gate_on_depends: true`) on batch5's own todos completing first, so
-  this doc's archival will land automatically through that already-dispatched chain rather than needing separate
-  action here. Not reclassifying this doc itself — doing so would create a competing/duplicate archival claim against
-  the plan that already owns it.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — the sole remaining item is the
+  "archive this doc" tracking todo, still correctly owned by `ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md`
+  todo 2. Verified live: batch5 and batch5_finalize are now BOTH `status: active`/`assigned_vm: planning` (the operator
+  activation this doc's own note was waiting on has since happened) — batch5_finalize is machine-gated
+  (`gate_on_depends: true`) on batch5's own todos completing first, so this doc's archival will land automatically
+  through that already-dispatched chain rather than needing separate action here. Not reclassifying this doc itself —
+  doing so would create a competing/duplicate archival claim against the plan that already owns it.

@@ -98,9 +98,9 @@ todos of its own**. The plans that actually work these docs' open items:
   [ao_satellite_ao_dispatch_batch2_2026_07_30](/plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md),
   [batch3_2026_07_31](/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md),
   [batch4_2026_08_01](/plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md) (now archived, complete),
-  and [batch5_2026_08_03](/plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md) (`status: draft`, awaiting
-  operator approval) — each with its own gated `_finalize` pair — as the tranche's iterative-drain audit cycle continued
-  per the skill's own methodology.
+  and [batch5_2026_08_03](/plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_2026_08_03.md) (`status: draft`,
+  awaiting operator approval) — each with its own gated `_finalize` pair — as the tranche's iterative-drain audit cycle
+  continued per the skill's own methodology.
 - [ao_open_issues_consolidated_close_out_2026_07_17](/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md)
   — an earlier AO-scope tracker (8 open todos as of 2026-08-04) that is **not** in the Sources lists below but does
   cover some of them (its Recovery-audit Layer-1 producer todo owns
@@ -110,7 +110,7 @@ todos of its own**. The plans that actually work these docs' open items:
   mistags** (bare `[meta]`/`[cross-cutting]` with `orchestrator_master`/`agent_operating_framework_master`
   `parent_epic`, each verified by reading the doc's real content, not tag shape):
   [ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02](/plans/archive/2026_08/issues/ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02.md),
-  [boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31](/plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md),
+  [boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31](/plans/archive/2026_08/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md),
   [orphaned_wip_slot12_slot8_recovery_2026_08_04](/plans/archive/2026_08/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md),
   [backlog_regen_reverted_p1_2_park_2026_08_01](/plans/active/issues/backlog_regen_reverted_p1_2_park_2026_08_01.md),
   [p1_2_backlog_hand_park_did_not_persist_2026_07_31](/plans/archive/issues/p1_2_backlog_hand_park_did_not_persist_2026_07_31.md),
@@ -128,7 +128,7 @@ todos of its own**. The plans that actually work these docs' open items:
 `agent-orchestrator@b926a9262c4ef592f1bfe644b0c0e03cac3335ef`) ·
 [issues/orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md](/plans/archive/issues/orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md)
 (`PlanRegenLoop.prune_stale` wiped the entire live backlog on a transient zero-scan tick — now archived, resolved) ·
-[issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md](/plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md)
+[issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md](/plans/archive/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md)
 (same backlog task dispatched to two slots simultaneously) ·
 [issues/orchestrator_ready_p1_task_undispatched_no_matching_worker_autospawn_gap_2026_07_25.md](/plans/archive/issues/orchestrator_ready_p1_task_undispatched_no_matching_worker_autospawn_gap_2026_07_25.md)
 (ready P1 task undispatched, no matching worker, autospawn gap) ·
@@ -140,9 +140,9 @@ todos of its own**. The plans that actually work these docs' open items:
 (redispatch churn when a task is gated on an external CI promote, no durable park) ·
 [issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md](/plans/archive/issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md)
 (escalation-dispatch vs backlog-dispatch repo-collision blind spot) ·
-[issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md](/plans/active/issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md)
+[issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md](/plans/archive/issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md)
 (orphan-reaper kills an in-flight detached quickmerge, marks false-done) ·
-[issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md](/plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md)
+[issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md](/plans/archive/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md)
 (worker completes with no clean-exit signal, watchdog needlessly rekicks) ·
 [issues/auto_park_no_flipper_rule_not_mechanism_enforced_2026_07_20.md](/plans/archive/issues/auto_park_no_flipper_rule_not_mechanism_enforced_2026_07_20.md)
 (`auto_park.py` doesn't mechanically enforce its own "no park without flipper" rule).
@@ -228,7 +228,7 @@ posts; dead code refs restored or removed cleanly; Playwright port-collision fix
 [ao_issue_docs_consolidated_remediation_2026_07_23.md](/plans/archive/2026_07/ao_issue_docs_consolidated_remediation_2026_07_23.md)
 (archived 2026-07-27 — the Q2-held todos shipped and 2 of 4 non-dispatchable items resolved; the remaining 2,
 route-collision + backlog-relations-view, are DEFERRED per operator instruction rather than held open) ·
-[issues/ao_recovery_audit_layer1_deleted_2026_07_15.md](/plans/active/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md)
+[issues/ao_recovery_audit_layer1_deleted_2026_07_15.md](/plans/archive/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md)
 (AO custom recovery-audit-signoff role/agent deleted as cleanup collateral) ·
 [ao_open_issues_consolidated_close_out_2026_07_17.md](/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md)
 (9 open/32 done — added 2026-07-26, resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #25, option A/C

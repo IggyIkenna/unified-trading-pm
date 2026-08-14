@@ -274,10 +274,15 @@ before touching the source doc directly._
       concurrent session also independently moved the same two files around the same time (a bare `git mv` with no
       banner/status update landed via the inventory-regen script's own commit) — reconciled cleanly, no data lost, this
       commit layers the full ritual (banner, status, referrer fixups) on top of that move.
-- [ ] [REVIEW] P1. **`ao_satellite_ao_dispatch_batch5_2026_08_03.md` now shows 0 open todos** (as of this session's
+- [x] [REVIEW] P1. **`ao_satellite_ao_dispatch_batch5_2026_08_03.md` now shows 0 open todos** (as of this session's
       checkbox flip) — check whether it needs its own archival, and confirm `batch5_finalize`'s `gate_on_depends` has
       genuinely cleared before running its 5 todos. Source:
-      `/plans/active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md`.
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md`. **DONE 2026-08-14** — gate
+      confirmed cleared (batch5 itself 0 open todos, no lock); ran all 5 of batch5_finalize's todos (re-verify 10
+      done-claims, reconcile evidence into 10 source docs incl. fixing a broken citation + resolving its sign-off
+      question, re-check 31 declined-orphan gates, archive 1 newly-eligible source doc, archive the batch plan itself).
+      Both batch5 and batch5_finalize `git mv`'d to `plans/archive/2026_08/`, banners added,
+      `status: active →     complete`, all corpus-wide referrers repointed.
 - [ ] [SCRIPT] P2. Finish the `context_scope` backfill named in `batch3`'s own open todo (see Track 3) — this is what
       still gates `batch3_finalize`'s 5 todos via `gate_on_depends`. Source:
       `/plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`.

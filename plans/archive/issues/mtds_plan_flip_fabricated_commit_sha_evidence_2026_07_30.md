@@ -156,8 +156,8 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
 - [x] ✅ [SCRIPT] P1. **RECURRENCE 2026-08-08 — the baseline was RAISED again (0 -> 2) instead of the citations being
       corrected.** `35e99e4ba3` had ratcheted `fabricated_sha_citation_baseline` to 0 with `baseline_citations: []`;
       `unified-trading-pm@a969d9ba8b` (slot-16, 2026-08-08) re-raised it to 2. Both new entries cite the SAME fabricated
-      SHA `ea5d699c9` (repo `unified-trading-pm`), at `plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md:130`
-      and
+      SHA `ea5d699c9` (repo `unified-trading-pm`), at
+      `plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_2026_08_03.md:130` and
       `plans/active/issues/agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md:187`.
       MEASURED 2026-08-08 after a fresh `git fetch origin`: `git cat-file -t ea5d699c9` -> UNRESOLVABLE, so these are
       genuinely wrong citations, NOT the fetch-miss false positive that `35e99e4ba3` fixed in the checker itself. Per

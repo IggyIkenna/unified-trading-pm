@@ -29,8 +29,8 @@ related:
   [
     /plans/archive/issues/orchestrator_ready_p1_task_undispatched_no_matching_worker_autospawn_gap_2026_07_25.md,
     /plans/active/issues/one_shot_complete_session_ownership_desync_2026_08_08.md,
-    /plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
-    /plans/active/issues/autospawn_refill_sla_data_points_1_2_and_live_recheck_followup_2026_08_09.md,
+    /plans/archive/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
+    /plans/archive/2026_08/issues/autospawn_refill_sla_data_points_1_2_and_live_recheck_followup_2026_08_09.md,
   ]
 created: 2026-08-08
 parent_epic: orchestrator_master
@@ -52,7 +52,7 @@ context_scope:
     agent-orchestrator/server/autospawn.py,
     /agents/worker.md,
     /plans/active/issues/one_shot_complete_session_ownership_desync_2026_08_08.md,
-    /plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
+    /plans/archive/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
   ]
 ---
 
@@ -62,7 +62,7 @@ context_scope:
 > root cause confirmed for data point 3 (`agent-orchestrator@dfef970`, `_do_spawns_concurrently()`). The two prose
 > caveats (data points 1/2 not independently explained; production live-recheck not performed) were migrated to a
 > tracked follow-up:
-> `/plans/active/issues/autospawn_refill_sla_data_points_1_2_and_live_recheck_followup_2026_08_09.md`.
+> `/plans/archive/2026_08/issues/autospawn_refill_sla_data_points_1_2_and_live_recheck_followup_2026_08_09.md`.
 
 ## Evidence
 
@@ -158,7 +158,7 @@ impact — both are self-healing idle-capacity gaps, not silent failures.
   already `[x]`, independently verified by the companion finalize plan's evidence-check todo). Migrated the two
   remaining prose caveats (data points 1/2 not independently explained; production live-recheck not performed) into a
   real tracked todo doc —
-  `/plans/active/issues/autospawn_refill_sla_data_points_1_2_and_live_recheck_followup_2026_08_09.md` — per
+  `/plans/archive/2026_08/issues/autospawn_refill_sla_data_points_1_2_and_live_recheck_followup_2026_08_09.md` — per
   `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` §2 (todos-not-prose), rather than letting them
   evaporate with this archived doc. `status: resolved`. Moving to `plans/archive/2026_08/issues/` in this same commit
   (no checkbox flip happening in this session, so the never-combine-flip-with-mv rule does not apply here).

@@ -12,7 +12,7 @@ summary: >-
   ARE AO-eligible bounded work — this batch extracts those 9 plus the 1 `archivable_now` bookkeeping item (10 todos
   total), each conflict-checked against the whole `plans/active` corpus before drafting (2 same-file adjacencies found
   and handled via a sequencing rule rather than exclusion, matching batch3/batch4's own precedent).
-status: active
+status: complete
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -21,7 +21,7 @@ scope: [engineer]
 tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-5, satellite-docs]
 related:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md,
     /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
@@ -52,7 +52,7 @@ context_scope:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
-    /plans/active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
   ]
 source: >-
@@ -65,6 +65,10 @@ source: >-
 ---
 
 # AO satellite AO batch 5
+
+> **🔴 ARCHIVED 2026-08-14 — COMPLETE (all 10 todos `[x]`, unlocked).**
+> `ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md`'s own 5 todos are now all `[x]` and it has self-archived
+> alongside this doc (see its own banner) — no further successor to chase.
 
 > **`status: active`** — approved 2026-08-08 after a fresh conflict-check found no blocking overlap (see Progress Log).
 > **`assigned_vm: planning` / `execution_scope: orchestrator-agent`** — the `ao` tranche's 2026-07-17 "local execution
@@ -121,8 +125,8 @@ below rather than duplicated here.
   net-positive addition needs an offsetting condensation in the same edit; extend the existing SSOT-pointer
   parenthetical rather than adding a new sentence.
 - Do not edit a source issue doc's checkboxes beyond appending your evidence line to the todo you executed. The paired
-  finalize plan (`/plans/active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md`) reconciles evidence back into
-  every source doc and runs archival.
+  finalize plan (`/plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md`) reconciles evidence
+  back into every source doc and runs archival.
 - No todo below deletes prod data, mutates a GCS bucket, or launches a VM.
 
 ## Todos
@@ -262,7 +266,7 @@ below rather than duplicated here.
       `self_declared_complete=True`, and asserts the clean `_reap_idle_session` path is invoked (NOT the destructive
       flow) — plus the full existing `worker_liveness`/`_respawn` test suite still passes and `quality-gates.sh` is
       green before shipping. Source:
-      `/plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md` (its
+      `/plans/archive/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md` (its
       residual-risk finding). Repo: agent-orchestrator. — agent-orchestrator@687cad2d00 (threaded
       `self_declared_complete` through `_maybe_auto_respawn_stuck_slot`; a task-less self-declared-complete escalating
       slot is now idle-reaped via `_reap_idle_session` even with `queued_undispatched > 0` — no duplicate-worker spawn.
