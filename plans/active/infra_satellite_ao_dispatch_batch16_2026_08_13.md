@@ -115,9 +115,12 @@ source: >-
       one-directional `related:` back-reference from `defi_compute_gcp_migration_2026_08_08.md` to its finalize twin
       `/plans/active/defi_compute_gcp_migration_2026_08_08_finalize_2026_08_08.md` (which already pointed at the
       parent). unified-trading-pm@6ea81d3e15
-- [ ] [CODE] P2. Fix prod_terraform_drift_backlog_reconcile_2026_07_24.md:177's dangling 'finding W' citation to point
-      at the actual section name in orchestrator-cloud-identity-self-service.md. Source:
-      `plans/active/issues/plan_reconciler_findings_infra_2026_08_10.md`
+- [x] ✅ [CODE] P2. Fix prod_terraform_drift_backlog_reconcile_2026_07_24.md:177's dangling 'finding W' citation to
+      point at the actual section name in orchestrator-cloud-identity-self-service.md. Source:
+      `plans/active/issues/plan_reconciler_findings_infra_2026_08_10.md` — unified-trading-pm (this batch): the doc has
+      no "finding W" section; the actual anchor for the self-fixable-permission-gap rule is `## The rule`. Reworded the
+      citation to `... § "The rule"` and dropped the undefined "finding W" phrasing (incl. its self-reference in the
+      surrounding prose).
 - [ ] [INFRA] P2. Verify quickmerge isolation on a second (service) repo with a heavier suite and confirm the cached
       venv (~/.cache/qm-iso-venv/<repo>) refreshes correctly across a dependency-lock bump, before flipping
       laptop-default isolation back on. Done when: two repos pass an isolated --isolated quickmerge end-to-end and the

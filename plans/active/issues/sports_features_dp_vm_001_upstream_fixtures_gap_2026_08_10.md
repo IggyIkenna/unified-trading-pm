@@ -208,6 +208,21 @@ occurrence's evidence rather than opening a new todo — same underlying defect 
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
 
+**slot-5 2026-08-14 (data_pipeline_failure escalation agt-2d8319, FIFTH occurrence)** — a fresh `data_pipeline_failure`
+worker was dispatched with the same-shaped stale boot `CONTEXT` as the slot-23/slot-30/slot-6 occurrences above
+(`"Filed issue: (none — alert carries the details)"` +
+`RELAUNCH vm=features-sports-sports-2026-20260810-051126 launcher=(resolve via launcher_registry) deployment_id=? asset_group=sports`),
+again for the exact same VM name from 2026-08-10, with no reference to this issue doc or the operator's do-not-relaunch
+ruling. Grepped `plans/active/` + `issues/` per the pre-task conflict-check HARD RULE and found this issue immediately
+(title/content match on the VM name). Per the standing decision (operator-approved 2026-08-10, reconfirmed by
+slot-15/slot-30/slot-6): upstream 2026-08-10 fixtures are present, the recompute is done, the relaunch bound is
+massively exceeded, and no new root-cause information exists to justify the carve-out — so **no relaunch performed**, no
+code change in `deployment-service` (this wall's `$REPO`; the underlying defect is agent-orchestrator's escalation
+dispatch/lifecycle layer, outside this one-shot wall's scope). Five occurrences of the identical pattern across five
+different escalation ids/VMs-days now on record — this is a live, still-unfixed defect, not a one-off; the tracked P2
+agent-orchestrator todo above should be treated as high-priority given the dispatch capacity being burned on repeat
+no-op escalations.
+
 **slot-5 2026-08-14 (data_pipeline_failure escalation agt-b5c313, FIFTH occurrence)** — a fresh escalation id
 (`agt-b5c313`, dispatch_initiated 07:27:14Z per `/api/activity` event 490825) was dispatched for the SAME VM
 `features-sports-sports-2026-20260810-051126` with a stale boot `CONTEXT`
