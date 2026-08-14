@@ -39,7 +39,7 @@ resolved_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-08-11
+last_updated: 2026-08-14
 context_scope:
   [
     unified-trading-library/unified_trading_library/service_framework/fastapi_factory.py,
@@ -186,18 +186,32 @@ itself; the CVE doc keeps ownership of the `--ignore-vuln` allowlist.
       `> **Owner for the stale-venv / \`iter_route_contexts\` ImportError**:
       /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` at its mention site.     **`sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`is the ONE exception — pointer NOT added this     pass**: that doc's prettier-canonical form is 1008 lines > the 1000-line HARD plan cap (HEAD is 998L but     non-canonical), so staging ANY edit to it (even a pure pointer append) triggers a prettier reflow over the cap and     hard-fails plan-hygiene's`check_line_caps`.
       Its pointer is tracked as the P3 todo below (split/fold the doc under the cap, then add the pointer).
-- [ ] [DOCS] P3. `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` is over the 1000-line plan hard cap in its
-      prettier-canonical form (1008L; HEAD 998L non-canonical) — any staged edit hard-fails `check_line_caps`. Split or
-      fold that doc below 1000L (e.g. fold the closed-out "Live-verification gotchas" and older Progress Log entries
-      into an archive sibling), then add the `> **Owner for the stale-venv / \`iter_route_contexts\` ImportError**:
-      /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` pointer at the Venv gotcha
-      (~line 888) that todo 5 could not land. Repo: unified-trading-pm.
+- [x] ✅ [DOCS] P3. **DONE 2026-08-14 (slot 20).** `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` was over
+      the 1000-line plan hard cap in its prettier-canonical form (1008L; HEAD 998L non-canonical). Folded the
+      2026-08-01..08-06 Progress Log entries (18 entries incl. the "Live-verification gotchas" section, ~317 lines)
+      verbatim into a new archive sibling:
+      `/plans/archive/2026_08/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01_progress_log_archive_2026_08_14.md`
+      (same split pattern already used for `sports_odds_af_shard_reconciliation_defect_2026_08_09.md`). The parent doc's
+      own Progress Log now carries a short pointer summary + every entry from 2026-08-06 (slot 8) onward; prettier-
+      canonical line count re-measured at **692L**, well under cap. Added the
+      `> **Owner for the stale-venv / \`iter_route_contexts\` ImportError**:
+      /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` pointer at the archive doc's
+      Venv gotcha bullet (the one todo 5 could not land directly, since the doc was already over cap). Repo:
+      unified-trading-pm.
 - [ ] [INVESTIGATE] P3. Three `*.stale-pre-history-rewrite-20260805T112453Z/` sibling directories (execution-service,
       instruments-service, market-data-processing-service, unified-trading-library) still carry their own 0.136.3 venvs
       in the slot. Confirm they are dead weight from the 2026-08-05 history rewrite and can be removed, or document why
       they are retained.
 
 ## Progress Log
+
+**2026-08-14 (slot 20, todo 6)** — Split `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` under its
+1000-line hard cap (was 1008L canonical) so the deferred owner-pointer from todo 5 could finally land. Folded the
+2026-08-01..08-06 Progress Log (18 entries, ~317 lines) into
+`/plans/archive/2026_08/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01_progress_log_archive_2026_08_14.md`;
+parent doc re-measured at 692L canonical. Pointer added at the archive's Venv gotcha bullet. Full detail in the flipped
+todo 6 checkbox above. This was not my assigned todo, but a general worker task in this same doc — one todo remains open
+(the `.stale-pre-history-rewrite-*` dead-weight investigation directly below), so this doc is not yet archive- eligible.
 
 **2026-08-13 (slot 18, todo 3)** — Fleet-wide staleness measurement: **the staleness is NOT present elsewhere.** Swept
 all 33 slots on the planning VM (`.tabs/1`–`.tabs/33`) + the AO VM's own runtime venv. 239 fastapi-carrying venvs total,
