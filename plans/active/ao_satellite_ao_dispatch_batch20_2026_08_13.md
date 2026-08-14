@@ -372,8 +372,18 @@ source: >-
       happens in the paired finalize plan"), citing the finding for
       `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` to reconcile. Source:
       `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
-- [ ] [CODE] P2. DOCS P3: add sequential/gate_on_depends between ao_scheduled_job_reserve_and_staggering_2026_08_04.md's
-      2 prose-gated open todos Source: `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
+- [x] ✅ [CODE] P2. DOCS P3: add sequential/gate_on_depends between
+      ao_scheduled_job_reserve_and_staggering_2026_08_04.md's 2 prose-gated open todos — MOOT, no code change needed:
+      re-read the doc fresh (2026-08-14) and confirmed the exact pair the finding flagged (L322 enabler / L364 dependent
+      at the time the finding was filed 2026-08-10) has since both been checked off — the enabler (session-teardown
+      `checkout_sha` instrumentation) shipped `agent-orchestrator@0c27963` and the dependent (reaped-stale mid-run-death
+      re-check) was closed 2026-08-11 (slot 25, "superseded, not re-derivable"), both now `- [x]` in the source doc. The
+      doc's only 2 remaining open todos (the spawn-retry-cap guard confirmation and the `no_capacity` legacy-status
+      decision) do not reference each other in prose — there is no current open-open gating relationship left to encode.
+      Not touching the source doc's own copy of this todo here — per this batch's stated design ("checkbox
+      reconciliation back into each source doc happens in the paired finalize plan"), citing the finding for
+      `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` to reconcile. Source:
+      `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
 - [ ] [CODE] P2. SCRIPT P3: investigate why run_hygiene_sweep.sh's prettier emphasis-mangling check reported PASS
       despite 5 confirmed live instances Source: `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
 - [ ] [CODE] P2. DOCS P3: update ao_main_review_force_compact_idle_gate_unreachable_2026_08_09.md's frontmatter title
