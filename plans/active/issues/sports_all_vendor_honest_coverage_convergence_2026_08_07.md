@@ -268,6 +268,35 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       `empty_confirmed` grew by exactly the retyped counts (SFI +205,447 ≈ 205,363 retyped; weather +205,302, an exact
       match). Both sources now hold only `captured` + `empty_confirmed` + their small, already-diagnosed
       `attempted_failed` tail.
+- [ ] [SCRIPT][OPERATOR] P0. **REGRESSION 2026-08-14: SFI + weather `expected_unattempted` both re-inflated from the
+      2026-08-08 convergence (0) back to 791,000 (SFI) / 778,959 (weather) — root-caused, code fix landed, prod manifest
+      write PENDING operator sign-off.** Live census (read-only) confirmed: NOT a data_type merge — 100% of
+      `soccer_football_info` rows (866,978) are `data_type=SFI_PROGRESSIVE_STATS`; `SFI_LEAGUES`/`SFI_STANDINGS` carry 0
+      rows (retired 2026-05-05/04-24, never write manifest rows, no legacy residue). Root cause:
+      `unified_api_contracts/canonical/domain/sports/provider_league_ids.py` lines 886 + 892
+      (`SPORTS_ENTITY_LEAGUE_COVERAGE`) hardcoded `"SFI_PROGRESSIVE_STATS": None` / `"WEATHER": None` ("no restriction,
+      all leagues") — consulted ONLY by the bulk expected-universe enumerator
+      (`instruments-service/scripts/enumerate_expected_universe.py::_enumerate_v2_sports`, via
+      `get_entity_league_coverage(dt)`), which loops the FULL shared `LEAGUE_REGISTRY` (390 leagues today, up from ~101
+      at this plan's 2026-06-24 diagnosis — grown by
+      `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`'s ongoing Reference/Features-tier
+      league registrations). Confirmed live: SFI's 791,000 EU rows spanned 350 distinct `league_id`s (e.g.
+      `CUBA_PRIMERA_DIVISION`, `BHUTAN_SUPER_LEAGUE`, `GIBRALTAR_ROCK_CUP`), ~2,260 rows each = one per day for the full
+      2020-06-06→today history — a full-history re-seed, not a daily-cron trickle (daily cron:
+      `expected-universe-v2-sports-daily`, `terraform/gcp/expected_universe_v2_scheduler.tf`, 01:30 UTC). This was a
+      DIFFERENT, un-migrated SSOT from `SPORTS_SOURCE_LEAGUE_ALLOWLIST`/`is_sports_structural_gap()` (`league_data.py`)
+      — the ONE that was correctly fixed to the 33-league Prediction tier for weather/SFI/odds_api on 2026-08-10
+      (`unified-api-contracts@5d4a1e6f`) — so the writers (`sfi.py`/`weather.py`, via
+      `get_expected_leagues_for_source(..., classifications=["Prediction"])`) stayed correctly scoped while the
+      enumerator's SEPARATE entity-coverage gate never got the same fix: a partial consumer migration, not a new bug
+      introduced this week. odds_api's sibling entry (`ODDS_HORIZON_BUCKET`) was NOT affected — it already used a real
+      frozenset allow-list, not `None`. Fix: `provider_league_ids.py` lines 886/892 now derive both from the SAME
+      `get_expected_leagues_for_source(...)` call the writers use — single SSOT, can't re-diverge —
+      `unified-api-contracts@168dd74227` (QG green, landed on LDR). **Still blocked on operator confirmation** before
+      running `type_sfi_eu_no_provider_coverage_2026_06_27.py --apply` +
+      `type_weather_eu_no_provider_coverage_2026_06_27.py     --apply` against the live prod manifest to retype the
+      791,000 + 778,959 already-seeded phantom rows — running the code fix without these just stops the bleeding going
+      forward, it does not clean up the existing rows.
 - [x] ✅ [SCRIPT] P2. **Checked `type_understat_eu_no_provider_coverage.py` — NOT the same pattern, no action needed.**
       Dry-run (2026-08-07T22:18Z) confirms understat's 25 rows are `reason=EXPECTED_NO_FIXTURE`, dates 2026-08-05→
       2026-08-07 (today/yesterday) — matches the earlier "slot 4" diagnosis exactly (self-resolving IS-cron artifact for
