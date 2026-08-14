@@ -242,6 +242,20 @@ than proceeding.
       override-dict wiring already scoped in step 3. No step-2/3 code shipped this session pending operator review of
       this corrected design (see BLK-8436a1a6 follow-up); step 1 (the manifest re-stamp script) is independent of this
       correction and unaffected.
+- [x] ✅ [DATA] P0. **Draft + locally validate the 19-token re-stamp's step 1 (manifest relabel script) — NOT
+      execution.** Per operator interim guidance on BLK-20f1ba56 ("write + locally validate, stop short of VM
+      launch/live execution"): shipped `instruments-service@0c0a5109`
+      (`scripts/restamp_sports_19token_lowercase_2026_08_14.py`) — relabels `data_type` on the merged availability
+      index + every `_index/per_vm/*.parquet` shard per `SPORTS_IS_DATA_TYPE_LOWERCASE_FORM`, dry-run default,
+      `--apply-prod --confirm-prod-write` gated. Relabel logic locally validated against a synthetic in-memory DataFrame
+      (no GCS calls): confirmed correct per-token mapping, already-lowercase/non-target rows left untouched. Traced +
+      corrected the step 2/3 design (see CORRECTION note above) — all 8 registry sites classified, 5 real
+      manifest-boundary call sites identified with exact file:line citations. **Both instruments-service commits this
+      session (census `67105c6e` + this script `0c0a5109`) stay LOCAL/unshipped**, blocked by the unrelated pre-existing
+      `instruments_service_defi_golden_red_capability_drift_2026_08_14.md` QG-red — not by this todo. **The `[OPERATOR]`
+      execute todo directly above stays intentionally UNCHECKED** — no VM was launched, no live write was attempted;
+      BLK-20f1ba56 remains open pending the operator's actual go/no-go on the launch, and steps 2-3 still need code
+      written (scoped, not yet drafted) before that launch can happen.
 - [ ] [DATA] P0. **Fold footystats `ODDS` (6,306 captured) + `odds` (16,207 captured) into a single `odds`.** These are
       the same vendor population under two spellings; `source=footystats` remains the discriminator against the odds_api
       population. Note the UAC comment calling the uppercase set "4 stale empty rows" is FALSE — expect 6,306 real
