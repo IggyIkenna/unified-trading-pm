@@ -406,7 +406,22 @@ than proceeding.
       longer exists in the source of truth.
 - [ ] [DATA] P1. **Delete the 2,490 blank-venue rows** written by instruments-service into the MTDS tick manifest, once
       P1's writer fix has stopped the source. Verify the writer is genuinely fixed before cleanup — cleaning before the
-      writer stops just re-pollutes.
+      writer stops just re-pollutes. **Writer-stopped verification DONE 2026-08-14 (slot-26), live-measured** — this is
+      NOT the reference-data manifest's blank-venue population (14.4M rows there, but blank venue is CORRECT/expected
+      for league/team/fixture reference tokens like STANDINGS/XG/TEAMS — a wrong first-pass filter, corrected before
+      acting on it); the real target lives in the SEPARATE `market-data-tick-sports-prd-central-element-323112` manifest
+      (6.1M rows, distinct index from the reference-data one), where `service_name=instruments-service` + blank venue +
+      captured = **2,379** (`odds` 1,273 + `odds_horizon_bucket` 1,106 — matches
+      `sports_taxonomy_p2_consumer_inventory_2026_08_12.md`'s already-documented root cause exactly: the
+      `resolve_source_and_mode()` case-sensitivity bug in `backfill_orphan_class_e_sports.py`, fixed at
+      `instruments-service@d9994199`; the gap to 2,490 is the 111 `trades_inplay` rows already resolved by this plan's
+      own earlier in_play-column todo, so nothing missing). **Writer confirmed stopped**: `attempted_at` (write time)
+      for all 2,379 rows clusters 2026-07-21T16:02→2026-07-22T05:08 UTC — a one-time backfill batch, zero rows written
+      since, 3+ weeks before this fix landed and before today. Sampled rows carry no `instrument_id`/no real venue —
+      metadata-only artifacts of the buggy backfill, not real physical shards (no valid `venue=` path segment could have
+      been written for them). **Not yet deleted**: same "manifest rewrite never runs locally" constraint as the other
+      two pending tiny fixes above — batch all three (this + `odds_horizon_bucket`'s 4-row gap + the SPORT residue's 8
+      manifest rows) into ONE small VM run rather than three separate launches.
 - [ ] [DATA] P1. **Delete the `SPORT` instrument_type residue** (8 rows on ODDS_API's `trades`) — junk token, no backing
       model. **PARTIALLY DONE 2026-08-14 (slot-26)**: widened scope live — the manifest's 8 `trades` rows were only half
       the population; a bounded per-day GCS listing found an EQUAL, entirely un-manifested `data_type=odds` twin at the
