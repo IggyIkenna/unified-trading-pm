@@ -10,7 +10,7 @@ summary: >-
   import, SWALLOWS the ImportError into an empty schema, and 6 PM unit tests fail on `assert 0 >= 29`. That hard-fails
   quickmerge Stage 3, blocking every PM commit from the slot. Referenced as background noise in 9 active docs; owned and
   tracked by none, with zero open todos in the corpus.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -36,6 +36,9 @@ source:
   ]
 assigned_vm: planning
 resolved_by:
+  "All 6 todos done. Todo 6 (final): confirmed *.stale-pre-history-rewrite-* dirs are RETAINED per the already-resolved
+  /plans/archive/issues/git_health_scan_exclusion_infra_routing_2026_08_10.md ruling — intentional pre-history-rewrite
+  backups, main directed 'no deletions', git-health scan already excludes them."
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
@@ -53,6 +56,9 @@ context_scope:
 locked_by:
 locked_since:
 ---
+
+<!-- ARCHIVED: all 6 todos shipped/resolved — unified-trading-pm@9307f909af, c7c237d804, a5182bdbfc, 45d9248d68,
+d351f3ceb7, and this doc's own final todo-6 resolution (no code change, investigation-only) -->
 
 # Stale service venvs below their own declared fastapi floor
 
@@ -184,7 +190,7 @@ itself; the CVE doc keeps ownership of the `--ignore-vuln` allowlist.
       `data_pipeline_reconciliation_skill_2026_07_20.md` + `fleet_venv_drift_after_pull_no_resync_2026_08_11.md` (2
       shipped in the same commit; the SSOT flip itself also landed there). Each got
       `> **Owner for the stale-venv / \`iter_route_contexts\` ImportError**:
-      /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` at its mention site.     **`sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`is the ONE exception — pointer NOT added this     pass**: that doc's prettier-canonical form is 1008 lines > the 1000-line HARD plan cap (HEAD is 998L but     non-canonical), so staging ANY edit to it (even a pure pointer append) triggers a prettier reflow over the cap and     hard-fails plan-hygiene's`check_line_caps`.
+      /plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` at its mention site.     **`sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`is the ONE exception — pointer NOT added this     pass**: that doc's prettier-canonical form is 1008 lines > the 1000-line HARD plan cap (HEAD is 998L but     non-canonical), so staging ANY edit to it (even a pure pointer append) triggers a prettier reflow over the cap and     hard-fails plan-hygiene's`check_line_caps`.
       Its pointer is tracked as the P3 todo below (split/fold the doc under the cap, then add the pointer).
 - [x] ✅ [DOCS] P3. **DONE 2026-08-14 (slot 20).** `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` was over
       the 1000-line plan hard cap in its prettier-canonical form (1008L; HEAD 998L non-canonical). Folded the
@@ -195,15 +201,40 @@ itself; the CVE doc keeps ownership of the `--ignore-vuln` allowlist.
       own Progress Log now carries a short pointer summary + every entry from 2026-08-06 (slot 8) onward; prettier-
       canonical line count re-measured at **692L**, well under cap. Added the
       `> **Owner for the stale-venv / \`iter_route_contexts\` ImportError**:
-      /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` pointer at the archive doc's
-      Venv gotcha bullet (the one todo 5 could not land directly, since the doc was already over cap). Repo:
-      unified-trading-pm.
-- [ ] [INVESTIGATE] P3. Three `*.stale-pre-history-rewrite-20260805T112453Z/` sibling directories (execution-service,
-      instruments-service, market-data-processing-service, unified-trading-library) still carry their own 0.136.3 venvs
-      in the slot. Confirm they are dead weight from the 2026-08-05 history rewrite and can be removed, or document why
-      they are retained.
+      /plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` pointer at the
+      archive doc's Venv gotcha bullet (the one todo 5 could not land directly, since the doc was already over cap).
+      Repo: unified-trading-pm.
+- [x] ✅ [INVESTIGATE] P3. **DONE 2026-08-14 (slot 27) — RETAINED, not dead weight; no removal.** Three
+      `*.stale-pre-history-rewrite-20260805T112453Z/` sibling directories (execution-service, instruments-service,
+      market-data-processing-service, unified-trading-library) still carry their own 0.136.3 venvs in the slot. Confirm
+      they are dead weight from the 2026-08-05 history rewrite and can be removed, or document why they are retained. ✅
+      Investigated on this host (`.tabs/1`-`.tabs/16`, timestamp `20260805T112618Z` — a **different** timestamp than
+      this todo's `20260805T112453Z`, which was on a separate "Mac" host per the related doc below; same 2026-08-05
+      rewrite event, same resolution applies to both): (1) each dir is a real git clone with a live `origin` remote, not
+      an orphan; (2) **no `.venv` present in any of the 80 such dirs fleet-wide**
+      (`find … -path     '*.stale-pre-history-rewrite-*/.venv'` → 0 hits) — the "still carry 0.136.3 venvs" premise is
+      already moot, superseded by todo-3's 2026-08-13 fleet sweep which found no fastapi in these dirs; (3) each dir's
+      `HEAD` is byte-identical to its live sibling repo's `HEAD` (verified for all 5 repo types on slot 5) — they are
+      actively FF-realigned ("branch-heal"), not frozen; (4) total fleet footprint ≈3.3GB across 80 dirs (16 slots × 5
+      repos). **Decisive finding**: this exact question was already investigated and ruled on 2026-08-10 —
+      `/plans/archive/issues/git_health_scan_exclusion_infra_routing_2026_08_10.md` records main (agt-fc0755) confirming
+      these `*.stale-*` dirs are **intentional 08-05 pre-history-rewrite backups** and directing **"No deletions"**; the
+      git-health scan, slot reporter, and FF-cron were already patched to exclude them from drift/dirty noise
+      (`agent-orchestrator@b4ab17e84e` + `unified-trading-pm@71f10bc0f`). This todo's own investigation reproduces the
+      same facts independently and reaches the same conclusion — **retained by existing operator/main ruling**, no new
+      action needed. No repo/code changes; evidence is this todo + the cited archived doc.
 
 ## Progress Log
+
+**2026-08-14 (slot 27, todo 6 — final todo, doc now archived)** — Investigated the `.stale-pre-history-rewrite-*`
+sibling dirs (see flipped checkbox above for full findings). Conclusion: RETAINED, not dead weight — this exact question
+was already ruled on 2026-08-10 in `/plans/archive/issues/git_health_scan_exclusion_infra_routing_2026_08_10.md` (main:
+intentional backups, "no deletions"; git-health scan already excludes them from noise). No code change;
+investigation-only. All 6 todos now done and this doc is unlocked, so per the plan-completion-and-archival-discipline
+HARD RULE it is archived in this same turn to `plans/archive/2026_08/issues/`. Referrer sweep: updated all 12 external
+corpus references from `plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` to
+the new archive path (the two mentions inside this doc's own prior Progress Log entries were left as historical
+narrative, unaffected by the move).
 
 **2026-08-14 (slot 20, todo 6)** — Split `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` under its
 1000-line hard cap (was 1008L canonical) so the deferred owner-pointer from todo 5 could finally land. Folded the

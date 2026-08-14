@@ -313,7 +313,7 @@ unrelated clusters:
    fails PM's gate. Fix belongs in strategy-service's dependency set.
 
 > **Owner for the stale-venv / `iter_route_contexts` ImportError**:
-> /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
+> /plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
 
 2. **1 × `scripts/quality_gates/test_check_repo_docs_ssot.py::test_live_corpus_has_zero_new_drift`** — all 6 flagged
    files live in `instruments-service-agentwork-sports-2026-07-13/`, a **stale agent scratch clone** sitting in the

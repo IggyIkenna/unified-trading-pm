@@ -24,7 +24,7 @@ related:
     /plans/active/issues/na_eligibility_multiline_marker_continuation_lines_never_stripped_from_hash_2026_08_10.md,
     /plans/active/issues/plan_reconciler_findings_infra_2026_08_10.md,
     /plans/archive/2026_08/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md,
-    /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md,
+    /plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md,
     /plans/active/repo_scripts_governance_audit_2026_06_18.md,
   ]
 created: "2026-08-13"
@@ -157,8 +157,8 @@ source: >-
       correctly reports incremental_skip: true when no real content changed. Source:
       `plans/active/issues/na_eligibility_multiline_marker_continuation_lines_never_stripped_from_hash_2026_08_10.md`
 - [x] ✅ [CODE] P2. Make the swallowed ImportError loud in unified-trading-pm/scripts/quality_gates/_capability_gaps.py
-      (~line 864) Source: `plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` —
-      STALE-CHECKBOX CORRECTION (already-shipped-elsewhere, per
+      (~line 864) Source: `plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md`
+      — STALE-CHECKBOX CORRECTION (already-shipped-elsewhere, per
       `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3.4): the source issue doc's own
       todo 2 was already `[x] ✅ 2026-08-13` at `unified-trading-pm@c7c237d804` + `a5182bdbfc` before this batch
       dispatched — verified live: `c7c237d804` is an ancestor of `origin/live-defi-rollout`, the actual file is
@@ -169,15 +169,16 @@ source: >-
       flipping this checkbox to match reality — unified-trading-pm@c7c237d804 (pre-existing).
 - [x] ✅ [CODE] P2. Measure whether other slots and the AO VM carry the same fastapi staleness; report per-slot
       installed-vs-declared table Source:
-      `plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` — STALE-CHECKBOX CORRECTION
-      (already-shipped-elsewhere, per `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §
-      3.4): the source issue doc's own todo 3 was already `[x] ✅ 2026-08-13` at `unified-trading-pm@4f7c5f827b` before
-      this batch dispatched — verified live: `4f7c5f827b` is an ancestor of `origin/live-defi-rollout`, and the source
-      doc's Progress Log already carries the full per-slot table (all 33 slots + the AO VM's runtime venv swept, 239
-      fastapi-carrying venvs, zero below the `>=0.137.0` floor). No new measurement needed; flipping this checkbox to
-      match reality — unified-trading-pm@4f7c5f827b (pre-existing).
+      `plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` — STALE-CHECKBOX
+      CORRECTION (already-shipped-elsewhere, per
+      `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3.4): the source issue doc's own
+      todo 3 was already `[x] ✅ 2026-08-13` at `unified-trading-pm@4f7c5f827b` before this batch dispatched — verified
+      live: `4f7c5f827b` is an ancestor of `origin/live-defi-rollout`, and the source doc's Progress Log already carries
+      the full per-slot table (all 33 slots + the AO VM's runtime venv swept, 239 fastapi-carrying venvs, zero below the
+      `>=0.137.0` floor). No new measurement needed; flipping this checkbox to match reality —
+      unified-trading-pm@4f7c5f827b (pre-existing).
 - [x] ✅ [CODE] P2. Add a preflight/QG check that fails when an installed distribution is below its own pyproject.toml
-      floor Source: `plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` —
+      floor Source: `plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` —
       STALE-CHECKBOX CORRECTION (already-shipped-elsewhere, per
       `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3.4): the source issue doc's own
       todo 4 was already `[x] ✅ 2026-08-13` at `unified-trading-pm@45d9248d68` before this batch dispatched — verified
@@ -188,16 +189,26 @@ source: >-
       mis-invoked with the wrong interpreter — confirmed live against slot 27's own PM venv. No new code needed;
       flipping this checkbox to match reality — unified-trading-pm@45d9248d68 (pre-existing).
 - [x] ✅ [CODE] P2. Add a one-line pointer to this doc from the 9 referencing docs once todo 1 lands Source:
-      `plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` — STALE-CHECKBOX CORRECTION
-      (already-shipped-elsewhere, per `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §
-      3.4): the source issue doc's own todo 5 was already `[x] ✅ 2026-08-13 — slot-6` before this batch dispatched —
-      verified live: `rg -l "Owner for the stale-venv" plans/` finds the pointer already present in all 10 referencing
-      docs (9 listed in the source doc's Prior-art section + `fleet_venv_drift_after_pull_no_resync_2026_08_11.md`) plus
-      the archive sibling `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01_progress_log_archive_2026_08_14.md`
-      (landed via the source doc's own todo 6, 2026-08-14). No new code needed; flipping this checkbox to match reality
-      — unified-trading-pm (this batch, pre-existing content).
-- [ ] [CODE] P2. Confirm the 4 .stale-pre-history-rewrite-* archive dirs are dead weight and can be removed, or document
-      why retained Source: `plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md`
+      `plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` — STALE-CHECKBOX
+      CORRECTION (already-shipped-elsewhere, per
+      `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3.4): the source issue doc's own
+      todo 5 was already `[x] ✅ 2026-08-13 — slot-6` before this batch dispatched — verified live:
+      `rg -l "Owner for the stale-venv" plans/` finds the pointer already present in all 10 referencing docs (9 listed
+      in the source doc's Prior-art section + `fleet_venv_drift_after_pull_no_resync_2026_08_11.md`) plus the archive
+      sibling `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01_progress_log_archive_2026_08_14.md` (landed via
+      the source doc's own todo 6, 2026-08-14). No new code needed; flipping this checkbox to match reality —
+      unified-trading-pm (this batch, pre-existing content).
+- [x] ✅ [CODE] P2. **DONE 2026-08-14 (slot 27) — same investigation as the source doc's own final todo, RETAINED, not
+      dead weight.** Confirm the 4 .stale-pre-history-rewrite-* archive dirs are dead weight and can be removed, or
+      document why retained Source:
+      `plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` — investigated
+      directly (not just a checkbox-mirror): each dir is a live git clone with a real `origin` remote (not orphaned),
+      carries no `.venv` fleet-wide (0/80 dirs), and its `HEAD` is byte-identical to its live sibling repo's `HEAD`
+      (actively FF-realigned, not frozen). Decisive: this exact question was already ruled on 2026-08-10 in
+      `/plans/archive/issues/git_health_scan_exclusion_infra_routing_2026_08_10.md` — main confirmed these `*.stale-*`
+      dirs are intentional 08-05 pre-history-rewrite backups and directed "no deletions"; the git-health
+      scan/reporter/FF-cron already exclude them from drift noise (`agent-orchestrator@b4ab17e84e` +
+      `unified-trading-pm@71f10bc0f`). No repo/code changes; retained by existing operator/main ruling.
 - [ ] [CODE] P2. Execute the 'immediately-safe ~40' script deletions (UI 2026-03 .tsx.bak splitters/codemods, done
       deployment-service bucket migrations, the 5 dead checkers) -- the sub-list this doc's own Delete-execution item
       names as unconditionally safe, distinct from the campaign-gated cohort it's bundled with Source:

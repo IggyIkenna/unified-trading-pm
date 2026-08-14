@@ -21,7 +21,7 @@ tags: [sports, data-pipeline-correctness, odds-api, archive, line-cap-split]
 related:
   [
     /plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md,
-    /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md,
+    /plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md,
   ]
 created: 2026-08-14
 author: ikennaigboaka
@@ -351,7 +351,7 @@ re-learned the hard way):**
   `filters=[("date","==",D)]` (slim/date-filtered read, ~5MB/day; unbounded reads of the sports index are ~6.5GB).
 
   > **Owner for the stale-venv / `iter_route_contexts` ImportError**:
-  > /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
+  > /plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
 
 - **Cloud Run Job freshness**: the job resolves `market-tick-data-service:latest` FRESH per execution. To confirm a fix
   is live: `gcloud run jobs executions describe <exec> --region asia-northeast1` → resolved `image@sha256:` → match the
