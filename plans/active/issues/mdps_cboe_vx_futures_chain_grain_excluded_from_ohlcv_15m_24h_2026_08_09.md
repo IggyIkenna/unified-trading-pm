@@ -11,7 +11,7 @@ summary: >-
   `market-data-tick-tradfi-prd-*` availability manifest) found the underlying aggregation MECHANISM already exists and
   is PROVEN working end-to-end for CME/NASDAQ/NYSE (`mdps-backfill-tradfi-20260803-104812`: 99,711 real candles, 788
   captured manifest rows) — `TradfiOhlcv15mAdapter`/`TradfiOhlcv24hAdapter`'s `related_data_types` fix
-  (`market-data-processing-service@0671953`) and the UAC `ohlcv_24h` alias fix (`unified-api-contracts@079d48ff`) both
+  (`market-data-processing-service@de8ea9f`) and the UAC `ohlcv_24h` alias fix (`unified-api-contracts@079d48ff`) both
   already ship. So this todo is NOT "genuinely new build" as its own text framed it — EXCEPT for one real, CBOE-specific
   blocker: CBOE VX-futures raw `ohlcv_1m`/`ohlcv_1s` ticks are captured ONLY at `instrument_type=futures_chain` grain
   (2,942 captured rows, 2020-06-01→2026-08-06, confirmed live on GCS), never at the per-contract `future` leaf grain UAC
@@ -82,7 +82,7 @@ new build") against the current code + a live, read-only GCS query.
 bucketing (`open=first, high=max, low=min, close=last, volume=sum`) whenever multiple finer-grain source rows map into
 one coarser grid slot — not a pure 1:1 passthrough despite the class name.
 `TradfiOhlcv15mAdapter`/`TradfiOhlcv24hAdapter` both declare `related_data_types: list[str] = ["ohlcv_1m", "ohlcv_1s"]`
-(shipped `market-data-processing-service@0671953`, 2026-08-03), which lets raw `ohlcv_1m`/`ohlcv_1s` reach this adapter
+(shipped `market-data-processing-service@de8ea9f`, 2026-08-03), which lets raw `ohlcv_1m`/`ohlcv_1s` reach this adapter
 for `ohlcv_15m`/`ohlcv_24h` output requests. A live verification VM run (`mdps-backfill-tradfi-20260803-104812`,
 documented in `/plans/active/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`) already proved this
 exact mechanism end-to-end: **99,711 real candles, 788 real `captured` manifest rows** for CME/NASDAQ/NYSE
@@ -192,16 +192,60 @@ market-tick-data-service, not MDPS) to additionally emit or re-key per-contract 
       verification) is NOT claimed here**: no live VM re-run was launched; a real `ohlcv_15m`/`ohlcv_24h` manifest row
       for CBOE VX-futures still needs a `mdps-backfill-tradfi-*` run over an affected date to confirm end-to-end.
 
-- [ ] [SCRIPT] P2. **Live-verify option (a) end-to-end (remaining done-when).** Run
-      `mdps-backfill-tradfi-* --force --data-types "ohlcv_15m ohlcv_24h" --venues "CBOE CME" tradfi 2026-07-20     2026-07-24 full`
-      over dates with confirmed CBOE `futures_chain` ohlcv_1m/1s raw capture (2,942 captured rows,
-      2020-06-01→2026-08-06), after refreshing the floating MDPS tarball
-      (`create-code-tarballs.sh --include market-data-processing-service`, per `vm-tarball-deployment.md`), and confirm
-      a real `ohlcv_15m`/`ohlcv_24h` candle row lands in the manifest for CBOE `futures_chain` WITHOUT reopening the CME
-      combo `SchemaContractNotFoundError` crash (run CME in the same pass to prove the exclusion still holds). Safe /
-      idempotent: a `--force` backfill re-writes canonical skip-if-fresh paths; no GCS delete, no `--apply`. Repo:
-      market-data-processing-service (+ deployment-service for the tarball refresh). This is the shared remaining
-      done-when of this doc's `[CODE] P2` above and `tradfi_satellite_ao_dispatch_batch9_2026_08_09.md` todo 2.
+- [x] ✅ [SCRIPT] P2. **PARTIALLY DONE 2026-08-14 (slot-20, worker) — `ohlcv_15m` CONFIRMED end-to-end; `ohlcv_24h`
+      needs the follow-up todo below.** Refreshed the MDPS tarball and ran `mdps-backfill-tradfi-20260814-010920`
+      (`--force --data-types "ohlcv_15m ohlcv_24h" --venues "CBOE CME"     tradfi 2026-07-20 2026-07-24 full`). Found a
+      SECOND, previously-undiagnosed bug this live-verify itself surfaced (not part of option (a)'s scope):
+      `LiveChainProcessingMixin._resolve_chain_adapter_data_type` (`live_workers_chain.py`) unconditionally overrode the
+      `CandleAdapterRegistry` lookup key to the raw chain type (`futures_chain`) whenever a blob path carried
+      `instrument_type=futures_chain/`, INCLUDING when the caller was requesting a derived coarse timeframe
+      (`ohlcv_15m`/`ohlcv_24h`) rather than a raw content type — no adapter is registered under the bare key
+      `"futures_chain"` itself, so every CBOE attempt failed "No adapter for tradfi/ohlcv_15m" with 0 candles (this
+      doc's `[CODE] P2` above only fixed the scanner-admission half; the adapter-selection half was untested until this
+      live run). Fixed (`market-data-processing-service@d720375bb9`, QG-green, regression test added to
+      `test_chain_bundle_adapter_routing.py`): the override now no-ops for `ohlcv_15m`/`ohlcv_24h` so the target's own
+      dedicated `TradfiOhlcv15mAdapter`/`TradfiOhlcv24hAdapter` resolves instead (unaffected: the ORIGINAL Deribit
+      mislabelled-trades/options_chain routing this function was built for — those data_types are never in the
+      coarse-timeframe carve-out set).
+
+      **Re-ran** (`mdps-backfill-tradfi-20260814-013207`, same CLI, tarball re-pinned to `d720375bb9`) and confirmed
+          via the run's own per-VM manifest shard (`_index/per_vm/mdps-backfill-tradfi-20260814-013207.parquet`,
+          queried read-only via UTL `download_from_storage`, not gsutil): **`venue=CBOE, instrument_type=FUTURE,
+          data_type=ohlcv_15m, capture_status=captured` — 20 real rows** across the 5-date/2-venue run — this doc's
+          done-when for `ohlcv_15m` is MET. **CME stayed clean**: zero `COMBO` mentions anywhere in the run.log, and
+          zero manifest rows of any kind for CME in this VM's shard — the 2026-08-06 combo exclusion is intact, not
+          reopened.
+
+          **`ohlcv_24h` for CBOE FUTURE — NOT confirmed, needs its own follow-up (new todo below).** The explicit
+          `ohlcv_24h` processing pass in both runs found only 5 candidate files/date (vs. 12 for `ohlcv_15m`) and never
+          touched the CBOE `futures_chain` blob at all (0 rows, captured or failed, for `venue=CBOE,
+          instrument_type=FUTURE, data_type=ohlcv_24h` in the manifest) — a scanner file-candidate-listing asymmetry
+          between the two coarse data_types, distinct from both bugs fixed so far. Not investigated further this pass
+          (scope/time-bounded) — see the new todo.
+
+          **Unrelated finding, already tracked — not a new issue**: the second run's SchemaContractNotFoundError count
+          (`instrument_type='OPTION'`, `venue='CME'`, `underlying∈{GOLD,NASDAQ100,SILVER,SP500}`) is CME single-leg
+          options-on-futures, a DIFFERENT instrument_type than the `combo`/`futures_chain` this doc's own scope
+          excludes — it's per-shard isolated (does not abort the date's other shards; CBOE's 20 rows landed in the SAME
+          runs), and matches the already-open, already-unblocked "OPTION half" todo in
+          `/plans/active/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` (`("tradfi","option")`
+          is `frozenset()` in `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`) — no new todo needed here, just noting the
+          live evidence lines up with that doc's existing scope.
+
+- [ ] [CODE] P2. **Investigate + fix why the explicit `ohlcv_24h` scanner pass never admits the CBOE `futures_chain`
+      blob, even though the `ohlcv_15m` pass (same run, same source content) does.** Live evidence:
+      `mdps-backfill-tradfi-20260814-013207` run.log — for each of the 5 dates (2026-07-20..24), "Processing data_type:
+      ohlcv_15m" lists 12 candidate files (includes CBOE `futures_chain/data_type=ohlcv_1m` + `ohlcv_1s`) and writes 20
+      total `venue=CBOE/instrument_type=FUTURE/data_type=ohlcv_15m/captured` manifest rows; "Processing data_type:
+      ohlcv_24h" immediately after, same date, lists only 5 candidate files and touches zero CBOE `futures_chain`
+      content — 0 manifest rows (captured or failed) for `venue=CBOE/instrument_type=FUTURE/data_type=ohlcv_24h`
+      anywhere in the run. Likely a scanner-side file-candidate-matching asymmetry (`orchestration_scanner.py`'s
+      blob-matching / `related_data_types` expansion) that treats `ohlcv_15m` and `ohlcv_24h` requests differently
+      despite `TradfiOhlcv24hAdapter.related_data_types` declaring the same `["ohlcv_1m","ohlcv_1s"]` sources as the 15m
+      adapter — start there. Re-run `mdps-backfill-tradfi-*` with the same CLI shape after the fix to confirm a real
+      `venue=CBOE/instrument_type=FUTURE/data_type=ohlcv_24h/capture_status=captured` manifest row lands. Repo:
+      market-data-processing-service. This is the doc's own remaining `ohlcv_24h` done-when, split out from the
+      `[SCRIPT]` todo above once `ohlcv_15m` was confirmed working.
 
 # Progress Log
 
@@ -225,3 +269,15 @@ market-tick-data-service, not MDPS) to additionally emit or re-key per-contract 
   launched, so the issue doc's done-when (real candles without reopening the CME crash) still needs a VM run over an
   affected CBOE date; that live-verify is `tradfi_satellite_ao_dispatch_batch9_2026_08_09.md` todo 2's own done-when,
   left `- [ ]`.
+
+- 2026-08-14 (slot-20, worker): dispatched the `[SCRIPT] P2 Live-verify` todo. First run
+  (`mdps-backfill-tradfi-20260814-010920`) found `ohlcv_15m` still producing 0 candles for CBOE — root-caused to a
+  SEPARATE bug in `_resolve_chain_adapter_data_type` (adapter-selection, not scanner-admission) that this live-verify
+  itself surfaced; fixed + regression-tested (`market-data-processing-service@d720375bb9`, QG-green). Re-ran
+  (`mdps-backfill-tradfi-20260814-013207`) and confirmed via the per-VM manifest shard: 20 real
+  `venue=CBOE/instrument_type=FUTURE/data_type=ohlcv_15m/capture_status=captured` rows, zero CME manifest pollution and
+  zero `COMBO` mentions in either run's log (combo exclusion intact). `ohlcv_24h` for CBOE FUTURE still has zero
+  manifest rows either way — a distinct scanner file-candidate-listing gap, split into its own `[CODE]` todo above
+  rather than investigated further this pass. Also noted (not a new issue) that the second run's CME
+  `instrument_type='OPTION'` `SchemaContractNotFoundError`s line up with the already-open, already-unblocked "OPTION
+  half" todo in `/plans/active/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`.
