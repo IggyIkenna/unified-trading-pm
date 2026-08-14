@@ -129,6 +129,16 @@ context_scope:
 - [ ] [DATA] P3. Verify the 2022 year-sharded features VM (`features-sports-sports-2022-20260810-051126`): no
       EXIT_STATUS (terminated mid-run 07:15Z, skip-if-fresh only) — confirm 2022 features coverage in the availability
       index.
+- [ ] [CODE] P1. Both slot-30's dedup fix (`deployment-service@427d6d2b91`) and slot-21's completion-ack-race fix
+      (`agent-orchestrator@962e5c1`) are confirmed live on `origin/live-defi-rollout` (re-verified 2026-08-14 by slot-6,
+      occurrence TEN — see Progress Log) yet a FRESH escalation id (`agt-8e558e`) for the SAME VM still fired after both
+      landed. Neither shipped fix is the full story — a third, still-undiagnosed path is creating new
+      `EscalationQueueRow`s for this VM. Candidates NOT yet checked: (a) whether `check_dispatch_dedup_for_finding`'s
+      vm_name fallback is actually reached on THIS finding's code path (vs. a different finding-construction site that
+      bypasses it), (b) whether the dedup's "open issue" lookup is matching this doc correctly (`status:`/path-pattern
+      mismatch), (c) a distinct AO-side re-queue trigger unrelated to the completion-ack race part (b) fixed. Needs a
+      dedicated fix task spanning both repos with request/response tracing on a live reproduction, not another one-shot
+      wall re-diagnosis.
 - [x] [CODE] P1. ✅ **(a) dedup-layer fix SHIPPED** — `deployment-service@427d6d2b91` adds
       `escalation_dedup.find_open_issue_for_vm` + `check_dispatch_dedup_vm`, mirroring the existing
       `(asset_group, data_type)`-keyed path but matched on the exact `vm_name` (immutable once a VM has terminated, so a
@@ -318,3 +328,18 @@ separate part-(a) dedup gap), not this same-object bounce recurring. No code cha
 todo's checkbox with the commit as evidence per the Commit+Push+Flip rule's Half-2 closure. `deployment-service` part
 (a) and `agent-orchestrator` part (b) are now BOTH shipped; the only remaining open todos in this doc are the P2
 relaunch-storm-actuator observation and the P3 2022-year-shard verification.
+
+**slot-6 2026-08-14 (data_pipeline_failure escalation agt-8e558e, TENTH occurrence)** — another fresh escalation id
+(`agt-8e558e`) dispatched for the SAME VM `features-sports-sports-2026-20260810-051126`, identical stale-context shape
+(`"Filed issue: (none — alert carries the details)"` + bare `RELAUNCH` instruction, no reference to this issue doc, the
+operator do-not-relaunch ruling BLK-4fecb718, or the massively-exceeded relaunch bound). Grepped `plans/active/` +
+`issues/` per the pre-task conflict-check HARD RULE and found this issue immediately. New evidence this session added
+beyond re-confirming the standing decision: explicitly verified BOTH previously-shipped fixes are live on
+`origin/live-defi-rollout` (`git merge-base --is-ancestor 427d6d2b91 origin/live-defi-rollout` → true;
+`... 962e5c1 origin/live-defi-rollout` → true) — and this escalation STILL fired after both landed. That rules out "the
+fix hasn't deployed yet" as the explanation and means a third, distinct mechanism is still creating fresh escalations
+for this VM; added a dedicated `[CODE] P1` todo above with the specific unchecked candidates rather than re-diagnosing
+blind under this one-shot wall's time-box. No relaunch performed (upstream state and the relaunch-bound-exceeded ruling
+are unchanged from the nine prior re-verifications — did not re-run those checks). No code change in
+`deployment-service` this session (this wall's `$REPO`; diagnosing the residual dispatch-gap mechanism needs cross-repo
+tracing better suited to a dedicated task, per the new todo).
