@@ -321,6 +321,13 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       not 2 new independent regressions — not proven (no per-category timing captured for delta-one/onchain).
       `deployment-api@5d99e89a30` (comment-only, cites this evidence in `data_status_rollup_worker.py`). See todo below
       for the follow-up fix.
+- [x] ✅ [SERVICE] P1. **Layer-2 fix on the SAME OOM (independent of `f1d1d19c8` above): read-side pushdown + tree-build
+      bound.** `deployment-api@b15cbe87e7` pushes `source=`/`pipeline_mode=` down to the parquet filter (was
+      pandas-post-decode). That alone exposed a NEW bug — `source=`-filtered totals silently returned 0 (tree build for
+      SPORTS' 3-level-deep axis always hit the terminal leaf, 212s to build ~76K nodes, past the child's 120s cap,
+      swallowed to an empty 200 instead of an error). Fixed same-day: `deployment-api@dcc72be104` adds a cross-recursion
+      `NodeBudget` (totals computed from the full df, never the tree) — 212s→32.4s, verified live post-deploy:
+      `captured=20246 empty_confirmed=55653 attempted_failed=112 total=76011` (byte-identical to direct manifest read).
 - [ ] [SCRIPT] P3. **Capture per-category timing for features-delta-one-service + features-onchain-service's rollup
       compute** (same method as instruments-service's 2026-08-10 fix: 3 live measurements against prod buckets), then
       decide whether they need a `_CHILD_JOIN_TIMEOUT_OVERRIDES_S` entry — do not blind-bump. If cumulative container
