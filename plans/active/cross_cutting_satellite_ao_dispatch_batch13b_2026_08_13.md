@@ -479,8 +479,20 @@ source: >-
       `execution_service/config/__init__.py`'s module docstring (where a reader looking for `config.py` lands first),
       pointing to `service_config.py` as the real target — kept out of `service_config.py` itself to respect its line
       cap.
-- [ ] [CODE] P2. Close the Bybit API-key reload asymmetry in DATA_SOURCE_TO_SECRET — §D Source:
-      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
+- [x] ✅ [CODE] P2. Close the Bybit API-key reload asymmetry in DATA_SOURCE_TO_SECRET — §D Source:
+      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` — **ALREADY SHIPPED, no new code
+      needed (verified 2026-08-14).** This todo's literal ask — fix UAC's `DATA_SOURCE_TO_SECRET` registry so it can
+      express Bybit — is already done: `unified-api-contracts@8c72b501` added the bare `"BYBIT": "bybit"` entry to
+      `VENUE_TO_DATA_SOURCE` and `"bybit": "bybit-trade-api-key"` to `DATA_SOURCE_TO_SECRET`
+      (`unified_api_contracts/canonical/canonical_mappings.py`), with its own comment explicitly citing "plan § D, close
+      the Bybit API-key reload asymmetry" as the motivation. Confirmed live in the current worktree (both entries
+      present) and `8c72b501` verified an ancestor of `origin/live-defi-rollout`. The bespoke `_BybitKeyReloader` in
+      `execution-service/execution_service/config_reloaders.py` (landed separately via `execution-service@c2053c47`,
+      also already an ancestor of `origin/live-defi-rollout`) remains, but its own docstring now documents why: it
+      resolves the Bybit **trade-scope secret pair with a fallback to the unscoped pair**
+      (`_resolve_bybit_credentials`), a capability the generic single-secret-name `ApiKeyReloader` structurally does not
+      implement — a real, documented capability gap distinct from the registry gap this todo targeted, not an accidental
+      "silently unmaintained" duplicate. No further registry or reloader change is warranted by this todo's scope.
 - [ ] [CODE] P2. G1 — feed config_algorithm through the already-threaded selector hook Source:
       `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
 - [ ] [CODE] P2. Delete the shadow BookType (J1) and import UAC's enum Source:
