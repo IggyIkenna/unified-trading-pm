@@ -1,8 +1,9 @@
 # SUB-AGENT MANDATORY RULES — Lean Essentials
 
 > Sub-agent in the **Unified Trading System** workspace — context is FRESH, nothing inherited. **Read this file in full
-> before your first tool call.** Non-negotiable floor; for domain rules read `cursor-configs/CLAUDE.md` + only the codex
-> SSOT your task touches (conditional-load — skip what doesn't apply).
+> before your first tool call.** Non-negotiable floor; for domain-specific rules read `cursor-configs/CLAUDE.md`
+>
+> - only the codex SSOT your task touches (conditional-load — skip rules that don't apply).
 
 ## Identity + workspace
 
@@ -16,41 +17,41 @@
   MEASUREMENT**: 0 hits ≠ missing (runtime-resolved) — read the consumer; a PROXY (line count, exit 0, green test) ≠ the
   property — measure or say you didn't; uncertain → ASK. SSOT:
   `/codex/12-agent-workflow/measurement-claims-discipline.md`. Never `python3 <<EOF` for file analysis — use `rg`.
-- **Batch independent tool calls — the trigger is PRE-call**: before any Bash/Read/Grep ask _what else will I want
-  regardless of this answer_ and fold it into the SAME call (compound `&&`/`;`, several `tool_use` blocks, `replace_all`
-  over serial Edits); only result-dependent calls stay sequential. 57.3% collapsible. SSOT:
-  `/codex/06-coding-standards/tool-call-batching.md`.
+- **Batch independent tool calls into ONE turn** (same response) — never fire single-lookup Reads/Greps/Bash one per
+  turn when they have no dependency; compound `&&`/`;` Bash; prefer `replace_all` over serial Edits; thin brief → batch
+  YOUR OWN discovery reads too. SSOT (numbers/hooks/authoring gaps): `/codex/06-coding-standards/tool-call-batching.md`.
 
 ## Quality gates / tests — the ONLY way to run them
 
 ```bash
-cd <repo> && bash scripts/quality-gates.sh           # ship mode — only when you own a tree-wide reformat
-cd <repo> && bash scripts/quality-gates.sh --no-fix   # no reformat — committing only your own named files
+cd <repo> && bash scripts/quality-gates.sh # ship mode — only when you own a tree-wide reformat
+cd <repo> && bash scripts/quality-gates.sh --no-fix # no reformat — committing only your own named files
 ```
 
 **Never** run `pytest` directly (wrong venv); **never** `pip install` (use `uv pip install`); **never** re-lock
 internal-dep drift in `uv.lock`. A green `quality-gates.sh` tree is the per-repo quality boundary — the gate enforces
-the bans, so green tree = contract. **QG admission is RESOURCE-based — just invoke it, it queues; never quote a fixed
-concurrency cap (legacy), never bulk-kill another slot's `pytest`/QG.** SSOT:
-`/codex/06-coding-standards/quality-gates.md`.
+the bans, so green tree = contract. **Shared host ≤2 full QGs at once — never bulk-kill another slot's `pytest`/QG.**
+SSOT: `/codex/06-coding-standards/quality-gates.md`.
 
 ## Ship CODE: two-pass, never a raw `git push`
 
-1. **Pass 1 — full quality gate** writes `.qg_last_passed_sha` (== HEAD); skip it and Pass 2 refuses. The commit is the
-   quality boundary for EVERY code commit, not just the ship. Gate ONCE per batch (QG-sweep) → per-unit commits.
+1. **Pass 1 — full quality gate** writes `.qg_last_passed_sha` (== HEAD); skip it and Pass 2 refuses (missing sentinel).
+   The commit is the quality boundary for EVERY code commit, not just the ship. Gate ONCE per batch (QG-sweep) →
+   per-unit commits.
 2. **Pass 2 — `bash scripts/quickmerge.sh "feat: …" --agent --files '<p1> <p2>'`** — ALWAYS `--agent`, scope `--files`
    by name (never the whole tree, never `git add -A` even on prek retry). Verifies sentinel == HEAD, stages, commits,
-   lands on LDR; a standing job promotes LDR→main DIRECT behind `quality-gates-v2` (staging is DORMANT). **A raw
-   `git push` of code is BANNED** (dodges dep gates). Carve-outs: dirty-deps; PM `docs(plans):` flip via
-   `scripts/dev/safe-doc-push.sh`. **Never `[skip ci]`** on a v2-gated promotion-PR commit (required check goes MISSING
-   → PR BLOCKED). **NEVER force-push a shared branch.**
+   lands on LDR; Tier-C drain promotes LDR→staging→main behind `quality-gates-v2`. **A raw `git push` of code is
+   BANNED** (dodges dep gates). Carve-outs: dirty-deps; PM `docs(plans):` flip via `scripts/dev/safe-doc-push.sh`.
+   **Never `[skip ci]`** on a v2-gated promotion-PR commit (required check goes MISSING → PR BLOCKED). **NEVER
+   force-push a shared branch.**
 3. **Commit + Push + Flip, SAME turn (HARD RULE)**: flip `- [ ]` → `- [x] — <repo>@<sha> + evidence`, commit with the
    MANDATORY `docs(plans):` prefix (`plan(...)` is hook-rejected) — unflipped is invisible to the orchestrator, causing
    a wasted re-dispatch. An all-done unlocked plan archives immediately (`locked_by` needs `[unlock-plan]` ask). SSOT:
    `/codex/08-workflows/ci-cd-flow.md`.
 
-**Behind remote**: quickmerge STAGE 0.4 auto-reconciles (ff → rebase-autostash); same-file conflict → `rebase --abort`,
-then `QUICKMERGE_BLOCKED` recovery per the autostash recipe — never blind-overwrite.
+**Conditional push**: `git fetch` first; 0 incoming → push freely; behind at quickmerge → STAGE 0.4 auto-reconciles (ff
+→ rebase-autostash); same-file conflict → `rebase --abort` + `QUICKMERGE_BLOCKED` (recover per the autostash recipe,
+never blind-overwrite).
 
 ## Foot-guns (each has burned the workspace)
 
@@ -104,33 +105,32 @@ cross-repo / SSOT contradiction / kill-switch / batch≠live) → **NOTIFY THE O
 Never report a backgrounded task done before its real exit; rely on the tracked-task auto-re-invoke (don't poll harness
 tasks); poll external work only on a **progress metric** (flat = STALL → diagnose); reach a TERMINAL **measured**
 verdict (liveness `kill -0 <PID>`, no self-match) — `ScheduleWakeup`/a dispatched sub-agent are NOT reliable wakes, arm
-your OWN `run_in_background` heartbeat watchdog (size-to-job). **Never `gh workflow run ldr-to-main-promote-fleet.yml`
-to check if your repo promoted** — starves its one shared slot (measured 2+ hr livelock); read
-`promotion_lag_monitor.py` or `gh pr list --search "chore(promote)"`. SSOT:
-`/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
+your OWN `run_in_background` heartbeat watchdog (≤30-min). **Never `gh workflow run ldr-to-main-promote-fleet.yml` to
+check if your repo promoted** — starves its one shared slot (measured 2+ hr livelock); read `promotion_lag_monitor.py`
+or `gh pr list --search "chore(promote)"`. SSOT: `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 
 ## When YOU spawn sub-agents
 
-**Max 5 parallel** (different repos ok, same file never) — the host is SHARED by ~4 slots (operator ruling 2026-08-10).
-Paste THIS file at the TOP of every Task spawn (no inherited context); if impractical, prepend "read
-`unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full and follow ALL rules" — injection failure means
-the agent MUST NOT proceed. Send all `Task` calls in ONE message; set `model=` explicitly. Finish-to-DONE → also paste
-`cursor-configs/AUTONOMOUS_AGENT_RULES.md`.
+**Max 5 parallel** (different repos ok, same file never) — the host is SHARED by ~4 slots, so 10-per-slot oversubscribes
+a ~10-core box several times over (operator ruling 2026-08-10). Paste THIS file at the TOP of every Task spawn (no
+inherited context); if impractical, prepend "read `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in
+full and follow ALL rules" — injection failure means the agent MUST NOT proceed. Send all `Task` calls in ONE message;
+set `model=` explicitly. Finish-to-DONE → also paste `cursor-configs/AUTONOMOUS_AGENT_RULES.md`.
 
 ## When escalating a question to the operator (HARD RULE)
 
 **Always present options, never open-ended** — min 2, your recommendation marked (e.g. "A: … [WORKER REC]"); the
-dashboard has an "Other" free-text input. Only one path genuinely exists → say so. Never a bare yes/no unframed.
+dashboard has an "Other" free-text input. Only one path genuinely exists → say so, don't fake a choice. Never a bare
+yes/no without framing both sides.
 
 ## When in doubt — retrieve less but right
 
-**Grep the L0 doc index first**: `unified-trading-pm/DOC_INDEX.generated.md` (gitignored; regen
-`scripts/docs/refresh-doc-index.sh`; grep, NEVER read whole). Narrow by facet —
+**Grep the L0 doc index first**: `unified-trading-pm/DOC_INDEX.generated.md` (per-clone, gitignored; regen
+`bash scripts/docs/refresh-doc-index.sh`; grep it, NEVER read whole). Narrow by facet —
 `rg -l '^authoritative_for:.*<topic>' codex/` lands THE one SSOT; confirm its `summary:`, open ONLY that doc;
 `code_refs` jumps doc→code. Fallback: `cursor-configs/CLAUDE.md`'s domain index — or ask the operator a focused question
 (≤1 min read-only investigation first).
 
 - **Ship via `safe-doc-push.sh`/`quickmerge.sh` — they COMMIT FROM AN ISOLATED WORKTREE** so a peer session sharing your
-  checkout can't revert your edits; never re-improvise reconcile-retry. **quickmerge 10 / safe-doc-push 12·13 = your
-  change is NOT on origin — RECOVER from the printed ref, never plain re-run**; verify with a marker only YOUR change
-  could have produced. SSOT: `/codex/12-agent-workflow/ship-tooling-silent-success.md`.
+  checkout can't revert your edits; never re-improvise reconcile-retry. **Exit 10 = your edits were reverted — RECOVER
+  from the printed stash ref, never plain re-run.** SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
