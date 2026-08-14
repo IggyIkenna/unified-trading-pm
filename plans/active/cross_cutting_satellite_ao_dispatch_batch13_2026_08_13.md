@@ -124,7 +124,19 @@ source: >-
       blocked, HEAD is red" — is not currently true; a same-day re-run before attempting a real commit will very likely
       land it. Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
-- [ ] [CODE] P2. Move the 11 Pydantic BaseModel subclasses out of service source or record a justified exemption Source:
+- [x] ✅ [CODE] P2. **Recorded justified exemptions (not a move) — 9 real classes, not 11.** The gate's own filtered
+      check (excluding `# CORRECT-LOCAL`-annotated lines, which the raw `git grep -l` count in the source issue didn't
+      account for) currently flags exactly 9 classes across 4 files: `api/registry_router.py` (4),
+      `api/operational_mode_router.py` (2), `api/restriction_profile_router.py` (1), `signal_broadcast/transport.py`
+      (2). All 9 are FastAPI request/response wire-shape DTOs bound to specific endpoints (admin registry envelopes,
+      operational-mode transition body/reply, a restriction-profile HTTP envelope wrapping a UAC `RestrictionProfile`,
+      and signal-broadcast ack/emission wire shapes) — not domain data contracts other services consume; two of the four
+      files already self-documented this as a deliberate follow-up in their own module docstrings. Annotated each class
+      with the repo's established `# CORRECT-LOCAL` exemption convention (already used in 8 other strategy-service
+      files: `client_config.py`, `config_loader.py`, `reconciliation_routes.py`, `sports_position_tracker.py`,
+      `position/models.py`, `position_interface/routing.py`, `risk/api/main.py`, `risk/models.py` — none of those needed
+      touching, already exempt). Verified: QG-equivalent regex clean post-fix; full `quality-gates.sh --no-fix` green
+      (`✅ ALL QUALITY GATES PASSED`, 31s) — strategy-service@621858344d (2026-08-14, slot-10·infra). Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
 - [ ] [CODE] P2. Resolve the STEP 5.37 inline HF/LTV/margin thresholds against UAC LIQUIDATION_PARAMS_REGISTRY — **note
       (2026-08-14 diagnosis above): the `catalog_carry.py` hit (`_, liquidation_threshold = resolve_ltv_mode(...)`) is a

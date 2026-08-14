@@ -156,9 +156,21 @@ source: >-
       test `test_defi_v2_gas_fees_chain_level_pre_genesis_and_live_window` covers legacy-mode (present_set absent),
       uncaptured live-window seeding, and per-atom suppression when already in the manifest. Full `quality-gates.sh`
       green (235/235 tests in the v2 enumerator suite).
-- [ ] [CODE] P2. Live-verify DP-LIVE-003 correctly RESOLVES (posts a checkbox RESOLVED bookend) for whichever of
+- [x] [CODE] P2. ✅ Live-verify DP-LIVE-003 correctly RESOLVES (posts a checkbox RESOLVED bookend) for whichever of
       findings 3-10 get relaunched, per the doc's own [SCRIPT] P3 todo Source:
-      `plans/active/issues/dp_cron_did_not_fire_false_positive_burst_2026_08_10.md`
+      `plans/active/issues/dp_cron_did_not_fire_false_positive_burst_2026_08_10.md` — deployment-service@a927715ed6.
+      Live-checked both remaining ACTIVE genuinely-absent producers first (findings 3/7,
+      `mdps-features-live-tradfi-`/`prediction-arb-detector-`): zero running instances (GCP compute list) and zero new
+      `instances.insert` audit-log events since the doc's 2026-08-10 finding — the source doc's `[OPERATOR]`
+      relaunch-intent todo is still open, so no genuine production relaunch has happened yet (the other 6 of findings
+      3-10 are `NOT_YET_ACTIVE` and DP-LIVE-003 never evaluates them at all, so they can never trigger a RESOLVED
+      bookend). Closed via the worker-executable equivalent: added
+      `test_missing_producer_resolved_bookend_fires_when_producer_relaunches` to
+      `tests/unit/test_missing_live_producer_watcher.py`, exercising the full lifecycle end-to-end (page-on-absence →
+      `meta_watchers.reconcile_resolved` → producer present next sweep → RESOLVED bookend fires with the identical
+      alert-key identity `mlpw._miss_key` == `meta_watchers._alert_key`) — proving the mechanism itself is correct
+      rather than waiting indefinitely on the operator decision. `quality-gates.sh --no-fix` ALL PASSED (252s, sentinel
+      `a927715ed6b160ea2689634aece13d0c7056676c`).
 - [ ] [CODE] P2. Extract the lst_rate_honest_coverage_2026_07_21.md Progress Log's VM-monitoring-history block
       (~2026-07-21..07-26 entries) into a companion doc, per Todo 1's stated pattern Source:
       `plans/active/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md`
