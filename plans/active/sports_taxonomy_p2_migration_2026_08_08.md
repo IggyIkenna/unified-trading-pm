@@ -417,3 +417,12 @@ than proceeding.
   launched, no live re-stamp attempted; the branch does not merge until the new doc's classification + coding todos
   complete AND the operator gives an explicit go/no-go on the atomic merge+launch (delete-safety-style review a 16M-row
   prod-manifest rewrite warrants, per the todo's own `[OPERATOR]` tag).
+- **2026-08-14 (slot-26, same-day follow-up)** —
+  `/plans/active/sports_taxonomy_p2_19token_manifest_write_site_inventory_2026_08_14.md`'s classification +
+  code-authoring + verification is now COMPLETE (full detail in that doc, not duplicated here): every remaining vendor
+  file + `process_*.py` stage fixed, a classification-method error found and corrected mid-session (manifest-read
+  skip-checks need translate-BEFORE, not keep-uppercase), 2 latent bugs found and fixed via a full-suite quality-gate
+  run (18 test assertions updated, all confirmed pre-migration-uppercase artifacts, zero real regressions), branch
+  pushed as `instruments-service@5b1b2c72`. The `[OPERATOR]` execute todo below still stays UNCHECKED — the branch is
+  fully coded + locally-validated but still deliberately unmerged; the atomic merge+launch decision is now ready for
+  operator go/no-go review.
