@@ -250,6 +250,20 @@ days.
       prior attempt in this batch (log counters + manifest `written_at` + GCS `last_modified` — a clean exit code alone
       has already proven insufficient multiple times this batch). Confirm zero non-zero-rc dates before calling this
       closed.
+- [ ] [DATA] P3. NEW, SEPARATE, narrow finding surfaced mid-4th-re-derive (2026-08-14, unrelated to contract_size/
+      margin_type):
+      `No SchemaContract registered for asset_group='cefi' instrument_type='<SYMBOL>' data_type='liq_agg_15s'     venue='BINANCE-FUTURES'`
+      — 8 distinct symbols (AVAX/LTC/ATOM/BTC/UNI/DOGE/ADA/ETHUSDT), ~16 total occurrences, 2021-01-31..2021-02-08 only.
+      Root cause NOT yet confirmed but strongly suspected: the raw
+      `venue=BINANCE-FUTURES/.../data_type=liquidations/ticks.parquet` BUNDLE file (multiple instruments per file, not
+      per-instrument) has a malformed per-row `instrument_type` column containing the SYMBOL string instead of
+      `PERPETUAL` for these specific rows — a likely raw MTDS historical data-quality issue for this exact 9-day window,
+      not an MDPS code bug (MDPS's fail-closed `SchemaContract` lookup is working as designed, refusing to guess).
+      Correctly recorded as `attempted_failed`, not silently wrong. Needs: (1) confirm the raw bundle file's actual
+      `instrument_type` column content for one of these symbol/dates to verify the hypothesis, (2) if confirmed, either
+      a targeted content-fix (same methodology as Finding 1a) or accept as honest historical absence. Very small blast
+      radius (16 occurrences vs the thousands-of-shards P0 findings above) — does not block calling Findings 1/2/3
+      verified.
 
 ## Lesson
 
