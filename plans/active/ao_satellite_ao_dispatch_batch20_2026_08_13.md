@@ -153,8 +153,15 @@ source: >-
       AO-dispatch conflict-check protocol's rule 4 ("already-shipped elsewhere, checkbox just never flipped"), citing
       the SHA here rather than re-doing the work. Source:
       `plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`
-- [ ] [CODE] P2. Repair the NULL-provenance rows (clear the affected ProcessedTranscriptRow fingerprints, re-sweep,
-      re-measure and record the NULL counts) Source:
+- [x] ✅ [CODE] P2. Repair the NULL-provenance rows (clear the affected ProcessedTranscriptRow fingerprints, re-sweep,
+      re-measure and record the NULL counts) — STALE-CHECKBOX correction, not new work: already SHIPPED at
+      `agent-orchestrator@002126cb32` (2026-08-13) — `scripts/orchestrator/repair_null_provenance.py` + 5 tests, QG
+      green (3589 pytest / 319 vitest), then run live on the fleet DB (`--apply --sweep`): 631 affected transcript files
+      repaired, NULL `slot_id` 31,947→0 ($62.72), NULL `is_review_slot` 35,975→0 ($68.89), verified independently
+      against the live DB, fingerprints re-upserted so the repair doesn't need to recur. The source doc's own copy of
+      this exact todo was already flipped `[x]` there but this batch20 extraction never picked up the SHA. Per the
+      AO-dispatch conflict-check protocol's rule 4 ("already-shipped elsewhere, checkbox just never flipped"), citing
+      the SHA here rather than re-doing the work — same pattern as the todo immediately above this one. Source:
       `plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`
 - [ ] [CODE] P2. Discover DeepSeek transcripts by glob (~/.claude-configs/_/projects/_/_.jsonl plus
       ~/.claude/projects/_/*.jsonl) instead of enumerating live slot rows, so a retired slot's transcripts are still
