@@ -790,25 +790,17 @@ genuine-UI, out of scope.
       replaced hardcoded `central-element-323112` with `{project_id}`. unified-trading-pm@codex-doc-commit +
       client-reporting-api@77b2d54 (quickmerge, landed LDR). Doc gates: prettier-clean, doc-body-links clean, my refs
       add 0 danglers.
-- [ ] [OPERATOR] P2. **ibkr-gateway-infra internal contradictions (⚠️ ground-truth needed)**: the repo contradicts
-      itself on (a) archived-vs-live status (`QUALITY_GATE_BYPASS_AUDIT.md` says archived; README/docs/coverage-floor
-      treat it as live) and (b) 2FA automation (README/ARCHITECTURE claim IBGA+TOTP "no human 2FA";
-      `DEPLOYMENT_GUIDE`/`FIRST_TIME_LOGIN` describe manual GUI/IB-Key login). Needs an operator/owner call on the
-      repo's actual status + the canonical 2FA path before the FIX-STALE rewrite can land. (repo: ibkr-gateway-infra)
-      **⏸ PARKED 2026-07-31 (main, Option A of BLK-273ddfda — false prereq `ibkr-owner-decision-made`, priority:999):**
-      dispatch-scope mismatch — this is an owner decision, not worker/main-determinable, so it was churning through
-      workers. Ground-truth captured for the owner (slot-6, so the eventual rewrite need not re-derive it): (a)
-      **STATUS** — every objective signal says LIVE (active README describing a live deployed gateway;
-      actively-maintained `.coverage-floor-exception.md` @2026-03-08, floor 51% / actual 52.38%; on `live-defi-rollout`;
-      active workspace scope); the lone dissent is `QUALITY_GATE_BYPASS_AUDIT.md` L7 "Repo is archived", which reads
-      STALE — but status was deliberately owner-gated (an intent to wind IBKR down would not be visible in code), so NOT
-      overridden. (b) **2FA** — the README already reconciles the layering (`docker-compose.ibga.yml` IBGA
-      fully-automated TOTP = primary L62; `docker-compose.yml` gnzsnz manual 2FA = fallback L63; `DEPLOYMENT_GUIDE` Step
-      3 frames GUI login as First-Time / One-Time); the one residual is whether the IBGA path is truly zero-touch or
-      still needs that one-time GUI bootstrap (`DEPLOYMENT_GUIDE` L58/L189 + `FIRST_TIME_LOGIN.md` say a first-login IS
-      required on first start / re-provision). **UNPARK**: owner answers (a)+(b) → set `ibkr-owner-decision-made=true`,
-      restore priority 50 + `priority_override:     false`, reload → apply the FIX-STALE rewrite reconciling all 4 ibkr
-      docs per their call. Do NOT proceed before that.
+- [x] ✅ P2. **ibkr-gateway-infra internal contradictions** — resolved by operator ruling 2026-08-13 on
+      `QUALITY_GATE_BYPASS_AUDIT.md` (CORRECTED, supersedes an earlier 12:17 misreading that wrongly inferred "being
+      wound down"): (a) **STATUS** — the repo is NOT archived/wound down; it's deployable + actively maintained, simply
+      not currently prioritized to run LIVE since backtesting needs are met from other sources. Only
+      `QUALITY_GATE_BYPASS_AUDIT.md` L7 "Repo is archived" was stale — fixed to reflect that reality;
+      README/ARCHITECTURE/DEPLOYMENT_GUIDE were already correctly LIVE and untouched. (b) **2FA** —
+      `DEPLOYMENT_GUIDE`/`FIRST_TIME_LOGIN`'s more precise description (a first-login IS required on first
+      start/re-provision) is canonical; README's "no human 2FA required" overstated the IBGA path's zero-touch-ness and
+      was corrected to match. Applied via the FIX-STALE rewrite: ibkr-gateway-infra@905a317
+      (`QUALITY_GATE_BYPASS_AUDIT.md` + `README.md`; `ARCHITECTURE.md`/`DEPLOYMENT_GUIDE.md`/`FIRST_TIME_LOGIN.md`
+      already matched the corrected ruling, no edit needed there).
 
 ### deployment-service refreshed registry (2026-07-27) — supersedes the stale Appendix-A `(~52)` entry
 
