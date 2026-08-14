@@ -151,6 +151,22 @@ All three are real design/priority calls, not something determinable from code o
       scope split. The decision to do this is no longer open; only the credential-creation ACTION remains, and only the
       operator's own Bybit exchange login can perform it (no cloud identity or automation can create a new exchange-side
       API key) — that is why the tag stays `[HUMAN]` rather than moving to an AO execution tag.
+- [ ] [SCRIPT] P2. **MTDS's own key-reload preflight
+      (`unified_trading_library.startup_validation.validate_api_keys_for_venues`, called via
+      `api_key_reloader.py`/`tick_data_handler.py._start_key_reloader`) has NO fallback to the unscoped `bybit-api-key`
+      — unlike `execution-service`'s already-shipped fallback (item above).** Found 2026-08-14 launching the CeFi Tardis
+      equity-perp backfill (`cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`):
+      `cefi-bybit-2026-heavy-20260814-151808` failed all 16/16 date-chunks with
+      `StartupValidationError: Missing API keys for venues [...]: ["bybit (secret: 'bybit-trade-api-key')"]` even though
+      `bybit-api-key` (the unscoped credential, created 2026-07-23) exists and is presumably still a real, usable key.
+      `validate_api_keys_for_venues` (`startup_validation.py:225-233`) does a single fixed
+      `secret_client.get_secret(secret_name)` per venue via `get_required_secrets(venues)` with no fallback attempt —
+      the venue is BLOCKED-CODE-GAP for market-data capture, not BLOCKED-CREDENTIALS (a working credential exists, MTDS
+      just can't find it under the name it's hardcoded to look for). Fix: mirror execution-service's
+      `_load_venue_trade_credentials` fallback pattern in `validate_api_keys_for_venues` (or in `get_required_secrets`
+      itself) — try the scoped name first, fall back to the unscoped `bybit-api-key` pair. **Not fixed in this pass**
+      (equity-perp backfill session deferred BYBIT and proceeded with OKX-SWAP/BINANCE-FUTURES, which have working
+      scoped keys) — a proper fix needs a test + QG run, not a rushed mid-launch patch. Repo: unified-trading-library.
 - [ ] [BACKEND] P2. **Decide on OKX/Hyperliquid's scope-separation design**, if wanted at all, since neither fits the
       Binance/Deribit pattern. **APPROVED (operator, 2026-08-08)**: "Build both: OKX/Hyperliquid scope-separation AND
       the Aster execution adapter" — retagged `[HUMAN]`→`[BACKEND]`. This item's own text already narrows the design

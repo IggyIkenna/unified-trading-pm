@@ -271,3 +271,14 @@ lifecycle, not a PM-doc dedup check), and this task's own issue-doc scope (`repo
 `agent-orchestrator`; added it to `repos:` and split it into its own tracked P2 todo above rather than guessing a fix in
 an unfamiliar subsystem under one session's time-box. Flipped the P1 CODE todo to done for part (a); part (b) stays open
 as its own todo.
+
+**slot-7 2026-08-14 (data_pipeline_failure escalation agt-9e5637, NINTH occurrence)** — another fresh escalation id
+(`agt-9e5637`) dispatched for the SAME VM `features-sports-sports-2026-20260810-051126`, identical stale-context shape
+(`"Filed issue: (none — alert carries the details)"` + bare `RELAUNCH` instruction, no reference to this issue doc, the
+standing operator do-not-relaunch ruling BLK-4fecb718, or the massively-exceeded relaunch bound). Confirmed this is the
+same VM name as all eight prior occurrences via this issue doc before acting. Given the underlying GCS/manifest state
+has been re-verified multiple times today with nothing that could plausibly have changed since, and the fix for part (a)
+already shipped (`deployment-service@427d6d2b91`) while part (b) — the agent-orchestrator completion-ack/clear race —
+remains the open, correctly-scoped-elsewhere todo, did not re-run those checks — no relaunch performed, no code change
+in `deployment-service` (this wall's `$REPO`). Not bumping the tracked P2 todo's priority again; the todo already
+reflects P1 and nine occurrences in one day is the same evidence already on record, just accumulating.
