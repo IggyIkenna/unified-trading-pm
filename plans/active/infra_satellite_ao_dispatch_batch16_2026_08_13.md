@@ -167,9 +167,15 @@ source: >-
       `import_error` (line ~857-863) instead of degrading to `{}`, and the regression test
       `test_import_error_fails_loud` exists in `tests/unit/test_capability_param_schema.py:116`. No new code needed;
       flipping this checkbox to match reality — unified-trading-pm@c7c237d804 (pre-existing).
-- [ ] [CODE] P2. Measure whether other slots and the AO VM carry the same fastapi staleness; report per-slot
+- [x] ✅ [CODE] P2. Measure whether other slots and the AO VM carry the same fastapi staleness; report per-slot
       installed-vs-declared table Source:
-      `plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md`
+      `plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` — STALE-CHECKBOX CORRECTION
+      (already-shipped-elsewhere, per `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §
+      3.4): the source issue doc's own todo 3 was already `[x] ✅ 2026-08-13` at `unified-trading-pm@4f7c5f827b` before
+      this batch dispatched — verified live: `4f7c5f827b` is an ancestor of `origin/live-defi-rollout`, and the source
+      doc's Progress Log already carries the full per-slot table (all 33 slots + the AO VM's runtime venv swept, 239
+      fastapi-carrying venvs, zero below the `>=0.137.0` floor). No new measurement needed; flipping this checkbox to
+      match reality — unified-trading-pm@4f7c5f827b (pre-existing).
 - [ ] [CODE] P2. Add a preflight/QG check that fails when an installed distribution is below its own pyproject.toml
       floor Source: `plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md`
 - [ ] [CODE] P2. Add a one-line pointer to this doc from the 9 referencing docs once todo 1 lands Source:
