@@ -79,9 +79,15 @@ source: >-
       its direct unit test (`test_parse_curve_full`); confirmed no other code references remain (only historical
       comments in `_dex_pools_subgraph.py`/`_parse_balancer`'s docstring, left as-is — accurate prose, not broken code).
       Full quality-gates.sh green.
-- [ ] [CODE] P2. Determine the real scope of the HYPERLIQUID perp_funding gap around 2026-04-20 via a bounded manifest
-      query across April-May 2026 (explicitly not a corpus walk, worker-determinable outcome) Source:
+- [x] [CODE] P2. ✅ Determine the real scope of the HYPERLIQUID perp_funding gap around 2026-04-20 via a bounded
+      manifest query across April-May 2026 (explicitly not a corpus walk, worker-determinable outcome) Source:
       `plans/active/issues/defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md`
+      — market-tick-data-service@ba8b3146. Bounded
+      `read_availability_index(..., filters=[("date",">=",...),("date","<=",...)])` query for
+      `(cefi, perp_funding, HYPERLIQUID)` across 2026-04-01..2026-05-31 found **61/61 days captured, zero gap**
+      (including 2026-04-20 itself). The original 2026-08-08 preflight failure no longer reproduces — the gap has since
+      closed. Confirmed NOT the same root cause as `defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md`
+      (different data_type, non-overlapping window). Full findings in the source issue doc's Progress Log.
 - [ ] [CODE] P2. P3 test-isolation flake fix: add a setup_events() fixture to
       test_batch_harness.py::test_position_state_survives_across_ticks so it passes in isolation (strategy-service repo)
       -- bounded/mechanical, not a judgment call. Source:

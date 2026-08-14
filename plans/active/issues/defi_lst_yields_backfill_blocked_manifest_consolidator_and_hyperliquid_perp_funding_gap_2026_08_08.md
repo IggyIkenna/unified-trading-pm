@@ -127,11 +127,21 @@ Missing: market-tick-data-service-perp
       `plans/archive/issues/dp_consolidator_scheduler_paused_defi_recurrence_2026_08_07.md` (resolved, archived
       2026-08-07). The "escalate as novel" branch does not apply. The underlying outage itself remains open, tracked in
       that sibling doc — not resolved here, only the "is this tracked" question is answered.
-- [ ] [DIAG] P2. Determine the real scope of the HYPERLIQUID `perp_funding` gap around 2026-04-20 — a bounded manifest
-      query (not a fresh whole-corpus walk) for `(cefi, perp_funding, HYPERLIQUID)` across April-May 2026 to establish
-      whether this is a single-day hole or a wider window, and whether it's the same root cause as the already-tracked
-      `defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md` gap (likely not, given the date predates that
-      gap's window — confirm rather than assume). Repo: market-tick-data-service.
+- [x] ✅ [DIAG] P2. **RESOLVED — no gap exists as of 2026-08-14.** Determined the real scope of the HYPERLIQUID
+      `perp_funding` gap around 2026-04-20 via a bounded manifest query (not a fresh whole-corpus walk) for
+      `(cefi, perp_funding, HYPERLIQUID)` across April-May 2026. Repo: market-tick-data-service@ba8b3146 —
+      `scripts/check_hyperliquid_perp_funding_gap_2026_08_14.py`
+      (`read_availability_index(bucket, filters=[("date",">=",...),("date","<=",...)])` row-group pushdown, NOT a
+      full-corpus walk). Result: **61/61 calendar days captured** for `(cefi, perp_funding, HYPERLIQUID)` across
+      2026-04-01..2026-05-31, including 2026-04-20 itself (a `captured` row, not `empty_confirmed`/absent). 70 total
+      manifest rows in the window (61 `captured` + 9 `empty_confirmed` duplicates/retries on other dates, no bearing on
+      coverage). The original 2026-08-08 preflight failure ("no manifest row for required venue(s) ['HYPERLIQUID'] on
+      2026-04-20 (n=4 rows total)") no longer reproduces against today's manifest — the gap has since closed (plausibly
+      the same manifest-consolidator catch-up todo 1 already tracked, or an intervening backfill/live-cron write; not
+      further investigated, out of this todo's bounded scope). **Confirmed separate from
+      `defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md`**: that gap is a different data_type
+      (`perp_daily_ctx`, not `perp_funding`) over a non-overlapping later window (2026-06-02-onward vs this doc's
+      2026-04-01..2026-05-31) — not the same root cause, as the doc's own note suspected.
 - [ ] [DATA] P3. **Once both gaps above are resolved (or a clean date range is identified), re-run
       `backfill_lst_yields_30day.sh`** (now bug-fixed, `features-service@00b399d7a`) — either over the original
       2026-04-20→2026-05-19 window if the gaps clear, or over a re-scoped clean window if they don't. Cite the manifest
@@ -159,3 +169,16 @@ Missing: market-tick-data-service-perp
   `defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md` (read in full) — closed by citation. Todos 2-3 remain
   genuine open work (todo 2 unevidenced anywhere in the corpus; todo 3 explicitly gated on 1+2, and the underlying
   consolidator outage is still genuinely unresolved). Doc stays `assigned_vm: NA`.
+- **2026-08-14 (AO worker, defi_satellite_ao_dispatch_batch13_2026_08_13 todo 2, slot 14)**: `[DIAG] P2` (todo 2)
+  RESOLVED — shipped a bounded `read_availability_index(..., filters=[...])` diagnostic script
+  (`market-tick-data-service/scripts/check_hyperliquid_perp_funding_gap_2026_08_14.py`) and ran it live against the real
+  `market-data-tick-cefi-prd-central-element-323112` bucket for `(cefi, perp_funding, HYPERLIQUID)` across
+  2026-04-01..2026-05-31: **61/61 days captured, zero gap, including 2026-04-20 itself** (a `captured` row, not
+  `empty_confirmed`/absent — 7 total rows on 2026-04-20 across all `perp_funding` venues, up from the 4 the original
+  2026-08-08 finding saw, consistent with the gap having closed between filing and now). Confirmed NOT the same root
+  cause as `defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md` (different data_type, non-overlapping
+  window). Did not investigate WHY the gap closed (manifest-consolidator catch-up vs an intervening backfill/cron write)
+  — out of this todo's bounded scope. Todo 3 (`[DATA] P3`, the `backfill_lst_yields_30day.sh` re-run) is now unblocked
+  on the perp_funding side; the manifest-consolidator staleness class from Todo 1 may still need a fresh live check
+  before re-running it (not re-verified here). Evidence: script output above; full quality-gates.sh green on the shipped
+  SHA.
