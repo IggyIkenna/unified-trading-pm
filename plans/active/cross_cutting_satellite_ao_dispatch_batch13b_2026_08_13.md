@@ -425,10 +425,37 @@ source: >-
       keyed by that pair → `policy_ref`, resolved via `resolve()`/`resolve_config_algorithm()`) and
       `v2/policy_spec.py`'s `ExecutionPolicyDomainConfig.bindings` (the GCS-hosted binding table, same key shape).
       Confirmed live in the current worktree; `c2053c47` verified an ancestor of `origin/live-defi-rollout`.
-- [ ] [CODE] P2. Give the execution-policy registry a GCS loader + DomainConfigReloader subscription — §B Source:
-      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
-- [ ] [CODE] P2. Wire policy evaluation into the live execution path (select_algorithm takes config_algorithm from the
-      resolved policy) — §B Source: `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
+- [x] ✅ [CODE] P2. Give the execution-policy registry a GCS loader + DomainConfigReloader subscription — §B Source:
+      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` — **ALREADY SHIPPED, no new code
+      needed (verified 2026-08-14).** `execution-service@c2053c47` already added
+      `execution_service/v2/policy_reloader.py` following the existing three-reloader pattern
+      (instruments/clients/rate-limits in `config_reloaders.py`):
+      `start_execution_policy_reloader(config_store_bucket, project_id)` builds a
+      `DomainConfigReloader[ExecutionPolicyDomainConfig]` (domain=`"execution-policies"`), registers `_on_policy_reload`
+      (atomic-swap into `_active_policy_resolver`, exposed via `get_active_policy_resolver()`), and calls
+      `start_watching()`; `stop_execution_policy_reloader()` mirrors it. Confirmed live in the current worktree:
+      `config_reloaders.start_domain_config_reloaders`/`stop_domain_config_reloaders` call the policy reloader
+      start/stop alongside the other three (same function, same commit lineage); `execution_service/api/app.py` calls
+      `start_domain_config_reloaders` at service startup; `execution_service/v2/__init__.py` exports
+      `get_active_policy_resolver`/`start_execution_policy_reloader`/`stop_execution_policy_reloader`; wrapper-level
+      coverage in `tests/unit/test_config_reloaders.py` (empty-bucket-disabled + stop-when-none paths exercise the
+      policy-reloader call sites). `c2053c47` verified an ancestor of `origin/live-defi-rollout`.
+- [x] ✅ [CODE] P2. Wire policy evaluation into the live execution path (select_algorithm takes config_algorithm from
+      the resolved policy) — §B Source: `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` —
+      **ALREADY SHIPPED, no new code needed (verified 2026-08-14).** `execution-service@c2053c47` (same commit as this
+      batch's two preceding "ALREADY SHIPPED" todos) already wires this: `HandlerRegistry.select_algorithm()`
+      (`execution_service/engine/routing/handler_registry.py:149-174`) falls back to
+      `resolve_config_algorithm(self._policy_resolver, client_id, slot_label, policy_context)` when no explicit
+      `config_algorithm` is supplied, feeding the resolved policy's `then_algo` into the same `config_algorithm` hook
+      `select_algorithm()` already validates against `ALGOS_BY_INSTRUCTION_TYPE`; the v2 `TradeHandler`/`SwapHandler`
+      path (`execution_service/v2/handlers.py:152-156`) calls the identical `resolve_config_algorithm` helper via
+      `get_active_policy_resolver()`. Confirmed live in the current worktree (`git log` shows `c2053c47` as the
+      introducing commit; `git rev-list --left-right --count HEAD...origin/live-defi-rollout` = `0 0`, i.e. fully landed
+      on `origin/live-defi-rollout`). Test coverage:
+      `tests/unit/test_handler_registry.py::test_select_algorithm_resolves_config_algorithm_from_policy` (explicitly
+      cites "plan § G1") + `tests/unit/v2/test_policy_resolver.py`. This closes the same underlying gap as this batch's
+      later "G1 — feed config_algorithm through the already-threaded selector hook" todo (§D framing of the identical §B
+      ask) — no separate fix needed there either.
 - [ ] [CODE] P2. Add the reference price to the shared instruction envelope with its mark mode — §C Source:
       `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
 - [ ] [CODE] P2. Subscribe strategy-service to ClientDomainConfig — §D Source:

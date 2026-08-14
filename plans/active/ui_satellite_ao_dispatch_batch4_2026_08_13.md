@@ -139,12 +139,34 @@ source: >-
       lint). Not in this todo's scope (batch4's title doesn't cite it): "Fold RepoCi ImageCell fields into the new
       columns" — that's a distinct sentence trailing the same source-doc checkbox, left for the source doc's own
       reconciliation. Source: `plans/active/artifact_pipeline_observability_2026_07_17.md`
-- [ ] [BACKEND] P2. Retire the superseded narrow deployment-api build/artifact routes once the new artifact_pipeline
-      service covers them; delete dead code (Phase 4) — retagged `[CODE]` → `[BACKEND]` 2026-08-14 (ui_developer slot-14
-      craft-mismatch catch): the work is Python-only
-      (`deployment-api/routes/{cloud_builds,_cloud_builds_*,     _code_builds_aws,builds_history}.py` + their `main.py`
-      registrations + tests) — no TS/React surface, out of ui_developer's craft (`agents/ui_developer.md` does_not:
-      Python service code). Source: `plans/active/artifact_pipeline_observability_2026_07_17.md`
+- [x] ✅ [BACKEND] P2. Retire the superseded narrow deployment-api build/artifact routes once the new artifact_pipeline
+      service covers them; delete dead code (Phase 4) — deployment-api@`3f13e4435e`. **Surfaced an unknown the plan
+      didn't anticipate**: the source plan's "Prior art to ABSORB then delete" list names
+      `cloud_builds/_cloud_builds_*/_code_builds_aws.py` for WHOLESALE deletion, but that framing predates two things
+      that make wholesale deletion wrong: (1) this same batch plan's own already-shipped sibling todo ("Port the
+      manual-trigger action into the new /ops/artifacts page", deployment-ui@9d5ad0d105) wired `ArtifactPipeline.tsx`'s
+      "Trigger build" popover to `getCloudBuildTriggers()`/`triggerCloudBuild()`, which hit these EXACT
+      `cloud_builds.py` `/triggers`+`/trigger` routes — live, load-bearing endpoints, not dead code; (2)
+      `_cloud_builds_history.py`'s `_recent_builds_by_repo_name` is imported by `repo_ci.py` (RepoCi image signal,
+      active) and `cloud_builds.py`'s re-exported `get_gcp_build_client` is imported by `service_status_checkers.py` —
+      both files are load-bearing for currently-active features, so none of
+      `cloud_builds.py`/`_cloud_builds_types.py`/`_cloud_builds_trigger.py`/`_cloud_builds_history.py`/
+      `_code_builds_aws.py` can be deleted wholesale without breaking them. **Scoped to what's genuinely dead**
+      (confirmed via grep across `deployment-ui/src` for every caller + every test file, zero consumers found): deleted
+      `builds_history.py` in full (`/api/builds/history` — separate router, zero consumers) + its `main.py`
+      registration/test; removed `cloud_builds.py`'s `/history/{service}`, `/library-status/{library}`,
+      `/dependency-check` routes (superseded by the new `/ops/artifacts` Pipeline/Health tabs, zero frontend callers);
+      removed their now-unreachable helpers (`_build_history_for_repo` in `_cloud_builds_history.py`,
+      `get_codebuild_history_sync` in `_code_builds_aws.py`) and 5 now-dead TypedDicts
+      (`BuildHistoryResponseDict`/`QualityGatesStatusDict`/`LibraryStatusDict`/`DependencyIssueDict`/
+      `DependencyCheckResponseDict`) in `_cloud_builds_types.py`; trimmed the corresponding test classes in
+      `test_cloud_builds_helpers.py` + `test_code_builds_aws.py`. Kept `/triggers`+`/trigger` (manual-trigger action,
+      per the source plan's own "keep the manual-trigger action" note) and every file those two live routes or
+      `repo_ci.py`/`service_status_checkers.py` still import from. Full deployment-api quality-gates green; 892 lines
+      net removed. `deployment-ui`'s `client.ts` still exports `getCloudBuildHistory()`/a `/cloud-builds/aws-status`
+      caller with zero page consumers (the latter already pointed at a route that never existed in `cloud_builds.py`) —
+      pre-existing dead frontend code, out of this BACKEND-craft-tagged todo's TS/React-free scope; a `ui_developer`
+      follow-up can clean those up if picked up. Source: `plans/active/artifact_pipeline_observability_2026_07_17.md`
 - [ ] [BACKEND] P2. Build→deploy latency join: 'built but never deployed' + build-to-first-revision latency (Phase 6
       stretch) — retagged `[CODE]` → `[BACKEND]` 2026-08-14 (ui_developer slot-7 craft-mismatch catch, same class as the
       routes-retirement todo above): the work is a new `_condition()` derivation in

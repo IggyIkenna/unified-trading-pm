@@ -148,6 +148,18 @@ source: >-
       `plans/active/sports_consolidated_closeout_2026_07_19.md`
 - [ ] [CODE] P2. Track O: repair attempted_at on the 112,277 rows from the named pre-clobber snapshot (a normal,
       human-watched write window, not unsupervised) Source: `plans/active/sports_consolidated_closeout_2026_07_19.md`
+
+      **INVESTIGATED 2026-08-14 (slot-12, backend_engineer) — target keys extinct, repair as specified is moot.**
+          Full investigation + evidence in the source doc's own Track O entry (this same commit). Summary: the
+          consolidator-pause safety question is resolved (incremental cycles pass through unchanged canonical rows
+          untouched, so a direct CAS-write would need no pause) — but a dry-run join of the pre-clobber snapshot against
+          the LIVE canonical (both the base 4-col dedup key and the full production key, `_dedup_key_sql`-normalized
+          identically to `manifest_consolidator`) found **0 matching rows**: `venue=BETFAIR` no longer exists (split into
+          `BETFAIR_SB_UK`/`BETFAIR_EX_EU`/`BETFAIR_EX_UK` by a later venue-taxonomy migration) and current
+          `data_type='trades'` rows all belong to `venue=ODDS_API`, unrelated. No prod write attempted (nothing to write).
+          Leaving open — real follow-up is tracing the venue-rename mapping to re-target the repair, out of scope for this
+          pass (open investigation, not a bounded key-swap).
+
 - [ ] [CODE] P2. Track O: locate the emitter of the 139,620 venue=ODDS_API/source=api_football/empty_confirmed rows
       before folding into K2 Source: `plans/active/sports_consolidated_closeout_2026_07_19.md`
 - [ ] [CODE] P2. Track V: execute the 5-part-proof-gated DELETE of the old raw-keyed league_id GCS objects (COPY+SWAP

@@ -100,9 +100,17 @@ source: >-
       `record_failed(error="NON_CANONICAL_INSTRUMENT_ID")` rows already give reconciliation a queryable (if
       row-granularity rather than field-granularity) signal. Repos: unified-trading-library, market-tick-data-service.
       Source: `plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md` §5b.
-- [ ] [WRITER] P2. implement Gap 2's resolution — make the live/on-chain lane's manifest key a deterministic function of
-      the already-computed column value instead of an independent resolve_cefi_instrument_id() call
-      (market-tick-data-service: venue_fetch.py, partitioned_writer.py) Source:
+- [x] ✅ [WRITER] P2. implement Gap 2's resolution — make the live/on-chain lane's manifest key a deterministic function
+      of the already-computed column value instead of an independent resolve_cefi_instrument_id() call
+      (market-tick-data-service: venue_fetch.py, partitioned_writer.py) — **SHIPPED
+      market-tick-data-service@d518aca80d**. `PartitionedTickWriter` now persists the column resolution
+      `_normalize_cefi_instrument_id_column` already computes into a new `resolved_cefi_instrument_ids` map (keyed on
+      the SAME `(instrument_type, sanitized_symbol)` atom `underlying_counts` uses).
+      `venue_fetch._canonicalize_manifest_instrument_id` gained a `resolved_column_id` kwarg and derives the manifest
+      key by parsing that already-computed value instead of independently re-resolving; `resolve_cefi_instrument_id()`
+      is now only a fallback for the no-column-value-yet case. 10 new/updated unit tests
+      (`tests/unit/test_venue_fetch_cefi_manifest_canonicalization.py::TestGap2ManifestKeyFromColumnValue`,
+      `tests/unit/test_partitioned_writer_cefi_column.py`). Source:
       `plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md`
 - [ ] [UAC] P3. implement Gap 3's resolution — add the temporal 'unclassified' manifest-row state and wire the Stage 3
       read gate to pass-with-warning on it until a backfill-complete flag promotes it to enforced-fail
