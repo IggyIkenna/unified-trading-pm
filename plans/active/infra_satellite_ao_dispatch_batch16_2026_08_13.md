@@ -75,8 +75,12 @@ source: >-
       unified-trading-pm (this batch) — negative-result investigation: no script ever creates that symlink (exhaustive
       git-history search of every bootstrap/linker script); most likely a manual `ln -s` typo by an operator. Full
       writeup + todo closed in the source issue doc's 2026-08-14 Progress Log entry.
-- [ ] [CODE] P2. Update /codex/05-infrastructure/claude-code-settings-symlink.md with the corrected symlink-target and
-      git-tracked-status facts Source: `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md`
+- [x] ✅ [CODE] P2. Update /codex/05-infrastructure/claude-code-settings-symlink.md with the corrected symlink-target
+      and git-tracked-status facts Source:
+      `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md` — unified-trading-pm (this
+      batch): added "`settings.local.json` must be a REAL per-clone file — never a symlink" section (mechanism, fix,
+      hygiene-check pointer) + a "`cursor-configs/settings.json` git-tracked status — confirmed current" section
+      flagging `link-claude-skills.sh`'s own header comments as the stale artifact, not this codex doc.
 - [ ] [CODE] P2. Record the Cursor claudeCode.allowDangerouslySkipPermissions / initialPermissionMode per-machine fix in
       the same codex doc Source: `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md`
 - [ ] [CODE] P2. Confirm no workflow depended on the disabled pyright-lsp in-session diagnostics before making the
