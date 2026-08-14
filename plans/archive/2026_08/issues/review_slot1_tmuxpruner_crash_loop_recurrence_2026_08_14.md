@@ -11,7 +11,7 @@ summary: >-
   review spawn that never called its first `/heartbeat` sat as a DB-status="killed" but still-genuinely-alive orphan for
   ~26 minutes past its own documented ~15min detection budget, with two `orchestrator.service` restarts landing inside
   that exact gap. Zero kernel-log entries (rules out OOM/SIGKILL again).
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -35,7 +35,7 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: backend_engineer (slot 29, agent-orchestrator@c107c96a52 + agent-orchestrator@6ec0f1e507, 2026-08-14)
 last_updated: 2026-08-14
 locked_since:
 context_scope:
@@ -43,6 +43,12 @@ context_scope:
 ---
 
 # Review-slot-1 crash-loop recurrence
+
+> **🟢 ARCHIVED (2026-08-14).** All todos done, 0 open, unlocked. Todo 1's root cause (unconditional `status="killed"`
+> write regardless of whether `kill_session()` actually terminated the tmux session) is fixed
+> (`agent-orchestrator@c107c96a52`), and todo 2 closed the same defect class at the three remaining call sites that
+> bypass `_kill_slot` (`agent-orchestrator@6ec0f1e507`) rather than tightening `orphan_session_reclaim`'s sweep cadence,
+> which was already tight enough (60s) and wasn't the actual bottleneck. See Progress Log for both fixes' full detail.
 
 ## What was found (2026-08-14, live capture)
 
@@ -105,11 +111,12 @@ to hide a live one).
       own restart-correlation finding (9-24% of kills within 2-5min of a restart) — likely the same underlying
       mechanism, not a second coincidence. Repo: agent-orchestrator. — **ROOT CAUSE FOUND, NOT the in-memory-reset
       theory** — see Progress Log. Fixed: agent-orchestrator@c107c96a52.
-- [ ] [BACKEND] P2. **Once the above is understood, decide whether `orphan_session_reclaim`'s own sweep cadence should
-      independently be tightened** as a backstop regardless of the Trigger-3 root cause — a slot sitting DB-status
-      `killed` while genuinely still alive should be reclaimed on a much shorter cycle than "whenever the next full
-      sweep happens to run," since it structurally blocks a fresh respawn attempt for its entire duration. Repo:
-      agent-orchestrator.
+- [x] ✅ [BACKEND] P2. **Once the above is understood, decide whether `orphan_session_reclaim`'s own sweep cadence
+      should independently be tightened** as a backstop regardless of the Trigger-3 root cause — a slot sitting
+      DB-status `killed` while genuinely still alive should be reclaimed on a much shorter cycle than "whenever the next
+      full sweep happens to run," since it structurally blocks a fresh respawn attempt for its entire duration. Repo:
+      agent-orchestrator. — **Decision: NO, do not tighten cadence — closed the real remaining gap instead.** See
+      Progress Log. Fixed: agent-orchestrator@6ec0f1e507.
 
 ## Progress Log
 
@@ -172,3 +179,40 @@ guard because that branch already knows the OLD session was torn down by its own
 lines earlier and is failing on the NEW spawn, not the kill) the urgency of independently tightening
 `orphan_session_reclaim`'s cadence. Left as a genuine P2 judgment call for whoever picks it up next, per the todo's own
 "regardless of root cause" framing.
+
+**2026-08-14 — Todo 2 resolved.** Slot-29 backend_engineer worker. Read `_tick_once` (lines 805-880), `_kill_slot`
+(2682-2770), `_resume_or_fresh_respawn` (2494-2650), `_maybe_realign_tier` (2340-2430), and `_handle_usage_cap`
+(2068-2220) in full before deciding.
+
+**Decision: do NOT tighten `orphan_session_reclaim`'s sweep cadence.** It already runs on EVERY watchdog tick
+(`watchdog_interval_seconds`, default 60s — `server/config.py:552`), gated only by `_ZOMBIE_RECLAIM_GRACE_SECONDS` (180s
+from `last_spawned_at`). That is already tight; the measured 26-minute delay in this doc's own live capture was not
+caused by sweep cadence — it was caused by the watchdog _thread itself_ not getting a stable tick at all while
+`orchestrator.service` restarted twice inside the 01:15-01:30Z window (a process-level unavailability, not a timer
+problem). Shortening `watchdog_interval_seconds` globally would add DB-query + `tmux capture-pane` load across every
+active slot on every tick for a scenario it would not actually have prevented, since the reclaim sweep runs in the SAME
+thread/process that was unavailable.
+
+**What actually needed fixing, per this doc's own prior entry**: the three OTHER `status="killed"` write sites that
+bypass `_kill_slot` entirely and therefore never got the `has_session()` guard — `_resume_or_fresh_respawn`'s
+heartbeat-resume spawn-failure branch, `_maybe_realign_tier`'s tier-realign spawn-failure branch, and
+`_handle_usage_cap`'s usage-cap spawn-failure branch. Each kills the OLD tmux session via an **unchecked**
+`tmux_spawn.kill_session()` call (bare `try/except` only catches a raise, never inspects the `bool` return) before
+attempting a resumed spawn on a NEW session with the same name; if that kill silently failed to actually end the session
+AND the new spawn then also raised, the old code wrote `status="killed"` unconditionally — the exact same
+zombie-creation defect class the `_kill_slot` fix closed, just via three different call sites `_kill_slot` doesn't own.
+
+**Fix shipped** (agent-orchestrator@6ec0f1e507, QG-green 3730 passed/2 skipped Python + 346 passed dashboard vitest):
+added the identical post-failure `has_session(tmux_session)` guard to all three sites — if the session is confirmed
+still alive, the DB write is skipped and the slot's status is left unchanged (retried on the trigger's own next tick),
+exactly mirroring the `_kill_slot` pattern. Added
+`test_heartbeat_resume_spawn_failure_does_not_strand_zombie_when_session_alive` (proves the guard) +
+`test_heartbeat_resume_spawn_failure_marks_killed_when_session_actually_gone` (proves the existing normal-case recovery
+path is unregressed) to `test_self_healing_hardening.py`, covering the `_resume_or_fresh_respawn` site directly; the
+`_maybe_realign_tier` and `_handle_usage_cap` sites got the identical inline guard (same pattern, verified by code
+review — not separately unit-tested given the heavier existing mock/fixture surface those two functions require, which
+would be disproportionate for a 4-line mechanical repeat of an already-tested pattern).
+
+This closes the zombie-creation surface this doc's own Progress Log had already identified as the actual remaining gap —
+a more targeted fix than a blanket cadence change, and the one this todo's "regardless of root cause" framing was
+actually pointing at once the mechanism was understood.
