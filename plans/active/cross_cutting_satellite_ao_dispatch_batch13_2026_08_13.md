@@ -87,18 +87,70 @@ source: >-
       code sites + a bounded live read of `prod/catalog.parquet`; recorded in both the source issue doc and
       `tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`'s todo 1) Source:
       `plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md`
-- [ ] [CODE] P2. Diagnose how strategy-service's LDR HEAD went gate-red (clean-checkout re-run + git log -S on the
-      introducing commits) Source:
+- [x] ✅ [CODE] P2. **Diagnose how strategy-service's LDR HEAD went gate-red — NOT actually gate-red today; root cause
+      isolated to a mis-triaged host-contention timing trip.** (2026-08-14, slot-27·infra) Clean-checkout re-run: fresh
+      `git fetch`+`ff-only` to `origin/live-defi-rollout` (HEAD==origin, zero working-tree diff), then
+      `bash scripts/quality-gates.sh --no-fix` in strategy-service → **`✅ ALL QUALITY GATES PASSED (112s)`, sentinel
+      written at current HEAD `8f1aefc07c17`** — the reported failure does NOT reproduce. `git log -S`/`git blame` on
+      the 4 flagged checks + their introducing code: strategy-service sets `CODEX_MAX_VIOLATIONS=4` (stable since
+      2026-06-11, unchanged since) in its own `scripts/quality-gates.sh`; `base-service.sh`'s shared `$V` counter
+      (`_max_v=${CODEX_MAX_VIOLATIONS:-0}`, ~L2416-2426) treats a violation count `<= _max_v` as `log_warn` ("within
+      tolerance"), NOT a failure — but the underlying `log_fail()` calls for each individual STEP still print in ❌-red
+      regardless of whether the run ultimately warns or fails. All 4 flagged checks (BaseModel: registry_router.py
+      2026-04-21, operational_mode_router.py 2026-05-10 — check itself dates to 2026-03-09; STEP 5.37:
+      analog_execution_gate.py kelly_boost 2026-05-30 — check dates to 2026-05-01; asyncio.run()-in-loop:
+      live_routing.py 2026-08-10 — check dates to 2026-03-09; imports-inside-function: catalog_engine_coverage.py
+      2026-08-14 — AST check dates to 2026-05-11) landed AFTER their respective checks already existed, but land at
+      exactly the tolerance ceiling (V=4, `CODEX_MAX_VIOLATIONS=4`) — i.e. sanctioned ratchet headroom, not silent drift
+      or a check that tightened afterward. One flagged STEP 5.37 site (`catalog_carry.py`'s
+      `_, liquidation_threshold = resolve_ltv_mode(...)`) is a check REGEX false-positive: it matches the
+      `liquidation_threshold\s*=` alternation on the tuple-unpack VARIABLE NAME, not an inline literal — the line is
+      actually a call to the canonical resolver, the opposite of a violation (flagged for whoever picks up todo below).
+      The actual 2026-08-10 exit-1 that blocked the one-line `cloudbuild.yaml` commit was almost certainly the
+      independent, tolerance-exempt `<300s` duration hard-gate alone (`base-service.sh` ~L4471-4474, unconditional
+      `exit 1`, outside the `$V`/`CODEX_MAX_VIOLATIONS` system) tripping under host contention (12s measured governor
+      queue-wait that day) — `quickmerge.sh` itself documents this exact incident by date (STAGE 3 re-gate, ~L2445-2470:
+      "measured 2026-08-10, 602s billable against a 600s cap under 11 concurrent quickmerges, with every content check
+      passing... Telling an agent to go fix content that was never broken") and shipped a same-day CPU-vs-wall billing
+      rework specifically to stop this false-failure class. **New finding not covered by an existing todo**:
+      `quickmerge.sh`'s own contention-vs-content disambiguation guard (`_qm_other_fail`, ~L2463-2464) that exists
+      BECAUSE of the 2026-08-10 incident is itself incomplete — it greps the re-gate log for any ❌/FAILED/ERROR line
+      other than the duration message to decide "genuine content failure", but doesn't know some of those ❌ lines come
+      from `CODEX_MAX_VIOLATIONS`-tolerated checks that the underlying script only WARNs on — so a run that is, in
+      substance, ALSO just a duration-budget trip can still get misclassified as "a REAL failure" (exactly what the
+      source issue doc's quoted evidence shows). Filed as a new todo below rather than fixed inline (out of this
+      diagnosis todo's scope). Net: the 4 other todos below (move BaseModel/resolve STEP 5.37/fix or re-baseline the
+      duration budget/fix the stale pointer) are still legitimate cleanup, but the BLOCKING premise — "every commit is
+      blocked, HEAD is red" — is not currently true; a same-day re-run before attempting a real commit will very likely
+      land it. Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
 - [ ] [CODE] P2. Move the 11 Pydantic BaseModel subclasses out of service source or record a justified exemption Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
-- [ ] [CODE] P2. Resolve the STEP 5.37 inline HF/LTV/margin thresholds against UAC LIQUIDATION_PARAMS_REGISTRY Source:
-      `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
-- [ ] [CODE] P2. Fix or re-baseline the <300s quality-gate budget (326s+12s measured) Source:
+- [ ] [CODE] P2. Resolve the STEP 5.37 inline HF/LTV/margin thresholds against UAC LIQUIDATION_PARAMS_REGISTRY — **note
+      (2026-08-14 diagnosis above): the `catalog_carry.py` hit (`_, liquidation_threshold = resolve_ltv_mode(...)`) is a
+      check regex false-positive (matches the assignment-target variable name, not a literal value) — it is already
+      calling the canonical resolver correctly; do not "fix" that call site, only tighten the regex or add a
+      `# CORRECT-LOCAL` opt-out. The `greek_model.py`/`analog_execution_gate.py` Decimal-literal hits are genuine.**
+      Source: `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
+- [ ] [CODE] P2. Fix or re-baseline the <300s quality-gate budget (326s+12s measured) — **note (2026-08-14 diagnosis
+      above): NOT reproducible on a clean, uncontended host (measured 112s today) and likely already substantially fixed
+      by `quickmerge.sh`'s same-day 2026-08-10 CPU-vs-wall billing rework; re-verify under real contention before sizing
+      further work — may already be resolved.** Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
 - [ ] [CODE] P2. Fix the gate's stale SCHEMA_CONTRACTS_AUDIT.md pointer message (and grep the fleet for the same
       template) Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
+- [ ] [CODE] P3. Make `quickmerge.sh`'s STAGE 3 re-gate contention-vs-content guard (`_qm_other_fail`, ~L2463-2464) also
+      exclude ❌ lines produced by `CODEX_MAX_VIOLATIONS`-tolerated checks — currently it only excludes the
+      duration-budget line, so a run that warns-but-passes the codex-compliance tolerance check (prints its per-STEP
+      `log_fail()` ❌ lines regardless) but fails purely on the independent duration hard-gate still gets misclassified
+      as "a REAL failure" instead of "HOST CONTENTION, not your change" (repro case: strategy-service 2026-08-10, see
+      the diagnosis todo above). Fix: additionally check the re-gate log's own final verdict line
+      (`✅ ALL QUALITY GATES PASSED` / `⚠️ Codex compliance: N violations (within tolerance...)` vs
+      `Codex compliance FAILED` / `Quality gates FAILED: N hard gate...`) rather than raw-grepping intermediate ❌ lines
+      alone. Repo: unified-trading-pm. Source:
+      `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md` (new
+      finding, 2026-08-14 diagnosis)
 - [ ] [CODE] P2. Split the remaining MTDS >900L files + extract oversized fns/methods (market-tick-data-service) Source:
       `plans/active/mtds_file_size_refactor_2026_06_08.md`
 - [ ] [CODE] P2. Re-add 17 connector reconnect tests using terminating mocks (market-tick-data-service) Source:
