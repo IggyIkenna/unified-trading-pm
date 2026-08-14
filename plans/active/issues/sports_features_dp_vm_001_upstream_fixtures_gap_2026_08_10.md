@@ -129,20 +129,23 @@ context_scope:
 - [ ] [DATA] P3. Verify the 2022 year-sharded features VM (`features-sports-sports-2022-20260810-051126`): no
       EXIT_STATUS (terminated mid-run 07:15Z, skip-if-fresh only) — confirm 2022 features coverage in the availability
       index.
-- [ ] [CODE] P2. AO re-dispatched already-resolved escalation agt-af22dd to a fresh slot (22:18Z) with a stale boot
-      context carrying no resolution — gate escalation dispatch on already-resolved (or carry the resolution summary in
-      the boot context) so a resolved wall cannot spawn a conflicting relaunch worker. **Bumped P3→P2 2026-08-14: a
-      THIRD occurrence confirmed** (see Late dispatch note, slot-30) — this is a recurring dispatch-gating gap, not a
-      one-off. **FOURTH occurrence, 2026-08-14, sharper evidence (slot-6)**: this time it is the SAME `escalation_id`
-      (`agt-bc9148`) re-dispatched — not merely a fresh id for the same underlying VM — only ~30s after its own prior
-      worker (slot-30) reached `lifecycle-complete`. `/api/activity` event ids 488567
-      (`tmux_session_lost`/`archived_lifecycle_complete: true`, agent `agt-bc9148`, 02:49:40Z) → 488570/488575
-      (`escalation_dispatch_initiated`/`escalation_dispatched`, same `escalation_id: agt-bc9148`, to slot 6, 02:50:10Z /
-      02:50:25Z) prove the dispatcher re-fired the identical escalation object right after its own completion, rather
-      than clearing it — a tighter mechanical bug than "stale boot context," pointing at a completion-ack/clear race in
-      the escalation lifecycle, not just a missing already-resolved check. No relaunch performed (nothing could have
-      changed in 30s; slot-30's same-day verification stands unchanged). No code fix in `deployment-service` — the gap
-      is in `agent-orchestrator`'s escalation dispatch/lifecycle layer, outside this wall's `$REPO` scope.
+- [ ] [CODE] P1. **Bumped P2→P1 2026-08-14 (7th occurrence, slot-5, agt-66cc86)** — seven same-day duplicate dispatches
+      of one already-resolved wall is no longer a "recurring gap", it is active, ongoing capacity burn in
+      `agent-orchestrator`; escalate priority accordingly. AO re-dispatched already-resolved escalation agt-af22dd to a
+      fresh slot (22:18Z) with a stale boot context carrying no resolution — gate escalation dispatch on
+      already-resolved (or carry the resolution summary in the boot context) so a resolved wall cannot spawn a
+      conflicting relaunch worker. **Bumped P3→P2 2026-08-14: a THIRD occurrence confirmed** (see Late dispatch note,
+      slot-30) — this is a recurring dispatch-gating gap, not a one-off. **FOURTH occurrence, 2026-08-14, sharper
+      evidence (slot-6)**: this time it is the SAME `escalation_id` (`agt-bc9148`) re-dispatched — not merely a fresh id
+      for the same underlying VM — only ~30s after its own prior worker (slot-30) reached `lifecycle-complete`.
+      `/api/activity` event ids 488567 (`tmux_session_lost`/`archived_lifecycle_complete: true`, agent `agt-bc9148`,
+      02:49:40Z) → 488570/488575 (`escalation_dispatch_initiated`/`escalation_dispatched`, same
+      `escalation_id: agt-bc9148`, to slot 6, 02:50:10Z / 02:50:25Z) prove the dispatcher re-fired the identical
+      escalation object right after its own completion, rather than clearing it — a tighter mechanical bug than "stale
+      boot context," pointing at a completion-ack/clear race in the escalation lifecycle, not just a missing
+      already-resolved check. No relaunch performed (nothing could have changed in 30s; slot-30's same-day verification
+      stands unchanged). No code fix in `deployment-service` — the gap is in `agent-orchestrator`'s escalation
+      dispatch/lifecycle layer, outside this wall's `$REPO` scope.
 
 ## Late dispatch note (slot-23, 2026-08-10)
 
@@ -225,3 +228,24 @@ GCS/manifest checks a sixth time — no relaunch performed, no code change in `d
 the defect is in agent-orchestrator's escalation dispatch/lifecycle layer, outside this one-shot wall's scope). Not
 bumping the tracked P2 dispatch-gating todo's priority number again — six occurrences in one day is now unambiguous
 evidence for whoever actions it in agent-orchestrator.
+
+**slot-5 2026-08-14 (data_pipeline_failure escalation agt-66cc86, SEVENTH occurrence)** — yet another fresh escalation
+id (`agt-66cc86`) dispatched for the SAME VM `features-sports-sports-2026-20260810-051126`, identical stale-context
+shape (`"Filed issue: (none — alert carries the details)"` + bare `RELAUNCH` instruction, no reference to this issue
+doc, the operator do-not-relaunch ruling BLK-4fecb718, or the massively-exceeded relaunch bound). Also traced the
+mechanism one level further this time:
+`deployment_service.data_pipeline_monitors.escalation_dedup. check_dispatch_dedup_for_finding` (the dedup layer that
+WOULD stop this) only fires when `finding.details` carries `asset_group_name`/`data_type` — by its own docstring,
+"today, only DP-FETCH-009 / DP_RUN_MOSTLY_EMPTY does" have that shape. `DP_VM_EXIT_NONZERO` findings carry `vm_name`,
+not `(asset_group, data_type)`, so they structurally CANNOT match `find_open_issue_for_tuple` and get zero dedup
+coverage — every re-scan of this VM's durable (self-delete-surviving) `run.log` is eligible to re-fire indefinitely.
+This is consistent with, and narrows, the "completion-ack/clear race" the slot-6 occurrence pointed at: the fix likely
+needs BOTH (a) an already-resolved/open-issue check keyed on `vm_name` (mirroring `find_open_issue_for_tuple`'s
+`(asset_group, data_type)` shape) added to the dedup layer, AND (b) whatever clears/acks a completed escalation in
+`agent-orchestrator` doing so before the next dispatch tick can re-see it. Given seven same-day dispatches with the
+underlying GCS/manifest state re-verified three separate times already today (slots 30, 6, 5-earlier) and nothing that
+could plausibly have changed, did not re-run those checks — no relaunch performed, no code change in
+`deployment-service` (the dedup-layer extension in (a) is plausibly in scope for a future `deployment-service` fix, but
+authoring it blind under a one-shot wall's time-box risks a wrong-shaped fix for a bug whose full mechanism spans two
+repos; leaving it to a dedicated fix task with both repos in scope). Bumped the tracked todo P2→P1 above given the
+now-unambiguous, ongoing capacity cost.

@@ -97,9 +97,12 @@ source: >-
       disable is already the tracked, git-committed team default (`e5be0047c1`, 2026-07-23, "re-track
       cursor-configs/settings.json") and propagates fleet-wide via `git pull` — nothing further needs to ship to make it
       permanent.
-- [ ] [CODE] P2. Re-verify (live find/ls) whether codex_vs_repo_docs_ssot_audit_2026_06_01.md's MDPS/instruments-service
-      [x] items have the same DELETE-half-unshipped pattern already confirmed for 3 other items. Source:
-      `plans/active/issues/plan_reconciler_findings_infra_2026_08_10.md`
+- [x] ✅ [CODE] P2. Re-verify (live find/ls) whether codex_vs_repo_docs_ssot_audit_2026_06_01.md's
+      MDPS/instruments-service [x] items have the same DELETE-half-unshipped pattern already confirmed for 3 other
+      items. Source: `plans/active/issues/plan_reconciler_findings_infra_2026_08_10.md` — unified-trading-pm (this
+      batch): live `git ls-files` check in both repo clones found ALL 7 DELETE-class docs (5 MDPS + 2
+      instruments-service, per the SSOT audit's refreshed 2026-07-27 registries) genuinely absent — suspicion REFUTED,
+      no half-done pattern found; full writeup in the source issue doc's 2026-08-14 Filed-item update.
 - [ ] [CODE] P2. Fix fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md's todo 5/6 repo-count off-by-ones
       (states 23/'22 of 23', enumerated lists count 24) and defi_compute_gcp_migration_2026_08_08.md's missing related:
       back-reference to its finalize twin. Source: `plans/active/issues/plan_reconciler_findings_infra_2026_08_10.md`

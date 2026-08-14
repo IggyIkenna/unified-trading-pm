@@ -174,10 +174,24 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
       `uac_data_type_validity_combinator_fragmentation_2026_07_07.md` — all cleared to `model_tier:` (blank, matching
       this corpus's established fix convention). Zero `model_tier: opus*` remaining outside `plans/archive/` and the
       commented-out example in `task_template.md`. Repo: unified-trading-pm.
-- [ ] [DOCS] P3. Independently re-verify (live `find`/`ls`) whether `codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s
+- [x] ✅ [DOCS] P3. Independently re-verify (live `find`/`ls`) whether `codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s
       market-data-processing-service + instruments-service `[x]` items have the same DELETE-half-unshipped pattern as
       the 3 already-fixed items (Flips verified #2) — neither hunter batch 1 nor this run independently checked their
-      specific DELETE-class file lists; do not act on the unverified suspicion alone.
+      specific DELETE-class file lists; do not act on the unverified suspicion alone. **DONE 2026-08-14 (infra worker,
+      slot 11) — suspicion REFUTED, no half-done pattern found; both repos' `[x]` DELETE items are genuinely shipped.**
+      Checked the DOC's own refreshed registries (not the stale Appendix-A lists — the plan text at line ~334/362
+      explicitly flags those as superseded by the 2026-07-27 refresh): - **market-data-processing-service (5 DELETE
+      items)**: `DEPLOYMENT_GUIDE.md`, `TESTING.md`, `REFACTORING_STANDARDS_COMPLIANCE.md`, `specs/PLANS_ALIGNMENT.md`,
+      `specs/README.md` — live `git ls-files | grep` in `.tabs/11/market-data-processing-service` found ZERO matches for
+      any of the 5; `ls       docs/` confirms only `TESTING_GUIDE.md`/`DEPLOYMENT_GUIDE_FEMI.md` remain (the redirect
+      targets, not the deleted stubs); no `specs/` directory exists at all. All 5 confirmed absent. -
+      **instruments-service (2 DELETE items, refreshed 13-doc registry)**: `scripts/README.md`,
+      `.github/BRANCH_PROTECTION_SETUP.md` — live `git ls-files | grep` in `.tabs/11/instruments-service` found ZERO
+      matches for either. Both confirmed absent. Unlike the 3 already-fixed items
+      (deployment-service/unified-api-contracts/execution-service, where DELETE was falsely checked while files still
+      existed on disk), MDPS and instruments-service's `[x]` DELETE checkmarks in
+      `codex_vs_repo_docs_ssot_audit_2026_06_01.md` are CORRECT as-is — no plan edit needed there. This closes the
+      suspected-pattern investigation with a genuine negative result.
 - [ ] [DOCS] P3. Fix `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`'s todo 5/6 repo-count
       off-by-ones (states "23"/"22 of 23", enumerated lists count 24 — Doc-drift #2) and
       `defi_compute_gcp_migration_2026_08_08.md`'s missing `related:` back-reference to its own finalize twin (Doc-drift
@@ -270,7 +284,7 @@ of the 42 writable docs was read and assessed by a hunter this run.
 | Archive `na_eligibility_hash_blind_...2026_08_09.md`, `ag_closeout_audit_infra_parked_2026_08_{01,07}.md` | **Cannot be done yet** — same grace-locked-referrer blocker; `archive_exempt: true` bridge already applied  | Time — referrer docs clearing grace                         |
 | Fix `quality_gates_quickmerge_timing_baseline_2026_07_31.md` stale Deferred-work table + finalize summary | **Not done** — genuinely fixable, no blocker, just not this run's scope (meta-tagged, adjacent)             | Nobody — pick it up any time                                |
 | Re-count `defi_compute_gcp_migration_2026_08_08.md` off-by-one todo citations                             | **Not done** — real work, deliberately deferred to avoid a rushed second error                              | Nobody — pick it up any time                                |
-| Re-verify MDPS/instruments-service DELETE-half on `codex_vs_repo_docs_ssot_audit_2026_06_01.md`           | **Not done** — suspected pattern, unconfirmed, needs a live `find`/`ls` check                               | Nobody — pick it up any time                                |
+| Re-verify MDPS/instruments-service DELETE-half on `codex_vs_repo_docs_ssot_audit_2026_06_01.md`           | **Done** — 2026-08-14 (slot 11): live `git ls-files` check found all 7 DELETE-class docs absent; refuted    | Nobody — completed                                          |
 | `vm-launcher-runbook.md` missing freshness-gap incident                                                   | **Not done** — needs an editorial scope/placement decision, exceeds the mechanical carve-out                | Whoever owns that runbook's editorial scope                 |
 | MDPS DELETE-vs-FILL ruling (`s5_7` vs SSOT audit)                                                         | **Done** — operator ruled 2026-08-10 option A (DELETE wins), applied `s5_7` todo 2 closed as moot           | Nobody — completed                                          |
 | CI-tagged infra closeout coverage gap                                                                     | **Done** — operator ruled 2026-08-10 option A (revive `ci_consolidated_closeout`), un-archived + registered | Nobody — completed                                          |

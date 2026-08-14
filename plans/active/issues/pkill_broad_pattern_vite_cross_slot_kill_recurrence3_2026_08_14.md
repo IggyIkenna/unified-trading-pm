@@ -88,9 +88,9 @@ my own current one) and does not by itself explain why the guard was missing her
       installation/sourcing path so it actually reaches every AO-spawned worker shell, not just manually-opened
       interactive ones. (repo: agent-orchestrator or unified-trading-pm, whichever owns worker pane spawning) —
       agent-orchestrator@2e4122b
-- [ ] [INFRA] P2. Re-verify (or re-run) the guard installer across every slot/host currently in the fleet — the
+- [x] ✅ [INFRA] P2. Re-verify (or re-run) the guard installer across every slot/host currently in the fleet — the
       2026-07-29 resolution only confirmed ONE host; if worker panes don't inherit it, every host needs the same
-      re-check this incident surfaced.
+      re-check this incident surfaced. — unified-trading-pm (no code change needed)
 - [ ] [DOC] P3. Extend RULES.md § 1's pkill guidance with a concrete "how to restart just your own dev server" recipe
       (e.g. `pkill -f "vite.*\.tabs/${SLOT_ID}/"` or kill by the exact PID playwright's `webServer` reports) so a worker
       hitting a stuck dev server has a SAFE alternative readily at hand instead of reaching for a bare name pattern
@@ -111,3 +111,15 @@ my own current one) and does not by itself explain why the guard was missing her
   `git rebase --skip` on my own not-yet-pushed commit (discarding my duplicate implementation, not slot 12's landed
   work) rather than shipping a second, functionally-redundant version — verified slot 12's landed fix + its 39 tests
   pass. No further code change needed for this item.
+- 2026-08-14 (slot 7): closed P2 — the P1 fix (agent-orchestrator@2e4122b) makes a per-host installer re-run moot by
+  construction: the guard is no longer statically installed into `~/.bashrc`/`~/.zshrc` per host at all —
+  `tmux_spawn.py` now sources `unified-trading-pm/scripts/hooks/pkill-guard.sh` directly into `bash_cmd` on EVERY spawn,
+  computed from the worker's own `cwd` (`.tabs/<N>/` split), so any host that clones `unified-trading-pm` gets the guard
+  in every future AO-spawned pane automatically — nothing to "re-verify per host" going forward. Also, per
+  `/codex/04-architecture/runtime-deployment-topology.md`, `planning` is the ONLY VM in the current single-VM
+  architecture, so "every slot/host in the fleet" is one host. Verified live: root `agent-orchestrator` checkout is at
+  `a30d884` (HEAD, includes `2e4122b`), the running `uvicorn server.server:app` process (PID 1376826) started at 13:00
+  local — after the fix commit (`2026-08-14 06:51:51 +0000`) — so the deployed server already spawns workers with the
+  guard sourced. Direct functional test: `bash -c 'set -e; . pkill-guard.sh; pkill -f "vite"'` → REFUSED with the
+  guard's error message (exit 1), confirming the exact incident pattern is now blocked in a freshly-sourced shell, not
+  just in theory.
