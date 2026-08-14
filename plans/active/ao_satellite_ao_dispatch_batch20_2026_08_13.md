@@ -261,8 +261,16 @@ source: >-
       rule 4 ("already-shipped elsewhere, checkbox just never flipped" — here, already superseded), citing the source
       doc's own resolution rather than building unneeded correlation wiring. Source:
       `plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`
-- [ ] [CODE] P2. Confirm sub-E (odum3default@gmail.com) / sub-D (odum1default@gmail.com) account identity mapping
-      against accounts.json / .claude-accounts/*.env before using either as a calibration sample Source:
+- [x] ✅ [CODE] P2. Confirm sub-E (odum3default@gmail.com) / sub-D (odum1default@gmail.com) account identity mapping
+      against accounts.json / .claude-accounts/*.env before using either as a calibration sample — ALREADY SHIPPED
+      elsewhere, this batch20 extraction never picked it up: the source doc's own todo was already flipped `[x]`
+      2026-08-13 ("Confirm sub-F/sub-D account identity mapping — DONE ...
+      sub-d-odum1default=odum1default@gmail.com=Pro, sub-e-odum2default=odum3default@gmail.com=Max20"). Independently
+      re-verified live against the real `agent-orchestrator/data/config/accounts.json` `primary_email` field this
+      session (2026-08-14): `sub-d-odum1default` → `odum1default@gmail.com` (pro), `sub-e-odum2default` →
+      `odum3default@gmail.com` (max20, id slug intentionally stale per that account's own `_comment`) — both match
+      exactly. Per the AO-dispatch conflict-check protocol's rule 4 ("already-shipped elsewhere, checkbox just never
+      flipped"), citing the confirmed-current mapping here rather than re-doing the verification. Source:
       `plans/active/issues/claude_anthropic_flat_rate_billing_calibration_2026_08_12.md`
 - [ ] [CODE] P2. Re-measure the forced-compact wedge rate now that all 3 fixes (queued-message latch, effect-based
       verification, repro test) have landed, comparing against the doc's own stated baselines (~3.5 wedges/hr
