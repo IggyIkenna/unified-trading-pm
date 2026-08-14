@@ -224,8 +224,36 @@ source: >-
       rogue-delete incident documented in `claude_code_agent_deletes_active_canonical_migration_vm_2026_08_10.md`) —
       corrected inline + Progress Log entry added to that doc. Full evidence trail in that doc's 2026-08-14 Progress Log
       entry.
-- [ ] [CODE] P2. Determine the root cause of sports data being ~4 weeks stale Source:
-      `plans/active/issues/pipeline_smoke_sweep_findings_2026_07_20.md`
+- [x] ✅ [CODE] P2. Determine the root cause of sports data being ~4 weeks stale Source:
+      `plans/active/issues/pipeline_smoke_sweep_findings_2026_07_20.md` — unified-trading-pm (this batch):
+      **ROOT-CAUSED, no ongoing outage (verified live 2026-08-14).** Live GCS/manifest verification (via
+      `unified_trading_library.cloud_interface.get_storage_client()`, no gsutil) of the sports consolidated manifest
+      (`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`, 15.65M rows) shows
+      **zero real capture gap**: every daily-cadence data_type (`standings`, `teams`, `injuries`, `odds`, `matches`) has
+      a `captured` row for every single day from 2026-06-01 straight through today 2026-08-14 (75/75 dates in-window for
+      standings/teams); `fixtures`/`fixtures_schedule`/`fixtures_outcomes` run through 2026-12-06 (forward-poll
+      lookahead); overall `written_at` max is today 18:06 UTC. The Cloud Scheduler cron `uts-prod-sports-scheduler-cron`
+      (`*/5 * * * *`, ENABLED) driving Cloud Run job `uts-prod-sports-scheduler` (created 2026-04-29, well before the
+      07-20 finding) is firing and completing successfully every 5 min (`gcloud run jobs executions list` confirms 5
+      consecutive clean executions at check time); the dedicated per-tier Cloud Scheduler crons
+      (`uts-prod-sports-fixtures-{midnight,6am,noon,6pm}-t1-schedule`,
+      `uts-prod-sports-enrichment-{soccer-football-info,     transfermarkt,footystats}-daily`,
+      `features-service-sports-daily-trigger`) are all ENABLED and current. **So the 2026-07-20 "~4 weeks stale, last
+      captured 2026-06-24" reading was itself a false-stale VERDICT, not a real outage** — same tooling-defect class as
+      this doc's own §1 (3 other false/misleading verdicts from the same sweep session). Root cause of the false
+      reading: the sports bucket's consolidated-manifest merge cycle structurally runs 400-460s (5.4M+ row incremental
+      merge) against the reader's 120s default `MANIFEST_CONSOLIDATED_STALENESS_SEC` budget — a distinct-but-adjacent
+      defect independently root-caused the very next day
+      (`plans/archive/issues/manifest_consolidator_stale_sports_bucket_2026_07_21.md`, resolved) and fixed by bumping 14
+      sports launchers' staleness override to 1800s. The smoke-sweep's ad-hoc recency check (an interactive-session
+      query, not a checked-in script — no matching tool found under `market-tick-data-service/scripts`,
+      `instruments-service/scripts`, or `deployment-service/scripts`) had no such override and is exactly the read shape
+      most exposed to landing mid-merge or on the stale-fallback path. No code fix needed here — the adjacent
+      consolidator-staleness defect was already fixed 2026-07-21, and live data confirms sports capture has been
+      continuous since at least 2026-06-01. This closes the source doc's "Still open" sub-item 3 (sports staleness cause
+      unconfirmed) and the 2026-08-06 na-eligibility-audit's outstanding re-verify instruction; checkbox reconciliation
+      back into `pipeline_smoke_sweep_findings_2026_07_20.md` happens in this batch's paired finalize plan, per this
+      batch's own frontmatter note.
 - [x] ✅ [CODE] P2. dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md -- parallelize
       exit_code_fleet_monitor.py/heartbeat_stall_watcher.py's sweep() via ThreadPoolExecutor Source:
       `plans/active/issues/plan_reconciler_findings_all_2026_08_12.md` — **ALREADY SHIPPED, duplicate dispatch, no new
