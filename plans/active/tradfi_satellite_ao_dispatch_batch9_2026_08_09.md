@@ -110,7 +110,23 @@ is deliberately thin; reported honestly rather than padded.
           ruling now contradicts for CBOE/VIX specifically. Filed
           `issues/mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md` with 2 candidate fix paths +
           an `[OPERATOR]` decision todo rather than unilaterally reopen the CME-combo crash that exclusion was built to
-          close. This todo stays `- [ ]` pending that decision.
+          close.
+
+      **STALE ANNOTATION UPDATE 2026-08-14 (citation-only, no new work) — this todo stays `- [ ]` open, now pointing at
+          real progress instead of the 2026-08-09 blocked state above.** The sibling issue doc has since resolved the
+          operator decision (RULED 2026-08-13, option (a)), shipped the carve-out
+          (`market-data-processing-service@3c86d4ef1` + `unified-api-contracts@8688745b`), and live-verified it
+          (slot-20, `mdps-backfill-tradfi-20260814-013207`, independently corroborated same-day via direct manifest read
+          of `_index/per_vm/mdps-backfill-tradfi-20260814-013207.parquet`): a real
+          `venue=CBOE/instrument_type=FUTURE/data_type=ohlcv_15m/capture_status=captured` row lands (20 rows across the
+          5-date run) via the existing `TradfiOhlcv15mAdapter` aggregator (not a new build — this todo's original
+          "genuinely new build" framing was already stale per the 2026-08-09 entry above), and CME's combo/futures_chain
+          exclusion is confirmed intact (zero CME rows, zero `COMBO` log mentions). This todo's own done-when needs BOTH
+          `ohlcv_15m` AND `ohlcv_24h` to land plus `vix_features` genuinely fed — `ohlcv_24h` for CBOE FUTURE is NOT yet
+          confirmed (0 manifest rows either way, a distinct scanner file-candidate-listing gap), tracked as its own new
+          `[CODE] P2` todo in the issue doc. Stays `- [ ]` until that lands and `vix_features` is confirmed fed. Full
+          detail + evidence: `issues/mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md`
+          Progress Log, 2026-08-14 entries.
 
 ## Not extracted this batch — items that stay behind
 

@@ -281,3 +281,21 @@ market-tick-data-service, not MDPS) to additionally emit or re-key per-contract 
   rather than investigated further this pass. Also noted (not a new issue) that the second run's CME
   `instrument_type='OPTION'` `SchemaContractNotFoundError`s line up with the already-open, already-unblocked "OPTION
   half" todo in `/plans/active/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`.
+
+- 2026-08-14 (independent verification, dispatched to execute this same `[SCRIPT] P2` live-verify todo): arrived at
+  this doc concurrently with slot-20's own dispatch above. Refreshed the MDPS floating tarball, content-verified it
+  pinned `market-data-processing-service@3c86d4ef1` (content-based `git merge-base --is-ancestor` check per
+  `vm-tarball-deployment.md`, not a wall-clock compare), then launched an independent run
+  (`mdps-backfill-tradfi-20260814-012605`, same CLI: `--force --data-types "ohlcv_15m ohlcv_24h" --venues "CBOE CME"
+  tradfi 2026-07-20 2026-07-24 full`). Hit the EXACT SAME `_resolve_chain_adapter_data_type` "No adapter for
+  tradfi/ohlcv_15m" bug slot-20's first run also hit (0 candles, EXIT_STATUS=1) — before I could act on it, slot-20's
+  fix (`market-data-processing-service@d720375bb9`) landed on `origin/live-defi-rollout` and was already an ancestor of
+  my local MDPS HEAD, so rather than duplicate a second re-run I independently read slot-20's cited evidence directly
+  (UTL `download_from_storage`, not gsutil): `_index/per_vm/mdps-backfill-tradfi-20260814-013207.parquet` — confirmed
+  145 total rows, all `venue=CBOE`, breakdown `instrument_type=FUTURE, data_type=ohlcv_15m, capture_status=captured`:
+  **20 rows** (byte-identical to the claimed count), plus 125 unrelated `instrument_type=INDEX`
+  `attempted_failed` rows (different instrument_type, not part of this fix's scope) and zero `venue=CME` rows of any
+  kind in the shard — corroborates both halves of slot-20's claim (CBOE `ohlcv_15m` genuinely captured; CME combo
+  exclusion not reopened). Did not re-launch a redundant VM. No further doc changes needed here — slot-20's Progress Log
+  entry above already captures the finding accurately; see `tradfi_satellite_ao_dispatch_batch9_2026_08_09.md` for the
+  citation update this concurrent dispatch also applied there.
