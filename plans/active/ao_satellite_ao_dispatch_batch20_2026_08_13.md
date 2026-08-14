@@ -385,7 +385,7 @@ source: >-
       `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` to reconcile. Source:
       `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
 - [x] ✅ [CODE] P2. SCRIPT P3: investigate why run_hygiene_sweep.sh's prettier emphasis-mangling check reported PASS
-      despite 5 confirmed live instances — ROOT-CAUSED, 2 distinct causes, 1 fixed: `unified-trading-pm@<pending>`. Of
+      despite 5 confirmed live instances — ROOT-CAUSED, 2 distinct causes, 1 fixed: `unified-trading-pm@85ee358018`. Of
       the 5 fixed instances in `ao_open_issues_consolidated_close_out_2026_07_17.md` (`task*id`, `dispatch*id`,
       `` `ORCHESTRATOR*\*` ``, 2× `\*\*`): (1) **`task*id`/`dispatch*id` were bare-prose mangles genuinely missing from
       `check_prettier_mangling.sh`'s curated `PAT` allowlist** (only 8 specific identifier families were listed —
