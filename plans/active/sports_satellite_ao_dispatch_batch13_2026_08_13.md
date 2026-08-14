@@ -151,18 +151,35 @@ source: >-
       human-watched write window, not unsupervised) Source: `plans/active/sports_consolidated_closeout_2026_07_19.md`
 
       **INVESTIGATED 2026-08-14 (slot-12, backend_engineer) — target keys extinct, repair as specified is moot.**
-              Full investigation + evidence in the source doc's own Track O entry (this same commit). Summary: the
-              consolidator-pause safety question is resolved (incremental cycles pass through unchanged canonical rows
-              untouched, so a direct CAS-write would need no pause) — but a dry-run join of the pre-clobber snapshot against
-              the LIVE canonical (both the base 4-col dedup key and the full production key, `_dedup_key_sql`-normalized
-              identically to `manifest_consolidator`) found **0 matching rows**: `venue=BETFAIR` no longer exists (split into
-              `BETFAIR_SB_UK`/`BETFAIR_EX_EU`/`BETFAIR_EX_UK` by a later venue-taxonomy migration) and current
-              `data_type='trades'` rows all belong to `venue=ODDS_API`, unrelated. No prod write attempted (nothing to write).
-              Leaving open — real follow-up is tracing the venue-rename mapping to re-target the repair, out of scope for this
-              pass (open investigation, not a bounded key-swap).
+                  Full investigation + evidence in the source doc's own Track O entry (this same commit). Summary: the
+                  consolidator-pause safety question is resolved (incremental cycles pass through unchanged canonical rows
+                  untouched, so a direct CAS-write would need no pause) — but a dry-run join of the pre-clobber snapshot against
+                  the LIVE canonical (both the base 4-col dedup key and the full production key, `_dedup_key_sql`-normalized
+                  identically to `manifest_consolidator`) found **0 matching rows**: `venue=BETFAIR` no longer exists (split into
+                  `BETFAIR_SB_UK`/`BETFAIR_EX_EU`/`BETFAIR_EX_UK` by a later venue-taxonomy migration) and current
+                  `data_type='trades'` rows all belong to `venue=ODDS_API`, unrelated. No prod write attempted (nothing to write).
+                  Leaving open — real follow-up is tracing the venue-rename mapping to re-target the repair, out of scope for this
+                  pass (open investigation, not a bounded key-swap).
 
-- [ ] [CODE] P2. Track O: locate the emitter of the 139,620 venue=ODDS_API/source=api_football/empty_confirmed rows
-      before folding into K2 Source: `plans/active/sports_consolidated_closeout_2026_07_19.md`
+- [x] ✅ [CODE] P2. Track O: locate the emitter of the 139,620 venue=ODDS_API/source=api_football/empty_confirmed rows
+      before folding into K2 **ALREADY DONE — duplicate of `sports_consolidated_native_ao_extract_2026_07_25.md`'s own
+      Track O item (lines 281-321 there), never flipped in this batch.** Full mechanism + both fixes already cited
+      there: pre-`mtds@accd8aa4` (2026-07-20), `_expected_sports_bookmakers()` derived its bookmaker-expectation scope
+      from UAC venue CATEGORIES (5 keys incl. ODDS_API) instead of the real 23-key odds-api `bookmakers=` request list —
+      `ODDS_API` (the aggregator token, never a real bookmaker) could therefore never pass
+      `is_bookmaker_league_covered()` for any league, so every (league,date) cell in the cartesian expectation universe
+      for `venue=ODDS_API` routed to `record_empty(was_expected=True)` -> `capture_status=empty_confirmed`, producing
+      exactly these 139,620 rows (identical mechanism/count to sibling phantom venues BETFAIR(bare)/ONEXBET). The
+      `source=api_football` mislabel is a separate, stacked bug: `SOURCE_PRIORITY[("sports","TRADES")]` was missing from
+      UAC's `_source_priority_data.py`, so `derive_pipeline_mode_for_row()` fell through to
+      `_ASSET_GROUP_FALLBACKS["sports"]=BATCH_API_FOOTBALL` and mis-stamped every sports TRADES sentinel row. Both fixes
+      shipped (`mtds@accd8aa4`, `unified-api-contracts@44623d25`) and live-verified 2026-07-28 (0 rows carry
+      `source=api_football` anywhere in the live MTDS sports manifest, 516,196 rows scanned — the population has NOT
+      re-accumulated in the 5 days since the fix, positive proof it holds in prod). The "before folding into K2"
+      downstream framing is itself stale (K2's casing migration is superseded/slated for revert per Track C) — pure
+      standalone diagnosis, not a K2-fold-in precondition. No new code needed here; stale-checkbox correction per
+      `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3.4. Source:
+      `plans/active/sports_consolidated_closeout_2026_07_19.md`
 - [ ] [CODE] P2. Track V: execute the 5-part-proof-gated DELETE of the old raw-keyed league_id GCS objects (COPY+SWAP
       already done, reversibility-verified 604800s soft-delete window, unblocked since 2026-07-28) Source:
       `plans/active/sports_consolidated_closeout_2026_07_19.md`
