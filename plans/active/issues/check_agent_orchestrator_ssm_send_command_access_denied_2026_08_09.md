@@ -131,3 +131,11 @@ on shared AWS infra, not something to self-grant.
   direct `escalation_queue` reads (slot-18), and now the CI-bootstrap bare-host proof (any approach that needs to run a
   command on a private-IP-only EC2 instance with no SSH key hits the identical wall). Task released GATED, not
   re-dispatched blind — resume only after this grant lands.
+- **2026-08-14 (slot-14, infra)**: FOURTH independent confirmation, same day, same task
+  (`ci_satellite_ao_dispatch_batch13-e30f435b0c68`) re-dispatched after slot-15's GATED release. Live-rechecked before
+  resuming rather than trusting the prior entry's timestamp: `aws sts get-caller-identity` still resolves to
+  `arn:aws:iam::427895769566:user/ikenna-worker`;
+  `aws ssm describe-instance-information --filters Key=InstanceIds,Values=i-0c9b283b31d6b5ca7 --region ap-northeast-1`
+  fails the identical `AccessDeniedException` on `ssm:DescribeInstanceInformation`. Grant has NOT landed. Releasing the
+  parent task GATED again via `reason_code: GATED` (not re-diagnosing, not re-launching a throwaway VM) per slot-15's
+  own note — no new facts, just a fresh timestamped confirmation the wall is still up.

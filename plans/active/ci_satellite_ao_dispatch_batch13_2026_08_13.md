@@ -262,7 +262,11 @@ source: >-
       verification (a decision, not something to improvise solo). Released back to the queue GATED (genuinely blocked on
       the operator-gated SSM IAM grant above, confirmed fleet-wide, not a task-boundary artifact) — the next pickup
       should check that issue doc's status FIRST; once granted, re-launch per the recipe above and proceed through steps
-      4-5 directly (no SSM re-diagnosis needed).
+      4-5 directly (no SSM re-diagnosis needed). **RE-CONFIRMED 2026-08-14 (slot-14, infra), same day, no new VM
+      launched:** live-rechecked `check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09.md` first per
+      slot-15's own instruction — the `[OPERATOR]` grant is still open; `aws ssm describe-instance-information` against
+      the central VM (`i-0c9b283b31d6b5ca7`) still fails `AccessDeniedException` for `ikenna-worker`. Released GATED
+      again, no re-diagnosis performed. Next pickup: check that issue doc's status first, exactly as above.
 - [ ] [CODE] P2. implement the consumer-QG promote fan-out gate in UAC's promote-gate workflow (per the 2026-08-08
       operator ruling; design + target consumer already specified in the doc) Source:
       `plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`
