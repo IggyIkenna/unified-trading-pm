@@ -100,9 +100,13 @@ events belong to `uts-prod-dp-meta-watchers`, not the exit-code job:
 - [ ] [SCRIPT] P2. After the fix, live-verify: `uts-prod-dp-meta-watchers` executions complete (no
       `"memory limit was     reached"`) for ≥3 consecutive `*/15` cycles AND `vm-census/meta-last-run.json` advances
       each cycle AND `RenagTracker`/`MissTracker` persist lands (end-of-sweep). Repo: deployment-service.
-- [ ] [SCRIPT] P2. Confirm whether `DP_CRON_DID_NOT_FIRE::vm-census/exit-code-last-run.json` fired during the exit-code
-      cron-pause window (08-11T15:40 → now); if it did NOT fire, that is a second finding — the meta sweep's OOM
-      prevents the cross-check from running (fold into the exit-code doc's todo 4). Repo: deployment-service.
+- [x] ✅ [SCRIPT] P2. **CONFIRMED (2026-08-14, slot 11)** — answered from the exit-code doc's twin todo 4 (full evidence
+      there, `dp_exit_code_monitor_oom_signal9_2026_08_09.md`). Summary: `DP_CRON_DID_NOT_FIRE::exit-code` DID fire
+      correctly through 08-11T01:11Z, then went silent after one last alert at **08-12T19:05:30Z** (3683m/61.4h stale) —
+      a real detection gap, but attributable to THIS doc's own OOM incident (meta sweep dying before reaching
+      `check_monitor_crons_fired`) rather than a separate bug. No further action needed here beyond this doc's own
+      already-shipped fix (`deployment-service@f425eb12b3`, todo 1) + its live-verify todo 2 above (which will also
+      re-confirm `check_monitor_crons_fired` reaches completion again). Repo: deployment-service.
 
 ## Progress Log
 
@@ -149,3 +153,11 @@ events belong to `uts-prod-dp-meta-watchers`, not the exit-code job:
   `quality-gates.sh`. Evidence: deployment-service@f425eb12b3, `.qg_last_passed_sha` verified, ancestry verified on
   `origin/live-defi-rollout`.
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- 2026-08-14 (slot 11, infra): Todo "confirm DP_CRON_DID_NOT_FIRE::exit-code during the pause window" — answered (full
+  evidence in the twin todo on `dp_exit_code_monitor_oom_signal9_2026_08_09.md`, not duplicated here). Read
+  `#data-pipeline-alerts` via `scripts/dev/slack-read-channel.py data-pipeline-alerts 132` (132h window,
+  2026-08-08→2026-08-14, 12,599 messages) and filtered for `exit-code`. Detection worked correctly through 08-11T01:11Z
+  (7 alerts, `last output` growing 914m→1170m), fired once more at 08-12T19:05:30Z (3683m/61.4h stale), then went silent
+  for the remainder of the window despite the cron staying paused — the gap starts right in the middle of THIS doc's own
+  live OOM incident, confirming the suspected mechanism (meta sweep dying before reaching `check_monitor_crons_fired`)
+  rather than a distinct detection bug. No new issue doc filed.
