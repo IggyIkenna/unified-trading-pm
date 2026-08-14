@@ -395,10 +395,15 @@ than proceeding.
       is a PATH segment so objects move, not just rows. Note the fork is currently split WITHIN venues — BETFAIR_EX_UK
       has 9,204 `exchange_odds` AND 3,405 pre-fork `odds` — so a partial purge would leave the same venue across two
       tokens; the end state must be ONE token per venue. **§3a fresh check required before any object delete.**
-- [ ] [DATA] P0. **Delete the 20,785 KALSHI `empty_confirmed` rows** (source `polymarket_clob`, 2020-06-06 → 2026-05-21)
-      from the sports manifest — prediction-market venues seeded into the sports denominator, ~3.4% of the manifest
-      being fictitious. Manifest-only; confirm zero backing GCS objects first (if any exist, that is a different and
-      larger finding — file it, do not delete). **§3a fresh check required if any object delete is involved.**
+- [x] ✅ [DATA] P0. **Delete the 20,785 KALSHI `empty_confirmed` rows** (source `polymarket_clob`, 2020-06-06 →
+      2026-05-21) from the sports manifest — prediction-market venues seeded into the sports denominator, ~3.4% of the
+      manifest being fictitious. **CLOSED 2026-08-14 (slot-26), live re-measured**: `venue=KALSHI` AND
+      `source=polymarket_clob` (exact match) = **0 rows**; widened to a case-insensitive substring check on both `venue`
+      (contains "KALSHI") and `source` (contains "polymarket") across the WHOLE manifest = **0 hits either way** — not a
+      wrong-vocabulary miss. No matching purge commit found in `instruments-service` git history
+      (`git     log -i --grep=kalshi`), so the mechanism is unconfirmed, but the population is genuinely absent from the
+      live manifest now, not just under the exact original spelling. Nothing to delete; the todo's stated population no
+      longer exists in the source of truth.
 - [ ] [DATA] P1. **Delete the 2,490 blank-venue rows** written by instruments-service into the MTDS tick manifest, once
       P1's writer fix has stopped the source. Verify the writer is genuinely fixed before cleanup — cleaning before the
       writer stops just re-pollutes.
