@@ -181,7 +181,7 @@ until the next sweep) and is a stopgap, not the root fix.
       QG green. Live-verification of the NEXT few hourly executions (does the sweep now finish under 1800s, does the
       stall-timeout rate drop) is a fresh verify task, not bundled into this fix.
 
-- [ ] [BACKEND] P2. **ADDED 2026-08-14 (slot 7, follow-up)** — live-verify the candidate-c mitigation
+- [x] ✅ [BACKEND] P2. **ADDED 2026-08-14 (slot 7, follow-up)** — live-verify the candidate-c mitigation
       (`deployment-service@f9cf85a4b5`: `_SWEEP_IO_MAX_WORKERS` 32→16 + jittered-backoff retry on `download_bytes`)
       actually collapses the exit-code-monitor sweep under its 1800s task-timeout: check the next 2-3 hourly Cloud Run
       executions after this fix's image deploys — confirm via
@@ -192,7 +192,32 @@ until the next sweep) and is a stopgap, not the root fix.
       `download_bytes(...) exceeded the 30s     bounded-call timeout` warnings (retry-recovered stalls should no longer
       appear as terminal failures). If still timing out, candidate (b) (current live fleet size vs
       `_SWEEP_IO_MAX_WORKERS=16`) needs an actual live census count this task's environment couldn't obtain. Repo:
-      deployment-service.
+      deployment-service. — ✅ **Result: still timing out — candidate-c mitigation insufficient, but confirmed live +
+      partially effective; root cause is a THIRD, previously-undiagnosed bottleneck.** Full evidence + new fix candidate
+      in the Progress Log below (this session had live `gcloud`/GCS credential access, unlike the prior 3 sessions on
+      this doc). Filed the next P1 investigate/fix todo.
+
+- [ ] [BACKEND] P1. **ADDED 2026-08-14 (slot 15, live-verify follow-up)** — the classify/route/emit phase (deliberately
+      kept SEQUENTIAL to protect shared state — `finding_sink`, `_EMITTED_THIS_SWEEP`, the RESOLVED bookend,
+      `route_finding` side effects) is now the dominant bottleneck, confirmed via live phase-boundary logs on execution
+      `f8k2v` (2026-08-14 18:00-18:30Z): only 15/266 terminated VMs got a logged `verdict=` between 18:09:31Z and
+      18:26:55Z (~1044s, ~70s/VM average) before the 1800s kill — vs. the FANNED-OUT read phases (`running-census`
+      1.9s + `terminated-base-signals` 449.9s ≈ 452s total), which the candidate-c fix successfully sped up. Two
+      candidates: (1) the classify loop's PER-VM `needs_reason` run.log fetch is a SEPARATE single-read (not part of the
+      earlier fanned-out `_read_terminated_base` prefetch) and still hits the 30s bounded-call timeout + 1 retry (91
+      warnings logged this execution) — each stall costs up to ~60s serialized into the sequential loop; consider either
+      (a) prefetching this run.log too as part of the fanned-out base-signals read (same "prefetch pure reads, keep
+      classify/route/emit sequential" pattern already used), or (b) reducing the per-call timeout/retry budget so a
+      stalled VM doesn't block the sequential loop as long. (2) SEPARATELY: `write_census()` is called only ONCE, after
+      the ENTIRE terminated-VM loop completes — since the sweep has been timing out every hour, the census likely never
+      advances, so each hourly execution reprocesses nearly the SAME ~266-VM "terminated" backlog against a stale
+      `prior` snapshot instead of making forward progress. Consider checkpointing `write_census()` incrementally (e.g.
+      after the fast read/base-signals phases, independent of whether the slow classify loop finishes) so a
+      chronically-timing-out sweep still shrinks its backlog over successive executions. **Candidate (b) (live fleet
+      size) is RULED OUT**: live `gcloud compute instances list --filter="status=RUNNING"` = 29 VMs total fleet-wide,
+      confirmed via genuinely running census (not the stale 266-VM terminated backlog) — `_SWEEP_IO_MAX_WORKERS=16` is
+      not undersized for the current fleet. Target: sweep completes well under 1800s with the terminated backlog
+      actually shrinking execution-over-execution. Repo: deployment-service.
 
 ## Related
 
@@ -204,6 +229,41 @@ until the next sweep) and is a stopgap, not the root fix.
   launcher-host exemption), and the DP_SOURCE_RATE_LIMITED cooldown.
 
 ## Progress Log
+
+- 2026-08-14 (slot 15, backend): Live-verified the P2 candidate-c verify todo — this session had live `gcloud`/GCS
+  credential access (`unified-trading-sa`), unlike the prior 3 sessions on this doc which explicitly noted the lack.
+  **Image identity — confirmed via DIRECT IMAGE INSPECTION, stronger than the prior ancestor-check discipline**: pulled
+  the exact digest (`docker pull …@sha256:df43a6ef…`, pushed 2026-08-14T17:41:22Z, tag `c4b0d51` = the deployment-api
+  LDR→main promote commit at 17:36:52Z, built via Cloud Build `8967611b` (`deployment-api-main-deploy`, 17:36:57Z) —
+  after the deployment-service fix commit `f9cf85a4b5` at 14:40:34Z) and `grep`'d the running container's own installed
+  `deployment_service` package directly: `_SWEEP_IO_MAX_WORKERS = 16` (both call sites), all 3 phase-boundary log
+  strings, and `retries=1` wired into `_gcs.py`'s `read_text`/`download_bytes` call — all present, genuinely live.
+  Execution `f8k2v` (18:00:06–18:30:31Z) is the FIRST execution on this digest (the 6 prior hourly executions
+  13:00-17:00Z all ran older pre-fix or partially-pre-fix digests, confirmed via
+  `gcloud run jobs executions describe --format=value(spec.template.spec.containers[0].image)` per-execution + cross-
+  referenced against `gcloud artifacts docker images list --include-tags` push timestamps). **Result: `f8k2v` STILL hit
+  the full 1800s timeout** (`"The configured timeout was reached"`) — candidate-c alone is confirmed insufficient, same
+  as candidate-a (dedup) alone was. **But the phase-boundary logs (new this fix) reveal the REAL bottleneck, which was
+  never previously isolated**: `running-census phase took 1.9s (14 VMs, 16 workers)` +
+  `terminated-base-signals phase took 449.9s (266 VMs, 16 workers)` — the FANNED-OUT read phases the candidate-c fix
+  targeted are now fast (≈452s combined, well under budget). But NO `classify/route/emit phase took...` or
+  `total sweep...` log line ever appeared — the execution was killed mid-classify-loop. Only 15 of the 266 terminated
+  VMs got a logged `verdict=` line, spanning 18:09:31Z→18:26:55Z (~1044s) — **~70s/VM average in the deliberately-
+  SEQUENTIAL classify/route/emit phase**, which the earlier `ThreadPoolExecutor` fan-out never touched (by design, to
+  protect the shared `finding_sink`/`_EMITTED_THIS_SWEEP`/RESOLVED-bookend/`route_finding` state). 91
+  `download_bytes(...) exceeded the 30s bounded-call timeout` warnings still fired in this execution — these are
+  SEPARATE single-VM `needs_reason` run.log reads inside the classify loop (not the earlier fanned-out prefetch), each
+  costing up to ~60s (30s timeout + 1 jittered-backoff retry) serialized one-at-a-time into the sequential loop — this
+  is what actually drove the ~70s/VM average. **Also discovered (not previously known): `write_census()` fires only
+  ONCE, after the entire terminated-VM loop completes** — since the sweep has timed out every hour for days, the census
+  has likely never advanced, so each hourly execution recomputes nearly the SAME ~266-VM terminated backlog against a
+  stale `prior` snapshot rather than shrinking it. **Candidate (b) (live fleet size) ruled out**: live
+  `gcloud compute instances list --filter="status=RUNNING"` = 29 VMs fleet-wide right now — the 266-VM "terminated" set
+  is an artifact of the never-checkpointed census, not current fleet scale; `_SWEEP_IO_MAX_WORKERS=16` is not
+  undersized. Flipped the P2 verify todo done with this result recorded inline; filed a new P1 investigate/fix todo
+  (classify-loop's separate run.log read + incremental census checkpointing) since this is a genuinely new diagnosis,
+  not a mechanical follow-through of this verify-only task. No code changed this session (verification + issue-doc
+  update only, consistent with this task's own P2 live-verify scope).
 
 - 2026-08-14 (slot 7, backend): Shipped the candidate-(c) fix for the P1 investigate/fix todo. Lowered
   `_SWEEP_IO_MAX_WORKERS` 32→16 in both `exit_code_fleet_monitor.py` and `heartbeat_stall_watcher.py` (same
