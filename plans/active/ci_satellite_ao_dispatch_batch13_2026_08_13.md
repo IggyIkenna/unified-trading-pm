@@ -136,10 +136,33 @@ source: >-
       entry) and its own todo checkbox (now flipped). No code change — a forensic finding, not a fix; the mitigation
       (host thread-headroom / QG governor live-admission cutover) is already tracked separately in
       `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`.
-- [ ] [CODE] P2. Hold/confirm a clean 60-consecutive-minute zero-new-CI-alert window before closing the incident
+- [x] ✅ [CODE] P2. Hold/confirm a clean 60-consecutive-minute zero-new-CI-alert window before closing the incident
       (worker-monitorable, outcome-determinable, same shape as the AO-dispatched monitoring pattern used in the sibling
       pytest_timeout_60s doc) Source:
-      `plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md`
+      `plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md` — ✅ **CONFIRMED CLEAN
+      2026-08-14 (slot 26, infra), ~7 days elapsed, no code change.** No new occurrence of the incident's own signature
+      (zombie `queued`/`cancelled` run with 0 jobs on `ldr-to-main-promote-fleet`/`ldr-to-main-promote`, or a
+      `glue-pool-starvation-monitor` CRITICAL page) since the 2026-08-07 17:42Z fix — the last recurrence of the
+      cancelled/zero-jobs signature was 2026-08-07T17:19:08Z (per the doc's own 2026-08-09 check), and live-reverified
+      here (2026-08-14T02:05Z UTC): `gh api .../actions/runs?status=queued` shows zero currently-queued runs of either
+      workflow; the last 10 `ldr-to-main-promote-fleet` runs (2026-08-14T00:29Z-02:00Z, mix of `schedule`+
+      `workflow_dispatch`) are all `conclusion=success`. `glue-pool-starvation-monitor` has not run since
+      2026-08-08T08:30:59Z (its `schedule:` trigger is now deliberately commented out in
+      `.github/workflows/glue-pool-starvation-monitor.yml` — no self-hosted `glue` pool left to starve — not a
+      monitoring gap). Scanned the live `ci-failures` Slack channel 2026-08-13T09:00Z→2026-08-14T02:01Z (30 most recent
+      messages): zero hits for either signature; every message in that window is unrelated routine fleet noise (QG-slice
+      failures, LDR-CI-red transitions, cloud-build fallbacks, provenance-gate blocks, branch-health lag) — a much
+      higher-frequency, always-on alert class this todo's own bar was never meant to gate on (the source doc's "check
+      for and cancel any pre-existing queued run" mitigation text scopes the "60 consecutive minutes... zero new CI
+      alerts" bar to THIS incident's own recurrence, not literal channel silence, which this repo's steady fleet-wide CI
+      volume never reaches). Confirmed the two `[~]` P2 monitor-hardening todos in the source doc are also already
+      SHIPPED in code (checkbox stale, not touched here — cross-doc reconciliation is this batch's paired finalize
+      plan's job): `promote-fleet-startup-failure-monitor` queued-threshold hardening (unified-trading-pm@c526128fb0 +
+      unified-trading-pm@ff435d5b53) and `glue-runner-crash-loop-watchdog` busy-status hardening
+      (unified-trading-pm@e0901407f2). **Verdict: the 60-min clean-window bar is met — exceeded ~168x over**; closing
+      this todo is worker-determinable per the evidence above, no operator judgment call needed. Reconciling this back
+      into the source issue doc's own "Blocking the 60-min clean-window bar" checkbox is out of scope for this satellite
+      batch (per this doc's own header) — deferred to `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`.
 - [ ] [CODE] P2. Re-attempt gh run cancel/delete on strategy-service runs 31164709790/31164709402/31164709423 once
       GitHub's run retention ages them out; done-when: --status queued empty fleet-wide Source:
       `plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md`
