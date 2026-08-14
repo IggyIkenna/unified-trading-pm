@@ -889,3 +889,64 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
   CEFI Tardis incident (this doc's own root cause) used, just without the sports per-league fan-out activated;
   `cefi_coverage_chunk_ loop.sh` is a separate, less-used launcher path sharing the same underlying vulnerability class
   but out of this todo's stated scope.
+- **2026-08-14 (main, Claude Code session) — first real `memray --native` capture of the sports odds_api path (this
+  doc's long-standing next step, aborted for cost 2026-08-02). Result NARROWS the hypothesis, does not confirm a leak;
+  no severe blowup reproduced at this scope. Todo stays `[ ]` open.** Repro: spot `e2-standard-4` VM via the registered
+  `mtds-backfill-odds-` launcher (cheap skip-only bootstrap for tarball/venv), then SSH'd in and manually ran
+  `DEPLOYMENT_ENV=prod ... python -m memray run --native --aggregate -o out.bin -m market_tick_data_service --operation download --asset-group SPORTS --league EPL --start-date 2020-08-30 --end-date 2020-09-03 --force`
+  — the season-opener window this doc's 2026-08-07T21:22Z entry already measured at a 55% per-league OOM rate, the
+  cheapest already-evidenced candidate. `--aggregate` kept overhead down (plain `--native` is what made the 2026-08-02
+  attempt too slow). **VM1 lost to an unrelated operational finding, worth its own follow-up**: disabling
+  `VM_SHUTDOWN_ON_COMPLETION` via metadata correctly stopped the VM's own self-delete, but the VM was still deleted
+  ~13min later by something else (`v1.compute.instances.delete`, confirmed NOT a `compute.instances.preempted` event) —
+  most likely a heartbeat- staleness watchdog reaping it during the idle gap between the automatic bootstrap finishing
+  (its heartbeat loop trap-EXIT'd) and my manual work starting. Recovered on VM2 by keeping that gap under a minute.
+  **VM2 succeeded, two real bugs fixed on the way**: (a) my manual invocation had no `DEPLOYMENT_ENV`, so it resolved to
+  a nonexistent dev bucket and aborted (`404 ... instruments-store-sports-dev-...`) — launcher scripts set this
+  explicitly, a bare module invocation must too; (b) `memray stats`/`summary` refuse `--aggregate` captures
+  (`NotImplementedError`) — only `flamegraph`/`table`/`tree` work, and `tree`'s TUI is unusable over non-interactive
+  SSH, so top allocators were extracted via memray's `FileReader.get_high_watermark_allocation_records()` API instead.
+  With both fixed, all 5 days genuinely real-fetched (1656/805/759/943/989 rows, 5,152 total, confirmed via
+  `Odds API batch complete`/`Tier-2 sentinel fan-out` log lines). **Fidelity gap**: bypassing the launcher's per-chunk
+  `VM_NAME` suffix + `MANIFEST_PER_VM_SHARDS` wiring meant every write hit the legacy-oversized-index guard
+  (`ManifestWriter write failed: ... over the 209715200-byte legacy-read guard budget`, a different already-fixed
+  2026-07-31 OOM guard doing its job) — no rows were durably captured; the API cost was profiling-only. **Result**: no
+  blowup — RSS never exceeded ~720MiB (vs. this doc's 6.5–31.7GiB failure peaks). Memray's own high-water-mark tracking
+  (samples every malloc/free) DID catch a 1.501GB peak the 30s-interval RESOURCE_SAMPLE never showed at all — real
+  evidence memray sees things a coarse RSS sampler misses. Breaking down that peak (n=137,280 records): by innermost
+  **native** frame, `unix_mmap_prim_aligned.constprop.0` 71.5%, `_PyMem_ArenaAlloc` 14.4%, `_PyObject_Malloc` 6.8% —
+  plain glibc/CPython arena allocation, no `aiohttp`/`pandas`/`pyarrow`-specific symbol in the top 20. By top **Python**
+  frame, `_call_with_frames_removed` 72.7% + `_compile_bytecode` 7.2% — CPython **import machinery**, plus smaller
+  pydantic/protobuf schema-construction amounts, all one-time process-startup cost, not per-date/per-request code.
+  **Interpretation**: the peak here is import/schema-compile overhead, not a scaling leak — RSS settled back to ~700MiB
+  rather than climbing across the remaining real-fetch days. This means single-league/5-day/~5K-row is too small a scope
+  to reproduce the doc's real failure mode, which was always either much WIDER per-date fan-out or MANY MORE consecutive
+  real-fetch days in one subprocess (the `--chunk-size 250` vs `5` evidence throughout this doc) — neither tested here
+  by design (smallest-reproducing-case instruction), but the smallest case came in smaller than the actual trigger.
+  `ThreadedResolver`-churn and pyarrow-mmap are NOT refuted (neither appeared, but neither was tested at a scale where
+  they'd matter against the import-time baseline). No code fix shipped — diagnosis only, per this task's own instruction
+  not to force one. **Cost/runtime**: 2 SPOT `e2-standard-4` VMs, `asia-northeast1-c` (~15min watchdog-reaped + ~18min
+  clean capture) = ~33min total compute, both confirmed deleted (NOT_FOUND). ~5,152 odds_api credits spent on profiling
+  only (key had 10.3M free, reconfirmed healthy).
+
+- [ ] [DATA] P1. **Re-run `memray --native` at a scope wide/long enough to actually reproduce the blowup** — the
+      2026-08-14 single-league/5-day run above did NOT reproduce it (peak 1.501GB, import-dominated, RSS never exceeded
+      ~720MiB) — too small a scope. Target ONE of the two shapes this doc has actually observed OOMing production: (a)
+      wider per-date fan-out (multiple leagues/bookmakers concurrently), or (b) a longer single subprocess accumulating
+      many more consecutive real-fetch days (`--chunk-size 20`+ over a real-fetch-dense multi-week span, not 5 days) —
+      accept the higher VM-time/credit cost this needs. Once RSS actually climbs past the ~700MiB–1.5GB baseline this
+      entry set, re-extract top allocators the same way (`FileReader.get_high_watermark_allocation_records()` — `tree`'s
+      TUI is unusable remotely, `stats`/`summary` refuse `--aggregate`) and check specifically for `aiohttp`/
+      `ThreadedResolver`/`pandas`/`pyarrow` native symbols near the top — absent in the 2026-08-14 baseline, so their
+      appearance (or continued absence) at a reproducing scale is the discriminating test. Repo:
+      market-tick-data-service.
+- [ ] [INFRA] P2. **Root-cause which fleet watchdog reaped a `mtds-backfill-odds-` VM ~13min after its automatic task
+      completed despite `VM_SHUTDOWN_ON_COMPLETION=false`** (2026-08-14 VM1 finding above). Not SPOT preemption (checked
+      `compute.instances.preempted` in the same window — absent; the delete is a plain `v1.compute.instances.delete`).
+      Most likely a heartbeat-staleness monitor in `deployment-service/deployment_service/data_pipeline_monitors/`
+      reaping a VM whose automatic-task heartbeat stopped even though a human/agent was still doing manual follow-up —
+      not confirmed (too short a window for `vm_zombie_watchdog.py`'s >4h check). Matters fleet-wide: "launch, then
+      disable auto-shutdown for manual work" is not a safe pattern today. **Done when**: the specific watchdog +
+      threshold for the `EPHEMERAL_BATCH` `mtds-backfill-odds-` prefix is identified, and either documented with the
+      correct way to keep a VM alive for manual work, or fixed to respect a deliberate `VM_SHUTDOWN_ON_COMPLETION`
+      override. Repo: deployment-service.
