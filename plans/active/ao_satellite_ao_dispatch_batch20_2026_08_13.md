@@ -194,9 +194,21 @@ source: >-
       `"cleanupPeriodDays": 30` at `cursor-configs/settings.json:2`; current disk headroom 162G free (77% used) — still
       healthy for 30-day retention. No further code change needed. Source:
       `plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`
-- [ ] [CODE] P2. Archive safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md via the standard 6-step
-      archival ritual (all 3 of its own todos are done + unlocked, and its own Progress Log already flags it
-      archival-eligible) Source: `plans/active/issues/ag_closeout_audit_ao_parked_2026_08_10.md`
+- [x] ✅ [CODE] P2. Archive safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md via the standard 6-step
+      archival ritual — unified-trading-pm (this commit): two prior archival attempts (2026-08-10) had recorded the
+      ritual as done in prose but the follow-up `git mv` commit never actually landed (caught twice by
+      `/plan-reconcile`, agt-c7578b ~05:30 UTC and agt-2baff3 ~18:20 UTC on 2026-08-10). This session verified the
+      source doc was still `status: open` at its active path, then ran all 6 steps for real: `🟢 ARCHIVED` banner +
+      `status: resolved` + `resolved_by:` on the source doc, `git mv` to `plans/archive/2026_08/issues/`, every
+      path-form corpus referrer repointed (the gated finalize doc — which itself also archives in the same commit, all 4
+      todos done + unlocked — plus `committed_conflict_marker_plan_doc_2026_08_10.md`'s `related:` list and a stale
+      "remains open" prose citation in `review_agent_evidence_gated_write_capability_2026_08_09.md`), a duplicate
+      archival todo in `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` flipped rather than left
+      re-dispatchable, and a codex-alignment gap closed (`/codex/05-infrastructure/per-tab-worktrees.md`'s prek-race
+      section now documents `check_orphaned_prek_patches()` as complementary to `_prek_race_snapshot`/
+      `_prek_race_check` — the slot-11 claim that this had already landed was itself part of the same never-pushed
+      commit). `scripts/plans/regenerate_active_plan_inventory.py` re-run after the moves. Source:
+      `plans/active/issues/ag_closeout_audit_ao_parked_2026_08_10.md`
 - [ ] [CODE] P2. Attribute the 7 deepseek_spawn_selected calls preceding a death to their actual caller by adding a
       source field (autospawn/escalation/plan_health) to that log line Source:
       `plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`

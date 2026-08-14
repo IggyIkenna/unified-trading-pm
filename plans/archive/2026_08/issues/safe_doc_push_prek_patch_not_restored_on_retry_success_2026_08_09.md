@@ -22,7 +22,7 @@ summary: >-
   succeeded cleanly. Without noticing the missing "Restored" line and going looking for the patch file, this would have
   read as ordinary, unremarked data loss — the two edited files would simply have reverted to their pre-session state
   with no error, no warning, and no trace in `git status`.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci, ao]
 stage: [meta]
@@ -47,7 +47,7 @@ estimate_calibrated_ai_days: 0.3
 assigned_role: cicd
 drift_direction: none
 depends_on: []
-resolved_by:
+resolved_by: safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09_finalize_2026_08_10
 locked_by:
 locked_since:
 supersedes:
@@ -65,6 +65,13 @@ context_scope:
 ---
 
 # safe-doc-push.sh drops unrelated unstaged edits on a hook-triggered retry
+
+> **🟢 ARCHIVED 2026-08-14 — COMPLETE.** All 3 todos shipped/verified (safety net `check_orphaned_prek_patches()` +
+> header-comment disposition note both re-verified independently twice by the gated finalize plan's review todos). See
+> `/plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09_finalize_2026_08_10.md`
+> for the full re-verification record and the archival ritual's own history (two prior archival attempts, 2026-08-10,
+> were never actually pushed — the checkbox flip landed but the follow-up `git mv` commit did not; caught twice by
+> `/plan-reconcile`, closed for real by this commit).
 
 ## What I found
 
@@ -130,16 +137,16 @@ mitigations, cheapest first:
       → detected, exit 1 from the check function; no patch → clean exit 0).
 
       **Reconciled against todo-1's note that `locked_git_commit()`'s `_prek_race_snapshot`/`_prek_race_check`
-          (shipped `f8a307badf`, 2026-08-09) might already cover this**: confirmed it does cover the SAME-PROCESS
-          retry-drops-the-restore scenario from the original incident (the edited file already has an unstaged diff
-          before the snapshot, so a dropped restore on ANY subsequent attempt's commit call changes its post-commit hash
-          and gets caught) — but it is scoped strictly to files already unstaged-dirty at the moment THIS script's OWN
-          `locked_git_commit()` call starts, and only fires around that specific call. It cannot see: (a) a patch left
-          behind by a DIFFERENT process's `git commit` in the same shared `~/.cache/prek/patches/` cache dir (a bare
-          `git commit` outside this script, or a peer session not going through `locked_git_commit`), or (b) a file that
-          only became unstaged-dirty after this script's own snapshot was taken. `check_orphaned_prek_patches()` closes
-          both gaps by checking the shared cache dir directly, once, for the whole run — genuinely complementary, not
-          redundant, so both mechanisms are now kept.
+              (shipped `f8a307badf`, 2026-08-09) might already cover this**: confirmed it does cover the SAME-PROCESS
+              retry-drops-the-restore scenario from the original incident (the edited file already has an unstaged diff
+              before the snapshot, so a dropped restore on ANY subsequent attempt's commit call changes its post-commit hash
+              and gets caught) — but it is scoped strictly to files already unstaged-dirty at the moment THIS script's OWN
+              `locked_git_commit()` call starts, and only fires around that specific call. It cannot see: (a) a patch left
+              behind by a DIFFERENT process's `git commit` in the same shared `~/.cache/prek/patches/` cache dir (a bare
+              `git commit` outside this script, or a peer session not going through `locked_git_commit`), or (b) a file that
+              only became unstaged-dirty after this script's own snapshot was taken. `check_orphaned_prek_patches()` closes
+              both gaps by checking the shared cache dir directly, once, for the whole run — genuinely complementary, not
+              redundant, so both mechanisms are now kept.
 
 - [x] ✅ [DEVOPS] P2. **RE-SCOPED (2026-08-10, per todo 1's verdict — reproduction did NOT confirm a genuine prek
       defect):** do not file upstream against prek. Instead, document in `scripts/dev/safe-doc-push.sh`'s own header
@@ -338,15 +345,35 @@ mitigations, cheapest first:
   run's own commit. Did NOT apply the patch or touch the foreign sports file — wrong task/repo scope (this session is
   cefi batch17, not the sports_af_completion_pass owner). Left the patch file in place for that owner to recover; noting
   per this doc's established practice.
-- **2026-08-11 (slot 6, tradfi honest-coverage smoke-harness task `honest_coverage_smoke_harness_4ag_verify-06809dbd31f9`
-  — hit the safety net live on the tradfi data-gap issue-doc push)**: the push (`d2e62d8643`,
-  `plans/active/issues/tradfi_smoke_290d_window_data_gap_2026_08_11.md`) succeeded but exited 9 with THREE orphaned
-  patches (`1786406839214-3692985.patch`, `1786406844379-3704481.patch`, `1786406849227-3714702.patch`, byte-identical
-  per `git apply --stat`), diffing UNRELATED files this session never touched — 8 files: the
-  `*satellite_ao_dispatch_batch{17,11,2}_finalize` plans, `ml_service_full_blob_missing`, vm-tarball-staleness, the
-  canonical-path-migration design, and this tracking doc itself (+20 lines). `git status --porcelain` clean before and
-  after; this run's own push verified on origin (`d2e62d8643` `merge-base --is-ancestor`-confirmed). Consistent with the
-  prior recurrences: leftover stashes from concurrent sessions sharing this host's `~/.cache/prek/patches/` cache dir,
-  not a defect in this run's own commit. Did NOT apply the patches or touch the foreign files — wrong task/repo scope
-  (this session is the tradfi smoke-harness task, not the satellite/ml-service owners). Left all three patch files in
-  place for their owners to recover; noting per this doc's established practice.
+- **2026-08-11 (slot 6, tradfi honest-coverage smoke-harness task
+  `honest_coverage_smoke_harness_4ag_verify-06809dbd31f9` — hit the safety net live on the tradfi data-gap issue-doc
+  push)**: the push (`d2e62d8643`, `plans/active/issues/tradfi_smoke_290d_window_data_gap_2026_08_11.md`) succeeded but
+  exited 9 with THREE orphaned patches (`1786406839214-3692985.patch`, `1786406844379-3704481.patch`,
+  `1786406849227-3714702.patch`, byte-identical per `git apply --stat`), diffing UNRELATED files this session never
+  touched — 8 files: the `*satellite_ao_dispatch_batch{17,11,2}_finalize` plans, `ml_service_full_blob_missing`,
+  vm-tarball-staleness, the canonical-path-migration design, and this tracking doc itself (+20 lines).
+  `git status --porcelain` clean before and after; this run's own push verified on origin (`d2e62d8643`
+  `merge-base --is-ancestor`-confirmed). Consistent with the prior recurrences: leftover stashes from concurrent
+  sessions sharing this host's `~/.cache/prek/patches/` cache dir, not a defect in this run's own commit. Did NOT apply
+  the patches or touch the foreign files — wrong task/repo scope (this session is the tradfi smoke-harness task, not the
+  satellite/ml-service owners). Left all three patch files in place for their owners to recover; noting per this doc's
+  established practice.
+- **2026-08-14 (slot 6, infra, `ao_satellite_ao_dispatch_batch20-90fe4a1f17dd`)**: ran the 6-step archival ritual for
+  real. Two prior attempts (slot 11, 2026-08-10; re-flagged twice by `/plan-reconcile`, 2026-08-10 05:30 UTC and 18:20
+  UTC) each recorded the ritual as done in prose but the actual `git mv` commit never reached origin — confirmed still
+  `status: open`, no banner, at the active path at session start. This time: (1) no deferred items — all 3 todos' fixes
+  already shipped in code; (2) `status: resolved` + `resolved_by:` + `🟢 ARCHIVED` banner added above; (3-4)
+  codex-alignment — `/codex/05-infrastructure/per-tab-worktrees.md`'s prek-race section (item 4) still didn't mention
+  `check_orphaned_prek_patches()` as complementary to `_prek_race_snapshot`/`_prek_race_check` (the slot-11 progress-log
+  claim that this landed was itself part of the same never-pushed commit) — added the paragraph now; (5) referrer sweep
+  — repointed the path-form citations in the gated finalize doc (which itself also archives in this same commit, all 4
+  todos done + unlocked) and in `plans/active/issues/committed_conflict_marker_plan_doc_2026_08_10.md`'s `related:`
+  list; updated the stale prose citation in `plans/active/review_agent_evidence_gated_write_capability_2026_08_09.md`
+  ("remains open") to reflect the archived state; flipped the duplicate archival todo in
+  `plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` rather than leaving it re-dispatchable; left
+  the one historical citation inside the already-archived
+  `plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md` untouched (frozen
+  Progress-Log narrative describing the state at the time, not a live navigational link); (6) `git mv`'d to
+  `plans/archive/2026_08/issues/` in the same commit as the banner/status (legal — no checkbox transition happens on
+  this doc in this commit, all 3 todos were already `[x]` before this session). Re-ran
+  `scripts/plans/regenerate_active_plan_inventory.py` after the move.

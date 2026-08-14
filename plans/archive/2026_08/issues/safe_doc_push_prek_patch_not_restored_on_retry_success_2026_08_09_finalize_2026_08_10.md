@@ -2,11 +2,12 @@
 doc_type: issue
 title: "safe-doc-push.sh prek-patch-restore bug — finalize"
 summary: >-
-  Gated closeout for `/plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md` —
-  machine-held via `depends_on` + `gate_on_depends: true` until all 3 of that doc's todos are done. Re-verifies the
-  reproduction, the shipped safety-net code, and the upstream/pin/document follow-up against reality (not against the
-  checkbox), then closes out the source doc.
-status: open
+  Gated closeout for
+  `/plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md` — machine-held
+  via `depends_on` + `gate_on_depends: true` until all 3 of that doc's todos are done. Re-verifies the reproduction, the
+  shipped safety-net code, and the upstream/pin/document follow-up against reality (not against the checkbox), then
+  closes out the source doc.
+status: resolved
 nature: issue
 asset_group: [ci, ao]
 stage: [meta]
@@ -15,14 +16,13 @@ scope: [engineer]
 tags: [ao, ao-dispatch, close-out, finalize, safe-doc-push, prek, precommit, data-loss]
 related:
   [
-    /plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
+    /plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
     /scripts/dev/safe-doc-push.sh,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-10"
-last_updated: "2026-08-10"
-archive_exempt: true
+last_updated: "2026-08-14"
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -43,7 +43,7 @@ gate_on_depends: true
 sequential: true
 context_scope:
   [
-    /plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
+    /plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
   ]
@@ -54,8 +54,12 @@ source: >-
 
 # safe-doc-push.sh prek-patch-restore bug — finalize
 
-> **Machine-gated on `/plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`**
-> (`depends_on` + `gate_on_depends: true`) — will not dispatch until all 3 of that doc's todos are `done`.
+> **🟢 ARCHIVED 2026-08-14 — COMPLETE.** All 4 todos done; the source doc is archived alongside this finalize doc in the
+> same commit (see Progress Log below for the SHA once verified on origin).
+
+> **Machine-gated on
+> `/plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`** (`depends_on` +
+> `gate_on_depends: true`) — will not dispatch until all 3 of that doc's todos are `done`.
 
 ## Todos
 
@@ -102,18 +106,19 @@ source: >-
       finding via an independent read of the current file content. — unified-trading-pm (verification only, no code
       change).
 - [x] ✅ [INFRA] P0. **Archive the source doc if all 3 todos are genuinely done**, then run the 6-step archival ritual:
-      banner `/plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`, move to
-      `plans/archive/2026_08/issues/`, fix every corpus-wide referrer including this finalize plan's own
+      banner `/plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`, move
+      to `plans/archive/2026_08/issues/`, fix every corpus-wide referrer including this finalize plan's own
       `related:`/`depends_on:`, then re-run the active-plan inventory generator. **Done when**: the source doc is
       archived with a banner, the inventory regenerates cleanly, and `check_finalize_plan_coverage.py` no longer names
-      this pair. — **CORRECTION (2026-08-10, plan_reconciler agt-2baff3):** the Progress Log below (slot 11 entry, lines
-      171-184) describes the 6-step ritual in completed past tense, but a live check against `origin/live-defi-rollout`
-      confirms the source doc is STILL at `plans/active/issues/` with `status: open`, no ARCHIVED banner, `resolved_by:`
-      empty — the follow-up archival commit was never pushed (first flagged by plan_reconciler agt-c7578b ~05:30 UTC,
-      independently re-verified by this delta run ~18:20 UTC). The source doc is currently inside the 12h grace window;
-      this todo's `[x]` remains as-is pending the actual archival (the verification half — todos 1-3 genuinely done — IS
-      correct; only the archival half is unexecuted). Do NOT re-close this finalize doc until the source doc is actually
-      `git mv`'d to archive.
+      this pair. — **ACTUALLY DONE (2026-08-14, slot 6, infra, `ao_satellite_ao_dispatch_batch20-90fe4a1f17dd`):** the
+      2026-08-10 CORRECTION above was right twice (plan_reconciler agt-c7578b ~05:30 UTC and agt-2baff3 ~18:20 UTC both
+      caught the same never-pushed follow-up commit) — this session verified the source doc was STILL at its active path
+      with `status: open` at session start, then actually ran all 6 steps and pushed them in this commit (see Progress
+      Log below for the SHA once verified on origin). Source doc now carries the `🟢 ARCHIVED` banner +
+      `status: resolved` + `resolved_by:` and lives at `plans/archive/2026_08/issues/`; every path-form corpus referrer
+      repointed (this doc's own `related:`/`context_scope:` included); `regenerate_active_plan_inventory.py` re-run.
+      This finalize doc itself also now has 0 open todos + unlocked, so it archives alongside the source doc in the same
+      commit (see `archive_exempt:` removed from frontmatter below, and the banner added above the H1).
 
 ## Codex SSOTs
 
@@ -195,3 +200,19 @@ source: >-
   checkbox annotation updated to reflect this. The source doc is currently inside the 12h grace window; the archival
   should be completed once it exits grace. This finalize doc's remaining work is the archival follow-up commit only —
   todos 1-3 are genuinely done and independently re-verified.
+- **2026-08-14 (slot 6, infra, `ao_satellite_ao_dispatch_batch20-90fe4a1f17dd`)**: ran the actual archival this time.
+  Confirmed at session start the source doc was still `status: open` at its active path (both prior grace-window notes
+  above were correct — the archival commit genuinely never landed). Repointed every path-form referrer to this doc
+  (frontmatter `related:`/`context_scope:`, the machine-gated banner, todo 4's own banner-path text) to the archive
+  location, dropped `archive_exempt: true` (moot once archived), flipped `status: resolved`, added the `ARCHIVED` banner
+  above, and updated todo 4's stale CORRECTION note to reflect real completion. Also fixed the corpus-wide referrer
+  sweep this same session: the source doc's own path form in
+  `plans/active/issues/committed_conflict_marker_plan_doc_2026_08_10.md`'s `related:` list, the stale "remains open"
+  prose in `plans/active/review_agent_evidence_gated_write_capability_2026_08_09.md`, and the duplicate archival todo in
+  `plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` (flipped `[x]` there rather than leaving it
+  re-dispatchable). Codex-alignment: `/codex/05-infrastructure/per-tab-worktrees.md`'s prek-race section still didn't
+  mention `check_orphaned_prek_patches()` (the slot-11 claim that this landed was itself part of the same never-pushed
+  commit) — added it now. `git mv`'d both this finalize doc and the source doc to `plans/archive/2026_08/issues/` in the
+  same commit as their respective banner/status edits (no checkbox transition happens on either doc in this commit — all
+  todos on both were already `[x]` before this session), then re-ran
+  `scripts/plans/regenerate_active_plan_inventory.py`.
