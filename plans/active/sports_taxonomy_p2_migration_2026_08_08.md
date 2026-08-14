@@ -304,7 +304,10 @@ than proceeding.
       `/codex/05-infrastructure/vm-launcher-runbook.md` — out of scope for an interactive verification; the direct
       function cross-check + existing unit suite give equivalent coverage of the translation logic itself). Verification
       script not promoted (one-shot check, not a durable tool, no open todo needs it) — left in scratchpad, safe to
-      lose.
+      lose. **Stale-doc finding fixed in passing**: this verification pass surfaced that
+      `SPORTS_IS_DATA_TYPE_LOWERCASE_FORM`'s and `canonical_sports_is_data_type()`'s own docstrings in
+      `unified_api_contracts/canonical/domain/sports/league_data.py` still said "not yet wired into live enumeration" —
+      stale since `f2586ada09` wired it. Corrected — `unified-api-contracts@4b8529e6a7`.
 - [ ] [SCRIPT] P2. **Delete the two one-off migration scripts** now that the physical re-stamp is verified complete (0
       uppercase-token rows remaining, confirmed twice):
       `instruments-service/scripts/restamp_sports_19token_lowercase_2026_08_14.py` and
