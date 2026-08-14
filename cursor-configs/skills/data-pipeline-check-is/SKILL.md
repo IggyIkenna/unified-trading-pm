@@ -80,9 +80,14 @@ in §3 below — run via `deployment-service/scripts/vm/launch-pipeline-e2e-chec
 
 ```bash
 bash deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh \
-  --service is --day <DAY> --legs force,skip --require-captured --auto-day \
+  --service is --day <DAY> --legs force,skip \
   --project central-element-323112
 ```
+
+**Do not add `--require-captured`/`--auto-day`/`--mvp-only` to the IS command above** — confirmed 2026-08-14 (live run
+`instruments-service-pipeline-e2e-check: error: unrecognized arguments: --require-captured --auto-day`, exit rc=2,
+wasted one driver-VM launch): `instruments-service/scripts/pipeline_e2e_check.py`'s argparse has no such flags at all
+(see § "Known gap" below — those are MTDS-only). This example previously showed them; it was wrong.
 
 Prints `vm_name=...` immediately, then returns — async (the driver VM self-deletes on completion). Poll
 `gs://deployment-scripts-central-element-323112/vm-logs/<vm_name>/{run.log,EXIT_STATUS}`, or via
@@ -205,8 +210,11 @@ checker), that is what "tradfi is code-complete, migrated, honestly-covered, and
 
 ```bash
 cd instruments-service && python3 scripts/pipeline_e2e_check.py \
-  --legs live --mvp-only --day <DAY>
+  --legs live --day <DAY>
 ```
+
+(`--mvp-only` is not a real flag on this script either — see § "Known gap" below; MVP scoping for IS comes from
+`enumerate_cells()`'s own MVP predicate, not a CLI switch.)
 
 - Same launcher, `--test-run`, scoped to MVP venues only. No separate force/skip split on this leg — `--mode live`
   already always forces (`_adapter.py:158`).
