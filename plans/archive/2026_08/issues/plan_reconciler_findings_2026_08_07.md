@@ -7,7 +7,7 @@ summary: >-
   auto-fix. ZERO fixes applied this run — all findings filed for operator review. 4 verified missed-flip candidates
   (HARD evidence) blocked by lock, 1 archive candidate blocked by lock, 1 stale draft, 1 stale close-out prose, 1
   missing normative ref.
-status: open
+status: resolved
 nature: process
 asset_group: [ui]
 stage: [meta]
@@ -31,7 +31,7 @@ context_scope:
     /plans/active/deployment_registry_firestore_p5_verify_2026_07_14.md,
   ]
 created: "2026-08-07"
-last_updated: "2026-08-07"
+last_updated: "2026-08-14"
 parent_epic: deployment_and_user_management_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -44,11 +44,20 @@ drift_direction: none
 locked_by:
 locked_since:
 resolved_by:
+  "unified-trading-pm (slot-7, 2026-08-14) — sole tracked todo (ACTIVE_INDEX.md dangling normative-ref) flipped after
+  confirming the fix already shipped via unified-trading-pm@e8bb0b8524; remaining prose findings (flips-blocked-by-lock,
+  stale draft, stale close-out prose) are each already tracked at their OWN doc
+  (data_status_tab_and_downloads_remediation / deployment_registry_firestore_p5_verify / ui_consolidated_closeout), not
+  orphaned by this archival. 0 open todos, unlocked -> archived per the 6-step ritual."
 source: "plan_reconciler dispatch agt-a40e5f — sharded ui tranche run 2026-08-07"
 depends_on: []
 ---
 
 # plan_reconciler findings — ui tranche, 2026-08-07
+
+> **RESOLVED / ARCHIVED 2026-08-14** — sole tracked todo (ACTIVE_INDEX.md dangling normative-ref) flipped; fix was
+> already shipped via `unified-trading-pm@e8bb0b8524`. Every other finding below is prose-tracked at its own owning doc
+> (see `resolved_by` in frontmatter) — nothing here is orphaned by this archival.
 
 > **Run**: dispatch `agt-a40e5f`, sharded to `tranche=ui`. 15 docs in scope (11 plans + 4 issues). **Outcome**: zero
 > fixes applied (11/15 grace-protected, 2/4 non-grace locked). All findings filed below.
@@ -150,12 +159,17 @@ confirm the lock is genuine (and flip these manually) or unlock the doc so the n
   prose" rule. Both citing files are outside `plans/**` (plan_reconciler's own write-scope), so no worker running this
   skill can fix them directly — an operator or a human session must.
 
-- [ ] [DOC] P3. Resolve the `ACTIVE_INDEX.md` dangling normative-ref: either regenerate the file (if a real artifact was
-      intended, distinct from the existing `INDEX.md`) or edit `cursor-configs/skills/plan-reconcile/SKILL.md` (lines 5,
-      59, 425) + `agents/plan_reconciler.md` (line 114) to drop the stale name and cite only `INDEX.md`. Requires a
-      human/operator session (both target files are outside every plan_reconciler dispatch's `plans/**` write-scope).
-      Done when: `grep -rn ACTIVE_INDEX cursor-configs/skills/plan-reconcile/SKILL.md     agents/plan_reconciler.md`
-      returns 0 hits, or the file exists and is wired into the regen tooling.
+- [x] ✅ [DOC] P3. Resolve the `ACTIVE_INDEX.md` dangling normative-ref: either regenerate the file (if a real artifact
+      was intended, distinct from the existing `INDEX.md`) or edit `cursor-configs/skills/plan-reconcile/SKILL.md`
+      (lines 5, 59, 425) + `agents/plan_reconciler.md` (line 114) to drop the stale name and cite only `INDEX.md`.
+      Requires a human/operator session (both target files are outside every plan_reconciler dispatch's `plans/**`
+      write-scope). Done when:
+      `grep -rn ACTIVE_INDEX cursor-configs/skills/plan-reconcile/SKILL.md     agents/plan_reconciler.md` returns 0
+      hits, or the file exists and is wired into the regen tooling. — Already shipped by `unified-trading-pm@e8bb0b8524`
+      (a prior slot-7 session, `ui_satellite_ao_dispatch_batch4_2026_08_13.md` todo): `plans/ACTIVE_INDEX.md` DOES exist
+      (self-declares STALE, superseded by `plans/active/INDEX.md`, since 2026-07-14) so "genuinely distinct artifact"
+      doesn't apply; both citing files were edited to drop the stale normative-ref citation and cite only `INDEX.md` —
+      only this issue doc's own checkbox was left unflipped. This turn flips it.
 
 ## Hygiene sweep (corpus-wide, not tranche-specific)
 
@@ -176,6 +190,9 @@ were not read end-to-end (active work in flight, <12h old — reading them for c
 
 ## Progress Log
 
+- **2026-08-14 (slot-7)**: flipped the ACTIVE_INDEX.md todo checkbox — the fix itself was already shipped
+  (`unified-trading-pm@e8bb0b8524`, via `ui_satellite_ao_dispatch_batch4_2026_08_13.md`); only this doc's own checkbox
+  had been left stale.
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped

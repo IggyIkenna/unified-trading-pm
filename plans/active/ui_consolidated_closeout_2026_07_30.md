@@ -208,10 +208,10 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
       skill's per-doc Phase 1 judgment) and drafts `ui_satellite_ao_dispatch_batch1_<date>.md` if warranted. — **DONE,
       verified by plan_reconciler 2026-08-10 (dispatch `agt-ec1688`).** `/ag-closeout-audit ui` has now run 4×
       (2026-08-06/07/08/09, all cited above) and drafted batch1. `/plan-reconcile ui` has now run 2× — a first pass
-      2026-08-07 (dispatch `agt-a40e5f`, `plans/active/issues/plan_reconciler_findings_2026_08_07.md`) that applied zero
-      fixes (grace/lock blocked everything that run) but DID establish the coverage baseline this todo asks for, and
-      this 2026-08-10 pass (`plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md`), which applied ~20 fixes
-      across 10 files. **Correction to several prior Progress Log entries below** (2026-08-07 through 08-09, from
+      2026-08-07 (dispatch `agt-a40e5f`, `plans/archive/2026_08/issues/plan_reconciler_findings_2026_08_07.md`) that
+      applied zero fixes (grace/lock blocked everything that run) but DID establish the coverage baseline this todo asks
+      for, and this 2026-08-10 pass (`plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md`), which applied ~20
+      fixes across 10 files. **Correction to several prior Progress Log entries below** (2026-08-07 through 08-09, from
       `ag_closeout_auditor`/`na-eligibility-audit`): those entries state "`/plan-reconcile ui` has still never run" /
       "genuinely has not run yet" — this was factually incorrect from 2026-08-07 onward, contradicted by that same day's
       own `plan_reconciler_findings_2026_08_07.md` (dispatch `agt-a40e5f`, with a full coverage report). Not editing

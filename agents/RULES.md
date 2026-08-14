@@ -69,7 +69,7 @@ STALE — report or fix it, do not act on it. SSOT: `codex/05-infrastructure/per
   anyway): a `pkill`/`pgrep` shell function REFUSES a bare name-only pattern instead of executing it host-wide — see
   `/codex/05-infrastructure/per-tab-worktrees.md` § "pkill/pgrep cross-slot-kill guard". **A SAFE alternative for the
   common "my own dev server is stuck" case** (e.g. a stale `vite`/Playwright `webServer` process before a retry) —
-  recurrence #3 (`plans/active/issues/pkill_broad_pattern_vite_cross_slot_kill_recurrence3_2026_08_14.md`): scope the
+  recurrence #3 (`plans/archive/issues/pkill_broad_pattern_vite_cross_slot_kill_recurrence3_2026_08_14.md`): scope the
   pattern to your own slot's absolute worktree path instead of a bare process name, e.g.
   `pkill -f ".tabs/${SLOT_ID}/.*vite"` — every slot's `.tabs/<N>/` cwd substring is unique, so this cannot cross-match
   another slot's process, and the guard recognizes exactly this shape (see `pkill-guard.sh`'s own

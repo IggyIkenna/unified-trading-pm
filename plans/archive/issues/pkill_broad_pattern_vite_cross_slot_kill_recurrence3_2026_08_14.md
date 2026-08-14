@@ -12,7 +12,7 @@ summary:
   NOT active in this shell — `type pkill` resolved straight to `/usr/bin/pkill`, no guard function. Installed the guard
   into `~/.bashrc`/`~/.zshrc` on this host as an immediate fix (idempotent, affects only NEW shells — does not
   retroactively protect already-open sessions on this or other slots).'
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -31,12 +31,18 @@ priority: P1
 parent_epic: agent_operating_framework_master
 source: "Self-reported by slot-20 during ui_satellite_ao_dispatch_batch4-beda512b935d, 2026-08-14"
 assigned_vm: planning
-resolved_by:
+resolved_by: slot-7, 2026-08-14
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+last_updated: "2026-08-14"
 ---
+
+> **🟢 ARCHIVED 2026-08-14** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule. All 3 todos done: P1/P2 root-fixed via agent-orchestrator@2e4122b (guard now sourced directly
+> into every AO-spawned worker pane's `bash_cmd`, not a per-host `~/.bashrc` install); P3 (this doc's own DOC todo)
+> landed the safe cwd-scoped pkill recipe in `agents/RULES.md` § 1 — unified-trading-pm@`1d29effea1`.
 
 # pkill broad-pattern cross-slot vite kill — 2026-08-14 incident (recurrence #3)
 
@@ -91,10 +97,12 @@ my own current one) and does not by itself explain why the guard was missing her
 - [x] ✅ [INFRA] P2. Re-verify (or re-run) the guard installer across every slot/host currently in the fleet — the
       2026-07-29 resolution only confirmed ONE host; if worker panes don't inherit it, every host needs the same
       re-check this incident surfaced. — unified-trading-pm (no code change needed)
-- [ ] [DOC] P3. Extend RULES.md § 1's pkill guidance with a concrete "how to restart just your own dev server" recipe
+- [x] ✅ [DOC] P3. Extend RULES.md § 1's pkill guidance with a concrete "how to restart just your own dev server" recipe
       (e.g. `pkill -f "vite.*\.tabs/${SLOT_ID}/"` or kill by the exact PID playwright's `webServer` reports) so a worker
       hitting a stuck dev server has a SAFE alternative readily at hand instead of reaching for a bare name pattern
-      under time pressure.
+      under time pressure. — unified-trading-pm@`1d29effea1`: added the cwd-scoped `pkill -f ".tabs/${SLOT_ID}/.*vite"`
+      recipe (recognized as safe by `pkill-guard.sh`'s own `_pkill_guard_slot_token` check) plus the exact-PID `kill`
+      alternative to `agents/RULES.md` § 1.
 
 ## Progress Log
 
@@ -123,3 +131,6 @@ my own current one) and does not by itself explain why the guard was missing her
   guard sourced. Direct functional test: `bash -c 'set -e; . pkill-guard.sh; pkill -f "vite"'` → REFUSED with the
   guard's error message (exit 1), confirming the exact incident pattern is now blocked in a freshly-sourced shell, not
   just in theory.
+- 2026-08-14 (slot 7): closed P3 (last open todo) — added the safe cwd-scoped `pkill -f ".tabs/${SLOT_ID}/.*vite"`
+  recipe + exact-PID `kill` alternative to `agents/RULES.md` § 1 (unified-trading-pm@`1d29effea1`). All 3 todos done,
+  `locked_by` empty — archiving this doc now per the archive-immediately HARD RULE.

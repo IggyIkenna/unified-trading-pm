@@ -16,7 +16,7 @@ tags: [plan_reconciler, findings, ui, 2026-08-11]
 related:
   [
     /plans/active/ui_consolidated_closeout_2026_07_30.md,
-    /plans/active/issues/plan_reconciler_findings_2026_08_07.md,
+    /plans/archive/2026_08/issues/plan_reconciler_findings_2026_08_07.md,
     /plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md,
     /plans/active/ui_satellite_ao_dispatch_batch3_2026_08_09.md,
     /plans/active/ui_satellite_ao_dispatch_batch3_finalize_2026_08_09.md,

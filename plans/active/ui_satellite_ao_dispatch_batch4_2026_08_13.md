@@ -21,7 +21,7 @@ related:
     /plans/active/ui_consolidated_closeout_2026_07_30.md,
     /plans/active/artifact_pipeline_observability_2026_07_17.md,
     /plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md,
-    /plans/active/issues/plan_reconciler_findings_2026_08_07.md,
+    /plans/archive/2026_08/issues/plan_reconciler_findings_2026_08_07.md,
     /plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md,
     /plans/active/issues/plan_reconciler_findings_ui_2026_08_11.md,
   ]
@@ -165,7 +165,7 @@ source: >-
       `plans/ACTIVE_INDEX.md` DOES exist (not dangling) but self-declares STALE/superseded-by-`plans/active/INDEX.md`
       since 2026-07-14, so "genuinely distinct artifact" doesn't apply — dropped the stale name, both files now cite
       only `INDEX.md` as a normative ref: unified-trading-pm@`e8bb0b8524`. Source:
-      `plans/active/issues/plan_reconciler_findings_2026_08_07.md`
+      `plans/archive/2026_08/issues/plan_reconciler_findings_2026_08_07.md`
 - [x] ✅ [CODE] P2. Expand the ui-tranche doc discovery/inventory logic (used by /plan-reconcile ui and
       /ag-closeout-audit ui) to include multiline-frontmatter `asset_group:` docs missed by same-line grep —
       unified-trading-pm@`b2e3e5f8fe`. Added `scripts/plan-hygiene/generate_tranche_doc_inventory.py` (reuses

@@ -16,7 +16,7 @@ tags: [plan_reconciler, findings, ui, 2026-08-10]
 related:
   [
     /plans/active/ui_consolidated_closeout_2026_07_30.md,
-    /plans/active/issues/plan_reconciler_findings_2026_08_07.md,
+    /plans/archive/2026_08/issues/plan_reconciler_findings_2026_08_07.md,
     /plans/active/ui_satellite_ao_dispatch_batch1_2026_08_06.md,
     /plans/archive/2026_08/ui_satellite_ao_dispatch_batch2_2026_08_08.md,
     /plans/active/ui_satellite_ao_dispatch_batch3_2026_08_09.md,
@@ -154,9 +154,9 @@ context_scope:
 4. **[FIXED]** `plans/active/ui_satellite_ao_dispatch_batch2_finalize_2026_08_08.md` — 2 occurrences of "batch-3
    candidate" reworded to "future-satellite-batch candidate" (name now taken by an unrelated doc,
    `ui_satellite_ao_dispatch_batch3_2026_08_09.md`, drafted after this text was written). Commit `6232701a11`.
-5. **[FIXED]** `plans/active/issues/plan_reconciler_findings_2026_08_07.md` — converted a 2×-flagged, never-tracked
-   prose-only finding (missing `ACTIVE_INDEX.md` normative ref) into a real `[DOC] P3` todo per the "every follow-up is
-   a todo, never prose" rule. Commit `69a5ac46e2`.
+5. **[FIXED]** `plans/archive/2026_08/issues/plan_reconciler_findings_2026_08_07.md` — converted a 2×-flagged,
+   never-tracked prose-only finding (missing `ACTIVE_INDEX.md` normative ref) into a real `[DOC] P3` todo per the "every
+   follow-up is a todo, never prose" rule. Commit `69a5ac46e2`.
 
 ## Codex corrections applied (mechanical, evidence-cited)
 

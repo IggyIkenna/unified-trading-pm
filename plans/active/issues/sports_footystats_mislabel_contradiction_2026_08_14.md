@@ -90,13 +90,48 @@ context_scope:
 | This session, live `read_availability_index` census                | `venue=ODDS_API`/`pipeline_mode=batch_footystats`: **19,782 shards, 19,469 `captured`** (real data, `source=footystats`), date range through **2026-08-14** (today) | 2026-08-14 |
 | `sports_taxonomy_p2_migration_2026_08_08.md` slot-26 closure note  | `venue=FOOTYSTATS`: 0 captured rows of any data_type                                                                                                                | 2026-08-14 |
 
-Both cannot be true of a one-time historical migration. The date range on the still-populated
+~~Both cannot be true of a one-time historical migration. The date range on the still-populated
 `ODDS_API`/`batch_footystats` rows running through **today** is the strongest signal: this reads as an **unfixed
 writer/backfill path still emitting new objects under the wrong stamp daily**, not leftover residue from before the
 2026-07-27 rename. The 2026-07-27 session's own tooling only ever touched the historical objects present _at that time_
 (16,970 objects) — nothing in this corpus shows a writer-side fix (e.g. to whatever job produces
 `pipeline_mode=batch_footystats` + `venue=ODDS_API` shards) that would stop new mis-stamped objects from continuing to
-land. This is a hypothesis, not yet confirmed — the writer/job itself has not been located in this session.
+land. This is a hypothesis, not yet confirmed — the writer/job itself has not been located in this session.~~
+
+**CORRECTED 2026-08-14 (slot-30) — the "dates through today" claim was a measurement artifact; no writer exists.** This
+session's census (`census_track_c_venue_restamp_targets_2026_07_27.py`, THIS session's own reported number above) was
+read at the **venue level only**, and `venue=ODDS_API` carries rows under **4 distinct `pipeline_mode`s**:
+`batch_footystats` (the mislabeled population this doc is about), `batch_mdps_odds_horizon_bucket`, `batch_odds_api`,
+and — the actual source of the "through today" date — `live_odds_api` (1,694 rows, 2026-06-21..2026-08-14, the genuinely
+live, correctly-attributed ODDS_API vendor capture). Re-scoped live to
+`venue=ODDS_API AND pipeline_mode=batch_footystats` specifically: **19,782 rows, date range 2020-06-01..2026-04-14** —
+frozen exactly at the 2026-05-05 migration's own boundary, **0 rows with any `attempted_at` in the last 14 days** (in
+fact `attempted_at` is `NaT`/absent for the entire population, consistent with a legacy bulk-migrated set predating
+`attempted_at` tracking). **There is no writer producing new mis-stamped objects.** Confirmed no-hit greps for both
+`ODDS_API` and `batch_footystats` as literals in `market-tick-data-service`'s live source tree
+(`market_tick_data_service/`, migration one-off scripts excluded); the one candidate live writer that DOES touch
+FootyStats odds (`instruments-service/instruments_service/engine/orchestrator/footystats.py::_fetch_footystats_odds`,
+active since the 2026-06-22 coherence-check fix) writes `venue="footystats"` (lowercase) to a completely different
+path/bucket (`sports_reference/by_date/.../entity=footystats_odds/`, the IS reference-data surface) — it is not this
+population's source.
+
+**But the population's PERSISTENCE despite the 2026-07-27 "0 stale remaining" claim IS real, and now has a confirmed
+root cause: a legacy per-VM seed shard the 2026-07-27 rename never touched.** Live-read
+`_index/per_vm/_legacy_seed.parquet` (the bucket's own legacy-row carrier, always merged into the main index by
+`manifest_consolidator.consolidate()` on every cycle per `unified-trading-library`'s own
+`_seed_legacy_if_needed`/`legacy_seed_captured_outranks_resurrection_risk_2026_07_15` logic) directly: it still holds
+**20,095** `venue=ODDS_API`/`pipeline_mode=batch_footystats` rows, never re-stamped.
+`manifest_swap_venue_restamp_2026_07_27.py`'s CAS-swap operates ONLY on `_index/availability_index.parquet` (the merged
+index) — it has no code path touching `_index/per_vm/*.parquet` shards at all. So the 2026-07-27 run's "VERIFY
+stale_remaining=0" was true of the merged index in that moment, but the very next consolidation cycle re-merged the
+un-renamed legacy-seed copy back in — the population never actually left, it was masked for one consolidation cycle.
+**This is the real blocker for any future purge/rename of this population**, not a live writer: whatever operation lands
+next (routed to `sports_taxonomy_p2_migration_2026_08_08.md` per this doc's own recommendation below) must also
+re-stamp/purge the matching rows in `_index/per_vm/_legacy_seed.parquet` in the SAME change, or the consolidator will
+resurrect them again on its next cycle exactly as it did this time. Tooling fix shipped this session:
+`market-tick-data-service@<see /done evidence>` adds a per-`pipeline_mode` date-range breakdown to
+`census_track_c_venue_restamp_targets_2026_07_27.py` whenever a venue spans more than one pipeline_mode, so this exact
+aggregation-artifact false alarm can't recur silently for any future venue/mode combination.
 
 **2. The rename-to-FOOTYSTATS approach was already determined to be the WRONG fix, one day before it was executed.**
 
@@ -154,16 +189,41 @@ already-identified wrong fix (creating duplicate manifest rows) rather than reso
 
 ## Todos
 
-- [ ] [DIAG] P1. Identify the writer/backfill job that produces `pipeline_mode=batch_footystats` + `venue=ODDS_API`
+- [x] ✅ [DIAG] P1. Identify the writer/backfill job that produces `pipeline_mode=batch_footystats` + `venue=ODDS_API`
       objects (dates through 2026-08-14) and determine whether it needs a writer-side fix to stop the ongoing mis-stamp,
       vs. this being a one-off re-population this session mis-measured. Cross-reference
       `/plans/archive/issues/sports_canonical_migrated_odds_mistamped_footystats_2026_07_16.md`'s still-open PURGE todo
       before choosing rename vs. purge vs. writer-fix. (repo: market-data-processing-service or wherever the footystats
-      capture job lives)
-- [ ] [REVIEW] P2. Reconcile the completion-state contradiction between
+      capture job lives) — **DONE 2026-08-14 (slot-30), live-verified, no writer exists.** Neither hypothesis in the
+      todo's own title is quite right: re-scoped to `venue=ODDS_API AND pipeline_mode=batch_footystats` specifically,
+      the population is frozen at 2020-06-01..2026-04-14 (0 rows with recent `attempted_at`) — genuinely a one-off, not
+      a re-population this session mis-measured (the "through today" figure was real, just wrongly attributed — it
+      belongs to the co-resident `live_odds_api` pipeline_mode under the same venue, a separate, correctly-labeled,
+      actively-live population). The real reason the population never reached zero after the 2026-07-27 rename is a
+      THIRD explanation neither hypothesis names: `_index/per_vm/_legacy_seed.parquet` still carries 20,095 matching
+      rows the rename script never touched, and the manifest consolidator re-merges them every cycle. See the corrected
+      "What I found" §1 above for full evidence. No writer-side fix needed; a manifest-hygiene fix is needed instead
+      (see new todo below). Tooling: `census_track_c_venue_restamp_targets_2026_07_27.py` fixed to break out
+      per-`pipeline_mode` date ranges so this exact aggregation-artifact false alarm can't recur silently.
+- [x] ✅ [REVIEW] P2. Reconcile the completion-state contradiction between
       `sports_consolidated_native_ao_extract_2026_07_25.md` (2026-07-27: claims 0 stale `ODDS_API`/`batch_footystats`
       rows) and this doc's 2026-08-14 measurement (19,782 real shards) — most likely writer-recurrence (see todo above),
-      but state it explicitly once confirmed rather than leaving two "done" claims standing.
+      but state it explicitly once confirmed rather than leaving two "done" claims standing. — **DONE 2026-08-14
+      (slot-30), resolved as a byproduct of the DIAG todo above (same investigation, not writer-recurrence).** Both
+      claims were true of different manifest LAYERS at different times, not a genuine contradiction about the same
+      state: the 2026-07-27 CAS-swap genuinely zeroed the MERGED index (`_index/availability_index.parquet`) at that
+      moment — but never touched `_index/per_vm/_legacy_seed.parquet`, so the very next consolidation cycle re-merged
+      the legacy seed's un-renamed 20,095 rows back in. "0 stale remaining" and "19,782 shards present today" are both
+      accurate readings of their respective moments; the gap between them is the legacy-seed omission, not a
+      re-measurement error or a live writer.
+- [ ] [DATA] P1. **Before any future purge/rename of the `ODDS_API`/`batch_footystats` population lands** (routed to
+      `sports_taxonomy_p2_migration_2026_08_08.md` per the Recommended decision above): the fix MUST also re-stamp or
+      purge the matching rows in `_index/per_vm/_legacy_seed.parquet` (20,095 rows, live-confirmed 2026-08-14, slot-30)
+      in the SAME change as the merged-index operation — the manifest consolidator (`unified-trading-library`'s
+      `manifest_consolidator.consolidate()`, `_seed_legacy_if_needed`) always re-merges this shard on every cycle, and
+      this is confirmed to be exactly why the 2026-07-27 `manifest_swap_venue_restamp_2026_07_27.py` run's "VERIFY
+      stale_remaining=0" did not stick — it only ever touched the merged index. Any operation that repeats that mistake
+      will silently revert again. (repo: market-tick-data-service or wherever the next purge/rename tool is built)
 - [ ] [DATA] P2. Live-content-verify whether `LADBROKES_UK`/`SPORT888` under `batch_footystats`/`odds_horizon_bucket`
       are a genuine casing/alias duplicate (safe to fold, mirroring the existing `SPORTS_VENUE_FOLD` entries) or a
       content-distinct feed (like UNIBET_UK/UNIBET_EU turned out to be) before building any restamp tooling for this
