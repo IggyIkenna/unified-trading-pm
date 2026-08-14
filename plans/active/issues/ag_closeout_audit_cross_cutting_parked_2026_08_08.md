@@ -45,7 +45,7 @@ related:
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md,
-    /plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-08"
@@ -252,7 +252,7 @@ markdown link (not a bare backtick filename — prettier line-wrap risk per the 
 `check_ag_closeout_linkage.py` = **65 orphan(s) (baseline 69)** today, down from 71 (2026-08-07) / 72-87 (2026-08-06) —
 the first PASS since this ratchet started failing. Cross-cutting's own share 37→29 (driven largely by today's 14
 permanent citations added to the closeout doc). Full detail in
-[`ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`](/plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md),
+[`ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`](/plans/archive/2026_08/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md),
 Todo 2 closed there on the met done-when (with a volatility caveat — this could regress).
 
 ## Ledger

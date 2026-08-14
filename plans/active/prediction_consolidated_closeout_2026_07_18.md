@@ -400,7 +400,7 @@ fixture-linked before MVP backfill.
   - [`plans/active/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md`](/plans/archive/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md)
     — **added to this index 2026-08-06** (`/ag-closeout-audit prediction`, closing a `check_ag_closeout_linkage.py`
     graph-disconnection gap — see
-    [`ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`](/plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md)).
+    [`ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`](/plans/archive/2026_08/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md)).
     Self-dispatched (`assigned_vm: planning`, `status: open`), so not orphaned in the ag-closeout-audit sense — but was
     graph-disconnected from this closeout family (no `related:`/mention link), which is now fixed by this citation. Code
     fix (writer `instrument_type` stale-literal) + root-cause fix + prod deploy all DONE 2026-08-01/03 per the doc's own
