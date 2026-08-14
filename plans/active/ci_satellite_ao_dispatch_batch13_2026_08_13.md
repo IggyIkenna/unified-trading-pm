@@ -456,7 +456,7 @@ source: >-
       visibility. Warn-only, no test regression — verified live in this same run's own `quality-gates.sh` pass (baseline
       file present, block executes every run). Issue-doc/source-plan checkbox reconciliation deferred to
       `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` per this batch's own header (source docs not touched
-      here). Evidence: `unified-trading-pm@<pending-ship-sha>`.
+      here). Evidence: `unified-trading-pm@85c8ce933c`.
 - [ ] [CODE] P2. Re-measure GitHub Actions billing for the 17+PM reverted repos (should read $0/unmetered) and the
       self-hosted VM's steady-state load average before vs. after, via the already-proven github-billing-token GSM
       secret + aws ce get-cost-and-usage procedure Source:
