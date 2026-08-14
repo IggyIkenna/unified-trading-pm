@@ -92,7 +92,7 @@ because a new filename cannot collide with a peer's in-flight edit of an existin
       in this doc who was consulted or that the owning session is confirmed finished. ✅ I am that owner (authored
       `0974060a` this session, per `mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md`'s P0 diagnose/fix
       todos) — no separate coordination needed, resolved it myself in the same session.
-- [ ] [DATA] P1. Ship the blocked consumer migration once the gate is green —
+- [x] [DATA] P1. Ship the blocked consumer migration once the gate is green —
       `scripts/delete_bybit_spot_spot_nonsense_manifest_2026_07_07.py` still did
       `VENUE_DATA_TYPE_CAPABILITIES.get(_VENUE, {})` then `sorted(caps.keys())` after the typed-record migration, which
       raises `AttributeError` on the new `VenueCapabilityRecord` inside a `--apply` delete script's safety gate; the fix
