@@ -350,8 +350,16 @@ source: >-
       `git show --stat d4f7fab9d8` confirms it touches `scripts/plan-hygiene/check_line_caps.sh` (41 lines changed) —
       matching the cited "small-marker-append carve-out" work. No gap remains; this item's finding (Item L in
       `plan_reconciler_findings_cross_cutting_2026_08_10.md`) is closed by an earlier session's fix, not this one.
-- [ ] [CODE] P2. Item N -- fix 3 docs' stale 'closeout over 1000-line hard cap' citations (now 720 lines) Source:
-      `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`
+- [x] ✅ [CODE] P2. Item N -- fix 3 docs' stale 'closeout over 1000-line hard cap' citations (now 720 lines) Source:
+      `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md` — same commit as this flip: corrected
+      the stale "already over the 1000-line hard cap" citations in all 3 docs
+      (`promote_ref_orphaned_on_manual_pr_close_2026_08_06.md` summary+body,
+      `unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md` Progress Log,
+      `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md` Progress Log — traced its indirect
+      reference through the deadlock doc, confirmed same claim) — live-verified
+      `cross_cutting_consolidated_closeout_2026_07_25.md` is 733 lines (under the 1000-line hard cap). Text-only
+      correction per Item N's narrow scope; did not execute the newly-unblocked archival/repoint follow-ups (left
+      tracked in their own docs).
 - [ ] [CODE] P2. De-cohort the freshness thresholds (e.g. 90d + hash(path) % 14 jitter, or stagger last_reviewed on bulk
       authoring) Source: `plans/active/issues/qg_ratchets_block_unrelated_ships_2026_08_12.md`
 - [ ] [CODE] P2. Write up the correctness-ratchet-vs-hygiene-ratchet distinction (currently only in commit messages) as

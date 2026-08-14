@@ -409,9 +409,12 @@ source: >-
       archived to `plans/archive/issues/` on 2026-07-14 — repointed all 4 hits + the same stale path in
       `scripts/hooks/prettier-autostage.sh`'s SSOT comment (5 hits total across 3 files). Source:
       `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
-- [ ] [CODE] P2. DOCS P3: update ao_main_review_force_compact_idle_gate_unreachable_2026_08_09.md's frontmatter title
-      (still says 'unreachable') to match its own body's supersession Source:
-      `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
+- [x] ✅ [CODE] P2. DOCS P3: update ao_main_review_force_compact_idle_gate_unreachable_2026_08_09.md's frontmatter title
+      (still says 'unreachable') to match its own body's supersession — unified-trading-pm (this commit): retitled the
+      frontmatter `title:` field and the body's H1 heading (both carried the "never satisfies"/"unreachable" framing the
+      2026-08-10 Progress Log entry explicitly supersedes) to "main/review forced-compact idle gate is rarely reached
+      because the cooperative nudge lands first — working as designed, not unreachable", matching the operator ruling's
+      own wording. Source: `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
 - [ ] [CODE] P2. DOCS P2: correct ao_orphan_audit_followup_triage_2026_07_30.md's stale claim that batch2 already
       carries fixes for ao_recovery_audit_layer1_deleted_2026_07_15 (re-verified false) Source:
       `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`

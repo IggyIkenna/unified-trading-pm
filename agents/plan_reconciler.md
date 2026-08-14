@@ -111,10 +111,10 @@ reaps your session.
 **SCOPE — read this before STEP 0.** If your boot message set `$TRANCHE`, every step below applies to **that ONE topic
 tranche's docs only**, per `cursor-configs/skills/plan-reconcile/SKILL.md` § "Topic-scoped (sharded) runs": the skill
 file is the SSOT for how tranche membership is derived, and for the two things that stay corpus-wide in EVERY shard (the
-normative refs — `PLAN_FORMAT.md` / `task_template.md` / `INDEX.md` / `ACTIVE_INDEX.md` — and codex). Do not attempt
-another tranche; a sibling worker owns each of the others in this wave. If `$TRANCHE` is ABSENT, you run the whole
-corpus (`all`) exactly as before — that unsharded run is what catches the cross-tranche contradictions a single shard
-structurally cannot see, so it is not merely a fallback.
+normative refs — `PLAN_FORMAT.md` / `task_template.md` / `INDEX.md` — and codex). Do not attempt another tranche; a
+sibling worker owns each of the others in this wave. If `$TRANCHE` is ABSENT, you run the whole corpus (`all`) exactly
+as before — that unsharded run is what catches the cross-tranche contradictions a single shard structurally cannot see,
+so it is not merely a fallback.
 
 **Why sharded (operator ruling 2026-08-06)**: the unsharded daily run was dying mid-flight on 7 of 8 attempts (several
 within 2-5 minutes of spawn) and took 13.5 hours on the single attempt that completed, holding a slot all day. A bounded

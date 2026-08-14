@@ -159,9 +159,12 @@ source: >-
       above): also a pure `_condition()` derivation over already-fetched `DeployFact`s in
       `deployment-api/deployment_api/services/artifact_pipeline/service.py`, rendered by the same generic Health table —
       no TS/React surface. Source: `plans/active/artifact_pipeline_observability_2026_07_17.md`
-- [ ] [CODE] P2. Resolve the ACTIVE_INDEX.md dangling normative-ref: edit cursor-configs/skills/plan-reconcile/SKILL.md
-      (lines 5,59,425) + agents/plan_reconciler.md (line 114) to drop the stale name and cite only INDEX.md, or
-      regenerate ACTIVE_INDEX.md if a distinct artifact was genuinely intended Source:
+- [x] ✅ [CODE] P2. Resolve the ACTIVE_INDEX.md dangling normative-ref: edit
+      cursor-configs/skills/plan-reconcile/SKILL.md (lines 5,59,425) + agents/plan_reconciler.md (line 114) to drop the
+      stale name and cite only INDEX.md, or regenerate ACTIVE_INDEX.md if a distinct artifact was genuinely intended —
+      `plans/ACTIVE_INDEX.md` DOES exist (not dangling) but self-declares STALE/superseded-by-`plans/active/INDEX.md`
+      since 2026-07-14, so "genuinely distinct artifact" doesn't apply — dropped the stale name, both files now cite
+      only `INDEX.md` as a normative ref: unified-trading-pm@`e8bb0b8524`. Source:
       `plans/active/issues/plan_reconciler_findings_2026_08_07.md`
 - [ ] [CODE] P2. Expand the ui-tranche doc discovery/inventory logic (used by /plan-reconcile ui and /ag-closeout-audit
       ui) to include multiline-frontmatter `asset_group:` docs missed by same-line grep (named examples:

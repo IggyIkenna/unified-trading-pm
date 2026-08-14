@@ -128,9 +128,21 @@ source: >-
       `BucketSpec("aggregator-routes", "aggregator_route",     "spot_asset", grain="path")` in
       `_migrate_defi_classify.py`, mirroring the gas-fees/liquidations 7th/8th specs. Source:
       `plans/active/defi_migration_audit_log_2026_07_24.md`
-- [ ] [CODE] P2. Redirect the 4 DeFi live handlers (dex_swaps_handler, solana_defi_handler, evm_defi_handler,
-      aggregator_route_handler) that still write to non-migrated legacy buckets onto their dedicated migrated-bucket
-      targets Source: `plans/active/defi_migration_audit_log_2026_07_24.md`
+- [x] [CODE] P2. ✅ RESOLVED-AS-MOOT — the redirect target no longer exists. Live investigation (2026-08-14) found the
+      "dedicated migrated-bucket" architecture this todo describes was RETIRED by a LATER, closed-out decision: a
+      "bucket estate cleanup" (`gcs_bucket_estate_cleanup_2026_07_10`,
+      `defi_dedicated_bucket_shared_migration_2026_07_13`) deleted every dedicated per-data_type DeFi bucket kind
+      (dex-pools/dex-swaps/lending-indices/perp-funding/
+      lst-rates/oracle-prices/gas-fees/eigenlayer-rewards/evm-defi/solana-defi) from
+      `deployment-service/configs/cloud-providers.yaml` on confirmed-zero-callers grounds — every DeFi writer (including
+      the 4 named "orphan" handlers) already converges on the ONE shared `market-data-tick-defi-{env}-{pid}` bucket
+      (`kind="market-data"`, aliased `kind="tick-data"`). Direct code read confirms all 4 handlers already call
+      `get_write_bucket_name("market_data", "defi")` / `resolve_bucket_name(kind="market-data", asset_group="defi")` —
+      byte-identical to what `dex_pools_handler`/`lending_indices_handler`/`lst_rates_handler` (the audit doc's "already
+      migrated" set) call. No divergence remains to redirect; no code change is possible or needed. Full evidence + the
+      adjacent stale-todo fallout (gas-fees manifest-rebuild-scope, delete-after-migration, aggregator-routes-9th-spec)
+      filed at `plans/active/issues/defi_migration_dedicated_bucket_architecture_retired_2026_08_14.md`. Source:
+      `plans/active/defi_migration_audit_log_2026_07_24.md`
 - [ ] [CODE] P2. Wire gas_fees into the manifest could-exist denominator as a per-chain expected cell (IS
       enumerate_expected_universe + deployment-api/UI data-status), the (b) half of the already-registered gas-fees
       manifest todo Source: `plans/active/defi_migration_audit_log_2026_07_24.md`
