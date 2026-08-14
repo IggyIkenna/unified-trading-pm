@@ -174,10 +174,10 @@ todo below.
       `client`/`client_version` diffs (ship the P2 `ignore_changes` fix below first if convenient, so the cosmetic set
       stops re-appearing in the same plan run). **Done when**: a `tofu plan` run shows zero remaining diff for every
       resource classified INTENDED in the refreshed pass.
-- [x] [INFRA] P1. ✅ **DONE 2026-07-27** — **downgraded from `[OPERATOR]` per finding W**
-      (`/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`): a permission gap on
+- [x] [INFRA] P1. ✅ **DONE 2026-07-27** — **downgraded from `[OPERATOR]` per
+      `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` § "The rule"**: a permission gap on
       `unified-trading-sa`'s own identity is self-fixable, not an operator escalation (the earlier gating pass predates
-      finding W). Granted `roles/secretmanager.viewer`, `roles/pubsub.viewer` (superseded), and `roles/pubsub.admin`
+      that rule). Granted `roles/secretmanager.viewer`, `roles/pubsub.viewer` (superseded), and `roles/pubsub.admin`
       (the one that actually covers `pubsub.{topics,subscriptions}.getIamPolicy` — `pubsub.viewer` alone did not,
       discovered by re-running the real check, not assumed) — `storage.admin`/`resourcemanager.projectIamAdmin` from
       earlier this session already covered the bucket + project-IAM reads. **Done when, verified for real**: ran
@@ -195,12 +195,12 @@ todo below.
       deployment-service.
 
       **DONE 2026-07-30 — deployment-service@f57c96e.** Added `ignore_changes = [client, client_version]` to BOTH the
-          shared `terraform/modules/container-job/gcp/main.tf` `google_cloud_run_v2_job.job` resource (covers every
-          `module.*_job` consumer — the 65-diff bulk) AND the standalone
-          `terraform/gcp/vm_log_archival_scheduler.tf` `google_cloud_run_v2_job.vm_log_archival` resource (not built via
-          the shared module, so it needed its own copy — extended its existing `ignore_changes = [launch_stage]` rather
-          than duplicating). Code-only (no `tofu apply` — that's this doc's still-open P1 item); `tofu fmt -check` clean
-          on the added lines; full `quality-gates.sh` green.
+              shared `terraform/modules/container-job/gcp/main.tf` `google_cloud_run_v2_job.job` resource (covers every
+              `module.*_job` consumer — the 65-diff bulk) AND the standalone
+              `terraform/gcp/vm_log_archival_scheduler.tf` `google_cloud_run_v2_job.vm_log_archival` resource (not built via
+              the shared module, so it needed its own copy — extended its existing `ignore_changes = [launch_stage]` rather
+              than duplicating). Code-only (no `tofu apply` — that's this doc's still-open P1 item); `tofu fmt -check` clean
+              on the added lines; full `quality-gates.sh` green.
 
 ## Progress Log
 
