@@ -97,23 +97,16 @@ source:
 > consumers (`relaunch_backfill_vm`, `relaunch_stalled_vm`, `vm_zombie_watchdog`) already import `VM_PREFIX_TO_BUCKET`
 > at module top level. Import it at the top like they do; the defensive version cost a gate round-trip to discover.
 
-> **🚧 BLOCKED BY AN IMPORT CYCLE — measured 2026-08-14, this is the whole remaining gap.** The call site belongs in
-> `escalation.route_finding()`: it is the one seam every DP finding already passes through, and revocation must fire
-> there INDEPENDENT of tier (the 4 watcher call sites would each need wiring otherwise, and a 5th watcher would silently
-> miss it). But `revocation_actuator` imports `escalation` for `PipelineFinding`/`EscalationTier` (used only by
-> `_emit_fleet_halt_visibility`), so `escalation` cannot import back without a cycle — and `escalation.py` is at
-> **958/960 lines**, leaving no room for even a 2-line hop. Both must be fixed together:
->
-> 1. Extract `EscalationTier` + `PipelineFinding` into `escalation_types.py` (no deps), imported by both.
-> 2. Invert the actuator's FLEET_HALT visibility to an INJECTED callable so it stops importing `meta_watchers` (which
->    itself reaches `escalation`) — the actuator should not know about alerting at all.
-> 3. Split `escalation.py`, which is at its cap independently of this work (the issue-doc helpers `_write_issue_doc` /
->    `_ping_orchestrator_inbox` / `_resolve_pm_path` are the obvious seam).
->
-> Until then `test_actuate_has_a_production_caller` is `xfail(strict=True)` — it FLIPS TO A FAILURE the moment wiring
-> lands, so the marker cannot outlive the defect. Do not remove the xfail without landing the call.
-
-- [ ] [CODE] P0. **Call `actuate()` from `escalation.route_finding()`.** That is the seam every DP finding already
+- [x] ✅ [CODE] P0. **Call `actuate()` from `escalation.route_finding()`.** — **deployment-service@79864746c.** The
+      mechanism is ARMED: `actuate()` has a production caller and fires for every finding, independent of tier. The
+      import cycle was broken by inverting the actuator's FLEET_HALT visibility to an injected callable (that one
+      import, used only to announce a halt, was the whole blocker), and room was made by extracting
+      `escalation_issue_writer.py` with a TYPE_CHECKING-only type import (escalation.py 958 → 930). **A correctness fix
+      fell out of it**: the announcement now calls `log_event` directly instead of `meta_watchers.emit_finding`, which
+      calls `route_finding` — announcing from INSIDE `route_finding` would have re-entered the escalation hop and re-run
+      revocation against the announcement. The original design carried that edge and it never fired only because the
+      actuator had no caller. The `xfail(strict=True)` guard is removed: strict failed on PASS the moment the call site
+      landed, which is exactly what forced its removal in the same commit. That is the seam every DP finding already
       passes through, and revocation must fire there INDEPENDENT of tier — a `DEPS_DRAIN` verdict applies whether the
       finding is `auto_recover`, `file_issue` or `page_operator`, unlike `_DP_RECOVERY_ACTIONS` which is auto-recover
       only. Use `finding.registry_id` as the alert identity (the finer key — `DP-FETCH-007`/`009` share one `AlertCode`)
