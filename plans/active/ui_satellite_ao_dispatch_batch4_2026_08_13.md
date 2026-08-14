@@ -63,9 +63,11 @@ source: >-
 
 ## Todos
 
-- [ ] [CODE] P2. Re-run pw:L2 full smoke suite and flip the 3 CODE-SHIPPED todos (venue-filter frontend, duplicate
-      available/available-dates panel collapse, pagination visible-count selector) if it exits 0 Source:
-      `plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md`
+- [x] ✅ [CODE] P2. Re-run pw:L2 full smoke suite and flip the 3 CODE-SHIPPED todos (venue-filter frontend, duplicate
+      available/available-dates panel collapse, pagination visible-count selector) if it exits 0 — exit 0 confirmed
+      (450/450), 3 items flipped in the source doc. A pre-existing unrelated blocker (stale hardcoded
+      `capability_tab.spec.ts` manifest counts, missed by fix(capability) 6a323bf) was root-caused + fixed inline:
+      deployment-ui@`d95f1934ef`. Source: `plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md`
 - [ ] [CODE] P2. Ship the small Rollup-difference-clarity UI tooltip/note (audit §F, by-design explainer) Source:
       `plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md`
 - [ ] [CODE] P2. Investigate + resolve the Yahoo/Kalshi market-tick-view out-of-scope registry check (add to
