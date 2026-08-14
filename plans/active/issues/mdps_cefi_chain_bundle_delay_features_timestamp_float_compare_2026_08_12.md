@@ -129,6 +129,24 @@ line.
 
 ## Progress Log
 
+- **data_pipeline_failure agt-87339b 2026-08-14**: a SECOND, separate 2019 CeFi year-shard —
+  `mdps-cefi-2019-20260810-035109` (launched 2026-08-10 03:51, ~80min after this issue's original `...-023141` VM, so
+  pre-dates the fix) — hit the identical `TypeError: '>' not supported between instances of 'Timestamp' and 'float'` on
+  its LAST processed date (2019-12-31, the final date in its 365-day range), for `[trades] BITFINEX-FUTURES/DERIBIT`
+  (7/7 timeframes each) and `[liquidations] BINANCE-FUTURES:PERPETUAL` (candle-write failures) — 12 errors, 21/33
+  succeeded, `exit_code=1`, DP-VM-001 escalation. Confirmed via `run.log`
+  (`gs://deployment-scripts-central-element-323112/log-archive/final/mdps-cefi-2019-20260810-035109/run.log`) this is
+  the SAME root cause as above (`_calculate_delay_features`'s µs-vs-ns scale heuristic on a native-`datetime64` column)
+  — the fix (`market-data-processing-service@cc65f076ae`) was already live in this repo, this VM simply pre-dated it.
+  Per RB-INFRA-RELAUNCH's root-cause-diagnosed carve-out (root cause already diagnosed + fix already shipped + this is
+  the first relaunch of `mdps-cefi-` TODAY with the fix live), relaunched `cefi --year 2019` as
+  `mdps-cefi-2019-20260814-193801` (`launch-mdps-sharded-backfill.sh`, presence-skip will fast-skip the already-captured
+  days and only reprocess 2019-12-31). Verified STARTED@T+60s (`gcloud compute instances describe` = RUNNING) and
+  PROGRESS@T+10min (serial console showed live tarball-deploy sequence advancing, not stalled) — did not wait for the
+  full multi-hour run to complete; the standing DP-VM fleet monitor will catch and re-escalate if this relaunch also
+  fails. This is now the SECOND confirmed instance of the blast-radius concern below (a pre-fix VM hitting the same
+  crash) — reinforces that the P2 blast-radius audit todo is worth doing, not just theoretical.
+
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
