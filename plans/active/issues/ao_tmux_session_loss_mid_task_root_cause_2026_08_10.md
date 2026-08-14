@@ -584,3 +584,13 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   actually interrupted, only the diagnostic tool's own runtime window was. Relaunched immediately for continued
   coverage; re-attached to the same pid on the first poll, as expected. Operator has not yet responded on the earlier
   closure question — continuing light background observation, doc not otherwise updated pending their answer.
+- 2026-08-14 00:12Z (independent confirming check, separate interactive session): operator asked directly whether this
+  bug is fixed. Fresh SSM query against `activity_log`, not reusing any cached figure: **zero** `tmux_server_died`
+  events and **zero** whole-server-signature `tmux_session_lost` events (`tmux_server_alive=false`) between 20:20Z (when
+  the 4th/last fix, `agent-orchestrator@d813ef1703`, shipped) and 00:12Z — a clean **~3h52m** window on this independent
+  measurement, consistent with and extending the supervisor's own continuously-tracked pid-stability figure above. Last
+  actual occurrence of any kind remains 17:13:27Z (~7h prior to this check). Relayed to the operator as "strong current
+  evidence, holding," explicitly NOT as a re-declared permanent close — this doc has already walked back two premature
+  closure claims (13:51Z, then again after the Layer-3 gaps), and the operator's own standing objection to declaring
+  victory on a readback still applies. Not flipping `status`/archiving; that decision stays with whoever is tracking the
+  still-open closure question above.
