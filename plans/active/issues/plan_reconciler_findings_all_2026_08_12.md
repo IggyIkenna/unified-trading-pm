@@ -123,8 +123,10 @@ idempotency guard silently no-ops re-park attempts (observed 4x/26x redundant re
       backfill for day=2026-08-10 to replace false `empty_confirmed` rows. Verified slot-29 2026-08-14: manifest shows
       `fixture_features`/`derived_features` `captured` for 2026-08-10 with real GCS output (172 blobs, 40+ leagues); doc
       resolved + archived.
-- [ ] [CONFIG] P2. `plans/active/issues/sports_features_2026_backfill_launch_window_was_today_2026_08_10.md` — clamp the
-      per-year sports features backfill launcher's `end_date = min(today-1, {year}-12-31)` for the current year.
+- [x] ✅ [CONFIG] P2. `plans/archive/2026_08/issues/sports_features_2026_backfill_launch_window_was_today_2026_08_10.md`
+      — clamp the per-year sports features backfill launcher's `end_date = min(today-1, {year}-12-31)` for the current
+      year. FIXED: `launch-features-sharded-backfill.sh`'s `launch_year_shard()` now clamps dynamically —
+      deployment-service@3a18bc5ce0. Source doc resolved + archived 2026-08-14.
 - [ ] [OPERATOR] P2. `plans/active/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md` — flip
       `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md` and `...batch12_2026_08_10.md` from `draft`→`active`
       (unblocks 4 docs + 8 open todos) — cross-check against Section 1's wave_launcher-mechanism reconciliation first.

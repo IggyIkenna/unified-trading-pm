@@ -19,7 +19,7 @@ summary: >-
   rows/613 rows). Today (08-10) is a forward/T+1 item (features-sports T+1 recon at 02:30 per t1_batch_scheduler.tf),
   not a batch-backfill gap. A blind relaunch of the exact window (`end=2026-08-10`) would re-fail identically and
   exceeds RB-INFRA-RELAUNCH's `≤2/(vm-prefix,day)` bound (12+ `features-sports-sports` launches today) — so no relaunch.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [features]
@@ -46,7 +46,6 @@ assigned_role: data
 drift_direction: advance-code
 locked_by:
 locked_since:
-archive_exempt: true
 supersedes:
 superseded_by:
 resolved_by:
@@ -60,6 +59,10 @@ context_scope:
 ---
 
 # `features-sports-sports-2026-20260810-051126` rc=1 — launch-window (end=today) honest-halt, no relaunch
+
+> **ARCHIVED 2026-08-14** — The sole todo (clamp the current-year sharded-features launcher's window to
+> `end_date = min(today-1, {year}-12-31)`) is fixed and shipped: deployment-service@3a18bc5ce0
+> (`scripts/vm/launch-features-sharded-backfill.sh`'s `launch_year_shard()`).
 
 ## The finding (DP-VM-001, escalation agt-af22dd)
 
