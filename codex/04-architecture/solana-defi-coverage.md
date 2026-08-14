@@ -4,14 +4,16 @@ title: Solana DeFi Coverage — Perp DEX + AMM/CLOB/Oracle Adapters
 summary:
   Solana DeFi reference-data adapter coverage in instruments-service — Plan B (perp-DEX) was EMPTY 2026-07-16→2026-08-14
   (Drift + Pacifica removed, operator ruling); **2026-08-14 the operator reversed the Pacifica portion and authorized
-  BOTH Jupiter perps and Pacifica for re-integration** — Drift stays removed (real hack, unproven Velocity relaunch).
-  Also covers spot AMM/CLOB (Meteora/Phoenix/Jupiter/Lifinity), Pyth oracle, Jito restaking; venue registry + program
-  IDs + deploy-date floors (MTDS market-data wiring tracked separately).
+  BOTH Jupiter perps and Pacifica for re-integration; PACIFICA-SOLANA's full-stack re-integration (UAC through
+  strategy-service) shipped 2026-08-14/15** — Drift stays removed (real hack, unproven Velocity relaunch); Jupiter perps
+  remain a separately-scoped, not-yet-done future task. Also covers spot AMM/CLOB (Meteora/Phoenix/Jupiter/Lifinity),
+  Pyth oracle, Jito restaking; venue registry + program IDs + deploy-date floors (MTDS market-data wiring tracked
+  separately).
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [instruments-service]
+repos: [instruments-service, unified-api-contracts, market-tick-data-service, execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [defi, instruments, mtds, backfill, catalogue]
 related:
@@ -19,6 +21,8 @@ related:
     /codex/04-architecture/drift-v2-data-sources.md,
     /codex/04-architecture/defi-execution-overview.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
+    /plans/active/pacifica_solana_perp_reintegration_2026_08_14.md,
+    /plans/active/solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md,
   ]
 created: 2026-05-13
 authoritative_for:
@@ -26,7 +30,7 @@ authoritative_for:
 referenced_by:
   [/codex/04-architecture/drift-v2-data-sources.md, /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md]
 owner: defi-adapters
-last_reviewed: 2026-08-10
+last_reviewed: 2026-08-15
 code_refs:
 type: architecture
 ---
@@ -65,14 +69,39 @@ type: architecture
 > own words).** This is a NEW, explicit decision — it does not retroactively imply the 2026-07-16 ruling was wrong, only
 > that circumstances (or the operator's risk tolerance) changed. **DRIFT-SOLANA stays removed** — nothing in this
 > reversal touches Drift; the hack was real and attributed with medium-high confidence to a North Korean
-> state-affiliated group (DPRK/Lazarus), and its Velocity DEX relaunch remains an unproven ~$0-TVL product. **This
-> banner authorizes re-integration as a decision; it does not itself re-add any code.** Actual re-integration (UAC
-> registry, instruments-service adapter, MTDS connector, execution-service protocol, strategy-service venue selection)
-> is tracked as real engineering work in a plan — see `/plans/active/` for the current tracking doc (name may change;
-> grep `PACIFICA` in `plans/active/` for the live pointer rather than trusting a hardcoded link here). Everything below
-> the 2026-07-16 banner describing PACIFICA-SOLANA as historical-only is now PARTIALLY superseded by this reversal — the
-> DRIFT-SOLANA portions remain accurate; PACIFICA-SOLANA content should be read as "this is what existed before the
-> 2026-07-16 cull, and what re-integration should restore or improve on," not as dead history.
+> state-affiliated group (DPRK/Lazarus), and its Velocity DEX relaunch remains an unproven ~$0-TVL product.
+
+> 🟢 **RE-INTEGRATION COMPLETE (2026-08-14/15).** Full stack shipped per
+> `/plans/active/pacifica_solana_perp_reintegration_2026_08_14.md` — UAC registry (venue + collateral policy +
+> capability declarations across ~18 files, `unified-api-contracts@316002f1e6` + a same-day `venue_tokens.py` gap fix
+> `unified-api-contracts@ce7c07d9af`) → instruments-service reference-data adapter, MODERNIZED to dynamic `GET /info`
+> market discovery rather than the pre-cull curated 10-coin list (`instruments-service@31981f461c`) → MTDS batch REST
+> adapter + a REAL (not scaffold) live WS connector at `wss://ws.pacifica.fi/ws`, public/unauthenticated
+> (`market-tick-data-service@c87b12db60`) → execution-service net-new protocol, deliberately SIMULATION-ONLY
+> (`execution-service@c2961ec9a2` — see the live-signing note below) → strategy-service venue selection for
+> `CARRY_FUNDING_DISPERSION`/`CARRY_BASIS_PERP`, explicitly NEVER `CARRY_STAKED_BASIS` since Pacifica accepts no LST as
+> margin (`strategy-service@14d869449f`). Facts a future reader would otherwise have to re-derive from `git log`:
+>
+> - The pre-cull `instruments-service` adapter's premise ("Pacifica has no public markets-discovery endpoint") was WRONG
+>   by the time of re-integration — `GET /info` returns the full live market list; the resurrection replaced the
+>   hardcoded coin list with a dynamic call, so new Pacifica listings are picked up automatically.
+> - The pre-cull MTDS live connector was a `BLOCKED-CREDENTIALS` scaffold whose premise ("needs a paid Helius/Triton RPC
+>   key + partner header") was also WRONG — direct testing 2026-08-14 proved the WS is public and unauthenticated. The
+>   connector is a full real rewrite (aiohttp `ws_connect`, real subscribe/parse, exponential backoff), not a boolean
+>   flip.
+> - **execution-service order placement is NOT live** — Pacifica's SIGNED endpoints require an Ed25519 signature from a
+>   raw Solana keypair (researched via `docs.pacifica.fi/api-documentation/api/signing.md`), not an HMAC API-key scheme
+>   like Aster. Per the workspace's wallet-keys hard-stop, this was correctly left unimplemented: `supports_live=False`
+>   (fail-closed), simulation-only. Wiring genuine Solana wallet-signing is an explicit, not-yet-made operator decision.
+> - **Deferred follow-up, not yet done**: 265 historically-quarantined `PACIFICA-SOLANA` objects
+>   (`unified_api_contracts/canonical/quarantine.py` `QUARANTINE_REGISTRY`) predate the reintegration and were left
+>   registered/quarantined — resolving them against the now-real catalogue is tracked as a P3 todo in the plan's §C, not
+>   done as a side effect of the registry work.
+>
+> **This banner authorizes re-integration as a decision; it does not itself re-add any code — see the plan for that.**
+> Everything below the 2026-07-16 banner describing PACIFICA-SOLANA as historical-only is now SUPERSEDED for
+> PACIFICA-SOLANA specifically (it is live again, not historical) — the DRIFT-SOLANA portions remain accurate as
+> written.
 
 > **SSOT for Solana DeFi adapter architecture.** Created: 2026-05-13 per
 > `/plans/archive/solana_perp_dex_adapters_2026_05_13.md` Phase 6. Extended: 2026-05-13 per
@@ -82,9 +111,12 @@ type: architecture
 
 The `arbitrage_price_dispersion` DeFi archetype originally called for:
 
-1. **Perp DEX hedge legs** (Plan B) — **NOW EMPTY** (see tombstone banner above). DRIFT was the sole remaining Plan B
-   venue (MANGO/ZETA/FLASH removed 2026-07-15, see below); removed entirely 2026-07-16 (operator ruling). Solana perp
-   hedge legs are unavailable until/unless Jupiter perps integration is scoped as new work.
+1. **Perp DEX hedge legs** (Plan B) — **PACIFICA-SOLANA is live again** (re-integrated 2026-08-14/15, see the
+   RE-INTEGRATION COMPLETE banner above); DRIFT remains removed (MANGO/ZETA/FLASH removed 2026-07-15, see below; DRIFT
+   removed 2026-07-16, operator ruling, stays removed). Jupiter perps remain unintegrated — that is still a distinct,
+   separately-scoped future task (tracked in the sibling
+   `/plans/active/solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md`), not done alongside Pacifica's
+   reintegration.
 2. **Spot AMM/CLOB venues** (Plan C) — Meteora DLMM, Phoenix CLOB, Jupiter aggregator, Lifinity PMM. **Unaffected** by
    the 2026-07-16 ruling (these are spot/aggregator venues, not perp DEXes).
 3. **Oracle price feeds** (Plan C) — Pyth Network Hermes batch API for 10 major Solana pairs. **Unaffected.**
@@ -118,12 +150,21 @@ All adapters live in `instruments-service/instruments_service/reference_data/ada
 > [the Elysium readiness plan](/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md) §
 > H.9. **This does not constitute the operator decision to re-add a Solana perp DEX** — that is still required.
 
-**EMPTY as of 2026-07-16** (operator ruling: all Solana perp DEXes dropped except Jupiter, not integrated). DRIFT-SOLANA
-was the sole entry; historical record:
+**Post-reintegration state (2026-08-14/15)**: PACIFICA-SOLANA is LIVE again (full stack shipped, see the banner above);
+DRIFT-SOLANA remains removed; Jupiter perps remain not-integrated (tracked separately in the sibling plan noted below
+the table).
 
-| Venue            | UAC Key                              | Program ID                                        | API Endpoint                       | Deploy Date         | Adapter                      | Status                 |
-| ---------------- | ------------------------------------ | ------------------------------------------------- | ---------------------------------- | ------------------- | ---------------------------- | ---------------------- |
-| ~~DRIFT-SOLANA~~ | ~~`SOLANA_DEFI_PROTOCOLS["drift"]`~~ | ~~`dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH`~~ | ~~`https://data.api.drift.trade`~~ | ~~2022-11-04 (V2)~~ | ~~`adapters/defi/drift.py`~~ | **REMOVED 2026-07-16** |
+| Venue               | UAC Key                              | REST Base                          | WS Base                   | Deploy Date         | Adapter                                                          | Status                                                                     |
+| ------------------- | ------------------------------------ | ---------------------------------- | ------------------------- | ------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **PACIFICA-SOLANA** | `VENUES_BY_ASSET_GROUP["cefi"]`      | `https://api.pacifica.fi/api/v1`   | `wss://ws.pacifica.fi/ws` | 2025-06-01          | `reference_data/adapters/cefi/pacifica.py` (instruments-service) | **LIVE — re-integrated 2026-08-14/15**, public/unauthenticated REST+WS     |
+| ~~DRIFT-SOLANA~~    | ~~`SOLANA_DEFI_PROTOCOLS["drift"]`~~ | ~~`https://data.api.drift.trade`~~ | —                         | ~~2022-11-04 (V2)~~ | ~~`adapters/defi/drift.py`~~                                     | **REMOVED 2026-07-16** — hacked, unproven Velocity relaunch, stays removed |
+
+Real off-chain-matching CLOB (genuine `fulfill_taker`/`fulfill_maker` order attribution, not pool-fill), classified
+`cefi` (same on-chain-CLOB cluster as HYPERLIQUID/ASTER/EXTENDED-STARKNET/LIGHTER-ZKSYNC), USDC unified margin (cross or
+isolated, **no LST accepted** — targets `CARRY_FUNDING_DISPERSION`/`CARRY_BASIS_PERP` only, never `CARRY_STAKED_BASIS`).
+Full re-integration record, including the two premises the pre-cull code got wrong (no public markets-discovery
+endpoint; WS needs paid RPC credentials) and the execution-service live-signing gap:
+`/plans/active/pacifica_solana_perp_reintegration_2026_08_14.md`.
 
 > **MANGO-SOLANA / ZETA-SOLANA / FLASH-SOLANA — REMOVED 2026-07-15 (operator ruling).** All 3 venues were half-onboarded
 > (an instruments-service reference-data adapter + factory registration + tests existed, but zero MTDS market-data

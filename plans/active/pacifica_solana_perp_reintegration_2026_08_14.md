@@ -251,12 +251,17 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
 
 ## G. Documentation
 
-- [ ] [SCRIPT] P2. **Update `/codex/04-architecture/solana-defi-coverage.md`'s venue-registry tables** once §B-§E land —
-      replace the struck-through DRIFT-only historical table with the real post-reintegration state (Pacifica live,
-      Drift still absent, Jupiter tracked separately), and fold in this plan's git-history resurrection facts (§A, §C,
-      §D) so a future reader doesn't have to re-derive them from `git log`.
-- [ ] [SCRIPT] P3. **Cross-link this plan and the Jupiter+Kamino plan's Progress Logs** once both land, so a future
-      reader following either doc sees the split decision and can find the sibling track.
+- [x] [SCRIPT] P2. ✅ **Updated `/codex/04-architecture/solana-defi-coverage.md`'s venue-registry tables** —
+      `unified-trading-pm@<pending push>`. Replaced the struck-through DRIFT-only historical table with the real
+      post-reintegration state (PACIFICA-SOLANA live row + REST/WS bases, DRIFT-SOLANA still struck through, Jupiter
+      explicitly noted as separately-tracked/not-done); added a "RE-INTEGRATION COMPLETE" banner with the git-history
+      resurrection facts (the two wrong pre-cull premises, the execution-service live-signing gap, the deferred
+      quarantine-reconciliation follow-up) so a future reader doesn't have to re-derive them from `git log`. Updated
+      frontmatter `summary`/`repos`/`related`/`last_reviewed` to match.
+- [x] [SCRIPT] P3. ✅ **Cross-linked this plan and the Jupiter+Kamino plan's Progress Logs** —
+      `unified-trading-pm@<pending push>`. Added a "sibling track complete" entry to the Jupiter+Kamino plan's Progress
+      Log pointing back here with the execution-service live-signing finding flagged as relevant to Jupiter's own
+      (not-yet-resolved) gates; this plan's own Progress Log (below) already carries the split-decision pointer forward.
 
 ## Progress Log
 

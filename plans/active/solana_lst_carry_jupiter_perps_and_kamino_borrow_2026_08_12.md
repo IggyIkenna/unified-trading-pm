@@ -162,46 +162,46 @@ from 2020-12-18).
       not `staking_yields`:
 
       | Venue                  | Declared                                        |
-                      | ---------------------- | ----------------------------------------------- |
-                      | `MARINADE-SOLANA`      | `lst_rates` from **2021-08-01**                 |
-                      | `JITO-SOLANA`          | `lst_rates` from **2021-11-01**                 |
-                      | `SOLBLAZE-SOLANA`      | `lst_rates` from 2022-10-15                     |
-                      | `JITORESTAKING-SOLANA` | `staking_yields` — restaking, correctly distinct |
+                          | ---------------------- | ----------------------------------------------- |
+                          | `MARINADE-SOLANA`      | `lst_rates` from **2021-08-01**                 |
+                          | `JITO-SOLANA`          | `lst_rates` from **2021-11-01**                 |
+                          | `SOLBLAZE-SOLANA`      | `lst_rates` from 2022-10-15                     |
+                          | `JITORESTAKING-SOLANA` | `staking_yields` — restaking, correctly distinct |
 
-                      `lst_rates_handler.py` writes **both** `lst_rates` and `staking_yields`, so the vocabulary split is deliberate and the
-                      registry matches the handler exactly. The split is also semantically right: `lst_rates` is the LST exchange-rate/APY
-                      series, `staking_yields` is protocol staking APY.
+                          `lst_rates_handler.py` writes **both** `lst_rates` and `staking_yields`, so the vocabulary split is deliberate and the
+                          registry matches the handler exactly. The split is also semantically right: `lst_rates` is the LST exchange-rate/APY
+                          series, `staking_yields` is protocol staking APY.
 
-                      **Third correction on the same question, so the lesson is the point, not the fact:** my first verdict was
-                      "possibly BLOCKED-DATA" (from reading the registry for the wrong key), my second was "the registry is wrong"
-                      (from finding the handlers and still not re-checking the registry with the right key), and the truth is that both the
-                      registry and the handlers were right all along. This is exactly the failure
-                      `/codex/02-data/four-surface-reconciliation-procedure.md` warns about — **an absence result is evidence ONLY once you
-                      have confirmed you probed the vocabulary the WRITER actually emits.** Before declaring any data absent, enumerate the
-                      data types the writer emits and grep for those, never for the name you expect.
+                          **Third correction on the same question, so the lesson is the point, not the fact:** my first verdict was
+                          "possibly BLOCKED-DATA" (from reading the registry for the wrong key), my second was "the registry is wrong"
+                          (from finding the handlers and still not re-checking the registry with the right key), and the truth is that both the
+                          registry and the handlers were right all along. This is exactly the failure
+                          `/codex/02-data/four-surface-reconciliation-procedure.md` warns about — **an absence result is evidence ONLY once you
+                          have confirmed you probed the vocabulary the WRITER actually emits.** Before declaring any data absent, enumerate the
+                          data types the writer emits and grep for those, never for the name you expect.
 
-          **Consequence for § A, in the good direction:** SOL LST history starts **2021-08**, roughly 22 months EARLIER than
-                      Kamino's `lending_indices` (2023-06). So the binding constraint on the Solana spread is the **borrow** series, not the
-                      staking series, and the full Kamino window is computable. ETH remains deeper (Lido `staking_yields` 2020-12-18) but
-                      Solana is in no way blocked.
+              **Consequence for § A, in the good direction:** SOL LST history starts **2021-08**, roughly 22 months EARLIER than
+                          Kamino's `lending_indices` (2023-06). So the binding constraint on the Solana spread is the **borrow** series, not the
+                          staking series, and the full Kamino window is computable. ETH remains deeper (Lido `staking_yields` 2020-12-18) but
+                          Solana is in no way blocked.
 
 - [ ] [AGENT] P0. **Use `lst_rates`, NOT `staking_yields`, for the § A spread — they measure different things.**
       Measured 2026-08-12; recorded here because § A's answer is wrong if the wrong series is used.
 
       | | `lst_rates` | `staking_yields` |
-                      | --- | --- | --- |
-                      | `instrument_type` | `lst` | `staking` |
-                      | Payload | `exchange_rate` (float64, **non-null**) | `apy` + `total_staked` (nullable) |
-                      | Source | **on-chain** — contract / `exchangeRate` / `getPooledEth` / subgraph | **reported** — `yields.llama.fi/pools`, `LIDO_APY_URL`, `ETHERFI_APY_URL` |
-                      | Meaning | The LST's redemption rate; **drift over time IS realised accrual** | A published forward-looking APY |
-                      | Venues | 14 LST issuers | 26, mostly vaults + restaking |
+                          | --- | --- | --- |
+                          | `instrument_type` | `lst` | `staking` |
+                          | Payload | `exchange_rate` (float64, **non-null**) | `apy` + `total_staked` (nullable) |
+                          | Source | **on-chain** — contract / `exchangeRate` / `getPooledEth` / subgraph | **reported** — `yields.llama.fi/pools`, `LIDO_APY_URL`, `ETHERFI_APY_URL` |
+                          | Meaning | The LST's redemption rate; **drift over time IS realised accrual** | A published forward-looking APY |
+                          | Venues | 14 LST issuers | 26, mostly vaults + restaking |
 
-                      **The axis is reported-vs-measured, not protocol-native-vs-DEX-swapped** (a hypothesis considered and rejected), and it
-                      is not about token mechanics either — rebasing vs price-appreciating cuts across both. For a staked-basis P&L you want
-                      the **measured** series, because exchange-rate drift is the yield actually earned rather than the number a protocol
-                      advertises. `sim_schemas.py` already does exactly that: `stake_apy_bps  # staking yield from MTDS lst_rates`.
-                      Only **three** venues declare both (LIDO, ETHERFI, PUFFER) — protocols that genuinely both issue an LST and run a
-                      vault/restaking product, so the overlap lets you cross-check advertised against realised rather than being duplication.
+                          **The axis is reported-vs-measured, not protocol-native-vs-DEX-swapped** (a hypothesis considered and rejected), and it
+                          is not about token mechanics either — rebasing vs price-appreciating cuts across both. For a staked-basis P&L you want
+                          the **measured** series, because exchange-rate drift is the yield actually earned rather than the number a protocol
+                          advertises. `sim_schemas.py` already does exactly that: `stake_apy_bps  # staking yield from MTDS lst_rates`.
+                          Only **three** venues declare both (LIDO, ETHERFI, PUFFER) — protocols that genuinely both issue an LST and run a
+                          vault/restaking product, so the overlap lets you cross-check advertised against realised rather than being duplication.
 
 - [ ] [AGENT] P1. **Compare LTV and borrow cost across the three Solana lending venues** (Kamino / Solend / MarginFi)
       and against Aave on the ETH side. Operator asked which has better LTV and lower stable borrow rates. **Note for
@@ -453,3 +453,12 @@ no change at all.**
   ready work behind this plan's open gates. This doc reverts to its original Jupiter+Kamino-only scope and estimate
   (baseline 12, calibrated 9.6 — down from the temporary 20/15.4 combined figure). `status: draft` unchanged — still
   gated on §A and the new §A.3.
+
+- **2026-08-14/15 — sibling track complete.** The split-out Pacifica plan finished its full build-out: UAC registry →
+  instruments-service → market-tick-data-service (batch + live) → execution-service → strategy-service, all shipped with
+  green quality gates across 5 repos (see that plan's Progress Log for commit SHAs). Notable for THIS plan's own gates:
+  Pacifica's execution-service protocol ended up simulation-only (`supports_live=False`) because Pacifica's
+  order-signing model turned out to require a raw Solana Ed25519 wallet keypair, not an HMAC API-key scheme — worth
+  checking whether Jupiter perps (once/if this plan's gates resolve) has the same live-signing constraint, since that's
+  a real execution-service scoping question, not just a data-coverage one. This plan (Jupiter+Kamino) remains
+  `status: draft`, still gated on §A economics + §A.3 schema-mapping — Pacifica landing does not resolve either gate.
