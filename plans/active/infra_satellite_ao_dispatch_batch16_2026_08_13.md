@@ -156,8 +156,17 @@ source: >-
 - [ ] [SCRIPT] P3. Once fixed, spot-check docs with old (pre-fix) markers to confirm the next na-eligibility-audit run
       correctly reports incremental_skip: true when no real content changed. Source:
       `plans/active/issues/na_eligibility_multiline_marker_continuation_lines_never_stripped_from_hash_2026_08_10.md`
-- [ ] [CODE] P2. Make the swallowed ImportError loud in unified-trading-pm/scripts/quality_gates/_capability_gaps.py
-      (~line 864) Source: `plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md`
+- [x] ✅ [CODE] P2. Make the swallowed ImportError loud in unified-trading-pm/scripts/quality_gates/_capability_gaps.py
+      (~line 864) Source: `plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` —
+      STALE-CHECKBOX CORRECTION (already-shipped-elsewhere, per
+      `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3.4): the source issue doc's own
+      todo 2 was already `[x] ✅ 2026-08-13` at `unified-trading-pm@c7c237d804` + `a5182bdbfc` before this batch
+      dispatched — verified live: `c7c237d804` is an ancestor of `origin/live-defi-rollout`, the actual file is
+      `scripts/openapi/_capability_gaps.py` (the batch todo's `quality_gates` path was a transcription slip), its
+      `extract_param_schema` already raises `RuntimeError` naming the offending venv path + underlying message on
+      `import_error` (line ~857-863) instead of degrading to `{}`, and the regression test
+      `test_import_error_fails_loud` exists in `tests/unit/test_capability_param_schema.py:116`. No new code needed;
+      flipping this checkbox to match reality — unified-trading-pm@c7c237d804 (pre-existing).
 - [ ] [CODE] P2. Measure whether other slots and the AO VM carry the same fastapi staleness; report per-slot
       installed-vs-declared table Source:
       `plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md`
