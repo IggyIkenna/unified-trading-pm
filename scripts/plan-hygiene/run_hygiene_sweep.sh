@@ -531,6 +531,10 @@ run_check "Superseded plans in active/"      soft "$SCRIPT_DIR/check_superseded_
 run_check "Codex path refs resolve (legacy, subset of the ratchet check above)" soft "$SCRIPT_DIR/check_codex_refs.sh"
 run_check "Parent-epic alignment (keyword)"  soft python3 "$SCRIPT_DIR/check_parent_epic_alignment.py"
 run_check "CLAUDE↔SUB_AGENT topic parity"    soft "$SCRIPT_DIR/check_claude_subagent_parity.sh"
+# Settings symlink/dirty hygiene (claude_settings_symlink_writeback_drops_hooks_2026_08_11.md) —
+# fleet-wide, not per-plan: flags a symlinked .claude/settings.local.json or a dirty
+# cursor-configs/settings.json in any clone root (the team-SSOT hook-stripping failure mode).
+run_check "Settings symlink/dirty hygiene (fleet-wide)" soft "$SCRIPT_DIR/check_settings_symlink_hygiene.sh"
 # Delete/VM-launch todo tagging (task_template.md §3 finding O, 2026-07-25) — mechanical candidate
 # signal only, feeds /plan-reconcile's AO-dispatch-readiness hunter for real judgment; soft because
 # a regex cannot decide whether a self-justification is actually sound.
