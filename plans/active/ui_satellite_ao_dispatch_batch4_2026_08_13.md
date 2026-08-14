@@ -139,9 +139,12 @@ source: >-
       lint). Not in this todo's scope (batch4's title doesn't cite it): "Fold RepoCi ImageCell fields into the new
       columns" — that's a distinct sentence trailing the same source-doc checkbox, left for the source doc's own
       reconciliation. Source: `plans/active/artifact_pipeline_observability_2026_07_17.md`
-- [ ] [CODE] P2. Retire the superseded narrow deployment-api build/artifact routes once the new artifact_pipeline
-      service covers them; delete dead code (Phase 4) Source:
-      `plans/active/artifact_pipeline_observability_2026_07_17.md`
+- [ ] [BACKEND] P2. Retire the superseded narrow deployment-api build/artifact routes once the new artifact_pipeline
+      service covers them; delete dead code (Phase 4) — retagged `[CODE]` → `[BACKEND]` 2026-08-14 (ui_developer slot-14
+      craft-mismatch catch): the work is Python-only
+      (`deployment-api/routes/{cloud_builds,_cloud_builds_*,     _code_builds_aws,builds_history}.py` + their `main.py`
+      registrations + tests) — no TS/React surface, out of ui_developer's craft (`agents/ui_developer.md` does_not:
+      Python service code). Source: `plans/active/artifact_pipeline_observability_2026_07_17.md`
 - [ ] [CODE] P2. Build→deploy latency join: 'built but never deployed' + build-to-first-revision latency (Phase 6
       stretch) Source: `plans/active/artifact_pipeline_observability_2026_07_17.md`
 - [ ] [CODE] P2. Add a deploy-churn/crash-loop health condition (e.g. a service redeployed ~14x in hours, ~40%
