@@ -30,6 +30,7 @@ related:
   - /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md
   - /plans/active/issues/fleet_wide_deepseek_crash_loop_undetected_2026_08_11.md
   - /codex/15-runbooks/isolated-deepseek-crash-debug-sandbox.md
+  - /plans/active/ao_consolidated_closeout_2026_08_12.md
 context_scope:
   - agent-orchestrator/server/tmux_spawn.py
   - agent-orchestrator/server/orphan_reap.py
