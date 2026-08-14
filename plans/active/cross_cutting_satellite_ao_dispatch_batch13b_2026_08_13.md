@@ -320,8 +320,14 @@ source: >-
       "Alignment OK" — no strategy-service/UAC drift flagged. Two unrelated, currently-open drift conditions exist (PM
       self-version drift; a fleet-wide 21-repo local-vs-origin/main `staging_versions` lag) but neither is the cited
       pairing — out of scope. P9.2 in the target doc flipped `[x]` with the full re-verify citation.
-- [ ] [CODE] P2. Item J -- fix check_na_corpus_ratchet.py's --diff-base fenced-code-block checkbox-overcounting regex
-      bug Source: `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`
+- [x] ✅ [CODE] P2. Item J -- fix check_na_corpus_ratchet.py's --diff-base fenced-code-block checkbox-overcounting regex
+      bug Source: `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md` —
+      unified-trading-pm@4484ad1200: **ALREADY SHIPPED, verified 2026-08-14 (same underlying defect this batch's own
+      preceding "Section 3 log" todo above already closed).** `_count_open_checkboxes_fence_aware()` (toggle-flag fence
+      skip) is wired into `_na_open_todos_from_text()` in `scripts/plan-hygiene/check_na_corpus_ratchet.py`, replacing
+      the bare `_CHECKBOX_RE` scan that previously double-counted checkbox-shaped lines inside fenced code blocks.
+      Commit verified ancestor of `origin/live-defi-rollout`. No new code needed — this checkbox closes the duplicate
+      dispatch.
 - [ ] [CODE] P2. Item K -- add the missing backlog todo to
       plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md once grace lifts Source:
       `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`

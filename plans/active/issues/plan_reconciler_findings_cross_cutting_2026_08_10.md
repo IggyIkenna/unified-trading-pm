@@ -302,10 +302,12 @@ diagnosed but did not apply. Re-verified 2026-08-10 (same day) before conversion
       `plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`** — verified 2026-08-10: 100%
       done (0 open / 20 closed checkboxes), `status: open`, `locked_by: live-defi-rollout` — a genuine
       stuck-archive-candidate, not actioned this run (prioritized the already-verified `bucket_iam` case instead).
-- [ ] [SCRIPT] P2. **Item J — fix `check_na_corpus_ratchet.py`'s `--diff-base` fenced-code-block checkbox-overcounting
-      bug** — verified 2026-08-10: `_CHECKBOX_RE` (line 79) is still a bare `^\s*[-*]\s*\[ \]` regex with no
-      fence-awareness, so it double-counts checkbox-shaped text inside fenced code blocks. Open since 2026-08-02,
-      unfixed.
+- [x] ✅ [SCRIPT] P2. **Item J — fix `check_na_corpus_ratchet.py`'s `--diff-base` fenced-code-block
+      checkbox-overcounting bug** — verified 2026-08-10: `_CHECKBOX_RE` (line 79) is still a bare `^\s*[-*]\s*\[ \]`
+      regex with no fence-awareness, so it double-counts checkbox-shaped text inside fenced code blocks. Open since
+      2026-08-02, unfixed. **DONE 2026-08-14 (`cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md` Item J) —
+      `unified-trading-pm@4484ad1200`**: `_count_open_checkboxes_fence_aware()` wired into `_na_open_todos_from_text()`,
+      verified ancestor of `origin/live-defi-rollout`.
 - [ ] [DOC] P2. **Item K — add the real backlog todo to
       `plans/active/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`** — 4 of that
       doc's own Progress Log entries claim a "P3 backlog todo" exists for the prosewrap `--diff-base` conversion
@@ -350,3 +352,9 @@ a missing checkbox, so no new todo is added here; a future hygiene pass should c
   decision") are stated judgment calls, not bounded outcomes; Item I (`[OPERATOR]` P2) requires `[unlock-plan]`, which
   is human-gated per the corpus HARD RULE (never autonomous). The remaining items (A, G, H, J, K, L, N) are individually
   bounded, but the audit's whole-doc bar requires every open todo to clear, not a majority. Doc stays `assigned_vm: NA`.
+- **2026-08-14 (`cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md` Item J, slot-10) — Item J DONE.** Verified
+  live that `unified-trading-pm@4484ad1200` (2026-08-14,
+  `fix(plan-hygiene): make check_na_corpus_ratchet.py --diff-base checkbox count fence-aware`) already ships
+  `_count_open_checkboxes_fence_aware()` wired into `_na_open_todos_from_text()` in
+  `scripts/plan-hygiene/check_na_corpus_ratchet.py`, closing the exact fence-blindness gap this item names; commit
+  confirmed ancestor of `origin/live-defi-rollout`. Checkbox flipped above with citation.
