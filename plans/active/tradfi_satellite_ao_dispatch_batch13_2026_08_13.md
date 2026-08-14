@@ -186,3 +186,15 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   then `full`) — same monitoring pattern; expect it may hit its OWN new edge case even though it shares the fixed code
   (different code population). Once both migrations self-verify 0-remaining, flip todo 1's checkbox citing both SHAs +
   full evidence (dry-run counts, apply row/object counts, self-verify lines for both) and call `/done`.
+
+- **2026-08-14 (slot-18, in-flight, same todo — monitoring checkpoint + doc correction)**: **corrected the run.log read
+  pattern above** — `get_storage_client().download_bytes(...)` is not a real method on UTL's `GCSBlobHandle` wrapper
+  (confirmed via two failed attempts: `AttributeError` on a raw google-cloud-storage-style `.bucket().blob().reload()`
+  guess, then `TypeError` on a `bucket=`/`object_name=` kwarg guess). The correct call, confirmed via
+  `inspect.signature()`:
+  `unified_trading_library.cloud_interface.gcs_read_object_with_generation(uri='gs://<bucket>/<path>') -> tuple[bytes | None, int]`
+  — single `gs://` URI positional/kwarg, returns `(data, generation)`. Used successfully to read
+  `canonical-migration-tradfi-sector-remap-20260814-040712`'s `run.log` twice this session (progress healthy both times,
+  0 errors both reads). **Status at last check (~04:27 UTC)**: 7,500/25,922 renamed, 0 errors, steady ~500/min — no
+  drift from the dry-run's 25,922-object count. Sector-remap apply not yet complete; micro-remap not yet started. No
+  code changes this checkpoint — pure monitoring.
