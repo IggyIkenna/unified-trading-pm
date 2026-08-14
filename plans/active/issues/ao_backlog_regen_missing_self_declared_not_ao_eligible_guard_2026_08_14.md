@@ -82,8 +82,11 @@ dispatchable set.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. In `agent-orchestrator/server/regen_backlog_from_plan.py`, extend `_PERMANENT_NON_DISPATCHABLE_RE`
+- [x] ✅ [SCRIPT] P2. In `agent-orchestrator/server/regen_backlog_from_plan.py`, extend `_PERMANENT_NON_DISPATCHABLE_RE`
       (~line 1389) with a pattern matching self-declared non-AO-eligibility phrasing ("not AO-eligible",
-      "not-AO-eligible", "needs an operator ruling", "requires operator judgment") so `_is_non_dispatchable()` excludes
-      these todos from the backlog the same way the existing permanent-marker case already is. Add a regression test in
-      the corresponding test file covering this exact phrase. (repo: agent-orchestrator)
+      "not-AO-eligible", "needs an operator ruling" — see the source todo in
+      `/plans/active/strategy_archetype_latency_deployment_profile_execution_2026_08_10.md`, "requires operator
+      judgment") so `_is_non_dispatchable()` excludes these todos from the backlog the same way the existing
+      permanent-marker case already is. Add a regression test in the corresponding test file covering this exact phrase.
+      (repo: agent-orchestrator) — agent-orchestrator@5c3dfb58c8. Added
+      `test_parse_skips_self_declared_not_ao_eligible_todos` covering all three phrasings; full QG green (3741 passed).
