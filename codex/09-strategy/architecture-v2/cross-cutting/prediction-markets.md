@@ -194,21 +194,23 @@ Codification gap:
 
 ## Instrument ID Convention
 
-Prediction markets need a consistent instrument ID pattern:
+**RESOLVED 2026-08-14** (was: unresolved codification gap G2, now deleted from the register). The pattern below was
+never implemented — reality is TWO separate, non-interchangeable fields, both real and both shipped:
 
-```
-{VENUE}:{MARKET_TYPE}:{EVENT_SLUG}@{OUTCOME}
+- **`instrument_id`** — the raw, per-venue, per-market canonical id, covering every prediction market that exists. Built
+  by the single cross-asset-group dispatcher `build_canonical_instrument_id()`
+  (`unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py:1027`, operator-ruled
+  `instrument_id_format_canonicalization_2026_07_08.md`): `VENUE:TYPE:SYMBOL`, e.g.
+  `KALSHI:PREDICTION_MARKET:KXBNB15M-26JUL171000-00`.
+- **`canonical_event_id`** — a separate cross-venue MATCHING key (human-readable), for "is this Kalshi market the same
+  real-world event as that Polymarket market (or that sports fixture)". Populated on `PredictionMarketCrossVenueMapping`
+  (`unified-api-contracts/unified_api_contracts/canonical/domain/prediction/prediction_mapping.py:55`) by
+  `unified-api-contracts/unified_api_contracts/canonical/domain/predictions/cross_venue_mapping.py`, e.g.
+  `"EPL:ARS-v-CHE:20260322"`. Stores each venue's native id side-by-side (`kalshi_market_ticker`,
+  `polymarket_condition_id`) plus, for football/sports specifically, `odds_api_event_id` + `api_football_fixture_id` —
+  this is the mechanism that lets a football prediction market join to its Odds-API/api-football sports fixture.
 
-Examples:
-  POLYMARKET:BINARY:BTC_ABOVE_100K_DEC2025@YES
-  POLYMARKET:BINARY:BTC_ABOVE_100K_DEC2025@NO
-  KALSHI:BINARY:SP500_ABOVE_5000_DEC2025@YES
-  KALSHI:BRACKET:HIGHNY_22NOV27@B58          (bracket = range market)
-  POLYMARKET:CATEGORICAL:US_PRESIDENT_2028@HARRIS
-```
-
-Codification gap:
-[`prediction-markets-codification-gaps.md § G2 — Instrument ID convention`](../../operational/prediction-markets-codification-gaps.md#g2--instrument-id-convention).
+See also [`prediction-schema-paths.md` § Canonical Instrument ID Format](/codex/02-data/prediction-schema-paths.md).
 
 ## Polymarket as a Feature Source
 
