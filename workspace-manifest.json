@@ -780,7 +780,7 @@
         "coverage_pct": 91.04,
         "warn_file_count": 11
       },
-      "ldr_ci_status_sha": "d2672c1be72c899220aed85f4d7156df20d282f2"
+      "ldr_ci_status_sha": "d250e5dd5092c2b0109198297819a0b10b97369c"
     },
     "market-data-processing-service": {
       "promotion_model": "ldr_main",
@@ -905,7 +905,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "28e120041b5dbe98ae31dcd5207f73922db14c78"
+      "ldr_ci_status_sha": "adf74dcf1166a982ba2f2a452a561491c8a90717"
     },
     "ml-service": {
       "promotion_model": "ldr_main",
@@ -1039,7 +1039,7 @@
         "warn_file_count": 10
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "8c11e2fcd66e59ce72b8c1f32c83029e39b4afaa"
+      "ldr_ci_status_sha": "4a77d575a95b42de99721c76946390875abd3d9b"
     },
     "system-integration-tests": {
       "promotion_model": "ldr_main",
@@ -1132,7 +1132,7 @@
         "coverage_pct": null,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "534b31c1125ea50f511b7cdf7f3289fc0058bed0"
+      "ldr_ci_status_sha": "64b7c1176f4cf0b877bff9f8c33843b40834f7c0"
     },
     "trading-agent-service": {
       "promotion_model": "ldr_main",
@@ -1244,7 +1244,7 @@
         "coverage_pct": null,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "b0485e1aced0ec63c9cd5cf4a0af91342d75702c"
+      "ldr_ci_status_sha": "8f5fe4f80dcfe7958eb5577ab9dfaadc20e688ae"
     },
     "unified-trading-library": {
       "promotion_model": "ldr_main",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "3c10a0465a2fe885c5e934784ef3de20e70ff76f"
+      "ldr_ci_status_sha": "5f3b16ddb8e24b0cbbd3430dc77bed3eb47a9463"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
@@ -1519,7 +1519,7 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "tests",
-      "ldr_ci_status_sha": "bf34f562e220272eb7790b55afd6d949df648502"
+      "ldr_ci_status_sha": "77125caf2fb515f2f913c759cd85e82c887b5d1d"
     },
     "agent-orchestrator": {
       "promotion_model": "ldr_terminal",
