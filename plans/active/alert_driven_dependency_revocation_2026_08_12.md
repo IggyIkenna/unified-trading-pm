@@ -519,11 +519,8 @@ bridges them; it does not extend one over the other.
       BEHAVIOUR, not the docstring** — deployment-service@_TBD_. The flag (raised in e2e-testing's Phase 6 suite for
       this session to arbitrate) was correct, and the actuator was the lone dissenter among three sources: the enum
       docstring says drain subsumes hold, and `DEPENDENT_LIFECYCLE_STRENGTH` ranks `DEPS_DRAIN=2` above `DEPS_HOLD=1`,
-      **CODE WRITTEN + TESTED, NOT LANDED — see the 2026-08-14 Progress Log entry; blobs
-      `761ebc9d6f62c2dac050b8bc50881c801ca342a8` (actuator), `667a148a05479228da0828c37516c196973a3497` (ds tests),
-      `8add413ed86b783a6374bdab1fa4a7d26c3adac7` (e2e assertion). e2e-testing gated GREEN with the change; the
-      deployment-service gate could not be gotten green on a host at load average 39 with 10 concurrent QG runs.** which
-      only means anything if the stronger action does everything the weaker one does. **The hole was real but bounded**:
+      **LANDED: deployment-service@56021af4e + e2e-testing@bc0023a46** (gate 3421 passed / 0 failed, 182s). which only
+      means anything if the stronger action does everything the weaker one does. **The hole was real but bounded**:
       nothing blocked the scheduler relaunching a drained target into the same bad-input window, where the heartbeat
       daemon would drain the new instance on its first tick and again on the next launch — a launch/drain loop lasting
       as long as the condition did. Not data-corrupting (the relaunch drains before writing), but it burns quota and
@@ -585,6 +582,13 @@ bridges them; it does not extend one over the other.
       **Needs a design call this plan's operator record does not make**: whether a DEPS_DRAIN targets the specific
       running VM name or the whole prefix family (drain is per-instance, hold is per-family — they may not want the same
       target). Repo: deployment-service.
+
+> **Resolver groundwork (measured 2026-08-14, read-only).** `VmPrefixSpec` has NO `asset_group` field, so
+> `(asset_group, entity)` must match on the prefix STRING — reuse `_scheduler_jobs_for()`'s technique, not a second one.
+> `vm_prefix_registry` resolves buckets AT IMPORT and raises `BucketNamingError` without `GCP_PROJECT_ID`, so import it
+> lazily and degrade (same contract as `_STORAGE_AVAILABLE`). `resolve_dependents()` is fleet-wide when
+> `asset_group=None`, so one alert fans out to many targets — the budget is keyed per (alert, target).
+
 - [ ] [CODE] P0. **Call `actuate()` from `escalation.route_finding()`.** That is the seam every DP finding already
       passes through, and revocation must fire there INDEPENDENT of tier — a `DEPS_DRAIN` verdict applies whether the
       finding is `auto_recover`, `file_issue` or `page_operator`, unlike `_DP_RECOVERY_ACTIONS` which is auto-recover
@@ -959,60 +963,37 @@ still fully open behind Phase 6.
 
 ### 2026-08-14 (later) — the mechanism is INERT in production; Phase 8 opened
 
-**The finding that matters more than anything else in this plan.** Six phases are green and the revocation mechanism has
-never revoked anything, because **nothing calls `RevocationActuator.actuate()`**. Measured, not assumed:
-`rg 'RevocationActuator|\.actuate\('` over deployment-service excluding tests returns the class definition and nothing
-else; `resolve_dependents()` is consumed only inside UAC. The READ side is fully wired — `heartbeat_cli` polls for a
-drain marker every tick, `vm-exec-with-gcs-tee.sh` gates admission and exits 75 — so the fleet is listening and nothing
-is speaking.
+**Nothing calls `RevocationActuator.actuate()`.** Measured: `rg 'RevocationActuator|\.actuate\('` over
+deployment-service excluding tests returns the class definition and nothing else; `resolve_dependents()` is consumed
+only inside UAC. The READ side is fully wired (`heartbeat_cli` drain poll, `vm-exec-with-gcs-tee.sh` admission gate), so
+the fleet is listening and nothing is speaking. Six green phases hid it because Phase 4 claimed "built", never "called"
+— a plan shipping a component needs an explicit caller-side todo or completeness is unfalsifiable.
 
-**Why six green phases hid it.** Every Phase 4 todo is ✅ and each is honestly ticked: the actuator WAS built, tested
-and shipped. "Built" and "called" are different properties and Phase 4 only ever claimed the first. The generalisable
-lesson: a plan that ships a component needs an explicit caller-side todo, or completeness is unfalsifiable from the
-plan's own state. Phase 8 now carries that work.
+**The missing piece is a translation layer, not a call.** `evaluate_revocation()` answers WHAT; `resolve_dependents()`
+returns `(asset_group, data_type)`; the actuator wants a VM prefix. Nothing bridges them, which is exactly why no caller
+could exist.
 
-**The missing piece is a translation layer, not a call.** `evaluate_revocation()` answers WHAT action;
-`resolve_dependents()` returns `(asset_group, data_type)` pairs; the actuator wants a VM prefix or job name. Nothing
-bridges them, which is precisely why no caller could exist. Bridging it needs a design call this plan's operator record
-does not make: whether DEPS_DRAIN targets the specific running VM or the whole prefix family (drain is per-instance,
-hold is per-family).
-
-**Admission-gate coverage is partial, and a naive grep says otherwise.** 148 of 184 launchers route through
-`setup-data-pipeline-vm.sh` → `vm-exec-with-gcs-tee.sh` and are gated; 158 use `launcher_common.sh`'s `lc_` helper,
-which is a deliberately LIGHTWEIGHT observability snippet with no tarball/venv/heartbeat-daemon install and therefore
-neither the admission check nor the drain poll. `rg -l 'launcher_common'` initially read as "179/184 covered" — the lib
-only MENTIONS `vm-exec-with-gcs-tee.sh` in its comments. Reading what a lib does beats counting who sources it.
-
-**Todo 515 resolved by changing behaviour, not the docstring** — written, tested, NOT landed. The actuator was the lone
-dissenter among three sources; `_MARKER_PATH_FOR` → `_MARKER_PATHS_FOR` (tuple of builders per action) so DEPS_DRAIN
-writes both markers, and `release()` clears both. The hole was real but bounded: a relaunched target drains before
-writing, so it burnt quota and fired noise rather than corrupting data. e2e-testing gated GREEN with the change (its
-venv was bootstrapped this session — `uv sync` clean — and it resolves both `deployment_service` and
-`unified_api_contracts` to the local checkouts, so the change was genuinely exercised).
-
-**Why it did not land, and how to land it.** Two full deployment-service gate runs failed on DIFFERENT tests in
-`tests/unit/test_vm_launcher_scripts.py` — first `test_script_syntax_validation`, then
-`test_genuinely_healthy_run_with_real_action_lines_is_not_false_killed` with `rc=124`, a subprocess TIMEOUT on a test
-that shells out and sleeps 12s. Host load average was 39 with 10 concurrent QG processes. Different test each run =
-load, not the change; and `revocation_actuator.py` is not on the `vm-exec` path the failing file exercises. **Do not
-re-run blind a third time** — wait for the host to quiesce (`ps aux | grep -c '[q]uality-gates'` near 1), then one run
-should green. Restore with `git cat-file -p <blob> > <path>` using the three SHAs on todo 515 above, deployment-service
-FIRST (e2e-testing's inverted assertion depends on it).
+**Admission-gate coverage is partial, and a naive grep says otherwise.** 148/184 launchers route through
+`setup-data-pipeline-vm.sh` → `vm-exec-with-gcs-tee.sh` and are gated; 158 use `launcher_common.sh`'s `lc_` helper, a
+deliberately LIGHTWEIGHT snippet with no venv/heartbeat-daemon and therefore neither gate. `rg -l 'launcher_common'`
+first read as "179/184 covered" — the lib only MENTIONS the wrapper in comments. Read what a lib does, don't count who
+sources it.
 
 ### 2026-08-14 (later still) — UN-ARCHIVED; the archive copy was removed
 
-A parallel session archived this plan (`status: complete`, 0 open todos) minutes after this session pushed Phase 8
-documenting that it must NOT be archived. For a short window both copies were on `origin/live-defi-rollout` saying
-opposite things; then the archive move dropped the active copy entirely, taking Phase 8 with it.
+A parallel session archived this plan (`status: complete`, 0 open todos) minutes after Phase 8 landed saying it must NOT
+be archived; the archive move then dropped the active copy, taking Phase 8 with it. **Operator instruction: the ACTIVE
+copy survives, the archive copy is deleted** (`unified-trading-pm@44b6410206`, restored from `f9c97dd4c6`).
 
-**Resolved on the operator's instruction: the ACTIVE copy survives, the archive copy is deleted.** The archived version
-was the misleading half — it presented six green phases as finished work for a mechanism that has never fired once, and
-anyone grepping the archive first would have concluded the work was done. The active copy is restored from
-`unified-trading-pm@f9c97dd4c6` with Phase 8 and 13 open todos intact.
+**Why it happened matters more than the fix.** The archival was not careless — by the plan's own state every phase was
+✅, and the discipline says archive immediately when that is true. The state was simply wrong: Phase 4 claimed "built",
+never "called". A completeness check that reads only checkboxes will keep reaching that wrong answer, which is why Phase
+8's anti-inertness guard (a test asserting `actuate()` has a non-test caller) is the durable fix.
 
-**Why this happened is worth more than the fix.** The archival was not careless: by the plan's own state at that moment,
-every phase was ✅ and the archival discipline says a plan with every todo done must be archived immediately. The plan's
-state was simply wrong — Phase 4 claimed "built", never "called", and nothing in the corpus could tell the difference. A
-completeness check that reads only checkboxes will keep reaching this same wrong answer. The Phase 8 anti-inertness
-guard (a test asserting `actuate()` has a non-test caller) is the durable fix, because it makes the gap visible to the
-gate rather than to whoever happens to grep for call sites.
+**Todo 515 LANDED** — `deployment-service@56021af4e` + `e2e-testing@bc0023a46`. The two earlier gate failures were pure
+host contention: on a quiet host (load 5.8, 0 concurrent QGs) the same tree ran **3421 passed / 0 failed in 182s**,
+versus 13 minutes and a failure at load 39. Different test each run in the same subprocess-heavy file was the tell.
+
+**This plan is AT its 1000-line hard cap** and every edit now fights `check_line_caps`. Splitting Phase 8 into its own
+plan is the right fix and is the next structural task — it is also the correct modelling, since arming is genuinely
+separate work from building.
