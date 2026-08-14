@@ -80,34 +80,75 @@ Polymarket CLOB), not transaction signing.
 
 ## Surface 2 — execution-service (the ACT side)
 
-`execution_service/defi_execution/protocols/` ships **40 modules** covering roughly 30 distinct protocols: `aave`,
-`morpho`, `uniswap`, `lido`, `marinade`, `kamino`, `jupiter`, `orca`, `raydium`, `pendle`, `convex`, `yearn`, `beefy`,
-`etherfi`, `kelpdao`, `renzo`, `puffer`, `rocket_pool`, `solblaze`, `symbiotic`, `eigenlayer`, `jito_restaking`,
-`karak`, `idle`, `aster`, `hyperliquid`, `bybit`, `weth`, plus `cctp` / `bridge` for transfers. `venues/` adds
-`deribit`, `lido`, `uniswap` connectors.
+`execution_service/defi_execution/protocols/` ships **38 `.py` modules** (not 40 — recounted 2026-08-14), which the tier
+table below splits into 9 live-capable, 16 simulation-only and the rest infrastructure. The raw list: `aave`, `morpho`,
+`uniswap`, `lido`, `marinade`, `kamino`, `jupiter`, `orca`, `raydium`, `pendle`, `convex`, `yearn`, `beefy`, `etherfi`,
+`kelpdao`, `renzo`, `puffer`, `rocket_pool`, `solblaze`, `symbiotic`, `eigenlayer`, `jito_restaking`, `karak`, `idle`,
+`aster`, `hyperliquid`, `bybit`, `weth`, plus `cctp` / `bridge` for transfers. `venues/` adds `deribit`, `lido`,
+`uniswap` connectors.
 
 ## The asymmetry
 
-| Asset group | Can EXECUTE | Can READ positions | Verdict                                              |
-| ----------- | ----------- | ------------------ | ---------------------------------------------------- |
-| CeFi        | yes         | yes (ccxt-generic) | **Balanced** — both sides covered                    |
-| DeFi        | ~30         | **3**              | **~27 protocols we can act on but cannot reconcile** |
+> **⚠️ CORRECTED 2026-08-14 — the original version of this section OVERSTATED execute capability.** It counted a
+> protocol as executable because a module for it exists. That is not the same property. Re-measured below by reading
+> what each module's write path actually does; the corrected numbers are smaller, and the shape of the problem changed.
+
+| Asset group | Can EXECUTE (live) | Can READ positions | Verdict                                               |
+| ----------- | ------------------ | ------------------ | ----------------------------------------------------- |
+| CeFi        | yes                | yes (ccxt-generic) | **Balanced** — both sides covered                     |
+| DeFi        | **~10, not ~30**   | **3**              | a read gap AND a smaller-than-claimed execute surface |
 
 **This is the wrong way round.** Being able to act without being able to see is strictly worse than the inverse: an
 instruction executes, the position changes, and nothing can confirm it landed or detect drift afterwards.
 
+### The three tiers (measured 2026-08-14, by reading each module's write path)
+
+`defi_execution/protocols/` ships 38 `.py` modules, but they are not one kind of thing:
+
+| Tier                    | What it is                                                                                                | Modules                                                                                                                                                                    |
+| ----------------------- | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1 — live-capable**    | branches on `is_live` into a real executor, or makes real RPC/HTTP calls and `send_transaction`s          | `aave` (+`aave_live`), `uniswap` (+`uniswap_live`), `hyperliquid`, `marinade`, `kamino`, `jupiter`, `orca`, `raydium`, `eigenlayer`                                        |
+| **2 — simulation-only** | in-memory `_balances` dict, seeded by `set_balance()`; write ops do arithmetic and return `success: True` | `lido`, `rocket_pool`, `etherfi`, `renzo`, `puffer`, `kelpdao`, `symbiotic`, `karak`, `jito_restaking`, `solblaze`, `yearn`, `beefy`, `convex`, `idle`, `pendle`, `morpho` |
+| **3 — infrastructure**  | not protocols: chain plumbing, transfer rails, encoding                                                   | `base`, `solana_base`, `cctp`, `bridge`, `weth`, `uniswap_encoding`, `_hyperliquid_*`, `solana_lst_devnet`, `bybit`, `aster`                                               |
+
+**Tier 2 is the finding.** `LidoConnector.stake()` does not build a transaction — it subtracts from
+`self._balances["WETH"]`, adds to `self._balances["wstETH"]`, and returns `{"success": True, ...}`. `get_balance()`
+reads the same dict. `connect()` sets a flag.
+
+**And the tier-2 modules accept `is_live` and never read it.** All 16 take `is_live` in `__init__`, pass it to
+`super().__init__`, and contain **zero** `if self.is_live` branches and **zero** `NotImplementedError` guards. So
+`LidoConnector(config, is_live=True).stake(Decimal("10"))` returns success having moved nothing on-chain. The parameter
+reads as a capability the code does not have.
+
+Severity is bounded today, and it is worth being precise about why: the one live construction site
+(`cli/handlers/live_execution_handler.py:495`) passes only `aave_connector=AAVEConnector(..., is_live=True)` — tier 1 —
+and `DefiAdapter` raises `ValueError("LidoConnector not configured")` when the Lido path is called without one. So the
+live path fails loudly rather than faking a fill. The trap is latent, not active. But it is one wiring line away from
+active, and a client engineer reading this repo will find it.
+
 ### It hits the carve-out archetypes directly
 
-Both DeFi archetypes shipping REAL in the carve-out depend on protocols we can execute against and cannot read:
+| Archetype                  | Leg           | Execute                                  | Read position |
+| -------------------------- | ------------- | ---------------------------------------- | ------------- |
+| `CARRY_STAKED_BASIS` (ETH) | Lido stETH    | ❌ **simulated only** (`lido.py` tier 2) | ❌            |
+| `CARRY_STAKED_BASIS` (SOL) | Marinade mSOL | ✅ real (`aiohttp` + `send_transaction`) | ❌            |
+| `CARRY_RECURSIVE_STAKED`   | Kamino borrow | ✅ real (`aiohttp`)                      | ❌            |
+| SOL perp leg               | Jupiter       | ✅ real (`aiohttp`)                      | ❌            |
 
-| Archetype                  | Leg           | Execute          | Read position |
-| -------------------------- | ------------- | ---------------- | ------------- |
-| `CARRY_STAKED_BASIS` (ETH) | Lido stETH    | ✅ `lido.py`     | ❌            |
-| `CARRY_STAKED_BASIS` (SOL) | Marinade mSOL | ✅ `marinade.py` | ❌            |
-| `CARRY_RECURSIVE_STAKED`   | Kamino borrow | ✅ `kamino.py`   | ❌            |
-| SOL perp leg               | Jupiter       | ✅ `jupiter.py`  | ❌            |
+The ETH row is the correction. **The ETH staked-basis archetype has no live Lido execution at all** — neither
+`defi_execution/protocols/lido.py` nor `venues/lido.py` (see the dual-path finding below) can stake ETH on-chain. The
+earlier "✅ execute" was read off module existence, which this table now shows is not evidence of the property.
 
-So today we can open both legs of a staked-basis position and reconcile neither.
+So today we can open both legs of a staked-basis position on SOL and reconcile neither; on ETH we cannot open the
+staking leg for real either.
+
+### Dual path — three connector classes exist twice
+
+`LidoConnector`, `UniswapConnector` and `BaseConnector` are each defined in **two** places: `execution_service/venues/`
+and `execution_service/defi_execution/protocols/`. Both `LidoConnector`s are tier 2 (identical in-memory `_balances`
+simulation); `venues/uniswap.py` has zero network references while `protocols/uniswap.py` has a live executor. This is a
+same-data-consumption dual path and falls under the operator's standing ruling: **unify to one SSOT path and complete
+the build — do not delete the half that is unfinished.**
 
 ## Todos
 
@@ -126,6 +167,23 @@ So today we can open both legs of a staked-basis position and reconcile neither.
       actually closes, and list the residue explicitly. Writing 27 near-identical modules and writing one generic module
       plus 5 exceptions are very different amounts of surface to maintain and to disclose — and the second is also far
       easier for a client engineer to audit.
+- [ ] [AGENT] P0. **Make a simulation-only connector refuse live mode instead of reporting success.** All 16 tier-2
+      connectors accept `is_live` and never read it, so `LidoConnector(config, is_live=True).stake(...)` returns
+      `{"success": True}` having moved nothing on-chain. The fix is not per-module: put the guard in `BaseConnector` so
+      a connector that declares no live path raises on construction (or on first write) when `is_live=True`, and have
+      each tier-1 module opt in explicitly. A silent simulated success on a live path is the worst failure mode this
+      code can have — it is indistinguishable from a real fill to every downstream consumer, including reconciliation.
+      **Evidence**: `rg -c 'if self\.is_live|NotImplementedError'` returns 0 for all 16; `lido.py:118-154` is the worked
+      example.
+- [ ] [AGENT] P0. **Unify the duplicated connector classes to one SSOT path.** `LidoConnector`, `UniswapConnector` and
+      `BaseConnector` are each defined twice — `execution_service/venues/` and
+      `execution_service/defi_execution/protocols/`. Per the operator's standing ruling, **unify and complete the build;
+      do not delete the unfinished half** — handle the union of what each side does. Note the two sides are not
+      equivalent: `protocols/uniswap.py` has a live executor and `venues/uniswap.py` has zero network references, so the
+      merge has a right answer and a wrong one.
+- [ ] [AGENT] P0. **Re-measure DeFi execute coverage on the three-tier model and correct every downstream claim.** The
+      "~30 protocols" figure counted simulation modules as executable. Anywhere that number was inherited — the
+      artifacts especially — needs the corrected one. **Do not restate a module count as a capability count.**
 - [ ] [AGENT] P1. **Build the venue-coverage cascade as THREE SIT invariants** — operator ruling 2026-08-14, recorded as
       the SSOT in
       [integration-testing-layers § "The venue-coverage cascade"](/codex/06-coding-standards/integration-testing-layers.md).
@@ -185,22 +243,25 @@ correct and is now verified at the ABC rather than inferred.
 
 ## Deferred work after 2026-08-14
 
-| Item                                                                | Kind               | Blocked on                                                                                                             |
-| ------------------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| Measure what the generic token-balance reader closes of the ~27 gap | Not done           | nobody — do this BEFORE building 27 modules                                                                            |
-| Build generic reader + bespoke exceptions (both services)           | Not done           | the measurement above                                                                                                  |
-| Lido / Marinade / Kamino / Jupiter position adapters                | Not done           | may be subsumed by the generic reader — measure first                                                                  |
-| 3 directional SIT invariants                                        | Not done           | nobody                                                                                                                 |
-| Per-venue instruction-ACTION coverage audit                         | Not done           | nobody — this audit proved modules EXIST, not that each handles every action                                           |
-| B6 — a consumer per governing section                               | **Operator-owned** | a design call on which consumer owns each section; an agent already investigated 4 and correctly declined to force one |
-| Disclosure call on betfair / ibkr / polymarket adapters             | **Operator-owned** | out-of-mandate venues; inert unless configured, so cost-free to ship                                                   |
-| Review of the other session's 7 shipped tasks                       | Not done           | their ships landing; UAC confirmed at `8c72b501`                                                                       |
-| Artifact pass (reconciliation + venue/instruction registry)         | Not done           | the chunks being verified landed                                                                                       |
+| Item                                                                | Kind                   | Blocked on                                                                                                                                                  |
+| ------------------------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Measure what the generic token-balance reader closes of the ~27 gap | Not done               | nobody — do this BEFORE building 27 modules                                                                                                                 |
+| Build generic reader + bespoke exceptions (both services)           | Not done               | the measurement above                                                                                                                                       |
+| Lido / Marinade / Kamino / Jupiter position adapters                | Not done               | may be subsumed by the generic reader — measure first                                                                                                       |
+| 3 directional SIT invariants                                        | Not done               | nobody                                                                                                                                                      |
+| Per-venue instruction-ACTION coverage audit                         | Not done               | nobody — this audit proved modules EXIST, not that each handles every action                                                                                |
+| B6 — a consumer per governing section                               | **Operator-owned**     | a design call on which consumer owns each section; an agent already investigated 4 and correctly declined to force one                                      |
+| Disclosure call on betfair / ibkr / polymarket adapters             | **Operator-owned**     | out-of-mandate venues; inert unless configured, so cost-free to ship                                                                                        |
+| Review of the other session's 7 shipped tasks                       | **Cannot be done yet** | that work is UNCOMMITTED WIP in a live peer session (strategy-service 46 dirty, execution-service 29 dirty, mtimes 03:06) — nothing to verify at origin yet |
+| Artifact pass (reconciliation + venue/instruction registry)         | Not done               | the chunks being verified landed, AND the corrected tier numbers above                                                                                      |
+| Live-mode guard on the 16 tier-2 connectors                         | Not done               | nobody — P0                                                                                                                                                 |
+| Unify the 3 duplicated connector classes                            | Not done               | nobody — P0                                                                                                                                                 |
 
-**Recommended next: verify the other session's ships, then measure the generic-reader coverage.** The first is
-verification of work already claimed done (and two of its codex outputs were found orphaned tonight, so the claim needs
-checking); the second decides whether the venue gap is 27 modules of work or roughly one plus a handful of exceptions —
-an order-of-magnitude difference in both build cost and disclosure surface.
+**Recommended next: measure the generic-reader coverage, then fix the tier-2 live-mode guard.** The review of the peer
+session's work is _not_ the next item any more — its output is still uncommitted in a live session, so there is nothing
+at origin to verify and touching that tree would race their edits. The measurement decides whether the venue gap is 27
+modules of work or roughly one plus a handful of exceptions; the guard closes the one finding here that could produce a
+silently-wrong result rather than a loud failure.
 
 ## Lessons — 2026-08-14
 
@@ -216,3 +277,13 @@ an order-of-magnitude difference in both build cost and disclosure surface.
 - **Orphaned outputs are a real failure mode of task-splitting.** Chunk 2 wrote two codex docs; the ship tasks named
   UAC, strategy-service and execution-service and nobody owned PM, so both sat uncommitted for 2.5 hours. **When
   splitting work, name the doc repo in someone's ship scope.**
+- **Module existence is not capability — this is the same wrong-vocabulary error in a new costume.** The first version
+  of this audit scored a protocol "✅ execute" because `lido.py` exists. Reading the write path showed 16 of 38 modules
+  are in-memory simulations. The tell was visible in the public surface all along and I did not read it: a method named
+  `set_balance()` / `set_exchange_rate()` is a **test seeder**, and a module whose API lets you _set_ the balance is not
+  reading it from a chain. **Grep the write path, not the file listing.**
+- **`is_live` being in a signature does not mean it is read.** All 16 tier-2 connectors accept it, forward it to
+  `super().__init__`, and never branch on it. A parameter is a claim; `rg -c 'if self\.is_live'` is the measurement.
+- **ripgrep's `-r` is `--replace`, not `--recursive`** (grep's is recursive). `rg -rn 'LidoConnector|...'` silently
+  substituted every match with the literal `n` and produced plausible-looking but corrupted output —
+  `class n(BaseConnector)`. It fails _quietly_, as valid-looking results. rg recurses by default; drop the `-r`.
