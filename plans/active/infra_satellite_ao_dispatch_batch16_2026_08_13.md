@@ -138,11 +138,21 @@ source: >-
       zero vulnerabilities fleet-default, so the PM canonical-range widen has no live security driver and was NOT
       executed. execution-service@bb49911d27 ratchets `CODEX_MAX_VIOLATIONS` 3→0 on the strength of this; full writeup
       in the source doc's own flipped todo.
-- [ ] [SCRIPT] P2. Fix _VERDICT_MARKER_LINE_RE (or replace with a proper multi-line-block strip) in
+- [x] ✅ [SCRIPT] P2. Fix _VERDICT_MARKER_LINE_RE (or replace with a proper multi-line-block strip) in
       generate_na_doc_tranche_inventory.py so a marker's full continuation-line span is excluded from
       body_content_hash(); add the stated regression test asserting hash-before ==
       hash-after-writing-the-declared-hash-marker; verify against real multi-line markers in the corpus. Source:
-      `plans/active/issues/na_eligibility_multiline_marker_continuation_lines_never_stripped_from_hash_2026_08_10.md`
+      `plans/active/issues/na_eligibility_multiline_marker_continuation_lines_never_stripped_from_hash_2026_08_10.md` —
+      STALE-CHECKBOX CORRECTION (already-shipped-elsewhere, per
+      `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3.4): this item was carved into
+      this batch citing the source issue doc's own todo 1, but that todo was already `[x]` at
+      `unified-trading-pm@fcaaa677f1` before this batch dispatched — verified live: `fcaaa677f1` is an ancestor of
+      `origin/live-defi-rollout`, `_VERDICT_MARKER_LINE_RE` in
+      `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` already strips the full marker block (not just the
+      first line), and both named regression tests (`test_body_content_hash_stable_across_own_multiline_marker`,
+      `test_body_content_hash_multiline_marker_stops_at_next_bullet`) exist in
+      `tests/unit/test_generate_na_doc_tranche_inventory.py`. No new code needed; flipping this checkbox to match
+      reality — unified-trading-pm@fcaaa677f1 (pre-existing).
 - [ ] [SCRIPT] P3. Once fixed, spot-check docs with old (pre-fix) markers to confirm the next na-eligibility-audit run
       correctly reports incremental_skip: true when no real content changed. Source:
       `plans/active/issues/na_eligibility_multiline_marker_continuation_lines_never_stripped_from_hash_2026_08_10.md`
