@@ -151,25 +151,25 @@ source: >-
       human-watched write window, not unsupervised) Source: `plans/active/sports_consolidated_closeout_2026_07_19.md`
 
       **INVESTIGATED 2026-08-14 (slot-12, backend_engineer) — target keys extinct, repair as specified is moot.**
-                  Summary: the consolidator-pause safety question is resolved (incremental cycles pass through unchanged canonical
-                  rows untouched, so a direct CAS-write would need no pause) — but a dry-run join of the pre-clobber snapshot against
-                  the LIVE canonical (both the base 4-col dedup key and the full production key, `_dedup_key_sql`-normalized
-                  identically to `manifest_consolidator`) found **0 matching rows**: `venue=BETFAIR` no longer exists and current
-                  `data_type='trades'` rows all belong to `venue=ODDS_API`, unrelated. No prod write attempted (nothing to write).
-                  **CORRECTION + CLOSED 2026-08-14 (slot-30, backend_engineer)** — the line above claimed the full investigation +
-                  evidence lives "in the source doc's own Track O entry (this same commit)"; that's stale/false — re-checked the
-                  source doc's live Track O section (`sports_consolidated_closeout_2026_07_19.md:659`) and it carries no such note,
-                  only the original unedited todo text. The real evidence trail is the issue doc slot-12's SAME commit actually
-                  filed: `plans/active/issues/sports_track_o_attempted_at_keys_extinct_2026_08_14.md` (`status: open`,
-                  `assigned_vm: NA`, one `[DIAG]` follow-up todo). **Independently corroborated slot-12's "not a bounded key-swap"
-                  call, not just deferred to it**: `BETFAIR_SB_UK`/`BETFAIR_EX_UK`/`BETFAIR_EX_EU` are registry-level DISTINCT
-                  venues (`unified-api-contracts/registry/venue_constants.py:67-69`) — no migration/rename script exists anywhere in
-                  `market-tick-data-service` or `unified-api-contracts` mapping bare `BETFAIR` rows 1:1 (or by any documented rule)
-                  onto the three new venues; classifying which pre-clobber row belongs to which requires row-level
-                  market/region inspection, not a mechanical key substitution. This todo's literal ask (repair the 112,277 rows) has
-                  no executable target and no code to ship; closing it here. The genuine remaining work (trace + re-classify) is
-                  correctly parked as NA/DIAG in the issue doc above — do not re-open this exact todo, extend that issue doc's todo
-                  list instead.
+                      Summary: the consolidator-pause safety question is resolved (incremental cycles pass through unchanged canonical
+                      rows untouched, so a direct CAS-write would need no pause) — but a dry-run join of the pre-clobber snapshot against
+                      the LIVE canonical (both the base 4-col dedup key and the full production key, `_dedup_key_sql`-normalized
+                      identically to `manifest_consolidator`) found **0 matching rows**: `venue=BETFAIR` no longer exists and current
+                      `data_type='trades'` rows all belong to `venue=ODDS_API`, unrelated. No prod write attempted (nothing to write).
+                      **CORRECTION + CLOSED 2026-08-14 (slot-30, backend_engineer)** — the line above claimed the full investigation +
+                      evidence lives "in the source doc's own Track O entry (this same commit)"; that's stale/false — re-checked the
+                      source doc's live Track O section (`sports_consolidated_closeout_2026_07_19.md:659`) and it carries no such note,
+                      only the original unedited todo text. The real evidence trail is the issue doc slot-12's SAME commit actually
+                      filed: `plans/active/issues/sports_track_o_attempted_at_keys_extinct_2026_08_14.md` (`status: open`,
+                      `assigned_vm: NA`, one `[DIAG]` follow-up todo). **Independently corroborated slot-12's "not a bounded key-swap"
+                      call, not just deferred to it**: `BETFAIR_SB_UK`/`BETFAIR_EX_UK`/`BETFAIR_EX_EU` are registry-level DISTINCT
+                      venues (`unified-api-contracts/registry/venue_constants.py:67-69`) — no migration/rename script exists anywhere in
+                      `market-tick-data-service` or `unified-api-contracts` mapping bare `BETFAIR` rows 1:1 (or by any documented rule)
+                      onto the three new venues; classifying which pre-clobber row belongs to which requires row-level
+                      market/region inspection, not a mechanical key substitution. This todo's literal ask (repair the 112,277 rows) has
+                      no executable target and no code to ship; closing it here. The genuine remaining work (trace + re-classify) is
+                      correctly parked as NA/DIAG in the issue doc above — do not re-open this exact todo, extend that issue doc's todo
+                      list instead.
 
 - [x] ✅ [CODE] P2. Track O: locate the emitter of the 139,620 venue=ODDS_API/source=api_football/empty_confirmed rows
       before folding into K2 **ALREADY DONE — duplicate of `sports_consolidated_native_ao_extract_2026_07_25.md`'s own
@@ -232,9 +232,24 @@ source: >-
       doc's 2026-08-13 measurement, confirming no regression 1 day later. No code shipped (nothing to fix — this is a
       stale-checkbox correction per `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3.4,
       not new work). Source: `plans/active/issues/sports_features_dp_vm_001_upstream_fixtures_gap_2026_08_10.md`
-- [ ] [CODE] P2. Verify the self-heal actuator dedup (launch_budget_registry) and whether an external launcher loop
+- [x] ✅ [CODE] P2. Verify the self-heal actuator dedup (launch_budget_registry) and whether an external launcher loop
       fired ~19 features-sports-sports-* VMs (~8 with empty vm-logs) far beyond the RB-INFRA-RELAUNCH ≤2/(prefix,day)
-      bound -- resource-waste investigation. Source:
+      bound -- resource-waste investigation. **STALE checkbox — this exact todo was already verified + fixed in the
+      source doc itself before this batch was dispatched (slot-14, 2026-08-14)**, per
+      `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3.4 stale-checkbox-correction
+      pattern. `launch_budget_registry.py` (the todo's literal name) carries no dedup — rate/machine-sizing only. Real
+      bound traced: `RelaunchBackfillVm`'s ShardedState budget only guards the in-process OOM (exit_code==137) actuator;
+      `escalation.py`'s `_ACTUATORS_AVAILABLE` gating routes every other `DP_VM_EXIT_NONZERO` to
+      `escalate-to-orchestrator` → a planning-VM worker relaunching by hand per RB-INFRA-RELAUNCH, a path with ZERO
+      code-enforced relaunch-count bound (the ≤2/(prefix,day) rule was prose only) — the "external loop" that produced
+      the 19-VM storm (~8 empty-log VMs = workers who launched, found the issue doc mid-setup, self-deleted). Fixed:
+      `deployment-service@c7ed0077cb` adds `escalation_dedup.check_relaunch_dispatch_budget` (GCS-durable
+      `ShardedState`, day-partitioned by vm-prefix, mirrors `revocation_actuator.py`) — the dispatched context now says
+      `DO NOT RELAUNCH` once a launcher-family hits 2 dispatches for the day. Re-verified this session: SHA is an
+      ancestor of `origin/live-defi-rollout` (`git merge-base --is-ancestor c7ed0077cb origin/live-defi-rollout` →
+      true); `check_relaunch_dispatch_budget` present at `escalation_dedup.py:514` and wired into `escalation.py:616`;
+      13 references in `tests/unit/test_escalation_dedup.py`. No new code needed — flipping this batch's duplicate
+      checkbox to match the source doc's already-`[x]` state. Source:
       `plans/active/issues/sports_features_dp_vm_001_upstream_fixtures_gap_2026_08_10.md`
 - [x] [CODE] P2. Recompute day=2026-08-10 sports features once upstream fixtures land -- the 15:42Z compute is sparse
       (row_count 1-2/league, computed from partial upstream) and must not be treated as final. **OUT-OF-SCOPE FOR THIS
