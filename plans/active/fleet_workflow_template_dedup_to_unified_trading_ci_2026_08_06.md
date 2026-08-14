@@ -54,7 +54,7 @@ related:
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 created: "2026-08-06"
-last_updated: "2026-08-07"
+last_updated: "2026-08-14"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -270,7 +270,7 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       never made it back into this canonical template — ported it in before converting, closing an SSOT-drift gap that
       would have silently regressed those repos on any future `rollout-workflow-templates.sh` run. Hosted in
       `unified-trading-ci` (`65111fc8890eae41df41c1fa19e663ec8ef7ff09`), actionlint-clean, structurally verified
-      (YAML-parsed + `inputs`/`env`/`concurrency` blocks confirmed present). All 23 fleet repos converted to thin stubs
+      (YAML-parsed + `inputs`/`env`/`concurrency` blocks confirmed present). All 24 fleet repos converted to thin stubs
       and independently verified via `git show origin/live-defi-rollout:.github/workflows/semver-agent.yml` (not just
       trusting quickmerge's own success message — this session hit quickmerge.sh's own defensive "Reset to origin"
       discarding an already-made local commit 3 separate times, recovered each via `git cherry-pick`):
@@ -290,7 +290,7 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
 - [x] ✅ 6. [INFRA] P2. **Delete now-dead `notify-slack.yml` copies — DONE 2026-08-07.** Re-verified per-repo rather
       than relying solely on todo 1's now-stale audit (todo 1 predates today's semver-agent.yml migration, which is
       exactly what made several repos' last local caller disappear) — grepped every fleet repo's `.github/workflows/`
-      for any remaining `uses: ./.github/workflows/notify-slack.yml` reference. Result: 22 of 23 fleet repos had zero
+      for any remaining `uses: ./.github/workflows/notify-slack.yml` reference. Result: 23 of 24 fleet repos had zero
       remaining local callers (their only callers were `main-backmerge-to-ldr.yml`/`staging-backmerge-to-ldr.yml`/
       `semver-agent.yml`, all now thin stubs whose logic — including the `notify-slack.yml` call — moved into
       `unified-trading-ci`). Deleted and independently verified via
