@@ -205,7 +205,20 @@ source: >-
 - [ ] [CODE] P2. Run /data-pipeline-check-is and /data-pipeline-check-mtds 3x each (baseline/mid-backfill/final) across
       the defi backfill using --day 2026-07-01 (operator-unparked 2026-08-08, exact commands already specified in the
       doc) — launcher-driven VM check, worker-executable, not yet dispatched anywhere Source:
-      `plans/active/defi_track5_coverage_mvp_backfill_2026_07_24.md`
+      `plans/active/defi_track5_coverage_mvp_backfill_2026_07_24.md` — **2026-08-14 attempt (slot 12)**: mid-backfill
+      and final checkpoints remain correctly ungated — the DeFi MVP backfill itself has not started (track5's own "Run
+      the DeFi MVP backfill to 100%" todo is still open, R3 migration `RUNNING, partial`), so only Baseline is
+      actionable now. Baseline attempted for both checks: **IS** hit a skill-doc bug (`--require-captured`/
+      `--auto-day`/`--mvp-only` aren't real flags on `instruments-service/scripts/pipeline_e2e_check.py` — fixed in the
+      skill doc same session, `unified-trading-pm@b0fcda64d9`) then re-launched
+      (`pipeline-e2e-check-is-20260814-224849-f6e2db`) — confirmed alive + progressing venue-by-venue (healthy RSS
+      ~467MB) as of 2026-08-14T23:28Z but did NOT reach a terminal state within this session (dozens of MVP venues
+      across 5 asset_groups; self-deletes on completion, report mirrors to
+      `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_is/2026-07-01/`
+      regardless of whether anyone is watching). **MTDS** baseline OOM'd (exit 137) on the isolated driver VM itself
+      partway through its real 3126-shard unscoped sweep — filed as
+      `plans/active/issues/mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep_2026_08_14.md` (fix + interim-mitigation
+      todos, not fixed inline — genuine infra defect, out of this satellite todo's bounded scope).
 - [ ] [CODE] P2. todo1: investigate whether solana_dex_pool_swaps_indexer-002's workload characteristics (prompt size,
       tool-call pattern, worktree size) disproportionately trigger the now-root-caused fleet-wide TmuxPruner crash-loop,
       per agent-orchestrator logs/code Source:
