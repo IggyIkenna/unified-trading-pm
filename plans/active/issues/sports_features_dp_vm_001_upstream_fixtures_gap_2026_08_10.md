@@ -142,15 +142,21 @@ context_scope:
       todo below (distinct repo, distinct fix — see `agt-bc9148`/slot-6's same-escalation-object-bounce evidence, which
       (a) alone does not address since that dedup only gates deployment-service's OWN re-scan-triggered fast-spawn, not
       an already-dispatched-then-immediately-redispatched escalation row inside `agent-orchestrator` itself).
-- [ ] [CODE] P2. **agent-orchestrator escalation completion-ack/clear race** (slot-6, FOURTH occurrence, agt-bc9148):
-      `/api/activity` event 488567 (`tmux_session_lost`/`archived_lifecycle_complete: true`, agent `agt-bc9148`,
-      02:49:40Z) immediately followed by 488570/488575 (`escalation_dispatch_initiated`/`escalation_dispatched`, SAME
-      `escalation_id: agt-bc9148`, to slot 6, 02:50:10Z/02:50:25Z) — the dispatcher re-fired the identical escalation
-      object ~30s after its own worker's `lifecycle-complete`, rather than clearing/acking it first. Diagnose + fix in
-      `agent-orchestrator`'s escalation dispatch/lifecycle code (repo: `agent-orchestrator`) — whatever marks an
-      `EscalationQueueRow` `resolved`/cleared on worker completion must do so BEFORE the next dispatch tick can re-see
-      it as dispatchable. The vm_name-keyed dedup fix above (repo: `deployment-service`) closes the SEPARATE
-      re-scan-triggered re-fire path but does not touch this same-escalation-object bounce.
+- [x] [CODE] P1. ✅ **agent-orchestrator escalation completion-ack/clear race — FIXED** — `agent-orchestrator@962e5c1`
+      (`fix(escalation): resolve poll-blind walls off worker completion, not deadline reescalate`). Root cause:
+      `_mark_unresolved_and_maybe_reescalate` (the deadline-poll path `verify_dispatched_escalations` uses for wall
+      types `_poll_wall_resolution` can never verify, e.g. `data_pipeline_failure`) was the ONLY forward-progress signal
+      and was blind to whether the dispatched worker had already finished — a worker whose `/done` landed right around
+      `RESOLUTION_DEADLINE_MINUTES` raced the watchdog tick and got reescalated onto a fresh slot seconds after its own
+      clean completion (exactly the `agt-bc9148` slot-30→slot-6 02:49:40Z/02:50:25Z bounce this todo tracked). Fix:
+      before reescalating/giving up, check whether the escalation's own `AgentRow` (`agent_id == escalation_id`) already
+      reached `status=archived`/`exit_reason=lifecycle-complete`; if so, resolve the row directly
+      (`resolution=worker_completed_no_poll_signal`) instead of re-dispatching. Unit tests added in
+      `tests/test_escalation.py`. Verified: `git merge-base --is-ancestor 962e5c1 origin/live-defi-rollout` on a
+      fresh-pulled slot-21 clone, 2026-08-14 — confirmed on origin. No same-escalation-object bounce recurrence in the
+      Progress Log after this landed (06:07:08Z) — occurrences 5-9 below it were all fresh escalation ids (the SEPARATE
+      deployment-service dedup gap, part (a) above), not this same-object bounce. This todo's checkbox was never flipped
+      when the fix shipped (Half-1/Half-2 gap) — closing that now.
 
 ## Late dispatch note (slot-23, 2026-08-10)
 
@@ -297,3 +303,18 @@ already shipped (`deployment-service@427d6d2b91`) while part (b) — the agent-o
 remains the open, correctly-scoped-elsewhere todo, did not re-run those checks — no relaunch performed, no code change
 in `deployment-service` (this wall's `$REPO`). Not bumping the tracked P2 todo's priority again; the todo already
 reflects P1 and nine occurrences in one day is the same evidence already on record, just accumulating.
+
+**slot-21 2026-08-14 (dedicated [CODE] P2 fix task — dispatched via this doc's own CODE todo)** — investigated part (b),
+the agent-orchestrator completion-ack/clear race, expecting to write the fix. Found it was **already shipped**:
+`agent-orchestrator@962e5c1`
+(`fix(escalation): resolve poll-blind walls off worker completion, not deadline reescalate`, committed by an earlier
+slot-6 session at 2026-08-14 06:07:08Z — `git blame` on `server/escalation.py:2321-2384` attributes the guard to that
+exact commit, and its message quotes the identical `agt-bc9148` slot-30→slot-6 02:49:40Z/02:50:25Z timing this todo's
+diagnosis cites). Confirmed on origin via `git merge-base --is-ancestor 962e5c1 origin/live-defi-rollout` on a
+fresh-pulled slot-21 clone. That earlier slot-6 session shipped the code (Half 1) but never flipped this todo's checkbox
+or logged the fix here (Half 2 gap) — the doc kept reading as an open P2/P1 through five further re-dispatches
+(occurrences 5-9 above), none of which re-diagnosed part (b) since their escalations were all fresh-id dispatches (the
+separate part-(a) dedup gap), not this same-object bounce recurring. No code change needed this session — flipped the
+todo's checkbox with the commit as evidence per the Commit+Push+Flip rule's Half-2 closure. `deployment-service` part
+(a) and `agent-orchestrator` part (b) are now BOTH shipped; the only remaining open todos in this doc are the P2
+relaunch-storm-actuator observation and the P3 2022-year-shard verification.
