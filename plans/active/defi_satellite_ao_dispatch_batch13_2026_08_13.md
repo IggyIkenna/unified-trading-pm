@@ -24,7 +24,7 @@ related:
     /plans/active/defi_migration_audit_log_2026_07_24.md,
     /plans/active/defi_track5_coverage_mvp_backfill_2026_07_24.md,
     /plans/active/issues/defi_balancer_dex_pool_state_writer_schema_mismatch_2026_08_04.md,
-    /plans/active/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md,
+    /plans/archive/2026_08/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md,
     /plans/active/issues/defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md,
     /plans/active/issues/defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md,
     /plans/active/issues/defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md,
@@ -133,9 +133,10 @@ source: >-
       tool-call pattern, worktree size) disproportionately trigger the now-root-caused fleet-wide TmuxPruner crash-loop,
       per agent-orchestrator logs/code Source:
       `plans/active/issues/solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md`
-- [ ] [CODE] P2. Update defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md row 1's stale script-name/numbers
-      once the gas_fees manifest purge is confirmed complete — bounded doc-hygiene edit Source:
-      `plans/active/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md`
+- [x] ✅ [CODE] P2. **DONE 2026-08-14 (data_engineering, slot 10, via the sibling `[DATA] P2` todo in the source issue
+      doc).** `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` row 1 updated to reflect the 2026-08-07
+      17:26Z completion of both phases (0/12,425 TARGET rows remain, consolidator cron re-enabled). Source:
+      `/plans/archive/2026_08/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md`
 - [ ] [CODE] P2. Relaunch the dex_swaps legacy-fold script WITHOUT --allow-stale-fallback once the DeFi manifest
       consolidator has genuinely caught up (mechanical rerun, worker can verify freshness precondition and execute)
       Source: `plans/active/issues/defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md`

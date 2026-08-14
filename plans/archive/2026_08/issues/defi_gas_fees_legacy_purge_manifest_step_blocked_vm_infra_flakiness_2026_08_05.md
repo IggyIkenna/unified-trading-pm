@@ -14,7 +14,7 @@ summary: >-
   currently-active, shared VM-launcher infra reliability issue, not a script bug — stopping further blind retries here;
   resumed the (never-touched) consolidator cron rather than leave DeFi-wide consolidation paused indefinitely for a
   stalled one-off task.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi, infrastructure]
 stage: [data]
@@ -41,7 +41,10 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "manifest purge completed 2026-08-07 17:26Z (market-tick-data-service@eb380b71b streaming-download fix,
+  VM canonical-migration-defi-gas-fees-legacy-purge-20260807-170630); zombie-watchdog + heartbeat-stall-watcher
+  threshold fixes (deployment-service@0e94ceee1, @14240378194039fe5a2cfb5e2d86dbed6cffe8d8); sibling dispatch doc row
+  updated 2026-08-14 (slot 10, data_engineering)"
 source:
   ["defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md item 1, interactive session continuation, 2026-08-05"]
 drift_direction: advance-code
@@ -55,6 +58,14 @@ context_scope:
     /plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-14** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Both phases (GCS-object delete + manifest purge) confirmed complete 2026-08-07 17:26Z
+> (`market-tick-data-service@eb380b71b`, VM `canonical-migration-defi-gas-fees-legacy-purge-20260807-170630`, 0/12,425
+> TARGET rows remain); zombie-watchdog + heartbeat-stall-watcher threshold fixes shipped
+> (`deployment-service@0e94ceee1`, `@14240378194039fe5a2cfb5e2d86dbed6cffe8d8`); sibling dispatch doc's row 1 updated
+> to match (`unified-trading-pm`, this commit).
 
 # gas_fees legacy purge — object-delete done, manifest-purge blocked by infra flakiness
 
@@ -201,10 +212,11 @@ the highest-priority open question.
       `market-tick-data-service@eb380b71b` — `_purge_manifest_rows()` now uses `blob.download_as_bytes(timeout=900)`
       (single streaming response via `_raw_client()`) instead of `_download_index_chunked()` (range-request chunks) —
       this is the exact fix that made the later `-170630` relaunch succeed.
-- [ ] [DATA] P2. Update `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` row 1 once the manifest purge
-      actually completes (its current entry cites a different, never-committed script name
-      `delete_legacy_gas_fees_venue_2026_08_04.py` with different numbers — likely stale/abandoned WIP from an earlier,
-      since-lost session; this doc's script + numbers are the real, shipped, adversarially-reviewed lineage).
+- [x] ✅ [DATA] P2. **DONE 2026-08-14.** Updated row 1's status cell in
+      `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` to reflect the 2026-08-07 17:26Z completion of
+      both phases (GCS-object delete + manifest purge — VM `-170630`, 0/12,425 TARGET rows remain, consolidator cron
+      re-enabled ≥17 clean cycles) instead of the stale "manifest purge NOT complete" text — the row had never been
+      touched since this doc's own P1 completion was recorded in the Progress Log below.
 
 ## Progress Log
 
