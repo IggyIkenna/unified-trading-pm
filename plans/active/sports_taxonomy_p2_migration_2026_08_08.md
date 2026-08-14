@@ -244,18 +244,21 @@ than proceeding.
       correction and unaffected.
 - [x] ✅ [DATA] P0. **Draft + locally validate the 19-token re-stamp's step 1 (manifest relabel script) — NOT
       execution.** Per operator interim guidance on BLK-20f1ba56 ("write + locally validate, stop short of VM
-      launch/live execution"): shipped `instruments-service@0c0a5109`
+      launch/live execution"): shipped `instruments-service@5ec75509`
       (`scripts/restamp_sports_19token_lowercase_2026_08_14.py`) — relabels `data_type` on the merged availability
       index + every `_index/per_vm/*.parquet` shard per `SPORTS_IS_DATA_TYPE_LOWERCASE_FORM`, dry-run default,
       `--apply-prod --confirm-prod-write` gated. Relabel logic locally validated against a synthetic in-memory DataFrame
       (no GCS calls): confirmed correct per-token mapping, already-lowercase/non-target rows left untouched. Traced +
       corrected the step 2/3 design (see CORRECTION note above) — all 8 registry sites classified, 5 real
-      manifest-boundary call sites identified with exact file:line citations. **Both instruments-service commits this
-      session (census `67105c6e` + this script `0c0a5109`) stay LOCAL/unshipped**, blocked by the unrelated pre-existing
-      `instruments_service_defi_golden_red_capability_drift_2026_08_14.md` QG-red — not by this todo. **The `[OPERATOR]`
-      execute todo directly above stays intentionally UNCHECKED** — no VM was launched, no live write was attempted;
-      BLK-20f1ba56 remains open pending the operator's actual go/no-go on the launch, and steps 2-3 still need code
-      written (scoped, not yet drafted) before that launch can happen.
+      manifest-boundary call sites identified with exact file:line citations. **CORRECTED 2026-08-14 (slot-26)**: both
+      instruments-service commits from this note (census `instruments-service@e6d1a76c` + this script
+      `instruments-service@5ec75509`) DID land on origin — the local pre-rebase SHAs `67105c6e`/`0c0a5109` this entry
+      originally cited never resolved because quickmerge's Stage-0.4 rebase rewrote them; confirmed via
+      `git log --oneline -- <path>` against `origin/live-defi-rollout`. The unrelated pre-existing
+      `instruments_service_defi_golden_red_capability_drift_2026_08_14.md` QG-red that blocked shipping at the time has
+      since cleared. **The `[OPERATOR]` execute todo directly above stays intentionally UNCHECKED** — no VM was
+      launched, no live write was attempted; BLK-20f1ba56 remains open pending the operator's actual go/no-go on the
+      launch, and steps 2-3 still need code written (scoped, not yet drafted) before that launch can happen.
 - [ ] [DATA] P0. **Fold footystats `ODDS` (6,306 captured) + `odds` (16,207 captured) into a single `odds`.** These are
       the same vendor population under two spellings; `source=footystats` remains the discriminator against the odds_api
       population. Note the UAC comment calling the uppercase set "4 stale empty rows" is FALSE — expect 6,306 real
@@ -396,3 +399,21 @@ than proceeding.
   matcher previously would have). features-service/ml-service read only the PROCESSED `odds_horizon_bucket` path, never
   this raw-tick prefix — unaffected. No live writer re-emits `trades_inplay` (verified: no MTDS adapter emits it), so
   the retirement is durable.
+- **2026-08-14 (slot-26)** — Dispatched the `[OPERATOR]` 19-token execution todo; filed 3 blocked-questions rather than
+  execute unilaterally: `BLK-dc738bb5` (is code-prep-only safe given the corrected step-2/3 design?), `BLK-0a3f3791`
+  (found instruments-service auto-deploys via a ~15-min Cloud Run Job poll — merging steps 2-3 alone, even without a VM
+  launch, would run the new lowercase-comparison logic against the still-uppercase manifest on the next poll,
+  reproducing the exact re-fetch-storm this migration exists to prevent; main confirmed this is a real gap in its own
+  earlier guidance), `BLK-1479b716` (found the plan's "5 confirmed call sites" scoping is materially incomplete — a
+  systematic grep found 90+ manifest-write call sites across ~14 files, only 5 of which the prior trace covered; every
+  per-vendor sports writer — footystats/sfi/transfermarkt/understat/weather — stamps its own 19-token value directly and
+  was unaudited). Main's answer: stop hand-patching, file a dedicated LOCAL plan enumerating the full inventory before
+  more code lands — see `/plans/active/sports_taxonomy_p2_19token_manifest_write_site_inventory_2026_08_14.md`. 4 files
+  fixed + locally QG-clean this session (`process_preflight.py`, `sports_dependency.py`, `writers.py`, `catalogue.py`),
+  pushed to a REVIEW BRANCH deliberately withheld from `main`/LDR:
+  `instruments-service@sports-taxonomy-p2-19token-lowercase-codeprep-2026-08-14`. 5 more vendor files fully classified
+  (62 call sites: 57 SIMPLE, 5 ORDERED) via parallel Explore agents; `sports_reference_core.py` + `process_fetch.py`
+  partially classified (open todos in the new doc). The `[OPERATOR]` execute todo below stays UNCHECKED — no VM
+  launched, no live re-stamp attempted; the branch does not merge until the new doc's classification + coding todos
+  complete AND the operator gives an explicit go/no-go on the atomic merge+launch (delete-safety-style review a 16M-row
+  prod-manifest rewrite warrants, per the todo's own `[OPERATOR]` tag).
