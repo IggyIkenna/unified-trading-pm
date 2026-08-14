@@ -272,9 +272,27 @@ source: >-
       exactly. Per the AO-dispatch conflict-check protocol's rule 4 ("already-shipped elsewhere, checkbox just never
       flipped"), citing the confirmed-current mapping here rather than re-doing the verification. Source:
       `plans/active/issues/claude_anthropic_flat_rate_billing_calibration_2026_08_12.md`
-- [ ] [CODE] P2. Re-measure the forced-compact wedge rate now that all 3 fixes (queued-message latch, effect-based
+- [x] ✅ [CODE] P2. Re-measure the forced-compact wedge rate now that all 3 fixes (queued-message latch, effect-based
       verification, repro test) have landed, comparing against the doc's own stated baselines (~3.5 wedges/hr
-      post-measurement-fix, ~9.7/hr pre-fix) Source:
+      post-measurement-fix, ~9.7/hr pre-fix) — **MEASURED 2026-08-14**: added a permanent read-only readout script,
+      `agent-orchestrator@3ee2996783` (`scripts/orchestrator/forced_compact_wedge_rate_readout.py`, mirrors the
+      `deepseek_flash_pro_split_readout.py` precedent pattern), querying `activity_log` directly for
+      `context_wedge_recovered` (the actual TERMINAL-wedge event — distinct from and stricter than
+      `forced_compact_ineffective`, per the source doc's own note that the two metrics must not be conflated),
+      `forced_compact`, and `forced_compact_ineffective`, role=worker only. Live run over a 96h window post-all-3-fixes
+      (2026-08-10 20:00Z → 2026-08-14 18:29Z): **worker wedge rate 0.0104/hr** (1 wedge in 96h) vs this doc's baselines
+      of **3.5/hr** (post-measurement-fix, pre-3-fixes) and **9.7/hr** (pre-measurement-fix) — a ~330-930x reduction;
+      worker forced_compact 301 events (3.135/hr), of which 31 (10.3%) were ineffective-but- re-armed (down from the
+      doc's own interim 78%/13.8-per-hr ineffective-rate measurement taken with only 1 of 3 fixes landed). The sole
+      wedge in-window was role=worker at pct=100 (single-force saturation short-circuit, the
+      `/compact`-cannot-succeed-by-construction case this doc's own "why it only became visible now" section already
+      classifies as expected/unavoidable, not the queued-message bug these 3 fixes targeted); the only other wedge in
+      the full activity history since the fixes landed was role=main (excluded from the worker-scoped rate; cooperative-
+      path main/review wedging is a separate, already-ruled-on concern per
+      `ao_main_review_force_compact_idle_gate_     unreachable_2026_08_09.md`). QG green (3740 passed, 2 skipped). Not
+      touching the source doc's own copy of this todo here — per this batch's own stated design ("checkbox
+      reconciliation back into each source doc happens in the paired finalize plan"), citing the finding for
+      `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` to reconcile. Source:
       `plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md`
 - [ ] [CODE] P2. Cross-check plans/active/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md's own
       logged death timestamps against journalctl orphan_reap-sweep/kill_session signatures for the same incident
