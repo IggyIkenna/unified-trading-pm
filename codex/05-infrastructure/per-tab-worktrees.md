@@ -651,16 +651,6 @@ actively confirms the wrong conclusion rather than merely omitting the right one
 call in `safe-doc-push.sh`/`quickmerge.sh`, plus a checksum-verify hard-stop on those same call sites — see the issue
 doc's Progress Log) but do not close every path — a raw/manual `git commit` outside those two scripts can still hit it.
 
-- **Complementary safety net — `check_orphaned_prek_patches()` (`scripts/dev/safe-doc-push.sh`), added 2026-08-09
-  (`/plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`).** After a
-  successful push, compares every `~/.cache/prek/patches/*.patch` file's mtime against the run's own start epoch; a
-  patch created during THIS run that outlived the push means its restore never happened, and the script fails loudly
-  (exit 9) instead of silently exiting 0. Genuinely complementary to `_prek_race_snapshot`/`_prek_race_check` above, not
-  redundant: the checksum check is per-call and only covers files already unstaged-dirty at THIS script's own
-  `locked_git_commit()` snapshot; the orphan scan checks the shared cache dir directly, once, for the whole run, so it
-  also catches a patch left behind by a DIFFERENT process's `git commit` (a bare commit outside these scripts, or a peer
-  session) or a file that only went dirty after this script's own snapshot.
-
 - **HARD RULE — back up uncommitted WIP to the scratchpad BEFORE running any git-touching command in a shared checkout,
   and verify the backup before trusting it.** Copy the file(s) you're mid-editing to your scratchpad
   (`cp <file> <scratchpad>/<file>.bak` or equivalent) ahead of any `git commit` / `prek run` / `safe-doc-push.sh` /
@@ -1358,6 +1348,48 @@ Two separate hazards get conflated. Keep them apart when reasoning about a host:
 So turning isolation off on the VM removes overhead for a hazard it does not have, and removes none of the protection
 for the hazard it does. Both scripts therefore share ONE host gate: laptop → on, named VM → off, explicit flag/env wins
 either way.
+
+### Stale local content silently overwrites unrelated concurrent edits to the same file (2026-08-14)
+
+A THIRD hazard, distinct from both listed above — not a shared-index race, not commit-graph divergence. **Full-file
+staging is an overwrite, not a merge.** `safe-doc-push.sh`/`quickmerge.sh` stage the NAMED files' CURRENT ON-DISK BYTES
+into the isolated worktree's index — there is no diff/patch/rebase applied to the FILE CONTENT itself, only to the
+commit-graph position. If your local checkout is significantly behind `origin/live-defi-rollout` (a laptop slot with no
+reliable `slot-cron-ff-pull.sh`, or simply hours of a very active shared branch) and you edit a file based on that stale
+content, your push silently REPLACES origin's current version of that file with your stale-base-plus-your-edit version —
+reverting any OTHER concurrent change to that same file, even though nothing about it looks like a conflict: no rebase
+error, no merge marker, `git status` clean, exit 0. Neither script's drift/rebase machinery is designed to catch this —
+it operates at the commit-graph level, not the per-file-content level.
+
+**Measured 2026-08-14** (session doing a corpus-wide AO-todo checkbox-flip sweep, checkout ~700-900 commits behind): two
+near-misses, both caught only because a CONTENT-aware hook happened to flag the specific symptom, not because any
+git/shipping-script mechanism detected the staleness. (1) A referrer-path fix to `ao_satellite_ao_dispatch_batch6_*.md`
+built on a stale local copy would have reverted an already-landed archive-path correction for an unrelated doc
+(`boot_composer_misroutes_*.md`) — caught by `check_reference_paths` flagging a now-dangling link. (2) A 5-file
+referrer-path batch for an archived issue doc would have silently dropped concurrent context-scout metadata additions
+and prettier table reformatting on 4 of those files (no checker exists for THAT specific loss — it would have landed
+clean) — caught only incidentally while investigating hazard (1) and diffing every file out of caution before the second
+push attempt.
+
+**The discipline, now explicit — before staging ANY edited file for push, not just when a hook complains:**
+
+```bash
+git fetch origin live-defi-rollout --quiet
+git diff origin/live-defi-rollout -- <path>   # anything beyond YOUR intended edit present?
+```
+
+If the diff shows content you didn't write, refresh and reapply rather than push your stale version:
+
+```bash
+git checkout origin/live-defi-rollout -- <path>   # discard your stale base, take origin's current content
+# ...reapply your specific edit on top of the fresh content via Edit/Read, not a blind re-paste...
+```
+
+This is cheap (one `git diff` per file) and belongs in the SAME pre-push habit as
+`git status && git diff --cached --stat` from the commit-push-flip rule — not a special step reserved for when something
+already looks wrong. A file you haven't touched in the current session, or a shared checkout with any sign of concurrent
+activity (stray task notifications from agents you didn't spawn, a large unrelated `git status` diff, a
+`behind origin by N commits` count in the hundreds), is exactly the condition this hazard needs.
 
 ### Rebase-invalidated evidence citations reconcile themselves
 
