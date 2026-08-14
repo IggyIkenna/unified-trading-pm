@@ -32,9 +32,10 @@ related:
     /plans/archive/2026_08/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
     /plans/archive/2026_08/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/ao_consolidated_closeout_2026_08_12.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-14"
 parent_epic: orchestrator_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
