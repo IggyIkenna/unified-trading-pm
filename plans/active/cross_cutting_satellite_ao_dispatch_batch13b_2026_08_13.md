@@ -425,8 +425,21 @@ source: >-
       keyed by that pair → `policy_ref`, resolved via `resolve()`/`resolve_config_algorithm()`) and
       `v2/policy_spec.py`'s `ExecutionPolicyDomainConfig.bindings` (the GCS-hosted binding table, same key shape).
       Confirmed live in the current worktree; `c2053c47` verified an ancestor of `origin/live-defi-rollout`.
-- [ ] [CODE] P2. Give the execution-policy registry a GCS loader + DomainConfigReloader subscription — §B Source:
-      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
+- [x] ✅ [CODE] P2. Give the execution-policy registry a GCS loader + DomainConfigReloader subscription — §B Source:
+      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` — **ALREADY SHIPPED, no new code
+      needed (verified 2026-08-14).** `execution-service@c2053c47` already added
+      `execution_service/v2/policy_reloader.py` following the existing three-reloader pattern
+      (instruments/clients/rate-limits in `config_reloaders.py`):
+      `start_execution_policy_reloader(config_store_bucket, project_id)` builds a
+      `DomainConfigReloader[ExecutionPolicyDomainConfig]` (domain=`"execution-policies"`), registers `_on_policy_reload`
+      (atomic-swap into `_active_policy_resolver`, exposed via `get_active_policy_resolver()`), and calls
+      `start_watching()`; `stop_execution_policy_reloader()` mirrors it. Confirmed live in the current worktree:
+      `config_reloaders.start_domain_config_reloaders`/`stop_domain_config_reloaders` call the policy reloader
+      start/stop alongside the other three (same function, same commit lineage); `execution_service/api/app.py` calls
+      `start_domain_config_reloaders` at service startup; `execution_service/v2/__init__.py` exports
+      `get_active_policy_resolver`/`start_execution_policy_reloader`/`stop_execution_policy_reloader`; wrapper-level
+      coverage in `tests/unit/test_config_reloaders.py` (empty-bucket-disabled + stop-when-none paths exercise the
+      policy-reloader call sites). `c2053c47` verified an ancestor of `origin/live-defi-rollout`.
 - [ ] [CODE] P2. Wire policy evaluation into the live execution path (select_algorithm takes config_algorithm from the
       resolved policy) — §B Source: `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
 - [ ] [CODE] P2. Add the reference price to the shared instruction envelope with its mark mode — §C Source:
