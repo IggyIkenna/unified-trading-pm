@@ -152,10 +152,9 @@ source:
 > Two lessons, both mine this session: reading what a lib DOES beats counting who sources it (twice); and two
 > overlapping sets are not complements.
 
-- [ ] [CODE] P1. **AWS-path admission gate — WRITTEN AND CONTENT-GREEN, NOT LANDED.** Blob
-      `0536a71710f1bdcb660c4c1178d71154fccd41bb` for `scripts/vm/lib/aws_ec2_launch_lib.sh`. Adds
-      `lc_aws_admission_gate` called before `run-instances`, so a held family creates NO instance at all rather than
-      booting one that exits 75 after being billed — strictly better than the GCP wrapper's in-VM check. Reuses the same
+- [x] ✅ [CODE] P1. **AWS-path admission gate — LANDED, deployment-service@92a550325.** Adds `lc_aws_admission_gate`
+      called before `run-instances`, so a held family creates NO instance at all rather than booting one that exits 75
+      after being billed — strictly better than the GCP wrapper's in-VM check. Reuses the same
       `revocation_admission_cli`, so there is ONE admission implementation and no subprocess object-storage CLI (which a
       HARD RULE bans, reads included — the earlier in-VM approach was correctly blocked by that guardrail and this is
       the better design it forced). Fail-open: no venv / no module / any rc but 75 → proceed. **A full
@@ -164,6 +163,7 @@ source:
       "Re-gate hit ONLY the duration budget — every content check passed. This is HOST CONTENTION, not your change."
       Recover: restore the blob and re-run quickmerge on a quiet host, or use the sanctioned `IGNORE_TIMEOUT=true` since
       the content is already verified green.
+
 - [ ] [CODE] P1. **Admission-gate coverage is 173/186 launchers — the real gap is the 8 AWS-path launchers** (measured
       2026-08-14). Only launchers routing through `setup-data-pipeline-vm.sh` → `vm-exec-with-gcs-tee.sh` get the
       admission check and the heartbeat drain poll; the 158 that use `launcher_common.sh`'s `lc_` helper get the
