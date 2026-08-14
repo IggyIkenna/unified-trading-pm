@@ -77,7 +77,7 @@ source: >-
       check whether a failing VM's launcher family has a supervising wrapper (grep deployment-service/scripts/vm/ for a
       _-historical-_ or loop-style caller) before relaunching, mirroring the existing 'if it re-fails the same way
       twice, STOP' pattern already in the runbook — added as new Procedure step 3 (renumbering the old 3/4 to 4/5),
-      citing the root-cause example doc. unified-trading-pm@fead59f8cc Source:
+      citing the root-cause example doc. unified-trading-pm@c5816bc7e6 Source:
       `plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md`
 - [x] [CODE] P2. Once instruments-service has written real 2026-08-10 sports_reference data, --force recompute the
       sports features backfill for day=2026-08-10 (features-service) to replace the false
