@@ -140,3 +140,28 @@ setup() {
     [ "$status" -ne 0 ]
     [[ "$output" == *"REFUSED"* ]]
 }
+
+# ── export -f survives exec into a non-shell process (recurrence #3 regression) ──
+#
+# tmux_spawn.py's worker-spawn path sources this file then immediately `exec`s
+# into the `claude` binary; every later Bash-tool call is a FRESH `bash -c`
+# child of that (non-shell) process. A non-exported function only lives in the
+# shell that defined it and is silently discarded across `exec` into a
+# different program — confirmed live (pkill_broad_pattern_vite_cross_slot_kill_
+# recurrence3_2026_08_14.md): `type pkill` in a real worker's Bash-tool shell
+# resolved straight to /usr/bin/pkill despite the guard having been sourced in
+# its ancestor shell. These tests simulate that exact source -> exec -> child
+# chain (using `bash -c` as the exec target instead of the real `claude`
+# binary, which is unavailable in CI) to prove the guard actually survives it.
+
+@test "export: pkill survives source -> exec -> fresh bash -c child" {
+    run bash -c '. "'"$PM_ROOT"'/scripts/hooks/pkill-guard.sh"; exec bash -c "type pkill"'
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"pkill is a function"* ]]
+}
+
+@test "export: pkill in a fresh bash -c child still refuses a bare pattern" {
+    run bash -c '. "'"$PM_ROOT"'/scripts/hooks/pkill-guard.sh"; exec bash -c "pkill -f quality-gates.sh"'
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"REFUSED"* ]]
+}

@@ -146,3 +146,22 @@ pgrep() {
     _pkill_guard_check "pgrep" "$@" || return 1
     command pgrep "$@"
 }
+
+# export -f (recurrence #3, pkill_broad_pattern_vite_cross_slot_kill_recurrence3_2026_08_14.md):
+# a non-exported shell function only lives in the shell process that defined it. The
+# tmux_spawn.py worker-spawn path sources this file then immediately `exec`s into the
+# `claude` binary -- a non-shell process -- which discards any non-exported function
+# outright, and every later Bash-tool child (`bash -c '...'`, the actual vector all three
+# pkill recurrences hit) is a FRESH bash process that never re-sources this file at all.
+# `export -f` bakes each function into the process environment as a BASH_FUNC_*
+# variable, which bash auto-imports into a real shell function on startup for ANY child
+# process -- interactive or `bash -c`, login or not -- with no rc-file sourcing required.
+# Confirmed empirically: without this export, `type pkill` in a live worker's Bash-tool
+# shell resolved straight to /usr/bin/pkill despite the guard_export sourcing having run
+# in its ancestor shell moments earlier.
+export -f _pkill_guard_slot_token
+export -f _pkill_guard_has_numeric_target
+export -f _pkill_guard_extract_pattern
+export -f _pkill_guard_check
+export -f pkill
+export -f pgrep
