@@ -39,7 +39,7 @@ assigned_role: infra-engineer
 drift_direction: advance-code
 ---
 
-## Deferred work — migrated to: `plans/active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md` — successor:
+## Deferred work — migrated to: `plans/archive/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md` — successor:
 
 long_lived_vm_logs_not_backed_up_2026_07_02 (the one remaining P3 item — sweeping the 3 long-lived `*-aws.sh` launchers
 — was DEFERRED by operator decision 2026-07-02 and migrated to that issue doc; see the item's own note below)
@@ -51,7 +51,7 @@ long_lived_vm_logs_not_backed_up_2026_07_02 (the one remaining P3 item — sweep
 > Remaining-item review (2026-07-02) confirmed **6 of 7 open items were already done or resolved-by-decision** (see
 > below); the one genuinely-open item — **durable logs for long-lived orchestrator VMs (Tier 3, GCP + AWS)** — is
 > consciously **DEFERRED, not lost**, and migrated to
-> [`plans/active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md`](../active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md).
+> [`plans/archive/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md`](../active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md).
 > Codex SSOT for the shipped contract: `/codex/05-infrastructure/vm-tarball-deployment.md` § "Observability + lifecycle
 > — two tiers" + runbook `/codex/15-runbooks/vm-log-observability-verify.md`.
 
@@ -118,7 +118,7 @@ long-lived sweep is genuinely open, and is migrated to the Tier-3 issue doc (def
 - [ ] [SCRIPT] P3. Sweep the remaining `*-aws.sh` non-backfill launchers (`launch-central-brain-aws.sh`,
       `launch-orchestrator-worker-vm.sh`, `launch-epic-vm-aws.sh`) for the same lc_aws_log_upload_trap_block wiring. →
       **DEFERRED (operator, 2026-07-02) & MIGRATED** to
-      [`plans/active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md`](../active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md).
+      [`plans/archive/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md`](../active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md).
       These three are long-lived orchestrator VMs (their GCP twins are EXEMPT); today they only `tee` to VM-local
       `/var/log/*-bootstrap.log` with no S3 backup. Closing this is the Tier-3 continuous-tail shipper, not the batch
       EXIT_STATUS trap.

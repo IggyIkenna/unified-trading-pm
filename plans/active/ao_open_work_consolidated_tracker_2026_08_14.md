@@ -286,10 +286,19 @@ before touching the source doc directly._
 - [ ] [SCRIPT] P2. Finish the `context_scope` backfill named in `batch3`'s own open todo (see Track 3) — this is what
       still gates `batch3_finalize`'s 5 todos via `gate_on_depends`. Source:
       `/plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`.
-- [ ] [REVIEW] P1. **RULED 2026-08-06 disposition sweep** — apply the operator's default-disposition ruling to the
-      remaining declined-orphan docs. Source: `/plans/active/issues/ao_orphan_audit_followup_triage_2026_07_30.md`.
-- [ ] [REVIEW] P2. Read + properly bucket the 7 "unclear" docs the Phase-1 audit agent couldn't cleanly classify.
-      Source: same doc.
+- [x] [REVIEW] P1. **RULED 2026-08-06 disposition sweep** — apply the operator's default-disposition ruling to the
+      remaining declined-orphan docs. Source: `/plans/archive/issues/ao_orphan_audit_followup_triage_2026_07_30.md`.
+      **DONE 2026-08-14** — re-checked all 12 named docs directly: 10 already archived/resolved by earlier sessions, 1
+      (`blocked_questions_ux_redesign...`) 0-open but deliberately `archive_exempt` for a companion plan, 1
+      (`unified_trading_pm_stash_pile_accumulation...`) correctly still gated on a literal operator action, not a
+      judgment fork. Archived `long_lived_vm_logs_not_backed_up_2026_07_02.md` directly (its own bridge note named this
+      as the follow-on pass). No fold-into-batch action was actually needed — every genuine item had already resolved
+      independently. Full disposition in the source doc's own todo evidence.
+- [x] [REVIEW] P2. Read + properly bucket the 7 "unclear" docs the Phase-1 audit agent couldn't cleanly classify.
+      Source: same doc. **DONE 2026-08-14** — 6 of 7 already archived/resolved; the 7th
+      (`orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md`) is genuinely still open and already tracked as
+      its own item in this tracker's Track 4. The source triage doc itself reached 0 open todos after both items above
+      and was archived in the same pass (`/plans/archive/issues/ao_orphan_audit_followup_triage_2026_07_30.md`).
 - [ ] [BACKEND] P2. **Ship the escalation-route collision fix** (`server/routes/agents.py` still only has
       `/api/escalate`) named in the linked epic's own P1 todo. Source:
       `/plans/active/issues/ao_residuals_after_dispatch_hardening_2026_07_17.md`.

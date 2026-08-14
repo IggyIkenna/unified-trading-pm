@@ -192,7 +192,7 @@ guard); orphaned branch work recovered or explicitly written off with evidence.
 (SQLAlchemy `QueuePool` exhaustion under concurrent slot traffic) ·
 [issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md](/plans/archive/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md)
 (unpinned JWT secret causes fleet-wide auth outage) ·
-[issues/long_lived_vm_logs_not_backed_up_2026_07_02.md](/plans/active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md)
+[issues/long_lived_vm_logs_not_backed_up_2026_07_02.md](/plans/archive/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md)
 (long-lived planning/epic/central-brain/orchestrator-worker VM logs not backed up) ·
 [orchestrator_vm_e2e_hardening_2026_07_24.md](/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md)
 (bootstrap/watchdog/memory-guardrail, VM-from-scratch e2e — forked out of `monitoring_control_plane_master` as the

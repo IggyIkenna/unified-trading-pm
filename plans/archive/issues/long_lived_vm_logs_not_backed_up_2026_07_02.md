@@ -8,7 +8,7 @@ summary:
   `/var/log/*-bootstrap.log`, ship no log content off-box, and run no logging agent — so their logs die with the VM.
   They were EXEMPTED from the coverage guard on a misleading "systemd/container logging" rationale (no agent is
   installed; journald is VM-local too).'
-status: open
+status: resolved
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -28,7 +28,8 @@ source:
   ]
 assigned_vm: planning
 resolved_by:
-archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
+  deployment-service (all 3 build todos shipped; see cebb2425/a2f5ee2a in Todos, and the 2026-08-06 reclassify +
+  2026-08-12 archive_exempt bridge in Progress Log)
 locked_by:
 locked_since:
 context_scope:
@@ -46,6 +47,13 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-02
 ---
+
+> **🟢 ARCHIVED 2026-08-14 — RESOLVED (all 3 build todos `[x]`, unlocked).** Reclassified `assigned_vm: NA → planning`
+> 2026-08-06 and all 3 todos shipped (`deployment-service@cebb2425`, `@a2f5ee2a`) since — the 2026-07-02 "not needed
+> right now" decision text describes the pre-2026-08-06 state, not a current blocker. `archive_exempt: true` (a
+> 2026-08-12 bridge for the `locked_by:live-defi-rollout` placeholder cleanup) un-set per this doc's own instruction:
+> "drop this line + git mv ... in that follow-on pass" — this is that pass, run as part of applying the
+> `ao_orphan_audit_followup_triage_2026_07_30.md` disposition sweep.
 
 ## What I found
 
@@ -119,7 +127,7 @@ EXEMPT reasons accordingly.
 
 - **2026-08-06 (`/plan-reconcile ao`, operator ruling, interactive)**: **RECLASSIFIED `assigned_vm: NA` → `planning`**
   (+ `assigned_role: infra` added, which was absent). This doc sat in the "12 operator-gated docs" bucket of
-  `/plans/active/issues/ao_orphan_audit_followup_triage_2026_07_30.md`, whose todo describes all 12 as "a genuine
+  `/plans/archive/issues/ao_orphan_audit_followup_triage_2026_07_30.md`, whose todo describes all 12 as "a genuine
   design/judgment fork with no evidence-based tiebreaker". That description does not fit this doc: its three open todos
   are bounded implementation work naming concrete files (`launcher_common.sh`, `aws_ec2_launch_lib.sh`,
   `test_vm_launcher_scripts.py`), each with a stated done-when and no undecided design call — which meets the
