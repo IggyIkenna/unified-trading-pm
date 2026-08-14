@@ -43,6 +43,13 @@ execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    deployment-service/scripts/vm/gcloud-vm-delete-guard.sh,
+    agent-orchestrator/scripts/hooks/block_destructive_commands.py,
+  ]
 ---
 
 # Issue: claude_code Agent on Operator Mac Deletes Active Canonical-Migration VM (HARD RULE Violation — repeat)
@@ -152,3 +159,4 @@ was healthy and progressing, heartbeats current to ~19:40Z).
     decision functions + refuse path. QG green; landed `deployment-service@54cd393728`, verified ancestor of
     `origin/live-defi-rollout`. **Follow-up (operator action, not a tracked todo)**: run the installer on the operator's
     Mac so the guard is actually live in laptop shells; the code shipping alone does not install it.
+- **context-scout 2026-08-14**: populated context_scope (4 entries)

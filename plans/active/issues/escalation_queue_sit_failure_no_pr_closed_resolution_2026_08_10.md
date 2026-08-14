@@ -47,6 +47,12 @@ drift_direction: fix
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md,
+    agent-orchestrator/server/escalation.py,
+    agent-orchestrator/tests/test_escalation.py,
+  ]
 ---
 
 # sit_failure escalation walls on closed/superseded promote PRs can't machine-resolve
@@ -140,3 +146,4 @@ probe-return contract). Gate: only apply when the escalate payload actually name
   (#2997-#3000 MERGED, current open promote PR #3004 all quality-gates-v2 checks SUCCESS as of `2026-08-14T01:17:38Z`).
   No action taken beyond this evidence append (the P1 fix below is still pending operator approval) — closed out
   agt-6bf014 via `/done` with no repo changes.
+- **context-scout 2026-08-14**: populated context_scope (3 entries)

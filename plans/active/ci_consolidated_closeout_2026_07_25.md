@@ -44,6 +44,14 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: []
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/06-coding-standards/quality-gates.md,
+    /cursor-configs/skills/ci-reconcile/SKILL.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+  ]
 source: >-
   Corpus-wide classification pass (unified-trading-pm, 2026-07-25) splitting CI/CD-flavored docs (previously all
   `asset_group: cross-cutting`, spread across `infrastructure_master`/`deployment_and_user_management_master`/
@@ -241,3 +249,4 @@ unblocked on a CI runner.
   `image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07` newly orphaned within `ci`'s own family (this
   Progress Log entry IS that link-back fix) — the other 2 retagged docs were already reachable and needed no further
   linkage fix. Re-verified 0→0 new orphans after this entry landed.
+- **context-scout 2026-08-14**: populated context_scope (5 entries)

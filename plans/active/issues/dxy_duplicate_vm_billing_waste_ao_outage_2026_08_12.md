@@ -30,6 +30,13 @@ priority: P1
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
+    /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
+    deployment-service/scripts/vm/launch-tradfi-bf-ice-ohlcv-24h.sh,
+    deployment-service/scripts/wave_launcher.py,
+  ]
 ---
 
 # 26+ duplicate DXY VMs — active billing waste, killed
@@ -103,3 +110,7 @@ tmux workers despite the server process being healthy.
 - [ ] [DATA] P3. Confirm the killed duplicate VMs' partial/redundant writes didn't leave any non-idempotent side-effects
       (expected: none, since DXY capture is a pure overwrite-safe write, but not independently re-verified after the
       kill).
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (4 entries)

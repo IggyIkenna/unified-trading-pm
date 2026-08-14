@@ -48,6 +48,12 @@ superseded_by:
 resolved_by:
 source: slot 22, deployment-service QG run during cross_cutting_satellite_ao_dispatch_batch5-77d480c19d08, 2026-08-09
 archive_exempt: true # 0-open-todos 2026-08-10 (both todos folded + DONE via infra_satellite_ao_dispatch_batch15_2026_08_10.md todo 1); archival blocked by that active parent plan still referencing this doc — bridge until it reaches a terminal status
+context_scope:
+  [
+    /codex/05-infrastructure/shared-host-tmp-tmpfs-capacity.md,
+    /plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md,
+    scripts/dev/cleanup-stale-tmp-parquet-scratch.sh,
+  ]
 ---
 
 # Shared-host /tmp tmpfs full — breaks pytest fleet-wide
@@ -108,3 +114,7 @@ process long-dead) vs a live session's genuine in-flight scratch — only then i
       dead), but nothing was blindly deleted; (2) the shipped reaper is liveness-gated (never touches a file with an
       open handle — `fuser`) so it can only reclaim genuinely-dead scratch, satisfying the ownership-audit caution as a
       standing mechanism rather than a one-time check.
+
+## Progress Log
+
+**context-scout 2026-08-14**: populated context_scope (3 entries)

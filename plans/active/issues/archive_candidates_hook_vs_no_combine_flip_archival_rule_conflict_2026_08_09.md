@@ -35,6 +35,11 @@ archive_exempt: true
 locked_by:
 drift_direction: none
 depends_on: []
+context_scope:
+  [
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    scripts/plan-hygiene/check_archive_candidates.sh,
+  ]
 ---
 
 # check_archive_candidates hook vs. never-combine-flip-and-mv SSOT — same-day conflict
@@ -151,3 +156,4 @@ One of:
     once the wrapping batch plan (`ci_satellite_ao_dispatch_batch12_2026_08_10.md`) and its sibling finalize plan are
     also resolved. `archive_exempt: true` set to satisfy `check_archive_candidates.sh --only` — per the codex-sanctioned
     bridge pattern; will be dropped in the actual archival commit.
+- **context-scout 2026-08-14**: populated context_scope (2 entries)

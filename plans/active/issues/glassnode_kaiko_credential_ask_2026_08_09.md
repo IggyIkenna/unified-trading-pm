@@ -44,6 +44,13 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /codex/02-data/external-data-always-available-rule.md,
+    /plans/active/issues/operator_action_items_consolidated_2026_08_08.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain/glassnode.py,
+    market-tick-data-service/market_tick_data_service/market_interface/factory.py,
+  ]
 source:
   [
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
@@ -121,6 +128,7 @@ each depending on plan). Once provisioned:
   resolved), Helius/Alchemy/Databento/Odds-API all carry live secrets already. Scaffolded `KaikoAdapter` + 18 mocked
   unit tests (`market-tick-data-service@<see plan-flip commit>`); Glassnode's existing scaffold (370-line adapter + 26
   unit tests, already shipped 2026-05-21) re-verified still green, no changes needed.
+- **context-scout 2026-08-14**: populated context_scope (4 entries)
 
 ## Kaiko removal COMPLETE (2026-08-10)
 

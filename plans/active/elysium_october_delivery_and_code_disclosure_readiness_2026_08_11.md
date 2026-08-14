@@ -42,6 +42,7 @@ estimate_calibrated_ai_days: 12.8
 assigned_role:
 drift_direction: none
 depends_on: []
+context_scope: [/codex/14-customer-journeys/commercial-model/elysium-carveout-deferral-message-2026-08-11.md]
 locked_by:
 locked_since:
 supersedes:

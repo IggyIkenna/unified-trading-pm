@@ -40,6 +40,14 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on:
+context_scope:
+  [
+    /plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md,
+    agent-orchestrator/server/state_store/account_usage.py,
+    agent-orchestrator/server/usage_poller.py,
+    agent-orchestrator/server/model_pricing.py,
+    agent-orchestrator/dashboard/src/ClaudeWalletPanel.tsx,
+  ]
 source: >-
   Operator chat instruction, 2026-08-12, immediately following the DeepSeek native-usage-capture proxy landing — "now
   there is a plan around this for a max account... same for pro which is a different multiplier... together with our
@@ -316,3 +324,7 @@ averaged together.
       but partial (sub-f was already at weekly_pct=100% mid-window as of this check).
 - [ ] [OPERATOR] P3. **sub-e stays excluded** from calibration until it goes untouched interactively through a full
       weekly reset (contamination noted above still stands).
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (5 entries)

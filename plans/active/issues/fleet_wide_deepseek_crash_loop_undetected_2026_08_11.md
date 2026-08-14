@@ -48,6 +48,13 @@ superseded_by:
 resolved_by:
 source: operator-reported respawn-without-finishing pattern on slot 15, investigated + partially remediated 2026-08-11
 archive_exempt:
+context_scope:
+  [
+    /codex/04-architecture/agent-orchestrator-autospawn.md,
+    /plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md,
+    agent-orchestrator/server/autospawn.py,
+    agent-orchestrator/server/resume_lifecycle.py,
+  ]
 ---
 
 # Fleet-wide DeepSeek spawn crash loop — root mechanism still unconfirmed
@@ -122,3 +129,7 @@ Operator reported agents "keep respawning without finishing their tasks and burn
       fraction down as headroom rises, no manual action needed there) — this flag is the one knob that does NOT
       auto-revert and needs an explicit operator call. Repo: agent-orchestrator,
       `server/config.py`/`server/autospawn.py`.
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (4 entries)

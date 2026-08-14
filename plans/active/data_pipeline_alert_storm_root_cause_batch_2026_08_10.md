@@ -61,6 +61,14 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    deployment-service/scripts/recovery/_durable_state.py,
+    deployment-service/scripts/recovery/relaunch_backfill_vm.py,
+    /plans/active/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md,
+  ]
 source: >-
   Interactive session 2026-08-10, operator-pasted #data-pipeline-alerts dump, traced to root cause across 6 repos.
   Operator decisions recorded inline: chain fix = "both, sequenced"; packaging = one batch plan + existing-doc
@@ -892,3 +900,5 @@ alone was proven misleading here) before declaring the re-derive done.
     every claim from the tracing sub-agent was re-verified against the live contract-builder, schema-fallback, and
     schema-definition code before the fix shipped — a plausible, detailed, wrong theory reads identically to a correct
     one until checked.
+
+**context-scout 2026-08-14**: populated context_scope (5 entries)

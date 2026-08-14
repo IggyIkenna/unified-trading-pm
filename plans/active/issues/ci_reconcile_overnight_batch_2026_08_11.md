@@ -61,6 +61,13 @@ locked_by:
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md,
+    /codex/04-architecture/agent-orchestrator-alerting.md,
+    agent-orchestrator/server/escalation.py,
+  ]
 ---
 
 # /ci-reconcile overnight batch (2026-08-10 23:14 – 2026-08-11 04:00 UTC)
@@ -479,3 +486,7 @@ Item 10 (MTDS file-size regression) is RESOLVED as of the follow-up session docu
 fleet job's own cadence). The item-11 Cloud-Build-fix verification (P2 follow-up) was independently VERIFIED CLEARED
 (see its follow-up checkbox above). All 17 original items are now resolved, self-healed, or false alarms with cited
 evidence.
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (4 entries)

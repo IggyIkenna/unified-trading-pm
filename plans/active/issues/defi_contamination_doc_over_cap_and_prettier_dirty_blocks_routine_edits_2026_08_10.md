@@ -51,6 +51,13 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
+    /plans/active/issues/tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md,
+    scripts/plan-hygiene/check_line_caps.sh,
+    scripts/hooks/prettier-autostage.sh,
+  ]
 ---
 
 # defi_cefi_venue_chain_axis_contamination doc is over-cap + prettier-dirty — routine edits blocked
@@ -134,3 +141,4 @@ gate-assessment evidence from slot-6 is recorded in this doc's Progress Log belo
   `archive_exempt: true` on this doc: both todos now done, but the doc should be user-archived (not auto-archived by the
   next worker) so the operator can review the resolution before closing. The archive step (`git mv` + banner + referrer
   sweep) is trivial and deterministic — a P3 archive-candidates cleanup.
+- **context-scout 2026-08-14**: populated context_scope (4 entries)

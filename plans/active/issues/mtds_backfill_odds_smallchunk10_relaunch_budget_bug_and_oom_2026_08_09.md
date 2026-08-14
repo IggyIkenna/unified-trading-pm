@@ -49,6 +49,14 @@ execution_scope: orchestrator-agent
 priority: P1
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+    /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md,
+    deployment-service/scripts/recovery/relaunch_stalled_vm.py,
+    deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh,
+    market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py,
+  ]
 ---
 
 # `mtds-backfill-odds-smallchunk10-20260809` relaunch — budget bug (fixed) + unresolved OOM root cause
@@ -161,3 +169,5 @@ Two independent paths, not mutually exclusive:
   raw-name is fallback-only for non-canonical requests -- `market-tick-data-service@719e4d0dd1` (10 new regression
   tests, full quality-gates.sh green). Does not close this todo -- the general OOM root cause is still open, only this
   additive amplifier is fixed.
+
+**context-scout 2026-08-14**: populated context_scope (5 entries)

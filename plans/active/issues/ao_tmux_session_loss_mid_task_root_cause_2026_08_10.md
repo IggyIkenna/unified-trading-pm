@@ -45,6 +45,12 @@ execution_scope: local-only
 priority: P2
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    scripts/self-hosted-runners/tmpfs-disk-cleanup.sh,
+    agent-orchestrator/server/tmux_spawn.py,
+    /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
+  ]
 ---
 
 # Fleet dispatch:done gap root cause — unplanned tmux session loss, not watchdog kills
@@ -594,3 +600,4 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   closure claims (13:51Z, then again after the Layer-3 gaps), and the operator's own standing objection to declaring
   victory on a readback still applies. Not flipping `status`/archiving; that decision stays with whoever is tracking the
   still-open closure question above.
+- **context-scout 2026-08-14**: populated context_scope (3 entries)

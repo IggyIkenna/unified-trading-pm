@@ -112,6 +112,14 @@ locked_by:
 resolved_by:
 last_updated: 2026-08-10
 locked_since:
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/active/issues/dp_live_003_agent_orch_aws_credentials_gap_2026_08_10.md,
+    deployment-service/deployment_service/data_pipeline_monitors/missing_live_producer_watcher.py,
+    deployment-service/deployment_service/data_pipeline_monitors/producer_lifecycle.py,
+    deployment-service/deployment_service/backends/aws_census.py,
+  ]
 source: >-
   Operator-reported: 10 DP_CRON_DID_NOT_FIRE alerts fired within ~90 seconds of each other at 2026-08-10T00:09-00:10Z,
   one already confirmed false-positive (agent-orch-planning-vm-, the real AWS orchestrator VM verified running
@@ -292,3 +300,4 @@ is exactly the kind of judgment call this doc should surface, not resolve.
   `quality-gates.sh --no-fix` ALL PASSED (314s, sentinel `b35b5e0fd9c4a6fcb3901622e3c5670b224fdcb5`); shipped via
   quickmerge, landed on `live-defi-rollout` at `deployment-service@f6a830f94f044fa9ee98b567ea47217629e9052d`
   (ancestry-verified against origin).
+- **context-scout 2026-08-14**: populated context_scope (5 entries)

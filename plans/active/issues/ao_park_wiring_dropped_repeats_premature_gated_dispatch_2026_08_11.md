@@ -29,6 +29,11 @@ tags: [ao, auto-park, dispatch, gated, sports]
 drift_direction: advance-code
 depends_on: []
 archive_exempt: true
+context_scope:
+  [
+    agent-orchestrator/server/auto_park.py,
+    /plans/active/issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md,
+  ]
 ---
 
 # AO durable park wiring missing from task entry → false condition does not gate dispatch
@@ -125,3 +130,4 @@ recorded in the P3 plan's Progress Log (slots 15/22/10).
   `/plans/active/issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md` for the full
   same-day conflict this sidesteps, using its documented `archive_exempt: true` bridge). A follow-up commit flips
   `status: resolved` + performs the real 6-step archival ritual + drops this exemption key.
+- **context-scout 2026-08-14**: populated context_scope (2 entries)

@@ -29,6 +29,12 @@ drift_direction: fix
 resolved_by: ""
 locked_by: ""
 depends_on: []
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    features-service/features_service/sports/cli/handlers/batch_handler.py,
+  ]
 ---
 
 # Features-Sports: compute_features hard-fails on missing upstream fixtures for today's date
@@ -130,3 +136,5 @@ tomorrow's run once instruments-service writes it. (A mid-run read of the run.lo
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
+
+- **context-scout 2026-08-14**: populated context_scope (3 entries)

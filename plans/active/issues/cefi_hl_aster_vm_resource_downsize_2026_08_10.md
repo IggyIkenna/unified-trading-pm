@@ -41,6 +41,12 @@ execution_scope: orchestrator-agent
 priority: P2
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh,
+    deployment-service/scripts/vm/launch-tier3-cefi-backfill.sh,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+  ]
 ---
 
 # CeFi backfill VM resource audit
@@ -133,3 +139,4 @@ depends_on: []
   `estimated_unblock_minutes: 180` (the fleet cap) this time, since two prior GATED releases at default cooldown still
   produced two more no-op re-checks within ~24h on a launcher with no fixed cadence — a longer cooldown should cut
   redundant polling until the campaign actually re-dispatches this launcher.
+- **context-scout 2026-08-14**: populated context_scope (3 entries)

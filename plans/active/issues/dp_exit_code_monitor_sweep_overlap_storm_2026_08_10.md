@@ -40,6 +40,13 @@ archive_exempt: true
 resolved_by:
 last_updated: 2026-08-13
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
+    deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py,
+  ]
 source: >-
   Found during the 2026-08-10 scheduled /data-pipeline-alerts-reconcile sweep. Live evidence: `gcloud run jobs
   executions list` shows 4-6 concurrent "Waiting for execution to complete" rows for the exit-code-monitor at any time;
@@ -162,3 +169,5 @@ this task because it remains the SOURCE doc for still-open DERIVED todos in OTHE
 §2. Archiving the source out from under those would orphan their references; closing/retiring them is a
 `/plan-reconcile` coordination, not a single-worker flip. Drop `archive_exempt: true` and `git mv` to
 `plans/archive/2026_08/issues/` once those derived todos are reconciled.
+
+- **context-scout 2026-08-14**: populated context_scope (4 entries)

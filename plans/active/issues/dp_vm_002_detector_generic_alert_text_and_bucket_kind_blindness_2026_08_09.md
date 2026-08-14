@@ -62,6 +62,13 @@ depends_on: []
 locked_by:
 resolved_by:
 locked_since:
+context_scope:
+  [
+    /plans/archive/2026_08/qg_v2_green_false_resolution_historical_sample_audit_unverified_dp_gaps_2026_08_09.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
+    deployment-service/deployment_service/data_pipeline_monitors/cli.py,
+  ]
 source: >-
   `qg_v2_green_false_resolution_historical_sample_audit_unverified_dp_gaps_2026_08_09.md`'s todo 2 (23-VM DP-VM-002
   verification pass), extracted 2026-08-09 after that doc archived — the structural detector findings noted in its
@@ -111,3 +118,7 @@ fine, this was a different code path" — do not assume it's the same bug as fin
       correctly-alerting condition (e.g. a real non-zero exit_code) misread as the same bug class in the source
       investigation. If genuinely a live-VM-exemption miss, file the root cause as its own P2 finding — do not fix
       blind. Repo: deployment-service.
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (4 entries)

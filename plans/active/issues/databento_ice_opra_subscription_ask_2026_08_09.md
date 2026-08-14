@@ -47,6 +47,12 @@ supersedes:
 superseded_by:
 source:
   [/plans/active/data_completion_to_100_all_ag_2026_06_21.md, /codex/02-data/tradfi-databento-sourcing-ssot.md:87-117]
+context_scope:
+  [
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/external-data-always-available-rule.md,
+    unified-api-contracts/unified_api_contracts/registry/databento_subscription_allowlist.py,
+  ]
 ---
 
 # Databento ICE + OPRA subscription ask
@@ -112,3 +118,4 @@ incur real metered billing the moment they're queried.
   re-verified before filing that Databento's core subscription is NOT actually blocked (live `databento-api-key`, 17
   running backfill VMs), narrowing the ask to only the genuinely-excluded ICE/OPRA datasets. This is a real
   billing/subscription commitment decision (`CREDENTIAL_BLOCKED`), not a missing key -- correctly `assigned_vm: NA`.
+- **context-scout 2026-08-14**: populated context_scope (3 entries)

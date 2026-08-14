@@ -51,6 +51,13 @@ supersedes:
 superseded_by:
 resolved_by:
 source: cross_cutting_satellite_ao_dispatch_batch5-77d480c19d08 (slot 22, 2026-08-09 audit)
+context_scope:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    deployment-service/scripts/vm/launch-mdps-backfill-vm.sh,
+    market_data_processing_service/app/utils/cefi_wire_bridge.py,
+  ]
 ---
 
 # MDPS candle backfill for BITGET 2026-04-14..04-30 is upstream-blocked (MTDS raw-tick gap)
@@ -201,3 +208,7 @@ the raw-tick manifest before re-running, rather than assuming a fixed completion
       BITGET-FUTURES 04-14..04-19 residual (same pattern as this session's `mdps-backfill-cefi-20260809-123352`) to
       close the remaining candle gap. BITGET-SPOT candle backfill is NOT needed (see resolved todo above — the
       underlying raw ticks were never meant to exist). Repo: market-data-processing-service.
+
+## Progress Log
+
+**context-scout 2026-08-14**: populated context_scope (4 entries)

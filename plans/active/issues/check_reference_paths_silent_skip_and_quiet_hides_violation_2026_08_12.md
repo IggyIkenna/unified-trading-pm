@@ -45,6 +45,14 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+context_scope:
+  [
+    /codex/12-agent-workflow/measurement-claims-discipline.md,
+    /codex/11-project-management/cross-reference-path-convention.md,
+    scripts/plan-hygiene/check_reference_paths.py,
+    scripts/plan-hygiene/run_hygiene_sweep.sh,
+    scripts/plan-hygiene/find_moved_doc_referrers.sh,
+  ]
 source: >-
   Found 2026-08-12 while pushing sections H/H.5 of the Elysium October delivery plan. Seven identical `safe-doc-push`
   failures, six wrong diagnoses, all anchored on a false negative produced by defect (1).
@@ -119,3 +127,7 @@ is a separate judgement call — worth a deliberate decision rather than leaving
 - [ ] [AGENT] P3. **Decide whether fenced code blocks should be exempt** from `BARE_CODEX_RE`, or whether the glob
       workaround becomes the documented convention. Record the ruling in
       [cross-reference-path-convention](/codex/11-project-management/cross-reference-path-convention.md).
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (5 entries)

@@ -41,6 +41,15 @@ locked_by:
 resolved_by:
 last_updated: 2026-08-13
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md,
+    /plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py,
+    deployment-service/deployment_service/data_pipeline_monitors/renag_tracker.py,
+    deployment-service/terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf,
+  ]
 source: >-
   Side-discovery during the 2026-08-13 slot-18 confirmation of
   `/plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md` todo 1. That task's Cloud Logging history sweep
@@ -100,3 +109,4 @@ events belong to `uts-prod-dp-meta-watchers`, not the exit-code job:
 
 - 2026-08-13: Filed from the slot-18 exit-code confirmation sweep. Live evidence captured above; config 32Gi/8cpu/900s
   confirmed live via `gcloud run jobs describe`.
+- **context-scout 2026-08-14**: populated context_scope (6 entries)

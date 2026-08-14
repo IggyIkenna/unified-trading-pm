@@ -31,6 +31,13 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
+context_scope:
+  [
+    unified-api-contracts/unified_api_contracts/registry/cefi_inverse_contract_multipliers.py,
+    market-data-processing-service/market_data_processing_service/app/adapters/cefi/liquidations_adapter.py,
+    market-data-processing-service/market_data_processing_service/app/core/canonical_writer_shaping.py,
+    /plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md,
+  ]
 ---
 
 # CeFi inverse contract_size silently wrong and missing — 2026-08-12
@@ -214,6 +221,10 @@ Since `liquidations_adapter.py`'s `base_asset` parsing (Finding 2's fix) already
 `@` marker is present, `contract_size` resolution for all 7 instruments works correctly the moment `margin_type`
 resolves — no further code change needed (OKX-SWAP TRX/XRP/LTC → registry `_DEFAULT=10`, BTC/ETH → their specific
 values; KRAKEN-FUTURES dated futures → registry `UNIFORM=1`).
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (4 entries)
 
 **The 4th re-derive VM (`mdps-backfill-cefi-20260813-174138`) was killed and relaunched** once this fix landed — its
 tarball was staged before the fix shipped, so it would have kept failing on these 7 instruments for the rest of its

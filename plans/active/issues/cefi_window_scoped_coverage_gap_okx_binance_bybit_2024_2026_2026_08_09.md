@@ -69,6 +69,15 @@ assigned_role: data_engineering
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    /codex/02-data/honest-coverage-model.md,
+    /plans/active/cefi_ml_directional_continuous_live_2026_06_20.md,
+    /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
+    instruments-service/scripts/measure_honest_coverage.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py,
+  ]
 ---
 
 # Window-scoped cefi honest-coverage gap — OKX/BINANCE/BYBIT, 2024-2026
@@ -406,3 +415,5 @@ can re-prioritize P0 vs P1 if the live-capture investigation (item 1) surfaces s
   today. Filed follow-up fix + registry-drift todos in a new issue doc per this todo's own instruction:
   `issues/cefi_deribit_futures_chain_canonical_write_path_exposure_2026_08_09.md`. Read-only audit — no code shipped,
   per this todo's scope.
+
+- **context-scout 2026-08-14**: populated context_scope (6 entries)

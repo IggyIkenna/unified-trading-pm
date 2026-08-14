@@ -48,6 +48,15 @@ source: >-
   Interactive session 2026-08-11 slot 1, found while checking whether the liquidations re-drive prerequisite had
   cleared. Every number below is from `gcloud compute instances list`, per-VM serial-console reads, and `gcloud logging
   read` on the monitor job — not inferred.
+context_scope:
+  [
+    /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
+    deployment-service/scripts/recovery/relaunch_backfill_vm.py,
+    deployment-service/scripts/vm/reap_vms.py,
+    deployment-service/deployment_service/vm_prefix_registry.py,
+  ]
 ---
 
 # The backfill VM fleet wedged, and the monitor that should have caught it is blind
@@ -258,3 +267,4 @@ guest liveness on 2 samples) — a future check should confirm they're actually 
     and did NOT kill either duplicate VM (no destructive action without a clearer instruction than "relaunch," and
     reaping is already this doc's own tracked P0/P1 territory). No code shipped this session; this Progress Log entry is
     the only change. `/done` posted with `one_shot_complete: true`.
+- **context-scout 2026-08-14**: populated context_scope (6 entries)

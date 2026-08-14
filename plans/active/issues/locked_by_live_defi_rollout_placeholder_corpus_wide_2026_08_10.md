@@ -40,6 +40,12 @@ source:
   "plan_reconciler dispatch agt-ec1688 (ui tranche, 2026-08-10) — discovered while investigating a stuck ui archive
   candidate"
 depends_on: []
+context_scope:
+  [
+    scripts/plans/fix_epic_frontmatter_2026_05_21.py,
+    scripts/plan-hygiene/check_archive_candidates.sh,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # `locked_by: live-defi-rollout` — hardcoded placeholder, not a real lock (96 docs corpus-wide)
@@ -108,10 +114,10 @@ mis-treating a doc that coincidentally has a real reason to be locked under that
       shot), commit in batches, re-run `check_archive_candidates.sh` after.
 - [x] ✅ [REVIEW] P2. Once unlocked, re-run archival eligibility on
       `plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` specifically (all 3 todos
-      already HARD-verified done as of 2026-08-10) and archive via the 6-step ritual if still eligible.
-      **RESOLVED 2026-08-10** — this specific doc did not wait on the corpus-wide Option A/B/C ruling (todos 1-2 above,
-      still open): the operator was asked directly and explicitly approved a targeted `[unlock-plan]` for just this one
-      doc. All 3 todos re-verified `[x]` done, `locked_by`/`locked_since` cleared, archived to
+      already HARD-verified done as of 2026-08-10) and archive via the 6-step ritual if still eligible. **RESOLVED
+      2026-08-10** — this specific doc did not wait on the corpus-wide Option A/B/C ruling (todos 1-2 above, still
+      open): the operator was asked directly and explicitly approved a targeted `[unlock-plan]` for just this one doc.
+      All 3 todos re-verified `[x]` done, `locked_by`/`locked_since` cleared, archived to
       `/plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` via the 6-step
       ritual, all active-corpus referrer paths fixed. The remaining 95 docs carrying the same placeholder value are
       unaffected — todos 1-2 stay open for that corpus-wide decision.
@@ -127,3 +133,4 @@ mis-treating a doc that coincidentally has a real reason to be locked under that
   `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` specifically, and approved. Flipped todo 3 above
   citing that approval; todos 1-2 (the corpus-wide Option A/B/C ruling for the remaining 95 docs) remain open — this was
   a targeted single-doc exception, not a resolution of the underlying corpus-wide question.
+- **context-scout 2026-08-14**: populated context_scope (3 entries)

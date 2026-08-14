@@ -50,6 +50,14 @@ locked_by:
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/ci_reconcile_overnight_batch_2026_08_11.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    scripts/cicd/reconcile_release_tags.py,
+    scripts/cicd/detect_breaking_change.py,
+    workspace-manifest.json,
+  ]
 ---
 
 # ibkr-gateway-infra release-tag stall — root cause past the "false alarm" verdict
@@ -113,3 +121,7 @@ the underlying condition (27 commits, all non-package, tag unchanged) between 00
 outcome-correct but methodology-incomplete — it verified the wrong directory was empty without noticing the directory
 itself was wrong. The alert will keep firing (correctly, per current content) until real `ibkr_gateway_client/` work
 lands; that is not a bug. The residual reconciler content-check gap is filed above as a follow-up, not blocking.
+
+## Progress Log
+
+**context-scout 2026-08-14**: populated context_scope (5 entries)

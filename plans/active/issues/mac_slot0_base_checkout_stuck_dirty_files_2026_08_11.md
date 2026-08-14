@@ -44,6 +44,12 @@ source:
   fleet git-health investigation, 2026-08-11 session (killed-slots git:N-warn incident, resolved separately via
   agent-orchestrator@a4531e1293)
 archive_exempt:
+context_scope:
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    scripts/dev/slot-cron-ff-pull.sh,
+    scripts/dev/slot-git-status-report.sh,
+  ]
 ---
 
 # Mac slot 0 base checkout — 3 stuck dirty files + cosmetic stray symlinks
@@ -76,3 +82,7 @@ fast-forward).
 - [ ] [SCRIPT] P3. **Identify + fix the source of the stray `<repo>/<repo>` self-referential symlinks** (2026-08-09
       15:28, uniform across every repo in the base checkout) and clean up the existing ones — cosmetic (doesn't block
       FF), but worth tracing to stop it recurring. Repo: unified-trading-pm.
+
+## Progress Log
+
+**context-scout 2026-08-14**: populated context_scope (3 entries)

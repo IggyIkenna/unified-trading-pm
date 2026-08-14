@@ -56,6 +56,12 @@ assigned_role: data
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    market_data_processing_service/app/adapters/cefi/trades_adapter.py,
+    market_data_processing_service/tests/unit/test_hft_features.py,
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+  ]
 ---
 
 # MDPS chain-bundle candle derivation: Timestamp-vs-float compare crash (fixed) + blast-radius audit (open)
@@ -128,3 +134,4 @@ line.
 
 - 2026-08-12 (slot-3, agt-68d94a): diagnosed root cause from run.log, shipped the fix (`cc65f076ae`), relaunched the
   2019 CeFi shard with the fix live, filed this doc for the blast-radius follow-up.
+- **context-scout 2026-08-14**: populated context_scope (3 entries)

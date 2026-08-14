@@ -23,7 +23,7 @@ repos:
 tags: [vm-safety, agent-safety, heartbeat, cross-agent-kill, canonical-migration, HARD-RULE-VIOLATION]
 related:
   - /plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md
-  - /plans/active/issues/watchdog_kill_events_deployment_gaps_2026_08_05.md
+  - /plans/archive/2026_08/watchdog_kill_events_deployment_gaps_2026_08_05.md
   - /plans/active/issues/vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md
 created: 2026-08-07
 parent_epic: infrastructure_master
@@ -35,6 +35,14 @@ execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    agents/infra.md,
+    agents/data_engineering.md,
+    deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
+    deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py,
+  ]
 ---
 
 # Issue: claude_code Agent Deletes Active Canonical-Migration VM (HARD RULE Violation)
@@ -222,3 +230,4 @@ wrapper):
   `origin/main`; no SIGPIPE guard found anywhere in deployment-service or market-tick-data-service via targeted grep).
   This is a small, clear, in-file fix per the findings-triage HARD RULE, not a reclassification — the doc stays NA
   (operator-notification flag above is dispositive on its own).
+- **context-scout 2026-08-14**: populated context_scope (5 entries)

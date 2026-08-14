@@ -53,6 +53,14 @@ locked_by:
 resolved_by:
 last_updated: 2026-08-10
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/dp_cron_did_not_fire_false_positive_burst_2026_08_10.md,
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+    deployment-service/deployment_service/backends/aws_census.py,
+    deployment-service/deployment_service/data_pipeline_monitors/missing_live_producer_watcher.py,
+    deployment-service/terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf,
+  ]
 source: >-
   Discovered while resolving dp_cron_did_not_fire_false_positive_burst_2026_08_10.md's [OPERATOR] todo on the fate of
   agent-orch-planning-vm-: building the real cross-cloud check surfaced that the detector's own production runtime has
@@ -151,3 +159,4 @@ explicit instruction, faking or hand-waving execution here was avoided; this doc
   (`uts-prod-dp-meta-watchers` Cloud Run Job, GCP service-account identity only). No code fix attempted here per this
   task's explicit instruction to document rather than fake — see
   `dp_cron_did_not_fire_false_positive_burst_2026_08_10.md`'s Part 1 resolution for the shipped check itself.
+- **context-scout 2026-08-14**: populated context_scope (5 entries)

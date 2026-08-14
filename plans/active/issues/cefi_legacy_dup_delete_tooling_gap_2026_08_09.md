@@ -42,6 +42,12 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    instruments-service/scripts/cleanup_legacy_twins.py,
+    deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
+  ]
 ---
 
 # What I found
@@ -207,3 +213,4 @@ and only needed a spot-check.
   list describes no longer exist live in GCS at all, confirmed via a stratified sample + prefix listing on 3 separate
   days). Full `--apply` run deliberately NOT launched (would be a no-op against 0 deletable candidates). Flipped todo 3;
   retargeted todo 4's precondition since the original "after the full run" framing no longer applies.
+- **context-scout 2026-08-14**: populated context_scope (3 entries)

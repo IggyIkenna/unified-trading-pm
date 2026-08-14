@@ -47,6 +47,13 @@ locked_by:
 resolved_by:
 last_updated: 2026-08-09
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/escalation_queue_sit_failure_no_pr_closed_resolution_2026_08_10.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    agent-orchestrator/server/escalation.py,
+    agent-orchestrator/tests/test_escalation.py,
+  ]
 archive_exempt: true # 2026-08-10 — all 4 todos resolved, but doc serves as operator-visible historical-blast-radius record per its own stated scope (§Disposition item 1)
 source: >-
   escalation_queue_reconciler's routine 3-hourly check (slot 11, task agt-21fadd) was triaging an unrelated wall when it
@@ -183,3 +190,4 @@ ratios suggest this has been the STEADY-STATE behavior, not a recent regression)
   `mtds-backfill-odds-smallchunk14-20260809` RUNNING (asia-northeast1-c, created 2026-08-10T09:29:02Z), matching the
   independent verification in `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` Progress Log
   (todo 11, slot 22). All 4 todos in this doc are now resolved (2 flipped `[x]`, 1 extracted to batch7, 1 flipped here).
+- **context-scout 2026-08-14**: populated context_scope (4 entries)

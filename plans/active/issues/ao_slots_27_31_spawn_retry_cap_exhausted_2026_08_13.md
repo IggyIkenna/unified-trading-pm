@@ -37,6 +37,12 @@ execution_scope: local-only
 priority: P3
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/server/worker_liveness/_auth_failover.py,
+    /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
+    /plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md,
+  ]
 ---
 
 # AO slots 27 and 31 — spawn retry cap exhausted, silent ~44h
@@ -82,3 +88,4 @@ actively-running-but-stuck worker.
 - 2026-08-13: doc created from a chat-only finding surfaced while working an unrelated investigation — flagged, not
   chased, per the operator's own framing at the time ("I don't want to burn time chasing that down fully right now"). No
   further investigation performed yet.
+- **context-scout 2026-08-14**: populated context_scope (3 entries)
