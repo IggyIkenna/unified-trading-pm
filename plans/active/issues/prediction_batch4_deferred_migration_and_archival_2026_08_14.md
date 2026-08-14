@@ -32,6 +32,8 @@ parent_epic: predictions_master
 resolved_by:
 locked_by:
 source: [prediction_satellite_ao_dispatch_batch4_2026_07_26.md todo 4b-iii, this session's completion]
+drift_direction: advance-code
+depends_on: []
 ---
 
 # prediction_satellite_ao_dispatch_batch4 — archival prerequisite
