@@ -21,11 +21,13 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import pytest
 from check_codex_doc_freshness import (
+    JITTER_SPREAD_DAYS,
     BaselineSnapshot,
     FreshnessViolation,
     FrontmatterParseError,
     _check_doc,
     _is_retired_with_successor,
+    _jitter_days_for_path,
     _load_baseline,
     _new_violations,
     _parse_frontmatter,
@@ -409,3 +411,82 @@ def test_check_doc_stale_without_owner_has_empty_owner(tmp_path: Path) -> None:
     v = _check_doc(p, 90, datetime.date(2026, 8, 9))
     assert v is not None
     assert v.owner == ""
+
+
+# ---------------------------------------------------------------------------
+# De-cohorting jitter (2026-08-14) — /plans/active/issues/qg_ratchets_block_unrelated_ships_2026_08_12.md
+# "De-cohort the thresholds" todo. A batch of docs sharing one last_reviewed stamp must not
+# all tip stale on the same calendar day.
+# ---------------------------------------------------------------------------
+
+
+def test_jitter_days_for_path_is_in_range_and_deterministic() -> None:
+    seen = set()
+    for i in range(50):
+        rel = f"unified-trading-pm/codex/02-data/doc_{i}.md"
+        j = _jitter_days_for_path(rel)
+        assert 0 <= j < JITTER_SPREAD_DAYS
+        assert j == _jitter_days_for_path(rel), "must be stable across repeated calls"
+        seen.add(j)
+    assert len(seen) > 1, "50 distinct paths landing on a single offset would defeat de-cohorting"
+
+
+def test_jitter_days_for_path_differs_by_path_not_by_process_random_seed() -> None:
+    """sha256-keyed, not the builtin hash() -- must not depend on PYTHONHASHSEED."""
+    a = _jitter_days_for_path("unified-trading-pm/codex/02-data/a.md")
+    b = _jitter_days_for_path("unified-trading-pm/codex/02-data/a.md")
+    assert a == b
+
+
+def test_check_doc_without_workspace_root_still_deterministic(tmp_path: Path) -> None:
+    """No workspace_root given (bare unit-test call shape) falls back to str(path) -- still a
+    stable jitter within one process, not a crash or a no-op."""
+    p = tmp_path / "solo.md"
+    p.write_text("---\nlast_reviewed: 2026-01-01\n---\nbody\n", encoding="utf-8")
+    v1 = _check_doc(p, 90, datetime.date(2026, 8, 9))
+    v2 = _check_doc(p, 90, datetime.date(2026, 8, 9))
+    assert v1 is not None and v2 is not None
+    assert v1.detail == v2.detail
+
+
+def test_check_doc_de_cohorts_a_same_stamp_cohort(tmp_path: Path) -> None:
+    """The actual point of the todo: a cohort of docs authored the same day (identical
+    last_reviewed) must NOT all flip to 'stale' on the exact same calendar day -- some of the
+    cohort should still be clean at day 91 (base window + 0 jitter), with the rest tipping
+    over the following ~13 days as their own per-path jitter elapses."""
+    workspace_root = tmp_path
+    pm_dir = tmp_path / "unified-trading-pm" / "codex" / "02-data"
+    pm_dir.mkdir(parents=True)
+    paths = []
+    for i in range(30):
+        p = pm_dir / f"cohort_{i}.md"
+        p.write_text("---\nlast_reviewed: 2026-01-01\n---\nbody\n", encoding="utf-8")
+        paths.append(p)
+
+    day_91 = datetime.date(2026, 4, 2)  # age == 91: only jitter == 0 tips at the base window
+    stale_at_91 = [p for p in paths if _check_doc(p, 90, day_91, workspace_root=workspace_root) is not None]
+    assert 0 < len(stale_at_91) < len(paths), (
+        "a same-day cohort must partially, not wholly, tip stale at the un-jittered cutover day"
+    )
+
+    day_105 = datetime.date(2026, 4, 16)  # age == 105: past every possible 90+0..13 jitter
+    stale_at_105 = [p for p in paths if _check_doc(p, 90, day_105, workspace_root=workspace_root) is not None]
+    assert len(stale_at_105) == len(paths), "every cohort member must eventually tip once its own jitter elapses"
+
+
+def test_check_doc_jitter_uses_relative_path_not_absolute_worktree_prefix(tmp_path: Path) -> None:
+    """The same doc must jitter identically across per-slot .tabs/<N>/ absolute prefixes --
+    only the workspace-relative suffix may drive the offset."""
+    slot_a_root = tmp_path / "slot_a" / ".tabs" / "4"
+    slot_b_root = tmp_path / "slot_b" / ".tabs" / "26"
+    rel = "unified-trading-pm/codex/02-data/shared.md"
+    for root in (slot_a_root, slot_b_root):
+        (root / "unified-trading-pm" / "codex" / "02-data").mkdir(parents=True)
+    p_a = slot_a_root / rel
+    p_b = slot_b_root / rel
+    p_a.write_text("---\nlast_reviewed: 2026-01-01\n---\nbody\n", encoding="utf-8")
+    p_b.write_text("---\nlast_reviewed: 2026-01-01\n---\nbody\n", encoding="utf-8")
+
+    v_a = _check_doc(p_a, 90, datetime.date(2026, 4, 2), workspace_root=slot_a_root)
+    v_b = _check_doc(p_b, 90, datetime.date(2026, 4, 2), workspace_root=slot_b_root)
+    assert (v_a is None) == (v_b is None), "identical relative path must jitter identically regardless of slot"

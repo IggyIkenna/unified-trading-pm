@@ -360,8 +360,18 @@ source: >-
       `cross_cutting_consolidated_closeout_2026_07_25.md` is 733 lines (under the 1000-line hard cap). Text-only
       correction per Item N's narrow scope; did not execute the newly-unblocked archival/repoint follow-ups (left
       tracked in their own docs).
-- [ ] [CODE] P2. De-cohort the freshness thresholds (e.g. 90d + hash(path) % 14 jitter, or stagger last_reviewed on bulk
-      authoring) Source: `plans/active/issues/qg_ratchets_block_unrelated_ships_2026_08_12.md`
+- [x] ✅ [CODE] P2. De-cohort the freshness thresholds (e.g. 90d + hash(path) % 14 jitter, or stagger last_reviewed on
+      bulk authoring) Source: `plans/active/issues/qg_ratchets_block_unrelated_ships_2026_08_12.md` — unified-trading-pm
+      (this batch): `check_codex_doc_freshness.py`'s effective staleness window is now `staleness_days + jitter(path)`,
+      where `jitter` is a stable sha256-derived 0-13 day offset over the doc's WORKSPACE-RELATIVE path (never the
+      builtin `hash()`, which is `PYTHONHASHSEED`-salted and would move a doc's cutover day on every run/slot). Threaded
+      through `_check_parsed`/`_check_doc` via an optional `workspace_root` param (defaults to `None` → falls back to
+      `str(path)`, so existing direct-call unit tests keep working unmodified); `main()` passes the resolved `pm_root`
+      so the same doc jitters identically across every `.tabs/<N>/` slot worktree. Only changes WHEN the
+      already-advisory `stale` reason fires — the three blocking authoring reasons are untouched. 6 new unit tests
+      added, incl. a same-stamp 30-doc cohort proving a partial (not all-or-nothing) tip at the un-jittered cutover day
+      and full tip 13 days later, and a same-relative-path cross-worktree-prefix identity check.
+      `.venv/bin/python3 -m pytest` on the test file: 51/51 green.
 - [ ] [CODE] P2. Write up the correctness-ratchet-vs-hygiene-ratchet distinction (currently only in commit messages) as
       a doc Source: `plans/active/issues/qg_ratchets_block_unrelated_ships_2026_08_12.md`
 - [ ] [CODE] P2. Implement the safe-field allow-list + UnsafeConfigChangeError guard in
