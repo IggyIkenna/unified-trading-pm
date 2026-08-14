@@ -17,6 +17,7 @@ summary: |
   is the single execution vehicle: each todo cites its source doc, and each source doc's archival is gated on its todos
   here. LOCAL track — operator-driven, never dispatched.
 status: active
+archive_exempt: true
 nature: process
 asset_group: [ao] # corrected 2026-07-30 (/ag-closeout-audit ao) -- was [meta]; a real AO covering plan, not generic
 stage: [meta]
@@ -682,12 +683,18 @@ NOT AO and are deliberately out of scope here.
 
 ### Phase LAST — operator-sequenced
 
-- [ ] [BACKEND] P0. **Recovery-audit Layer-1 producer rewire (operator ruling B, "do it at last").** Stand up the
-      standalone recovery-audit-signoff producer (NOT an AO worker-role): consume PubSub `agent-recovery-actions`, POST
-      verdicts to the live `POST /safety-ops/signoffs`; unmock the DART feed; clean the stale `routes/agents.py:146`
-      comment. Only start once Phases 0–4 are done (the operator's sequencing). Source: doc #9. **Gate**: a real signoff
-      flows PubSub→producer→alerting-service→DART with the mock feed retired; codex Layer-1 banner replaced with the
-      live description.
+- [x] ✅ [BACKEND] P0. **Recovery-audit Layer-1 producer rewire (operator ruling B, "do it at last" — see
+      `/plans/archive/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`).** Stand up the standalone
+      recovery-audit-signoff producer (NOT an AO worker-role): consume PubSub `agent-recovery-actions`, POST verdicts to
+      the live `POST /safety-ops/signoffs`; unmock the DART feed; clean the stale `routes/agents.py:146` comment. Only
+      start once Phases 0–4 are done (the operator's sequencing). Source: doc #9
+      (`/plans/archive/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`). **Gate**: a real signoff flows
+      PubSub→producer→alerting-service→DART with the mock feed retired; codex Layer-1 banner replaced with the live
+      description. **SHIPPED — `deployment-service@1a8346db`** (`scripts/recovery/recovery_audit_signoff_producer.py` +
+      15 unit tests; `agent-recovery-actions`/`-sub` provisioned in `deployment-service/terraform/gcp/main.tf`; DART
+      `_mock_signoffs()` gated behind `is_mock_mode()` only), codex banner updated at `unified-trading-pm@522dec4ba7`.
+      Reconciled 2026-08-14 per `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 1 (evidence from
+      `ao_satellite_ao_dispatch_batch20_2026_08_13.md`).
 
 ### Phase 7 — INDEPENDENT AGENT-AUDIT FINDINGS (Claude, 2026-07-17) — ⚠️ NOT from the issue docs
 
@@ -963,6 +970,12 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
 - `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` — measured-verdict discipline for every gate above.
 
 ## Progress Log
+
+- **2026-08-14 (batch20-finalize reconciliation)**: this doc's last open todo (Recovery-audit Layer-1 producer rewire)
+  flipped `[x]` — the doc now has zero open todos. **Not archived here — `archive_exempt: true` set deliberately**: real
+  archival (6-step ritual + corpus referrer fixup) is explicit scope of
+  `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 2, a separate dispatched unit of work, not this
+  reconciliation pass. Drop `archive_exempt` when that todo runs.
 
 > **Line-cap remediation (2026-08-03, round 1)**: entries from this plan's 2026-07-17 authoring through the 2026-07-28
 > A7 ruling were extracted verbatim to

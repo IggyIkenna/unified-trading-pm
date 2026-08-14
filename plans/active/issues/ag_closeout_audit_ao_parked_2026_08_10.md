@@ -17,6 +17,7 @@ summary: >-
   actionable-and-uncovered work in the ENTIRE 72-doc corpus), and all 33 remaining orphaned-but-not-eligible docs
   catalogued with per-doc reasoning for the ledger.
 status: open
+archive_exempt: true
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -237,10 +238,21 @@ left only in ephemeral chat/return text.
       dispatchable. No operator action outstanding. Original text preserved for record. Was: **Review + approve
       `ao_satellite_ao_dispatch_batch19_2026_08_10.md`** (flip `status: draft` → `active` if agreed) — 2 AO-eligible
       items, conflict-checked against batch1-18, zero overlap found.
-- [ ] [LOCAL] P3. **Archive `safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`** via the standard
-      6-step ritual — all 3 todos done + unlocked, own Progress Log already flags it archival-eligible.
+- [x] ✅ [LOCAL] P3. **Archive `safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`** via the standard
+      6-step ritual — all 3 todos done + unlocked, own Progress Log already flags it archival-eligible. **SHIPPED —
+      `unified-trading-pm@627f6a3d47`** (real 6-step archival — 2 prior attempts had recorded the ritual as done in
+      prose but never actually landed the `git mv`, caught twice by `/plan-reconcile`; this session verified still-open
+      at the active path, then ran all 6 steps for real). Reconciled 2026-08-14 per
+      `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 1 (evidence from
+      `ao_satellite_ao_dispatch_batch20_2026_08_13.md`).
 
 ## Progress Log
+
+- **2026-08-14 (batch20-finalize reconciliation)**: this doc's last open todo (archive
+  `safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`) flipped `[x]` — the doc now has zero open
+  todos. **Not archived here — `archive_exempt: true` set deliberately**: real archival (6-step ritual + corpus referrer
+  fixup) is explicit scope of `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 2, a separate dispatched
+  unit of work, not this reconciliation pass. Drop `archive_exempt` when that todo runs.
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).

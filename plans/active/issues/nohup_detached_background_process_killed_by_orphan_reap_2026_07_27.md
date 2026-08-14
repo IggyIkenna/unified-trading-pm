@@ -166,21 +166,29 @@ Recovery: resumed again (idempotent via `--report`) + immediately began sending 
 - [ ] [SCRIPT] P3. Optional — investigate whether `agent-orchestrator/server/orphan_reap.py` should special-case a
       worker-shell-parented background process (recommended decision 2 above). Lower priority; the RULES.md/worker.md
       fix is the primary mitigation and now shipped; this remains open only as a defense-in-depth nice-to-have.
-- [ ] [SCRIPT] P3. Cross-check `plans/active/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`'s own
-      evidence (its logged death timestamps) against `journalctl | grep -E 'orphan_reap sweep|kill_session'` for the
+- [x] ✅ [SCRIPT] P3. Cross-check `plans/active/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`'s
+      own evidence (its logged death timestamps) against `journalctl | grep -E 'orphan_reap sweep|kill_session'` for the
       same windows — some or all of its "RAM exhaustion" occurrences may actually be this doc's `nohup`/`orphan_reap`
       bug (or the sibling `kill_session` heartbeat-staleness collateral-kill, see this doc's 2026-07-28 addendum above)
       misdiagnosed, not genuine memory pressure. If confirmed, correct that doc's root-cause framing rather than leaving
       two docs describing the same incidents under different causes. Repo: unified-trading-pm (investigation + doc
-      correction only, no code).
+      correction only, no code). **PARTIALLY CONFIRMED — `unified-trading-pm@fdddea5356`**: real `orphan_reap`/
+      `kill_session` events fired continuously fleet-wide on 2026-07-27, hitting every corroborating slot; slot-8's 4th
+      corroboration is a plausible misattribution (matches the 300-360s orphan_reap band + a distinctive
+      orphan-pytest-xdist fingerprint), but the original slot-12 incident's sub-300s deaths are code-confirmed NOT
+      orphan_reap (structurally impossible under the 300s floor), and slot-14/7/10's signatured failures leave a live
+      app-level error inconsistent with orphan_reap's silent SIGKILL. Addendum appended to the archived RAM-exhaustion
+      doc rather than rewriting its title. Reconciled 2026-08-14 per
+      `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 1 (evidence from
+      `ao_satellite_ao_dispatch_batch20_2026_08_13.md`).
 
       **na-eligibility-audit 2026-08-03**: the referenced doc is now archived/resolved
-                                                                                                              (`plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`, 2026-07-28) but via a
-                                                                                                              DIFFERENT fix mechanism (a qg-governor runtime abort-monitor watchdog + SIGTERM/SIGINT/SIGHUP signal traps) — its
-                                                                                                              own extensive multi-session Progress Log never performs the specific `orphan_reap`/`kill_session`-journalctl
-                                                                                                              cross-check this todo asks for; every one of its own recorded incidents cites `free -h` swings, load-average
-                                                                                                              spikes, OOM-killer signatures, or TYPE-CHECK/pytest timeouts, never an `orphan_reap sweep ... KILLED` log line.
-                                                                                                              This cross-check remains genuinely un-done, not closing here.
+                                                                                                                      (`plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`, 2026-07-28) but via a
+                                                                                                                      DIFFERENT fix mechanism (a qg-governor runtime abort-monitor watchdog + SIGTERM/SIGINT/SIGHUP signal traps) — its
+                                                                                                                      own extensive multi-session Progress Log never performs the specific `orphan_reap`/`kill_session`-journalctl
+                                                                                                                      cross-check this todo asks for; every one of its own recorded incidents cites `free -h` swings, load-average
+                                                                                                                      spikes, OOM-killer signatures, or TYPE-CHECK/pytest timeouts, never an `orphan_reap sweep ... KILLED` log line.
+                                                                                                                      This cross-check remains genuinely un-done, not closing here.
 
 ## Progress Log
 
