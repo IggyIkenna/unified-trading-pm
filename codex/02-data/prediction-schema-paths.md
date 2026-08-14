@@ -34,7 +34,7 @@ referenced_by:
     plans/epics/predictions_master.md,
   ]
 owner:
-last_reviewed: 2026-05-22
+last_reviewed: 2026-08-14
 code_refs:
 ---
 
@@ -70,16 +70,19 @@ A, deleted) + target (post-Plan A, current).
 
 ## Venues
 
-> **[DELTA 2026-05-22 — KALSHI API MIGRATION]** Kalshi migrated from `trading-api.kalshi.com` to
-> `api.elections.kalshi.com`. Phase 1 of `kalshi_api_migration_to_elections_subdomain_2026_05_20.md` shipped all 17 URL
-> update sites across 5 repos (UAC@`5729197`, IS@`79ad855`, MTDS@`28b84ce`, EXS@`8a3cbe48`, UI@`664c3992`). Phase 3
-> (integration verification) is `BLOCKED-CREDENTIALS` pending `api_keys_wallets_accounts_readiness_2026_05_10.md` 5.B.2.
-> Status: `BLOCKED-CREDENTIALS`.
+> **[DELTA 2026-08-14 — KALSHI LIVE, NOT CREDENTIALS-BLOCKED]** Kalshi migrated from `trading-api.kalshi.com` to
+> `api.elections.kalshi.com` (`kalshi_api_migration_to_elections_subdomain_2026_05_20.md`, all 17 URL sites across 5
+> repos). The `BLOCKED-CREDENTIALS` framing below is stale: live capture has been running well past `day=2026-07-27`
+> (`prediction_phase_ab_residuals_2026_07_24.md`), the dead-host regression (`trading-api.kalshi.com` reintroduced into
+> the smoke matrix) was fixed and regression-guarded (`e2e-testing@371ac1b`,
+> `kalshi_live_capture_regression_and_drift_2026_07_13.md`), and real `KALSHI:PREDICTION_MARKET:...` rows are landing in
+> the manifest. The actual current gate is an **operator ruling on live-order verification** (not a credentials absence)
+> — see `prediction_phase_ab_residuals_2026_07_24.md`.
 
-| Venue      | API Auth      | API Base URL (canonical)          | Data Sources                                                              |
-| ---------- | ------------- | --------------------------------- | ------------------------------------------------------------------------- |
-| POLYMARKET | None (public) | `gamma-api.polymarket.com` (meta) | Gamma API (metadata), CLOB API (books/trades), Data API (fills)           |
-| KALSHI     | API key       | `api.elections.kalshi.com`        | REST API (markets, trades, books) — BLOCKED-CREDENTIALS (see delta above) |
+| Venue      | API Auth      | API Base URL (canonical)          | Data Sources                                                                                 |
+| ---------- | ------------- | --------------------------------- | -------------------------------------------------------------------------------------------- |
+| POLYMARKET | None (public) | `gamma-api.polymarket.com` (meta) | Gamma API (metadata), CLOB API (books/trades), Data API (fills)                              |
+| KALSHI     | API key       | `api.elections.kalshi.com`        | REST API (markets, trades, books) — LIVE, gated on live-order-verification (see delta above) |
 
 ## Sub-Categories
 

@@ -97,7 +97,28 @@ codex autonomously.
       `PRICE::BNB::UP_DOWN::2026-07-17::DIR`-shaped samples into ONE documented canonical form (or confirm they
       legitimately coexist for a stated reason, e.g. schema versioning — and document that instead). Update both codex
       docs to match once ruled.
-- [ ] [OPERATOR] P2. **Confirm Kalshi's current actual capture/gate state** and update both codex docs'
-      `BLOCKED-CREDENTIALS` framing to reflect it (per `prediction_phase_ab_residuals_2026_07_24.md`, capture is running
-      through `day=2026-07-27`; the real residual gate is an operator ruling on live-order verification). Bump
-      `last_reviewed` on both docs once corrected.
+- [x] ✅ [OPERATOR] P2. **DONE 2026-08-14 (interactive session, operator confirmed).** Updated both codex docs'
+      `BLOCKED-CREDENTIALS` delta banners + venue table row to reflect actual state (live capture running past
+      `day=2026-07-27`, dead-host bug fixed and regression-guarded `e2e-testing@371ac1b`, real `KALSHI:...` rows
+      landing; actual gate = operator ruling on live-order verification, not credentials absence). `last_reviewed`
+      bumped to 2026-08-14 on both `/codex/02-data/prediction-schema-paths.md` and
+      `/codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md`.
+
+## Progress Log
+
+- 2026-08-14 (interactive session): investigated Finding 1 (instrument-ID drift) before ruling — found
+  `build_canonical_instrument_id()`
+  (`unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py:1027`) is the
+  ALREADY-OPERATOR-RULED (`instrument_id_format_canonicalization_2026_07_08.md`) single dispatch entry point: prediction
+  → `VENUE:TYPE:SYMBOL` (matches the live `KALSHI:PREDICTION_MARKET:KXBNB15M-...` sample), sports →
+  `LEAGUE:MATCHUP:DATE` (deliberately different, sports has no clean TYPE/SYMBOL concept). Separately, the
+  `PRICE::{ASSET}::{BET_TYPE}::{SETTLEMENT_KEY}::{STRIKE_TOKEN}` shape is `canonical_event_id`, NOT `instrument_id` — a
+  different field entirely, built by
+  `unified-api-contracts/unified_api_contracts/canonical/domain/predictions/cross_venue_mapping.py` specifically to
+  answer "is this Kalshi market the same individual contract as that Polymarket market", and it already supports sports
+  matching via an optional `titles` map. So the doc's "3 incompatible formats" framing conflates two different fields
+  (instrument_id vs. canonical_event_id) that were never meant to be the same shape. Fix-in-place: update
+  `prediction-markets.md`'s G2 marker and `prediction-schema-paths.md`'s canonical-form section to (1) point
+  `instrument_id` at the single dispatcher's real output shape, (2) document `canonical_event_id` as the separate
+  cross-venue/cross-asset-group matching key. Operator instrument-ID todo left open pending that doc rewrite (not done
+  in this entry — a real edit, not just a ruling restatement).

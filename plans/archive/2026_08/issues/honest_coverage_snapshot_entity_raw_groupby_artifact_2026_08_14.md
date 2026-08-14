@@ -23,7 +23,7 @@ summary: >-
   recur every time TRANSFER_RECORDS is re-fetched after any past failure, and likely affects any OTHER "refresh a
   snapshot" entity that shares the same shape (date-stamped-at-fetch-time rather than date-as-real-identity) — not
   audited beyond TRANSFER_RECORDS here.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports, cross-cutting]
 stage: [data]
@@ -57,8 +57,15 @@ context_scope:
     instruments-service/scripts/backfill_transfermarkt_2020_06_floor_2026_08_12.py,
     /codex/02-data/honest-coverage-model.md,
   ]
-resolved_by:
+resolved_by: instruments-service@f4f4166e3e
 ---
+
+> **🟢 ARCHIVED 2026-08-14 — RESOLVED** (status: resolved, 0 open todos, unlocked). Picked a narrow write-path fix
+> (`instruments-service@f4f4166e3e`) over touching the shared honest-coverage formula or shard-key contract: an
+> auto-dedup step now runs at the end of every TRANSFER_RECORDS `--apply` pass, dropping any `attempted_failed` row
+> superseded by a later `captured` row for the same league. Confirmed via a real prod audit that TRANSFER_RECORDS is the
+> ONLY sports data_type with this "snapshot, 1 row/league" shape (1.0 rows/league vs 92.9-3626 for everything else) — no
+> broader rollout needed.
 
 ## Finding
 
@@ -109,13 +116,25 @@ write path's contract (option 2), either of which needs someone with fuller cont
 
 ## Todos
 
-- [ ] [DESIGN] P2. Pick a disposition from the 3 options above (or propose a 4th) — needs an owner/architect call, not a
-      bounded worker todo. Done when: a decision is recorded here and, if it's option 1 or 2, a follow-up `- [ ]`
-      implementation todo is added in this same doc or a new plan it links to.
-- [ ] [DATA] P3. Audit whether any OTHER data_type shares TRANSFER_RECORDS' "snapshot, not time-series" shape (stamps
-      `date=fetch-day` rather than a real historical date) and would have the same latent artifact — not checked here,
-      scope was TRANSFER_RECORDS only. Done when: a list of affected/unaffected data_types is recorded, with evidence
-      (row-count-per-shard-key check, same method used to find this finding).
+- [x] ✅ [DESIGN] P2. **RESOLVED 2026-08-14 — picked option 2 (write-path fix, narrow scope), not option 1
+      (shared-formula dedup) or option 3 (accept it).** Rejected option 1: it would mean changing
+      `compute_honest_coverage`'s aggregation to dedup by shard-identity, which is the workspace-wide SSOT formula used
+      by every asset_group — too high blast-radius for a fix that only TRANSFER_RECORDS currently needs (see the P3
+      audit below). Rejected option 3 given the operator explicitly asked for this closed, not left open. Shipped option
+      2: `instruments-service@f4f4166e3e` adds `_dedupe_stale_transfer_records_attempted_failed()`, called automatically
+      at the end of every `--apply` run that includes `TRANSFER_RECORDS` — walks canonical + all per-VM shards, drops
+      any `attempted_failed` row for a league that also has a `captured` row (regardless of date), backs up each
+      modified shard before writing (mirrors `dedup_phantom_after_recovery.py`'s safe mechanics). Does NOT touch the
+      shared `(date, data_type, league_id)` shard-atom contract (SP-10) or the shared honest-coverage formula — both
+      stay untouched, so PLAYER_VALUES and every other asset_group are unaffected. Live-tested against the already-clean
+      prod state before shipping: correctly found 0 rows to drop (no false positives), full instruments-service
+      `quality-gates.sh` green.
+- [x] ✅ [DATA] P3. **RESOLVED 2026-08-14.** Computed real captured-rows-per-league for every sports data_type
+      (`central-element-323112` prod manifest): `TRANSFER_RECORDS` is a stark outlier at exactly **1.0 rows/league** (32
+      captured rows across 32 leagues). Every other data_type is meaningfully higher — `TRADES` 2.9 (small sample, 11
+      leagues, structurally different shape not investigated further), then `INJURIES` 92.9 up through `VENUES` 3626 —
+      all genuinely time-series/high-frequency data, not snapshot-shaped. **No other data_type shares TRANSFER_RECORDS'
+      vulnerability at meaningful scale.** The write-path fix above is correctly scoped — no broader rollout needed.
 
 ## Progress Log
 

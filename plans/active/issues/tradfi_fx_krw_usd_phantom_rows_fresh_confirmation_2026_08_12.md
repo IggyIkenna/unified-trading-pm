@@ -1,16 +1,24 @@
 ---
 doc_type: issue
-title: "KRW/USD manifest rows are 97% phantom — fresh confirmation, matches the known FX-venue-wide defect class"
+title:
+  "KRW/USD manifest rows are NOT phantom — CORRECTED 2026-08-14: real data exists, mislabeled pipeline_mode (batch_yahoo
+  claimed, batch_databento actual)"
 summary: >-
-  While diagnosing the tradfi MVP "KRW/USD" backfill cell (per tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md),
-  a stratified sample of 35 `FX:SPOT_PAIR:KRW-USD` manifest rows marked `capture_status=captured` across 2020-2026 found
-  only 1/35 (the most recent) actually has a backing GCS object — the other 34 are phantom manifest rows (claim
-  `captured`, no file exists; confirmed absent for e.g. day=2020-01-02). This matches the exact defect class documented
-  in the ARCHIVED `plans/archive/issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md` (1,812 corpus-wide
-  phantom rows found 2026-08-03, gated on a not-yet-executed design/apply remediation plan) — this is a fresh, dated
-  re-confirmation on a specific pair, not a new discovery, filed as its own tracked todo per this workspace's "every
-  deferral is a `- [ ]` todo, never prose" hard rule (the finding was reported only in chat/an agent's final summary
-  before this doc, at risk of being lost).
+  ORIGINAL CLAIM (2026-08-12, WRONG, kept below for the record): a stratified sample of 35 `FX:SPOT_PAIR:KRW-USD`
+  manifest rows marked `capture_status=captured` found only 1/35 with a backing GCS object under
+  `pipeline_mode=batch_yahoo` (the manifest's own claimed prefix) — the other 34 looked phantom. **This reproduced the
+  exact wrong-vocabulary-probe mistake the archived
+  `plans/archive/issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md` investigation already caught and
+  documented on 2026-08-04**: it checked only the manifest's claimed `pipeline_mode=batch_yahoo` prefix and never the
+  second, previously-uninspected `pipeline_mode=batch_databento` prefix where real (Yahoo-sourced, mislabeled-path)
+  content actually lives. A live re-check 2026-08-14 against the FULL 2,023-row `FX:SPOT_PAIR:KRW-USD` captured
+  population (60-date stratified sample) found **0 genuinely phantom dates** — every single sampled date has a real
+  backing object under `pipeline_mode=batch_databento`, `source=yahoo` confirmed genuine Yahoo content, zero under the
+  manifest's claimed `batch_yahoo`. The real, narrower defect: all 2,023 rows carry a **mislabeled `pipeline_mode`**
+  (manifest says `batch_yahoo`, real object path says `batch_databento`) — a manifest/reality mismatch that would make
+  any reader querying strictly by the manifest's claimed prefix find nothing, even though the data genuinely exists and
+  is genuinely 100% Yahoo-sourced. Needs a `pipeline_mode` RE-STAMP (mirroring the already-proven disposition the
+  archived doc's superseding fix used for the blank-`instrument_id` population), never a recapture/delete.
 status: open
 nature: issue
 asset_group: [tradfi]
@@ -41,9 +49,23 @@ context_scope:
   ]
 ---
 
-# KRW/USD manifest rows are 97% phantom — fresh confirmation
+# KRW/USD manifest rows: mislabeled pipeline_mode, NOT phantom (corrected 2026-08-14)
 
-## What was found (2026-08-12)
+## CORRECTED 2026-08-14 — the "97% phantom" premise does not hold
+
+> **CORRECTION**, same shape as the archived doc's own 2026-08-04 self-correction: the original 2026-08-12 check below
+> probed only `pipeline_mode=batch_yahoo` (the manifest's own claimed value) and never the second,
+> previously-uninspected `pipeline_mode=batch_databento` prefix. A live re-check of the full 2,023-row
+> `FX:SPOT_PAIR:KRW-USD` `captured` population (60-date stratified sample, both prefixes) found **0 genuinely phantom
+> dates** — every sampled date has a real backing object, 100% of the time under `batch_databento`, 0% under the
+> manifest's claimed `batch_yahoo`. All 2,023 candidate rows carry `pipeline_mode=batch_yahoo` + `source=yahoo` in the
+> manifest despite their real content living under a `batch_databento` path — a genuine mislabel, but not data loss: the
+> content is real, and per `source=yahoo` confirmed genuinely 100% Yahoo-sourced (matches the operator's standing
+> requirement that KRW/USD stay 100% Yahoo — already true architecturally too:
+> `TickDataHandler._VENUE_FIXED_SOURCE_VENUES` hardcodes FX to the Yahoo fetch path unconditionally, `--source` is never
+> consulted for this venue).
+
+## What the original (WRONG) 2026-08-12 check found
 
 - `launch-tradfi-bf-fx-ohlcv-24h.sh` has no per-pair scoping flag — it always fetches the entire `FX_SPOT_PAIRS`
   universe (12 pairs including KRW-USD) in one run.
@@ -69,11 +91,28 @@ archived doc's remediation plan should treat this KRW/USD sample as corroboratin
 
 ## Todos
 
-- [ ] [DATA] P2. Fold this fresh KRW/USD confirmation into the archived remediation plan's execution — do NOT blind
-      `--force-recapture` across all 12 FX pairs × 7 year-shards (that would re-walk real, already-correct data too,
-      exactly the "whole-corpus refetch" class `vm-launcher-runbook.md`'s own HARD RULE says to check for a surgical fix
-      on first). A surgical, phantom-row-targeted re-capture (only the specific `(pair, date)` cells confirmed phantom)
-      is the correct shape, mirroring the archived doc's own design intent.
-- [ ] [OPERATOR] P3. Decide whether to fold this into the archived doc's plan now, or defer until a broader FX-pair pass
-      is scheduled — flagged, not resolved, per the operator's own "fold into existing plan or defer?" framing when this
-      was first reported.
+- [x] ✅ [OPERATOR] P3. **ANSWERED 2026-08-14: fold in now, not deferred** — operator confirmed, adding the standing
+      requirement that KRW/USD stay 100% Yahoo-sourced (already true architecturally, see correction above — no code
+      change needed for that half).
+- [ ] [DATA] P2. **REVISED disposition (was: surgical recapture; now: pipeline_mode re-stamp)** — do NOT recapture/fetch
+      anything (the data already exists, confirmed real). Build a manifest-only CAS re-stamp for the 2,023
+      `FX:SPOT_PAIR:KRW-USD` `captured` rows: `pipeline_mode` `batch_yahoo` → `batch_databento` (matching the real
+      object path each row's content lives under), mirroring the exact pattern + safety rigor (snapshot-before-write,
+      dry-run report, self-verify after) already proven in
+      `market-tick-data-service/scripts/quarantine_tradfi_fx_phantom_manifest_rows_2026_08_04.py` and its sibling
+      re-stamp script for the archived doc's blank-`instrument_id` population. Verify EVERY one of the 2,023 rows (not
+      just the 60-date sample) resolves to real `batch_databento` backing before writing anything.
+- [ ] [DATA] P3. Once the KRW/USD re-stamp is verified safe, check whether the same `batch_yahoo`-claimed/
+      `batch_databento`-actual mislabel affects the other 11 FX pairs too (this doc only sampled KRW-USD) — if so, widen
+      the re-stamp to the full FX venue rather than re-discovering this pair-by-pair.
+
+## Progress Log
+
+- 2026-08-12 — Filed on a single-prefix (`pipeline_mode=batch_yahoo`) probe; premise later found wrong.
+- 2026-08-14 — Operator decision: fold into remediation now, KRW/USD must stay 100% Yahoo (already true
+  architecturally). Re-checking against both known FX prefixes (mirroring the archived doc's own 2026-08-04
+  self-correction) found the "phantom" premise false — 0/60 sampled dates genuinely phantom, 100% resolve under
+  `pipeline_mode=batch_databento`. Real defect is a manifest `pipeline_mode` mislabel (2,023 rows), not missing data.
+  Corrected the doc's title/summary/todos in place rather than filing a second doc, since the original claim never
+  shipped anything and would only mislead a future reader. Next: build + dry-run the re-stamp script (see revised P2
+  todo), verify all 2,023 rows before any write.
