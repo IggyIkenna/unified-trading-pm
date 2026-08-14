@@ -308,12 +308,14 @@ than proceeding.
       `SPORTS_IS_DATA_TYPE_LOWERCASE_FORM`'s and `canonical_sports_is_data_type()`'s own docstrings in
       `unified_api_contracts/canonical/domain/sports/league_data.py` still said "not yet wired into live enumeration" —
       stale since `f2586ada09` wired it. Corrected — `unified-api-contracts@4b8529e6a7`.
-- [ ] [SCRIPT] P2. **Delete the two one-off migration scripts** now that the physical re-stamp is verified complete (0
+- [x] [SCRIPT] P2. **Delete the two one-off migration scripts** now that the physical re-stamp is verified complete (0
       uppercase-token rows remaining, confirmed twice):
       `instruments-service/scripts/restamp_sports_19token_lowercase_2026_08_14.py` and
       `instruments-service/scripts/census_sports_19token_lowercase_scope_2026_08_14.py`. Both are lifecycle-marked
       one-offs (per `/codex/06-coding-standards/script-homes.md`) whose job is done; keep them only until this todo is
-      picked up, then delete via quickmerge.
+      picked up, then delete via quickmerge. ✅ Deleted (no external consumers — grep confirmed the only references were
+      self-referential header/docstring comments in the restamp script itself); QG green
+      (`0b1adeaf44736353d9d733ad28160b2953d51cb7`) before commit — `instruments-service@c1cc730772`.
 - [x] ✅ [DATA] P0. **Draft + locally validate the 19-token re-stamp's step 1 (manifest relabel script) — NOT
       execution.** Per operator interim guidance on BLK-20f1ba56 ("write + locally validate, stop short of VM
       launch/live execution"): shipped `instruments-service@5ec75509`
