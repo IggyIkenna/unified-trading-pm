@@ -1033,3 +1033,7 @@ against the reproduction script.
   VENUE_FETCH_FAILED (~93k), none schema-contract. Re-fire = the filed dedup-inert gap
   (`dp_escalation_dispatch_dedup_inert_monitor_host_no_pm_clone_2026_08_13.md`, [CODE] P2, Option A ruled), not a data
   regression. No code change, no GCS/manifest write, no VM launch (PM plan-doc append only).**
+- **2026-08-14 (data_pipeline_failure escalation worker, agt-8ec9c8, slot 11) — SAME escalation_id as slot-5 directly
+  above; fan-out duplicate, no code fix. All 11 fix commits re-verified ancestors of origin/live-defi-rollout; no repeat
+  GCS read (byte-identical 7,806/208,624 reading already investigated). Doc over 1000-line cap — 1-line close-out
+  only.**

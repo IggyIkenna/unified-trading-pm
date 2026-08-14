@@ -113,6 +113,20 @@ until the next sweep) and is a stopgap, not the root fix.
       classify/route/emit sequential to preserve the shared-state discipline (findings sink, `_EMITTED_THIS_SWEEP`,
       RESOLVED bookend). Fallback if not immediately shippable: reduce cron cadence to match sweep duration (stopgap
       only, trades detection latency). Repo: deployment-service.
+- [ ] [BACKEND] P1. **ADDED 2026-08-14 (slot 15, infra live-verify)** — the shipped `ThreadPoolExecutor` fix
+      (`deployment-service@069ced1412`) is LIVE but empirically NOT sufficient: 3 consecutive hourly executions on 08-13
+      (21:27, 22:00, 23:00 — all AFTER the fix landed) each still hit the full 1800s task-timeout, the same failure mode
+      as pre-fix. Live logs from a 4th execution (08-14 00:00) show per-VM classification lines spaced ~30-90s apart
+      (not the tight clustering expected from an effective 32-worker pool) plus at least one
+      `download_bytes(...) exceeded the 30s bounded-call timeout` stall. Investigate why parallelizing the READ phase
+      didn't collapse wall-clock: candidates — (a) the per-VM call chain (exit-code read + captured read +
+      PREEMPTED-marker read + run.log download) may still be largely SEQUENTIAL _within_ each worker thread rather than
+      genuinely fanned out, (b) the terminated-VM classify/route/emit stage (deliberately kept sequential) may itself
+      now dominate wall-clock once the read phase is faster, (c) the fleet may have grown past what
+      `_SWEEP_IO_MAX_WORKERS=32` was sized for, or (d) GCS API throttling under 32 concurrent readers is itself
+      producing the observed 30s stalls. Verify with a timed/profiled sweep run (log phase boundaries) before attempting
+      another fix. Full evidence in `/plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md` Progress Log,
+      2026-08-14 entry. Repo: deployment-service.
 
 ## Related
 
@@ -124,6 +138,12 @@ until the next sweep) and is a stopgap, not the root fix.
   launcher-host exemption), and the DP_SOURCE_RATE_LIMITED cooldown.
 
 ## Progress Log
+
+- 2026-08-14 (slot 15, infra): While live-verifying the sibling OOM doc's gated todo, found the shipped parallelize fix
+  (`069ced1412`) is live but NOT resolving the timeout — 3 consecutive post-fix hourly executions on 08-13 (21:27,
+  22:00, 23:00) all still hit the full 1800s timeout, identical to pre-fix behavior. Added a new P1 investigate/fix todo
+  above; did not attempt the fix myself (backend craft scope, out of bounds for this P2 verify-only task). Full evidence
+  in the sibling doc's 2026-08-14 Progress Log entry.
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).

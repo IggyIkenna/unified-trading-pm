@@ -134,7 +134,7 @@ Wrapped existing safety actions (don't duplicate — wrap the entry point):
 >   data; `_mock_signoffs()` only in `CLOUD_MOCK_MODE=true`). The producer's verdict is a **closed deterministic rule
 >   set** (FAILED/BLOCKED_BY_LOOP_DETECTOR/verification-incomplete → ESCALATE_TO_HUMAN; verified-success → APPROVED;
 >   success-no-verification → APPROVED_WITH_NOTES); it does NOT emit DISPUTE_AUTOMATED_ACTION (that judgment is left to
->   a future LLM/human pass). Tracking: `plans/active/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`. The
+>   a future LLM/human pass). Tracking: `plans/archive/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`. The
 >   description below is the design contract.
 
 Design owner: `plans/archive/ai_recovery_audit_signoff_agent_2026_05_23.plan.md` (archived). Prior agent template

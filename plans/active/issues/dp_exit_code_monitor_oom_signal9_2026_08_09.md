@@ -137,6 +137,27 @@ A silently-OOMing exit-code monitor never reaches its sentinel write (`_gcs.writ
 
 ## Progress Log
 
+- 2026-08-14 (slot 15, infra): Todo 3 (live-verify sentinel after resume) — re-checked. The cron is now **ENABLED**
+  (`gcloud scheduler jobs describe uts-prod-dp-exit-code-monitor-cron`: `state=ENABLED`, `schedule=0 * * * *` hourly) —
+  resumed by someone else since slot 29's 08-13 check; not resumed by this session. The sibling doc's P1
+  `ThreadPoolExecutor` parallelize fix (`deployment-service@069ced1412`) IS present at current HEAD (confirmed
+  `grep -n ThreadPoolExecutor deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py` → 3 hits, incl. the
+  pool construction). Signal-9/OOM is confirmed genuinely absent: `gcloud logging read` for
+  `resource.labels.job_name="uts-prod-dp-exit-code-monitor" AND textPayload:"signal 9"` over the last 6h returns ZERO
+  hits. **But the verification target itself still FAILS**: `gcloud run jobs executions list` shows 3 consecutive full
+  executions on 08-13 (21:27–21:57, 22:00–22:30, 23:00–23:30, all AFTER the parallelize fix shipped the same day) each
+  hit `"The configured timeout was reached"` at the full 1800s — the identical failure mode as before the fix. A 4th
+  execution (`8n77n`, started 00:00:05 on 08-14) was still running past the 15-min mark at last check, live logs showing
+  per-VM classification lines spaced ~30-90s apart (not the tight clustering you'd expect from a genuinely effective
+  32-worker thread pool), including a `download_bytes(...) exceeded the 30s bounded-call timeout` stall on one VM's
+  run.log read. **Conclusion: the parallelize fix, though shipped and live, has NOT brought the sweep under its 1800s
+  timeout in production — the sentinel is still not advancing cleanly.** Leaving this todo UNCHECKED (the
+  ≥3-consecutive-clean-cycles target is not met) and did not further touch the cron/job config myself (investigation
+  only, no infra state changed this session). Filed a follow-up todo + Progress Log entry in
+  `/plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md` (the sweep-duration SSOT) since its
+  shipped P1 fix is now empirically disproven-insufficient — that's the right place for the next fix attempt, not this
+  P2 verify-only todo.
+
 - 2026-08-13 (slot 29): Todo 3 (live-verify sentinel after resume) — checked whether it's safe to resume yet. Live
   `gcloud scheduler jobs list --location=asia-northeast1` confirms `uts-prod-dp-exit-code-monitor-cron` is still
   **PAUSED**, schedule already edited to `0 * * * *` (hourly — the "reduce cadence" fallback from

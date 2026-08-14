@@ -14,7 +14,7 @@ summary: |
   directly contradict each other on a load-bearing recovery/kill-switch component, and the code sides with "removed."
   This is a governance/safety-domain SSOT contradiction, not a cosmetic drift — flagged to the operator per the
   findings-triage HARD RULE. Read-only investigation; no code or contract changed.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -38,7 +38,7 @@ source:
   - agent-orchestrator/server/prompts.py (NEVER_LAUNCH), agent-orchestrator/agents/ (recovery-audit.md absent)
 assigned_vm: NA
 execution_scope: local-only
-resolved_by:
+resolved_by: deployment-service@1a8346db
 locked_by:
 locked_since:
 estimate_class: design
@@ -58,6 +58,10 @@ context_scope:
     unified-api-contracts/unified_api_contracts/incident.py,
   ]
 ---
+
+> **🗄️ RESOLVED + ARCHIVED 2026-08-14** — the sole open todo (re-home the producer, Option B) is DONE:
+> `deployment-service@1a8346db` + codex banner `unified-trading-pm@522dec4ba7`. See the 2026-08-14 Progress Log entry
+> for the verification detail. No open todos remain.
 
 > **🟢 EXECUTION CONSOLIDATED 2026-07-17** — this doc's open items are now tracked and executed via
 > [`ao_open_issues_consolidated_close_out_2026_07_17`](../ao_open_issues_consolidated_close_out_2026_07_17.md)
@@ -145,10 +149,11 @@ function.
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Re-home the recovery-audit-signoff producer (Option B)** — stand up a standalone producer (NOT an
-      AO worker-role) that consumes PubSub `agent-recovery-actions`, decides a `SignoffVerdict`, and POSTs to the
+- [x] ✅ [BACKEND] P2. **Re-home the recovery-audit-signoff producer (Option B)** — stand up a standalone producer (NOT
+      an AO worker-role) that consumes PubSub `agent-recovery-actions`, decides a `SignoffVerdict`, and POSTs to the
       already-live `POST /safety-ops/signoffs`; scheduled LAST, after the in-flight AO dispatch-correctness work (see
-      "Operator ruling 2026-07-16" above).
+      this doc's own "Operator ruling 2026-07-16" Progress Log entry below,
+      `ao_recovery_audit_layer1_deleted_2026_07_15.md`). — `deployment-service@1a8346db` (see Progress Log 2026-08-14).
 
 ## Progress Log
 
@@ -210,3 +215,19 @@ function.
   deliberately sequenced LAST after AO dispatch-correctness work) remains current and un-retired — confirmed distinct
   from the unrelated same-label "Option B" semver-reconciler retirement (round11 already ruled this out). Sole todo
   remains fully claimed by `ao_open_issues_consolidated_close_out_2026_07_17.md`'s Phase-LAST todo. Not re-litigated.
+- **2026-08-14 (slot-10)**: dispatched via `ao_satellite_ao_dispatch_batch20_2026_08_13.md`'s todo citing this doc.
+  Investigation found the producer was ALREADY shipped earlier the same day by a different slot
+  (`deployment-service@1a8346db` "feat(recovery): standalone Layer-1 recovery-audit-signoff producer" — 346-line
+  `scripts/recovery/recovery_audit_signoff_producer.py` + 15 unit tests + `agent-recovery-actions`/`-sub` topic
+  provisioned in `terraform/gcp/main.tf`) with the codex Layer-1 banner already updated
+  (`unified-trading-pm@522dec4ba7`), but neither this doc's own todo nor the two plan checkboxes citing it had been
+  flipped. Verified all 4 gate sub-asks live before flipping: (1) producer consumes PubSub `agent-recovery-actions` via
+  a closed deterministic verdict rule set (FAILED/BLOCKED_BY_LOOP_DETECTOR→ESCALATE_TO_HUMAN, verified-success→APPROVED,
+  no-verification→APPROVED_WITH_NOTES; DISPUTE_AUTOMATED_ACTION deliberately never auto-emitted — left to a future
+  LLM/human pass, exactly as this doc's Option B scoped it); (2) POSTs to the live alerting-service
+  `POST /safety-ops/signoffs`; (3) DART's `llm-audit-verdicts-feed.tsx` / `safety_ops.py` `_mock_signoffs()` only
+  returns under `is_mock_mode()` — real producer data otherwise; (4) `agent-orchestrator/server/routes/agents.py:146`'s
+  comment now accurately documents the AO-role removal + standalone-producer replacement (no longer stale). Flipped this
+  doc's todo + the two plan checkboxes (`ao_open_issues_consolidated_close_out_2026_07_17.md` Phase-LAST,
+  `ao_satellite_ao_dispatch_batch20_2026_08_13.md`). No new code shipped — this session's work is verification +
+  checkbox reconciliation only.

@@ -66,15 +66,6 @@ Required:
 
 Owner: UIC + features-cross-instrument. Consumed by: prediction-arb strategy + feature calculators.
 
-## G2 — Instrument ID convention
-
-Canonical `{VENUE}:{MARKET_TYPE}:{EVENT_SLUG}@{OUTCOME}` pattern (see
-[`prediction-markets.md` §Instrument ID Convention](../architecture-v2/cross-cutting/prediction-markets.md#instrument-id-convention))
-is not in UIC's instrument ID rules. `CanonicalPredictionMarket` in `prediction_mapping.py` generates deterministic IDs
-that don't match the standard instrument-key format.
-
-Required: add the pattern to `unified-config-interface` instrument-ID rules; back-fill existing prediction-market IDs.
-
 ## G3 — Semantic market matching
 
 "Bitcoin above $95k on March 20" and "BTC price exceeds 95000 by end of March 20" are the same market. No grouping

@@ -96,6 +96,28 @@ PREDICTION
 
 ## Canonical Instrument ID Format
 
+> **[DELTA 2026-08-14 — this table is SUPERSEDED, not real]** The `POLYMARKET::{...}` formats below were never
+> implemented as written — they predate the 2026-07-08 operator ruling
+> (`instrument_id_format_canonicalization_2026_07_08.md`) that made `build_canonical_instrument_id()`
+> (`unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py:1027`) the single dispatch
+> entry point for EVERY asset group. Two real, distinct fields actually exist and are NOT interchangeable:
+>
+> - **`instrument_id`** (per-venue, per-market, covers every prediction market that exists) — dispatched via
+>   `build_canonical_instrument_id(asset_group="prediction", ...)` → `VENUE:TYPE:SYMBOL`, e.g.
+>   `KALSHI:PREDICTION_MARKET:KXBNB15M-26JUL171000-00`. Same shape as CeFi/DeFi/TradFi (sports is the sole deliberate
+>   exception, `LEAGUE:MATCHUP:DATE` — no clean TYPE/SYMBOL concept).
+> - **`canonical_event_id`** (a cross-venue MATCHING key, human-readable, NOT a substitute for `instrument_id`) —
+>   populated by `PredictionMarketCrossVenueMapping`
+>   (`unified-api-contracts/unified_api_contracts/canonical/domain/prediction/prediction_mapping.py:55`), e.g.
+>   `"EPL:ARS-v-CHE:20260322"` or `"BTC:ABOVE:95000:20260321T1400Z"`. This is a bridge row, not a rewrite of
+>   `instrument_id`: it stores each venue's native id side-by-side (`kalshi_market_ticker`, `polymarket_condition_id`)
+>   AND, for sports/football specifically, `odds_api_event_id` + `api_football_fixture_id` — so a football prediction
+>   market and its Odds-API/api-football sports fixture join through the SAME `canonical_event_id`. Built by
+>   `unified-api-contracts/unified_api_contracts/canonical/domain/predictions/cross_venue_mapping.py`.
+>
+> The sub-category table above (CRYPTO/MACRO/FOOTBALL/SPORTS_OTHER) is still accurate; only this ID-format table below
+> it was aspirational and never shipped.
+
 | Sub-category     | Format                                                  | Example                                    |
 | ---------------- | ------------------------------------------------------- | ------------------------------------------ |
 | Crypto up/down   | `POLYMARKET::UP_DOWN::{ASSET}::{TF}::{WINDOW_END_TS}`   | `POLYMARKET::UP_DOWN::BTC::5M::1774230900` |

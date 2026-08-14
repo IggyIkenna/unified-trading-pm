@@ -14,7 +14,7 @@ summary: >-
   PRICE::BNB::UP_DOWN::2026-07-17::DIR). (2) Both codex docs' Kalshi framing (BLOCKED-CREDENTIALS, last_reviewed
   2026-05-22) reads stale — live capture has been running through day=2026-07-27 per prediction_phase_ab_residuals, and
   the actual residual gate is an operator ruling on live-order verification, not a credentials absence.
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [meta]
@@ -42,8 +42,9 @@ estimate_calibrated_ai_days: 1.0
 drift_direction: advance-code
 parent_epic: predictions_master
 depends_on: []
-resolved_by:
+resolved_by: /unified-trading-pm@98c5d710dc + interactive-session-2026-08-14-doc-rewrite
 locked_by:
+archived: "2026-08-14"
 last_updated: 2026-08-13
 context_scope:
   [
@@ -52,6 +53,13 @@ context_scope:
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
   ]
 ---
+
+> **ARCHIVED 2026-08-14** — both findings resolved via direct codex rewrite (interactive session): Finding 1
+> (instrument-ID drift) was a false conflict between two different fields (`instrument_id` vs `canonical_event_id`), not
+> a format to pick — both codex docs rewritten to describe the real single-dispatcher `instrument_id` and the separate
+> `canonical_event_id` cross-venue/sports matching key; G2 deleted from the codification-gaps register. Finding 2 (stale
+> Kalshi `BLOCKED-CREDENTIALS` framing) corrected on both docs, `last_reviewed` bumped to 2026-08-14. Shipped
+> `unified-trading-pm@98c5d710dc` (Finding 2) + a follow-up commit (Finding 1 + this archival).
 
 # Prediction-market codex alignment: two parked findings
 
@@ -91,12 +99,15 @@ codex autonomously.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Rule which instrument-ID format is canonical** for prediction markets — reconcile
-      `prediction-markets.md`'s `{VENUE}:{MARKET_TYPE}:{EVENT_SLUG}@{OUTCOME}` (self-flagged G2, unresolved),
-      `prediction-schema-paths.md`'s `POLYMARKET::UP_DOWN::{ASSET}::{TF}::{WINDOW_END_TS}`, and the live
-      `PRICE::BNB::UP_DOWN::2026-07-17::DIR`-shaped samples into ONE documented canonical form (or confirm they
-      legitimately coexist for a stated reason, e.g. schema versioning — and document that instead). Update both codex
-      docs to match once ruled.
+- [x] ✅ [OPERATOR] P2. **DONE 2026-08-14 (interactive session, operator confirmed).** Not a competing-format pick —
+      `instrument_id` (VENUE:TYPE:SYMBOL, `build_canonical_instrument_id()`) and `canonical_event_id`
+      (`PredictionMarketCrossVenueMapping`, cross-venue/cross-asset-group matching key incl. football via
+      `api_football_fixture_id`) are two different fields that were never meant to be the same shape. Rewrote
+      `prediction-markets.md`'s Instrument ID Convention section (deleted the fictional
+      `{VENUE}:{MARKET_TYPE}:{EVENT_SLUG}@{OUTCOME}` pattern) and `prediction-schema-paths.md`'s Canonical Instrument ID
+      Format table (added a DELTA banner marking the `POLYMARKET::...` formats as never-shipped/superseded). Deleted the
+      now-resolved G2 row from `prediction-markets-codification-gaps.md` per its own "close a gap = delete its row" rule
+      (G3 left open — not verified as fully resolved, only G2's exact claim was investigated).
 - [x] ✅ [OPERATOR] P2. **DONE 2026-08-14 (interactive session, operator confirmed).** Updated both codex docs'
       `BLOCKED-CREDENTIALS` delta banners + venue table row to reflect actual state (live capture running past
       `day=2026-07-27`, dead-host bug fixed and regression-guarded `e2e-testing@371ac1b`, real `KALSHI:...` rows

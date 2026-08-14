@@ -84,9 +84,24 @@ source: >-
       there was nothing to promote. Code fix: SKIP line now prints the compare ahead_by so this reads as a
       self-documented correct decision. A successor PR (#963) did open once real content landed 08-12, then merged
       stream #963-#980; #981 (current LDR tip cbc6531b) is open + mergeable(blocked on its own v2).
-- [ ] [CODE] P2. Read unified-trading-ci's python-quality-gates-v2.yml on: trigger config to find and fix the ~15-min
+- [x] ✅ [CODE] P2. Read unified-trading-ci's python-quality-gates-v2.yml on: trigger config to find and fix the ~15-min
       redispatch, or migrate the Slack step to the dedup'd notify-slack.yml carrier Source:
-      `plans/active/issues/mtds_main_promotion_stall_and_qg_alert_redispatch_2026_08_11.md`
+      `plans/active/issues/mtds_main_promotion_stall_and_qg_alert_redispatch_2026_08_11.md` — **ALREADY FIXED, no new
+      code needed (verified 2026-08-14).** The redispatch was root-caused: the promote-PR head is a per-SHA frozen ref
+      (`promote/<repo>/<sha12>`), and PM's drain bot supersedes a promote PR roughly every ~15min — almost exactly
+      matching the observed 9:34/9:49 double-page cadence — so every successor PR minted a brand-new dedup key and a
+      still-red condition re-paged on each supersession. The Slack step was already routed through the dedup'd
+      `notify-slack.yml` carrier (`dedup_key: qg-fail:{repo}:{base_ref-for-PR|ref_name-for-push}`, `cooldown_min: 120`)
+      before this todo was even drafted. Three peer-session commits on `unified-trading-ci` fully closed the gap:
+      `45eabc2` (2026-08-12, 15-min debounce before alerting on a promote-PR failure — most self-resolve via supersede),
+      `e499f9d` (tier-3 AO escalation at 30min via `promote_qg_failure`), and `ec6d421` (2026-08-13, REDESIGNED the
+      debounce to track the underlying CONDITION across PR supersessions by walking real `quality-gates-v2` run history
+      for a continuous-failure streak, instead of sleeping 15min and re-checking one ephemeral PR number — the original
+      per-PR debounce was structurally unreachable since the drain bot superseded the PR before the sleep ended, exactly
+      the bug this todo's `~15-min` symptom points at). Confirmed live on `unified-trading-ci@67698d8`
+      (`.github/workflows/python-quality-gates-v2.yml` — `debounce-promote-qg-fail` job derives `duration_min` from run
+      history and only fires `notify-qg-fail` once the streak is genuinely ≥15min old, with a 120min cooldown after
+      that). No further action.
 - [ ] [CODE] P2. Investigate and document why standalone quality-gates.sh --no-fix treats the local type:ignore ratchet
       (STEP 5.94/5.95) as non-fatal while quickmerge's internal re-gate treats the identical finding as fatal Source:
       `plans/active/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md`

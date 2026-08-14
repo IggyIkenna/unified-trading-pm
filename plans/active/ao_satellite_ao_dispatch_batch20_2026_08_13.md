@@ -90,10 +90,17 @@ source: >-
       `../../$repo` has zero `git log --all -S` hits (generator is not a current committed script), so the durable fix
       is healing-at-the-self-healer rather than a one-shot cleanup. Source:
       `plans/active/issues/mac_slot0_base_checkout_stuck_dirty_files_2026_08_11.md`
-- [ ] [CODE] P2. Recovery-audit Layer-1 producer rewire — stand up the standalone recovery-audit-signoff producer
+- [x] ✅ [CODE] P2. Recovery-audit Layer-1 producer rewire — stand up the standalone recovery-audit-signoff producer
       (consume PubSub agent-recovery-actions, POST verdicts to POST /safety-ops/signoffs, unmock the DART feed, clean
       the stale routes/agents.py:146 comment); now unblocked since the Phases 0-4 it was operator-sequenced behind are
-      all done, and is a well-scoped, deterministic build task Source:
+      all done, and is a well-scoped, deterministic build task — VERIFIED already shipped by a different slot the same
+      day (`deployment-service@1a8346db` — `scripts/recovery/recovery_audit_signoff_producer.py` + 15 unit tests,
+      `unified-trading-pm@522dec4ba7` updated the codex Layer-1 banner). Confirmed all 4 sub-asks live:
+      `agent-recovery-actions`/`-sub` provisioned in `deployment-service/terraform/gcp/main.tf`; producer POSTs to
+      alerting-service `POST /safety-ops/signoffs` on a closed deterministic verdict rule set; DART feed
+      `_mock_signoffs()` is gated behind `is_mock_mode()` only (real producer data otherwise); `agents.py:146`'s comment
+      now accurately describes the AO-role removal + standalone-producer replacement (no longer stale). This checkbox +
+      the source doc's own todo were the only remaining gap — closing both here. Source:
       `plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md`
 - [ ] [CODE] P2. Backfill context_scope frontmatter across the full active plans/issues corpus (per
       generate_context_scope_inventory.py's live NEVER_SCOUTED count), then flip docspec.py's context_scope FieldSpec

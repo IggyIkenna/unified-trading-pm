@@ -680,12 +680,16 @@ NOT AO and are deliberately out of scope here.
 
 ### Phase LAST — operator-sequenced
 
-- [ ] [BACKEND] P0. **Recovery-audit Layer-1 producer rewire (operator ruling B, "do it at last").** Stand up the
-      standalone recovery-audit-signoff producer (NOT an AO worker-role): consume PubSub `agent-recovery-actions`, POST
-      verdicts to the live `POST /safety-ops/signoffs`; unmock the DART feed; clean the stale `routes/agents.py:146`
-      comment. Only start once Phases 0–4 are done (the operator's sequencing). Source: doc #9. **Gate**: a real signoff
-      flows PubSub→producer→alerting-service→DART with the mock feed retired; codex Layer-1 banner replaced with the
-      live description.
+- [x] ✅ [BACKEND] P0. **Recovery-audit Layer-1 producer rewire (operator ruling B per
+      `ao_recovery_audit_layer1_deleted_2026_07_15.md`, "do it at last").** Stand up the standalone
+      recovery-audit-signoff producer (NOT an AO worker-role): consume PubSub `agent-recovery-actions`, POST verdicts to
+      the live `POST /safety-ops/signoffs`; unmock the DART feed; clean the stale `routes/agents.py:146` comment. Only
+      start once Phases 0–4 are done (the operator's sequencing). Source: doc #9. **Gate**: a real signoff flows
+      PubSub→producer→alerting-service→DART with the mock feed retired; codex Layer-1 banner replaced with the live
+      description. — **DONE `deployment-service@1a8346db`** (standalone producer + 15 unit tests, PubSub topic/sub
+      provisioned in `terraform/gcp/main.tf`), codex banner replaced `unified-trading-pm@522dec4ba7`. Gate verified:
+      closed deterministic verdict rules POST to the live ingest; DART's `_mock_signoffs()` is `is_mock_mode()`-gated
+      only; `agents.py:146` comment now accurate. Mirrored in doc #9 (`ao_recovery_audit_layer1_deleted_2026_07_15.md`).
 
 ### Phase 7 — INDEPENDENT AGENT-AUDIT FINDINGS (Claude, 2026-07-17) — ⚠️ NOT from the issue docs
 

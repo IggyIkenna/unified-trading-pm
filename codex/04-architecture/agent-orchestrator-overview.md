@@ -225,7 +225,7 @@ workers + escalation drains.
 - **Recovery-audit note**: the `recovery_audit` agent-kind was removed from the AO roster, but the Layer-1
   recovery-audit-signoff FUNCTION is not retired — its consuming half is live but producer-less/mock-fed, producer
   rewire DEFERRED (operator 2026-07-16). See `recovery-defence-in-depth-layers.md` § Layer 1 +
-  `plans/active/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`.
+  `plans/archive/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`.
 
 ## Blocked-questions, authority, and prerequisites
 
