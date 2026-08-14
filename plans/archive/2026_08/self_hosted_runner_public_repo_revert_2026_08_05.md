@@ -9,7 +9,7 @@ summary: >-
   `unified-trading-pm` — one of the 8 — was itself flipped PUBLIC on 2026-08-06 (see todo 24; it had been accidentally
   left private, which broke every repo's `quality-gates-v2` since public repos cannot call reusable workflows hosted in
   a private repo). PM is now in scope for the same revert this plan already does for the other 17.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -79,6 +79,11 @@ superseded_by:
 ---
 
 # Revert self-hosted CI runners to GitHub-hosted for confirmed-public repos
+
+> **🟢 ARCHIVED 2026-08-14 — COMPLETE.** All 24 todos done, including todo 20's billing/load re-measurement (real GitHub
+> Enhanced Billing data: $0 net across 8 consecutive clean days for the 18 reverted repos). Full measurement write-up
+> lives in `/plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`'s 2026-08-14 Progress
+> Log entry, per this plan's own todo 20 instruction to update that doc rather than duplicate it here.
 
 ## Why this plan exists
 
@@ -285,12 +290,19 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
       stopped/disabled on the CI VM, confirmed `inactive` with no re-registration; other 7 private repos' pools
       confirmed untouched. Full detail + 24h CI-VM usage tracking:
       `/plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md`.
-- [ ] 20. [INFRA] P2. **Re-measure GitHub Actions billing for the 17 reverted repos** (should read $0/unmetered,
-      confirming the public-repo-unmetered premise held in practice) and the self-hosted VM's steady-state load average
-      before vs. after (not a spot-check — matches `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`'s own
-      still-open "longer-window measurement" gap). Update that plan's issue doc
-      (`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`) with the dated result rather than duplicating
-      it here.
+- [x] ✅ 20. [INFRA] P2. **Re-measured 2026-08-14 (`ci_satellite_ao_dispatch_batch13`, slot 20) — DONE, real data both
+      sides.** Billing (GitHub Enhanced Billing usage API, `github-billing-token` GSM secret): all 18 target repos'
+      GH-hosted `Actions Linux` compute netAmount was **$0.00 every day 08-06 through 08-13** (8 consecutive clean days)
+      despite gross minutes climbing fleet-wide — the public-repo-unmetered premise is confirmed in the real billing
+      data, not just theory. Load average: the OLD shared host (`i-0c9b283b31d6b5ca7`) now reads 6.38/6.34/6.78 (down
+      from the historical 25-65+ range) with zero `github-glue-runner-*` systemd units left on it — confirmed genuinely
+      migrated off, not just idle. The NEW dedicated `ci-escalation-runner-vm-1` (`i-042a6332509482556`, where the
+      actual pools live now) could not be re-measured this session — `ssm     StartSession`/`SendCommand` both
+      `AccessDeniedException` for this worker's AWS identity (`ikenna-worker`), the same non-self-fixable IAM-gap class
+      already documented for `ce:GetCostAndUsage` (`/codex/05-infrastructure/billing-cost-observability.md`) — not
+      attempted-and-failed, out of this identity's self-service scope. Full write-up + evidence:
+      `plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` 2026-08-14 Progress Log
+      entry.
 - [x] 21. ✅ [INFRA] P1. **Deregistered the old self-hosted runners for all 17 landed repos — DONE.** Used the
       documented safe path exactly (`ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`'s own incident-derived
       method — never `setup-glue-runners.sh teardown --POOL_TAG`, which has a live, unresolved, reproducible bug that

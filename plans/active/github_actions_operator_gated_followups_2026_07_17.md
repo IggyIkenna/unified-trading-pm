@@ -209,9 +209,9 @@ drift_direction: advance-code
       half of this done-when) is moot — the self-hosted glue deployment was retired (51 orphaned units archived
       2026-08-08T13:05Z, per `/plans/archive/issues/ao_observability_and_deploy_hygiene_gaps_2026_08_08.md`) and PM's
       workflows were separately reverted to `ubuntu-latest`
-      (`/plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md` todo 24) — PM is now public, so GH-hosted
-      billing is unmetered, $0 for a different reason than self-hosting. Not credentials-blocked; moot, not unreachable.
-      Re-measure fresh only if the glue deployment is ever actually completed.
+      (`/plans/archive/2026_08/self_hosted_runner_public_repo_revert_2026_08_05.md` todo 24) — PM is now public, so
+      GH-hosted billing is unmetered, $0 for a different reason than self-hosting. Not credentials-blocked; moot, not
+      unreachable. Re-measure fresh only if the glue deployment is ever actually completed.
 
 - [x] ✅ [VERIFY] P0. **DONE 2026-08-09 (slot-28)** — representative QG run ~10 billed min (features-service PR run,
       real /jobs pull); identical-tree sentinel skip ~5% (PM, 1/20) / 0% (features-service, 0/20). Full numbers: batch4
