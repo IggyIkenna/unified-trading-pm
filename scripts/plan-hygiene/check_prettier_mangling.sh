@@ -7,7 +7,7 @@
 #   data_type  -> data*type      asset_group -> asset*group     schema_version -> schema*version
 #   LIVE_/BATCH_ -> LIVE*/BATCH\_ (meaning-inverting in normative text, quality-gates.md L1 row)
 # Root cause + repair recipe + the four trigger classes:
-#   plans/active/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md
+#   plans/archive/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md
 # Reference repairs: unified-trading-pm@169a8c8cd @65420c363 @f54f0e9d6 (13 codex SSOTs,
 # operator-approved 2026-07-14). Primary fix is the >=3.9.5 version guard in
 # scripts/hooks/prettier-autostage.sh; this gate is the backstop so a host that slips through
@@ -53,9 +53,14 @@ fi
 # examples never self-flag; a mangle hiding INSIDE a code span is out of scope for this gate —
 # the >=3.9.5 version guard in prettier-autostage.sh is the primary stop):
 #   {mode}*{source} / asset*group / schema*version / pipeline*mode / instrument*type / data*type
-#   record*captured|failed|empty / last*updated / "x*y_z < v9"-shaped version exprs
+#   record*captured|failed|empty / last*updated / task*id / dispatch*id / ORCHESTRATOR*\* /
+#   "x*y_z < v9"-shaped version exprs
 # Extend this list when a new mangled family is found (add the mangled form, never the clean one).
-PAT='\{mode\}\*\{source\}|asset\*group|schema\*version|pipeline\*mode|instrument\*type|data\*type|record\*(captured|failed|empty)|last\*updated|[a-z]\*[a-z_]+ < v9'
+# task*id / dispatch*id / ORCHESTRATOR*\* added 2026-08-14 (plan_reconciler_findings_ao_2026_08_10.md
+# "run_hygiene_sweep.sh prettier check reported PASS despite 5 confirmed live instances" follow-up) —
+# these 3 identifier families weren't in the curated list yet, so the default (non-strict) sweep
+# missed them even though --strict's broader alnum*identifier heuristic would have caught them.
+PAT='\{mode\}\*\{source\}|asset\*group|schema\*version|pipeline\*mode|instrument\*type|data\*type|record\*(captured|failed|empty)|last\*updated|task\*id|dispatch\*id|ORCHESTRATOR\*\\\*|[a-z]\*[a-z_]+ < v9'
 
 # --strict-only broader heuristic (2026-08-01, raw_npx_prettier_bypasses_version_guard_recurs_
 # mangling_2026_08_01.md todo 2): any `alnum` immediately followed by `*` immediately followed by
@@ -86,7 +91,7 @@ for f in "${FILES[@]}"; do
   if [ -n "$HITS" ]; then
     RC=1
     if [ "$QUIET" -eq 0 ]; then
-      echo "❌ prettier emphasis-mangling in $f (underscore rewritten as asterisk — see plans/active/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md for the repair recipe):"
+      echo "❌ prettier emphasis-mangling in $f (underscore rewritten as asterisk — see plans/archive/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md for the repair recipe):"
       printf '%s\n' "$HITS" | sed 's/^/    /'
     fi
   fi

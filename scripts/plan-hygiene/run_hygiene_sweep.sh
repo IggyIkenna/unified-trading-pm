@@ -96,7 +96,7 @@ if [ "$CI_MODE" = "--precommit" ]; then
     # Prettier emphasis-mangling gate — blocks landing underscore-identifiers rewritten as
     # asterisks by prettier <3.9.5 (data*type, asset*group, ...). Backstop to the >=3.9.5
     # version guard in scripts/hooks/prettier-autostage.sh. SSOT + repair recipe:
-    # plans/active/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md
+    # plans/archive/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md
     "$SCRIPT_DIR/check_prettier_mangling.sh" --quiet "${STAGED_PLANS[@]}" && echo "  ✅ No prettier mangling (staged plans)" || { echo "  ❌ Prettier emphasis-mangling in staged plans — run: bash scripts/plan-hygiene/check_prettier_mangling.sh <file> for lines + see the corruption issue doc for the repair recipe"; PF=$(( PF + 1 )); }
     # Line-cap gate on staged plans ONLY — absolute bar (same model as frontmatter/todo-format
     # above, not a baseline delta): if a plan you're touching is over cap, split/trim it before
@@ -304,7 +304,7 @@ if [ "$CI_MODE" = "--precommit" ]; then
     # check_frontmatter_schema.py (the exact checker the lint-codex slice invokes).
     python3 "$SCRIPT_DIR/check_frontmatter_schema.py" --quiet "${STAGED_CODEX[@]}" && echo "  ✅ Frontmatter schema (staged codex)" || { echo "  ❌ Frontmatter schema — missing/empty required field (staged codex)"; PF=$(( PF + 1 )); }
     "$SCRIPT_DIR/check_conflict_markers.sh" --quiet "${STAGED_CODEX[@]}" && echo "  ✅ No conflict markers (staged codex)" || { echo "  ❌ Conflict marker(s) in staged codex — resolve before commit"; PF=$(( PF + 1 )); }
-    "$SCRIPT_DIR/check_prettier_mangling.sh" --quiet "${STAGED_CODEX[@]}" && echo "  ✅ No prettier mangling (staged codex)" || { echo "  ❌ Prettier emphasis-mangling in staged codex — see plans/active/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md for the repair recipe"; PF=$(( PF + 1 )); }
+    "$SCRIPT_DIR/check_prettier_mangling.sh" --quiet "${STAGED_CODEX[@]}" && echo "  ✅ No prettier mangling (staged codex)" || { echo "  ❌ Prettier emphasis-mangling in staged codex — see plans/archive/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md for the repair recipe"; PF=$(( PF + 1 )); }
     # Reference-path convention (staged codex) — check_reference_paths.py scans codex/** as well as
     # plans/**; same --only rationale as the plans-side call above.
     python3 "$SCRIPT_DIR/check_reference_paths.py" --quiet --only "${STAGED_CODEX[@]}" \
