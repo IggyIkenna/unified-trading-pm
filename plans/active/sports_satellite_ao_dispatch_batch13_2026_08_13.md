@@ -109,9 +109,9 @@ source: >-
       shipped for that piece. (2) NEW finding, not covered by any prior effort: `LADBROKES_UK`/`SPORT888` also carry the
       same casing/alias defect under a third, previously-unexamined shape (`pipeline_mode=batch_footystats`,
       `data_type=odds_horizon_bucket`) — 121,884 shards / 12.3M rows measured, 2020-2026. Full evidence + recommended
-      decision + 4 follow-up todos filed: `plans/active/issues/sports_footystats_mislabel_contradiction_2026_08_14.md`.
-      Stale claim in the source doc corrected in place (same turn). Source:
-      `plans/active/sports_consolidated_closeout_2026_07_19.md`
+      decision + 4 follow-up todos filed:
+      `/plans/archive/2026_08/issues/sports_footystats_mislabel_contradiction_2026_08_14.md`. Stale claim in the source
+      doc corrected in place (same turn). Source: `plans/active/sports_consolidated_closeout_2026_07_19.md`
 - [x] ✅ [CODE] P2. Track C: QG assertion that sports data_type/venue/instrument_type/chain stay within the canonical
       vocabulary (deployment-ui Distinct Values panel reads 0 non-canonical across all four axes)
       **deployment-api@8497e952bb** (2026-08-14, slot-27). Wired `scripts/check_sports_distinct_values_canonical.py`

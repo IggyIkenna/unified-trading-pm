@@ -28,7 +28,7 @@ summary: >-
   `sports_venue_restamp_derived_candle_gap_2026_07_27.md` covered (resolved 2026-08-03). Measured: LADBROKES_UK 25,645
   shards / 2,454,668 rows / 570 days (2023-03-31..2026-04-14); SPORT888 96,239 shards / 9,857,007 rows / 1,350 days
   (2020-06-06..2026-04-14). No prior effort has touched this population.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -60,7 +60,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: unified-trading-pm (docs-only investigation, slot-27, 2026-08-14)
 assigned_vm: planning
 source:
   [
@@ -79,6 +79,17 @@ context_scope:
 ---
 
 # Track C footystats mislabel: completion contradiction + a new bookmaker-casing gap
+
+> **✅ ARCHIVED 2026-08-14 — all 5 todos done, no `locked_by`.** Moved from `plans/active/issues/` to
+> `plans/archive/2026_08/issues/` per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. Every
+> question this doc opened is closed: the completion-state contradiction was reconciled (byproduct of the DIAG todo — a
+> legacy-seed manifest layer, not a live writer or a re-measurement error), the legacy-seed residue purge was routed to
+> `sports_taxonomy_p2_migration_2026_08_08.md`, and the LADBROKES_UK/SPORT888 live-content-verify confirmed a genuine
+> content-distinct feed (not a casing/alias duplicate — mirrors the UNIBET precedent, no fold/restamp tool needed). One
+> new finding surfaced during that last verification (the `batch_footystats`/`source=footystats`/ `odds_horizon_bucket`
+> population's physical content reading `source=ODDS_API`, a manifest mislabel disjoint from this doc's own original
+> scope) was routed forward as a new P1 todo in `sports_taxonomy_p2_migration_2026_08_08.md` rather than reopening this
+> doc.
 
 ## What I found
 
@@ -231,11 +242,52 @@ already-identified wrong fix (creating duplicate manifest rows) rather than reso
       closed one in that plan carrying this exact requirement (both-layers purge, do-not-rename-straight guidance,
       citation back to this doc) so the next worker to touch that population has it in-plan, not just in this issue doc.
       `unified-trading-pm@<see /done evidence>`.
-- [ ] [DATA] P2. Live-content-verify whether `LADBROKES_UK`/`SPORT888` under `batch_footystats`/`odds_horizon_bucket`
+- [x] ✅ [DATA] P2. Live-content-verify whether `LADBROKES_UK`/`SPORT888` under `batch_footystats`/`odds_horizon_bucket`
       are a genuine casing/alias duplicate (safe to fold, mirroring the existing `SPORTS_VENUE_FOLD` entries) or a
       content-distinct feed (like UNIBET_UK/UNIBET_EU turned out to be) before building any restamp tooling for this
-      shape. (repo: market-tick-data-service)
-- [ ] [CODE] P3. If todo 3 confirms a genuine casing/alias duplicate: build a restamp tool mirroring
+      shape. (repo: market-tick-data-service) — **DONE 2026-08-14 (slot-27), live-verified: CONTENT-DISTINCT, NOT a
+      casing/alias duplicate — mirrors the UNIBET precedent exactly, do not fold.** Method: downloaded the real
+      `processed/by_date/day={D}/data_type=odds_horizon_bucket/league_id={L}/timeframe={T}/bucketed.parquet` shards two
+      manifest rows for `venue=LADBROKES_UK`/`SPORT888` under this pipeline_mode/data_type resolve to
+      (`day=2023-04-02`/`league_id=PRIMEIRA_LIGA` and `day=2020-06-06`/`league_id=BUNDESLIGA`, independent samples) and
+      inspected the `bookmaker_key` column directly (the file's real per-bookmaker natural key — same one MDPS's own
+      `migrate_odds_horizon_bucket_venue_to_bookmaker_2026_07_27.py` groups on). Findings: (1) `ladbrokes_uk` and
+      `sport888` are first-class, native `bookmaker_key` values in the vendor's own fan-out (confirmed in both samples,
+      alongside `unibet`/`unibet_uk` co-existing as separate keys in the identical file — the exact structural pattern
+      already proven genuinely-distinct for UNIBET); (2) **no bare `ladbrokes` or `bet888sport` key exists anywhere in
+      this shape at all** (0 manifest rows for either, confirmed via `read_availability_index` census scoped to
+      `pipeline_mode=batch_footystats AND data_type=odds_horizon_bucket` — so there is no collision/duplicate-risk from
+      leaving them unfolded, unlike the ODDS_API/FOOTYSTATS raw-tick population); (3) on a shared fixture
+      (`7f7e2bbbdbaf5fca3c422adf3cb84225`, CS Maritimo vs Boavista Porto, 2023-04-02), `ladbrokes_uk` stamped its own
+      independent `bm_time` (13:24:50Z) and odds (HOME 2.25/DRAW 3.10/AWAY 3.30) distinct in timing from every other
+      bookmaker's own independently-timestamped row on the same fixture — an independent per-bookmaker observation, not
+      a duplicated/copied row. **No restamp tooling should be built for this population** (todo below is resolved as
+      N/A, not skipped). No code changes required; this todo's own done_definition (checkbox flip) is the full task.
+- [x] ✅ [CODE] P3. If todo 4 confirms a genuine casing/alias duplicate: build a restamp tool mirroring
       `restamp_sports_bookmaker_venue_2026_07_27.py`'s proven pattern, scoped to
       `instrument_type=MATCH_ODDS|OVER_UNDER_*`/`data_type=odds_horizon_bucket`/`pipeline_mode=batch_footystats`, and
-      execute + manifest-swap for the ~121,884 shards / ~12.3M rows measured above. (repo: market-tick-data-service)
+      execute + manifest-swap for the ~121,884 shards / ~12.3M rows measured above. (repo: market-tick-data-service) —
+      **N/A 2026-08-14 (slot-27), premise disproven by todo 4** — LADBROKES_UK/SPORT888 are content-distinct, real
+      per-bookmaker feeds, not a casing/alias duplicate; building this tool would silently conflate two distinct
+      bookmakers' data under one venue key, exactly the mistake the UNIBET precedent already warned against. No tool
+      built, none needed.
+
+## New finding (2026-08-14, slot-27) — the `batch_footystats`/`odds_horizon_bucket` manifest population's own
+
+`pipeline_mode`/`source` stamp does not match its physical content; likely a much larger mislabel than this doc's
+original scope
+
+While live-content-verifying todo 4 above, both sampled `bucketed.parquet` shards' **own `source`/`data_source` columns
+read `ODDS_API` for 100% of rows** (86/86 and 23/23 respectively, across every `bookmaker_key` present, not just
+`ladbrokes_uk`/`sport888`) — not `footystats`, despite the manifest rows pointing at these exact shards being stamped
+`pipeline_mode=batch_footystats`/`source=footystats`. The physical shard path itself
+(`processed/by_date/day={D}/data_type=odds_horizon_bucket/league_id={L}/timeframe={T}/bucketed.parquet`) carries no
+`pipeline_mode=` segment at all, confirming it is genuinely ODDS_API-vendor derived data (same schema/shape as the
+already-migrated `mdps_odds_horizon_bucket` population), just manifest-mislabeled as footystats. This population
+measures **1,784,473 manifest rows** (`read_availability_index` census,
+`pipeline_mode=batch_footystats AND data_type=odds_horizon_bucket`, this session) — entirely separate from, and not
+counted by, `sports_taxonomy_p2_migration_2026_08_08.md`'s "Move `odds_horizon_bucket` onto the `odds` + `horizon`
+model" P0 todo, whose 2026-08-14 (slot-26) closure scoped its 1,070,078-row total to `source=mdps_odds_horizon_bucket`
+specifically and never examined this disjoint `source=footystats` population sitting under the identical `data_type`.
+Routed as a new P1 todo in `sports_taxonomy_p2_migration_2026_08_08.md` (the actively-working plan on this exact ground)
+rather than re-opening this doc's own closed scope — see that plan for the tracked follow-up.
