@@ -7,12 +7,12 @@ last_reviewed: 2026-09-16
 
 ## TL;DR
 
-- **25 repos in `workspace-manifest.json`** (the registry SSOT; not all are pipeline services). The **core pipeline**
-  is 7 repos forming a strict DAG: instruments-service -> market-tick-data-service -> market-data-processing-service ->
+- **25 repos in `workspace-manifest.json`** (the registry SSOT; not all are pipeline services). The **core pipeline** is
+  7 repos forming a strict DAG: instruments-service -> market-tick-data-service -> market-data-processing-service ->
   features-service -> ml-service -> strategy-service -> execution-service.
-  - **[Corrected 2026-07-31]** `ml-training-service` and `ml-inference-service` no longer exist as separate repos —
-    they are the `training/` and `inference/` sub-packages of a single **`ml-service`** repo. References to the two old
-    repo names throughout this doc are historical.
+  - **[Corrected 2026-07-31]** `ml-training-service` and `ml-inference-service` no longer exist as separate repos — they
+    are the `training/` and `inference/` sub-packages of a single **`ml-service`** repo. References to the two old repo
+    names throughout this doc are historical.
 - **Batch**: GCS is the message bus. Service A writes Parquet to a bucket; Service B reads it. No inter-service RPCs. No
   PubSub.
 - **Live**: two distinct concerns — **feature calculation** runs in the consolidated `features-service` (per
@@ -20,24 +20,23 @@ last_reviewed: 2026-09-16
   cross-cutting standalone. The same code path as batch — only the trigger swaps from Cloud Scheduler to Redis Stream
   events. **Data transport** now goes through the UTL **`EventTransport` facade**
   (`unified_trading_library/streaming/event_facade.py`), which has three interchangeable implementations —
-  `InMemoryTransport` (paper / colocated), `RedisStreamTransport` (inner-loop cascade), `PubSubTransport`
-  (cross-service async fan-out). Inner-loop events are CANDLE_BOUNDARY_CROSSED → CANDLE_COMPUTED → FEATURES_COMPUTED
-  (see
+  `InMemoryTransport` (paper / colocated), `RedisStreamTransport` (inner-loop cascade), `PubSubTransport` (cross-service
+  async fan-out). Inner-loop events are CANDLE_BOUNDARY_CROSSED → CANDLE_COMPUTED → FEATURES_COMPUTED (see
   [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md)).
   Because every mode publishes through the same facade, `paper(W)` equals `batch-rerun(W)` at epsilon=0 — see
   [`/codex/02-data/live-data-persistence-and-event-log.md`](/codex/02-data/live-data-persistence-and-event-log.md).
-  **[Updated 2026-07-31 — previously described Redis Stream and PubSub as two hardcoded, separate mechanisms.]**
-  All are async message buses, not REST/RPC — the "no network hops" rule applies to synchronous HTTP/REST
-  calls between services, not async messaging.
+  **[Updated 2026-07-31 — previously described Redis Stream and PubSub as two hardcoded, separate mechanisms.]** All are
+  async message buses, not REST/RPC — the "no network hops" rule applies to synchronous HTTP/REST calls between
+  services, not async messaging.
 - **Live deployments** (post-2026-05-08, per [`features-service-architecture.md`](features-service-architecture.md) +
   the live-pipeline activation): one consolidated **`features-service`** repo (family sub-packages — 11 as of
   2026-07-31: calendar, cefi, commodity, cross_instrument, delta_one, multi_timeframe, onchain, performance_features,
-  sports, strategy_pnl_archetype, volatility, up from the original 8) deployed in two flavors —
-  **asset-scoped** colocated with MDPS per asset_group cluster + **cross-cutting** standalone for cross-asset /
-  cross-venue features. Plus: (1) MTDS cluster (sharded by v5 shard atom), (2) instruments-service, (3)
-  strategy-service, (4) execution-service (per-client). Pre-2026-05-08 the features tier was 5-6 separate repos
-  (features-calendar / features-delta-one / features-volatility / features-onchain / features-sports /
-  features-multi-timeframe) — all consolidated as part of the live-pipeline pre-requisite. See
+  sports, strategy_pnl_archetype, volatility, up from the original 8) deployed in two flavors — **asset-scoped**
+  colocated with MDPS per asset_group cluster + **cross-cutting** standalone for cross-asset / cross-venue features.
+  Plus: (1) MTDS cluster (sharded by v5 shard atom), (2) instruments-service, (3) strategy-service, (4)
+  execution-service (per-client). Pre-2026-05-08 the features tier was 5-6 separate repos (features-calendar /
+  features-delta-one / features-volatility / features-onchain / features-sports / features-multi-timeframe) — all
+  consolidated as part of the live-pipeline pre-requisite. See
   [runtime-deployment-topology.md](runtime-deployment-topology.md) for visuals
   - [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md)
     for the full topology + Redis Stream cascade contract.
@@ -213,8 +212,8 @@ In-process computation avoids serialization, network latency, and connection man
 live streaming. PubSub delivers messages with low latency and decouples producers from consumers without requiring
 synchronous coordination.
 
-**See**: [BATCH-LIVE-SYMMETRY.md](BATCH-LIVE-SYMMETRY.md) for the full batch/live distinction, mode toggle pattern, and
-anti-drift guards.
+**See**: [batch-live-architecture.md](batch-live-architecture.md) for the full batch/live distinction, mode toggle
+pattern, and anti-drift guards.
 
 ### 3. Sync: HTTP/REST for Control Plane [IMPLEMENTED]
 
@@ -284,6 +283,6 @@ processing date, not wall-clock time.
 | [concurrency.md](concurrency.md)                                 | MAX_WORKERS, adaptive resource management, CPU vs I/O-bound, batch/live parallelism      |
 | [communication-patterns.md](communication-patterns.md)           | GCS batch bus, embedded live streaming, HTTP control plane                               |
 | [compute.md](compute.md)                                         | VM vs Cloud Run decision matrix, resource allocation                                     |
-| [BATCH-LIVE-SYMMETRY.md](BATCH-LIVE-SYMMETRY.md)                 | Batch vs live distinction: transport, calculation, forbidden patterns, anti-drift guards |
+| [batch-live-architecture.md](batch-live-architecture.md)         | Batch vs live distinction: transport, calculation, forbidden patterns, anti-drift guards |
 | [batch/README.md](batch/README.md)                               | Job-based execution model, shard-per-container                                           |
 | [live/README.md](live/README.md)                                 | Long-running processes, per-client isolation                                             |
