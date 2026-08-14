@@ -285,3 +285,14 @@ source: >-
   than a fourth prose recommendation):
   `/plans/active/issues/ao_backlog_regen_missing_self_declared_not_ao_eligible_guard_2026_08_14.md` (repo:
   agent-orchestrator, `_PERMANENT_NON_DISPATCHABLE_RE` in `server/regen_backlog_from_plan.py`).
+- **backend_engineer (slot 10) 2026-08-14, same dispatch
+  `strategy_archetype_latency_deployment_profile_execution-73c2e13d68fc` — FOURTH recurrence, RE-CONFIRMED
+  not-AO-eligible, skipped with GATED, no code action.** Independently re-verified live state again:
+  `isolation_policies.strategy-service.default` still `shared` (gap 2 unresolved), `vol-market-making.md` still
+  `min_sla_tier: premium` vs the `distributed` mapping (gap 3 unresolved), `portfolio-*`/`yield-*` docs still declare
+  `basic` vs the decision artifact's `standard` (gap 4 unresolved),
+  `git log ab157b54a1..HEAD -- codex/04-architecture/ RUNTIME_TOPOLOGY_DECISIONS.md configs/runtime-topology.yaml` still
+  returns zero commits. Same conclusion as slots 7, 21, 26 — all three require operator judgment. The guard-fix issue
+  doc slot 26 filed (`ao_backlog_regen_missing_self_declared_not_ao_eligible_guard_2026_08_14.md`) is still
+  `status: open` with its fix todo unclaimed — not re-filing a duplicate; that issue doc's own todo is the actual fix
+  for this recurrence pattern.
