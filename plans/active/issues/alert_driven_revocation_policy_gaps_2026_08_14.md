@@ -137,7 +137,7 @@ which asserts `admission_blocked(...).blocked is False` immediately after a DEPS
 the docstring to match the actual (drain = running units only, hold = new launches only) behavior rather than change
 behavior, since changing behavior (making DEPS_DRAIN also write a hold marker) is itself a design call on
 `revocation_gate.admission_blocked()` semantics that belongs to whoever reads item 4 above, not a drive-by fix.
-`unified-api-contracts@<TBD — fill in on ship>`.
+`unified-api-contracts@e2c4ca835b`.
 
 - [x] ✅ [CODE] P3. Fix the docstring to match shipped behavior. — see commit above.
 

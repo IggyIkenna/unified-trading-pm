@@ -521,7 +521,7 @@ bridges them; it does not extend one over the other.
       currently-draining target is NOT blocked). **FIXED 2026-08-14** — corrected the docstring to match shipped
       behavior rather than change behavior (changing behavior is its own design call, migrated to
       `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` § 4's sibling if ever revisited).
-      `unified-api-contracts@<fill on ship>`.
+      `unified-api-contracts@e2c4ca835b`.
 
 ## Phase 7 — Codex SSOT and close-out
 
