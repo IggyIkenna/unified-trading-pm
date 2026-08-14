@@ -28,9 +28,10 @@ related:
     /codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md,
   ]
 created: 2026-08-14
-owner:
 resolved_by:
 locked_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Venue coverage — read vs execute asymmetry
