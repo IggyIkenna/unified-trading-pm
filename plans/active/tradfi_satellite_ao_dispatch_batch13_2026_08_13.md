@@ -85,36 +85,45 @@ source: >-
       `plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`
 
       **DONE 2026-08-14.** Evidence:
-          - `unified-api-contracts@ebda13eb28`: 15 new `RootMetadata` micro-contract entries + a new reverse-lookup test
-            converging `tradfi_roots.py`'s table onto the same values as the manifest/GCS migration below.
-          - `market-tick-data-service@b0e18fd33e`: initial migration-script rewrite — `pc.and_()` fix (bare `&` unsupported
-            on installed pyarrow's `ChunkedArray`), manifest-row-derived GCS path construction (never a live
-            `gcloud storage ls` glob — that approach timed out at 120s/call, single-walk-discipline violation), §3a fresh
-            soft-delete-retention check, per-row resilience (one bad row doesn't abort the run), `"ohlcv_1s"` added to
-            `TRADFI_DATA_TYPES`.
-          - `market-tick-data-service@129925df94`: hardening fix after the live prod run below hit a genuine manifest CAS
-            race — added a retry-with-fresh-read loop around the manifest CAS write (5 attempts) + a `--skip-rename` resume
-            flag (mirrors both `migrate_tradfi_sector_underlying_2026_08_10.py` and `migrate_tradfi_micro_underlying_2026_08_13.py`).
-          - **Sector-remap** (8 codes): dry-run measured 25,922 GCS objects to rename. `--apply` on VM
-            `canonical-migration-tradfi-sector-remap-20260814-040712`: **25,922/25,922 GCS objects renamed, 0 errors** —
-            but the manifest CAS write lost a race against a concurrent writer right after the clean rename (by-design
-            `RuntimeError`, no corruption; this is what triggered the `129925df94` fix above). Resumed via
-            `MIGRATION_EXTRA_ARGS="--skip-rename"` on VM `canonical-migration-tradfi-sector-remap-20260814-053905`:
-            manifest CAS committed, **self-verify: `✅ VERIFIED: 0 rows with old underlying remain. gen=1786686192651258`**.
-          - **Micro-remap** (15 codes): dry-run measured **0 manifest rows, 0 GCS objects to rename** — the live
-            population is genuinely empty, consistent with the script's own documented caveat that these raw micro codes
-            did not exist in the live `EXCHANGE_CODE_TO_NAME` registry before the 2026-08-07 fix, so no rows were ever
-            captured under them. Confirmed via `--apply` on VM `canonical-migration-tradfi-micro-remap-20260814-054820`:
-            `Total GCS objects to rename: 0. Nothing to rename — exiting.` (exit_code=0). Nothing to purge; no manifest
-            write needed.
-          - `quality-gates.sh`: green in both `unified-api-contracts` (via the `ebda13eb28` quickmerge) and
-            `market-tick-data-service` (explicit run, exit 0, confirmed for `129925df94`).
-          - Also fixed in-flight this task: a stale `download_bytes(...)` API-pattern reference in this plan's own Progress
-            Log (corrected to the confirmed-working `gcs_read_object_with_generation(uri=...)` call, in two places).
+              - `unified-api-contracts@ebda13eb28`: 15 new `RootMetadata` micro-contract entries + a new reverse-lookup test
+                converging `tradfi_roots.py`'s table onto the same values as the manifest/GCS migration below.
+              - `market-tick-data-service@b0e18fd33e`: initial migration-script rewrite — `pc.and_()` fix (bare `&` unsupported
+                on installed pyarrow's `ChunkedArray`), manifest-row-derived GCS path construction (never a live
+                `gcloud storage ls` glob — that approach timed out at 120s/call, single-walk-discipline violation), §3a fresh
+                soft-delete-retention check, per-row resilience (one bad row doesn't abort the run), `"ohlcv_1s"` added to
+                `TRADFI_DATA_TYPES`.
+              - `market-tick-data-service@129925df94`: hardening fix after the live prod run below hit a genuine manifest CAS
+                race — added a retry-with-fresh-read loop around the manifest CAS write (5 attempts) + a `--skip-rename` resume
+                flag (mirrors both `migrate_tradfi_sector_underlying_2026_08_10.py` and `migrate_tradfi_micro_underlying_2026_08_13.py`).
+              - **Sector-remap** (8 codes): dry-run measured 25,922 GCS objects to rename. `--apply` on VM
+                `canonical-migration-tradfi-sector-remap-20260814-040712`: **25,922/25,922 GCS objects renamed, 0 errors** —
+                but the manifest CAS write lost a race against a concurrent writer right after the clean rename (by-design
+                `RuntimeError`, no corruption; this is what triggered the `129925df94` fix above). Resumed via
+                `MIGRATION_EXTRA_ARGS="--skip-rename"` on VM `canonical-migration-tradfi-sector-remap-20260814-053905`:
+                manifest CAS committed, **self-verify: `✅ VERIFIED: 0 rows with old underlying remain. gen=1786686192651258`**.
+              - **Micro-remap** (15 codes): dry-run measured **0 manifest rows, 0 GCS objects to rename** — the live
+                population is genuinely empty, consistent with the script's own documented caveat that these raw micro codes
+                did not exist in the live `EXCHANGE_CODE_TO_NAME` registry before the 2026-08-07 fix, so no rows were ever
+                captured under them. Confirmed via `--apply` on VM `canonical-migration-tradfi-micro-remap-20260814-054820`:
+                `Total GCS objects to rename: 0. Nothing to rename — exiting.` (exit_code=0). Nothing to purge; no manifest
+                write needed.
+              - `quality-gates.sh`: green in both `unified-api-contracts` (via the `ebda13eb28` quickmerge) and
+                `market-tick-data-service` (explicit run, exit 0, confirmed for `129925df94`).
+              - Also fixed in-flight this task: a stale `download_bytes(...)` API-pattern reference in this plan's own Progress
+                Log (corrected to the confirmed-working `gcs_read_object_with_generation(uri=...)` call, in two places).
 
-- [ ] [CODE] P2. Add a codified requirement to /codex/02-data/tradfi-databento-sourcing-ssot.md that Databento
+- [x] ✅ [CODE] P2. Add a codified requirement to /codex/02-data/tradfi-databento-sourcing-ssot.md that Databento
       billing-health verification must include one real scoped data-pull, never list_datasets()/warmup() alone Source:
       `plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`
+
+      **DONE 2026-08-14 (slot 10, backend_engineer).** Added new section "Billing-health verification MUST include one
+          real scoped data-pull — never `list_datasets()`/`warmup()` alone" to
+          `/codex/02-data/tradfi-databento-sourcing-ssot.md` (between "PAYG re-frame" and "Single API key"). Codifies the
+          hard rule from the source issue doc's 2026-08-10/08-12 recurrence: an unscoped `warmup()`/`list_datasets()`
+          success proves the API key authenticates but not that every access path (in particular the live WS session) is
+          functional — a real scoped pull per access path (batch `timeseries.get_range` AND a real received live tick) is
+          required before trusting an "account restored" verification. — unified-trading-pm@17b7deeb51
+
 - [ ] [CODE] P2. Sweep and repoint the 9 identified referrer files' citations, then archive this doc via the standard
       6-step ritual Source: `plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`
 - [ ] [CODE] P2. Todo 1: re-run the dry-run with the fixed canonical_twin_path, confirm 100% twin-coverage, re-check
