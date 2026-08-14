@@ -110,8 +110,10 @@ if [ -f "${PM_CFG}/CLAUDE.md" ]; then
 fi
 
 # ── (3) `<root>/.claude/settings.json` → PM SSOT (team policy), IFF this clone already has it ──
-# cursor-configs/settings.json is gitignored (see header note above) — never invented/copied here,
-# only linked when this root's own PM clone already has the file on disk. Placed here (before the
+# cursor-configs/settings.json is git-TRACKED (re-tracked 2026-07-23 — see header note above); this
+# block never invents/copies its content, it only links `.claude/settings.json` to it when this
+# root's own PM clone already has the file on disk (a stale/behind clone just needs a `git pull`).
+# Placed here (before the
 # skills block below, NOT after it) because the skills block below has multiple early `exit 0` paths
 # (already-linked, no source dir) that would otherwise skip this entirely — measured: an earlier
 # version of this patch placed the settings.json block at the end of the file and it silently never
@@ -121,7 +123,7 @@ _settings_dest="${WORKSPACE_ROOT}/.claude/settings.json"
 _settings_target="../unified-trading-pm/cursor-configs/settings.json"
 
 if [ ! -f "$_settings_src" ]; then
-    echo "[link-claude-skills] no ${_settings_src} (gitignored + per-clone — re-seed manually, see codex/05-infrastructure/claude-code-settings-symlink.md) — settings.json link skipped for this root"
+    echo "[link-claude-skills] no ${_settings_src} (git-tracked — this clone hasn't pulled it yet; run git pull --ff-only, see codex/05-infrastructure/claude-code-settings-symlink.md) — settings.json link skipped for this root"
 elif [ -L "$_settings_dest" ]; then
     if [ "$(readlink "$_settings_dest")" = "$_settings_target" ]; then
         echo "[link-claude-skills] ${_settings_dest} → ${_settings_target} (already linked)"

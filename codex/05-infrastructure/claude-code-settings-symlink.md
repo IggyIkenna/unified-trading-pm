@@ -194,6 +194,39 @@ Stale local registrations are swept: `scripts/workspace/link-claude-skills.sh` s
 from a machine's `.claude/settings.local.json`, so a host still carrying the retired block gets auto-compact back on its
 next run. SSOT for the failure mode: `/plans/archive/issues/ao_worker_context_saturation_unrecoverable_2026_08_06.md`.
 
+## `settings.local.json` must be a REAL per-clone file, never a symlink (2026-08-11)
+
+`.claude/settings.local.json` is personal, gitignored, per-clone state — unlike `.claude/settings.json` (the tracked
+team file symlinked above), it must never be a link to anything, including to `cursor-configs/settings.json`.
+`link-claude-skills.sh` block (4.5) heals this file (strips stale `UserPromptSubmit`/`PreCompact` hook registrations
+that duplicate the SSOT) by writing through it with `echo > "$file"`, which follows a symlink. On 2026-08-11 three
+clones (`.tabs/1`, `.tabs/3`, `.tabs/6`) were found with `settings.local.json` symlinked to the tracked
+`cursor-configs/settings.json` — the heal write landed on the git-tracked team file instead, deleting its
+`UserPromptSubmit` hook block and reformatting the rest via jq's pretty-printer. Root cause was never a script (an
+exhaustive git-history search found none that ever creates this symlink); most likely a manual `ln -s` typo. The script
+now refuses to write through a `settings.local.json` symlink (prints the readlink target instead), and
+`scripts/plan-hygiene/check_settings_symlink_hygiene.sh` fails the hygiene sweep if `cursor-configs/settings.json` is
+ever found dirty in a clone or `settings.local.json` is ever found to be a symlink. Full incident:
+`/plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md`.
+
+## Per-machine IDE permission-mode fix (Cursor extension, 2026-08-11)
+
+`permissions.defaultMode: bypassPermissions` in `settings.json` (team or personal) does **not** control the Cursor IDE
+extension's session permission mode — confirmed via session transcripts showing `"permissionMode":"acceptEdits"` despite
+the setting. The extension resolves its own mode from **Cursor's own user settings**
+(`~/Library/Application Support/Cursor/User/settings.json` on macOS), which is deliberately personal/untracked and so
+does NOT propagate via git — every operator machine needs it set once:
+
+```json
+"claudeCode.allowDangerouslySkipPermissions": true,
+"claudeCode.initialPermissionMode": "bypassPermissions"
+```
+
+Editing `permissions.allow` in `settings.json` is not a working lever for this (verified: neither a 95-entry
+`Bash(cmd:*)` allow-list nor `Bash(*)` changed which commands prompted, and in bypass mode the allow list isn't
+consulted at all). Note the rest of `settings.json` stays fully load-bearing under bypass — hooks, `mcpServers`, `env`,
+`enabledPlugins` all still apply; only the `permissions` block goes inert for IDE sessions.
+
 ## Notes
 
 - The per-slot symlink lives in `.tabs/<N>/.claude/` which is **not** inside any git repo, so it is never committed.

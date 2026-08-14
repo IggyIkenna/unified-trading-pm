@@ -75,10 +75,17 @@ source: >-
       unified-trading-pm (this batch) — negative-result investigation: no script ever creates that symlink (exhaustive
       git-history search of every bootstrap/linker script); most likely a manual `ln -s` typo by an operator. Full
       writeup + todo closed in the source issue doc's 2026-08-14 Progress Log entry.
-- [ ] [CODE] P2. Update /codex/05-infrastructure/claude-code-settings-symlink.md with the corrected symlink-target and
-      git-tracked-status facts Source: `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md`
-- [ ] [CODE] P2. Record the Cursor claudeCode.allowDangerouslySkipPermissions / initialPermissionMode per-machine fix in
-      the same codex doc Source: `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md`
+- [x] ✅ [CODE] P2. Update /codex/05-infrastructure/claude-code-settings-symlink.md with the corrected symlink-target
+      and git-tracked-status facts Source:
+      `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md` — unified-trading-pm (this
+      batch): added "`settings.local.json` must be a REAL per-clone file, never a symlink" section (2026-08-11
+      incident + fix + hygiene-check pointer) and corrected the stale "gitignored" claims in
+      `scripts/workspace/link-claude-skills.sh` (lines describing `cursor-configs/settings.json` — that file was
+      re-tracked 2026-07-23, only the header note had been updated, not the two later comments)
+- [x] ✅ [CODE] P2. Record the Cursor claudeCode.allowDangerouslySkipPermissions / initialPermissionMode per-machine fix
+      in the same codex doc Source: `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md` —
+      unified-trading-pm (this batch): added "Per-machine IDE permission-mode fix (Cursor extension, 2026-08-11)"
+      section
 - [ ] [CODE] P2. Confirm no workflow depended on the disabled pyright-lsp in-session diagnostics before making the
       disable permanent Source: `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md`
 - [ ] [CODE] P2. Re-verify (live find/ls) whether codex_vs_repo_docs_ssot_audit_2026_06_01.md's MDPS/instruments-service
