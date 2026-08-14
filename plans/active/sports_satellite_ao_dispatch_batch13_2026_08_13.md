@@ -142,23 +142,24 @@ source: >-
       (`test_rescan_sports_fixtures_canonical_script.py::test_entity_handlers_registered`). QG green (sentinel=304711c8
       matches HEAD); verified `merge-base --is-ancestor` on origin. **Follow-up filed, not fixed here** (separate,
       pre-existing bug discovered during this repoint, not caused by it):
-      `plans/active/issues/rescan_sports_fixtures_canonical_per_league_suffix_match_broken_2026_08_14.md` — the rescan
-      tool's blob-matching logic requires an exact bare-file suffix, so its FIXTURES handler has matched zero real
-      per-league objects since fixtures went per-league (independent of which entity name it points at). Source:
+      `/plans/archive/2026_08/issues/rescan_sports_fixtures_canonical_per_league_suffix_match_broken_2026_08_14.md`
+      (archived 2026-08-14, slot-18, fix shipped instruments-service@622b641628) — the rescan tool's blob-matching logic
+      required an exact bare-file suffix, so its FIXTURES handler had matched zero real per-league objects since
+      fixtures went per-league (independent of which entity name it points at). Source:
       `plans/active/sports_consolidated_closeout_2026_07_19.md`
 - [ ] [CODE] P2. Track O: repair attempted_at on the 112,277 rows from the named pre-clobber snapshot (a normal,
       human-watched write window, not unsupervised) Source: `plans/active/sports_consolidated_closeout_2026_07_19.md`
 
       **INVESTIGATED 2026-08-14 (slot-12, backend_engineer) — target keys extinct, repair as specified is moot.**
-          Full investigation + evidence in the source doc's own Track O entry (this same commit). Summary: the
-          consolidator-pause safety question is resolved (incremental cycles pass through unchanged canonical rows
-          untouched, so a direct CAS-write would need no pause) — but a dry-run join of the pre-clobber snapshot against
-          the LIVE canonical (both the base 4-col dedup key and the full production key, `_dedup_key_sql`-normalized
-          identically to `manifest_consolidator`) found **0 matching rows**: `venue=BETFAIR` no longer exists (split into
-          `BETFAIR_SB_UK`/`BETFAIR_EX_EU`/`BETFAIR_EX_UK` by a later venue-taxonomy migration) and current
-          `data_type='trades'` rows all belong to `venue=ODDS_API`, unrelated. No prod write attempted (nothing to write).
-          Leaving open — real follow-up is tracing the venue-rename mapping to re-target the repair, out of scope for this
-          pass (open investigation, not a bounded key-swap).
+              Full investigation + evidence in the source doc's own Track O entry (this same commit). Summary: the
+              consolidator-pause safety question is resolved (incremental cycles pass through unchanged canonical rows
+              untouched, so a direct CAS-write would need no pause) — but a dry-run join of the pre-clobber snapshot against
+              the LIVE canonical (both the base 4-col dedup key and the full production key, `_dedup_key_sql`-normalized
+              identically to `manifest_consolidator`) found **0 matching rows**: `venue=BETFAIR` no longer exists (split into
+              `BETFAIR_SB_UK`/`BETFAIR_EX_EU`/`BETFAIR_EX_UK` by a later venue-taxonomy migration) and current
+              `data_type='trades'` rows all belong to `venue=ODDS_API`, unrelated. No prod write attempted (nothing to write).
+              Leaving open — real follow-up is tracing the venue-rename mapping to re-target the repair, out of scope for this
+              pass (open investigation, not a bounded key-swap).
 
 - [ ] [CODE] P2. Track O: locate the emitter of the 139,620 venue=ODDS_API/source=api_football/empty_confirmed rows
       before folding into K2 Source: `plans/active/sports_consolidated_closeout_2026_07_19.md`

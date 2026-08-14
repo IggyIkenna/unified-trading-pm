@@ -27,7 +27,8 @@ priority: P2
 locked_by:
 resolved_by:
 source: [instruments-service/scripts/rescan_sports_fixtures_canonical.py]
-status: open
+status: archived
+resolved_by: instruments-service@622b641628
 drift_direction: advance-code
 depends_on: []
 ---
@@ -79,10 +80,22 @@ repoint itself (a labeling fix), this is a distinct blob-matching defect.
 
 ## Todos
 
-- [ ] [CODE] P2. Fix `_list_entity_blob_paths()` in `instruments-service/scripts/rescan_sports_fixtures_canonical.py` to
-      match per-league blobs (tolerate an intervening `league={L}/` segment between `prefix_suffix` and `blob_filename`)
-      for entities whose data is written per-league (FIXTURES/fixtures_schedule today), while keeping the existing exact
-      match for genuinely bare per-day entities (WEATHER, XG). Add a regression test asserting `_list_entity_blob_paths`
-      returns a real per-league fixtures_schedule blob path, since `test_entity_handlers_registered` only checks handler
-      config, not actual matching behavior. Verify against a real bucket listing (or a mocked `list_blobs`)
-      before/after.
+- [x] [CODE] P2. ✅ Fix `_list_entity_blob_paths()` in `instruments-service/scripts/rescan_sports_fixtures_canonical.py`
+      to match per-league blobs (tolerate an intervening `league={L}/` segment between `prefix_suffix` and
+      `blob_filename`) for entities whose data is written per-league (FIXTURES/fixtures_schedule today), while keeping
+      the existing exact match for genuinely bare per-day entities (WEATHER, XG). Add a regression test asserting
+      `_list_entity_blob_paths` returns a real per-league fixtures_schedule blob path, since
+      `test_entity_handlers_registered` only checks handler config, not actual matching behavior. Verify against a real
+      bucket listing (or a mocked `list_blobs`) before/after. — instruments-service@622b641628, QG green. Added
+      `per_league` field to `_EntityHandler`, set on `_FIXTURES_HANDLER`; `_list_entity_blob_paths` now checks
+      `endswith(blob_filename)` + `prefix_suffix in name` when `per_league`, exact suffix otherwise. Two regression
+      tests (mocked `list_blobs`): FIXTURES matches a real per-league blob + skips a bare-day one; WEATHER keeps the
+      strict exact match (rejects a hypothetical per-league-shaped WEATHER blob). Also fixed an adjacent bug found while
+      live-verifying against the real bucket: `BUCKET_NAME` was hardcoded to a bucket that doesn't exist
+      (`instruments-store-sports-central-element-323112`, missing the `-prd-` segment — the SAME defect already fixed in
+      `audit_fixtures_via_api_football.py`) — repointed to
+      `resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group="sports")`, instruments-service@85ca3727,
+      QG green. **Live-bucket verification also surfaced a THIRD, separate defect** (upstream prefix mismatch —
+      canonical writes live under an intervening `pipeline_mode=batch_api_football/` segment this handler's prefix never
+      reaches) — out of scope for this todo (needs its own range-scan-safe design), filed as
+      `/plans/active/issues/rescan_sports_fixtures_canonical_missing_pipeline_mode_prefix_2026_08_14.md`.
