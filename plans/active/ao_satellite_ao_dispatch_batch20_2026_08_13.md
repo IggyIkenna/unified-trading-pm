@@ -146,8 +146,12 @@ source: >-
       lifecycle), joins `activity_log` spawn/dispatch `account_id` rows against `accounts.json`'s declared
       `AccountDef.variant` to report the live flash/pro split per event type + an aggregate percentage; QG green (3658
       passed, basedpyright/ruff clean). Source: `plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md`
-- [ ] [CODE] P2. Stamp agent_kind onto deepseek_message_usage at sweep time so scheduled/escalation spend is split out
-      from the mislabeled 'Worker (backlog tasks)' bucket Source:
+- [x] ✅ [CODE] P2. Stamp agent_kind onto deepseek_message_usage at sweep time so scheduled/escalation spend is split
+      out from the mislabeled 'Worker (backlog tasks)' bucket — STALE-CHECKBOX correction, not new work: already SHIPPED
+      at `agent-orchestrator@18fc60b` (2026-08-13, verified on `origin/live-defi-rollout`) — the source doc's own copy
+      of this exact todo was already flipped `[x]` there but this batch20 extraction never picked up the SHA. Per the
+      AO-dispatch conflict-check protocol's rule 4 ("already-shipped elsewhere, checkbox just never flipped"), citing
+      the SHA here rather than re-doing the work. Source:
       `plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`
 - [ ] [CODE] P2. Repair the NULL-provenance rows (clear the affected ProcessedTranscriptRow fingerprints, re-sweep,
       re-measure and record the NULL counts) Source:
