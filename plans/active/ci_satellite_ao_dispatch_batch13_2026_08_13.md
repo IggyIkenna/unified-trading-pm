@@ -270,9 +270,25 @@ source: >-
       `image-build-gate.yml`) + `instruments-service@054a67ba04` (new `consumer-qg-check.yml` listener) +
       `unified-trading-pm` (this commit — codex doc `/codex/08-workflows/ci-cd-flow.md` updated, source issue doc's todo
       flipped, follow-up branch-protection-wiring todo added). See the source issue doc's own checkbox for full detail.
-- [ ] [CODE] P2. fix or prove rollout-cloudbuild.py's --apply preserves consumer-only `substitutions` keys (currently
+- [x] ✅ [CODE] P2. fix or prove rollout-cloudbuild.py's --apply preserves consumer-only `substitutions` keys (currently
       invisible to _cloudbuild_markers()), per the doc's own stated done-when Source:
-      `plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`
+      `plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md` — ✅ **DONE 2026-08-14 (slot
+      26, infra).** Fixed via a new, SEPARATE guard (`find_dropped_substitution_keys()`, `unified-trading-pm@<pending>`)
+      rather than folding `substitutions` into `_cloudbuild_markers()`/ `find_dropped_markers()` — those two are reused
+      by `check_cloudbuild_template_drift.py`'s baseline-gated ratchet, so extending them would raise that ratchet's
+      count for every consumer already carrying legitimate per-repo substitutions (deployment-api's
+      `_DEPLOY`/`_ROLLUP_JOB`/`_ROLLUP_SVC`), requiring the operator-sanctioned baseline re-seed the doc's done-when
+      flagged as a decision, not a drive-by. The new function is called only from `main()`'s own `--apply` write path,
+      so it protects `--apply` from silently rendering away a consumer-only substitution key without touching the
+      ratchet baseline at all. Verified: unit tests for the function directly + an integration test proving
+      `main() --apply` refuses to write (rc=1, live file byte-identical afterward) when a synthetic consumer carries a
+      substitution key the template lacks, plus a live re-run against the real fleet confirming deployment-api's
+      `_DEPLOY`/`_ROLLUP_JOB`/`_ROLLUP_SVC` are refused-not-dropped. 8/8 new tests green, full `quality-gates.sh` clean.
+      **Also unblocked shipping this fix**: hit a genuinely unrelated pre-existing `workflow-template-parity` post-gate
+      red (verified on a clean stashed tree, confirmed not caused by this change) — see
+      `plans/active/issues/unified_api_contracts_image_build_gate_template_lag_blocks_all_pm_commits_2026_08_14.md` for
+      the full finding + resolution (grandfathered via `--baseline-write-allow-additions`, same reasoning as this doc's
+      own vendor-deps precedent).
 - [ ] [CODE] P2. fix/annotate the ~23 basedpyright errors in
       deployment_service/sports_trigger_{evaluation,periodic,scheduler,state}.py to drop BASEDPYRIGHT_MAX_ERRORS back to
       <=1293 (coordinate file-family ownership with sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md first,
