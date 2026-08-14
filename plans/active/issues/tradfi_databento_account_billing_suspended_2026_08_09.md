@@ -120,7 +120,12 @@ bulk backfill, then flip each gated todo's marker back to dispatchable in the sa
       the original 2026-08-09 issue) — re-apply the `BLOCKED-OPERATOR-DECISION` gate to every item in "Plans/issues
       gated by this doc" below (that section currently reads RESOLVED/lifted, which is now stale) until re-verified per
       the next todo's stronger check. Done when: operator confirms the new invoice is paid AND the next todo's
-      real-data-pull re-verification succeeds.
+      real-data-pull re-verification succeeds. **OPERATOR DECISION 2026-08-12→2026-08-14: not paying for now** —
+      explicit deferral, not an oversight; every downstream Databento-fetch todo stays `BLOCKED-OPERATOR-DECISION` until
+      this changes. Interim: the Yahoo-sourced ohlcv_1h path
+      (`yahoo_ohlcv_1h_availability_semantic_undecided_2026_08_13.md`) is the sanctioned NASDAQ/NYSE workaround for the
+      equities-2026-ML-feature goal while this stays unpaid — do not propose re-paying as a blocker-removal step without
+      asking again.
 - [ ] [DOCS] P1. **Verification-methodology gap found by the 2026-08-12 recurrence**: `DatabentoBaseClient.warmup()` /
       `client.metadata.list_datasets()` (the check the 2026-08-10 "RESOLVED" todo above relied on) is a **free,
       unbilled, account-level metadata call** — it returned 29 datasets successfully on 2026-08-10 (and would likely

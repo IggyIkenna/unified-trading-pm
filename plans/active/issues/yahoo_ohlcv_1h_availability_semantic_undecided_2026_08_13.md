@@ -137,8 +137,14 @@ So the lookahead risk the original text worried about is modelled by an existing
       (`test_source_priority`, `test_validity_matrix_completeness`, the four `test_era_b_purge` cases) — 32 passed.
 - [ ] [DATA] P3. **Re-verify the 15-min Yahoo latency still holds for 1h equity bars specifically.** The registered
       900_000 ms is documented against "CBOE-sourced indices like ^VIX"; it is the right mechanism and a sane default,
-      but it was measured for a different instrument class. Cheap to confirm: fetch a symbol across a session boundary
-      and record when each bar first becomes retrievable relative to its own close. Repo: market-tick-data-service.
+      but it was measured for a different instrument class. **Script ready, not yet run**:
+      `market-tick-data-service/scripts/measure_yahoo_1h_equity_emission_latency_2026_08_14.py` polls a live ticker
+      across a real bar-close boundary and records wall-clock-vs-bar-close latency — this CANNOT be measured
+      retrospectively (Yahoo exposes no server-side "first available at" field), only live during NASDAQ/NYSE market
+      hours (09:30-16:00 America/New_York). Checked 2026-08-14T00:15Z: market closed (next open ~13:30 UTC same day) —
+      run it during the next open window:
+      `.venv/bin/python scripts/measure_yahoo_1h_equity_emission_latency_2026_08_14.py --ticker AAPL`. Repo:
+      market-tick-data-service.
 - [ ] [DOCS] P2. Record in `/codex/02-data/tradfi-databento-sourcing-ssot.md` that Yahoo is an interim `ohlcv_1h` source
       while Databento billing is suspended, with its measured delay — so the next person adding an interim vendor knows
       the availability semantic is part of the change, not a follow-up.
