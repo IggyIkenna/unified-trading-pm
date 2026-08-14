@@ -176,8 +176,17 @@ source: >-
       doc's Progress Log already carries the full per-slot table (all 33 slots + the AO VM's runtime venv swept, 239
       fastapi-carrying venvs, zero below the `>=0.137.0` floor). No new measurement needed; flipping this checkbox to
       match reality — unified-trading-pm@4f7c5f827b (pre-existing).
-- [ ] [CODE] P2. Add a preflight/QG check that fails when an installed distribution is below its own pyproject.toml
-      floor Source: `plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md`
+- [x] ✅ [CODE] P2. Add a preflight/QG check that fails when an installed distribution is below its own pyproject.toml
+      floor Source: `plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` —
+      STALE-CHECKBOX CORRECTION (already-shipped-elsewhere, per
+      `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3.4): the source issue doc's own
+      todo 4 was already `[x] ✅ 2026-08-13` at `unified-trading-pm@45d9248d68` before this batch dispatched — verified
+      live: `45d9248d68` is an ancestor of `origin/live-defi-rollout`,
+      `scripts/quality_gates/check_installed_satisfies_pyproject.py` exists and is wired into both
+      `scripts/quality-gates-base/base-service.sh` and `base-library.sh` right after the frozen-lock floor gate, and it
+      correctly PASSES when invoked with the venv's own python (`.venv/bin/python`) and correctly FLAGS violations when
+      mis-invoked with the wrong interpreter — confirmed live against slot 27's own PM venv. No new code needed;
+      flipping this checkbox to match reality — unified-trading-pm@45d9248d68 (pre-existing).
 - [ ] [CODE] P2. Add a one-line pointer to this doc from the 9 referencing docs once todo 1 lands Source:
       `plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md`
 - [ ] [CODE] P2. Confirm the 4 .stale-pre-history-rewrite-* archive dirs are dead weight and can be removed, or document
