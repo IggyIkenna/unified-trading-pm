@@ -50,7 +50,7 @@ related_plans:
   - ../active/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md
   - ../active/ao_satellite_ao_dispatch_batch3_2026_07_31.md
   - ../active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md
-  - ../active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md
+  - ../archive/2026_08/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md
   - ../archive/2026_08/ao_satellite_ao_dispatch_batch5_2026_08_03.md
   - ../archive/2026_08/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md
   - ../archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md
@@ -473,7 +473,7 @@ ANTHROPIC_AUTH_TOKEN from the now-live GSM secret (orchestrator_master epic)
 
 **status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: AO satellite AO batch 14 — finalize
 
-### [`ao_satellite_ao_dispatch_batch4_finalize_2026_08_01`](../active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md)
+### [`ao_satellite_ao_dispatch_batch4_finalize_2026_08_01`](../archive/2026_08/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md)
 
 **status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: AO satellite AO batch 4 — finalize
 

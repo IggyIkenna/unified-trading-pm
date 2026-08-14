@@ -340,8 +340,15 @@ source: >-
       `agent-orchestrator@4d27bc1`, todo 4: `agent-orchestrator@26f8a49`, todo 17b: `agent-orchestrator@64a0291`) —
       updated all 3 rows to cite the same SHAs/dates and point back at each todo's own entry. Source:
       `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
-- [ ] [CODE] P2. DOCS P3: repoint plans/epics/orchestrator_master.md's 2 stale referrers to the archived batch4_finalize
-      path Source: `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
+- [x] ✅ [CODE] P2. DOCS P3: repoint plans/epics/orchestrator_master.md's 2 stale referrers to the archived
+      batch4_finalize path — unified-trading-pm@(this commit): fixed both hits (L53 `related_plans` frontmatter list
+      entry, L476 section-header link) in `plans/epics/orchestrator_master.md`, repointing
+      `../active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md` (confirmed no longer exists at that path) to
+      `../archive/2026_08/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md` (confirmed real archive path);
+      mirrored the existing batch5/batch6/batch7 archived-referrer link precedent already in the same file (link path
+      only, `**status**: active` prose left as-is per that precedent). Not touching the source doc's own copy of this
+      todo here — per this batch's stated design ("checkbox reconciliation back into each source doc happens in the
+      paired finalize plan"). Source: `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
 - [ ] [CODE] P2. DOCS P3: fix ao_satellite_ao_dispatch_batch12_2026_08_09.md todo formatting (meta-commentary on first
       line + [BACKEND]-vs-[OPERATOR]-adjacent tag mismatch) Source:
       `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
