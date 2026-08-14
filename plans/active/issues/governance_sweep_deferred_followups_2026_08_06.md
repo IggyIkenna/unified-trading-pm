@@ -151,17 +151,17 @@ context_scope:
       conflict cited.
 
       **round5-cross-cutting-audit 2026-08-08: all 6 subparts now confirmed resolved, no operator ruling needed.**
-                                          (1) already closed above (2026-08-07). (2) `sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md` already
-                                          self-corrects the stale PR#1084 citation (current PR is #1093). (3)
-                                          `defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md`'s own 2026-08-08 Progress Log ran the live
-                                          re-check, confirmed the stall IS real, removed the BLOCKED-OPERATOR-DECISION park. (4)
-                                          `lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` (committed 2026-08-08) confirms the split is now moot.
-                                          (5) `tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`'s own audit entries already identify this
-                                          as the same live conflict. (6) `okx_futures_instid_marker_convention_mismatch_2026_07_30.md` Progress Log
-                                          already cross-validates via an independent convergent audit run. All 6 close as stale-checkbox/duplicate
-                                          corrections against the docs they collide with.
+                                              (1) already closed above (2026-08-07). (2) `sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md` already
+                                              self-corrects the stale PR#1084 citation (current PR is #1093). (3)
+                                              `defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md`'s own 2026-08-08 Progress Log ran the live
+                                              re-check, confirmed the stall IS real, removed the BLOCKED-OPERATOR-DECISION park. (4)
+                                              `lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` (committed 2026-08-08) confirms the split is now moot.
+                                              (5) `tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`'s own audit entries already identify this
+                                              as the same live conflict. (6) `okx_futures_instid_marker_convention_mismatch_2026_07_30.md` Progress Log
+                                              already cross-validates via an independent convergent audit run. All 6 close as stale-checkbox/duplicate
+                                              corrections against the docs they collide with.
 
-                                  **CLOSED 2026-08-08 (na-eligibility-audit round7)**: the round5-cross-cutting-audit entry immediately above already found all 6 subparts resolved as stale-checkbox/duplicate corrections against the docs they collide with -- flipping this checkbox to match (no new investigation performed, citing that entry's own evidence).
+                                      **CLOSED 2026-08-08 (na-eligibility-audit round7)**: the round5-cross-cutting-audit entry immediately above already found all 6 subparts resolved as stale-checkbox/duplicate corrections against the docs they collide with -- flipping this checkbox to match (no new investigation performed, citing that entry's own evidence).
 
 - [x] ✅ [OPERATOR] P2. **aws_codebuild_terraform_import_pending_2026_07_22.md's D1-D4 rows still need your own read** —
       this sweep ruled the provider-pin sub-question (v5-align, recommended) but explicitly did not fabricate answers to
@@ -197,12 +197,22 @@ context_scope:
       the actual code-execution security gate, still open. **operator ruling 2026-08-08 (cross-cutting round 5, id=61,
       same as id=42)**: will do it later — leave blocked for now, no change. (repo: unified-trading-pm, GitHub settings
       only)
-- [ ] [DIAG] P2. **Verify the exact CME `instrument_id` string format before implementing
-      tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md's ruled fix.** The operator approved option A
-      (make `_resolve_spot_perp` asset-group-aware) and the standard CME FX underlying codes (6A/6B/6C/6E/6J) are
-      well-known, but this sweep did not verify the codebase's actual internal `instrument_id` string shape for CME
-      FUTURE contracts against the live catalogue — confirm before coding, don't assume the OKX-FUTURES `@LIN`/`@INV`
-      marker shape carries over unchanged. (repo: instruments-service)
+- [x] ✅ [DIAG] P2. **VERIFIED 2026-08-14 — CME FUTURE `instrument_id` format confirmed against BOTH code (3 convergent
+      call sites) AND the live production catalogue.** Format: `CME:FUTURE:<PRODUCT_ROOT>-USD@LIN-YYYYMMDD` (the
+      OKX-FUTURES-style `@LIN` marker DOES carry over, contrary to this todo's own caution not to assume it — turns out
+      it's a shared cross-venue convention, not OKX-specific). Confirmed at:
+      `unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py:331-344`
+      (`_build_with_margin_marker`),
+      `instruments-service/instruments_service/reference_data/adapters/tradfi/databento/adapter.py:895-929` (catalogue
+      writer),
+      `market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tradfi_shared.py:276-292`
+      (`derive_tradfi_row_instrument_id`). **Live-data confirmation**: read
+      `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (920,625 rows) via UTL
+      `get_storage_client()` (single bounded object read, no corpus walk) — found live rows for all 5 underlyings:
+      `CME:FUTURE:AUD-USD@LIN-20200113` (6A), `CME:FUTURE:GBP-USD@LIN-20200113` (6B), `CME:FUTURE:CAD-USD@LIN-20200114`
+      (6C), `CME:FUTURE:EUR-USD@LIN-20200113` (6E), `CME:FUTURE:JPY-USD@LIN-20200113` (6J). This CONTRADICTS the source
+      issue doc's tentative guess of `CME:FUTURE:AUD` (no `-USD@LIN-<expiry>` suffix, no per-expiry dating) — corrected
+      there too. (repo: instruments-service)
 - [ ] [DOCS] P3. **Human line-cap trim of `data_completion_defi_2026_07_15.md`** (sits at the 1000L hard cap) needed
       before `context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md`'s 2 dropped context_scope entries can
       be restored — this needs editorial judgment about what to cut/split from a 1000-line doc, which this sweep

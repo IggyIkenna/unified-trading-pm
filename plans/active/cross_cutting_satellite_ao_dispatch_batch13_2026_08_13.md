@@ -81,8 +81,11 @@ source: >-
 - [ ] [INFRA] P3. document which live services rely on the default-compute-SA and what secrets/buckets they can
       therefore reach (bounded documentation task) Source:
       `plans/active/issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`
-- [ ] [DIAG] P2. verify the exact CME instrument_id string format for FUTURE contracts against the live catalogue before
-      implementing tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md's already-ruled fix Source:
+- [x] ✅ [DIAG] P2. verify the exact CME instrument_id string format for FUTURE contracts against the live catalogue
+      before implementing tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md's already-ruled fix —
+      unified-trading-pm@(this commit) (2026-08-14: confirmed `CME:FUTURE:<PRODUCT_ROOT>-USD@LIN-YYYYMMDD` via 3
+      convergent code sites + a bounded live read of `prod/catalog.parquet`; recorded in both the source issue doc and
+      `tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`'s todo 1) Source:
       `plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md`
 - [ ] [CODE] P2. Diagnose how strategy-service's LDR HEAD went gate-red (clean-checkout re-run + git log -S on the
       introducing commits) Source:
