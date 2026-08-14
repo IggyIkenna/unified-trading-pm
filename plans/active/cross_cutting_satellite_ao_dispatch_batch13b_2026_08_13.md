@@ -468,8 +468,17 @@ source: >-
       loop; `start_domain_config_reloaders()` starts the `clients` domain reloader alongside `strategies`/`instruments`
       — mirroring execution-service's existing three-reloader pattern exactly, per this todo's own ask. Confirmed live
       in the current worktree; `c55b586c9c` verified an ancestor of `origin/live-defi-rollout`.
-- [ ] [CODE] P2. Resolve execution-service's missing config.py (rename-vs-document decision applied consistently) — §D
-      Source: `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
+- [x] ✅ [CODE] P2. Resolve execution-service's missing config.py (rename-vs-document decision applied consistently) —
+      §D Source: `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` —
+      execution-service@ff12d5fb87: **DOCUMENT, not rename.** `execution_service/service_config.py` (already at the
+      900-line hard cap) is execution-service's `config.py`-equivalent — schema + defaults, hot-reloadable via
+      `config_reloaders.py`. Renaming it to `config.py` would collide with the existing `execution_service/config/`
+      PACKAGE (JSON backtest/grid `ConfigLoader`, unrelated) — confirmed live: a package always shadows a same-named
+      sibling module, so the rename broke every `get_execution_config`/`ExecutionServicesConfig` import via a
+      circular-import error when attempted and was reverted the same session. Full rationale documented in
+      `execution_service/config/__init__.py`'s module docstring (where a reader looking for `config.py` lands first),
+      pointing to `service_config.py` as the real target — kept out of `service_config.py` itself to respect its line
+      cap.
 - [ ] [CODE] P2. Close the Bybit API-key reload asymmetry in DATA_SOURCE_TO_SECRET — §D Source:
       `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
 - [ ] [CODE] P2. G1 — feed config_algorithm through the already-threaded selector hook Source:
