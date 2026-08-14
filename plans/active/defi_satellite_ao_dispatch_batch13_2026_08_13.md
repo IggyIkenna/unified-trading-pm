@@ -184,10 +184,15 @@ source: >-
       SHA/description only, still valid after the move). Doc dropped from 1019L to 856L (well under the 1000L hard cap;
       `check_line_caps.sh` confirms). Left the Sanctum-reconciliation ship entry and the lst_yields feature-deferral
       note in place (not VM monitoring, per the todo's own framing).
-- [ ] [CODE] P2. Root-cause why lending_indices capture stopped 2026-08-01 — read-only diagnosis (check for a stalled
+- [x] [CODE] P2. ✅ Root-cause why lending_indices capture stopped 2026-08-01 — read-only diagnosis (check for a stalled
       cron/Workflow trigger), reopened 2026-08-08 with the underlying stall independently reconfirmed real via a live
       availability_index re-check; the operator-blocking premise that originally parked it was resolved the same day.
-      Source: `plans/active/issues/defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md`
+      **DIAGNOSED + FIXED 2026-08-14 (slot-5)**: cron trigger hypothesis falsified (fired reliably every day) — real
+      root cause is the target Cloud Run Job OOM/timeout since 2026-08-02 on an unbounded
+      `ManifestFreshnessCache.bulk_load()` call. Fixed: `market-tick-data-service@4925f88d73` (bounded_freshness_warmup
+      wiring) + `deployment-service@21e6814616` (2CPU/8Gi resource bump, live+IaC). Full writeup + a follow-up
+      live-verification todo (code fix couldn't be verified without a fresh image build) in the source doc's Progress
+      Log. Source: `plans/active/issues/defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md`
 - [x] [CODE] P2. ✅ Verify whether the declining DeFi shard-density trend (Dec2025-Feb2026 ~28,000 shards/day →
       2026-06-30..07-19 ~934/day, a >30x drop assumed but never confirmed to reflect venue retirement) is genuine or an
       actual capture gap — bounded cross-check with an explicit done-when already stated in the doc. Source:
