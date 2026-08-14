@@ -583,7 +583,8 @@ interface marks the v2 additions optional; the route returns verbatim; the test 
       "all_shards_coverage_pct": 71.0,
       "instrument_gates_download": true,
       "denominator_complete": false,
-      "layer1_completeness_pct": 97.3
+      "layer1_completeness_pct": 97.3,
+      "storage_bytes_tb": 0.4303
     }
   },
   "by_venue": { "<ag>": { "<venue>": { "...HonestCoverageStatusCounts...": 0 } } },
@@ -608,6 +609,17 @@ Key fields at each Layer-2 count node (`...counts...`): `captured`, `empty_confi
 New-in-v2 keys: `schema_version`, `layer_1`, `by_venue_instrument_type`, `by_venue_instrument_type_data_type`, `by_day`;
 new-in-v2 per-AG-cell fields: `instrument_gates_download`, `denominator_complete`, `layer1_completeness_pct`. Everything
 the v1 harness already wrote stays byte-for-byte compatible.
+
+**`storage_bytes_tb`** (added 2026-08-14, `instruments-service@scripts/measure_honest_coverage.py`): total live GCS
+storage for the asset_group, in TB (1e12 bytes), rounded to 4dp. Sourced from Cloud Monitoring's
+`storage.googleapis.com/storage/total_bytes` metric (latest daily point per `storage_class`, summed) via
+`unified_trading_library.cloud_interface.get_bucket_total_bytes()`. Soft-deleted objects are excluded by the metric's
+own definition — no separate filtering needed (do not switch to `storage/v2/total_bytes`, which INCLUDES soft-deleted
+bytes). Scope is wider than every other field on this cell: it SUMS the asset_group's instruments-store bucket (IS) AND
+its market-data-tick bucket (MTDS) — the existing Layer-2 counts on this same cell are already 100% MTDS-sourced, so
+this field intentionally reaches across the same IS/MTDS boundary rather than being scoped to instruments-service's own
+bucket alone. Optional/nullable — omitted or `null` if the Cloud Monitoring call fails (permissions, no data yet,
+transient error); a storage-metric outage never aborts coverage computation.
 
 ---
 
