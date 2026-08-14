@@ -307,8 +307,13 @@ source: >-
       windows, to determine whether some or all of its RAM-exhaustion incidents were actually this doc's
       nohup/orphan_reap bug misdiagnosed, and correct that doc's root-cause framing if confirmed Source:
       `plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`
-- [ ] [CODE] P2. DOCS P3: fix orchestrator_vm_e2e_hardening_2026_07_24.md's self-contradictory assigned_vm:NA +
-      execution_scope:orchestrator-agent frontmatter to local-only Source:
+- [x] ✅ [CODE] P2. ALREADY-DONE 2026-08-14 — verified via
+      `git log -S"execution_scope: local-only" --     plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md`: the
+      frontmatter fix landed in commit c7cddb75f6 ("docs(plans): reconcile ao delta — 5 fixes (frontmatter
+      contradiction, ...)") prior to this dispatch. Current file
+      (`plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md:22-23`) already reads `assigned_vm: NA` +
+      `execution_scope: local-only` — no code change needed. DOCS P3: fix orchestrator_vm_e2e_hardening_2026_07_24.md's
+      self-contradictory assigned_vm:NA + execution_scope:orchestrator-agent frontmatter to local-only Source:
       `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
 - [ ] [CODE] P2. DOCS P3: update deepseek_flash_ab_routing_test_2026_08_05.md's stale Deferred-table rows for todos
       2/4/17b Source: `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
