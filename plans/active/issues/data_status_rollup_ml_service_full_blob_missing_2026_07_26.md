@@ -775,7 +775,7 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       mixed None+str, clean-strings, v4 guards). 58 targeted tests pass; full QG green; verified on origin. Live `*/20`
       cycle re-verification is the next `[DATA] P3`-style follow-up (the deploy gate: LDR→main promote + Cloud Run
       build).
-- [ ] [DATA] P2. **NEW (2026-08-13), ROOT-CAUSED 2026-08-14 — see Progress Log entry below for full evidence.**
+- [x] ✅ [DATA] P2. **NEW (2026-08-13), ROOT-CAUSED 2026-08-14 — see Progress Log entry below for full evidence.**
       `market-data-processing-service`'s 420s timeout is NOT a read-size/timeout-budget-fit problem — it is a DOWNSTREAM
       SYMPTOM of the live incident tracked as the new P0 above (`market-data-tick-defi-prd-central-element-323112`'s
       consolidator SILENT STALL). ~~Once that P0 is resolved, verify this P2 clears on its own~~ **UPDATE
@@ -790,12 +790,31 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       provides. This is a genuinely separate, still-open capacity/contention problem, not resolved by the P0's own fix —
       needs its own investigation (e.g. a longer MDPS override sized off a REAL measurement of the
       lock-wait/fallback-read duration, not a blind bump, per this file's own established discipline) before assuming
-      any additional rollup-worker-side change. **`features-onchain-service`'s identical-looking 420s timeout is a
-      SEPARATE, still-unexplained cause** — its own bucket (`features-defi-prd-central-element-323112`) was confirmed
-      live-healthy (index 351KB, fresh at 30min old, no consolidator lock held) at the same check that found MDPS's
-      bucket stalled, so its timeout must originate elsewhere (likely the downstream honest-coverage grid compute, not
-      the manifest read) — do not assume the P0 fix also resolves this one; needs its own trace once the P0 is out of
-      the way.
+      any additional rollup-worker-side change. **MDPS's own portion CLOSED 2026-08-14 (slot-11) — the requested
+      measurement now exists and rules out a per-service override rather than leaving it unsized.** Two live-measured
+      facts: (1) this bucket's in-flight-wait horizon
+      (`AG_CONSOLIDATOR_INFLIGHT_HORIZON_SEC["defi"]` in `unified_trading_library/manifest_writer/_staleness_budget.py`)
+      is **4200s** — `_wait_for_in_flight_cycle_then_reread` polls for a lock release for up to 4200s once it detects a
+      live merge; (2) the now-healthy consolidator's own cycles run **~3400-3450s (~57min)** back-to-back with only a
+      ~10min free gap (the two consecutive cycles measured in the P0's own 13:30Z entry above). MDPS's 420s per-service
+      budget is ~1/10th of one merge cycle, so unless the sequential 14-service sweep happens to land inside that ~10min
+      free window, the read is GUARANTEED to still be polling when its own 420s wall-clock backstop fires — no override
+      value that also respects the shared-sequential-sweep-budget ceiling (the same constraint that capped
+      instruments-service's own override) can close that gap; only a multi-thousand-second override could, and that
+      reintroduces the exact "starves every service queued after it" risk this file already rejected once for MDPS
+      itself. **Resolution: accepted as a structural gap** (same honest-failure treatment as the original MTDS gap and
+      the since-fixed instruments-service memory gap, not a silent placeholder) —
+      `deployment-api@<TBD, see commit below>` records this in `data_status_rollup_worker.py`'s comment block; the
+      existing `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` regression test (added
+      2026-08-02) already asserts the property that matters (loud, isolated failure), so no new test was needed. A real
+      fix (MDPS tolerating a stale-but-bounded read, or its read moving off the shared sequential-sweep budget) is a
+      genuine architecture call, out of scope here — not attempted.
+- [ ] [DATA] P2. `features-onchain-service`'s identical-looking 420s timeout is a SEPARATE, still-unexplained cause,
+      split out of the combined P2 above (2026-08-14, slot-11) since it does NOT share MDPS's now-closed root cause. Its
+      own bucket (`features-defi-prd-central-element-323112`) was confirmed live-healthy (index 351KB, fresh at 30min
+      old, no consolidator lock held) at the same check that found MDPS's bucket stalled, so its timeout must originate
+      elsewhere (likely the downstream honest-coverage grid compute, not the manifest read) — needs its own trace, not
+      assumed resolved by the MDPS P0/P2 work above. Repo: deployment-api.
 - [ ] [DATA] P3. Live-verify ml-service's full.json.gz actually refreshes on a real */20 uts-prod-data-status-rollup
       cron cycle post-fix (deployment-api@aaa0d1d)
 - [x] ✅ [DATA] P1. Once
