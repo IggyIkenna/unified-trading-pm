@@ -316,7 +316,11 @@ until the next sweep) and is a stopgap, not the root fix.
       ancestor-check false-negatives under Option-B direct-promote), then check the next 2-3 hourly executions for (a)
       no OOM/signal-9 kill, (b) a completed `run-log-prefetch phase took...` log line, (c) sweep finishing under 1800s.
       If still OOM-ing, the residual unbounded `read_terminal_exit_code` fallback read in `_gcs.py` (noted as NOT fixed
-      this session, scope-boxed out) is the next suspect. Repo: deployment-service.
+      this session, scope-boxed out) is the next suspect. Repo: deployment-service. **PARTIAL (2026-08-14, slot 18)**:
+      the fix was NOT deployed yet at task pickup (last image predated the commit) — self-triggered a
+      `deployment-api-main-deploy` rebuild + content-verified the fix is now live (image `61726d7`, pushed 21:45:38Z).
+      Next 2-3 hourly executions (22:00Z onward) not yet observed this session — see Progress Log for the deploy
+      timeline; re-verify those executions' outcome next.
 
 ## Related
 
@@ -328,6 +332,27 @@ until the next sweep) and is a stopgap, not the root fix.
   launcher-host exemption), and the DP_SOURCE_RATE_LIMITED cooldown.
 
 ## Progress Log
+
+- 2026-08-14 (slot 18, backend): Picked up the P2 tail-cap-fix live-verify todo (had live `gcloud`/GCS/docker credential
+  access this session — `unified-trading-sa`). **Found the fix was NOT yet deployed**: `e69f8aeda4` committed 20:38:52Z,
+  but the running `deployment-api:latest` image (tag `c788707`) was pushed 19:32:46Z — before the fix — confirmed via
+  digest push-timestamp vs commit-timestamp (not ancestry, per this doc's own established discipline). Polled 20 min for
+  a natural `deployment-api` rebuild (fleet LDR→main promote workflow was healthy/running every ~15 min per
+  `gh run list`, but had nothing NEW to promote on `deployment-api`'s own repo — the classic "732 commits ahead" reading
+  is a false signal here too, Option-B direct-promote produces non-ancestor commits permanently, same trap review.md
+  warns about). No rebuild landed; a SECOND pre-fix OOM recurred in the interim (`fwgt2`, 21:00-21:13Z, identical
+  `qgtnz`-class "configured memory limit was reached"), confirming the regression is still live and blocking detection.
+  **Self-serviced the deploy**: `gcloud builds triggers run deployment-api-main-deploy --branch=main` (build `cae1fac6`)
+  — this only re-vendors `deployment-service`'s current LDR content into the SAME already-reviewed `deployment-api` main
+  HEAD, no new/unreviewed code. Build SUCCEEDED 21:46:11Z, pushed image tag `61726d7` (21:45:38Z). **Content-verified**
+  (docker pull + `docker cp` off the exact tag + grep, not just build-green): `read_text_tail()` defined in
+  `_gcs_tail.py` and wired into 4 call sites in `exit_code_fleet_monitor.py` + 1 in `heartbeat_stall_watcher.py` — all
+  present in the deployed image. Attempted to wait for the next hourly execution (22:00Z) to observe post-fix behavior,
+  but repeated `run_in_background` polls were killed by the harness at the ~4-5 min mark (session-lifecycle constraint,
+  not a script bug) before the 22:00 execution could start or complete — could not observe the actual post-fix sweep
+  outcome this session. Left the todo UNCHECKED (genuine behavioral verification pending) with an inline PARTIAL note
+  recording the deploy timeline, so the next session can skip straight to reading the 22:00Z+ execution logs instead of
+  re-deriving deploy state. No code changed this session (deploy-trigger + verification only).
 
 - 2026-08-14 (slot 27, backend): Live-verified the P2 classify-loop-fix todo. Confirmed `cbe58d2d` content is live on
   `origin/main` (SHA-level `merge-base --is-ancestor` false-negatived due to Option-B direct-promote rewriting commits —
