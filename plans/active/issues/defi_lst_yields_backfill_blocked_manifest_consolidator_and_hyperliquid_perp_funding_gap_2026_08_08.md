@@ -129,7 +129,7 @@ Missing: market-tick-data-service-perp
       that sibling doc — not resolved here, only the "is this tracked" question is answered.
 - [x] ✅ [DIAG] P2. **RESOLVED — no gap exists as of 2026-08-14.** Determined the real scope of the HYPERLIQUID
       `perp_funding` gap around 2026-04-20 via a bounded manifest query (not a fresh whole-corpus walk) for
-      `(cefi, perp_funding, HYPERLIQUID)` across April-May 2026. Repo: market-tick-data-service@(pending sha) —
+      `(cefi, perp_funding, HYPERLIQUID)` across April-May 2026. Repo: market-tick-data-service@ba8b3146 —
       `scripts/check_hyperliquid_perp_funding_gap_2026_08_14.py`
       (`read_availability_index(bucket, filters=[("date",">=",...),("date","<=",...)])` row-group pushdown, NOT a
       full-corpus walk). Result: **61/61 calendar days captured** for `(cefi, perp_funding, HYPERLIQUID)` across
