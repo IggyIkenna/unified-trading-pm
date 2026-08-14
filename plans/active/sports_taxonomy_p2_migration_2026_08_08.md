@@ -374,9 +374,18 @@ than proceeding.
       VM (or accept the 4-row gap as a documented, non-blocking residual — an [OPERATOR] proportionality call, since a
       dedicated VM launch for 4 rows is disproportionate; see Progress Log). Not marking this todo `[x]` until that gap
       is either closed or explicitly operator-accepted.
-- [ ] [DATA] P1. **Re-attribute the ODDS_API and FOOTYSTATS venue rows.** ODDS_API's 123,642 `odds_horizon_bucket` + 8
-      `trades` and FOOTYSTATS' 22,513 rows must move to `source` with a real per-bookmaker `venue`, or be classified as
-      genuinely source-grain rows that need a different home. Do not silently drop them.
+- [x] ✅ [DATA] P1. **Re-attribute the ODDS_API and FOOTYSTATS venue rows.** ~~ODDS_API's 123,642
+      `odds_horizon_bucket` + 8 `trades` and FOOTYSTATS' 22,513 rows~~ **CLOSED 2026-08-14 (slot-26), live re-measured —
+      all three sub-populations resolved, none silently dropped**: (1) ODDS_API's `odds_horizon_bucket` component is the
+      SAME population as the P0 todo above (this todo's number was a stale duplicate of that one) — tracked there, not
+      re-tracked here. (2) FOOTYSTATS venue currently has **0 captured rows of any data_type** — live census
+      (`data_type`/`venue`/`source`/`capture_status`) shows all 2,372 `venue in {FOOTYSTATS,footystats}` rows are
+      `empty_confirmed` — nothing left to re-attribute; the stale 22,513 figure predates whatever prior work already
+      cleared this population. (3) ODDS_API's 8 `trades` rows — dumped live (`pipeline_mode=batch_odds_api`,
+      `instrument_type=SPORT`, `instrument_id`s like `ODDS_API:SPORT:soccer_epl`) — are NOT re-attributable odds data at
+      all, they're the exact same junk population the "Delete the `SPORT` instrument_type residue" purge todo below
+      already names (8 rows) — correctly routed there as a delete, not force-fit into a bookmaker-venue re-attribution
+      here. No sub-population was silently dropped; each has an owning todo or is confirmed already-empty.
 
 ### The purges (each requires the §3a fresh check, in-run)
 
