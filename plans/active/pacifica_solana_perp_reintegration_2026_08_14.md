@@ -252,18 +252,30 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
 ## G. Documentation
 
 - [x] [SCRIPT] P2. ✅ **Updated `/codex/04-architecture/solana-defi-coverage.md`'s venue-registry tables** —
-      `unified-trading-pm@<pending push>`. Replaced the struck-through DRIFT-only historical table with the real
+      `unified-trading-pm@f5fd1a87f0`. Replaced the struck-through DRIFT-only historical table with the real
       post-reintegration state (PACIFICA-SOLANA live row + REST/WS bases, DRIFT-SOLANA still struck through, Jupiter
       explicitly noted as separately-tracked/not-done); added a "RE-INTEGRATION COMPLETE" banner with the git-history
       resurrection facts (the two wrong pre-cull premises, the execution-service live-signing gap, the deferred
       quarantine-reconciliation follow-up) so a future reader doesn't have to re-derive them from `git log`. Updated
       frontmatter `summary`/`repos`/`related`/`last_reviewed` to match.
 - [x] [SCRIPT] P3. ✅ **Cross-linked this plan and the Jupiter+Kamino plan's Progress Logs** —
-      `unified-trading-pm@<pending push>`. Added a "sibling track complete" entry to the Jupiter+Kamino plan's Progress
-      Log pointing back here with the execution-service live-signing finding flagged as relevant to Jupiter's own
+      `unified-trading-pm@f5fd1a87f0`. Added a "sibling track complete" entry to the Jupiter+Kamino plan's Progress Log
+      pointing back here with the execution-service live-signing finding flagged as relevant to Jupiter's own
       (not-yet-resolved) gates; this plan's own Progress Log (below) already carries the split-decision pointer forward.
 
 ## Progress Log
+
+- **2026-08-15 (§G landed — plan stays active, one deferred item remains)** — §G shipped
+  (`unified-trading-pm@ f5fd1a87f0`): codex doc updated with the real post-reintegration state + git-history facts, both
+  sibling plans' Progress Logs cross-linked. **This plan is NOT archived** despite §A-§G all being checked off — one
+  genuine P3 follow-up remains open (reconciling the 265 historically-quarantined `PACIFICA-SOLANA` objects against the
+  now-real catalogue, `unified_api_contracts/canonical/quarantine.py`), deliberately left as real future data work
+  rather than force-closed to trigger archival. Per the plan-completion-and-archival hard rule, archival requires EVERY
+  todo done — this one isn't, so the plan correctly stays `status: active` until that reconciliation pass actually runs.
+  **Final state**: full stack live in production code across 5 repos (UAC, instruments-service, MTDS, execution-service
+  simulation-only, strategy-service), zero `DEFERRED`/`BLOCKED-OPERATOR` end-states per the autonomous-completion
+  contract — the one open item is a tracked `- [ ]` todo with a clear unblock condition (a reconciliation pass, not a
+  human decision), not a hidden gap.
 
 - **2026-08-14/15 (§D-§F landed, full stack shipped)** — §D (MTDS), §E (execution-service), §F (strategy-service) all
   shipped with full QG green: `market-tick-data-service@c87b12db60`, `execution-service@c2961ec9a2`,
