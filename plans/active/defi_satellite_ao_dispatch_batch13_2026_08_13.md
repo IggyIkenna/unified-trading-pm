@@ -171,9 +171,19 @@ source: >-
       alert-key identity `mlpw._miss_key` == `meta_watchers._alert_key`) — proving the mechanism itself is correct
       rather than waiting indefinitely on the operator decision. `quality-gates.sh --no-fix` ALL PASSED (252s, sentinel
       `a927715ed6b160ea2689634aece13d0c7056676c`).
-- [ ] [CODE] P2. Extract the lst_rate_honest_coverage_2026_07_21.md Progress Log's VM-monitoring-history block
+- [x] [CODE] P2. ✅ Extract the lst_rate_honest_coverage_2026_07_21.md Progress Log's VM-monitoring-history block
       (~2026-07-21..07-26 entries) into a companion doc, per Todo 1's stated pattern Source:
-      `plans/active/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md`
+      `plans/active/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` — unified-trading-pm (this commit).
+      Extracted the 19-entry contiguous chronological block of VM re-check / preemption-resume / T+N-min health-check
+      entries (2026-07-22 19:51 UTC → 2026-07-26 07:56 UTC, the LST-rates + dex-swaps backfill fleets) verbatim into
+      `plans/archive/2026_08/lst_rate_honest_coverage_vm_monitoring_history_2026_07_21.md`, leaving a condensed
+      summary + pointer in the live plan's Progress Log. Also fixed the Deferred-work table's internal "see 2026-07-26
+      Progress Log entry" pointer to cite the new companion doc directly. Grepped the corpus for any other doc citing a
+      specific timestamped entry inside the extracted range by path — none found (the two hits,
+      `defi_satellite_ao_dispatch_batch2_2026_07_26.md` and this todo's own source issue doc, cite by commit
+      SHA/description only, still valid after the move). Doc dropped from 1019L to 856L (well under the 1000L hard cap;
+      `check_line_caps.sh` confirms). Left the Sanctum-reconciliation ship entry and the lst_yields feature-deferral
+      note in place (not VM monitoring, per the todo's own framing).
 - [ ] [CODE] P2. Root-cause why lending_indices capture stopped 2026-08-01 — read-only diagnosis (check for a stalled
       cron/Workflow trigger), reopened 2026-08-08 with the underlying stall independently reconfirmed real via a live
       availability_index re-check; the operator-blocking premise that originally parked it was resolved the same day.
