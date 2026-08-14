@@ -90,12 +90,22 @@ The same shape holds for `_bybit_factory` (its connector matches only the `publi
 launched — but it is a live trap, not a theoretical one, and the launcher comment for the cefi VM explicitly notes
 "options_chain WS not yet wired" while the factory silently accepts it.
 
-- [ ] [DATA] P1. Make every CeFi connector factory reject an unsupported data_type with a typed error instead of falling
+- [x] [DATA] P1. Make every CeFi connector factory reject an unsupported data_type with a typed error instead of falling
       through to the trades connector — DoD: `_deribit_factory("cefi", "DERIBIT", "options_chain")` raises, and a
-      parametrised test asserts every registered venue rejects at least one known-unsupported data_type.
-- [ ] [DATA] P1. Audit the manifest for rows whose data_type could have been mis-stamped by this fallthrough before the
+      parametrised test asserts every registered venue rejects at least one known-unsupported data_type. — DONE
+      2026-08-14: `_deribit_factory`/`_bybit_factory`/`_binance_futures_factory` now raise `NotImplementedError` for any
+      `data_type != "trades"` instead of falling through
+      (market-tick-data-service/market_tick_data_service/live/connectors/{deribit_ws,bybit_ws,binance_futures_ws}.py);
+      parametrised rejection + still-accepts-trades tests added in
+      market-tick-data-service/tests/unit/test_cefi_book_ticker_ws_connectors.py
+      (`TestFactoryRejectsUnsupportedDataType`).
+- [x] [DATA] P1. Audit the manifest for rows whose data_type could have been mis-stamped by this fallthrough before the
       fix — DoD: a query over live rows for the affected (venue, data_type) pairs returning zero `captured` rows, or a
-      list of affected rows for remediation.
+      list of affected rows for remediation. — DONE 2026-08-14: read cefi prod `_index/availability_index.parquet`
+      (28,314,889 total rows / 155,406 live rows), filtered to the 7 affected (venue, data_type) pairs (DERIBIT
+      options_chain/futures_chain, BYBIT-FUTURES liquidations/futures_chain, BINANCE-FUTURES
+      liquidations/options_chain/futures_chain) — **zero rows exist for any of the 7 pairs** (never launched). No
+      mis-stamped data in prod; no remediation needed.
 
 ## Finding B — DeFi live connectors registered under runtime-unreachable keys
 
@@ -108,12 +118,43 @@ The batch-live smoke-matrix validator hides this: its `_normalize_venue_for_matc
 matching, so `CURVE-ETHEREUM` resolves to `curve` in the validator and the cell reads as wired. The validator is more
 permissive than the runtime it is meant to prove.
 
-- [ ] [DATA] P1. Re-register the affected DeFi connectors under canonical `VENUES_BY_ASSET_GROUP` venue names — DoD: for
+- [x] [DATA] P1. Re-register the affected DeFi connectors under canonical `VENUES_BY_ASSET_GROUP` venue names — DoD: for
       every defi venue with a real connector, `WS_FEED_CONNECTOR_FACTORIES` resolves the exact canonical token; a test
-      iterates the venue list and asserts resolution with no normalisation.
-- [ ] [DATA] P1. Make the validator's venue matching identical to the runtime handler's, or have it call the handler's
+      iterates the venue list and asserts resolution with no normalisation. — DONE 2026-08-14: `curve`/`morpho`/`orca`/
+      `raydium` now also register under `CURVE-ETHEREUM`/`MORPHO-ETHEREUM`/`ORCA-SOLANA`/`RAYDIUM-SOLANA` (bare legacy
+      keys kept for existing callers) —
+      market-tick-data-service/market_tick_data_service/live/connectors/{curve_defi_ws,morpho_defi_ws,orca_defi_ws,raydium_defi_ws}.py@44db26bce0.
+      `jito` was already correctly dual-registered under `JITO-SOLANA`; `phoenix` handled separately below (no canonical
+      target exists). Canonical-key resolution tests added per connector in
+      market-tick-data-service/tests/unit/test_{curve,morpho,orca,raydium}_defi_ws_connector.py@44db26bce0.
+- [x] [DATA] P1. Make the validator's venue matching identical to the runtime handler's, or have it call the handler's
       resolver directly — DoD: a venue reachable in the validator but not at runtime RED-fails the smoke matrix; prove
-      with the pre-fix `CURVE-ETHEREUM` case.
+      with the pre-fix `CURVE-ETHEREUM` case. — DONE 2026-08-14: extracted the exact/`.lower()`/`.upper()` lookup order
+      out of `_resolve_connector` into a new shared `resolve_ws_feed_venue_key()` —
+      market-tick-data-service/market_tick_data_service/cli/handlers/websocket_streaming_handler.py@44db26bce0;
+      `validate_batch_live_smoke_matrix.py`'s `resolve_live_venue_key` now delegates to it instead of its own
+      chain-suffix-stripping `_normalize_venue_for_match` (deleted) —
+      e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py@bb2e2316d5. Pre/post-fix `CURVE-ETHEREUM` case
+      proven directly in
+      market-tick-data-service/tests/unit/test_websocket_streaming_handler.py::TestResolveWsFeedVenueKey@44db26bce0
+      (e2e-testing has no service-to-service dependency on MTDS, so its own test suite proves delegation via a stub
+      injection instead — e2e-testing/tests/unit/test_validate_batch_live_smoke_matrix.py@bb2e2316d5).
+
+**2026-08-14 correction to this finding's venue list — `phoenix` is not a casing bug.** Re-registration landed for
+`curve`→`CURVE-ETHEREUM`, `morpho`→`MORPHO-ETHEREUM`, `orca`→`ORCA-SOLANA`, `raydium`→`RAYDIUM-SOLANA` (all single-chain
+real connectors; `jito` was already correctly dual-registered under `JITO-SOLANA`). `phoenix` could not be fixed the
+same way: `PHOENIX-SOLANA` is not in current UAC `VENUES_BY_ASSET_GROUP` at all (verified live — 168-venue universe,
+zero `phoenix` substring match). It was deliberately excluded 2026-07-22
+(`unified_api_contracts/registry/defi_venues.py:800`) after its REST API (`api.phoenix.trade`) went NXDOMAIN —
+deprecated 2026-05-15 per `unified_api_contracts/external/phoenix/schemas.py`. So `phoenix_ws.py`'s registration isn't
+reachable under any canonical key because there IS no canonical key, not because of a resolver mismatch — re-registering
+it would mean inventing a venue UAC has already ruled out. The validator/resolver fix above still applies to this
+connector (correctly), it just can never turn green for `phoenix` while the venue stays excluded.
+
+- [ ] [OPERATOR] P2. Rule on `phoenix_ws.py`: delete it as dead code targeting a UAC-excluded venue (the honest option,
+      since Jupiter-routed polling still can't produce a `PHOENIX-SOLANA` canonical row), or make the case to restore
+      `PHOENIX-SOLANA` to `VENUES_BY_ASSET_GROUP` for live-only coverage despite the dead REST API — DoD: the ruling is
+      recorded here and `phoenix_ws.py` either removed or left in place with the ruling cited in its docstring.
 
 ## Finding C — deployed live shards producing zero rows in three asset groups
 
@@ -182,3 +223,13 @@ and succeeded on all recent runs; the index's age reflects the incremental-cutof
 ## Progress Log
 
 _(append dated entries here)_
+
+- **2026-08-14**: Findings A and B (both todos each) DONE. Finding A: cefi factory fallthrough fixed
+  (market-tick-data-service@44db26bce0) + manifest audit found zero mis-stamped rows (bug was live but never exercised —
+  7 affected (venue, data_type) pairs, all zero rows). Finding B: curve/morpho/orca/raydium re-registered under
+  canonical UAC keys, resolver logic deduplicated into a shared `resolve_ws_feed_venue_key()` used by both the runtime
+  handler and the smoke-matrix validator (market-tick-data-service@44db26bce0, e2e-testing@bb2e2316d5). Correction
+  recorded in-finding: `phoenix` cannot be fixed by re-registration — `PHOENIX-SOLANA` isn't in current UAC
+  `VENUES_BY_ASSET_GROUP` (excluded 2026-07-22, dead REST API) — new `[OPERATOR]` P2 todo added under Finding B to rule
+  on deleting `phoenix_ws.py` vs restoring the canonical venue. Findings C, D, E untouched (out of scope — owned by
+  Workers A/C per the 3-way split).
