@@ -147,7 +147,12 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
 - [ ] [SCRIPT] P2. **Next time this recurs, catch it BEFORE the silent window elapses** — if a monitoring tick sees a
       VM's `run.log`/heartbeat go quiet, SSH in immediately
       (`gcloud compute ssh ... --command="py-spy dump --pid <pid>"` or `strace -p <pid>`) instead of waiting for the
-      watchdog to kill it, to capture the actual hang state.
+      watchdog to kill it, to capture the actual hang state. **IAP-SSH blocker RESOLVED 2026-08-14** (see Progress Log)
+      — `gcloud compute ssh --tunnel-through-iap` now works end-to-end against live instances using
+      `1060025368044-compute@developer.gserviceaccount.com` (the automation account used for VM actions in this
+      campaign). Remaining gap: `strace` is present on the VM image but `py-spy`/`gdb` are NOT — a live hang capture
+      would need `pip install py-spy` at hang time (extra step/delay) or fall back to `strace -p <pid>`. Still gated on
+      the opportunistic "must catch it mid-tick" timing, not on access anymore.
 - **[SCRIPT] P3. Extracted to `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 (2026-08-09,
   satellite-batch-extraction pass) — audit whether `market_tick_data_service`'s `odds_api` HTTP client calls have
   explicit connect/read timeouts, and add them if missing. Tracked there (`assigned_vm: planning`), not duplicated here;
@@ -491,3 +496,33 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   capacity problem confirmed, not fixable by relaunch). This is genuinely new information (preemption, not the hang) —
   recorded here rather than a new issue to keep this campaign's history in one doc; the silent-hang root cause (Todo 1)
   remains the P1 across the whole family regardless.
+
+- **2026-08-14 (autonomous session) — todo 1's standing IAP-SSH blocker diagnosed at the root and RESOLVED (project
+  `central-element-323112`).** Reproduced the exact failure first: the 2026-08-08T08:40Z entry's
+  `Error while connecting [4033: 'not authorized']` reproduces cleanly today when running
+  `gcloud compute ssh --tunnel-through-iap` as `1060025368044-compute@developer.gserviceaccount.com` — the account this
+  campaign's own relaunch commands set via `CLOUDSDK_CORE_ACCOUNT=` and the same one that shows as `principalEmail` on
+  every watchdog-kill delete op in the Timeline above. Checked both halves of the standard IAP-SSH gate: (1) **firewall
+  was never the blocker** — `default-allow-ssh` (network `default`) already allows ingress `0.0.0.0/0` on `tcp:22`,
+  which trivially covers the IAP relay range `35.235.240.0/20`; no firewall change was needed or made. (2) **IAM was the
+  actual gap** — project IAM policy showed `roles/iap.tunnelResourceAccessor` present on
+  `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (this session's own active account — likely
+  self-serviced by an earlier session per the round-7 na-eligibility-audit entry above, but never checked against the
+  account that actually runs VM automation) but **absent** on `1060025368044-compute@developer.gserviceaccount.com` —
+  the account that matters for this doc. Granted it:
+  `gcloud projects add-iam-policy-binding central-element-323112 --member="serviceAccount:1060025368044-compute@developer.gserviceaccount.com" --role="roles/iap.tunnelResourceAccessor" --condition=None`
+  (a standard, narrowly-scoped role grant to an existing, already-heavily-used service account — no new principal, no
+  broadened firewall, nothing opened beyond the one missing role). **Verified, not just claimed**: two SSH attempts
+  immediately after the grant still hit the identical `4033: 'not authorized'` error (IAM propagation lag, ~60-90s); the
+  third attempt (~90s after the grant) succeeded, and a repeat against a second, directly-relevant live instance
+  (`mtds-live-sports-odds-api-trades-20260804-131449`, same odds-api family) succeeded immediately with no further lag —
+  confirms the fix is real and stable, not a fluke. **New sub-finding while verifying**: the VM image ships `strace` but
+  NOT `py-spy` or `gdb` — todo 1's suggested `py-spy dump` would need an on-the-fly `pip install py-spy` at hang-capture
+  time (extra step, adds delay to an already-tight opportunistic window); `strace -p <pid>` works as-is and is the safer
+  first reach. **Net effect**: todo 1's standing access blocker is closed — the next session/operator that catches a
+  `mtds-backfill-odds-*` VM's heartbeat freshly stale (but still `RUNNING`, before the watchdog's ~16-21 min kill) can
+  now
+  `gcloud compute ssh <vm> --zone=asia-northeast1-c --tunnel-through-iap --account=1060025368044-compute@developer.gserviceaccount.com --command="strace -p <pid>"`
+  (or `py-spy` after a quick `pip install`) and actually capture the hang state live. This resolves the ACCESS gap only
+  — the timing constraint (must be caught mid-tick, before the watchdog acts) is unchanged, and the underlying
+  silent-hang mechanism itself is still unconfirmed.
