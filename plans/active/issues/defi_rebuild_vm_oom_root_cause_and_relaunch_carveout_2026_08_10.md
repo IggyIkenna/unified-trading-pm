@@ -209,10 +209,19 @@ opt-out for exactly this case. Fresh watchdog armed for this instance name.
 ## Resolution (2026-08-10/11) — second root cause found + fixed, chain reached terminal SUCCESS
 
 The `-113426` on-demand relaunch above was not the end of the chain: its eventual successor
-(`canonical-migration-defi-rebuild-20260810-180141`) OOM'd for real on an over-aggressive `e2-standard-4` (4vCPU/16GB)
+(`canonical-migration-defi-rebuild-20260810-141813`) OOM'd for real on an over-aggressive `e2-standard-4` (4vCPU/16GB)
 resize — a genuine RAM shortfall on a denser chunk, unrelated to the `covered_keys` bug above (confirmed via
 `host_metrics_window`: 50%→85%+ within-chunk, no reset). Relaunched on `e2-highmem-4` (restores 32GB RAM, keeps the
 validated-fine 4-vCPU reduction).
+
+**Correction (2026-08-14, live verification — see Progress Log)**: the original text here named
+`canonical-migration-defi-rebuild-20260810-180141` as the VM that OOM'd. That was a mislabeling — the OOM'd VM (raw
+`run.log` tail: `[vm-exec] command exited rc=137` / `DEPLOYMENT_FAILED ... exit_code=137` at 2026-08-10T16:59:47Z) is
+`-141813` (corrected above). `-180141` was launched later and, per
+`/plans/active/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_10.md`, was killed by an unrelated
+rogue `gcloud compute instances delete` at 19:41-19:43Z while actively healthy (heartbeats current to 19:40:30Z, no
+`rc=137`/shutdown-script trace in its own `run.log` — it simply stops, consistent with an external delete, not a kernel
+OOM-kill).
 
 While that ran, a **second, deeper root cause** was found by direct investigation (operator: "why is memory bloating,
 fix the leakage, add canonical resource monitoring"): `ManifestWriter`'s per-VM-shard flush path
@@ -280,3 +289,18 @@ already-running incumbent's ~8%-noise impact) is now a codified HARD RULE, not j
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
+
+**slot 15 (infra worker) 2026-08-14**: Live-verified fleet completion state for
+`cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`'s "Verify current DeFi canonical-migration-defi-rebuild
+fleet completion and consolidated-manifest freshness state" todo. Findings: (1) zero live `canonical-migration*` VMs
+currently running (`gcloud compute instances list`, project `central-element-323112`); (2) full GCS `vm-logs/` directory
+listing (via UTL's `get_storage_client()`, no `gsutil`) confirms `canonical-migration-defi-rebuild-20260810-204358` is
+the LATEST `canonical-migration-defi-rebuild-*` entry — no relaunch since; its raw `run.log` tail confirms the
+"Resolution" section's terminal-SUCCESS claim independently (`rc=0`, `DEPLOYMENT_COMPLETED ... exit_code=0`,
+`Elapsed 12780.2s`, `total_shards: 5832208`, chunk 5 through `2026-12-31`); (3) while tracing the chain, found + fixed
+this doc's own VM-name mislabeling (`-180141` → `-141813` for the real OOM), see the inline correction above; (4) the
+consolidated manifest is genuinely FRESH right now — live read of `market-data-tick-defi-prd-central-element-323112`'s
+`_index/availability_index.parquet` blob shows `updated=2026-08-14T18:39:07Z`, age≈250s at check time, well inside
+DeFi's `AG_STALENESS_BUDGET_SEC["defi"]=3600s` override (`unified_trading_library/manifest_writer/_staleness_budget.py`)
+— only 2 outstanding per-VM shards (no backlog pileup), consistent with a healthy, actively-cycling consolidator, not a
+paused/stale one. Full todo verdict recorded on the dispatching plan's checkbox.
