@@ -185,8 +185,13 @@ source: >-
       `unified_api_contracts.canonical.domain.strategy.clients_yaml_schema` as the schema SSOT.
 - [ ] [CODE] P2. Instantiate or explicitly waive clients.yaml for every factory-registered archetype that can run
       Source: `plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md`
-- [ ] [CODE] P2. Record the resolved per-client config surface ownership in codex (per-client-isolation-architecture.md)
-      Source: `plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md`
+- [x] ✅ [CODE] P2. Record the resolved per-client config surface ownership in codex
+      (per-client-isolation-architecture.md) Source:
+      `plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md` — unified-trading-pm: added
+      a "Config surface ownership" section to `/codex/04-architecture/per-client-isolation-architecture.md` with the
+      three-surface table (wallet_mapping.json / clients.yaml / strategy_service configs) + live-vs-not verdicts, the
+      two known gaps (archetype-first keying, missing leverage/venue-selection/coin-universe fields), and a pointer to
+      the operator's 2026-08-12 `(client_id, slot_label)` target-state ruling in the source issue doc.
 - [ ] [CODE] P2. Mine unified-trading-system-ui backtest views for the analytics surface before extending the analytics
       schema section further Source:
       `plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md`
