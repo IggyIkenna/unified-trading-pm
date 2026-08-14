@@ -112,8 +112,19 @@ source: >-
       decision + 4 follow-up todos filed: `plans/active/issues/sports_footystats_mislabel_contradiction_2026_08_14.md`.
       Stale claim in the source doc corrected in place (same turn). Source:
       `plans/active/sports_consolidated_closeout_2026_07_19.md`
-- [ ] [CODE] P2. Track C: QG assertion that sports data_type/venue/instrument_type/chain stay within the canonical
-      vocabulary (deployment-ui Distinct Values panel reads 0 non-canonical across all four axes) Source:
+- [x] ✅ [CODE] P2. Track C: QG assertion that sports data_type/venue/instrument_type/chain stay within the canonical
+      vocabulary (deployment-ui Distinct Values panel reads 0 non-canonical across all four axes)
+      **deployment-api@8497e952bb** (2026-08-14, slot-27). Wired `scripts/check_sports_distinct_values_canonical.py`
+      (reuses the SAME `enumerate_distinct_values()` + honest-coverage rollup reader the `GET /distinct-values/sports`
+      panel itself uses — no reimplemented vocabulary logic) into `quality-gates.sh` as a genuine hard-gate STEP: fails
+      the run (exit 1) on real non-canonical drift, warns without blocking (exit 2) when the honest-coverage rollup is
+      unreachable in a given QG context. **Root-caused + fixed a live QG-abort bug while wiring this in**: the checker
+      script itself pre-existed from a prior same-slot session (unpushed local commit) but calling it as a bare
+      statement silently aborted the ENTIRE quality-gates.sh run — `base-library.sh:43`'s `set -e` persists through the
+      whole sourced QG process, so a non-zero exit outside an `if` condition triggers the inherited errexit + EXIT trap
+      with zero error output (confirmed live via `bash -x` trace, reproduced twice deterministically). Fixed by
+      observing the exit status via an `if` condition (bash's one errexit-exempt context), matching STEP 5.90's existing
+      checker pattern. QG green (sentinel=8497e952 matches HEAD); verified `merge-base --is-ancestor` on origin. Source:
       `plans/active/sports_consolidated_closeout_2026_07_19.md`
 - [ ] [CODE] P2. Track E: repoint the remaining 7-file stale entity=fixtures consumer list to
       fixtures_schedule/fixtures_outcomes Source: `plans/active/sports_consolidated_closeout_2026_07_19.md`
