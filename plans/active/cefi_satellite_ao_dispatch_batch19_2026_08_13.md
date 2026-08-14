@@ -71,10 +71,35 @@ source: >-
 
 ## Todos
 
-- [ ] [WRITER] P2. implement Gap 1's resolution — row-level column-value gate for bundle-shaped
+- [x] ✅ [WRITER] P2. implement Gap 1's resolution — row-level column-value gate for bundle-shaped
       (chain-bundle/options_chain) writers, dropping non-canonical rows to record_failed(NON_CANONICAL_INSTRUMENT_ID,
       granularity=row) + adding quarantined_legs to the manifest row (market-tick-data-service) Source:
-      `plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md`
+      `plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md` — **SHIPPED
+      market-tick-data-service@c1626c5dbd** (a7a1ae39 gate + c1626c5d file-size-cap consolidation, no behavior change).
+      `finalise_rows_and_path` classifies each chain-bundle row's own `instrument_id` immediately before write via
+      `classify_id_form()`; NON_CANONICAL rows drop (canonical + registered-quarantined legs both survive) and are
+      tracked on the new `FinalisedShard.quarantined_legs`, propagated through `ShardChunk.metadata`, and routed to a
+      per-leg `record_failed(error="NON_CANONICAL_INSTRUMENT_ID")` manifest row in
+      `finalise_and_write_cefi_shards_streaming` (reconciliation queries these by `error=`/`underlying=`/`day=` rather
+      than a first-class `quarantined_legs` field on the aggregate row — see the new todo below). 4 new unit tests
+      (`tests/market_interface/adapters/cefi/test_chain_bundle_row_level_id_gate.py`). **Prerequisite fix shipped
+      alongside**: the row-level gate exposed a real, pre-existing UAC ID_FORM-oracle gap —
+      `is_canonical_instrument_id`'s regex only recognized the `@LIN`/`@INV` margin-marker convention, not the
+      co-existing legacy lowercase `-inverse`/`-linear` word-form suffix `_build_option`/`_build_future` still emit when
+      `quote_asset`+`margin_type` are supplied without a `margin_marker` — so the new gate was misclassifying real
+      DERIBIT/BYBIT inverse+linear options_chain/futures_chain rows as NON_CANONICAL and dropping legitimate production
+      data. Fixed at the oracle (widened `_CANONICAL_INSTRUMENT_ID_RE`), not worked around in the writer — **SHIPPED
+      unified-api-contracts@8b81dd78bb**.
+- [ ] [WRITER] P3. Extend Gap 1's row-level gate with first-class manifest visibility: add a `quarantined_legs` field to
+      UTL's `ManifestRow` schema (unified-trading-library) and thread it from `FinalisedShard.quarantined_legs` through
+      `ShardChunk.metadata` → the day-level `_DateRunState` accumulator (`venue_fetch.py`) → `_write_bundle_shard_row`'s
+      aggregate `record_captured_from_counts` call (`manifest_finalize.py`), so the underlying-keyed captured row itself
+      carries the dropped-leg list, per §5b's original "the manifest keeps its existing underlying-keyed row, plus a new
+      quarantined_legs: [...] field" spec. Deferred out of the Gap 1 todo above because `ManifestRow` lives in a
+      different repo (unified-trading-library) not named in that todo's scope, and today's per-leg
+      `record_failed(error="NON_CANONICAL_INSTRUMENT_ID")` rows already give reconciliation a queryable (if
+      row-granularity rather than field-granularity) signal. Repos: unified-trading-library, market-tick-data-service.
+      Source: `plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md` §5b.
 - [ ] [WRITER] P2. implement Gap 2's resolution — make the live/on-chain lane's manifest key a deterministic function of
       the already-computed column value instead of an independent resolve_cefi_instrument_id() call
       (market-tick-data-service: venue_fetch.py, partitioned_writer.py) Source:

@@ -215,7 +215,54 @@ source: >-
       deferred to the paired finalize plan, same as above.
 - [ ] [CODE] P2. PROVE the CI bootstrap script on a real bare host (VM launch + systemd/IMDS/GCP-ADC/runner-registration
       verification) -- container leg already proven, bare-VM leg genuinely blocked only on provisioning Source:
-      `plans/active/github_actions_operator_gated_followups_2026_07_17.md`
+      `plans/active/github_actions_operator_gated_followups_2026_07_17.md` **IN PROGRESS 2026-08-14 (slot 15, infra) —
+      NOT complete, VM terminated, resume from here (do not restart from zero):** Launched a throwaway EC2 instance
+      (`i-0e2421dbfaa547d4e`, `ci-bootstrap-verify-20260814-052142`, `t3.small`, `ap-northeast-1`, subnet
+      `subnet-fc09eca6`, SG `sg-066c852065f8cdcac`, IAM instance profile `uts-orchestrator-epic`) via
+      `deployment-service/scripts/vm/lib/aws_ec2_launch_lib.sh`'s `lc_aws_ec2_run` (mirrors
+      `/codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md`'s documented manual-relaunch recipe for the REAL
+      CI-runner VM — there is no registered launcher for this VM class, confirmed intentional per that runbook).
+      **Findings so far**: 1. `lc_aws_resolve_ami()`'s SSM Parameter Store lookup (`ssm:GetParameter` on the public
+      Canonical AMI param) is DENIED for the `ikenna-worker` IAM user (`AccessDeniedException`) — worked around via the
+      `AMI_ID` env override using the SAME AMI the real CI-runner VM runs (`ami-0bf052f8a9dd8bf42`, live-confirmed in
+      the runbook above) rather than self-granting the missing permission, since a working alternative existed. Not
+      self-fixed as a permission gap because it wasn't necessary to; flagging in case a future launcher genuinely needs
+      the SSM-latest-AMI path. 2. IAM instance-profile association confirmed correctly `associated`
+      (`aws ec2 describe-iam-instance-profile-associations`) and the instance reached `running` state promptly, but
+      **SSM Agent never registered** (`aws ssm describe-instance-information` returned empty `PingStatus` for ~5 min of
+      polling) — at the time this read as an unresolved per-instance/AMI mystery (candidates floated: SSM agent not
+      enabled on this AMI; subnet lacking a NAT/SSM VPC endpoint for a no-EIP box). **CORRECTED 2026-08-14 (slot 15,
+      infra), same-session resume**: that framing was WRONG — root-caused by testing SSM directly against the KNOWN
+      -WORKING real CI-runner VM (`i-042a6332509482556`) and the central planning VM (`i-0c9b283b31d6b5ca7`): BOTH
+      `aws ssm describe-instance-information` and `aws ssm send-command` fail the identical `AccessDeniedException` for
+      the `ikenna-worker` IAM user, and `iam:ListAttachedUserPolicies`/`iam:ListUserPolicies` are ALSO denied (no
+      self-inspection path, so no self-grant either). This is not a per-instance/AMI/subnet problem — it is the **exact
+      same pre-existing, already-filed, twice-reconfirmed fleet-wide gap** documented in
+      `/plans/active/issues/check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09.md` (filed 2026-08-09,
+      reconfirmed 2026-08-09 by slot-18). This task's entire bare-host-proof approach depends on `aws ssm send-command`
+      to reach a private-IP-only instance (no SSH key provisioned) — so it is blocked on that SAME `[OPERATOR]` grant,
+      not on anything a relaunch/AMI-swap/subnet-fix can resolve. **Do not re-diagnose SSM registration on a future
+      relaunch** — the fix is the operator IAM grant in that issue doc; re-attempt this task only after it lands. 3.
+      **Terminated the instance** (`i-0e2421dbfaa547d4e`) rather than leave an unverified, IAM-privileged box running
+      unattended across a session boundary — nothing was proven on it yet (bootstrap-ci-host.sh was never actually run),
+      so nothing of value was lost by tearing down. 4. **Validated plan for the GH-runner-registration leg, not yet
+      executed** (still correct, apply once the SSM grant lands): use
+      `GH_PAT=$(aws secretsmanager get-secret-value --secret-id GH_PAT --query SecretString --output text)`
+      (`setup-glue-runners.sh`'s documented "LEGACY... host with no ADC" path — the SAME mechanism
+      `launch-central-brain-aws.sh`'s own user-data already uses) rather than the GCP-Secret-Manager `GH_TOKEN_SECRET`
+      path, which would require copying the shared production `unified-trading-sa` GCP service-account PRIVATE KEY onto
+      a disposable verification host — a deliberate security-scoping decision, not an oversight. Register with a
+      distinct `POOL_TAG=ci-bootstrap-verify` (additive per the script's own multi-tenancy design — cannot clobber PM's
+      live pool), confirm via `./setup-glue-runners.sh status` AND an independent
+      `gh api repos/IggyIkenna/unified-trading-pm/actions/runners` check from outside the VM, then `teardown` +
+      `terminate-instances` immediately. 5. **GCP-ADC leg scoping note**: proving this leg via the real production SA
+      key is NOT recommended for a throwaway host (see 4 above) — the toolchain-only check (`gcloud` installed +
+      resolvable, which `bootstrap-ci-host.sh`'s own `verify()` already covers) is the safe bar for THIS leg unless the
+      operator wants a dedicated non-production test GCP service-account minted specifically for this class of
+      verification (a decision, not something to improvise solo). Released back to the queue GATED (genuinely blocked on
+      the operator-gated SSM IAM grant above, confirmed fleet-wide, not a task-boundary artifact) — the next pickup
+      should check that issue doc's status FIRST; once granted, re-launch per the recipe above and proceed through steps
+      4-5 directly (no SSM re-diagnosis needed).
 - [ ] [CODE] P2. implement the consumer-QG promote fan-out gate in UAC's promote-gate workflow (per the 2026-08-08
       operator ruling; design + target consumer already specified in the doc) Source:
       `plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`

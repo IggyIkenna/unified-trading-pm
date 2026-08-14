@@ -175,15 +175,85 @@ The sports leg is already owned by `/plans/active/mtds_sports_live_arb_feeds_sha
 The rest is unowned.
 
 - [ ] [DATA] P1. Diagnose the prediction live-capture stall — captured rows stop 2026-08-03/08-05 while three VMs run —
-      DoD: root cause named with evidence, then a captured row dated after the fix.
-- [ ] [DATA] P1. Diagnose the tradfi CME live shard producing 28 rows since 2026-06-22 and `ohlcv_15m` failing outright
-      — DoD: root cause named; state whether the Databento live subscription actually covers the requested schema.
-- [ ] [DATA] P1. Diagnose the four cefi shards launched but producing only `empty_confirmed` (BYBIT-FUTURES all
+      DoD: root cause named with evidence, then a captured row dated after the fix. **DIAGNOSED 2026-08-14, NOT CLOSED —
+      DoD's captured-row half unmet, fix is out of this session's ownership.** Two independent root causes, both with
+      full log/GCS evidence: (A) `LiveWebsocketRunner`'s hot-reload path
+      (`InstrumentCacheRefreshConsumer`/`apply_instrument_delta`,
+      `market_tick_data_service/live/websocket_runner.py:325-390`) is never wired into the real entrypoint —
+      `WebsocketStreamingHandler.run()` (`cli/handlers/websocket_streaming_handler.py:220-266`) constructs
+      `LiveWebsocketRunner(...)` without `cache_refresh_consumer=`, so every live VM resolves its instrument universe
+      exactly ONCE at boot (confirmed: `resolved N instruments prediction/<VENUE>` appears exactly once in each VM's
+      full run.log, never again) and never picks up newly-listed markets as old ones settle. (B) Independently,
+      instruments-service's POLYMARKET `instrument_availability` catalog writer stopped producing entirely after
+      2026-08-05 (KALSHI's writer, same service, stayed fresh every day through 08-14) — confirmed via direct GCS
+      listing. Both are inside `market_tick_data_service/live/**`/`cli/handlers/websocket_streaming_handler.py` (owned
+      by the connector/handler worker on this plan, not VM-launchers/shard-configs/alerting) and instruments-service
+      respectively — filed as
+      `/plans/active/issues/prediction_live_instrument_cache_never_refreshed_and_polymarket_catalog_gap_2026_08_14.md`
+      with both root causes as tracked `- [ ]` todos. Leaving this todo OPEN until that doc's fix lands and produces a
+      captured row after — no restart/relaunch of the prediction VMs would help without the code fix, so none was
+      attempted.
+- [x] [DATA] P1. Diagnose the tradfi CME live shard producing 28 rows since 2026-06-22 and `ohlcv_15m` failing outright
+      — DoD: root cause named; state whether the Databento live subscription actually covers the requested schema. —
+      DONE 2026-08-14: root cause is a Databento account billing outage, NOT a code bug —
+      `mtds-live-tradfi-cme-     trades-20260809-163443`'s run.log shows `gateway error code=api_key_deactivated` +
+      `CRAM authentication error: ... unpaid invoice` at 2026-08-12T00:03:57Z, one failed reconnect, then silence for
+      ~50h with the process still heartbeating (invisible to any liveness check). Manifest confirms the exact boundary:
+      captured cleanly 08-09..08-11, 100% `empty_confirmed` from 08-12 onward. This is a RECURRENCE of
+      `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md` (resolved 2026-08-10, broke again
+      2026-08-12) — updated that doc with the new evidence, reopened `status: blocked`, added a fresh `[OPERATOR] P0`
+      pay-the-invoice-again todo (kept the original as history) and a `[CODE] P2` todo flagging the connector's missing
+      reconnect/backoff for its owner. **Schema question answered directly: NO** — Databento's live API only streams
+      `ohlcv-1s`/`ohlcv-1m` (confirmed in both the live connector's `_DATA_TYPE_TO_SCHEMA` map and
+      `/codex/02-data/tradfi-databento-sourcing-ssot.md`); `ohlcv_15m` is MDPS-derived-only and structurally cannot be
+      requested live — no VM is currently launched with that shard-spec (confirmed via `gcloud compute instances list`,
+      only one `mtds-live-tradfi-*` VM exists, `trades` only), so the 64 historical `attempted_failed` rows are a
+      pre-existing artifact, nothing currently running to fix. Did not restart the VM — the feed is dead on the vendor
+      side, a restart would not fix anything, per diagnose-before- restart.
+- [x] [DATA] P1. Diagnose the four cefi shards launched but producing only `empty_confirmed` (BYBIT-FUTURES all
       data_types, DERIBIT derivative_ticker, COINBASE-SPOT and OKX-SWAP depth_of_book_10) — DoD: per-shard root cause; a
-      shard that is correctly empty by design is re-labelled as such rather than left looking broken.
-- [ ] [DATA] P1. Add a standing live-capture-productivity check across all asset groups — a shard with a running process
+      shard that is correctly empty by design is re-labelled as such rather than left looking broken. — DONE 2026-08-14:
+      all four are GENUINE BUGS (none correctly-empty-by-design), all already root-caused and code-fixed upstream
+      between 2026-08-09 13:13-14:13 UTC — `mtds-live-cefi-consolidated-20260809-121034` (booted 12:12 UTC that day,
+      confirmed via `creationTimestamp == lastStartTimestamp` never restarted) was just running pre-fix code. Per-shard
+      cause: **BYBIT-FUTURES** (all data_types) — Tardis-alias venue name never resolved to IS's `BYBIT`-keyed
+      instruments.parquet, zero instruments ever subscribed (`market-tick-data-service@e3bd10b9`,
+      `_resolve_is_lookup_venue`). **DERIBIT derivative_ticker** — the combined ~2,997-instrument `public/subscribe`
+      request exceeds Deribit's channel limit and is rejected/closed, looping forever (`@90e2336c`, chunked subscribe).
+      **COINBASE-SPOT depth_of_book_10** — subscribed to the deprecated auth-only `level2` channel and silently
+      swallowed the rejection frame (`@cc736408`, switched to `level2_batch`). **OKX-SWAP depth_of_book_10** —
+      instrument-ID builder didn't round-trip the `@LIN`/`@INV` margin marker IS attaches, so every subscribe targeted a
+      nonexistent wire id (`@52383e87`+`@98fad5ad`). Verified none is the Finding-A fallthrough (all four factories
+      explicitly branch on their data_type). **Fix applied**: 3-signal staleness check (boot==last-start timestamp; live
+      log tail; 8-61GB per-shard log files from continuous retry-fail spam, matching each diagnosed cause) confirmed the
+      VM was safe to cycle — deleted `mtds-live-cefi-consolidated-20260809-121034`, relaunched via
+      `launch-mtds-live-cefi-consolidated.sh` (`mtds-live-cefi-consolidated-20260814-041422`), confirmed the new VM's
+      on-disk code contains `_resolve_is_lookup_venue`/`_MAX_CHANNELS_PER_SUBSCRIBE_MSG` (the fix functions). Caught and
+      stopped a duplicate-VM race from a too-fast second launch attempt before it created a second VM. **Captured-row
+      verification NOT YET obtained** — as of this session, instruments-service had not yet published 2026-08-14's CEFI
+      instrument catalog at all (0 blobs under `instrument_availability/by_date/day=2026-08-14/`, vs 22 on 08-12/08-13;
+      08-13's catalog itself wasn't published until 13:37 UTC) — this affects EVERY cefi venue on the VM uniformly,
+      including the 6 previously-healthy ones, confirming it's an unrelated IS daily-catalog-timing gap, not a
+      regression from this fix. Re-check after ~13:00 UTC today for captured rows on all four shards.
+- [x] [DATA] P1. Add a standing live-capture-productivity check across all asset groups — a shard with a running process
       and zero `captured` rows over N days must page — DoD: replaying the check against the 2026-08 manifest window
-      fires on sports, prediction and the four cefi shards; routes per the actionable-only alerting rule.
+      fires on sports, prediction and the four cefi shards; routes per the actionable-only alerting rule. — DONE
+      2026-08-14: added **DP-LIVE-004** to
+      `deployment-service/deployment_service/data_pipeline_monitors/     live_stream_watcher.py`
+      (`check_live_capture_productivity` + `build_running_live_shards`, generalized across every registered
+      `LONG_LIVED_LIVE` VM prefix — not just prediction — and grouped per `(venue, data_type)` so a single consolidated
+      multi-shard VM, e.g. the cefi VM, is evaluated per-shard) — fires when a shard's `attempted_at` is recent (proving
+      it's still alive, not DP-LIVE-001's job) but its last `captured` row (if any) is older than `stale_capture_days`
+      (default 3d) or never happened. Routes via the existing `DP_CRON_DID_NOT_FIRE` → `#data-pipeline-alerts` →
+      PAGE_OPERATOR path (actionable-only, matches the alerting rule). Replay-tested with 3 unit tests mirroring the
+      exact diagnosed shapes: sports (recent attempts, never captured), prediction (fresh attempts, last captured 9 days
+      ago), and the cefi consolidated VM (5 dead venue/data_type groups fire, 2 healthy ones on the SAME shard correctly
+      don't) — all pass (`tests/unit/test_data_pipeline_monitors.py::test_dp_live_004_*`). Also fixed an adjacent bug
+      found in the same file: `build_prediction_live_shards()` resolved a GCS bucket kind (`"market-data"`) that has no
+      per-asset_group entry for prediction, silently returned `[]` on every sweep via a blanket `except`, and so
+      DP-LIVE-001/002 had never evaluated a single prediction VM — fixed to the correct flat
+      `market-data-tick-prediction` kind (mirrors the existing DP-FETCH-009 fix for the same class of bug) and stopped
+      swallowing the failure silently. Shipped: `deployment-service@ebeef843c9` (landed on `live-defi-rollout`).
 
 ## Finding D — 40 DeFi venues are BLOCKED-BUILD placeholders with no tracked follow-up
 
@@ -233,3 +303,26 @@ _(append dated entries here)_
   `VENUES_BY_ASSET_GROUP` (excluded 2026-07-22, dead REST API) — new `[OPERATOR]` P2 todo added under Finding B to rule
   on deleting `phoenix_ws.py` vs restoring the canonical venue. Findings C, D, E untouched (out of scope — owned by
   Workers A/C per the 3-way split).
+
+- **2026-08-14 (Finding C, non-sports legs — VM-launchers/shard-configs/alerting-check scope)**: tradfi CME todo DONE
+  (Databento billing recurrence root-caused, `ohlcv_15m` schema question answered NO — see todo for full evidence; issue
+  doc `tradfi_databento_account_billing_suspended_2026_08_09.md` updated + reopened `blocked`). Four-cefi-shards todo
+  DONE (all genuine bugs, all already fixed upstream 2026-08-09, root-caused per-shard; cycled the stale
+  `mtds-live-cefi-consolidated-*` VM to deploy the fix, confirmed the fix code is present on the new VM; caught and
+  stopped a duplicate-VM race mid-launch). Productivity-check todo DONE — shipped DP-LIVE-004
+  (`deployment-service@ebeef843c9`) plus an adjacent DP-LIVE-001/002 bucket-kind fix for prediction found in the same
+  file. Prediction-stall todo left OPEN — two root causes fully diagnosed with evidence (instrument-cache never
+  refreshed post-boot; instruments-service's Polymarket catalog gap since 08-05), both filed as tracked todos in a new
+  issue doc (`prediction_live_instrument_cache_never_refreshed_and_polymarket_catalog_gap_2026_08_14.md`) since both
+  fixes are outside this session's ownership (the websocket handler/live connectors, and instruments-service
+  respectively). Captured-row verification for the cefi fix is pending — instruments-service had not yet published
+  today's (08-14) CEFI instrument catalog as of this session (confirmed via direct GCS check: 0 blobs vs 22 on
+  08-12/08-13, and 08-13's own catalog wasn't published until 13:37 UTC), blocking every venue on the VM uniformly
+  including the 6 already-healthy ones — an unrelated IS daily-cadence gap, not a fix regression. Re-check after ~13:00
+  UTC. Also resolved a STALE (3-day-old, non-live) git conflict on `scripts/dev/ff-starvation-detect.sh` in this shared
+  `.tabs/4` checkout that was blocking every commit here (`needs merge`, `git commit` hard-refuses regardless of
+  pathspec scoping) — both conflicting hunks were purely cosmetic comment-rewording with zero functional difference;
+  resolved to the `Updated upstream` side, which turned out byte-identical to HEAD (nothing to commit for that file —
+  the conflict was pure stash-pop residue, not a real content difference). Left the now-redundant `autostash` stash
+  entry in place (its content was already fully applied/resolved in the working tree; `git stash drop` is hard-blocked
+  for agents by the orchestrator guardrail, correctly).

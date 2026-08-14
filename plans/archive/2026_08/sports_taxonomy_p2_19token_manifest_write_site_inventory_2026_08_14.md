@@ -11,7 +11,7 @@ summary: >-
   registry lookup on the same variable must run first) per the pattern already proven in process_preflight.py/
   sports_dependency.py/writers.py/catalogue.py. A rushed hand-patch risks silently missing a site and reintroducing the
   exact split-token bug this whole migration exists to fix — worse than shipping nothing, since it would look done.
-status: active
+status: complete
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -58,6 +58,12 @@ source:
 locked_by:
 locked_since:
 ---
+
+> **🟢 ARCHIVED 2026-08-14.** Only todo done: the classified branch landed + physically executed atomically —
+> `instruments-service@3637252f81` (code) + `deployment-service@3eded03f6a` (launcher) + the VM run confirming 0
+> uppercase-token rows remain, plus a step-3 gap closed at `instruments-service@f2586ada09`. Full execution detail lives
+> in [[sports_taxonomy_p2_migration_2026_08_08]]'s Progress Log, not duplicated here. Archived per
+> plan-completion-and-archival-discipline's "archive immediately" rule (0 open todos, no lock).
 
 # Sports taxonomy P2 — full manifest-write call-site inventory
 
@@ -388,12 +394,18 @@ write-side todo below, not a separate pass.
       tool's own success message, especially under same-file parallel edits. Final re-grep after all fixes: zero
       remaining literal-uppercase manifest-write/read sites outside the two confirmed-dead/confirmed-untouchable
       exceptions (`process_enrichment.py:191`'s dead branch; UAC-registry lookups' own independent literals).
-- [ ] [OPERATOR] P0. **Bring the completed branch back to `sports_taxonomy_p2_migration_2026_08_08.md`'s `[OPERATOR]`
+- [x] ✅ [OPERATOR] P0. **Bring the completed branch back to `sports_taxonomy_p2_migration_2026_08_08.md`'s `[OPERATOR]`
       19-token execution todo for the atomic land-and-launch decision** — this doc's job is now done: a fully
       classified + coded + locally-validated branch (WRITE side AND the READ side both fixed, full test suite green) at
       `instruments-service@5b1b2c72`. The actual merge + VM launch stays gated on that parent todo per BLK-0a3f3791's
       resolution (Cloud Run Job auto-deploy risk) and the parent plan's own atomicity rule — merge and VM launch happen
-      in the SAME window, never separately, and only on explicit operator go-ahead.
+      in the SAME window, never separately, and only on explicit operator go-ahead. **DONE 2026-08-14 (slot-26, resume
+      session)**: landed + executed per the parent plan's own Progress Log — `instruments-service@3637252f81` (code) +
+      `deployment-service@3eded03f6a` (launcher) in the same window as the VM launch, VM ran to completion with 0
+      uppercase-token rows remaining (both the script's own VERIFY and an independent census), plus a step-3 gap
+      (`enumerate_expected_universe.py` override wiring) found and closed same-session at
+      `instruments-service@f2586ada09`. Full detail in the parent plan, not duplicated here. This doc's scope is fully
+      closed.
 
 ## Progress Log
 

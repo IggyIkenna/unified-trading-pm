@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 296 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 295 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -383,7 +383,7 @@ by hand._
   — Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and
   prediction strategies.
 
-### sports (44)
+### sports (43)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -502,9 +502,6 @@ by hand._
   — Gated closeout for sports_satellite_ao_dispatch_batch9_2026_08_04.md — machine-held via depends_on +
   gate_on_depends: true until all 30 of that plan's todos are done. Mirrors the batch2-8-finalize pattern: reconcile
   each of the 17 distinct…
-- [`sports_taxonomy_p2_19token_manifest_write_site_inventory_2026_08_14`](./sports_taxonomy_p2_19token_manifest_write_site_inventory_2026_08_14.md)
-  — The P2 19-token lowercase re-stamp's own plan scoped the registry/writer-side fix to "5 confirmed call sites, 8
-  registries." This session found that scope is materially incomplete — every per-vendor sports reference-data writer…
 - [`sports_taxonomy_p2_consumer_inventory_2026_08_12`](./sports_taxonomy_p2_consumer_inventory_2026_08_12.md) — Required
   output of P2's "Consumer enumeration" gating todo, per the codex entity-rename-and-split-consumer-migration rule.
   Enumerates every consumer (writer, reader, path-prefix matcher, filename matcher, registry-membership binder,…

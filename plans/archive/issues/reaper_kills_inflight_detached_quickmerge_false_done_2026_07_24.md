@@ -13,7 +13,7 @@ summary: >-
   code never lands. spawn_retry_cap_reached + worker death then leave no automatic retry. Confirmed on-host 2026-07-24
   for sports_closeout_batch1_ao_ready-010 (slot 9, ip-172-31-5-118): features-service ahead=2 unchanged ~80min,
   quickmerge PID 2949777 (PPID=1) reaped after 5+min of progressing QG with no /tmp/qm_detached2.exit written.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -37,6 +37,11 @@ execution_scope: local-only
 estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
+  "All 3 todos done: reaper CPU-progressing guard `agent-orchestrator@f91b4d0` (2026-08-08), `/done` sha-on-origin gate
+  `tuning.done_require_origin` (pre-2026-08-14), orphaned-commit recovery closed moot 2026-08-10 (superseding commit
+  `features-service@7ea10aaa` confirmed a live origin ancestor). Codex-aligned into
+  `/codex/04-architecture/agent-orchestrator-worker-liveness.md` and `…-backlog-state-alignment.md`. Archived 2026-08-14
+  (code-audit sweep)."
 locked_by:
 context_scope:
   [
@@ -48,6 +53,17 @@ context_scope:
   ]
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-08-14** — `status: resolved`, all 3 todos `[x]`, unlocked; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md).
+> The reaper CPU-progressing guard is codex-aligned at
+> [`/codex/04-architecture/agent-orchestrator-worker-liveness.md`](/codex/04-architecture/agent-orchestrator-worker-liveness.md)
+> § "`orphan_reap.py::sweep_orphan_processes` spares a CPU-progressing detached quickmerge"; the `/done` sha-on-origin
+> gate is aligned at
+> [`/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`](/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md)
+> § "`/done`-time completion-acceptance gates". Sibling doc:
+> [`orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md`](/plans/archive/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md)
+> (archived same session, same `/done`-handler file-collision this doc's Progress Log tracked).
 
 # Reaper kills in-flight detached quickmerge → false-done + orphaned unpushed commit
 
@@ -91,10 +107,14 @@ Two distinct defects compound:
       (`fix(orphan-reap): spare CPU-progressing detached quickmerge from sweep`): `_has_cpu_progressing_descendant`
       helper + guard in `sweep_orphan_processes`; two discriminator regression tests added in
       `test_orphan_process_reap.py` (CPU-progressing → spared; idle → still reaped).
-- [ ] [INFRA] P1. Close the false-done gap: gate `/done` acceptance (or a fast follow-up verifier) on the task's code
+- [x] ✅ [INFRA] P1. Close the false-done gap: gate `/done` acceptance (or a fast follow-up verifier) on the task's code
       actually being on origin for code tasks — a `/done` with the slot clone still `ahead>0` on the touched repo should
       flip the task back to a landing-pending state, not read as durably done. Cross-ref
-      `check_evidence_backed_completion.py`.
+      `check_evidence_backed_completion.py`. **✅ VERIFIED DONE 2026-08-14 (code-audit sweep)** —
+      `agent-orchestrator/server/config.py:1235` `tuning.done_require_origin` (default `True`) gates
+      `server/routes/slots_worker.py:2403-2429`, which 409s (`sha_not_on_origin`) any `/done` whose sha verifies locally
+      but isn't found on any origin branch, per commit history tied to the now-archived
+      `ao_done_require_origin_not_enforced_2026_07_29` doc.
 - [x] ✅ [INFRA] P1. ~~Recover the orphaned commits on BOTH victim slots via a live-pane path, then confirm code on
       origin~~ — **CLOSED MOOT 2026-08-10 (ao full-tranche sweep, group 3)**. The 2026-07-31 conflict-gated re-triage
       flagged this as "very likely moot" (both source plans fully archived with 0 open todos) but left the actual

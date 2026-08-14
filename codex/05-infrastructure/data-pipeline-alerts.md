@@ -367,6 +367,20 @@ dead-man's-switch above them.
 > also gained `retry_count=2` so a transient invocation failure never drops a tick. SSOT:
 > `/plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md` § "Watch-the-watchers SPOF".
 
+**Fleet-monitor job memory sizing (live as of 2026-08-14)**: `uts-prod-dp-exit-code-monitor` 16Gi/4cpu/1800s,
+`uts-prod-dp-heartbeat-watcher` 16Gi/4cpu/900s, `uts-prod-dp-meta-watchers` 32Gi/8cpu/900s
+(`terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf`, deployment-service repo) — each already bumped once or twice
+from an original smaller ceiling as the fleet/manifest corpus grew. **Confirmed OOM root-cause class (2026-08-14,
+`deployment-service@f425eb12b3`)**: `meta_watchers`' `check_high_attempted_failed` read the FULL unfiltered
+`capture_status` row set via `pandas.DataFrame.to_pandas()` before filtering — `.to_pandas()` materializes every
+projected column as individual Python objects regardless of relevance, so a checker that only ever consumes 2 of 4
+canonical `capture_status` values (`captured`/`attempted_failed`; `expected_unattempted`/`empty_confirmed` contribute
+nothing) was paying full memory cost for the 75%+ of rows it never uses. Fix pattern: filter to the relevant
+`capture_status` allow-list INSIDE pyarrow (`table.filter(...)`) or via a pandas `.isin()` mask immediately after read,
+BEFORE any `.to_pandas()`/full-DataFrame conversion — never bump the Cloud Run memory ceiling as the first response to
+an OOM on one of these jobs without first checking whether a checker is materializing rows it doesn't need. Full
+incident: `/plans/archive/2026_08/issues/dp_meta_watchers_oom_at_32gi_2026_08_13.md`.
+
 ## Daily digests (also posted to the channel, INFO)
 
 - **Per-AG completion digest** (`0 7 * * *` UTC): per AG, batch vs live, completion % per venue/chain/data_type, **union
@@ -396,5 +410,8 @@ present + UTL/UAC/pandas import.
 
 - Muting a persistent alert instead of fixing its root cause (the alert IS the work item — drive to zero).
 - A watcher that infers "VM gone ⇒ success" (DP-VM-002 exists because self-delete masks OOM — check `exit_code`).
+- Bumping a fleet-monitor job's Cloud Run memory ceiling as the first OOM response without checking whether a checker
+  materializes (`.to_pandas()`/full-DataFrame read) rows it never consumes — see "Fleet-monitor job memory sizing"
+  above.
 - A new silent-failure class fixed as a point-bug without an `append` to this registry (then it recurs unmonitored).
 - Routing a code-fixable mechanical alert to a human when an auto-recover tier exists (mirror CI auto-recover).

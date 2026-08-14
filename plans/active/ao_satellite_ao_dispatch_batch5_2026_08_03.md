@@ -311,7 +311,7 @@ below rather than duplicated here.
       `tests/test_worker_liveness_watchdog.py`) proves a detached quickmerge whose QG subprocess is measurably
       CPU-progressing survives a reap sweep on a heartbeat-silent pane, while a genuinely dead/idle detached tree is
       still reaped (no regression); full `agent-orchestrator` `quality-gates.sh` green. Source:
-      `/plans/active/issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md` (item 1, the
+      `/plans/archive/issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md` (item 1, the
       reaper-overeagerness fix only — its other 2 items stay held/deferred per that doc's own state). Repo:
       agent-orchestrator. — agent-orchestrator@f91b4d0
 

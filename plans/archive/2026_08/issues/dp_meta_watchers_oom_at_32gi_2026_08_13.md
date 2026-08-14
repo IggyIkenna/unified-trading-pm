@@ -15,7 +15,7 @@ summary: >-
   `DP_CRON_DID_NOT_FIRE`, a second blind-spot compounding this one. This is a separate live incident from the exit-code
   OOM premise (disproven) and from the overlap-storm doc (which asserted meta-watchers was "OOM-safe at 32Gi" — that
   claim is now FALSE).
-status: open
+status: closed
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -59,6 +59,13 @@ source: >-
 
 # uts-prod-dp-meta-watchers OOM at 32Gi/8cpu (live, 2026-08-13)
 
+> **ARCHIVED 2026-08-14** — all 3 todos done. Todo 1's `deployment-service@f425eb12b3` fix (filter to
+> `RELEVANT_CAPTURE_STATUSES` before `.to_pandas()`) is live-verified: 3 consecutive `*/15` cycles (04:45/05:00/05:15Z)
+> completed clean with zero `"memory limit was reached"` failures, `vm-census/meta-last-run.json` advanced each cycle,
+> and `RenagTracker`/`MissTracker` persist blobs advanced at matching timestamps — see Progress Log. Durable
+> memory-sizing lesson migrated to `/codex/05-infrastructure/data-pipeline-alerts.md` § "Fleet-monitor job memory
+> sizing" before archival.
+
 ## What was found
 
 While running the 30-day Cloud Logging signal-9 history sweep for the exit-code monitor (todo 1 of
@@ -97,9 +104,19 @@ events belong to `uts-prod-dp-meta-watchers`, not the exit-code job:
       ceiling a 4th time; candidates: stream/chunk the manifest read (precedent: the 08-10 defi-index streaming read),
       or cap the per-sweep retained working set. Repo: deployment-service. — deployment-service@f425eb12b3 (see Progress
       Log for the measured root cause + fix).
-- [ ] [SCRIPT] P2. After the fix, live-verify: `uts-prod-dp-meta-watchers` executions complete (no
-      `"memory limit was     reached"`) for ≥3 consecutive `*/15` cycles AND `vm-census/meta-last-run.json` advances
-      each cycle AND `RenagTracker`/`MissTracker` persist lands (end-of-sweep). Repo: deployment-service.
+- [x] ✅ [SCRIPT] P2. **CONFIRMED (2026-08-14, slot 20)** — After the fix, live-verify: `uts-prod-dp-meta-watchers`
+      executions complete (no `"memory limit was reached"`) for ≥3 consecutive `*/15` cycles AND
+      `vm-census/meta-last-run.json` advances each cycle AND `RenagTracker`/`MissTracker` persist lands (end-of-sweep).
+      3 consecutive clean executions confirmed via `gcloud run jobs executions list`: `kd4x6` (04:45:06→04:52:25Z,
+      7m18.77s), `rcn57` (05:00:06→05:06:53Z, 6m47.39s), `9xrhn` (05:15:04→05:21:08Z, 6m3.72s) — all "Execution
+      completed successfully", zero `"memory limit was reached"` (the prior 4+ executions 02:15-04:35Z all failed with
+      that exact message, confirming the fix is what changed the outcome). Sentinel `vm-census/meta-last-run.json` read
+      via `_gcs.read_monitor_last_run` advanced each cycle: `ts=2026-08-14T05:06:48Z` (after rcn57) →
+      `ts=2026-08-14T05:21:02Z` (after 9xrhn), both `ok=True`. `RenagTracker`/`MissTracker` persist blobs
+      (`vm-census/dp-renag-timestamps.json`, `vm-census/dp-miss-counters.json`) confirmed advancing at matching
+      timestamps each cycle (05:06:48/05:06:47 and 05:21:02/05:21:01) via `list_files_with_metadata` — proves both
+      trackers reach their end-of-sweep `.persist()` call rather than the sweep dying first. Repo: deployment-service
+      (read-only verification, no code change).
 - [x] ✅ [SCRIPT] P2. **CONFIRMED (2026-08-14, slot 11)** — answered from the exit-code doc's twin todo 4 (full evidence
       there, `dp_exit_code_monitor_oom_signal9_2026_08_09.md`). Summary: `DP_CRON_DID_NOT_FIRE::exit-code` DID fire
       correctly through 08-11T01:11Z, then went silent after one last alert at **08-12T19:05:30Z** (3683m/61.4h stale) —
@@ -110,6 +127,17 @@ events belong to `uts-prod-dp-meta-watchers`, not the exit-code job:
 
 ## Progress Log
 
+- 2026-08-14 (slot 20): Closed todo 2 (live-verify) — full evidence in the todo itself above. 3 consecutive clean `*/15`
+  cycles (04:45/05:00/05:15Z start times) with sentinel + RenagTracker/MissTracker persist all advancing. Every todo in
+  this doc is now done and unlocked — archiving per the 6-step ritual
+  (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): migrated the durable memory-sizing lesson
+  (`.to_pandas()` full-materialization anti-pattern + current live resource configs for all 3 fleet-monitor jobs) into
+  `/codex/05-infrastructure/data-pipeline-alerts.md` (§ "Fleet-monitor job memory sizing" + an Anti-patterns bullet)
+  BEFORE archival so the fact doesn't become archived-doc-only; corpus-grepped for referrers — only
+  `dp_exit_code_monitor_oom_signal9_2026_08_09.md` cites this doc's path (in its `related`/frontmatter list; no specific
+  fact/number cited from this doc there, so no further migration needed for that referrer). `git mv` to
+  `plans/archive/2026_08/issues/` in this same commit (single-repo/mode-1 case — plan-of-record lives in this worker's
+  own worktree — sanctioned per the archival SSOT's 2026-08-10 narrowing).
 - 2026-08-13: Filed from the slot-18 exit-code confirmation sweep. Live evidence captured above; config 32Gi/8cpu/900s
   confirmed live via `gcloud run jobs describe`.
 - 2026-08-14 (slot 14): Root-caused + fixed todo 1. **The 08-10 streaming-index fix (`_make_streaming_index_reader`,

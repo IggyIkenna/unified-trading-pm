@@ -9,7 +9,6 @@
 # NEVER add an entry here to silence a check you introduced yourself — this baseline is for
 # PRE-EXISTING debt found at seed time, not a way to launder new breakage.
 known_broken:
-  - "codex/04-architecture/README.md::BATCH-LIVE-SYMMETRY.md"
   - "codex/04-architecture/README.md::communication-patterns.md"
   - "codex/04-architecture/README.md::compute.md"
   - "codex/04-architecture/README.md::scaling.md"
@@ -18,18 +17,13 @@ known_broken:
   - "codex/06-coding-standards/README.md::configuration-management.md"
   - "codex/06-coding-standards/README.md::formatting-standards.md"
   - "codex/06-coding-standards/ui-testing-layers.md::../../../.claude/rules/workspace-workflow.md"
-  - "codex/09-strategy/architecture-v2/README.md::templates/archetype-doc.md"
   - "codex/09-strategy/mvp-universe-per-asset-group.md::codex/09-strategy/architecture-v2/archetypes/<archetype>.md"
   - "codex/11-project-management/cross-reference-path-convention.md::/codex/<NN-section>/<doc>.md"
-  - "codex/14-customer-journeys/commercial-model/elysium-presentation-authoring-notes.md::codex/NN-name/...md"
   - "codex/14-customer-journeys/shared-core/strategy-version-governance.md::/codex/12-incidents/post-mortem-template.md"
   - "codex/README.md::.github/PRE_COMMIT_SETUP.md"
   - "plans/active/issues/doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md::/codex/<NN-section>/<doc>.md"
-  - "plans/active/issues/doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md::codex/.../block-list.md"
   - "plans/active/issues/doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md::codex/09-strategy/architecture-v2/archetypes/<archetype>.md"
   - "plans/active/issues/docs_reconcile_operator_decisions_2026_08_02.md::/codex/02-data/<filename>.md"
-  - "plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md::codex/.../block-list.md"
-  - "plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md::codex/.../defi-canonical-naming-ssot.md"
   - "plans/audit/results/archive/mega_audit_phase_a_issues_human_readable_2026_05_20.md::/codex/02-data/manifest-writer-ssot.md"
   - "plans/audit/results/codex_plan_diff_scan_2026_05_22.md::/codex/09-strategy/architecture-v2/archetypes/xyz-foo.md"
   - "plans/audit/results/codex_plan_diff_scan_2026_05_22.md::codex/CLAUDE.md"

@@ -68,7 +68,13 @@ source: >-
       (450/450), 3 items flipped in the source doc. A pre-existing unrelated blocker (stale hardcoded
       `capability_tab.spec.ts` manifest counts, missed by fix(capability) 6a323bf) was root-caused + fixed inline:
       deployment-ui@`d95f1934ef`. Source: `plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md`
-- [ ] [CODE] P2. Ship the small Rollup-difference-clarity UI tooltip/note (audit §F, by-design explainer) Source:
+- [x] ✅ [CODE] P2. Ship the small Rollup-difference-clarity UI tooltip/note (audit §F, by-design explainer) —
+      CODE-SHIPPED deployment-ui@`8033b83651`. Extended the existing `InstrumentsServiceShardModal` note
+      (`DataStatusDrilldown.tsx`) with a hover-tooltip explainer + inline text: IS's per-venue/day drilldown has no
+      data_type axis by design (reference data), vs MTDS's 5-axis market-data shards — so the structural difference
+      reads as intentional, not broken. **pw:L2 ✓** (full `tests/smoke/` re-run, 450/450 passed via 2-shard split) |
+      regression: `tests/unit/components/DataStatusDrilldown.test.tsx` (new test: "explains the by-design structural
+      difference vs MTDS's 5-axis shards for instruments-service"). Source:
       `plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md`
 - [ ] [CODE] P2. Investigate + resolve the Yahoo/Kalshi market-tick-view out-of-scope registry check (add to
       EXPECTED_COVERAGE_BY_ASSET_GROUP if genuinely provided, else confirm correct-by-design) Source:

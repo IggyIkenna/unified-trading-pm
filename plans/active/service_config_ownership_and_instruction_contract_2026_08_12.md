@@ -443,20 +443,24 @@ the clearest surviving statement of what transfers were meant to support.
       do something. Regression test asserts **both** `True` and `False` reach the call — asserting only `True` would
       still pass against a hard-coded value. Shipped AFTER the UAC union because quickmerge's dep gate correctly refused
       while a dependency had uncommitted changes.
-- [ ] [AGENT] P0. **Break (c): add a `REBALANCE_PERIOD_TICK` producer.** Nothing sends it, so
-      `_handle_rebalance_period_tick` (`client_worker.py:214`) never fires even with (a) fixed. The only producer-side
-      `pipe.send` in strategy-service is `CREDENTIAL_ROTATED` (`client_admission_controller.py:215`) — that is the
-      pattern to follow.
-- [ ] [AGENT] P0. **Break (b): implement `compute_rebalance_transfers()` as dust-sweep + gas-reserve top-up.** Scope is
-      narrower than "rebalancing" implies, and the existing config states it: `sweep_threshold_usd` (default 10.0) is
-      _"USD threshold below which wallet balances are swept to the main wallet"_ and `min_eth_reserve` (0.05) is
-      _"minimum ETH balance to maintain in DeFi wallets for gas"_ (`config.py:461-470`, both currently unconsumed). That
-      is **threshold logic, not a judgment call**, so it is determinable. Balance source exists
-      (`position/core/venue_balance_tracker.py::get_all_balances`), and `TransferRequest` already carries the right
-      shape (`source_venue`→`dest_venue`, asset, amount, `transfer_type: BusTransferType`). Emit transfer types whose
-      `BUS_TRANSFER_TYPE_RAIL` rail matches the rail that can actually service them. | J7 | Archetype universe |
-      `StrategyArchetype` (60) | factory-registered (32), `PARAM_SCHEMA_REGISTRY` (35) | **Measured: only 13 overlap.**
-      19 engines have no schema, 22 schemas have no engine, 6 have neither |
+- [x] [AGENT] P0. ✅ **Break (c) fixed — `strategy-service@46f8728472`**, gate green. `RebalanceTicker` +
+      `ClientAdmissionController.broadcast_rebalance_tick` now send `REBALANCE_PERIOD_TICK`, so
+      `_handle_rebalance_period_tick` (`client_worker.py:214`) fires on cadence with (a) already fixed.
+- [x] [AGENT] P0. ✅ **Break (b) fixed — `compute_rebalance_transfers()` shipped `strategy-service@46f8728472`
+      (dust-sweep + gas-reserve top-up, threshold logic per `config.py:461-470`), and the wallet-balance SOURCE it
+      needed shipped `strategy-service@c55b586c9c`.** **Correction to this row's own prior text**: it named
+      `position/core/venue_balance_tracker.py::get_all_balances` as "balance source exists" — that was wrong, from a
+      symbol-name match without reading the returned type. That function returns UAC's SPORTS-betting `VenueBalance`
+      (`internal/domain/sports/arb_config.py`) — no `asset` field, structurally unable to carry per-asset DeFi wallet
+      state. The real source is the new `strategy_service/position/core/wallet_balance_source.py::WalletBalanceSource`,
+      wrapping UTL's `CustodyPinger`; it is wired into `client_worker.py::_handle_rebalance_period_tick` (feeds
+      `compute_rebalance_transfers()`, queues the resulting `TransferRequest`s into `RebalanceEmitPipeline`) and never
+      fabricates a balance — an unreachable or unpriced wallet is dropped, not zero-filled. **One gap remains, one level
+      further in than before**: `ClientContext.wallet_balance_source` defaults to `None` in production — constructing a
+      live `CustodyPinger` needs real custodian/RPC clients built from this client's credentials, which was deliberately
+      not wired (credential/key-material handling is operator-gated). | J7 | Archetype universe | `StrategyArchetype`
+      (60) | factory-registered (32), `PARAM_SCHEMA_REGISTRY` (35) | **Measured: only 13 overlap.** 19 engines have no
+      schema, 22 schemas have no engine, 6 have neither |
 
 ### J7 measured in full (2026-08-12, registries loaded in Python — not grepped)
 
@@ -506,9 +510,16 @@ someone scoped and did not finish**. Deleting it silently discards the design de
       hard block** — a valid `CANDLE_BOOK_COLS` or `AMM` config ran fine while being reported invalid. An earlier note
       in this plan overstated it as blocking. The test suite had also locked the defect in place by asserting
       `validate("AMM")` raises.
-- [ ] [AGENT] P1. **Add a "no shadow SSOT type" gate.** J1 and J6 are one defect class: a local class/enum redefining a
-      name UAC owns. A mechanical check — any class whose name matches a UAC-exported symbol and is not an import —
-      catches both at commit time, and is cheaper than the audit that eventually finds J8.
+- [x] [AGENT] P1. ✅ **Shadow-SSOT-type gate added — `strategy-service@c55b586c9c`**
+      (`scripts/quality_gates/check_no_shadow_ssot_types.py` + `shadow_ssot_types_baseline.yaml`, shrink-only baseline).
+      J1 and J6 are one defect class: a local class/enum redefining a name UAC owns; the gate catches both at commit
+      time. Baselined 15 pre-existing collisions at wire-in time; 2 resolved so far — `WalletConfig` (unioned
+      `strategy_id` into UAC `unified-api-contracts@77cceb6c9d`, then deleted the local class and imported UAC's —
+      `strategy-service@486a61b975`) and `SportsVenueType` (deleted outright — zero real consumers anywhere in the tree,
+      and its members described a different axis than UAC's same-named enum, so unioning would have corrupted UAC rather
+      than helped — same commit). 13 remain: `CadenceKind`, `ClientContext`, `ExecutionMode`, `FillEvent`,
+      `GroupBMetrics`, `OrderRecord`, `PnLAttribution`, `PnLSummary`, `Position`, `SettlementEvent`, `StrategyType`,
+      `TradeDeviation`, `VenueAuthStatus`.
 - [ ] [AGENT] P1. **For every remaining row, name the SSOT in codex and mark the other path.** Where both must exist for
       a real reason (Group B / Group C in J3), **state in both places which is authoritative and why**. A dual path
       documented as intentional stops costing an auditor an hour; an undocumented one costs it every time.
@@ -551,6 +562,12 @@ assumptions? **Mechanisms: mostly yes. Parameterisation: no — and the missing 
 
 ## Progress Log
 
+- **2026-08-14** — Shipped the two-repo-batch backlog + closed the wallet-balance-source gap: UAC (`8c72b501` I001
+  import-order + client-scoped batch, `77cceb6c9d` `WalletConfig.strategy_id` union), strategy-service (`c55b586c9c`
+  wallet-balance source + Phase A/B batch, `486a61b975` WalletConfig/SportsVenueType shadow-SSOT resolution),
+  execution-service (`c2053c47bc` latency-pair stamping + Phase A/B batch). Break (b)/(c) and the shadow-SSOT-gate todo
+  above flipped to reflect this. G2 (latency) is stamped on the real v2-router + matching-engine converter + manual-
+  instruction path, still partial (14 algorithm-slicer `ChildOrder` call sites don't populate `received_at_utc` yet).
 - **2026-08-12 (execution-service deep audit)** — § G added. **The single most important finding: the target property —
   "strategy backtests using just strategy-service and the upstream data, given the benchmark fill assumption" — is
   already the documented AND implemented architecture**, as Group B. `benchmark_fills.py` (653 lines, pure,

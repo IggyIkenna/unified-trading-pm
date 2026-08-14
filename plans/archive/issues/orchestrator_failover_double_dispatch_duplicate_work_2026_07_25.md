@@ -20,7 +20,7 @@ summary: >-
   actually released it — the prior owner's slot-side current_task is not cleared, so both proceed. This is a dispatcher
   throughput/correctness gap, NOT a data defect; self-mitigating today only because workers happened to self-detect the
   already-landed work.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -58,10 +58,13 @@ execution_scope: local-only
 estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
+  "All 3 todos done: release-safety fix `agent-orchestrator@7911083` (2026-08-01), current_task-clearing
+  `agent-orchestrator@82578c3` (2026-08-04), pre-existing `/done` idempotency (B1). Codex-aligned into
+  `/codex/04-architecture/agent-orchestrator-worker-liveness.md`. Archived 2026-08-14 (code-audit sweep)."
 locked_by:
 context_scope:
   [
-    /plans/active/issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md,
+    /plans/archive/issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md,
     /plans/active/issues/cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md,
     /plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md,
     agent-orchestrator/server/routes/slots_worker.py,
@@ -69,6 +72,17 @@ context_scope:
   ]
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-08-14** — `status: resolved`, all 3 todos `[x]`, unlocked; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md).
+> The release-safety + observability fixes are codex-aligned at
+> [`/codex/04-architecture/agent-orchestrator-worker-liveness.md`](/codex/04-architecture/agent-orchestrator-worker-liveness.md)
+> § "Same-VM slot-to-slot double-dispatch — release-safety + observability fixes (2026-08-01/04)"; the shared `/done`
+> idempotency gate is aligned at
+> [`/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`](/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md)
+> § "`/done`-time completion-acceptance gates". Sibling doc:
+> [`reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md`](/plans/archive/issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md)
+> (archived same session, same `/done`-handler file-collision this doc's Progress Log tracked).
 
 # Failover double-dispatch — same task in two slots' current_task=working while backend names one owner
 
@@ -136,10 +150,13 @@ task is already in-flight on another live slot.
       `origin/live-defi-rollout` and its commit message explicitly cites this exact todo. (batch6-finalize's own todo 2,
       which would normally do this reconciliation, is still open — flipping directly here since the source doc exited
       the 12h grace window and the evidence bar was independently met.)
-- [ ] [BACKEND] P3. Make `/done` idempotent + owner-checked: a second `/done` on an already-terminal task by a non-owner
-      slot should no-op with a warning (not double-flip the checkbox or re-run reconciliation). Confirm current behavior
-      against incidents 1 & 2 (slot 8 /done as non-owner of record for sigabrt; slot 11 potentially /done batch2-001 as
-      non-owner).
+- [x] ✅ [BACKEND] P3. Make `/done` idempotent + owner-checked: a second `/done` on an already-terminal task by a
+      non-owner slot should no-op with a warning (not double-flip the checkbox or re-run reconciliation). Confirm
+      current behavior against incidents 1 & 2 (slot 8 /done as non-owner of record for sigabrt; slot 11 potentially
+      /done batch2-001 as non-owner). **✅ VERIFIED DONE 2026-08-14 (code-audit sweep)** — pre-existing, predates this
+      doc: `agent-orchestrator/server/routes/slots_worker.py` `done_slot()` (~line 2224-2262, comment-marked "B1") 409s
+      on both a second `/done` for an already-`done` task (`slot_done_rejected_already_done`) and a non-owner caller
+      (`slot_done_rejected_not_holder`), each logged as an activity event before any reconciliation logic runs.
 
 ## Triage / charter note
 

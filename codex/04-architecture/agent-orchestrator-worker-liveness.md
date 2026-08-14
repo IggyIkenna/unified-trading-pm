@@ -181,6 +181,17 @@ synchronous, multi-minute foreground wait (rather than truly backgrounding it AN
 per the worker heartbeat HARD RULE) is exactly the scenario this reaps — confirmed root cause for
 `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`'s ~19-minute reproduction.
 
+**`orphan_reap.py::sweep_orphan_processes` spares a CPU-progressing detached quickmerge (`agent-orchestrator@f91b4d0`,
+2026-08-08).** Distinct from `_reap_pane_tree` above (which reaps at kill-time, as part of ending a session):
+`sweep_orphan_processes` is a periodic sweep that previously killed ANY detached process (`PPID=1`) on a frozen-pane
+read, including an in-flight quickmerge whose QG child was actively CPU-progressing — producing a false-done (task
+already read `done` server-side, code committed-but-unpushed, no automatic push path). `_has_cpu_progressing_descendant`
+now walks the descendant process tree and spares a detached quickmerge with a live, CPU-progressing pytest/QG child
+before classifying the pane as reap-eligible. Closes the false-done shape documented in
+`reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md` (archived, `plans/archive/issues/`); see the
+`/done`-time sha-on-origin gate in `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` for the
+complementary server-side guard against the same false-done class.
+
 ---
 
 ## WorkerLivenessKicker — host-load-aware grace shield + hard-kill escalation (2026-07-29/30)
@@ -317,6 +328,27 @@ remains exactly as defeatable as the 2026-07-26 incident. Regression coverage: `
 (a FINAL-answered historical row does not false-positive gate).
 
 ---
+
+## Same-VM slot-to-slot double-dispatch — release-safety + observability fixes (2026-08-01/04)
+
+**The gap.** `_reconcile_unacked_dispatches` released a `status="dispatched"` task past `dispatch_ack_timeout_seconds`
+(1800s) back to `queued` on a SINGLE pane-classify snapshot alone (no real liveness check), then `dispatch.py`'s R5
+`_target_slot_is_dead()` (a shorter 600s ping-silence threshold) let a DIFFERENT slot claim the freshly-queued task
+moments later — while the true owner's pane was still alive, mid a long silent operation like `quality-gates.sh`.
+Observed live: `orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md` (archived, `plans/archive/issues/`),
+7 incidents across 2026-07-25 to 2026-08-09, both doc-only convergences (self-mitigating) and real same-file
+code-conflict near-misses.
+
+- **Release-safety fix** (`agent-orchestrator@7911083`, 2026-08-01). `_reconcile_unacked_dispatches` now requires
+  `_pane_is_dead` (the same discriminator `_sweep_dirty_slots` already uses) before releasing an un-ACKed dispatch — a
+  worker that's silent-but-provably-alive (PID up, forward progress) no longer has its in-flight task pulled out from
+  under it.
+- **Observability fix** (`agent-orchestrator@82578c3`, 2026-08-04). `assign_task_to_slot` now clears any DIFFERENT
+  slot's stale `current_task` before assigning a task to a new slot, and logs a loud warning naming both slot ids + the
+  task — so `/api/state` never silently shows one task `working` in two slots at once.
+
+This is a same-VM slot-to-slot race (release timing), distinct from the FLEET-scope in-flight guard below (which closes
+a session-boundary gap for long-running resumable todos). Both remain live, complementary layers.
 
 ## Fleet-wide in-flight-task double-dispatch guard + abandoned-claim threshold (2026-08-06/09)
 
