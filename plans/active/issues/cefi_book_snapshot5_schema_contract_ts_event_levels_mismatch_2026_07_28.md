@@ -1037,3 +1037,9 @@ against the reproduction script.
   above; fan-out duplicate, no code fix. All 11 fix commits re-verified ancestors of origin/live-defi-rollout; no repeat
   GCS read (byte-identical 7,806/208,624 reading already investigated). Doc over 1000-line cap — 1-line close-out
   only.**
+- **2026-08-14 (data_pipeline_failure escalation worker, agt-8ec9c8, slot 26) — THIRD fan-out of the same escalation_id
+  today (slot-5, slot-11); no code fix. Independently reproduced via a live read (own reader, not copied): af=7,803,
+  max_attempted_at=2026-08-11T14:47:01Z, 0 rows in last 24h/48h — byte-identical checkpoint to slot-5/-18, confirming
+  genuine zero growth in 3+ days. All fix commits still ancestors of origin/live-defi-rollout. Re-fire is the filed
+  dedup-inert gap, not a data regression. No code change, no GCS write, no VM launch. Doc at 1044 lines (over 1000-line
+  cap, pre-existing) — kept to a 1-line close-out.**
