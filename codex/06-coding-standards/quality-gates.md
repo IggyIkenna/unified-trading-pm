@@ -106,6 +106,7 @@ code_refs:
     - [Step 1: Auto-Fix (Phase 1)](#step-1-auto-fix-phase-1)
     - [Step 2: Linting (Phase 2)](#step-2-linting-phase-2)
     - [Step 3: Tests](#step-3-tests)
+      - [BATS shell tests](#bats-shell-tests-warn-only-fleet-default-hard-fail-per-repo-opt-in-2026-08-0912)
 13. [Usage](#usage)
 14. [Two-Phase Workflow](#two-phase-workflow)
 15. [Ruff Version Consistency](#ruff-version-consistency-critical)
@@ -1621,6 +1622,23 @@ pytest tests/smoke/ -v --tb=short --timeout=180
 ```
 
 Missing test directories are silently skipped.
+
+### BATS shell tests (warn-only fleet default; hard-fail per-repo opt-in, 2026-08-09/12)
+
+`[3] TESTS` also runs any `.bats` shell-test suite found under `tests/*.bats`, if `bats` is present on PATH (CI installs
+bats-core via `.github/actions/setup-python-tools/action.yml`; a dev box without `bats` installed just skips this phase
+silently). Runs in parallel (`bats -j`) when GNU parallel is available — measured 5.8x speedup on PM's suite (663s
+serial vs 115s at `-j 8`) with byte-identical pass/fail outcomes vs serial; `BATS_JOBS=1` opts a repo out if its own
+suite isn't hermetic.
+
+**Default is WARN-ONLY** — a bats failure logs but does not fail the gate, because the fleet-wide `.bats` pass/fail
+baseline outside PM has never been measured (mirrors the actionlint warn-only-then-re-harden transitional pattern used
+elsewhere in this file). **`BATS_HARD_FAIL=1`** (set per-repo in that repo's own `scripts/quality-gates.sh`, never in
+this shared base file) flips bats failures to `exit 1`. PM is the only repo currently opted in, after re-measuring its
+own suite clean (0 failures) post-fixture-fix. Any other repo can opt in the same way once its own suite is confirmed
+clean.
+
+SSOT: `/plans/active/issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`.
 
 ### `PYTEST_UNIT_DIR` override (Phase 8, 2026-05-15)
 
