@@ -627,6 +627,23 @@ promote PR** (the breaking-gate narrows SIT dispatch, never QG).
   deliberate signal that a DATA contract changed (see the scope-boundary bullet below); `# @contract-surface` is the
   same idea for a plain Python data registry — tag it explicitly rather than have the differ guess by name/path. Adding
   a NEW registry constant to this tracked set is a one-line tag, not a differ code change.
+- **Consumer-QG promote fan-out gate (shipped 2026-08-14, per the 2026-08-08 operator ruling in the same issue doc)**: a
+  differ-flagged registry-dict change is necessary but not sufficient — under `ldr_main`, UAC's LDR→main promote PR
+  fires ONLY `sit-gate/fleet-green` + `quality-gates-v2` + `quickmerge-provenance` (the MVP gate set), none of which
+  re-runs a live consumer's own test suite against the candidate. `unified-api-contracts/.github/workflows/
+  image-build-gate.yml` (the same `pull_request: branches:[main]` workflow the dual-cloud image-build signal lives in —
+  see `/codex/05-infrastructure/dual-cloud-image-builds.md`) now carries a third job, `consumer-qg-gate`: it file-level
+  scopes the promote PR's diff to the two tagged registry files (`venue_constants.py`,
+  `market_data_categories.py`); a touch on either dispatches `repository_dispatch: consumer-qg-check` to
+  `instruments-service` (the confirmed real consumer). `instruments-service/.github/workflows/consumer-qg-check.yml`
+  checks out the candidate UAC SHA as the sibling editable dep, runs `bash scripts/quality-gates.sh --no-fix` against
+  it, and posts the result back as a commit status (`consumer-qg/instruments-service`) on the UAC candidate SHA;
+  `image-build-gate.yml` polls that status for up to 25min and fails closed on timeout/failure. **Not yet a
+  branch-protection REQUIRED check** — `image-build-gate.yml`'s jobs are not in the `ldr_main` MVP-gate-set today (they
+  soft-pass informationally), so this job currently blocks its own workflow run but does not yet block the PR merge
+  button; wiring it into `pin_branch_protection_rulesets.py`'s required-context set (or the MVP gate set itself) is a
+  follow-up, not done here. Extending to other UAC consumers (MTDS, features-service, execution-service) is deferred
+  until the same registry-drift class is shown to affect them, per the ruling's own scope.
 - **Scope boundary — the differ is a CODE public-surface tool; non-code contract surfaces are OUT of scope BY DESIGN**
   and governed by their OWN SSOTs: (1) **manifest `schema_version`** (a DATA-schema contract, SSOT
   `/codex/02-data/availability-manifest-and-data-status.md`); (2) **GCS path / partition keys** (`pipeline_mode=` /
