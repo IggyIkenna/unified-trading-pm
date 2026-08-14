@@ -28,7 +28,7 @@ related:
     /plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md,
     /plans/active/issues/dp_vm_002_mdps_cefi_2021_silent_zero_false_positive_2026_08_11.md,
     /plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md,
-    /plans/active/issues/mdps_cefi_chain_bundle_delay_features_timestamp_float_compare_2026_08_12.md,
+    /plans/archive/2026_08/mdps_cefi_chain_bundle_delay_features_timestamp_float_compare_2026_08_12.md,
     /plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md,
     /plans/active/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md,
     /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md,
@@ -195,10 +195,13 @@ source: >-
       `plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
 - [ ] [CODE] P2. Launch the CeFi Tardis/venue-native backfill for the tokenized-equity SPOT window Source:
       `plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
-- [ ] [CODE] P2. Grep prior mdps-cefi-_/mdps-tradfi-_/mdps-defi-* run.log archives (or manifest attempted_failed reason
-      strings) for the exact Timestamp-vs-float TypeError signature to size the historical blast radius, and re-trigger
-      record_failed→retry for any shard whose failure resolves to this exact root cause Source:
-      `plans/active/issues/mdps_cefi_chain_bundle_delay_features_timestamp_float_compare_2026_08_12.md`
+- [x] ✅ [CODE] P2. Grep prior mdps-cefi-_/mdps-tradfi-_/mdps-defi-* run.log archives (or manifest attempted_failed
+      reason strings) for the exact Timestamp-vs-float TypeError signature to size the historical blast radius, and
+      re-trigger record_failed→retry for any shard whose failure resolves to this exact root cause —
+      market-data-processing-service@4cd46c17ba. Manifest: 0 rows matched across cefi/tradfi/defi. run.log grep: 19/294
+      matched, all pre-fix `mdps-cefi-2019-*` relaunch attempts of the already-relaunched-with-fix shard — blast radius
+      contained, no further retry needed. Source doc archived + resolved:
+      `plans/archive/2026_08/mdps_cefi_chain_bundle_delay_features_timestamp_float_compare_2026_08_12.md`
 - [ ] [CODE] P2. Mechanical citation-reconciliation for todo 2 (S1-b): flip the checkbox to [x] citing
       deployment-service@e7d17f2 + the CEFI 117-shard/DeFi 3,535-shard production verification already documented
       in-doc, and update the doc's stale 'Big findings — Recommended (A): delete' section to reflect that option (B)

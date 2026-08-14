@@ -2,7 +2,7 @@
 doc_type: issue
 title: >-
   MDPS chain-bundle candle derivation crashed on native-datetime64 timestamp columns ("'>' not supported between
-  instances of 'Timestamp' and 'float'") — fixed; blast-radius audit across venues/years still open
+  instances of 'Timestamp' and 'float'") — fixed; blast-radius audit CONTAINED to the already-fixed shard, resolved
 summary: >-
   DP-VM-001 (`DP_VM_EXIT_NONZERO`, exit_code=1) fired for `mdps-cefi-2019-20260810-023141` (the CeFi 2019 year-shard of
   `launch-mdps-sharded-backfill.sh`). Diagnosed via the archived `run.log`:
@@ -22,7 +22,7 @@ summary: >-
   and lacks `ts_event` (one `BITFINEX-FUTURES` line also appeared in this VM's error log), so prior CeFi backfill runs
   across other venues/years may have silently hit the same crash without anyone having traced it to this exact line
   before.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -59,12 +59,18 @@ estimate_class: bug
 estimate_baseline: 0.3
 calibrated_ai_days: 0.3
 assigned_role: data
-resolved_by:
+resolved_by: slot-30
 locked_by:
 depends_on: []
 ---
 
 # MDPS chain-bundle candle derivation: Timestamp-vs-float compare crash (fixed) + blast-radius audit (open)
+
+> **🟢 ARCHIVED 2026-08-14 — RESOLVED** (status: resolved, all todos `[x]`, unlocked). Archived by slot-30 (data). Both
+> the fix (`market-data-processing-service@cc65f076ae`) and the blast-radius audit
+> (`market-data-processing-service@4cd46c17ba`) are shipped — see Progress Log for the full grep/manifest-cross-check
+> evidence, plus `agt-87339b`'s independent 2026-08-14 second-instance relaunch. No successor doc; this issue is fully
+> closed, not superseded.
 
 ## Evidence
 
@@ -122,10 +128,12 @@ venue/asset_group whose `trades` chain-bundle read carries a native- datetime `t
 venues/years may have silently hit this same crash and been miscounted as generic failures rather than traced to this
 line.
 
-- [ ] [SCRIPT] P2. Grep prior `mdps-cefi-*`/`mdps-tradfi-*`/`mdps-defi-*` run.log archives (or the manifest's
+- [x] ✅ [SCRIPT] P2. Grep prior `mdps-cefi-*`/`mdps-tradfi-*`/`mdps-defi-*` run.log archives (or the manifest's
       `attempted_failed` reason strings) for the exact `"not supported between instances of 'Timestamp' and 'float'"`
       signature to size the historical blast radius, and re-trigger `record_failed`→retry (never a blind mass relaunch)
-      for any shard whose failure resolves to this exact root cause.
+      for any shard whose failure resolves to this exact root cause. — market-data-processing-service@4cd46c17ba +
+      evidence below. Blast radius CONTAINED to the already-fixed shard; no further retry action needed (see Progress
+      Log).
 
 ## Progress Log
 
@@ -146,6 +154,33 @@ line.
   full multi-hour run to complete; the standing DP-VM fleet monitor will catch and re-escalate if this relaunch also
   fails. This is now the SECOND confirmed instance of the blast-radius concern below (a pre-fix VM hitting the same
   crash) — reinforces that the P2 blast-radius audit todo is worth doing, not just theoretical.
+
+- **slot-30 2026-08-14** (this todo — blast-radius grep + retry check):
+  - **Manifest leg** (`attempted_failed` reason strings): ran
+    `instruments-service --operation reprocess-shards --asset-group {cefi,tradfi,defi} --capture-status attempted_failed --error-reason-contains "not supported between instances of 'Timestamp' and 'float'"`
+    (dry-run) — **0 of 85,064 / 27,516 / 138,327 rows matched**, in all three asset groups. Root cause: the crashing VMs
+    exited non-zero (`Handler returned non-zero exit code: 1`) before any per-shard `record_failed` call ever wrote this
+    exact exception text into `error_reason` — the manifest genuinely has nothing to flip.
+  - **run.log leg**: wrote + ran a one-off script
+    (`market-data-processing-service/scripts/blast_radius_cefi_chain_bundle_timestamp_float_2026_08_14.py`,
+    `market-data-processing-service@4cd46c17ba`) that streams every archived
+    `log-archive/final/mdps-{cefi,tradfi,defi}-*/run.log` durable snapshot (294 total: 22 cefi / 161 tradfi / 111 defi)
+    via bounded ranged reads (files measured 700MB+ each — a plain full-object download+decode+splitlines would have
+    materialized ~700MB+ per file in RAM on this shared host, so this streams in 8MB chunks with early-stop per file
+    instead) and greps for the exact signature. **Result: 19 of 294 matched, and every single match is an
+    `mdps-cefi-2019-*` VM** (0 tradfi, 0 defi, 0 cefi outside the 2019 shard). All 19 are dated 2026-08-10/2026-08-11 —
+    pre-fix relaunch attempts of the SAME `mdps-cefi-2019` singleton shard, all
+    `DERIBIT:FUTURE:*-2019*`/`DERIBIT:PERPETUAL:*` chain-bundle instruments, matching the root cause exactly (2019 is
+    the only CeFi year whose futures/perpetual data ships as a DERIBIT chain-bundle rather than per-symbol).
+  - **Conclusion**: blast radius is CONTAINED to the single `mdps-cefi-2019` singleton shard — every one of the 19
+    matched archives (including `...-035109`, the VM `agt-87339b`'s entry above independently escalated + relaunched as
+    `mdps-cefi-2019-20260814-193801`) is a pre-fix relaunch attempt of that SAME shard; no other venue/year/asset_group
+    ever hit this signature, live or in the manifest. **No further retry action beyond what's already landed above is
+    warranted**: the shard already has two independent post-fix relaunches (`...-20260812` from the original incident,
+    `...-20260814-193801` from `agt-87339b` today), and there is no OTHER shard anywhere in the fleet whose failure
+    resolves to this root cause — a third relaunch of the same already-covered shard would be pure duplicate work. This
+    satisfies the todo's "never a blind mass relaunch" instruction: the correct action here is confirming zero
+    additional scope, not manufacturing a relaunch.
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
 
