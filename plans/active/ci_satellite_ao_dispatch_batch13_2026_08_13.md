@@ -433,14 +433,15 @@ source: >-
 - [x] ✅ [CODE] P2. Fix _qg_governor_default_k() to call the already-correct _qg_physical_cores() instead of its own
       undeduped lscpu invocation (hyperthreading double-count bug) Source:
       `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` — ✅ **DONE 2026-08-14 (slot 20, infra).**
-      `_qg_governor_default_k()` (`scripts/quality-gates-base/qg-host-governor.sh`) now delegates to
-      `_qg_physical_cores()` instead of its own inline `lscpu -p=core | grep -vc '^#'` (which counted one row per
-      LOGICAL cpu, no dedup — up to 2x too permissive on a hyperthreaded host); `_qg_physical_cores()` already dedupes
-      correctly via `sort -u`. New regression test in `test-qg-host-capacity.sh` (block d): a fake `lscpu -p=core`
-      simulating 32 physical cores × 2 HT threads (64 logical rows, each core id repeated twice) asserts
-      `_qg_physical_cores` returns 32 (deduped) and `_qg_governor_default_k` returns `floor(32/4)=8`, not the old-buggy
-      `floor(64/4)=16`. All `test-qg-host-capacity.sh` assertions pass (13/13, incl. the 2 new ones); full
-      `quality-gates.sh` clean. Issue-doc/source-plan checkbox reconciliation deferred to
+      Evidence: `unified-trading-pm@918eee37ab`. `_qg_governor_default_k()`
+      (`scripts/quality-gates-base/qg-host-governor.sh`) now delegates to `_qg_physical_cores()` instead of its own
+      inline `lscpu -p=core | grep -vc '^#'` (which counted one row per LOGICAL cpu, no dedup — up to 2x too permissive
+      on a hyperthreaded host); `_qg_physical_cores()` already dedupes correctly via `sort -u`. New regression test in
+      `test-qg-host-capacity.sh` (block d): a fake `lscpu -p=core` simulating 32 physical cores × 2 HT threads (64
+      logical rows, each core id repeated twice) asserts `_qg_physical_cores` returns 32 (deduped) and
+      `_qg_governor_default_k` returns `floor(32/4)=8`, not the old-buggy `floor(64/4)=16`. All
+      `test-qg-host-capacity.sh` assertions pass (13/13, incl. the 2 new ones); full `quality-gates.sh` clean.
+      Issue-doc/source-plan checkbox reconciliation deferred to
       `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` per this batch's own header (source docs not touched
       here).
 - [ ] [CODE] P2. Stamp work-start after admission so MAX_DURATION excludes governor queue-wait (already-cited concrete
