@@ -4,10 +4,10 @@ title: Live path has no stale-producer detection — a silent strategy-service t
 summary: >-
   Measured 2026-08-14: if strategy-service goes down or stops publishing, execution-service does NOT detect it. It gates
   on INPUT freshness (market-data age vs venue SLA), never on PRODUCER liveness. The kill switch is armed by exactly 5
-  risk conditions, none of which is "an internal service went silent". The dependency-health policy DOES classify
-  INTERNAL_SERVICE with recovery/warning/escalation buffers, but it only emits WARN/SEV1/SEV0 alerts — it has ZERO
-  consumers in execution-service or strategy-service, so it pages a human and halts nothing. The batch/data pipeline
-  just got exactly this mechanism (alert-driven dependency revocation); live has no equivalent.
+  risk conditions, none of which is "an internal service went silent". The dependency-health policy has 27 entries and
+  ZERO are our own microservices — all 27 are external venues, RPCs, cloud primitives or notification channels — and it
+  emits alerts only, with zero consumers in execution-service or strategy-service. The batch/data pipeline just got
+  exactly this mechanism (alert-driven dependency revocation); live has no equivalent.
 status: open
 nature: issue
 asset_group: [cross-cutting]
@@ -72,11 +72,15 @@ action downstream. Is that the flow?"_
    nothing on the live path treats absence as a signal. This is the live analogue of the honest-absence rule the data
    pipeline already enforces.
 
-2. **The dependency-health policy is inert on the trading path.** It classifies `INTERNAL_SERVICE` and carries
-   `expected_recovery_time` / `warning_buffer` / `hard_escalation_seconds` per dependency, and alerting-service
-   evaluates it. But `rg -l 'health_policy|DependencyHealth'` over execution-service (1384 py files) and
-   strategy-service (1033 py files) returns **zero** consumers. It pages a human; it changes no behaviour. This is the
-   same shape as the defect just found in the batch path — a policy with no actuator — one layer up.
+2. **The dependency-health policy is inert on the trading path, AND does not describe our services.** It carries
+   `expected_recovery_time_seconds` / `warning_buffer_seconds` / `hard_escalation_seconds` / `fallback_available` /
+   `protected_mode_available` per dependency, and alerting-service evaluates it. But all **27** registered dependencies
+   are EXTERNAL venues/RPCs, cloud primitives, or notification channels — **zero** are execution-service,
+   strategy-service, risk or reconciliation. `INTERNAL_CONTROL_PLANE` means _cloud infra_, not _our services_. A silent
+   strategy-service breaches no policy because no policy describes it. But `rg -l 'health_policy|DependencyHealth'` over
+   execution-service (1384 py files) and strategy-service (1033 py files) returns **zero** consumers. It pages a human;
+   it changes no behaviour. This is the same shape as the defect just found in the batch path — a policy with no
+   actuator — one layer up.
 
 3. **No scope arms on internal-service silence.** The kill switch has a `STRATEGY` scope in its taxonomy, and nothing
    publishes to it for a silent strategy-service.
@@ -97,6 +101,20 @@ polled on a heartbeat tick, which is right for a VM doing hour-long shards and f
 reusable parts are the POLICY shape (an identity → action table with a machine-checked ceiling) and the lesson that a
 policy without a wired actuator reads as done and does nothing.
 
+## The kill switch cannot help when execution-service is the thing that failed
+
+Worth stating because it is structural, not a bug: the kill switch is IN-PROCESS. `kill_switch_bus_bridge.on_bus_event`
+is subscribed by `ServiceBootstrap` **on boot**, and cancel-on-arm works through callbacks the order owner (OMS / live
+orchestrator) registers in that same process. If execution-service is down there is no subscriber, so arming the bus
+reaches nothing and no open order is cancelled. The kill switch protects against _bad trading decisions_ by a running
+execution-service; it is not a lever over a dead one.
+
+That is what makes execution / risk / reconciliation categorically different from strategy: a silent strategy-service
+leaves a live execution-service that can still hedge, exit and be halted, whereas a dead execution-service leaves
+positions with no automated actor at all. The operator's read (2026-08-14) is the right one — strategy can be down for a
+while; execution/risk/reconciliation down is the escalation, and the honest answer there is redundancy or a human, not a
+kill switch.
+
 ## Proposed todos (for the operator to place)
 
 - [ ] [CODE] P0. Decide the intended live behaviour when a producer goes silent — hold new orders only, or also flatten
@@ -105,8 +123,8 @@ policy without a wired actuator reads as done and does nothing.
 - [ ] [CODE] P0. Add producer-liveness gating to the execution path: a last-instruction-received clock per
       strategy/client with a declared SLA, checked where `assert_market_data_fresh()` is checked. Repo:
       execution-service.
-- [ ] [CODE] P0. Wire `dependency_health_policy` to an actuator rather than only to alerts — at minimum, an
-      `INTERNAL_SERVICE` breach at SEV0 should reach the kill-switch bus at its declared scope. Repo: alerting-service.
+- [ ] [CODE] P0. Wire `dependency_health_policy` to an actuator rather than only to alerts — at minimum, an SEV0 breach
+      on a registered internal service should reach the kill-switch bus at its declared scope. Repo: alerting-service.
 - [ ] [TEST] P0. An anti-inertness guard for the live path, mirroring the batch one: assert the dependency-health policy
       has a non-test consumer that changes behaviour. Repo: alerting-service.
 - [ ] [DOC] P1. `/codex/04-architecture/dependency-health-policy.md` reads as though the policy governs behaviour; it
