@@ -161,19 +161,19 @@ workflow job step runs `google-github-actions/auth` on this host, which happens 
       its worker slots live on. None of those 7 repos are checked out in this workspace (PM-scoped session), so whether
       any of THEIR workflows call `google-github-actions/auth` on a self-hosted job (the actual poisoning trigger) is
       unverified here -- flagged as the audit half of the new todo below, not assumed either way.
-- [ ] [SCRIPT] P2. **NEW 2026-08-08 -- implement ruling (b), non-shared credential file per job, in two parts.** **Part
-      1 (AO worker-side, agent-orchestrator repo -- not editable from this PM-scoped session, named here so it's ready
-      to dispatch):** stop every AO worker-slot code path that shells out to bare `gcloud`/`gsutil` relying on ambient
-      active-account resolution. Provision a per-VM (or per-worker-slot) dedicated credential file at a fixed path (e.g.
-      `/etc/orchestrator/gcp-sa.json`, sourced fresh from Secret Manager `ORCHESTRATOR_VM_GCP_ADC` at boot, same key
-      `bootstrap_vm.sh` STEP 5.5 already uses) and set `GOOGLE_APPLICATION_CREDENTIALS` to it explicitly in every AO
-      worker process's own environment (not the shared user shell profile) -- AO code then always resolves credentials
-      from that file via ADC, never via `gcloud config get-value account`, so a CI job's WIF auth overwriting the shared
-      `~/.config/gcloud` active-account pointer can no longer affect AO's own calls even if it still poisons the raw
-      `gcloud` CLI for a bare interactive shell on the same host. Verify by deliberately running a self-hosted WIF-auth
-      CI job on the host, then confirming an AO worker's `gcloud`/`gsutil` call (via the pinned credential file, not
-      ambient resolution) still succeeds. **Part 2 (CI-workflow-side audit, repos outside this session's scope):** for
-      each of the 7 repos still on `self-hosted-qg-repos.txt`
+- [x] ✅ [SCRIPT] P2. **NEW 2026-08-08 -- implement ruling (b), non-shared credential file per job, in two parts.**
+      **Part 1 (AO worker-side, agent-orchestrator repo -- not editable from this PM-scoped session, named here so it's
+      ready to dispatch):** stop every AO worker-slot code path that shells out to bare `gcloud`/`gsutil` relying on
+      ambient active-account resolution. Provision a per-VM (or per-worker-slot) dedicated credential file at a fixed
+      path (e.g. `/etc/orchestrator/gcp-sa.json`, sourced fresh from Secret Manager `ORCHESTRATOR_VM_GCP_ADC` at boot,
+      same key `bootstrap_vm.sh` STEP 5.5 already uses) and set `GOOGLE_APPLICATION_CREDENTIALS` to it explicitly in
+      every AO worker process's own environment (not the shared user shell profile) -- AO code then always resolves
+      credentials from that file via ADC, never via `gcloud config get-value account`, so a CI job's WIF auth
+      overwriting the shared `~/.config/gcloud` active-account pointer can no longer affect AO's own calls even if it
+      still poisons the raw `gcloud` CLI for a bare interactive shell on the same host. Verify by deliberately running a
+      self-hosted WIF-auth CI job on the host, then confirming an AO worker's `gcloud`/`gsutil` call (via the pinned
+      credential file, not ambient resolution) still succeeds. **Part 2 (CI-workflow-side audit, repos outside this
+      session's scope):** for each of the 7 repos still on `self-hosted-qg-repos.txt`
       (`agent-orchestrator, strategy-service, e2e-testing, features-service, market-tick-data-service,     execution-service, ml-service`),
       grep for `google-github-actions/auth` combined with a self-hosted `runs-on:` on the SAME job (the exact pattern
       PM's own since-reverted `cloud-build-router.yml` had) -- `agent-orchestrator` itself is the highest-priority
@@ -181,12 +181,38 @@ workflow job step runs `google-github-actions/auth` on this host, which happens 
       `CLOUDSDK_CONFIG`-isolation pattern extended to that job step (option (a) from the ruling above, as a CI-side
       complement to the AO-side Part 1 fix -- the ruling picked (b) as the durable direction for AO's OWN calls, but a
       still-self-hosted WIF-auth CI job remains a hazard to any OTHER bare-gcloud caller on the host, e.g. an
-      interactive operator session, unless also isolated).
-- [ ] [BACKEND] P3. Extend the `deployment-service@3ba14ff9` ADC-backed-client fix pattern to bare `gcloud compute`
+      interactive operator session, unless also isolated). **✅ SHIPPED 2026-08-14 (operator-authorized, code-audit
+      sweep).** Part 1: `agent-orchestrator@5375439` — `bootstrap_vm.sh` STEP 5.5 now also writes the SA key to
+      `/etc/orchestrator/gcp-sa.json` (non-shared, non-well-known path) and pins `.env.local`'s
+      `GOOGLE_APPLICATION_CREDENTIALS` to it instead of the well-known shared `~/.config/gcloud` path — AO's own
+      Python/ADC-based GCP calls now resolve from a file no CI job or `gcloud` ambient-account resolution ever touches.
+      Part 2: audited all 7 self-hosted-qg-repos.txt repos for `google-github-actions/auth` combined with a self-hosted
+      `runs-on:` on the same job — only `execution-service/.github/workflows/benchmarks.yml` matched (the other 6,
+      including `agent-orchestrator` itself, have zero `google-github-actions/auth` usage). Fixed:
+      `execution-service@a3ce78261` — `CLOUDSDK_CONFIG` scoped to `${{ runner.temp }}` on the job's two GCP-touching
+      steps. Codex-aligned: `/codex/05-infrastructure/vm-launcher-runbook.md`'s new Common-Failure-Patterns row.
+      **Live-verification gap**: the todo's own "Verify by deliberately running a self-hosted WIF-auth CI job on the
+      host, then confirming an AO worker's gcloud/gsutil call still succeeds" bar was NOT run this session (no direct
+      orchestrator-VM access from here) — the fix takes effect on the VM's next boot/re-bootstrap; tracked as its own
+      follow-up below, not silently assumed.
+- [x] ✅ [BACKEND] P3. Extend the `deployment-service@3ba14ff9` ADC-backed-client fix pattern to bare `gcloud compute`
       calls used by AO workers (VM stop/start/create), not just the `gsutil` upload path -- or at minimum, document the
       `CLOUDSDK_AUTH_ACCESS_TOKEN=$(gcloud auth application-default print-access-token)` per-command workaround (already
       proven working for `gcloud storage`/`gcloud compute instances create` per the sibling issue doc) as the sanctioned
-      stopgap for any `gcloud compute` call until (a)-(d) above lands.
+      stopgap for any `gcloud compute` call until (a)-(d) above lands. **✅ "AT MINIMUM" BAR MET 2026-08-14** —
+      documented the `--account=`/`CLOUDSDK_AUTH_ACCESS_TOKEN` stopgap as a new Common-Failure-Patterns row in
+      `/codex/05-infrastructure/vm-launcher-runbook.md` (`unified-trading-pm@6ab5a7fe3b`). The heavier "build a real
+      ADC-backed compute client" half was not attempted — these are ad-hoc worker-typed `gcloud compute` invocations
+      during interactive sessions, not a fixed code call-site (confirmed via a targeted grep of `agent-orchestrator`'s
+      own server/scripts code, which has zero bare `gcloud compute` subprocess calls), so there's no single client to
+      build; the documented stopgap is the doc's own explicitly-sanctioned "at minimum" bar.
+- [ ] [OPERATOR] P2. **NEW 2026-08-14.** Run the live-verification check the SCRIPT-P2 todo's own done-when specifies:
+      deliberately trigger a self-hosted WIF-auth CI job on the orchestrator VM (e.g. re-run `execution-service`'s
+      `benchmarks.yml` via `workflow_dispatch`), then on the VM confirm an AO worker's `gcloud`/`gsutil` or
+      Python-ADC-based GCP call still succeeds via the pinned
+      `/etc/orchestrator/gcp-sa.json`/`GOOGLE_APPLICATION_CREDENTIALS` path (needs the VM to have re-bootstrapped, or
+      `bootstrap_vm.sh` STEP 5.5 re-run manually, since the fix only lands on next boot). Needs direct orchestrator-VM
+      access (SSM or operator shell) that this PM-scoped session doesn't have.
 
 ## Notes
 
