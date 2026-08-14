@@ -113,13 +113,19 @@ source:
       and fall back to `finding.event`. Must never crash the sweep: same `except Exception` contract the existing
       actuator dispatch already uses. Record the outcome in `event_details` so the Slack alert says what was revoked.
       Repo: deployment-service.
-- [ ] [CODE] P0. **Emit and release the bookend.** `RevocationActuator.release()` exists and is tested but has no
-      production caller either, so even once holds are written, nothing clears them — a revocation that cannot be
-      released is an outage with extra steps, and this is the alerting SSOT's close-bookend rule. Wire release to the
-      condition-resolved path. Repo: deployment-service.
-- [ ] [TEST] P0. An anti-inertness guard: a test asserting `actuate()` has at least one non-test caller. The whole
-      mechanism sat wired-but-unreachable through six green phases; a grep-level guard is what makes that unrepeatable.
-      Repo: deployment-service.
+- [x] ✅ [CODE] P0. **Emit and release the bookend.** — **deployment-service@375835a9a.** Wired into
+      `meta_watchers.reconcile_resolved()`, which already finds alerts that fired on a prior sweep and did not re-fire.
+      Release re-derives targets with the SAME `targets_for_finding()` call delivery used, so no extra state is
+      persisted and the halves cannot drift. Documented imprecision: the alert key carries the EVENT, not the finer DP
+      id; both id-pairs sharing an event today resolve to the same action, so released == delivered.
+      `test_release_has_a_production_caller` added — the same AST guard that caught the actuator.
+      `RevocationActuator.release()` exists and is tested but has no production caller either, so even once holds are
+      written, nothing clears them — a revocation that cannot be released is an outage with extra steps, and this is the
+      alerting SSOT's close-bookend rule. Wire release to the condition-resolved path. Repo: deployment-service.
+- [x] ✅ [TEST] P0. An anti-inertness guard: a test asserting `actuate()` has at least one non-test caller. —
+      **deployment-service@cf5e041e7** (guard, AST-based not grep) + **@79864746c** (xfail removed once wired) +
+      **@375835a9a** (same guard now covers `release()`). The whole mechanism sat wired-but-unreachable through six
+      green phases; a grep-level guard is what makes that unrepeatable. Repo: deployment-service.
 - [ ] [OPERATOR] P0. **Confirm it live after wiring**: the monitor runs as the `uts-prod-dp-exit-code-monitor` Cloud Run
       Job on a `*/5` schedule, so verify (a) the job's deployed image contains the wiring commit
       (`gcloud run jobs describe`), (b) an execution actually invoked revocation (log a `DP-REVOCATION-*` line), and (c)
