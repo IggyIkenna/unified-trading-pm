@@ -439,8 +439,16 @@ than proceeding.
       two separate launches.
 - [ ] [DATA] P1. **Sweep the `league=` vs `league_id=` path duplication.** Measured on day=2020-06-06: the same
       FOOTYSTATS shard exists under BOTH `league=BUNDESLIGA/ticks_migrated_*.parquet` AND
-      `league_id=BUNDESLIGA/ticks.parquet`. Determine which is canonical (`league_id=` per the path SSOT), census the
-      full extent — do NOT assume one day generalises — and purge the non-canonical side. **§3a fresh check required.**
+      `league_id=BUNDESLIGA/ticks.parquet`. ~~Determine which is canonical (`league_id=` per the path SSOT)~~ **WRONG
+      DIRECTION — corrected 2026-08-14 (slot-26), confirmed by direct code read, not just citing the consumer inventory
+      doc's own warning**: UAC's actual sports path builder
+      (`unified_api_contracts/canonical/domain/sports/gcs_paths.py:351`,
+      `paths.append(f"{base}/league={league_id}/{folder}.parquet")`) canonically emits **`league=`**, NOT `league_id=` —
+      this plan's own stated direction was backwards. Had this been executed as originally written, it would have purged
+      the REAL canonical `league=` side and kept the legacy `league_id=` duplicate — the opposite of correct. **Extent
+      census still NOT done** (do not assume one day generalises, per the todo's own text) — flagging the corrected
+      direction now, before any census/purge work proceeds, precisely to prevent that catastrophic wrong-way execution.
+      **§3a fresh check still required before any purge.**
 
 ### Added 2026-08-08 (operator, mid-flight) — re-stamp the collapsed derived types
 
