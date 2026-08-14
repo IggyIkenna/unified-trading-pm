@@ -153,6 +153,50 @@ than proceeding.
       `MATCHES`, `ODDS`, `PLAYER_STATS`, `PLAYER_VALUES`, `PREDICTIONS`, `SFI_PROGRESSIVE_STATS`, `STANDINGS`, `TEAMS`,
       `WEATHER`, `XG`, `XG_SHOTS`, `ODDS_HORIZON_BUCKET`). Only after the API-Football campaign has converged (the
       `gate_on_depends` above enforces this, but re-verify at run time — a gate is not a substitute for looking).
+      **SPLIT 2026-08-14 (BLK-8436a1a6, operator-approved Option A)**: census + risk-analysis this session found the
+      scope far larger and riskier than the 1h estimate — see the new dedicated todo immediately below and the Progress
+      Log. This todo now tracks ONLY the split decision; the physical work moved to that todo.
+- [ ] [DATA] P0. **[OPERATOR] Execute the 19-token lowercase re-stamp on a dedicated VM (in-region, SPOT +
+      progress-checkpoint resume) — census + code diff prepared 2026-08-14, execution not yet run.** Scope, in ONE
+      atomic change (must land together, per the analysis below): 1. Metadata-only manifest re-stamp: rewrite
+      `data_type` for the 19 uppercase tokens to their `SPORTS_IS_DATA_TYPE_LOWERCASE_FORM` target
+      (`unified-api-contracts` `league_data.py:297`) across `instruments-store-sports-prd-central-element-323112`'s
+      `_index/availability_index.parquet` (merged index) AND any per-VM legacy-seed shards — **census 2026-08-14:
+      15,907,902 of 17,208,810 rows (92%) carry an uppercase token**, dated 2014-01-01 → 2026-08-20 (tool:
+      `census_sports_19token_lowercase_scope_2026_08_14.py`, shipped `instruments-service@<see Progress Log>`). NO GCS
+      object copy needed — `entity=` path segments are already lowercase + stable (`SPORTS_DATA_TYPE_TO_FOLDER`, UAC
+      `gcs_paths.py`); this is a manifest-column relabel only, unlike the `trades`→`odds` re-stamp. 2. Flip
+      instruments-service's 8 registry sites to the lowercase form in the SAME change (never before step 1 completes
+      verified): `process_preflight.py` (`_SPORTS_CORE_ENTITIES`, `_SPORTS_PER_FIXTURE_ENTITY_NAMES`,
+      `_ENRICHMENT_ENTITY_VENUES`, `_SPORTS_PER_LEAGUE_ENTITIES`, `_FIXTURES_ENTITY_ALIASES`),
+      `orchestrator/__init__.py::_SPORTS_DATA_TYPE_TO_PIPELINE_MODE`, `sports_dependency.py`
+      (`_API_FOOTBALL_FIXTURES_DATA_TYPES`), `sports_reference_fixtures_write.py::_ENTITY_DT_BY_SHORT`,
+      `writers.py`/`catalogue.py`'s venue-string-slicing derivation (apply `canonical_sports_is_data_type()` to the
+      derived value before the manifest write). 3. Wire `enumerate_expected_universe.py`'s
+      `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE` with all 19 tokens' lowercase mapping (§3b of the consumer inventory's
+      VERDICT) — in the SAME change as steps 1-2, never standalone. **Why atomic, not staged (root-cause evidence,
+      2026-08-14 session)**: UTL's shared `check_shard_freshness()` does an EXACT case-sensitive string match of
+      `expected_venues` against the manifest `data_type`/`venue` columns
+      (`unified-trading-library/manifest_writer/_queries.py:149`, `token_mask = date_df["venue"] == venue`) — no
+      case-insensitive fallback. Flipping step 2 before step 1 completes (or vice versa) makes every already-captured
+      historical date read as "missing" on the next freshness pre-flight, triggering re-fetch storms against LIVE
+      provider APIs (API-Football/FootyStats/Understat/Transfermarkt/SFI/OpenMeteo) across 6+ years of history — the
+      SAME failure class as the documented `odds_horizon_bucket` "572 permanently-skipped days" incident
+      (`enumerate_expected_universe.py`'s own `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE` comment,
+      `sports_data_sources_canonical_completion_2026_07_13.md` §1), but at ~46x the row count. The SAME mechanism
+      applies to step 3: wiring the override dict before step 1 lands makes `enumerate_expected_universe.py`'s
+      present-set match look for the NEW lowercase string while real captured rows are still uppercase-cased — a
+      guaranteed repeat of the exact 209,526-vs-123,642 zero-overlap incident this dict's own comment documents, at
+      19-token scale, which is why this todo does NOT ship the override-dict wiring standalone this session despite the
+      operator's BLK-8436a1a6 answer inviting it — the diff is drafted (see Progress Log) but held for atomic landing
+      with steps 1-2. **Explicitly OUT of scope** (P3's job per the consumer inventory's own delineation):
+      `FIXTURES_SCHEDULE` / `FIXTURES_OUTCOMES` are UAC string CONSTANTS also directly imported by MTDS and MDPS — do
+      not flip their VALUE here; only instruments-service's own registries/writers move in this todo. **Verify**: fresh
+      census (rerun the shipped script) shows 0 remaining uppercase-token rows across BOTH manifest surfaces; a live
+      freshness pre-flight run on a recent + a historical date each shows `is_fresh=True` with 0 spurious missing/stale;
+      `[OPERATOR]` tag because this launches a VM + executes a corpus-scale prod manifest mutation (delete-safety codex
+      §3a doesn't apply — no object delete, but the launch itself needs the same review a 16M-row prod-manifest rewrite
+      warrants).
 - [ ] [DATA] P0. **Fold footystats `ODDS` (6,306 captured) + `odds` (16,207 captured) into a single `odds`.** These are
       the same vendor population under two spellings; `source=footystats` remains the discriminator against the odds_api
       population. Note the UAC comment calling the uppercase set "4 stale empty rows" is FALSE — expect 6,306 real
@@ -215,6 +259,28 @@ than proceeding.
 - [ ] [REVIEW] P1. **Re-run the honest-coverage measurer and confirm the rollup's distinct values equal the manifest's**
       (31 venues / 10 data types today → the canonical set, with nothing hidden). This is the end-to-end proof that the
       panel and the data finally agree.
+
+- **2026-08-14** — Todo 3 (lowercase the 19-token IS vocabulary) SPLIT after census + risk analysis found it far
+  larger/riskier than its 1h estimate. Census (`census_sports_19token_lowercase_scope_2026_08_14.py`, shipped
+  `instruments-service` — see SHA below) of `instruments-store-sports-prd-central-element-323112`'s
+  `_index/availability_index.parquet`: **15,907,902 of 17,208,810 rows (92%) carry one of the 19 uppercase tokens**,
+  dated 2014-01-01 → 2026-08-20, across every status (`captured`/`empty_confirmed`/`expected_unattempted`/
+  `attempted_failed`). `ODDS_HORIZON_BUCKET` already has 0 uppercase rows (writer already stamps lowercase, matching the
+  existing `enumerate_expected_universe.py` override precedent); `ODDS` uppercase carries 898,195 rows vs 1,774
+  already-lowercase. Filed `/blocked` BLK-8436a1a6 before touching any live code — root cause: UTL's shared
+  `check_shard_freshness()` does an EXACT case-sensitive match
+  (`unified-trading-library/manifest_writer/_queries.py:149`) with no case-insensitive fallback, so flipping
+  instruments-service's registries before the physical re-stamp lands would read every historical date as "missing" and
+  trigger re-fetch storms against live provider APIs across 6+ years — the same failure class as the documented
+  `odds_horizon_bucket` 572-day incident, at ~46x scale. Operator approved Option A (code-prep only this session,
+  dedicated VM-run follow-up for the actual re-stamp + registry flip
+  - override-dict wiring, landed atomically). New todo added above with full scope + the atomicity rationale. **Shipped
+    this session**: the census script (read-only, safe). **NOT shipped this session** (deliberately, despite the
+    operator's answer inviting it): the `enumerate_expected_universe.py` override-dict wiring — verified via direct read
+    of that file's own load-bearing comment (§3b of the P2 consumer inventory) that wiring it BEFORE the physical
+    re-stamp reproduces the identical 209,526-vs-123,642 zero-overlap incident the dict's own history already documents;
+    the diff is drafted in the new todo's scope description instead of merged standalone, to land atomically with the VM
+    re-stamp. Checkbox on the original todo stays unflipped per the operator's explicit instruction.
 
 ## Codex SSOTs
 
