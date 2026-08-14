@@ -25,7 +25,7 @@ related:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md,
-    /plans/active/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md,
+    /plans/archive/2026_08/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md,
     /plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md,
     /plans/active/issues/sports_catalog_dp_catalog_001_oom_manifest_read_2026_08_10.md,
     /plans/active/issues/sports_features_2026_backfill_launch_window_was_today_2026_08_10.md,
@@ -82,9 +82,10 @@ source: >-
       sports features backfill for day=2026-08-10 (features-service) to replace the false
       empty_confirmed(SOURCE_RETURNED_ZERO) rows the aborted 12:03 UTC run wrote **OUT-OF-SCOPE FOR THIS BATCH
       (2026-08-13, operator scoping instruction)** — MDPS/features-service backfill/recompute work is excluded from this
-      batch unless manifest-canonical or migration-related. The underlying item remains open in its own source doc,
-      untouched by this batch/commit. Source:
-      `plans/active/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md`
+      batch unless manifest-canonical or migration-related. **UPDATE 2026-08-14 (slot-29)**: the underlying item is now
+      resolved (outside this batch) — manifest shows `fixture_features`/`derived_features` `captured` for 2026-08-10
+      with real GCS output; source doc archived. Source:
+      `/plans/archive/2026_08/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md`
 - [ ] [CODE] P2. Track F: root-cause why the features-service sfi_progressive manifest group is corpus-empty (1 manifest
       row) despite a documented 2020->today backfill window Source:
       `plans/active/sports_consolidated_closeout_2026_07_19.md`

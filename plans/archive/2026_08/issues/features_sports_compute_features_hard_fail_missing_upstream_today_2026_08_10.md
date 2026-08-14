@@ -6,7 +6,7 @@ summary: >-
   compute_features hard-fails on missing upstream fixtures for today's date (2026-08-10) while
   gcs_read_reference_fixtures handles it gracefully with recovery=skip. Relaunched with end_date=2026-08-09 as
   mitigation.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -37,6 +37,13 @@ context_scope:
 ---
 
 # Features-Sports: compute_features hard-fails on missing upstream fixtures for today's date
+
+> **🟢 ARCHIVED 2026-08-14** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Code fix: `DependencyError` added to `_run_feature_group`'s per-shard failure tuple
+> (features-service@692ce76b — the earlier `305d897a` claim was false, see the correction above). Data-fix: the only
+> remaining todo (`--force` recompute of the 2026-08-10 feature groups) is confirmed already run — manifest shows
+> `fixture_features`/`derived_features` `captured` with real GCS output for that date.
 
 **Created**: 2026-08-10 | **Severity**: P1 | **Escalation**: agt-af22dd
 
@@ -126,10 +133,10 @@ tomorrow's run once instruments-service writes it. (A mid-run read of the run.lo
 
 ## Todos
 
-- [ ] [DATA] P2. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — Once instruments-service
-      writes real 2026-08-10 `sports_reference` data, `--force` recompute the sports features backfill for
-      `day=2026-08-10` to replace the false `empty_confirmed(SOURCE_RETURNED_ZERO)` rows the aborted 12:03 run recorded
-      (the upstream was merely lagging, not confirmed-absent). Repo: features-service.
+- [x] ✅ [DATA] P2. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — Once
+      instruments-service writes real 2026-08-10 `sports_reference` data, `--force` recompute the sports features
+      backfill for `day=2026-08-10` to replace the false `empty_confirmed(SOURCE_RETURNED_ZERO)` rows the aborted 12:03
+      run recorded (the upstream was merely lagging, not confirmed-absent). Repo: features-service.
 
 ## Progress Log
 
@@ -137,3 +144,17 @@ tomorrow's run once instruments-service writes it. (A mid-run read of the run.lo
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - **context-scout 2026-08-14**: populated context_scope (2 entries).
+
+- **slot-29 2026-08-14**: Verified via manifest lookup
+  (`ManifestWriter(service_name="features-service", catalogue_bucket="features-sports-prd-central-element-323112").lookup(...)`)
+  that `day=2026-08-10` `fixture_features` and `derived_features` now record `capture_status=captured` (attempted_at
+  ≈2026-08-13T18:24Z, superseding the earlier false `empty_confirmed(SOURCE_RETURNED_ZERO)` rows) — the `--force`
+  recompute this todo asked for already ran (prior session on this slot). Confirmed real (non-empty) GCS output at
+  `gs://features-sports-prd-central-element-323112/sports_features/by_date/day=2026-08-10/league={L}/feature_group={fixture_features,derived_features}/features.parquet`
+  — 172 blobs across 40+ leagues, 17-490KB each, not placeholder-sized. Instruments-service's `sports_reference`
+  upstream for 2026-08-10 is also confirmed real (648 objects, real sizes, under
+  `gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/day=2026-08-10/`). Todo closed — no
+  code change needed, this was a data-fix-only recompute. (`odds_features`/`odds_targets` and the features-service own
+  reference-table exports for this date remain `empty_confirmed` — those use a live-provider-fetch path unrelated to the
+  `DependencyError`/`read_reference_entity` bug this issue tracked, so their empty state is not in this todo's scope;
+  not touched here.)

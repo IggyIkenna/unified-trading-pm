@@ -117,9 +117,12 @@ idempotency guard silently no-ops re-park attempts (observed 4x/26x redundant re
       `_CEFI_MVP_SHARDS`/SPORTS-equivalent override to `pipeline_e2e_check.py`'s `_venue_data_type_is_mvp()` —
       market-tick-data-service@6105f0b0 (already shipped 2026-08-12); doc's own checkbox flipped + archived slot 14
       2026-08-13.
-- [ ] [DATA] P2. `plans/active/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md` —
+- [x] ✅ [DATA] P2.
+      `plans/archive/2026_08/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md` —
       once instruments-service writes real 2026-08-10 sports_reference data, `--force` recompute the sports features
-      backfill for day=2026-08-10 to replace false `empty_confirmed` rows.
+      backfill for day=2026-08-10 to replace false `empty_confirmed` rows. Verified slot-29 2026-08-14: manifest shows
+      `fixture_features`/`derived_features` `captured` for 2026-08-10 with real GCS output (172 blobs, 40+ leagues); doc
+      resolved + archived.
 - [ ] [CONFIG] P2. `plans/active/issues/sports_features_2026_backfill_launch_window_was_today_2026_08_10.md` — clamp the
       per-year sports features backfill launcher's `end_date = min(today-1, {year}-12-31)` for the current year.
 - [ ] [OPERATOR] P2. `plans/active/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md` — flip
