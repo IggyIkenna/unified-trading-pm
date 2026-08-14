@@ -2,10 +2,11 @@
 doc_type: codex-ssot
 title: Solana DeFi Coverage — Perp DEX + AMM/CLOB/Oracle Adapters
 summary:
-  Solana DeFi reference-data adapter coverage in instruments-service — Plan B (perp-DEX) is EMPTY as of 2026-07-16
-  (Drift + Pacifica removed, operator ruling, Jupiter not integrated), spot AMM/CLOB (Meteora/Phoenix/Jupiter/
-  Lifinity), Pyth oracle, Jito restaking; venue registry + program IDs + deploy-date floors (MTDS market-data wiring
-  tracked separately).
+  Solana DeFi reference-data adapter coverage in instruments-service — Plan B (perp-DEX) was EMPTY 2026-07-16→2026-08-14
+  (Drift + Pacifica removed, operator ruling); **2026-08-14 the operator reversed the Pacifica portion and authorized
+  BOTH Jupiter perps and Pacifica for re-integration** — Drift stays removed (real hack, unproven Velocity relaunch).
+  Also covers spot AMM/CLOB (Meteora/Phoenix/Jupiter/Lifinity), Pyth oracle, Jito restaking; venue registry + program
+  IDs + deploy-date floors (MTDS market-data wiring tracked separately).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -52,6 +53,26 @@ type: architecture
 > this banner describing DRIFT-SOLANA / PACIFICA-SOLANA / the Velocity Data API is now HISTORICAL RECORD ONLY — do not
 > use it to justify re-adding these venues.** `/codex/04-architecture/drift-v2-data-sources.md` is SUPERSEDED by this
 > banner in full.
+
+> 🟢 **REVERSAL (2026-08-14, operator ruling, verbatim): "jupiter and pacifica please."** Given in direct response to
+> being shown this tombstone's own conflict (Pacifica was named and killed in the 2026-07-16 blanket ruling above,
+> alongside Drift, despite no evidence Pacifica itself was ever compromised — it was swept into a blanket "kill
+> everything except Jupiter" reaction) plus current data (Pacifica: mainnet 2025-06, overtook Jupiter for #1 Solana perp
+> DEX by daily volume within 3 months, $100B+ cumulative volume by 2026-01, but only ~$27-38M TVL against that volume —
+> one external source explicitly flags the volume/TVL ratio as a possible wash-trading/points-farming signature, not a
+> clean quality signal; no hack or shutdown found). **Operator decision, with that caveat surfaced: re-authorize
+> PACIFICA-SOLANA for re-integration, alongside Jupiter perps (already the intended survivor per the 2026-07-16 ruling's
+> own words).** This is a NEW, explicit decision — it does not retroactively imply the 2026-07-16 ruling was wrong, only
+> that circumstances (or the operator's risk tolerance) changed. **DRIFT-SOLANA stays removed** — nothing in this
+> reversal touches Drift; the hack was real and attributed with medium-high confidence to a North Korean
+> state-affiliated group (DPRK/Lazarus), and its Velocity DEX relaunch remains an unproven ~$0-TVL product. **This
+> banner authorizes re-integration as a decision; it does not itself re-add any code.** Actual re-integration (UAC
+> registry, instruments-service adapter, MTDS connector, execution-service protocol, strategy-service venue selection)
+> is tracked as real engineering work in a plan — see `/plans/active/` for the current tracking doc (name may change;
+> grep `PACIFICA` in `plans/active/` for the live pointer rather than trusting a hardcoded link here). Everything below
+> the 2026-07-16 banner describing PACIFICA-SOLANA as historical-only is now PARTIALLY superseded by this reversal — the
+> DRIFT-SOLANA portions remain accurate; PACIFICA-SOLANA content should be read as "this is what existed before the
+> 2026-07-16 cull, and what re-integration should restore or improve on," not as dead history.
 
 > **SSOT for Solana DeFi adapter architecture.** Created: 2026-05-13 per
 > `/plans/archive/solana_perp_dex_adapters_2026_05_13.md` Phase 6. Extended: 2026-05-13 per
