@@ -303,10 +303,31 @@ source: >-
       `0 errors, 0 warnings, 0 notes`. Checkbox reconciliation back into the source issue doc is out of scope for this
       satellite batch (per this doc's own header) — deferred to
       `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`.
-- [ ] [CODE] P2. Disable/fix the 4 named vacuous crons (sit-debounce-trigger, freeze-deferred-build-replay,
+- [x] ✅ [CODE] P2. Disable/fix the 4 named vacuous crons (sit-debounce-trigger, freeze-deferred-build-replay,
       fix-approval-timeout, supersede-stale-dep-update-prs) -- the bounded sub-part of the F4 item, separable from
       digest-drift-sweep's open-ended non-convergence investigation Source:
-      `plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md`
+      `plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md` — ✅ **DONE 2026-08-14 (slot 10,
+      infra).** Read all 4 workflows end-to-end before touching any cron — 2 genuinely had cadence-reduction headroom, 2
+      are safety-critical and were left unchanged (a blind "disable all 4" would have broken real monitoring): **Fixed
+      (cadence reduced, `unified-trading-pm` this commit)**: `freeze-deferred-build-replay.yml` hourly→every 2h (its own
+      stale-deferral guard already tolerates 6h before paging, and GH itself only delivers ~37% of scheduled runs under
+      load per this same file's own note, so "hourly" already ran more like every 2-3h in practice — this just
+      formalizes the observed cadence, still comfortably inside the 6h alarm with 2 missed ticks = 4h);
+      `supersede-stale-dep-update-prs.yml` every 2h→every 6h (its own header text already calls this role "low-urgency
+      cleanup"; `promotion_lag_monitor.py` separately alerts on any dep-update PR stuck CONFLICTING past its own SLA, so
+      widening this bot's poll interval doesn't leave a conflict silently unwatched). **Audited, left unchanged (no code
+      change — confirmed NOT actually fixable via cadence/disable without harm)**: `sit-debounce-trigger.yml` is
+      dual-purpose — its own header already documents `*/5` as GitHub's practical floor (`*/2` silently coalesces to
+      `*/5`), and the SAME cron also runs `check-stale-lock` (SIT-lock starvation detection + auto-remediation of a
+      fleet-wide staging deadlock) — the "Trigger SIT step skipped 40/40" evidence the F4 finding cited is the debounce
+      logic working AS DESIGNED (most ticks have no pending staging changes to drain), not a defect; disabling or
+      slowing this cron would degrade starvation detection, a real safety function. `fix-approval-timeout.yml`'s
+      `0 open breaking-fix-pending issues` sampled 6/6 is likewise inherent to breaking-fix escalations being RARE, not
+      a cadence defect — its 4h/24h escalation thresholds genuinely benefit from the current 2h poll granularity;
+      widening it risks a late CRITICAL page on a real stuck fix. `digest-drift-sweep`'s non-convergence (the genuinely
+      open-ended, real-$ part of F4) remains untouched, exactly as this todo's own scoping intended — not claimed here.
+      YAML-validated both edited files post-change (`python3 -c "import yaml; yaml.safe_load(...)"` on each, both parse
+      clean).
 - [ ] [CODE] P2. Classify each of the 7 residually-stalled repos' commit ranges since their baseline tag as 'correctly
       quiet' (no SOURCE_DIR-touching commit since baseline) vs a genuine gap in the patch-fallback logic -- a checkable,
       worker-determinable fact per repo. Source:

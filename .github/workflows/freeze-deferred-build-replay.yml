@@ -21,7 +21,14 @@ name: freeze-deferred-build-replay
 
 on:
   schedule:
-    - cron: "0 * * * *" # hourly (Phase-3 ci-cost 2026-07-17: post-freeze drain tolerates ≤1h; was */30)
+    # F4 vacuous-cron fix (2026-08-14, post_cutover_silent_assumption_sweep_2026_07_23.md): hourly
+    # was nearly always a no-op ("No active PROD_DEPLOY freeze" on every sampled run — freeze windows
+    # are <=30min and rare) while occupying the shared self-hosted glue pool ~174x/week. The
+    # stale-deferral guard below already tolerates 6h before paging, and GitHub itself only delivers
+    # ~37% of scheduled runs under load (see ldr-to-main-promote-fleet.yml's own measured note), so an
+    # "hourly" cron already ticks more like every 2-3h in practice. Widening to */2h stays comfortably
+    # inside the 6h stale threshold (2 missed ticks = 4h) while roughly halving vacuous occupancy.
+    - cron: "0 */2 * * *" # every 2h (was hourly; Phase-3 ci-cost 2026-07-17 set hourly, was */30)
   workflow_dispatch:
     inputs:
       dry_run:
