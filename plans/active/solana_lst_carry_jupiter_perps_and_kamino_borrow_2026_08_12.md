@@ -148,46 +148,46 @@ from 2020-12-18).
       not `staking_yields`:
 
       | Venue                  | Declared                                        |
-              | ---------------------- | ----------------------------------------------- |
-              | `MARINADE-SOLANA`      | `lst_rates` from **2021-08-01**                 |
-              | `JITO-SOLANA`          | `lst_rates` from **2021-11-01**                 |
-              | `SOLBLAZE-SOLANA`      | `lst_rates` from 2022-10-15                     |
-              | `JITORESTAKING-SOLANA` | `staking_yields` — restaking, correctly distinct |
+                  | ---------------------- | ----------------------------------------------- |
+                  | `MARINADE-SOLANA`      | `lst_rates` from **2021-08-01**                 |
+                  | `JITO-SOLANA`          | `lst_rates` from **2021-11-01**                 |
+                  | `SOLBLAZE-SOLANA`      | `lst_rates` from 2022-10-15                     |
+                  | `JITORESTAKING-SOLANA` | `staking_yields` — restaking, correctly distinct |
 
-              `lst_rates_handler.py` writes **both** `lst_rates` and `staking_yields`, so the vocabulary split is deliberate and the
-              registry matches the handler exactly. The split is also semantically right: `lst_rates` is the LST exchange-rate/APY
-              series, `staking_yields` is protocol staking APY.
+                  `lst_rates_handler.py` writes **both** `lst_rates` and `staking_yields`, so the vocabulary split is deliberate and the
+                  registry matches the handler exactly. The split is also semantically right: `lst_rates` is the LST exchange-rate/APY
+                  series, `staking_yields` is protocol staking APY.
 
-              **Third correction on the same question, so the lesson is the point, not the fact:** my first verdict was
-              "possibly BLOCKED-DATA" (from reading the registry for the wrong key), my second was "the registry is wrong"
-              (from finding the handlers and still not re-checking the registry with the right key), and the truth is that both the
-              registry and the handlers were right all along. This is exactly the failure
-              `/codex/02-data/four-surface-reconciliation-procedure.md` warns about — **an absence result is evidence ONLY once you
-              have confirmed you probed the vocabulary the WRITER actually emits.** Before declaring any data absent, enumerate the
-              data types the writer emits and grep for those, never for the name you expect.
+                  **Third correction on the same question, so the lesson is the point, not the fact:** my first verdict was
+                  "possibly BLOCKED-DATA" (from reading the registry for the wrong key), my second was "the registry is wrong"
+                  (from finding the handlers and still not re-checking the registry with the right key), and the truth is that both the
+                  registry and the handlers were right all along. This is exactly the failure
+                  `/codex/02-data/four-surface-reconciliation-procedure.md` warns about — **an absence result is evidence ONLY once you
+                  have confirmed you probed the vocabulary the WRITER actually emits.** Before declaring any data absent, enumerate the
+                  data types the writer emits and grep for those, never for the name you expect.
 
-              **Consequence for § A, in the good direction:** SOL LST history starts **2021-08**, roughly 22 months EARLIER than
-              Kamino's `lending_indices` (2023-06). So the binding constraint on the Solana spread is the **borrow** series, not the
-              staking series, and the full Kamino window is computable. ETH remains deeper (Lido `staking_yields` 2020-12-18) but
-              Solana is in no way blocked.
+                  **Consequence for § A, in the good direction:** SOL LST history starts **2021-08**, roughly 22 months EARLIER than
+                  Kamino's `lending_indices` (2023-06). So the binding constraint on the Solana spread is the **borrow** series, not the
+                  staking series, and the full Kamino window is computable. ETH remains deeper (Lido `staking_yields` 2020-12-18) but
+                  Solana is in no way blocked.
 
 - [ ] [AGENT] P0. **Use `lst_rates`, NOT `staking_yields`, for the § A spread — they measure different things.**
       Measured 2026-08-12; recorded here because § A's answer is wrong if the wrong series is used.
 
       | | `lst_rates` | `staking_yields` |
-              | --- | --- | --- |
-              | `instrument_type` | `lst` | `staking` |
-              | Payload | `exchange_rate` (float64, **non-null**) | `apy` + `total_staked` (nullable) |
-              | Source | **on-chain** — contract / `exchangeRate` / `getPooledEth` / subgraph | **reported** — `yields.llama.fi/pools`, `LIDO_APY_URL`, `ETHERFI_APY_URL` |
-              | Meaning | The LST's redemption rate; **drift over time IS realised accrual** | A published forward-looking APY |
-              | Venues | 14 LST issuers | 26, mostly vaults + restaking |
+                  | --- | --- | --- |
+                  | `instrument_type` | `lst` | `staking` |
+                  | Payload | `exchange_rate` (float64, **non-null**) | `apy` + `total_staked` (nullable) |
+                  | Source | **on-chain** — contract / `exchangeRate` / `getPooledEth` / subgraph | **reported** — `yields.llama.fi/pools`, `LIDO_APY_URL`, `ETHERFI_APY_URL` |
+                  | Meaning | The LST's redemption rate; **drift over time IS realised accrual** | A published forward-looking APY |
+                  | Venues | 14 LST issuers | 26, mostly vaults + restaking |
 
-              **The axis is reported-vs-measured, not protocol-native-vs-DEX-swapped** (a hypothesis considered and rejected), and it
-              is not about token mechanics either — rebasing vs price-appreciating cuts across both. For a staked-basis P&L you want
-              the **measured** series, because exchange-rate drift is the yield actually earned rather than the number a protocol
-              advertises. `sim_schemas.py` already does exactly that: `stake_apy_bps  # staking yield from MTDS lst_rates`.
-              Only **three** venues declare both (LIDO, ETHERFI, PUFFER) — protocols that genuinely both issue an LST and run a
-              vault/restaking product, so the overlap lets you cross-check advertised against realised rather than being duplication.
+                  **The axis is reported-vs-measured, not protocol-native-vs-DEX-swapped** (a hypothesis considered and rejected), and it
+                  is not about token mechanics either — rebasing vs price-appreciating cuts across both. For a staked-basis P&L you want
+                  the **measured** series, because exchange-rate drift is the yield actually earned rather than the number a protocol
+                  advertises. `sim_schemas.py` already does exactly that: `stake_apy_bps  # staking yield from MTDS lst_rates`.
+                  Only **three** venues declare both (LIDO, ETHERFI, PUFFER) — protocols that genuinely both issue an LST and run a
+                  vault/restaking product, so the overlap lets you cross-check advertised against realised rather than being duplication.
 
 - [ ] [AGENT] P1. **Compare LTV and borrow cost across the three Solana lending venues** (Kamino / Solend / MarginFi)
       and against Aave on the ETH side. Operator asked which has better LTV and lower stable borrow rates. **Note for
@@ -319,3 +319,40 @@ no change at all.**
   `AAVE_V3-*` keys are EVM), and **three** Solana lending venues already carry `lending_indices` history (Kamino
   2023-06, Solend 2022-11, MarginFi 2025-01). Left `status: draft` deliberately — the codex requires an explicit
   operator decision to re-add a Solana perp venue, and § A's economics gate could still return no-go.
+
+- **2026-08-14** — Interactive session: operator asked to use "Pacifica and Jupiter" for a Solana perp
+  basis/funding-rate trade, believing MTDS adapters already existed for both. **Corrected**: what's wired under
+  `JUPITER-SOLANA` is Jupiter the spot-swap aggregator (`jupiter_solana_ws.py` polls `lite-api.jup.ag/swap/v1/quote`) —
+  a different product from Jupiter **Perpetuals** (JLP-pool-backed, separate REST surface at
+  `api.jup.ag`/`developers.jup.ag/docs/perps/` covering markets/positions/funding/pricing). Zero coverage of Jupiter
+  Perps specifically exists anywhere. `PACIFICA` has zero hits in `VENUES_BY_ASSET_GROUP` or any connector — this
+  session's own grep re-confirms the 2026-07-16 cull (below) holds live.
+  - **Drift hack, externally re-verified**:
+    $285M exploit 2026-04-01, medium-high-confidence DPRK attribution (same
+    threat actor as the 2024 Radiant Capital hack, per TRM Labs/Chainalysis/Elliptic). Attackers spent months posing as
+    a quant firm, got Security Council members to pre-sign dormant "durable nonce" transactions, then used the resulting
+    admin access to whitelist a fake collateral token. TVL fell ~$550M
+    → ~$252M. Matches and adds detail to the codex
+    tombstone's "~$280M, Lazarus-attributed" figure.
+  - **Operator flagged the open conflict directly: is Pacifica actually still killed, or should it be reconsidered?**
+    Re-read `/codex/04-architecture/solana-defi-coverage.md`'s tombstone: the 2026-07-16 ruling killed DRIFT **and**
+    PACIFICA by name in the same blanket instruction ("kill all other solana perp dex's... everything"), fully executed
+    across 11 repos including a closed GCS/manifest purge
+    (`/plans/archive/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`, closed 2026-08-03) — not a stale flag, a
+    completed removal. Unlike Drift, **no evidence Pacifica itself was compromised** — it was swept into the blanket
+    "kill everything except Jupiter" reaction, and the ruling's own words name only Jupiter as the intended survivor.
+  - **Current Pacifica data pulled 2026-08-14** (web search, external — not our data): launched mainnet 2025-06,
+    overtook Jupiter for #1 Solana perp DEX by daily volume within 3 months (2025-09),
+    $100B+ cumulative volume by
+    2026-01. **TVL is ~$27-38M against that
+    $100B+ volume** — one source explicitly questions this as a "flawed
+    metric" (`solanafloor.com`), the volume/TVL ratio being a classic wash-trading/points-farming signature. No hack,
+    no shutdown found. Compare Jupiter: TVL figures inconsistent across sources/dates ($716M
+    per this plan's own 2026-07-16 snapshot vs. $2.2-2.5B cited for later 2026 dates elsewhere — likely JLP-pool-only
+    vs. whole-protocol scope, not fully reconciled) but an order of magnitude more established than Pacifica either way.
+  - **Net: still an open decision, not resolved by fresher data.** Pacifica isn't dead or newly compromised, so "current
+    data" doesn't make the cull moot — reversing it is a genuine call, same bar as the original ruling itself required.
+    **This plan takes no position and adds no Pacifica scope** — Jupiter Perps integration (already scoped above) is
+    unaffected and remains the recommended path per the operator's own 2026-07-16 stated intent. If Pacifica is to be
+    reconsidered, that needs its own explicit operator ruling (mirroring the bar the original cull set), not a silent
+    add to this plan.
