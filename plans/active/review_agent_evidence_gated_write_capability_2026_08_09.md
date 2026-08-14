@@ -188,15 +188,15 @@ local sandbox first:
   by its actual owner: `prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md` (archived 2026-08-09, all 4
   todos done, including the scratchpad-backup SSOT rule this session independently reached for on its own before knowing
   that rule existed). A related-but-distinct facet of the same bug class (safe-doc-push.sh's own retry loop failing to
-  restore an intermediate prek patch) was filed separately and remains open, owned by its own author
-  (`safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`) — not pursued further from this session. On
-  top of that: a REAL 3-way git-stash conflict (not just the silent-revert class) landed literal open/close/base/
-  divider conflict-marker lines into this very file mid-session, against a concurrent `na-eligibility-audit` entry from
-  another session — caught by `scripts/plan-hygiene/check_conflict_markers.sh` (which scans the WHOLE `plans/active/`
-  corpus on disk when run with no explicit file args, so a conflict-marker failure is not necessarily about the file
-  you're committing) and hand-resolved, preserving both sides. Content preserved via a session-scratchpad backup between
-  attempts per exactly the scratchpad-backup rule referenced above. Final landing succeeded once branch contention
-  settled.
+  restore an intermediate prek patch) was filed separately and has since been resolved + archived
+  (`/plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`) — not pursued
+  further from this session. On top of that: a REAL 3-way git-stash conflict (not just the silent-revert class) landed
+  literal open/close/base/ divider conflict-marker lines into this very file mid-session, against a concurrent
+  `na-eligibility-audit` entry from another session — caught by `scripts/plan-hygiene/check_conflict_markers.sh` (which
+  scans the WHOLE `plans/active/` corpus on disk when run with no explicit file args, so a conflict-marker failure is
+  not necessarily about the file you're committing) and hand-resolved, preserving both sides. Content preserved via a
+  session-scratchpad backup between attempts per exactly the scratchpad-backup rule referenced above. Final landing
+  succeeded once branch contention settled.
 
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — explicit dated operator-ruling
   citation ('operator direction 2026-08-09, local/human track, not AO-dispatched') on a doc adding new write capability

@@ -4,12 +4,14 @@ title:
   Alert-driven revocation — 5 findings from Phase 6 verification needing operator/design judgment, not blocking plan
   archival
 summary: >-
-  Phases 0-7 of alert_driven_dependency_revocation_2026_08_12.md are DONE and archived (evaluator, actuator, gate, drain
-  contract, 12-scenario test matrix, codex SSOTs — all shipped and verified). Writing Phase 6's tests surfaced 5 genuine
-  follow-ups that are NOT incomplete Phase 6/7 work — they are meta-findings about the ALREADY-SHIPPED Phase 2 policy
-  table and this dev slot's environment, each requiring either credentials this checkout lacks or a design decision on
-  live-safety-relevant behavior that an autonomous worker should not make unilaterally. Tracked here so the plan can
-  archive clean per the "every todo done" discipline without losing this work.
+  Phases 0-7 of alert_driven_dependency_revocation_2026_08_12.md were believed DONE (evaluator, actuator, gate, drain
+  contract, 12-scenario test matrix, codex SSOTs — shipped and verified) when this doc was written. **CORRECTION
+  2026-08-14 (cicd/plan_health):** the parent plan was un-archived the same day — 13 todos incl. 4 P0s remain open
+  (nothing calls RevocationActuator.actuate() outside tests, so the mechanism has never fired in prod); it is back at
+  /plans/active/alert_driven_dependency_revocation_2026_08_12.md, not archived. Findings 1/2/6 below duplicate open
+  todos now reopened in that plan (p95/max shard-duration measurement, FLEET_HALT MaintenanceWindow, UTL venv bootstrap)
+  — reconcile which copy is canonical before dispatching either. The 5 findings themselves (this doc's actual content)
+  remain independently valid regardless of the parent plan's archival status.
 status: open
 nature: issue
 asset_group: [cross-cutting]
@@ -20,7 +22,7 @@ tags: [alerting, self-healing, vm-lifecycle, dependency-dag, revocation, policy-
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md,
+    /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
   ]
@@ -57,8 +59,11 @@ context_scope:
 
 # Alert-driven revocation — 5 findings from Phase 6 verification
 
-> The parent plan is archived. This doc exists so these 5 findings are not lost, not because Phase 6/7 is incomplete —
-> every todo in the parent plan that was actually plan-scope is done and evidenced there.
+> **STALE, corrected 2026-08-14 (cicd/plan_health gate fix):** this doc originally said the parent plan was archived
+> with all plan-scope todos done. It was un-archived the same day (13 open todos incl. 4 P0s — see
+> `/plans/active/alert_driven_dependency_revocation_2026_08_12.md` directly). This doc's own 5 findings below are
+> unaffected by that correction, but findings 1/2/6 now duplicate todos reopened in the parent plan — see the Progress
+> Log at the bottom before dispatching either copy.
 
 ## 1. P95/max shard-duration measurement — BLOCKED-CREDENTIALS in dev checkouts (P2)
 
@@ -148,3 +153,13 @@ a full `quality-gates.sh` run (measured: 103s/119s/218s/406s + a 74s tests-slice
 local check. Environment setup, not a code change.
 
 - [ ] [OPERATOR] P3. Bootstrap a `.venv` in this slot's `unified-trading-library`.
+
+## Progress Log
+
+- **2026-08-14 (cicd/plan_health gate fix, agt-352823):** fixed `related:` pointing at a deleted archive path — the
+  parent plan `alert_driven_dependency_revocation_2026_08_12.md` was un-archived the same day (13 open todos incl. 4
+  P0s, commit `44b6410206`) after this doc's own header claimed it archived-and-done. Corrected the summary/callout
+  above. Found while fixing the gate: findings **1** (p95/max shard-duration), **2** (FLEET_HALT MaintenanceWindow), and
+  **6** (UTL `.venv` bootstrap) now literally duplicate open todos in the reopened plan (lines 108, 376, 176
+  respectively as of `44b6410206`). Not resolved here — deciding which copy is canonical is a judgment call outside this
+  gate-fix's scope; flagging for `/plan-reconcile` or the operator.

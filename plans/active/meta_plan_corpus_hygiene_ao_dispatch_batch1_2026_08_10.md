@@ -216,10 +216,13 @@ Two independent causes, both now fixed:
       excluded — team-name canonicaliser shipped separately 2026-08-05). **League scope**: ALL leagues structurally
       (code is league-agnostic via `SPORTS_*` prefix), not MLB-only; test gap is coverage-only. Full diff confirmed:
       `kalshi.py` +25L, test +34L.
-- [ ] [DOCS] P3. **Archive `/plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`**
-      via the standard 6-step ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — all 3
-      todos done, unlocked, and its own Progress Log already flags it archival-eligible. **Done when**: archived with
-      the SUPERSEDED/archived banner and every corpus referrer repointed.
+- [x] ✅ [DOCS] P3. **Archive
+      `/plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`** via the
+      standard 6-step ritual — DUPLICATE of the same item independently dispatched as
+      `ao_satellite_ao_dispatch_batch20_2026_08_13.md`'s own todo (source: `ag_closeout_audit_ao_parked_2026_08_10.md`);
+      closing here rather than leaving a redundant re-dispatchable duplicate — unified-trading-pm (same commit as the
+      batch20 archival, 2026-08-14, slot 6): source doc archived with banner, `status: resolved`, every corpus referrer
+      repointed, inventory regenerated. See batch20's own checkbox for the full evidence citation.
 - [x] ✅ [DOCS] P2. **Reconcile the 28 `ag_closeout_audit_*_parked_*.md` docs against this batch — ONE pass, one
       worker.** (a) Flip each todo this batch has completed to `[x]` citing this plan; (b) collapse the cross-day
       duplicates into the single oldest carrier and re-date it, per SKILL.md's new rule 3 —
@@ -278,10 +281,10 @@ generator addition; scoping the 2 flagged `CITE_RE`-hardening batch-era candidat
       **Done when**: the skill emits per-todo verdicts and names the extraction path.
 
       **Shipped**: split the old whole-doc-only RECLASSIFY (verdict 4) into two sub-verdicts — verdict 4 (whole-doc, every
-      open todo bounded → flip `assigned_vm` in place) and verdict 5 (per-todo split path, mixed bounded + operator-gated →
-      extract bounded slice into `{topic}_satellite_ao_dispatch_batch{N}` + `_finalize` pair, source doc stays NA). Added
-      extraction mechanics to Phase 3 (topic resolution, conflict-check-before-write, source-doc checkbox flip, Progress
-      Log marker). Updated the "Why RECLASSIFY volume is inherently low" section to document the new model.
+          open todo bounded → flip `assigned_vm` in place) and verdict 5 (per-todo split path, mixed bounded + operator-gated →
+          extract bounded slice into `{topic}_satellite_ao_dispatch_batch{N}` + `_finalize` pair, source doc stays NA). Added
+          extraction mechanics to Phase 3 (topic resolution, conflict-check-before-write, source-doc checkbox flip, Progress
+          Log marker). Updated the "Why RECLASSIFY volume is inherently low" section to document the new model.
 
 ## Codex SSOTs
 

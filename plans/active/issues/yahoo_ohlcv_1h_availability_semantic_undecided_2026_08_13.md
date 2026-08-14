@@ -26,7 +26,7 @@ related:
     /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md,
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md,
+    /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
   ]
 created: 2026-08-13
 last_updated: "2026-08-13"

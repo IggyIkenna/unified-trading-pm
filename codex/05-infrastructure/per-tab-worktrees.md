@@ -651,6 +651,16 @@ actively confirms the wrong conclusion rather than merely omitting the right one
 call in `safe-doc-push.sh`/`quickmerge.sh`, plus a checksum-verify hard-stop on those same call sites — see the issue
 doc's Progress Log) but do not close every path — a raw/manual `git commit` outside those two scripts can still hit it.
 
+- **Complementary safety net — `check_orphaned_prek_patches()` (`scripts/dev/safe-doc-push.sh`), added 2026-08-09
+  (`/plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`).** After a
+  successful push, compares every `~/.cache/prek/patches/*.patch` file's mtime against the run's own start epoch; a
+  patch created during THIS run that outlived the push means its restore never happened, and the script fails loudly
+  (exit 9) instead of silently exiting 0. Genuinely complementary to `_prek_race_snapshot`/`_prek_race_check` above, not
+  redundant: the checksum check is per-call and only covers files already unstaged-dirty at THIS script's own
+  `locked_git_commit()` snapshot; the orphan scan checks the shared cache dir directly, once, for the whole run, so it
+  also catches a patch left behind by a DIFFERENT process's `git commit` (a bare commit outside these scripts, or a peer
+  session) or a file that only went dirty after this script's own snapshot.
+
 - **HARD RULE — back up uncommitted WIP to the scratchpad BEFORE running any git-touching command in a shared checkout,
   and verify the backup before trusting it.** Copy the file(s) you're mid-editing to your scratchpad
   (`cp <file> <scratchpad>/<file>.bak` or equivalent) ahead of any `git commit` / `prek run` / `safe-doc-push.sh` /

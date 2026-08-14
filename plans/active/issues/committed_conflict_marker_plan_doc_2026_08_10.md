@@ -25,7 +25,7 @@ related:
   [
     /plans/archive/2026_08/multi_leg_execution_systems_audit_2026_08_10.md,
     /plans/archive/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md,
-    /plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
+    /plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-10
