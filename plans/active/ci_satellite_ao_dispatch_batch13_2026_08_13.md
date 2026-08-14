@@ -215,7 +215,47 @@ source: >-
       deferred to the paired finalize plan, same as above.
 - [ ] [CODE] P2. PROVE the CI bootstrap script on a real bare host (VM launch + systemd/IMDS/GCP-ADC/runner-registration
       verification) -- container leg already proven, bare-VM leg genuinely blocked only on provisioning Source:
-      `plans/active/github_actions_operator_gated_followups_2026_07_17.md`
+      `plans/active/github_actions_operator_gated_followups_2026_07_17.md` **IN PROGRESS 2026-08-14 (slot 15, infra) —
+      NOT complete, VM terminated, resume from here (do not restart from zero):** Launched a throwaway EC2 instance
+      (`i-0e2421dbfaa547d4e`, `ci-bootstrap-verify-20260814-052142`, `t3.small`, `ap-northeast-1`, subnet
+      `subnet-fc09eca6`, SG `sg-066c852065f8cdcac`, IAM instance profile `uts-orchestrator-epic`) via
+      `deployment-service/scripts/vm/lib/aws_ec2_launch_lib.sh`'s `lc_aws_ec2_run` (mirrors
+      `/codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md`'s documented manual-relaunch recipe for the REAL
+      CI-runner VM — there is no registered launcher for this VM class, confirmed intentional per that runbook).
+      **Findings so far**: 1. `lc_aws_resolve_ami()`'s SSM Parameter Store lookup (`ssm:GetParameter` on the public
+      Canonical AMI param) is DENIED for the `ikenna-worker` IAM user (`AccessDeniedException`) — worked around via the
+      `AMI_ID` env override using the SAME AMI the real CI-runner VM runs (`ami-0bf052f8a9dd8bf42`, live-confirmed in
+      the runbook above) rather than self-granting the missing permission, since a working alternative existed. Not
+      self-fixed as a permission gap because it wasn't necessary to; flagging in case a future launcher genuinely needs
+      the SSM-latest-AMI path. 2. IAM instance-profile association confirmed correctly `associated`
+      (`aws ec2 describe-iam-instance-profile-associations`) and the instance reached `running` state promptly, but
+      **SSM Agent never registered** (`aws ssm describe-instance-information` returned empty `PingStatus` for ~5 min of
+      polling) — genuinely unresolved, root cause NOT diagnosed (candidates: this specific AMI's SSM agent service not
+      enabled by default the way stock Canonical images are; `subnet-fc09eca6` lacking an outbound route/NAT/SSM VPC
+      interface endpoint for a box with no public EIP — the real CI-runner VM also has no EIP per the runbook, so if
+      THIS is the cause, the runbook itself is missing a step). Next session: diagnose this BEFORE relaunching blindly —
+      check `aws ec2 get-console-output` for cloud-init/ssm-agent errors once boot completes, and confirm whether the
+      runbook's own VM has working SSM today
+      (`aws ssm describe-instance- information --filters Key=InstanceIds,Values=i-042a6332509482556`) as a sanity
+      baseline. 3. **Terminated the instance** (`i-0e2421dbfaa547d4e`) rather than leave an unverified, IAM-privileged
+      box running unattended across a session boundary — nothing was proven on it yet (bootstrap-ci-host.sh was never
+      actually run), so nothing of value was lost by tearing down. 4. **Validated plan for the GH-runner-registration
+      leg, not yet executed**: use
+      `GH_PAT=$(aws secretsmanager get-secret-value --secret-id GH_PAT --query SecretString --output text)`
+      (`setup-glue-runners.sh`'s documented "LEGACY... host with no ADC" path — the SAME mechanism
+      `launch-central-brain-aws.sh`'s own user-data already uses) rather than the GCP-Secret-Manager `GH_TOKEN_SECRET`
+      path, which would require copying the shared production `unified-trading-sa` GCP service-account PRIVATE KEY onto
+      a disposable verification host — a deliberate security-scoping decision, not an oversight. Register with a
+      distinct `POOL_TAG=ci-bootstrap-verify` (additive per the script's own multi-tenancy design — cannot clobber PM's
+      live pool), confirm via `./setup-glue-runners.sh status` AND an independent
+      `gh api repos/IggyIkenna/unified-trading-pm/actions/runners` check from outside the VM, then `teardown` +
+      `terminate-instances` immediately. 5. **GCP-ADC leg scoping note**: proving this leg via the real production SA
+      key is NOT recommended for a throwaway host (see 4 above) — the toolchain-only check (`gcloud` installed +
+      resolvable, which `bootstrap-ci-host.sh`'s own `verify()` already covers) is the safe bar for THIS leg unless the
+      operator wants a dedicated non-production test GCP service-account minted specifically for this class of
+      verification (a decision, not something to improvise solo). Released back to the queue GATED-equivalent (task
+      boundary hit before completion, not a blocker) — the next pickup should re-launch per the recipe above, diagnose
+      the SSM gap FIRST, then proceed through steps 4-5.
 - [ ] [CODE] P2. implement the consumer-QG promote fan-out gate in UAC's promote-gate workflow (per the 2026-08-08
       operator ruling; design + target consumer already specified in the doc) Source:
       `plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`
