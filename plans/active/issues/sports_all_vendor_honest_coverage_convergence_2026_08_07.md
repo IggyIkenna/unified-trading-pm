@@ -311,10 +311,22 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       regression test (`test_bounded_subprocess_error_returns_503`) and updated mocks for the 4 existing drilldown-route
       tests (patch `run_bounded` at its call-site path now, not the inner function — patching the inner fn would make
       `run_bounded` try to pickle a `Mock` for a real `multiprocessing.spawn` child).
-- [ ] [SERVICE] P2. **data-status rollup worker: 420s per-service timeouts on features-onchain-service /
-      features-delta-one-service / market-data-processing-service / market-tick-data-service**, observed during the
-      03:00Z 2026-08-14 sweep that later OOM'd (32GB limit). Predates this session; not investigated — root cause
-      unknown (genuinely slow compute vs. a stuck upstream call).
+- [x] ✅ [SERVICE] P2. **data-status rollup worker 420s timeouts — root-caused 2026-08-14 (slot 28).** Live Cloud
+      Logging read of `uts-prod-data-status-rollup-svc` confirms NOT a stuck upstream call: MTDS (03:17:04Z) → MDPS
+      (03:24:04Z) → features-delta-one-service (03:31:04Z) each hit the hard 420s join-timeout back-to-back with zero
+      gap, then features-onchain-service (03:44:03Z) after features-volatility-service completed cleanly in between; the
+      sweep then hit the 32768 MiB container ceiling and was SIGKILLed at 03:50:54Z before the next child's own rlimit
+      could catch it. MTDS/MDPS are the already-documented accepted gaps; delta-one + onchain hitting the ceiling is
+      new. Reads as the same cumulative-baseline-pressure pattern the `_CHILD_RLIMIT_AS_BYTES` ratchet already targets,
+      not 2 new independent regressions — not proven (no per-category timing captured for delta-one/onchain).
+      `deployment-api@5d99e89a30` (comment-only, cites this evidence in `data_status_rollup_worker.py`). See todo below
+      for the follow-up fix.
+- [ ] [SCRIPT] P3. **Capture per-category timing for features-delta-one-service + features-onchain-service's rollup
+      compute** (same method as instruments-service's 2026-08-10 fix: 3 live measurements against prod buckets), then
+      decide whether they need a `_CHILD_JOIN_TIMEOUT_OVERRIDES_S` entry — do not blind-bump. If cumulative container
+      memory pressure (not per-service compute time) is the real driver, the fix is elsewhere (e.g. lowering
+      `_CHILD_RLIMIT_AS_BYTES` further, or reducing services-per-sweep) — measure before choosing. (repo:
+      deployment-api)
 - [x] ✅ [SCRIPT] P2. **Checked `type_understat_eu_no_provider_coverage.py` — NOT the same pattern, no action needed.**
       Dry-run (2026-08-07T22:18Z) confirms understat's 25 rows are `reason=EXPECTED_NO_FIXTURE`, dates 2026-08-05→
       2026-08-07 (today/yesterday) — matches the earlier "slot 4" diagnosis exactly (self-resolving IS-cron artifact for
