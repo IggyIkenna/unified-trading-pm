@@ -2489,11 +2489,11 @@ for p in (line.strip() for line in sys.stdin):
     def v(n,par=None):
       if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)):
         l=(n.end_lineno or n.lineno)-n.lineno+1
-        if isinstance(par,ast.ClassDef): l>$MAX_METHOD_LINES and print(f'  {p}:{n.lineno}:{par.name}.{n.name}(): {l}L')
-        elif l>$MAX_FUNCTION_LINES: print(f'  {p}:{n.lineno}:{n.name}(): {l}L')
+        if isinstance(par,ast.ClassDef): l>$MAX_METHOD_LINES and print(f'  {p}:{n.lineno}:{par.name}.{n.name}(): {l}L (method cap $MAX_METHOD_LINES)')
+        elif l>$MAX_FUNCTION_LINES: print(f'  {p}:{n.lineno}:{n.name}(): {l}L (function cap $MAX_FUNCTION_LINES)')
       elif isinstance(n,ast.ClassDef):
         l=(n.end_lineno or n.lineno)-n.lineno+1
-        l>$MAX_CLASS_LINES and print(f'  {p}:{n.lineno}:{n.name}: {l}L')
+        l>$MAX_CLASS_LINES and print(f'  {p}:{n.lineno}:{n.name}: {l}L (class cap $MAX_CLASS_LINES)')
       for c in ast.iter_child_nodes(n): v(c,n if isinstance(n,ast.ClassDef) else par)
     v(tree)
   except Exception: pass
@@ -4347,7 +4347,7 @@ fi
 # `[: integer expression expected` symptom.
 _RATCHET_FAILS=$(( V - _V_PRE_RATCHET ))
 if [[ $_RATCHET_FAILS -gt 0 ]]; then
-    log_fail "Quality gates FAILED: ${_RATCHET_FAILS} hard gate/ratchet step(s) failed (see the ❌ STEP lines above). Sentinel NOT written; fix the root cause and re-run."
+    log_fail "Quality gates FAILED: ${_RATCHET_FAILS} hard gate/ratchet step(s) failed. Scroll up to the ❌ line(s) — NOT every hard gate is prefixed \"STEP\" (the file- and function-size gates are not), so search for ❌ rather than ❌ STEP. Sentinel NOT written; fix the root cause and re-run."
     exit 1
 fi
 
