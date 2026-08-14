@@ -1,0 +1,154 @@
+[
+  {
+    "subtype": "bot_message",
+    "text": ":rotating_light: CRITICAL — python-quality-gates-v2",
+    "type": "message",
+    "ts": "1786742306.036289",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "IGT7C",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *CRITICAL* — python-quality-gates-v2",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "u4ja/",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":x: *QG slice(s) FAILED* | *unified-trading-pm* | push to `main` | <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31841527436|sha `64615f3c0e5c89c631ab3876d2ef6e44f59e056b`>",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "iSScp",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31841527436|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":x: CRITICAL — ci-status-update",
+    "type": "message",
+    "ts": "1786742350.586689",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "8VyJh",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":x: *CRITICAL* — ci-status-update  |  result: *FAILED* (`failure`)",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "cTyqd",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: CI REGRESSION on *main*: *unified-trading-pm* is *FAILING* (was MAIN_GREEN) — the promoted/main line is RED\n:bust_in_silhouette: pushed by IggyIkenna [automation]",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "1UPc4",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31841829245|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":white_check_mark: INFO — ci-status-update",
+    "type": "message",
+    "ts": "1786742671.756369",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "ORx0J",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":white_check_mark: *INFO* — ci-status-update  |  result: *OK* (`success`)",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "e2fNe",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":large_green_circle: CI RECOVERED: *unified-trading-pm* FAILING → *MAIN_GREEN*\n:bust_in_silhouette: pushed by IggyIkenna [automation]",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "M1gra",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31842207952|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":rotating_light: CRITICAL — ldr-ci-monitor",
+    "type": "message",
+    "ts": "1786745170.641059",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "J+t82",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *CRITICAL* — ldr-ci-monitor",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "1WonY",
+        "text": {
+          "type": "mrkdwn",
+          "text": "LDR-CI-red monitor detected live-defi-rollout state transition(s):\n:x: *1 repo(s) LDR went RED* (live-defi-rollout has no remote CI — caught by Tier-A):\n  • `alerting-service`@`live-defi-rollout` GREEN → *RED* (c07485f4) <https://github.com/IggyIkenna/alerting-service/actions/runs/30816220716|gate run>\n      ↳ `411922e2` uts-backmerge-bot: Merge remote-tracking branch 'origin/main' into _backmerge\n",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "0V1fT",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31845142926|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  }
+]
