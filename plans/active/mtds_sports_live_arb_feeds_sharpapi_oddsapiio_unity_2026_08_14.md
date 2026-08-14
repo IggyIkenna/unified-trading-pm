@@ -45,7 +45,7 @@ context_scope:
     e2e-testing/docs/sports/LIVE_ODDS_PROVIDERS.md,
     unified-api-contracts/unified_api_contracts/internal/unity_child_books.py,
   ]
-depends_on: [sports_venue_universe_and_capability_route_axis_2026_08_14]
+depends_on: [venue_capability_route_axis_and_cross_ag_declarations_2026_08_14]
 gate_on_depends: true
 supersedes:
 superseded_by:

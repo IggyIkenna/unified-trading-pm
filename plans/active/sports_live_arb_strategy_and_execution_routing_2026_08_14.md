@@ -47,7 +47,7 @@ context_scope:
   ]
 depends_on:
   [
-    sports_venue_universe_and_capability_route_axis_2026_08_14,
+    venue_capability_route_axis_and_cross_ag_declarations_2026_08_14,
     mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14,
   ]
 gate_on_depends: true
@@ -200,8 +200,8 @@ against a batch rerun of the same window.
 ### 2026-08-14 — P0 delta established
 
 Read `e2e-testing/scripts/sports/live_arb_scanner.py` in full (3,136 lines; every `def` catalogued via
-`grep -n "^def \|^ def "` to confirm nothing past the feed-runner section at line ~1260 was missed) against the
-three production modules named in "What already exists" plus `sports_feature_subscriber.py`.
+`grep -n "^def \|^ def "` to confirm nothing past the feed-runner section at line ~1260 was missed) against the three
+production modules named in "What already exists" plus `sports_feature_subscriber.py`.
 
 **Headline finding: there are two separate, non-sharing production arb pipelines today**, not one:
 
@@ -216,21 +216,21 @@ redundant once #2 covers 2-and-3-outcome complete sets — worth a P1 decision o
 
 **Function-level delta table** (DoD for todo 1):
 
-| Scanner symbol (`live_arb_scanner.py`) | Production equivalent | Status | Notes |
-| --- | --- | --- | --- |
-| `scan_arbs_for_event` | none | **NONE** | No per-event dispatch entry point in production — closest analogue is `SportsFeatureSubscriber._handle_message`, but that dispatches per-feature-vector-message, not per-event, and calls straight into `detect_sports_arbitrage`. |
-| `_check_3way_arb` | `arbitrage_detector._find_best_odds_per_outcome` + `detect_sports_arbitrage` | **PARTIAL** | Same core math (best decimal odds per outcome, `1 - sum(implied)` margin). Production adds two things the scanner lacks: `arb_legs_are_independent()` (rejects same-operator-group legs) and probability-weighted net-of-commission margin (`_expected_commission_pct`) via `unified_api_contracts.internal.domain.sports.arb_config`. Scanner is gross-margin only, no operator-group filter. |
-| `_check_back_lay_arbs` | none | **NONE** — confirmed by the code itself | `arbitrage_detector.py`'s own module docstring: "Back-lay arb ... is NOT ported here because it is not invoked by the live subscriber; when a consumer needs it, it will be added alongside this detector rather than revived from the archive." This is a full port, not a partial one. |
-| `_check_dnb_arbs` | none | **NONE** | No DNB (Draw-No-Bet) detection anywhere in production. |
-| `_check_2way_arbs` / `_check_2way_pair` | `SportsArbDutchingEngine._scan_for_arb` | **PARTIAL (structural analog only)** | Same shape (best-price-per-outcome across venues, gate on `sum(inverse_odds) < 1`), but `_scan_for_arb` is config-driven over an explicit `outcome_set`/`candidate_venues` list reading `odds_decimal_<outcome>_<venue>` features — it has no live over/under-line-pairing logic (the scanner's `_check_2way_arbs` groups outcome keys like `over_4.5`/`under_4.5` dynamically by parsing the line value out of the key). Porting the 2-way family means feeding `_scan_for_arb`'s existing shape, not adding a parallel pairing algorithm. |
-| `_track_arb` | none | **NONE** | No opportunity lifecycle (open → persist → close, duration, peak-margin) anywhere in production. `arbitrage_detector.py` is stateless per call (only a monotonic `signal_number` counter via `_SignalCounter`); `SportsArbDutchingEngine.on_tick` emits one-shot instructions per tick with no persisted "this arb is still open" state. This is a full port. |
-| `_best_fresh_odds` / `_is_refreshed` | none | **NONE** | No staleness gate in production at all. `arbitrage_detector` trusts whatever the feature vector says is current; `SportsArbDutchingEngine.on_tick` trusts whatever `features` dict it's handed. Full port, and per the plan's own P1 DoD the freshness bound must land as config, not the scanner's literal `STALE_THRESHOLD_S = 300`. |
-| `_american_to_decimal` | `unified_api_contracts.american_to_decimal` (`canonical/domain/sports/odds_canonical.py`) | **EXISTS — reuse, do not port** | See grep citation below. One semantic gap to resolve at port time: UAC's version `raise`s `ValueError` on `american == 0` or `american == -100` and returns a quantized `Decimal`; the scanner's version silently returns `0.0` (float) on any parse failure and never raises. The port needs to pick one failure mode, not silently swallow bad input the way the scanner does. |
-| `_calc_stakes` | `SportsArbDutchingEngine._build_dutched_legs` (inverse-odds proportional share, same formula) | **PARTIAL — structurally duplicated, not identical** | `_calc_stakes(bankroll, odds_list)` and `_build_dutched_legs`'s `share = inverse_odds / book_sum` are the same dutching-stake-share math, but `_build_dutched_legs` is scoped to the archetype's own `AtomicLeg` construction, not reusable as a standalone helper. P1's todo already directs stake allocation through `allocation_sizer`/`sports_arb_engine` instead of a new `_calc_stakes` port — confirmed no dedicated UAC/UTL "dutch stake" helper exists (grep below), so that P1 routing decision is correct: there is nothing else to reuse. |
-| `_format_duration` | none | **NONE (trivial)** | Only needed if `_track_arb`'s duration logging is ported verbatim; not worth a separate delta line beyond noting it here. |
+| Scanner symbol (`live_arb_scanner.py`)  | Production equivalent                                                                         | Status                                               | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| --------------------------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scan_arbs_for_event`                   | none                                                                                          | **NONE**                                             | No per-event dispatch entry point in production — closest analogue is `SportsFeatureSubscriber._handle_message`, but that dispatches per-feature-vector-message, not per-event, and calls straight into `detect_sports_arbitrage`.                                                                                                                                                                                                                                                                                                                    |
+| `_check_3way_arb`                       | `arbitrage_detector._find_best_odds_per_outcome` + `detect_sports_arbitrage`                  | **PARTIAL**                                          | Same core math (best decimal odds per outcome, `1 - sum(implied)` margin). Production adds two things the scanner lacks: `arb_legs_are_independent()` (rejects same-operator-group legs) and probability-weighted net-of-commission margin (`_expected_commission_pct`) via `unified_api_contracts.internal.domain.sports.arb_config`. Scanner is gross-margin only, no operator-group filter.                                                                                                                                                        |
+| `_check_back_lay_arbs`                  | none                                                                                          | **NONE** — confirmed by the code itself              | `arbitrage_detector.py`'s own module docstring: "Back-lay arb ... is NOT ported here because it is not invoked by the live subscriber; when a consumer needs it, it will be added alongside this detector rather than revived from the archive." This is a full port, not a partial one.                                                                                                                                                                                                                                                              |
+| `_check_dnb_arbs`                       | none                                                                                          | **NONE**                                             | No DNB (Draw-No-Bet) detection anywhere in production.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `_check_2way_arbs` / `_check_2way_pair` | `SportsArbDutchingEngine._scan_for_arb`                                                       | **PARTIAL (structural analog only)**                 | Same shape (best-price-per-outcome across venues, gate on `sum(inverse_odds) < 1`), but `_scan_for_arb` is config-driven over an explicit `outcome_set`/`candidate_venues` list reading `odds_decimal_<outcome>_<venue>` features — it has no live over/under-line-pairing logic (the scanner's `_check_2way_arbs` groups outcome keys like `over_4.5`/`under_4.5` dynamically by parsing the line value out of the key). Porting the 2-way family means feeding `_scan_for_arb`'s existing shape, not adding a parallel pairing algorithm.           |
+| `_track_arb`                            | none                                                                                          | **NONE**                                             | No opportunity lifecycle (open → persist → close, duration, peak-margin) anywhere in production. `arbitrage_detector.py` is stateless per call (only a monotonic `signal_number` counter via `_SignalCounter`); `SportsArbDutchingEngine.on_tick` emits one-shot instructions per tick with no persisted "this arb is still open" state. This is a full port.                                                                                                                                                                                         |
+| `_best_fresh_odds` / `_is_refreshed`    | none                                                                                          | **NONE**                                             | No staleness gate in production at all. `arbitrage_detector` trusts whatever the feature vector says is current; `SportsArbDutchingEngine.on_tick` trusts whatever `features` dict it's handed. Full port, and per the plan's own P1 DoD the freshness bound must land as config, not the scanner's literal `STALE_THRESHOLD_S = 300`.                                                                                                                                                                                                                |
+| `_american_to_decimal`                  | `unified_api_contracts.american_to_decimal` (`canonical/domain/sports/odds_canonical.py`)     | **EXISTS — reuse, do not port**                      | See grep citation below. One semantic gap to resolve at port time: UAC's version `raise`s `ValueError` on `american == 0` or `american == -100` and returns a quantized `Decimal`; the scanner's version silently returns `0.0` (float) on any parse failure and never raises. The port needs to pick one failure mode, not silently swallow bad input the way the scanner does.                                                                                                                                                                      |
+| `_calc_stakes`                          | `SportsArbDutchingEngine._build_dutched_legs` (inverse-odds proportional share, same formula) | **PARTIAL — structurally duplicated, not identical** | `_calc_stakes(bankroll, odds_list)` and `_build_dutched_legs`'s `share = inverse_odds / book_sum` are the same dutching-stake-share math, but `_build_dutched_legs` is scoped to the archetype's own `AtomicLeg` construction, not reusable as a standalone helper. P1's todo already directs stake allocation through `allocation_sizer`/`sports_arb_engine` instead of a new `_calc_stakes` port — confirmed no dedicated UAC/UTL "dutch stake" helper exists (grep below), so that P1 routing decision is correct: there is nothing else to reuse. |
+| `_format_duration`                      | none                                                                                          | **NONE (trivial)**                                   | Only needed if `_track_arb`'s duration logging is ported verbatim; not worth a separate delta line beyond noting it here.                                                                                                                                                                                                                                                                                                                                                                                                                             |
 
-**Not a scanner-function match, but relevant**: `SportsArbEngine.detect_arbs()` (`position/core/sports_arb_engine.py`) is
-**not** pre-trade opportunity detection — it's post-fill P&L bookkeeping over positions the tracker already holds
+**Not a scanner-function match, but relevant**: `SportsArbEngine.detect_arbs()` (`position/core/sports_arb_engine.py`)
+is **not** pre-trade opportunity detection — it's post-fill P&L bookkeeping over positions the tracker already holds
 (`total_backed`/`total_laid` per selection), computing guaranteed P&L net of commission for arbs already taken. It sits
 downstream of execution, not upstream of it, so it doesn't correspond to any function in the migration list despite
 being named in "What already exists."
@@ -243,6 +243,7 @@ unified_api_contracts/canonical/domain/sports/odds_canonical.py:17:def american_
 unified_api_contracts/__init__.py:1355:from .normalize_utils import american_to_decimal, decimal_to_american
 unified_api_contracts/__init__.py:2372:    "american_to_decimal",   # re-exported at package top level
 ```
+
 No `american_to_decimal`/equivalent found anywhere under `unified-trading-library`.
 
 ```
@@ -253,20 +254,21 @@ strategy-service/strategy_service/allocation_sizer.py   # per-CLIENT capital all
 strategy-service/strategy_service/engine/strategies/v2/arbitrage_structural/sports_arb_dutching.py  # inverse-odds
                                                           # stake-share math already lives here (see delta table)
 ```
+
 No dedicated dutch/kelly/proportional-stake helper exists in UAC or UTL. `allocation_sizer.py` is a different concern
-(per-client capital sizing off `AllocationEngine`, referenced by the P1 todo for the *cross-client* guard) — it does not
+(per-client capital sizing off `AllocationEngine`, referenced by the P1 todo for the _cross-client_ guard) — it does not
 compute stake shares across arb legs, so it is not an alternative to `_calc_stakes`/`_build_dutched_legs`.
 
 **Golden fixture** (DoD for todo 3): `strategy-service/tests/fixtures/sports_odds/live_arb_scanner_golden.py` — six
-synthetic events, each isolating one detection path (3-way, back/lay, DNB, 2-way, a no-arb control, and a
-stale-leg control), with hand-derived `EXPECTED_OPPORTUNITIES`/`EXPECTED_NO_ARB_EVENTS`. **Verified against the actual
-scanner code**, not just arithmetic: drove `live_arb_scanner.update_odds()` / `scan_arbs_for_event()` directly against
-the fixture's `ODDS_STORE` and read back `_active_arbs`; all four expected opportunities matched to 6 decimal places,
-and both no-arb controls produced zero opportunities. That verification pass surfaced a real gotcha now documented in
-the fixture's docstring: `live_arb_scanner.py` hardcodes `datetime.now(UTC)` for every freshness check (no injectable
-clock) — replaying the fixture against the original scanner requires freezing time to the fixture's `NOW` first (a
-`datetime` subclass override), or the staleness control silently fires an arb instead of correctly producing zero. The
-ported archetype doesn't inherit this problem: `BaseArchetypeEngineV2.on_tick` already takes `now_utc` as an explicit
+synthetic events, each isolating one detection path (3-way, back/lay, DNB, 2-way, a no-arb control, and a stale-leg
+control), with hand-derived `EXPECTED_OPPORTUNITIES`/`EXPECTED_NO_ARB_EVENTS`. **Verified against the actual scanner
+code**, not just arithmetic: drove `live_arb_scanner.update_odds()` / `scan_arbs_for_event()` directly against the
+fixture's `ODDS_STORE` and read back `_active_arbs`; all four expected opportunities matched to 6 decimal places, and
+both no-arb controls produced zero opportunities. That verification pass surfaced a real gotcha now documented in the
+fixture's docstring: `live_arb_scanner.py` hardcodes `datetime.now(UTC)` for every freshness check (no injectable clock)
+— replaying the fixture against the original scanner requires freezing time to the fixture's `NOW` first (a `datetime`
+subclass override), or the staleness control silently fires an arb instead of correctly producing zero. The ported
+archetype doesn't inherit this problem: `BaseArchetypeEngineV2.on_tick` already takes `now_utc` as an explicit
 parameter.
 
 **Shipping status**: fixture is written and verified but **not yet committed** — `strategy-service` quickmerge is
@@ -275,8 +277,7 @@ currently blocked by an unrelated uncommitted change in its `unified-api-contrac
 scope instruction — UAC registry files are explicitly out of scope for this plan). Retry once that lands:
 `cd strategy-service && bash scripts/quickmerge.sh "test(sports): add golden fixture for live_arb_scanner migration delta (P0)" --agent --files 'tests/fixtures/sports_odds/live_arb_scanner_golden.py'`.
 
-This Progress Log entry is written from an isolated `git worktree` checked out fresh at `origin/live-defi-rollout`
-(this session's `.tabs/3/unified-trading-pm` checkout had 4 other live sessions sharing it per the SessionStart
-collision warning, plus an actual in-progress unmerged conflict on an unrelated file — editing the plan doc there risked
-racing a concurrent session's index/working-tree state, so this write bypasses that checkout entirely rather than
-touching it).
+This Progress Log entry is written from an isolated `git worktree` checked out fresh at `origin/live-defi-rollout` (this
+session's `.tabs/3/unified-trading-pm` checkout had 4 other live sessions sharing it per the SessionStart collision
+warning, plus an actual in-progress unmerged conflict on an unrelated file — editing the plan doc there risked racing a
+concurrent session's index/working-tree state, so this write bypasses that checkout entirely rather than touching it).
