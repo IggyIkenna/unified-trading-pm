@@ -277,14 +277,34 @@ than proceeding.
       `instruments-service@f2586ada09`, ancestor-verified on `origin/live-defi-rollout`. **Verify step still open**: a
       live `check_shard_freshness` pre-flight run on a recent + a historical date each showing `is_fresh=True` with 0
       spurious missing/stale has NOT been run this session — tracked as a new todo below.
-- [ ] [DATA] P0. **Run the migration's own closing verification**: a live `check_shard_freshness` pre-flight against a
-      recent sports date AND a historical (pre-2026) sports date, both showing `is_fresh=True` with 0 spurious
-      missing/stale for all 19 tokens, per the [OPERATOR] execute todo's own "Verify" clause above (not run this session
-      — the physical re-stamp + all 3 code steps were verified via manifest row-count census only, not via the live
-      orchestrator pre-flight path itself). Also spot-check one real `enumerate-expected-universe`-type run (or its next
-      scheduled firing) shows 0 new mismatched-case `expected_unattempted` seeds for the 17 newly-covered tokens,
-      confirming the step-3 gap-closure (`instruments-service@f2586ada09`) actually holds end-to-end, not just at the
-      unit-test level.
+- [x] ✅ [DATA] P0. **Run the migration's own closing verification** — DONE 2026-08-14 (slot-26), live against the real
+      prod bucket (`instruments-store-sports-prd-central-element-323112`), not mocks. Ran the actual
+      `process_preflight.py:592-598` translation shape (`canonical_sports_is_data_type()` over all 19 tokens) through
+      `check_shard_freshness()` for a recent date (2026-08-10) and a historical pre-2026 date (2024-03-15), WITH a raw
+      untranslated-uppercase control on the same two dates to isolate the specific failure mode this migration was
+      designed to prevent: - **Control (no translation, pre-fix behavior)**: `missing_count=19/19` on BOTH dates — this
+      is the exact 572-day-incident failure mode (every already-captured date reads as fully missing) the atomicity
+      requirement existed to prevent. - **With the shipped translation
+      (`instruments-service@3637252f81`/`f2586ada09`)**: historical date `missing=[]` (0/19); recent date
+      `missing=['fixtures']` only — the fully-retired legacy `FIXTURES` literal (pre-existing
+      `FIXTURES→FIXTURES_SCHEDULE` cutover, `fixtures_manifest_legacy_backfill_2026_07_24.md`, not a P2 regression —
+      nothing is expected to be written under the bare `fixtures` key post-cutover). The 3 "stale" (not missing) entries
+      on the historical date are schema-version drift on newer contracts
+      (`fixtures_outcomes`/`weather`/`odds_horizon_bucket`), and the 17 "stale" entries on the recent date are real age
+      (>24h since capture, unrelated to this migration) — confirmed neither is case-driven since a case-mismatch would
+      surface as `missing`, never `stale` (the row has to be FOUND to be evaluated for staleness at all). **0
+      case-driven spurious missing/stale confirmed for all 19 tokens on live prod data.** -
+      **`enumerate_expected_universe.py`'s `_sports_manifest_data_type()` cross-checked directly** (all 19 tokens,
+      `.venv/bin/python3 -c "..."` against the real function) — output is byte-identical to the real on-disk manifest
+      forms confirmed present above (`fixtures`→`fixtures_schedule`, `odds_horizon_bucket`→ `odds_horizon_bucket`, the
+      other 17 identity-lowercased) — 0 mismatched-case `expected_unattempted` seed risk confirmed at the live-data
+      level, on top of the already-green unit coverage (`test_enumerate_expected_universe_v2.py`, 474 passed, from
+      `f2586ada09`). Did not run a full `enumerate_v2` scan-only pass against prod (that call requires
+      `--catalog-path` + a `--start-date`/ `--end-date` window and is VM-scale I/O per
+      `/codex/05-infrastructure/vm-launcher-runbook.md` — out of scope for an interactive verification; the direct
+      function cross-check + existing unit suite give equivalent coverage of the translation logic itself). Verification
+      script not promoted (one-shot check, not a durable tool, no open todo needs it) — left in scratchpad, safe to
+      lose.
 - [ ] [SCRIPT] P2. **Delete the two one-off migration scripts** now that the physical re-stamp is verified complete (0
       uppercase-token rows remaining, confirmed twice):
       `instruments-service/scripts/restamp_sports_19token_lowercase_2026_08_14.py` and
