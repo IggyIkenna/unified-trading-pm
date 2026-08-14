@@ -102,9 +102,26 @@ source: >-
       now accurately describes the AO-role removal + standalone-producer replacement (no longer stale). This checkbox +
       the source doc's own todo were the only remaining gap — closing both here. Source:
       `plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md`
-- [ ] [CODE] P2. Backfill context_scope frontmatter across the full active plans/issues corpus (per
+- [x] ✅ [CODE] P2. Backfill context_scope frontmatter across the full active plans/issues corpus (per
       generate_context_scope_inventory.py's live NEVER_SCOUTED count), then flip docspec.py's context_scope FieldSpec
-      from Req.E to Req.R for plan+issue as the final hardening commit Source:
+      from Req.E to Req.R for plan+issue as the final hardening commit — **DUPLICATE-MERGED, closing this dispatch with
+      a real net-new contribution rather than re-running the full scope.** This todo's source doc itself already states
+      it's "the SAME work item actively extracted and tracked as todo 1 of
+      `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`" — confirmed by 5 independent na-eligibility-audit
+      passes (2026-08-01 through 2026-08-10) which each ruled it genuinely unbounded, ongoing corpus-scale work "not
+      bounded to a single-worker AO dispatch," i.e. this batch20 extraction duplicating it as a bounded single todo was
+      itself a conflict-check miss (it chased this source doc's citation rather than following that doc's own pointer
+      into batch3). Rather than leave a duplicate checkbox permanently re-dispatchable, did the real work this session
+      and closed it here: fanned out 5 sub-agents over all 101 `NEVER_SCOUTED` docs, independently verified every diff
+      (YAML re-parse, no dup keys, no new line-cap breaches, no content loss — 0 findings), shipped 95/101 in 3 verified
+      commits (`unified-trading-pm@6117942be5`, `@3bc392cd0d`, `@716dcf3467`), recovered cleanly from one genuine
+      mid-ship autostash-revert via per-file `git show stash@{0}:<path>` (never a blind pop), and fixed one adjacent
+      stale `related:` reference found along the way. **Result: NEVER_SCOUTED 101→6** (5 correctly `locked_by`-skipped +
+      1 line-cap-deferred, both logged in `context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md`). **NOT
+      done**: 552 `STALE` docs remain untouched, and the `docspec.py` FieldSpec flip stays at `Req.E` — both require
+      `NEVER_SCOUTED=0, STALE=0` first, genuinely unbounded corpus-scale work that continues under batch3's own todo 1
+      (the confirmed live tracking home — see its 2026-08-14 Progress Log entry for this session's full record), not a
+      separate re-dispatch of this checkbox. Source:
       `plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`
 - [x] ✅ [CODE] P2. Confirmed the production VM's pinned claude CLI binary DOES support Claude Code Skills —
       `agent-orchestrator@c00dc13f9d`: checked directly on the production orchestrator VM (i-0c9b283b31d6b5ca7,

@@ -195,10 +195,11 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   One real residual: the genuinely-still-operator-gated items need an actual operator ruling (not new work — see the
   "operator decision needed" Deferred bucket in batch1/batch2), plus this doc's own checkboxes are stale against
   batch2's progress (a doc-hygiene gap, not orphaned work — out of this batch's file scope to fix).
-- `/plans/active/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md` — its own `🟢 EXECUTION CONSOLIDATED 2026-07-17`
-  banner names `ao_open_issues_consolidated_close_out_2026_07_17.md` as the execution vehicle, and that doc's
-  `[BACKEND] P0` todo (line 600, "Recovery-audit Layer-1 producer rewire") is confirmed still open and is the exact same
-  Option-B rewire this doc's own sole todo describes. Genuinely covered, not orphaned.
+- `/plans/archive/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md` — its own
+  `🟢 EXECUTION CONSOLIDATED 2026-07-17` banner names `ao_open_issues_consolidated_close_out_2026_07_17.md` as the
+  execution vehicle, and that doc's `[BACKEND] P0` todo (line 600, "Recovery-audit Layer-1 producer rewire") is
+  confirmed still open and is the exact same Option-B rewire this doc's own sole todo describes. Genuinely covered, not
+  orphaned.
 
 ## Deferred — orphaned but not AO-eligible (design/judgment fork or explicit operator ruling, no evidence-based tiebreaker)
 
@@ -501,3 +502,37 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   item (corpus-wide `context_scope` backfill). Genuinely unbounded, ongoing corpus-scale work — the backfill target
   moves as the corpus itself grows, not a defaulted judgment call. 4 prior audits (08-01 through round11-08-09)
   consistently agree with a well-reasoned round11 marker from the prior day; no new facts found.
+- **context-scout 2026-08-14 (slot-28, AO-dispatched via the duplicate `ao_satellite_ao_dispatch_batch20_2026_08_13.md`
+  todo — see that plan's own item for the closure note)**: fresh inventory at session start: 740 in-scope docs, 101
+  `NEVER_SCOUTED`, 552 `STALE`, 87 `UP_TO_DATE` (corpus grew + STALE outpaced scouting since the 2026-08-03 snapshot of
+  646/13/294/339, consistent with this todo's own "genuinely unbounded, target moves as corpus grows" framing above).
+  Fanned out 5 parallel `general-purpose` sub-agents (per `SUB_AGENT_MANDATORY_RULES.md` injection, model=sonnet, one
+  per ~20-doc slice) over all 101 `NEVER_SCOUTED` docs — sub-agents ONLY edited files (no git ops); this session
+  independently verified every diff before shipping (PyYAML frontmatter re-parse, no duplicate `context_scope:` keys, no
+  new 1000L hard-cap breaches, no unexpected content removal via a `git diff` audit — 0 findings across all 96 touched
+  files) rather than trusting the sub-agents' own completion reports, per this corpus's own "an agent's own report is
+  not sufficient evidence" lesson from the 2026-08-03 entry above. 95/101 scouted and shipped; 5 correctly skipped
+  (`locked_by:` set — same 5 `plan_reconciler_findings_*_2026_08_10.md` docs an in-flight `/plan-reconcile` run had
+  locked at scouting time) + 1 (`elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`, 998L pre-edit)
+  reverted after its 3-entry `context_scope` alone (no marker) pushed it to 1004L, over the 1000L hard cap — its
+  pre-computed, disk-verified entries are now logged as a new Follow-up in
+  `/plans/active/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md` (this corpus's existing
+  line-cap-remediation tracking doc) rather than re-discovered fresh next time. One adjacent fix in the same pass: found
+  and corrected a pre-existing dangling `related:` reference in
+  `plans/active/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md` (cited
+  `watchdog_kill_events_deployment_gaps_2026_08_05.md` at its pre-archival path; doc had since moved to
+  `/plans/archive/2026_08/`) — caught only because that file happened to be staged for this session's own edit; fixed in
+  the same commit per the "a pointer that misled you is a finding" HARD RULE. Shipped in 3 verified batches via
+  `scripts/dev/safe-doc-push.sh` (each confirmed on `origin/live-defi-rollout` via `git merge-base --is-ancestor` before
+  proceeding): `unified-trading-pm@6117942be5` (33 files), `@3bc392cd0d` (32 files), `@716dcf3467` (31 files). Chunk 2
+  hit a genuine `safe-doc-push.sh` autostash-revert-suspected condition mid-ship (concurrent branch churn) — diagnosed
+  per the script's own forensic guide (`git log -1`/`git show HEAD:<path>` showed HEAD did NOT contain the intended
+  edit, confirming real reversion, not a peer-landed-it-first false alarm), recovered cleanly via
+  `git show 'stash@{0}:<path>' > <path>` per file (never a blind pop — a SEPARATE, unrelated stash@{1} carrying another
+  session's foreign WIP was on the same stack and left untouched), re-verified full integrity post-recovery (0
+  findings), then re-shipped successfully. **Result: `generate_context_scope_inventory.py` now reports 6
+  `NEVER_SCOUTED`** (the 5 locked docs + 1 line-cap-deferred doc, both classes already tracked in the
+  line-cap/locked-doc issue doc above) **and 552 `STALE`** (untouched this session — this pass targeted `NEVER_SCOUTED`
+  only, the higher-value zero-context-list case; `STALE` re-scouting is real remaining scope for a future session).
+  Still far from this todo's own `NEVER_SCOUTED =0, STALE=0` completion bar — the `docspec.py` `FieldSpec` flip stays
+  untouched, deliberately, same as every prior session logged above.
