@@ -332,9 +332,15 @@ bridges them; it does not extend one over the other.
 - [x] 27. ✅ [CODE] P0. Deliver DEPS_HOLD by writing an admission-block marker the launcher preflight reads, so a held
       dependent never starts. Repo: deployment-service. — deployment-service@e38b2a0e.
       `vm-census/admission-hold/{target}.json`.
-- [ ] [CODE] P0. Deliver FLEET_HALT by pausing the relevant Cloud Scheduler jobs, reusing the existing scheduler-pause
-      path rather than a new mechanism — and emit `DP_CONSOLIDATOR_SCHEDULER_PAUSED`-style visibility so a halt is never
-      silent. Repo: deployment-service.
+- [x] 35. ✅ [CODE] P0. Deliver FLEET_HALT by pausing the relevant Cloud Scheduler jobs, reusing the existing
+      scheduler-pause path rather than a new mechanism — and emit `DP_CONSOLIDATOR_SCHEDULER_PAUSED`-style visibility so
+      a halt is never silent. Repo: deployment-service. — deployment-service@67e3b36c. Pauses every job serving the
+      target's asset group via the existing `scheduler_maintenance` pauser — one pause path in the repo, and
+      `check_consolidator_scheduler_paused` already suppresses DP-WATCHER-004 for a deliberately paused job so a halt
+      does not page as its own failure. Jobs resolve from the UAC `SCHEDULER_REGISTRY`, so a newly-registered scheduler
+      is halted automatically rather than silently exempt. Never silent: paused job names ride back on the outcome. A
+      failing pause does not abandon the rest (`test_a_failing_pause_does_not_abandon_the_remaining_jobs` — uses sports,
+      not cefi, because cefi resolves to a SINGLE job and the test would have been vacuous).
 - [x] 28. ✅ [CODE] P0. Budget-bound every actuation per (alert_code, target, day) using the GCS-durable state pattern
       from `relaunch_backfill_vm.py` — the tempdir-backed budget was discarded every 5 minutes on Cloud Run and the
       documented cap never engaged. Repo: deployment-service. — deployment-service@e38b2a0e. `ShardedState`,
@@ -362,16 +368,31 @@ bridges them; it does not extend one over the other.
       `drain_and_exit()` calls `drain_all()` BEFORE exiting and returns 0 (a drained VM SUCCEEDED; a non-zero exit would
       fire `DP_VM_EXIT_NONZERO` and page about a working system). `test_drain_actually_flushes_not_merely_exits` guards
       it.
-- [ ] [CODE] P0. Add an admission check to the launcher preflight so a DEPS_HOLD marker prevents launch, and the refusal
-      is logged with the alert that caused it. Repo: deployment-service.
-- [ ] [CODE] P0. Add the same admission check to the Cloud Run job entrypoints so a job in a bad-state window skips its
-      run instead of executing against known-bad inputs. Repo: deployment-api.
-- [ ] [CODE] P1. Roll the poll hook across the drain-capable launcher prefixes from Phase 0, structurally rather than
-      per-file where the launchers share a common wrapper. Repo: deployment-service.
-- [ ] [TEST] P0. Test: a VM with the poll hook drains within one checkpoint interval of the marker appearing. Repo:
-      deployment-service.
-- [ ] [TEST] P0. Test: a Cloud Run job skips cleanly and reports skipped-not-failed when the admission check blocks it.
-      Repo: deployment-api.
+- [x] 36. ✅ [CODE] P0. Add an admission check to the launcher preflight so a DEPS_HOLD marker prevents launch, and the
+      refusal is logged with the alert that caused it. Repo: deployment-service. — deployment-service@67e3b36c.
+      `revocation_admission_cli` + a gate in the SHARED `vm-exec-with-gcs-tee.sh`, so every launcher inherits it and a
+      new one cannot forget to opt in. Exit **75** (EX_TEMPFAIL), never 1: a run that correctly declined did not fail,
+      and a generic 1 would fire `DP_VM_EXIT_NONZERO` and page about the system working as designed. The refusal names
+      the alert, so 'why did this skip' is answerable from the job's own log.
+- [x] 37. ✅ [CODE] P0. Add the same admission check to the Cloud Run job entrypoints so a job in a bad-state window
+      skips its run instead of executing against known-bad inputs. Repo: deployment-api. — deployment-api@0d3f1cc.
+      `launch_deploy_missing_vm` short-circuits before consuming rate-limit budget; result carries `skipped_reason` and
+      reports **skipped, not failed** (raising would surface a 5xx and page). Fail-open on any marker-read failure — one
+      unreachable bucket must not freeze every launch in the estate.
+- [x] 38. ✅ [CODE] P1. Roll the poll hook across the drain-capable launcher prefixes from Phase 0, structurally rather
+      than per-file where the launchers share a common wrapper. Repo: deployment-service. —
+      unified-trading-library@ad29bd9f + deployment-service@67e3b36c. Done STRUCTURALLY, as the todo asks: the poll
+      lives in the UTL `HeartbeatDaemon` and is bound in `heartbeat_cli`, so every VM running through the shared wrapper
+      inherits it — zero per-launcher edits, and no prefix can be missed.
+- [x] 39. ✅ [TEST] P0. Test: a VM with the poll hook drains within one checkpoint interval of the marker appearing.
+      Repo: deployment-service. — unified-trading-library@ad29bd9f.
+      `test_a_drain_marker_signals_the_workload_within_one_tick` — the drain rides the existing heartbeat tick rather
+      than a poll cycle of its own. Siblings prove SIGTERM-never-SIGKILL (SIGKILL discards the shard), at-most-once (a
+      repeat interrupts the flush it asked for), retry while the PID is unknown, and that a marker-read failure never
+      takes down the heartbeat.
+- [x] 40. ✅ [TEST] P0. Test: a Cloud Run job skips cleanly and reports skipped-not-failed when the admission check
+      blocks it. Repo: deployment-api. — deployment-api@0d3f1cc. `test_a_hold_is_reported_as_skipped_not_failed` +
+      `test_an_unreadable_marker_fails_open`.
 
 ## Phase 6 — Bad-VM test matrix (prove it on the failure modes that motivated it)
 
@@ -463,6 +484,39 @@ rescue committed this plan's Phases 2-5 (`c206f910`, `e38b2a0e`).
   `+` into a list item. Don't start a comment or wrapped line with a token a parser owns. (4) **A blocked change is not
   a frozen change** — origin moved 168 commits under one parked item, and a different fix to the same problem had landed
   in the same functions.
+
+### 2026-08-14 — Phases 4 and 5 finished end-to-end; Phase 3 wired but not landed
+
+The blockers cleared overnight, so this pass closed the loop from "policy exists" to "the fleet actually reacts".
+
+**Shipped.** `unified-trading-library@ad29bd9f` (heartbeat daemon polls for a drain marker and SIGTERMs the workload),
+`deployment-service@67e3b36c` (FLEET_HALT pauses schedulers; the shared VM wrapper gates admission),
+`deployment-api@0d3f1cc` (a held deploy-missing launch skips). The mechanism is no longer inert: an alert now reaches a
+running VM and a pending launch, by two independent paths.
+
+**The design call worth keeping.** The daemon does NOT drain on the workload's behalf — it sends SIGTERM and lets the
+workload's own drain registry flush writers before the manifest. One drain implementation, not two, and it reuses the
+Phase-1 contract rather than paralleling it.
+
+**A number that would have caused an incident.** Wiring `RETRY_BUDGETS` into the adapters, the first cut also took the
+registry's backoff LADDER. Measured before shipping: that puts delays of `[300, 600, 1200]` **seconds** inside an
+in-request HTTP retry loop — 20-minute sleeps inside a single fetch. The registry's ladder is calibrated for VM- and
+job-level retries; HTTP backoff is a different concern in different units. Only the ATTEMPT COUNT is taken from the
+registry now, and both adapters say so in a comment so the next person does not redo it.
+
+**Phase 3 is written but NOT landed.** `instruments-service` `base_adapter.py` gains a `retry_source` class attribute
+(one-line opt-in per subclass, defaulting to the generic budget) and MTDS's hyperliquid handler resolves its count from
+the registry. Tests pass; the IS gate reports one hard step failing that its own output never names — the summary says
+"1 hard gate/ratchet step(s) failed (see the ❌ STEP lines above)" while no such line is printed, and a stash probe
+confirmed the failure is not in the test suite. **That un-named gate failure is itself a finding**: a gate that cannot
+tell you which step failed costs every future agent the same hunt. Preserved as blobs:
+`1c1184c8181473ead13f41fd4cac4e2ddea0203b` (IS base_adapter), `adf44f54afb424fa1aceae67a61c1adf639eef52` (IS test),
+`8aa50ac270fd4bac707c3dd75e4a890ad539c714` (MTDS handler).
+
+**Two test bugs worth naming**, both of which passed for the wrong reason first: a `pauser` stub tested against `cefi`,
+which resolves to a SINGLE scheduler job, so "did it carry on to the rest" was unaskable; and an `admission_blocked`
+stub declared `**kwargs`-only while the caller passes positionally, so it raised, hit the fail-open guard, and the test
+went green while testing nothing.
 
 ### 2026-08-13 (later) — Phases 3, 4 and 5 written; one Phase-5 piece shipped
 
