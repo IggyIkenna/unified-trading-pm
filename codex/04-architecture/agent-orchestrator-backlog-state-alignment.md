@@ -98,6 +98,21 @@ pages or alerts today (no Slack/on-call wiring exists for these findings yet —
 not assumed). See `ao_backlog_regen_integrity_2026_07_20.md` todo 7 for the original ruling and
 `gate_completed_tasks_trusts_stale_done_after_checkbox_unflip_2026_07_25.md`'s Progress Log for the cadence change.
 
+## `/done`-time completion-acceptance gates (sha-on-origin + idempotency/owner-check)
+
+Two structural hard-409 gates sit in `server/routes/slots_worker.py`'s `done_slot()`, alongside `check_plan_flip` above,
+closing the specific false-done surfaces named in `reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md`
+and `orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md` (both archived, `plans/archive/issues/`):
+
+- **Sha-on-origin gate** (`tuning.done_require_origin`, default `True`, `server/config.py`). A `/done` whose reported
+  sha verifies locally but is NOT found on any origin branch 409s with `sha_not_on_origin` instead of reading as durably
+  done — closes the specific false-done shape where a slot's push failed silently (e.g. its detached quickmerge got
+  reaped mid-run) but the task still read `done` server-side with the code never on origin.
+- **Idempotency + owner-check gate** (pre-existing, predates both source docs — comment-marked `B1`). A second `/done`
+  on an already-`done` task 409s (`slot_done_rejected_already_done`); a `/done` from a slot that isn't the task's
+  `dispatched_to` owner 409s (`slot_done_rejected_not_holder`) — both logged as activity events before any
+  reconciliation logic runs, closing the double-`/done` risk from a failover-driven double-dispatch.
+
 ---
 
 ## Regen lifecycle

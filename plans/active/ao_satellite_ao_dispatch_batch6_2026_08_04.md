@@ -164,7 +164,7 @@ evidence-backed, zero-risk housekeeping action, not new work.
       file-adjacency rule #1 before starting.** **Done when**: a regression test proves a re-dispatched task's prior
       slot no longer reports it as `current_task`, and the loud log line fires; full `agent-orchestrator`
       `quality-gates.sh` green. Source:
-      `/plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md` (its 2nd `[BACKEND] P3`
+      `/plans/archive/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md` (its 2nd `[BACKEND] P3`
       item ONLY — the 3rd item, `/done` idempotency, stays conflict-gated against 3 other open docs sharing the same
       mechanism, see Deferred). Repo: agent-orchestrator. — **agent-orchestrator@82578c3** (`assign_task_to_slot` in
       `server/state_store/slots.py` now clears a DIFFERENT slot's stale `current_task` before assigning the task to a
@@ -227,11 +227,10 @@ evidence-backed, zero-risk housekeeping action, not new work.
 - [x] [DOC] P2. **Add a 4th conflict-check surface to the shared AO-dispatch protocol.** ✅ unified-trading-pm@c2083029d
       — added surface "(d) any `status: draft` `{ag}_satellite_ao_dispatch_batch{N}_*.md` for the same tranche, from
       EITHER `/ag-closeout-audit` or `/na-eligibility-audit`'s prior runs (not just the current run) — grep its
-      `Source:`/`## Deferred`/`## Already covered` citations for the candidate doc's path before finalizing a
-      RECLASSIFY or drafting a new extraction" to
-      `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3; wired both
-      `na-eligibility-audit/SKILL.md` (its Phase 2) and `ag-closeout-audit/SKILL.md` (its own Phase 3 conflict-check
-      section) to reference the new surface explicitly. Source:
+      `Source:`/`## Deferred`/`## Already covered` citations for the candidate doc's path before finalizing a RECLASSIFY
+      or drafting a new extraction" to `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §
+      3; wired both `na-eligibility-audit/SKILL.md` (its Phase 2) and `ag-closeout-audit/SKILL.md` (its own Phase 3
+      conflict-check section) to reference the new surface explicitly. Source:
       `/plans/archive/2026_08/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md` (its 1st item — its 2nd
       item was operator-ruled 2026-08-08; source doc fully closed + archived 2026-08-10). Repo: unified-trading-pm.
 
