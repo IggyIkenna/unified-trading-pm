@@ -87,17 +87,15 @@ tmux workers despite the server process being healthy.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Investigate why AO's central server is down (`ConnectionRefusedError` on its own host) — separate,
-      likely more urgent issue than this billing-waste finding. See
-      `/codex/15-runbooks/safe-service-restart-procedures.md`'s fix-vs-not table before restarting. **Partially
-      superseded by the 2026-08-13 update above**: the server process itself has since recovered (healthy, answering
-      `/api/healthz`), but no tmux workers are running at all — the ORIGINAL "why did the server die" question may still
-      be open even though the server is currently up; investigate why the dispatch loop isn't spawning workers despite
-      the server being healthy.
-- [ ] [OPERATOR] P1. **New 2026-08-13**: with the server healthy but zero live tmux workers, confirm whether the
-      dispatch loop is actually attempting to spawn workers and failing silently, or not attempting at all — and
-      reconcile the `dependency_health_alerting_never_wired-376d92bc984b` task's stale `status=dispatched` claim (no
-      live session behind it) before it silently blocks that queue slot indefinitely.
+- [x] ✅ [OPERATOR] P1. **DECLINED 2026-08-14 — operator: not investigating, expected back on its own within hours, does
+      not concern other work.** Was: investigate why AO's central server is down. Leaving this AND the 2026-08-13
+      dispatch-loop follow-up below as historical record, not re-opening either — if AO is still down past the
+      operator's own expected window, that's a fresh decision point, not an automatic re-open of this todo.
+- [ ] [OPERATOR] P1. **New 2026-08-13** (superseded by the decline above, kept for record): with the server healthy but
+      zero live tmux workers, confirm whether the dispatch loop is actually attempting to spawn workers and failing
+      silently, or not attempting at all — and reconcile the `dependency_health_alerting_never_wired-376d92bc984b`
+      task's stale `status=dispatched` claim (no live session behind it) before it silently blocks that queue slot
+      indefinitely.
 - [ ] [SCRIPT] P2. Determine whether any manual-launcher-invocation path (as opposed to `wave_launcher.py`'s automated
       dispatch) has a dedup/collision check against already-running VMs for the same shard — if not, consider whether
       one is worth adding given this is the second fleet-wide duplicate-VM billing-waste incident this week (different

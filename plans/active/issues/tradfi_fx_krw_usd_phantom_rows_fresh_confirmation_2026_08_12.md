@@ -94,15 +94,14 @@ archived doc's remediation plan should treat this KRW/USD sample as corroboratin
 - [x] ✅ [OPERATOR] P3. **ANSWERED 2026-08-14: fold in now, not deferred** — operator confirmed, adding the standing
       requirement that KRW/USD stay 100% Yahoo-sourced (already true architecturally, see correction above — no code
       change needed for that half).
-- [ ] [DATA] P2. **REVISED disposition (was: surgical recapture; now: pipeline_mode re-stamp)** — do NOT recapture/fetch
-      anything (the data already exists, confirmed real). Build a manifest-only CAS re-stamp for the 2,023
-      `FX:SPOT_PAIR:KRW-USD` `captured` rows: `pipeline_mode` `batch_yahoo` → `batch_databento` (matching the real
-      object path each row's content lives under), mirroring the exact pattern + safety rigor (snapshot-before-write,
-      dry-run report, self-verify after) already proven in
-      `market-tick-data-service/scripts/quarantine_tradfi_fx_phantom_manifest_rows_2026_08_04.py` and its sibling
-      re-stamp script for the archived doc's blank-`instrument_id` population. Verify EVERY one of the 2,023 rows (not
-      just the 60-date sample) resolves to real `batch_databento` backing before writing anything.
-- [ ] [DATA] P3. Once the KRW/USD re-stamp is verified safe, check whether the same `batch_yahoo`-claimed/
+- [ ] [DATA] P2. **REVISED disposition (was: surgical recapture; now: pipeline_mode re-stamp) — script shipped, apply in
+      progress.** Full 2,023-row verification (not just the 60-date sample): 0 phantom, 1,949 mislabeled
+      `batch_yahoo`→`batch_databento`, 59 already-correct, 15 with backing under both (left untouched, out of scope).
+      Dry-run matched the full verification exactly. Script shipped: `market-tick-data-service@75a9ed0b54`
+      (`scripts/restamp_tradfi_fx_krw_usd_mislabeled_pipeline_mode_2026_08_14.py`, snapshot-before-write + CAS +
+      self-verify). First `--apply` attempt safely aborted (CAS generation mismatch — a concurrent writer touched the
+      manifest mid-run; script confirmed no partial write occurred) — retrying.
+- [ ] [DATA] P3. Once the KRW/USD re-stamp is confirmed applied, check whether the same `batch_yahoo`-claimed/
       `batch_databento`-actual mislabel affects the other 11 FX pairs too (this doc only sampled KRW-USD) — if so, widen
       the re-stamp to the full FX venue rather than re-discovering this pair-by-pair.
 
