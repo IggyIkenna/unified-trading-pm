@@ -263,9 +263,13 @@ source: >-
       the operator-gated SSM IAM grant above, confirmed fleet-wide, not a task-boundary artifact) — the next pickup
       should check that issue doc's status FIRST; once granted, re-launch per the recipe above and proceed through steps
       4-5 directly (no SSM re-diagnosis needed).
-- [ ] [CODE] P2. implement the consumer-QG promote fan-out gate in UAC's promote-gate workflow (per the 2026-08-08
+- [x] ✅ [CODE] P2. implement the consumer-QG promote fan-out gate in UAC's promote-gate workflow (per the 2026-08-08
       operator ruling; design + target consumer already specified in the doc) Source:
-      `plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`
+      `plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md` — ✅ **DONE 2026-08-14
+      (slot 14, infra).** Shipped `unified-api-contracts@ae2f4ce4c5` (new `consumer-qg-gate` job in
+      `image-build-gate.yml`) + `instruments-service@054a67ba04` (new `consumer-qg-check.yml` listener) +
+      `unified-trading-pm` (this commit — codex doc `/codex/08-workflows/ci-cd-flow.md` updated, source issue doc's todo
+      flipped, follow-up branch-protection-wiring todo added). See the source issue doc's own checkbox for full detail.
 - [ ] [CODE] P2. fix or prove rollout-cloudbuild.py's --apply preserves consumer-only `substitutions` keys (currently
       invisible to _cloudbuild_markers()), per the doc's own stated done-when Source:
       `plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`

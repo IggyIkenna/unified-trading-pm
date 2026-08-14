@@ -106,7 +106,7 @@ last_updated: 2026-06-27
 > three concurrent agents' additions incl. this one: 853→998). Fixed by extraction into
 > `scripts/recovery/ _durable_state.py` (998→895); awaiting a re-gate + a real sha. A checkbox goes `[x]` only when the
 > sha RESOLVES — see this session's own correction of a false `305d897a` claim in
-> `/plans/active/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md`.
+> `/plans/archive/2026_08/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md`.
 >
 > **⚠️ CORRECTION (2026-08-10, data-pipeline-alerts reconciler slot-20): the "code complete" claim above is now FALSE —
 > the code is LOST, not awaiting a re-gate.** Verified 2026-08-10T23:44Z: `scripts/recovery/_durable_state.py` (and the
@@ -184,9 +184,9 @@ last_updated: 2026-06-27
       `empty_confirmed` would block the later recompute (codex `/codex/02-data/honest-absence-downstream-handling.md`
       §6A Class 1). LIVE-mode halt verified unchanged. Evidence: **features-service@692ce76b**, `FS_QG_EXIT=0`, 18,387
       passed; full `tests/sports/unit` 3107 passed / 0 failed. NOTE: this ALSO closes the FALSE claim in
-      `/plans/active/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md` that the
-      fix had landed at `features-service@305d897a` — that sha never existed (`git cat-file -t` → not a valid object);
-      692ce76b is the real one.
+      `/plans/archive/2026_08/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md`
+      that the fix had landed at `features-service@305d897a` — that sha never existed (`git cat-file -t` → not a valid
+      object); 692ce76b is the real one.
 - [ ] [SCRIPT] P1. Alert-accuracy quartet (deployment-service): interpolate or drop the fixed-template `"(0 → 0)"`;
       extend the captured-reader probe fallback to the bucket-resolves-but-blob-absent case (+ `instruments-store` /
       `features` kind buckets); make the "relaunching through the Tardis/launcher concurrency guard" text conditional on
@@ -290,15 +290,18 @@ last_updated: 2026-06-27
 - [ ] [SCRIPT] P1. Sports reference-table exporter FABRICATES `http_status=200` `FetchEvidence` for a GCS-missing
       upstream that it classifies `SOURCE_RETURNED_ZERO`. `FetchEvidence` is the gate that makes `empty_confirmed`
       trustworthy at all — fabricating it defeats the honest-absence model at its root.
-- [ ] [DATA] P2. 2026-08-10 sports reference tables were falsely recorded `empty_confirmed(SOURCE_RETURNED_ZERO)` by an
-      aborted mitigation run; they need a `--force` recompute once instruments-service backfills that day.
+- [x] ✅ [DATA] P2. 2026-08-10 sports reference tables were falsely recorded `empty_confirmed(SOURCE_RETURNED_ZERO)` by
+      an aborted mitigation run; they need a `--force` recompute once instruments-service backfills that day. Verified
+      slot-29 2026-08-14: manifest shows `fixture_features`/`derived_features` `captured` for 2026-08-10 with real GCS
+      output — see
+      `/plans/archive/2026_08/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md`.
 - [x] ✅ [SCRIPT] P2. Corrected a FALSE-PROGRESS claim in
-      `/plans/active/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md`: it stated
-      "Fix committed (features-service @ `305d897a`, quickmerge pending QG)" but `git cat-file -t 305d897a` returns
-      `fatal: Not a valid object name` and `git log --all --grep` finds nothing on any ref — the commit never existed.
-      Added a correction banner rather than deleting the text, because the pattern is the lesson: a "committed at <sha>"
-      claim is only true once the sha RESOLVES. NOTE: this session's own pre-task conflict check MISSED this doc and
-      wrongly concluded a new one was needed — the check searched the wrong terms.
+      `/plans/archive/2026_08/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md`:
+      it stated "Fix committed (features-service @ `305d897a`, quickmerge pending QG)" but `git cat-file -t 305d897a`
+      returns `fatal: Not a valid object name` and `git log --all --grep` finds nothing on any ref — the commit never
+      existed. Added a correction banner rather than deleting the text, because the pattern is the lesson: a "committed
+      at <sha>" claim is only true once the sha RESOLVES. NOTE: this session's own pre-task conflict check MISSED this
+      doc and wrongly concluded a new one was needed — the check searched the wrong terms.
 
 ### Remaining — not started
 

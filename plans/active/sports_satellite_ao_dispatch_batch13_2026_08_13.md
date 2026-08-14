@@ -25,7 +25,7 @@ related:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md,
-    /plans/active/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md,
+    /plans/archive/2026_08/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md,
     /plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md,
     /plans/active/issues/sports_catalog_dp_catalog_001_oom_manifest_read_2026_08_10.md,
     /plans/active/issues/sports_features_2026_backfill_launch_window_was_today_2026_08_10.md,
@@ -82,9 +82,10 @@ source: >-
       sports features backfill for day=2026-08-10 (features-service) to replace the false
       empty_confirmed(SOURCE_RETURNED_ZERO) rows the aborted 12:03 UTC run wrote **OUT-OF-SCOPE FOR THIS BATCH
       (2026-08-13, operator scoping instruction)** — MDPS/features-service backfill/recompute work is excluded from this
-      batch unless manifest-canonical or migration-related. The underlying item remains open in its own source doc,
-      untouched by this batch/commit. Source:
-      `plans/active/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md`
+      batch unless manifest-canonical or migration-related. **UPDATE 2026-08-14 (slot-29)**: the underlying item is now
+      resolved (outside this batch) — manifest shows `fixture_features`/`derived_features` `captured` for 2026-08-10
+      with real GCS output; source doc archived. Source:
+      `/plans/archive/2026_08/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md`
 - [ ] [CODE] P2. Track F: root-cause why the features-service sfi_progressive manifest group is corpus-empty (1 manifest
       row) despite a documented 2020->today backfill window Source:
       `plans/active/sports_consolidated_closeout_2026_07_19.md`
@@ -148,8 +149,22 @@ source: >-
       excluded from this batch unless manifest-canonical or migration-related. The underlying item remains open in its
       own source doc, untouched by this batch/commit. Source:
       `plans/active/issues/sports_odds_horizon_bucket_reader_writer_path_mismatch_defeats_zombie_purge_2026_08_09.md`
-- [ ] [REVIEW] P2. locate and re-engage the owner of 'the bucket-cutover lane' referenced in reprocess_sports_odds.py's
-      code comment (ceadb45c/2026-07-16), or confirm the comment is stale Source:
+- [x] ✅ [REVIEW] P2. locate and re-engage the owner of 'the bucket-cutover lane' referenced in
+      reprocess_sports_odds.py's code comment (ceadb45c/2026-07-16), or confirm the comment is stale — **CONFIRMED NOT
+      STALE; no live owner to re-engage.** Owner located:
+      `plans/archive/2026_07/sports_legacy_bucket_cutover_2026_07_16.md` (`status: complete`, archived 2026-07-27,
+      independently re-verified via a fresh /ag-closeout-audit pass the same day per its own banner) + its companion
+      `sports_legacy_bucket_cutover_history_2026_07_24.md`; both sibling child plans
+      (`sports_legacy_cutover_closeout_tasks_2026_07_24.md`,
+      `sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md`) are also archived with terminal status. The
+      ~90,947 `processed/` odds_horizon_bucket objects the comment refers to were a DELIBERATE, accepted TERMINAL
+      disposition (PRESERVATION not migration — server-side-copied to `_legacy_migrated_processed/` before the legacy
+      bucket delete, per the history doc's own Phase-4 T4.1 entry), not an unfinished task — there is no live effort
+      left to re-engage. Corroborated corpus-wide: `_legacy_migrated_processed/` is still treated today as inert
+      scratch/metadata (excluded from manifest audits by
+      `plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md` Finding 1's underscore-prefix
+      exclusion fix), and no active plan/issue proposes touching it further. The comment stands accurate as written; no
+      code change needed. Source:
       `plans/active/issues/sports_odds_horizon_bucket_reader_writer_path_mismatch_defeats_zombie_purge_2026_08_09.md`
 - [x] [CODE] P2. Re-run MDPS odds_horizon_bucket shard4 full-mode (resume-friendly, not --force) reprocess for
       2025-01-01..2026-07-25 once the odds_api gap-backfill converges into that date range, to re-poll the ~20 remaining

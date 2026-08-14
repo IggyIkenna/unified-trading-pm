@@ -96,8 +96,22 @@ source: >-
       `test_position_state_survives_across_ticks` are present at HEAD and the test passes in isolation
       (`pytest tests/unit/engine/strategies/v2/test_batch_harness.py::TestMultipleTicksCarryForward::test_position_state_survives_across_ticks`
       → 1 passed). No new code change needed for this batch; checkbox reconciliation only.
-- [ ] [CODE] P2. Cross-check instrument_type=spot_pair (9,802 rows) against defi-canonical-naming-ssot.md's locked
-      instrument_type list Source: `plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`
+- [x] [CODE] P2. ✅ Cross-check instrument_type=spot_pair (9,802 rows) against defi-canonical-naming-ssot.md's locked
+      instrument_type list Source: `plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` —
+      unified-trading-pm (this commit). Live re-check (2026-08-12 honest-coverage rollup,
+      `by_venue_instrument_type.defi`) found exactly 3 venues carrying `instrument_type=spot_pair`: CHAINLINK (119,247
+      cells) and PYTH (18,441 cells) are LEGITIMATE —
+      `unified_api_contracts...capability_declarations._defi.PROTOCOL_CAPABILITIES["chainlink"/"pyth"]` deliberately
+      declares `[SPOT_PAIR, SPOT_ASSET]` for their `oracle_prices` capability (2026-07-20 catalogue canonicalization:
+      pair-denominated ETH/USD-style feeds vs single-asset feeds); `defi-canonical-naming-ssot.md`'s locked
+      instrument_type row was simply stale (never updated when that decision landed) — corrected in this commit.
+      EIGENLAYER's 3,816 `spot_pair` cells are NOT explained by its registry declaration (`_RESTAKING` = `spot_asset`
+      only) — filed as `plans/active/issues/defi_eigenlayer_spot_pair_unexplained_expected_cells_2026_08_14.md` for
+      root-cause (all 3,816 cells are `captured=0`, so not a live-writer contamination bug — likely a stale
+      expected-universe seed). All 3 venues' cells are 0% captured, which is also why the original "9,802 rows" figure
+      (dated 2026-08-07) no longer matches any live rollup — the underlying population has moved substantially across
+      the many DeFi canonicalization fixes that landed 2026-08-08..08-13; not independently reproduced, not material to
+      the drift-vs-legitimate verdict.
 - [ ] [CODE] P2. Fix the deployment-api/instruments-service Distinct Values panel's <blank> instrument_type badge to
       exclude capture_status=empty_confirmed rows (mirrors the already-shipped attempted_failed enumeration-key fix,
       instruments-service@8b59e8ba2) Source:

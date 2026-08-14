@@ -124,12 +124,27 @@ source: >-
       ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md's still-open todo 4 as a same-file
       (artifact_pipeline_observability_2026_07_17.md) dispatch-collision risk. Source:
       `plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md`
-- [ ] [CODE] P2. Port the manual-trigger action into the new /ops/artifacts page; remove CloudBuildsTab from the
-      per-service tab bar + DeployConsole; delete CloudBuildsTab.tsx (Phase 4) Source:
-      `plans/active/artifact_pipeline_observability_2026_07_17.md`
-- [ ] [CODE] P2. Retire the superseded narrow deployment-api build/artifact routes once the new artifact_pipeline
-      service covers them; delete dead code (Phase 4) Source:
-      `plans/active/artifact_pipeline_observability_2026_07_17.md`
+- [x] ✅ [CODE] P2. Port the manual-trigger action into the new /ops/artifacts page; remove CloudBuildsTab from the
+      per-service tab bar + DeployConsole; delete CloudBuildsTab.tsx (Phase 4) — deployment-ui@9d5ad0d105. Added a
+      "Trigger build" popover to the Pipeline view's toolbar (service/branch picker → `triggerCloudBuild`, lazy-loads
+      `getCloudBuildTriggers` on open, refreshes the builds table on success); removed the "Builds" tab from HomeShell's
+      per-service tab bar and DeployConsole's "Build history" view; deleted `CloudBuildsTab.tsx` (no shim). Found +
+      fixed in the same change: the mock API router only matched the unprefixed `/cloud-builds/trigger` POST path, so
+      every real `triggerCloudBuild()` call 404'd against the mock — a pre-existing gap CloudBuildsTab shared but was
+      never pw:L2-covered enough to catch. **pw:L2 ✓** (full
+      `--project=chromium tests/smoke/artifact-pipeline.spec.ts tests/smoke/cockpit.spec.ts` re-run, 53/53 passed) |
+      regression: `tests/smoke/artifact-pipeline.spec.ts` (new case: "Pipeline: the Trigger build popover fires a manual
+      build and refreshes the table (Phase 4 port)") + `src/pages/ArtifactPipeline.test.tsx` (new Vitest case asserting
+      lazy-fetch, submit, and builds-table refresh). Full deployment-ui gate green (102 Vitest tests, build, typecheck,
+      lint). Not in this todo's scope (batch4's title doesn't cite it): "Fold RepoCi ImageCell fields into the new
+      columns" — that's a distinct sentence trailing the same source-doc checkbox, left for the source doc's own
+      reconciliation. Source: `plans/active/artifact_pipeline_observability_2026_07_17.md`
+- [ ] [BACKEND] P2. Retire the superseded narrow deployment-api build/artifact routes once the new artifact_pipeline
+      service covers them; delete dead code (Phase 4) — retagged `[CODE]` → `[BACKEND]` 2026-08-14 (ui_developer slot-14
+      craft-mismatch catch): the work is Python-only
+      (`deployment-api/routes/{cloud_builds,_cloud_builds_*,     _code_builds_aws,builds_history}.py` + their `main.py`
+      registrations + tests) — no TS/React surface, out of ui_developer's craft (`agents/ui_developer.md` does_not:
+      Python service code). Source: `plans/active/artifact_pipeline_observability_2026_07_17.md`
 - [ ] [CODE] P2. Build→deploy latency join: 'built but never deployed' + build-to-first-revision latency (Phase 6
       stretch) Source: `plans/active/artifact_pipeline_observability_2026_07_17.md`
 - [ ] [CODE] P2. Add a deploy-churn/crash-loop health condition (e.g. a service redeployed ~14x in hours, ~40%
