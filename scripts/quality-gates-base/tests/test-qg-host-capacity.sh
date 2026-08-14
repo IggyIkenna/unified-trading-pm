@@ -111,6 +111,31 @@ chmod +x "$FAKE"/uname "$FAKE"/sysctl "$FAKE"/vm_stat
     exit "$rc"
 ) || FAILS=$((FAILS + 1))
 
+# ── (d) _qg_governor_default_k dedupes hyperthread siblings via _qg_physical_cores
+# (regression for the hyperthreading double-count bug — was its own undeduped
+# `lscpu -p=core | grep -vc '^#'` inline, plans/active/qg_host_adaptive_resource_governor_2026_07_14.md).
+# Fake `lscpu -p=core` simulates 32 physical cores x 2 HT threads = 64 logical rows,
+# each physical core id (0-31) appearing twice. The old buggy code would count all
+# 64 rows -> K=floor(64/4)=16; the fixed code delegates to _qg_physical_cores's
+# sort -u dedup -> 32 physical -> K=floor(32/4)=8.
+FAKE_LSCPU="$TMP/bin-lscpu"
+mkdir -p "$FAKE_LSCPU"
+cat > "$FAKE_LSCPU/lscpu" <<'EOF'
+#!/usr/bin/env bash
+echo "# comment line"
+for i in $(seq 0 31); do echo "$i"; done
+for i in $(seq 0 31); do echo "$i"; done
+EOF
+chmod +x "$FAKE_LSCPU/lscpu"
+(
+    _qg_is_macos() { return 1; } # force the non-macOS (lscpu) branch
+    PATH="$FAKE_LSCPU:$PATH"
+    rc=0
+    eq "HT-simulated physical cores (deduped)" 32 "$(_qg_physical_cores)" || rc=1
+    eq "governor default K uses deduped physical cores, not logical" 8 "$(_qg_governor_default_k)" || rc=1
+    exit "$rc"
+) || FAILS=$((FAILS + 1))
+
 echo "────────────────────────────────────────"
 if [[ "$FAILS" -eq 0 ]]; then echo "ALL BLOCKS PASSED"; else echo "FAILED BLOCKS: $FAILS"; fi
 [[ "$FAILS" -eq 0 ]]

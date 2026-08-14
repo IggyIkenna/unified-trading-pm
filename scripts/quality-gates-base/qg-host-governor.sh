@@ -102,12 +102,19 @@
 # Mac Studio was capped at 2 instead of 6. `sysctl -n hw.physicalcpu` is the macOS
 # equivalent of `lscpu -p=core` (TRUE physical cores, not logical — `hw.ncpu` and
 # `hw.logicalcpu` would over-count on SMT Intel Macs).
+#
+# HYPERTHREADING DOUBLE-COUNT FIXED 2026-08-14 (plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
+# ci_satellite_ao_dispatch_batch13). This function used to re-implement its own
+# `lscpu -p=core | grep -vc '^#'` core count, which counts one row per LOGICAL cpu
+# (`lscpu -p=core` emits a row per hyperthread sibling, with the physical core id
+# repeating) — no dedup, so on a hyperthreaded host it returned the logical CPU
+# count (e.g. 16) instead of the true physical count (e.g. 8), making K up to 2x
+# too permissive there. `_qg_physical_cores()` below already dedupes correctly via
+# `sort -u` (added later for the TOTAL-INSTANCE cap) — delegate to it instead of
+# maintaining two diverging "count physical cores" implementations.
 _qg_governor_default_k() {
     local cores
-    # physical cores: lscpu (Linux) → sysctl (macOS) → logical nproc → 4
-    cores="$(lscpu -p=core 2>/dev/null | grep -vc '^#')"
-    [[ "${cores:-0}" -ge 1 ]] || cores="$(sysctl -n hw.physicalcpu 2>/dev/null)"
-    [[ "${cores:-0}" -ge 1 ]] || cores="$(nproc 2>/dev/null || echo 4)"
+    cores="$(_qg_physical_cores)"
     local k=$(( cores / 4 ))
     (( k >= 2 )) || k=2
     echo "$k"
