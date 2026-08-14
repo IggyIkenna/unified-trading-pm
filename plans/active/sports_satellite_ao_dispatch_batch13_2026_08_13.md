@@ -94,8 +94,23 @@ source: >-
       canonical manifest carries 18,409 `feature_group=sfi_progressive` rows (18,098 captured), 2,094 real GCS
       day-objects 2020-06-06→2026-08-01 — corpus genuinely healthy, no code change needed. Full detail in the Track F
       todo itself. Source: `plans/active/sports_consolidated_closeout_2026_07_19.md`
-- [ ] [CODE] P2. Track C: venue vocabulary cleanup dispositions for the residual non-canonical values (casing/aliasing
-      re-stamp + footystats legacy bundle mislabel venue=ODDS_API->FOOTYSTATS, 42,476 rows) Source:
+- [x] ✅ [CODE] P2. Track C: venue vocabulary cleanup dispositions for the residual non-canonical values
+      (casing/aliasing re-stamp + footystats legacy bundle mislabel venue=ODDS_API->FOOTYSTATS, 42,476 rows)
+      **INVESTIGATED 2026-08-14 (slot-30) — the literal disposition text is STALE, not executable as worded.** Live
+      `read_availability_index` census found: (1) the footystats-mislabel rename this todo describes was already
+      attempted 2026-07-27 (`sports_consolidated_native_ao_extract_2026_07_25.md` Progress Log claims "0 stale rows
+      remaining") but a fresh 2026-08-14 census shows `venue=ODDS_API`/`pipeline_mode=batch_footystats` still holding
+      19,782 real captured shards with dates through TODAY — an unfixed-writer recurrence, not residue, and the rename
+      itself was already determined to be the WRONG fix one day before it ran
+      (`plans/archive/issues/sports_canonical_migrated_odds_mistamped_footystats_2026_07_16.md`, still `status: open`:
+      correct fix is a purge, a rename creates duplicate manifest rows on 56.40% of cells); this ground is also
+      concurrently owned by the active `sports_taxonomy_p2_migration_2026_08_08.md` plan (closed an adjacent todo
+      today). Re-running the existing restamp script would repeat an already-identified wrong fix, so no code was
+      shipped for that piece. (2) NEW finding, not covered by any prior effort: `LADBROKES_UK`/`SPORT888` also carry the
+      same casing/alias defect under a third, previously-unexamined shape (`pipeline_mode=batch_footystats`,
+      `data_type=odds_horizon_bucket`) — 121,884 shards / 12.3M rows measured, 2020-2026. Full evidence + recommended
+      decision + 4 follow-up todos filed: `plans/active/issues/sports_footystats_mislabel_contradiction_2026_08_14.md`.
+      Stale claim in the source doc corrected in place (same turn). Source:
       `plans/active/sports_consolidated_closeout_2026_07_19.md`
 - [ ] [CODE] P2. Track C: QG assertion that sports data_type/venue/instrument_type/chain stay within the canonical
       vocabulary (deployment-ui Distinct Values panel reads 0 non-canonical across all four axes) Source:
