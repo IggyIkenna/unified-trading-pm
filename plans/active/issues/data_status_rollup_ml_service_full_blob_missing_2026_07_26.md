@@ -185,19 +185,19 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       needs its own bound.
 
       **RESOLVED 2026-08-02 (slot 10)**: `deployment-api@34a596b`. Took the documented alternative to raising the
-                          ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
-                          means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
-                          accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
-                          `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
-                          `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
-                          `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
-                          observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
-                          `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
-                          AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
-                          isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
-                          isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
-                          "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
-                          records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
+                              ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
+                              means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
+                              accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
+                              `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
+                              `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
+                              `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
+                              observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
+                              `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
+                              AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
+                              isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
+                              isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
+                              "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
+                              records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
 
 - [x] ✅ [INFRA] P3. The `data-status-rollup-worker` `GcsEventSink` (the
       `log_event(SERVICE_PROCESSED/SERVICE_FAILED, ...)` calls in `run_rollup`) has not written a new dated prefix under
@@ -459,6 +459,34 @@ worth closing the same way (isolate + surface the real error) rather than leavin
   out per the open P2). Re-check blob timestamps for the 7 P1-affected services after confirming a POST-18:48:28Z cycle
   has run to completion.
 
+- **2026-08-14 (scoping the open P2, interrupted mid-investigation — NOT root-caused, read before continuing)**: Traced
+  the P2 timeout's actual read path to decide whether the earlier "memory-bounded/column-projected read" idea (mentioned
+  in the prior entry) is safe to build. It is NOT, as a naive version — `data_status_service._read_index_cached` (the
+  shared manifest-index reader both `defi.py` and `sports.py` call) has an explicit docstring warning that a fixed
+  column projection there risks silently dropping a column a DIFFERENT caller needs; this function was deliberately left
+  unprojected for that reason. Any real fix needs a PER-CALLER column allowlist threaded through explicitly, not a
+  blanket projection at the shared layer.
+  1. **Re-examined the actual production symptom**: `market-data-processing-service`/`features-onchain-service` both
+     fail with `"timed out after 420s"` — never `MemoryError`. `market-tick-data-service`'s already-accepted gap DOES
+     produce `MemoryError` (caught inside its 18Gi child rlimit). This distinction matters: a pure timeout inside a
+     currently-succeeding memory budget points toward the SAME low-risk, already-proven fix pattern used for
+     `instruments-service` (a per-service `_CHILD_JOIN_TIMEOUT_OVERRIDES_S` raise, `data_status_rollup_worker.py:220`)
+     rather than a riskier read-path rewrite — IF a real measured duration justifies it, matching how the
+     instruments-service override was sized ("3 consistent live measurements"), not a blind bump (this doc's own history
+     already flagged the risk of a blind bump: raising MDPS's budget without evidence could starve every service queued
+     after it in the shared sequential 420s-per-service budget).
+  2. **Attempted a safe measurement, it failed differently than expected**: resolved MDPS's and features-onchain's DEFI
+     bucket names (`resolve_bucket_name(kind="market-data"/"features", asset_group="defi")`) and tried
+     `list_blobs(bucket, prefix="")` (no cap) to get a cheap blob-count/size estimate before attempting any read. **This
+     hung for hours without returning** — confirmed still genuinely alive (not silently dead) via `TaskStop` on the
+     process late in this session, only then terminated. This is itself new evidence: even bucket-metadata listing (no
+     data download) doesn't complete in reasonable time on these buckets unpaginated, which independently suggests very
+     high object COUNT is part of what's slow here, not just per-object size.
+  3. **Did not get to a real measurement this session** — this genuinely needs new data that doesn't exist yet (a
+     bounded/paginated listing or a pyarrow-footer-only metadata read, see the todo's own updated text for the exact
+     next step), not something to force to completion under time pressure. Filed as an update to the existing P2 todo
+     below rather than a new one — same open item, now scoped precisely instead of vaguely.
+
 ## Follow-ups
 
 - [x] ✅ [DATA] P1. **NEW (2026-08-13)**: root-cause + fix the `TypeError: '<' not supported between NoneType and str` /
@@ -488,7 +516,24 @@ worth closing the same way (isolate + surface the real error) rather than leavin
 - [ ] [DATA] P2. **NEW (2026-08-13)**: `market-data-processing-service` and `features-onchain-service` now also timeout
       at 420s (same failure mode as the already-tracked `market-tick-data-service` gap) — not previously documented as
       failing in this doc. Confirm whether this is the SAME root cause as the tracked `market-tick-data-service` timeout
-      or a distinct one before folding them into that fix.
+      or a distinct one before folding them into that fix. **Scoping progress 2026-08-13/14 (see Progress Log entry
+      below for the full evidence) — NOT root-caused yet, do not attempt a fix without reading it first**: (1) the
+      shared read `data_status_service._read_index_cached` is DELIBERATELY unprojected (its own docstring warns a naive
+      `columns=`/`filters=` projection risks silently dropping a column a DIFFERENT caller needs — defi.py and sports.py
+      share this one function with different downstream needs) — do NOT "just add column projection" here without
+      threading a per-caller column allowlist through explicitly, the way the fix needs to be done, not a shortcut. (2)
+      Production's own error is `"timed out after 420s"`, never `MemoryError` — unlike `market-tick-data-service`'s
+      already-accepted MemoryError-class gap, this is evidence the failure is TIME-bound within the existing 18Gi child
+      rlimit, not memory-unsafe — which points toward the SAME low-risk pattern already proven for `instruments-service`
+      (`_CHILD_JOIN_TIMEOUT_OVERRIDES_S`, a per-service timeout raise) as the likely right fix, NOT a rewrite of the
+      shared read path. That needs a REAL measured duration to size correctly (the instruments-service override was
+      "sized from 3 consistent live measurements") — not yet obtained; see below. (3) A naive
+      `list_blobs(bucket, prefix='')` (no cap) against MDPS's/features-onchain's DEFI buckets to get that measurement
+      HUNG for hours without returning (confirmed via `TaskStop` on the still-alive process) — do not repeat that
+      approach. Next attempt should use a bounded/paginated listing (a `max_results` cap) or a pyarrow-dataset
+      FOOTER-ONLY metadata read (row-count/byte-size without materializing rows — same technique already used for the
+      SPORTS 19.5GB/42-col measurement referenced elsewhere in this doc), then size a per-service timeout override from
+      that, mirroring the instruments-service precedent's own rigor.
 - [ ] [DATA] P3. Live-verify ml-service's full.json.gz actually refreshes on a real */20 uts-prod-data-status-rollup
       cron cycle post-fix (deployment-api@aaa0d1d)
 - [x] ✅ [DATA] P1. Once
