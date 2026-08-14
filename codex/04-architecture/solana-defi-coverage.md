@@ -296,7 +296,8 @@ the AVS premium component, causing P&L to appear worse than actual. Restaking co
 > **Not implemented (verified 2026-07-30):** `restaking_operator_set` and `cross_chain_restaking_routes` exist nowhere
 > in code. Of this family only `restaking_rewards` is real.
 >
-> | `lst_rates` | Exchange rate (underlying SOL per receipt token) | Stake pool state accounts |
+> `lst_rates` — exchange rate (underlying SOL per receipt token), sourced from stake pool state accounts — is a
+> separate, adjacent data type, not part of this restaking family.
 
 ### Jito Restaking (already shipped — Plan A)
 

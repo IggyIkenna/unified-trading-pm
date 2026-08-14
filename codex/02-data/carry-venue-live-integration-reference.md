@@ -2,7 +2,7 @@
 doc_type: codex-ssot
 title: Carry-strategy venue integration reference
 summary:
-  Integration SSOT for the carry_staked_basis live/paper path — per-venue perp-funding endpoints and quirks (13 venues),
+  Integration SSOT for the carry_staked_basis live/paper path — per-venue perp-funding endpoints and quirks (14 venues),
   LST staking APR sources, collateral-acceptance and capital-efficiency, Aave lending legs, and the conservative-default
   + filed-TODO discipline; batch==live reuses the FundingPoint machinery.
 status: current

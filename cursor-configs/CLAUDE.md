@@ -292,7 +292,7 @@ architecture (L0–L4)".
 
 - **Working on a SERVICE?** Read that service's architecture doc first, skip the rest. Always-true:
   **instruments-service owns reference data** (`InstrumentRecord` carries `source_archive_url_template` + coverage
-  windows; live REST/WS endpoints are in UAC registries, not InstrumentRecord); venue lists + adapter KEYS are UAC
+  windows; live REST/WS endpoints are in UAC registries, not InstrumentRecord); **venue lists + adapter KEYS are UAC
   data** (`VENUE_TO_ADAPTER_KEY`; IS is the thin resolver —
   `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`, `…/instrument-universe-registry-consolidation.md`);
   **MTDS is market-data only**; service CLIs use `--operation`/`--mode`/`--asset-group`
