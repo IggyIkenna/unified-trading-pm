@@ -147,19 +147,29 @@ source: >-
       required an exact bare-file suffix, so its FIXTURES handler had matched zero real per-league objects since
       fixtures went per-league (independent of which entity name it points at). Source:
       `plans/active/sports_consolidated_closeout_2026_07_19.md`
-- [ ] [CODE] P2. Track O: repair attempted_at on the 112,277 rows from the named pre-clobber snapshot (a normal,
+- [x] ✅ [CODE] P2. Track O: repair attempted_at on the 112,277 rows from the named pre-clobber snapshot (a normal,
       human-watched write window, not unsupervised) Source: `plans/active/sports_consolidated_closeout_2026_07_19.md`
 
       **INVESTIGATED 2026-08-14 (slot-12, backend_engineer) — target keys extinct, repair as specified is moot.**
-                  Full investigation + evidence in the source doc's own Track O entry (this same commit). Summary: the
-                  consolidator-pause safety question is resolved (incremental cycles pass through unchanged canonical rows
-                  untouched, so a direct CAS-write would need no pause) — but a dry-run join of the pre-clobber snapshot against
-                  the LIVE canonical (both the base 4-col dedup key and the full production key, `_dedup_key_sql`-normalized
-                  identically to `manifest_consolidator`) found **0 matching rows**: `venue=BETFAIR` no longer exists (split into
-                  `BETFAIR_SB_UK`/`BETFAIR_EX_EU`/`BETFAIR_EX_UK` by a later venue-taxonomy migration) and current
-                  `data_type='trades'` rows all belong to `venue=ODDS_API`, unrelated. No prod write attempted (nothing to write).
-                  Leaving open — real follow-up is tracing the venue-rename mapping to re-target the repair, out of scope for this
-                  pass (open investigation, not a bounded key-swap).
+          Summary: the consolidator-pause safety question is resolved (incremental cycles pass through unchanged canonical
+          rows untouched, so a direct CAS-write would need no pause) — but a dry-run join of the pre-clobber snapshot against
+          the LIVE canonical (both the base 4-col dedup key and the full production key, `_dedup_key_sql`-normalized
+          identically to `manifest_consolidator`) found **0 matching rows**: `venue=BETFAIR` no longer exists and current
+          `data_type='trades'` rows all belong to `venue=ODDS_API`, unrelated. No prod write attempted (nothing to write).
+          **CORRECTION + CLOSED 2026-08-14 (slot-30, backend_engineer)** — the line above claimed the full investigation +
+          evidence lives "in the source doc's own Track O entry (this same commit)"; that's stale/false — re-checked the
+          source doc's live Track O section (`sports_consolidated_closeout_2026_07_19.md:659`) and it carries no such note,
+          only the original unedited todo text. The real evidence trail is the issue doc slot-12's SAME commit actually
+          filed: `plans/active/issues/sports_track_o_attempted_at_keys_extinct_2026_08_14.md` (`status: open`,
+          `assigned_vm: NA`, one `[DIAG]` follow-up todo). **Independently corroborated slot-12's "not a bounded key-swap"
+          call, not just deferred to it**: `BETFAIR_SB_UK`/`BETFAIR_EX_UK`/`BETFAIR_EX_EU` are registry-level DISTINCT
+          venues (`unified-api-contracts/registry/venue_constants.py:67-69`) — no migration/rename script exists anywhere in
+          `market-tick-data-service` or `unified-api-contracts` mapping bare `BETFAIR` rows 1:1 (or by any documented rule)
+          onto the three new venues; classifying which pre-clobber row belongs to which requires row-level
+          market/region inspection, not a mechanical key substitution. This todo's literal ask (repair the 112,277 rows) has
+          no executable target and no code to ship; closing it here. The genuine remaining work (trace + re-classify) is
+          correctly parked as NA/DIAG in the issue doc above — do not re-open this exact todo, extend that issue doc's todo
+          list instead.
 
 - [x] ✅ [CODE] P2. Track O: locate the emitter of the 139,620 venue=ODDS_API/source=api_football/empty_confirmed rows
       before folding into K2 **ALREADY DONE — duplicate of `sports_consolidated_native_ao_extract_2026_07_25.md`'s own
