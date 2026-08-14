@@ -199,3 +199,19 @@ escalation dispatch/lifecycle code, outside scope here). Bumped the tracked P2 d
 occurrence's evidence rather than opening a new todo — same underlying defect class.
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+
+**slot-5 2026-08-14 (data_pipeline_failure escalation agt-b5c313, FIFTH occurrence)** — a fresh escalation id
+(`agt-b5c313`, dispatch_initiated 07:27:14Z per `/api/activity` event 490825) was dispatched for the SAME VM
+`features-sports-sports-2026-20260810-051126` with a stale boot `CONTEXT`
+(`"Filed issue: (none — alert carries the details)"` + a bare `RELAUNCH vm=...` instruction, no reference to this issue
+doc, the standing operator do-not-relaunch ruling (BLK-4fecb718), or the ≤2/(prefix,day) bound already massively
+exceeded). Same shape as the slot-23/slot-30 occurrences (fresh id, stale context) rather than slot-6's literal
+same-object bounce. Given the extensive same-day re-verification already on record (root cause 2026-08-10, re-verified
+2026-08-13 slot-15, re-verified twice more 2026-08-14 by slot-30 and slot-6, each confirming upstream present +
+recompute done + nothing regressed), did not re-run the GCS/manifest checks a fifth time — no relaunch performed, no
+code change in `deployment-service` (this wall's `$REPO`; the actual defect is agent-orchestrator's escalation
+dispatch/lifecycle layer, outside scope for this one-shot wall). This is now FIVE dispatches of the same resolved wall
+in one day — escalating the severity read on the tracked P2 dispatch-gating todo below from "recurring pattern" to "the
+dispatch gap is actively burning slot capacity every cycle"; did not re-bump the priority number myself (P2 already
+reflects "confirmed recurring", and priority is agent-orchestrator-repo-scoped work this wall cannot action) but
+flagging for whoever picks up that todo that 5 occurrences in <24h materially raises its urgency.
