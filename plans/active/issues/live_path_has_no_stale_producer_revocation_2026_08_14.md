@@ -151,7 +151,28 @@ positions with no automated actor at all. The operator's read (2026-08-14) is th
 while; execution/risk/reconciliation down is the escalation, and the honest answer there is redundancy or a human, not a
 kill switch.
 
-## Proposed todos (for the operator to place)
+## RESOLVED into a plan — the operator made the risk decision 2026-08-14
+
+The decision this issue was blocked on is made, and the work is now
+`/plans/active/producer_silence_flatten_protocol_2026_08_14.md` (15 todos). The answer was not the binary this issue
+posed (hold vs flatten) — it is conditional on whether we still know our position:
+
+- **strategy-service silent + reconciliation UP** → START FLATTENING RISK. Protocol owned by the execution algo,
+  aggressiveness strategy-dependent, and the inputs must be published in advance because the producer is unreachable at
+  that moment.
+- **strategy-service silent + reconciliation DOWN** → we do not know our position, so ALERT ONLY. An operator checks the
+  venues physically, then flattens manually or instructs execution-service. The system must be structurally incapable of
+  trading against a position it cannot see.
+- **Reconciliation-down is fixed first** — escalation with retries and waits. Flattening is a last resort, not a reflex.
+- **Flattening is NOT close-everything**: spreads are allowed, the target is net delta per underlying, and the trade is
+  chosen by POST-TRADE leverage (reducing a long and increasing a short can be delta-equivalent but not
+  leverage-equivalent).
+- **SLAs must exceed ordinary restart and deploy durations** so routine operations never trigger a flatten.
+
+This issue stays open for the parts the plan does not cover: the dependency-health chain's three-level inertness, and
+the launcher-gate guardrail question.
+
+## Original proposed todos (superseded by the plan above)
 
 - [ ] [CODE] P0. Decide the intended live behaviour when a producer goes silent — hold new orders only, or also flatten
       / hand existing exposure to a supervisor. This is a risk decision, not an engineering one, and everything below
