@@ -348,10 +348,32 @@ than proceeding.
       = 30,498 (grown past this todo's 2026-08-08 6,306+16,207=22,513 count, as expected — real capture continued
       between the audit and the restamp). Fold is a genuine side effect of the 19-token restamp, not assumed: verified
       live, not from the prior mapping-code read alone.
-- [ ] [DATA] P0. **Move `odds_horizon_bucket` (135,980 shards) onto the `odds` + `horizon` model.** Three writers emit
-      it today (MDPS 121,762 / MTDS 14,656 / IS 1,106) at two different grains — 123,642 attributed to venue=ODDS_API
-      plus ~12,000 spread per-bookmaker. Re-attribute to the correct per-bookmaker venue and collapse the double-count;
-      state the resulting single grain explicitly.
+- [ ] [DATA] P0. **Move `odds_horizon_bucket` onto the `odds` + `horizon` model.** ~~135,980 shards... MDPS 121,762/MTDS
+      14,656/IS 1,106... 123,642 attributed to venue=ODDS_API~~ **STALE — corrected 2026-08-14 (slot-26), live
+      re-measured**: total `odds_horizon_bucket` manifest rows = 1,070,078 (all `source=mdps_odds_horizon_bucket`, the
+      writer's own literal source tag, not 3 distinct sources); MDPS's own already-shipped
+      `migrate_odds_horizon_bucket_venue_to_bookmaker_2026_07_27.py` +
+      `reclassify_odds_horizon_bucket_unresolvable_rows_2026_07_28.py` (git history: `market-data-processing-service`
+      commits `5517dea9`→`bd9f0063`, `b2762129`→`ec2f9aa5`) had **already re-attributed the bulk to real per-bookmaker
+      venues** (BETVICTOR/WILLIAMHILL/FANDUEL/UNIBET/etc — 165,604 captured rows across 26 real bookmakers) before this
+      session — this todo's own scope was mostly already done, just never flipped. Remaining `venue=ODDS_API` captured =
+      30,608, of which **30,602 are the COARSE per-day aggregate rows the migration script deliberately leaves untouched
+      by design** (no league_id/timeframe — not a gap) and **6 are genuine fine (league_id+timeframe populated)
+      unmigrated rows** — live-probed via the script's own `_read_shard_bookmaker_breakdown`: 1
+      (2020-06-12/SUPERLIGA/T-6h, 4 sub-rows) reconciles cleanly (unibet/betvictor/sport888/paddypower ×1 each) and is
+      the ONLY genuine remaining gap; the other 5 are 404 NotFound against their backing `bucketed.parquet` — stale
+      manifest rows for shards `reprocess_sports_odds.py`'s own `_delete_stale_shards()` already removed, which the
+      migration script's own docstring explicitly classifies as expected/left-untouched, not a defect. **Confirmed via
+      the script's own live `--dry-run`** (generation `1786687266036554`, target-shard count == 6, matches the manual
+      probe exactly) — not assumed from the mapping-code read alone. **`--apply` attempted locally twice this session
+      and OOM-killed both times** (SIGKILL at ~28s despite `free -h` showing 18Gi host-available — a sandbox cgroup
+      limit, not genuine host exhaustion) because the script always loads+rewrites the FULL 15.6M-row manifest
+      regardless of target-row count — this is the "manifest rewrites never run locally" HARD RULE biting even at
+      trivial target scale; manifest verified UNCHANGED/uncorrupted after both kills (re-`--dry-run` showed identical
+      generation + target count). **Remaining scope, tracked explicitly, not silently closed**: run `--apply` on a tiny
+      VM (or accept the 4-row gap as a documented, non-blocking residual — an [OPERATOR] proportionality call, since a
+      dedicated VM launch for 4 rows is disproportionate; see Progress Log). Not marking this todo `[x]` until that gap
+      is either closed or explicitly operator-accepted.
 - [ ] [DATA] P1. **Re-attribute the ODDS_API and FOOTYSTATS venue rows.** ODDS_API's 123,642 `odds_horizon_bucket` + 8
       `trades` and FOOTYSTATS' 22,513 rows must move to `source` with a real per-bookmaker `venue`, or be classified as
       genuinely source-grain rows that need a different home. Do not silently drop them.
