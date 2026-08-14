@@ -77,7 +77,16 @@ locked_since:
 already fixed + locally QG-clean (ruff lint + format pass; not yet run against live GCS):
 
 - `process_preflight.py` — `check_shard_freshness()` call: forward-translate `expected` via
-  `canonical_sports_is_data_type(e) or e`, reverse-map `missing`/`stale` back to the original UAC-uppercase form.
+  `canonical_sports_is_data_type(e) or e`, reverse-map `missing`/`stale` back to the original UAC-uppercase form. Also:
+  `.get(m, m)` instead of `[m]` on the reverse-map lookups (found this session — a hard `[m]` KeyErrors whenever
+  `check_shard_freshness`'s returned missing/stale contains a value outside the translated input list, as
+  `test_process_instruments_all_venues_skipped_before_launch`'s loosely-mocked return demonstrated). **Also found this
+  session, during the final verification sweep**: a SECOND, entirely separate write site at `process_preflight.py:754`
+  (`record_captured_from_counts` in the ENRICHMENT-ONLY reprocess path, gated by a 5-entity `_self_manifested_enr`
+  exclusion set — live/reachable, unlike `process_enrichment.py`'s dead 7-key-gated twin) was NOT part of the original
+  "already fixed" description and was missed by every classification pass until a final whole-repo re-grep caught it —
+  proof the "verify nothing was missed" REVIEW todo is load-bearing, not ceremonial. Fixed identically to the other
+  `entity_name.upper()` SIMPLE sites.
 - `sports_dependency.py` — `_API_FOOTBALL_FIXTURES_DATA_TYPES` widened to a superset
   (`{"FIXTURES", "FIXTURES_SCHEDULE", "fixtures_schedule"}`) rather than a hard swap, so the `.isin()` check is correct
   BOTH before and after the physical re-stamp — no ordering hazard on this one.
@@ -357,24 +366,34 @@ write-side todo below, not a separate pass.
       skip-check instead of after — see the corrected classification method + "NEW FINDING" section above.
       `transfermarkt.py`'s site fixed this session; the remaining 6 (footystats.py=3, sfi.py=1, understat.py=2) are
       fixed inline with those files' write-side todo below, not a separate pass.
-- [ ] [DATA] P0. **Once every site above is classified, author + locally validate the fix code for ALL remaining files**
-      (footystats.py, sfi.py, understat.py, weather.py [DONE], sports_reference_core.py,
-      sports_reference_fixtures_write.py, and whichever `process_*.py` files todo 2 confirms) on the SAME held-back
-      branch as the already-fixed files (`instruments-service@sports-taxonomy-p2-19token-lowercase-codeprep-2026-08-14`)
-      — commit, push to that branch, do NOT merge. Run `bash scripts/quality-gates.sh` (ruff + basedpyright at minimum)
-      before each commit. For footystats.py/sfi.py/understat.py, also apply the corresponding READ-side fix from the
-      todo above in the SAME pass (same functions, same lines already being touched).
-- [ ] [REVIEW] P0. **Once the full branch is complete, verify NO manifest-write call site in the sports reference-data
-      path was missed** — re-run the systematic grep this doc's inventory was built from
-      (`grep -rn "record_captured(\|record_failed(\|record_empty(\|record_captured_from_counts(\|record_expected_empty( \|note_empty(\|note_failed(" instruments_service/engine/orchestrator/*.py instruments_service/reference_data/ *.py`)
-      against the fixed branch and confirm every 19-token site above (and any new one the grep surfaces) is accounted
-      for in the diff. A partial fix that looks complete is the exact failure mode this doc exists to prevent.
+- [x] ✅ [DATA] P0. **Author + locally validate the fix code for ALL remaining files.** DONE — footystats.py (23 write +
+      3 read sites), sfi.py (11 write + 1 read site), understat.py (14 write + 2 read sites), weather.py (9 write
+      sites), sports_reference_core.py (note_failed/note_empty/`_manifest_index_guarded_captured_leagues`/
+      `_emit_empty_gap_for_league`/TEAMS/STANDINGS/INJURIES/`_close_stale_enrichment_expected_unattempted_cells`),
+      sports_reference_fixtures_write.py (2 methods), process_write.py/process_zero_records.py/
+      process_completeness.py/process_fetch.py, and a NEW second site found in process_preflight.py:754 (see below) —
+      all fixed, `instruments-service@5b1b2c72` on the held-back branch, NOT merged. Full `quality-gates.sh` green
+      (ruff + basedpyright + full pytest suite, 5396 passed) — went beyond the "ruff + basedpyright at minimum" bar once
+      the full-suite run surfaced 9 (then 5 more) pre-existing tests asserting the pre-migration uppercase form; all 18
+      assertions across 6 test files updated to expect the new lowercase values, zero real regressions found. Also fixed
+      2 latent bugs surfaced by the full-suite run: `process_preflight.py`'s `_to_original_entity[m]` hard lookup →
+      `.get(m, m)` (KeyErrors when `check_shard_freshness`'s return isn't a subset of the translated input —
+      demonstrated by a loosely-mocked test), and the second `process_preflight.py:754` write site itself.
+- [x] ✅ [REVIEW] P0. **Verify NO manifest-write call site in the sports reference-data path was missed.** DONE — the
+      systematic re-grep caught exactly one straggler (`process_preflight.py:754`, see above), confirming this todo is
+      load-bearing, not ceremonial. Also caught (and fixed) a same-turn regression: 2 parallel same-file `Edit` calls in
+      one message silently dropped one of two intended `replace_all` matches (`process_write.py:381` kept the old
+      uppercase literal despite the tool reporting "all occurrences replaced") — a real tool-batching hazard, not just a
+      classification gap; the fix going forward is to grep-verify every `replace_all` result rather than trust the
+      tool's own success message, especially under same-file parallel edits. Final re-grep after all fixes: zero
+      remaining literal-uppercase manifest-write/read sites outside the two confirmed-dead/confirmed-untouchable
+      exceptions (`process_enrichment.py:191`'s dead branch; UAC-registry lookups' own independent literals).
 - [ ] [OPERATOR] P0. **Bring the completed branch back to `sports_taxonomy_p2_migration_2026_08_08.md`'s `[OPERATOR]`
-      19-token execution todo for the atomic land-and-launch decision** — this doc's job ends at a fully classified +
-      coded + locally-validated branch (WRITE side AND the newly-discovered READ side both fixed); the actual merge + VM
-      launch stays gated on that parent todo per BLK-0a3f3791's resolution (Cloud Run Job auto-deploy risk) and the
-      parent plan's own atomicity rule. **Do not bring this back until the READ-side todo above is also done** — a
-      writes-only branch would fix the stale-shard bug while introducing a permanent re-fetch-storm bug in its place.
+      19-token execution todo for the atomic land-and-launch decision** — this doc's job is now done: a fully
+      classified + coded + locally-validated branch (WRITE side AND the READ side both fixed, full test suite green) at
+      `instruments-service@5b1b2c72`. The actual merge + VM launch stays gated on that parent todo per BLK-0a3f3791's
+      resolution (Cloud Run Job auto-deploy risk) and the parent plan's own atomicity rule — merge and VM launch happen
+      in the SAME window, never separately, and only on explicit operator go-ahead.
 
 ## Progress Log
 
@@ -402,3 +421,18 @@ write-side todo below, not a separate pass.
   reference-data write path are now fully classified with exact line numbers; **the classification phase for this entire
   migration is done**. Only remaining open items: the `TRANSFER_RECORDS` scope question (P1, operator input needed) and
   the 3 code-authoring/verification/land todos below.
+- **2026-08-14 (same session, third follow-up — code-authoring + verification COMPLETE)** — resolved `TRANSFER_RECORDS`
+  (not a 20th token, confirmed via direct UAC source read). Discovered and resolved a classification-method error
+  mid-authoring: `_should_skip_shard`/`_should_skip_date_for_per_league` are manifest-READS needing the translated value
+  BEFORE the call (not UAC-registry lookups needing the original AFTER) — corrected the method, re-ordered
+  transfermarkt.py's already-shipped fix, and fixed the 6 other read sites this surfaced (footystats.py=3, sfi.py=1,
+  understat.py=2) inline with their write-side fixes. Authored + shipped fix code for all 9 remaining files
+  (`instruments-service@5b1b2c72`). Full-suite `quality-gates.sh` run surfaced 14 pre-existing test failures (9 then 5
+  more) — all confirmed the SAME root cause (tests asserting/mocking the pre-migration uppercase manifest form) except
+  one genuine pre-existing bug (`process_preflight.py`'s hard `_to_original_entity[m]` lookup, fixed to `.get(m, m)`).
+  Updated 18 assertions across 6 test files; fixed the dict lookup; found + fixed a second live write site
+  (`process_preflight.py:754`) via the final systematic re-grep — proof that todo was load-bearing. Also hit and
+  documented a same-turn tool hazard: parallel same-file `Edit` calls can silently drop a `replace_all` match despite
+  reporting success — mitigated by grep-verifying every batch's result rather than trusting the tool's own message. Full
+  suite green (5396 passed), branch pushed, NOT merged. **This doc's job is done** — remaining work is the
+  `[OPERATOR]`-gated atomic land-and-launch on the parent plan.
