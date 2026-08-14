@@ -522,16 +522,20 @@ now split: shapes #3/#3b MIGRATED (4b-i COMPLETE 2026-08-06 — 3,574 legacy obj
   a fresh `gcs_bucket_soft_delete_retention_seconds()` check (604800s, reversibility-qualified).
 
 - **Shape #4** (10-segment `data_source=POLYMARKET_CLOB/.../data_type=trades/{cid}.parquet` tree under
-  `raw_tick_data/by_date/day=.../pipeline_mode=batch_polymarket_clob/asset_group=prediction/`): **1,126,358 objects,
-  563,173 unique condition_ids**, 100% of days have canonical flat twins. Merge+delete (4b-iii) is a separate follow-on,
-  gated on 4b-i completing (both share the same canonical target).
+  `raw_tick_data/by_date/day=.../pipeline_mode=batch_polymarket_clob/asset_group=prediction/`): Merge+delete (4b-iii)
+  **COMPLETE 2026-08-14** — `market-tick-data-service@5271ea7c` (timestamp-conversion fix) drove VM
+  `canonical-migration-prediction-shape4-merge-20260812-221112` to EXIT_STATUS=0 over the full 397-day range.
+  **TOTALS**: 799,510 shape #4 objects / 399,749 condition_ids; 737,828 legacy objects deleted; 61,682 objects
+  intentionally KEPT as honest non-canonical (the already-characterized subset-divergent prefixed-twin population, ~8% —
+  content-verified via `_metadata_matches`, never a bare existence check; delete-safety Part 2 correctly refuses these).
+  0 script errors, 0 unexplained anomalies.
 
 See `plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 4b and
 `/codex/02-data/non-canonical-path-inventory.md` row 22 for the full disposition.
 
-| asset_group | effective-from (new writes) | historical backfill state                                                                                                                              |
-| ----------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| prediction  | 2026-07-28                  | shapes #3/#3b MIGRATED + legacy deleted 2026-08-06 (4b-i, 3,574 objects, 0 remaining); shape #4 (1.13M objects enumerated) merge+delete pending 4b-iii |
+| asset_group | effective-from (new writes) | historical backfill state                                                                                                                                                                                   |
+| ----------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| prediction  | 2026-07-28                  | shapes #3/#3b MIGRATED + legacy deleted 2026-08-06 (4b-i, 3,574 objects, 0 remaining); shape #4 MIGRATED + merge+delete COMPLETE 2026-08-14 (4b-iii, 737,828 deleted / 61,682 kept as honest non-canonical) |
 
 ---
 

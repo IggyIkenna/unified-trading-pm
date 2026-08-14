@@ -40,7 +40,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-08-14"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -693,27 +693,19 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   #4 → canonical shape #1 (shape #4 carries richer `title`/`slug`/`eventSlug` metadata, 24 cols vs canonical 22),
   mirroring 4b-i's alias-aware additive-only approach in `migrate_prediction_trades_legacy_bundle_2026_07_28.py`. Filed
   as a new sub-item below.
-- [ ] [DATA] P2. **4b-iii — merge shape #4 into canonical + delete legacy objects.** Gate cleared (4b-i COMPLETE
-      2026-08-06 — both migrations share the same canonical target; concurrent writes would race). Apply the same
-      read-transform-write-per-cell pattern as 4b-i to enrich canonical shape #1 objects with
-      `title`/`slug`/`event_slug` from their shape #4 twins (1,126,358 objects, 348 days, 100% twin coverage confirmed
-      by 4b-ii's enumeration), then delete the now-redundant shape #4 legacy objects after content verification.
-      **Delete safety**: mirror 4b-i's reversibility-qualified pattern — gate the delete on a FRESH
-      `gcs_bucket_soft_delete_retention_seconds()` ≥604800s check before any object deletion (codex delete-safety §3a);
-      no `[OPERATOR]` gate needed per that carve-out. Repo: market-tick-data-service.
-
-      **STATUS 2026-08-12 (slot 18) — FINDING + FIX + RELAUNCH IN FLIGHT.** VM `...-201105` (slot-25's launch) COMPLETED
-          EXIT_STATUS=0 (TOTALS: 1,126,358 objects / 563,173 cids, canonical_already_enriched=1,126,338,
-          legacy_objects_deleted=326,848). **Post-run verify: delete leg INCOMPLETE (29%)** — the shipped script's
-          `_canonical_ts_seconds()` mis-converts canonical `timestamp` when it's int64 unix-seconds (the 2026-01-15+
-          writer format; `pd.to_datetime` misreads seconds-as-ns → every key ≈1s) → `_metadata_matches` false-negatives
-          → 100% of cells wrongly refused on 2026-01-15..2026-04-14 (+4 2025 days) = **94 days / 775,406 objects kept**.
-          FIX SHIPPED: `market-tick-data-service@5271ea7c` (int64 passthrough, +2 tests, QG green) +
-          `deployment-service@b9cbb1b1` (tarball build also broken — 11G gitignored `.tmp/count_check_*` inflated the
-          tarball to 7.7G, overflowed /tmp, shipped stale tarball; added `--exclude='.tmp'`). MTDS tarball republished
-          pinned `5271ea7c` (content-verified). **RELAUNCHED VM `canonical-migration-prediction-shape4-merge-20260812-221112`**
-          (on-demand, full `--apply --delete-legacy`, full range) — retention gate 604800s PASSED, DEPLOYMENT_STARTED,
-          running. Checkbox flips after this VM completes + post-delete verify (final counts in Progress Log).
+- [x] ✅ [DATA] P2. **4b-iii — merge shape #4 into canonical + delete legacy objects — COMPLETE 2026-08-14 (slot 18).**
+      Gate cleared 2026-08-06 (4b-i). Code: `market-tick-data-service@5271ea7c` + `deployment-service@b9cbb1b1`
+      (timestamp-conversion fix, 2026-08-12). **Final VM**
+      `canonical-migration-prediction-shape4-merge-20260812-221112`: EXIT_STATUS=0, self-shut-down, 397/397 days, 0
+      script errors. TOTALS: `shape4_objects=799,510 condition_ids=399,749 legacy_objects_deleted=737,828`. The
+      61,682-object gap reconciles EXACTLY against 30,835 `WARNING ANOMALY ... metadata MISMATCHES ... NOT deleted` log
+      lines — the same subset-divergent population characterized + dispositioned ACCEPT/KEEP 2026-08-10 below, not a new
+      defect. Live spot-check (`gcs_describe_object`+`list_blobs`, not log-trust alone): a logged-kept mismatched object
+      still exists; a 0-anomaly clean day has 0 remaining shape #4 objects.
+      `/codex/02-data/canonical-cutover-register.md` §6e + `/codex/02-data/non-canonical-path-inventory.md` row 22
+      updated (both said "pending"). **Prior finding (2026-08-12)**: the first full-range VM (`...-201105`) hit
+      EXIT_STATUS=0 but only 29% deleted — `_canonical_ts_seconds()` mis-converted int64-unix-second timestamps on 94
+      post-2026-01-15 days; fixed + relaunched.
 
 - [x] ✅ [DATA] P2. **Characterize the shape-#4 subset-divergent cells (canonical ⊂ shape #4)** — discovered 2026-08-10
       (slot 25, 4b-iii dry-run): ~10% of cells (9/85 on day 2025-03-14, e.g. `0x58b3...`, `market_type=range_bracket`)
@@ -998,3 +990,9 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
 - **2026-08-10T22:30Z (slot 25, data_engineering, 4b-iii post-compaction RESUME)**: Session died mid-4b-iii; all repos
   ahead=0 (both code legs survived). VM 201105 RUNNING at [174/397], 0-loss: deleted=35,036 anomalies(kept)=3,641
   enriched=0 objects=41,194. No overwrites/mis-deletes; monitor re-armed. POST /done after migration + 4b-iii flip.
+
+- **2026-08-14 (slot 18, data_engineering, 4b-iii CLOSE)**: detail is in the todo's own text above (kept out of the
+  Progress Log for the line cap). **Every top-level `- [ ]` here is now checked** — plan is archival-eligible per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. Archival (incl. migrating the Deferred sections
+  — a judgment-call audit, out of this dispatched todo's scope) is tracked as its own follow-up:
+  `/plans/active/issues/prediction_batch4_deferred_migration_and_archival_2026_08_14.md`.
