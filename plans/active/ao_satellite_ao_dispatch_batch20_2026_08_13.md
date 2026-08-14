@@ -247,9 +247,17 @@ source: >-
       upstream issue carries a confirmed-fixed-in version to track against; noting for the record in case a FUTURE CLI
       bump lands on/near 2.1.47-2.1.50-adjacent regressions, but no action needed today. Source:
       `plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`
-- [ ] [CODE] P2. Build the dashboard UI toggle for scheduled-dispatch pause/resume (the API is already shipped and live;
-      only the UI wiring + Playwright pw:L2 coverage remains) Source:
-      `plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`
+- [x] ✅ [CODE] P2. Build the dashboard UI toggle for scheduled-dispatch pause/resume (the API is already shipped and
+      live; only the UI wiring + Playwright pw:L2 coverage remains) — agent-orchestrator@33c050e3e0: new
+      `ScheduledDispatchPanel` (mirrors `PrerequisitesPanel`'s toggle-list shape) lists every `plan_health.VALID_MODES`
+      entry (11, incl. the separately-ticked `ci_reconcile`) with a live pause/resume `Toggle`, backed by the
+      already-shipped `GET/POST /api/scheduled-dispatch/...` endpoints; wired into both `DesktopLayout` rail spots +
+      `MobileTriage`'s Triage tab via a new `scheduledDispatchStatus`/`pauseScheduledDispatch`/`resumeScheduledDispatch`
+      api.ts trio and a `ScheduledDispatchStatusView` type. Playwright pw:L2 coverage added at
+      `dashboard/tests/e2e/scheduled-dispatch-pause.spec.ts` (2 tests: default-unpaused listing + pause/resume
+      round-trip), run green against the shared default e2e backend — modes come from a static backend dict so no
+      fixture seeding was needed. `tsc --noEmit`, `vitest run` (346 passed), and full `quality-gates.sh` (3740 passed)
+      all green. Source: `plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`
 - [x] ✅ [CODE] P2. Wire resource-watchdog's existing pressure/cgroup_mem tick log into the same death-correlation
       capture path as the other host/account/pane fields — STALE-CHECKBOX correction, not new work: the source doc's own
       copy of this exact todo is already
