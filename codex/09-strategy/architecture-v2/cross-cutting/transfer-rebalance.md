@@ -57,10 +57,11 @@ code_refs:
 > | Four competing transfer-type enums, no shared vocabulary                                             | ✅ FIXED `unified-api-contracts@4663daf908` |
 > | Nothing sends `REBALANCE_PERIOD_TICK`, so `_handle_rebalance_period_tick` never fires                | ✅ FIXED `strategy-service@46f8728472`      |
 > | `compute_rebalance_transfers()` does not exist — zero non-test `TransferRequest(` construction sites | ✅ FIXED `strategy-service@46f8728472`      |
+> | No DeFi wallet-balance SOURCE to feed `compute_rebalance_transfers()`                                | ✅ FIXED `strategy-service@c55b586c9c`      |
 >
-> **All four original breaks are closed. One integration gap remains before transfers actually happen**: nothing sources
-> real `WalletBalance` rows to feed `compute_rebalance_transfers()` — no DeFi wallet-balance tracker exists (see §
-> "Sweep and gas reserve"). The computation is correct and tested; it has no live input.
+> **All five breaks above are closed — `WalletBalanceSource` (wrapping UTL's `CustodyPinger`) is built, tested, and
+> wired into `client_worker.py::_handle_rebalance_period_tick`.** One gap remains, one level further in than before: see
+> § "Sweep and gas reserve" for it — it is now about live custody-client construction, not about the source existing.
 >
 > Live plan:
 > [service-config-ownership-and-instruction-contract](/plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md)
@@ -147,9 +148,14 @@ to express per-asset gas reserves. Do not force a fit.
 
 `compute_rebalance_transfers()` (`strategy_service/transfer_coordinator.py`, shipped `strategy-service@46f8728472`)
 therefore takes a purpose-built **`WalletBalance`** (venue / asset / amount / usd_value / chain_id) as an explicit
-parameter. **No production caller is wired yet**, because no DeFi wallet-balance tracker exists to source real
-`WalletBalance` rows — the computation is correct and tested, and connecting it to live balances is a further
-integration step. That gap is the honest remaining distance between "transfers compute" and "transfers happen".
+parameter. **The source now exists**: `strategy_service/position/core/wallet_balance_source.py::WalletBalanceSource`
+(shipped `strategy-service@c55b586c9c`) wraps UTL's `CustodyPinger`, converts each `CustodyPingResult` into a
+`WalletBalance` row, and is wired into `client_worker.py::_handle_rebalance_period_tick` — an unreachable ping or a
+native balance with no USD price is DROPPED, never zero-filled. **One gap remains, one level further in**:
+`ClientContext.wallet_balance_source` defaults to `None` in production, because constructing a live `CustodyPinger`
+needs real custodian/RPC clients built from a client's credentials, which is deliberately not wired here —
+credential/key-material handling is operator-gated. That is now the honest remaining distance between "transfers
+compute" and "transfers happen".
 
 ## Target-state protocol
 
