@@ -49,6 +49,13 @@ priority: P2
 drift_direction: advance-code
 depends_on: []
 archive_exempt: true # 0 open todos by design (monitoring + docs done); backfill fix/relaunch tracked in tradfi_vix_backfill_launch_failed_2026_08_10.md
+context_scope:
+  [
+    /plans/active/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md,
+    /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
+    /plans/archive/issues/databento_concurrency_gating_audit_2026_08_09.md,
+    /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md,
+  ]
 ---
 
 # VIX futures full-history backfill
@@ -126,3 +133,4 @@ which is authoritative.
   finding; scope-ruling doc flip done) and the remaining real work (schema fix, manifest row_key fix, relaunch, verify)
   is fully tracked as 4 open todos in `/plans/active/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md`. Kept in
   `plans/active/` as the origin/context doc for that follow-up; 0-open-todo state is intentional + durable.
+- **context-scout 2026-08-14**: populated context_scope (4 entries).

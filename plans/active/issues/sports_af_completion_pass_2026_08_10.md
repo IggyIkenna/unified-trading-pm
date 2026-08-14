@@ -36,6 +36,12 @@ priority: P1
 assigned_role: data_engineering
 drift_direction: advance-data
 depends_on: []
+context_scope:
+  [
+    instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py,
+    deployment-service/scripts/vm/launch-api-football-backfill-vm.sh,
+    /plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
+  ]
 ---
 
 ## Todos
@@ -795,3 +801,4 @@ automator still alive, re-launch if session teardown killed it.
     VM completion, not a genuine blocker — skipping with `reason_code: GATED` so the fleet cooldown arms instead of the
     task immediately re-dispatching to the next heartbeat. Next worker should re-verify VM health + chain-automator
     liveness (same durability caveat — session-bound background process) and re-run the census.
+- **context-scout 2026-08-14**: populated context_scope (3 entries).

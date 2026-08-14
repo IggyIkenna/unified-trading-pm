@@ -47,6 +47,13 @@ supersedes:
 superseded_by:
 resolved_by:
 source: slot 11, 2026-08-12, corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize archival session
+context_scope:
+  [
+    /plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
+    /plans/archive/2026_08/issues/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    unified-trading-pm/scripts/plan-hygiene/check_line_caps.sh,
+  ]
 ---
 
 # Stale referrer to an archived doc's pre-archival path — blocked on the doc's own prettier/line-cap state
@@ -102,3 +109,5 @@ Two-step landing, per the codex doc's own prescribed fix:
   archival session — the direct fix was attempted, hit the prettier-reflow/line-cap interaction described above, and was
   reverted rather than forced through. Rest of the archival (source doc + finalize plan both archived, codex rule
   migrated, `infrastructure_master.md`'s own link fixed) landed clean; this is the one referrer left outstanding.
+
+- **context-scout 2026-08-14**: populated context_scope (4 entries).

@@ -48,6 +48,13 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+    /codex/02-data/sports-fixtures-lifecycle.md,
+    features-service/features_service/sports/data/gcs_reader.py,
+    features-service/features_service/sports/cli/handlers/batch_handler.py,
+  ]
 ---
 
 # sports features DP-VM-001 — upstream fixtures gap (2026-08-10)
@@ -190,3 +197,5 @@ relaunch bound massively exceeded, operator do-not-relaunch ruling standing) —
 performed, no code change in `deployment-service` (this wall's `$REPO`; the fix belongs in agent-orchestrator's
 escalation dispatch/lifecycle code, outside scope here). Bumped the tracked P2 dispatch-gating todo above with this
 occurrence's evidence rather than opening a new todo — same underlying defect class.
+
+- **context-scout 2026-08-14**: populated context_scope (4 entries).

@@ -58,6 +58,12 @@ source:
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    instruments-service/scripts/build_instrument_catalogue.py,
+    deployment-service/terraform/gcp/lifecycle_catalogue_scheduler.tf,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+  ]
 ---
 
 # DP-CATALOG-001: sports catalogue stale — daily job OOMs at 4Gi on the 17.1M-row manifest read
@@ -149,3 +155,4 @@ tradfi/prediction — a provisioning fix for a real data-volume growth curve, no
   `deployment-service@1218fad3` + `instruments-service@783b448a` both `git merge-base --is-ancestor`
   origin/live-defi-rollout. No recurrence risk under the 16Gi provisioning (gg4kh proved the config at scale). P3
   streaming-read follow-up left tracked below as the only remaining open item.
+- **context-scout 2026-08-14**: populated context_scope (3 entries).

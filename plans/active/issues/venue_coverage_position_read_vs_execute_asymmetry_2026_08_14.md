@@ -31,6 +31,14 @@ created: 2026-08-14
 owner:
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /codex/06-coding-standards/integration-testing-layers.md,
+    /plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md,
+    /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
+    strategy-service/strategy_service/position/position_interface/factory.py,
+    execution-service/execution_service/defi_execution/protocols,
+  ]
 ---
 
 # Venue coverage — read vs execute asymmetry
@@ -298,3 +306,7 @@ silently-wrong result rather than a loud failure.
 - **ripgrep's `-r` is `--replace`, not `--recursive`** (grep's is recursive). `rg -rn 'LidoConnector|...'` silently
   substituted every match with the literal `n` and produced plausible-looking but corrupted output —
   `class n(BaseConnector)`. It fails _quietly_, as valid-looking results. rg recurses by default; drop the `-r`.
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (5 entries).

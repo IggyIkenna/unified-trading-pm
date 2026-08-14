@@ -38,6 +38,12 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    /plans/active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md,
+    unified-trading-pm/scripts/setup-workspace-venv.sh,
+    unified-trading-pm/scripts/openapi/generate-unified-openapi.sh,
+  ]
 ---
 
 # .venv-workspace + openapi-regen batch11 findings
@@ -181,3 +187,5 @@ ship.
   (`ALL QUALITY GATES PASSED`, sentinel matched HEAD `fe613ad6b`). Shipped via quickmerge:
   `unified-trading-pm@089e89c2a` (gate script + shell wiring + doc fix) and `unified-trading-pm@fe613ad6b` (QG exclude
   fix) — both verified ancestors of `origin/live-defi-rollout`.
+
+- **context-scout 2026-08-14**: populated context_scope (3 entries).

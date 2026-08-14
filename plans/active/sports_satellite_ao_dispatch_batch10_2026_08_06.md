@@ -56,6 +56,13 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+  ]
 ---
 
 # Sports satellite AO batch 10 — /ag-closeout-audit orphan extraction (2026-08-06)
@@ -367,3 +374,4 @@ orphan verdict; writes/retags belong to the owning tranche's audit. All NEW (not
     fixture with a kickoff 12h/4h/2h out re-enters the calendar. Flipped todo 2a `- [x]` on this evidence per the todo's
     own "or a cited reason why a horizon cannot fire" done-when clause — an unbounded wait for a specific live fixture
     to materialize is not further-session-actionable work.
+- **context-scout 2026-08-14**: populated context_scope (4 entries).

@@ -28,6 +28,11 @@ archive_exempt: true
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/archive/2026_08/infra_capture_and_devops_leftovers_2026_07_06.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+  ]
 ---
 
 ## What I found
@@ -93,3 +98,4 @@ STARTED <60s + progress + terminal state).
   running the full corpus-wide archival ritual in the same pass; this doc has ~3 corpus referrers, genuinely
   0-open-todos/done, intentional terminal state. Revisit for a proper archive (banner + git mv + referrer fix) in a
   dedicated plan-hygiene pass.
+- **context-scout 2026-08-14**: populated context_scope (2 entries).

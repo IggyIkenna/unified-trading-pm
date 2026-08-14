@@ -51,6 +51,13 @@ resolved_by:
 locked_by:
 depends_on: [tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09]
 gate_on_depends: true
+context_scope:
+  [
+    /plans/active/issues/tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
+    deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh,
+    deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
+  ]
 # 2026-08-12 (/plan-reconcile): wired a real machine gate — the sole remaining open todo's `BLOCKED-ON:` free-text
 # marker does not match `_BLOCKED_TOKEN_RE`'s alternation (verified against the regex quoted live in
 # blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md — `ON` is not one of the recognized
@@ -101,7 +108,7 @@ investigated further here (out of scope for this incident) — flagged as a foll
 
 ## Fix applied
 
-`deployment-service@6b1057cc` (same-session): `VM_TASK=cefi-backfill` → `VM_TASK=mtds-backfill` +
+`deployment-service@c99ab99b` (same-session): `VM_TASK=cefi-backfill` → `VM_TASK=mtds-backfill` +
 `metadata="${metadata},VM_SOURCE=databento"`, mirroring the identical fix already shipped in
 `launch-tradfi-forward-poll.sh` (which carries its own comment documenting this exact failure mode). Re-launch of the 5
 ES_OPT VMs with the fixed script confirmed all 5 surviving past the previous 2-4 minute failure window (boot/setup phase
@@ -306,7 +313,7 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
   post-fix re-observation step instead of shipping an unsupported change. No code shipped this pass (investigation + doc
   update only). Did not relaunch ES_OPT (out of scope, singleton-lock collision risk with concurrent fleet work).
 - **2026-08-09, slot-28**: Discovered + root-caused + fixed live while executing batch6 todo #2. Fix committed
-  `deployment-service@6b1057cc`; re-launch in progress, VMs surviving past the previous failure window at time of
+  `deployment-service@c99ab99b`; re-launch in progress, VMs surviving past the previous failure window at time of
   filing.
 - **2026-08-09T~04:41Z, slot-28**: Fix landed on `live-defi-rollout` (`deployment-service@c99ab99b8`, rebased SHA of the
   same content — ancestry-verified on origin). QG hit the 600s timing gate 3× standalone (1343s, timeout, 708s) before
@@ -478,3 +485,5 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
   likely still occupied** by that new set (any RUNNING `tradfi-bf-*` holds the lock) — not re-verified against the
   ES_OPT retry directly this session; the P1 BLOCKED-ON tag stays as-is until the new issue's kill/no-kill call
   resolves.
+
+- **context-scout 2026-08-14**: populated context_scope (4 entries).

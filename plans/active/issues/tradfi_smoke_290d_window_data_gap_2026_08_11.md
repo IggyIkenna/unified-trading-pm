@@ -40,6 +40,14 @@ locked_by:
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/02-data/honest-coverage-model.md,
+    /plans/archive/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md,
+    /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
+    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    e2e-testing/scripts/build_smoke/coverage_harness.py,
+  ]
 ---
 
 ## Finding
@@ -87,3 +95,7 @@ smoke slice = `INSUFFICIENT_HISTORY` (honest), harness shipped and verified.
 > **RULED 2026-08-12 (/plan-reconcile, operator interactive)**: Option 1 — accept `INSUFFICIENT_HISTORY` until the
 > tracked tradfi backfill work closes the window. No harness/window change. Re-check status once KRX/in-window
 > `attempted_failed` coverage closes.
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (5 entries).

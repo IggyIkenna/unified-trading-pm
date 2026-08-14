@@ -22,6 +22,13 @@ parent_epic: infrastructure_master
 source: interactive-session
 resolved_by: unified-trading-pm@c389fe9dc (loop); frontmatter fixed in-session
 locked_by:
+context_scope:
+  [
+    scripts/setup.sh,
+    scripts/quickmerge.sh,
+    scripts/quality-gates-base/base-library.sh,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 assigned_vm: NA
 execution_scope: local-only
 priority: P1
@@ -134,3 +141,7 @@ Pure-doc content was landed via `scripts/dev/safe-doc-push.sh` (the sanctioned d
 Found during the 2026-08-09 Google Cloud spend-forecast session while trying to commit
 `/codex/11-project-management/cloud-spend-forecast-and-credits-2026-08.md` and its tooling. Four attempts consumed a
 material share of that session's budget — hence this doc, so the next session does not repeat them.
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (4 entries).
