@@ -455,6 +455,70 @@ tier_a_merge_gate_ok() {
   return 0
 }
 
+# ── Ancestor-cleanup, hoisted ABOVE the SIT gate (2026-08-14,
+# sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md todo 3) ───────────────────────
+# The superseded-ref cleanup (further below, right after STEP 1's ref-freeze) only runs once the
+# content + SIT + label-check gates have all PASSED for this tick — every one of which can
+# `_done BLOCKED; return 0` before reaching it. Under high LDR velocity that is exactly when a
+# promote PR most needs cleaning up: its immutable per-SHA head can never receive a later fix, so
+# it sits red and open, permanently, until the SIT gate happens to pass on some future tick — and
+# meanwhile pages the lag monitor (confirmed live: PR #939, closed by hand 2026-08-10 because the
+# bot itself could never reach the code that would have closed it).
+#
+# Design constraint (do NOT loosen — must not mass-close): a stale-headed open promote/$REPO/* PR
+# is closed here ONLY when BOTH hold:
+#   (a) its head SHA is a STRICT ANCESTOR of the current LDR tip ($LDR_SHA) — verified via the
+#       compare API, never inferred from ref-name mismatch alone. $PROMOTE_HEAD degrades to a
+#       bare "promote/$REPO/" prefix when $LDR_SHA is empty (a failed API read), which would make
+#       EVERY open promote PR look superseded — the exact naive-hoist risk this constraint exists
+#       to close. Guarded below by refusing to run at all when $LDR_SHA is empty.
+#   (b) quality-gates-v2 has already CONCLUDED failure on that exact head SHA (status=completed,
+#       conclusion=failure) — a still-pending/in-progress run might yet pass, so it is left alone.
+# An immutable per-SHA ref satisfying both can never merge and can never be fixed in place, so
+# closing it discards no viable promotion.
+_close_ancestor_failed_promote_prs() {
+  if [ -z "$LDR_SHA" ]; then
+    echo "  ancestor-cleanup $REPO: skipped (empty LDR_SHA — cannot safely identify an ancestor)"
+    return 0
+  fi
+  _ANCESTOR_CANDIDATE_HEADS=$(gh pr list --repo "$OWNER/$REPO" --base main --state open \
+    --json headRefName \
+    --jq ".[] | select(.headRefName | startswith(\"promote/$REPO/\")) | select(.headRefName != \"$PROMOTE_HEAD\") | .headRefName" \
+    2>/dev/null || echo "")
+  for _ANCESTOR_HEAD in $_ANCESTOR_CANDIDATE_HEADS; do
+    _ANCESTOR_PR=$(gh pr list --repo "$OWNER/$REPO" --base main --head "$_ANCESTOR_HEAD" \
+      --state open --json number,headRefOid 2>/dev/null || echo "")
+    _ANCESTOR_NUM=$(printf '%s' "$_ANCESTOR_PR" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d[0]["number"] if d else "")' 2>/dev/null || echo "")
+    _ANCESTOR_SHA=$(printf '%s' "$_ANCESTOR_PR" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d[0]["headRefOid"] if d else "")' 2>/dev/null || echo "")
+    if [ -z "$_ANCESTOR_NUM" ] || [ -z "$_ANCESTOR_SHA" ] || [ "$_ANCESTOR_SHA" = "$LDR_SHA" ]; then
+      continue
+    fi
+    # (a) strict-ancestor check: compare base=$_ANCESTOR_SHA...head=$LDR_SHA — "ahead" means the
+    # LDR tip carries commits the PR head does not, i.e. the PR head IS an ancestor of it.
+    _ANCESTOR_CMP=$(gh api "repos/$OWNER/$REPO/compare/${_ANCESTOR_SHA}...${LDR_SHA}" \
+      --jq '.status' 2>/dev/null || echo "")
+    if [ "$_ANCESTOR_CMP" != "ahead" ]; then
+      echo "  ancestor-cleanup $REPO: PR #$_ANCESTOR_NUM (head=$_ANCESTOR_HEAD) is not a strict ancestor of LDR tip ${LDR_SHA:0:12} (compare status='${_ANCESTOR_CMP:-unknown}') — leaving for the normal superseded-ref cleanup"
+      continue
+    fi
+    # (b) required check CONCLUDED failure on that exact (immutable) head SHA.
+    _ANCESTOR_V2_FAILED=$(gh run list --repo "$OWNER/$REPO" --workflow quality-gates-v2.yml --limit 20 \
+      --json headSha,status,conclusion \
+      --jq "[.[]|select(.headSha==\"$_ANCESTOR_SHA\" and .status==\"completed\" and .conclusion==\"failure\")]|length" \
+      2>/dev/null || echo "0")
+    if [ "${_ANCESTOR_V2_FAILED:-0}" = "0" ]; then
+      echo "  ancestor-cleanup $REPO: PR #$_ANCESTOR_NUM (head=$_ANCESTOR_HEAD) is an ancestor of LDR tip but quality-gates-v2 has not CONCLUDED failure on ${_ANCESTOR_SHA:0:12} — leaving open (still viable or still checking)"
+      continue
+    fi
+    echo "  ancestor-cleanup $REPO: PR #$_ANCESTOR_NUM (head=$_ANCESTOR_HEAD, ${_ANCESTOR_SHA:0:12}) is a strict ancestor of LDR tip ${LDR_SHA:0:12} with quality-gates-v2 CONCLUDED failure — an immutable head that can never merge; closing now instead of waiting for the SIT gate to clear"
+    if [ "$DRY_RUN" != "true" ]; then
+      gh pr close "$_ANCESTOR_NUM" --repo "$OWNER/$REPO" \
+        --comment "Closed by LDR→main fleet bot (ancestor-cleanup, hoisted above the SIT gate): superseded by LDR tip ${LDR_SHA:0:12}, and this PR's own quality-gates-v2 already concluded failure on its immutable head — it can never merge." 2>/dev/null || true
+      GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X DELETE "repos/$OWNER/$REPO/git/refs/heads/$_ANCESTOR_HEAD" 2>/dev/null || true
+    fi
+  done
+}
+
 process_repo() {
   REPO="$1"
   _done() { printf '%s\n' "$1" > "$RESULT_DIR/$REPO"; }
@@ -604,6 +668,13 @@ process_repo() {
   fi
 
   PROMOTE_HEAD="promote/$REPO/${LDR_SHA:0:12}"
+
+  # Run the ancestor-cleanup NOW — before the content-identical skip below and before the SIT
+  # differ/gate section further down, both of which can return/block before ever reaching the
+  # original superseded-ref cleanup near STEP 1. See _close_ancestor_failed_promote_prs()'s own
+  # header comment for the full rationale + the design constraint it enforces.
+  _close_ancestor_failed_promote_prs
+
   MAIN_TREE=$(gh api "repos/$OWNER/$REPO/commits/main" \
     --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_MAIN")
   if [ "$LDR_TREE" = "$MAIN_TREE" ]; then
