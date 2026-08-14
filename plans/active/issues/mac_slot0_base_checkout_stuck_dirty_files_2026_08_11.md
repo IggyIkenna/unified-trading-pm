@@ -74,9 +74,14 @@ fast-forward).
       obviously safe to auto-resolve (a staged-but-uncommitted workflow file, a lockfile drift, a gate-config edit).
       Once resolved, slot 0 should read clean on the next FF-cron tick. Repo: unified-trading-pm (base checkout is
       workspace-level, not repo-specific).
-- [ ] [SCRIPT] P3. **Identify + fix the source of the stray `<repo>/<repo>` self-referential symlinks** (2026-08-09
+- [x] ✅ [SCRIPT] P3. **Identify + fix the source of the stray `<repo>/<repo>` self-referential symlinks** (2026-08-09
       15:28, uniform across every repo in the base checkout) and clean up the existing ones — cosmetic (doesn't block
-      FF), but worth tracing to stop it recurring. Repo: unified-trading-pm.
+      FF), but worth tracing to stop it recurring. Repo: unified-trading-pm. **SHIPPED —
+      `unified-trading-pm@820984d53d`** (repo-level self-referential-link heal added to `link-claude-skills.sh`, the
+      canonical self-healer every host runs on QG/setup/pm-pull; no committed generator found via `git log --all -S`, so
+      healing-at-the-self-healer is the durable fix). Reconciled 2026-08-14 per
+      `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 1 (evidence from
+      `ao_satellite_ao_dispatch_batch20_2026_08_13.md`).
 
 ## Progress Log
 

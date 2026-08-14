@@ -71,6 +71,21 @@ that exemption removes docs which SHOULD NOT be re-read at all, while this makes
 the remaining genuine review debt visible without blocking. Neither alone was
 enough — the exemption still left live docs tipping on the calendar.
 
+DE-COHORTING (2026-08-14) — even a non-blocking digest still arrives as a flood
+when a whole batch of docs shares one `last_reviewed` stamp: they all cross the
+90-day line on the same calendar day. Each doc's effective window is therefore
+`staleness_days + jitter(doc)`, where `jitter` is a stable 0..13-day offset
+derived from the doc's WORKSPACE-RELATIVE path (never the built-in `hash()`,
+which is salted per-process by `PYTHONHASHSEED` and would move a doc's cutover
+day on every run/slot). Keying off the relative path (not the absolute one)
+matters: every `.tabs/<N>/` slot worktree has a different absolute prefix, and
+the same doc must land on the same cutover day regardless of which slot's gate
+computes it. This spreads a same-day cohort's digest entries across ~2 weeks
+instead of one flood, per
+`/plans/active/issues/qg_ratchets_block_unrelated_ships_2026_08_12.md`'s
+"De-cohort the thresholds" todo. It only changes WHEN `stale` fires (already
+advisory); it does not touch the three blocking authoring reasons.
+
 `--strict` still fails on ANY violation including staleness — that is the mode a
 scheduled digest/audit job uses. Partitioning fails CLOSED: only reasons listed
 in `CLOCK_DRIVEN_REASONS` are advisory, so a reason added later blocks by
@@ -93,6 +108,7 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import hashlib
 import sys
 from pathlib import Path
 from typing import cast
@@ -124,6 +140,26 @@ CUTOVER_CRITICAL_DIRS = (
 )
 DEFAULT_STALENESS_DAYS = 90
 DEFAULT_BASELINE_PATH = Path(__file__).parent / "codex_doc_freshness_baseline.yaml"
+
+# Spread of the per-doc jitter offset added to staleness_days (see DE-COHORTING in the
+# module docstring). 14 days matches the todo's own suggestion and the cohort's own
+# observed size (a batch shares one last_reviewed stamp, so 14 days is plenty to break
+# same-day flood into a trickle without meaningfully loosening the 90-day cadence).
+JITTER_SPREAD_DAYS = 14
+
+
+def _jitter_days_for_path(rel_path: str) -> int:
+    """Stable 0..JITTER_SPREAD_DAYS-1 offset for a doc, keyed on its WORKSPACE-RELATIVE path.
+
+    Never uses the builtin ``hash()`` — it is salted per-process by ``PYTHONHASHSEED``, so the
+    same doc would land on a different cutover day on every invocation/slot. sha256 over a
+    path relative to the repo root is deterministic across processes, machines, and the
+    per-slot ``.tabs/<N>/`` absolute-prefix worktrees (codex_doc_freshness_baseline.yaml's own
+    relative-path convention, reused here for the same portability reason).
+    """
+    digest = hashlib.sha256(rel_path.encode("utf-8")).digest()
+    return int.from_bytes(digest[:4], "big") % JITTER_SPREAD_DAYS
+
 
 # A doc carrying one of these statuses is formally retired: it is no longer the SSOT for
 # anything, and it is not supposed to still match the running system.
@@ -247,12 +283,22 @@ def _is_retired_with_successor(fm: dict[str, object]) -> bool:
 
 
 def _check_parsed(
-    path: Path, fm: dict[str, object] | None, staleness_days: int, today: datetime.date
+    path: Path,
+    fm: dict[str, object] | None,
+    staleness_days: int,
+    today: datetime.date,
+    workspace_root: Path | None = None,
 ) -> FreshnessViolation | None:
     """Freshness verdict for an ALREADY-parsed frontmatter dict.
 
     Split out from `_check_doc` so `main()` can parse each doc's frontmatter exactly once and
     still classify retired-exempt docs separately, rather than re-reading all 316 files.
+
+    ``workspace_root``, when given, anchors the de-cohorting jitter to a WORKSPACE-RELATIVE
+    path (see ``_jitter_days_for_path``) so the same doc jitters identically across every
+    slot's `.tabs/<N>/` worktree. ``None`` falls back to ``str(path)`` — still deterministic
+    within a single process/run (adequate for direct unit tests that pass bare tmp_path files
+    with no shared repo root to anchor against).
     """
     if fm is None:
         return FreshnessViolation(path, "no-frontmatter")
@@ -264,18 +310,24 @@ def _check_parsed(
     last_reviewed = _parse_last_reviewed(last_reviewed_raw)
     if last_reviewed is None:
         return FreshnessViolation(path, "invalid-last_reviewed-format", str(last_reviewed_raw)[:40])
+    rel_anchor = _relative_path(path, workspace_root) if workspace_root is not None else str(path)
+    jitter = _jitter_days_for_path(rel_anchor)
+    effective_staleness_days = staleness_days + jitter
     age = (today - last_reviewed).days
-    if age > staleness_days:
+    if age > effective_staleness_days:
         return FreshnessViolation(
             path,
             "stale",
-            f"{age}d old (limit {staleness_days}d; last_reviewed={last_reviewed})",
+            f"{age}d old (limit {effective_staleness_days}d = {staleness_days}d + {jitter}d jitter; "
+            f"last_reviewed={last_reviewed})",
             owner=str(fm.get("owner") or ""),
         )
     return None
 
 
-def _check_doc(path: Path, staleness_days: int, today: datetime.date) -> FreshnessViolation | None:
+def _check_doc(
+    path: Path, staleness_days: int, today: datetime.date, workspace_root: Path | None = None
+) -> FreshnessViolation | None:
     """Parse-and-check a single doc. Convenience wrapper over `_check_parsed`.
 
     Catches :class:`FrontmatterParseError` so a present-but-malformed frontmatter block is
@@ -286,7 +338,7 @@ def _check_doc(path: Path, staleness_days: int, today: datetime.date) -> Freshne
         fm = _parse_frontmatter(path)
     except FrontmatterParseError as exc:
         return FreshnessViolation(path, "yaml-parse-error", str(exc))
-    return _check_parsed(path, fm, staleness_days, today)
+    return _check_parsed(path, fm, staleness_days, today, workspace_root=workspace_root)
 
 
 class BaselineSnapshot:
@@ -473,7 +525,7 @@ def main() -> int:
         if fm is not None and _is_retired_with_successor(fm):
             exempt_retired.append(doc)
             continue
-        v = _check_parsed(doc, fm, staleness_days, today)
+        v = _check_parsed(doc, fm, staleness_days, today, workspace_root=pm_root)
         if v is not None:
             violations.append(v)
 

@@ -9,6 +9,7 @@ summary: >-
   recycles, and it was masked before the measurement fix because forces only ever fired at 99-100 where a session is
   unrecoverable anyway.
 status: open
+archive_exempt: true
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -103,15 +104,25 @@ never executed". With forces now firing from 60, the two separate cleanly — an
       `tests/test_tmux_spawn_targets.py` — `pane_has_queued_messages` (detect/absent/error), `submit_to_pane`
       (clears/retry/stuck/error) + `test_repro_queued_compact_returns_true_but_shows_queued` proving the full ambiguity.
       All 27 tests in the file pass (re-verified in the batch12-finalize review).
-- [ ] [BACKEND] P3. **Re-measure the wedge rate once the above lands.** Baseline to beat, measured on the clean fleet
+- [x] ✅ [BACKEND] P3. **Re-measure the wedge rate once the above lands.** Baseline to beat, measured on the clean fleet
       after `c6e6d982a`/`9b269c0ce`: ~3.5 wedges/hr with forces distributed 62-97. Pre-measurement-fix baseline was
-      ~9.7/hr with every force at 91-100.
+      ~9.7/hr with every force at 91-100. **MEASURED 2026-08-14 — `agent-orchestrator@3ee2996783`**
+      (`scripts/orchestrator/forced_compact_wedge_rate_readout.py`, permanent readout tool): worker wedge rate over a
+      96h post-all-3-fixes window = **0.0104/hr** (1 wedge in 96h) — a ~330-930x reduction vs both baselines above; sole
+      wedge was the expected single-force-saturation-at-pct=100 case, not the queued-message bug these fixes targeted.
+      Reconciled 2026-08-14 per `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 1 (evidence from
+      `ao_satellite_ao_dispatch_batch20_2026_08_13.md`).
 
 ## Codex SSOTs
 
 - `/codex/04-architecture/agent-orchestrator-worker-liveness.md` — pane classification + inject contract
 
 ## Progress Log
+
+- **2026-08-14 (batch20-finalize reconciliation)**: this doc's last open todo (re-measure the wedge rate) flipped `[x]`
+  — the doc now has zero open todos. **Not archived here — `archive_exempt: true` set deliberately**: real archival
+  (6-step ritual + corpus referrer fixup) is explicit scope of `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md`
+  todo 2, a separate dispatched unit of work, not this reconciliation pass. Drop `archive_exempt` when that todo runs.
 
 - **2026-08-08 (interactive session, slot 1)**: Isolated while validating the context-measurement fix. The measurement
   fix did not cause this — it uncovered it. Mitigated in the same session by `agent-orchestrator@989592628`, which stops

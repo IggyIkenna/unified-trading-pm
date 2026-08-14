@@ -159,7 +159,14 @@ choice (human-executed, not AO-dispatched).
       scouted, then flip `docspec.py`'s `context_scope` FieldSpec from `Req.E` to `Req.R` for `plan`+`issue` as the
       final hardening commit. **This is the same item actively tracked and worked as todo 1 of
       `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`** (that doc is the live tracking home — see this
-      doc's own Progress Log entry below).
+      doc's own Progress Log entry below). **Not flipped here — still open.**
+      `ao_satellite_ao_dispatch_batch20_2026_08_13.md`'s finalize session (2026-08-14) confirmed this todo was a
+      duplicate extraction of the same batch3 work and, rather than leave a re-dispatchable duplicate, did real
+      incremental work under batch20 instead: `NEVER_SCOUTED` corpus count 101→6 (5 `locked_by`-skipped + 1
+      line-cap-deferred), shipped in `unified-trading-pm@6117942be5`, `@3bc392cd0d`, `@716dcf3467`. The remaining
+      `STALE` docs + the `docspec.py` FieldSpec flip stay tracked under batch3's own todo 1 per this doc's own design
+      above — no reclassification here. Reconciled 2026-08-14 per
+      `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 1.
 
 ## Progress Log
 

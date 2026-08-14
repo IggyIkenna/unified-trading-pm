@@ -245,7 +245,11 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
 - [x] [INFRA] P0. Second mass burst even at reduced fleet — DONE, informed further investigation, superseded.
 - [x] [INFRA] P2. `sock_throttled` at the cgroup level — superseded, root cause found (unrelated metric).
 - [x] [INFRA] P3. `ao-self-pull` took ~1h not ~15min to redeploy a commit — real finding, tracked separately now.
-- [x] [INFRA] P3. Dashboard UI for scheduled-dispatch pause/resume — deferred, unrelated to root cause, not lost.
+- [x] [INFRA] P3. Dashboard UI for scheduled-dispatch pause/resume — **SHIPPED (correction 2026-08-14, was mis-annotated
+      "deferred"):** `agent-orchestrator@33c050e3e0` — `ScheduledDispatchPanel` wired into both `DesktopLayout` +
+      `MobileTriage`, backed by the already-shipped `GET/POST /api/scheduled-dispatch/...` endpoints, 2 Playwright pw:L2
+      tests. Reconciled per `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 1 (evidence from
+      `ao_satellite_ao_dispatch_batch20_2026_08_13.md`).
 - [x] [INFRA] P0. THIRD live catch, 2026-08-12 01:34:55 — folded into the eventual root-cause evidence chain.
 - [x] [INFRA] P0. FOURTH live catch — `fleet-git-health-guard.sh` lead, real but partial; see next item.
 - [x] [INFRA] P0. `fleet-git-health-guard.sh` de-prioritized + overlap-locked — SHIPPED 2026-08-12 (a real fix, kept).

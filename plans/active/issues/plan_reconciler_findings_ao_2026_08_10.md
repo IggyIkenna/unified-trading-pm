@@ -180,9 +180,10 @@ directly or filed:
   (`task*id`→`task_id`, `\*\*`→`**` ×2, `ORCHESTRATOR*\*`→`ORCHESTRATOR_*`, `dispatch*id`→`dispatch_id`); fixed 3
   instances of stale "5-step ritual"→"6-step ritual" (1 also needed the missing "update every referrer's path
   corpus-wide" step re-inserted into its own inline enumeration); resolved 1 confirmed hedge-pointer table row (see
-  Contradictions). — `unified-trading-pm@75e9b0c9c5`/`@da75f355bb`. Note: the corpus-wide `run_hygiene_sweep.sh`'s "No
-  prettier emphasis-mangling" check reported PASS despite these 5 live instances existing — a checker blind spot worth a
-  follow-up, filed below.
+  Contradictions). — `unified-trading-pm@da75f355bb` (citation corrected 2026-08-14: the SHA previously recorded here,
+  `75e9b0c9c5`, does not resolve — a rebase rewrote it; see `unified-trading-pm@02855016f5`). Note: the corpus-wide
+  `run_hygiene_sweep.sh`'s "No prettier emphasis-mangling" check reported PASS despite these 5 live instances existing —
+  a checker blind spot worth a follow-up, filed below.
 - Repointed 2 stale referrers (`ao_satellite_ao_dispatch_batch5_2026_08_03.md`, `..._batch5_finalize_2026_08_03.md`)
   from the now-archived `batch4_finalize` active-path citation to its real archive path —
   `unified-trading-pm@80b01dea70`. One further referrer (`plans/epics/orchestrator_master.md`, 2 hits) intentionally
@@ -265,42 +266,80 @@ budget.
       `ao_boot_stub_session_vars_field_name_mismatch_2026_08_02.md`'s framing, given batch9's confirmed counter-example
       (an AO-dispatched worker edited that exact file via normal dispatch, `agent-orchestrator@5353b6b`). Source: this
       run's Contradictions section.
-- [ ] [DOCS] P3. Once `orchestrator_vm_e2e_hardening_2026_07_24.md` exits grace: fix its self-contradictory frontmatter
-      (`assigned_vm: NA` + `execution_scope: orchestrator-agent` → should be `local-only`, matching the
+- [x] ✅ [DOCS] P3. Once `orchestrator_vm_e2e_hardening_2026_07_24.md` exits grace: fix its self-contradictory
+      frontmatter (`assigned_vm: NA` + `execution_scope: orchestrator-agent` → should be `local-only`, matching the
       already-corrected sibling-doc precedent in
       `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`). Source: this run's Contradictions
-      section.
-- [ ] [DOCS] P3. Once `deepseek_flash_ab_routing_test_2026_08_05.md` exits grace: update its stale Deferred table rows
-      for todos 2/4/17b (say "not done, pick up directly" while the next paragraph says they're already shipped via
+      section. **ALREADY SHIPPED — `unified-trading-pm@c7cddb75f6`** (landed before this batch's own dispatch;
+      re-verified 2026-08-14, file already reads `assigned_vm: NA` + `execution_scope: local-only`, no code change
+      needed). Reconciled 2026-08-14 per `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 1 (evidence from
+      `ao_satellite_ao_dispatch_batch20_2026_08_13.md`).
+- [x] ✅ [DOCS] P3. Once `deepseek_flash_ab_routing_test_2026_08_05.md` exits grace: update its stale Deferred table
+      rows for todos 2/4/17b (say "not done, pick up directly" while the next paragraph says they're already shipped via
       batch12) — same fix class already applied directly to batch7's Deferred bullet this run. Source: this run's
-      Contradictions section.
-- [ ] [DOCS] P3. Once `plans/epics/orchestrator_master.md` exits its own heavy-edit window: repoint its 2 stale
+      Contradictions section. **SHIPPED — `unified-trading-pm@abf2caa2cb`** (fixed all 3 rows to cite the batch12 SHAs +
+      fixed a dangling archival-banner cross-reference, on the now-archived
+      `plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md`). Reconciled 2026-08-14 per
+      `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 1 (evidence from
+      `ao_satellite_ao_dispatch_batch20_2026_08_13.md`).
+- [x] ✅ [DOCS] P3. Once `plans/epics/orchestrator_master.md` exits its own heavy-edit window: repoint its 2 stale
       referrers (L53, L467) from `../active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md` to
       `../archive/2026_08/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md`. Source: this run's Hygiene fixes.
-- [ ] [DOCS] P3. Once `ao_satellite_ao_dispatch_batch12_2026_08_09.md` exits grace: fix todo at L184-186 — move the
+      **SHIPPED — `unified-trading-pm@b791a7d5cd`** (fixed both hits — L53 frontmatter list entry, L476 section-header
+      link — mirroring the existing batch5/6/7 archived-referrer link precedent). Reconciled 2026-08-14 per
+      `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 1 (evidence from
+      `ao_satellite_ao_dispatch_batch20_2026_08_13.md`).
+- [x] ✅ [DOCS] P3. Once `ao_satellite_ao_dispatch_batch12_2026_08_09.md` exits grace: fix todo at L184-186 — move the
       tag-history meta-commentary off the literal first physical line, and reconcile the `[BACKEND]` routing tag against
       the todo's own claim of `[OPERATOR]`-adjacency (`--apply` mutates live production rows via SSM). Source: this
-      run's Contradictions section.
-- [ ] [BACKEND] P3. Once `ao_model_main_agent_as_first_class_slot_2026_08_10.md` exits grace: add
+      run's Contradictions section. **SHIPPED — `unified-trading-pm@abbf555e32`** (on the now-archived
+      `plans/archive/2026_08/ao_satellite_ao_dispatch_batch12_2026_08_09.md`). Reconciled 2026-08-14 per
+      `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 1 (evidence from
+      `ao_satellite_ao_dispatch_batch20_2026_08_13.md`).
+- [x] ✅ [BACKEND] P3. Once `ao_model_main_agent_as_first_class_slot_2026_08_10.md` exits grace: add
       `sequential: true`-equivalent ordering (or merge) between its 2 open `[BACKEND] P2` todos — both target
       `server/context_lifecycle.py` with no file-disjointness, a same-priority-concurrent-dispatch collision risk.
-      Source: this run's Contradictions section.
-- [ ] [DOCS] P3. Once `ao_scheduled_job_reserve_and_staggering_2026_08_04.md` exits grace: add
+      Source: this run's Contradictions section. **MOOT, no code change needed** — the target doc is now fully resolved
+      and archived (`plans/archive/2026_08/issues/ao_model_main_agent_as_first_class_slot_2026_08_10.md`, all todos
+      `[x]`); both flagged todos shipped the same day as `agent-orchestrator@bef2f6b` (todo 5) and
+      `agent-orchestrator@abcdee3` (todo 6), before the collision this finding warned about ever materialized — nothing
+      left to gate. Reconciled 2026-08-14 per `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 1 (evidence
+      from `ao_satellite_ao_dispatch_batch20_2026_08_13.md`).
+- [x] ✅ [DOCS] P3. Once `ao_scheduled_job_reserve_and_staggering_2026_08_04.md` exits grace: add
       `sequential:`/`gate_on_depends` between its L322 (enabler) and L364 (dependent) open todos — currently only
-      prose-gated. Source: this run's Contradictions section.
-- [ ] [SCRIPT] P3. Investigate why `run_hygiene_sweep.sh`'s "No prettier emphasis-mangling" check reported PASS despite
-      5 confirmed live `_`→`*` mangling instances in `ao_open_issues_consolidated_close_out_2026_07_17.md` (fixed this
-      run, `unified-trading-pm@75e9b0c9c5`) — possible checker blind spot for this specific corruption shape/location.
-      Source: this run's Hygiene fixes.
-- [ ] [DOCS] P2. Once `ao_orphan_audit_followup_triage_2026_07_30.md` exits grace: correct its todo 1's stale claim that
-      `ao_satellite_ao_dispatch_batch2_2026_07_30.md` "already carries real, ready fixes" for
+      prose-gated. Source: this run's Contradictions section. **MOOT, no code change needed** — re-read the doc fresh
+      2026-08-14: the exact enabler/dependent pair this finding flagged has since both been checked off (enabler shipped
+      `agent-orchestrator@0c27963`, dependent closed 2026-08-11) — the doc's 2 remaining open todos don't reference each
+      other in prose, so there is no current open-open gating relationship left to encode. Reconciled 2026-08-14 per
+      `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 1 (evidence from
+      `ao_satellite_ao_dispatch_batch20_2026_08_13.md`).
+- [x] ✅ [SCRIPT] P3. Investigate why `run_hygiene_sweep.sh`'s "No prettier emphasis-mangling" check reported PASS
+      despite 5 confirmed live `_`→`*` mangling instances in `ao_open_issues_consolidated_close_out_2026_07_17.md`
+      (fixed this run, `unified-trading-pm@da75f355bb`) — possible checker blind spot for this specific corruption
+      shape/location. Source: this run's Hygiene fixes. **ROOT-CAUSED, 2 distinct causes, 1 fixed —
+      `unified-trading-pm@85ee358018`**: 2 mangles (`task*id`/`dispatch*id`) were genuinely missing from
+      `check_prettier_mangling.sh`'s curated allowlist (fixed); 1 (backticked `` `ORCHESTRATOR*\*` ``) is the checker
+      working as designed (backticked spans are deliberately excluded); 2 (`\*\*`→`**`) are a different corruption class
+      (escaped-emphasis, out of scope for this gate) — no fix attempted, noted for a future dedicated investigation.
+      Reconciled 2026-08-14 per `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 1 (evidence from
+      `ao_satellite_ao_dispatch_batch20_2026_08_13.md`).
+- [x] ✅ [DOCS] P2. Once `ao_orphan_audit_followup_triage_2026_07_30.md` exits grace: correct its todo 1's stale claim
+      that `ao_satellite_ao_dispatch_batch2_2026_07_30.md` "already carries real, ready fixes" for
       `ao_recovery_audit_layer1_deleted_2026_07_15` — re-verified false via fresh grep (zero hits naming that doc in
       batch2). Already flagged unfixed by context-scout 2026-08-03/05/07; this is the 4th miss on record for the same
-      stale pointer. Source: this run's Contradictions section.
-- [ ] [DOCS] P3. Once `ao_main_review_force_compact_idle_gate_unreachable_2026_08_09.md` exits grace: update its
+      stale pointer. Source: this run's Contradictions section. **SHIPPED — `unified-trading-pm@1ec65bed86`** (struck
+      `ao_recovery_audit_layer1_deleted_2026_07_15` from the archived triage doc's todo 1 list, with a Correction note
+      citing the 5 prior re-verifications; noted the underlying doc was independently resolved via
+      `deployment-service@1a8346db` instead). Reconciled 2026-08-14 per
+      `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 1 (evidence from
+      `ao_satellite_ao_dispatch_batch20_2026_08_13.md`).
+- [x] ✅ [DOCS] P3. Once `ao_main_review_force_compact_idle_gate_unreachable_2026_08_09.md` exits grace: update its
       frontmatter `title:` field (still says "unreachable") to match the body's 2026-08-10 entry, which explicitly
       supersedes that framing ("gate is rarely reached... working as designed"). Source: this run's Contradictions
-      section.
+      section. **SHIPPED — `unified-trading-pm@fabca25c6e`** (retitled both the frontmatter `title:` and the body H1 on
+      the now-archived `plans/archive/issues/ao_main_review_force_compact_idle_gate_unreachable_2026_08_09.md`).
+      Reconciled 2026-08-14 per `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` todo 1 (evidence from
+      `ao_satellite_ao_dispatch_batch20_2026_08_13.md`).
 - [ ] [DOCS] P3. Once `ao_satellite_ao_dispatch_batch9_2026_08_08.md` exits grace: fix its own internal arithmetic
       inconsistency (L82-84 claims re-checking 48 items — "45 declined-orphan docs plus 3 conditional" — but its own
       breakdown at L86-110 sums to 59: 13+9+1+1+35). Doesn't change the actionable conclusion (still 1 new AO-eligible
