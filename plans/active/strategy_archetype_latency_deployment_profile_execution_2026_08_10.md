@@ -283,7 +283,7 @@ source: >-
   returns zero commits — no operator ruling has landed. Same conclusion as slots 7 and 21: all three sub-items require
   operator judgment, not a worker guess. Filed the recommended guard fix as a tracked, dispatchable issue doc (rather
   than a fourth prose recommendation):
-  `/plans/active/issues/ao_backlog_regen_missing_self_declared_not_ao_eligible_guard_2026_08_14.md` (repo:
+  `/plans/archive/2026_08/issues/ao_backlog_regen_missing_self_declared_not_ao_eligible_guard_2026_08_14.md` (repo:
   agent-orchestrator, `_PERMANENT_NON_DISPATCHABLE_RE` in `server/regen_backlog_from_plan.py`).
 - **backend_engineer (slot 10) 2026-08-14, same dispatch
   `strategy_archetype_latency_deployment_profile_execution-73c2e13d68fc` — FOURTH recurrence, RE-CONFIRMED
@@ -293,6 +293,9 @@ source: >-
   `basic` vs the decision artifact's `standard` (gap 4 unresolved),
   `git log ab157b54a1..HEAD -- codex/04-architecture/ RUNTIME_TOPOLOGY_DECISIONS.md configs/runtime-topology.yaml` still
   returns zero commits. Same conclusion as slots 7, 21, 26 — all three require operator judgment. The guard-fix issue
-  doc slot 26 filed (`ao_backlog_regen_missing_self_declared_not_ao_eligible_guard_2026_08_14.md`) is still
-  `status: open` with its fix todo unclaimed — not re-filing a duplicate; that issue doc's own todo is the actual fix
-  for this recurrence pattern.
+  doc slot 26 filed is now RESOLVED + archived — slot 18, 2026-08-14, shipped the guard fix
+  (agent-orchestrator@5c3dfb58c8: `_PERMANENT_NON_DISPATCHABLE_RE` extended with self-declared non-AO-eligibility
+  patterns + `test_parse_skips_self_declared_not_ao_eligible_todos` regression test, QG green) —
+  `/plans/archive/2026_08/issues/ao_backlog_regen_missing_self_declared_not_ao_eligible_guard_2026_08_14.md`. A future
+  regen tick should stop dispatching this plan's residual-gaps todo; if it recurs after this fix lands, that's a fresh
+  guard-gap, not this same root cause.

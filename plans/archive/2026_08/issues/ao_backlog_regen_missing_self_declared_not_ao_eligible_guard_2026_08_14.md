@@ -16,7 +16,7 @@ source:
   ]
 assigned_vm: planning
 execution_scope: orchestrator-agent
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -28,11 +28,16 @@ related:
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /plans/active/strategy_archetype_latency_deployment_profile_execution_2026_08_10.md,
   ]
-resolved_by:
+resolved_by: agent-orchestrator@5c3dfb58c8 — extended _PERMANENT_NON_DISPATCHABLE_RE + regression test, QG green.
 locked_by:
 priority: P2
 tags: [dispatch-scope, backlog-regen, guard-gap, recurring]
 ---
+
+> **🟢 ARCHIVED 2026-08-14** — status=resolved, sole todo done. `_PERMANENT_NON_DISPATCHABLE_RE` in
+> `agent-orchestrator/server/regen_backlog_from_plan.py` extended with self-declared non-AO-eligibility patterns +
+> `test_parse_skips_self_declared_not_ao_eligible_todos` regression test — agent-orchestrator@5c3dfb58c8, QG green.
+> Archived per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 # regen_backlog_from_plan.py dispatches checkboxes that self-declare "not AO-eligible"
 
