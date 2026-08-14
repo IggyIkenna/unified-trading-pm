@@ -95,7 +95,7 @@ normally.
       only "DEFERRED" hits were incidental prose ("verdict deferred to the investigation result", "no deferred `- [ ]`
       left in this plan") — added the honest closing banner. `vm_launcher_durable_log_observability_2026_06_19` had
       exactly 1 open item, already correctly migrated to
-      `plans/active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md` in prose but in a form (`& MIGRATED** to` +
+      `plans/archive/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md` in prose but in a form (`& MIGRATED** to` +
       markdown link, no literal `successor:`/`MIGRATED TO:`/`→ plans/active/` token) the regex didn't recognize — added
       a proper banner naming that real successor doc. Verified each via direct re-run of `check_plan_discipline.py`: 102
       → 98 (all 4 confirmed resolved, no other counts moved). Re-baselined 102 → 98 via `--baseline-write` (real

@@ -406,18 +406,18 @@ default from an external reference.
       (OmniRoute no-go) — one coherent call about which providers this workspace routes to, recorded in two docs.
 
       **Why closed rather than left open**: the original done-when required proving the abstraction "via a real
-                                                      isolated local pilot dispatch", which needs a provisioned credential for a provider the operator has just ruled
-                                                      out — "for now we are going to work with claude and deepseek only" (same session). As written the todo was
-                                                      **unsatisfiable without reversing that ruling**, so leaving it open would put a permanently un-actionable item in
-                                                      front of every future audit. When a second provider IS adopted, running that pilot dispatch simply *is* the
-                                                      integration work — not a separate task to remember — and the operator's own estimate for that integration is "a
-                                                      few hours".
+                                                          isolated local pilot dispatch", which needs a provisioned credential for a provider the operator has just ruled
+                                                          out — "for now we are going to work with claude and deepseek only" (same session). As written the todo was
+                                                          **unsatisfiable without reversing that ruling**, so leaving it open would put a permanently un-actionable item in
+                                                          front of every future audit. When a second provider IS adopted, running that pilot dispatch simply *is* the
+                                                          integration work — not a separate task to remember — and the operator's own estimate for that integration is "a
+                                                          few hours".
 
-                                                      **Known, accepted risk — state it plainly rather than let the ✅ imply more than it should**: this code has never
-                                                      executed against a real second provider. It is tested (34 pre-existing routing tests pass unmodified, plus
-                                                      simulated multi-provider-failover tests) but unproven in production, and a no-op cannot regress anything today.
-                                                      **The first real second-provider integration must treat this as unverified code**, not as a working feature to
-                                                      configure. Do not re-file this as a standing todo — re-open it at that moment instead.
+                                                          **Known, accepted risk — state it plainly rather than let the ✅ imply more than it should**: this code has never
+                                                          executed against a real second provider. It is tested (34 pre-existing routing tests pass unmodified, plus
+                                                          simulated multi-provider-failover tests) but unproven in production, and a no-op cannot regress anything today.
+                                                          **The first real second-provider integration must treat this as unverified code**, not as a working feature to
+                                                          configure. Do not re-file this as a standing todo — re-open it at that moment instead.
 
 - [x] [DATA] P2. ✅ Generalize the DeepSeek-specific health-gate ring to a per-provider map (failing free provider
       degrades to the next-priority free provider before falling back to Claude). — `agent-orchestrator@24bd611`, proven
@@ -437,9 +437,9 @@ default from an external reference.
       directly rather than waiting for the abstraction.
 
       **Explicitly NOT a permanent no**, and the reason it needs no standing todo: per the operator, integrating a
-                                                      further model later is **"not going to be hard, maybe a few hours of work only."** A cheap, well-understood
-                                                      future option does not need to sit open in the corpus being re-audited every sweep — re-open this only when
-                                                      there is an actual decision to add a provider. **Do not re-file this as a follow-up**: closing it is the point.
+                                                          further model later is **"not going to be hard, maybe a few hours of work only."** A cheap, well-understood
+                                                          future option does not need to sit open in the corpus being re-audited every sweep — re-open this only when
+                                                          there is an actual decision to add a provider. **Do not re-file this as a follow-up**: closing it is the point.
 
 - [x] [UI] P1. ✅ Surface DeepSeek's real dollar balance on the dashboard (available-balance-only design — DeepSeek's
       API exposes no spend/usage-history endpoint). — New `DeepSeekBalancePoller` (30-min cadence) +
@@ -478,25 +478,25 @@ default from an external reference.
       exact resource name is recorded in this todo.
 
       **PREPARED 2026-08-08 (operator ruling, ao round-5 apply session item 19): "Operator will create it - needs
-                                      Claude to provide the exact secret name + gcloud/aws command to run."** Proposed name (matching this repo's
-                                      existing `{vendor}-api-key` GSM convention — see `tardis-api-key`/`databento-api-key`/`graph-api-key` in
-                                      `/codex/05-infrastructure/auth-setup.md`, extended with the account variant since DeepSeek now has 2 distinct
-                                      keys, pro + flash, per `deepseek_flash_ab_routing_test_2026_08_05.md`): **`deepseek-v4-pro-api-key`** (project
-                                      `central-element-323112`, matching every other secret cited above). Exact command (run on whichever host holds
-                                      the live literal key, currently `~/.claude-accounts/deepseek-v4-pro.env`'s `ANTHROPIC_AUTH_TOKEN` value — do
-                                      NOT paste the key into shell history; use the `-n`-into-stdin form or a temp file deleted after):
-                                      ```bash
-                                      gcloud config set project central-element-323112
-                                      echo -n "<the literal ANTHROPIC_AUTH_TOKEN value from ~/.claude-accounts/deepseek-v4-pro.env>" | \
-                                        gcloud secrets create deepseek-v4-pro-api-key \
-                                          --data-file=- \
-                                          --replication-policy=automatic
-                                      ```
-                                      If/when the flash account (`deepseek-v4-flash.env`, provisioned on the orchestrator VM per the A/B test plan's
-                                      todo 6, not present on this host) also needs GSM-sourcing, the matching name is **`deepseek-v4-flash-api-key`**
-                                      (same command, swap the secret name + source the flash env file's token instead). Once created, hand the exact
-                                      name(s) to an agent session to wire the re-sourcing (next todo) — no guessing needed, this doc already states
-                                      the name.
+                                          Claude to provide the exact secret name + gcloud/aws command to run."** Proposed name (matching this repo's
+                                          existing `{vendor}-api-key` GSM convention — see `tardis-api-key`/`databento-api-key`/`graph-api-key` in
+                                          `/codex/05-infrastructure/auth-setup.md`, extended with the account variant since DeepSeek now has 2 distinct
+                                          keys, pro + flash, per `deepseek_flash_ab_routing_test_2026_08_05.md`): **`deepseek-v4-pro-api-key`** (project
+                                          `central-element-323112`, matching every other secret cited above). Exact command (run on whichever host holds
+                                          the live literal key, currently `~/.claude-accounts/deepseek-v4-pro.env`'s `ANTHROPIC_AUTH_TOKEN` value — do
+                                          NOT paste the key into shell history; use the `-n`-into-stdin form or a temp file deleted after):
+                                          ```bash
+                                          gcloud config set project central-element-323112
+                                          echo -n "<the literal ANTHROPIC_AUTH_TOKEN value from ~/.claude-accounts/deepseek-v4-pro.env>" | \
+                                            gcloud secrets create deepseek-v4-pro-api-key \
+                                              --data-file=- \
+                                              --replication-policy=automatic
+                                          ```
+                                          If/when the flash account (`deepseek-v4-flash.env`, provisioned on the orchestrator VM per the A/B test plan's
+                                          todo 6, not present on this host) also needs GSM-sourcing, the matching name is **`deepseek-v4-flash-api-key`**
+                                          (same command, swap the secret name + source the flash env file's token instead). Once created, hand the exact
+                                          name(s) to an agent session to wire the re-sourcing (next todo) — no guessing needed, this doc already states
+                                          the name.
 
 - [ ] [INFRA] P2. **Re-source `ANTHROPIC_AUTH_TOKEN` from the GSM secret on BOTH hosts** — this machine and the planning
       VM — so `~/.claude-accounts/deepseek-v4-pro.env` no longer contains the literal key. ~~BLOCKED on the operator
@@ -513,14 +513,14 @@ default from an external reference.
       this doc's own new `[OPERATOR] P2` balance-recurrence todo above.
 
       > **⚠️ Measurement trap recorded 2026-08-06 — do not repeat it.** This todo's earlier line "Confirmed 2026-08-04:
-                                                      > no `deepseek*` secret exists in GSM yet" should be re-verified before being trusted. A 2026-08-06 attempt to
-                                                      > re-confirm it returned an empty list that looked like proof of absence but was **permission denial**: the
-                                                      > session identity (`github-actions-deploy@central-element-323112`) lacks `secretmanager.secrets.list` on
-                                                      > `central-element-323112`, `uts-prod`, and `unified-trading-system`, and `gcloud secrets list --filter=...`
-                                                      > exits 0 with no rows rather than erroring visibly when filtered. **Check the identity's permission before
-                                                      > reading an empty secret list as absence** — same class as the journald-retention trap recorded in
-                                                      > `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`, where a `--since` predating
-                                                      > retention returned a confident zero that meant nothing.
+                                                          > no `deepseek*` secret exists in GSM yet" should be re-verified before being trusted. A 2026-08-06 attempt to
+                                                          > re-confirm it returned an empty list that looked like proof of absence but was **permission denial**: the
+                                                          > session identity (`github-actions-deploy@central-element-323112`) lacks `secretmanager.secrets.list` on
+                                                          > `central-element-323112`, `uts-prod`, and `unified-trading-system`, and `gcloud secrets list --filter=...`
+                                                          > exits 0 with no rows rather than erroring visibly when filtered. **Check the identity's permission before
+                                                          > reading an empty secret list as absence** — same class as the journald-retention trap recorded in
+                                                          > `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`, where a `--since` predating
+                                                          > retention returned a confident zero that meant nothing.
 
 - [x] [INFRA] P1. ✅ Durable per-task token usage (`TaskUsageRow`, any provider), persisted at `/done`. —
       `agent-orchestrator@b310c68`. Same-session follow-up: historical backfill script (dry-run default) +
@@ -556,20 +556,20 @@ default from an external reference.
       recorded here so it survives even if nobody writes the script (read-only, runs on the AO VM):
 
       ```sql
-          -- account_id distribution over spawns/dispatches, last 24h
-          -- DB: file:<repo>/agent-orchestrator/data/state/state.db?mode=ro   (open read-only; run as ubuntu)
-          SELECT json_extract(details_json,'$.account_id') AS a, COUNT(*) AS n
-          FROM activity_log
-          WHERE ts > datetime('now','-24 hours')
-            AND json_extract(details_json,'$.account_id') NOT IN ('')
-          GROUP BY a ORDER BY n DESC;
-          ```
+              -- account_id distribution over spawns/dispatches, last 24h
+              -- DB: file:<repo>/agent-orchestrator/data/state/state.db?mode=ro   (open read-only; run as ubuntu)
+              SELECT json_extract(details_json,'$.account_id') AS a, COUNT(*) AS n
+              FROM activity_log
+              WHERE ts > datetime('now','-24 hours')
+                AND json_extract(details_json,'$.account_id') NOT IN ('')
+              GROUP BY a ORDER BY n DESC;
+              ```
 
-          Done when: either a small read-only readout script lands under `agent-orchestrator/scripts/orchestrator/` with a
-          lifecycle marker, or the config.py comment carries the query inline so "re-measure" names its own method. Note the
-          measurement trap found this session: the split is only visible in `account_id` on spawn/dispatch rows — event-type
-          greps for `deepseek`/`free_provider` return nothing useful, so an agent probing that way concludes the A/B is
-          inactive when it is running normally. Repo: agent-orchestrator.
+              Done when: either a small read-only readout script lands under `agent-orchestrator/scripts/orchestrator/` with a
+              lifecycle marker, or the config.py comment carries the query inline so "re-measure" names its own method. Note the
+              measurement trap found this session: the split is only visible in `account_id` on spawn/dispatch rows — event-type
+              greps for `deepseek`/`free_provider` return nothing useful, so an agent probing that way concludes the A/B is
+              inactive when it is running normally. Repo: agent-orchestrator.
 
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
@@ -596,3 +596,107 @@ default from an external reference.
   real Claude-headroom-dependent run this checkout cannot exercise), 1 is a CLI-version/design fix on a fleet-wide
   worker-boot-critical-path file, 1 is a data check explicitly "not locally doable — `accounts.json` is
   gitignored/per-VM." None bounded for a background worker today.
+
+## Phase 3 — GLM (Zhipu) onboarding + DeepSeek peak/off-peak pricing (2026-08-14)
+
+**Why.** Same-session operator ruling (interactive, 2026-08-14): onboard GLM as a second fallback provider using the
+SAME generalized `select_account_for_spawn()`/`AccountProvider` mechanism Phase 2 already built — GLM's Coding Plan
+exposes a native Anthropic-compatible endpoint (`https://api.z.ai/api/anthropic`), so this is a config/registry
+addition, not new mechanism, mirroring DeepSeek's own onboarding exactly. Separately: DeepSeek is changing its own
+pricing structure to peak/off-peak at **2026-08-16T16:00:00Z** — confirmed directly from `api-docs.deepseek.com`
+2026-08-14 (peak windows 01:00-04:00 UTC + 06:00-10:00 UTC = 7h/day; off-peak = exactly 50% of peak; **every off-peak
+rate is still above today's pre-change price**, this is a net price increase, not a discount tier). Operator ruling:
+disable DeepSeek entirely during its own peak window and route elsewhere automatically, rather than dispatch at 2x.
+Every new provider gets a DeepSeek-style accurate-usage-capture proxy (operator instruction, 2026-08-14) — self-reported
+numbers are not trusted by default, per this plan's own precedent (DeepSeek's compat endpoint under-reported before
+`deepseek_native_proxy_server.py` was built to catch it). Routing stays simple for now — even split across all
+registered providers/models, same pattern as the existing flash-vs-pro A/B (operator, 2026-08-14: "just route things
+even split ... because I just want to get an idea of how well they complete things and also how much things cost ...
+We'll calibrate everything").
+
+**New exact DeepSeek rates** (USD/1M tokens, effective 2026-08-16T16:00:00Z):
+
+|                           | Off-peak | Peak (exactly 2x off-peak) |
+| ------------------------- | -------- | -------------------------- |
+| V4-Flash cache-hit input  | $0.007   | $0.014                     |
+| V4-Flash cache-miss input | $0.22    | $0.44                      |
+| V4-Flash output           | $0.66    | $1.32                      |
+| V4-Pro cache-hit input    | $0.022   | $0.044                     |
+| V4-Pro cache-miss input   | $0.66    | $1.32                      |
+| V4-Pro output             | $1.98    | $3.96                      |
+
+**Non-goal (explicit):** GLM-5.2 and GLM-4.7-FlashX are pooled under ONE Coding Plan Max subscription ($160/mo, ~1,600
+prompts/5h + 8,000/wk) — not metered pay-per-token API billing. Do not register a separate metered GLM rate card unless
+the operator later decides to also run pay-per-token GLM alongside the subscription.
+
+### Todos
+
+- [ ] [OPERATOR] P1. Complete Z.ai GLM Coding Plan Max signup and hand over the API key + confirm the exact
+      Anthropic-compatible base URL (`https://api.z.ai/api/anthropic`, per Z.ai's own Claude Code integration docs —
+      verify still current at signup time). Done when: a real key exists and is handed to an agent session for
+      registration.
+- [ ] [INFRA] P1. Register the GLM Coding Plan account end to end mirroring the DeepSeek account pattern exactly: env
+      file (`ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN`, `unset CLAUDE_CODE_OAUTH_TOKEN`) + `accounts.json` entry +
+      GSM secret `glm-coding-plan-api-key` (new naming-SSOT entry, `/codex/05-infrastructure/secret-manager-naming.md`
+      §2.7 has no LLM-provider-key convention yet — add one while here, matching the `{vendor}-api-key` pattern already
+      used for `deepseek-v4-pro-api-key`). Done when: `AUTH_OK` verified via a real smoke `claude -p` call and
+      `/api/accounts` shows `status: healthy`.
+- [ ] [INFRA] P1. Extend `AccountProvider` Literal to add `"glm"`. Register two model variants via the existing
+      `variant` field pattern (same mechanism as DeepSeek's pro/flash split): `glm-5.2` (flagship) and `glm-4.7-flashx`
+      (fast/cheap), both reachable under the one Coding Plan credential. Done when: QG green, routing tests extended to
+      cover the new provider value (mirrors `test_deepseek_provider_routing.py`).
+- [ ] [DATA] P1. Add GLM `RateCard` entries to `model_pricing.py`: GLM-5.2 ($1.40 input / $4.40 output /
+      $0.26 cached
+      input — 81% cache discount, confirmed) and GLM-4.7-FlashX ($0.07 input /
+      $0.40 output — cache rate NOT published
+      anywhere found; verify against the live API response's `usage.prompt_tokens_details.cached_tokens` field at
+      registration, do not hardcode a guessed number). These are informational rates for cost-tracking only — actual
+      billing is the flat $160/mo
+      subscription, not these per-token numbers; `price_usage()` still needs them to compute the
+      metered-equivalent-value comparison the reconciliation todo below produces. Done when: `price_usage()` returns
+      non-None for both models against a real captured usage sample.
+- [ ] [INFRA] P1. Build GLM's accurate-usage-capture proxy, mirroring `deepseek_native_proxy_server.py`: verify GLM's
+      Anthropic-compatible endpoint reports real usage (input/output/cache-read/cache-write) before trusting it directly
+      — DeepSeek's own compat endpoint under-reported 2.5-3.2x before this was caught. If GLM under-reports the same
+      way, add the same kind of intercepting translation layer; if it reports accurately, document that finding instead
+      of building unneeded infra. Done when: a dated comparison of captured-vs-Z.ai-dashboard usage for a real sample of
+      turns is recorded, with a stated tolerance.
+- [ ] [UI] P2. Surface GLM's subscription-quota usage reusing the SAME `five_hour_pct`/`weekly_pct` fields Claude
+      already uses (GLM Coding Plan Max's 1,600/5h + 8,000/wk shape is structurally identical to Claude's tier system) —
+      GATE dispatch on it in `_pick_headroom_account()`/`select_account_for_spawn()`, not just display it. Done when: a
+      simulated-near-ceiling test shows the account excluded from selection, same proof standard as Claude's existing
+      headroom exclusion.
+- [ ] [DATA] P2. Build a heuristic reconciliation pass that infers any unpublished multiplier (e.g. GLM-4.7-FlashX's
+      cache-read rate, whatever the live API doesn't disclose for Grok/Gemini either — reused by the sibling Grok/Gemini
+      plan) from real observed usage vs billed spend, mirroring the existing DeepSeek cache-discount verification (this
+      plan's 2026-08-04 Progress Log: operator-reported ≈$35 actual spend matched the
+      ~$22-25 implied by the
+      published hit/miss ratio). Done when: a documented, derivation-shown heuristic rate lands in `model_pricing.py`
+      for any provider/model missing a published number, with the derivation cited inline.
+- [ ] [INFRA] P0. Implement time-window-aware peak/off-peak pricing for DeepSeek: one shared hour-of-day utility
+      (`datetime.now(UTC).hour` against peak windows 01:00-04:00 + 06:00-10:00 UTC) used by BOTH `model_pricing.py`
+      (which rate applies right now) and `autospawn.py` (is DeepSeek dispatch-eligible right now) — not two separate
+      implementations of the same check. New `RateCard`-equivalent entries for both peak and off-peak, both models,
+      using the exact numbers in the table above, `effective_from=2026-08-16`. Done when: `price_usage()` returns the
+      correct rate for a stubbed timestamp on both sides of the 08-16 cutover and both sides of a peak/off-peak boundary
+      within a single day.
+- [ ] [INFRA] P0. Wire the same peak/off-peak time-window check into DeepSeek's dispatch eligibility inside
+      `select_account_for_spawn()`: during DeepSeek's peak window, exclude it from the fallback pool entirely (not just
+      let it dispatch at 2x price) and fall through to the next-priority free provider (GLM, then whatever else is
+      registered). Done when: a simulated dispatch at a stubbed peak-hour timestamp shows zero DeepSeek selections, and
+      a stubbed off-peak timestamp shows normal routing resumes.
+- [ ] [REVIEW] P2. After GLM + the peak/off-peak gate are live ~1 week, compare real measured cost-per-task and
+      completion quality across DeepSeek (off-peak only), GLM, and the Claude baseline — the "get an idea of how well
+      they complete things and how much things cost" calibration the operator asked for (2026-08-14). Done when: a dated
+      Progress Log entry with real per-provider $/task and quality numbers lands, informing whether the even-split
+      default should shift.
+
+- **2026-08-14 (later, separate session) — Gemini auth/billing findings, cross-reference only, not owned here.** This
+  plan's Phase 2 background text lists Gemini among candidate providers for the generalized `AccountProvider` set (never
+  implemented for Gemini specifically — that's the sibling plan below). A same-day session independently verified real
+  Gemini auth/tiering mechanics: `generateContent` 404s are per-retired-model-name, not an API-surface problem; a GCP
+  project's free-vs-paid tier is binary and project-scoped (billing-enabled = no parallel free bucket, full stop); and a
+  newly-found failure mode where a project's billing can look fully healthy in every config read yet still have every
+  paid call denied by Google's internal payment-dunning gate (confirmed live on the org's shared
+  `central-element-323112` project). Full findings + an actionable pre-flight todo land in
+  `/plans/active/grok_gemini_translation_proxy_2026_08_14.md`'s Progress Log, which owns Gemini onboarding.

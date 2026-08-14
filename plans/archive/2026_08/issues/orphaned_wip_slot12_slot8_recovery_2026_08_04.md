@@ -45,7 +45,7 @@ context_scope:
   [
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/08-workflows/ci-cd-flow.md,
-    /plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
   ]
 ---
 
@@ -93,8 +93,8 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
       `unified-api-contracts@06c54fee` (`AAVE-PLASMA: live` outcome matches 06c8e90b, independently authored
       2026-08-01), `deployment-service@eff55ae7` (identical fastapi>=0.137/starlette 1.3.1 cap-lift matching 0e62096f).
       Done-when (outcome-defined): each SHA's CHANGE is an ancestor of origin/live-defi-rollout under some SHA — MET for
-      all 3. See `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`'s matching item for the full per-repo
-      evidence. (repos: unified-trading-library, unified-api-contracts, deployment-service)
+      all 3. See `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md`'s matching item for the full
+      per-repo evidence. (repos: unified-trading-library, unified-api-contracts, deployment-service)
 - [x] ✅ [BACKEND] P2. Reconcile slot-8's stranded `market-tick-data-service@bd0e231f` — ONLY if main confirms slot 8
       did not self-resolve it post-boot (see Progress Log). The key difference: bd0e231f has never had a successful QG,
       so it MUST get a fresh `bash scripts/quality-gates.sh` green run against the reconciled commit (that IS the
@@ -178,10 +178,10 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
 - **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — first marker on this doc (filed
   ~03:33Z same day, no prior marker). All 3 open todos are bounded/mechanical git-rescue work in isolation, but todo 1
   (the 3 slot-12 commits) is already extracted verbatim into
-  `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md` todo 10, and todos 2-3 (slot-8's `bd0e231f`, slot-4's
-  `~036c568`) are explicitly listed in that same batch's own Deferred § "Conditionally gated" (their preconditions —
-  main confirming slot-8/slot-4 state — were not independently re-verifiable by that run). Per this tranche's standing
-  convention, batch6 itself stays `assigned_vm: NA` even for cleared-eligible content (see
+  `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md` todo 10, and todos 2-3 (slot-8's `bd0e231f`,
+  slot-4's `~036c568`) are explicitly listed in that same batch's own Deferred § "Conditionally gated" (their
+  preconditions — main confirming slot-8/slot-4 state — were not independently re-verifiable by that run). Per this
+  tranche's standing convention, batch6 itself stays `assigned_vm: NA` even for cleared-eligible content (see
   `fleet_git_health_ip_185...`'s marker today for the citation). Not reclassified — would create a competing/duplicate
   dispatch claim against batch6 once activated.
 - **context-scout 2026-08-06**: populated context_scope (3 entries).

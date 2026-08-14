@@ -24,7 +24,7 @@ tags: [agent-orchestrator, plan-hygiene, dispatch, false-progress, quality-gates
 related:
   [
     /plans/archive/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md,
-    /plans/active/issues/ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md,
+    /plans/archive/2026_08/issues/ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md,
   ]
 created: 2026-08-08
 parent_epic: agent_operating_framework_master
@@ -42,7 +42,7 @@ context_scope:
     agent-orchestrator/server/dispatch_visibility_report.py,
     agent-orchestrator/server/regen_backlog_from_plan.py,
     /plans/archive/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md,
-    /plans/active/issues/ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md,
+    /plans/archive/2026_08/issues/ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md,
   ]
 ---
 
@@ -111,15 +111,15 @@ human already made the call and the fleet still never executes it.
 
 ## Recommended decision
 
-- [x] ✅ [SCRIPT] P2. **Triage accidental exclusion in `plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`.**
-      Not genuinely blocked — the todo's own prose merely NAMES two marker families as documentation subject matter
-      (`BLOCKED-CREDENTIALS` as an example ingestion-gate token, `DEFERRED-BY-DESIGN` as a sibling convention it
-      cross-references), and both literal ASCII-hyphen spellings independently matched `_BLOCKED_TOKEN_RE` and
-      `_PERMANENT_NON_DISPATCHABLE_RE` respectively — two separate accidental triggers in the same block, not one.
-      Rewrote all four occurrences to the non-breaking-hyphen spelling (`BLOCKED‑CREDENTIALS`, `BLOCKED‑marker`,
-      `BLOCKED‑ON:<ref>`, `BLOCKED‑<TOKEN>`, `DEFERRED‑BY‑DESIGN`) — the same convention this issue doc's own
-      recommended-decision prose already uses for this exact reason. Verified:
-      `dispatch_visibility_report --pm-path ../unified-trading-pm --json` for
+- [x] ✅ [SCRIPT] P2. **Triage accidental exclusion in
+      `plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md`.** Not genuinely blocked — the todo's own
+      prose merely NAMES two marker families as documentation subject matter (`BLOCKED-CREDENTIALS` as an example
+      ingestion-gate token, `DEFERRED-BY-DESIGN` as a sibling convention it cross-references), and both literal
+      ASCII-hyphen spellings independently matched `_BLOCKED_TOKEN_RE` and `_PERMANENT_NON_DISPATCHABLE_RE` respectively
+      — two separate accidental triggers in the same block, not one. Rewrote all four occurrences to the
+      non-breaking-hyphen spelling (`BLOCKED‑CREDENTIALS`, `BLOCKED‑marker`, `BLOCKED‑ON:<ref>`, `BLOCKED‑<TOKEN>`,
+      `DEFERRED‑BY‑DESIGN`) — the same convention this issue doc's own recommended-decision prose already uses for this
+      exact reason. Verified: `dispatch_visibility_report --pm-path ../unified-trading-pm --json` for
       `ao_satellite_ao_dispatch_batch6_2026_08_04.md` now shows `excluded: []` (was 1 accidental) and `backlog_open`
       rose 2→3 matching `disk_open=3`.
 - [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-24, infra).** Triage accidental exclusion in

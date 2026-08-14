@@ -13,7 +13,7 @@ summary: >-
   those contribute 5 more eligible todos here after direct review. Total: 10 todos, each conflict-checked against the
   whole `plans/active` corpus before drafting (one soft same-file adjacency found and handled via a caution note, per
   batch3/4/5's own precedent, not exclusion).
-status: active
+status: complete
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -22,9 +22,9 @@ scope: [engineer]
 tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-6, satellite-docs]
 related:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
-    /plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md,
-    /plans/active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_2026_08_03.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -45,10 +45,9 @@ context_scope:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
-    /plans/active/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
   ]
-archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
 locked_by:
 locked_since:
 supersedes:
@@ -64,6 +63,12 @@ source: >-
 ---
 
 # AO satellite AO batch 6
+
+> **🔴 ARCHIVED 2026-08-14 — COMPLETE (all 10 todos `[x]`, unlocked).** This is the deferred follow-on pass named by the
+> 2026-08-12 `archive_exempt: true` bridge line (now dropped) — the stale `locked_by:live-defi-rollout` placeholder was
+> cleared 2026-08-12, surfacing this doc as 0-open-todos archive-eligible; archival itself was explicitly deferred to a
+> separate pass, which this is. `ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md`'s own 5 todos are now also all
+> `[x]` and it has self-archived alongside this doc (see its own banner) — no further successor to chase.
 
 > **`status: active`** — approved 2026-08-08 after a fresh conflict-check found no blocking overlap (see Progress Log).
 > **`assigned_vm: planning` / `execution_scope: orchestrator-agent`** — the `ao` tranche's 2026-07-17 "local execution
@@ -109,8 +114,8 @@ evidence-backed, zero-risk housekeeping action, not new work.
   immediately before editing regardless — this file sits close to its 1000-line hard cap (verify headroom before adding
   any new Progress Log text) and is edited almost daily by na-eligibility-audit/context-scout passes.
 - Do not edit a source issue doc's checkboxes beyond appending your evidence line to the todo you executed. The paired
-  finalize plan (`/plans/active/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md`) reconciles evidence back into
-  every source doc and runs archival.
+  finalize plan (`/plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md`) reconciles evidence
+  back into every source doc and runs archival.
 - No todo below deletes prod data, mutates a GCS bucket, or launches a VM.
 
 ## Todos

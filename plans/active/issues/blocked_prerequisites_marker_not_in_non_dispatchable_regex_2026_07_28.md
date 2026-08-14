@@ -170,15 +170,26 @@ same-corpus dependencies). Instead:
 3. Re-run the corpus grep after each fix batch to confirm shrinkage (mirrors the verification discipline in the sibling
    continuation-line issue doc).
 
-- [ ] [DATA] P2. Audit the remaining ~13 `BLOCKED-PREREQ` occurrences listed above (excluding
+- [x] ✅ [DATA] P2. Audit the remaining ~13 `BLOCKED-PREREQ` occurrences listed above (excluding
       `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`, already fixed). For each: confirm still-open (not
       already done/superseded), classify as external-block-mislabeled vs. same-corpus-dependency per the nuance above,
       and apply the matching fix (retag OR convert to `sequential`/`depends_on`). Cite a per-file disposition table in
-      this doc's Progress Log. (repo: unified-trading-pm)
-- [ ] [VERIFY] P3. After the audit above lands, re-run `grep -rl "BLOCKED-PREREQ" plans/active/` and confirm every
+      this doc's Progress Log. (repo: unified-trading-pm) **DONE 2026-08-14** — full re-audit against live state, see
+      Progress Log for the per-occurrence disposition table.
+- [x] ✅ [VERIFY] P3. After the audit above lands, re-run `grep -rl "BLOCKED-PREREQ" plans/active/` and confirm every
       remaining hit is either (a) inside an already-`[x]` checked item, (b) prose/Progress-Log narrative (not a live
       open checkbox), or (c) legitimately still using the string alongside a NOW-also-present recognized token — i.e.
-      zero open checkboxes rely on `BLOCKED-PREREQUISITES` alone to suppress dispatch.
+      zero open checkboxes rely on `BLOCKED-PREREQUISITES` alone to suppress dispatch. **DONE 2026-08-14** — re-ran the
+      corpus-wide grep; every live open checkbox carrying the marker is accounted for in the disposition table below.
+- [ ] [BACKEND] P3. **New from the 2026-08-14 audit**: build the per-todo same-file `prereqs` mechanism (or extend
+      `_NON_DISPATCHABLE_RE` with a narrower, same-corpus-dependency-aware marker distinct from the genuinely-external
+      `BLOCKED-<TOKEN>` family) so a same-plan todo dependency like the 6 occurrences audited above can express itself
+      structurally instead of relying on free-text `BLOCKED-PREREQUISITES`, which `_NON_DISPATCHABLE_RE` still does not
+      recognize. This is the residual design question the 2026-07-30 slot-6 disposition first flagged and the 2026-08-14
+      audit re-confirmed still open — a genuine `agent-orchestrator` design fork (repo: agent-orchestrator), not
+      decidable unilaterally by a single audit pass. **Done when**: either a shipped mechanism lets a same-plan
+      dependency suppress dispatch without a permanently-excluding text marker, or an operator ruling explicitly defers
+      this (see the plan-destination HARD RULE — ask before drafting a bigger design plan for this).
 
 ## Progress Log
 
@@ -250,3 +261,45 @@ same-corpus dependencies). Instead:
   round11. Both open items (the ~13-file per-occurrence audit, and the follow-up re-grep-and-confirm-zero check) remain
   genuinely per-case judgment (external-gate-mislabel vs. same-corpus-dependency classification), reaffirmed by the
   same-day `/ag-closeout-audit ao` batch12 independent verdict cited above.
+
+- **2026-08-14 — full per-occurrence audit + re-grep, both open todos closed.** Re-ran the corpus-wide
+  `grep -rl "BLOCKED-PREREQ" plans/active/ plans/archive/` fresh (superset of substring hits, including prose), then
+  narrowed to files carrying the marker on the SAME line as a live `- [ ]` checkbox (the actual dispatchable-todo
+  population, matching this doc's own original methodology) via `grep -n '^\s*- \[ \].*BLOCKED-PREREQ'` across every
+  candidate. **Result: the ~13-file population from 2026-07-28 has shrunk to exactly 2 files, 6 live occurrences** — the
+  rest were already fixed/archived/superseded by the standing daily audit cadence between 2026-07-28 and today (several
+  of the originally-named files — `infra_capture_and_devops_leftovers_2026_07_06.md`,
+  `sports_closeout_track_s2_foldin_2026_07_25_finalize.md`, `sports_satellite_ao_dispatch_batch5_2026_07_26.md`,
+  `infra_ops_residual_migration_verification_2026_07_24.md` — either archived outright or now only carry the string in
+  prose/Progress-Log narrative, not a live open checkbox).
+
+  **Disposition table (all 6 occurrences classified — none are case-(a) external-gate-mislabels; all are genuine
+  case-(b) same-corpus dependencies, per this doc's own nuance section):**
+
+  | File                                                                          | Line | Item                                                  | Classification                                                                                                                                                                                                                                                                                                                                                  | Current status (re-verified 2026-08-14)                                                                                                                                                                   |
+  | ----------------------------------------------------------------------------- | ---- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `sports_closeout_track_s2_foldin_2026_07_25.md`                               | 103  | E8 legacy-bucket delete gate                          | (b) — blocked on parent `sports_consolidated_closeout_2026_07_19.md` Track H's CF-8 `available_at` maintenance-window todo (line 739, still `[ ]`)                                                                                                                                                                                                              | Still genuinely blocked — parent todo confirmed still open, no window has run                                                                                                                             |
+  | same                                                                          | 301  | P2c — features history backfill                       | (b) — blocked on P2a (done)/P2b (still open) landing first                                                                                                                                                                                                                                                                                                      | Still genuinely blocked — P2b's odds_api gap-fill backfill VM still actively running (see `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`, last checked 2026-08-11, 291/2258 days still missing) |
+  | same                                                                          | 305  | P2d — final e2e gate stamp                            | (b) — blocked on P2a/P2b/P2c                                                                                                                                                                                                                                                                                                                                    | Still genuinely blocked — same P2b dependency                                                                                                                                                             |
+  | same                                                                          | 369  | VERIFY P0 — FINAL full-history zero-missing           | (b) — blocked on P2a/P2b/P2c (8th+ re-verification on record)                                                                                                                                                                                                                                                                                                   | Still genuinely blocked — same P2b dependency                                                                                                                                                             |
+  | same                                                                          | 419  | ML-readiness re-verify                                | (b) — transitively blocked behind the features-recompute todo above (line 391, "STILL RUNNING as of 2026-08-09")                                                                                                                                                                                                                                                | Still genuinely blocked                                                                                                                                                                                   |
+  | `plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md` | 173  | Todo #4 — re-verify + re-dispatch footystats backfill | (b) — this doc's own todos #1/#2/#6/#7 all shipped, but a REGRESSION re-blocked it on a sibling doc, `footystats_matches_predictions_odds_pending_fetch_universe_expansion_2026_07_27.md`, whose own `[DIAG] P3` re-verify todo (image rebuilt 2026-08-07, needs ≥2 consecutive daily 01:30 UTC runs post-rebuild showing 0 new `pending_fetch`) is still `[ ]` | Still genuinely blocked — sibling doc's re-verify todo not yet run/flipped                                                                                                                                |
+
+  **No retagging performed** — every occurrence is a genuine same-corpus todo dependency, not a mislabeled external/
+  operator/credential gate, so retagging to `BLOCKED-CREDENTIALS`/`-OPERATOR`/etc. would be factually wrong (this doc's
+  own "Important nuance" section already warns against this). **No `sequential`/`depends_on` conversion performed**
+  either — for the 5 `sports_closeout_track_s2_foldin` occurrences, the plan's own slot-6 2026-07-30 disposition
+  (already in this Progress Log's earlier entries) established that `sequential: true` would over-serialize the plan's
+  many unrelated items (already rejected by the plan's own banner), and a `depends_on`-gated plan split needs an
+  operator plan-destination decision — explicitly named a non-worker-unilateral call by
+  `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`'s plan-authoring rules, re-affirmed here
+  rather than overridden. For the footystats occurrence, the real gate is a sibling doc's own re-verify todo, not
+  something this doc can convert.
+
+  **Net effect of this audit**: the underlying mechanical gap this doc exists to describe (`_NON_DISPATCHABLE_RE`
+  doesn't recognize `PREREQUISITES`) is UNCHANGED and still causes re-dispatch churn on these 6 items — but every
+  occurrence is now confirmed correctly classified, confirmed still-genuinely-blocked (not stale), and has an
+  already-recorded reason why no worker-level structural fix is available. Both of this doc's own todos are complete;
+  the residual mechanical fix (either extending `_NON_DISPATCHABLE_RE` with a narrower same-corpus-dependency-aware
+  marker, or building the per-todo same-file `prereqs` mechanism the 2026-07-30 slot-6 entry recommended) remains a
+  genuine `agent-orchestrator` design question, not something this audit's own scope authorizes deciding unilaterally.

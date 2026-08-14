@@ -298,3 +298,15 @@ new symbols") didn't call out — added as a dedicated `[SCRIPT]` todo rather th
   blocks subprocess GCS calls) before assuming the gate has cleared; once clear, run the exact
   `launch-cefi-sharded-backfill.sh` command two entries above (drop `DRY_RUN=1`), then flip this checkbox with the VM
   name + evidence.
+
+- **2026-08-14T12:10 UTC — Todo 6 re-checked, STILL GATED, not launched.** Slot-10 data_engineering worker. Same VM
+  (`cefi-okx-swap-2026-light-20260814-020834`) still `RUNNING` (`gcloud compute instances list`), heartbeat fresh
+  (`vm-heartbeat/<vm>.txt` age ~1.1min via `unified_trading_library.cloud_interface.get_storage_client()`, never
+  subprocess `gsutil`), `PROGRESS.json.last_completed_date` now `2026-07-14` (advanced from the prior check's
+  `2026-05-12`) — genuinely progressing, not stalled. **Rate over this segment**: 2026-05-12→2026-07-14 = 63 days in
+  ~271min ≈ 0.23 days/min, consistent with the prior check's full-run-average band (~0.22-0.36 days/min), not the
+  earlier optimistic single-segment estimate. Remaining 30 days to `end_date=2026-08-13` project to ~2.2h more at this
+  rate. Tardis 1-VM-cap still applies (operator ruling 2026-07-16) — launching now would collide with this still-running
+  consumer. Task skipped again with `reason_code: GATED`, `estimated_unblock_minutes: 140`. **Next worker**: re-run the
+  same two checks before assuming the gate has cleared; once clear, run the exact `launch-cefi-sharded-backfill.sh`
+  command above (drop `DRY_RUN=1`), then flip this checkbox with the VM name + evidence.

@@ -189,7 +189,7 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
 
 ## Deferred — already covered by an active covering plan (no batch material)
 
-- `/plans/active/issues/ao_orphan_audit_followup_triage_2026_07_30.md` — all 4 open todos derive from the same
+- `/plans/archive/issues/ao_orphan_audit_followup_triage_2026_07_30.md` — all 4 open todos derive from the same
   classification table `ao_open_issues_consolidated_close_out_2026_07_17.md` already tracks; cross-checked against
   batch1/batch2 (a later, more-thorough audit than the one that produced this triage doc) and found nothing uncovered.
   One real residual: the genuinely-still-operator-gated items need an actual operator ruling (not new work — see the

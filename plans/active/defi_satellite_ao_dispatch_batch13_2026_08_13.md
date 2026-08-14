@@ -88,10 +88,14 @@ source: >-
       (including 2026-04-20 itself). The original 2026-08-08 preflight failure no longer reproduces — the gap has since
       closed. Confirmed NOT the same root cause as `defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md`
       (different data_type, non-overlapping window). Full findings in the source issue doc's Progress Log.
-- [ ] [CODE] P2. P3 test-isolation flake fix: add a setup_events() fixture to
+- [x] [CODE] P2. ✅ P3 test-isolation flake fix: add a setup_events() fixture to
       test_batch_harness.py::test_position_state_survives_across_ticks so it passes in isolation (strategy-service repo)
       -- bounded/mechanical, not a judgment call. Source:
-      `plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md`
+      `plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md` — already shipped pre-batch,
+      strategy-service@3ae05318 (2026-08-11, a different slot). Re-verified live: the fixture + its use on
+      `test_position_state_survives_across_ticks` are present at HEAD and the test passes in isolation
+      (`pytest tests/unit/engine/strategies/v2/test_batch_harness.py::TestMultipleTicksCarryForward::test_position_state_survives_across_ticks`
+      → 1 passed). No new code change needed for this batch; checkbox reconciliation only.
 - [ ] [CODE] P2. Cross-check instrument_type=spot_pair (9,802 rows) against defi-canonical-naming-ssot.md's locked
       instrument_type list Source: `plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`
 - [ ] [CODE] P2. Fix the deployment-api/instruments-service Distinct Values panel's <blank> instrument_type badge to

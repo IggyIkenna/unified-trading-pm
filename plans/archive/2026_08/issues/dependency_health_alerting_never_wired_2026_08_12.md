@@ -11,7 +11,7 @@ summary: >-
   fallback_available=False, and no DEPENDENCY_DEGRADED alert is ever raised and nobody is paged. The owning plan
   (connectivity_dependency_buffer_policy_2026_05_23) was ARCHIVED with the wiring step never done, which is what made a
   70%-built feature invisible.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -37,6 +37,8 @@ estimate_calibrated_ai_days: 0.8
 assigned_role: backend_engineer
 drift_direction: advance-code
 resolved_by:
+  "backend_engineer (slots 15/18/12), 2026-08-13/14 — duration floor, prober+subscriber wiring, integration test, and
+  the codex status-line/docstring corrections all shipped; zero open todos, no lock."
 locked_by:
 locked_since:
 supersedes:
@@ -53,6 +55,12 @@ context_scope:
     deployment-service/configs/dependency_health_policies.yaml,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-14** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. All 5 todos `[x]`: duration floor (`alerting-service@324ffa5`), producer+subscriber wiring
+> (`alerting-service@42347de`), integration test (`alerting-service@7291bee`), and the codex status-line +
+> `connectivity_rules.py` docstring correction (`unified-trading-pm`@this-commit, `alerting-service@e45e8dc73e`).
 
 # DEPENDENCY_DEGRADED can never fire
 
@@ -121,9 +129,14 @@ the active corpus without ever being done.
       (`route_event_with_explicit_channels`) patched, so the real prober→handler→rule→router chain runs unmocked. 2/2
       pass locally. The existing unit tests of `evaluate_dependency_health` would still pass with this path unwired;
       this test fails unless every link is reached.
-- [ ] [DOCS] P2. `/codex/04-architecture/dependency-health-policy.md` reads as though the rule is live ("Ships as:
+- [x] ✅ [DOCS] P2. `/codex/04-architecture/dependency-health-policy.md` reads as though the rule is live ("Ships as:
       `alerting-service@839cb5f`"). Add a status line stating it is contract-and-config only until the todos above land,
-      so the next reader is not misled the way this doc misled me.
+      so the next reader is not misled the way this doc misled me. — **DONE**: since filing, the wiring todos above
+      actually landed (2026-08-13), so the correct fix was to bring the doc CURRENT rather than add a not-live caveat.
+      Updated the escalation-rule diagram (it still described the pre-fix no-floor no-fallback bug) and added a "Status
+      — WIRED end-to-end" section citing the real shipped commits (`alerting-service@324ffa5` / `@42347de` / `@7291bee`)
+      — `unified-trading-pm` (this commit). Also fixed the same stale "NOT WIRED" claim in `connectivity_rules.py`'s own
+      docstring, which the wiring commits never updated — `alerting-service@e45e8dc73e`.
 
 ## Producer decision (2026-08-12)
 

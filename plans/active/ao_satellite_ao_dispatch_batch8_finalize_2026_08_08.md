@@ -16,12 +16,13 @@ tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-8, finalize]
 related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch8_2026_08_08.md,
-    /plans/active/ao_satellite_ao_dispatch_batch7_2026_08_06.md,
-    /plans/active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_2026_08_06.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/ao_consolidated_closeout_2026_08_12.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-14"
 parent_epic: orchestrator_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

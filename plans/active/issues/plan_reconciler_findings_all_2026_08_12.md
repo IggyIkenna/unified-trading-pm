@@ -265,9 +265,9 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       P3 as "Opus/high", propagating the same stale claim
 - [ ] [REVIEW] P3. (P3) plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md — bogus lock predates doc
       creation
-- [ ] [REVIEW] P3. (P2) plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md — Deferred section claims a doc is
-      still operator-gated; its own finalize twin shows it was reclassified NA→planning the same day, self-flagged but
-      never corrected
+- [ ] [REVIEW] P3. (P2) plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md — Deferred section claims a
+      doc is still operator-gated; its own finalize twin shows it was reclassified NA→planning the same day,
+      self-flagged but never corrected
 - [ ] [REVIEW] P3. (P3) plans/archive/2026_08/issues/ao_park_disposition_blocked_answer_no_follow_through_2026_07_31.md
       — `locked_since` predates `created` by 2 months (impossible); `locked_by` is a branch name, not an owner
 - [ ] [REVIEW] P3. (P2) plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md:87,96 — Phase-3 checkbox still asserts
@@ -318,9 +318,10 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
 - [ ] [DOC] P3. (codex-drift)
       plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md:186-188 — self-imposed
       follow-up written as prose in "Codex SSOTs" section, not a tracked todo
-- [ ] [DOC] P3. (codex-drift) plans/active/issues/dependency_health_alerting_never_wired_2026_08_12.md —
+- [x] ✅ [DOC] P3. (codex-drift) plans/archive/2026_08/issues/dependency_health_alerting_never_wired_2026_08_12.md —
       `/codex/04-architecture/dependency-health-policy.md` reads as though DEPENDENCY_DEGRADED alerting is live; no
-      producer/consumer exists anywhere in the fleet (self-tracked already in that doc)
+      producer/consumer exists anywhere in the fleet (self-tracked already in that doc) — **DONE**: the source issue
+      resolved 2026-08-13/14 (all 5 todos shipped, doc brought current + archived), this same session.
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md — missing
       definition-of-done, inherently unbounded scope for an AO-dispatched todo
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/data_pipeline_check_mdps_features_2026_07_20.md — P0 todo has only a
@@ -371,8 +372,8 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       instruction issue already fixed this run; the doc's claim that the codex SSOT was updated to remove the sudo HARD
       RULE should be re-verified against live CLAUDE.md
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md — low severity
-- [ ] [DOC] P3. (codex-drift) plans/active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md — codex-alignment fix
-      claimed complete, partially true per a sibling doc — low severity, historical
+- [ ] [DOC] P3. (codex-drift) plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md —
+      codex-alignment fix claimed complete, partially true per a sibling doc — low severity, historical
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/issues/duplicate_finalize_plans_created_for_one_parent_2026_08_06.md — 3
       open todos lack an explicit "Done when" clause
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md:790-808 — per-repo rollout

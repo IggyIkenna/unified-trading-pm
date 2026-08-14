@@ -7,7 +7,7 @@ summary: >-
   (the batch was an extraction, so the source docs' own checkboxes are the ones that go stale), re-checks whether the
   one conflict-gated declined item's named gate has since cleared, archives the source docs that reach zero open todos,
   and runs the standard 6-step archival ritual on the batch plan itself.
-status: active
+status: complete
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -16,9 +16,9 @@ scope: [engineer]
 tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-7, finalize]
 related:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch7_2026_08_06.md,
-    /plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
-    /plans/active/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_2026_08_06.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-06"
@@ -41,7 +41,7 @@ gate_on_depends: true
 sequential: true
 context_scope:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch7_2026_08_06.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_2026_08_06.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
@@ -57,18 +57,27 @@ source: >-
 
 # AO satellite AO batch 7 — finalize
 
-> **Machine-gated on `/plans/active/ao_satellite_ao_dispatch_batch7_2026_08_06.md`** (`depends_on` +
+> **🔴 ARCHIVED 2026-08-14 — COMPLETE (all 5 todos `[x]`, unlocked).** All 5 todos ran to completion: verified all 3
+> batch-7 done-claims (2026-08-08), reconciled source-doc evidence (2026-08-08), re-checked the one conflict-gated
+> declined item's gate (2026-08-08 — cleared, work already shipped, no batch-8 spin-off needed), archived
+> `ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md` (2026-08-08, reached zero open todos), and archived the
+> batch plan itself (`/plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_2026_08_06.md`, 2026-08-14). Self-archived
+> same-commit per the single-repo (mode-1) sanctioned pattern
+> (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § "Single-repo finalize plans: same-commit
+> flip+archival is the SANCTIONED path").
+
+> **Machine-gated on `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_2026_08_06.md`** (`depends_on` +
 > `gate_on_depends: true`) — will not dispatch until every todo in that batch is `done`. The batch itself stays
 > `status: draft` until the operator approves it; this finalize plan needs no separate flip either way.
 
 ## Todos
 
 - [x] [REVIEW] P0. **Re-verify every batch-7 done-claim against reality, not against its checkbox** — for each of the 3
-      todos in `/plans/active/ao_satellite_ao_dispatch_batch7_2026_08_06.md`, re-run `git show --stat <sha>` for every
-      cited commit and re-run the specific named test(s)/verdict directly rather than trusting the claim (todo 1's
-      done-when is a written verdict + evidence, not a commit — check the source doc's Progress Log entry exists and the
-      raw per-task metrics are actually present, not just asserted). **Done when**: all 3 verified, and any claim whose
-      evidence does not hold up is re-opened as a new tracked todo in this doc's Progress Log with the discrepancy
+      todos in `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_2026_08_06.md`, re-run `git show --stat <sha>`
+      for every cited commit and re-run the specific named test(s)/verdict directly rather than trusting the claim (todo
+      1's done-when is a written verdict + evidence, not a commit — check the source doc's Progress Log entry exists and
+      the raw per-task metrics are actually present, not just asserted). **Done when**: all 3 verified, and any claim
+      whose evidence does not hold up is re-opened as a new tracked todo in this doc's Progress Log with the discrepancy
       stated. ✅ VERIFIED — all 3 batch-7 done-claims re-checked against reality (commits confirmed on origin, diffs
       match claims, named regression tests re-run directly and pass); no discrepancies found. See Progress Log for
       per-todo evidence.
@@ -128,13 +137,19 @@ source: >-
       only the 5 live kill triggers go dormant on cap-hit, sweep/reclaim/reconcile mechanisms keep running). No DEFERRED
       items existed on the archived doc. `grep -rl ao_human_gated_recovery_audit_closable_gaps_2026_08_06 plans/ codex/`
       returns only the new archived path. Hygiene-sweep verification recorded in the Progress Log.
-- [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
-      `/plans/active/ao_satellite_ao_dispatch_batch7_2026_08_06.md`, migrate any still-open Deferred item into batch 8
-      (never leave a deferral that is not already a `- [ ]` todo somewhere), move the file to `plans/archive/2026_08/`,
-      fix every corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then run
-      `.venv/bin/python scripts/plans/regenerate_active_plan_inventory.py --commit` (verify the exact entrypoint name at
-      execution time). **Done when**: the batch plan is archived with a banner, the inventory regenerates cleanly, and
-      `check_finalize_plan_coverage.py` no longer names this pair.
+- [x] ✅ [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_2026_08_06.md`, migrate any still-open Deferred item into
+      batch 8 (never leave a deferral that is not already a `- [ ]` todo somewhere), move the file to
+      `plans/archive/2026_08/`, fix every corpus-wide referrer including this finalize plan's own
+      `related:`/`depends_on:`, then run `.venv/bin/python scripts/plans/regenerate_active_plan_inventory.py --commit`
+      (verify the exact entrypoint name at execution time). **Done when**: the batch plan is archived with a banner, the
+      inventory regenerates cleanly, and `check_finalize_plan_coverage.py` no longer names this pair. **DONE
+      2026-08-14** — the batch's own 3 todos were all already `[x]`; its "Deferred — the 1 partially-declined doc + the
+      1 confirmed-not-orphaned doc" section has no open todo of its own (the confirmed-not-orphaned doc is
+      self-covering, the partially-declined doc's residual is already tracked on its own source doc, nothing to
+      migrate). Added the archived banner, flipped `status: active → complete`, `git mv`'d to
+      `plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_2026_08_06.md`, repointed every corpus-wide referrer, and
+      ran `.venv/bin/python scripts/plans/regenerate_active_plan_inventory.py --commit`.
 
 ## Codex SSOTs
 

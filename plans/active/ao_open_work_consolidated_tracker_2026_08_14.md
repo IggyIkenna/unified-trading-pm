@@ -20,9 +20,9 @@ tags: [ao, agent-orchestrator, tracker, consolidated, open-work, worker-lifecycl
 related:
   [
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
-    /plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
-    /plans/active/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
-    /plans/active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
     /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
   ]
@@ -48,9 +48,9 @@ source: >-
   plans/issues (created on/before 2026-08-07) directly against live agent-orchestrator code — not just checkbox state.
   Found ~10 items already implemented but never checked off (flipped separately this session, see the 3 commits cited in
   the Progress Log), one live security gap now fixed + verified on the production VM
-  (`orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md`, archived), and the ~55 items below confirmed
-  genuinely still open. This plan is the tracking artifact requested to hold that remainder before deciding what to
-  dispatch.
+  (`orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md`, archived), and the 51 items below (58 as swept, 7
+  DeepSeek/Luna-bridge items removed per operator direction — see Notes) confirmed genuinely still open. This plan is
+  the tracking artifact requested to hold that remainder before deciding what to dispatch.
 context_scope:
   [
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
@@ -152,20 +152,27 @@ context_scope:
       checkout goes stale between runs — `plan_reconciler.md` already has this fix, the na-eligibility skill doesn't).
       Source: same doc.
 - [ ] [DOC] P2. Update the published skills-benchmark artifact once the two re-runs above land. Source: same doc.
-- [ ] [REVIEW] P2. Pilot the DeepSeek/Claude blended pool for one week at the default split vs. a Claude-only baseline
-      (blocked while accounts stay credit-exhausted per the doc's own caveat — re-check that gate before starting).
-      Source: `/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md`.
-- [ ] [REVIEW] P2. Confirm whether the flash-vs-pro ~56/44 routing split is real skew or accumulator noise — second
-      measurement window needed. Source: same doc.
-- [ ] [REVIEW] P3. Investigate why the flash variant trips `free_provider_health_gate_skipped` ~30% more than pro —
-      `autospawn.py` only emits the raw event today, no root-cause analysis exists. Source: same doc.
-- [ ] [REVIEW] P1. Re-run the local DeepSeek-routing pilot against the REDESIGNED policy specifically (3 stated
-      done-when criteria, none met yet per any dated Progress Log entry). Source: same doc.
-- [ ] [DATA] P2. Give the `deepseek_flash_route_fraction` remeasure instruction an actual runnable tool — neither the
-      inline comment in `config.py` nor `deepseek_spend_probe.py` (wrong scope) satisfies this. Source: same doc.
-- [ ] [OPERATOR] P2. Ratio-check DeepSeek account-count/cost assumptions against real `accounts.json` + `/usage` data —
-      stated as "not locally doable" in the source doc. Source: same doc.
-- [ ] [OPERATOR] P2. Address the DeepSeek wallet balance top-up recurrence (financial action). Source: same doc.
+      _(DeepSeek/Claude blended-routing work — `/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md` —
+      and the Luna/Flex bridge — `codex_luna_flex_bridge_2026_08_14.md` (local-only, not yet pushed to origin as of this
+      edit) — are out of scope for this tracker per operator direction 2026-08-14: handled elsewhere. The 7 todos below
+      are CANCELLED here (not real deletions — the source docs still carry the live work); the DeepSeek account-credit
+      gate the first one originally cited was stale at authoring — accounts are funded and DeepSeek is actively
+      reconciling + taking tasks.)_
+
+- **[REVIEW] P2. CANCELLED — SUPERSEDED 2026-08-14 (operator, out-of-tracker-scope).** Was: pilot the DeepSeek/Claude
+  blended pool for one week. Source: `/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md`.
+- **[REVIEW] P2. CANCELLED — SUPERSEDED 2026-08-14 (operator, out-of-tracker-scope).** Was: confirm whether the
+  flash-vs-pro ~56/44 routing split is real skew. Source: same doc.
+- **[REVIEW] P3. CANCELLED — SUPERSEDED 2026-08-14 (operator, out-of-tracker-scope).** Was: investigate why the flash
+  variant trips `free_provider_health_gate_skipped` ~30% more than pro. Source: same doc.
+- **[REVIEW] P1. CANCELLED — SUPERSEDED 2026-08-14 (operator, out-of-tracker-scope).** Was: re-run the local
+  DeepSeek-routing pilot against the redesigned policy. Source: same doc.
+- **[DATA] P2. CANCELLED — SUPERSEDED 2026-08-14 (operator, out-of-tracker-scope).** Was: give the
+  `deepseek_flash_route_fraction` remeasure instruction an actual runnable tool. Source: same doc.
+- **[OPERATOR] P2. CANCELLED — SUPERSEDED 2026-08-14 (operator, out-of-tracker-scope).** Was: ratio-check DeepSeek
+  account-count/cost assumptions. Source: same doc.
+- **[OPERATOR] P2. CANCELLED — SUPERSEDED 2026-08-14 (operator, out-of-tracker-scope).** Was: address the DeepSeek
+  wallet balance top-up recurrence. Source: same doc.
 
 ## Track 3 — Boot / context / session hygiene
 
@@ -223,9 +230,15 @@ context_scope:
       `push_or_preserve_ahead_commits`** — a rejected `git push` still falls straight to `_preserve(...)` with no retry,
       no re-stamped sentinel, no distinct alert. Source:
       `/plans/active/issues/ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24.md`.
-- [ ] [REVIEW] P2. Per-occurrence audit of the ~14 `BLOCKED-PREREQ` files in the active corpus (external-gate-mislabel
+- [x] [REVIEW] P2. Per-occurrence audit of the ~14 `BLOCKED-PREREQ` files in the active corpus (external-gate-mislabel
       vs. same-corpus-dependency), then re-grep-and-confirm as a follow-up. Source:
-      `/plans/active/issues/blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md`.
+      `/plans/active/issues/blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md`. **DONE
+      2026-08-14** — the ~14-file population had shrunk to exactly 2 files / 6 live occurrences by re-check time (rest
+      already fixed/archived independently since 2026-07-28). All 6 classified as genuine case-(b) same-corpus
+      dependencies (none mislabeled-external), confirmed still genuinely blocked as of 2026-08-14, full disposition
+      table in the source doc's Progress Log. Both of the source doc's own todos closed; spawned 1 new tracked follow-up
+      (`[BACKEND] P3`, the residual `agent-orchestrator` design question) — doc correctly stays open, not archived (real
+      design work remains).
 - [ ] [BACKEND] P3. Root-cause the "zero-derived-parent-row" third `gate_on_depends` failure mechanism (distinct from
       the two already-shipped fixes `13a5dd8`/`bd522d0`) — `gate_on_depends_unmet_upstreams_on_disk` still lacks the
       defense-in-depth checkbox-scan fallback `_wire_gate_on_depends_prereqs` already got. Source:
@@ -249,23 +262,49 @@ before touching the source doc directly._
 
 ## Track 6 — Archival + reconciliation bookkeeping
 
-- [ ] [REVIEW] P0. Archive `ao_satellite_ao_dispatch_batch6_2026_08_04.md` + run its finalize plan's remaining 3 todos
+- [x] [REVIEW] P0. Archive `ao_satellite_ao_dispatch_batch6_2026_08_04.md` + run its finalize plan's remaining 3 todos
       (reconcile evidence into named source docs, archive zero-open-todo sources, self-archive) — confirmed 0 open todos
-      on the batch plan itself. Source: `/plans/active/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md`.
-- [ ] [INFRA] P0. Archive `ao_satellite_ao_dispatch_batch7_2026_08_06.md` (confirmed 0 open todos) via its finalize
+      on the batch plan itself. Source: `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md`.
+      **DONE 2026-08-14** — batch6_finalize's 3 remaining todos (reconcile evidence, archive zero-open-todo sources,
+      self-archive) all confirmed already-satisfied-or-completed and flipped `[x]`; both batch6 and batch6_finalize
+      `git mv`'d to `plans/archive/2026_08/`, banners added, `status: active → complete`, all corpus-wide referrers
+      repointed. See these docs' own Progress Logs for full evidence. Evidence: this commit (doc edits) plus a follow-up
+      corrective commit closing a create-only-commit gap left by the automated inventory-regen step's own commit
+      (`unified-trading-pm@6d8a610d77`).
+- [x] [INFRA] P0. Archive `ao_satellite_ao_dispatch_batch7_2026_08_06.md` (confirmed 0 open todos) via its finalize
       plan's 1 remaining todo (self-archival ritual + inventory regen). Source:
-      `/plans/active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md`.
-- [ ] [REVIEW] P1. **`ao_satellite_ao_dispatch_batch5_2026_08_03.md` now shows 0 open todos** (as of this session's
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md`. **DONE 2026-08-14** —
+      batch7_finalize's last todo (archive the batch plan + regen inventory) completed and flipped `[x]`; both batch7
+      and batch7_finalize `git mv`'d to `plans/archive/2026_08/`, banners added, `status: active → complete`, all
+      corpus-wide referrers repointed (including the epic's relative links and `INDEX.md`/inventory regen). Note: a
+      concurrent session also independently moved the same two files around the same time (a bare `git mv` with no
+      banner/status update landed via the inventory-regen script's own commit) — reconciled cleanly, no data lost, this
+      commit layers the full ritual (banner, status, referrer fixups) on top of that move.
+- [x] [REVIEW] P1. **`ao_satellite_ao_dispatch_batch5_2026_08_03.md` now shows 0 open todos** (as of this session's
       checkbox flip) — check whether it needs its own archival, and confirm `batch5_finalize`'s `gate_on_depends` has
       genuinely cleared before running its 5 todos. Source:
-      `/plans/active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md`.
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md`. **DONE 2026-08-14** — gate
+      confirmed cleared (batch5 itself 0 open todos, no lock); ran all 5 of batch5_finalize's todos (re-verify 10
+      done-claims, reconcile evidence into 10 source docs incl. fixing a broken citation + resolving its sign-off
+      question, re-check 31 declined-orphan gates, archive 1 newly-eligible source doc, archive the batch plan itself).
+      Both batch5 and batch5_finalize `git mv`'d to `plans/archive/2026_08/`, banners added,
+      `status: active →     complete`, all corpus-wide referrers repointed.
 - [ ] [SCRIPT] P2. Finish the `context_scope` backfill named in `batch3`'s own open todo (see Track 3) — this is what
       still gates `batch3_finalize`'s 5 todos via `gate_on_depends`. Source:
       `/plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`.
-- [ ] [REVIEW] P1. **RULED 2026-08-06 disposition sweep** — apply the operator's default-disposition ruling to the
-      remaining declined-orphan docs. Source: `/plans/active/issues/ao_orphan_audit_followup_triage_2026_07_30.md`.
-- [ ] [REVIEW] P2. Read + properly bucket the 7 "unclear" docs the Phase-1 audit agent couldn't cleanly classify.
-      Source: same doc.
+- [x] [REVIEW] P1. **RULED 2026-08-06 disposition sweep** — apply the operator's default-disposition ruling to the
+      remaining declined-orphan docs. Source: `/plans/archive/issues/ao_orphan_audit_followup_triage_2026_07_30.md`.
+      **DONE 2026-08-14** — re-checked all 12 named docs directly: 10 already archived/resolved by earlier sessions, 1
+      (`blocked_questions_ux_redesign...`) 0-open but deliberately `archive_exempt` for a companion plan, 1
+      (`unified_trading_pm_stash_pile_accumulation...`) correctly still gated on a literal operator action, not a
+      judgment fork. Archived `long_lived_vm_logs_not_backed_up_2026_07_02.md` directly (its own bridge note named this
+      as the follow-on pass). No fold-into-batch action was actually needed — every genuine item had already resolved
+      independently. Full disposition in the source doc's own todo evidence.
+- [x] [REVIEW] P2. Read + properly bucket the 7 "unclear" docs the Phase-1 audit agent couldn't cleanly classify.
+      Source: same doc. **DONE 2026-08-14** — 6 of 7 already archived/resolved; the 7th
+      (`orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md`) is genuinely still open and already tracked as
+      its own item in this tracker's Track 4. The source triage doc itself reached 0 open todos after both items above
+      and was archived in the same pass (`/plans/archive/issues/ao_orphan_audit_followup_triage_2026_07_30.md`).
 - [ ] [BACKEND] P2. **Ship the escalation-route collision fix** (`server/routes/agents.py` still only has
       `/api/escalate`) named in the linked epic's own P1 todo. Source:
       `/plans/active/issues/ao_residuals_after_dispatch_hardening_2026_07_17.md`.
@@ -283,6 +322,10 @@ before touching the source doc directly._
   indefinitely); `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` (correctly blocked on a named
   unmet condition); `orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md` (fully resolved + archived
   2026-08-14, see this session's commits).
+- **Also excluded, per operator direction 2026-08-14**: all `deepseek_claude_blended_provider_routing_2026_07_28.md` and
+  `codex_luna_flex_bridge_2026_08_14.md` open items (7 todos removed from Track 2 at authoring) — operator is handling
+  both elsewhere, not via this tracker. Note the removed items' "credit-exhausted" framing was already stale at
+  authoring time: DeepSeek accounts are funded and actively taking tasks/reconciling.
 - **Not re-verified line-by-line at authoring time** — every item above reflects the 2026-08-14 sweep's findings. Given
   how actively this corpus ships (multiple concurrent sessions, ~900 commits/day observed this session), grep each
   source doc's current checkbox state before dispatching any item here — some may have landed since. Confirmed live at
@@ -296,5 +339,21 @@ before touching the source doc directly._
 - **2026-08-14 (authoring)**: Created from the 5-parallel-agent code-audit sweep of 44 AO-subject-matter docs run
   earlier this session. 10 already-implemented-but-unflipped items were fixed directly (not tracked here — see
   `unified-trading-pm@0969b12571`/`9906379de6`); the gcloud WIF-poisoning security issue was fully resolved + archived
-  (`unified-trading-pm@f34adbc7f1` + supporting commits); the ~55 items above are everything the sweep confirmed
-  genuinely still open, as of that sweep.
+  (`unified-trading-pm@f34adbc7f1` + supporting commits); 58 items confirmed genuinely still open, as of that sweep.
+- **2026-08-14 (same-day correction)**: 7 DeepSeek-routing todos CANCELLED per operator direction — that work + the
+  Luna/Flex bridge are handled outside this tracker; the "credit-exhausted" gate the first cancelled item cited was
+  already stale (accounts funded, DeepSeek actively taking tasks). 51 items remain genuinely open above.
+- **2026-08-14 (Track 6 dispatch, sub-agent)**: Worked all 6 assigned Track-6 items to completion — archived batch6 +
+  batch6_finalize, batch7 + batch7_finalize, and batch5 + batch5_finalize (all 0-open-todos, full 6-step ritual, corpus
+  referrers repointed); applied the RULED 2026-08-06 disposition sweep to the 12 operator-gated docs + bucketed the 7
+  unclear docs from `ao_orphan_audit_followup_triage_2026_07_30.md` (archived that doc too, 0 open todos after both
+  items); audited the ~14 `BLOCKED-PREREQ` occurrences down to 6 live ones, all confirmed genuine same-corpus
+  dependencies, spawned 1 tracked design-question follow-up. **Known residual, not fixed this pass**: `INDEX.md`'s regen
+  repeatedly failed to land via `safe-doc-push.sh` (3 attempts, each reporting "THE PUSH LANDED BUT YOUR CHANGE DID NOT"
+  against a large, extremely stale local stash pile — 48 autostash/safety-snapshot entries) — reverted the local copy to
+  match HEAD rather than keep fighting a pre-existing systemic issue tracked at
+  `/plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md` (F4/F8); `INDEX.md` is
+  machine-regenerated by the daily hygiene sweep regardless, so this is cosmetic staleness, not a correctness gap. Also
+  hit + recovered from 2 genuine stash-pop merge conflicts mid-session (both were redundant duplicates of already-landed
+  content, resolved by keeping the landed HEAD version; one conflict resolution surfaced and fixed a real content
+  duplication bug in the triage doc). See the individual archived docs' own Progress Logs for full per-item evidence.

@@ -393,7 +393,7 @@ new pool is confirmed green, (3) only then resize AO down.
       `/plans/archive/issues/per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27.md` and
       `/plans/archive/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md` (both now
       `status:     resolved`), plus the duplicate now-moot allowlist todo in
-      `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`.
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md`.
 
 ## Progress Log
 

@@ -281,16 +281,23 @@ source: >-
 - [ ] [CODE] P2. Live-verify (or synthetically force) the cloud-build-failure-watcher's coverage-gap self-check actually
       pages CRITICAL when a pool's oldest fetched build is newer than the lookback cutoff Source:
       `plans/active/issues/cloud_build_failure_watcher_limit_30_coverage_gap_silently_drops_failures_under_load_2026_08_10.md`
-- [ ] [CODE] P2. Add duration floor (N consecutive failed probes AND outage >= expected_recovery_time_seconds) to
+- [x] [CODE] P2. ✅ Add duration floor (N consecutive failed probes AND outage >= expected_recovery_time_seconds) to
       evaluate_dependency_health's no-fallback branch before any producer is wired Source:
-      `plans/active/issues/dependency_health_alerting_never_wired_2026_08_12.md`
-- [ ] [CODE] P2. Build the probe-driven producer + wire the *_event_handler.py subscriber into alerting-service's
-      subscribers/alert_subscriber.py Source: `plans/active/issues/dependency_health_alerting_never_wired_2026_08_12.md`
-- [ ] [CODE] P2. Add an integration test that drives a simulated outage from the producer's entry point and asserts a
-      routed alert Source: `plans/active/issues/dependency_health_alerting_never_wired_2026_08_12.md`
-- [ ] [CODE] P2. Add a status line to /codex/04-architecture/dependency-health-policy.md stating the feature is
+      `plans/archive/2026_08/issues/dependency_health_alerting_never_wired_2026_08_12.md` — already shipped directly
+      against the source issue: `alerting-service@324ffa5`. Duplicate of this batch's copy; no separate dispatch needed.
+- [x] [CODE] P2. ✅ Build the probe-driven producer + wire the *_event_handler.py subscriber into alerting-service's
+      subscribers/alert_subscriber.py Source:
+      `plans/archive/2026_08/issues/dependency_health_alerting_never_wired_2026_08_12.md` — already shipped directly
+      against the source issue: `alerting-service@42347de`. Duplicate of this batch's copy.
+- [x] [CODE] P2. ✅ Add an integration test that drives a simulated outage from the producer's entry point and asserts a
+      routed alert Source: `plans/archive/2026_08/issues/dependency_health_alerting_never_wired_2026_08_12.md` — already
+      shipped directly against the source issue: `alerting-service@7291bee`. Duplicate of this batch's copy.
+- [x] [CODE] P2. ✅ Add a status line to /codex/04-architecture/dependency-health-policy.md stating the feature is
       contract-and-config only until wired Source:
-      `plans/active/issues/dependency_health_alerting_never_wired_2026_08_12.md`
+      `plans/archive/2026_08/issues/dependency_health_alerting_never_wired_2026_08_12.md` — superseded: by the time this
+      landed the feature was actually wired (2026-08-13), so the doc was brought CURRENT instead (added a "Status —
+      WIRED end-to-end" section citing the real shipped commits) rather than caveated as not-live — same
+      `unified-trading-pm` commit as this checkbox flip. Duplicate of this batch's copy.
 - [ ] [CODE] P2. Bisect test_dp_recovery_actuators.py's full-suite contamination against predecessor test files
       (candidates: _\_relaunch_/fleet-monitor/dp-alerts suites; regression window b501a5e5, b34e85a2, 4ca051ea,
       dd7b62e1), find the shared-state leak, add cleanup Source:

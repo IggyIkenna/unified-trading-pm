@@ -29,7 +29,7 @@ related:
   [
     /plans/archive/issues/ag_closeout_auditor_one_shot_complete_no_agentrow_2026_07_26.md,
     /plans/archive/issues/slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md,
-    /plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
+    /plans/archive/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
   ]
 created: 2026-07-28
 parent_epic: agent_operating_framework_master

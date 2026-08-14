@@ -139,3 +139,42 @@ source:
       per-launcher census is needed to say which real VMs are uncovered. Either add the admission check to the `lc_`
       helper (it needs no venv — it can curl the marker) or document the lightweight path as deliberately ungated. Repo:
       deployment-service.
+
+## Progress Log
+
+### 2026-08-14 — ARMED. The mechanism fires for the first time.
+
+`actuate()` and `release()` both have production callers. The plan's defining defect — six green phases, every component
+complete and tested, and nothing ever calling any of it — is closed.
+
+**Shipped.** `deployment-service@cf5e041e7` (target resolver + AST guard) · `@79864746c` (arming: the call site) ·
+`@375835a9a` (release bookend) · `@ad73fdf6d` (launcher-test flake) · `e2e-testing@0fe3cc520` (contrast rows).
+
+**Three things had to be true to make the call site legal, and all three were real defects.** The actuator imported
+`escalation` solely to ANNOUNCE a FLEET_HALT — one import, for alerting, inside a module whose job is delivery.
+Inverting it to an injected callable was correct on its own terms and happened to be the entire blocker. `escalation.py`
+was at 958/960, so the issue-doc writer moved to its own module behind a `TYPE_CHECKING`-only type import (930 now). And
+the announcement went through `meta_watchers.emit_finding`, which calls `route_finding` — while running INSIDE
+`route_finding`. That is re-entrant: it would have re-run revocation against the announcement. The original design
+carried that edge and it never fired only because the actuator had no caller.
+
+**`xfail(strict=True)` earned its keep.** The guard failed on PASS the moment the call site landed, which is what forced
+the marker's removal in the same commit rather than letting it outlive the defect. Use strict for any guard that
+documents a known-broken state.
+
+**A grep-based guard would have been fooled by prose.** `rg '\.actuate\('` matches docstrings, so deleting the real call
+would have left a comment satisfying the guard. Both guards parse AST and match `Call` nodes.
+
+**What is NOT done, and why — none of it is "not started".**
+
+| Item                                | State                                                                                                                                                                                                                                                                                                                                                                                     |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Live confirmation                   | **Waiting**, not work. All commits are on LDR; none has promoted to `main`, which runs `*/15`. Confirming now would confirm the OLD image. Do not dispatch the promote workflow to hurry it — ad-hoc dispatches into that shared concurrency slot cost a measured 2h+ livelock on 2026-08-07.                                                                                             |
+| Lightweight-launcher admission gate | **Guardrail-blocked.** Reading the marker from a venv-free startup script needs a subprocess cloud-CLI object read, which an orchestrator guardrail bans (reads included) and QG 5.105 would fail regardless. Not circumvented; three options are in the issue doc.                                                                                                                       |
+| Live-path (dependency-health)       | **Deliberately not built.** Measured: `probe_fn` has ZERO production injection sites and the built-in probes report healthy by default, so no dependency-health alert can fire at all. Registering our services would have added rows nothing can observe — coverage-shaped inaction, the same defect this plan just spent itself removing. Sequencing recorded in the issue doc instead. |
+
+**The pattern worth carrying out of this plan.** Three separate systems here were individually complete, individually
+tested, and collectively inert: the revocation actuator (no caller), the dependency-health policy (no consumer), the
+health prober (no injected probe). Each passed review because each layer was genuinely finished. The cheap defence is an
+anti-inertness guard per layer — assert the thing has a non-test caller — and it belongs with the component, not in a
+checklist.
