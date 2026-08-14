@@ -268,11 +268,13 @@ absorbed.
 Formalized from "Plans not reached" (items A-N above) — each was a confirmed, still-actionable finding this run
 diagnosed but did not apply. Re-verified 2026-08-10 (same day) before conversion; all still current unless noted.
 
-- [ ] [DOC] P3. **Item A — retag `deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md`**
+- [x] ✅ [DOC] P3. **Item A — retag `deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md`**
       `asset_group: [cross-cutting]` → `[ui]` (dominant owner — repo, both broken tests, and the re-ship target all live
       in deployment-api) with a `sports` cross-reference note on its todo 2, per
       `ag_closeout_audit_cross_cutting_parked_2026_08_06.md`'s own `[WORKER REC]`. Verified 2026-08-10: still tagged
-      `[cross-cutting]`. All 3 of its own todos are bounded/worker-determinable — AO-eligible once retagged.
+      `[cross-cutting]`. All 3 of its own todos are bounded/worker-determinable — AO-eligible once retagged. — **DONE**,
+      reconciled from `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: `unified-trading-pm` (this batch)
+      retagged the target doc's `asset_group` to `[ui]` plus the sports cross-reference note on todo 2.
 - [ ] [DOC] P2. **Item B — reword `/codex/05-infrastructure/bucket-isolation-model.md` §8/§8.5** — god-SA-removal status
       still says "Pending" though P2.1b shipped 2026-08-08; needs the whole §8 framing reworded plus the residual
       `storage.admin` drift reflected (multi-part, not a single substitution).
@@ -290,14 +292,20 @@ diagnosed but did not apply. Re-verified 2026-08-10 (same day) before conversion
       checkboxes (in the epic body itself) be made visible to the plan-corpus tooling?** All corpus-wide checkbox/todo
       tools scan `plans/active/*.md` only, never `plans/epics/*.md` — this is a distinct orphan class. Moving the items
       to a real plan doc is a structural decision, not a mechanical fix.
-- [ ] [DOC] P2. **Item G — correct stale G3/G10 status in
+- [x] ✅ [DOC] P2. **Item G — correct stale G3/G10 status in
       `plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md`** — text still says G3/G10 are "still
       genuinely open as of 2026-07-27," but verified 2026-08-10: both were rescoped into
       `blrs_g3_g10_rescope_2026_07_28.md`, which is fully archived (`status: resolved`, all checkboxes `[x]`) — G3/G10
-      are actually DONE via that successor. Update the stale text with this citation.
-- [ ] [DIAG] P3. **Item H — live re-verify `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` P9.2's
-      UAC version-drift citation** (dated 2026-06-20) against current UAC — the doc's own later entries suggest it
-      self-resolved days later, but this needs an independent live check, not an assumption.
+      are actually DONE via that successor. Update the stale text with this citation. — **DONE**, reconciled from
+      `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: `unified-trading-pm@df3a908b1a` corrected the target
+      doc's G10 status line (G3 had already been corrected by a prior `/plan-reconcile` pass 2026-08-12).
+- [x] ✅ [DIAG] P3. **Item H — live re-verify `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`
+      P9.2's UAC version-drift citation** (dated 2026-06-20) against current UAC — the doc's own later entries suggest
+      it self-resolved days later, but this needs an independent live check, not an assumption. — **DONE**, reconciled
+      from `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: `unified-trading-pm@f32a181dcc` — re-verified
+      live 2026-08-14, self-resolved (the cited version pairing no longer exists at any version;
+      `run-version-alignment.sh` confirms "Alignment OK"); P9.2 in the target doc flipped `[x]` with the full re-verify
+      citation.
 - [ ] [OPERATOR] P2. **Item I — unlock (`[unlock-plan]`) then archive
       `plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`** — verified 2026-08-10: 100%
       done (0 open / 20 closed checkboxes), `status: open`, `locked_by: live-defi-rollout` — a genuine
@@ -308,26 +316,33 @@ diagnosed but did not apply. Re-verified 2026-08-10 (same day) before conversion
       2026-08-02, unfixed. **DONE 2026-08-14 (`cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md` Item J) —
       `unified-trading-pm@4484ad1200`**: `_count_open_checkboxes_fence_aware()` wired into `_na_open_todos_from_text()`,
       verified ancestor of `origin/live-defi-rollout`.
-- [ ] [DOC] P2. **Item K — add the real backlog todo to
+- [x] ✅ [DOC] P2. **Item K — add the real backlog todo to
       `plans/active/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`** — 4 of that
       doc's own Progress Log entries claim a "P3 backlog todo" exists for the prosewrap `--diff-base` conversion
       (mirroring the pattern already shipped for `check_archive_candidates.sh` and `check_na_corpus_ratchet.py`), but no
       such checkbox exists anywhere in the doc — the real, still-needed work has no tracked home. Was grace-protected
-      when this run checked it; re-verify grace has lifted before adding.
-- [ ] [DOC] P3. **Item L — backfill the real sha in
+      when this run checked it; re-verify grace has lifted before adding. — **ALREADY DONE**, reconciled from
+      `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: grace has lifted and the real todo already exists
+      (`check_prosewrap_padding.sh --diff-base <ref>` conversion, shipped `unified-trading-pm@e89d4931e5`, 2026-08-11).
+- [x] ✅ [DOC] P3. **Item L — backfill the real sha in
       `plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`** — its checked `[x]`
       `[SCRIPT] P2` todo (~line 138) cites a literal unfilled template placeholder ("Implemented
       `unified-trading-pm@<sha>` (2026-08-07)") as its evidence sha. Verified 2026-08-10: placeholder still unfilled.
       Underlying work is genuinely done (independently verified against a different doc per the original finding) — just
-      needs the real sha substituted in.
-- [ ] [DOC] P3. **Item N — fix 3 docs' stale "cross-cutting closeout over the 1000-line hard cap" citations** —
+      needs the real sha substituted in. — **ALREADY FIXED**, reconciled from
+      `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: a prior `/plan-reconcile` pass (2026-08-12) already
+      backfilled the real sha (`unified-trading-pm@d4f7fab9d8`) in the target doc.
+- [x] ✅ [DOC] P3. **Item N — fix 3 docs' stale "cross-cutting closeout over the 1000-line hard cap" citations** —
       `plans/active/issues/promote_ref_orphaned_on_manual_pr_close_2026_08_06.md` (verified 2026-08-10: still present,
       lines 9/45) and `plans/active/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md`
       (verified 2026-08-10: still present, line 97, explicitly names `cross_cutting_consolidated_closeout_2026_07_25.md`
       "1007L, already over the 1000L hard cap") both cite the closeout hub as over-cap; live-verified 720 lines (split
       via an earlier, untraced commit). `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`
       references the same underlying line-cap-deadlock chain indirectly (line 451) and needs tracing to confirm it's the
-      same stale claim. Low priority, all 3 claims are stale but harmless — batchable together.
+      same stale claim. Low priority, all 3 claims are stale but harmless — batchable together. — **DONE**, reconciled
+      from `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: `unified-trading-pm` (this batch) corrected all
+      3 docs' stale citations (traced the third's indirect reference through the deadlock doc, confirmed same claim);
+      `cross_cutting_consolidated_closeout_2026_07_25.md` live-verified 733 lines, under the 1000-line hard cap.
 
 **Not converted (Item M)**: `context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md` and
 `governance_sweep_deferred_followups_2026_08_06.md` both already carry their OWN real `- [ ]` `[OPERATOR]`/`[DOCS]`

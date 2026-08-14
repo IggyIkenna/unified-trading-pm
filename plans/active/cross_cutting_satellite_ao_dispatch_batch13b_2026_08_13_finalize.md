@@ -59,11 +59,30 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P2. For every completed todo in `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`, reconcile
-      the evidence back into its cited `Source:` doc's own checkbox — find the matching item in the source doc and
-      either flip it `[x]` with a citation to this batch's commit, or add a note pointing at the batch todo that
+- [x] ✅ [REVIEW] P2. For every completed todo in `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`,
+      reconcile the evidence back into its cited `Source:` doc's own checkbox — find the matching item in the source doc
+      and either flip it `[x]` with a citation to this batch's commit, or add a note pointing at the batch todo that
       superseded it. Do not trust the batch's own checkbox alone; re-verify each cited commit sha is real. Done when:
-      every source doc touched by this batch has its corresponding item's checkbox state reconciled.
+      every source doc touched by this batch has its corresponding item's checkbox state reconciled. — **DONE 2026-08-14
+      (slot-29, review)**: reconciled all 11 source docs cited by the batch's 39 todos —
+      `mtds_main_promotion_stall_and_qg_alert_redispatch_2026_08_11.md` (2/2),
+      `mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md` (archived, already 0-open — no action),
+      `na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md` (5/5),
+      `per_client_config_surface_keying_and_missing_axes_2026_08_12.md` (3/4 — "move the three treasury knobs" remains
+      genuinely open, not claimed by the batch; "mining" item was already flipped by its original author),
+      `pipeline_smoke_sweep_findings_2026_07_20.md` (1 bundled todo, all 3 sub-items now resolved),
+      `plan_reconciler_findings_all_2026_08_12.md` (dp_exit_code_monitor parallelize flipped; the 2 MDPS/features items
+      stayed open per the batch's own OUT-OF-SCOPE disposition; the "check_na_corpus_ratchet fenced-code-block (Section
+      3 log)" citation does not resolve to any existing checkbox in this doc — likely a batch mis-citation, the
+      underlying defect is the SAME fix already reconciled via `plan_reconciler_findings_cross_cutting`'s Item J),
+      `plan_reconciler_findings_cross_cutting_2026_08_10.md` (Items A/G/H/K/L/N flipped this session; Item J was already
+      flipped by a peer session before this reconciliation ran),
+      `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md` (1/1),
+      `qg_ratchets_block_unrelated_ships_2026_08_12.md` (2/2), `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`
+      (1/1), `service_config_ownership_and_instruction_contract_2026_08_12.md` (9/10 — J1/shadow-BookType was already
+      flipped by a peer session; several other todos in this doc remain genuinely open, out of this batch's scope).
+      Every flip cites the reconciling commit sha; re-verified live (not trusted from the batch's own text) against each
+      source doc's actual current checkbox state before flipping.
 - [ ] [REVIEW] P2. For each source doc reconciled above, check whether it now has zero open todos. If so, run the
       standard 6-step archival ritual on it (dated archive folder, exact-successor banner if applicable, corpus-wide
       referrer-path fixup) — do not leave a now-fully-done source doc live and un-archived. Done when: every source doc

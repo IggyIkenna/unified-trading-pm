@@ -578,12 +578,41 @@ just belongs on a different layer than instrument_type does, and conflating the 
       source=compound_v3) — verified in the run log (12 writes to
       `COMPOUND_V3-ETHEREUM:SPOT_ASSET:{wbtc,cbbtc,rseth,usde,reth,oseth,rsweth, tbtc,ethx,woeth,usdc,usdt}.parquet`) +
       per-VM manifest shard (81 total/64 new entries).
-- [ ] [CODE] P2. **WIRE oracle_prices capture for MORPHO-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE).
-      Over-claims a `2024-01-08` genesis (`defi_venue_capabilities.py:99`), zero captured rows, phase `live`. Add a
-      Morpho-Blue price-oracle branch to `oracle_prices_handler.py` (+ constants) writing under
-      `venue=MORPHO, chain=ETHEREUM` (Morpho markets use per-market oracle contracts — enumerate the active markets'
-      oracles). Done-when: single-day force-compute produces real `captured` rows for `MORPHO-ETHEREUM/oracle_prices`
-      against the `-test-` bucket. (repo: market-tick-data-service)
+- [x] ✅ [CODE] P2. **WIRE oracle_prices capture for MORPHO-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE,
+      recorded in this doc's Progress Log 2026-08-09,
+      `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`). Over-claims a `2024-01-08`
+      genesis (`defi_venue_capabilities.py:99`), zero captured rows, phase `live`. — **DONE 2026-08-14**: shipped
+      `market-tick-data-service@c0325cdebe` (`_morpho_oracle_collection.py` new module + `_oracle_branches_aggregate.py`
+      new module + constants + handler wiring) + `unified-trading-library@9e7be026ad`
+      (`_VENUE_DT_OVERRIDES[("MORPHO","oracle_prices")]` = `BATCH_MORPHO`, else the (defi, oracle_prices)
+      SOURCE_PRIORITY top entry mislabels every row as Pyth-sourced) + `unified-api-contracts` UAC registration
+      (`BATCH_MORPHO`/`SOURCE_MODE_CAPABILITY["morpho"]`/`SOURCE_PRIORITY`, already shipped by a parallel session before
+      this todo started). Design: rather than a static per-protocol reserve list (the SPARK/RADIANT/COMPOUND/FLUID
+      pattern), Morpho Blue markets are permissionless and created dynamically, so the branch ENUMERATES active
+      USD-stable-loan markets live via the Morpho Blue GraphQL API (`blue-api.morpho.org/graphql`,
+      `markets(first, orderBy: SupplyAssets, orderDirection: Desc)`) — verified live 2026-08-14 via WebSearch/WebFetch
+      against docs.morpho.org that the API exposes `oracle.address` per market and confirmed the `IOracle.price()`
+      scaling formula
+      (`price of 1 collateral unit quoted in 1 loan unit, scaled by 1e36, precision 36 + loanDecimals - collateralDecimals`)
+      against the official Morpho Blue oracle spec — then reads each candidate market's `IOracle.price()` on-chain and
+      converts via `human_price = price_raw * 10**(collateralDecimals - loanDecimals) / 1e36`, which for a USD-stable
+      loan asset (USDC/USDT/DAI) IS the collateral's USD price. QG hit 2 real gates along the way (both fixed, not
+      worked around): the added branch call pushed `oracle_prices_handler.py`'s `process()` over the 50-line method cap
+      (extracted `_collect_onchain_oracle_branches` → later moved to the new `_oracle_branches_aggregate.py` module when
+      that pushed the FILE over the 900-line cap, same fix class as COMPOUND_V3's 2026-08-12 module split) and 2
+      pre-existing AAVE/SPARK tests had stale `patch()` targets pointing at the old
+      `oracle_prices_handler.collect_compound_oracle_rows`/`collect_radiant_oracle_rows` names post-module-split
+      (repointed to `_oracle_branches_aggregate`, added a `collect_morpho_oracle_rows` mock so those tests don't hit the
+      real Morpho API). A copy-pasted blanket `# pyright:` suppression header on the 2 new files also tripped the
+      diff-scoped net-new-suppression ratchet (STEP 5.94) — replaced with explicit `cast()`s for the loosely-typed
+      GraphQL parsing + narrow per-line ignores on the 2 genuinely-untyped boundaries (aiohttp `.json()`, the web3
+      contract call); basedpyright 0 errors. **Done-when proven**: single-day force-compute for 2026-08-13 via the
+      console script
+      (`IS_TEST_RUN=true .venv/bin/market-tick-data-service --operation collect-oracle-prices --mode batch --asset-group defi --venues MORPHO --start-date 2026-08-13 --end-date 2026-08-13 --force`)
+      produced **2 real `captured` rows** for `MORPHO-ETHEREUM/oracle_prices` (sUSDe, USDe — both from real
+      USDC/USDT-loan markets) against the `-test-` bucket (`market-data-tick-defi-test-central-element-323112`,
+      `pipeline_mode=batch_morpho`, source=morpho) — verified in the run log
+      (`MORPHO-ETHEREUM:SPOT_ASSET:{susde,usde}.parquet`) + per-VM manifest shard (92 total/52 new entries).
 - [x] ✅ [CODE] P2. **WIRE oracle_prices capture for RADIANT-ARBITRUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE,
       recorded in this doc's Progress Log 2026-08-09,
       `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`). Over-claims a `2022-07-25`

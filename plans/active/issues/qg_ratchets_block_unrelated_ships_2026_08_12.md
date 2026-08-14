@@ -40,6 +40,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+archive_exempt: true
 source: >-
   Observed 2026-08-11/12 while shipping unrelated bats-hermeticity and codex-doc work; the same ratchet blocked ships on
   two consecutive days with no content change in either case.
@@ -109,15 +110,27 @@ fault:
       carried over — the re-application dropped one edit (the summary line still read "0 new violations"), which only
       the re-measurement caught.
 
-- [ ] [BACKEND] P3. **De-cohort the thresholds** so a batch of docs written the same day does not expire the same day —
-      e.g. jitter the limit per doc (90d + hash(path) % 14) or stagger `last_reviewed` on bulk authoring. Without this,
-      even a digest arrives as a once-a-quarter flood rather than a trickle.
-- [ ] [DOCS] P3. Record the distinction the absorb-path needs: a **correctness** ratchet (commit-SHA evidence — asserts
-      a claim is TRUE) must never be re-baselined by a passer-by, while a **hygiene** ratchet (freshness, link-prose)
-      may be, with the debt named in the commit. Both were hit in one session and treated differently on purpose; that
-      reasoning currently exists only in commit messages.
+- [x] ✅ [BACKEND] P3. **De-cohort the thresholds** so a batch of docs written the same day does not expire the same day
+      — e.g. jitter the limit per doc (90d + hash(path) % 14) or stagger `last_reviewed` on bulk authoring. Without
+      this, even a digest arrives as a once-a-quarter flood rather than a trickle. — **DONE**, reconciled from
+      `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: `check_codex_doc_freshness.py`'s effective staleness
+      window is now `staleness_days + jitter(path)`, a stable sha256-derived 0-13 day offset over the doc's
+      workspace-relative path (never builtin `hash()`, which is `PYTHONHASHSEED`-salted). Only the advisory `stale`
+      reason is affected. 6 new unit tests.
+- [x] ✅ [DOCS] P3. Record the distinction the absorb-path needs: a **correctness** ratchet (commit-SHA evidence —
+      asserts a claim is TRUE) must never be re-baselined by a passer-by, while a **hygiene** ratchet (freshness,
+      link-prose) may be, with the debt named in the commit. Both were hit in one session and treated differently on
+      purpose; that reasoning currently exists only in commit messages. — **DONE**, reconciled from
+      `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: new SSOT
+      `/codex/06-coding-standards/ratchet-correctness-vs-hygiene.md`.
 
 ## Progress Log
+
+- **2026-08-14 (slot-29, review, `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13_finalize.md` todo 1)**:
+  reached 0 open todos this session via checkbox reconciliation from
+  `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`. `archive_exempt: true` set deliberately — full 6-step
+  archival (incl. corpus-wide referrer fixup) is that finalize plan's separate todo 2, not this reconciliation pass's
+  scope. Drop this field and archive when todo 2 runs.
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).

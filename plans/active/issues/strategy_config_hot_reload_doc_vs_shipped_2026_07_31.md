@@ -41,6 +41,7 @@ assigned_vm: NA
 resolved_by:
 locked_by:
 locked_since:
+archive_exempt: true
 context_scope:
   [
     strategy-service/strategy_service/config_reloaders.py,
@@ -94,7 +95,7 @@ stating that the allow-list and error type do not exist and that the instrument 
 
 ## Follow-ups
 
-- [ ] [CODE] P2. **RULED 2026-08-06 (operator), option A: implement the documented guard — CONFIRMED 2026-08-12
+- [x] ✅ [CODE] P2. **RULED 2026-08-06 (operator), option A: implement the documented guard — CONFIRMED 2026-08-12
       (/plan-reconcile, operator confirmed interactively).** `[CODE]` tag (was `[OPERATOR]`) — build the safe-field
       allow-list + `UnsafeConfigChangeError` as originally designed, closing the real gap that any field can currently
       hot-swap into a live paper/live trading strategy. AO-dispatchable. Provenance: codex freshness re-review shard-B,
@@ -102,7 +103,11 @@ stating that the allow-list and error type do not exist and that the instrument 
       called it a 3-way undecided design call, with no Progress Log entry recording an actual ruling event) — resolved
       2026-08-12: the operator confirmed option A is the standing ruling. The implementation itself (safe-field
       allow-list + guard) is NOT done here — this only resolves the doc-level contradiction; the code change remains
-      open, AO-dispatchable work.
+      open, AO-dispatchable work. — **IMPLEMENTATION DONE**, reconciled from
+      `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: `strategy-service@c688512912` — added
+      `SAFE_STRATEGY_RELOAD_FIELDS` + `UnsafeConfigChangeError` to `config_reloaders.py`; `_on_strategies_reload` now
+      diffs incoming vs active config field-by-field, raising on any non-`strategy_params` change (previously active
+      config stays in effect). 5 new unit tests. Codex SSOT updated same session.
 - [x] [DOC] P3. Document `VersionGovernanceReloader` + `StrategyDirectiveReloader` in
       `/codex/04-architecture/live-strategy-config-hot-reload.md` — both are shipped and currently absent from the SSOT.
       -- CLOSED (na-eligibility-audit 2026-08-01): already done —
@@ -112,6 +117,11 @@ stating that the allow-list and error type do not exist and that the instrument 
 
 ## Progress Log
 
+- **2026-08-14 (slot-29, review, `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13_finalize.md` todo 1)**:
+  reached 0 open todos this session via checkbox reconciliation from
+  `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`. `archive_exempt: true` set deliberately — full 6-step
+  archival (incl. corpus-wide referrer fixup) is that finalize plan's separate todo 2, not this reconciliation pass's
+  scope. Drop this field and archive when todo 2 runs.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **na-eligibility-audit 2026-08-01**: KEEP-NA, stale items closed -- 1 item(s) closed as stale/duplicated (see
   checkboxes above), doc stays assigned_vm: NA. Full audit rationale: One item (the operator A/B/C ruling on whether

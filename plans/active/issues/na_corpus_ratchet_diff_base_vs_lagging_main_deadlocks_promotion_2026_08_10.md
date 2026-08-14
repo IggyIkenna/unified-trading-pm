@@ -111,33 +111,40 @@ a normal ratchet into a self-reinforcing wall.
       consumer regex), AND that the gate sits on the SHARED `DIFF_BASE_REF` rather than one consumer. Wired into
       `quality-gates.sh`. Verified both directions: renaming the consumer regex OR either producer makes the check exit
       1 naming the exact file; the unmodified tree passes.
-- [ ] [BACKEND] P3. The deeper shape is still unaddressed: `origin/main` is a proxy for "this change's base" that is
+- [x] ✅ [BACKEND] P3. The deeper shape is still unaddressed: `origin/main` is a proxy for "this change's base" that is
       only valid while promotion FLOWS. The promote gate handles the one case where that proxy is known-bad, but a
       normal PR opened against a long-stalled main has the same problem in miniature. Preferred end state: resolve the
       diff base to the branch's own last-gated point (`github.event.before` for a push; the integration branch for a PR)
       rather than a fixed `origin/main`. Note the CI checkout is `fetch-depth: 2`
       (`unified-trading-ci/.github/workflows/python-quality-gates-v2.yml`), so any chosen base must either already
       resolve there or be explicitly fetched — a base that silently fails to resolve is fail-UNSAFE (every current
-      violation reads as "new"). Repo: unified-trading-pm (`scripts/plan-hygiene/`).
+      violation reads as "new"). Repo: unified-trading-pm (`scripts/plan-hygiene/`). — **DONE**, reconciled from
+      `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: `unified-trading-pm@715a90d7ac` (`DIFF_BASE_REF` now
+      resolves from the triggering CI event — push uses `before` SHA, PR uses `GITHUB_BASE_REF`, other triggers stay
+      baseline+buffer; verified via 5 simulated scenarios).
 - [ ] [BACKEND] P2. **Promote PRs re-gate already-gated content.** A `chore(promote)` PR is a bot-generated projection
       of LDR content that each already passed the LDR entry gate commit-by-commit; re-running corpus-growth ratchets
       over the aggregate is double jeopardy and is what converts ordinary corpus growth into a promotion blocker. Decide
       (operator call, not a unilateral backend change — it narrows a hard gate) whether corpus-growth ratchets should be
       ENTRY gates only (LDR push / precommit) rather than promotion gates. Repo: unified-trading-pm.
-- [ ] [BACKEND] P2. **No detection surface for this failure class.** The wall stood 22h with 17 `sit_failure`
+- [x] ✅ [BACKEND] P2. **No detection surface for this failure class.** The wall stood 22h with 17 `sit_failure`
       dispatches, none of which escalated "this gate cannot converge" as distinct from "this gate is red". Add a
       detector for a _non-convergeable_ gate — e.g. the same check failing across N consecutive distinct HEADs with a
       MONOTONICALLY GROWING violation count is definitionally not a fixable regression. Cross-reference
       `/plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md` (adjacent gap:
       local pre-push ratchet breaches) — this one is the opposite side, a remote gate that IS observed but is
-      mis-classified as retryable. Repo: agent-orchestrator (`server/escalation.py`, `server/ci_reconcile.py`).
+      mis-classified as retryable. Repo: agent-orchestrator (`server/escalation.py`, `server/ci_reconcile.py`). —
+      **DONE**, reconciled from `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`:
+      `agent-orchestrator@197c5ca521` (`detect_non_convergeable_gate()` + violation-count-history walk in
+      `server/escalation.py`, pages immediately on a 3-streak monotonic growth instead of waiting the normal grace
+      period; 4 new tests).
 - [ ] [ADMIN] P2. **The NA corpus genuinely outgrew its ceiling** (391 docs vs 372+10; todos 1119 vs 1109+30 passing),
       and this is the third re-baseline in ~2 days. The fleet's own mandated processes (findings-triage "every follow-up
       is a `- [ ]` todo", `/plan-reconcile`, `/ci-reconcile`) create NA docs faster than `/na-eligibility-audit` retires
       them. Decide whether the answer is a higher steady-state ceiling, a faster retirement cadence, or narrowing what
       must become a tracked NA doc — re-baselining on each breach is not a steady state. Owner: operator.
 
-- [ ] [BACKEND] P1. **The deadlock SURVIVED the cancellation fix — it is now a supersede TREADMILL, and this is the
+- [x] ✅ [BACKEND] P1. **The deadlock SURVIVED the cancellation fix — it is now a supersede TREADMILL, and this is the
       controlling blocker.** Measured 16:00-16:35Z 2026-08-10: PR #2713 was CLOSED with `mergedAt: null`, then #2714,
       then #2715, each superseded within a tick; `origin/main..origin/live-defi-rollout` GREW 1622 → 1728 across the
       window. The bot's own log states the rule:
@@ -151,21 +158,34 @@ a normal ratchet into a self-reinforcing wall.
       Repo: unified-trading-pm (`.github/workflows/ldr-to-main-promote.yml`). **Note for whoever picks this up: the
       cancel-in-progress exemption shipped earlier today (932db1955e) was a REAL fix for a REAL cause, but it was never
       sufficient on its own — cancellation stopped and superseding took its place. Do not read its presence as
-      "promotion is handled".**
-- [ ] [BACKEND] P2. **`check_ag_closeout_linkage` is another corpus-wide ratchet with no diff-scoped fast path** — the
-      same class this doc already documents for the `DIFF_BASE_REF` four. It failed the promote gate at frozen head
+      "promotion is handled".** — **DONE**, reconciled from
+      `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: `unified-trading-pm@7840229ddf` (requires
+      `DOOMED_STREAK_THRESHOLD=3` consecutive doomed observations of the SAME open PR before superseding, tracked via
+      the bot's own "doomed-tick" PR comments).
+- [x] ✅ [BACKEND] P2. **`check_ag_closeout_linkage` is another corpus-wide ratchet with no diff-scoped fast path** —
+      the same class this doc already documents for the `DIFF_BASE_REF` four. It failed the promote gate at frozen head
       `37d720dc4291` with `1 orphan(s) (baseline 0)`, yet at LDR tip `0f7d704066` it reports **0 orphans** (verified
       locally in a clean worktree), so the violation was transient corpus state that no individual commit owned. Its
       `--only` mode passes on staged files while the corpus-wide mode fails, which is exactly the (f)-class blind spot:
       a violation introduced via a fast path surfaces later on an unrelated commit's full run. Give it the same
-      diff-scoped treatment as the migrated six. Repo: unified-trading-pm (`scripts/plan-hygiene/`).
-- [ ] [BACKEND] P3. **`check_ui_api_flow_coverage.py` fails OPEN on a missing manifest.** Run outside the expected
+      diff-scoped treatment as the migrated six. Repo: unified-trading-pm (`scripts/plan-hygiene/`). — **DONE**,
+      reconciled from `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: `unified-trading-pm@96b33046f9`
+      (added `--diff-base <ref>` mode to `check_ag_closeout_linkage.py`, git-backed rebuild + path-identity compare;
+      wired into `run_hygiene_sweep.sh`'s shared `DIFF_BASE_REF` guard).
+- [x] ✅ [BACKEND] P3. **`check_ui_api_flow_coverage.py` fails OPEN on a missing manifest.** Run outside the expected
       workspace layout it prints `ERROR: Manifest not found: …/unified-trading-pm/ui-api-flow-test-manifest.yaml` and
       **exits 0** (measured 2026-08-10). A gate whose absent input yields PASS cannot be trusted to be enforcing
       anything; if the manifest ever goes missing in CI, its `BLOCK: 2 critical journey(s) have ZERO real-flow tests`
       verdict silently disappears instead of failing loudly. Make a missing manifest a hard error, and separately
       resolve the two flagged journeys (`deploy-service`, `kill-switch-toggle`). Repo: unified-trading-pm
-      (`scripts/checkers/`).
+      (`scripts/checkers/`). — **DONE** (missing-manifest half only; the two flagged journeys are untouched, see below),
+      reconciled from `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: `unified-trading-pm@d5ea8d0755` —
+      the checker already returned exit 2 for missing/unparseable manifest; fixed `quality-gates.sh`'s `--warning-only`
+      wrapper to hard-fail specifically on exit 2 instead of folding it into the same non-blocking warn path as an
+      ordinary coverage gap.
+- [ ] [BACKEND] P3. Resolve the two flagged journeys (`deploy-service`, `kill-switch-toggle`) named in the prior todo —
+      the missing-manifest hard-fail is fixed, this half was explicitly out of scope for that fix. Repo:
+      unified-trading-pm (`scripts/checkers/`).
 
 ## Progress Log
 

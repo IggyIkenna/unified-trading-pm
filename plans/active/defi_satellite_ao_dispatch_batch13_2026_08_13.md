@@ -225,44 +225,50 @@ source: >-
       `plans/active/issues/solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md`
 
       **INVESTIGATED 2026-08-14 (slot-18, backend_engineer) — no workload-intrinsic factor found; best explanation is a
-          generic, pre-fix detection-bug window, not anything specific to this task.** Read both closed root-cause docs for
-          the fleet-wide crash-loop:
-          `plans/archive/2026_08/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md` (archived 2026-08-09)
-          and `plans/archive/2026_08/issues/review_slot1_tmuxpruner_crash_loop_recurrence_2026_08_14.md` (archived
-          2026-08-14). Neither identified mechanism is workload/content-gated: (1) an undebounced `has_session()` transient
-          probe miss in `reap_orphan_agents` (fixed `agent-orchestrator@5a163e7`, 2026-08-09) and a broken
-          `remain-on-exit` tmux target (`set-option -t "=name"` failing silently since 2026-06-25, fixed
-          `agent-orchestrator@c9dad3e`, 2026-08-09) are pure host-timing/tmux-target bugs that fire identically regardless
-          of what the session's prompt/tool-calls/worktree look like; (2) the 2026-08-14 recurrence's root cause
-          (`agent-orchestrator@c107c96a52`) was an unconditional `status="killed"` DB write regardless of whether
-          `kill_session()` actually terminated the tmux process — again content-agnostic. The one review-role-specific
-          mechanism found (`dd01255`, frozen `SlotRow.last_ping` because review's loop never calls the slot-heartbeat
-          endpoint) does not apply here — this task ran under a generic worker/`data_engineering` craft, which calls
-          `/api/slots/{N}/heartbeat` directly. Both non-role-specific fixes shipped 2026-08-09, i.e. AFTER this task's
-          2026-08-08 17:31-18:00Z wedge window — consistent with the task simply being dispatched during the live pre-fix
-          bug window, not reacting to it. Checked the task's own workload shape for a size/pattern anomaly: its plan
-          (`plans/active/solana_dex_pool_swaps_indexer_2026_08_08.md`, 132 lines) and referenced scope doc
-          (`plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md`, 168 lines) are both unremarkable in
-          size for this corpus (many active plans run 500-1000+ lines); `context_scope` is a normal short pointer list —
-          nothing here would push a fresh boot's initial context meaningfully higher than a typical task. The strongest
-          direct evidence is already in the source doc itself (Progress Log, 18:15Z/18:16Z entries, pre-dating this
-          investigation): the SAME exact task ran to a full clean `boot->work->done` cycle TWICE within minutes of the 4
-          wedge events (slot-33 and slot-7, both `already_in_progress` re-dispatches), each independently completing a
-          real ~1-AI-day brand-new build (Solana signature-walk + swap decoder) with quality-gates green — direct proof
-          the task's own workload is not inherently oversized or crash-prone. Live activity-log query for the original
-          2026-08-08 window was attempted (`GET /api/activity?task=solana_dex_pool_swaps_indexer-002`) but the `task`
-          filter param did not scope the response (returned generic recent activity, not task-scoped) and the event table
-          has rolled ~500k ids past that 6-day-old window since — not independently re-derivable at this remove; relying
-          on the doc's own live-captured table instead. **Conclusion: no workload-characteristic disproportion found** —
-          the 4-in-30min concentration is best explained by simple redispatch-timing bad luck landing inside the
-          still-active (pre-2026-08-09-fix) detection-bug window, not a property of this task's prompt size, tool-call
-          pattern, or worktree size. No code change indicated by this finding (the underlying bugs are already fixed);
-          checkbox reconciliation into the source doc's own todo 1 is out of scope for this batch (per the batch's stated
-          design, source docs are reconciled by the paired finalize plan). unified-trading-pm (this commit).
+              generic, pre-fix detection-bug window, not anything specific to this task.** Read both closed root-cause docs for
+              the fleet-wide crash-loop:
+              `plans/archive/2026_08/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md` (archived 2026-08-09)
+              and `plans/archive/2026_08/issues/review_slot1_tmuxpruner_crash_loop_recurrence_2026_08_14.md` (archived
+              2026-08-14). Neither identified mechanism is workload/content-gated: (1) an undebounced `has_session()` transient
+              probe miss in `reap_orphan_agents` (fixed `agent-orchestrator@5a163e7`, 2026-08-09) and a broken
+              `remain-on-exit` tmux target (`set-option -t "=name"` failing silently since 2026-06-25, fixed
+              `agent-orchestrator@c9dad3e`, 2026-08-09) are pure host-timing/tmux-target bugs that fire identically regardless
+              of what the session's prompt/tool-calls/worktree look like; (2) the 2026-08-14 recurrence's root cause
+              (`agent-orchestrator@c107c96a52`) was an unconditional `status="killed"` DB write regardless of whether
+              `kill_session()` actually terminated the tmux process — again content-agnostic. The one review-role-specific
+              mechanism found (`dd01255`, frozen `SlotRow.last_ping` because review's loop never calls the slot-heartbeat
+              endpoint) does not apply here — this task ran under a generic worker/`data_engineering` craft, which calls
+              `/api/slots/{N}/heartbeat` directly. Both non-role-specific fixes shipped 2026-08-09, i.e. AFTER this task's
+              2026-08-08 17:31-18:00Z wedge window — consistent with the task simply being dispatched during the live pre-fix
+              bug window, not reacting to it. Checked the task's own workload shape for a size/pattern anomaly: its plan
+              (`plans/active/solana_dex_pool_swaps_indexer_2026_08_08.md`, 132 lines) and referenced scope doc
+              (`plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md`, 168 lines) are both unremarkable in
+              size for this corpus (many active plans run 500-1000+ lines); `context_scope` is a normal short pointer list —
+              nothing here would push a fresh boot's initial context meaningfully higher than a typical task. The strongest
+              direct evidence is already in the source doc itself (Progress Log, 18:15Z/18:16Z entries, pre-dating this
+              investigation): the SAME exact task ran to a full clean `boot->work->done` cycle TWICE within minutes of the 4
+              wedge events (slot-33 and slot-7, both `already_in_progress` re-dispatches), each independently completing a
+              real ~1-AI-day brand-new build (Solana signature-walk + swap decoder) with quality-gates green — direct proof
+              the task's own workload is not inherently oversized or crash-prone. Live activity-log query for the original
+              2026-08-08 window was attempted (`GET /api/activity?task=solana_dex_pool_swaps_indexer-002`) but the `task`
+              filter param did not scope the response (returned generic recent activity, not task-scoped) and the event table
+              has rolled ~500k ids past that 6-day-old window since — not independently re-derivable at this remove; relying
+              on the doc's own live-captured table instead. **Conclusion: no workload-characteristic disproportion found** —
+              the 4-in-30min concentration is best explained by simple redispatch-timing bad luck landing inside the
+              still-active (pre-2026-08-09-fix) detection-bug window, not a property of this task's prompt size, tool-call
+              pattern, or worktree size. No code change indicated by this finding (the underlying bugs are already fixed);
+              checkbox reconciliation into the source doc's own todo 1 is out of scope for this batch (per the batch's stated
+              design, source docs are reconciled by the paired finalize plan). unified-trading-pm (this commit).
 
-- [ ] [CODE] P2. Update defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md row 1's stale script-name/numbers
-      once the gas_fees manifest purge is confirmed complete — bounded doc-hygiene edit Source:
-      `plans/archive/2026_08/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md`
+- [x] [CODE] P2. ✅ Update defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md row 1's stale
+      script-name/numbers once the gas_fees manifest purge is confirmed complete — bounded doc-hygiene edit Source:
+      `plans/archive/2026_08/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` —
+      unified-trading-pm (this commit). Live re-check (2026-08-14): the target doc's in-flight-work table row 1 already
+      carries the real script name (`purge_gas_fees_legacy_venue_prefixes_2026_08_04.py`, with an inline note that the
+      original row-1 name was stale/never-committed WIP) and the updated post-purge numbers/status ("DONE 2026-08-07
+      17:26Z (both GCS + manifest)... manifest confirmed 0 of 12,425 TARGET rows remain... GCS fresh-confirmed 0 objects
+      across all 10 TARGET_VENUES"), matching the gas_fees manifest purge's confirmed-complete status. No stale content
+      remains — checkbox reconciliation only, no doc edit needed for this batch.
 - [ ] [CODE] P2. Relaunch the dex_swaps legacy-fold script WITHOUT --allow-stale-fallback once the DeFi manifest
       consolidator has genuinely caught up (mechanical rerun, worker can verify freshness precondition and execute)
       Source: `plans/active/issues/defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md`

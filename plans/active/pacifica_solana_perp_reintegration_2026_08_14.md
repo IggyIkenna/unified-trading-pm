@@ -179,66 +179,75 @@ direct testing, not documentation-reading:**
 Depends on §B (venue + capability registration) and benefits from §C landing first (real instrument universe to validate
 shard-specs against), but the connector code itself doesn't hard-depend on §C — can be built in parallel.
 
-- [ ] [SCRIPT] P1. **Resurrect the batch REST adapter** —
-      `market-tick-data-service@2e674d1f~1:market_tick_data_service/adapters/_umi_pacifica.py` (deleted, 495 lines, real
-      working code against `https://api.pacifica.fi/api/v1`: `fetch_pacifica_candles`/`fetch_pacifica_rest`, trades +
-      book_snapshot_5 parsing). `git show market-tick-data-service@2e674d1f~1:<path> > <path>`. §A already confirmed the
-      REST response shapes still match this parser exactly — restore as-is, no shape migration expected. Also restore
-      the `umi_tick_provider.py` routing re-binds the deleted module's own docstring requires (`_fetch_pacifica_*`
-      symbols tests patch).
-- [ ] [SCRIPT] P1. **Resurrect and ACTIVATE the live WS connector** —
-      `market-tick-data-service@2e674d1f~1:market_tick_data_service/live/connectors/pacifica_solana_perp_ws.py`
-      (deleted, was `BLOCKED-CREDENTIALS`, `_CREDENTIALS_AVAILABLE = False`). Restore the file, then — unlike the
-      original scaffold — **flip `_CREDENTIALS_AVAILABLE = True` and implement `_drain_ws_messages` for real**, since §A
-      proved the free public tier streams live trades with zero credentials. Connect to `wss://ws.pacifica.fi/ws` (the
-      confirmed-live path — the old scaffold's `/v1` path assumption was wrong even before the cull). Register under
-      `WS_FEED_CONNECTOR_FACTORIES["PACIFICA-SOLANA"]`.
-- [ ] [SCRIPT] P2. **Wire funding-rate capture as `derivative_ticker.funding_rate`, NOT standalone `perp_funding`.**
-      Pre-cull history shows Pacifica was already migrated to the bundled `derivative_ticker` shape
-      (`market-tick-data-service@ba6df0ac`, "retire standalone perp_funding for HYPERLIQUID/ASTER/PACIFICA-SOLANA/
-      LIGHTER-ZKSYNC in favor of derivative_ticker.funding_rate") — follow that established pattern. `GET /info` (§A)
-      already returns `funding_rate`/`next_funding_rate` inline per market — use it directly rather than polling a
-      separate funding endpoint. Confirm the 5s-recalc/hourly-settlement cadence from current docs matches the capture
-      interval chosen.
-- [ ] [SCRIPT] P3. **Restore or rewrite the pruned MTDS tests** — `tests/unit/test_pacifica_candles.py` (408 lines) and
-      `tests/unit/test_pacifica_solana_perp_ws_connector.py` (145 lines) were deleted in the same cull commit
-      (`2e674d1f`). Restore as a starting point; update the WS connector test to assert real activation
-      (`_CREDENTIALS_AVAILABLE = True`) rather than the old scaffold's no-op behavior.
-- [ ] [SCRIPT] P3. **Shard-level failure isolation check** — confirm the resurrected live connector follows the
-      no-`raise`-in-per-shard-loop convention (`/codex/04-architecture/shard-level-failure-isolation.md`) and classifies
-      errors via `classify_venue_error()` rather than reintroducing whatever pattern the pre-cull scaffold used (it
-      never ran live, so its error-handling was never exercised for real).
+- [x] [SCRIPT] P1. ✅ **Resurrected the batch REST adapter** — `market-tick-data-service@c87b12db60`. Restored
+      `_umi_pacifica.py` from the deleted commit + `umi_tick_provider.py` routing re-binds. Evidence: 10728 passed, 0
+      failed on the repo's full pytest suite; `quality-gates.sh` ALL PASSED.
+- [x] [SCRIPT] P1. ✅ **Resurrected and ACTIVATED the live WS connector** — `market-tick-data-service@c87b12db60`. Full
+      real rewrite (not a flag flip) mirroring `hyperliquid_ws.py`'s structure, incl. the mandatory `asyncio.sleep(0)`
+      reconnect-loop fix (2026-08-05 incident — 16-26GB RSS host starvation if omitted). Subscribe message format
+      confirmed via WebFetch against `docs.pacifica.fi/api-documentation/api/websocket/subscriptions/     trades.md`
+      (`{"method":"subscribe","params":{"source":"trades","symbol":"<COIN>"}}`, cited example, not guessed); unsubscribe
+      shape is an honest, documented, inferred-not-confirmed mirror of subscribe (residual risk noted in code + tests,
+      no live round-trip performed in this session). Registered under `WS_FEED_CONNECTOR_FACTORIES["PACIFICA-SOLANA"]`.
+- [x] [SCRIPT] P2. ✅ **Funding-rate capture confirmed as `derivative_ticker.funding_rate`** —
+      `market-tick-data-service@     c87b12db60`. Unchanged from the pre-cull pattern; MTDS batch adapters don't call
+      `classify_venue_error()` (confirmed against sibling adapters — that's an instruments-service-layer convention, not
+      MTDS's).
+- [x] [SCRIPT] P3. ✅ **Restored + rewrote MTDS tests** — `market-tick-data-service@c87b12db60`.
+      `tests/unit/test_pacifica_candles.py`, `tests/unit/test_pacifica_solana_perp_ws_connector.py` restored + updated
+      for real activation (no more `_CREDENTIALS_AVAILABLE=False` no-op assertions).
+- [x] [SCRIPT] P3. ✅ **Shard-level failure isolation confirmed** — `market-tick-data-service@c87b12db60`. No `raise` in
+      per-shard loops (matches convention); `classify_venue_error()` correctly absent (MTDS batch adapters never use it,
+      unlike instruments-service). **§B4 corrected**: the tentative "no `onchain_perp_batch_handler.py` row needed"
+      answer from §B was WRONG — `git show 2e674d1f --stat` proved the deletion commit DID touch this file
+      (`_VENUE_SOURCE`/`_VENUE_PIPELINE_MODE`/`_venue_chain`/`_VENUE_LAUNCH`/`UMI_VENUE_FETCH`/symbol-mapping/
+      `DROPPED_DATA_TYPES`), all restored. One deliberate deviation from pre-cull behavior: `book_snapshot_5` stays in
+      the batch universe (honest-empties on non-today shards) rather than reintroducing an MTDS-local exclusion, since
+      UAC has no per-data-type capability entry declaring it batch-incapable yet — documented as a genuine gap, not
+      silently worked around.
 
 ## E. execution-service — genuinely net new
 
-- [ ] [SCRIPT] P1. **Build `defi_execution/protocols/pacifica.py` from scratch.** Confirmed zero prior Pacifica commits
-      anywhere in execution-service history — no resurrection shortcut here, unlike §C/§D. REST base
-      `https://api.pacifica.fi/api/v1`; order endpoints `POST /orders/create` (limit) and `POST /orders/create_market`
-      per current docs. Follow the existing DeFi protocol + `DefiErrorCode` conventions
-      (`/codex/04-architecture/defi-execution-overview.md`), mirroring the **on-chain-CeFi-perp CLOB shape** already
-      used for ASTER/EXTENDED-STARKNET/LIGHTER-ZKSYNC — Pacifica is an off-chain-matching-engine CLOB (confirmed: real
-      `fulfill_taker`/`fulfill_maker` trade attribution), not the AMM-pool shape used for Jupiter/Kamino in the sibling
-      plan.
-- [ ] [SCRIPT] P2. **Model USDC unified margin (cross/isolated) in the execution protocol.** Confirmed via §B's
-      collateral policy: no LST, no coin-margin — every position is USDC-denominated, with an explicit cross-vs-
-      isolated mode choice per position. Get this right at the protocol layer since it determines how margin calls and
-      liquidation risk get modeled downstream.
-- [ ] [SCRIPT] P3. **Wire `builder_code` support if fee-share/attribution is wanted.** Pacifica's order-creation
-      endpoints accept an optional `builder_code` param for partner attribution. Not required for basic execution — note
-      and defer unless there's a reason to register as a builder partner.
+- [x] [SCRIPT] P1. ✅ **Built `defi_execution/protocols/pacifica.py` from scratch** — `execution-service@c2961ec9a2`.
+      Researched Pacifica's real order-auth model via WebFetch (`docs.pacifica.fi/api-documentation/api/signing.md` +
+      `.../signing/implementation.md` + `.../signing/api-agent-keys.md`) BEFORE writing any signing code — confirmed
+      Pacifica does NOT use an HMAC API-key scheme like Aster; every SIGNED endpoint requires an **Ed25519 signature
+      from a raw Solana keypair**. Per the wallet-keys hard-stop, live signing was deliberately NOT implemented —
+      `supports_live` stays at `BaseConnector`'s fail-closed default (`False`); constructing with `is_live=True` raises
+      `SimulationOnlyConnectorError` (verified by test). `chain="SOLANA"` (not `"off-chain"` like Aster/ Hyperliquid,
+      since Pacifica's auth itself is wallet-signing-shaped, matching `JupiterConnector`). Error classification
+      confirmed via grep as UAC `classify_venue_error()` (this repo has no separate `DefiErrorCode` dispatch table for
+      connector-level errors — that enum serves a different purpose elsewhere). Evidence: 20 new unit tests passing,
+      `quality-gates.sh` ALL PASSED (189s).
+- [x] [SCRIPT] P2. ✅ **Modeled USDC unified margin (cross/isolated)** — `execution-service@c2961ec9a2`. New
+      `MarginMode = Literal["cross", "isolated"]` at both position level (`PositionResult`) and order level
+      (`place_order(..., margin_mode="cross")`) — a new pattern in this repo (neither Aster nor Hyperliquid modeled
+      margin mode explicitly before this).
+- [x] [SCRIPT] P3. ✅ **`builder_code` deliberately NOT implemented** — `execution-service@c2961ec9a2`. Documented in
+      module docstring + `_build_order_params()` comment as an explicit defer, per this todo's own instruction. **Honest
+      gap also flagged**: Pacifica's actual maker/taker fee schedule was not independently verified during the research
+      pass, so simulated fills record `fee=Decimal("0")` rather than a fabricated rate — covered by a dedicated test.
 
 ## F. strategy-service — venue selection
 
-- [ ] [SCRIPT] P1. **Add `PACIFICA-SOLANA` as a `perp_venue` candidate for `CARRY_FUNDING_DISPERSION` and straight-basis
-      structures** — never for `CARRY_STAKED_BASIS`/`CARRY_RECURSIVE_STAKED` (no LST margin, per §A/§B). Mirrors how
-      ASTER is already a priority venue in that same funding-dispersion cluster.
-- [ ] [SCRIPT] P2. **Confirm per-archetype venue selection accepts Pacifica with no new mechanism.** The pattern already
-      verified for other venues (`recursive_staked.py`/`staked_basis.py` reading `perp_venue` as a param) — check the
-      funding-dispersion archetype's own venue-selection path (`funding_rate_dispersion.py`) reads `perp_venue` the same
-      way. If it does, this is registry population only.
-- [ ] [SCRIPT] P3. **Confirm PnL/risk paths handle a USDC-cross-or-isolated venue correctly** — most existing
-      on-chain-perp venues in the funding-dispersion cluster may default to one margin mode; verify Pacifica's dual
-      cross/isolated option doesn't silently fall through to a wrong assumption.
+- [x] [SCRIPT] P1. ✅ **Added `PACIFICA-SOLANA` as a `perp_venue` candidate** — `strategy-service@14d869449f`. The
+      plan's assumed registration point (`funding_rate_dispersion.py`) was WRONG — that file is a pure-function helper
+      for a different engine with zero venue lists. The REAL registration point, found by investigation, is
+      `target_universe/catalog_carry.py`'s `_FUNDING_DISPERSION_VENUES` (feeds `CARRY_FUNDING_DISPERSION`) and
+      `_CARRY_BASIS_PERP_VENUE_BUNDLES` (feeds `CARRY_BASIS_PERP`, the plan's "straight-basis structures") — ASTER
+      already appears in both; Pacifica added the same way to both. Confirmed via 6 new tests, including 3 negative
+      assertions proving zero staked-basis eligibility.
+- [x] [SCRIPT] P2. ✅ **Confirmed registry-population-only, no new mechanism** — `strategy-service@14d869449f`.
+      `paper_universe.py`'s generic archetype→required-config-key map + the engine's per-tick generic `venue` field read
+      confirms the plan's own framing was right, once pointed at the real registration files above.
+- [x] [SCRIPT] P3. ✅ **Confirmed PnL/risk paths handle cross/isolated margin generically** —
+      `strategy-service@     14d869449f`. `risk/v2/margin_sim.py` reads `capability.margin_spec.mode` from the UAC
+      `CollateralPolicy` registry (§B already landed Pacifica's cross+isolated policy there) — venue-agnostic, no change
+      needed. The one venue-hardcoded margin-mode dict found (`CEFI_PERP_MARGIN_MODELS`) already excludes
+      ASTER/DERIBIT/KRAKEN-FUTURES etc. — Pacifica's absence there is consistent with every other funding-dispersion
+      venue, not a new gap. **Real cross-repo finding surfaced by this todo**: UAC's `venue_tokens.py` `_CEFI_TOKENS`
+      frozenset (consulted by the slot-label parser) was missing `"pacifica"` — §B's sweep hadn't covered it because
+      nothing consumed the token yet at sweep time. Fixed same-day: `unified-api-contracts@ce7c07d9af`.
 
 ## G. Documentation
 
@@ -250,6 +259,23 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
       reader following either doc sees the split decision and can find the sibling track.
 
 ## Progress Log
+
+- **2026-08-14/15 (§D-§F landed, full stack shipped)** — §D (MTDS), §E (execution-service), §F (strategy-service) all
+  shipped with full QG green: `market-tick-data-service@c87b12db60`, `execution-service@c2961ec9a2`,
+  `strategy-service@14d869449f`. Plus a same-day cross-repo fix `unified-api-contracts@ce7c07d9af` (venue_tokens.py
+  `_CEFI_TOKENS` gap §F surfaced). Parallelized §D/§E/§F as 3 background sub-agents (different repos, no file overlap)
+  after §B/§C landed — each did real investigation, not blind pattern-copying, and each found something the plan's draft
+  got wrong: §D discovered §B4's "no onchain_perp_batch_handler.py row needed" tentative answer was incorrect (the
+  deletion commit DID touch it); §E discovered Pacifica's order-auth is raw Solana Ed25519 wallet-signing, not
+  Aster-style HMAC — correctly triggered the wallet-keys hard-stop and left `supports_live=False`; §F discovered the
+  plan's assumed registration file (`funding_rate_dispersion.py`) was wrong and found the real one (`catalog_carry.py`),
+  and separately confirmed (with 3 negative tests) that Pacifica was never made staked-basis/LST-eligible. One
+  operational note: a UAC `quality-gates.sh` run stalled ~18 min in the resource-ledger admission-wait with zero actual
+  contention (confirmed via `ps`/`lsof` — no other QG process was running) — killed and re-ran clean rather than waiting
+  indefinitely; worth a look if this recurs, but treated as a one-off here, not filed as a separate issue. **Full stack
+  now live**: UAC → instruments-service → MTDS (batch+live) → execution-service (simulation-only, pending an operator
+  decision on live signing) → strategy-service (CARRY_FUNDING_DISPERSION + CARRY_BASIS_PERP). Remaining: §G (docs) + the
+  new §C follow-up (265-object quarantine reconciliation, deferred, tracked).
 
 - **2026-08-14 (autonomous build-out started)** — Invoked `/autonomous` to drive §B-§G to completion. §A already fully
   resolved (real API testing). Started §B (UAC registry, `unified-api-contracts`) — the discovery pass found the removal
