@@ -606,11 +606,33 @@ just belongs on a different layer than instrument_type does, and conflating the 
       source=radiant) — verified in the run log
       (`RADIANT-ARBITRUM:SPOT_ASSET:{dai,usdc,usdt,wbtc,weth,wsteth}.parquet`) + per-VM manifest shard (87 total/70 new
       entries).
-- [ ] [CODE] P2. **WIRE oracle_prices capture for FLUID-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE).
-      Over-claims a `2024-02-27` genesis (`defi_venue_capabilities.py:108`), zero captured rows, phase `live`. Add a
-      Fluid price-oracle branch to `oracle_prices_handler.py` (+ constants) writing under `venue=FLUID, chain=ETHEREUM`
-      (Fluid uses its own per-vault oracle resolvers). Done-when: single-day force-compute produces real `captured` rows
-      for `FLUID-ETHEREUM/oracle_prices` against the `-test-` bucket. (repo: market-tick-data-service)
+- [x] ✅ [CODE] P2. **WIRE oracle_prices capture for FLUID-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE,
+      recorded in this doc's Progress Log 2026-08-09,
+      `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`). Over-claims a `2024-02-27`
+      genesis (`defi_venue_capabilities.py:108`), zero captured rows, phase `live`. Add a Fluid price-oracle branch to
+      `oracle_prices_handler.py` (+ constants) writing under `venue=FLUID, chain=ETHEREUM` (Fluid uses its own per-vault
+      oracle resolvers). Done-when: single-day force-compute produces real `captured` rows for
+      `FLUID-ETHEREUM/oracle_prices` against the `-test-` bucket. (repo: market-tick-data-service) — **DONE
+      2026-08-14**: capture branch already shipped `market-tick-data-service@a4939570` + QG-fixes `@04263967`
+      (`_fluid_oracle_collection.py` — per-vault `oraclePriceOperate` via `FluidVaultResolver.getVaultEntireData`, USD-
+      stable-borrow vaults only) — both on `origin/live-defi-rollout`, but the checkbox had never been flipped and no
+      done-when proof was on record. Ran the done-when: single-day force-compute for 2026-08-13
+      (`IS_TEST_RUN=true .venv/bin/market-tick-data-service --operation collect-oracle-prices --mode batch --asset-group defi --venues FLUID --start-date 2026-08-13 --end-date 2026-08-13 --force`)
+      produced 3 real `captured` FLUID-ETHEREUM/oracle_prices rows (eth, susde, wsteth) — **but surfaced a real bug in
+      the process**: the rows physically landed under `pipeline_mode=batch_pyth_hermes` in the `-test-` GCS bucket while
+      the manifest recorded `pipeline_mode=batch_fluid` for the same rows (verified via the per-VM manifest parquet) — a
+      path/manifest mismatch making the captured rows unreachable at their canonical path. Root cause: FLUID was omitted
+      from `unified-trading-library`'s `_VENUE_DT_OVERRIDES` (`pipeline_mode_resolver.py`) — the exact same
+      per-(venue,data_type) override the 2026-08-12 SPARK/COMPOUND_V3/RADIANT fix added, just never extended to FLUID,
+      so `derive_pipeline_mode_for_row` fell through to `SOURCE_PRIORITY[("defi","oracle_prices")]`'s top entry
+      (pyth_hermes) for the physical write path only (the manifest's separate `pipeline_mode_for_source("fluid", ...)`
+      call was already correct). Fixed: added `("FLUID", "oracle_prices"): PipelineMode.BATCH_FLUID` to
+      `_VENUE_DT_OVERRIDES` — shipped `unified-trading-library@ebf8d082` (QG green, `origin/live-defi-rollout`,
+      post-push ancestry verified). Re-ran the done-when for 2026-08-14 post-fix: 3 real `captured` rows written to the
+      CORRECT canonical path
+      (`market-data-tick-defi-test-central-element-323112/raw_tick_data/by_date/day=2026-08-14/pipeline_mode=batch_fluid/asset_group=defi/venue=FLUID/chain=ETHEREUM/instrument_type=spot_asset/data_type=oracle_prices/FLUID-ETHEREUM:SPOT_ASSET:{eth,susde,wsteth}.parquet`),
+      manifest `pipeline_mode=batch_fluid` matching the physical path. WSTETH/ETH and WEETH/WSTETH vaults correctly
+      skipped (non-USD-stable borrow — debt-per-col ratio, not USD price) per `_FLUID_USD_STABLE_BORROWS` design.
 - [ ] [CODE] P2. **WIRE oracle_prices capture for KAMINO-SOLANA** (operator ruling 2026-08-09: WIRE REAL CAPTURE).
       Over-claims a `2023-06-01` genesis (`defi_venue_capabilities.py:177`), zero captured rows, phase `live`. Kamino is
       Solana — add the branch to the Solana defi collection path
