@@ -62,18 +62,26 @@ source: >-
 - [ ] [CODE] P2. Run data-pipeline-check-is --asset-group prediction --day 2026-08-05 (fallback 2026-06-28) once the
       phase_ab gate clears, cite the report path Source:
       `plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`
+
+      **NOT ACTIONABLE 2026-08-14 (slot-29, backend_engineer) — gate still open, re-verified live.** Same gate as the
+          `data-pipeline-check-mtds` todo below: `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md` is
+          `depends_on: [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true`. Live-checked
+                  `prediction_phase_ab_residuals_2026_07_24.md` today: still **7 open `- [ ]` todos** (unchanged from every prior
+          re-check). Skipping (`reason_code: GATED`) rather than running the pipeline-check prematurely; re-check
+                  `prediction_phase_ab_residuals_2026_07_24.md`'s open-todo count before re-attempting.
+
 - [ ] [CODE] P2. Run data-pipeline-check-mtds --asset-group prediction --day 2026-08-05 (fallback 2026-06-28) once the
       phase_ab gate clears, cite the report path Source:
       `plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`
 
       **NOT ACTIONABLE 2026-08-14 (slot-12, backend_engineer) — gate still open, re-verified live.** The Phase D source
-          plan is `depends_on: [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true`. Live-checked
-          `prediction_phase_ab_residuals_2026_07_24.md` today: still **7 open `- [ ]` todos** (unchanged from every prior
-          na-eligibility-audit re-check since 2026-08-06/07/09/10). The P0 manifest-migration todo's `--apply` landed the
-          (a)/(b)/(c) items 2026-07-19 but the CQG-bundle normalization decision (i) and the old-row tombstone-sweep
-          strategy (ii) remain genuinely open/undecided — Phase-B is not fully closed, so the gate has not cleared. Skipping
-          (`reason_code: GATED`) rather than running the pipeline-check prematurely; re-check
-          `prediction_phase_ab_residuals_2026_07_24.md`'s open-todo count before re-attempting.
+                  plan is `depends_on: [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true`. Live-checked
+                  `prediction_phase_ab_residuals_2026_07_24.md` today: still **7 open `- [ ]` todos** (unchanged from every prior
+                  na-eligibility-audit re-check since 2026-08-06/07/09/10). The P0 manifest-migration todo's `--apply` landed the
+                  (a)/(b)/(c) items 2026-07-19 but the CQG-bundle normalization decision (i) and the old-row tombstone-sweep
+                  strategy (ii) remain genuinely open/undecided — Phase-B is not fully closed, so the gate has not cleared. Skipping
+                  (`reason_code: GATED`) rather than running the pipeline-check prematurely; re-check
+                  `prediction_phase_ab_residuals_2026_07_24.md`'s open-todo count before re-attempting.
 
 ## Deferred
 

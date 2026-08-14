@@ -191,9 +191,12 @@ a verdict). Heaviest:
       DELETE cohort (instruments-service 64 / MTDS 22) is **campaign-gated** — the 2026-06 manifest-canonicalisation
       campaign is ACTIVE, so delete a repo's dated one-offs for an asset_group **only after that AG's
       `*_manifest_canonicalisation_2026_06_01.md` plan archives** + GCS-orphan-sweep=0. **Start with the
-      immediately-safe ~40** (UI 2026-03 `.tsx.bak` splitters/codemods; done deployment-service bucket migrations; the 5
-      dead checkers — UAC `check_schema_organization`, UTL `check-ruff-versions`, SIT `check-sit-readiness`, MTDS QG
-      stale SSOT pointer, deployment-service `aggregate_instruments`). Target: per-repo.
+      immediately-safe ~40** (UI 2026-03 `.tsx.bak` splitters/codemods; done deployment-service bucket migrations; the 3
+      dead checkers — UAC `check_schema_organization`, MTDS QG stale SSOT pointer, deployment-service
+      `aggregate_instruments`. **Struck 2026-08-14 — live CI tooling, NOT dead**: UTL `check-ruff-versions.sh` (CI Step
+      0 in `cloudbuild.yaml`, self-declares `Lifecycle: permanent`) and SIT `check-sit-readiness.py` (invoked from
+      `.github/workflows/smoke-test-gate.yml`, self-declares `Lifecycle: permanent`) — see
+      `/plans/active/issues/immediately_safe_40_delete_cohort_stale_reclassification_2026_08_14.md`). Target: per-repo.
 - [ ] [AUDIT] P2. **DEPRECATE remediation** — fix the ~10 KEEP/PROMOTE scripts carrying the cloud-discipline gap (UCI
       `get_storage_client`/`gcs_*` + `resolve_bucket_name` + `GCP_PROJECT_ID` via `UnifiedCloudConfig`):
       strategy-service DeFi tracers, `seed_demo_client`, `run_client_reporting_cutover`, `run_amm/lending_validation`,

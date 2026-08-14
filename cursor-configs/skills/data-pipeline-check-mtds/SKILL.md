@@ -65,11 +65,27 @@ after competing with every other slot for the shared host's fixed memory pool. E
 `deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh` instead of a bare
 `cd market-tick-data-service && python3 ...`: swap the command's head, keep every flag below it identical.
 
+**Default to per-`--asset-group` invocations (5 separate driver-VM launches), not one unscoped sweep** — confirmed
+2026-08-14 (`mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep_2026_08_14.md`): an unscoped `--mvp-only` sweep with
+no `--asset-group` filter enumerates the FULL post-fix MVP surface (3126 shards as of that date — see
+`mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md` for why the real count is this large, not the
+~52-cell cefi-only figure this doc used to quote elsewhere) and the top-level `pipeline_e2e_check.py` process was
+SIGKILLed (exit 137, OOM) about 10 minutes / ~30 shards in — on the DEDICATED, ISOLATED e2-highmem-4 (32GB) driver VM
+this §1a already exists to provide, not the shared host. A root-cause fix (bounding the driver's per-shard memory
+growth) is tracked in that issue doc; until it ships, scope every invocation to one `--asset-group` at a time:
+
 ```bash
-bash deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh \
-  --service mtds --day <DAY> --legs force,skip --mvp-only --require-captured --auto-day \
-  --project central-element-323112
+for AG in CEFI DEFI TRADFI SPORTS PREDICTION; do
+  bash deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh \
+    --service mtds --day <DAY> --asset-group "$AG" --legs force,skip --mvp-only --require-captured --auto-day \
+    --project central-element-323112
+done
 ```
+
+Each launch still prints its own `vm_name=...` immediately and returns — poll each independently. This bounds any single
+driver process to a fraction of the full 3126-shard surface (CEFI alone was already ~30+ shards deep and still climbing
+when the unscoped run OOM'd, so even a per-asset_group run may need further splitting by `--venue` if it still OOMs —
+check the driver RSS trend in `run.log` before assuming a smaller scope is automatically safe).
 
 Prints `vm_name=...` immediately, then returns — async (the driver VM self-deletes on completion). Poll
 `gs://deployment-scripts-central-element-323112/vm-logs/<vm_name>/{run.log,EXIT_STATUS}`, or via

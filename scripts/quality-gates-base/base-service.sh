@@ -4414,15 +4414,21 @@ QG_END=$(date +%s); DUR=$((QG_END - QG_START))
 DUR_BILLABLE=$(( DUR - ${QG_GOVERNOR_WAIT_SECONDS:-0} ))
 
 # ── 2× RESOURCE-DRIFT GUARD (qg-perrepo-baseline) ─────────────────────────────
-# WARN (never fail) when this run's wall-clock exceeds 2× the committed per-repo
+# WARN (never fail) when this run's work time exceeds 2× the committed per-repo
 # baseline — an early signal of a resource regression during code-freeze. Keyed by
 # repo folder name in qg_resource_baseline.json (local side). Fully defensive.
+# Compares DUR_BILLABLE (governor queue-wait already excluded, per the MAX_DURATION
+# fix above), not raw DUR — else the governor legitimately queueing a run under
+# contention gets misreported as "drift" (qg_host_adaptive_resource_governor_2026_07_14.md,
+# the 2026-08-10 finding: a 1538s wall run with only 724s real work still tripped
+# ">2× baseline" purely from an 814s governor queue-wait). Wall + queue-wait stay in
+# the message for visibility.
 _QG_BASELINE="${REPO_ROOT}/unified-trading-pm/scripts/dev/qg_resource_baseline.json"
 if [ -f "$_QG_BASELINE" ] && command -v python3 >/dev/null 2>&1; then
     _qg_repo_key="$(basename "$PROJECT_ROOT")"
     _base_wall="$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get(sys.argv[2],{}).get('local',{}).get('wall_s',0))" "$_QG_BASELINE" "$_qg_repo_key" 2>/dev/null || echo 0)"
-    if awk "BEGIN{exit !(${_base_wall:-0}>0 && ${DUR:-0} > 2*${_base_wall:-0})}" 2>/dev/null; then
-        log_warn "Resource drift: wall ${DUR}s > 2× baseline ${_base_wall}s for ${_qg_repo_key} (qg_resource_baseline.json) — investigate before merge"
+    if awk "BEGIN{exit !(${_base_wall:-0}>0 && ${DUR_BILLABLE:-0} > 2*${_base_wall:-0})}" 2>/dev/null; then
+        log_warn "Resource drift: work ${DUR_BILLABLE}s > 2× baseline ${_base_wall}s for ${_qg_repo_key} (${DUR}s wall incl. ${QG_GOVERNOR_WAIT_SECONDS:-0}s governor queue-wait; qg_resource_baseline.json) — investigate before merge"
     fi
 fi
 

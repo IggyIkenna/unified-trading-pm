@@ -444,8 +444,19 @@ source: >-
       Issue-doc/source-plan checkbox reconciliation deferred to
       `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` per this batch's own header (source docs not touched
       here).
-- [ ] [CODE] P2. Stamp work-start after admission so MAX_DURATION excludes governor queue-wait (already-cited concrete
-      fix, not a design question) Source: `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`
+- [x] ✅ [CODE] P2. Stamp work-start after admission so MAX_DURATION excludes governor queue-wait (already-cited
+      concrete fix, not a design question) Source: `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` — ✅
+      **DONE 2026-08-14 (slot 20, infra).** The MAX_DURATION completion gate itself already excluded governor queue-wait
+      (`DUR_BILLABLE`, shipped `unified-trading-pm@f36ac5877`, further CPU-billed 2026-08-10) — the piece still open per
+      the source plan's "Done when" was the sibling 2× resource-drift baseline WARN in
+      `scripts/quality-gates-base/base-service.sh` (§ "2× RESOURCE-DRIFT GUARD"), which still compared raw wall `DUR`
+      against the committed baseline and double-counted governor queue-wait as "drift" (the source plan's own 2026-08-10
+      finding: a 1538s-wall/724s-work run tripped the drift WARN purely from an 814s queue-wait). Now compares
+      `DUR_BILLABLE` (queue-wait already excluded) against the baseline; wall + queue-wait stay in the WARN message for
+      visibility. Warn-only, no test regression — verified live in this same run's own `quality-gates.sh` pass (baseline
+      file present, block executes every run). Issue-doc/source-plan checkbox reconciliation deferred to
+      `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` per this batch's own header (source docs not touched
+      here). Evidence: `unified-trading-pm@85c8ce933c`.
 - [ ] [CODE] P2. Re-measure GitHub Actions billing for the 17+PM reverted repos (should read $0/unmetered) and the
       self-hosted VM's steady-state load average before vs. after, via the already-proven github-billing-token GSM
       secret + aws ce get-cost-and-usage procedure Source:

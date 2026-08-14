@@ -124,9 +124,12 @@ Two independent angles, not mutually exclusive:
       accumulating in memory, or cap concurrent in-flight `launch_vm_and_wait()` calls. Verify by running the same
       unscoped `--day 2026-07-01 --legs force,skip --mvp-only --require-captured --auto-day` sweep to a clean exit on
       the same e2-highmem-4 driver VM class. (repos: market-tick-data-service)
-- [ ] [DOCS] P2. Update `unified-trading-pm/cursor-configs/skills/data-pipeline-check-mtds/SKILL.md` §1a to recommend
+- [x] [DOCS] P2. ✅ Update `unified-trading-pm/cursor-configs/skills/data-pipeline-check-mtds/SKILL.md` §1a to recommend
       per-`--asset-group` driver-VM invocations (5 launches) as the default sweep pattern until the above OOM fix ships,
-      instead of the current single unscoped-sweep example. (repos: unified-trading-pm)
+      instead of the current single unscoped-sweep example. (repos: unified-trading-pm) — unified-trading-pm (this
+      commit). §1a now shows a `for AG in CEFI DEFI TRADFI SPORTS PREDICTION; do ...` loop as the default, with a note
+      that even a per-asset_group run may still need `--venue`-level splitting (cefi alone was ~30+ shards deep and
+      still climbing when the unscoped run OOM'd).
 - [ ] [DATA] P2. Once either todo above lands, re-run the MTDS baseline (`--day 2026-07-01`) to completion and cite the
       resulting report path in `defi_track5_coverage_mvp_backfill_2026_07_24.md`'s pipeline-check gate todo. (repos:
       market-tick-data-service)

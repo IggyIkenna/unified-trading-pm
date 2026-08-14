@@ -101,10 +101,10 @@ has actually verified).
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P3. Update `repo_scripts_governance_audit_2026_06_18.md`'s "Immediately-safe DELETE cohort" section to
+- [x] ✅ [SCRIPT] P3. Update `repo_scripts_governance_audit_2026_06_18.md`'s "Immediately-safe DELETE cohort" section to
       strike `unified-trading-library check-ruff-versions.sh` and `system-integration-tests check-sit-readiness.py` from
       the DELETE list — both are live CI tooling with `Lifecycle: permanent` markers, not dead checkers. Repo:
-      unified-trading-pm.
+      unified-trading-pm. — `plans/active/repo_scripts_governance_audit_2026_06_18.md` line 190-196 updated.
 - [ ] [AUDIT] P3. Run the dedicated GCS orphan-sweep the closeout plan deferred (per
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) against the 4 deployment-service bucket-migration
       scripts' targets + `aggregate_instruments.py`'s targets; on orphan-sweep=0, git rm all 5 citing the sweep
