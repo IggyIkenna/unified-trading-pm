@@ -145,10 +145,20 @@ source: >-
       (`deployment-api/routes/{cloud_builds,_cloud_builds_*,     _code_builds_aws,builds_history}.py` + their `main.py`
       registrations + tests) — no TS/React surface, out of ui_developer's craft (`agents/ui_developer.md` does_not:
       Python service code). Source: `plans/active/artifact_pipeline_observability_2026_07_17.md`
-- [ ] [CODE] P2. Build→deploy latency join: 'built but never deployed' + build-to-first-revision latency (Phase 6
-      stretch) Source: `plans/active/artifact_pipeline_observability_2026_07_17.md`
-- [ ] [CODE] P2. Add a deploy-churn/crash-loop health condition (e.g. a service redeployed ~14x in hours, ~40%
-      config-only) (Phase 6 stretch) Source: `plans/active/artifact_pipeline_observability_2026_07_17.md`
+- [ ] [BACKEND] P2. Build→deploy latency join: 'built but never deployed' + build-to-first-revision latency (Phase 6
+      stretch) — retagged `[CODE]` → `[BACKEND]` 2026-08-14 (ui_developer slot-7 craft-mismatch catch, same class as the
+      routes-retirement todo above): the work is a new `_condition()` derivation in
+      `deployment-api/deployment_api/services/artifact_pipeline/service.py` (join `BuildFact` ↔ `DeployFact` by
+      digest/sha, compute build-finished→first-deploy latency + flag builds with no matching deploy) — the Health tab's
+      row rendering (`deployment-ui/src/pages/ArtifactPipeline.tsx`) is already fully generic (`data.conditions.map`, no
+      per-condition-type UI), so this todo has zero TS/React surface, out of ui_developer's craft
+      (`agents/ui_developer.md` does_not: Python service code). Source:
+      `plans/active/artifact_pipeline_observability_2026_07_17.md`
+- [ ] [BACKEND] P2. Add a deploy-churn/crash-loop health condition (e.g. a service redeployed ~14x in hours, ~40%
+      config-only) (Phase 6 stretch) — retagged `[CODE]` → `[BACKEND]` 2026-08-14 (same craft-mismatch catch as the todo
+      above): also a pure `_condition()` derivation over already-fetched `DeployFact`s in
+      `deployment-api/deployment_api/services/artifact_pipeline/service.py`, rendered by the same generic Health table —
+      no TS/React surface. Source: `plans/active/artifact_pipeline_observability_2026_07_17.md`
 - [ ] [CODE] P2. Resolve the ACTIVE_INDEX.md dangling normative-ref: edit cursor-configs/skills/plan-reconcile/SKILL.md
       (lines 5,59,425) + agents/plan_reconciler.md (line 114) to drop the stale name and cite only INDEX.md, or
       regenerate ACTIVE_INDEX.md if a distinct artifact was genuinely intended Source:

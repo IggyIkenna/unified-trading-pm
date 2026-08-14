@@ -355,10 +355,22 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       columns are structurally null in every row. Live-confirmed across 3 dates, 0/12 sampled non-null. No commit.
 - [x] [DATA] P2. ✅ Purged — `batch1_ao_ready` todo 14. `features-service@bf088de1` (verified via `git log`), 16,868
       rows purged (snapshotted first). Post-purge census: 0 rows for all 4 groups.
-- [ ] [DIAG] P1. Root-cause why the features-service `sfi_progressive` manifest group is corpus-empty (1 manifest row in
+- [x] ✅ [DIAG] P1. **STALE — already root-caused + fixed by two prior sessions, this todo just never got flipped
+      here.** Root-cause why the features-service `sfi_progressive` manifest group is corpus-empty (1 manifest row in
       `features-sports-prd`) despite a documented 2020→today backfill window — confirm whether it's a real
       unexecuted/failed backfill or a recording artifact of the CLI calculator-grain mismatch tracked in
-      `issues/sports_features_layer_findings_sweep_2026_07_18.md` §C1, fix or fold into that doc's scope. Source:
+      `issues/sports_features_layer_findings_sweep_2026_07_18.md` §C1, fix or fold into that doc's scope. **Result: real
+      unexecuted backfill (not the C1 recording artifact — `sfi_progressive` already has its own manifest group, the one
+      calculator C1 says correctly matches).** `sports_closeout_batch1_ao_ready_2026_07_24.md` (archived) confirmed the
+      sole prior row was a single-day (2020-01-01) test artifact migrated from a retired legacy flat bucket, fixed the
+      launcher's hardcoded legacy bucket path (`deployment-service@826ca68`), and ran the real backfill (2397 days,
+      16,661 rows). `data_completion_sports_2026_07_24.md` then found + fixed a `MissingFeatureFamilyError` in the
+      manifest write (`features-service@06c44c02`) and re-ran with `RECOMPUTE_FORCE=true` through 2026-07-25 (2087
+      captured days, 0 failed). **Live-verified 2026-08-14 (slot 27)**: canonical `availability_index.parquet` now
+      carries **18,409** `feature_group=sfi_progressive` rows (18,098 captured + 311 empty_confirmed, 131,974 total
+      feature rows) spanning 2020-01-01→2026-08-01; live GCS listing confirms **2,094** real `sfi_progressive.parquet`
+      day-objects in `features-sports-prd`, 2020-06-06→2026-08-01 (via UTL `get_storage_client().list_blobs`, not a
+      subprocess `gsutil` walk). The corpus is genuinely healthy today — no further action needed. Source:
       `plans/archive/2026_07/sports_consolidated_audit_2026_07_19.md` §1.4/§2.6 (relocated here per that now-archived
       snapshot doc's own convention that actionable work lives in this closeout).
 
@@ -508,9 +520,9 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       pre-fix — genuinely wrong, the exact same conflation class as this todo's own venue/instrument_type/chain fixes,
       since the underlying `bucketed.parquet` shard already carries a real, 100%-present `bookmaker_key` column per row
       (`_materialise_bookmaker_identity`) that was simply never used. **Fixed 2026-07-27**:
-      `market-data-processing-service@6f7422e` (forward-only writer fix — fine rows now split per real bookmaker, one
+      `market-data-processing-service@561f177` (forward-only writer fix — fine rows now split per real bookmaker, one
       manifest row per distinct bookmaker present in the shard; `_venue_breakdown_for_shard` + regression tests) +
-      `market-data-processing-service@a047b29` (backfill migration script for the ~198,572 already-captured fine rows,
+      `market-data-processing-service@5517dea` (backfill migration script for the ~198,572 already-captured fine rows,
       dry-run-validated against real production data — see the issue doc for the VM-apply run + row-count-conservation
       evidence). `source=mdps_odds_horizon_bucket` was investigated too and confirmed CORRECT/unchanged (UAC's own
       `SOURCE_PRIORITY` entry deliberately names this service as the derived-product producer — a different axis from

@@ -384,8 +384,31 @@ source: >-
       reconciliation back into each source doc happens in the paired finalize plan"), citing the finding for
       `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` to reconcile. Source:
       `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
-- [ ] [CODE] P2. SCRIPT P3: investigate why run_hygiene_sweep.sh's prettier emphasis-mangling check reported PASS
-      despite 5 confirmed live instances Source: `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
+- [x] ✅ [CODE] P2. SCRIPT P3: investigate why run_hygiene_sweep.sh's prettier emphasis-mangling check reported PASS
+      despite 5 confirmed live instances — ROOT-CAUSED, 2 distinct causes, 1 fixed: `unified-trading-pm@85ee358018`. Of
+      the 5 fixed instances in `ao_open_issues_consolidated_close_out_2026_07_17.md` (`task*id`, `dispatch*id`,
+      `` `ORCHESTRATOR*\*` ``, 2× `\*\*`): (1) **`task*id`/`dispatch*id` were bare-prose mangles genuinely missing from
+      `check_prettier_mangling.sh`'s curated `PAT` allowlist** (only 8 specific identifier families were listed —
+      neither of these two was one of them) — **fixed**: extended `PAT` with `task\*id|dispatch\*id|ORCHESTRATOR\*\\\*`,
+      verified against a reconstructed repro of the exact live text (both now correctly flagged) and a full-corpus
+      `check_prettier_mangling.sh --quiet` run (exit 0, no new false positives). (2) **`` `ORCHESTRATOR*\*` `` was
+      wrapped in backticks in the live doc** — the checker deliberately strips inline code spans before matching
+      (documented design: "genuine backticked wildcards ... never self-flag"; "a mangle hiding INSIDE a code span is out
+      of scope for this gate — the >=3.9.5 version guard in prettier-autostage.sh is the primary stop") — this is the
+      checker working AS DESIGNED, not a bug; the `PAT` addition above still adds bare-prose defense-in-depth if this
+      identifier family recurs unbackticked. (3) **The 2 `\*\*`→`**` instances are a DIFFERENT corruption class
+      entirely** (escaped bold-emphasis delimiters, not underscore-rewritten-as-asterisk identifiers) —
+      `check_prettier_mangling.sh`'s `PAT` signature is scoped specifically to the identifier-mangling defect documented
+      in `plans/archive/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md`; it was never designed to
+      detect escaped-emphasis-marker corruption, so this is correctly out of scope for THIS gate, not a blind spot in it
+      — no fix attempted here (a safe detector for this shape needs its own false-positive analysis, since genuine
+      escaped literal asterisks are legitimate elsewhere in prose); noting for a future dedicated investigation if it
+      recurs. **Adjacent fix**: found + fixed a stale-path pointer bug while investigating —
+      `check_prettier_mangling.sh` (comment + error message) and `run_hygiene_sweep.sh` (comment + error message) both
+      still cited `plans/active/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md`, but that doc
+      archived to `plans/archive/issues/` on 2026-07-14 — repointed all 4 hits + the same stale path in
+      `scripts/hooks/prettier-autostage.sh`'s SSOT comment (5 hits total across 3 files). Source:
+      `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
 - [ ] [CODE] P2. DOCS P3: update ao_main_review_force_compact_idle_gate_unreachable_2026_08_09.md's frontmatter title
       (still says 'unreachable') to match its own body's supersession Source:
       `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`

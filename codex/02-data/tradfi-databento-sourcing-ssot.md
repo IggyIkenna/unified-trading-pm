@@ -327,6 +327,28 @@ try/except → `cost_usd=None` on failure) and **never raises / never blocks** a
 `DATABENTO_PAYMENT_REQUIRED` venue-error stays a FAIL-no-retry (a genuine billing failure / quota exhaustion), but the
 **primary** guard is now the window+dataset entitlement (`DATABENTO_ENTITLEMENT`, above), not the 402.
 
+## Billing-health verification MUST include one real scoped data-pull — never `list_datasets()`/`warmup()` alone
+
+**HARD RULE (codified 2026-08-14, `plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`).**
+Confirming the Databento account is billing-healthy (after a suspension, or before resuming a paused backfill/live
+producer) requires at least one **real, scoped** call — a `timeseries.get_range` / `definition` fetch for a known
+instrument, or the live WS actually receiving a tick — not just `DatabentoBaseClient.warmup()` /
+`metadata.list_datasets()` in isolation. Those two are unscoped, account-level calls: they confirm the API key
+authenticates, but they do **not** prove every access path (in particular the live WS session) is actually functional.
+
+**The incident this closes.** On 2026-08-10, `warmup()` + `list_datasets()` succeeded (29 datasets returned, no
+401/403/locked/suspended error) and that was treated as evidence the WHOLE account — batch and live — was restored. It
+wasn't independently re-verified for the live `databento_tradfi_ws` connector. On 2026-08-12 the account was suspended
+again (`api_key_deactivated` / `CRAM authentication error: ... unpaid invoice`) and the live producer's feed died
+silently — the process kept heartbeating for ~50h with zero real ticks, invisible to any liveness check, and was only
+caught 2026-08-14 during an unrelated diagnosis.
+
+**The rule going forward**: after any billing-suspension recovery, or before trusting an existing "account restored"
+verification to resume backfills, re-verify EACH access path you intend to rely on with a real scoped pull specific to
+that path — a batch/historical `timeseries.get_range` call for the MTDS/instruments-service backfill paths, AND a real
+received tick (not just a successful connect) for the live WS path if live capture depends on it. An unscoped
+`warmup()`/`list_datasets()` success is a necessary but NOT sufficient signal.
+
 ## Single API key (collapse-to-single-key, operator 2026-06-18)
 
 Multi-key rotation is **OFF by default** — one canonical secret `databento-api-key`. Defaults flipped:

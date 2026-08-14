@@ -79,7 +79,7 @@ fi
 # deterministically CORRUPTS markdown — underscore identifiers rewritten as asterisks
 # (data_type -> data*type, LIVE_ -> LIVE*), paragraphs collapsed into blobs. Proven by
 # head-to-head repro (3.8.4 mangles, 3.9.5 clean); ~60 docs damaged before detection. SSOT:
-# unified-trading-pm/plans/active/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md
+# unified-trading-pm/plans/archive/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md
 # So: a resolved binary older than $PRETTIER_MIN_VERSION is NEVER used — prefer a pinned npx
 # fetch instead, and if npx is unavailable skip the format pass (a skipped format is recoverable;
 # corrupted content is not). check_prettier_mangling.sh in the plan-hygiene gate is the backstop.

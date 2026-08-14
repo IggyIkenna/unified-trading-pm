@@ -328,11 +328,28 @@ source: >-
       the bare `_CHECKBOX_RE` scan that previously double-counted checkbox-shaped lines inside fenced code blocks.
       Commit verified ancestor of `origin/live-defi-rollout`. No new code needed — this checkbox closes the duplicate
       dispatch.
-- [ ] [CODE] P2. Item K -- add the missing backlog todo to
+- [x] ✅ [CODE] P2. Item K -- add the missing backlog todo to
       plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md once grace lifts Source:
-      `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`
-- [ ] [CODE] P2. Item L -- backfill the real sha in over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md's
-      placeholder evidence citation Source: `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`
+      `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md` — unified-trading-pm (this batch):
+      **ALREADY DONE, verified live 2026-08-14 — no new todo needed.** Grace has lifted (target doc's `locked_by` is
+      empty; last commit touching it, `02aa7912cf`, is dated 2026-08-12, >12h before this check). The real backlog todo
+      the source doc's 4 Progress Log entries referenced already exists in the target doc: the
+      `check_prosewrap_padding.sh` `--diff-base <ref>` conversion P3 todo (added + shipped
+      `unified-trading-pm@e89d4931e5`, 2026-08-11 — its own text states "This closes the LAST of the 4 originally-named
+      option-(c) checks"). Confirmed live: `check_prosewrap_padding.sh` carries a real `--diff-base <ref>` usage line +
+      diff-scoped-mode implementation block (not just a doc claim), and `e89d4931e5` verified an ancestor of current
+      `origin/live-defi-rollout` HEAD. No gap remains to backfill.
+- [x] ✅ [CODE] P2. Item L -- backfill the real sha in over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md's
+      placeholder evidence citation Source: `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md` —
+      **ALREADY FIXED, no new code needed (verified 2026-08-14).** A prior `/plan-reconcile` pass (2026-08-12) already
+      backfilled the target doc's `over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md` line ~138 todo with
+      the real sha, replacing the literal `<sha>` placeholder: it now reads "Implemented `unified-trading-pm@d4f7fab9d8`
+      (2026-08-02 — CORRECTED 2026-08-12 /plan-reconcile...)". Live-verified this commit is genuine:
+      `git log -1     d4f7fab9d8` resolves (author ikennaigboaka, 2026-08-02 23:27:33Z),
+      `git merge-base --is-ancestor d4f7fab9d8     origin/live-defi-rollout` confirms it's landed, and
+      `git show --stat d4f7fab9d8` confirms it touches `scripts/plan-hygiene/check_line_caps.sh` (41 lines changed) —
+      matching the cited "small-marker-append carve-out" work. No gap remains; this item's finding (Item L in
+      `plan_reconciler_findings_cross_cutting_2026_08_10.md`) is closed by an earlier session's fix, not this one.
 - [ ] [CODE] P2. Item N -- fix 3 docs' stale 'closeout over 1000-line hard cap' citations (now 720 lines) Source:
       `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`
 - [ ] [CODE] P2. De-cohort the freshness thresholds (e.g. 90d + hash(path) % 14 jitter, or stagger last_reviewed on bulk

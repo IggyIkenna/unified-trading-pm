@@ -38,7 +38,7 @@ depends_on: []
 locked_by:
 archive_exempt: true
 resolved_by:
-last_updated: 2026-08-13
+last_updated: 2026-08-14
 locked_since:
 context_scope:
   [
@@ -234,7 +234,7 @@ until the next sweep) and is a stopgap, not the root fix.
       the sweep now finish under 1800s, does the sentinel/backlog actually advance) is a fresh verify task, not bundled
       into this fix.
 
-- [ ] [BACKEND] P2. **ADDED 2026-08-14 (slot 14, follow-up)** — live-verify the classify-loop fix
+- [x] ✅ [BACKEND] P2. **ADDED 2026-08-14 (slot 14, follow-up)** — live-verify the classify-loop fix
       (`deployment-service@cbe58d2d`: run.log prefetch + incremental census checkpointing) actually collapses the
       exit-code-monitor sweep under its 1800s task-timeout: confirm the image digest genuinely runs the post-fix commit
       (same ancestor/digest-inspection discipline as prior verify todos on this doc), then read the phase- boundary logs
@@ -242,7 +242,52 @@ until the next sweep) and is a stopgap, not the root fix.
       executions to see whether the sweep now finishes, whether the terminated backlog is actually shrinking
       execution-over-execution (via the new incremental census checkpoints), and whether the
       `download_bytes(...) exceeded the 30s bounded-call timeout` warning rate dropped now that most of those reads
-      moved into the parallel prefetch phase. Repo: deployment-service.
+      moved into the parallel prefetch phase. Repo: deployment-service. — ✅ **Result: sweep no longer TIMES OUT, but
+      now OOM-KILLS instead — a NEW regression, not the fix working.** `cbe58d2d`'s content confirmed live on
+      `origin/main` (direct file-content inspection of `origin/main:.../exit_code_fleet_monitor.py`, since the SHA-level
+      ancestor-check false-negatived — Option-B direct-promote rewrites commits, so content-inspection is the reliable
+      check, consistent with slot 15's 2026-08-14 note) and baked into the newly-pushed `deployment-api:latest` (digest
+      `db4f43ada1e1…`, pushed 19:32:46Z — confirmed via direct container-filesystem grep for
+      `_checkpoint_census`/`run-log-prefetch phase`/`_CENSUS_CHECKPOINT_INTERVAL`, all present). First execution on this
+      digest, `qgtnz` (20:00:04Z→20:13:35Z, only ~13.5 min — well under the 1800s timeout that killed every prior
+      execution), **failed with `"The configured memory limit was reached"` + `Container terminated on signal 9` at
+      20:13:32Z (OOM, not timeout)**. Phase logs: `running-census` 1.9s (15 VMs) → `terminated-base-signals` 444.5s (266
+      VMs) — both fast, consistent with the earlier candidate-c fix — then **no `run-log-prefetch phase took…` or
+      `classify/route/emit phase took…` line ever appeared**: the OOM kill landed ~4 min into the NEW run-log-prefetch
+      phase this fix added. 136 `download_bytes(...) exceeded the 30s bounded-call timeout` warnings still fired before
+      the kill. Filed the next P1 investigate/fix todo below. Repo: deployment-service.
+
+- [ ] [BACKEND] P1. **ADDED 2026-08-14 (slot 27, live-verify follow-up)** — the `run-log-prefetch` phase
+      (`deployment-service@cbe58d2d`) fixed the wall-clock problem but introduced a NEW memory regression: execution
+      `qgtnz` (2026-08-14 20:00:04Z-20:13:35Z, first execution on the post-fix `deployment-api:latest` digest
+      `db4f43ada1e1…`) OOM-killed (signal 9, `"The configured memory limit was reached"`) ~13.5 min in, mid-way through
+      the new `run-log-prefetch` phase — well under the 1800s timeout, so the fix's wall-clock goal is achieved but a
+      NEW failure mode replaced it. Root-cause candidate: unlike the sequential classify loop it replaced (which read
+      one VM's `run.log` at a time), the prefetch phase fans out `_gcs.read_text` across ALL
+      `run_log_prefetch_candidates` (up to ~266 terminated VMs this run) via a single
+      `ThreadPoolExecutor(max_workers=16)` batch and accumulates every result in one
+      `run_log_prefetch: dict[str, str | None]` BEFORE the classify loop consumes any of them — so the sweep now holds
+      up to ~266 full `run.log` blobs in memory SIMULTANEOUSLY (worst case) instead of one at a time. Per the
+      "Fleet-monitor job memory sizing" anti-pattern already in `/codex/05-infrastructure/data-pipeline-alerts.md` (the
+      `meta_watchers` `.to_pandas()` OOM root-cause), the first response should NOT be another Cloud Run memory bump —
+      check whether `run.log` blobs are large enough (long-running backfill VMs can accumulate many MB of log) that
+      holding ~266 of them at once genuinely exceeds 16Gi, and if so either (a) chunk the prefetch (submit+drain in
+      batches of e.g. 32-64 instead of all-at-once), or (b) stream classify/route/emit interleaved with the prefetch
+      pool (`as_completed` + classify each VM as its future resolves, rather than materializing the whole
+      `run_log_prefetch` dict first) so at most `_SWEEP_IO_MAX_WORKERS` blobs are ever resident, preserving the
+      wall-clock win from parallelizing the READ without paying for the full backlog in RAM at once. Verify with a
+      profiled run that logs `run.log` byte-size distribution (or peak RSS) alongside the existing phase-boundary timers
+      before landing an ungrounded fix. Target: sweep completes under 1800s AND under the 16Gi memory ceiling. Repo:
+      deployment-service. — **ADDENDUM (slot 26, same session, independent live-verify of the same `qgtnz` execution)**:
+      corroborating but DISTINCT evidence worth folding into the fix — the execution log (294 lines,
+      `gcloud logging read`) shows 136 `download_bytes(...)` stall/timeout/retry warnings concentrated in the final ~60s
+      before the kill, many the NEW jittered-backoff `retrying after ...` variant; each stalled call is logged as
+      leaving its thread running as an undying daemon ("the thread is left running as a daemon so it can never block
+      process exit"). A second, possibly-compounding contributor beyond "266 run.log blobs resident at once": each
+      STALLED read also leaks an abandoned daemon thread holding its own buffered/retry state for the rest of the
+      process lifetime, so the fan-out's true memory cost may be understated by blob size alone. Whichever fix lands
+      (chunking / interleaving the prefetch) should also confirm it bounds daemon-thread accumulation from stalled
+      reads, not just resident blob count.
 
 ## Related
 
@@ -254,6 +299,20 @@ until the next sweep) and is a stopgap, not the root fix.
   launcher-host exemption), and the DP_SOURCE_RATE_LIMITED cooldown.
 
 ## Progress Log
+
+- 2026-08-14 (slot 27, backend): Live-verified the P2 classify-loop-fix todo. Confirmed `cbe58d2d` content is live on
+  `origin/main` (SHA-level `merge-base --is-ancestor` false-negatived due to Option-B direct-promote rewriting commits —
+  confirmed instead via direct `git show origin/main:<path>` content grep) and baked into the freshly-pushed
+  `deployment-api:latest` (digest `db4f43ada1e1…`, pushed 19:32:46Z, confirmed via container-filesystem grep). First
+  execution on this digest (`qgtnz`, 20:00:04Z-20:13:35Z) no longer hits the 1800s timeout (finished in ~13.5 min) but
+  **OOM-killed instead** (signal 9, memory limit reached) mid-way through the new `run-log-prefetch` phase — the
+  wall-clock fix worked, but the same fix's fanned-out `run_log_prefetch` dict now holds too many full `run.log` blobs
+  in memory at once (up to ~266 candidates this run, all fetched before any are consumed). Flipped the P2 verify todo
+  done with this result; filed a new P1 investigate/fix todo (chunk or interleave the prefetch instead of materializing
+  the whole backlog) since this is a genuinely new failure mode, not a mechanical follow-through. No code changed this
+  session (live verification + issue-doc update only, consistent with this task's P2 verify-only scope). Session was
+  reassigned to a new task mid-verification (AO one-task-per-session liveness reap after a long background wait for the
+  hourly cron got killed) — recorded findings before handoff per the findings-triage rule.
 
 - 2026-08-14 (slot 14, backend): Shipped the P1 classify/route/emit-bottleneck fix. (1) Added a new fanned-out phase
   right after `terminated-base-signals` that prefetches the classify loop's conditional `needs_reason` run.log for
@@ -372,3 +431,15 @@ this task because it remains the SOURCE doc for still-open DERIVED todos in OTHE
 `plans/archive/2026_08/issues/` once those derived todos are reconciled.
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+
+- 2026-08-14 (slot 26, backend): Independently live-verified the SAME P2 classify-loop-fix todo in parallel with slot 27
+  (both had live `gcloud`/GCS/docker credential access this session) — reached the identical result via a separate path:
+  direct `docker pull` + `docker cp` + grep of the installed `exit_code_fleet_monitor.py` off the `qgtnz` execution's
+  exact digest (`db4f43ada1e19eb...`, tag `c788707`) confirmed the fix markers live, then watched `qgtnz` to completion
+  via a sized background poll (22-min cap matched to its 1800s task-timeout) and read the full execution log (294 lines
+  via `gcloud logging read`). Lost the race to land first — slot 27's push landed while this session's `safe-doc-push`
+  was rebasing, producing a same-file conflict; resolved by keeping slot 27's landed checkbox-flip + P1 todo (correct,
+  first, and covers the primary root-cause candidate) and folding this session's one genuinely additional finding — the
+  136 `download_bytes` stall/retry warnings + the daemon-thread-never-cleaned-up log text — in as an ADDENDUM on slot
+  27's P1 todo above, rather than re-flipping the checkbox or filing a duplicate competing P1 todo for the same
+  regression. No separate fix attempted (P2 verify-only scope, and the fix is already tracked).

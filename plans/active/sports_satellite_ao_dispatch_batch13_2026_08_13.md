@@ -87,9 +87,13 @@ source: >-
       resolved (outside this batch) — manifest shows `fixture_features`/`derived_features` `captured` for 2026-08-10
       with real GCS output; source doc archived. Source:
       `/plans/archive/2026_08/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md`
-- [ ] [CODE] P2. Track F: root-cause why the features-service sfi_progressive manifest group is corpus-empty (1 manifest
-      row) despite a documented 2020->today backfill window Source:
-      `plans/active/sports_consolidated_closeout_2026_07_19.md`
+- [x] ✅ [CODE] P2. Track F: root-cause why the features-service sfi_progressive manifest group is corpus-empty (1
+      manifest row) despite a documented 2020->today backfill window. **STALE premise — already fixed by
+      `sports_closeout_batch1_ao_ready_2026_07_24.md` + `data_completion_sports_2026_07_24.md` (launcher bucket fix +
+      `MissingFeatureFamilyError` manifest-write fix, 2 real backfill runs).** Live-verified 2026-08-14 (slot 27):
+      canonical manifest carries 18,409 `feature_group=sfi_progressive` rows (18,098 captured), 2,094 real GCS
+      day-objects 2020-06-06→2026-08-01 — corpus genuinely healthy, no code change needed. Full detail in the Track F
+      todo itself. Source: `plans/active/sports_consolidated_closeout_2026_07_19.md`
 - [ ] [CODE] P2. Track C: venue vocabulary cleanup dispositions for the residual non-canonical values (casing/aliasing
       re-stamp + footystats legacy bundle mislabel venue=ODDS_API->FOOTYSTATS, 42,476 rows) Source:
       `plans/active/sports_consolidated_closeout_2026_07_19.md`
