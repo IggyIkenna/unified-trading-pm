@@ -27,6 +27,12 @@ related:
     /plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/06-coding-standards/quality-gates.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 created: 2026-07-25
 last_updated: "2026-08-10"
 parent_epic: infrastructure_master
@@ -241,3 +247,4 @@ unblocked on a CI runner.
   `image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07` newly orphaned within `ci`'s own family (this
   Progress Log entry IS that link-back fix) — the other 2 retagged docs were already reachable and needed no further
   linkage fix. Re-verified 0→0 new orphans after this entry landed.
+- **context-scout 2026-08-14**: populated context_scope (3 entries).

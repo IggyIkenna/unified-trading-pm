@@ -37,6 +37,12 @@ parent_epic: tradfi_master
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/05-infrastructure/deployment-observability.md,
+    /plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md,
+    deployment-service/scripts/vm/_tradfi-ohlcv-launcher-lib.sh,
+  ]
 source: >-
   Operator chat instruction, 2026-08-10: "so then did you raise concurrency cap" → led to auditing whether the cap=1
   singleton lock was justified (it wasn't — separate fix); "ok we need to seriously size down these machines then they
@@ -148,3 +154,5 @@ I/O-bound enough to tolerate it, but that's an inference, not a direct measureme
   — needs ≥1 completed CME-family heavy-root VM. Estimated next check viable after ~06:00Z Aug 11 when the running
   gc-2021 VM completes (assuming no SPOT preemption). Releasing back to queue with `reason_code: GATED` +
   `estimated_unblock_minutes: 480` per worker.md § 4c.
+
+- **context-scout 2026-08-14**: populated context_scope (3 entries).

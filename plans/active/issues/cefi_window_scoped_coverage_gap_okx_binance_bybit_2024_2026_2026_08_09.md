@@ -49,6 +49,12 @@ related:
     /plans/active/issues/cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md,
     /plans/active/issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md,
   ]
+context_scope:
+  [
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py,
+    instruments-service/scripts/measure_honest_coverage.py,
+    /codex/02-data/honest-coverage-model.md,
+  ]
 created: "2026-08-09"
 author: slot-5
 priority: P1
@@ -406,3 +412,4 @@ can re-prioritize P0 vs P1 if the live-capture investigation (item 1) surfaces s
   today. Filed follow-up fix + registry-drift todos in a new issue doc per this todo's own instruction:
   `issues/cefi_deribit_futures_chain_canonical_write_path_exposure_2026_08_09.md`. Read-only audit — no code shipped,
   per this todo's scope.
+- **context-scout 2026-08-14**: populated context_scope (3 entries).

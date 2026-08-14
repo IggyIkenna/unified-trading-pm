@@ -38,6 +38,13 @@ stage: [meta]
 repos: [ibkr-gateway-infra, unified-trading-pm]
 tags: [ci-reconcile, semver-agent, release-tags, source-dir, alert-accuracy]
 related: [/plans/active/issues/ci_reconcile_overnight_batch_2026_08_11.md, /codex/08-workflows/ci-cd-flow.md]
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/issues/ci_reconcile_overnight_batch_2026_08_11.md,
+    unified-trading-pm/scripts/cicd/reconcile_release_tags.py,
+    ibkr-gateway-infra/.github/workflows/semver-agent.yml,
+  ]
 created: 2026-08-11
 author: claude-agent
 last_updated: 2026-08-11
@@ -113,3 +120,7 @@ the underlying condition (27 commits, all non-package, tag unchanged) between 00
 outcome-correct but methodology-incomplete — it verified the wrong directory was empty without noticing the directory
 itself was wrong. The alert will keep firing (correctly, per current content) until real `ibkr_gateway_client/` work
 lands; that is not a bug. The residual reconciler content-check gap is filed above as a follow-up, not blocking.
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (4 entries).

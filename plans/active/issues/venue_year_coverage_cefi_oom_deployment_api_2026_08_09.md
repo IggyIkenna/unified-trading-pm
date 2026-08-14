@@ -52,6 +52,12 @@ execution_scope: orchestrator-agent
 priority: P0
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    deployment-api/deployment_api/routes/data_status/_live_coverage_venue_year.py,
+    deployment-api/deployment_api/services/manifest_source.py,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch8_2026_08_09.md,
+  ]
 ---
 
 # `venue-year-coverage` cefi OOM (16GiB Cloud Run limit)
@@ -287,16 +293,16 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       `df.apply(..., axis=1)` once per row-group chunk (215 for cefi's current ~26M-row manifest), for EVERY `scope=mvp`
       request. Live repro 2026-08-11 (slot 32, infra re-verification): `scope=mvp` against the deployed,
       `_classify`-fixed revision `uts-shared-deployment-api-00523-kwt` still WORKER-TIMED-OUT + SIGABRT'd
-      (`Uncaught signal: 6`, `[CRITICAL] WORKER TIMEOUT (pid:22)` @2026-08-11T17:17:39Z) — faulthandler dump
-      confirms the abort site as `_coverage_scope.py:76` (`_manifest_cell`) ← `is_mvp_for_manifest_row:111` ←
-      `_row_is_mvp:130` ← `pandas/core/apply.py` ← `filter_to_mvp:132` ← `_process_manifest_chunk:154` ←
-      `get_venue_year_coverage:320`. Needs a vectorized or per-row-group-cached `is_mvp` evaluation (the 4 extra axes —
-      `base_ccy`/`league`/ `market_group`/`source` — are read via `.get()` per row today; a boolean-mask /
-      groupby-then-broadcast approach mirroring the `_classify` fix's shape is the likely path, but the `is_mvp`
-      predicate itself may need a vectorization-friendly UAC entry point — confirm with
-      `mvp_scope_catalogue_tagging_2026_06_08.md`). Repo: deployment-api. — **deployment-api@ce37346** (slot-33,
-      2026-08-11T18:32:23Z, Quickmerge, verified ancestor of `origin/live-defi-rollout`): already shipped a
-      dedup-then-broadcast rewrite of `filter_to_mvp` — evaluates `is_mvp_for_manifest_row` once per distinct
+      (`Uncaught signal: 6`, `[CRITICAL] WORKER TIMEOUT (pid:22)` @2026-08-11T17:17:39Z) — faulthandler dump confirms
+      the abort site as `_coverage_scope.py:76` (`_manifest_cell`) ← `is_mvp_for_manifest_row:111` ← `_row_is_mvp:130` ←
+      `pandas/core/apply.py` ← `filter_to_mvp:132` ← `_process_manifest_chunk:154` ← `get_venue_year_coverage:320`.
+      Needs a vectorized or per-row-group-cached `is_mvp` evaluation (the 4 extra axes — `base_ccy`/`league`/
+      `market_group`/`source` — are read via `.get()` per row today; a boolean-mask / groupby-then-broadcast approach
+      mirroring the `_classify` fix's shape is the likely path, but the `is_mvp` predicate itself may need a
+      vectorization-friendly UAC entry point — confirm with `mvp_scope_catalogue_tagging_2026_06_08.md`). Repo:
+      deployment-api. — **deployment-api@ce37346** (slot-33, 2026-08-11T18:32:23Z, Quickmerge, verified ancestor of
+      `origin/live-defi-rollout`): already shipped a dedup-then-broadcast rewrite of `filter_to_mvp` — evaluates
+      `is_mvp_for_manifest_row` once per distinct
       `(venue, instrument_type, data_type, base_asset, league_id, market_group, source)` combo in the chunk (combo
       cardinality orders of magnitude smaller than row count), then broadcasts the verdict back via a merge, falling
       back to a single evaluation when no axis column is present — same per-row semantics, a fraction of the
@@ -480,3 +486,5 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   top-level INFRA todo's 3-scope probe** — this fix isn't deployed yet, and the `filter_to_mvp` P0 todo (scope=mvp abort
   site) is still open, so a clean 3-scope pass isn't reachable yet regardless; live-prod re-verification stays a
   separate follow-up per this issue's established pattern.
+
+- **context-scout 2026-08-14**: populated context_scope (3 entries).

@@ -45,6 +45,14 @@ assigned_role: data_engineering
 effort: high
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    instruments-service/instruments_service/reference_data/adapters/cefi/coinbase_cde.py,
+    instruments-service/instruments_service/reference_data/adapters/cefi/kalshi_perp.py,
+    market-tick-data-service/market_tick_data_service/adapters/_umi_extended.py,
+    /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+  ]
 ---
 
 # Silent-cap source audit — remaining findings
@@ -304,6 +312,7 @@ findings.
 - 2026-08-10 (slot 19, review): shipped the sports-adapters hidden-vendor-page-cap todo — see the todo's own evidence
   line above for detail. instruments-service@2d7c19827, QG green (exit 0), quickmerge landed + ancestry-verified on
   origin/live-defi-rollout. Remaining todos in this doc are still open.
+- **context-scout 2026-08-14**: populated context_scope (5 entries).
 
 ## Codex SSOTs
 

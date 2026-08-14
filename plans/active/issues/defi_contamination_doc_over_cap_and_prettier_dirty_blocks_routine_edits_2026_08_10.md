@@ -38,6 +38,13 @@ source: >-
   defi_cefi_venue_chain_axis_contamination_2026_07_28.md — safe-doc-push.sh's prek plan-hygiene gate refused (HARD
   line-cap, 1008L at HEAD), and direct measurements (npx prettier@3.9.5 --check/--write on the HEAD file) showed the
   marker-append carve-out unreachable due to 121 lines of pre-existing prettier churn.
+context_scope:
+  [
+    /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
+    /plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md,
+    unified-trading-pm/scripts/plan-hygiene/check_line_caps.sh,
+    unified-trading-pm/scripts/hooks/prettier-autostage.sh,
+  ]
 priority: P3
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
@@ -134,3 +141,4 @@ gate-assessment evidence from slot-6 is recorded in this doc's Progress Log belo
   `archive_exempt: true` on this doc: both todos now done, but the doc should be user-archived (not auto-archived by the
   next worker) so the operator can review the resolution before closing. The archive step (`git mv` + banner + referrer
   sweep) is trivial and deterministic — a P3 archive-candidates cleanup.
+- **context-scout 2026-08-14**: populated context_scope (4 entries).

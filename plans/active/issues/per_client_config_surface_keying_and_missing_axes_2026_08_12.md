@@ -34,6 +34,14 @@ related:
     /codex/09-strategy/architecture-v2/axes/venue-eligibility.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
+context_scope:
+  [
+    /codex/04-architecture/per-client-isolation-architecture.md,
+    /codex/06-coding-standards/strategy-identity-versioning.md,
+    /plans/active/strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md,
+    /codex/09-strategy/architecture-v2/axes/venue-eligibility.md,
+    strategy-service/strategy_service/client_context.py,
+  ]
 created: 2026-08-12
 last_updated: 2026-08-12
 parent_epic: agent_operating_framework_master
@@ -348,6 +356,8 @@ same tick. That is the difference between an implementation that works and one t
       leaves all three in place has not centralised anything.
 
 ## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (5 entries).
 
 - **2026-08-12** — Raised from an operator question during the post-audit review. **Method note worth keeping**: the
   first probe searched only `strategy-service` for `clients.yaml`, found nothing, and was one step from reporting the

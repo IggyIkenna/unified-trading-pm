@@ -39,6 +39,12 @@ calibrated_ai_days: 0.05
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md,
+    deployment-service/deployment_service/data_pipeline_monitors/_gcs.py,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+  ]
 ---
 
 ## What I found
@@ -137,3 +143,4 @@ escalation.
   year-shard `--on-demand` → `mdps-cefi-2021-20260813-174738` (STANDARD, 10:47:42 UTC) — runbook SPOT escape hatch for a
   wave that cannot absorb repeated preemption; one-year shard cost is bounded (~~$35-70). Progress verification
   in-flight.
+- **context-scout 2026-08-14**: populated context_scope (3 entries).

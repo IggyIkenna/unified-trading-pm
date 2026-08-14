@@ -124,9 +124,9 @@ indefinitely and the clone silently diverges from the SSOT.
 - [ ] [SCRIPT] P1. Add a hygiene-sweep check that fails when `cursor-configs/settings.json` is dirty in any clone, OR
       when any `.claude/settings.local.json` is a symlink. The guard above prevents recurrence via this one code path;
       the check catches any other writer that reaches the same file.
-- [ ] [INVESTIGATE] P2. Find where the `settings.local.json` symlinks came from — three clones had them and nine did
-      not, so some older bootstrap path or a manual step created them. Until that's known, the guard is a backstop
-      rather than a root-cause fix.
+- [x] ✅ [INVESTIGATE] P2. Find where the `settings.local.json` symlinks came from — see 2026-08-14 Progress Log entry:
+      negative-result investigation — no script, past or present, ever creates a symlink at that path; most likely a
+      manual `ln -s` typo by an operator.
 - [ ] [DOCS] P2. Update `/codex/05-infrastructure/claude-code-settings-symlink.md`: record that `settings.local.json`
       must be a real per-clone file and never a link, and that `cursor-configs/settings.json` is git-TRACKED (the
       `link-claude-skills.sh` header still says it is gitignored, which is stale and was actively misleading during this
@@ -171,3 +171,26 @@ Verified working. Both are user-level, so they apply to every tab and slot on th
 not consulted at all; (2) `permissions.defaultMode` in the team or personal settings.json is inert for IDE sessions. The
 extension setting is the only control. Note that the rest of settings.json stays fully load-bearing under bypass —
 hooks, `mcpServers`, `env`, `enabledPlugins` all still apply; only the `permissions` block goes inert.
+
+**2026-08-14 — symlink-origin investigation, negative result (this todo closed).** Searched exhaustively for any
+bootstrap path that ever writes a symlink to `.claude/settings.local.json`:
+
+- `git log --all -S"settings.local.json"` and `git log --all -S"ln -s"` cross-referenced against every commit touching
+  `scripts/` — the only hits are `link-claude-skills.sh` block (4.5) (reads/heals the file, never symlinks it) and this
+  doc's own hygiene-check commits (`8e631c6dff`, `4874b48a52`, `99a13bea88`).
+- `link-claude-skills.sh`'s settings-symlink responsibility (`398d8aaa31`, 2026-07-23) and the codex SSOT's documented
+  manual per-slot loop (`claude-code-settings-symlink.md`, `3fc71129b3`) both target `.claude/settings.json` only — in
+  every historical version of both, the destination variable (`_settings_dest` / `$link`) resolves to `settings.json`,
+  never `settings.local.json`.
+- Timeline check against the archived `claude_code_settings_symlink_chain_broken_2026_07_23.md`: on 2026-07-23,
+  `.tabs/3`'s `settings.local.json` was still a REAL file (it carried redundant hook registrations that session cleaned
+  up) — so that slot's symlink was created SOMETIME BETWEEN 2026-07-23 and this doc's 2026-08-11 discovery, by a path
+  this investigation could not locate in any git-tracked automation.
+
+**Conclusion**: the three symlinks were not produced by any script — they were most likely a manual `ln -s` by an
+operator, plausibly a typo'd re-run of the documented `settings.json`-symlink loop that substituted
+`settings.local.json` for `settings.json` (the two filenames differ by one segment, and the same three slots —
+`.tabs/1`, `.tabs/3`, `.tabs/6` — were being fixed by hand during the 2026-07-23 incident's manual-fix phase, before the
+automated linker existed). No further code-level root cause exists to chase. The 2026-08-11 guard (refuse to write
+through a symlink) plus `check_settings_symlink_hygiene.sh` are therefore the complete fix for this failure class, not a
+backstop pending a future root-cause patch.

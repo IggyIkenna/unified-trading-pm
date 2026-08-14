@@ -30,6 +30,12 @@ related:
   - /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md
   - /plans/active/issues/fleet_wide_deepseek_crash_loop_undetected_2026_08_11.md
   - /codex/15-runbooks/isolated-deepseek-crash-debug-sandbox.md
+context_scope:
+  - agent-orchestrator/server/tmux_spawn.py
+  - agent-orchestrator/server/orphan_reap.py
+  - agent-orchestrator/scripts/orchestrator/strace_tmux_server_supervisor.sh
+  - scripts/self-hosted-runners/tmpfs-disk-cleanup.sh
+  - /codex/15-runbooks/safe-service-restart-procedures.md
 created: "2026-08-10"
 author: main (Claude Code, interactive session)
 parent_epic: orchestrator_master
@@ -594,3 +600,4 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   closure claims (13:51Z, then again after the Layer-3 gaps), and the operator's own standing objection to declaring
   victory on a readback still applies. Not flipping `status`/archiving; that decision stays with whoever is tracking the
   still-open closure question above.
+- **context-scout 2026-08-14**: populated context_scope (5 entries).

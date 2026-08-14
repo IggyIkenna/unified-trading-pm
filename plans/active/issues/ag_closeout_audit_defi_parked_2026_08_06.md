@@ -40,7 +40,7 @@ related:
     /plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md,
     /plans/archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
     /plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md,
-    /plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
     /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
     /scripts/plan-hygiene/check_ag_closeout_linkage.py,

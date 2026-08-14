@@ -11,7 +11,7 @@ summary: >-
   pyproject.toml + uv.lock only, no Python). The nearest concurrent commit on the branch
   (`market-tick-data-service@fa991f12`) does not itself add a new `# type: ignore` (checked directly, zero matches) —
   root cause not identified, only the blocking symptom and a safe uncommitted fix waiting behind it.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 repos: [market-tick-data-service]
@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [quality-gates, ratchet, ci-cd, ready-to-ship-blocked]
 created: 2026-08-03
 author: unknown
-last_updated: "2026-08-09"
+last_updated: "2026-08-14"
 parent_epic: plan_hygiene_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -30,7 +30,7 @@ source: [session on Ikenna's laptop, 2026-08-03]
 drift_direction: unknown
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13
 stage: [meta]
 related: []
 context_scope:
@@ -40,6 +40,12 @@ context_scope:
     scripts/quickmerge.sh,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-14** — `status: resolved` with zero open todos; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)'s
+> archive-on-resolve rule. All 3 todos done: baseline root-cause + ratchet fix (2026-08-09), the unblocked prek
+> Intel-Mac ship (2026-08-03), and the standalone-vs-quickmerge-re-gate fatality investigation + doc (2026-08-14,
+> `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`) — no open work remains.
 
 # market-tick-data-service type:ignore ratchet blocks a ready-to-ship, unrelated commit
 
@@ -113,10 +119,31 @@ deliberately bumped by someone who has confirmed the new occurrence is legitimat
       marker branches, exactly this fix. It landed bundled inside a larger multi-purpose commit rather than standalone
       via the recommended command, which is why the checkbox was never flipped — found by `/plan-reconcile ao`
       2026-08-06.
-- [ ] [SCRIPT] P3. Look at why `quality-gates.sh --no-fix` standalone treats STEP 5.95 as non-fatal ("ALL QUALITY GATES
-      PASSED" despite the ❌ line) while `quickmerge.sh`'s internal re-gate treats the identical finding as fatal —
-      likely intentional (re-gate may run a stricter/full mode) but worth a comment or confirming, since the
-      inconsistent signal cost time to understand during this session.
+- [x] ✅ [SCRIPT] P3. Look at why `quality-gates.sh --no-fix` standalone treats STEP 5.95 as non-fatal ("ALL QUALITY
+      GATES PASSED" despite the ❌ line) while `quickmerge.sh`'s internal re-gate treats the identical finding as fatal
+      — likely intentional (re-gate may run a stricter/full mode) but worth a comment or confirming, since the
+      inconsistent signal cost time to understand during this session. **DONE (2026-08-14, cross-cutting AO dispatch
+      batch 13b)** — investigated + documented; NOT a --no-fix-vs-full-mode difference (confirmed: STEP 5.94/5.95 has no
+      branch on that flag at all). Root cause is a MOVING-HEAD attribution window, not a severity difference: 1. The
+      2026-08-03 symptom (global baseline 658/659 mismatch) is OBSOLETE — the ratchet was redesigned since
+      (`market-tick-data-service@d072b035` era → the current diff-scoped-attribution form) to compare only files touched
+      in `git diff <merge-base-with-origin/live-defi-rollout> HEAD`, reading each touched file's live on-disk content
+      for the "new" count. There is no remaining whole-repo scalar-vs-frozen-baseline compare for 5.94/5.95 in the
+      current script (`grep -n BASELINE market-tick-data-service/scripts/quality-gates.sh` finds only a historical
+      comment). 2. Both invocation paths run the identical `bash scripts/quality-gates.sh --no-fix` — quickmerge's
+      `--agent` path only re-invokes it (the "re-gate") inside its sentinel-invalid RETRY loop
+      (`unified-trading-pm/scripts/quickmerge.sh:2454`), reached only after `_qm_stage_0_4_not_behind_gate` (same file,
+      called at line 2443 right before the re-gate) fetches + rebases the local HEAD onto whatever a peer slot pushed to
+      `live-defi-rollout` in the meantime. 3. Because 5.94/5.95's touched-file list comes from `git diff <base> HEAD`, a
+      peer commit swept in by that rebase — one that never appears in YOUR OWN diff — can still widen the re-gate's
+      `base..HEAD` window enough to surface a net-new bare `# type: ignore` in a file you never touched, and `log_fail`
+      there is an immediate `exit 1` (`market-tick-data-service/scripts/quality-gates.sh:631,664`). An earlier
+      standalone run, whose HEAD hadn't yet absorbed that peer commit, saw a narrower window and printed "ALL QUALITY
+      GATES PASSED" legitimately for the state it was scoped to at that moment. 4. Documented in place:
+      `market-tick-data-service/scripts/quality-gates.sh` (the diff-scoped-attribution helper's docstring, immediately
+      above `_mtds_ratchet_diff_base`) — `market-tick-data-service@9effa3529c`. No code BEHAVIOR change — this was an
+      investigate-and-document todo; the mechanism is working as designed (attribution scoped to `base..HEAD`), just
+      under-documented for why two invocations of the same script can legitimately disagree.
 
 ## Progress Log
 
@@ -147,3 +174,8 @@ deliberately bumped by someone who has confirmed the new occurrence is legitimat
   live-reverified current repo count is exactly 658 (matches baseline, no longer blocking). 1 open todo remains (todo 3,
   the `--no-fix`-vs-quickmerge-re-gate fatality inconsistency — no evidence found of anyone investigating it).
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **cross_cutting_satellite_ao_dispatch_batch13b 2026-08-14**: closed todo 3 (the final open item) — root-caused +
+  documented the standalone-vs-quickmerge-re-gate fatality split as a MOVING-HEAD attribution window, not a
+  --no-fix-vs-full-mode severity difference (full explanation on the checkbox above). Doc-level comment shipped at
+  `market-tick-data-service/scripts/quality-gates.sh` (diff-scoped-attribution helper docstring). All 3 todos now closed
+  — flipping `status: open -> resolved`.

@@ -202,6 +202,6 @@ finalize twin is drafted alongside it, gated on this plan per the finalize-plan-
   corrected todo already `[x]`-CLOSED under the same ruling.
 - **2026-08-10 (slot-17, infra) — archived**. `git mv` to `plans/archive/2026_08/` via the standard 6-step ritual —
   banner + `status: complete`, all corpus referrers repointed (incl.
-  `codex/05-infrastructure/shared-host-tmp-tmpfs-capacity.md`), INDEX.md regenerated. Finalize plan archived alongside
+  `/codex/05-infrastructure/shared-host-tmp-tmpfs-capacity.md`), INDEX.md regenerated. Finalize plan archived alongside
   (all 3 of its todos done). `check_ag_closeout_linkage.py` 0 orphans (baseline 0) +
   `regenerate_active_plan_inventory.py` clean.

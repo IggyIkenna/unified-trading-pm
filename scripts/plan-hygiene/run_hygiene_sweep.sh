@@ -416,18 +416,10 @@ run_check "No prettier emphasis-mangling"    hard "$SCRIPT_DIR/check_prettier_ma
 # emphasis-mangling check above (non-idempotent reflow of a 2nd+ paragraph nested inside a list
 # item; each reformat pass ADDS leading-space padding instead of converging). Corpus already
 # carries real debt (found while root-causing 2026-08-03), so this is a shrinking ratchet like
-# check_archive_candidates.sh below. SSOT + repro:
+# check_archive_candidates.sh below — full-corpus only, not wired into --precommit (a staged-subset
+# count would trivially pass against the corpus-wide baseline). SSOT + repro:
 # plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md
-# Diff-scoped in CI-gate mode (2026-08-11, closing the last check named in
-# plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md as never converted)
-# — same DIFF_BASE_REF guard as reference-path/archive-candidates/effort-ratchet/na-corpus above;
-# a per-commit staged-subset run still uses --only (wired elsewhere in this script) since a
-# handful of staged files would trivially pass the corpus-wide baseline either way.
-PROSEWRAP_DIFF_ARGS=()
-if [ -n "$DIFF_BASE_REF" ]; then
-  PROSEWRAP_DIFF_ARGS=(--diff-base "$DIFF_BASE_REF")
-fi
-run_check "No prettier proseWrap continuation-padding (ratchet)" hard "$SCRIPT_DIR/check_prosewrap_padding.sh" "${PROSEWRAP_DIFF_ARGS[@]}"
+run_check "No prettier proseWrap continuation-padding (ratchet)" hard "$SCRIPT_DIR/check_prosewrap_padding.sh"
 # Broken relative links (plans/active/*.md -> a doc that moved to plans/archive/... without the
 # referrer's path being updated) — the same check the --precommit fast path runs on any staged
 # plans/ change, run here too so the operator's daily sweep catches drift from commits that landed
@@ -535,6 +527,11 @@ run_check "CLAUDE↔SUB_AGENT topic parity"    soft "$SCRIPT_DIR/check_claude_su
 # signal only, feeds /plan-reconcile's AO-dispatch-readiness hunter for real judgment; soft because
 # a regex cannot decide whether a self-justification is actually sound.
 run_check "Delete/VM-launch todo tagging (AO plans, candidate signal)" soft "$SCRIPT_DIR/check_delete_vm_launch_gating.sh"
+# Uncited-symbol todo candidate signal (tool_call_batching_authoring_gap_2026_08_14) — a todo
+# citing no backtick-quoted symbol/file/table likely forces an exploratory Read/Grep before any
+# edit is possible; feeds /plan-reconcile hunter 5's specificity sub-check. Soft/advisory: a
+# backtick-presence regex cannot judge whether a todo genuinely has nothing to cite yet.
+run_check "Uncited-symbol todo (candidate signal)" soft "$SCRIPT_DIR/check_todo_specificity.sh"
 # Priority vs. tier policy (operator ruling 2026-07-28, plan_priority_policy_qg_validation_2026_07_28.md) —
 # flags a bare sports/tradfi-tagged doc sitting at P0/P1 with no title/frontmatter signal of
 # backfill-completion-critical work, per plan-priority-tier-and-dispatch-ordering.md. Soft/advisory:

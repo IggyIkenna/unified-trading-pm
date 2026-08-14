@@ -468,11 +468,13 @@ NOT AO and are deliberately out of scope here.
       CWD-fallback bug in `regen_backlog_from_plan.py`), not the earlier, well-known 08:1x UTC `/tmp`-ENOSPC blip (which
       was real but contained). Root-fixed same day, `agent-orchestrator@fc9ac53`. Full hourly-breakdown methodology +
       activity-log evidence lives in that plan's Progress Log — not duplicated here.
-- [ ] [REVIEW] P0. **`ao_docs_reconciliation` close-out pass.** Verify tier-by-tier (1–6) what has since landed (several
-      tiers were executed piecemeal: Tier-4 → `ao_residuals`; X2 → recovery doc; some Tier-1 flips landed in later
-      commits), apply/route what remains, then flip the tracker `resolved` + archive. Its own X5 lesson applies: every
-      edit lands committed+pushed in the same session. Source: doc #10. **Gate**: each tier marked landed/routed/dropped
-      with evidence; doc archived.
+- [x] ✅ [REVIEW] P0. **`ao_docs_reconciliation` close-out pass.** Verify tier-by-tier (1–6) what has since landed
+      (several tiers were executed piecemeal: Tier-4 → `ao_residuals`; X2 → recovery doc; some Tier-1 flips landed in
+      later commits), apply/route what remains, then flip the tracker `resolved` + archive. Its own X5 lesson applies:
+      every edit lands committed+pushed in the same session. Source: doc #10. **Gate**: each tier marked
+      landed/routed/dropped with evidence; doc archived. **✅ VERIFIED DONE 2026-08-14 (code-audit sweep)** —
+      `/plans/archive/2026_08/ao_docs_reconciliation_2026_07_15.md` is `status: resolved` and archived, with every
+      remainder todo `[x]`; this tracker's own checkbox was simply never reconciled once the gate closed.
 - [x] ✅ [REVIEW] P0. **Archive each source doc as its items land** (6-step ritual each: migrate deferred → banner →
       codex-alignment → codex update if a contract changed → update every referrer's path corpus-wide → clear lock).
       Docs #2 and #6-frontmatter carry bogus fields (`last_updated: 2026-06-27` predating `created`; stray
@@ -680,16 +682,12 @@ NOT AO and are deliberately out of scope here.
 
 ### Phase LAST — operator-sequenced
 
-- [x] ✅ [BACKEND] P0. **Recovery-audit Layer-1 producer rewire (operator ruling B per
-      `ao_recovery_audit_layer1_deleted_2026_07_15.md`, "do it at last").** Stand up the standalone
-      recovery-audit-signoff producer (NOT an AO worker-role): consume PubSub `agent-recovery-actions`, POST verdicts to
-      the live `POST /safety-ops/signoffs`; unmock the DART feed; clean the stale `routes/agents.py:146` comment. Only
-      start once Phases 0–4 are done (the operator's sequencing). Source: doc #9. **Gate**: a real signoff flows
-      PubSub→producer→alerting-service→DART with the mock feed retired; codex Layer-1 banner replaced with the live
-      description. — **DONE `deployment-service@1a8346db`** (standalone producer + 15 unit tests, PubSub topic/sub
-      provisioned in `terraform/gcp/main.tf`), codex banner replaced `unified-trading-pm@522dec4ba7`. Gate verified:
-      closed deterministic verdict rules POST to the live ingest; DART's `_mock_signoffs()` is `is_mock_mode()`-gated
-      only; `agents.py:146` comment now accurate. Mirrored in doc #9 (`ao_recovery_audit_layer1_deleted_2026_07_15.md`).
+- [ ] [BACKEND] P0. **Recovery-audit Layer-1 producer rewire (operator ruling B, "do it at last").** Stand up the
+      standalone recovery-audit-signoff producer (NOT an AO worker-role): consume PubSub `agent-recovery-actions`, POST
+      verdicts to the live `POST /safety-ops/signoffs`; unmock the DART feed; clean the stale `routes/agents.py:146`
+      comment. Only start once Phases 0–4 are done (the operator's sequencing). Source: doc #9. **Gate**: a real signoff
+      flows PubSub→producer→alerting-service→DART with the mock feed retired; codex Layer-1 banner replaced with the
+      live description.
 
 ### Phase 7 — INDEPENDENT AGENT-AUDIT FINDINGS (Claude, 2026-07-17) — ⚠️ NOT from the issue docs
 

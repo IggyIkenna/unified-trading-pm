@@ -65,7 +65,16 @@ mention", never "raise the baseline").
 Usage:
   python3 scripts/plan-hygiene/check_ag_closeout_linkage.py [--quiet] [--update-baseline]
   python3 scripts/plan-hygiene/check_ag_closeout_linkage.py --only <path> [<path> ...]
+  python3 scripts/plan-hygiene/check_ag_closeout_linkage.py --tranche <name> [--quiet]
 Exit 0 if the orphan count is <= baseline. NEVER hand-raise a baseline entry.
+
+``--tranche <name>`` (2026-08-14, additive/opt-in): scopes the printed orphan list + count to
+ONE tranche (mirrors generate_ag_closeout_audit_candidates.py's --tranche flag) — a real,
+measured cost a full-corpus run incurs for a tranche-scoped dispatch (e.g. cefi's own
+/ag-closeout-audit run surfacing 80 non-cefi orphans irrelevant to it). DIAGNOSTIC ONLY: the
+corpus-wide baseline ratchet is a single number for the whole corpus, not decomposable per
+tranche, so this mode always exits 0 (informational) rather than gating against it — no-flag
+mode's baseline-gated behavior is completely unchanged.
 
 ``--only <paths>`` (2026-08-09, precommit migration): this ratchet previously had NO
 precommit-time presence, only the full corpus-wide baseline mode (baseline: 49 orphans at
@@ -350,7 +359,10 @@ def _orphans_for(
         if fm.get("status") in EXCLUDED_STATUS:
             continue
         ag_values = [v for v in docspec._as_list(fm.get("asset_group")) if isinstance(v, str)]
-        if len(ag_values) != 1 or ag_values[0] not in COVERED_ASSET_GROUPS:
+        # Keyed off closeout_family (not the module-level COVERED_ASSET_GROUPS) so a caller
+        # that passes a SCOPED family dict (--tranche mode) only evaluates docs in that
+        # tranche, instead of KeyError-ing on the first doc belonging to an excluded tranche.
+        if len(ag_values) != 1 or ag_values[0] not in closeout_family:
             continue
         ag = ag_values[0]
         family = closeout_family[ag]
@@ -436,6 +448,22 @@ def _run_only(paths: list[str], quiet: bool) -> int:
     return 0 if n == 0 else 1
 
 
+def _tranche_from_argv() -> str | None:
+    """`--tranche <name>` (additive/opt-in, see module docstring) — validated against
+    COVERED_ASSET_GROUPS, the same value domain the rest of this script already keys on."""
+    if "--tranche" not in sys.argv:
+        return None
+    idx = sys.argv.index("--tranche")
+    if idx + 1 >= len(sys.argv):
+        print("error: --tranche requires a value", file=sys.stderr)
+        raise SystemExit(2)
+    tranche = sys.argv[idx + 1]
+    if tranche not in COVERED_ASSET_GROUPS:
+        print(f"error: --tranche must be one of {sorted(COVERED_ASSET_GROUPS)}", file=sys.stderr)
+        raise SystemExit(2)
+    return tranche
+
+
 def main() -> int:
     if "--only" in sys.argv:
         idx = sys.argv.index("--only")
@@ -443,12 +471,29 @@ def main() -> int:
 
     quiet = "--quiet" in sys.argv
     update = "--update-baseline" in sys.argv
+    tranche = _tranche_from_argv()
 
     files = target_files()
     all_docs, all_bodies = _scan_current()
 
     search_paths = closeout_search_paths()
-    closeout_family: dict[str, set[Path]] = {ag: closeout_family_for(ag, search_paths) for ag in COVERED_ASSET_GROUPS}
+    scoped_ags = (tranche,) if tranche else COVERED_ASSET_GROUPS
+    closeout_family: dict[str, set[Path]] = {ag: closeout_family_for(ag, search_paths) for ag in scoped_ags}
+
+    if tranche:
+        # Diagnostic mode (see module docstring): scope the printed list + count to one
+        # tranche and always exit 0 — the baseline ratchet is a single corpus-wide number,
+        # not decomposable per tranche, so this mode never gates on it.
+        violations_by_path = _orphans_for(all_docs, all_bodies, closeout_family)
+        violations = list(violations_by_path.values())
+        if not quiet:
+            print(f"AG-closeout linkage check [{tranche}] ({len(all_docs)} docs scanned):")
+            print()
+            for v in sorted(violations):
+                print(f"  ORPHAN  {v}")
+            print()
+        print(f"check_ag_closeout_linkage [{tranche}]: {len(violations)} orphan(s) (diagnostic, not baseline-gated)")
+        return 0
 
     empty_families = sorted(ag for ag, fam in closeout_family.items() if not fam)
     if empty_families:

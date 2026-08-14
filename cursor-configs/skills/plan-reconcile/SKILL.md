@@ -4,8 +4,8 @@ description:
   Audit the PM plans corpus (plans/active + plans/active/issues + plans/epics + the normative refs PLAN_FORMAT.md /
   task_template.md / INDEX.md / ACTIVE_INDEX.md) for cross-doc contradictions, done-but-unchecked todos, AND
   AO-dispatch-readiness defects (first-line truncation, unenforced ordering, bare section-shorthand, ambiguous verbs,
-  inconsistent delete-tagging, missing definition-of-done, markdown structural well-formedness, internal
-  self-consistency — per task_template.md §3), AND data-pipeline-milestones drift for the 5 asset-group consolidated
+  inconsistent delete-tagging, missing definition-of-done, uncited symbol/file forcing exploratory round-trips,
+  markdown structural well-formedness, internal self-consistency — per task_template.md §3), AND data-pipeline-milestones drift for the 5 asset-group consolidated
   closeouts (per data_pipeline_e2e_milestones_gate_2026_07_24.md's 14 cross-AG correctness criteria), adversarially
   verify every finding, then reconcile — auto-fix the mechanical classes (checkbox flips with hard
   evidence, supersession banners, status/frontmatter drift, dangling refs) AND anything a source of truth can settle
@@ -150,41 +150,6 @@ test was wrong. **The test is not "does this feel like a judgment call?" — it 
 they conflict, which side is authoritative and why, and options with the recommendation marked FIRST. Recurring classes
 get ONE class-level question with per-item exceptions (the 16-row fold table was approved as a single question).
 
-### No-defer default (added 2026-08-12) — every finding resolves to fix-or-ask, never a wholesale backlog dump
-
-**Real gap this closes**: the 2026-08-12 full-corpus run surfaced 121 contradictions + 43 done-but-unchecked/zero-
-checkbox docs, correctly drove all 6 P0 + 37 P1 + 4 judgment calls to resolution — then wrote the remaining ~150 P2/P3
-items into a findings doc's "compact backlog" section verbatim, untouched, "for a future pass." That is a violation of
-this skill's own no-silent-drop principle (Phase 5.9), just with a longer fuse — a finding sitting unfixed AND unasked
-in a doc nobody is pinged to read is exactly as lost as one dropped from the report.
-
-**Every confirmed finding, at every severity, must land on exactly one of three outcomes in the SAME run** — there is no
-fourth "log it for later" outcome as a default:
-
-1. **Auto-fix** per Phase 4's table (this covers most P2/P3 — stale banners, frontmatter drift, dangling refs, checkbox
-   mismatches are all provable-from-evidence, so FIX them, don't just describe them).
-2. **Ask** (interactive) — see routing below. High volume is a batching problem, not a reason to skip: a cluster of
-   near-identical low-severity findings (e.g. "N docs have a stale `last_updated`") is ONE class-level question, not N
-   individual ones and not zero.
-3. **Escalate** (autonomous/AO) — a `BLOCKED-OPERATOR-DECISION` entry per class (or per item if the class doesn't
-   generalize), same mechanism Phase 4 already uses for P0/P1 judgment calls, extended to every severity.
-
-A findings doc enumerating remaining items is still fine as the durable RECORD of what happened to each — it just can't
-be the disposition itself. If a run genuinely runs out of budget/time before finishing the fix-or-ask pass on the full
-backlog, that is allowed, but it must be stated OUT LOUD to the operator (interactive: say so in the Phase 6 report and
-name what's left) or in the issue doc's header (autonomous: an explicit `PARTIAL — remaining items not yet resolved`
-banner, not a silent "Section 3" with no disposition marker) — never presented as if the run finished when a few hundred
-items were only ever catalogued.
-
-**Route by mode, same split as the rest of this skill:**
-
-- **Interactive (operator in a laptop session)**: the MAIN agent — not a sub-agent — asks directly in the chat, batched
-  per the rule above. Sub-agents may VERIFY and PROPOSE a fix, but the ask itself goes through the main agent so the
-  operator only ever sees one coherent Q&A stream, not N parallel sub-agent prompts.
-- **Autonomous / AO-dispatched**: escalate to a human via the AO escalation queue exactly as Phase 4 already does for
-  P0/P1 — this is not new machinery, only a wider scope (every severity, not just the ones that used to feel like "real"
-  judgment calls).
-
 ## Phase 0 — deterministic inventory (cheap, no agents)
 
 Write a throwaway script (scratchpad, NOT the repo; line-based frontmatter parse, no regex backtracking, never
@@ -270,7 +235,13 @@ history; properly-bannered supersession (an UNbannered superseded doc that still
    `plans/active/issues/plan_quality_four_line_defense_architecture_2026_07_23.md`), not a regex in
    `run_hygiene_sweep.sh` (line 2). One hunter per active AO-eligible plan (`assigned_vm: planning` or a strong
    candidate for it), checking every open `- [ ]` todo against `task_template.md` §3's rules — these are the SAME rules,
-   not a parallel spec, so a rule added to §3 is automatically in scope here:
+   not a parallel spec, so a rule added to §3 is automatically in scope here. **NA plans (`assigned_vm: NA`) get the two
+   SPECIFICITY sub-checks too** (definition-of-done, cited-symbol below) — a human working an NA todo interactively pays
+   the SAME exploratory-round-trip cost a vague todo forces on an AO worker
+   (`tool_call_batching_authoring_gap_ 2026_08_14`; the user runs NA regularly on the laptop, not just AO on the VM).
+   The other sub-checks stay AO-only — ordering-machine-enforcement and delete/VM-launch-risk tagging exist because AO
+   is UNATTENDED; an NA session has a human present who can catch those the same way they'd catch anything else
+   mid-work:
    - **Line-1 completeness** (task_template.md §3): does the todo's actual FIRST PHYSICAL LINE — not the sentence as it
      reads to a human across a markdown line-wrap — carry the complete instruction (action + method + any hard
      constraint like ON-DEMAND vs SPOT)? A bolded clause that wraps onto line 2 mid-sentence is a genuine miss even
@@ -292,6 +263,15 @@ history; properly-bannered supersession (an UNbannered superseded doc that still
      not authoritative) and adjudicate each — that script cannot judge whether a stated justification is actually sound,
      only whether one exists at all.
    - **Definition-of-done present** — every todo states what evidence proves it's done, not just the goal.
+   - **Cited symbol/file, not just a mechanism** (`tool_call_batching_authoring_gap_2026_08_14`, task_template.md §3
+     framing note) — does the todo name a specific function/class/table/endpoint/file (grep-able, per the existing
+     symbol-not-line-number rule) rather than only describing a mechanism or symptom ("move the loader off its
+     PATH-PREFIX read" with no file/symbol named)? A todo with nothing grep-able GUARANTEES an exploratory Read/Grep
+     round-trip before any edit is possible — the same class of cost hunter 1 already measures elsewhere, just paid at
+     dispatch time instead of runtime. Not every todo needs this (a genuinely novel one-file fix may not have an
+     existing symbol to cite) — flag only when the todo's own wording gives a worker nothing to grep for AND
+     `context_scope` (§2a) doesn't already cover it. Auto-fixable when the missing symbol is findable in ≤1 grep
+     (rewrite the todo to name it); otherwise route to the operator like any other scope finding.
    - **Bounded outcome, no judgment call** (operator ruling 2026-07-23,
      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility") — is the
      todo's outcome DETERMINABLE by the dispatched worker alone (a checkable fact, a scoped change, an audit with a
@@ -591,11 +571,10 @@ hourly cadence because a whole-corpus run MEASURED 4175s (69.6min) on 2026-07-30
 past the 15-min inter-job stagger the hourly schedule assumed; the unit's `TimeoutStartSec` went 2450 → 6000 in the same
 change. If a run ever needs more than ~2h, shard it by tranche (this skill already supports that) rather than growing
 one monolithic run's budget again. The timer POSTs `{"mode": "reconcile"}` to `/api/plan-health/dispatch`, which spawns
-the worker (sonnet / effort max / thinking on — CORRECTED 2026-08-13, this previously said opus, stale against
-`agents/plan_reconciler.md`'s own `model: sonnet` frontmatter and CLAUDE.md's 2026-08-08 "opus is manual-only" ruling)
-on a free Max-plan slot. The autonomous contract above (no pauses, auto-fix only, park rulings, notify on big findings)
-is exactly the non-interactive behaviour that daily worker runs under. This skill (`/plan-reconcile`) stays directly
-invocable interactively any time — the timer is additive, not a replacement for an on-demand run.
+the worker (opus / effort max / thinking on) on a free Max-plan slot. The autonomous contract above (no pauses, auto-fix
+only, park rulings, notify on big findings) is exactly the non-interactive behaviour that daily worker runs under. This
+skill (`/plan-reconcile`) stays directly invocable interactively any time — the timer is additive, not a replacement for
+an on-demand run.
 
 ## Codex SSOTs
 

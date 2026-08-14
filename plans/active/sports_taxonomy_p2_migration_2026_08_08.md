@@ -153,6 +153,112 @@ than proceeding.
       `MATCHES`, `ODDS`, `PLAYER_STATS`, `PLAYER_VALUES`, `PREDICTIONS`, `SFI_PROGRESSIVE_STATS`, `STANDINGS`, `TEAMS`,
       `WEATHER`, `XG`, `XG_SHOTS`, `ODDS_HORIZON_BUCKET`). Only after the API-Football campaign has converged (the
       `gate_on_depends` above enforces this, but re-verify at run time — a gate is not a substitute for looking).
+      **SPLIT 2026-08-14 (BLK-8436a1a6, operator-approved Option A)**: census + risk-analysis this session found the
+      scope far larger and riskier than the 1h estimate — see the new dedicated todo immediately below and the Progress
+      Log. This todo now tracks ONLY the split decision; the physical work moved to that todo.
+- [ ] [DATA] P0. **[OPERATOR] Execute the 19-token lowercase re-stamp on a dedicated VM (in-region, SPOT +
+      progress-checkpoint resume) — census + code diff prepared 2026-08-14, execution not yet run.** Scope, in ONE
+      atomic change (must land together, per the analysis below): 1. Metadata-only manifest re-stamp: rewrite
+      `data_type` for the 19 uppercase tokens to their `SPORTS_IS_DATA_TYPE_LOWERCASE_FORM` target
+      (`unified-api-contracts` `league_data.py:297`) across `instruments-store-sports-prd-central-element-323112`'s
+      `_index/availability_index.parquet` (merged index) AND any per-VM legacy-seed shards — **census 2026-08-14:
+      15,907,902 of 17,208,810 rows (92%) carry an uppercase token**, dated 2014-01-01 → 2026-08-20 (tool:
+      `census_sports_19token_lowercase_scope_2026_08_14.py`, shipped `instruments-service@<see Progress Log>`). NO GCS
+      object copy needed — `entity=` path segments are already lowercase + stable (`SPORTS_DATA_TYPE_TO_FOLDER`, UAC
+      `gcs_paths.py`); this is a manifest-column relabel only, unlike the `trades`→`odds` re-stamp. 2. Flip
+      instruments-service's 8 registry sites to the lowercase form in the SAME change (never before step 1 completes
+      verified): `process_preflight.py` (`_SPORTS_CORE_ENTITIES`, `_SPORTS_PER_FIXTURE_ENTITY_NAMES`,
+      `_ENRICHMENT_ENTITY_VENUES`, `_SPORTS_PER_LEAGUE_ENTITIES`, `_FIXTURES_ENTITY_ALIASES`),
+      `orchestrator/__init__.py::_SPORTS_DATA_TYPE_TO_PIPELINE_MODE`, `sports_dependency.py`
+      (`_API_FOOTBALL_FIXTURES_DATA_TYPES`), `sports_reference_fixtures_write.py::_ENTITY_DT_BY_SHORT`,
+      `writers.py`/`catalogue.py`'s venue-string-slicing derivation (apply `canonical_sports_is_data_type()` to the
+      derived value before the manifest write). 3. Wire `enumerate_expected_universe.py`'s
+      `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE` with all 19 tokens' lowercase mapping (§3b of the consumer inventory's
+      VERDICT) — in the SAME change as steps 1-2, never standalone. **Why atomic, not staged (root-cause evidence,
+      2026-08-14 session)**: UTL's shared `check_shard_freshness()` does an EXACT case-sensitive string match of
+      `expected_venues` against the manifest `data_type`/`venue` columns
+      (`unified-trading-library/manifest_writer/_queries.py:149`, `token_mask = date_df["venue"] == venue`) — no
+      case-insensitive fallback. Flipping step 2 before step 1 completes (or vice versa) makes every already-captured
+      historical date read as "missing" on the next freshness pre-flight, triggering re-fetch storms against LIVE
+      provider APIs (API-Football/FootyStats/Understat/Transfermarkt/SFI/OpenMeteo) across 6+ years of history — the
+      SAME failure class as the documented `odds_horizon_bucket` "572 permanently-skipped days" incident
+      (`enumerate_expected_universe.py`'s own `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE` comment,
+      `sports_data_sources_canonical_completion_2026_07_13.md` §1), but at ~46x the row count. The SAME mechanism
+      applies to step 3: wiring the override dict before step 1 lands makes `enumerate_expected_universe.py`'s
+      present-set match look for the NEW lowercase string while real captured rows are still uppercase-cased — a
+      guaranteed repeat of the exact 209,526-vs-123,642 zero-overlap incident this dict's own comment documents, at
+      19-token scale, which is why this todo does NOT ship the override-dict wiring standalone this session despite the
+      operator's BLK-8436a1a6 answer inviting it — the diff is drafted (see Progress Log) but held for atomic landing
+      with steps 1-2. **Explicitly OUT of scope** (P3's job per the consumer inventory's own delineation):
+      `FIXTURES_SCHEDULE` / `FIXTURES_OUTCOMES` are UAC string CONSTANTS also directly imported by MTDS and MDPS — do
+      not flip their VALUE here; only instruments-service's own registries/writers move in this todo. **Verify**: fresh
+      census (rerun the shipped script) shows 0 remaining uppercase-token rows across BOTH manifest surfaces; a live
+      freshness pre-flight run on a recent + a historical date each shows `is_fresh=True` with 0 spurious missing/stale;
+      `[OPERATOR]` tag because this launches a VM + executes a corpus-scale prod manifest mutation (delete-safety codex
+      §3a doesn't apply — no object delete, but the launch itself needs the same review a 16M-row prod-manifest rewrite
+      warrants). **CORRECTION 2026-08-14 (slot-18, resume session) — step 2's "flip 8 registry sites to lowercase" is
+      WRONG as literally worded; do NOT rewrite these registries' literal values.** Traced all 8 call sites and found
+      they split into two disjoint classes the original wording conflates: **(a) UAC-axis lookup keys that MUST stay
+      uppercase** — `orchestrator/__init__.py::_SPORTS_DATA_TYPE_TO_PIPELINE_MODE` (looked up via
+      `_pipeline_mode_for_sports_data_type()` at `writers.py:270`, BEFORE the manifest-write casing decision — flipping
+      this dict's keys breaks the lookup, not the manifest) and any UAC-axis registry feeding
+      `get_entity_league_coverage()`/`SPORTS_DATA_TYPE_TO_SOURCE`; vs **(b) genuine manifest-boundary sites that DO need
+      the lowercase form, applied via a translation call at the boundary** (mirroring the already-proven
+      `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE`/`_sports_manifest_data_type()` pattern,
+      `enumerate_expected_universe.py:305-332`) — **not** by rewriting the registry literal, because several of the SAME
+      registries feed BOTH kinds of call in one file: `process_preflight.py:508-509` builds `expected` from
+      `_SPORTS_CORE_ENTITIES`/`_SPORTS_PER_FIXTURE_ENTITY_NAMES` and passes it straight into
+      `_orch.check_shard_freshness(expected_venues=expected, ...)` at `process_preflight.py:592-598` (confirmed exact
+      case-sensitive manifest-content match, `unified-trading-library/manifest_writer/_queries.py:149`) — but the SAME
+      `expected` also flows through `get_entity_league_coverage(entity)` at `process_preflight.py:469` (UAC-axis, stays
+      uppercase). Confirmed manifest-boundary sites needing a translation wrapper (not a registry rewrite):
+      `process_preflight.py:592-598`'s `check_shard_freshness(expected_venues=expected)` call;
+      `sports_dependency.py:218`'s `idx["data_type"].isin(_API_FOOTBALL_FIXTURES_DATA_TYPES)` — a DIRECT `.isin()`
+      against raw manifest content (`sports_dependency.py:97-98`'s own docstring: "the two manifest data_type values";
+      post-migration only `fixtures_schedule` will be present — the bare `FIXTURES` legacy literal was already fully
+      retired per `fixtures_manifest_legacy_backfill_2026_07_24.md`, so keeping both members lowered is harmless but
+      both must be lowered); `writers.py:270`+`writers.py:383-390`'s `_classify_venue_write()` —
+      `_pipeline_mode_for_sports_data_type     (manifest_data_type)` MUST run on the uppercase form BEFORE
+      `manifest_data_type` is lowered for the
+      `record_captured(row_key={"data_type": manifest_data_type}, data_type=manifest_data_type, ...)` write — ordering
+      matters WITHIN this one function, not just across files; `catalogue.py:131-171`'s equivalent legacy per-venue
+      write path (same extraction pattern, same fix). **Not yet traced to the same rigor this session**:
+      `sports_reference_fixtures_write.py::_ENTITY_DT_BY_SHORT`'s `record_captured(data_type=af_entity_dt, ...)` write
+      (~line 169, almost certainly the same writers.py pattern) and `_ENRICHMENT_ENTITY_VENUES`'s full consumer set
+      beyond the two call sites read this session. **Net effect**: step 2 shrinks from "8 registries, literal rewrite"
+      to "N manifest-boundary call sites, translation-wrapper insertion" — smaller blast radius but needs a fresh
+      per-site audit before code lands, not a mechanical global replace. **Both previously-untraced sites now confirmed
+      (same session, follow-up read)**: `sports_reference_fixtures_write.py:158-171`'s
+      `record_captured(row_key={...,     "data_type": af_entity_dt}, data_type=af_entity_dt, ...)` write is the
+      IDENTICAL writers.py pattern — lower `af_entity_dt` only immediately before this call, never
+      `_ENTITY_DT_BY_SHORT`'s dict values (which UAC-axis code elsewhere may still key uppercase).
+      `_ENRICHMENT_ENTITY_VENUES` has exactly 2 consumers, both in `process_preflight.py` (line 462, feeding
+      `expected.append(entity)` → the already-covered `check_shard_freshness` boundary; line 688, a
+      `{e for e, _ in ...}` set built only to test membership against `missing_set`, which itself derives from that same
+      already-translated `expected`/`missing`/`stale` — no separate casing risk). **All 8 original sites now fully
+      classified**: 0 need a literal registry rewrite; the manifest-boundary translation wrap is needed at exactly 5
+      call sites (`process_preflight.py:592-598`, `sports_dependency.py:218`, `writers.py:383-390`,
+      `catalogue.py:131-171`, `sports_reference_fixtures_write.py:158-171`) plus the `enumerate_expected_universe.py`
+      override-dict wiring already scoped in step 3. No step-2/3 code shipped this session pending operator review of
+      this corrected design (see BLK-8436a1a6 follow-up); step 1 (the manifest re-stamp script) is independent of this
+      correction and unaffected.
+- [x] ✅ [DATA] P0. **Draft + locally validate the 19-token re-stamp's step 1 (manifest relabel script) — NOT
+      execution.** Per operator interim guidance on BLK-20f1ba56 ("write + locally validate, stop short of VM
+      launch/live execution"): shipped `instruments-service@5ec75509`
+      (`scripts/restamp_sports_19token_lowercase_2026_08_14.py`) — relabels `data_type` on the merged availability
+      index + every `_index/per_vm/*.parquet` shard per `SPORTS_IS_DATA_TYPE_LOWERCASE_FORM`, dry-run default,
+      `--apply-prod --confirm-prod-write` gated. Relabel logic locally validated against a synthetic in-memory DataFrame
+      (no GCS calls): confirmed correct per-token mapping, already-lowercase/non-target rows left untouched. Traced +
+      corrected the step 2/3 design (see CORRECTION note above) — all 8 registry sites classified, 5 real
+      manifest-boundary call sites identified with exact file:line citations. **CORRECTED 2026-08-14 (slot-26)**: both
+      instruments-service commits from this note (census `instruments-service@e6d1a76c` + this script
+      `instruments-service@5ec75509`) DID land on origin — the local pre-rebase SHAs `67105c6e`/`0c0a5109` this entry
+      originally cited never resolved because quickmerge's Stage-0.4 rebase rewrote them; confirmed via
+      `git log --oneline -- <path>` against `origin/live-defi-rollout`. The unrelated pre-existing
+      `instruments_service_defi_golden_red_capability_drift_2026_08_14.md` QG-red that blocked shipping at the time has
+      since cleared. **The `[OPERATOR]` execute todo directly above stays intentionally UNCHECKED** — no VM was
+      launched, no live write was attempted; BLK-20f1ba56 remains open pending the operator's actual go/no-go on the
+      launch, and steps 2-3 still need code written (scoped, not yet drafted) before that launch can happen.
 - [ ] [DATA] P0. **Fold footystats `ODDS` (6,306 captured) + `odds` (16,207 captured) into a single `odds`.** These are
       the same vendor population under two spellings; `source=footystats` remains the discriminator against the odds_api
       population. Note the UAC comment calling the uppercase set "4 stale empty rows" is FALSE — expect 6,306 real
@@ -216,6 +322,40 @@ than proceeding.
       (31 venues / 10 data types today → the canonical set, with nothing hidden). This is the end-to-end proof that the
       panel and the data finally agree.
 
+- **2026-08-14** — Todo 3 (lowercase the 19-token IS vocabulary) SPLIT after census + risk analysis found it far
+  larger/riskier than its 1h estimate. Census (`census_sports_19token_lowercase_scope_2026_08_14.py`, shipped
+  `instruments-service` — see SHA below) of `instruments-store-sports-prd-central-element-323112`'s
+  `_index/availability_index.parquet`: **15,907,902 of 17,208,810 rows (92%) carry one of the 19 uppercase tokens**,
+  dated 2014-01-01 → 2026-08-20, across every status (`captured`/`empty_confirmed`/`expected_unattempted`/
+  `attempted_failed`). `ODDS_HORIZON_BUCKET` already has 0 uppercase rows (writer already stamps lowercase, matching the
+  existing `enumerate_expected_universe.py` override precedent); `ODDS` uppercase carries 898,195 rows vs 1,774
+  already-lowercase. Filed `/blocked` BLK-8436a1a6 before touching any live code — root cause: UTL's shared
+  `check_shard_freshness()` does an EXACT case-sensitive match
+  (`unified-trading-library/manifest_writer/_queries.py:149`) with no case-insensitive fallback, so flipping
+  instruments-service's registries before the physical re-stamp lands would read every historical date as "missing" and
+  trigger re-fetch storms against live provider APIs across 6+ years — the same failure class as the documented
+  `odds_horizon_bucket` 572-day incident, at ~46x scale. Operator approved Option A (code-prep only this session,
+  dedicated VM-run follow-up for the actual re-stamp + registry flip
+  - override-dict wiring, landed atomically). New todo added above with full scope + the atomicity rationale. **Shipped
+    this session**: the census script (read-only, safe). **NOT shipped this session** (deliberately, despite the
+    operator's answer inviting it): the `enumerate_expected_universe.py` override-dict wiring — verified via direct read
+    of that file's own load-bearing comment (§3b of the P2 consumer inventory) that wiring it BEFORE the physical
+    re-stamp reproduces the identical 209,526-vs-123,642 zero-overlap incident the dict's own history already documents;
+    the diff is drafted in the new todo's scope description instead of merged standalone, to land atomically with the VM
+    re-stamp. Checkbox on the original todo stays unflipped per the operator's explicit instruction.
+- **2026-08-14 (resume)** — Census script committed (`instruments-service@3fbcf108`) but **quickmerge blocked at ship
+  step by an unrelated, foreign QG red**: `test_expected_matches_golden[defi]` (fleet-wide, not caused by this commit —
+  same failure class as the archived `instruments_service_defi_golden_red_capability_lockstep_gap_2026_08_05.md`
+  incident). Root UAC commit (`unified-api-contracts@6a001ea4`, AAVE_V3 rewards) is settled, but the sanctioned
+  `regenerate_expected_universe_golden.py` fix produces a much broader 2280-line diff (MORPHO/SPARK/oracle_prices/
+  lst_rates/etc.) I could not verify is all intentional, and its unscoped run also nearly silently resolved an unrelated
+  open `[OPERATOR]` design question in `tradfi.json` (caught via `1 xpassed` where `xfail` was expected, reverted before
+  commit). Filed `/plans/active/issues/instruments_service_defi_golden_red_capability_drift_2026_08_14.md`
+  (`unified-trading-pm@0c8e9c26fc`) rather than attempt a fix outside this task's scope. **Census script stays local/
+  unpushed in slot-18's checkout** (`instruments-service`, ahead=1, tree otherwise clean) until that issue clears — no
+  data at risk: the census numbers + risk analysis this entry documents are the actual deliverable, already durable on
+  `origin/live-defi-rollout`.
+
 ## Codex SSOTs
 
 - `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — §3a reversibility path governs every delete here.
@@ -259,3 +399,30 @@ than proceeding.
   matcher previously would have). features-service/ml-service read only the PROCESSED `odds_horizon_bucket` path, never
   this raw-tick prefix — unaffected. No live writer re-emits `trades_inplay` (verified: no MTDS adapter emits it), so
   the retirement is durable.
+- **2026-08-14 (slot-26)** — Dispatched the `[OPERATOR]` 19-token execution todo; filed 3 blocked-questions rather than
+  execute unilaterally: `BLK-dc738bb5` (is code-prep-only safe given the corrected step-2/3 design?), `BLK-0a3f3791`
+  (found instruments-service auto-deploys via a ~15-min Cloud Run Job poll — merging steps 2-3 alone, even without a VM
+  launch, would run the new lowercase-comparison logic against the still-uppercase manifest on the next poll,
+  reproducing the exact re-fetch-storm this migration exists to prevent; main confirmed this is a real gap in its own
+  earlier guidance), `BLK-1479b716` (found the plan's "5 confirmed call sites" scoping is materially incomplete — a
+  systematic grep found 90+ manifest-write call sites across ~14 files, only 5 of which the prior trace covered; every
+  per-vendor sports writer — footystats/sfi/transfermarkt/understat/weather — stamps its own 19-token value directly and
+  was unaudited). Main's answer: stop hand-patching, file a dedicated LOCAL plan enumerating the full inventory before
+  more code lands — see `/plans/active/sports_taxonomy_p2_19token_manifest_write_site_inventory_2026_08_14.md`. 4 files
+  fixed + locally QG-clean this session (`process_preflight.py`, `sports_dependency.py`, `writers.py`, `catalogue.py`),
+  pushed to a REVIEW BRANCH deliberately withheld from `main`/LDR:
+  `instruments-service@sports-taxonomy-p2-19token-lowercase-codeprep-2026-08-14`. 5 more vendor files fully classified
+  (62 call sites: 57 SIMPLE, 5 ORDERED) via parallel Explore agents; `sports_reference_core.py` + `process_fetch.py`
+  partially classified (open todos in the new doc). The `[OPERATOR]` execute todo below stays UNCHECKED — no VM
+  launched, no live re-stamp attempted; the branch does not merge until the new doc's classification + coding todos
+  complete AND the operator gives an explicit go/no-go on the atomic merge+launch (delete-safety-style review a 16M-row
+  prod-manifest rewrite warrants, per the todo's own `[OPERATOR]` tag).
+- **2026-08-14 (slot-26, same-day follow-up)** —
+  `/plans/active/sports_taxonomy_p2_19token_manifest_write_site_inventory_2026_08_14.md`'s classification +
+  code-authoring + verification is now COMPLETE (full detail in that doc, not duplicated here): every remaining vendor
+  file + `process_*.py` stage fixed, a classification-method error found and corrected mid-session (manifest-read
+  skip-checks need translate-BEFORE, not keep-uppercase), 2 latent bugs found and fixed via a full-suite quality-gate
+  run (18 test assertions updated, all confirmed pre-migration-uppercase artifacts, zero real regressions), branch
+  pushed as `instruments-service@5b1b2c72`. The `[OPERATOR]` execute todo below still stays UNCHECKED — the branch is
+  fully coded + locally-validated but still deliberately unmerged; the atomic merge+launch decision is now ready for
+  operator go/no-go review.

@@ -65,11 +65,24 @@ CHAINABLE_TOOLS = {"Bash", "Read", "Grep", "Glob", "Edit"}
 # does not punish correct behaviour.
 SAME_MESSAGE_WINDOW_SECONDS = 2.0
 
-# Nudge at the 3rd round-tripped call in a row, then every 5th. Firing on every call
-# would be noise the agent learns to ignore; firing once would be lost in a run of 32
-# (runs of 20/23/26/28/32 were all observed in one 4h25m window).
-FIRST_NUDGE_AT = 3
+# Nudge at the 2nd round-tripped call in a row, then every 5th. Lowered from 3->2
+# 2026-08-14 (operator ask, after a real before/after measurement showed the 3-call
+# threshold left multi-tool-turn% at 4.3-5.7%, far short of the ~50% target) — catch the
+# pattern one call earlier, before it is already locked in. Firing on every call would be
+# noise the agent learns to ignore; firing once would be lost in a run of 32 (runs of
+# 20/23/26/28/32 were all observed in one 4h25m window).
+FIRST_NUDGE_AT = 2
 RENUDGE_EVERY = 5
+
+# Same-file repeated Edits are a STRONGER, near-zero-false-positive signal than "same
+# tool" alone (operator 2026-08-14: "file edits we can batch pretty much always... still
+# see us edit same file 2,3,4,5 times") — unlike Bash/Read/Grep, where a later call
+# sometimes genuinely depends on an earlier one's result, a later Edit on the SAME file
+# almost never needs the PRIOR edit's tool_result to construct its own old_string/
+# new_string (both are known from the file's on-disk content, not from what the edit
+# tool returned). So this fires EARLIER than the general chain nudge, and with a more
+# specific, harder-to-ignore message naming the actual file.
+SAME_FILE_NUDGE_AT = 2
 
 _SSOT = "/codex/06-coding-standards/tool-call-batching.md"
 
@@ -106,6 +119,27 @@ def _advice(tool: str, run_length: int) -> str:
     )
 
 
+def _same_file_advice(file_path: str, run_length: int) -> str:
+    return (
+        f"BATCHING: that was {run_length} consecutive Edit calls on the SAME file ({file_path}), each in its "
+        f"own turn. Same-file edits are almost NEVER dependent on each other's tool_result — the next edit's "
+        f"old_string/new_string are known from the file's own content, not from what the prior edit returned. "
+        f"Combine them into one `replace_all: true` Edit or a single `Write` with the final content. Every "
+        f"separate turn re-read the entire cached prompt prefix (~406k tokens, measured) and cost a full model "
+        f"round-trip (~10.5s median). SSOT: {_SSOT}"
+    )
+
+
+def _extract_file_path(tool: str, payload: dict[str, object]) -> str | None:
+    if tool != "Edit":
+        return None
+    tool_input = payload.get("tool_input")
+    if not isinstance(tool_input, dict):
+        return None
+    fp = tool_input.get("file_path")
+    return fp if isinstance(fp, str) and fp else None
+
+
 def main() -> None:
     try:
         payload = json.load(sys.stdin)
@@ -125,32 +159,58 @@ def main() -> None:
 
     now = time.time()
     prev = _load(path)
+    same_tool_as_prev = prev.get("tool") == tool
+    gap = now - float(prev.get("ts") or 0.0) if same_tool_as_prev else None
+    # A gap BELOW the window means the agent issued these in one message — it did the
+    # right thing, so HOLD the counter rather than advancing it. Correct behaviour must
+    # never be nudged; that is the whole design constraint (see module docstring).
+    same_message = gap is not None and gap < SAME_MESSAGE_WINDOW_SECONDS
+
     run_length = 1
-    if prev.get("tool") == tool:
-        gap = now - float(prev.get("ts") or 0.0)
-        # A gap BELOW the window means the agent issued these in one message — it did the
-        # right thing, so HOLD the counter rather than advancing it. Correct behaviour must
-        # never be nudged; that is the whole design constraint (see module docstring).
-        run_length = (
-            int(prev.get("run") or 1)
-            if gap < SAME_MESSAGE_WINDOW_SECONDS
-            else int(prev.get("run") or 0) + 1
-        )
+    if same_tool_as_prev:
+        run_length = int(prev.get("run") or 1) if same_message else int(prev.get("run") or 0) + 1
 
-    fired_at = int(prev.get("fired_at") or 0) if prev.get("tool") == tool else 0
-    should_fire = run_length >= FIRST_NUDGE_AT and (
-        fired_at == 0 or run_length - fired_at >= RENUDGE_EVERY
+    file_path = _extract_file_path(tool, payload)
+    same_file_as_prev = tool == "Edit" and file_path is not None and prev.get("file") == file_path
+    file_run = 1
+    if same_file_as_prev:
+        file_run = int(prev.get("file_run") or 1) if same_message else int(prev.get("file_run") or 0) + 1
+
+    fired_at = int(prev.get("fired_at") or 0) if same_tool_as_prev else 0
+    should_fire = run_length >= FIRST_NUDGE_AT and (fired_at == 0 or run_length - fired_at >= RENUDGE_EVERY)
+
+    file_fired_at = int(prev.get("file_fired_at") or 0) if same_file_as_prev else 0
+    same_file_should_fire = (
+        file_path is not None
+        and file_run >= SAME_FILE_NUDGE_AT
+        and (file_fired_at == 0 or file_run - file_fired_at >= RENUDGE_EVERY)
     )
-    _save(path, {"tool": tool, "run": run_length, "ts": now, "fired_at": run_length if should_fire else fired_at})
 
-    if should_fire:
+    _save(
+        path,
+        {
+            "tool": tool,
+            "run": run_length,
+            "ts": now,
+            "fired_at": run_length if should_fire else fired_at,
+            "file": file_path,
+            "file_run": file_run,
+            "file_fired_at": file_run if same_file_should_fire else file_fired_at,
+        },
+    )
+
+    # Same-file takes priority when both would fire — it's the stronger, more specific
+    # signal (see SAME_FILE_NUDGE_AT's own comment); only one additionalContext string
+    # can be returned per call, so pick the more actionable one rather than concatenating.
+    advice: str | None = None
+    if same_file_should_fire and file_path is not None:
+        advice = _same_file_advice(file_path, file_run)
+    elif should_fire:
+        advice = _advice(tool, run_length)
+
+    if advice is not None:
         json.dump(
-            {
-                "hookSpecificOutput": {
-                    "hookEventName": "PostToolUse",
-                    "additionalContext": _advice(tool, run_length),
-                }
-            },
+            {"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": advice}},
             sys.stdout,
         )
 
@@ -158,7 +218,10 @@ def main() -> None:
 def _reset(payload: dict[str, object], tool: str) -> None:
     path = _state_path(str(payload.get("transcript_path") or ""), str(payload.get("session_id") or ""))
     if path is not None:
-        _save(path, {"tool": tool, "run": 0, "ts": time.time(), "fired_at": 0})
+        _save(
+            path,
+            {"tool": tool, "run": 0, "ts": time.time(), "fired_at": 0, "file": None, "file_run": 0, "file_fired_at": 0},
+        )
 
 
 def _load(path: Path) -> dict[str, object]:

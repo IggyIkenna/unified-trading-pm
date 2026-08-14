@@ -342,6 +342,20 @@ lock check before doing Phase-1 analysis; a future pass should do the full scout
 
 ## Follow-ups
 
+- [ ] [SCRIPT] P3. Trim/split `plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` (998L
+      pre-edit; the minimal 3-entry `context_scope` block alone — no marker — pushed it to 1004L, over the 1000L hard
+      cap) per this issue's established extraction pattern (move the oldest fully-closed Progress Log section to a
+      `plans/archive/` companion doc, leave a one-line pointer), then apply the pre-computed, disk-verified
+      `context_scope` below and add the `context-scout` Progress Log marker. Pre-computed (2026-08-14, verified to
+      resolve on disk):
+  ```
+  plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md:
+    [
+      /codex/04-architecture/client-funds-isolation.md,
+      /codex/04-architecture/defi-execution-overview.md,
+      /codex/04-architecture/transfer-architecture.md,
+    ]
+  ```
 - [ ] [SCRIPT] P3. Complete the full context-scout for fleet_audit_triad_deferred_followups_2026_06_01.md (Phase-1
       analysis + a proper context_scope list; the applied entry is a stub).
 - [ ] [SCRIPT] P3. Trim/split 3 more docs newly confirmed sitting at the EXACT 1000-line hard cap during the 2026-08-07

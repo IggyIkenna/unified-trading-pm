@@ -41,6 +41,12 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+context_scope:
+  [
+    tests/test_slot_git_status_claim_heartbeat.bats,
+    /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+  ]
 source: >-
   Interactive session 2026-08-10 slot 1, found while waiting on a stalled unified-trading-pm quality gate during the
   data-pipeline alert-storm batch. Diagnosed from `ps`/`uptime`/`lsof` on the live host, not inferred.
@@ -150,3 +156,7 @@ nesting fails every session with `error connecting to ... (File name too long)`.
 
 Deleting or skipping the tmux tests. They cover the slot-claim heartbeat, which is real multi-agent-safety behaviour;
 the defect is the fixture plumbing (unbounded, un-torn-down, shared-socket), not the coverage.
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (3 entries).

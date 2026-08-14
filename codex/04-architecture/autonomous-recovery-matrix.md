@@ -51,7 +51,13 @@ The system takes care of itself 99.9% of the time through retries, circuit break
 position management. Human intervention is only required when both reconciliation AND execution connectivity are lost
 simultaneously — the 0.1% case.
 
-**Live-mode only.** All recovery mechanisms are disabled in batch/backtest.
+**Live-mode only for THIS decision tree** (`classify_venue_error()` → circuit breaker → kill switch — the execution-side
+mechanisms below). All of those remain disabled in batch/backtest. **Corrected 2026-08-14**: batch/backfill is NOT
+without recovery — it has its OWN, separate mechanism, **alert-driven dependency revocation**
+(`unified_api_contracts.dependency_revocation.evaluate_revocation()`), which drains or holds DEPENDENT VMs/jobs when an
+alert invalidates their inputs (never terminates a running unit — drain-at-checkpoint only). Full spec:
+`/codex/05-infrastructure/data-pipeline-alerts.md` § "Alert-driven dependency revocation". The two systems are
+deliberately disjoint — this plan bridged them without extending one over the other.
 
 **Every action in this decision tree** is wrapped by Layer-0 deterministic scripts emitting structured
 `AgentActionEvent` to the Incident Gateway. The operator gets a human audit ack within 6h (per
@@ -63,12 +69,12 @@ simultaneously — the 0.1% case.
 
 Every error flows through UAC `classify_venue_error()` which maps to one of four actions:
 
-| ErrorAction | Meaning                        | Example errors                           | System response                                      |
-| ----------- | ------------------------------ | ---------------------------------------- | ---------------------------------------------------- |
-| `RETRY`     | Transient, will likely succeed | 429 rate limit, 5xx, gas estimation fail | Exponential backoff (3 attempts), then circuit break |
-| `RECONNECT` | Connection lost                | Timeout, connection reset, RPC error     | Rebuild connection, retry on new connection          |
-| `SKIP`      | No-op, not an error            | No outstanding debt (trying to repay)    | Log as INFO, continue processing                     |
-| `FAIL`      | Permanent, cannot recover      | Auth failure, insufficient balance       | Stop immediately, emit alert, escalate               |
+| ErrorAction | Meaning                        | Example errors                           | System response                                                                                                                                                                                                                                                                                                                             |
+| ----------- | ------------------------------ | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RETRY`     | Transient, will likely succeed | 429 rate limit, 5xx, gas estimation fail | Exponential backoff (3 attempts), then circuit break — this row is the LIVE-mode per-request path; the batch/backfill retry-COUNT SSOT is `unified_api_contracts.RETRY_BUDGETS` (2026-08-14), a related but distinct registry — see `/codex/06-coding-standards/README.md` § "Hardcoded backfill/VM-scale retry counts" for the scope split |
+| `RECONNECT` | Connection lost                | Timeout, connection reset, RPC error     | Rebuild connection, retry on new connection                                                                                                                                                                                                                                                                                                 |
+| `SKIP`      | No-op, not an error            | No outstanding debt (trying to repay)    | Log as INFO, continue processing                                                                                                                                                                                                                                                                                                            |
+| `FAIL`      | Permanent, cannot recover      | Auth failure, insufficient balance       | Stop immediately, emit alert, escalate                                                                                                                                                                                                                                                                                                      |
 
 Rate limits (429) explicitly do NOT trip circuit breakers — they're transient and handled via backoff.
 

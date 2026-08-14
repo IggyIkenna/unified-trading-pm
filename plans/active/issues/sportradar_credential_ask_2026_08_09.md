@@ -46,6 +46,11 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/sportradar_adapter.py,
+    /codex/02-data/external-data-always-available-rule.md,
+  ]
 source:
   [
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
@@ -113,3 +118,4 @@ already-credentialed Odds-API/footystats path). Once provisioned:
   Odds-API, which is already credentialed) genuinely has no secret provisioned. Added 21 mocked unit tests
   (`market-tick-data-service@<see plan-flip commit>`) closing the "unit tests for the adapter now" half of the Step-4
   requirement — previously this adapter's ONLY test coverage was credential-gated and never ran.
+- **context-scout 2026-08-14**: populated context_scope (2 entries).

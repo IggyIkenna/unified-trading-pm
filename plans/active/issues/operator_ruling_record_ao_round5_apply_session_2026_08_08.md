@@ -21,6 +21,11 @@ related:
     /plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md,
     /plans/archive/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
   ]
+context_scope:
+  [
+    /plans/archive/2026_08/issues/ao_round5_apply_session_rulings_untraceable_blocks_quickmerge_2026_08_08.md,
+    /codex/12-agent-workflow/operator-gated-blocked-row-lifecycle.md,
+  ]
 created: 2026-08-08
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
@@ -108,6 +113,8 @@ cannot be audited for completeness.
       when**: the convention is documented and `task_template.md` points at it. Repo: unified-trading-pm.
 
 ## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (2 entries).
 
 - **2026-08-08 (slot 3, interactive)** — Created to unblock a repo-wide `quickmerge` stall, with the operator's explicit
   go-ahead to fix blocking issues in other plans. Deliberately scoped to transcription: the six rulings are copied

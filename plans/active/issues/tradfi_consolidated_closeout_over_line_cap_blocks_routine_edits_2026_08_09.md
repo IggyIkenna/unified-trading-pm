@@ -50,6 +50,13 @@ assigned_role: backend_engineer
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md,
+    /plans/active/issues/tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md,
+    unified-trading-pm/scripts/plan-hygiene/check_line_caps.sh,
+  ]
 ---
 
 # tradfi_consolidated_closeout_2026_07_18.md is over the 1000-line hard cap
@@ -94,3 +101,5 @@ depends_on: []
   the established 2026-07-24/2026-07-25 split precedent. Parent doc 1005L → 879L; `check_line_caps.sh` now exits 0 on
   it. Todos 2 and 3 remain open (out of this task's scope — a P3 content-landing todo and a P3 tooling-improvement todo,
   both separate follow-ups).
+
+- **context-scout 2026-08-14**: populated context_scope (4 entries).

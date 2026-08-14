@@ -35,7 +35,7 @@ related:
     /plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md,
     /plans/active/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md,
     /plans/active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md,
-    /plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
   ]
 created: "2026-08-07"
 author: unknown

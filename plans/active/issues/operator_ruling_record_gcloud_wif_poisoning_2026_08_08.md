@@ -25,6 +25,11 @@ related:
     /plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md,
     /plans/active/ci_consolidated_closeout_2026_07_25.md,
   ]
+context_scope:
+  [
+    /plans/active/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md,
+    /plans/active/issues/operator_ruling_record_ao_round5_apply_session_2026_08_08.md,
+  ]
 created: 2026-08-09
 parent_epic: orchestrator_master
 assigned_vm: NA
@@ -76,6 +81,8 @@ a third party cannot tell which from the outside). The confirmation todo below s
       Repo: unified-trading-pm.
 
 ## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (2 entries).
 
 - **2026-08-09 (round-11 ci-tranche RECLASSIFY sweep)** — Created to unblock a `check_plan_operator_ruling_evidence.py`
   precommit failure hit while appending an unrelated round-11 KEEP-NA marker to

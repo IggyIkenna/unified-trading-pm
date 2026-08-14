@@ -115,12 +115,12 @@ is fixed. Unblocks the benchmark to report 0 throughput (honest absence), but do
       `_resolve_spot_perp` asset-group-aware, use `futures_chain`/`FUTURE` instrument_type for TRADFI. **Mapping
       convention — standard CME FX futures underlyings** (widely-known market convention, not fabricated): 6A =
       Australian Dollar, 6B = British Pound, 6C = Canadian Dollar, 6E = Euro, 6J = Japanese Yen — each maps to its
-      corresponding CME FX futures contract. **The exact internal `instrument_id` STRING format still needs verification
-      against the live catalogue before implementing** (this codebase's dated-derivative convention uses a
-      `@LIN`/`@INV`-marker + expiry shape per the OKX-FUTURES precedent elsewhere in this sweep — confirm the equivalent
-      CME FUTURE naming by querying the actual catalogue for existing 6A/6B/6C/6E/6J entries, don't assume the shape).
-      **Confirm fix approach for TRADFI FX spot-price lookup** — Option A (make `_resolve_spot_perp` asset-group-aware,
-      use futures_chain for TRADFI) is recommended.
+      corresponding CME FX futures contract. **`instrument_id` STRING format VERIFIED 2026-08-14** (code + live
+      catalogue, see Progress Log) — `CME:FUTURE:<PRODUCT_ROOT>-USD@LIN-YYYYMMDD`, e.g.
+      `CME:FUTURE:AUD-USD@LIN-20200113` for 6A. Product roots: 6A→AUD, 6B→GBP, 6C→CAD, 6E→EUR, 6J→JPY. Note it is
+      PER-EXPIRY (dated), not one static id per underlying — the fix needs to select the correct/current-front-month
+      expiry, not a fixed string. **Confirm fix approach for TRADFI FX spot-price lookup** — Option A (make
+      `_resolve_spot_perp` asset-group-aware, use futures_chain for TRADFI) is recommended.
 - [ ] [DATA] P1. **Implement Option A and relaunch TRADFI:volatility benchmark** — once `_resolve_spot_perp` returns
       correct (venue, symbol) for TRADFI FX underlyings, relaunch
       `launch-features-vm.sh FAMILY=volatility ASSET_GROUP=TRADFI` to capture real throughput.
@@ -166,3 +166,13 @@ is fixed. Unblocks the benchmark to report 0 throughput (honest absence), but do
   cross-cite each other -- the conflict is live and current, not stale. Also cross-checked against
   `tradfi_databento_account_billing_suspended_2026_08_09.md`, which lists this doc as "left ungated" (features-VM
   relaunch reads existing data). `assigned_vm` unchanged.
+- **cross_cutting_satellite_ao_dispatch_batch13 2026-08-14 (slot 26, infra)**: resolved the conflict this doc's own todo
+  1 was gated on — `governance_sweep_deferred_followups_2026_08_06.md`'s `[DIAG] P2` todo is now flipped (verified
+  2026-08-14). CME FUTURE `instrument_id` format confirmed via 3 convergent code sites (canonical_id_builder, the
+  databento catalogue-writer adapter, MTDS's `derive_tradfi_row_instrument_id`) AND a bounded live read of
+  `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet`:
+  `CME:FUTURE:<PRODUCT_ROOT>-USD@LIN-YYYYMMDD` (per-expiry-dated, not one static id per underlying). Live examples:
+  `CME:FUTURE:AUD-USD@LIN-20200113` (6A), `CME:FUTURE:GBP-USD@LIN-20200113` (6B), `CME:FUTURE:CAD-USD@LIN-20200114`
+  (6C), `CME:FUTURE:EUR-USD@LIN-20200113` (6E), `CME:FUTURE:JPY-USD@LIN-20200113` (6J). Todo 1's format text updated
+  above with this confirmation. Todo 1 itself stays open (the actual `_resolve_spot_perp` code change + mapping-table
+  implementation is separate, unblocked, in-scope work) and todo 2 stays sequenced behind it.

@@ -33,6 +33,12 @@ related:
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
+context_scope:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/active/features_service_e2e_pipeline_test_2026_05_26.md,
+    deployment-service/scripts/vm/launch-mdps-backfill-vm.sh,
+  ]
 created: 2026-08-09
 last_updated: 2026-08-09
 parent_epic: infrastructure_master
@@ -201,3 +207,7 @@ the raw-tick manifest before re-running, rather than assuming a fixed completion
       BITGET-FUTURES 04-14..04-19 residual (same pattern as this session's `mdps-backfill-cefi-20260809-123352`) to
       close the remaining candle gap. BITGET-SPOT candle backfill is NOT needed (see resolved todo above — the
       underlying raw ticks were never meant to exist). Repo: market-data-processing-service.
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (3 entries).

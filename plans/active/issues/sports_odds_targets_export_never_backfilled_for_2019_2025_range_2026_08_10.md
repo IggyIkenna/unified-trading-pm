@@ -36,6 +36,14 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/02-data/sports-2020-06-data-floor.md,
+    /plans/active/issues/sports_clv_ensemble_trainer_no_driver_or_test_coverage_2026_08_09.md,
+    /plans/active/issues/sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md,
+    features-service/features_service/sports/exporters/odds_targets_exporter.py,
+    ml-service/ml_service/training/app/core/training_targets.py,
+  ]
 ---
 
 ## What I found
@@ -232,3 +240,7 @@ parent issue doc's Progress Log for the exact VM names / evidence.
 **Recommended next item**: the P3 CatBoost-NaN handling fix (ml-service — drop per-outcome NaN target rows before
 CatBoost, or a NaN-tolerant objective/metric), then re-run the 5 `ml-train-sports-model-2a/b/c/d/e` VMs to capture the
 performance delta.
+
+## Progress Log (context-scout)
+
+- **context-scout 2026-08-14**: populated context_scope (5 entries).

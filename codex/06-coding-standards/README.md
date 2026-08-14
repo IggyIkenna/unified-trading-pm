@@ -384,6 +384,28 @@ hand-rolled retry loops in MTDS's and instruments-service's `base_adapter.py` (e
 venue-error taxonomy — preserve that classification behaviour when migrating, the retry LOOP is what moves to UTL, not
 the classify step).
 
+### Hardcoded backfill/VM-scale retry counts → `unified_api_contracts.RETRY_BUDGETS`
+
+For a **batch/backfill adapter's** retry attempt count specifically (not the live-mode circuit-breaker path in
+`/codex/04-architecture/autonomous-recovery-matrix.md`, a different mechanism at a different timescale), the SSOT is
+`unified_api_contracts.RETRY_BUDGETS` (keyed `(data_type, source)`, resolving exact → `(data_type, "*")` →
+`("*", source)` → `ErrorAction` default) via `resolve_retry_budget(data_type, source).max_attempts` — declare a
+`retry_source: ClassVar[str]` class attribute on the adapter rather than a local `MAX_RETRIES` literal (see
+`instruments-service/instruments_service/reference_data/base_adapter.py` for the reference implementation). **Take
+attempt COUNT only** — `RetryBudget`'s backoff ladder (`backoff_base_seconds` etc., 300/600/1200/2400/3600s) is
+calibrated for VM- and job-level retries and must never be applied inside an in-request HTTP retry loop (a 20-minute
+sleep inside a single fetch was caught before shipping — 2026-08-14).
+
+### New buffered writer → register with the UTL drain registry
+
+Any new writer that accumulates rows in memory before a periodic GCS flush (mirroring `StreamingParquetWriter`) MUST
+register with `unified_trading_library.lifecycle.drain_registry` at construction and deregister on every terminal path
+(`close()` / `finalize_local()` / equivalent) — by convention, not by memory, so a SIGTERM mid-shard flushes the buffer
+instead of discarding it. Full contract (why drain ORDER is a correctness property, the three measured failure modes a
+naive fix misses, the drained-partial-shard-is-not-captured rule) lives in
+`/codex/05-infrastructure/spot-vms-for-backfill.md` § "The graceful-flush contract" — this entry is the pointer, not a
+duplicate.
+
 ---
 
 ## Logging Standards [IMPLEMENTED]

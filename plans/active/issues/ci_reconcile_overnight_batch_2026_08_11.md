@@ -49,6 +49,9 @@ related:
     /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
+context_scope:
+  - agent-orchestrator/server/escalation.py
+  - /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md
 created: 2026-08-11
 author: claude-agent
 last_updated: 2026-08-11
@@ -479,3 +482,7 @@ Item 10 (MTDS file-size regression) is RESOLVED as of the follow-up session docu
 fleet job's own cadence). The item-11 Cloud-Build-fix verification (P2 follow-up) was independently VERIFIED CLEARED
 (see its follow-up checkbox above). All 17 original items are now resolved, self-healed, or false alarms with cited
 evidence.
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (2 entries).

@@ -65,8 +65,8 @@ The dynamic, per-session values below are delivered in your **boot message** —
 - `slot_role` — `""` for a generic worker (this file's default); a craft persona sets its own craft name, and the
   dispatcher then only offers this slot tasks whose `assigned_role` matches
 
-Task specifics (`id`, `title`, `brief`, `done_definition`, `plan_ref`, `repos`) arrive in the `/boot` response, not the
-boot message.
+Task specifics (`id`, `title`, `brief`, `done_definition`, `plan_ref`, `context_scope`, `repos`) arrive in the `/boot`
+response, not the boot message.
 
 ## Boot sequence (the read-the-file contract)
 
@@ -133,12 +133,19 @@ curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/boot \
   }'
 ```
 
-The response includes `task` with `id`, `title`, `brief`, `done_definition`, `plan_ref`, `repos` — or `task: null` if no
-eligible tasks (idle; see § "When idle" below).
+The response includes `task` with `id`, `title`, `brief`, `done_definition`, `plan_ref`, `context_scope`, `repos` — or
+`task: null` if no eligible tasks (idle; see § "When idle" below).
 
 **Per-task plan-of-record.** When `/boot` returns a task with `plan_ref` pointing at a `plans/active/<X>.md` file, READ
 that plan before you start working — it's the SSOT for what counts as done. The task brief is a summary; the plan is the
 contract.
+
+**`context_scope` — read these BEFORE your own exploratory Read/Grep.** A non-empty `context_scope` is a reading-list
+the PLAN AUTHOR already compiled for this exact task (codex SSOTs, related plan/issue docs, key source paths — see
+`task_template.md` §2a) specifically so you don't have to re-derive that context yourself. Read every entry in
+`context_scope` as part of your normal STEP 1-2 reads, batched into the SAME message as your other startup reads
+(tool-call-batching.md) — do not grep around for context that's already been handed to you. An empty `context_scope`
+means the author didn't curate one for this plan; fall back to your own pre-task conflict-check grep as usual.
 
 **HARD RULE — you are UNATTENDED.** No human reads this pane, so a turn that ends with a question ("should I proceed?",
 "shall I run /boot?") leaves the session INERT until a liveness kick lands minutes later (observed slot 12, 2026-07-09).
@@ -222,12 +229,7 @@ Read brief + done_definition carefully and do it.
 ### 3) PROGRESS
 
 Call every ~5 minutes of active work (matches the Heartbeat HARD RULE below; server flags stale at 25 min), AND whenever
-you start a distinct sub-step. **This includes while waiting on a VM-scale job** (a launched backfill/migration VM
-documented at 30 min – 6+ hours in `vm-launcher-runbook.md`) — keep sending this ~5-min heartbeat throughout, rather
-than switching to the laptop-side sub-agent ≤30-min-watchdog-then-re-arm pattern
-(`/codex/12-agent-workflow/ async-wait-and-poll-discipline.md` § "Dispatched sub-agent is NOT a reliable wake"): a cheap
-heartbeat ping doesn't require the underlying job to finish, so it stays correct regardless of how long the VM job
-actually runs, unlike a watchdog that must re-arm a full turn on every tick.
+you start a distinct sub-step:
 
 ```bash
 curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/progress \

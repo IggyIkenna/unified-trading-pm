@@ -30,6 +30,12 @@ parent_epic: infrastructure_master
 resolved_by: "N/A"
 locked_by:
 locked_since:
+context_scope:
+  [
+    scripts/quickmerge.sh,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md,
+  ]
 source: >-
   Found live while shipping an unrelated tradfi fix (deployment-service) — isolated quickmerge failed twice,
   identically, at the quality-gates sentinel step. Root-caused by reading quickmerge.sh's isolation block directly.
@@ -133,3 +139,4 @@ broken since rollout with everyone either not hitting it or working around it vi
   non-PM ship will be the first real E2E test of the miniature-workspace fix. **archive_exempt**: E2E verification
   pending — isolation is opt-in (default-off) and no non-PM `--isolated` ship has been attempted since the fix. The
   issue stays open as a standing reference until the first real non-PM isolated ship confirms the fix works end-to-end.
+- **context-scout 2026-08-14**: populated context_scope (3 entries).

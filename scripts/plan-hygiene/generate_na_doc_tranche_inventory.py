@@ -80,12 +80,24 @@ _BOOKKEEPING_MARKER_SKILL_NAMES = (
     "context-scout",
 )
 
-# Strips entire lines that contain a bookkeeping marker so body_content_hash is
-# stable w.r.t. marker addition/update (the marker itself lives in the body, so
-# without this the hash would change every time one is written or updated).
+# Strips an entire bookkeeping-marker BLOCK (the dated marker line plus every
+# continuation line that follows it) so body_content_hash is stable w.r.t. marker
+# addition/update (the marker itself lives in the body, so without this the hash
+# would change every time one is written or updated). Continuation lines are
+# consumed until the first line that (a) is blank, (b) starts a new top-level `- `
+# bullet, (c) is a markdown header (`#`), or (d) starts another dated bookkeeping
+# marker -- whichever comes first. Continuation-line indentation is NOT assumed
+# uniform (verified against the real corpus: some markers indent continuations,
+# others don't), so the stop condition is content-shape-based, not indentation-based.
+# See na_eligibility_multiline_marker_continuation_lines_never_stripped_from_hash_2026_08_10.md
+# -- the single-line-only predecessor of this regex never stripped a marker's own
+# continuation lines, so body_content_hash never matched a marker's own declared
+# [body-hash:...] the instant after that marker was written.
 _BOOKKEEPING_MARKER_ALTERNATION = "|".join(re.escape(n) for n in _BOOKKEEPING_MARKER_SKILL_NAMES)
+_BOOKKEEPING_MARKER_START = r"\*\*(?:" + _BOOKKEEPING_MARKER_ALTERNATION + r") \d{4}-\d{2}-\d{2}"
 _VERDICT_MARKER_LINE_RE = re.compile(
-    r"^[^\n]*\*\*(?:" + _BOOKKEEPING_MARKER_ALTERNATION + r") \d{4}-\d{2}-\d{2}[^\n]*\n?",
+    r"^[^\n]*" + _BOOKKEEPING_MARKER_START + r"[^\n]*\n?"
+    r"(?:(?![ \t]*\n)(?!-[ \t])(?!#)(?!" + _BOOKKEEPING_MARKER_START + r")[^\n]*\n)*",
     re.MULTILINE,
 )
 

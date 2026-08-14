@@ -45,6 +45,14 @@ related:
     /plans/active/deployment_registry_firestore_p5_verify_2026_07_14.md,
     /plans/active/issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md,
   ]
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    deployment-service/scripts/recovery/relaunch_backfill_vm.py,
+    market-data-processing-service/market_data_processing_service/app/adapters/cefi/options_chain_adapter.py,
+  ]
 created: "2026-08-10"
 parent_epic: observability_master
 assigned_vm: NA
@@ -449,6 +457,29 @@ attempted_failed cells accruing), and its diagnosis just reversed, so nobody sho
   from `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` — another `(cefi, book_snapshot_5)`
   repeat-dispatch case (the escalation fast-path still has no open-issue-doc dedup). Read-only: no GCS write, no
   manifest change, no code shipped; PM plan-doc edit only.
+- **2026-08-14 (data_pipeline_failure escalation worker, agt-8ec9c8, slot 6) — repeat dispatch for
+  `(cefi, book_snapshot_5)`; VERIFIED STATIC BACKLOG, zero new attempted_failed activity since the last check, no code
+  fix.** DP-FETCH-009 page: 7,806 attempted_failed of 208,624 attempted (ratio 3.7%), labeled STATIC BACKLOG — no new
+  attempted_failed activity in 2d. Read this doc first per the pre-task plan/issue conflict-check rule; the prior two
+  entries above (`agt-b947d5` 2026-08-10, `agt-f601e4` 2026-08-13) already verified this exact numerator (7,806) as the
+  same windowed historical backlog. Rather than re-deriving the computation, called the shipped detector's own
+  `read_attempted_failed_cells()` + its GCS-streaming columnar reader directly
+  (`deployment_service.data_pipeline_monitors._attempted_failed_index` / `cli._make_streaming_index_reader`,
+  `market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, columns-pushdown only, no corpus
+  walk, no `gcloud` subprocess): live read returns `attempted_failed=7,802` (matches the alert within window-roll
+  noise), `captured=188,363`, `ratio=3.98%`, `high=True`, **`max_attempted_at=2026-08-11T14:47:01Z` — byte-identical to
+  the 2026-08-13 dispatch's reading** (i.e. zero new attempted_failed rows landed in the 3+ days since),
+  `recent_attempted_failed=0`. This is the strongest confirmation yet of no live regression: not just a static ratio,
+  but a literally unchanged `max_attempted_at` across two independent dispatches 24h+ apart. All previously shipped fix
+  commits (`unified-api-contracts@8db188fe`/`@1c4d8864`, `market-tick-data-service@339ca767`/`@6bf568ee`) were not
+  re-verified this session (redundant given the frozen `max_attempted_at` — zero new rows means nothing could have
+  regressed past the last verified checkpoint). **Verdict: no fresh regression, no code fix required** — same conclusion
+  as the prior two entries; the residual ~7.8k windowed rows are the same historical backlog awaiting a normal
+  idempotent backfill re-attempt (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`, Track-2, machine-gated on
+  Track-1). `AUTHORING_SLOT=dp-fleet-monitor` (not a numbered slot) — no ping sent, per the role's own skip rule; the
+  dispatch-time Slack alert already covers the FYI. Read-only: no GCS write, no manifest change, no code shipped; PM
+  plan-doc edit only.
+- **context-scout 2026-08-14**: populated context_scope (5 entries).
 
 ## Liquidations re-drive — operator decision recorded 2026-08-11
 

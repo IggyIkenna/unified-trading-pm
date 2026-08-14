@@ -45,7 +45,7 @@ related:
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md,
-    /plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-08"
@@ -125,13 +125,14 @@ tranche reports, the owning tranche's own audit retags).
    dual-tagged `[cross-cutting, ci]`. A reusable GHA workflow extracted to `unified-trading-ci` without re-auditing its
    `runs-on:` choice, stranding `image-build-validate.yml` on deregistered runners and stalling LDR→main promotion
    fleet-wide. 2 open todos (fleet-wide sweep for the same pattern; add a standing check), AO-eligible.
-8. **`plans/active/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md`** — bare `[cross-cutting]`,
-   found only via the `check_ag_closeout_linkage.py` cross-check (`parent_epic: plan_hygiene_master`, zero citations).
-   MTDS-local `# type: ignore` freeze-and-shrink ratchet blocking quickmerge's re-gate. Todo 1 (root-cause the ratchet
-   overage) is very likely already fixed out-of-band — a same-day archived doc's progress log records an independent fix
-   (`market-tick-data-service@d3260d2f`+`@5893ae3e`) landing ~4h before this doc's own todo-2 shipped, but this doc's
-   own checkboxes were never updated to reflect it (flagged for the `ci` tranche to verify-and-close, not just retag).
-   Todo 3 (quickmerge-regate-vs-standalone-QG inconsistency) remains genuinely open.
+8. **`plans/archive/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md`** (archived 2026-08-14,
+   resolved) — bare `[cross-cutting]`, found only via the `check_ag_closeout_linkage.py` cross-check
+   (`parent_epic: plan_hygiene_master`, zero citations). MTDS-local `# type: ignore` freeze-and-shrink ratchet blocking
+   quickmerge's re-gate. Todo 1 (root-cause the ratchet overage) is very likely already fixed out-of-band — a same-day
+   archived doc's progress log records an independent fix (`market-tick-data-service@d3260d2f`+`@5893ae3e`) landing ~4h
+   before this doc's own todo-2 shipped, but this doc's own checkboxes were never updated to reflect it (flagged for the
+   `ci` tranche to verify-and-close, not just retag). Todo 3 (quickmerge-regate-vs-standalone-QG inconsistency) remains
+   genuinely open.
 9. **`plans/active/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md`** — bare
    `[cross-cutting]`. `prettier --write` deterministically mangling a `{{RUNS_ON}}` YAML placeholder in workflow
    templates, breaking `quality-gates-v2` fleet-wide. 4 open todos (re-roll+ship for 6 more repos, fleet sweep,
@@ -251,7 +252,7 @@ markdown link (not a bare backtick filename — prettier line-wrap risk per the 
 `check_ag_closeout_linkage.py` = **65 orphan(s) (baseline 69)** today, down from 71 (2026-08-07) / 72-87 (2026-08-06) —
 the first PASS since this ratchet started failing. Cross-cutting's own share 37→29 (driven largely by today's 14
 permanent citations added to the closeout doc). Full detail in
-[`ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`](/plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md),
+[`ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`](/plans/archive/2026_08/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md),
 Todo 2 closed there on the met done-when (with a volatility caveat — this could regress).
 
 ## Ledger

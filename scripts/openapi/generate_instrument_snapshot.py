@@ -25,14 +25,28 @@ import sys
 import tempfile
 from pathlib import Path
 
-from unified_trading_library import get_storage_client
+from unified_trading_library import get_storage_client, resolve_bucket_name
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 CATEGORIES = ["cefi", "tradfi", "defi", "sports", "prediction"]
-GCP_PROJECT = "central-element-323112"
-BUCKET_TEMPLATE = "gs://instruments-store-{category}-{project}/instrument_availability/by_date/day={date}/"
+
+
+def _instrument_bucket_prefix(category: str, date: str) -> str:
+    """Resolve the env-tiered instruments-store bucket prefix for a category.
+
+    The hardcoded ``instruments-store-{category}-{project}`` shape (no env tier)
+    doesn't exist on GCS — Group-A raw buckets are env-tiered per
+    codex/05-infrastructure/bucket-isolation-model.md. ``prediction`` is a flat
+    dedicated kind (no per-asset_group entry); the other categories are keyed
+    per-asset_group under the ``instruments-store`` kind.
+    """
+    if category == "prediction":
+        bucket = resolve_bucket_name(cloud="gcp", kind="instruments-store-prediction")
+    else:
+        bucket = resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group=category)
+    return f"gs://{bucket}/instrument_availability/by_date/day={date}/"
 
 
 def _list_venues(bucket_prefix: str) -> list[str]:
@@ -187,11 +201,7 @@ def generate_snapshot(
         tmppath = Path(tmpdir)
 
         for category in CATEGORIES:
-            bucket_prefix = BUCKET_TEMPLATE.format(
-                category=category,
-                project=GCP_PROJECT,
-                date=date,
-            )
+            bucket_prefix = _instrument_bucket_prefix(category, date)
 
             LOG.info("\n%s. Listing venues in %s...", category.upper(), bucket_prefix[:60])
             venues = _list_venues(bucket_prefix)

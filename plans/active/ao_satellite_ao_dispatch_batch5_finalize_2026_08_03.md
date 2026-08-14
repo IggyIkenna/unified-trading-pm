@@ -63,14 +63,17 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P0. **Re-verify every batch-5 done-claim against reality, not against its checkbox** — for each of the 10
-      todos in `/plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md`, re-run `git show --stat <sha>` for every
-      cited commit and re-run the specific named test(s) directly rather than trusting the claim, and re-run each todo's
-      own stated done-when check where it is a command (the diagnostic table completeness, the governor verification's
-      evidence citation, the CLAUDE.md size-cap check, the pool-exhaustion-and-recovery test, the
+- [x] ✅ [REVIEW] P0. **Re-verify every batch-5 done-claim against reality, not against its checkbox** — for each of the
+      10 todos in `/plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md`, re-run `git show --stat <sha>` for
+      every cited commit and re-run the specific named test(s) directly rather than trusting the claim, and re-run each
+      todo's own stated done-when check where it is a command (the diagnostic table completeness, the governor
+      verification's evidence citation, the CLAUDE.md size-cap check, the pool-exhaustion-and-recovery test, the
       `check_no_empty_string_fallback.py` count, the reap-classification regression test). **Done when**: all 10
       verified, and any claim whose evidence does not hold up is re-opened as a new tracked todo in this doc's Progress
-      Log with the discrepancy stated.
+      Log with the discrepancy stated. **DONE 2026-08-14** — 9/10 fully verified (commit + content + named test/check
+      all match the claim); todo 6 has real, correct shipped work but a broken evidence citation (placeholder SHA, no
+      recorded operator sign-off) — see Progress Log below for the full per-todo breakdown and the new tracked follow-up
+      todo it spawned.
 - [ ] [REVIEW] P0. **Reconcile each verified todo's evidence back into its TRUE source doc's own checkbox(es)** — batch
       5 was an extraction, so the source-doc items it covers are the ones that go stale, not the batch's. Flip the
       specific todo(s) in each of:
@@ -128,3 +131,54 @@ source: >-
   `agent-orchestrator-single-vm-architecture.md` (§ Dispatch-scope eligibility), already cited in this doc's own Codex
   SSOTs section above but missing from context_scope; needed for todo 3's re-check of the 29 declined-orphan docs'
   gates.
+- **2026-08-14 (review, slot 6) — todo 1 re-verification, all 10 batch-5 done-claims checked against reality:**
+  - **Todo 1** (`agents/review.md` STEP 2 mirror) — VERIFIED. `git show --stat unified-trading-pm@6c4e57b8a` real, lands
+    exactly the claimed diff; `agents/review.md` lines 279-281 contain the cross-role-routing text described.
+  - **Todo 2** (`ao_db_lock_storm_and_stuck_shutdown_outage` bookkeeping) — VERIFIED. No sha cited in the batch plan's
+    text ("this commit") but resolves to real commit `c3d0894262`; doc's `status: open` correctly retained (not
+    prematurely archived), both `related:` additions present.
+  - **Todo 3** (`ao_tranche_full_content_audit_findings` §3+§4) — VERIFIED. Resolves to real commit `096926cc5a`;
+    `superseded_by: [ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26]` confirmed present in the actual target
+    doc's frontmatter (`plans/archive/issues/backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md:30`); the
+    corrected MOVED-item summary sentence ("all 29 MOVED items here are closed (fixed 2026-08-08)") is live in
+    `ao_open_issues_consolidated_close_out_2026_07_17.md:141`, which measures 985 lines (under the 1000-line hard cap).
+  - **Todo 4** (5-agent-id diagnostic table) — VERIFIED. Resolves to real commit `c936992781`; all 5 named ids
+    (`agt-79063c`, `agt-0cd704`, `agt-765e33`, `agt-8fa8d1`, `agt-8e95ca`) have a complete table row each in
+    `data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md`.
+  - **Todo 5** (host-saturation governor verification) — VERIFIED. `[DEVOPS] P1` checkbox is `[x]` in the archived
+    source doc, citing `qg_governor_acquire`'s real flock-based token semaphore as evidence (lines 149-151).
+  - **Todo 6** (per-tab-worktrees.md + CLAUDE.md multi-operator-slot-sharing fold-in) — **CONTENT VERIFIED, CITATION
+    BROKEN.** Both target docs genuinely contain the claimed content (`per-tab-worktrees.md:288`,
+    `cursor-configs/CLAUDE.md:149`) and `check_agent_rules_size_cap.py` passes (40,927/40,960 B). The real shipping
+    commit is findable via `git log -S "sharing ONE slot"` → `unified-trading-pm@a33e3306d3` (2026-08-09, slot-8). BUT:
+    (a) the batch-5 plan's own todo 6 entry cites no SHA at all, and (b) the source doc's Progress Log cites a literal
+    placeholder, `unified-trading-pm@<sha, see commit>`, not a real hash. Neither the commit message nor either doc's
+    Progress Log records the operator sign-off this plan's own "Rules for every worker" section required before
+    committing a codex/CLAUDE.md edit — see the new follow-up todo below.
+  - **Todo 7** (`self_declared_complete` reap threading) — VERIFIED. `git show --stat agent-orchestrator@687cad2d00`
+    matches the claimed diff exactly (3 files, the two named tests included); re-ran both named tests directly —
+    `test_self_declared_complete_queued_work_reaped_not_respawned` and
+    `test_queued_work_escalating_not_self_declared_takes_respawn_path` — 2 passed.
+  - **Todo 8** (DB pool-exhaustion-and-recovery test) — VERIFIED. `git show --stat agent-orchestrator@54b86a9` matches;
+    re-ran `tests/test_db_pool_exhaustion_recovery.py` directly — 1 passed (bounded to the named test file, not a full
+    2779-test re-run, per this todo's own "re-run the specific named test(s)" scope).
+  - **Todo 9** (`slack-read-channel.py` env-var fallback) — VERIFIED. `git show --stat unified-trading-pm@2db15bb21`
+    matches; re-ran `scripts/quality_gates/check_no_empty_string_fallback.py --scope unified-trading-pm` directly —
+    `[OK] unified-trading-pm: 319 (== baseline)`, matching the claimed "<= 319" exactly.
+  - **Todo 10** (orphan-reap CPU-progressing discriminator) — VERIFIED. `git show --stat agent-orchestrator@f91b4d0`
+    matches; re-ran `tests/test_orphan_process_reap.py` directly — 27 passed (includes the two new discriminator
+    regression tests named in the commit).
+  - **New tracked follow-up todo** (the one discrepancy this pass found — citation/sign-off gap, not a functional
+    defect):
+    - [ ] [DOCS] P2. Fix the broken evidence citations for batch-5 todo 6 (the `per-tab-worktrees.md`/`CLAUDE.md`
+          multi-operator-slot-sharing fold-in) — replace the source doc's placeholder
+          `unified-trading-pm@<sha, see commit>` (in
+          `/plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md`'s
+          2026-08-09 Progress Log entry) and the batch-5 plan's own uncited todo 6 with the real shipping commit,
+          `unified-trading-pm@a33e3306d3`. In the same edit, confirm whether operator sign-off was actually obtained
+          before that commit (per the batch-5 plan's "Rules for every worker" § requiring sign-off on any codex/
+          CLAUDE.md edit) — ask the operator if no record exists — and record the answer in the source doc's Progress
+          Log. **Done when**: both citations read the real SHA, and the sign-off question has an explicit recorded
+          answer (confirmed-obtained-at-the-time, or retroactively obtained now). This is folded into this finalize
+          plan's own todo 2 (source-doc reconciliation) rather than spun out separately, since todo 2 already touches
+          this exact source doc's `[DOCS] P2` item.

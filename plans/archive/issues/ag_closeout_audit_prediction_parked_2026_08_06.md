@@ -36,7 +36,7 @@ related:
     /plans/active/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md,
     /plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md,
     /plans/active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md,
-    /plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
     /plans/archive/2026_08/issues/mtds_prediction_live_boundary_event_topic_missing_2026_08_03.md,
     /plans/archive/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md,
   ]
@@ -136,7 +136,7 @@ script covers. It flagged 2 prediction-tagged docs this run's candidate list did
 `assigned_vm: planning` self-dispatched — so neither is a genuine "orphan" in this skill's sense, but both were
 genuinely graph-disconnected from the closeout family, which is real linkage debt). This is the SAME corpus-wide
 regression a sibling `cefi`-tranche run filed today as
-[`ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`](/plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md)
+[`ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`](/plans/archive/2026_08/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md)
 (84 orphans measured at the time this run cross-checked, corpus-wide, 2 tagged `prediction`) — that doc is
 `asset_group: [cross-cutting]`, owned by a different tranche and actively referenced by multiple concurrent workers
 today, so per the primary-owner rule it was NOT edited directly here; instead both prediction-owned contributing docs

@@ -325,13 +325,17 @@ capacity risk, not just reliability — see Progress Log 2026-08-07.
 
 ## Follow-ups from the 2026-08-08 root-cause session
 
-- [ ] [BACKEND] P2. **Do not spend the force latch on a merely-QUEUED `/compact`.** `tmux_spawn.submit_to_pane()`
+- [x] ✅ [BACKEND] P2. **Do not spend the force latch on a merely-QUEUED `/compact`.** `tmux_spawn.submit_to_pane()`
       returns True when the text leaves the input box, and its own docstring counts "consumed by an already-running
       turn" as success — but a message consumed into the CLI's queue ("Press up to edit queued messages", caught live on
       `orch-slot-4`) has NOT executed. The caller then sets `forced_at`, and the compaction that never ran counts toward
       `ineffective_forces` -> terminal wedge. Detect the queued-messages state and hold the latch un-spent until the
       queue drains, rather than re-sending (which would compact twice). Lower priority now that forces fire with real
-      headroom instead of at 99%.
+      headroom instead of at 99%. **✅ DONE 2026-08-09 — `agent-orchestrator@a1e2969`** ("fix(context-lifecycle): hold
+      force-compact latch on a queued-not-executed pane") — adds `tmux_spawn.pane_has_queued_messages()` +
+      `_TargetState.queued_since`, holding the latch un-spent while the pane shows a queued-not-executed message.
+      **Verified 2026-08-14 (code-audit sweep)**: commit confirmed live in `agent-orchestrator`; missed by the
+      2026-08-10 na-eligibility-audit pass.
 - [x] ✅ [BACKEND] P2. **DONE 2026-08-08 — `unified-trading-pm@8bff8f5792`** ("fix(precompact): measure local context
       from the transcript, learn the window per model", verified ancestor of `origin/live-defi-rollout`). **Port the
       measured signal to the local watcher.** `scripts/dev/precompact-watcher.py` now reads the session transcript and

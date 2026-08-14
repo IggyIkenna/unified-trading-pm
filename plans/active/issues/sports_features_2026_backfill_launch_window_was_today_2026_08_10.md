@@ -50,6 +50,12 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on: []
+context_scope:
+  [
+    deployment-service/scripts/vm/launch-features-vm.sh,
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+  ]
 ---
 
 # `features-sports-sports-2026-20260810-051126` rc=1 — launch-window (end=today) honest-halt, no relaunch
@@ -120,3 +126,5 @@ launch window.
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
+
+- **context-scout 2026-08-14**: populated context_scope (3 entries).

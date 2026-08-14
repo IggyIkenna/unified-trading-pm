@@ -43,6 +43,14 @@ resolved_by:
 source: >-
   Re-check of cefi_deribit_futures_chain_canonical_write_path_exposure_2026_08_09.md todo 1's precondition via the
   canonical tardis-concurrency-guard.sh (slot 19, 2026-08-10).
+context_scope:
+  [
+    /plans/archive/issues/tardis_concurrency_gate_hardening_2026_08_09.md,
+    /plans/active/issues/cefi_deribit_futures_chain_canonical_write_path_exposure_2026_08_09.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    deployment-service/scripts/vm/tardis-concurrency-guard.sh,
+    deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh,
+  ]
 ---
 
 # tardis-guard name-pattern fallback over-counts tradfi-bf Databento VMs
@@ -108,3 +116,5 @@ Fix at the root per the data-pipeline-correctness HARD RULE. Options, in order o
   issue's progress log). No code shipped (read-only observation + issue-doc filing). The N=1 slot decision in the parent
   issue was unaffected: even excluding the 3 over-counted VMs, the genuine stamped `cefi-queue-heavy` VM still holds the
   sole slot.
+
+- **context-scout 2026-08-14**: populated context_scope (5 entries).

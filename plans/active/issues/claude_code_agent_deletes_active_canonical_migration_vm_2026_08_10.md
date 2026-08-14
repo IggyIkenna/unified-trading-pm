@@ -33,6 +33,10 @@ related:
   - /plans/active/defi_satellite_ao_dispatch_batch11_2026_08_09.md
   - /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md
   - /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md
+context_scope:
+  - deployment-service/scripts/vm/gcloud-vm-delete-guard.sh
+  - agent-orchestrator/scripts/hooks/block_destructive_commands.py
+  - /plans/active/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md
 created: 2026-08-10
 parent_epic: infrastructure_master
 assigned_vm: planning
@@ -152,3 +156,4 @@ was healthy and progressing, heartbeats current to ~19:40Z).
     decision functions + refuse path. QG green; landed `deployment-service@54cd393728`, verified ancestor of
     `origin/live-defi-rollout`. **Follow-up (operator action, not a tracked todo)**: run the installer on the operator's
     Mac so the guard is actually live in laptop shells; the code shipping alone does not install it.
+- **context-scout 2026-08-14**: populated context_scope (3 entries).

@@ -1479,10 +1479,15 @@
           "name": "strategy-service",
           "version": ">=0.1.0,<1.0.0",
           "required": false
+        },
+        {
+          "name": "deployment-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": false
         }
       ],
       "completion_path": "infrastructure",
-      "notes": "Standalone repo. Not a library or service. scripts/defi/ wired into strategy-service QG; scripts/sports/ wired into features-service QG; scripts/prediction/ wired into mtds QG per CLAUDE.md peripheral-script discipline. risk/position deps removed 2026-05-20 — absorbed into strategy-service dep.",
+      "notes": "Standalone repo. Not a library or service. scripts/defi/ wired into strategy-service QG; scripts/sports/ wired into features-service QG; scripts/prediction/ wired into mtds QG per CLAUDE.md peripheral-script discipline. risk/position deps removed 2026-05-20 — absorbed into strategy-service dep. deployment-service dep added 2026-08-14 (Phase 6, alert_driven_dependency_revocation_2026_08_12.md) for revocation actuator/gate black-box tests.",
       "ci_status": "MAIN_GREEN",
       "coverage_pct": null,
       "bypass_audit_path": null,

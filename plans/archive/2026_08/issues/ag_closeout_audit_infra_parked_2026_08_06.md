@@ -39,7 +39,7 @@ related:
     /plans/active/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md,
     /plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,

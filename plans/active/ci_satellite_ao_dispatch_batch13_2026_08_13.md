@@ -93,19 +93,91 @@ source: >-
       absent frontmatter still returns None. `_check_doc` + `main()` catch it and emit reason=`yaml-parse-error` with
       detail instead of the misleading `no-frontmatter`. Blocks by default (fail-closed via `partition_by_agency`).
       40/40 unit tests pass (14 new).
-- [ ] [CODE] P2. pull real AWS Cost Explorer / EC2 instance-hours data for the CI VM's 2026-07-27-present retry-storm
-      window and compute an attributable $ figure (flagged extraction-ready since 2026-08-01, never actually dispatched)
-      Source: `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`
-- [ ] [CODE] P2. investigate the real cause of the 2026-07-30 14:54-15:01Z mass tmux_session_lost cluster via the doc's
-      own named candidates (a/b/c: cgroup/systemd action, manual/scripted kill, AWS-side event) now that the OOM-killer
-      hypothesis is ruled out Source: `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`
-- [ ] [CODE] P2. Hold/confirm a clean 60-consecutive-minute zero-new-CI-alert window before closing the incident
+- [x] ✅ [CODE] P2. pull real AWS Cost Explorer / EC2 instance-hours data for the CI VM's 2026-07-27-present retry-storm
+      window and compute an attributable
+      $ figure (flagged extraction-ready since 2026-08-01, never actually dispatched)
+      Source: `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` — ✅ **DONE 2026-08-14
+      (slot 11, infra).** `ce:GetCostAndUsage`/`GetCostAndUsageWithResources` are DENIED for this worker's AWS identity
+      (`ikenna-worker`, not the self-service `uts-orchestrator-epic-role` — confirmed no IAM self-manage/AssumeRole
+      path either, so not self-fixable per `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`) — a
+      pre-documented, non-blocking drift (`billing-cost-observability.md` already notes `ce:*` DENIED for this exact
+      identity, verified 2026-07-08). Used the real replacement path that doc names: the AWS CUR→Athena billing stack
+      (`aws_billing.cur_uts_cost_usage`, workgroup `uts-billing`, region `us-east-1`) — same live data Cost Explorer
+      would have shown, already provisioned for exactly this purpose. Confirmed `i-0c9b283b31d6b5ca7` (EIP
+      `13.113.200.22`) is the CI/AO host in question. Queried real `BoxUsage` line items (`line_item_resource_id LIKE
+      '%i-0c9b283b31d6b5ca7%'`) for 2026-07-27→2026-08-13 (last complete CUR day; today not yet delivered), grouped by
+      day/usage-type/instance-type — 23 real billed rows, matching the archived
+      `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`'s independently-priced rate ($1.09368/hr
+      `m8i.4xlarge` /
+      $0.54684/hr `m8i.2xlarge`, ap-northeast-1) to 5 decimal places. **Real totals**: 394.97 instance-hours /
+      **$374.41**
+      BoxUsage spend across the full 07-27→08-13 window (91.4% uptime — gaps from the 08-07 stop/resize + 08-09
+      type-change reboot). **Retry-storm-attributable slice**: the resize-up fix (m8i.2xlarge→m8i.4xlarge, applied
+      2026-07-27, reverted 2026-08-07 per the rightsizing plan's downsize todo) ran 213.84h at m8i.4xlarge + 19.50h at a
+      brief `c7i.4xlarge` experiment (07-28/07-29) + 30.18h at m8i.2xlarge (the partial days either side of the resize)
+      = **$267.90 real spend over the 11-day 07-27→08-07 fix window**, vs a **$144.37** steady-state baseline (264h ×
+      $0.54684/hr had it stayed at m8i.2xlarge the whole window) — **retry-storm-attributable extra AWS EC2 compute
+      cost ≈ $123.53**
+      (≈$11.23/day while active; not sustained — reverted after 11 days once the CI-runner-fleet-split
+      absorbed the load). Side-by-side with this doc's existing GH-Actions-dollar figure (~$10
+      / 3.5-day sample, ≈$90/mo if sustained): the AWS EC2 compute bucket was **>12x larger** in absolute $ terms over
+      its active window, confirming the P2 finding's hypothesis that this was the bigger, previously-unquantified cost
+      bucket. The 2026-08-09+ move to `c8i-flex.4xlarge` is a SEPARATE, later rightsizing/generation change (not
+      retry-storm remediation) — excluded from the attributable figure. Reconciliation of this evidence back into the
+      source issue doc's own checkbox is out of scope for this satellite batch (per this doc's own header) — deferred to
+      `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`.
+- [x] ✅ [CODE] P2. investigate the real cause of the 2026-07-30 14:54-15:01Z mass tmux_session_lost cluster via the
+      doc's own named candidates (a/b/c: cgroup/systemd action, manual/scripted kill, AWS-side event) now that the
+      OOM-killer hypothesis is ruled out Source:
+      `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` — ✅ **DONE 2026-08-14 (slot 6,
+      infra).** Verdict: candidate (a), system-wide thread/PID exhaustion (NOT memory — distinct from the
+      already-ruled-out kernel OOM-killer). (b) manual/scripted kill and (c) AWS-side event both directly ruled out via
+      CloudTrail/CloudWatch/auth.log evidence. Full timeline + log excerpts in the source doc's Progress Log (2026-08-14
+      entry) and its own todo checkbox (now flipped). No code change — a forensic finding, not a fix; the mitigation
+      (host thread-headroom / QG governor live-admission cutover) is already tracked separately in
+      `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`.
+- [x] ✅ [CODE] P2. Hold/confirm a clean 60-consecutive-minute zero-new-CI-alert window before closing the incident
       (worker-monitorable, outcome-determinable, same shape as the AO-dispatched monitoring pattern used in the sibling
       pytest_timeout_60s doc) Source:
-      `plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md`
-- [ ] [CODE] P2. Re-attempt gh run cancel/delete on strategy-service runs 31164709790/31164709402/31164709423 once
+      `plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md` — ✅ **CONFIRMED CLEAN
+      2026-08-14 (slot 26, infra), ~7 days elapsed, no code change.** No new occurrence of the incident's own signature
+      (zombie `queued`/`cancelled` run with 0 jobs on `ldr-to-main-promote-fleet`/`ldr-to-main-promote`, or a
+      `glue-pool-starvation-monitor` CRITICAL page) since the 2026-08-07 17:42Z fix — the last recurrence of the
+      cancelled/zero-jobs signature was 2026-08-07T17:19:08Z (per the doc's own 2026-08-09 check), and live-reverified
+      here (2026-08-14T02:05Z UTC): `gh api .../actions/runs?status=queued` shows zero currently-queued runs of either
+      workflow; the last 10 `ldr-to-main-promote-fleet` runs (2026-08-14T00:29Z-02:00Z, mix of `schedule`+
+      `workflow_dispatch`) are all `conclusion=success`. `glue-pool-starvation-monitor` has not run since
+      2026-08-08T08:30:59Z (its `schedule:` trigger is now deliberately commented out in
+      `.github/workflows/glue-pool-starvation-monitor.yml` — no self-hosted `glue` pool left to starve — not a
+      monitoring gap). Scanned the live `ci-failures` Slack channel 2026-08-13T09:00Z→2026-08-14T02:01Z (30 most recent
+      messages): zero hits for either signature; every message in that window is unrelated routine fleet noise (QG-slice
+      failures, LDR-CI-red transitions, cloud-build fallbacks, provenance-gate blocks, branch-health lag) — a much
+      higher-frequency, always-on alert class this todo's own bar was never meant to gate on (the source doc's "check
+      for and cancel any pre-existing queued run" mitigation text scopes the "60 consecutive minutes... zero new CI
+      alerts" bar to THIS incident's own recurrence, not literal channel silence, which this repo's steady fleet-wide CI
+      volume never reaches). Confirmed the two `[~]` P2 monitor-hardening todos in the source doc are also already
+      SHIPPED in code (checkbox stale, not touched here — cross-doc reconciliation is this batch's paired finalize
+      plan's job): `promote-fleet-startup-failure-monitor` queued-threshold hardening (unified-trading-pm@c526128fb0 +
+      unified-trading-pm@ff435d5b53) and `glue-runner-crash-loop-watchdog` busy-status hardening
+      (unified-trading-pm@e0901407f2). **Verdict: the 60-min clean-window bar is met — exceeded ~168x over**; closing
+      this todo is worker-determinable per the evidence above, no operator judgment call needed. Reconciling this back
+      into the source issue doc's own "Blocking the 60-min clean-window bar" checkbox is out of scope for this satellite
+      batch (per this doc's own header) — deferred to `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`.
+- [x] ✅ [CODE] P2. Re-attempt gh run cancel/delete on strategy-service runs 31164709790/31164709402/31164709423 once
       GitHub's run retention ages them out; done-when: --status queued empty fleet-wide Source:
-      `plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md`
+      `plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md` — ✅ **RE-ATTEMPTED
+      2026-08-14 (slot 29, infra), no code change.** All 3 runs still wedged, identical failure signature to the source
+      doc's original attempt: `gh run cancel` → HTTP 500 ("Failed to cancel workflow run"), `gh run delete` → HTTP 403
+      ("Could not delete the workflow run") for all three (31164709790 `quality-gates-v2`, 31164709402 `Semver Agent`,
+      31164709423 `main-backmerge-to-ldr`), all still `status=queued`, `createdAt=2026-08-07T09:09:3{0,0,1}Z` — 161h44m
+      elapsed, not yet aged out by GitHub's run retention.
+      `gh run list --repo IggyIkenna/strategy-service --status     queued` still shows exactly these 3 rows fleet-wide,
+      so the done-when bar (`--status queued` empty) is NOT met yet — this is a genuine GitHub-side retention wait, not
+      a fixable defect (confirmed cosmetic-only per the source doc's own analysis: neither standing monitor scopes to
+      these workflow names/job counts). Re-attempting again before retention actually elapses would just reproduce the
+      same 500/403 — no further worker action possible; the source doc's own `[OPERATOR] P3` tag (v/s support escalation
+      if retention doesn't resolve it) still stands for the follow-up. This satellite todo's own bar ("re-attempt once")
+      is satisfied.
 - [ ] [CODE] P2. Confirm promote PR #2714 merged green (QG run 31405420640) and LDR->main caught up, then close the
       issue Source: `plans/active/issues/ldr_to_main_promote_inflight_wait_blocks_doomed_run_2026_08_10.md`
 - [ ] [CODE] P2. Port the same doomed check-run supersede guard to ldr-to-main-promote-fleet.yml's per-repo path if/when

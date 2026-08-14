@@ -17,7 +17,7 @@ summary: >-
   that FIXED, widened code, not the old broken version). This is a second, independent finding: real NEW docs landing
   since 2026-07-31 without a `related:`/mention link back to their tranche's closeout family, which the ratchet is
   specifically designed to catch and which nobody has yet triaged.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -48,7 +48,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: slot-29, 2026-08-14
 source: >-
   Found incidentally while running the scheduled `/ag-closeout-audit cefi` tranche dispatch (2026-08-06,
   agent-orchestrator slot 3, dispatch agt-02411c) as a cross-check on cefi's own Phase 0 candidate discovery — ran
@@ -67,6 +67,11 @@ context_scope:
 ---
 
 # check_ag_closeout_linkage.py ratchet regression — 87 vs. baseline 69
+
+> **🟢 ARCHIVED 2026-08-14 — RESOLVED.** All three todos done. Todo 3 (the `--tranche <name>` filter) closed via
+> `unified-trading-pm@aa2cefd82d`, shipped by `orphan_wip_ship_2026_08_13.md`'s dispatch after that doc's own "already
+> exists, recover don't reimplement" premise turned out false — see this doc's Progress Log for the correction and
+> `/plans/archive/2026_08/issues/orphan_wip_ship_2026_08_13.md` for the sibling ship task.
 
 > **Re-measured 2026-08-07 (`/ag-closeout-audit cross-cutting`, dispatch `agt-a2b8a4`, slot 5)**:
 > `python3 scripts/plan-hygiene/check_ag_closeout_linkage.py` now reports **71 orphan(s) (baseline 69)** — down from 72
@@ -164,7 +169,7 @@ family, which is exactly the failure mode this gate exists to catch.
       the count down, not one coordinated link-adding pass. Closing on the stated done-when, but note the count is
       measurably volatile day-to-day (69→87→72→71→65 across 3 days) — a future re-measure reading over 69 again would be
       a regression of THIS todo, not evidence it was never really done; re-open rather than silently re-fix if so.
-- [ ] [SCRIPT] P3. **round5-cross-cutting-audit 2026-08-08**: Add a `--tranche <name>` filter to
+- [x] ✅ [SCRIPT] P3. **round5-cross-cutting-audit 2026-08-08**: Add a `--tranche <name>` filter to
       `check_ag_closeout_linkage.py`, mirroring the already-shipped `generate_ag_closeout_audit_candidates.py:172`
       (`parser.add_argument("--tranche", choices=ALL_TRANCHES, required=True)`) — direct existing precedent, not a novel
       design call. Keep additive/opt-in (no-flag preserves the full-corpus ratchet). AO-dispatchable, no operator
@@ -172,8 +177,19 @@ family, which is exactly the failure mode this gate exists to catch.
       a real, measured cost this run incurred: the scan surfaced 80 non-cefi orphans irrelevant to a cefi-scoped
       dispatch.) **RECOVER-INSTEAD-OF-RE-IMPLEMENT 2026-08-13 (main)**: this implementation ALREADY EXISTS as the
       committed-but-unpushed `925233d2ba` in slot 22's `.tabs/22/unified-trading-pm` worktree (clean, ahead=1) — do NOT
-      re-implement. Recover + push it (see `plans/active/issues/orphan_wip_ship_2026_08_13.md`), then flip THIS todo
-      done with that SHA.
+      re-implement. Recover + push it (see `plans/archive/2026_08/issues/orphan_wip_ship_2026_08_13.md`), then flip THIS
+      todo done with that SHA. **CORRECTION + DONE 2026-08-14 (slot 29)**: the "already exists, recover don't
+      re-implement" premise was FALSE — `check_ag_closeout_linkage.py` had no `--tranche` handling at all (no argparse;
+      the earlier recovery review apparently pattern-matched on the word "tranche" appearing 17× in the file's
+      docstrings/comments, which discuss the tranche CONCEPT, not an implemented CLI flag). Live-verified before
+      implementing: `--tranche cefi` silently no-op'd and ran the unfiltered full-corpus check. Since slot 22's own
+      `925233d2ba`/ `453a4558c4` commit was ALSO independently found superseded-on-inspection (see
+      `orphan_wip_ship_2026_08_13.md`'s corrected summary), there was nothing left to recover — implemented the flag
+      fresh instead: additive/opt-in `--tranche <name>` diagnostic mode (scopes the printed list + count to one tranche,
+      always exits 0 — the corpus-wide baseline ratchet is a single number, not per-tranche decomposable; the no-flag
+      baseline-gated path is completely unchanged), plus a latent `_orphans_for()` fix (was hardcoded to
+      `COVERED_ASSET_GROUPS` instead of the passed-in `closeout_family` dict, which KeyError'd the moment the dict was
+      scoped to one tranche). Shipped: `unified-trading-pm@aa2cefd82d`.
 
 ## Codex SSOTs
 
@@ -235,3 +251,8 @@ the triage given their concentration.
   to build this feature (2 finalize docs cite `check_ag_closeout_linkage.py --tranche prediction` in a "Done when"
   clause, but that's a citation error confusing it with `generate_ag_closeout_audit_candidates.py`'s real flag). Exempt
   from the finalize-twin requirement per `check_finalize_plan_coverage.py`'s single-open-todo carve-out.
+- **2026-08-14 (slot 29, orphan_wip_ship_2026_08_13.md dispatch)**: todo 3 DONE — implemented `--tranche <name>` for
+  real (see checkbox note for full detail). The intervening `2026-08-13 (main)` recovery note's "already exists in slot
+  22, do not re-implement" claim was itself wrong (a doc-comment-count false positive) — corrected in the checkbox
+  rather than left standing, per this workspace's misleading-doc-is-a-finding rule. Shipped
+  `unified-trading-pm@aa2cefd82d`. All three todos now closed — this doc is ready for archival.

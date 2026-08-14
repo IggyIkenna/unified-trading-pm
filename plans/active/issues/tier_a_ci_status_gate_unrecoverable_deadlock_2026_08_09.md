@@ -51,7 +51,14 @@ source: "cicd escalation agt-086274, 2026-08-09, wall_type=main_ci_red, escalati
 resolved_by:
 locked_by:
 locked_since:
-context_scope: []
+context_scope:
+  [
+    /plans/archive/issues/mtds_ldr_red_promote_churn_four_prs_2026_07_19.md,
+    /plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    unified-trading-pm/scripts/cicd/ldr_to_main_fleet_promote.sh,
+    unified-trading-pm/scripts/cicd/ci_status_store.py,
+  ]
 ---
 
 ## What happened
@@ -209,3 +216,4 @@ scope).
   todo 2 (line 173) was actually open at filing time. Todo 2 is explicitly `[OPERATOR]`-tagged and the doc's own text
   states it is not a bounded, worker-executable fix: a design call on `unified-api-contracts` dependency-resolution
   semantics for CI. Doc stays NA.
+- **context-scout 2026-08-14**: populated context_scope (5 entries).

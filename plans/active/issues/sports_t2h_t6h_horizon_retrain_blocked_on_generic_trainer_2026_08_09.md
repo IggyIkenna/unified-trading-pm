@@ -26,6 +26,14 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 archive_exempt: true
+context_scope:
+  [
+    /plans/active/sports_taxonomy_p3_consumers_2026_08_08.md,
+    /plans/active/issues/sports_clv_ensemble_trainer_no_driver_or_test_coverage_2026_08_09.md,
+    /plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md,
+    ml-service/ml_service/training/app/core/sports_model_config.py,
+    ml-service/ml_service/training/app/training/sports_ensemble_trainer.py,
+  ]
 ---
 
 ## What I found
@@ -127,3 +135,4 @@ doesn't reflect the actual production training pipeline, which is worse than rep
   (exit_code=1) — because the partially-non-null CLV targets are passed straight to CatBoost. That NaN-handling fix is
   tracked as P3 in the odds_targets issue doc; once it lands, re-run the 5 VMs and report the rmse/mae/r2-per-outcome-
   per-horizon delta here.
+- **context-scout 2026-08-14**: populated context_scope (5 entries).

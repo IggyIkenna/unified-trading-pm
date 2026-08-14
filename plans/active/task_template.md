@@ -163,6 +163,14 @@ version.
 
 ## 3. Todo format
 
+> **Why specificity here isn't just correctness** (`tool_call_batching_authoring_gap_2026_08_14`): the symbol-not-
+> line-number rule, the literal-action-verb rule, and the definition-of-done rule below exist for plan durability and
+> dispatch-correctness — but they're also what determines how many round-trips a worker needs before it can act. A todo
+> naming a mechanism but no file/symbol ("move the loader off its PATH-PREFIX read") guarantees an exploratory Grep
+> before any edit is possible; one naming the exact function/table does not. Same principle as `context_scope` (§2a) —
+> front-load the context a worker would otherwise have to go discover. SSOT + the runtime-hook half of this:
+> `/codex/06-coding-standards/tool-call-batching.md`.
+
 - Every todo: `- [ ] [TAG] P0. <description>` (open) → `- [x] N. ✅ [TAG] P0. <desc> — <repo>@<sha> + evidence` (done).
 - **Keep each todo's load-bearing content on the FIRST physical line** _(verified in `regen_backlog_from_plan.py`
   2026-07-21: `_parse_open_todos` captures only the first line matching `- [ ]`; wrapped/indented continuation lines are

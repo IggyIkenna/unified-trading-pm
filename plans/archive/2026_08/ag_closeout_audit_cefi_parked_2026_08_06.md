@@ -33,7 +33,7 @@ related:
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
     /plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md,
     /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
@@ -62,7 +62,7 @@ depends_on: []
 context_scope:
   [
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
-    /plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch7_2026_08_03.md,
     /plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md,
     /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
@@ -118,8 +118,8 @@ Not escalating as blocking (no in-flight work depends on these landing urgently)
 Found incidentally while cross-validating cefi's own Phase 0 candidate list against this stricter safety-net check. NOT
 cefi-scoped (only 7 of the 87 orphans are cefi-tagged; cross-cutting carries 36, ao 14, defi 11, ci 10). Filed as its
 own issue rather than duplicated here:
-`/plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`. Flagging its existence here only
-so a reader of this doc doesn't miss it.
+`/plans/archive/2026_08/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`. Flagging its existence
+here only so a reader of this doc doesn't miss it.
 
 ## Carried forward from the batch4→batch6→batch7 Deferred/re-check chain (re-verified live this run)
 

@@ -40,6 +40,13 @@ related:
     /codex/04-architecture/ci-alerting.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
+context_scope:
+  [
+    /codex/04-architecture/ci-alerting.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    unified-trading-pm/scripts/cicd/ldr_to_main_fleet_promote.sh,
+    unified-trading-ci/.github/workflows/python-quality-gates-v2.yml,
+  ]
 created: 2026-08-11
 author: claude-agent
 last_updated: 2026-08-11
@@ -170,3 +177,7 @@ applies.
       briefly exposed (truncated via `head -c 80`, likely near-complete) into SSM command-invocation output and this
       session's transcript — flagged to the operator directly; recommend rotating `SLACK_ALERTS_READER_BOT_TOKEN` in
       Slack + GSM as a precaution.
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (4 entries).

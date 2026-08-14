@@ -41,6 +41,13 @@ locked_by:
 resolved_by:
 last_updated: 2026-08-13
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md,
+    /plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md,
+    deployment-service/deployment_service/data_pipeline_monitors/_attempted_failed_index.py,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+  ]
 source: >-
   Side-discovery during the 2026-08-13 slot-18 confirmation of
   `/plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md` todo 1. That task's Cloud Logging history sweep
@@ -84,19 +91,73 @@ events belong to `uts-prod-dp-meta-watchers`, not the exit-code job:
 
 ## Not yet done
 
-- [ ] [BACKEND] P1. Root-cause the live OOM at 32Gi/8cpu: profile the meta sweep's memory peak (which checker/read
+- [x] [BACKEND] P1. ✅ Root-cause the live OOM at 32Gi/8cpu: profile the meta sweep's memory peak (which checker/read
       dominates — likely `check_high_attempted_failed`'s full-corpus manifest read, or the DP-LIVE-003 AWS-census /
       per-prefix VM list, or a multi-day Cloud-Run execution history). Fix the memory hog rather than bumping the
       ceiling a 4th time; candidates: stream/chunk the manifest read (precedent: the 08-10 defi-index streaming read),
-      or cap the per-sweep retained working set. Repo: deployment-service.
+      or cap the per-sweep retained working set. Repo: deployment-service. — deployment-service@f425eb12b3 (see Progress
+      Log for the measured root cause + fix).
 - [ ] [SCRIPT] P2. After the fix, live-verify: `uts-prod-dp-meta-watchers` executions complete (no
       `"memory limit was     reached"`) for ≥3 consecutive `*/15` cycles AND `vm-census/meta-last-run.json` advances
       each cycle AND `RenagTracker`/`MissTracker` persist lands (end-of-sweep). Repo: deployment-service.
-- [ ] [SCRIPT] P2. Confirm whether `DP_CRON_DID_NOT_FIRE::vm-census/exit-code-last-run.json` fired during the exit-code
-      cron-pause window (08-11T15:40 → now); if it did NOT fire, that is a second finding — the meta sweep's OOM
-      prevents the cross-check from running (fold into the exit-code doc's todo 4). Repo: deployment-service.
+- [x] ✅ [SCRIPT] P2. **CONFIRMED (2026-08-14, slot 11)** — answered from the exit-code doc's twin todo 4 (full evidence
+      there, `dp_exit_code_monitor_oom_signal9_2026_08_09.md`). Summary: `DP_CRON_DID_NOT_FIRE::exit-code` DID fire
+      correctly through 08-11T01:11Z, then went silent after one last alert at **08-12T19:05:30Z** (3683m/61.4h stale) —
+      a real detection gap, but attributable to THIS doc's own OOM incident (meta sweep dying before reaching
+      `check_monitor_crons_fired`) rather than a separate bug. No further action needed here beyond this doc's own
+      already-shipped fix (`deployment-service@f425eb12b3`, todo 1) + its live-verify todo 2 above (which will also
+      re-confirm `check_monitor_crons_fired` reaches completion again). Repo: deployment-service.
 
 ## Progress Log
 
 - 2026-08-13: Filed from the slot-18 exit-code confirmation sweep. Live evidence captured above; config 32Gi/8cpu/900s
   confirmed live via `gcloud run jobs describe`.
+- 2026-08-14 (slot 14): Root-caused + fixed todo 1. **The 08-10 streaming-index fix (`_make_streaming_index_reader`,
+  `cli.py`) was NOT the OOM driver — it was already live and does correctly stream/project columns.** The actual driver,
+  confirmed by direct measurement against the live buckets (real `pq.ParquetFile` metadata + a bounded controlled read,
+  not modeled): `check_high_attempted_failed` → `read_attempted_failed_cells` (`_attempted_failed_index.py`) calls
+  `.to_pandas()` on the FULL unfiltered row count for every asset_group, and `.to_pandas()` materializes every projected
+  string column as an individual Python `str` object regardless of relevance. Measured on the defi index specifically
+  (159,036,875 rows / 6.8 GiB as of today, up from ~134M/~6GiB on 08-10): the Arrow table pre-`.to_pandas()` is ~14.3
+  GiB, but the pandas conversion peaks ~40.9 GiB (257.3 bytes/row deep memory across 4 object-dtype columns), with the
+  two co-resident during the conversion call plausibly peaking ~55 GiB total — comfortably over the 32Gi/8cpu ceiling on
+  this ONE checker's ONE target (defi is 2nd of 5 AGs in `ASSET_GROUPS`, so the sweep reliably dies early, consistent
+  with the observed every-run OOM). The `.astype(str)` calls downstream were investigated as the original hypothesis
+  (per this doc's own "candidates" wording) and disproven by measurement — they're a near-no-op on already-object-dtype
+  columns; `.to_pandas()` itself is the cost. Separately measured the `capture_status` distribution for defi
+  (single-column pyarrow read, footer+data, ~3.1 GiB peak): of 159,036,875 rows, only 32,089,371 (`captured`) +
+  7,874,973 (`attempted_failed`) = 39,964,344 (25.1%) are ever consumed by this checker's logic — the other 74.9%
+  (`empty_confirmed` 78,597,415 + `expected_unattempted` 40,475,116) contribute to zero `AttemptedFailedCell` field and
+  were being fully materialized for nothing. **Fix** (deployment-service@f425eb12b3): filter to
+  `RELEVANT_CAPTURE_STATUSES = ("captured", "attempted_failed")` BEFORE the pandas conversion in both
+  `read_attempted_failed_cells` read paths — inside pyarrow (`table.filter(...)`, pre-`.to_pandas()`) for the streaming
+  path, and via a pandas `.isin()` mask right after `pd.read_parquet(...)` for the full-download fallback path. Cuts the
+  row count ~4x with NO change to any computed `AttemptedFailedCell` field for a cell with real
+  captured/attempted_failed activity — the filtered-out rows contributed nothing to `captured`, `attempted_failed`,
+  `ratio`, `high`, `max_attempted_at`, or `stale_days` either before or after this fix. The one observable behavior
+  change: a `data_type` with ONLY irrelevant-status rows (zero captured, zero attempted_failed) no longer appears in the
+  returned cell list at all (previously appeared as a permanent zero-cell) — provably inconsequential since such a cell
+  could never cross either HIGH threshold regardless (both require `attempted_failed >= 50`). Also investigated as
+  ruled-out alternate hypotheses (kept here so a future OOM recurrence doesn't re-walk the same dead ends): the Cloud
+  Run execution-history fan-out (`cloud_run_job_failure_watcher`/`consolidator_oom_watcher`/`check_cron_fired`, ~3
+  separate unbounded `list_executions()` walks across ~60+ registered jobs, confirmed via live
+  `gcloud run jobs executions list` — high-frequency jobs retain ~2000 executions each) is real and plausibly a genuine
+  WALL-CLOCK/RPC-volume risk (matches the terraform comment's separately-documented 900s timeout history) but is NOT
+  primarily a memory driver — Execution proto objects are modest and the reader only retains one scalar per job, not
+  accumulated lists; DP-LIVE-003 (`missing_live_producer_watcher`) uses a bounded single-instance `describe_instances`
+  lookup, not an unbounded AWS fleet census (the unbounded `list_ec2_census`/`list_batch_census`/etc in `aws_census.py`
+  are NOT called by the meta sweep at all). Todos 2/3 (live-verify + the exit-code cron-freshness cross-check) are
+  separate follow-on todos below, now unblocked by this fix. Tests:
+  `test_high_attempted_failed_irrelevant_capture_statuses_excluded` (fallback path),
+  `test_streaming_index_reader_filters_capture_status_before_pandas` (streaming path) — both new, both green under
+  `quality-gates.sh`. Evidence: deployment-service@f425eb12b3, `.qg_last_passed_sha` verified, ancestry verified on
+  `origin/live-defi-rollout`.
+- **context-scout 2026-08-14**: populated context_scope (4 entries).
+- 2026-08-14 (slot 11, infra): Todo "confirm DP_CRON_DID_NOT_FIRE::exit-code during the pause window" — answered (full
+  evidence in the twin todo on `dp_exit_code_monitor_oom_signal9_2026_08_09.md`, not duplicated here). Read
+  `#data-pipeline-alerts` via `scripts/dev/slack-read-channel.py data-pipeline-alerts 132` (132h window,
+  2026-08-08→2026-08-14, 12,599 messages) and filtered for `exit-code`. Detection worked correctly through 08-11T01:11Z
+  (7 alerts, `last output` growing 914m→1170m), fired once more at 08-12T19:05:30Z (3683m/61.4h stale), then went silent
+  for the remainder of the window despite the cron staying paused — the gap starts right in the middle of THIS doc's own
+  live OOM incident, confirming the suspected mechanism (meta sweep dying before reaching `check_monitor_crons_fired`)
+  rather than a distinct detection bug. No new issue doc filed.

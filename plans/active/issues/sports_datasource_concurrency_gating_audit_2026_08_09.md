@@ -63,6 +63,12 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    deployment-service/scripts/vm/odds-api-concurrency-guard.sh,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+  ]
 source:
   [
     deployment-service/scripts/vm/tardis-concurrency-guard.sh,
@@ -178,3 +184,4 @@ blocked/refused the way another backfill VM is — it must keep running).
   `execution_scope` corrected `local-only` → `orchestrator-agent`. Single-todo issue doc — finalize-plan-coverage is
   structurally exempt (`check_finalize_plan_coverage.py` only globs `plans/active/*.md`) and archival on this one todo's
   own done-when is trivial, so no companion finalize doc authored.
+- **context-scout 2026-08-14**: populated context_scope (3 entries).

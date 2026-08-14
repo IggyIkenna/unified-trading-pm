@@ -43,6 +43,13 @@ priority: P1
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/tradfi_vix_full_history_backfill_2026_08_10.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_adapter.py,
+    deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh,
+  ]
 ---
 
 # VIX futures backfill launch FAILED
@@ -181,3 +188,5 @@ operations log (all times UTC):
   CBOE floor) to 2026-08-06. 2024 was sparse in prior data (Jan-Feb only) — the 2024 VM is now running and filling it.
   All data source=databento, pipeline_mode=batch_databento. No code changes needed (verification-only). Backfill is IN
   PROGRESS — VMs will need several more hours to complete the full 7-year window.
+
+- **context-scout 2026-08-14**: populated context_scope (4 entries).

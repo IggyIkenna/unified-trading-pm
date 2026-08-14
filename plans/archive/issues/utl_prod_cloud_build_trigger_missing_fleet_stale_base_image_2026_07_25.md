@@ -462,3 +462,47 @@ base-image pipeline without confirming the correct source config/IAM/connection 
     Reiterating the standing follow-up (still out of cicd one-shot scope, now confirmed FIVE times over): wire a
     worker-callable resolve action or a wall-specific `_poll_wall_resolution` signal for `cloud_build_router_failure` so
     a genuinely-fixed instance stops re-dispatching fresh workers every `RESOLUTION_DEADLINE_MINUTES` tick.
+
+- **2026-08-14 (slot 5, cicd) — SIXTH dispatch of the same re-escalation loop for `agt-774a0e`, re-verified LIVE,
+  confirmed still-fixed, no new activity since the fifth check. No new fix applied.** Same known gap (no
+  `_QG_SIGNAL_WALLS` entry for `cloud_build_router_failure` → `verify_dispatched_escalations` re-dispatches on every
+  deadline tick with no auto-resolve signal). Measured live against GCP (not trusting prior notes):
+  - **Trigger unchanged, still correctly configured**: `gcloud builds triggers describe unified-trading-library-prod` →
+    `e9da54bb-ca66-40f6-b5fd-5caff6bfebf1`, `createTime 2026-07-25T12:44:13Z`.
+  - **Base image identical to the fifth check's snapshot** (no new UTL `main` pushes in the interim):
+    `0.81.3`/`0.81.3-41747d0cbbbe`/`latest` at `UPDATE_TIME 2026-08-13T23:59:08Z`.
+  - **Most recent trigger builds still all SUCCESS**: `fc1916e8` (23:52:53Z) + `781e1751` (23:51:38Z) SUCCESS; zero
+    TIMEOUTs since the governor-disable fix landed (last TIMEOUT remains `42db60a4` at 13:13:02Z on 2026-08-13,
+    pre-fix).
+  - **Router runs for the last ~40 min all `qg-passed`/success** (`gh run list --workflow cloud-build-router.yml`, 10
+    most recent runs 2026-08-14T00:19-01:02Z, all `success`) — no fresh failure since slot 6's check.
+  - **No new code fix required — closing this dispatch as confirmed-already-fixed**, same verdict as slots 14/28/6.
+    Reiterating the standing follow-up (now confirmed SIX times over, purely queue overhead each time): wire a
+    worker-callable resolve action or a wall-specific `_poll_wall_resolution` signal for `cloud_build_router_failure` in
+    `agent-orchestrator/server/escalation.py` so a genuinely-fixed instance stops re-dispatching fresh workers every
+    `RESOLUTION_DEADLINE_MINUTES` tick — recommend routing this to `/escalation-queue-reconcile` given it's now a
+    measured 6x-repeat cost.
+
+- **2026-08-14 (slot 2, cicd) — SEVENTH dispatch of the same re-escalation loop for `agt-774a0e`, re-verified LIVE,
+  confirmed still-fixed, pipeline actively healthy (not just idle). No new fix applied.** Same known gap (no
+  `_QG_SIGNAL_WALLS` entry for `cloud_build_router_failure` → `verify_dispatched_escalations` re-dispatches on every
+  deadline tick with no auto-resolve signal). Measured live against GCP/GitHub 2026-08-14T~02:05-02:10Z (not trusting
+  prior notes):
+  - **Trigger unchanged, still correctly configured**: `gcloud builds triggers describe unified-trading-library-prod` →
+    `e9da54bb-ca66-40f6-b5fd-5caff6bfebf1`, `createTime 2026-07-25T12:44:13Z`.
+  - **Base image unchanged from sixth check's snapshot** (no new UTL `main` push since): `0.81.3`/`0.81.3-41747d0cbbbe`/
+    `latest` at `UPDATE_TIME 2026-08-13T23:59:08Z`.
+  - **Recent trigger builds all SUCCESS, and a fresh build is actively QUEUED right now** — `2315c76e` QUEUED at
+    `2026-08-14T02:05:04Z` (in flight at check time, evidence the trigger→build path is live, not merely dormant);
+    `fc1916e8` (23:52:05Z) + `781e1751` (23:50:50Z) + `ae86ca67` (19:44:16Z) + `c78c8250` (19:43:09Z) all prior SUCCESS;
+    zero TIMEOUTs since the governor-disable fix landed (last TIMEOUT remains `42db60a4` at 13:13:02Z on 2026-08-13,
+    pre-fix).
+  - **Router runs healthy through the current moment**: `gh run list --workflow=cloud-build-router.yml` shows 7 of the
+    last 8 `qg-passed` dispatches (2026-08-14T01:34-01:56Z) `conclusion: success`, with an 8th (`31762660211`,
+    02:05:29Z) `in_progress` at check time — no failures in the sampled window.
+  - **No new code fix required — closing this dispatch as confirmed-already-fixed**, same verdict as slots 14/28/6/5.
+    Reiterating the standing follow-up (now confirmed SEVEN times over, purely queue overhead each time): wire a
+    worker-callable resolve action or a wall-specific `_poll_wall_resolution` signal for `cloud_build_router_failure` in
+    `agent-orchestrator/server/escalation.py` so a genuinely-fixed instance stops re-dispatching fresh workers every
+    `RESOLUTION_DEADLINE_MINUTES` tick — this is now a measured 7x-repeat cost with zero real work performed since the
+    fix landed ~11h ago; recommend `/escalation-queue-reconcile` treat this as a priority instance of its own mandate.

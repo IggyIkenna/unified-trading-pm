@@ -38,6 +38,12 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
+    unified-trading-ci/.github/workflows/python-quality-gates-v2.yml,
+    unified-trading-pm/scripts/workspace/resolve-canonical-versions.py,
+  ]
 ---
 
 ## What I found
@@ -99,3 +105,4 @@ design judgment needed.
   unified-trading-ci@6aa50d2 directly to `main` (`.github/**` carve-out). Set `archive_exempt: true` — archival (git
   mv + referrer sweep) is a separate operation handled by `/archive-candidates-audit`; blocking this task's plan-flip
   commit on a full archival is out of scope.
+- **context-scout 2026-08-14**: populated context_scope (3 entries).

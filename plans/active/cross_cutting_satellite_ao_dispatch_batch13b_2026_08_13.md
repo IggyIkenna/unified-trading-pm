@@ -24,7 +24,7 @@ related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/active/issues/mtds_main_promotion_stall_and_qg_alert_redispatch_2026_08_11.md,
-    /plans/active/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md,
+    /plans/archive/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md,
     /plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md,
     /plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md,
     /plans/active/issues/pipeline_smoke_sweep_findings_2026_07_20.md,
@@ -102,14 +102,40 @@ source: >-
       (`.github/workflows/python-quality-gates-v2.yml` — `debounce-promote-qg-fail` job derives `duration_min` from run
       history and only fires `notify-qg-fail` once the streak is genuinely ≥15min old, with a 120min cooldown after
       that). No further action.
-- [ ] [CODE] P2. Investigate and document why standalone quality-gates.sh --no-fix treats the local type:ignore ratchet
-      (STEP 5.94/5.95) as non-fatal while quickmerge's internal re-gate treats the identical finding as fatal Source:
-      `plans/active/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md`
-- [ ] [CODE] P2. Resolve the diff base to the branch's own last-gated point instead of a fixed origin/main proxy Source:
-      `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md`
-- [ ] [CODE] P2. Add a detector for a non-convergeable (monotonically-growing-violation-count) ratchet gate distinct
+- [x] ✅ [CODE] P2. Investigate and document why standalone quality-gates.sh --no-fix treats the local type:ignore
+      ratchet (STEP 5.94/5.95) as non-fatal while quickmerge's internal re-gate treats the identical finding as fatal
+      Source: `plans/archive/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md` —
+      `market-tick-data-service@9effa3529c`. **ROOT-CAUSED + DOCUMENTED (2026-08-14).** Not a --no-fix-vs-full-mode
+      difference (STEP 5.94/5.95 has no branch on that flag) — it's a MOVING-HEAD attribution window: both invocation
+      paths run the identical script/flags, but 5.94/5.95 scope to `git diff <merge-base> HEAD`, and quickmerge's
+      `--agent` re-gate only fires after its sentinel-invalid retry rebases local HEAD onto whatever a peer slot pushed
+      meanwhile — widening the window enough to surface a peer commit's net-new bare `# type: ignore` that an earlier,
+      narrower-scoped standalone run never saw. Full mechanism + code-line citations documented in the issue doc's todo
+      3 and as a code comment at `market-tick-data-service/scripts/quality-gates.sh` (diff-scoped-attribution helper
+      docstring). Issue doc flipped `status: open -> resolved` (all 3 todos closed).
+- [x] ✅ [CODE] P2. Resolve the diff base to the branch's own last-gated point instead of a fixed origin/main proxy
+      Source: `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md` —
+      unified-trading-pm@715a90d7ac: `run_hygiene_sweep.sh`'s `DIFF_BASE_REF` now resolves from the triggering CI event
+      instead of a fixed `origin/main` — a `push` (only fires on `push:[main]`) uses the event's `before` SHA read from
+      `$GITHUB_EVENT_PATH`; a `pull_request` uses its own `$GITHUB_BASE_REF`; any other trigger
+      (`workflow_dispatch`/schedule/unset, incl. the LDR-health-check dispatches and the cron entrypoint) stays
+      baseline+buffer. Both resolved refs are best-effort fetched then only applied once verified locally, so an
+      unresolvable base fails safe to baseline+buffer rather than reading all pre-existing debt as new. Promote-PR
+      exclusion unchanged, still wins over base resolution. Verified via 5 simulated scenarios (push/PR/promote-PR/
+      workflow_dispatch/unresolvable-SHA) against the extracted resolution block — all matched expected behavior.
+- [x] ✅ [CODE] P2. Add a detector for a non-convergeable (monotonically-growing-violation-count) ratchet gate distinct
       from an ordinary retryable failure Source:
-      `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md`
+      `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md` —
+      agent-orchestrator@197c5ca521: Added `detect_non_convergeable_gate()` + `_extract_violation_count()` +
+      `_root_key_violation_history()` in `server/escalation.py` — walks a wall's `root_key` re-escalation chain (the
+      same chronic-wall lineage `_resolve_root_key` already threads) and flags `resolution="non_convergeable"` when the
+      parsed violation count grows for `NON_CONVERGEABLE_MIN_STREAK` (3) consecutive attempts, paging immediately
+      instead of waiting out the normal `PAGE_AFTER_REESCALATIONS` grace period. `notify_escalation_unresolved`
+      (`server/notifications/slack.py`) now takes a `non_convergeable` kwarg and renders a distinct "NON-CONVERGEABLE
+      gate" header. 4 new tests in `tests/test_escalation.py` (pure extractor/detector + a real-SQLite-session
+      root_key-chain walk + a full wiring test asserting the first-miss immediate page). Evidence:
+      `bash scripts/quality-gates.sh` green (3640 pytest passed, 336 vitest passed); quickmerge verified `197c5ca52`
+      ancestor of `origin/live-defi-rollout`.
 - [ ] [CODE] P2. Fix the ldr-to-main-promote.yml rate mismatch that lets a fast-failing check manufacture an unbounded
       stream of superseded PRs Source:
       `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md`

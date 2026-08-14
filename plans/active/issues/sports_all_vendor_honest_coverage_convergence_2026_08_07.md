@@ -268,6 +268,46 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       `empty_confirmed` grew by exactly the retyped counts (SFI +205,447 ≈ 205,363 retyped; weather +205,302, an exact
       match). Both sources now hold only `captured` + `empty_confirmed` + their small, already-diagnosed
       `attempted_failed` tail.
+- [x] ✅ [SCRIPT][OPERATOR] P0. **REGRESSION 2026-08-14: SFI + weather `expected_unattempted` both re-inflated from the
+      2026-08-08 convergence (0) back to 791,000 (SFI) / 778,959 (weather) — root-caused, code fix landed, prod manifest
+      PURGED with operator sign-off (see Progress Log for the full delete + consolidator-race + rollup findings).** Live
+      census (read-only) confirmed: NOT a data_type merge — 100% of `soccer_football_info` rows (866,978) are
+      `data_type=SFI_PROGRESSIVE_STATS`; `SFI_LEAGUES`/`SFI_STANDINGS` carry 0 rows (retired 2026-05-05/04-24, never
+      write manifest rows, no legacy residue). Root cause:
+      `unified_api_contracts/canonical/domain/sports/provider_league_ids.py` lines 886 + 892
+      (`SPORTS_ENTITY_LEAGUE_COVERAGE`) hardcoded `"SFI_PROGRESSIVE_STATS": None` / `"WEATHER": None` ("no restriction,
+      all leagues") — consulted ONLY by the bulk expected-universe enumerator
+      (`instruments-service/scripts/enumerate_expected_universe.py::_enumerate_v2_sports`, via
+      `get_entity_league_coverage(dt)`), which loops the FULL shared `LEAGUE_REGISTRY` (390 leagues today, up from ~101
+      at this plan's 2026-06-24 diagnosis — grown by
+      `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`'s ongoing Reference/Features-tier
+      league registrations). Confirmed live: SFI's 791,000 EU rows spanned 350 distinct `league_id`s (e.g.
+      `CUBA_PRIMERA_DIVISION`, `BHUTAN_SUPER_LEAGUE`, `GIBRALTAR_ROCK_CUP`), ~2,260 rows each = one per day for the full
+      2020-06-06→today history — a full-history re-seed, not a daily-cron trickle (daily cron:
+      `expected-universe-v2-sports-daily`, `terraform/gcp/expected_universe_v2_scheduler.tf`, 01:30 UTC). This was a
+      DIFFERENT, un-migrated SSOT from `SPORTS_SOURCE_LEAGUE_ALLOWLIST`/`is_sports_structural_gap()` (`league_data.py`)
+      — the ONE that was correctly fixed to the 33-league Prediction tier for weather/SFI/odds_api on 2026-08-10
+      (`unified-api-contracts@5d4a1e6f`) — so the writers (`sfi.py`/`weather.py`, via
+      `get_expected_leagues_for_source(..., classifications=["Prediction"])`) stayed correctly scoped while the
+      enumerator's SEPARATE entity-coverage gate never got the same fix: a partial consumer migration, not a new bug
+      introduced this week. odds_api's sibling entry (`ODDS_HORIZON_BUCKET`) was NOT affected — it already used a real
+      frozenset allow-list, not `None`. Fix: `provider_league_ids.py` lines 886/892 now derive both from the SAME
+      `get_expected_leagues_for_source(...)` call the writers use — single SSOT, can't re-diverge —
+      `unified-api-contracts@168dd74227` (QG green, landed on LDR). **Directed this session (interactive, 2026-08-14):
+      DELETE outright, don't retype** (the 2026-08-08 convergence's retype-to-`empty_confirmed` approach was itself
+      deleted 2026-08-10 for cluttering the manifest with rows that never belonged — no reason to repeat that pattern).
+      Purged via `instruments-service/scripts/purge_sfi_weather_oos_expected_unattempted_2026_08_14.py --apply`:
+      1,570,999 rows deleted (791,350 SFI expected_unattempted + 1 SFI attempted_failed + 779,177 weather
+      expected_unattempted + 471 weather attempted_failed — operator explicitly extended scope to the small
+      attempted_failed tails too). See Progress Log for the consolidator-race avoidance and rollup-refresh chain.
+- [ ] [SERVICE] P1. **deployment-api's sports coverage drilldown OOMs the 16GB Cloud Run instance on a cold cache**
+      (`GET /api/data-status/drilldown/instruments-service/SPORTS?source=...`) — confirmed live 2026-08-14 (2 crashes,
+      `Memory limit of 16384 MiB exceeded`, see Progress Log). Needs a memory-bounded compute path or a
+      guaranteed-warm-cache precondition before this endpoint is safe to call broadly; not fixed this session.
+- [ ] [SERVICE] P2. **data-status rollup worker: 420s per-service timeouts on features-onchain-service /
+      features-delta-one-service / market-data-processing-service / market-tick-data-service**, observed during the
+      03:00Z 2026-08-14 sweep that later OOM'd (32GB limit). Predates this session; not investigated — root cause
+      unknown (genuinely slow compute vs. a stuck upstream call).
 - [x] ✅ [SCRIPT] P2. **Checked `type_understat_eu_no_provider_coverage.py` — NOT the same pattern, no action needed.**
       Dry-run (2026-08-07T22:18Z) confirms understat's 25 rows are `reason=EXPECTED_NO_FIXTURE`, dates 2026-08-05→
       2026-08-07 (today/yesterday) — matches the earlier "slot 4" diagnosis exactly (self-resolving IS-cron artifact for
@@ -872,3 +912,51 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   permits the singleton). Frontier at last check ≈2020-12-21 (chunk 115/2171) — still before the first real gap
   (~2021-06-07); gap census not re-run. No VM launched from the P2 VERIFY dispatch (its own standing instruction forbids
   it; this tracker owns relaunching).
+
+- **2026-08-14 (autonomous session) — SFI/weather out-of-scope purge executed with operator sign-off; discovered and
+  worked around a live consolidator-race gotcha; discovered a separate, real OOM bug in deployment-api's sports coverage
+  drilldown while verifying the UI-visible result.**
+  1. **Purge**: wrote `instruments-service/scripts/purge_sfi_weather_oos_expected_unattempted_2026_08_14.py` (adapted
+     from `delete_weather_sfi_odds_out_of_scope_rows_2026_08_10.py`'s CAS/backup/hard-abort-on-captured-rows template).
+     Dry-run confirmed 1,570,999 rows; `--apply` deleted them cleanly (soft-delete retention re-verified fresh at
+     604,800s per delete-safety §3a).
+  2. **Consolidator race avoided**: per `manifest-consolidator-ssot.md`'s "Surgical ROW REMOVAL" recipe (found via a
+     dedicated investigation, not known going in), paused `uts-prod-manifest-consolidator-instruments-sports-cron`
+     (`*/1 * * * *`) BEFORE the write, ran the purge, then force-re-stamped `consolidator_content_write_at` via
+     `market-tick-data-service/scripts/one_offs/restamp_manifest_consolidator_2026_07_26.py` (4th attempt succeeded
+     genuinely — first 3 hit `no_op_lock=True` from a stale lock, correctly retried per that script's own design) before
+     resuming the cron. Without this, the plain `upload_bytes` write would have stripped the marker and risked a
+     transient resurrection of the just-deleted rows on the next cron cycle.
+  3. **Rollup chain**: found `uts-prod-data-status-rollup-cron`'s `_locks/rollup_in_progress.json` held since 03:00:53Z
+     by a run that had ALREADY CRASHED (`Container terminated on signal 9` after `Memory limit of 32768 MiB exceeded` at
+     03:50:54Z) — the 150-min TTL meant every subsequent tick (03:09/03:20/ 03:24/03:40 + my own manual trigger) was
+     silently skipping with `status="skipped_overlap"` against a dead holder. Confirmed dead via direct Cloud Run log
+     evidence (not inferred) before deleting the stale lock (`gcs_delete_object` — sanctioned SDK path, not gsutil).
+     Rather than re-trigger the same full 14-service sweep that had just OOM'd (several services were ALSO independently
+     timing out at 420s before the crash — features-onchain-service, features-delta-one-service,
+     market-data-processing-service, market-tick-data-service — a real, separate reliability gap in this rollup worker,
+     not investigated further here), minted an OIDC identity token for `uts-prod-batch-sa`
+     (`--impersonate-service-account` + `--include-email`, self-serviced per this workspace's IAM rule) and called
+     `POST /api/data-status/rollup-run?services=instruments-service` directly — scoped, succeeded (`exit_code_live=0`),
+     confirmed via a real generation-number change on the rollup blob (not just trusting the 200 response).
+  4. **Cache clear**: `POST /api/data-status/turbo/clear` (via `deployment-api-api-key` GSM secret) —
+     `entries_cleared: 0`, meaning nothing was even stale by that point.
+  5. **New finding, not caused by this session's work**: the generic `asset_groups.SPORTS` entry in BOTH the rollup blob
+     and the live `/api/data-status/manifest?asset_group=SPORTS` endpoint is a structural stub (`bucket=""`,
+     `dates_found=0` always) — sports doesn't fit the generic per-venue grid model (`breakdowns_domain.py` comments
+     confirm sports uses a fixture-based model instead, "not applicable" for the generic venue axis). The REAL
+     per-source sports breakdown lives behind
+     `GET /api/data-status/drilldown/instruments-service/SPORTS?source=<source>` — calling it to verify the purge's
+     effect **OOM-crashed deployment-api twice** (`Memory limit of 16384 MiB exceeded`, 04:19:25Z + 04:20:34Z, confirmed
+     via Cloud Run logs, each auto-recovered with a fresh instance per Cloud Run's stateless model — verified healthy
+     again via `/api/health` immediately after). This matches a failure mode `manifest_source.py`'s own docstring
+     already warns about ("falls through to a multi-minute all-AG compute on the 8 GiB service → 503") — a real,
+     pre-existing reliability gap in the sports drilldown's live-compute fallback, independent of anything this session
+     changed. **Not fixed here** — flagging as a genuine follow-up: the sports drilldown needs either a memory-bounded
+     compute path or a warm-cache guarantee before it's safe to query broadly. Verified via the manifest census directly
+     (the authoritative source) that the purge itself is correct and durable; the UI-surface verification is what's
+     blocked, not the underlying data fix.
+  - **Follow-up needed** (not done this session): (a) scope + fix the sports drilldown OOM (new todo warranted, separate
+    P-tier from this doc's SFI/weather scope); (b) the rollup worker's 420s per-service timeouts on
+    features-onchain-service/features-delta-one-service/market-data-processing-service/market-tick-data-service predate
+    this session and were not investigated.

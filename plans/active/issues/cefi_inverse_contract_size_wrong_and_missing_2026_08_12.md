@@ -20,6 +20,12 @@ repos: [unified-api-contracts, market-data-processing-service, instruments-servi
 scope: [engineer, admin]
 tags: [contract_size, liquidations, tardis, instruments-service, cefi-inverse]
 related: [data_pipeline_alert_storm_root_cause_batch_2026_08_10, cefi_consolidated_closeout_2026_07_18]
+context_scope:
+  [
+    unified-api-contracts/unified_api_contracts/registry/cefi_inverse_contract_multipliers.py,
+    market-data-processing-service/market_data_processing_service/app/adapters/cefi/liquidations_adapter.py,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 created: 2026-08-12
 author: claude-agent
 source: "2026-08-12 continuation session, verifying the liquidations re-derive's manifest outcome"
@@ -255,3 +261,7 @@ checkout's own liveness-gated cleanup silently reverted an in-progress, uncommit
 reverted, untracked new files deleted) — recovered only because the full file content was still in the live conversation
 context. Reinforces the standing lesson even harder: ship at every green-gated unit, don't let genuinely-done work sit
 uncommitted across a checkpoint boundary, even mid-task.
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (3 entries).

@@ -658,7 +658,8 @@ batch)
   [`glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md`](/plans/archive/2026_08/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md),
   [`glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`](/plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md),
   [`image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md`](/plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md),
-  [`mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md`](/plans/active/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md),
+  [`mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md`](/plans/archive/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md)
+  (archived 2026-08-14, resolved),
   [`promote_ref_orphaned_on_manual_pr_close_2026_08_06.md`](/plans/active/issues/promote_ref_orphaned_on_manual_pr_close_2026_08_06.md),
   [`provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`](/plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md),
   [`workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md`](/plans/active/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md)

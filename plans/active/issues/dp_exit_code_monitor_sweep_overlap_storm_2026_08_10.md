@@ -40,6 +40,13 @@ archive_exempt: true
 resolved_by:
 last_updated: 2026-08-13
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md,
+    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
+    deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+  ]
 source: >-
   Found during the 2026-08-10 scheduled /data-pipeline-alerts-reconcile sweep. Live evidence: `gcloud run jobs
   executions list` shows 4-6 concurrent "Waiting for execution to complete" rows for the exit-code-monitor at any time;
@@ -113,7 +120,7 @@ until the next sweep) and is a stopgap, not the root fix.
       classify/route/emit sequential to preserve the shared-state discipline (findings sink, `_EMITTED_THIS_SWEEP`,
       RESOLVED bookend). Fallback if not immediately shippable: reduce cron cadence to match sweep duration (stopgap
       only, trades detection latency). Repo: deployment-service.
-- [ ] [BACKEND] P1. **ADDED 2026-08-14 (slot 15, infra live-verify)** — the shipped `ThreadPoolExecutor` fix
+- [x] [BACKEND] P1. **ADDED 2026-08-14 (slot 15, infra live-verify)** — the shipped `ThreadPoolExecutor` fix
       (`deployment-service@069ced1412`) is LIVE but empirically NOT sufficient: 3 consecutive hourly executions on 08-13
       (21:27, 22:00, 23:00 — all AFTER the fix landed) each still hit the full 1800s task-timeout, the same failure mode
       as pre-fix. Live logs from a 4th execution (08-14 00:00) show per-VM classification lines spaced ~30-90s apart
@@ -126,7 +133,16 @@ until the next sweep) and is a stopgap, not the root fix.
       `_SWEEP_IO_MAX_WORKERS=32` was sized for, or (d) GCS API throttling under 32 concurrent readers is itself
       producing the observed 30s stalls. Verify with a timed/profiled sweep run (log phase boundaries) before attempting
       another fix. Full evidence in `/plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md` Progress Log,
-      2026-08-14 entry. Repo: deployment-service.
+      2026-08-14 entry. Repo: deployment-service. — ✅ Confirmed candidate (a): the terminated-VM classify loop
+      independently re-downloaded the SAME run.log blob up to 3x per VM (`no_capture_reason_from_run_log`, then
+      `run_log_signals`, then `error_snippet_from_run_log`), each a separate GCS round-trip — this is what the
+      ~30-90s-per-VM classify-loop spacing measured. Fixed by fetching run.log once per VM (lazily) and reusing the text
+      across all consumers; regression test asserts ≤1 download per VM. `deployment-service@3c9d65dd50`, QG green.
+- [ ] [BACKEND] P2. **ADDED 2026-08-14 (slot 12, follow-up)** — Live-verify the redundant-download dedup
+      (`deployment-service@3c9d65dd50`) actually collapses the exit-code-monitor sweep under its 1800s task-timeout:
+      check the next few hourly Cloud Run executions after this fix deploys. If still timing out, candidates (b) fleet
+      size past `_SWEEP_IO_MAX_WORKERS=32` and (c) GCS throttling under 32 concurrent readers (see the original
+      investigate-todo above) remain unaddressed and need their own timed/profiled sweep run. Repo: deployment-service.
 
 ## Related
 
@@ -139,6 +155,19 @@ until the next sweep) and is a stopgap, not the root fix.
 
 ## Progress Log
 
+- 2026-08-14 (slot 12, backend): Picked up the 08-14 investigate/fix todo. Root cause confirmed: the terminated-VM
+  classify loop in `exit_code_fleet_monitor.sweep()` called `no_capture_reason_from_run_log`, then (on SILENT)
+  `run_log_signals`, then (once a finding fires) `error_snippet_from_run_log` — each independently downloading the SAME
+  `run.log` blob via `_gcs.read_text`, up to 3x per VM. The earlier `ThreadPoolExecutor` fan-out (069ced1412)
+  parallelized reads ACROSS VMs but did nothing for this redundancy WITHIN one VM's classify path — consistent with the
+  measured ~30-90s-per-VM spacing once the read phase was already fast. Fix: fetch run.log once per VM (lazily, only
+  when `needs_reason`), reuse the text across all three consumers via new pure `_from_text`/`_text` variants in
+  `_gcs.py` (`run_log_signals_from_text`, `error_snippet_from_log_text`, `run_log_shows_stall_text`). Added a regression
+  test (`test_sweep_gone_no_capture_downloads_run_log_at_most_once`) asserting ≤1 download per swept VM.
+  `deployment-service@3c9d65dd50`, QG green (had to trim two docstrings to stay under the 960-line file cap on
+  `_gcs.py`). Flipped the investigate/fix todo done; added a P2 follow-up todo to live-verify this actually collapses
+  the sweep under its 1800s timeout (candidates (b) fleet size / (c) GCS throttling from the original todo are still
+  unconfirmed either way).
 - 2026-08-14 (slot 15, infra): While live-verifying the sibling OOM doc's gated todo, found the shipped parallelize fix
   (`069ced1412`) is live but NOT resolving the timeout — 3 consecutive post-fix hourly executions on 08-13 (21:27,
   22:00, 23:00) all still hit the full 1800s timeout, identical to pre-fix behavior. Added a new P1 investigate/fix todo
@@ -162,3 +191,5 @@ this task because it remains the SOURCE doc for still-open DERIVED todos in OTHE
 §2. Archiving the source out from under those would orphan their references; closing/retiring them is a
 `/plan-reconcile` coordination, not a single-worker flip. Drop `archive_exempt: true` and `git mv` to
 `plans/archive/2026_08/issues/` once those derived todos are reconciled.
+
+- **context-scout 2026-08-14**: populated context_scope (4 entries).

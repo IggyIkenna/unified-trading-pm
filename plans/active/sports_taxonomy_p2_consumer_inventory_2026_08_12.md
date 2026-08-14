@@ -47,6 +47,13 @@ source: ["P2's Consumer-enumeration gating todo, dispatched to slot 32, 2026-08-
 locked_by:
 locked_since:
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_taxonomy_p2_migration_2026_08_08.md,
+    /plans/active/sports_taxonomy_p3_consumers_2026_08_08.md,
+    /codex/02-data/entity-rename-and-split-consumer-migration-rule.md,
+    instruments-service/scripts/enumerate_expected_universe.py,
+  ]
 ---
 
 # Sports taxonomy P2 — consumer inventory
@@ -435,3 +442,4 @@ confirmed, per CLAUDE.md).
   `enumerate_expected_universe.py` override-dict precedent as the load-bearing lesson, the `league=`/`league_id=`
   plan-text contradiction, and 4 independent copies of the same path-prefix logic across features-service/ml-service.
   `strategy-service` explicitly not covered — flagged as a stated blind spot, not silently omitted.
+- **context-scout 2026-08-14**: populated context_scope (4 entries).

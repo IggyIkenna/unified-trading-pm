@@ -29,6 +29,10 @@ related:
     /codex/06-coding-standards/model-tier-selection.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
   ]
+context_scope:
+  - agent-orchestrator/server/state_store/account_usage.py
+  - agent-orchestrator/server/usage_poller.py
+  - agent-orchestrator/server/model_pricing.py
 created: 2026-08-12
 last_updated: 2026-08-13
 parent_epic: orchestrator_master
@@ -316,3 +320,7 @@ averaged together.
       but partial (sub-f was already at weekly_pct=100% mid-window as of this check).
 - [ ] [OPERATOR] P3. **sub-e stays excluded** from calibration until it goes untouched interactively through a full
       weekly reset (contamination noted above still stands).
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (3 entries).

@@ -25,29 +25,6 @@ code_refs: [agent-orchestrator/server/model_pricing.py]
 
 > **The rule in one line**: if two tool calls do not depend on each other's results, they belong in ONE call.
 
-## The trigger is PRE-call, not post-hoc
-
-State the rule as a thing to do **before** a call, or it will not change behaviour:
-
-> **Before any Bash/Read/Grep, ask: _what else will I want to know regardless of how this one comes out?_ Fold that into
-> the same call.**
-
-This matters because the earlier phrasing ("batch independent calls") describes an OUTCOME. An outcome-shaped rule is
-one you can only grade yourself against after the fact, when the round-trip is already spent and the finding is "noted
-for next time" — which never arrives, because the next call has its own new context and the same instinct fires. The
-pre-call question has a checkable answer at the only moment the answer is still actionable.
-
-Measured failure of the outcome phrasing (2026-08-11 session): a `PreToolUse` hook printed the batching reminder **~88
-times in one session** and was acknowledged nearly every time without the next call changing shape. Acknowledging cost
-nothing and looked like compliance; the acknowledgement itself became the green signal with no behaviour behind it. If
-you find yourself agreeing with this rule more than once in a session, you are not applying it — treat the second
-reminder as evidence, not as a nudge.
-
-The question also has a useful side effect: it surfaces what you actually want to know. "What else, regardless?" tends
-to return the check you would otherwise have skipped (the `git status` alongside the `git diff`, the second repo's
-state, the file's size before you read it), so the batched call is usually a BETTER-informed call, not merely a cheaper
-one.
-
 ## Why this is expensive, not merely untidy
 
 An agent turn does not send "just the new message" — it re-reads the whole cached conversation prefix. So the cost of a
@@ -104,6 +81,61 @@ possible result. If the answer is "nothing", they are independent — batch them
 A role doc, runbook, or skill that walks an agent through a numbered one-command-per-step procedure is actively teaching
 the anti-pattern, and undermines this rule wherever it is loaded. Prefer "run these together" phrasing, and reserve
 numbered sequential steps for genuinely ordered work.
+
+## A written rule alone already failed once — the hooks that enforce it (2026-08-11 to 2026-08-14)
+
+This doc's own baseline measurement (below) is what a WRITTEN rule alone produced: `SUB_AGENT_MANDATORY_RULES.md`
+carried a batching directive from ~2026-08-05, and five days later a controlled re-measurement still found 57.3% of ALL
+calls sitting in collapsible chains. Restating the rule a third time was not going to fix it — the fix was moving
+enforcement to the moment the behavior happens, not to session-start context competing with everything else:
+
+- **`PostToolUse` nudge** (`cursor-configs/hooks/batching-nudge.py`) — fires in-loop on the 2nd+ consecutive
+  round-tripped same-tool call (calls inside one message are correctly distinguished from a real round-trip by latency,
+  not tool identity — see that hook's own docstring for why a naive same-tool counter punishes CORRECT batching). Fires
+  earlier and harder on repeated same-file `Edit` calls specifically, since a later edit almost never depends on an
+  earlier edit's own `tool_result`.
+- **`PreToolUse` hard block** (`cursor-configs/hooks/block-same-file-edit-spam.py`, 2026-08-14) — the one case measured
+  confident enough to actually DENY rather than nudge: the 5th+ consecutive round-tripped `Edit` call on the SAME file.
+  `replace_all: true` and `Write` are always exempt/valid escape hatches, so this can never wedge an agent — it can only
+  be escaped WITH the batched fix, never by retrying the identical pattern. Every other tool stays nudge-only; a real
+  block needs a much higher false-positive bar than an advisory (see that hook's own module docstring for the full
+  reasoning on why Bash/Read/Grep chains are NOT safe to hard-block the same way).
+- Measured after both hooks + a lowered nudge threshold: laptop multi-tool-turn% 6.4%→7.6% and AO 6.3%→9.8% within ~2.5h
+  of shipping (2026-08-14, small early sample — direction real, magnitude not yet proof of a durable shift). Fleet-wide
+  propagation is automatic: both hooks live in the git-tracked, per-slot-symlinked `cursor-configs/hooks/` dir (see
+  `/codex/05-infrastructure/claude-code-settings-symlink.md`), and Claude Code watches `settings.json` live — no session
+  restart needed to pick up either a logic change or a brand-new hook entry.
+
+## Authoring-time: reduce the calls a task NEEDS, not just how it makes them
+
+Everything above governs the EXECUTING agent's own habits. It says nothing about whether the TASK ITSELF arrived needing
+fewer calls in the first place — a vague todo forces an exploratory Grep pass no hook can collapse away, because there
+is genuinely nothing to batch yet at the moment the agent starts. Two authoring-time levers, both real gaps found and
+fixed 2026-08-14 (`tool_call_batching_authoring_gap_2026_08_14`):
+
+- **Cite the symbol/file, not just the mechanism.** `plans/active/task_template.md`'s existing specificity rules (cite
+  symbols not line numbers, state the literal action verb, state a concrete definition-of-done) exist for plan
+  durability and dispatch-correctness — but the SAME rules are what let a worker reach its first `Edit`/`Write` call in
+  one or two round-trips instead of eight. A todo that names a mechanism but no file/symbol ("move the loader off its
+  PATH-PREFIX read") guarantees a Grep before any edit is possible; one that names the exact function/table
+  (`_sweep_account`, `deepseek_message_usage`) does not. This mirrors Anthropic's own published guidance on scoping
+  agent prompts to one file/scenario and pointing at exact patterns rather than describing a problem in the abstract
+  (`code.claude.com/docs/en/best-practices`, "Provide specific context in your prompts").
+- **`context_scope` must actually reach the worker, not just the plan file.** `task_template.md` §2a has authors
+  pre-compile a reading-list (codex SSOTs, related docs, key paths) at authoring time specifically so a worker doesn't
+  re-derive it. Until 2026-08-14 this field was parsed by `/context-scout` and then discarded — never propagated past
+  `regen_backlog_from_plan.py` into the actual `/boot` payload a worker receives, so every dispatched task paid for
+  context-gathering a plan author had already done for it. Fixed: `context_scope` now threads through
+  `BacklogTask`/`TaskBrief`/`to_task_brief` end-to-end (`server/regen_backlog_from_plan.py`'s
+  `parse_frontmatter_context_scope`, `server/dispatch.py`'s `to_task_brief`), and `agents/worker.md` now instructs a
+  worker to read every `context_scope` entry as part of its normal startup reads, batched — not grep around for context
+  already handed to it.
+- **Unscoped "investigate X" tasks are a named anti-pattern, not just a style nit** — Anthropic's own Claude Code docs
+  name this "the infinite exploration": an unscoped investigation fills context with hundreds of file reads, and the
+  documented fix is either narrow the scope or route it through a subagent whose only output is a compiled summary. This
+  is the SAME failure mode CLAUDE.md's own dispatch-eligibility rule already targets ("AO-eligible = outcome
+  determinable by the worker alone... resolve open-ended judgment calls as a LOCAL plan first") — the gap is
+  enforcement, not the rule's existence.
 
 ## Baseline for re-measurement
 

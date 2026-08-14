@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [cross-cutting, ao-dispatch, satellite-batch, na-eligibility-audit, ag-closeout-audit]
 related: [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
+    /plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md,
     /plans/active/bucket_estate_consolidation_closeout_2026_07_24.md,
     /plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md,
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
@@ -81,8 +81,11 @@ source: >-
 - [ ] [INFRA] P3. document which live services rely on the default-compute-SA and what secrets/buckets they can
       therefore reach (bounded documentation task) Source:
       `plans/active/issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`
-- [ ] [DIAG] P2. verify the exact CME instrument_id string format for FUTURE contracts against the live catalogue before
-      implementing tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md's already-ruled fix Source:
+- [x] ✅ [DIAG] P2. verify the exact CME instrument_id string format for FUTURE contracts against the live catalogue
+      before implementing tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md's already-ruled fix —
+      unified-trading-pm@db37be4e4b (2026-08-14: confirmed `CME:FUTURE:<PRODUCT_ROOT>-USD@LIN-YYYYMMDD` via 3 convergent
+      code sites + a bounded live read of `prod/catalog.parquet`; recorded in both the source issue doc and
+      `tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`'s todo 1) Source:
       `plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md`
 - [ ] [CODE] P2. Diagnose how strategy-service's LDR HEAD went gate-red (clean-checkout re-run + git log -S on the
       introducing commits) Source:
@@ -159,19 +162,27 @@ source: >-
 - [ ] [CODE] P2. P9.2 -- run scripts/repo-management/run-version-alignment.sh --fix in strategy-service after pulling
       main in PM; small, deterministic, worth a fresh re-verify since it may already be stale/resolved. Source:
       `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`
-- [ ] [CODE] P2. Phase 1c: wire the drain registry into MTDS/MDPS/instruments-service/features-service backfill
-      entrypoints Source: `plans/active/alert_driven_dependency_revocation_2026_08_12.md`
-- [ ] [CODE] P2. Phase 1: add the flush-contract doc to spot-vms-for-backfill.md Source:
-      `plans/active/alert_driven_dependency_revocation_2026_08_12.md`
-- [ ] [CODE] P2. Phase 2: add DependentAction StrEnum + evaluate_revocation() + alert-action map to UAC (code already
-      written, blocked only on an unrelated peer's dirty tree clearing) Source:
-      `plans/active/alert_driven_dependency_revocation_2026_08_12.md`
-- [ ] [CODE] P2. Phase 3: add RetryBudget/RETRY_BUDGETS registry to UAC with the documented default ladder Source:
-      `plans/active/alert_driven_dependency_revocation_2026_08_12.md`
-- [ ] [CODE] P2. Phase 4: add the push actuator in deployment-service that consults evaluate_revocation() with no policy
-      branch of its own Source: `plans/active/alert_driven_dependency_revocation_2026_08_12.md`
-- [ ] [CODE] P2. Phase 5: add the VM-side drain-marker poll hook and Cloud Run admission-check skip gate Source:
-      `plans/active/alert_driven_dependency_revocation_2026_08_12.md`
+- [x] ✅ [CODE] P2. Phase 1c: wire the drain registry into MTDS/MDPS/instruments-service/features-service backfill
+      entrypoints. **STALE DUPLICATE, closed 2026-08-14** — this whole plan shipped and archived; Phase 1 landed
+      `unified-trading-library@2aacde1359` (structural fix, not a 4-repo edit — see the archived plan's Phase 1 todo 9).
+      Source: `plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`.
+- [x] ✅ [CODE] P2. Phase 1: add the flush-contract doc to spot-vms-for-backfill.md. **STALE DUPLICATE, closed
+      2026-08-14** — landed same commit as above. Source:
+      `plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`.
+- [x] ✅ [CODE] P2. Phase 2: add DependentAction StrEnum + evaluate_revocation() + alert-action map to UAC. **STALE
+      DUPLICATE, closed 2026-08-14** — landed `unified-api-contracts@c206f910` (all 7 todos). Source:
+      `plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`.
+- [x] ✅ [CODE] P2. Phase 3: add RetryBudget/RETRY_BUDGETS registry to UAC with the documented default ladder. **STALE
+      DUPLICATE, closed 2026-08-14** — landed `unified-api-contracts@c206f910` + `instruments-service@1ae4b7d0` +
+      `market-tick-data-service@554adf49` (all 8 todos). Source:
+      `plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`.
+- [x] ✅ [CODE] P2. Phase 4: add the push actuator in deployment-service that consults evaluate_revocation() with no
+      policy branch of its own. **STALE DUPLICATE, closed 2026-08-14** — landed `deployment-service@e38b2a0e` +
+      `@67e3b36c` (all 9 todos). Source: `plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`.
+- [x] ✅ [CODE] P2. Phase 5: add the VM-side drain-marker poll hook and Cloud Run admission-check skip gate. **STALE
+      DUPLICATE, closed 2026-08-14** — landed `deployment-service@67e3b36c` + `deployment-api@0d3f1cc` +
+      `unified-trading-library@ad29bd9f` (all 8 todos). Source:
+      `plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`.
 - [ ] [CODE] P2. Remove BLRS Stage 4's _write_agent_report() write path once superseded Source:
       `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md`
 - [ ] [CODE] P2. File the dead-mode-kwarg bug (execution_fills/positions/strategy_instructions/pnl_attribution all

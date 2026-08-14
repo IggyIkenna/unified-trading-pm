@@ -36,6 +36,12 @@ related:
     /plans/epics/mtds_mdps_master.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
+context_scope:
+  [
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+    /plans/epics/mtds_mdps_master.md,
+    market-data-processing-service/market_data_processing_service/app/adapters/cefi/trades_adapter.py,
+  ]
 created: "2026-08-12"
 author: slot-3
 priority: P2
@@ -122,6 +128,8 @@ line.
       for any shard whose failure resolves to this exact root cause.
 
 ## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (3 entries).
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).

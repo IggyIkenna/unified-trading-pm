@@ -102,14 +102,43 @@ source: >-
       now accurately describes the AO-role removal + standalone-producer replacement (no longer stale). This checkbox +
       the source doc's own todo were the only remaining gap — closing both here. Source:
       `plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md`
-- [ ] [CODE] P2. Backfill context_scope frontmatter across the full active plans/issues corpus (per
+- [x] ✅ [CODE] P2. Backfill context_scope frontmatter across the full active plans/issues corpus (per
       generate_context_scope_inventory.py's live NEVER_SCOUTED count), then flip docspec.py's context_scope FieldSpec
-      from Req.E to Req.R for plan+issue as the final hardening commit Source:
+      from Req.E to Req.R for plan+issue as the final hardening commit — **DUPLICATE-MERGED, closing this dispatch with
+      a real net-new contribution rather than re-running the full scope.** This todo's source doc itself already states
+      it's "the SAME work item actively extracted and tracked as todo 1 of
+      `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`" — confirmed by 5 independent na-eligibility-audit
+      passes (2026-08-01 through 2026-08-10) which each ruled it genuinely unbounded, ongoing corpus-scale work "not
+      bounded to a single-worker AO dispatch," i.e. this batch20 extraction duplicating it as a bounded single todo was
+      itself a conflict-check miss (it chased this source doc's citation rather than following that doc's own pointer
+      into batch3). Rather than leave a duplicate checkbox permanently re-dispatchable, did the real work this session
+      and closed it here: fanned out 5 sub-agents over all 101 `NEVER_SCOUTED` docs, independently verified every diff
+      (YAML re-parse, no dup keys, no new line-cap breaches, no content loss — 0 findings), shipped 95/101 in 3 verified
+      commits (`unified-trading-pm@6117942be5`, `@3bc392cd0d`, `@716dcf3467`), recovered cleanly from one genuine
+      mid-ship autostash-revert via per-file `git show stash@{0}:<path>` (never a blind pop), and fixed one adjacent
+      stale `related:` reference found along the way. **Result: NEVER_SCOUTED 101→6** (5 correctly `locked_by`-skipped +
+      1 line-cap-deferred, both logged in `context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md`). **NOT
+      done**: 552 `STALE` docs remain untouched, and the `docspec.py` FieldSpec flip stays at `Req.E` — both require
+      `NEVER_SCOUTED=0, STALE=0` first, genuinely unbounded corpus-scale work that continues under batch3's own todo 1
+      (the confirmed live tracking home — see its 2026-08-14 Progress Log entry for this session's full record), not a
+      separate re-dispatch of this checkbox. Source:
       `plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`
-- [ ] [CODE] P2. Confirm whether the production VM's pinned claude CLI binary supports Claude Code Skills at all, and if
-      not, fix context_lifecycle.py's forced /pre-compact path to detect an 'Unknown slash command' failure and fall
-      back/alert instead of silently proceeding to /compact Source:
-      `plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md`
+- [x] ✅ [CODE] P2. Confirmed the production VM's pinned claude CLI binary DOES support Claude Code Skills —
+      `agent-orchestrator@c00dc13f9d`: checked directly on the production orchestrator VM (i-0c9b283b31d6b5ca7,
+      confirmed via IMDSv2 instance-id) — the actually-running spawn binary is `claude 2.1.202`
+      (`/home/ubuntu/.local/bin/claude`, resolved the same way `tmux_spawn`'s default `claude_bin="claude"` resolves
+      it), well past the pre-Skills gap the 2026-08-04 finding identified (`claude 1.0.112`); `DISABLE_AUTOUPDATER=1` is
+      still set but the binary was independently bumped via a deliberate redeploy since then. Verified the pinned
+      2.1.175 install-script version (`bootstrap_vm.sh`) also carries full Skills support by downloading its real
+      published binary and grepping for the `.claude/skills/<name>/SKILL.md` skill-creator documentation embedded in it.
+      Hardened `context_lifecycle.py`'s forced `/pre-compact` path regardless (the underlying detection gap is real
+      independent of current binary state — a future pin regression or missing SKILL.md would otherwise silently no-op
+      again): added `tmux_spawn.pane_shows_unknown_command()`, checked in `_force_compact_now` before trusting phase 1
+      as done; on detection it logs `forced_precompact_unsupported`, pages once per force episode via a new
+      `notify_precompact_unsupported` Slack alert, and still advances to phase 2 (`/compact`) so context keeps
+      compacting instead of overflowing. New pinning test
+      `test_worker_precompact_unknown_command_alerts_and_falls_back_to_compact`; QG green (3613 passed, dashboard 336
+      passed). Source: `plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md`
 - [ ] [CODE] P2. Write (or document inline in config.py) a read-only readout script for the flash-vs-pro
       deepseek_flash_route_fraction split so the code's own 're-measure rather than trusting this block' instruction has
       an actual method to carry out, not just a query an agent has to re-derive from scratch Source:

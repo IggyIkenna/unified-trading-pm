@@ -496,6 +496,36 @@ a GENUINE cross-repo breaking gate — the SIT equivalent that staging provided 
 Layers 1–3b, these invariants are checked in `system-integration-tests/.github/workflows/full-workspace-sit.yml` (the
 CI/CD boundary, not a pytest suite), run on the full 21-repo assembly.
 
+### The venue-coverage cascade — operator ruling 2026-08-14
+
+**Where this class of check belongs**: within one repo, `quality-gates.sh`. **Across repos, SIT** — because no single
+repo's gate can see the other side of the implication.
+
+The cascade is **directional**, and the direction is the whole point. Each layer's venue coverage is forced by the layer
+before it, never the reverse:
+
+| #   | Invariant                                                                                 | Direction                                                                              |
+| --- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| 1   | Every MTDS **batch** capture adapter has a **live** capture adapter                       | batch ⟹ live. **NOT the reverse** — a live venue may legitimately predate its backfill |
+| 2   | Every MTDS venue has a strategy-service position reader on **batch, live AND paper**      | MTDS ⟹ strategy, all three paths                                                       |
+| 3   | Every venue strategy-service supports (batch/live/paper) has an execution-service adaptor | strategy ⟹ execution                                                                   |
+
+**Why each direction is asymmetric on purpose.** Reverse-implication would be wrong in every case: an execution adaptor
+for a venue no strategy trades is harmless dead code, a strategy reader for an uncaptured venue is merely premature, and
+a live capture adapter without a batch one is the normal way a venue is onboarded. Only the forward direction represents
+a real defect — **capability to ACT without capability to SEE**.
+
+**The defect this exists to catch** (measured 2026-08-14,
+`/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`): execution-service ships ~30
+DeFi protocol modules while strategy-service ships 3 position adapters, so ~27 protocols could be traded and not
+reconciled — including Lido, Marinade, Kamino and Jupiter, i.e. both legs of the two DeFi archetypes shipping real.
+Nothing detected it; it took a manual audit. Invariant 3 is the one that would have failed.
+
+**Scope caution for the implementer.** Asserting a venue MODULE exists is not asserting it handles every
+`InstructionActionV2` an archetype may emit for that venue — a module that swaps but cannot stake would pass a naive
+existence check. Invariant 3 must compare against the instruction ACTIONS the strategy side can emit, not against venue
+names alone, or it will score the gap it was built to find as green.
+
 ### Pattern: per-repo cross-repo invariant (negative-control-proven)
 
 Each ldr_main repo R contributes one cross-repo invariant to `run_cross_repo_invariants.sh`:

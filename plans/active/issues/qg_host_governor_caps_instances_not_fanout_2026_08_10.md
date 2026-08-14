@@ -36,6 +36,12 @@ last_updated: 2026-08-10
 locked_by:
 locked_since:
 resolved_by:
+context_scope:
+  [
+    scripts/quality-gates-base/qg-host-governor.sh,
+    /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md,
+    /codex/06-coding-standards/quality-gates.md,
+  ]
 ---
 
 # The instance cap does not model per-instance fan-out
@@ -100,3 +106,7 @@ deliberate decision rather than changed mid-session.
       queue-wait; extend that to CPU-starvation, or report duration as a WARN plus a separate hard ceiling. **Done
       when**: a gate that is green on every substantive check is not blocked by a host-load artifact, and a
       genuinely-slow gate still fails.
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (3 entries).

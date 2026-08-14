@@ -18,6 +18,11 @@ repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [infra, plan-hygiene, ratchet, evidence, commit-sha, qg-red]
 related: [/plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md]
+context_scope:
+  [
+    /plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md,
+    unified-trading-pm/scripts/quality_gates/check_plan_commit_sha_evidence.py,
+  ]
 created: 2026-08-10
 author: slot-20 (infra worker)
 parent_epic: plan_hygiene_master
@@ -102,6 +107,8 @@ check exists to catch.
       (slot-11): 2832 citations, 0 unresolvable. — unified-trading-pm@72adcb234c
 
 ## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (2 entries).
 
 - **2026-08-10 (slot-19, data_engineering worker adopting infra role)**: Citation already fixed by commit `5f5654c90e`
   (18th dispatch agt-e56165) which replaced `0f9b8a65ca` with `034cb4e2ad` in the target plan. Ratchet verified green:

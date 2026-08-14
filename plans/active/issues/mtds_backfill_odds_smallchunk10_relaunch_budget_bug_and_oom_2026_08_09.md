@@ -35,6 +35,13 @@ repos: [deployment-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [dp-vm-stall, relaunch-budget, oom, mtds, odds-api, sports, escalation]
 related: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md]
+context_scope:
+  [
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+    deployment-service/deployment_service/vm_prefix_registry.py,
+    deployment-service/scripts/recovery/relaunch_stalled_vm.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py,
+  ]
 created: "2026-08-09"
 author: data_pipeline_failure-worker-slot5
 parent_epic: infrastructure_master
@@ -128,6 +135,8 @@ Two independent paths, not mutually exclusive:
       (fixed above, `mtds-backfill-odds-` bucket currently at 0/2 today).
 
 ## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (4 entries).
 
 - **2026-08-09**: Filed by the `data_pipeline_failure` worker (slot 5) dispatched for escalation `agt-adfeaf`. Found +
   fixed the relaunch-budget cross-contamination bug inline (todo 1). Did not perform the VM relaunch itself — the

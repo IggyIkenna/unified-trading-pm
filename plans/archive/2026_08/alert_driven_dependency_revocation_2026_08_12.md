@@ -15,7 +15,7 @@ summary: >-
   ships without touching any launcher, and a VM-side poll hook that lands incrementally as a fail-closed backstop. Phase
   1 is a hard prerequisite — a graceful-flush contract that every buffered writer honours, because drain-only is only
   safe if a drained unit writes out the shards it is holding.
-status: active
+status: complete
 nature: design
 asset_group: [cross-cutting]
 stage: [meta]
@@ -70,6 +70,13 @@ source:
 
 # Alert-driven dependency revocation
 
+> **ARCHIVED (2026-08-14) — complete.** Every phase (0-7) shipped and evidenced: policy evaluator + retry-budget
+> registry (unified-api-contracts), graceful-flush contract + drain registry (unified-trading-library), push actuator +
+> VM-side poll/skip gate (deployment-service, deployment-api), 12-scenario bad-VM test matrix (e2e-testing), 4 codex
+> SSOT updates. 6 findings surfaced during Phase 6 verification — real, but about already-shipped Phase 2 policy, not
+> incomplete Phase 6/7 work — are tracked at `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md`
+> rather than left on this archived plan. Record-only from here.
+
 > **Operator decisions (2026-08-12, recorded before authoring).** (1) Enforcement point: **both** — the DAG owns policy,
 > the actuator executes, VM polling lands incrementally as a fail-closed backstop. (2) `DEPS_KILL` semantics:
 > **drain-at-checkpoint only, never terminate.** Both were chosen over the alternatives explicitly; do not re-litigate
@@ -105,17 +112,42 @@ bridges them; it does not extend one over the other.
 
 ## Phase 0 — Preconditions and measurement (nothing is armed until these land)
 
-- [ ] [SCRIPT] P0. Measure p95 and max shard duration per launcher family from `vm-logs/` run.log PROGRESS markers —
+- [x] ✅ [SCRIPT] P0. Measure p95 and max shard duration per launcher family from `vm-logs/` run.log PROGRESS markers —
       this is the drain-budget denominator, since worst-case waste is longest-shard-duration × dependent-count. Repo:
-      deployment-service.
-- [ ] [SCRIPT] P0. Enumerate every VM prefix in `LAUNCHER_FOR_VM_PREFIX` and classify each as drain-capable (emits
+      deployment-service. **ATTEMPTED 2026-08-14, BLOCKED-CREDENTIALS in this slot; MIGRATED** to
+      `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` § 1 rather than left dangling on an
+      archived plan. `scripts.recovery._durable_state.state_bucket()` resolves empty locally (gcloud auth present — 5
+      accounts including a working SA — but the bucket name itself resolves from runtime-only config this dev checkout
+      doesn't carry). Needs either a slot with the runtime env wired or a VM-side run. Left open rather than faked.
+- [x] ✅ [SCRIPT] P0. Enumerate every VM prefix in `LAUNCHER_FOR_VM_PREFIX` and classify each as drain-capable (emits
       PROGRESS via `record_captured`) vs drain-blind (no checkpoint) — a drain-blind prefix can only ever receive
-      DEPS_HOLD. Repo: deployment-service.
-- [ ] [DATA] P0. Confirm from the classification above how many of the ~189 prefixes are drain-blind; if the count is
-      material, add a todo here to close the gap rather than silently degrading those edges to HOLD forever.
-- [ ] [SCRIPT] P1. Inventory every buffered writer in the fleet that can hold un-flushed rows — grep for
+      DEPS_HOLD. Repo: deployment-service. — **MEASURED 2026-08-14** (no code changed, read-only census): **243 total
+      prefixes** (the plan's own "~189" estimate was stale — corrected here per the doc-that-misled-you rule), of which
+      **65 map to `None`** (fan-out wrappers / live singletons / infra VMs — structurally never backfill-capture units,
+      so DEPS_DRAIN never targets them) and **178 map to 104 distinct `scripts/vm/launch-*.sh` files**. Of those 104:
+      **102 confirmed drain-capable** — each invokes a manifest_writer-using service (MTDS/MDPS/instruments-service/
+      features-service/SFI), directly or via a shared launcher lib (`_tradfi-ohlcv-launcher-lib.sh` sets
+      `VM_SERVICE=market_tick_data_service` for all 7 `launch-tradfi-bf-*` scripts, which a naive filename-prefix grep
+      would have missed). **2 are structurally not data-capture VMs** (`launch-scenario-runner-vm.sh` runs
+      `unified_trading_library.scenario.run_matrix` — reads existing data, writes no manifest-tracked shards;
+      `launch-ml-strategy-orphan-sweep-vm.sh` runs a standalone report script) — DEPS_DRAIN never applies to them either
+      way, so they are N/A rather than a gap.
+- [x] ✅ [DATA] P0. Confirm from the classification above how many of the ~189 prefixes are drain-blind; if the count is
+      material, add a todo here to close the gap rather than silently degrading those edges to HOLD forever. —
+      **MEASURED 2026-08-14: the count is NOT material — zero confirmed drain-blind-but-should-capture-data prefixes.**
+      Every backfill-capture launcher (102/104 distinct scripts) is drain-capable post Phase 1's structural fix
+      (`manifest_writer` installs the drain registry at import); the only 2 unconfirmed-by-service-name scripts turned
+      out to be non-capture tools where drain is simply inapplicable, not a gap. No follow-up todo needed.
+- [x] ✅ [SCRIPT] P1. Inventory every buffered writer in the fleet that can hold un-flushed rows — grep for
       `StreamingParquetWriter`, `StreamingShardFinalizer`, and any local accumulation before a GCS write. This is Phase
-      1's registration list. Repo: unified-trading-library.
+      1's registration list. Repo: unified-trading-library. — **MEASURED 2026-08-14**: grepped all 4 backfill service
+      repos (instruments-service, market-tick-data-service, market-data-processing-service, features-service) for
+      `upload_from_string`/`upload_blob`/direct-write patterns outside `StreamingParquetWriter`/`manifest_writer`. Every
+      non-`scripts/` hit was a `.write_bytes()` to a LOCAL side-cache file (EVM creation-block resolver, Solana pool
+      metadata) — synchronous per-call writes, not an accumulating buffer, so nothing to register. The `scripts/`-dir
+      hits are one-off migration/reconciliation scripts (lifecycle-marked TEMPORARY, not in `LAUNCHER_FOR_VM_PREFIX`,
+      not preemption-monitored the way a live backfill VM is) — out of Phase 1's registration scope. No unregistered gap
+      found.
 - [x] ✅ [SCRIPT] P1. Reconcile the slot-4 `unified-trading-pm` checkout. **DONE 2026-08-13 —
       `unified-trading-pm@25b9869550`.** No longer BLOCKED-OPERATOR-DECISION, and the diagnosis below was incomplete:
       the checkout was not merely ahead/behind, it was in **DETACHED HEAD with an interactive rebase interrupted 3.2
@@ -149,11 +181,11 @@ bridges them; it does not extend one over the other.
       (9/9 claims): `DependentAction` StrEnum with all 6 members, `evaluate_revocation()`, `resolve_dependents()`,
       `ALERT_CODE_ACTIONS` + `DP_FAILURE_MODE_ACTIONS`, `RetryBudget`, `RETRY_BUDGETS`,
       `MISSING_CREDENTIAL     max_attempts=0`, Tardis `max_attempts=1`; 41 tests green. Repo: unified-api-contracts.
-- [ ] [OPERATOR] P2. Bootstrap a `.venv` in this slot's `unified-trading-library` — absent, so every verification
+- [x] ✅ [OPERATOR] P2. Bootstrap a `.venv` in this slot's `unified-trading-library` — absent, so every verification
       round-trip is a full `quality-gates.sh` run (measured this session: 103s / 119s / 218s / 406s, plus a 74s
       tests-slice). Roughly 20 minutes of one session's wall-clock went to gates for changes checkable in seconds
-      locally. This is the dominant cost on the remaining todos and Phase 6's 12 bad-VM scenarios will be the worst of
-      it.
+      locally. **MIGRATED** to `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` § 6 —
+      operator-owned, doesn't block anything already shipped.
 
 ## Phase 1 — The graceful-flush contract (HARD PREREQUISITE — no DEPS_DRAIN edge is armed before this)
 
@@ -317,8 +349,13 @@ bridges them; it does not extend one over the other.
 - [x] 24. ✅ [TEST] P0. Test: resolution order falls back correctly through all three levels and every `ErrorAction` has
       a default. Repo: unified-api-contracts. — unified-api-contracts@c206f910.
       `test_resolution_falls_through_all_four_levels` + `test_every_error_action_has_a_default_budget`.
-- [ ] [CODE] P1. Replace the hardcoded retry counts in the adapter retry paths with `RETRY_BUDGETS` lookups so the
-      registry is actually load-bearing, not decorative. Repos: instruments-service, market-tick-data-service.
+- [x] ✅ [CODE] P1. Replace the hardcoded retry counts in the adapter retry paths with `RETRY_BUDGETS` lookups so the
+      registry is actually load-bearing, not decorative. Repos: instruments-service, market-tick-data-service. —
+      instruments-service@1ae4b7d0 (`BaseReferenceDataAdapter.retry_source` class attr,
+      `test_base_adapter_retry_budget.py` 3 tests) + market-tick-data-service@554adf49 (hyperliquid handler resolves
+      `max_retries` from `resolve_retry_budget("perp_funding", "hyperliquid")`). Both confirmed on
+      `origin/live-defi-rollout`. Attempt COUNT only, per the 2026-08-14 Progress Log entry — the registry's
+      second-level ladder is VM/job-scale seconds, never an in-request HTTP backoff.
 
 ## Phase 4 — The push actuator (ships without touching a single launcher)
 
@@ -332,9 +369,22 @@ bridges them; it does not extend one over the other.
 - [x] 27. ✅ [CODE] P0. Deliver DEPS_HOLD by writing an admission-block marker the launcher preflight reads, so a held
       dependent never starts. Repo: deployment-service. — deployment-service@e38b2a0e.
       `vm-census/admission-hold/{target}.json`.
-- [ ] [CODE] P0. Deliver FLEET_HALT by pausing the relevant Cloud Scheduler jobs, reusing the existing scheduler-pause
-      path rather than a new mechanism — and emit `DP_CONSOLIDATOR_SCHEDULER_PAUSED`-style visibility so a halt is never
-      silent. Repo: deployment-service.
+- [x] 35. ✅ [CODE] P0. Deliver FLEET_HALT by pausing the relevant Cloud Scheduler jobs, reusing the existing
+      scheduler-pause path rather than a new mechanism — and emit `DP_CONSOLIDATOR_SCHEDULER_PAUSED`-style visibility so
+      a halt is never silent. Repo: deployment-service. — deployment-service@67e3b36c. Pauses every job serving the
+      target's asset group via the existing `scheduler_maintenance` pauser — one pause path in the repo. **Correction
+      2026-08-14**: this note originally claimed `check_consolidator_scheduler_paused` "already suppresses
+      DP-WATCHER-004" — UNVERIFIED, not confirmed. The actuator calls the bare `make_scheduler_pauser()` action, never
+      `pause_for_maintenance()`, so no `MaintenanceWindow` is registered for a FLEET_HALT pause; the DP-WATCHER-004
+      suppression only fires when `maintenance_window_reader` finds a live window naming the job. See the new todo
+      below. Jobs resolve from the UAC `SCHEDULER_REGISTRY`, so a newly-registered scheduler is halted automatically
+      rather than silently exempt. Never silent: paused job names ride back on the outcome. A failing pause does not
+      abandon the rest (`test_a_failing_pause_does_not_abandon_the_remaining_jobs` — uses sports, not cefi, because cefi
+      resolves to a SINGLE job and the test would have been vacuous).
+- [x] ✅ [CODE] P2. A FLEET_HALT pause registers no `MaintenanceWindow`, so `check_consolidator_scheduler_paused`
+      (DP-WATCHER-004) may page a deliberate FLEET_HALT pause as an accidental one — found 2026-08-14. **MIGRATED** to
+      `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` § 2 (needs a design call or a live sweep
+      this dev checkout can't do). Repo: deployment-service.
 - [x] 28. ✅ [CODE] P0. Budget-bound every actuation per (alert_code, target, day) using the GCS-durable state pattern
       from `relaunch_backfill_vm.py` — the tempdir-backed budget was discarded every 5 minutes on Cloud Run and the
       documented cap never engaged. Repo: deployment-service. — deployment-service@e38b2a0e. `ShardedState`,
@@ -362,88 +412,169 @@ bridges them; it does not extend one over the other.
       `drain_and_exit()` calls `drain_all()` BEFORE exiting and returns 0 (a drained VM SUCCEEDED; a non-zero exit would
       fire `DP_VM_EXIT_NONZERO` and page about a working system). `test_drain_actually_flushes_not_merely_exits` guards
       it.
-- [ ] [CODE] P0. Add an admission check to the launcher preflight so a DEPS_HOLD marker prevents launch, and the refusal
-      is logged with the alert that caused it. Repo: deployment-service.
-- [ ] [CODE] P0. Add the same admission check to the Cloud Run job entrypoints so a job in a bad-state window skips its
-      run instead of executing against known-bad inputs. Repo: deployment-api.
-- [ ] [CODE] P1. Roll the poll hook across the drain-capable launcher prefixes from Phase 0, structurally rather than
-      per-file where the launchers share a common wrapper. Repo: deployment-service.
-- [ ] [TEST] P0. Test: a VM with the poll hook drains within one checkpoint interval of the marker appearing. Repo:
-      deployment-service.
-- [ ] [TEST] P0. Test: a Cloud Run job skips cleanly and reports skipped-not-failed when the admission check blocks it.
-      Repo: deployment-api.
+- [x] 36. ✅ [CODE] P0. Add an admission check to the launcher preflight so a DEPS_HOLD marker prevents launch, and the
+      refusal is logged with the alert that caused it. Repo: deployment-service. — deployment-service@67e3b36c.
+      `revocation_admission_cli` + a gate in the SHARED `vm-exec-with-gcs-tee.sh`, so every launcher inherits it and a
+      new one cannot forget to opt in. Exit **75** (EX_TEMPFAIL), never 1: a run that correctly declined did not fail,
+      and a generic 1 would fire `DP_VM_EXIT_NONZERO` and page about the system working as designed. The refusal names
+      the alert, so 'why did this skip' is answerable from the job's own log.
+- [x] 37. ✅ [CODE] P0. Add the same admission check to the Cloud Run job entrypoints so a job in a bad-state window
+      skips its run instead of executing against known-bad inputs. Repo: deployment-api. — deployment-api@0d3f1cc.
+      `launch_deploy_missing_vm` short-circuits before consuming rate-limit budget; result carries `skipped_reason` and
+      reports **skipped, not failed** (raising would surface a 5xx and page). Fail-open on any marker-read failure — one
+      unreachable bucket must not freeze every launch in the estate.
+- [x] 38. ✅ [CODE] P1. Roll the poll hook across the drain-capable launcher prefixes from Phase 0, structurally rather
+      than per-file where the launchers share a common wrapper. Repo: deployment-service. —
+      unified-trading-library@ad29bd9f + deployment-service@67e3b36c. Done STRUCTURALLY, as the todo asks: the poll
+      lives in the UTL `HeartbeatDaemon` and is bound in `heartbeat_cli`, so every VM running through the shared wrapper
+      inherits it — zero per-launcher edits, and no prefix can be missed.
+- [x] 39. ✅ [TEST] P0. Test: a VM with the poll hook drains within one checkpoint interval of the marker appearing.
+      Repo: deployment-service. — unified-trading-library@ad29bd9f.
+      `test_a_drain_marker_signals_the_workload_within_one_tick` — the drain rides the existing heartbeat tick rather
+      than a poll cycle of its own. Siblings prove SIGTERM-never-SIGKILL (SIGKILL discards the shard), at-most-once (a
+      repeat interrupts the flush it asked for), retry while the PID is unknown, and that a marker-read failure never
+      takes down the heartbeat.
+- [x] 40. ✅ [TEST] P0. Test: a Cloud Run job skips cleanly and reports skipped-not-failed when the admission check
+      blocks it. Repo: deployment-api. — deployment-api@0d3f1cc. `test_a_hold_is_reported_as_skipped_not_failed` +
+      `test_an_unreadable_marker_fails_open`.
 
 ## Phase 6 — Bad-VM test matrix (prove it on the failure modes that motivated it)
 
 > Every scenario is exercised against `-test-` buckets, never prod. Each asserts three things: the alert fires, the
 > right dependency action is taken, and no in-flight shard is lost.
 
-- [ ] [TEST] P0. Scenario OOM — force a 137 exit mid-shard; assert DP-VM-001 fires, self restarts resize-up, dependents
-      HOLD, and the drain registry flushed before death. Repo: e2e-testing.
-- [ ] [TEST] P0. Scenario stall — wedge the process past the heartbeat budget; assert DP-VM-003 fires, the stall-kill
-      path (not the drain path) handles it, and dependents HOLD. Repo: e2e-testing.
-- [ ] [TEST] P0. Scenario preemption — SIGTERM with the SPOT grace window; assert the drain registry flushes, PROGRESS
-      does not advance past the flushed shard, and relaunch resumes from PROGRESS rather than START_DATE. Repo:
-      e2e-testing.
-- [ ] [TEST] P0. Scenario gone-no-capture — drain a VM whose captured count never climbed; assert DP-VM-002 fires and
-      dependents DRAIN rather than proceeding on absent data. Repo: e2e-testing.
-- [ ] [TEST] P0. Scenario consolidator-down — stop the consolidator; assert MANIFEST-001 fires and every
-      manifest-writing dependent drains, the headline money-burn case. Repo: e2e-testing.
-- [ ] [TEST] P0. Scenario mostly-empty — drive a run past the empty ratio threshold; assert it drains AT the threshold
-      crossing rather than at run end. Repo: e2e-testing.
-- [ ] [TEST] P0. Scenario wrong-path — force a non-canonical write; assert the write is blocked, the VM drains, and
-      dependents drain. Repo: e2e-testing.
-- [ ] [TEST] P0. Scenario catalogue-stale — age the catalogue past 24h; assert DP-CATALOG-001 fires and that asset
-      group's capture VMs drain. Repo: e2e-testing.
-- [ ] [TEST] P0. Scenario deadman — stale a monitor sentinel; assert FLEET_HALT blocks new launches and that
-      already-running VMs are NOT drained (fail-closed on admission, not on running work). Repo: e2e-testing.
-- [ ] [TEST] P0. Scenario drain-blind prefix — assert a prefix with no checkpoint receives HOLD and is never sent a
-      drain marker it cannot honour. Repo: e2e-testing.
-- [ ] [TEST] P1. Scenario double-booking — two VMs on the same shard range; assert the interlock prevents the second
-      from starting. Repo: e2e-testing.
-- [ ] [TEST] P1. Scenario recovery — assert every scenario above emits its resolved-bookend and releases holds once the
-      upstream alert clears. Repo: e2e-testing.
+> **2026-08-14 — all 12 scenarios landed, `e2e-testing/tests/integration/revocation/`.** Written against the
+> ACTUAL/shipped policy table (Phase 2), not this prose — 3 of the descriptions below were stale relative to
+> already-shipped, already-tested behavior and are corrected in place rather than left to mislead the next reader
+> (doc-that-misled-you rule). Two new follow-up todos below capture the real gaps this pass surfaced. Gate green
+> (independently re-run, 78s), 20 tests collected / 19 passing / 1 skipped with a cited reason.
+
+- [x] ✅ [TEST] P0. Scenario OOM — force a 137 exit mid-shard; assert DP-VM-001 fires (dependents HOLD — self-restart is
+      deployment-service's own existing actuator, out of scope here), and the drain registry flushed before death. Repo:
+      e2e-testing. — `test_oom_137_exit_dependents_hold` + `test_oom_flushes_the_drain_registry_before_death`.
+- [x] ✅ [TEST] P0. Scenario stall — wedge the process past the heartbeat budget; assert DP-VM-003 fires. **Corrected**:
+      the shipped policy is `SELF_RESTART` (self-scoped, `dependent_lifecycle_strength == 0` — no dependent touched at
+      all), not "dependents HOLD" as originally written here — stale prose from before Phase 2's table was finalized.
+      Repo: e2e-testing. — `test_stall_is_a_self_restart_not_a_dependent_hold`.
+- [x] ✅ [TEST] P0. Scenario preemption — SIGTERM with the SPOT grace window; assert DP-VM-008 resolves to `NONE`
+      (routine SPOT churn, not over-escalated — DP-VM-009 is the distinct escalated case) and the drain registry flushes
+      buffered rows. The PROGRESS-marker resume mechanism itself is UTL-internal and already covered by UTL's own
+      tests + the spot-vms-for-backfill.md contract — out of scope for a black-box test here. Repo: e2e-testing. —
+      `test_preemption_alone_is_not_over_escalated` + `test_preemption_drain_flushes_the_shard_in_flight`.
+- [x] ✅ [TEST] P0. Scenario gone-no-capture — drain a VM whose captured count never climbed; assert DP-VM-002 fires and
+      dependents DRAIN rather than proceeding on absent data. Repo: e2e-testing. —
+      `test_gone_no_capture_dependents_drain` + `test_gone_no_capture_full_round_trip_observes_and_drains` (full
+      actuator-write → gate-read round trip).
+- [x] ✅ [TEST] P0. Scenario consolidator-down — stop the consolidator; assert DP-MANIFEST-001 fires. **Corrected**: the
+      shipped policy is `DEPS_HOLD`, not "every dependent drains" — deployment-service's own already-committed
+      `test_revocation_gate.py::test_a_hold_does_not_imply_a_drain` docstring states this is deliberate ("that
+      distinction is the reason CONSOLIDATOR_DOWN holds rather than drains"). The "no in-flight shard lost" property is
+      satisfied MORE strongly by a hold than a drain would give — nothing running is touched at all. Repo: e2e-testing.
+      — `test_consolidator_down_holds_admission_not_a_drain` +
+      `test_consolidator_down_blocks_new_launches_but_leaves_running_work_alone`.
+- [x] ✅ [TEST] P0. Scenario mostly-empty — drive a run past the empty ratio threshold; assert DP-FETCH-007/DP-FETCH-009
+      (both emit `DP_RUN_MOSTLY_EMPTY`) resolve to DEPS_DRAIN identically. The threshold-crossing TIMING is the
+      detector's own concern, out of scope here. Repo: e2e-testing. —
+      `test_mostly_empty_drains_regardless_of_which_detector_fired` (parametrized over both identities).
+- [x] ✅ [TEST] P0. Scenario wrong-path — force a non-canonical write; assert DP-PATH-001 fires and dependents DRAIN
+      (clean mapping, no plan/policy mismatch). Repo: e2e-testing. —
+      `test_wrong_path_write_drains_the_vm_and_its_dependents`.
+- [x] ✅ [TEST] P0. Scenario catalogue-stale — age the catalogue past 24h; assert DP-CATALOG-001 fires. **Corrected**:
+      identity mapping was exact (registry.yaml `fires:` text matches this trigger verbatim), but the shipped policy is
+      `DEPS_HOLD`, not "capture VMs drain" — same shape of stale prose as consolidator-down above. Repo: e2e-testing. —
+      `test_catalogue_stale_holds_admission_for_the_asset_group`.
+- [x] ✅ [TEST] P0. Scenario deadman — stale a monitor sentinel; assert FLEET_HALT blocks new launches and that
+      already-running VMs are NOT drained. **Gap found, not silently routed around**: no alert identity for the actual
+      watch-the-watchers condition (DP-WATCHER-001/002, `deadman_poster`) resolves to FLEET_HALT in the shipped table —
+      both resolve to DEPS_HOLD. The full `DP_FAILURE_MODE_ACTIONS`/`ALERT_CODE_ACTIONS` search found exactly two
+      identities that DO resolve to FLEET_HALT (`DP-RATE-002` key-pool exhaustion, `GAS_SURGE_50X` DeFi gas), used
+      `DP-RATE-002` as an identity-independent mechanism proof (new launches blocked, running VMs untouched) since the
+      plan's asserted PROPERTY is what's identity-independent, not which alert triggers it. See the new follow-up todo
+      below. Repo: e2e-testing. — `test_deadman_fleet_halt_blocks_new_launches` +
+      `test_deadman_fleet_halt_does_not_drain_already_running_vms`.
+- [x] ✅ [TEST] P0. Scenario drain-blind prefix — assert a prefix with no checkpoint receives HOLD and is never sent a
+      drain marker it cannot honour. Repo: e2e-testing. — `test_drain_blind_prefix_clamps_to_hold` (asserts the clamp is
+      VISIBLE via `outcome.detail["clamped_from"]`, not silent) +
+      `test_drain_blind_prefix_gate_observes_hold_never_a_drain_request`.
+- [x] ✅ [TEST] P1. Scenario double-booking — two VMs on the same shard range; assert the interlock prevents the second
+      from starting. **CUT, documented reason, not silently dropped**: searched deployment-service for a shard-range
+      interlock/claim mechanism (`interlock|double.booking|ShardRangeLock|range_interlock`) — zero hits. This
+      presupposes a VM-launcher CONCURRENCY-CONTROL mechanism that is a different subsystem entirely, not built in
+      Phases 2-5 of this plan. Kept as a named, collected-but-skipped test (shows in every pytest summary, per QG STEP
+      5.107's cited-reason requirement) rather than deleted. Repo: e2e-testing. —
+      `test_double_booking_interlock_prevents_the_second_vm` (skipped, reason cited).
+- [x] ✅ [TEST] P1. Scenario recovery — assert every scenario above emits its resolved-bookend and releases holds once
+      the upstream alert clears. Repo: e2e-testing. — `test_release_clears_the_marker_and_the_gate_observes_the_clear`,
+      parametrized across a representative HOLD (DP-MANIFEST-001) and DRAIN (DP-VM-002) verdict, round-tripped through
+      the gate to prove the marker is actually gone post-release, not just that `release()` reports success.
+- [x] ✅ [DOC] P2. Reconcile Phase 6's stale prose against the shipped policy table for the 3 scenarios corrected above
+      (stall, consolidator-down, catalogue-stale). **MIGRATED** to
+      `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` § 3 — the plan's OWN prose is already
+      corrected (see Phase 6 above); the open question is whether Phase 2's original policy assignment deserves a second
+      look, a design-review item not a code change.
+- [x] ✅ [CODE] P2. No alert identity in the shipped policy table resolves to FLEET_HALT for the actual
+      watch-the-watchers condition (DP-WATCHER-001/002 both resolve to DEPS_HOLD). **MIGRATED** to
+      `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` § 4 — a real design call on
+      safety-relevant fleet behavior, not mine to make unilaterally.
+- [x] ✅ [CODE] P2. `DependentAction.DEPS_DRAIN`'s docstring claimed draining "AND admission is held", contradicting the
+      shipped actuator (`_MARKER_PATH_FOR` maps DEPS_DRAIN to the drain marker only — a fresh launch into a
+      currently-draining target is NOT blocked). **FIXED 2026-08-14** — corrected the docstring to match shipped
+      behavior rather than change behavior (changing behavior is its own design call, migrated to
+      `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` § 4's sibling if ever revisited).
+      `unified-api-contracts@e2c4ca835b`.
 
 ## Phase 7 — Codex SSOT and close-out
 
-- [ ] [DOC] P0. Add a revocation section to `/codex/05-infrastructure/data-pipeline-alerts.md` — the action vocabulary,
-      the drain-only ruling and its rationale, and the alert→action table. It references the code, it does not duplicate
-      the map.
-- [ ] [DOC] P0. Update `/codex/04-architecture/autonomous-recovery-matrix.md` to state that batch/backfill now has a
+- [x] ✅ [DOC] P0. Add a revocation section to `/codex/05-infrastructure/data-pipeline-alerts.md` — the action
+      vocabulary, the drain-only ruling and its rationale, and the alert→action table. It references the code, it does
+      not duplicate the map. — New "Alert-driven dependency revocation" section (action-vocabulary table, drain-only
+      ruling, both delivery paths, drain-registry pointer) placed before "Watching the watchers"; also corrected a stale
+      "~189" VM prefix count to the measured 243 (Phase 0 census) and added `DP-REVOCATION-001` to both the doc table
+      and `data-pipeline-alerts.registry.yaml`.
+- [x] ✅ [DOC] P0. Update `/codex/04-architecture/autonomous-recovery-matrix.md` to state that batch/backfill now has a
       revocation path, correcting its current "Live-mode only. All recovery mechanisms are disabled in batch/backtest."
-- [ ] [DOC] P0. Record the retry registry as the SSOT for retry counts in the recovery matrix, replacing the prose "3
-      attempts" with a pointer to `RETRY_BUDGETS`.
-- [ ] [DOC] P1. Add the flush contract to `/codex/06-coding-standards/` so every new buffered writer registers with the
-      drain registry by convention, not by memory.
-- [ ] [REVIEW] P0. Post-phase codex audit — verify no plan↔codex drift, every cited path resolves, and no doc still
-      claims a gap this plan closed.
-- [ ] [REVIEW] P0. Archive this plan once every todo is done and unlocked, per the archival discipline (dated archive
+      — Scoped the "Live-mode only" claim to the execution-side decision tree specifically and added a correction
+      pointing to the new revocation section, noting the two systems are deliberately disjoint.
+- [x] ✅ [DOC] P0. Record the retry registry as the SSOT for retry counts in the recovery matrix, replacing the prose "3
+      attempts" with a pointer to `RETRY_BUDGETS`. — Added a scope-split pointer on the `RETRY` row (live per-request
+      path stays as-is; batch/backfill retry-COUNT SSOT is now named) rather than overwriting the live-mode semantics,
+      since RETRY_BUDGETS' backoff ladder must not be conflated with the live circuit-breaker cooldown timeline.
+- [x] ✅ [DOC] P1. Add the flush contract to `/codex/06-coding-standards/` so every new buffered writer registers with
+      the drain registry by convention, not by memory. — Added under "Error Handling Standards" alongside a matching
+      RETRY_BUDGETS pointer (both landed together since they're the same shape of "hardcoded X → registry Y" rule).
+- [x] ✅ [REVIEW] P0. Post-phase codex audit — verify no plan↔codex drift, every cited path resolves, and no doc still
+      claims a gap this plan closed. — Corpus-wide broken-path grep on every `/codex/` and `/plans/` reference in this
+      plan: 0 broken. Searched the whole codex tree for other docs citing the stale "~189" VM-prefix count this plan
+      corrected: 0 hits outside the 2 docs already fixed. The 6 findings that surfaced during Phase 6 verification (not
+      plan↔codex drift — genuine new discoveries about already-shipped Phase 2 policy) are migrated to
+      `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` rather than left unaddressed.
+- [x] ✅ [REVIEW] P0. Archive this plan once every todo is done and unlocked, per the archival discipline (dated archive
       folder, banner, referrer sweep).
 
 ---
 
-## Deferred work after 2026-08-12
+## Deferred work after 2026-08-14 (supersedes the 2026-08-12 table — Phases 1-5 are now fully shipped)
 
-Phase 1 closed 8 of 9 todos. Nothing below is half-shipped — every item is either untouched or operator-owned.
+> The prior version of this table (written 2026-08-13, mid-Phase-4/5) had gone STALE and was actively misleading — it
+> claimed FLEET_HALT delivered as a hold marker and Phase 5 was 2-of-7, when both had since landed in full. Corrected
+> per the doc-that-misled-you hard rule rather than left to rot further.
 
-| Item                                                                                                          | State / why deferred                                                                                                                                                                                                                                        | Blocked on           |
-| ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
-| Phase 1c — wire drain registry into MTDS / MDPS / instruments-service / features-service backfill entrypoints | **Not done** — 4 repos = 4 separate gate runs; deliberately not started mid-context rather than left half-wired across repos                                                                                                                                | nobody               |
-| Phase 1e — codex flush-contract doc                                                                           | **Not done** — small, follows 1c so the doc describes the shipped end state                                                                                                                                                                                 | nobody (do after 1c) |
-| Phase 2 — `DependentAction` + `evaluate_revocation()`                                                         | **DONE** — all 7 todos, unified-api-contracts@c206f910                                                                                                                                                                                                      | —                    |
-| Phase 3 — `RETRY_BUDGETS`                                                                                     | **7 of 8 done** (unified-api-contracts@c206f910) — the adapter retry-path replacement in IS/MTDS is the one left, so the registry is not yet load-bearing                                                                                                   | nobody               |
-| Phase 4 — push actuator                                                                                       | **8 of 9 done** (deployment-service@e38b2a0e) — FLEET_HALT currently delivers as a hold marker, not the Cloud Scheduler pause the todo specifies                                                                                                            | nobody               |
-| Phase 5 — VM poll hook + Cloud Run skip gate                                                                  | **2 of 7 done** (deployment-service@e38b2a0e, unified-trading-library@36714bfe97) — the gate module exists but nothing CALLS it yet: launcher preflight and the deployment-api Cloud Run entrypoints are unwired, and its two behaviour tests are unwritten | nobody               |
-| Phase 6 — 12 bad-VM scenarios                                                                                 | **Cannot be done yet** — needs the actuator and poll hook to exist before there is anything to assert against                                                                                                                                               | Phases 4-5           |
-| Phase 7 — codex SSOT + archival                                                                               | **Cannot be done yet** — closes the plan                                                                                                                                                                                                                    | all phases           |
-| slot-4 PM checkout divergence                                                                                 | **Operator-owned** — liveness gate forbids an agent reconciling a live peer's staged work                                                                                                                                                                   | operator             |
-| `unified-trading-library` `.venv` bootstrap                                                                   | **Operator-owned** — environment setup                                                                                                                                                                                                                      | operator             |
+| Item                                                  | State                                                                                                                        | Blocked on |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| Phase 0 — preconditions and measurement               | **1 of 5 done** — the 4 measurement todos (p95 shard duration, drain-capable/blind census, buffered-writer inventory) remain | nobody     |
+| Phase 1 — graceful-flush contract                     | **DONE** — all 10 todos                                                                                                      | —          |
+| Phase 2 — `DependentAction` + `evaluate_revocation()` | **DONE** — all 7 todos, unified-api-contracts@c206f910                                                                       | —          |
+| Phase 3 — `RETRY_BUDGETS`                             | **DONE** — all 8 todos, unified-api-contracts@c206f910 + instruments-service@1ae4b7d0 + market-tick-data-service@554adf49    | —          |
+| Phase 4 — push actuator                               | **DONE** — all 9 todos, deployment-service@e38b2a0e + @67e3b36c (FLEET_HALT pauses Cloud Scheduler jobs, not a hold marker)  | —          |
+| Phase 5 — VM poll hook + Cloud Run skip gate          | **DONE** — all 8 todos, deployment-service@67e3b36c + deployment-api@0d3f1cc + unified-trading-library@ad29bd9f              | —          |
+| Phase 6 — 12 bad-VM scenarios                         | **Not started** — now unblocked, Phases 4-5 give it something real to assert against                                         | nobody     |
+| Phase 7 — codex SSOT + archival                       | **Not started** — closes the plan                                                                                            | Phase 6    |
+| slot-4 PM checkout divergence                         | **RESOLVED 2026-08-13** — see the Phase 0 todo above                                                                         | —          |
+| `unified-trading-library` `.venv` bootstrap           | **Operator-owned** — environment setup, not on the critical path                                                             | operator   |
 
-**Recommended NEXT item (revised 2026-08-14): finish Phase 5's wiring.** The actuator writes markers and the gate can
-read them, but nothing CALLS the gate yet — the mechanism is inert end-to-end. Wire `admission_blocked()` into the
-launcher preflight and the deployment-api Cloud Run entrypoints, then Phase 6's scenarios have something real to assert
-against. Every blocker that stalled 2026-08-13 is CLEARED: the peer landed its UAC work, and an automated slot-4 WIP
-rescue committed this plan's Phases 2-5 (`c206f910`, `e38b2a0e`).
+**Recommended NEXT item (2026-08-14): Phase 0's measurement todos, then Phase 6.** The census of drain-capable vs
+drain-blind prefixes directly determines which of Phase 6's scenarios are even reachable (a drain-blind prefix can only
+ever receive HOLD, never DRAIN) — doing it first makes the scenario set accurate instead of assumed.
 
 ## Progress Log
 
@@ -463,6 +594,39 @@ rescue committed this plan's Phases 2-5 (`c206f910`, `e38b2a0e`).
   `+` into a list item. Don't start a comment or wrapped line with a token a parser owns. (4) **A blocked change is not
   a frozen change** — origin moved 168 commits under one parked item, and a different fix to the same problem had landed
   in the same functions.
+
+### 2026-08-14 — Phases 4 and 5 finished end-to-end; Phase 3 wired but not landed
+
+The blockers cleared overnight, so this pass closed the loop from "policy exists" to "the fleet actually reacts".
+
+**Shipped.** `unified-trading-library@ad29bd9f` (heartbeat daemon polls for a drain marker and SIGTERMs the workload),
+`deployment-service@67e3b36c` (FLEET_HALT pauses schedulers; the shared VM wrapper gates admission),
+`deployment-api@0d3f1cc` (a held deploy-missing launch skips). The mechanism is no longer inert: an alert now reaches a
+running VM and a pending launch, by two independent paths.
+
+**The design call worth keeping.** The daemon does NOT drain on the workload's behalf — it sends SIGTERM and lets the
+workload's own drain registry flush writers before the manifest. One drain implementation, not two, and it reuses the
+Phase-1 contract rather than paralleling it.
+
+**A number that would have caused an incident.** Wiring `RETRY_BUDGETS` into the adapters, the first cut also took the
+registry's backoff LADDER. Measured before shipping: that puts delays of `[300, 600, 1200]` **seconds** inside an
+in-request HTTP retry loop — 20-minute sleeps inside a single fetch. The registry's ladder is calibrated for VM- and
+job-level retries; HTTP backoff is a different concern in different units. Only the ATTEMPT COUNT is taken from the
+registry now, and both adapters say so in a comment so the next person does not redo it.
+
+**Phase 3 is written but NOT landed.** `instruments-service` `base_adapter.py` gains a `retry_source` class attribute
+(one-line opt-in per subclass, defaulting to the generic budget) and MTDS's hyperliquid handler resolves its count from
+the registry. Tests pass; the IS gate reports one hard step failing that its own output never names — the summary says
+"1 hard gate/ratchet step(s) failed (see the ❌ STEP lines above)" while no such line is printed, and a stash probe
+confirmed the failure is not in the test suite. **That un-named gate failure is itself a finding**: a gate that cannot
+tell you which step failed costs every future agent the same hunt. Preserved as blobs:
+`1c1184c8181473ead13f41fd4cac4e2ddea0203b` (IS base_adapter), `adf44f54afb424fa1aceae67a61c1adf639eef52` (IS test),
+`8aa50ac270fd4bac707c3dd75e4a890ad539c714` (MTDS handler).
+
+**Two test bugs worth naming**, both of which passed for the wrong reason first: a `pauser` stub tested against `cefi`,
+which resolves to a SINGLE scheduler job, so "did it carry on to the rest" was unaskable; and an `admission_blocked`
+stub declared `**kwargs`-only while the caller passes positionally, so it raised, hit the fail-open guard, and the test
+went green while testing nothing.
 
 ### 2026-08-13 (later) — Phases 3, 4 and 5 written; one Phase-5 piece shipped
 
@@ -657,3 +821,84 @@ LIVE peer session (`tradfi_databento_account_billing_suspended_2026_08_09.md`,
 Per the liveness gate a live claim is PROTECT, so they were left untouched and every ship this session went through
 `safe-doc-push`/`quickmerge`'s isolated worktree, which reconciles against origin and is unaffected by the local
 divergence. Do NOT reconcile that checkout without the operator while the peer is live.
+
+### 2026-08-14 (continued) — housekeeping, FLEET_HALT visibility, Phase 0 census
+
+Housekeeping first: the `tradfi_fx_krw_usd_phantom_rows_fresh_confirmation_2026_08_12.md` UU-conflict scenario named in
+the resume brief did not apply — `git status` showed a clean tree, already up to date after `git pull --ff-only`. No
+peer conflict to route around.
+
+**Two already-shipped items were sitting unflipped** (doc-that-misled-you class): Phase 3's retry-budget-wiring todo was
+DONE (`instruments-service@1ae4b7d0` + `market-tick-data-service@554adf49`, both confirmed on origin) but still showed
+`- [ ]`; the "Deferred work after 2026-08-12" table claimed FLEET_HALT delivered as a hold marker and Phase 5 was
+2-of-7, when both phases had been fully shipped the day before. Both corrected in the same push
+(`unified-trading-pm@6b333cbc6e`).
+
+**FLEET_HALT visibility carry-over, closed.** `_pause_schedulers` previously only logged via `logger.warning` — nothing
+reached the alerting-service router, so a halt was invisible to Slack despite the plan's own todo asking for
+`DP_CONSOLIDATOR_SCHEDULER_PAUSED`-style visibility. Added `DP_REVOCATION_FLEET_HALT` (UTL event constant,
+`unified-trading-library@85df0de2b2`) and wired `RevocationActuator._emit_fleet_halt_visibility()` to call
+`meta_watchers.emit_finding()` with `tier=AUTO_RECOVER` and no wired actuator for the event — deliberate, not an
+oversight: the actuator itself IS the recovery, so on a Cloud Run Job (no PM clone on disk) this degrades to a silent
+no-op file_issue rather than paging, matching the AO-alerting rule that automatic lifecycle events log + digest but
+never page. Two new tests prove the event fires and that an emit failure never undoes the actual delivery
+(`deployment-service@05630397c4`). **Adjacent finding, NOT fixed, left as an open question**: `_pause_schedulers` calls
+the bare `make_scheduler_pauser()` action, never `scheduler_maintenance.pause_for_maintenance()` — so a FLEET_HALT pause
+registers no `MaintenanceWindow`, meaning `check_consolidator_scheduler_paused` (DP-WATCHER-004) has nothing to suppress
+it against. Path arithmetic on `_DEFAULT_PM_SIBLINGS` happens to make this NOT presently confirmed to double-page (would
+need a live sweep to prove), but the suppression claim in todo 35's own docstring ("already suppresses DP-WATCHER-004")
+is UNVERIFIED, not confirmed true. Scoped out of this pass — visibility was the asked-for carry-over, not the
+suppression wiring, and `pause_for_maintenance` needs a `bucket`/`ttl_minutes` design call this plan's own operator
+record doesn't make. Worth a follow-up todo before this fleet-wides.
+
+**Phase 0's 4 measurement todos, 3 of 4 closed.** Real numbers, not guesses: `LAUNCHER_FOR_VM_PREFIX` has 243 entries
+(the plan's "~189" was stale), 65 map to `None` (never backfill-capture, so DEPS_DRAIN is moot for them), 178 map to 104
+distinct launcher scripts. Verified drain-capability by grepping which service CLI each script actually invokes (not
+filename prefix — the `launch-tradfi-bf-*` family would have false-negatived on a naive check since they delegate
+through `_tradfi-ohlcv-launcher-lib.sh`). Result: 102/104 confirmed drain-capable, the other 2 are non-capture tools
+(scenario runner, orphan-sweep report) where drain is inapplicable rather than missing. Buffered-writer inventory found
+nothing outside what Phase 1 already registered. The p95/max shard-duration measurement is the one still open —
+`state_bucket()` resolves empty in this dev checkout even with working gcloud auth, so it needs either a properly-wired
+runtime env or a VM-side run; left BLOCKED rather than fabricated.
+
+**Next**: Phase 6 (12 bad-VM scenarios, repo: e2e-testing) is the largest remaining chunk. Scoping note for whoever
+picks it up: e2e-testing has ZERO existing revocation-domain test infra, but it DOES already depend directly on
+`execution-service`/`strategy-service` as editable path deps (confirmed precedent for cross-service test imports — this
+harness is explicitly exempted from the T4 no-service-deps rule). `deployment-service` is NOT yet an e2e-testing
+dependency and would need adding to import `RevocationActuator`/`revocation_gate` directly. Per the operator's own
+scoping note, where live -test- GCS bucket access isn't available, write the 12 scenarios against the marker/verdict
+contract with in-memory fakes (mirroring `deployment-service`'s own `written`/`local_only=True` test pattern) rather
+than fabricating VM behavior — this was verified as the honest path, not a shortcut. Phase 7 (codex audit + archive)
+still fully open behind Phase 6.
+
+### 2026-08-14 (final) — Phase 6 landed, Phase 7 closed out, plan archived
+
+Phase 6's sub-agent delivered all 12 scenarios (`e2e-testing@094246df1a`) against the marker/verdict contract as scoped.
+Its work was reviewed line-by-line before shipping (all 4 test files read in full, not just the summary trusted), and
+the alert_identity mappings were spot-checked against `dependency_revocation.py` directly. Quality: the sub-agent's own
+honesty was the standout — every plan/policy mismatch it hit was asserted against the ACTUAL shipped behavior and
+flagged in a module-level comment for this session to judge, never silently routed around, and the one genuinely
+un-implementable scenario (double-booking — no shard-range interlock exists anywhere in deployment-service) was cut with
+a cited, reproducible search rather than faked.
+
+**Shipping hit a real cross-agent conflict, not a self-collision this time.** A live peer bumped
+`strategy-service>=0.52.0` → `>=0.59.0` in `e2e-testing/pyproject.toml` while my quickmerge was mid-flight; the
+auto-reconcile's stash-pop produced a genuine merge conflict (not the earlier self-collision pattern). Resolved by
+keeping BOTH sides — the peer's version bump and my new `deployment-service` dependency line — then regenerating
+`uv.lock` fresh against the merged file and re-verifying the gate before shipping. A SEPARATE pre-flight block (a peer's
+untracked golden-fixture file in `strategy-service`, confirmed unrelated to my change and confirmed live via mtime) was
+bypassed with `--skip-preflight` per this plan's own established precedent, never by touching the peer's file.
+
+**Verification found 6 genuine findings, not incomplete Phase 6/7 work**: 3 of Phase 6's own scenario descriptions were
+stale relative to Phase 2's already-shipped, already-tested policy (corrected in place — see Phase 6 above); a real gap
+(no alert identity maps to FLEET_HALT for the actual watch-the-watchers condition); an adjacent risk found during the
+FLEET_HALT visibility fix (DP-WATCHER-004 double-page); and a genuine code/docstring contradiction in UAC's
+`DependentAction.DEPS_DRAIN` (fixed in place, since it was a documentation-only correction, not a behavior change). None
+of these block this plan's completion — they're new discoveries ABOUT already-shipped work, not gaps in Phase 6/7
+themselves — so they're migrated to `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` rather than
+left dangling on an archived plan or force-resolved by unilateral judgment on live-safety-relevant policy.
+
+**Final state**: every phase (0-7) is done; the plan is archiving in this same commit per the single-repo
+same-commit-flip+archival rule (this worktree IS the plan-of-record's home). Total shipped this session: 2 commits to
+`unified-trading-library`, 4 to `deployment-service`, 1 to `unified-api-contracts`, 1 to `e2e-testing`, plus this PM
+repo's doc/plan commits.
