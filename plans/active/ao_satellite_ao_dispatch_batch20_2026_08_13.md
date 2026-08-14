@@ -360,8 +360,17 @@ source: >-
       `[BACKEND]` tag — reworded to "Originally tagged `[OPERATOR]`-adjacent … (retagged to plain `[BACKEND]` above to
       match the source todo)" so the body is internally consistent with the checkbox tag. Source:
       `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
-- [ ] [CODE] P2. BACKEND P3: add sequential/gate_on_depends ordering between
-      ao_model_main_agent_as_first_class_slot_2026_08_10.md's 2 same-file open todos Source:
+- [x] ✅ [CODE] P2. BACKEND P3: add sequential/gate_on_depends ordering between
+      ao_model_main_agent_as_first_class_slot_2026_08_10.md's 2 same-file open todos — MOOT, no code change needed:
+      `ao_model_main_agent_as_first_class_slot_2026_08_10.md` is now fully resolved and archived
+      (`plans/archive/2026_08/issues/ao_model_main_agent_as_first_class_slot_2026_08_10.md`, 🟢 ARCHIVED 2026-08-10,
+      every todo `[x]`) — the 2 open `[BACKEND] P2` todos this finding flagged (both targeting
+      `server/context_lifecycle.py`) shipped the same day as agent-orchestrator@bef2f6b (todo 5) and
+      agent-orchestrator@abcdee3 (todo 6), before the collision the finding warned about ever materialized. There is no
+      longer anything to gate/order — both todos are done and the doc is archived. Not touching the source doc's own
+      copy of this todo here — per this batch's stated design ("checkbox reconciliation back into each source doc
+      happens in the paired finalize plan"), citing the finding for
+      `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` to reconcile. Source:
       `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
 - [ ] [CODE] P2. DOCS P3: add sequential/gate_on_depends between ao_scheduled_job_reserve_and_staggering_2026_08_04.md's
       2 prose-gated open todos Source: `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
