@@ -109,9 +109,9 @@ source: >-
       shipped for that piece. (2) NEW finding, not covered by any prior effort: `LADBROKES_UK`/`SPORT888` also carry the
       same casing/alias defect under a third, previously-unexamined shape (`pipeline_mode=batch_footystats`,
       `data_type=odds_horizon_bucket`) — 121,884 shards / 12.3M rows measured, 2020-2026. Full evidence + recommended
-      decision + 4 follow-up todos filed: `plans/active/issues/sports_footystats_mislabel_contradiction_2026_08_14.md`.
-      Stale claim in the source doc corrected in place (same turn). Source:
-      `plans/active/sports_consolidated_closeout_2026_07_19.md`
+      decision + 4 follow-up todos filed:
+      `/plans/archive/2026_08/issues/sports_footystats_mislabel_contradiction_2026_08_14.md`. Stale claim in the source
+      doc corrected in place (same turn). Source: `plans/active/sports_consolidated_closeout_2026_07_19.md`
 - [x] ✅ [CODE] P2. Track C: QG assertion that sports data_type/venue/instrument_type/chain stay within the canonical
       vocabulary (deployment-ui Distinct Values panel reads 0 non-canonical across all four axes)
       **deployment-api@8497e952bb** (2026-08-14, slot-27). Wired `scripts/check_sports_distinct_values_canonical.py`
@@ -126,8 +126,26 @@ source: >-
       observing the exit status via an `if` condition (bash's one errexit-exempt context), matching STEP 5.90's existing
       checker pattern. QG green (sentinel=8497e952 matches HEAD); verified `merge-base --is-ancestor` on origin. Source:
       `plans/active/sports_consolidated_closeout_2026_07_19.md`
-- [ ] [CODE] P2. Track E: repoint the remaining 7-file stale entity=fixtures consumer list to
-      fixtures_schedule/fixtures_outcomes Source: `plans/active/sports_consolidated_closeout_2026_07_19.md`
+- [x] ✅ [CODE] P2. Track E: repoint the remaining 7-file stale entity=fixtures consumer list to
+      fixtures_schedule/fixtures_outcomes **`instruments-service@304711c8`** (2026-08-14, slot-10). Named list resolved
+      against `sports_consolidated_closeout_2026_07_19.md`'s own Track E section: `sports_dependency.py` +
+      `sports_fixtures_daily_repoll.py` were ALREADY migrated (already read/write
+      `fixtures_schedule`/`fixtures_outcomes` as primary, with a documented legacy fallback for pre-migration dates) —
+      no change needed. The remaining 4 files (`rescan_sports_fixtures_canonical.py:328,452`,
+      `enumerate_expected_universe.py` — cited line 1902 was stale, real location is
+      `_UNDERSTAT_FIXTURES_TPL`/`_build_understat_fixture_index` — `migrate_sports_per_league.py`,
+      `reconcile_sports_blank_empty_reason_2026_06_24.py`) still hardcoded the bare, dead-since-2026-07-14
+      `entity=fixtures/fixtures.parquet` path; repointed each to list the canonical (`pipeline_mode=`) then legacy
+      per-league `entity=fixtures_schedule/` prefix, matching the established canonical-then-legacy pattern already used
+      elsewhere in this package (`sports_fixtures.py::_read_per_league_entity_df`, `weather.py`). None of the 4 needed
+      `fixtures_outcomes` (no score data consumed). Updated the one stale test assertion
+      (`test_rescan_sports_fixtures_canonical_script.py::test_entity_handlers_registered`). QG green (sentinel=304711c8
+      matches HEAD); verified `merge-base --is-ancestor` on origin. **Follow-up filed, not fixed here** (separate,
+      pre-existing bug discovered during this repoint, not caused by it):
+      `plans/active/issues/rescan_sports_fixtures_canonical_per_league_suffix_match_broken_2026_08_14.md` — the rescan
+      tool's blob-matching logic requires an exact bare-file suffix, so its FIXTURES handler has matched zero real
+      per-league objects since fixtures went per-league (independent of which entity name it points at). Source:
+      `plans/active/sports_consolidated_closeout_2026_07_19.md`
 - [ ] [CODE] P2. Track O: repair attempted_at on the 112,277 rows from the named pre-clobber snapshot (a normal,
       human-watched write window, not unsupervised) Source: `plans/active/sports_consolidated_closeout_2026_07_19.md`
 - [ ] [CODE] P2. Track O: locate the emitter of the 139,620 venue=ODDS_API/source=api_football/empty_confirmed rows
@@ -168,11 +186,13 @@ source: >-
       'Track V' prose inside sports_consolidated_closeout_2026_07_19.md, a LOCAL/human plan (not assigned_vm:planning),
       so it does not meet the AO-dispatch coverage bar despite being a real, single-command, deterministic-outcome item.
       Source: `plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md`
-- [ ] [CODE] P2. Repoint the 7 remaining stale entity=fixtures consumers (sports_dependency.py,
+- [x] ✅ [CODE] P2. Repoint the 7 remaining stale entity=fixtures consumers (sports_dependency.py,
       sports_fixtures_daily_repoll.py, rescan_sports_fixtures_canonical.py:328,452, enumerate_expected_universe.py:1902,
       migrate_sports_per_league.py, reconcile_sports_blank_empty_reason_2026_06_24.py) to fixtures_schedule
       (+fixtures_outcomes where scores are needed) -- instruments-service, a mechanical single-repo file-by-file repoint
-      with a named, closed list. Source:
+      with a named, closed list. **DONE — identical population as this batch's own Track E todo above (same 7-location
+      list, same fix); this todo was a duplicate never flipped.** `instruments-service@304711c8` (2026-08-14, slot-10).
+      Full evidence in the Track E entry above. Source:
       `plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md`
 - [x] [DATA] P2: root-cause why odds_features feature-export parquet is entirely missing for
       2025-10-23/2025-11-11/2025-11-13 despite odds_horizon_bucket being re-derived (resolve env=dev discrepancy in the

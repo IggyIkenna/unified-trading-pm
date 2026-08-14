@@ -31,7 +31,7 @@ tags:
 related:
   [
     /plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
@@ -235,29 +235,29 @@ Both were established by reading the code, and both are silent — neither raise
       back.
 
       Renames every derived-key namespace `-013`'s `derived_keys_for_row` enumerated: `tasks.task_id`, `backlog.yaml`'s
-                  `id:`, `slot_skips.task_id`, `blocked_queue` (`task_id` column + the `BLK-op-` `blocked_id` shape only — a
-                  regular blocked question's `blocked_id` is a random UUID and is never touched), `prerequisites.name`
-                  (`auto_unpark__` shape) + `backlog.yaml`'s own `prereqs.prerequisites` list entries, `dispatch_cooldowns.key`
-                  (`task:` shape), and the two `dedup_state` seen-keys JSON files (one exact remap, one prefix scan for the sixth
-                  namespace whose `incoming_brief_hash` suffix is never persisted statically). Also handles a wrinkle `-013`
-                  flagged but didn't resolve: an existing `<old_id>--ruling` materialized-operator-ruling task gets its OWN,
-                  unrelated content-hash in the map (computed from its own distinct brief) — this script ignores that and instead
-                  renames it, in the same pass as its parent, directly to `<new_id>--ruling`, the convention
-                  `_materialize_operator_ruling_tasks`'s dedup actually depends on (a naive per-map-entry rename would have
-                  stranded the old-named row and caused a duplicate re-materialization on the next regen tick). Hazard 1
-                  (dispatched-row deferral) is re-checked FRESH per row at apply time (not trusted from the map's snapshot
-                  `status`), deferring anything still in flight to `content_id_migration.py`'s three existing transition-point
-                  hooks. Appends a `backlog_task_id_migrated` activity_log row per rename (append-only, matching `-012`'s ruling —
-                  never rewrites history).
+                              `id:`, `slot_skips.task_id`, `blocked_queue` (`task_id` column + the `BLK-op-` `blocked_id` shape only — a
+                              regular blocked question's `blocked_id` is a random UUID and is never touched), `prerequisites.name`
+                              (`auto_unpark__` shape) + `backlog.yaml`'s own `prereqs.prerequisites` list entries, `dispatch_cooldowns.key`
+                              (`task:` shape), and the two `dedup_state` seen-keys JSON files (one exact remap, one prefix scan for the sixth
+                              namespace whose `incoming_brief_hash` suffix is never persisted statically). Also handles a wrinkle `-013`
+                              flagged but didn't resolve: an existing `<old_id>--ruling` materialized-operator-ruling task gets its OWN,
+                              unrelated content-hash in the map (computed from its own distinct brief) — this script ignores that and instead
+                              renames it, in the same pass as its parent, directly to `<new_id>--ruling`, the convention
+                              `_materialize_operator_ruling_tasks`'s dedup actually depends on (a naive per-map-entry rename would have
+                              stranded the old-named row and caused a duplicate re-materialization on the next regen tick). Hazard 1
+                              (dispatched-row deferral) is re-checked FRESH per row at apply time (not trusted from the map's snapshot
+                              `status`), deferring anything still in flight to `content_id_migration.py`'s three existing transition-point
+                              hooks. Appends a `backlog_task_id_migrated` activity_log row per rename (append-only, matching `-012`'s ruling —
+                              never rewrites history).
 
-                  15 new tests (idempotency, dispatched-row deferral, dry-run, resumable batching across multiple small
-                  transactions, every derived-key namespace, the `--ruling` wrinkle, cross-task `completed_tasks`/`prerequisites`
-                  remapping in `backlog.yaml`, activity_log append-only, seen-keys file rewriting, and invert/rollback both for a
-                  real prior apply and for a row that was never actually applied) — using the same real-ORM-schema
-                  `create_all_tables()` fixture pattern as `test_content_id_migration_wiring.py`, not hand-rolled DDL. QG: 2944
-                  passed (full suite), basedpyright 0 errors, ruff clean. Also verified end-to-end via direct CLI invocation
-                  (dry-run, apply, idempotent re-apply, invert) against a throwaway scratch DB — all four modes behaved correctly.
-                  Evidence: agent-orchestrator@a7dfb9652 (verified ancestor of origin/live-defi-rollout). Repo: agent-orchestrator.
+                              15 new tests (idempotency, dispatched-row deferral, dry-run, resumable batching across multiple small
+                              transactions, every derived-key namespace, the `--ruling` wrinkle, cross-task `completed_tasks`/`prerequisites`
+                              remapping in `backlog.yaml`, activity_log append-only, seen-keys file rewriting, and invert/rollback both for a
+                              real prior apply and for a row that was never actually applied) — using the same real-ORM-schema
+                              `create_all_tables()` fixture pattern as `test_content_id_migration_wiring.py`, not hand-rolled DDL. QG: 2944
+                              passed (full suite), basedpyright 0 errors, ruff clean. Also verified end-to-end via direct CLI invocation
+                              (dry-run, apply, idempotent re-apply, invert) against a throwaway scratch DB — all four modes behaved correctly.
+                              Evidence: agent-orchestrator@a7dfb9652 (verified ancestor of origin/live-defi-rollout). Repo: agent-orchestrator.
 
 - [ ] [OPERATOR] P1. **Dry-run the migration against a SCRATCH COPY of `state.db`, never the live file.** Operator-gated
       because it requires copying live orchestrator state and reading it outside the service. Assert: row-count

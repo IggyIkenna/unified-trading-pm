@@ -16,8 +16,7 @@ summary: |
   plan todos are open; the mvp-defi park is HOLDING (yaml priority 999); brief_hash NULL tail now 54 (moves). This plan
   is the single execution vehicle: each todo cites its source doc, and each source doc's archival is gated on its todos
   here. LOCAL track — operator-driven, never dispatched.
-status: active
-archive_exempt: true
+status: complete
 nature: process
 asset_group: [ao] # corrected 2026-07-30 (/ag-closeout-audit ao) -- was [meta]; a real AO covering plan, not generic
 stage: [meta]
@@ -95,6 +94,17 @@ source:
 ---
 
 # AO open-issues consolidated close-out
+
+> **🟢 ARCHIVED 2026-08-14 — COMPLETE.** Zero open todos as of the 2026-08-14
+> `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` reconciliation pass (its last open item, the Recovery-audit
+> Layer-1 producer rewire, was reconciled — already shipped via `deployment-service@1a8346db`). `archive_exempt: true`
+> dropped per that finalize plan's own note ("Drop `archive_exempt` when that todo runs"). The `ao` tranche's LIVE
+> coordinator is `[[ao_consolidated_closeout_2026_08_12]]`, not this doc — archiving this one does not remove tranche
+> coverage (`check_ag_closeout_linkage.py` resolves coordinators by the `ao_consolidated_*` filename prefix, which this
+> doc's `ao_open_issues_consolidated_close_out_...` name never matched). One item flagged here but NOT actioned stays
+> genuinely open elsewhere, unduplicated: `ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30`
+> remains `archive_exempt: true`, its own archival explicitly owned by
+> `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`'s `[REVIEW] P0` todo.
 
 > **Human plan — operator session executes it** (`assigned_vm: NA`, never ingested). ONE plan for the whole remaining
 > AO-issue pile so nothing needs rediscovering. Every todo below was admitted only after re-verifying its source doc's

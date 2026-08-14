@@ -382,14 +382,49 @@ source: >-
       how it composes with (not duplicates) `check_codex_doc_freshness.py`'s existing clock-vs-authoring split. Linked
       from `quality-gates.md`'s `related:`. Source doc's own todo intentionally left untouched per this batch's stated
       policy (checkbox reconciliation into source docs happens in the paired finalize plan).
-- [ ] [CODE] P2. Implement the safe-field allow-list + UnsafeConfigChangeError guard in
+- [x] ✅ [CODE] P2. Implement the safe-field allow-list + UnsafeConfigChangeError guard in
       strategy-service/strategy_service/config_reloaders.py per the operator-confirmed 2026-08-12 ruling (option A)
-      Source: `plans/active/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`
-- [ ] [CODE] P2. FLEET-WIDE: instruments-store _index v9-COLUMN populate for cefi/tradfi/defi (+ prediction source) —
+      Source: `plans/active/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` —
+      strategy-service@c688512912: added `SAFE_STRATEGY_RELOAD_FIELDS = frozenset({"strategy_params"})` +
+      `UnsafeConfigChangeError` (RuntimeError subclass) to `config_reloaders.py`. `_on_strategies_reload` now diffs the
+      incoming `StrategyDomainConfig` against the currently active snapshot field-by-field (skipping the very first
+      load, which has no baseline); a `strategy_params`-only change still atomic-swaps as before, an
+      `enabled_strategies` change (different archetype/code path) raises `UnsafeConfigChangeError` and the previously
+      active config stays in effect — `FieldFilteredCallbackRegistry.notify` (UTL) already catches `RuntimeError` from a
+      reload callback and logs it, so the reload is rejected without crashing the process; a restart is still required
+      to actually apply an archetype change (this guard does not auto-restart). 5 new unit tests in
+      `tests/unit/test_config_reloaders.py` (`TestStrategySafeFieldAllowList`): safe field hot-reloads, unsafe field
+      raises + keeps prev config, the registry-level end-to-end swallow path, first-load bypass. Updated
+      `/codex/04-architecture/live-strategy-config-hot-reload.md` (this batch, same commit set) to stop describing the
+      guard as unimplemented design intent — the "What can hot-reload safely" table and "Live = batch" section now
+      reflect the strategies-domain enforcement; the instruments-domain hot-swap contradiction remains open/unenforced
+      (out of this todo's scope — still tracked in the source issue doc). Evidence: `bash scripts/quality-gates.sh`
+      green (sentinel = HEAD `c688512912edae9a2efc254282bb1749404aa68e`, 5992 passed / 0 failed); quickmerge verified
+      `c6885129` ancestor of `origin/live-defi-rollout`.
+- [x] ✅ [CODE] P2. FLEET-WIDE: instruments-store _index v9-COLUMN populate for cefi/tradfi/defi (+ prediction source) —
       pattern-identical to the already-shipped sports v9-column populate script Source:
-      `plans/active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md`
-- [ ] [CODE] P2. Key execution policies by (client_id, slot_label) — §B Source:
-      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
+      `plans/active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md` — unified-trading-pm (this batch):
+      **ALREADY SHIPPED + APPLIED LIVE, no new code needed (verified 2026-08-14).**
+      `instruments-service/scripts/populate_is_index_v9_2026_06_19.py` (`instruments-service@96fd4260`) is the
+      pattern-identical fleet-wide script this todo asked for — it already exists, covers all 4 AGs
+      (cefi/defi/tradfi/prediction), and was `--apply`'d live on 2026-06-19 (confirmed via
+      `_index/snapshots/pre_is_v9_{ag}_2026_06_19.parquet` present in all 4 buckets). Live-re-verified via a fresh
+      `--asset-group` dry-run against each of the 4 prod `_index` objects today: `schema_v9_pct` / `pipeline_mode_pct` /
+      `source_pct` / `asset_group_pct` all **100.0%** for prediction (31,625 rows, source_dist:
+      polymarket_gamma_api/polymarket_clob/instruments_service/kalshi), tradfi (27,516 rows, 100% instruments_service),
+      cefi (85,064 rows, 100% instruments_service), and defi (138,327 rows, 100% instruments_service). `captured` counts
+      unchanged in every dry-run (no data loss). Byproduct observation: defi's dry-run also reported
+      `venue_changes: 120088` from the SAME script's bundled venue-canonicalisation step (`canonicalise_venue_column`) —
+      this is DISTINCT from the v9-column scope of this todo and is already tracked under the existing active defi
+      venue-canonicalization plans (e.g. `plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`,
+      `plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md`), so no new issue doc filed here.
+- [x] ✅ [CODE] P2. Key execution policies by (client_id, slot_label) — §B Source:
+      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` — **ALREADY SHIPPED, no new code
+      needed (verified 2026-08-14).** `execution-service@c2053c47` already implements this: `v2/policy_resolver.py`'s
+      `binding_key(client_id, slot_label)` (`f"{client_id}:{slot_label}"`) plus `ExecutionPolicyResolver` (bindings dict
+      keyed by that pair → `policy_ref`, resolved via `resolve()`/`resolve_config_algorithm()`) and
+      `v2/policy_spec.py`'s `ExecutionPolicyDomainConfig.bindings` (the GCS-hosted binding table, same key shape).
+      Confirmed live in the current worktree; `c2053c47` verified an ancestor of `origin/live-defi-rollout`.
 - [ ] [CODE] P2. Give the execution-policy registry a GCS loader + DomainConfigReloader subscription — §B Source:
       `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
 - [ ] [CODE] P2. Wire policy evaluation into the live execution path (select_algorithm takes config_algorithm from the

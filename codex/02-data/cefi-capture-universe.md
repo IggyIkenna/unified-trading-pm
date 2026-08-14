@@ -113,6 +113,29 @@ spot take effect).
 member — its ordinary spot pairs are mvp=true. KRW is accepted as a quote asset FOR UPBIT only
 (`accepted_quotes_for_venue` SSOT in `cefi_instrument_universe.py`).
 
+## Exception — tokenized-equity spot (perp-gate-exempt, no perp leg)
+
+`CEFI_TOKENIZED_EQUITY_BASE_UNIVERSE` (UAC constant `registry/cefi_instrument_universe.py`, 67 members: **56 OKX
+`X<UNDERLYING>` tokens** + **11 Bybit `xstocks`**) is a distinct carve-out from `CEFI_EQUITY_PERP_BASE_UNIVERSE` — these
+symbols are pure `SPOT_PAIR` tokenized-equity products with **no perp leg on either venue** (unlike the TradFi-linked
+equity perps below, which DO have a PERP form and only ride `SPOT_PAIR` as their secondary tokenized-spot form). Bases
+in this set are captured on ANY venue that lists them regardless of `has_perp_for_base`, mirroring the
+`STAKING_SPOT_EXCEPTION` mechanism (operator precedent 2026-06-23). Discovered/registered 2026-08-12/13,
+`plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`; `MVP_SCOPE_CONFIG_VERSION` 25 → 26.
+
+- **OKX** — 56 `X<UNDERLYING>-USDT` spot tokens (base `X<UNDERLYING>`), `instCategory=3`, live-queried real per-symbol
+  listing dates (2026-07-15/16 through 2026-08-13).
+- **Bybit** — 11 `<TICKER>X`-suffixed `xstocks` (`symbolType="xstocks"` is the discriminator, not `xstockMultiplier`):
+  NVDAX, COINX, AAPLX, CRCLX, METAX, HOODX, AMZNX, GOOGLX, MCDX, TSLAX, SPCXX. Real listing dates are NOT retrievable
+  from Bybit's `instruments-info` endpoint (no `launchTime` field); the Tardis archive's own `availableSince` is the
+  source of record instead (e.g. AAPLX 2025-07-01).
+
+Both venues' tokenized-equity SPOT products ride the EXISTING Tardis CeFi pipeline — no new adapter/fetch path was
+needed (`OKX-SPOT`/`BYBIT-SPOT` were already canonical cefi venues in
+`canonical_mappings.py`/`market_data_categories.py` before this addition). `tracks_equity` links to the Databento
+`DBEQ.BASIC` real-equity twin per the same `crypto_equity_link.py` mechanism as the equity-perp bases (SpaceX's
+`XSPCX`/`SPCXX` are the one standalone `tracks_equity=""` exception, mirroring the pre-IPO SPCX precedent).
+
 ## Exception — TradFi-linked perps
 
 Binance, OKX, and Bybit TradFi-linked perps (underlyings are equities/indices, not crypto coins) are captured via the
@@ -196,14 +219,15 @@ above; the MVP-universe-as-denominator scoping still holds, but `empty_confirmed
 
 ## UAC constants (single SSOT)
 
-| Constant                         | Location                               | Purpose                                                         |
-| -------------------------------- | -------------------------------------- | --------------------------------------------------------------- |
-| `CEFI_BASE_ASSET_UNIVERSE`       | `registry/cefi_instrument_universe.py` | The MVP base-asset set (~540 members)                           |
-| `CEFI_EQUITY_PERP_BASE_UNIVERSE` | same                                   | TradFi-perp underlyings allow-list                              |
-| `STAKING_SPOT_EXCEPTION`         | same                                   | Spot-without-perp allow-list (28 LST/LRT members)               |
-| `is_in_mvp_capture_universe`     | `canonical/crosscutting/mvp_scope.py`  | The shared per-cell predicate                                   |
-| `MVP_SCOPE_CONFIG_VERSION`       | same                                   | Bumped on every content-changing edit to the universe/predicate |
-| `accepted_quotes_for_venue`      | `cefi_instrument_universe.py`          | Per-venue accepted quote assets (KRW for UPBIT only)            |
+| Constant                              | Location                               | Purpose                                                                                          |
+| ------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `CEFI_BASE_ASSET_UNIVERSE`            | `registry/cefi_instrument_universe.py` | The MVP base-asset set (~540 members)                                                            |
+| `CEFI_EQUITY_PERP_BASE_UNIVERSE`      | same                                   | TradFi-perp underlyings allow-list                                                               |
+| `CEFI_TOKENIZED_EQUITY_BASE_UNIVERSE` | same                                   | OKX X-token + Bybit xstocks tokenized-equity spot-only allow-list (67 members, perp-gate-exempt) |
+| `STAKING_SPOT_EXCEPTION`              | same                                   | Spot-without-perp allow-list (28 LST/LRT members)                                                |
+| `is_in_mvp_capture_universe`          | `canonical/crosscutting/mvp_scope.py`  | The shared per-cell predicate                                                                    |
+| `MVP_SCOPE_CONFIG_VERSION`            | same                                   | Bumped on every content-changing edit to the universe/predicate                                  |
+| `accepted_quotes_for_venue`           | `cefi_instrument_universe.py`          | Per-venue accepted quote assets (KRW for UPBIT only)                                             |
 
 ## Accepted coverage ceiling (operator decision 2026-07-17)
 

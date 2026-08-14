@@ -15,7 +15,7 @@ stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]
 tags: [role, review, write-capability, evidence-gated, plan-flip, backlog]
-related: [/agents/review.md, /agents/worker.md, /agents/RULES.md]
+related: [/agents/review.md, /agents/worker.md, /agents/RULES.md, /plans/active/ao_consolidated_closeout_2026_08_12.md]
 created: "2026-08-09"
 last_updated: "2026-08-09"
 parent_epic: orchestrator_master

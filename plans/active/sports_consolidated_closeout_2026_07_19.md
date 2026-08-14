@@ -539,10 +539,10 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       parse-bug residue — FOOTBALL/UNKNOWN clear once the venue-parts[0] fix above ships and existing rows are
       re-stamped. Also still fix the original footystats legacy bundle mislabel (`venue=ODDS_API`→`FOOTYSTATS`, 42,476
       rows) — unrelated to the parse bug, a separate writer defect. **STALE 2026-08-14, see
-      `issues/sports_footystats_mislabel_contradiction_2026_08_14.md`.** **RESOLVED 2026-08-02 (operator ruling on
-      plan_reconcile_parked_operator_decisions_2026_08_02.md § 1a, option A): the UNIBET-fold and SMARKETS-purge clauses
-      are STRUCK from disposition (1)/(3) above, not just banered** — both premises were DISPROVEN 2026-07-27, two days
-      after this todo was authored, by measured evidence in
+      `/plans/archive/2026_08/issues/sports_footystats_mislabel_contradiction_2026_08_14.md`.** **RESOLVED 2026-08-02
+      (operator ruling on plan_reconcile_parked_operator_decisions_2026_08_02.md § 1a, option A): the UNIBET-fold and
+      SMARKETS-purge clauses are STRUCK from disposition (1)/(3) above, not just banered** — both premises were
+      DISPROVEN 2026-07-27, two days after this todo was authored, by measured evidence in
       [`/plans/active/sports_consolidated_native_ao_extract_2026_07_25.md:151-166`](/plans/active/sports_consolidated_native_ao_extract_2026_07_25.md).
       **(a) `UNIBET_UK`/`UNIBET_EU` → `UNIBET` is NOT a casing/alias fold** — a live content comparison proved they are
       genuinely distinct bookmaker feeds (a shared day/league/fixture/market shows DIFFERENT simultaneous odds), so the

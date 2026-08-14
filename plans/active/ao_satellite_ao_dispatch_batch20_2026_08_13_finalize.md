@@ -82,10 +82,30 @@ source: >-
       batch's own checkbox text alone) — caveats/discrepancies found are flagged inline at each doc rather than silently
       accepted (see the `deepseek_claude_blended_provider_routing_2026_07_28.md` Skills-CLI item's
       live-cycle-verification gap, and the 2 uncited-in-source tmux-doc items above).
-- [ ] [REVIEW] P2. For each source doc reconciled above, check whether it now has zero open todos. If so, run the
+- [x] ✅ [REVIEW] P2. For each source doc reconciled above, check whether it now has zero open todos. If so, run the
       standard 6-step archival ritual on it (dated archive folder, exact-successor banner if applicable, corpus-wide
       referrer-path fixup) — do not leave a now-fully-done source doc live and un-archived. Done when: every source doc
       left with zero open todos is archived, and `run_hygiene_sweep.sh` reports no orphan referrers to any of them.
+      **DONE 2026-08-14** — `unified-trading-pm@daca8cb4c0`. Of the 12 unique `Source:` docs, exactly 3 had reached zero
+      open todos (each was `archive_exempt: true` deliberately, per todo 1's "Drop `archive_exempt` when that todo
+      runs"): `ao_open_issues_consolidated_close_out_2026_07_17.md`, `ag_closeout_audit_ao_parked_2026_08_10.md`,
+      `forced_compact_reports_submitted_but_never_executes_2026_08_08.md` — all 3 archived to `plans/archive/2026_08/`
+      via the 6-step ritual (banner + status flip + `git mv`). The other 9 source docs still carry open todos (1-15
+      each, one also `locked_by`) and were left untouched, correctly. Verified `ao_open_issues...` is NOT itself part of
+      the `ao` closeout-family (filename doesn't match the `ao_consolidated__` prefix `check_ag_closeout_linkage.py`
+      resolves on) — the tranche's live coordinator (`ao_consolidated_closeout_2026_08_12.md`) is unaffected.
+      Corpus-wide referrer-path fixup: repointed the 21 active-corpus/codex hits `check_reference_paths.py` flagged as
+      newly- DANGLING against the 3 moved paths (dangling-ref count unchanged from pre-move baseline: 64/86 existence,
+      52/81 format). **Adjacent regression caught + fixed**: archiving
+      `ao_open_issues_consolidated_close_out_2026_07_17.md` dropped it out of `check_ag_closeout_linkage.py`'s
+      active-doc graph, breaking indirect 2-3-hop `[ao]` linkage paths for 9 UNRELATED docs that had relied on it as a
+      bridge to the live coordinator (confirmed via `git stash` A/B: 0 orphans clean, 9 orphans with just the archival
+      applied) — fixed by adding a direct `related:` link to `ao_consolidated_closeout_2026_08_12.md` on each of the 9.
+      Re-verified clean post-ship: `check_ag_closeout_linkage` 0 orphans (baseline 0), `check_reference_paths` at
+      baseline, `regenerate_active_plan_     inventory.py` 0 orphans, `check_archive_candidates.sh` 0 candidates
+      (baseline 0), `check_line_caps.sh` not a regression. `run_hygiene_sweep.sh` itself not run standalone (heavy
+      full-corpus script; the 5 constituent checks this todo's done-condition depends on were run directly and are all
+      clean).
 - [ ] [REVIEW] P2. Once `ao_satellite_ao_dispatch_batch20_2026_08_13.md` itself has zero open todos, run the standard
       6-step archival ritual on it, then archive this finalize plan too. Done when: the batch plan and this finalize
       plan are both under `plans/archive/`, and `regenerate_active_plan_inventory.py` reports zero orphan referrers to

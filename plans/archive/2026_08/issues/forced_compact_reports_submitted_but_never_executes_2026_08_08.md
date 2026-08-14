@@ -8,8 +8,7 @@ summary: >-
   in a 69-minute window, so the submit-verification cannot see the failure. This is now the dominant cause of worker
   recycles, and it was masked before the measurement fix because forces only ever fired at 99-100 where a session is
   unrecoverable anyway.
-status: open
-archive_exempt: true
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -33,7 +32,7 @@ estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
 assigned_role: backend_engineer
 drift_direction: fix-regression
-resolved_by:
+resolved_by: ao_satellite_ao_dispatch_batch20_2026_08_13_finalize
 locked_by:
 locked_since:
 supersedes:
@@ -53,6 +52,12 @@ context_scope:
 ---
 
 # Forced /compact reports submitted=True but never executes
+
+> **🟢 ARCHIVED 2026-08-14 — RESOLVED.** Zero open todos as of the 2026-08-14
+> `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` reconciliation pass (its last open item, re-measuring the
+> wedge rate post-3-fixes, was completed: **worker wedge rate 0.0104/hr**, a ~330-930x reduction vs this doc's own
+> 3.5/hr and 9.7/hr baselines). `archive_exempt: true` dropped per that finalize plan's own note ("Drop `archive_exempt`
+> when that todo runs").
 
 ## The evidence
 

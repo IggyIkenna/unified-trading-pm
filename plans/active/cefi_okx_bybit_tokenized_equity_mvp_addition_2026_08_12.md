@@ -107,8 +107,8 @@ and MVP-tagging needs.
 - [ ] [SCRIPT] P2. Once IS enumerates the new symbols, launch the CeFi Tardis/venue-native backfill for the
       tokenized-equity SPOT window (existing launcher — verify whether OKX/Bybit SPOT tokenized-equity trades ride the
       same Tardis archive as the equity perps, or need their own adapter check first). Repo: deployment-service.
-- [ ] [DOCS] P2. Propagate to `/codex/02-data/mvp-scope-canonical.md` and `/codex/02-data/cefi-capture-universe.md` once
-      the above lands.
+- [x] ✅ [DOCS] P2. Propagate to `/codex/02-data/mvp-scope-canonical.md` and `/codex/02-data/cefi-capture-universe.md`
+      once the above lands. — unified-trading-pm (this commit), see Progress Log.
 
 ## Progress Log
 
@@ -298,6 +298,17 @@ new symbols") didn't call out — added as a dedicated `[SCRIPT]` todo rather th
   blocks subprocess GCS calls) before assuming the gate has cleared; once clear, run the exact
   `launch-cefi-sharded-backfill.sh` command two entries above (drop `DRY_RUN=1`), then flip this checkbox with the VM
   name + evidence.
+
+- **2026-08-14 — Todo 7 (codex propagation) COMPLETE.** Slot-15 data_engineering worker. Propagated the
+  `CEFI_TOKENIZED_EQUITY_BASE_UNIVERSE` universe+carve-out (Todos 1-5's findings) to both target codex docs, which
+  previously had zero mention of it: `/codex/02-data/mvp-scope-canonical.md` (CeFi table — Base universe row now
+  includes `CEFI_TOKENIZED_EQUITY_BASE_UNIVERSE`; Perp-gate row now lists the new spot-without-perp carve-out) and
+  `/codex/02-data/cefi-capture-universe.md` (new "Exception — tokenized-equity spot (perp-gate-exempt, no perp leg)"
+  section documenting the 56 OKX X-tokens + 11 Bybit xstocks and their real listing dates/sources, distinguishing this
+  carve-out from the pre-existing TradFi-linked-perp exception since these symbols have NO perp leg on either venue; UAC
+  constants table row added). Done ahead of Todo 6 (the backfill launch, still Tardis-1-VM-cap-gated) since the
+  catalogue/universe/MVP-scope code this doc propagation describes already landed (Todos 1-5) — the docs were materially
+  stale regardless of launch status.
 
 - **2026-08-14T12:10 UTC — Todo 6 re-checked, STILL GATED, not launched.** Slot-10 data_engineering worker. Same VM
   (`cefi-okx-swap-2026-light-20260814-020834`) still `RUNNING` (`gcloud compute instances list`), heartbeat fresh

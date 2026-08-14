@@ -22,7 +22,8 @@ scope: [engineer, admin]
 tags: [ao, tranche-audit, asset-group, mistag, duplicate, tracker]
 related:
   [
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/active/ao_consolidated_closeout_2026_08_12.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: 2026-07-31
@@ -39,7 +40,7 @@ locked_by:
 resolved_by:
 context_scope:
   [
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/archive/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md,
@@ -185,8 +186,8 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
 - 2026-07-31: filed during `/pre-compact` — these 4 findings existed only in chat during the live audit session and
   would have been lost at compaction; the tracker doc itself has zero line-cap headroom to hold them (999/1000 lines).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries). Skipped one candidate entry —
-  `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` (already in `related:`) — per this run's explicit
-  instruction not to read or touch that file (under active concurrent edit by a different session).
+  `/plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md` (already in `related:`) — per this run's
+  explicit instruction not to read or touch that file (under active concurrent edit by a different session).
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries, unchanged) — all still resolve; this is a
   code-free tracker/audit-findings doc (no source-code target applies) so the codex+plan-doc list stands.
 - **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — re-affirmed, no content change (still
@@ -198,9 +199,9 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 - **context-scout 2026-08-07**: refreshed context_scope (5 entries) — added
-  `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` (the tracker doc) as the first entry: §4's open
-  todo directly edits it (flip 6 MOVED items + fix a stale count), and the 2026-08-01 marker's reason for skipping it (a
-  since-passed instruction not to touch a file under concurrent edit) no longer applies.
+  `/plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md` (the tracker doc) as the first entry:
+  §4's open todo directly edits it (flip 6 MOVED items + fix a stale count), and the 2026-08-01 marker's reason for
+  skipping it (a since-passed instruction not to touch a file under concurrent edit) no longer applies.
 
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — re-affirmed, no content change. §1/§2's operator rulings both
   now `[x]` (closed 2026-08-06); the standing §2 opportunistic-retag todo and §3's human-read-needed merge stay
@@ -208,8 +209,8 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
   below as MISCLASSIFIED_LIKELY_AO_ELIGIBLE — consistent with this doc's own established reasoning that the whole doc
   still correctly stays NA since `assigned_vm` is doc-granular and the other open items are judgment-gated.
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — §3 and §4 are both now `[x]`
-  (done 2026-08-08). The sole remaining open item is the standing §2 opportunistic-retag todo, which is explicitly
-  NOT a standalone dispatchable task by its own text ("Do NOT open a doc solely to retag it, and do NOT batch these"
-  — the 2026-08-06 operator ruling specifically chose opportunistic-only over a bulk pass to avoid a 23-file
-  collision magnet). A single-item doc whose only content is an anti-batch instruction cannot be satellite-extracted
-  without violating the instruction itself.
+  (done 2026-08-08). The sole remaining open item is the standing §2 opportunistic-retag todo, which is explicitly NOT a
+  standalone dispatchable task by its own text ("Do NOT open a doc solely to retag it, and do NOT batch these" — the
+  2026-08-06 operator ruling specifically chose opportunistic-only over a bulk pass to avoid a 23-file collision
+  magnet). A single-item doc whose only content is an anti-batch instruction cannot be satellite-extracted without
+  violating the instruction itself.

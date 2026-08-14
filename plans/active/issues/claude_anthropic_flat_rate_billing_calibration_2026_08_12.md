@@ -27,7 +27,7 @@ related:
   [
     /plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md,
     /codex/06-coding-standards/model-tier-selection.md,
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
   ]
 context_scope:
   - agent-orchestrator/server/state_store/account_usage.py

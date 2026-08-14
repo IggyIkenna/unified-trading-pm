@@ -49,7 +49,7 @@ drift_direction: advance-code
 locked_by:
 context_scope:
   [
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     agent-orchestrator/server/regen_backlog_from_plan.py,
     agent-orchestrator/server/bootstrap.py,
@@ -290,8 +290,8 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
   re-affirmed on citation alone per the skill's own hardened rule (the rule this exact incident wrote in). Both
   citations verified real by reading them directly: the top-of-body "🟢 EXECUTION CONSOLIDATED" banner still reads "Do
   NOT start work from this doc alone" and still redirects to
-  `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` (confirmed still `assigned_vm: NA`, active,
-  present); the inline `assigned_vm: NA #`-comment still states "NOT AO-dispatchable" citing the 2026-07-31
+  `/plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md` (confirmed still `assigned_vm: NA`,
+  active, present); the inline `assigned_vm: NA #`-comment still states "NOT AO-dispatchable" citing the 2026-07-31
   RECLASSIFY-then-revert (BLK-29884333). No content drift since the 2026-08-03 marker (only incidental context-scout
   touches). Not re-deriving the underlying judgment.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

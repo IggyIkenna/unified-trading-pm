@@ -328,10 +328,32 @@ source: >-
       open-ended, real-$ part of F4) remains untouched, exactly as this todo's own scoping intended — not claimed here.
       YAML-validated both edited files post-change (`python3 -c "import yaml; yaml.safe_load(...)"` on each, both parse
       clean).
-- [ ] [CODE] P2. Classify each of the 7 residually-stalled repos' commit ranges since their baseline tag as 'correctly
-      quiet' (no SOURCE_DIR-touching commit since baseline) vs a genuine gap in the patch-fallback logic -- a checkable,
-      worker-determinable fact per repo. Source:
-      `plans/active/issues/semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md`
+- [x] ✅ [CODE] P2. Classify each of the 7 residually-stalled repos' commit ranges since their baseline tag as
+      'correctly quiet' (no SOURCE_DIR-touching commit since baseline) vs a genuine gap in the patch-fallback logic -- a
+      checkable, worker-determinable fact per repo. Source:
+      `plans/active/issues/semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` — ✅ **DONE 2026-08-14 (slot
+      6, backend_engineer), no code change.** All 7 (`e2e-testing`, `fund-administration-service`, `greeks-service`,
+      `ibkr-gateway-infra`, `system-integration-tests`, `trading-agent-service`, `unified-trading-api`) classified
+      **correctly quiet** — confirmed two independent ways: (1) live re-run of the authoritative
+      `python3 scripts/cicd/reconcile_release_tags.py --dry-run` (unified-trading-pm) now reports **0 STALLED**
+      fleet-wide (down from the doc's own 7-repo residual) — `e2e-testing`/`fund-administration-service`/
+      `greeks-service`/`ibkr-gateway-infra`/`trading-agent-service` moved to `tag-derived healthy` (baseline tag IS
+      `origin/main` HEAD, zero commits since); `system-integration-tests`/`unified-trading-api` are `ahead-but-benign`
+      (15 and 3 commits respectively since baseline, the script's own verdict: "all CI/docs/lockfile-only"). (2)
+      Independently re-derived per-repo via `git log --oneline <baseline-tag>..origin/main -- <source_dir>/` scoped to
+      each repo's actual `source_dir` (read from its own `.github/workflows/semver-agent.yml` `source_dir:` input, not
+      guessed): zero commits touch the source dir in any of the 7; the non-zero commit counts for
+      system-integration-tests (15) and unified-trading-api (3) are 100% `chore(promote): LDR → main` squash commits
+      whose only file diff is `pyproject.toml`'s version stamp. **No genuine gap found** — the patch-fallback logic is
+      working correctly; these repos simply have had no `SOURCE_DIR`-touching commit land since their last release.
+      **Separate observation, not fixed here (out of this todo's scope, flagging for the finalize plan / a fresh issue
+      if warranted)**: `e2e-testing`'s configured `source_dir: "e2e_testing"` does not correspond to any real directory
+      in the repo (only `e2e_testing.egg-info/` exists, no `e2e_testing/` package tree) — the patch-fallback's
+      `SOURCE_DIR/`-scoped file check is structurally a permanent no-op for this repo regardless of what changes land, a
+      latent misconfiguration independent of today's "correctly quiet" verdict (which holds either way, since the repo
+      genuinely had 0/1 commits since baseline). Issue-doc checkbox reconciliation for the source doc's own todo is out
+      of scope for this satellite batch (per this doc's own header) — deferred to
+      `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`.
 - [ ] [CODE] P2. Hoist the superseded-promote-PR cleanup in ldr_to_main_fleet_promote.sh above the SIT gate, scoped to
       ancestor-of-current-tip + concluded-failure PRs only (design constraint already specified in the todo) Source:
       `plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md`

@@ -873,8 +873,9 @@ live fleet, taken after the idle-gate instrumentation landed):
 The cooperative nudge lands before the force is needed: main and review are not starved of the 3-minute idle window,
 they mostly never reach the fallback at all. Extending the unconditional force to them would move the two roles that
 compact reliably onto the path that currently fails ~78% of the time
-(`/plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md`; its decisive "verify by
-EFFECT, not submission" fix was still unlanded when this was measured, so 22% is a pre-fix baseline, not a regression).
+(`/plans/archive/2026_08/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md`; its decisive "verify
+by EFFECT, not submission" fix was still unlanded when this was measured, so 22% is a pre-fix baseline, not a
+regression).
 
 **Consequences for future work — read before "fixing" the idle gate:**
 
@@ -903,8 +904,8 @@ EFFECT, not submission" fix was still unlanded when this was measured, so 22% is
 
   Two things this gate does NOT accept as evidence: the force _submitting_ (`submitted=True` is what
   `forced_compact_ineffective` exists to disprove — see
-  `/plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md`), and the idle gate merely
-  _refusing to open_ (judge the path by whether the target compacts, never by whether the force fired).
+  `/plans/archive/2026_08/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md`), and the idle gate
+  merely _refusing to open_ (judge the path by whether the target compacts, never by whether the force fired).
 
   Machine guard: `tests/test_context_lifecycle.py` asserts main/review route through the idle-gated
   `_maybe_force_compact`, so a change that bypasses it fails the suite rather than shipping silently. Changing the
