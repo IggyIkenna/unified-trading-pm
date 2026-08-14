@@ -36,11 +36,12 @@ related:
 parent_epic: sports_master
 priority: P2
 locked_by:
-resolved_by:
+resolved_by: instruments-service@6e81874504
 source: [instruments-service/scripts/rescan_sports_fixtures_canonical.py]
 status: open
 drift_direction: advance-code
 depends_on: []
+archive_exempt: true
 ---
 
 # rescan_sports_fixtures_canonical.py FIXTURES handler missing the canonical pipeline_mode= prefix segment
@@ -102,11 +103,24 @@ for at least one date pre- and one date post- the 2026-07-14 cutover.
 
 ## Todos
 
-- [ ] [CODE] P2. Add canonical-prefix-first / legacy-prefix-fallback support to `_list_entity_blob_paths()` in
+- [x] ✅ [CODE] P2. Add canonical-prefix-first / legacy-prefix-fallback support to `_list_entity_blob_paths()` in
       `instruments-service/scripts/rescan_sports_fixtures_canonical.py`'s FIXTURES path (mirror
       `_load_venue_to_leagues()`'s existing pattern for the single-date case; design + implement the range-scan case to
       UNION canonical + legacy matches rather than either/or, since a wide date range can span the 2026-07-14 cutover).
       Keep WEATHER/XG on their existing single-prefix behavior (no evidence they need this). Add a regression test
       covering both the single-date and range-scan shapes. Verify against the real bucket
       (`instruments-store-sports-prd-central-element-323112`) for a pre-cutover and a post-cutover date before/after.
-      Repo: instruments-service.
+      Repo: instruments-service. — instruments-service@6e81874504
+
+## Progress Log
+
+- 2026-08-14 (slot-31): Added `_EntityHandler.pipeline_mode_segment` (FIXTURES only); single-date lookup now tries the
+  canonical `day={D}/pipeline_mode=batch_api_football/entity=fixtures_schedule/` prefix first, falling back to the bare
+  legacy prefix only if canonical is empty. Investigated the range-scan case (`date_str is None`): it already lists the
+  whole `FIXTURES_PREFIX` with no per-day prefix narrowing, so it inherently reaches blobs shaped either way via the
+  existing per-blob suffix/substring match — no separate union logic was needed there (documented in code). Added 3
+  regression tests (canonical-first, legacy-fallback, range-scan-unions-both) — 11/11 unit tests pass. Verified live
+  against `instruments-store-sports-prd-central-element-323112`: 2026-08-01 now resolves 90 real blobs via the canonical
+  prefix (was 0 before this fix); 2020-06-10/2022-01-15/2023-06-01/2024-09-15 also resolve via the canonical prefix
+  (legacy_raw=0 at every date probed — the live bucket currently has no genuinely legacy-shaped FIXTURES blobs, the
+  fallback branch is a safe no-op there but still covered by the synthetic unit test).
