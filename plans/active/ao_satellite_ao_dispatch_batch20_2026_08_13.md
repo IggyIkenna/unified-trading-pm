@@ -415,9 +415,13 @@ source: >-
       2026-08-10 Progress Log entry explicitly supersedes) to "main/review forced-compact idle gate is rarely reached
       because the cooperative nudge lands first — working as designed, not unreachable", matching the operator ruling's
       own wording. Source: `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
-- [ ] [CODE] P2. DOCS P2: correct ao_orphan_audit_followup_triage_2026_07_30.md's stale claim that batch2 already
-      carries fixes for ao_recovery_audit_layer1_deleted_2026_07_15 (re-verified false) Source:
-      `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
+- [x] ✅ [CODE] P2. DOCS P2: correct ao_orphan_audit_followup_triage_2026_07_30.md's stale claim that batch2 already
+      carries fixes for ao_recovery_audit_layer1_deleted_2026_07_15 (re-verified false) — unified-trading-pm (this
+      commit): struck `ao_recovery_audit_layer1_deleted_2026_07_15` from the archived triage doc's todo 1 "6 docs" list
+      (now 5), with a Correction note citing the 5 prior re-verifications (context-scout 2026-08-03/05/07,
+      `/plan-reconcile` 2026-08-10) that all confirm zero hits naming that doc in
+      `ao_satellite_ao_dispatch_batch2_2026_07_30.md`; noted the underlying doc was independently resolved via
+      `deployment-service@1a8346db` instead. Source: `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
 
 ## Deferred
 
