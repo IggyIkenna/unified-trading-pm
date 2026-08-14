@@ -350,27 +350,27 @@ than proceeding.
       live, not from the prior mapping-code read alone.
 
       **ADDENDUM 2026-08-14 (slot-18) — the population slot-26 verified above is a DIFFERENT one from this todo's own
-                              cited counts; a second, separate fold was actually still outstanding and is now also closed.** Re-checking this
-                              todo's own numbers (6,306 captured `ODDS` / 16,207 captured `odds`, venue=FOOTYSTATS) against
-                              `instruments-store-sports-prd-central-element-323112` (the bucket slot-26 measured) does NOT reproduce them — that
-                              bucket's lowercase `odds`/footystats count is 30,498, not 16,207. The 6,306/16,207 figures are physically in the
-                              **MTDS raw-tick manifest** (`market-data-tick-sports-prd-central-element-323112`), a completely separate bucket
-                              that happens to share the `ODDS`/`odds` token name with the IS 19-token reference-data vocabulary slot-26
-                              resolved — the EXACT "two different systems, one shared token" trap this whole todo's own UAC-comment correction
-                              already named once (see the todo's own "the UAC comment... is FALSE" line) and the 19-token migration's Progress
-                              Log named again for a different pair of systems. Live-verified this session (dispatched as
-                              `sports_taxonomy_p2_migration-005`): a full-population (not sampled) GCS-existence check of all 6,306 MTDS
-                              `captured` uppercase-`ODDS` rows found **0/6,306 had backing parquet content** under either known raw_tick_data
-                              path shape, while every checked (date, league) pair's lowercase `odds` twin did — i.e. this MTDS population was
-                              phantom bookkeeping residue, not real data needing a content-merge fold. Filed
-                              `/plans/archive/issues/sports_footystats_odds_uppercase_phantom_not_real_2026_08_14.md`, operator ruling
-                              BLK-931edbb5: purge rather than fold. Purged 2026-08-14 (6,306 captured + 136 empty_confirmed rows removed,
-                              manifest-only — no real GCS object existed to touch; consolidator paused via maintenance window, pre-purge
-                              snapshot taken, §3a fresh soft-delete-retention check passed at 604800s), re-verified 0 remaining post-purge.
-                              Shipped `market-tick-data-service@5dcb6c865a` (purge tool + test) and `unified-api-contracts@b6378af519`
-                              (corrected the same UAC comment slot-18 found already-wrong-again, shrunk
-                              `SPORTS_DATA_TYPE_ACCEPTED_STALE_UPPERCASE_RESIDUE` by dropping `ODDS`). Both populations this todo's title
-                              implicitly bundled are now genuinely resolved.
+                                  cited counts; a second, separate fold was actually still outstanding and is now also closed.** Re-checking this
+                                  todo's own numbers (6,306 captured `ODDS` / 16,207 captured `odds`, venue=FOOTYSTATS) against
+                                  `instruments-store-sports-prd-central-element-323112` (the bucket slot-26 measured) does NOT reproduce them — that
+                                  bucket's lowercase `odds`/footystats count is 30,498, not 16,207. The 6,306/16,207 figures are physically in the
+                                  **MTDS raw-tick manifest** (`market-data-tick-sports-prd-central-element-323112`), a completely separate bucket
+                                  that happens to share the `ODDS`/`odds` token name with the IS 19-token reference-data vocabulary slot-26
+                                  resolved — the EXACT "two different systems, one shared token" trap this whole todo's own UAC-comment correction
+                                  already named once (see the todo's own "the UAC comment... is FALSE" line) and the 19-token migration's Progress
+                                  Log named again for a different pair of systems. Live-verified this session (dispatched as
+                                  `sports_taxonomy_p2_migration-005`): a full-population (not sampled) GCS-existence check of all 6,306 MTDS
+                                  `captured` uppercase-`ODDS` rows found **0/6,306 had backing parquet content** under either known raw_tick_data
+                                  path shape, while every checked (date, league) pair's lowercase `odds` twin did — i.e. this MTDS population was
+                                  phantom bookkeeping residue, not real data needing a content-merge fold. Filed
+                                  `/plans/archive/issues/sports_footystats_odds_uppercase_phantom_not_real_2026_08_14.md`, operator ruling
+                                  BLK-931edbb5: purge rather than fold. Purged 2026-08-14 (6,306 captured + 136 empty_confirmed rows removed,
+                                  manifest-only — no real GCS object existed to touch; consolidator paused via maintenance window, pre-purge
+                                  snapshot taken, §3a fresh soft-delete-retention check passed at 604800s), re-verified 0 remaining post-purge.
+                                  Shipped `market-tick-data-service@5dcb6c865a` (purge tool + test) and `unified-api-contracts@b6378af519`
+                                  (corrected the same UAC comment slot-18 found already-wrong-again, shrunk
+                                  `SPORTS_DATA_TYPE_ACCEPTED_STALE_UPPERCASE_RESIDUE` by dropping `ODDS`). Both populations this todo's title
+                                  implicitly bundled are now genuinely resolved.
 
 - [x] ✅ [DATA] P0. **Move `odds_horizon_bucket` onto the `odds` + `horizon` model.** ~~135,980 shards... MDPS
       121,762/MTDS 14,656/IS 1,106... 123,642 attributed to venue=ODDS_API~~ **STALE — corrected 2026-08-14 (slot-26),
@@ -440,10 +440,13 @@ than proceeding.
       is a PATH segment so objects move, not just rows. Note the fork is currently split WITHIN venues — BETFAIR_EX_UK
       has 9,204 `exchange_odds` AND 3,405 pre-fork `odds` — so a partial purge would leave the same venue across two
       tokens; the end state must be ONE token per venue. **§3a fresh check required before any object delete.**
-      **Partial-completion note (2026-08-14, slot-28)**: 59,310/60,095 (98.7%) is content-verified safe and purged via
-      DROP/COPY_THEN_DELETE (see Progress Log); the remaining 785 keys are excluded (see the new merge todo directly
-      below) because their `odds` twin does not cover their content — do not flip this checkbox until either the merge
-      todo closes or an operator explicitly accepts the 785-key residual as out of scope.
+      **Partial-completion note (2026-08-14, slot-28)**: 59,310/60,095 (98.7%) is content-verified safe and purged on
+      BOTH sides — GCS (DROP/COPY_THEN_DELETE, `market-tick-data-service` migrate+verify, VERIFY PASSED) AND the sports
+      manifest (REMOVE 59,310 fork rows / ADD 35,350 new `odds` rows / 23,960 no-add-needed, live-index VERIFY PASSED, 0
+      non-excluded fork rows remain) — see Progress Log for full evidence + shas. The remaining 785 keys are excluded on
+      both sides (see the merge todo directly below) because their `odds` twin does not cover their content — do not
+      flip this checkbox until either the merge todo closes or an operator explicitly accepts the 785-key residual as
+      out of scope.
 - [ ] [DATA] P1. **Content-merge the 785 `exchange_odds`/`fixed_odds` keys where the pre-existing `odds` twin does NOT
       cover the fork object's rows** (found 2026-08-14, slot-28, via
       `verify_exchange_fixed_odds_full_population_content_2026_08_14.py`'s full-population re-check — up to 1,134
@@ -824,3 +827,57 @@ than proceeding.
   disposition check are NOT interchangeable measurements even when they sound like the same question — always re-verify
   content at the SAME granularity the delete will actually operate on, and never generalize a subset content-check to
   the full population without re-running it.
+- **2026-08-14 (slot-28, same session, manifest pass)** —
+  `manifest_purge_exchange_fixed_odds_2026_08_14.py --exclude-report full_population_content_verify.json` (DRY-RUN)
+  confirmed counts internally consistent with the GCS-verified safe population: REMOVE 59,310 fork rows (785 excluded,
+  untouched) / ADD 35,350 new `odds` rows (no pre-existing twin) / DROP-no-add 23,960 (odds twin already exists) —
+  35,350+23,960=59,310, matches exactly. Proceeded to `--confirm-prod-write`, but hit two consecutive process-management
+  failures BEFORE any live-index write occurred (both independently confirmed safe by re-running the DRY-RUN afterward
+  and observing REMOVE still =59,310, i.e. the live index was byte-identical to before either attempt): (1) first launch
+  was double-backgrounded (Bash-tool `run_in_background: true` wrapping a command that ALSO backgrounded itself with
+  shell `&`) — the tracked "process" was only the launcher shell, which exits almost immediately after spawning the real
+  child, so the harness reported false-positive completion while the real child (no `nohup`/`disown`) kept running
+  unprotected; it then died silently (no traceback) right after the pre-write snapshot step, most likely SIGHUP'd when
+  its parent shell was torn down. (2) Second launch used single, correct `run_in_background: true` (no manual `&`) —
+  still died at the exact same point (after "snapshot written + verified", before the CAS rewrite), this time with an
+  explicit signal: harness reported `exit code 143` (SIGTERM), confirming the kill is external to the script (no
+  exception, no traceback in either log). Both times the process was torn down at what looks like a session/turn
+  boundary in the agent harness itself, not a script bug. **Lesson**: a Bash-tool `run_in_background: true` process is
+  not immune to being SIGTERM'd on a session/turn boundary in this environment — for any prod-write that must survive
+  across turns, fully detach it first (`setsid nohup <cmd> < /dev/null > log 2>&1 &` + `disown`, capturing the REAL
+  worker PID via `pgrep`, not `$!`, since `$!` under `setsid` is the transient wrapper PID, not the detached child),
+  THEN attach a separate tracked `run_in_background: true` monitor (`while kill -0 <real-PID>; do sleep 5; done`) purely
+  to get a completion signal — never trust `run_in_background: true` alone as a durability guarantee for a long-running
+  prod mutation. Third attempt (setsid-detached) **also died at the identical point** — this ruled out shell-session
+  teardown as the cause and pointed at something host-level. Found the real root cause by reading
+  `/usr/log/resource-watchdog.log` and `/usr/local/bin/resource-watchdog.sh`: a legitimate cross-slot host guardian
+  (permanent infra, not a bug) that kills any non-allowlisted process whose RSS exceeds 10GB normal / **4GB once the
+  shared orchestrator cgroup crosses 80% memory** (other slots' concurrent work can trigger "high pressure" at any
+  moment — confirmed via the log: all 3 kills fired at `pressure=high cgroup_mem=22GB`, `rss:~9.4-10.3GB > 4194304kB`,
+  `KILL #134/#135/#136`). Each kill was independently confirmed harmless (re-running the plain DRY-RUN afterward each
+  time showed the live index byte- identical to before, REMOVE still =59,310) — the watchdog SIGTERMs cleanly before any
+  partial write lands, so no data-loss risk, just wasted attempts. **Root cause was the script, not the environment**:
+  the original pandas implementation did `pd.read_parquet` of the FULL 6.1M-row/39-column live index, then
+  `pd.concat([filtered, add_rows])` (a second near-full-size copy), then `to_parquet` (a third Arrow-conversion copy) —
+  3x the base frame alive at once, plus a Python-level tuple-list exclude-check that iterated all 6.1M rows instead of
+  just the ~60K fork rows. Rewrote the script (`manifest_purge_exchange_fixed_odds_2026_08_14.py`) to never materialize
+  the full table in pandas: a cheap column-projected (6-of-39 cols) pass over the whole index computes REMOVE/ADD row
+  masks as numpy bool arrays (exclude/target-key matching now scoped to only the ~60K fork + ~511K odds rows, not all
+  6.1M), then a pyarrow row-group streaming pass (`ParquetFile.iter_batches` → filter → `ParquetWriter.write_batch`)
+  rewrites the index without ever holding more than one ~250K-row batch of full-width data in memory. Validated
+  correctness before trusting it against prod: re-ran the fixed DRY-RUN and got byte-identical output to the original
+  implementation (REMOVE 59,310/785-excluded, ADD 35,350, DROP 23,960, identical per-venue breakdown) — proof the
+  rewrite is behaviorally equivalent, not just faster. Measured peak RSS via `/usr/bin/time -v`: **1.84GB** for DRY-RUN
+  (vs the killed original's ~10GB). Shipped `market-tick-data-service@dca9b75192`. **Fourth attempt (memory-fixed
+  script) — SUCCESS**: `--confirm-prod-write` completed exit 0, peak RSS **2.15GB** (comfortably under the 4GB
+  high-pressure threshold). Output: `base=6,103,081 rows -> removed 59,310 fork row(s), added 35,350 odds row(s)`.
+  Post-write independent re-download verify: **`non-excluded fork rows remaining = 0` — VERIFY PASSED**. Manifest side
+  is now fully clean for the 59,310 safe keys, matching the GCS side exactly. Combined with the earlier GCS pass, **both
+  surfaces (GCS objects + manifest rows) are now purged for 59,310/60,095 (98.7%)**; the 785 DATA-LOSS-RISK keys remain
+  untouched on both surfaces, tracked by the separate P1 content-merge todo above. **Lesson**: a killed background
+  process is not automatically "the environment being flaky" — `ps`/cgroup evidence (`resource-watchdog.log`,
+  `/dev/shm/resource-watchdog/kills/<pid>.json` marker files) will name the exact reason and threshold; check them
+  before retrying blindly, since 2 of these 3 kills were fully explainable and the fix was in the script, not in how it
+  was launched. **This todo's checkbox is now updated to reflect BOTH-surfaces completion for the safe population** (see
+  the todo's partial-completion note above) — still NOT flipped to `[x]`, pending either the 785-key merge todo closing
+  or an operator accepting that residual as permanently out of scope.
