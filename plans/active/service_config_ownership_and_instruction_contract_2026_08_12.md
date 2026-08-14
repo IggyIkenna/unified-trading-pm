@@ -530,20 +530,32 @@ someone scoped and did not finish**. Deleting it silently discards the design de
 - [x] [AGENT] P1. ✅ **Shadow-SSOT-type gate added — `strategy-service@c55b586c9c`**
       (`scripts/quality_gates/check_no_shadow_ssot_types.py` + `shadow_ssot_types_baseline.yaml`, shrink-only baseline).
       J1 and J6 are one defect class: a local class/enum redefining a name UAC owns; the gate catches both at commit
-      time. Baselined 15 pre-existing collisions at wire-in time; 3 resolved so far — `WalletConfig` (unioned
-      `strategy_id` into UAC `unified-api-contracts@77cceb6c9d`, then deleted the local class and imported UAC's —
-      `strategy-service@486a61b975`), `SportsVenueType` (deleted outright — zero real consumers anywhere in the tree,
-      and its members described a different axis than UAC's same-named enum, so unioning would have corrupted UAC rather
-      than helped — same commit), and `CadenceKind` (renamed to `AllocationCadenceKind` — UAC's `CadenceKind` is fund
-      subscription/redemption cadence (DAILY/WEEKLY/MONTHLY), a different axis from this file's allocator
-      rebalance-trigger cadence (DAILY/HOURLY/WEEKLY/ON_EVENT) — `strategy-service@793df0ef7a`). 12 remain:
-      `ClientContext`, `ExecutionMode`, `FillEvent`, `GroupBMetrics`, `OrderRecord`, `PnLAttribution`, `PnLSummary`,
-      `Position`, `SettlementEvent`, `StrategyType`, `TradeDeviation`, `VenueAuthStatus`. Of these, `ExecutionMode` is
-      confirmed a genuine near-duplicate (UAC's `HUF`/`SCE`/`EVT` = this file's `HOLD_UNTIL_FLIP`/`SAME_CANDLE_EXIT` +
-      one UAC-only value) but blocked on a live-config migration (8 real strategy YAMLs reference the current wire
-      values directly); `PnLAttribution`/`PnLSummary` are confirmed NOT a clean subset/union (UAC's versions require
-      `attribution_id`/`summary_id` + shard dims this file lacks, and rename `start_time`/`end_time` →
-      `start_date`/`end_date`) — a real PnL-domain data-shape migration, deliberately not rushed.
+      time. Baselined 15 pre-existing collisions at wire-in time; **9 of 15 now resolved**: `WalletConfig` (unioned
+      `strategy_id` into UAC `unified-api-contracts@77cceb6c9d`, then deleted+imported — `strategy-service@486a61b975`);
+      `SportsVenueType` (deleted — zero real consumers, different axis than UAC's same-named enum — same commit);
+      `CadenceKind` (renamed `AllocationCadenceKind` — UAC's is fund subscription/redemption cadence, a different axis
+      from this file's allocator rebalance-trigger cadence — `strategy-service@793df0ef7a`); `VenueAuthStatus` (its one
+      unique member, `CIRCUIT_TRIPPED`, unioned into UAC's — the other 3 were already string-identical —
+      `unified-api-contracts@75addd27ae`, then deleted+imported — `strategy-service@8c11e2fcd6`);
+      `FillEvent`→`ParsedFillEvent`, `OrderRecord`→`StrategyOrderRecord`, `GroupBMetrics`→`CandidateScoreMetrics`,
+      `SettlementEvent`→`FundingSettlementEvent`, `TradeDeviation`→`FieldDeviation` (all 5 renamed, same commit — each
+      verified a genuinely different concept or granularity from UAC's same-named export before renaming, not assumed
+      from the name alone; the `Backtest*` rename attempt for `GroupBMetrics` tripped the
+      `ST-19-no-standalone-backtest-engine` architectural ratchet on the substring "Backtest" in the class name,
+      corrected to `CandidateScoreMetrics`). **6 remain, all deliberately declined rather than force-migrated**:
+      `ExecutionMode` (genuine near-duplicate but 8 real strategy YAMLs reference the current wire values directly —
+      needs a coordinated config migration, not a class-name change); `ClientContext` (UAC's is an unrelated JWT-claims
+      record, but the name is woven through this service's whole per-client architecture in docstrings — a wider rename
+      than the others, deserves its own pass); `PnLAttribution`/`PnLSummary` (UAC's versions require different fields
+      (`attribution_id`/`summary_id` + shard dims) and different field names (`start_time`/`end_time` vs
+      `start_date`/`end_date`) — a real PnL-domain data-shape migration); `Position` (47 consumer files in
+      strategy_service/, by far the widest blast radius of anything in this list, already marked `# CORRECT-LOCAL` from
+      an earlier review — UAC's is an explicitly-named third-party nautilus interop schema, almost certainly a different
+      concept, but deserves a dedicated pass, not one appended to a batch); `StrategyType` (local's 4 values do NOT
+      match the actual `strategy_type:` values found in real production YAMLs — `mean_reversion`/`COMMODITY_REGIME` vs
+      local's `MOM`/`MR`/`BASIS`/`YIELD` — meaning this field is fed by a different config path than assumed, tangled in
+      the already-documented J5 dual-path strategy-config-loading defect (this same plan, § J dual-path register) that
+      needs tracing first, not guessing around).
 - [ ] [AGENT] P1. **For every remaining row, name the SSOT in codex and mark the other path.** Where both must exist for
       a real reason (Group B / Group C in J3), **state in both places which is authoritative and why**. A dual path
       documented as intentional stops costing an auditor an hour; an undocumented one costs it every time.
@@ -586,6 +598,29 @@ assumptions? **Mechanisms: mostly yes. Parameterisation: no — and the missing 
 
 ## Progress Log
 
+- **2026-08-14 (round 3)** — Closed out the two remaining open items from the "later" batch below, plus 6 more
+  shadow-SSOT resolutions. (1) **ADV `as_of_date` manifest stamping — now fully wired end to end.**
+  `paper_run_handler.py`'s `run_paper()` now calls `get_resolved_carry_universe_as_of_date()` at the
+  `emit_paper_run_ledger()` call site, guarded on whether the run actually replayed a `_FUNDING_ARCHETYPES` spec
+  (`CARRY_BASIS_PERP` / `CARRY_FUNDING_DISPERSION`) — the only archetypes whose universe resolution goes through
+  `catalog_carry.py`'s dynamic ADV ranking. This is honestly the date THIS PROCESS resolved against (the
+  process-level-singleton limitation noted last round means it cannot be a fresh per-rerun re-derivation), never a
+  fabricated or omitted value — `strategy-service@3e8162c6cb`. **ε=0 proof added**: two new tests in
+  `test_batch_rerun.py` — `test_rerun_carries_dynamic_universe_as_of_dates_and_stays_epsilon_zero` (batch manifest
+  carries the paper manifest's pinned `{"carry_basis_perp_adv": "2026-01-04"}` through unchanged AND
+  `result.recon.deterministic is True` / `matched == 4` / `deviations == []`) and
+  `test_rerun_defaults_dynamic_universe_as_of_dates_to_empty_when_paper_had_none` (no funding-archetype spec → `{}`,
+  never guessed) — both green under `quality-gates.sh`, confirming this wiring does not perturb
+  `paper(W) == batch-rerun(W)`. (2) **6 more shadow-SSOT-type collisions resolved** (see the gate todo above for the
+  full per-item rationale): `VenueAuthStatus` (unioned `CIRCUIT_TRIPPED` into UAC, `unified-api-contracts@75addd27ae`),
+  `FillEvent`→`ParsedFillEvent`, `OrderRecord`→`StrategyOrderRecord`, `GroupBMetrics`→`CandidateScoreMetrics`,
+  `SettlementEvent`→`FundingSettlementEvent`, `TradeDeviation`→`FieldDeviation` (all 5 renames,
+  `strategy-service@8c11e2fcd6`) — 9/15 baseline items now resolved, 6 remain, all deliberately declined with stated
+  reasons (`ExecutionMode` live-YAML-migration scope; `ClientContext` wide-blast-radius rename; `PnLAttribution`/
+  `PnLSummary` real data-shape migration; `Position` 47-consumer blast radius; `StrategyType` tangled in the J5
+  dual-path config-loading defect, needs tracing first). (3) Task 7a (this plan's own PM-repo ship,
+  `check_reference_paths.py`) remained blocked this round by 5 other sessions' foreign untracked files in the shared
+  `unified-trading-pm` checkout — never touched, rechecked rather than forced, per standing multi-agent-safety rule.
 - **2026-08-14 (later)** — Continued from the earlier same-day batch: (1) J6 importer migration — all 5 real
   `BusTransferType` importers migrated + the 2 zero-importer legacy enums deleted (`unified-api-contracts@08954d8d6a`,
   `strategy-service@793df0ef7a`, `execution-service@3a72912c85`). (2) `CadenceKind` shadow-SSOT renamed to
