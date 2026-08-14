@@ -90,7 +90,7 @@
     "ml-service": "0.58.8",
     "alerting-service": "0.63.0",
     "unified-trading-api": "0.4.1",
-    "client-reporting-api": "0.32.0"
+    "client-reporting-api": "0.32.11"
   },
   "repositories": {
     "alerting-service": {
