@@ -101,16 +101,28 @@ For every `manifest.record_captured(...)` / `record_failed(...)` / `record_empty
 writes one of the 19-token vocabulary into `data_type`:
 
 1. Find the exact variable/literal carrying the token into the manifest write.
-2. Grep the surrounding function (and anything it's called from/into) for a UAC-axis REGISTRY lookup on the SAME
-   variable (`get_entity_league_coverage`, `_pipeline_mode_for_sports_data_type`, `is_league_entity_covered`,
-   `get_source_coverage_start`, `SPORTS_DATA_TYPE_TO_SOURCE`, `_RETIRED_SPORTS_DATA_TYPES`,
-   `_should_skip_date_for_per_league`).
+2. Grep the surrounding function (and anything it's called from/into) for a lookup on the SAME variable, and sort it
+   into ONE of two buckets — **CORRECTED 2026-08-14 (mid-code-authoring)**, see the "NEW FINDING" section below for why
+   the original single-bucket version of this step was wrong for one entry:
+   - **UAC-registry lookup** (`get_entity_league_coverage`, `_pipeline_mode_for_sports_data_type`,
+     `is_league_entity_covered`, `get_source_coverage_start`, `SPORTS_DATA_TYPE_TO_SOURCE`,
+     `_RETIRED_SPORTS_DATA_TYPES`) — a plain Python dict/constant keyed on the PERMANENT uppercase UAC vocabulary,
+     unrelated to what's on disk. Needs the ORIGINAL uppercase value — translate AFTER this runs.
+   - **Manifest-read lookup** (`_should_skip_shard`, `_should_skip_date_for_per_league`, `ManifestWriter.lookup()`
+     directly, `check_shard_freshness()`) — does an EXACT-MATCH read against the manifest's own stored `data_type`
+     column (confirmed: `ManifestWriter.lookup()`'s docstring says "exact on every populated key";
+     `_should_skip_date_for_per_league` docstring says "exactly as ManifestWriter.lookup would" and its body does a
+     literal `_df[_col] == _want` filter). Post-restamp that column holds LOWERCASE — needs the TRANSLATED value,
+     translate BEFORE this runs (same direction/timing as the writes, not the opposite).
 3. **SIMPLE** (no lookup dependency, or the lookup uses its own independent literal — translating a manifest-write
    literal never touches a separate literal used elsewhere) → wrap with `canonical_sports_is_data_type(X) or X`
    immediately at the write.
-4. **ORDERED** (the SAME variable feeds both a lookup and a later write) → insert the translation AFTER the last lookup
-   use and BEFORE the first write use — cite both line numbers explicitly.
-5. Import: `from unified_api_contracts.sports import canonical_sports_is_data_type` (already the convention in the 4
+4. **ORDERED against a UAC-registry lookup** (the SAME variable feeds both a registry lookup and a later write) → insert
+   the translation AFTER the last registry-lookup use and BEFORE the first write use — cite both line numbers.
+5. **ORDERED against a manifest-read lookup** (the SAME variable feeds both a skip-check/`.lookup()` and a later write)
+   → insert the translation BEFORE the first manifest-read use (it needs the translated value too) — the skip-check and
+   every write downstream then share the SAME translated value, cite the insertion line number.
+6. Import: `from unified_api_contracts.sports import canonical_sports_is_data_type` (already the convention in the 4
    fixed files, matching the existing `FIXTURES_SCHEDULE` import).
 
 **Known non-obvious trap** (found this session, `sports_reference_core.py`): the SAME small function can use its
@@ -138,17 +150,20 @@ All write the literal `"SFI_PROGRESSIVE_STATS"`. Lines (row_key, + kwarg where p
 480(483,489), 509(512), 546(549), 577(578), 586(589), 601(602), 609(612), 653(656). Two independent-literal lookups at
 sfi.py:151 (`_should_skip_date_for_per_league`) and sfi.py:276 (`get_source_coverage_start`) — untouched.
 
-### transfermarkt.py — 5 call sites, ALL ORDERED (single shared fix point)
+### transfermarkt.py — 5 write sites + 1 manifest-read site, ALL ORDERED against the manifest-read (single shared fix
+
+    point) — FIXED (`instruments-service` branch, this session)
 
 `data_type` is carried by the local variable `_tm_data_type` (assigned at transfermarkt.py:559 —
 `"TRANSFER_RECORDS" if _want_transfers else "PLAYER_VALUES"`), fed into
-`_should_skip_date_for_per_league(data_type= _tm_data_type)` at transfermarkt.py:597-603 BEFORE every write. **Single
-fix**: insert `_tm_data_type = canonical_sports_is_data_type(_tm_data_type) or _tm_data_type` at transfermarkt.py:606
-(immediately after the skip-check's early-return block ends) — covers all 5 downstream writes at lines 629, 935, 951,
-959, 967. **Open question (flag for operator/plan-author, not resolved by this doc)**: `"TRANSFER_RECORDS"` is NOT one
-of the 19 tokens enumerated in the parent plan's todo text. Confirm whether it is a 20th in-scope token (if it's a
-member of `SPORTS_DATA_TYPE_TO_SOURCE`, `canonical_sports_is_data_type()` will already translate it, silently widening
-the re-stamp's scope beyond "19") or should be excluded from this migration entirely.
+`_should_skip_date_for_per_league(data_type=_tm_data_type)` — a MANIFEST-READ lookup (see the corrected classification
+method above), not a UAC-registry one. **Single fix, corrected**: translate `_tm_data_type` BEFORE the skip-check runs
+(immediately after `_expected_pv_league_ids` is built, transfermarkt.py — right before the
+`if _orch._should_skip_date_for_per_league(...)` call) so the skip-check AND all 5 downstream writes (lines 629→now
+shifted, 935, 951, 959, 967 pre-edit numbering) share the one translated value. **`TRANSFER_RECORDS` resolved (see the
+todo above)**: confirmed NOT a `SPORTS_DATA_TYPE_TO_SOURCE` member — `canonical_sports_is_data_type("TRANSFER_RECORDS")`
+returns `None`, so the `or _tm_data_type` fallback leaves it untouched; not a 20th in-scope token, no special-casing
+needed.
 
 ### understat.py — 14 call sites, ALL SIMPLE
 
@@ -305,11 +320,13 @@ method above applies here too, just for reads instead of writes). **`process_pre
 fix is NOT reusable here** — different function, different manifest-read primitive (`check_shard_freshness` vs
 `.lookup()`/`_should_skip_date_for_per_league`'s own inline exact-match filter).
 
-**This is a genuinely new, cross-cutting scope item — NOT silently folded into the write-side branch.** The write-side
-mechanical fixes below remain correct and necessary regardless (writes must still become lowercase), but **this branch
-must NOT be represented as "the fix" for the 19-token migration until the read side is also inventoried and fixed** —
-doing so would ship a migration that looks complete (writes fixed, tests presumably pass since writes still succeed) but
-silently reproduces a variant of the exact bug it exists to prevent. See the new P0 todo below.
+**Resolved (2026-08-14, same session, follow-up)**: the fix pattern is the SAME translation primitive as the write side
+(`canonical_sports_is_data_type(X) or X`), just applied on the READ side, BEFORE the skip-check call instead of after —
+see the corrected classification method (step 2's two-bucket split) above. This is not a separately-deferred task; it is
+being fixed FILE-BY-FILE, inline with the write-side mechanical work, since both hazards live in the same functions and
+require touching the same lines anyway. `transfermarkt.py`'s 1 read site is already fixed this way (see its section
+above); the remaining 6 read sites (footystats.py=3, sfi.py=1, understat.py=2) are fixed as part of those files' own
+write-side todo below, not a separate pass.
 
 ## Todos
 
@@ -332,20 +349,21 @@ silently reproduces a variant of the exact bug it exists to prevent. See the new
       with zero special-casing: `PLAYER_VALUES` → `"player_values"`, `TRANSFER_RECORDS` → `None` → falls back to the
       original literal, untouched. No operator escalation needed; the single fix point at transfermarkt.py:606 is
       confirmed scope-safe as specified.
-- [ ] [DATA] P0. **NEW (discovered mid-code-authoring): classify + fix the READ-side exact-match hazard** —
-      `_should_skip_shard()`/`_should_skip_date_for_per_league()` call sites (7 confirmed: footystats.py=3, sfi.py=1,
-      transfermarkt.py=1, understat.py=2) each pass a raw uppercase `data_type` into an exact-match manifest read
-      (`ManifestWriter.lookup()` / `sports.py:416`'s own inline exact-match filter) — completely outside this doc's
-      write-only scope, and NOT covered by `process_preflight.py`'s existing `check_shard_freshness()` fix (different
-      primitive). Unfixed, this produces a permanent post-restamp skip-check failure (re-fetch storm), not data
-      corruption — but still reproduces the migration's own failure class in a new shape. See the "NEW FINDING" section
-      above for the full mechanism + evidence.
+- [x] ✅ [DATA] P0. **NEW (discovered mid-code-authoring), then resolved same session: classify + fix the READ-side
+      exact-match hazard** — `_should_skip_shard()`/`_should_skip_date_for_per_league()` call sites (7 confirmed:
+      footystats.py=3, sfi.py=1, transfermarkt.py=1, understat.py=2) each pass `data_type` into an exact-match manifest
+      read (`ManifestWriter.lookup()` / `sports.py:416`'s own inline exact-match filter), which the write-only sweep
+      missed. Fix pattern resolved: same `canonical_sports_is_data_type(X) or X` primitive, applied BEFORE the
+      skip-check instead of after — see the corrected classification method + "NEW FINDING" section above.
+      `transfermarkt.py`'s site fixed this session; the remaining 6 (footystats.py=3, sfi.py=1, understat.py=2) are
+      fixed inline with those files' write-side todo below, not a separate pass.
 - [ ] [DATA] P0. **Once every site above is classified, author + locally validate the fix code for ALL remaining files**
-      (footystats.py, sfi.py, transfermarkt.py, understat.py, weather.py, sports_reference_core.py,
+      (footystats.py, sfi.py, understat.py, weather.py [DONE], sports_reference_core.py,
       sports_reference_fixtures_write.py, and whichever `process_*.py` files todo 2 confirms) on the SAME held-back
-      branch as the 4 already-fixed files
-      (`instruments-service@sports-taxonomy-p2-19token-lowercase-codeprep-2026-08-14`) — commit, push to that branch, do
-      NOT merge. Run `bash scripts/quality-gates.sh` (ruff + basedpyright at minimum) before each commit.
+      branch as the already-fixed files (`instruments-service@sports-taxonomy-p2-19token-lowercase-codeprep-2026-08-14`)
+      — commit, push to that branch, do NOT merge. Run `bash scripts/quality-gates.sh` (ruff + basedpyright at minimum)
+      before each commit. For footystats.py/sfi.py/understat.py, also apply the corresponding READ-side fix from the
+      todo above in the SAME pass (same functions, same lines already being touched).
 - [ ] [REVIEW] P0. **Once the full branch is complete, verify NO manifest-write call site in the sports reference-data
       path was missed** — re-run the systematic grep this doc's inventory was built from
       (`grep -rn "record_captured(\|record_failed(\|record_empty(\|record_captured_from_counts(\|record_expected_empty( \|note_empty(\|note_failed(" instruments_service/engine/orchestrator/*.py instruments_service/reference_data/ *.py`)
