@@ -8,7 +8,7 @@ summary: >-
   uppercase ODDS — 0/20 sampled rows have backing content, while their lowercase odds twin does (20/20); the UAC comment
   that reclassified this population as "real, live instruments-service data" is also wrong about which system owns it.
   Blocks the P2 "fold footystats ODDS+odds" todo pending operator disposition.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -27,7 +27,7 @@ author: slot-18 (data_engineering)
 assigned_vm: planning
 parent_epic: sports_master
 priority: P0
-resolved_by:
+resolved_by: sports_taxonomy_p2_migration-005
 locked_by:
 source:
   [
@@ -38,6 +38,11 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🗄️ ARCHIVED — resolved 2026-08-14.** Both recommended-decision todos done; the phantom rows were purged and the
+> misleading UAC comment corrected. See the plan addendum in
+> `/plans/active/sports_taxonomy_p2_migration_2026_08_08.md`'s "Fold footystats ODDS..." todo for the full closing
+> evidence + SHAs.
 
 # footystats uppercase `ODDS` is phantom, not real — contradicts the P2 todo's own premise
 
@@ -97,7 +102,7 @@ time.
 
 ## Recommended decision
 
-- [ ] [OPERATOR] P0. **Confirm the disposition of the 6,306 captured + 136 empty_confirmed uppercase `ODDS`
+- [x] ✅ [OPERATOR] P0. **Confirm the disposition of the 6,306 captured + 136 empty_confirmed uppercase `ODDS`
       (venue=FOOTYSTATS, MTDS bucket `market-data-tick-sports-prd-central-element-323112`) manifest rows** before any P2
       fold/drop code ships. Two live-measured facts to reconcile: (a) 0/20 sampled rows have backing GCS content under
       either known raw_tick_data path shape; (b) the same (date, league) combination's lowercase `odds` row does have
@@ -107,12 +112,14 @@ time.
       framing with a manifest-only relabel/purge (no GCS object move needed, since there is nothing on disk under the
       uppercase token) rather than a four-surface content-merge. If the full check finds a meaningful non-phantom
       minority, that minority is the actual "real shards" population and needs the four-surface fold; the rest does not.
-      (repo: market-tick-data-service, unified-api-contracts for the corrected comment)
-- [ ] [DATA] P1. **Correct `unified_api_contracts/registry/market_data_categories.py`'s
+      (repo: market-tick-data-service, unified-api-contracts for the corrected comment) — **DONE**: operator ruled
+      BLK-931edbb5 = option A; full 6,306-row population check confirmed 0/6,306 phantom-not-real (100%), purged.
+- [x] ✅ [DATA] P1. **Correct `unified_api_contracts/registry/market_data_categories.py`'s
       `SPORTS_DATA_TYPE_ACCEPTED_STALE_UPPERCASE_RESIDUE` comment** once the operator's disposition above is settled —
       it currently claims the 6,306-row population is "a live instruments-service reference-data population", which this
       session's direct read of the instruments-service manifest disproves (0 uppercase `ODDS` rows there, 30,498
-      captured lowercase `odds`/footystats — an unrelated count). (repo: unified-api-contracts)
+      captured lowercase `odds`/footystats — an unrelated count). (repo: unified-api-contracts) — **DONE**:
+      `unified-api-contracts@b6378af519`.
 
 ## Progress Log
 
@@ -121,3 +128,20 @@ time.
   GCS estate and found it contradicted (0/20 phantom, matching the twin lowercase). Filed this issue + posted `/blocked`
   on the task rather than execute a fold against non-existent source content or unilaterally reclassify a
   twice-already-revised population without operator visibility.
+- **2026-08-14 (slot-18, resolution)** — Operator answered BLK-931edbb5 (option A). Ran the FULL 6,306-row population
+  (not a sample) through a footystats-venue-scoped variant of `drop_sports_odds_phantom_uppercase_2026_07_26.py`'s
+  live-check: **6,306/6,306 (100%) confirmed phantom**, 0 unexpected hits, 177 rows additionally had no lowercase twin
+  either (flagged, not blocking — a separate minor data-gap note, not evidence against the phantom verdict). Purged
+  (manifest-only — consolidator paused via `pause_via_maintenance_window`, pre-purge snapshot taken, §3a fresh
+  soft-delete-retention check passed at 604800s, no real GCS object touched since none existed): 6,306 captured + 136
+  empty_confirmed rows removed from `market-data-tick-sports-prd-central-element-323112`'s
+  `_index/availability_index.parquet`; re-verified 0 remaining post-purge. Corrected the UAC comment this issue's
+  finding traced to (it had independently been re-corrected-wrong on 2026-08-08; now accurate) and dropped `ODDS` from
+  `SPORTS_DATA_TYPE_ACCEPTED_STALE_UPPERCASE_RESIDUE` (genuinely empty for that token now). Shipped
+  `market-tick-data-service@5dcb6c865a` (purge tool + unit tests) and `unified-api-contracts@b6378af519` (comment fix).
+  **Separately discovered while flipping the plan checkbox**: `sports_taxonomy_p2_migration_2026_08_08.md`'s "Fold
+  footystats ODDS..." todo had ALREADY been marked done by a different session (slot-26), which had verified a DIFFERENT
+  population under the same token name (`instruments-store-sports-prd`'s IS reference-data manifest, 30,498 captured
+  rows) rather than this issue's MTDS population (16,207 captured) — the exact "two systems share a token" trap this
+  issue's own finding #1 named. Appended a correction addendum to that todo rather than re-flipping its already-`[x]`
+  checkbox (never overwrite another session's landed content). Issue resolved.
