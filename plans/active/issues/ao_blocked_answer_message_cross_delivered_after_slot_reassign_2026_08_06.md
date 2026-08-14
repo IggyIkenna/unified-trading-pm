@@ -18,7 +18,7 @@ summary: >-
   supposedly being answered. `POST /api/slots/{slot_id}/skip-current-task` (`routes/slots_ops.py:722-835`) has the same
   gap (checks `slot.current_task is not None`, not `slot.status`). The codebase fixed a structurally identical "stale
   per-slot state bleeds into the new occupant" bug once before for a different mechanism (`_prereq_blocked_since`, see
-  `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md:626-641` and its fix
+  `/plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md:626-641` and its fix
   `ao_dispatch_liveness_p0_2026_07_20.md`) — this is the same shape, unfixed, for blocked-question message delivery.
 status: open
 nature: issue

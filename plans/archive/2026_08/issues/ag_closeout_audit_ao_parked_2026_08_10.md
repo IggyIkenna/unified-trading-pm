@@ -16,8 +16,7 @@ summary: >-
   read, `ao_satellite_ao_dispatch_batch19_2026_08_10.md` drafted (2 AO-eligible items — the total surviving
   actionable-and-uncovered work in the ENTIRE 72-doc corpus), and all 33 remaining orphaned-but-not-eligible docs
   catalogued with per-doc reasoning for the ledger.
-status: open
-archive_exempt: true
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -61,7 +60,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: ao_satellite_ao_dispatch_batch20_2026_08_13_finalize
 depends_on: []
 context_scope:
   [
@@ -77,6 +76,11 @@ source: >-
 ---
 
 # Parked findings — 2026-08-10 `/ag-closeout-audit ao` (part of the `all`-mode run)
+
+> **🟢 ARCHIVED 2026-08-14 — RESOLVED.** Zero open todos as of the 2026-08-14
+> `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` reconciliation pass (its last open item, archiving
+> `safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`, was reconciled + verified already flipped).
+> `archive_exempt: true` dropped per that finalize plan's own note ("Drop `archive_exempt` when that todo runs").
 
 ## Resolved this run (not a parked finding — mechanical linkage fixes)
 

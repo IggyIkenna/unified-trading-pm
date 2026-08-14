@@ -16,6 +16,7 @@ scope: [engineer, admin]
 tags: [context-scope, context-scout, ao-dispatch, model-tier, follow-up]
 related:
   [
+    /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /plans/archive/2026_08/issues/context_scope_consumption_enforcement_2026_07_30.md,
     /cursor-configs/skills/context-scout/SKILL.md,
     /codex/06-coding-standards/model-tier-selection.md,

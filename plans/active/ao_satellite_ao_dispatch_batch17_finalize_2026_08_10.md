@@ -17,7 +17,7 @@ related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch17_2026_08_10.md,
     /plans/archive/2026_08/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md,
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-10"

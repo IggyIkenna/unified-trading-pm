@@ -21,7 +21,7 @@ related:
     /plans/active/ao_satellite_ao_dispatch_batch19_finalize_2026_08_10.md,
     /plans/active/issues/ao_dispatch_ignores_same_doc_operator_predecessor_todo_2026_08_08.md,
     /plans/active/issues/citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md,
-    /plans/active/issues/ag_closeout_audit_ao_parked_2026_08_10.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_ao_parked_2026_08_10.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-10"
