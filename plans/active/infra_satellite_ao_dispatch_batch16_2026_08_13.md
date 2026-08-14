@@ -70,8 +70,11 @@ source: >-
       `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md` — unified-trading-pm@99a13bea88
       (`scripts/plan-hygiene/check_settings_symlink_hygiene.sh` + wired into `run_hygiene_sweep.sh`; verified PASS on a
       clean workspace and FAIL on both violation modes via a scratch fake-clone)
-- [ ] [CODE] P2. Find where the settings.local.json symlinks came from (which bootstrap path/manual step created them)
-      Source: `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md`
+- [x] ✅ [CODE] P2. Find where the settings.local.json symlinks came from (which bootstrap path/manual step created
+      them) Source: `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md` —
+      unified-trading-pm (this batch) — negative-result investigation: no script ever creates that symlink (exhaustive
+      git-history search of every bootstrap/linker script); most likely a manual `ln -s` typo by an operator. Full
+      writeup + todo closed in the source issue doc's 2026-08-14 Progress Log entry.
 - [ ] [CODE] P2. Update /codex/05-infrastructure/claude-code-settings-symlink.md with the corrected symlink-target and
       git-tracked-status facts Source: `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md`
 - [ ] [CODE] P2. Record the Cursor claudeCode.allowDangerouslySkipPermissions / initialPermissionMode per-machine fix in
