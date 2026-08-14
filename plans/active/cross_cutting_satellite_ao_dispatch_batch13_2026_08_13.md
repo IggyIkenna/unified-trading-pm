@@ -138,19 +138,37 @@ source: >-
       touching, already exempt). Verified: QG-equivalent regex clean post-fix; full `quality-gates.sh --no-fix` green
       (`✅ ALL QUALITY GATES PASSED`, 31s) — strategy-service@621858344d (2026-08-14, slot-10·infra). Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
-- [ ] [CODE] P2. Resolve the STEP 5.37 inline HF/LTV/margin thresholds against UAC LIQUIDATION_PARAMS_REGISTRY — **note
-      (2026-08-14 diagnosis above): the `catalog_carry.py` hit (`_, liquidation_threshold = resolve_ltv_mode(...)`) is a
-      check regex false-positive (matches the assignment-target variable name, not a literal value) — it is already
-      calling the canonical resolver correctly; do not "fix" that call site, only tighten the regex or add a
-      `# CORRECT-LOCAL` opt-out. The `greek_model.py`/`analog_execution_gate.py` Decimal-literal hits are genuine.**
-      Source: `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
-- [ ] [CODE] P2. Fix or re-baseline the <300s quality-gate budget (326s+12s measured) — **note (2026-08-14 diagnosis
-      above): NOT reproducible on a clean, uncontended host (measured 112s today) and likely already substantially fixed
-      by `quickmerge.sh`'s same-day 2026-08-10 CPU-vs-wall billing rework; re-verify under real contention before sizing
-      further work — may already be resolved.** Source:
+- [x] ✅ [CODE] P2. Resolved the STEP 5.37 inline HF/LTV/margin thresholds — unified-api-contracts@31b4ad958e +
+      strategy-service@ac5cab7edb (2026-08-14, slot-29·infra). Added `MarginModel.REG_T` +
+      `reg_t_initial_margin_long_pct`/`short_pct` fields to UAC `LIQUIDATION_PARAMS_REGISTRY` (50%/150%);
+      `greek_model.py._reg_t` now reads those instead of inlining `Decimal("0.5")`/`Decimal("1.5")`. **Correction to the
+      2026-08-14 diagnosis note**: `analog_execution_gate.py`'s `kelly_boost=Decimal("1.2")` hit was NOT genuine —
+      re-verified live: it's a Kelly-criterion position-sizing multiplier on the analog execution gate, unrelated to
+      margin/liquidation (confirmed via its own docstring: "Multiplier applied when all analogs were clean"), not a
+      threshold sourced from any venue's margin model — same regex-false-positive class as `catalog_carry.py`'s
+      `liquidation_threshold` var-name hits. Both false positives annotated `# CORRECT-LOCAL` (not migrated to UAC,
+      which would be semantically wrong for a strategy-tuning constant). `strategy-service/scripts/quality-gates.sh`
+      `CODEX_MAX_VIOLATIONS` ratcheted 4 -> 3 (STEP 5.37 class cleared); full QG green on both repos
+      (unified-api-contracts 352s, strategy-service 141s, sentinel-verified). Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
-- [ ] [CODE] P2. Fix the gate's stale SCHEMA_CONTRACTS_AUDIT.md pointer message (and grep the fleet for the same
-      template) Source:
+- [x] ✅ [CODE] P2. **RESOLVED — already fixed by the 2026-08-10 CPU-vs-wall billing rework, no code change needed.**
+      strategy-service@ac5cab7edb (2026-08-14, slot-27·infra). Re-verified under genuine contention (not just the 112s
+      clean-host figure from the diagnosis todo above): 2 fresh `bash scripts/quality-gates.sh --no-fix` runs on the
+      current LDR-tip HEAD, both under real host load — run 1: 134s wall (`time` real 2m14.415s), exit 0; run 2: 44s
+      governor queue-wait (excluded from billable per base-service.sh's CPU-vs-wall rework) +
+      `✅ ALL QUALITY GATES PASSED (152s)` billable work. Both comfortably under the 300s `MAX_DURATION` cap, including
+      one run with real governor contention (30-44s queue-wait) — the exact contention scenario that produced the
+      original 326s+12s=338s failure on 2026-08-10. Confirms the diagnosis todo's hypothesis: the billing rework already
+      resolved this before this todo was ever picked up; no `MAX_DURATION` re-baseline or suite optimization is
+      warranted. Source:
+      `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
+- [x] ✅ [CODE] P2. Fix the gate's stale SCHEMA_CONTRACTS_AUDIT.md pointer message (and grep the fleet for the same
+      template) — unified-trading-pm@144a18fed5 (2026-08-14). Repointed `plans/active/SCHEMA_CONTRACTS_AUDIT.md` →
+      `plans/archive/SCHEMA_CONTRACTS_AUDIT.md` in the shared gate template (`base-service.sh`, `base-library.sh` —
+      strategy-service and every other service source these, so the fix propagates fleet-wide with no per-repo
+      duplication) plus 4 `.cursor/rules/*.mdc` and 2 `codex/*` docs carrying the same stale pointer. Fleet grep found
+      no other verbatim copy of the gate check outside this repo (the UI repo's separate `context/` doc mirror was left
+      untouched — out of this plan's repo scope). Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
 - [ ] [CODE] P3. Make `quickmerge.sh`'s STAGE 3 re-gate contention-vs-content guard (`_qm_other_fail`, ~L2463-2464) also
       exclude ❌ lines produced by `CODEX_MAX_VIOLATIONS`-tolerated checks — currently it only excludes the

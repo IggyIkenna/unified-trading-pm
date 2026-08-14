@@ -191,3 +191,25 @@ live precondition ('once LDR goes quiet... confirm SIT completes an uninterrupte
 0'). As a read-only text-classification pass with no cloud/network access, I cannot independently verify whether LDR has
 since gone quiet or the streak has reset -- the doc's own remediation path requires exactly that live check before
 either item can responsibly move.
+
+**cicd escalation agt-33b3c3, 2026-08-14 ~22:41Z** (`sit_gate_stuck` wall, `deployment-api` 4→5 straight
+SIT-gate-blocked ticks on `ldr-to-main-promote-fleet.yml`): Live-diagnosed via `sit_gate_stuck_detector.py` + `gh` API,
+not assumed from the alert text. **Same treadmill mechanism, fully converged — not a masked bug and not something I
+needed to fix.** Sequence: `deployment-api@3f13e4435e` (21:59:08Z) retired the dead `builds_history.router`
+(`/api/builds/history`), which happened to be the ONLY place `/api/builds` was passed as an `include_router(prefix=...)`
+kwarg in `main.py` — the live route `/api/builds/{service}` survived unaffected (it's wired via literal full-path
+`@router.get("/api/builds/...")` decorators on a bare `APIRouter()`, a shape
+`unified-api-contracts/tests/test_deployment_ui_cross_repo_invariant.py::_registered_prefixes`'s AST-based
+`include_router(prefix=...)`-kwarg scan cannot see). That made `test_deployment_api_route_prefixes_wired` red for any
+SIT tree combining the deployment-api fix without the matching UAC test update. UAC's `EXPECTED_ROUTE_PREFIXES` was
+fixed to drop `/api/builds` at `8771a4b7` (22:19:12Z, already on `live-defi-rollout`, with its own inline comment
+explaining exactly this). SIT run `31845981642` (dispatched 22:16:40Z, i.e. BEFORE 22:19:12Z) validated a stale pre-fix
+UAC tree and failed on this one invariant — the classic dispatch-time-tree-pin race this doc already documents, this
+time manifesting as a genuine (if already-resolved) test failure rather than a bare cancelled/superseded run. **Verified
+converged, not just inferred**: backgrounded a poll of the next SIT run dispatched after both fixes were live
+(`31847052770`, dispatched 22:33:10Z) — completed `conclusion=success` at ~22:52Z. Re-ran `sit_gate_stuck_detector.py`
+live: `sit-gate stuck detector: healthy (no repo has 3+ consecutive SIT GATE BLOCK ticks)`. No code push required from
+this escalation — both fixes were already shipped by other sessions before I was dispatched; this entry exists so the
+next `sit_gate_stuck` escalation for the SAME window doesn't re-diagnose from scratch. Todos 1 (dedup-key) and 3 (hoist
+PR cleanup) are unchanged/still open — this occurrence did not exercise either (no orphaned promote PR was involved this
+time; all recent deployment-api promote PRs #607-#616 are `MERGED`).

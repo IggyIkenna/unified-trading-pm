@@ -143,7 +143,7 @@ Internal-only schemas (e.g. risk, VaR, stress testing) belong in `unified_api_co
   locally.
 - **SchemaDefinition / ColumnSchema** (parquet infrastructure from unified-trading-library) stay in the service's
   `schemas/output_schemas.py` — these are enforcement descriptors, not data contracts.
-- Audit: see `plans/active/SCHEMA_CONTRACTS_AUDIT.md` Section 3b for all known violations.
+- Audit: see `plans/archive/SCHEMA_CONTRACTS_AUDIT.md` Section 3b for all known violations.
 
 ## Quality gates and schema organization checks
 

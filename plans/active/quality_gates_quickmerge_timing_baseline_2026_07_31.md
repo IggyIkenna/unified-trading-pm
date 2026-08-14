@@ -158,7 +158,7 @@ content changes.
   fix** — already owned, already in-flight elsewhere.
 
 > **Owner for the stale-venv / `iter_route_contexts` ImportError**:
-> /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
+> /plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
 
 **Practical consequence**: `quickmerge.sh` cannot ship ANYTHING on unified-trading-pm right now, not just this plan's
 fix — there is no skip-tests escape hatch for quickmerge by design (`--skip-tests`/`--skip-typecheck`/`--skip-codex` are

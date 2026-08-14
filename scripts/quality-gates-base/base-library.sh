@@ -926,7 +926,7 @@ if [[ "$PACKAGE_NAME" != "unified-api-contracts" ]]; then
         "$SOURCE_DIR/" 2>/dev/null | grep -v '#.*CORRECT-LOCAL' || :)
     [[ -n "$DOMAIN_CONTRACTS_IN_LIB" ]] && {
         log_warn "Pydantic BaseModel subclasses found in library source — external API schemas belong in UAC; internal domain contracts in UIC"
-        log_warn "See: unified-trading-pm/plans/active/SCHEMA_CONTRACTS_AUDIT.md"
+        log_warn "See: unified-trading-pm/plans/archive/SCHEMA_CONTRACTS_AUDIT.md"
         echo "$DOMAIN_CONTRACTS_IN_LIB" | head -5
     } || log_success "No misplaced domain BaseModel contracts in library"
 else

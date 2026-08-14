@@ -456,20 +456,106 @@ source: >-
       cites "plan § G1") + `tests/unit/v2/test_policy_resolver.py`. This closes the same underlying gap as this batch's
       later "G1 — feed config_algorithm through the already-threaded selector hook" todo (§D framing of the identical §B
       ask) — no separate fix needed there either.
-- [ ] [CODE] P2. Add the reference price to the shared instruction envelope with its mark mode — §C Source:
+- [x] ✅ [CODE] P2. Add the reference price to the shared instruction envelope with its mark mode — §C Source:
       `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
-- [ ] [CODE] P2. Subscribe strategy-service to ClientDomainConfig — §D Source:
-      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
-- [ ] [CODE] P2. Resolve execution-service's missing config.py (rename-vs-document decision applied consistently) — §D
-      Source: `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
-- [ ] [CODE] P2. Close the Bybit API-key reload asymmetry in DATA_SOURCE_TO_SECRET — §D Source:
-      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
-- [ ] [CODE] P2. G1 — feed config_algorithm through the already-threaded selector hook Source:
-      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
-- [ ] [CODE] P2. Delete the shadow BookType (J1) and import UAC's enum Source:
-      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
-- [ ] [CODE] P2. Add a participation cap to the passive fill path, filtered to the filling side per PB.8 — §K Source:
-      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
+
+      **DONE 2026-08-14 (slot-21, infra).** `unified-api-contracts@c869c35bcb`: added `reference_price: Decimal | None`
+                      + `reference_price_mark_mode: ReferencePriceMarkMode` (new StrEnum: `STATIC_AT_SEND` |
+                      `UPDATE_AS_UNDERLYING_MOVES`, default `STATIC_AT_SEND`) to `StrategyInstructionEnvelope`
+                      (`internal/architecture_v2/schemas.py`) — not just `QuoteInstruction`, which now narrows the envelope's
+                      optional field to its own pre-existing required `Decimal` (unaffected). Re-exported `ReferencePriceMarkMode`
+                      via `unified_api_contracts.internal`. This is the field the strategy-service `reference_price` param-schema
+                      section (`refprice_mark_mode`/`refprice_source`/`refprice_max_drift_bps`, shipped inert in `4762c211ab`)
+                      configures once a construction site sets it — wiring construction sites + the actual repricing/drift-cap
+                      behavior is out of this todo's scope (separate open §C todos: "prove the standalone-backtest property",
+                      "reconcile ref price with the ε=0 spine"). 3 new unit tests
+                      (`tests/internal/unit/test_instruction_envelope_reference_price.py`): envelope defaults (`None`/
+                      `STATIC_AT_SEND`), a `TradeInstruction` (no dedicated field of its own) carrying both fields, and
+                      `QuoteInstruction.reference_price` staying required. Regression-verified against the local editable UAC
+                      install: execution-service's `test_quote_maintenance.py` + `test_router_and_handlers.py` (34 tests, both
+                      construct `QuoteInstruction`) unaffected. **Byproduct fix, separate commit same session**: found + fixed a
+                      pre-existing UAC QG red (`tests/test_deployment_ui_cross_repo_invariant.py` expecting a `builds_history`
+                      route module deployment-api deliberately deleted per `ui_satellite_ao_dispatch_batch4_2026_08_13.md`) —
+                      verified pre-existing on a clean tree at `HEAD~1` before touching it; a peer (slot-2,
+                      `unified-api-contracts@8771a4b7`) landed the identical fix independently in the same window, so mine was
+                      dropped via `git rebase --skip` during reconciliation (kept the peer's better-documented version, zero
+                      duplicate diff). `bash scripts/quality-gates.sh` green on the rebased HEAD (sentinel = `c869c35bcb`).
+
+- [x] ✅ [CODE] P2. Subscribe strategy-service to ClientDomainConfig — §D Source:
+      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` — **ALREADY SHIPPED, no new code
+      needed (verified 2026-08-14).** `strategy-service@c55b586c9c` already wires this (docstring cites it as "B1,
+      2026-08-13"): `strategy_service/config_reloaders.py` imports `ClientDomainConfig`, maintains a module-level
+      `_client_reloader: DomainConfigReloader[ClientDomainConfig]` + `_active_clients` snapshot, `_on_clients_reload()`
+      atomic-swaps the config, invalidates `ClientConfigStore`'s cache, and fans out to
+      `register_client_change_callback()` registrants with the same shard-isolation discipline as the instrument-change
+      loop; `start_domain_config_reloaders()` starts the `clients` domain reloader alongside `strategies`/`instruments`
+      — mirroring execution-service's existing three-reloader pattern exactly, per this todo's own ask. Confirmed live
+      in the current worktree; `c55b586c9c` verified an ancestor of `origin/live-defi-rollout`.
+- [x] ✅ [CODE] P2. Resolve execution-service's missing config.py (rename-vs-document decision applied consistently) —
+      §D Source: `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` —
+      execution-service@ff12d5fb87: **DOCUMENT, not rename.** `execution_service/service_config.py` (already at the
+      900-line hard cap) is execution-service's `config.py`-equivalent — schema + defaults, hot-reloadable via
+      `config_reloaders.py`. Renaming it to `config.py` would collide with the existing `execution_service/config/`
+      PACKAGE (JSON backtest/grid `ConfigLoader`, unrelated) — confirmed live: a package always shadows a same-named
+      sibling module, so the rename broke every `get_execution_config`/`ExecutionServicesConfig` import via a
+      circular-import error when attempted and was reverted the same session. Full rationale documented in
+      `execution_service/config/__init__.py`'s module docstring (where a reader looking for `config.py` lands first),
+      pointing to `service_config.py` as the real target — kept out of `service_config.py` itself to respect its line
+      cap.
+- [x] ✅ [CODE] P2. Close the Bybit API-key reload asymmetry in DATA_SOURCE_TO_SECRET — §D Source:
+      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` — **ALREADY SHIPPED, no new code
+      needed (verified 2026-08-14).** This todo's literal ask — fix UAC's `DATA_SOURCE_TO_SECRET` registry so it can
+      express Bybit — is already done: `unified-api-contracts@8c72b501` added the bare `"BYBIT": "bybit"` entry to
+      `VENUE_TO_DATA_SOURCE` and `"bybit": "bybit-trade-api-key"` to `DATA_SOURCE_TO_SECRET`
+      (`unified_api_contracts/canonical/canonical_mappings.py`), with its own comment explicitly citing "plan § D, close
+      the Bybit API-key reload asymmetry" as the motivation. Confirmed live in the current worktree (both entries
+      present) and `8c72b501` verified an ancestor of `origin/live-defi-rollout`. The bespoke `_BybitKeyReloader` in
+      `execution-service/execution_service/config_reloaders.py` (landed separately via `execution-service@c2053c47`,
+      also already an ancestor of `origin/live-defi-rollout`) remains, but its own docstring now documents why: it
+      resolves the Bybit **trade-scope secret pair with a fallback to the unscoped pair**
+      (`_resolve_bybit_credentials`), a capability the generic single-secret-name `ApiKeyReloader` structurally does not
+      implement — a real, documented capability gap distinct from the registry gap this todo targeted, not an accidental
+      "silently unmaintained" duplicate. No further registry or reloader change is warranted by this todo's scope.
+- [x] ✅ [CODE] P2. G1 — feed config_algorithm through the already-threaded selector hook Source:
+      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` — **ALREADY SHIPPED, no new code
+      needed (verified 2026-08-14).** `execution-service@c2053c47` (confirmed ancestor of current HEAD `ff12d5fb87`)
+      already does exactly what G1 asks: resolves the per-`(client_id, slot_label)` execution policy and feeds its
+      `then_algo` into the existing `config_algorithm` hook. Verified at BOTH real call sites, not just the
+      `HandlerRegistry.select_algorithm()` wrapper this batch's earlier "Wire policy evaluation into the live execution
+      path — §B" todo already confirmed: `execution_service/v2/handlers.py`'s `TradeHandler.handle()` and
+      `SwapHandler.handle()` (lines 180/200) both call `_resolve_selected_algorithm(instruction, self.action)`, which
+      resolves `get_active_policy_resolver()` and calls
+      `resolve_config_algorithm(resolver, instruction.identity.     client_id, instruction.identity.strategy_instance_id, context)`
+      — the v2 live-instruction path's own concrete caller of the hook. This closes the same underlying gap as that
+      earlier §B todo (identical §D framing of the same ask); no separate code change is warranted.
+- [x] ✅ [CODE] P2. Delete the shadow BookType (J1) and import UAC's enum Source:
+      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` — **ALREADY SHIPPED, no new code
+      needed (verified 2026-08-14, slot-21).** `execution-service@a75d953ece` already deletes the shadow `BookType`
+      class in `execution_service/cli/domain_runners.py` and imports UAC's SSOT enum
+      (`from unified_api_contracts.internal import BookType`), with `validate_book_type()` now validating against the
+      enum itself. Confirmed live in the current worktree (module imports `BookType` from UAC, no local shadow class
+      remains) and `a75d953ece` verified an ancestor of `origin/live-defi-rollout`. This is the exact fix the source
+      doc's own J1 row already documents as resolved (line 521 of the source doc). No further action.
+- [x] ✅ [CODE] P2. Add a participation cap to the passive fill path, filtered to the filling side per PB.8 — §K Source:
+      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` — execution-service@f3402a7c11:
+      **wired, not just primitive.** `TradeMatcher.capped_passive_fill_quantity` / `filling_side_volume` /
+      `should_fill_passive_order` already existed (built earlier the same day) and were unit-tested as pure functions,
+      but no live matcher consumed them — confirmed via a full-repo grep, the only caller was the primitive's own test
+      file. Wired into `L1Matcher._match_passive()` (`execution_service/matching_engine/engine.py`): the LIMIT (passive)
+      branch now participation-caps against `kwargs['trades']` (`Sequence[CandleTrade]`) when supplied, filtered to the
+      FILLING side per PB.8 (a resting BUY fills only against aggressive SELLs at price <= limit, never total candle
+      volume), via `kwargs['participation_cap_pct']` (default `1` = uncapped, sourced from the execution-policy
+      `then_params` per `policy_resolver.participation_cap_from_params` — same routing point already established for
+      `SubCandleVWAPMatcher`). Falls back to the prior full-fill-at-price behavior when no trade tape is supplied
+      (fidelity-ladder graceful degradation, same discipline as § I's book-columns → sub-candle VWAP → OHLC bar rungs).
+      A raised `ValueError` from an out-of-range cap is caught and returned as a rejected `MatchResult` (never
+      propagated) to preserve `BaseMatcher.match()`'s never-raises contract. IOC/MARKET (aggressive) and FOK are
+      unaffected — the cap only applies to the passive path. 8 new tests in
+      `tests/unit/matching_engine/test_l1_matcher_participation.py`: no-trades/empty-trades fallback, cap-binds partial
+      fill, requested-below-cap full fill, default-uncapped-but-still-filling-side-only (proves the PB.8 over-count this
+      closes), FOK/IOC unaffected, sell-side symmetry, and the invalid-cap-value fails-loud-without-raising case.
+      Evidence: `bash scripts/quality-gates.sh` green (sentinel = HEAD `f3402a7c1105c486d3d50e1c671aeb14741ebd49`);
+      quickmerge verified `f3402a7c11` ancestor of `origin/live-defi-rollout`.
 
 ## Deferred
 

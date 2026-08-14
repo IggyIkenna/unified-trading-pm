@@ -167,15 +167,20 @@ source: >-
       caller with zero page consumers (the latter already pointed at a route that never existed in `cloud_builds.py`) —
       pre-existing dead frontend code, out of this BACKEND-craft-tagged todo's TS/React-free scope; a `ui_developer`
       follow-up can clean those up if picked up. Source: `plans/active/artifact_pipeline_observability_2026_07_17.md`
-- [ ] [BACKEND] P2. Build→deploy latency join: 'built but never deployed' + build-to-first-revision latency (Phase 6
-      stretch) — retagged `[CODE]` → `[BACKEND]` 2026-08-14 (ui_developer slot-7 craft-mismatch catch, same class as the
-      routes-retirement todo above): the work is a new `_condition()` derivation in
-      `deployment-api/deployment_api/services/artifact_pipeline/service.py` (join `BuildFact` ↔ `DeployFact` by
-      digest/sha, compute build-finished→first-deploy latency + flag builds with no matching deploy) — the Health tab's
-      row rendering (`deployment-ui/src/pages/ArtifactPipeline.tsx`) is already fully generic (`data.conditions.map`, no
-      per-condition-type UI), so this todo has zero TS/React surface, out of ui_developer's craft
-      (`agents/ui_developer.md` does_not: Python service code). Source:
-      `plans/active/artifact_pipeline_observability_2026_07_17.md`
+- [x] ✅ [BACKEND] P2. Build→deploy latency join: 'built but never deployed' + build-to-first-revision latency (Phase 6
+      stretch) — deployment-api@`764db37c33`. Added `_build_deploy_matches()` (a `BuildFact.build_id` → matching
+      `DeployFact`s join, reusing `running()`'s digest → image → `:<sha>` tag → `(repo, sha)` chain across each build's
+      FULL deploy history, not just what's live now) and two new Health-view conditions built from it:
+      `_never_deployed_condition` (a SUCCESS image-lane build in the last 7 days with no traced deploy anywhere) and
+      `_first_deploy_latency_condition` (a build whose first deploy took ≥24h — `_SLOW_BUILD_TO_DEPLOY_HOURS`, a
+      stalled- rollout signal). The Health tab's row rendering is already fully generic (`data.conditions.map`), so this
+      shipped with zero TS/React surface. 3 new unit tests (`test_health_flags_build_never_deployed`,
+      `test_health_does_not_flag_a_build_with_a_matching_deploy`, `test_health_flags_slow_first_deploy_latency`); full
+      deployment-api quality-gates green. **Incidental fix in the same commit**: unified-api-contracts re-authorized
+      PACIFICA 2026-08-14 (`venue_adapter_keys.py`), which left
+      `test_drop_removed_venues_matches_base_before_first_hyphen` asserting a now-stale expected drop (pre-existing red,
+      verified on a clean tree before touching it) — updated the assertion to match the current correct behavior.
+      Source: `plans/active/artifact_pipeline_observability_2026_07_17.md`
 - [ ] [BACKEND] P2. Add a deploy-churn/crash-loop health condition (e.g. a service redeployed ~14x in hours, ~40%
       config-only) (Phase 6 stretch) — retagged `[CODE]` → `[BACKEND]` 2026-08-14 (same craft-mismatch catch as the todo
       above): also a pure `_condition()` derivation over already-fetched `DeployFact`s in

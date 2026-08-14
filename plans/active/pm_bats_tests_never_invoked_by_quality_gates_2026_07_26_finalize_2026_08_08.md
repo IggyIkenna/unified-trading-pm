@@ -99,11 +99,11 @@ superseded_by:
       source doc's Todos section (both `[x]`) and its na-eligibility-audit verdict history (round7 RECLASSIFY →
       dispatchable → both todos shipped).
 
-- [ ] [DOC] P3. **Update `/codex/06-coding-standards/quality-gates.md` if the new BATS phase changes the documented gate
-      composition** (e.g. if quality-gates.md enumerates each check phase quality-gates.sh runs, add the BATS phase in
-      its warn-only and, later, hard-fail states; skip this todo with a one-line note if the codex doc is already
+- [x] ✅ [DOC] P3. **Update `/codex/06-coding-standards/quality-gates.md` if the new BATS phase changes the documented
+      gate composition** (e.g. if quality-gates.md enumerates each check phase quality-gates.sh runs, add the BATS phase
+      in its warn-only and, later, hard-fail states; skip this todo with a one-line note if the codex doc is already
       phase-agnostic and needs no edit). **Done when**: either the codex doc is updated and accurate against the shipped
-      phase, or a note confirms no update was needed and why.
+      phase, or a note confirms no update was needed and why. — unified-trading-pm@3116bd0dd5
 
 - [ ] [DOC] P3. **Archive the source doc via the standard 6-step ritual** once todo 1 confirms both its todos are
       genuinely done and no other open item remains in its body: migrate any still-open follow-up to a tracked todo →
@@ -134,3 +134,14 @@ superseded_by:
   `origin/live-defi-rollout`. D4-10 in the now-archived `ci_satellite_ao_dispatch_batch4_2026_07_31.md` was already
   correctly annotated as resolved prior to this session (`unified-trading-pm@f005f1f564`) — left as-is, not
   re-litigated. Todos 2 (codex doc update) and 3 (archive source doc) remain open for a future dispatch.
+
+- **2026-08-14 (slot 31, cicd craft)**: Flipped todo 2 — confirmed `/codex/06-coding-standards/quality-gates.md`'s "Step
+  3: Tests" section (`#step-3-tests`) DOES enumerate each pytest test category the gate runs (unit/integration/
+  e2e/smoke), so it was NOT phase-agnostic and needed the edit (not a skip-with-note case). Verified live against
+  `base-service.sh` that the BATS phase lives inside the same `[3] TESTS` block (lines ~1131-1229, before
+  `[3.5/6] IMPORT PATTERNS` at line 1230) — confirming it belongs in this same doc section, not a separate one. Added a
+  new "BATS shell tests" subsection (+ TOC entry) documenting: the `tests/*.bats` detection + `command -v bats` gate,
+  the measured 5.8x parallel speedup (`bats -j`, `BATS_JOBS` override), the WARN-ONLY fleet default mirroring the
+  actionlint transitional pattern, and the per-repo `BATS_HARD_FAIL=1` opt-in (PM only, post clean-baseline re-measure)
+  — matches the shipped code exactly, no invented behavior. `grep -in bats /codex/06-coding-standards/quality-gates.md`
+  was 0 hits before this edit, confirming the gap was real.

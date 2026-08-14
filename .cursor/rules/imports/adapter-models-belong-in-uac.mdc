@@ -25,7 +25,7 @@ WHY: Adapter-private models ARE external API schemas. Keeping them in interface 
 - Auditing external API coverage becomes impossible
 
 CODEX: 02-data/contracts-scope-and-layout.md
-AUDIT: plans/active/SCHEMA_CONTRACTS_AUDIT.md Section 3a
+AUDIT: plans/archive/SCHEMA_CONTRACTS_AUDIT.md Section 3a
 
 DO:
   # External API response model: define in UAC

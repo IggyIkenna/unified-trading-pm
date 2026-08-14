@@ -126,36 +126,53 @@ direct testing, not documentation-reading:**
 
 ## B. UAC registry — prerequisite for everything below
 
-- [ ] [SCRIPT] P1. **Add `PACIFICA-SOLANA` to `VENUES_BY_ASSET_GROUP["cefi"]`** — matching the existing
-      HYPERLIQUID/ASTER/EXTENDED-STARKNET/LIGHTER-ZKSYNC on-chain-perp cluster. This is the first real code change;
-      every downstream layer (§C-§F) depends on the venue existing in the registry.
-- [ ] [SCRIPT] P1. **Add `PACIFICA-SOLANA`'s `CollateralPolicy` to `COLLATERAL_REGISTRY`** — `venue_kind=PERP_DEX`,
-      USDC-only margin (unified, cross OR isolated per `docs.pacifica.fi`), linear contracts only, sourced with the
-      fetch date. Clean net-new registration — no pre-cull UAC row ever existed for Pacifica, so there's nothing stale
-      to inherit; source directly from current docs, not the deleted adapter's assumptions.
-- [ ] [SCRIPT] P2. **Declare `VENUE_DATA_TYPE_CAPABILITIES`** for `trades`, `book_snapshot_5`, `derivative_ticker` with
-      `available_from=2025-06-01` (confirmed deploy date, matches `_PACIFICA_FUNDING_START_MS` in the deleted adapter).
-      Route pre-launch requests through `EXPECTED_PRE_VENUE_LAUNCH`, not silent absence.
-- [ ] [SCRIPT] P2. **Check whether `onchain_perp_batch_handler.py`'s `_VENUE_SOURCE`/`_VENUE_PIPELINE_MODE`/
-      `_VENUE_LAUNCH` dicts need a Pacifica row.** That handler covers HYPERLIQUID/ASTER/EXTENDED-STARKNET/
-      LIGHTER-ZKSYNC as the self-archiving on-chain-perp cluster — confirm whether Pacifica's batch capture belongs in
-      that same handler (source token, pipeline_mode) or is fully served by the resurrected `_umi_pacifica.py` adapter
-      (§D) instead; don't double-register the same batch path two ways.
+- [x] [SCRIPT] P1. ✅ **Add `PACIFICA-SOLANA` to `VENUES_BY_ASSET_GROUP["cefi"]`** — `unified-api-contracts@316002f1e6`.
+      Discovery pass found the removal footprint was ~18 files wide (registries + comments), not just the 4 named in
+      this plan — full sweep done as one coherent unit (see Progress Log). Evidence: `quality-gates.sh` ALL PASSED
+      (297s), full suite 13175 passed / 0 failed (3 pre-existing unrelated deployment_ui failures untouched).
+- [x] [SCRIPT] P1. ✅ **Add `PACIFICA-SOLANA`'s `CollateralPolicy` to `COLLATERAL_REGISTRY`** — `venue_kind=PERP_DEX`,
+      USDC-only margin (cross+isolated), linear contracts only — `unified-api-contracts@316002f1e6`. Also added the
+      underlying `VENUE_COLLATERAL_MATRIX` (`venue_collateral.py`) row it derives from (USDC accepted; JitoSOL/mSOL
+      explicitly not-accepted, confirmed live 2026-08-14 — no LST margin).
+- [x] [SCRIPT] P2. ✅ **Declare `VENUE_DATA_TYPE_CAPABILITIES`** for `trades`, `book_snapshot_5`, `derivative_ticker`,
+      `available_from=2025-06-01`, `live_capable=True`/`requires_credentials=False` (real connector, not a
+      BLOCKED-CREDENTIALS stub like EXTENDED-STARKNET/LIGHTER-ZKSYNC) — `unified-api-contracts@316002f1e6`.
+- [x] [SCRIPT] P2. ✅ **Checked `onchain_perp_batch_handler.py`'s `_VENUE_SOURCE`/`_VENUE_PIPELINE_MODE`/`_VENUE_LAUNCH`
+      dicts** — this file lives in `market-tick-data-service` (plan's file location for this todo was wrong), not UAC.
+      Confirmed via the same self-archiving-vs-Tardis-routed logic that gates HYPERLIQUID/ASTER/EXTENDED-STARKNET
+      (self-archiving, own REST) vs LIGHTER-ZKSYNC (Tardis-routed): Pacifica has confirmed-live direct REST (`/trades`,
+      `/book`, `/info`, §A), matching the self-archiving cluster — but its pre-cull code was NEVER routed through this
+      shared handler either (own standalone `_umi_pacifica.py`/`umi_tick_provider.py` module). **Answer: no row needed
+      here** — §D's resurrected `_umi_pacifica.py` is the real batch path. Will do a final confirm when §D actually
+      lands (next).
 
 ## C. instruments-service — reference data
 
-- [ ] [SCRIPT] P1. **Resurrect the reference-data adapter** —
-      `instruments-service@dee3f6a4~1:instruments_service/reference_data/adapters/cefi/pacifica.py` (deleted, real
-      working code: curated top-10-coin `PERPETUAL` instrument list, `settle_asset=USDC`, `MarginType.LINEAR`,
-      `available_from=2025-06-01`). `git show instruments-service@dee3f6a4~1:<path> > <path>` as the starting point.
-      **Then modernize per §A's finding**: replace the hardcoded coin list with a real call to `GET /info` (confirmed
-      live, returns the full market list) so new Pacifica listings are picked up automatically instead of requiring a
-      manual list update every time.
-- [ ] [SCRIPT] P1. **Restore the factory registration and orchestrator venue-list entry** the cull commit removed
-      alongside the adapter file itself — a resurrected adapter with no factory registration is dead code.
-- [ ] [SCRIPT] P2. **Restore or rewrite the pruned instrument-adapter tests** covering the resurrected adapter — check
-      the cull commit's full deleted-file list for the instruments-service-side test file and confirm it still exists in
-      that commit's parent before assuming a rewrite is needed.
+- [x] [SCRIPT] P1. ✅ **Resurrected + modernized the reference-data adapter** — `instruments-service@31981f461c`. Pulled
+      the deleted file (`instruments-service@dee3f6a4~1:instruments_service/reference_data/adapters/cefi/pacifica.py`,
+      curated 10-coin list) as reference, then rewrote against the CURRENT adapter interface shape
+      (`classify_venue_error` + `log_event` + `_get_with_retry`, mirroring `extended.py` — the pre-cull file predates
+      this interface and a straight restore would not have passed current QG) with dynamic `/info` market discovery
+      replacing the hardcoded list per §A's finding. 10 new unit tests (`tests/unit/test_pacifica_adapter.py`), all
+      passing — caught and fixed 2 real bugs during testing (a conditional-expression operator-precedence bug that
+      silently returned `[]` for every /info call, and dead exception-handling code because `_get_with_retry` wraps
+      `aiohttp.ClientError` into `RuntimeError` before it reaches the caller — both confirmed via actually running the
+      tests, not just writing them).
+- [x] [SCRIPT] P1. ✅ **Restored the factory registration + orchestrator comments** — `instruments-service@31981f461c`.
+      `factory.py`'s `_ADAPTERS`/`ADAPTER_DATA_SOURCES` re-registered; fixed 3 stale "PACIFICA removed" comments in
+      `orchestrator/defi.py` + `orchestrator/writers.py` (informational only — Pacifica was never in
+      `_SOLANA_DEFI_VENUES`, it's cefi not defi, so no list entry needed there, only the comments were stale).
+- [x] [SCRIPT] P2. ✅ **Wrote new adapter tests** (no pre-cull test file existed to restore — deleted alongside the
+      adapter with no separate parent-commit survivor) — `tests/unit/test_pacifica_adapter.py`, 10 tests, mirrors
+      `test_hyperliquid_adapter.py`'s structure. Also fixed 1 collateral test
+      (`test_pipeline_e2e_prediction.py::test_rule11_per_ag_dedup_target_counts_byte_unchanged`, CEFI dedup count 24→25)
+      caught by the full QG run. Evidence: `quality-gates.sh` ALL PASSED (199s).
+- [ ] [SCRIPT] P3. **New follow-up (surfaced 2026-08-14, not in the original plan draft)**: run a reconciliation pass to
+      attempt resolving the 265 `QUARANTINE_REGISTRY`-listed `PACIFICA-SOLANA` objects
+      (`unified_api_contracts/canonical/quarantine.py`) against the real catalogue now that §C's adapter is live —
+      read-only classify, not GCS-destructive. Not done as part of §B/§C themselves (real data reconciliation, not a
+      registry-code change) — the registry entry's `reason` field was updated to note this is now possible, but the 265
+      objects are deliberately left registered/quarantined until this pass actually runs.
 
 ## D. market-tick-data-service — batch and live capture
 
@@ -234,6 +251,73 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
 
 ## Progress Log
 
+- **2026-08-14 (autonomous build-out started)** — Invoked `/autonomous` to drive §B-§G to completion. §A already fully
+  resolved (real API testing). Started §B (UAC registry, `unified-api-contracts`) — the discovery pass found the removal
+  footprint is much larger than §B's 4 todos suggested: ~16 files in `unified_api_contracts/` carry
+  `# PACIFICA ... removed 2026-07-16` markers (registries + comments), not just `VENUES_BY_ASSET_GROUP`/
+  `COLLATERAL_REGISTRY`/`VENUE_DATA_TYPE_CAPABILITIES`/`onchain_perp_batch_handler.py`. Treating the full sweep as
+  necessary for §B to be genuinely correct (a partial UAC registration would leave §C-§F resolving against an
+  inconsistent venue picture) — this is IN PROGRESS, not yet a scope change to the plan itself, just a wider §B than
+  drafted. Done directly (uncommitted, local edits) so far:
+  - `unified_api_contracts/registry/market_data_categories.py` — `PACIFICA-SOLANA` back in
+    `VENUES_BY_ASSET_GROUP["cefi"]`, stale removal comment corrected to note the reversal.
+  - `unified_api_contracts/registry/venue_collateral.py` — `CollateralAcceptance` rows: `PACIFICA-SOLANA`/`USDC`
+    accepted (cross/isolated), `PACIFICA-SOLANA`/`{JitoSOL,mSOL}` explicitly not-accepted (no LST margin, confirmed live
+    2026-08-14).
+  - `unified_api_contracts/internal/architecture_v2/collateral_registry.py` — net-new `CollateralPolicy` for
+    `pacifica-solana` (`venue_kind=PERP_DEX`, USDC-only, cross+isolated margin modes), deriving its `AssetHaircut` from
+    the `venue_collateral.py` row above via `_ah_from_venue_collateral`.
+  - `unified_api_contracts/canonical/quarantine.py` — updated the `PACIFICA-SOLANA` `QUARANTINE_REGISTRY` entry's
+    `reason` to note the 2026-08-14 reversal; the 265 historically-quarantined objects are NOT auto-resolved by this
+    change (deliberate — resolving them requires a reconciliation pass against instruments-service's real catalogue once
+    §C lands, which is real data work, not a registry-code change). Tracked as a new follow-up todo below.
+  - Dispatched a background sub-agent (general-purpose, sonnet) to sweep the remaining ~14 files (`venue_constants.py`,
+    `venue_launch_dates.py`, `venue_mapping.py` [3 spots], `venue_adapter_keys.py`, `cefi_perp_venue_endpoints.py`,
+    `data_type_capability.py` [real `VENUE_DATA_TYPE_CAPABILITIES` entries — this covers §B3], `expected_coverage.py`,
+    `perp_funding_cadence.py`, `venue_instrument_config.py`, `capability_declarations/_cefi.py`,
+    `canonical/crosscutting/pipeline_mode.py`, `canonical/crosscutting/_source_priority_data.py` [3 spots],
+    `canonical/crosscutting/mvp_scope.py`, `canonical/crosscutting/_mvp_scope_rules.py`) — mirroring the
+    HYPERLIQUID/ASTER/EXTENDED-STARKNET/LIGHTER-ZKSYNC sibling pattern in each, fixing every stale "removed" comment it
+    touches. **Result pending** — not yet reviewed/shipped as of this journal entry.
+  - §B4 (`onchain_perp_batch_handler.py`, actually in `market-tick-data-service`, not UAC — the plan's file location for
+    this todo was wrong) — preliminary read: Pacifica has its own direct REST adapter (`_umi_pacifica.py`, confirmed
+    live in §A) exactly like the pre-cull code, NOT routed through this shared on-chain-perp batch handler (that
+    handler's `_VENUE_SOURCE`/`_VENUE_PIPELINE_MODE` dicts cover HYPERLIQUID/ASTER/EXTENDED-STARKNET/ LIGHTER-ZKSYNC
+    only). Tentative answer: **no row needed here** — will confirm when §D's batch adapter resurrection lands and
+    cross-check against the pre-cull commit's actual wiring (the deleted `_umi_pacifica.py` was never routed through
+    this handler either).
+  - Pulled the 3 deleted pre-cull files from git history for §C/§D (read-only, not yet applied):
+    `instruments-service@dee3f6a4~1:instruments_service/reference_data/adapters/cefi/pacifica.py` (167 lines, curated
+    10-coin list — needs the `/info`-dynamic-discovery modernization per §A/§C1),
+    `market-tick-data-service@2e674d1f~1:market_tick_data_service/adapters/_umi_pacifica.py` (495 lines, real REST
+    parsing — §A confirmed shapes still match, restore near-as-is),
+    `market-tick-data-service@2e674d1f~1:market_tick_data_service/live/connectors/pacifica_solana_perp_ws.py` (189
+    lines, the `BLOCKED-CREDENTIALS` scaffold — needs `_CREDENTIALS_AVAILABLE=True` + real `_drain_ws_messages` per
+    §D2). Confirmed the modern `instruments-service` adapter interface pattern via `hyperliquid.py` (uses
+    `classify_venue_error`, `log_event`, `_make_session`, `VenueMapping().get_instrument_discovery_start` — none of
+    which existed in the same form when the Pacifica adapter was deleted, so a straight `git show` restore would NOT
+    pass current QG; the `/info`-based rewrite needs to follow `hyperliquid.py`'s current shape, not the old file's).
+  - **New follow-up todo (not in original plan draft)**: after §C lands, run a reconciliation pass to attempt resolving
+    the 265 `QUARANTINE_REGISTRY`-listed `PACIFICA-SOLANA` objects against the real catalogue — see
+    `unified_api_contracts/canonical/quarantine.py`'s updated reason field. Not GCS-destructive (read/classify only);
+    still deferred until a real catalogue exists to resolve against.
+  - **Nothing committed/pushed yet** — §B is still mid-flight (waiting on the sub-agent sweep before running QG +
+    shipping as one coherent unit, since a partial/inconsistent UAC registration is worse than a slightly-delayed
+    complete one). Next tick: review the sub-agent's diff, run `quality-gates.sh`, `quickmerge` the whole §B batch, flip
+    §B's checkboxes with the commit SHA, then move to §C.
+
+- **2026-08-14 (§B+§C landed)** — §B (UAC, `unified-api-contracts@316002f1e6`) and §C (instruments-service,
+  `instruments-service@31981f461c`) both shipped, full QG green on both repos. Widened §B beyond its drafted 4 todos to
+  a genuine ~18-file sweep (registries + 6 stale-test fixes) once discovery showed the removal footprint was that wide —
+  a partial UAC registration would have left §C-§F resolving against an inconsistent venue picture. Two real bugs caught
+  by actually running the new instruments-service adapter tests before shipping (not just writing them): an
+  operator-precedence bug in the `/info` response parser that silently returned an empty market list every time, and
+  dead exception-handling code (the base adapter's `_get_with_retry` wraps `aiohttp.ClientError` into `RuntimeError`
+  before it reaches the caller, so catching only `ClientError` never fired — fixed by catching both, mirroring
+  `extended.py`'s already-correct pattern). One new out-of-plan follow-up tracked as a P3 todo in §C (265
+  historically-quarantined Pacifica objects, reconciliation deferred to a real data pass, not done as a side-effect of a
+  registry-code change). Next: §D (MTDS batch + live), which needs a final confirm-on-landing of §B4's "no
+  `onchain_perp_batch_handler.py` row needed" answer.
 - **2026-08-14** — Split out of `/plans/active/solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md`'s Track 2
   on operator instruction ("just pacifica then lets build plan from IS to Strategy service"), once real testing (that
   plan's §A.2) fully resolved every Pacifica gate while the Jupiter track's gates (§A.1 economics, §A.3 schema mapping)

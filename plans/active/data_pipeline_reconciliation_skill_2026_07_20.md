@@ -683,7 +683,7 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
       new issue filed (would have duplicated the existing tracked doc). Local-venv-only change, nothing shipped.
 
 > **Owner for the stale-venv / `iter_route_contexts` ImportError**:
-> /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
+> /plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
 
 ---
 

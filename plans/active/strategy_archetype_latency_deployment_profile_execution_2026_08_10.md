@@ -146,15 +146,23 @@ source: >-
       distributed unless evidence is decisive"; needs an operator ruling. (4) `portfolio-*` + single-sided `yield-*`
       docs declare `basic` while the decision artifact's §6 says `standard` (arguably `basic` is correct for
       non-executing allocation/staking). Repo: unified-trading-pm (codex + configs/runtime-topology.yaml).
-- [ ] [DATA] P2. **CORRECTED 2026-08-12 (/plan-reconcile): de-conditionalized — the audit's answer is now known.**
-      Original text was written before the audit plan landed and hedged with "may have flagged"/"if the audit found such
-      a gap." The audit's binding decision artifact (`strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`
-      todo 8, `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`) has since answered this definitively: **YES, a
-      real gap exists** — every Low-category family's real E2E latency requirement (MM <100ms / arb <200-300ms /
-      basis+ML+rules+stat-arb ms-realm inter-leg gap) EXCEEDS the `premium` SLA tier's 40ms `latency_budget_ms` budget.
-      **Cross-check against this SLA-tier gap**: this plan's derivation logic must surface it as an explicit
-      warning/exception rather than silently under-provisioning — this is confirmed real work, not a no-op confirmation
-      branch.
+- [x] ✅ [DATA] P2. **DONE 2026-08-14 (slot 11, backend_engineer) — deployment-service@c9c1f9509.** Added
+      `check_sla_tier_latency_budget_gap()` to `deployment_service/deployment_profile_derivation.py`: given a derived
+      plan + `runtime-topology.yaml`, it maps each active archetype to its family + declared `min_sla_tier`
+      (reverse-index walk of `archetype_deployment_profile_mapping`), compares the family's real E2E requirement
+      (documented per-family ms figures sourced from `RUNTIME_TOPOLOGY_DECISIONS.md`'s 2026-08-10 table: market_making
+      100ms, arbitrage_structural 300ms, carry_and_yield_basis 500ms, ml_directional 200ms, rules_directional 200ms,
+      stat_arb_pairs 300ms) against the tier's declared `latency_budget_ms`, and returns an explicit warning string for
+      every archetype whose real requirement exceeds its tier's budget — never silently drops the gap. Wired into the
+      CLI: warnings are logged and included under `output["sla_tier_latency_budget_warnings"]` (non-fatal — a confirmed,
+      documented gap, not a defect to block on) whenever `--runtime-topology` is passed. 4 new regression tests
+      (`test_sla_tier_latency_gap_surfaced_when_real_requirement_exceeds_budget`,
+      `..._absent_when_budget_covers_requirement`, `..._never_raises_on_missing_topology_sections`,
+      `..._skips_archetype_not_in_reverse_index`) confirm the gap fires for a Low family exceeding premium's 40ms, stays
+      silent when a budget genuinely covers the requirement, and never raises on partial/missing topology data. Full
+      `bash scripts/quality-gates.sh` green on the shipped SHA (basedpyright caught + I fixed 4 new `Unknown`-type
+      errors from the first draft before shipping — cast dict.get() results explicitly, matching the file's existing
+      pattern).
 - [ ] [DOC] P3. **Update `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`** (or wherever the audit plan's decision
       artifact landed) with a note that the archetype↔deployment link is now live-derived, not manually maintained,
       cross-referencing the new code paths added by this plan.
@@ -177,6 +185,15 @@ source: >-
       unlabelled.
 
 ## Progress Log
+
+- **backend_engineer (slot 11) 2026-08-14**: The SLA-tier-latency-budget-gap todo done — `deployment-service@c9c1f9509`.
+  Added `check_sla_tier_latency_budget_gap()` to `deployment_profile_derivation.py`, wired into the CLI's
+  `--runtime-topology` output as `sla_tier_latency_budget_warnings` + `logger.warning` lines (never fatal — this is a
+  confirmed, documented gap per `RUNTIME_TOPOLOGY_DECISIONS.md`, not a bug to block shipping on). 4 new regression
+  tests. First QG pass caught a self-inflicted basedpyright ratchet regression (4 new `Unknown`-type errors from not
+  casting `dict.get()` results, matching the file's existing pattern) — fixed before re-running QG and shipping. Full
+  `quality-gates.sh` green on the shipped SHA (`.qg_last_passed_sha=faa297664c53b63ca945321b6448fe1c5b860b6f`
+  pre-push-rebase, post-push-ancestry-verified `c9c1f9509`).
 
 - **backend_engineer (slot 8) 2026-08-10**: Todo 1 done. Added `DeploymentProfile` StrEnum (`distributed` /
   `co_located_vm`) + `ARCHETYPE_TO_DEPLOYMENT_PROFILE` mapping (60/60 `StrategyArchetype` values) to

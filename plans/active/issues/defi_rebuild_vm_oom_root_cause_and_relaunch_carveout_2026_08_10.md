@@ -273,6 +273,22 @@ already-running incumbent's ~8%-noise impact) is now a codified HARD RULE, not j
       this) — confirm the drop tracks a documented retirement, or file a fresh capture-gap issue if it doesn't. (repo:
       market-tick-data-service)
 
+      **INVESTIGATED 2026-08-14 (slot-12, backend_engineer) — MIXED result, does NOT cleanly confirm retirement alone;
+          follow-up issue filed.** Bounded `read_availability_index_safe(bucket, columns=[date,venue,capture_status],
+          filters=[date range, capture_status=captured])` cross-check, 3 windows: known-good (Dec2025-Feb2026) avg
+          33,091.8 shards/day, 54.54 distinct venues/day; mid (Jun10-29) avg 6,188.7 shards/day, 46.45 venues/day; recent
+          (Jun30-Jul19) avg 1,254.5 shards/day (close to the doc's own ~934 estimate), 37.55 venues/day. **Distinct-venue
+          count fell only ~31% (54.5→37.55) — far short of the >26x total shard-count drop** — so venue retirement alone
+          cannot explain the magnitude; ORCA/RAYDIUM/PHOENIX/TRADER_JOE_V2/KAMINO/SOLEND/HYPERLIQUID/BALANCER dropped out
+          of the venue set (consistent with the doc's named in-flight retirements — KAMINO/SUSHISWAP match directly), but
+          that's ~8/55 venues, not enough. Per-data_type breakdown for the recent window: `dex_pool_state` 657.35/day +
+          `dex_pool_swaps` 173.75/day dominate (66% of the total) — both POOL-grain, not venue-grain, so the true driver is
+          likely a shrinking tracked-POOL universe per venue, not fewer venues; this is directionally consistent with the
+          doc's named `dex_pools`/`dex_swaps` retirement plans but NOT independently confirmed at the pool-count level
+          (out of this bounded check's scope — would need an instrument/pool-level census, not just venue/data_type
+          aggregates). Filed `plans/active/issues/defi_dex_pool_density_drop_pool_level_followup_2026_08_14.md` for the
+          pool-count-level cross-check this todo's done-when couldn't fully resolve.
+
 ## Pointers
 
 - Full evidence trail:

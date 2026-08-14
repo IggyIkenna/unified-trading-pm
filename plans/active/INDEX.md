@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 294 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 293 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (32)
+### cefi (33)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -123,6 +123,9 @@ by hand._
   deeper-than-L5 (L10/full-L2) order book for the 9 CeFi venues already carrying book_snapshot_5, derive
   queue_position_bid/ask + book_depth_levels through the canonical CanonicalBookMicrostructure shape, and flip their
   UAC…
+- [`pacifica_solana_perp_reintegration_2026_08_14`](./pacifica_solana_perp_reintegration_2026_08_14.md) — Re-integrate
+  PACIFICA-SOLANA (real CLOB, hourly-settled funding rates) after the 2026-07-16 cull and its 2026-08-14 reversal —
+  split out of the combined Jupiter+Pacifica plan once Pacifica's gates fully resolved while Jupiter's did not.…
 - [`prediction_capture_incident_remediation_2026_07_06`](./prediction_capture_incident_remediation_2026_07_06.md) —
   "Actionable remediation for the 2026-07-01→07-06 prediction-universe-capture outage (diagnosis + root-cause evidence:
   issue doc prediction_universe_capture_dead_since_07_01_2026_07_06). Two workstreams: (A) harden the capture path —
@@ -269,9 +272,9 @@ by hand._
   finalize companion for solana_dex_pool_swaps_indexer_2026_08_08.md — reconcile evidence back into the source scoping
   doc, re-check any deferred follow-up, then archive both docs per the standard 6-step ritual.
 - [`solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12`](./solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md)
-  **[draft]** — Restore Solana LST carry after the 2026-07-16 perp-DEX cull left Plan B empty, by integrating the two
-  venues that survive on merit: Jupiter perps (the only liquid, never-hacked Solana perp venue) for the hedge leg, and
-  Kamino lending (the…
+  **[draft]** — Restore Solana LST carry after the 2026-07-16 perp-DEX cull left Plan B empty, by integrating Jupiter
+  perps (the operator's stated long-term intent, re-authorized 2026-08-14) for the hedge leg, and Kamino lending (the
+  only venue in the UAC…
 - [`strategy_service_expansion_overlays_config_and_wizard_2026_08_12`](./strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md)
   **[draft]** — Executes the expansion work the Elysium readiness audit surfaced, and it must land BEFORE the
   strategy-service repository is sent, because the client artefacts describe this as the design rather than as a
@@ -626,7 +629,7 @@ by hand._
   direction is UAC-as-SSOT (Option A), executed as a scoped migration, not a blind rename. Picks deliberate field names
   for…
 
-### cross-cutting (64)
+### cross-cutting (65)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -822,6 +825,9 @@ by hand._
 - [`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`](./pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md)
   — Standardise pipeline_mode to source-aware live/batch/replay schema across all repos, gating all v9 manifest --apply
   runs on Phase 0 completion.
+- [`producer_silence_flatten_protocol_2026_08_14`](./producer_silence_flatten_protocol_2026_08_14.md) — Operator
+  decision 2026-08-14, answering "what should happen when a producer goes silent". If strategy-service stops producing
+  the cross-cutting data an instruction needs (risk, position) then: reconciliation UP means START FLATTENING RISK,…
 - [`revocation_arming_2026_08_14`](./revocation_arming_2026_08_14.md) — The revocation mechanism is BUILT and INERT.
   Measured 2026-08-14: nothing calls RevocationActuator.actuate() outside tests, so no alert has ever revoked anything
   and none will. The read side is fully wired (heartbeat drain poll, vm-exec…
@@ -846,7 +852,7 @@ by hand._
   — Cross-AG registry foundation. Adds a route axis (aggregator/broker/direct) and a mode axis (batch/live) to
   VENUE_DATA_TYPE_CAPABILITIES so an aggregator-served venue reads as a venue WITH an adapter, folds in the…
 
-### ao (40)
+### ao (37)
 
 - [`anthropic_per_task_actual_spend_and_account_calibration_2026_08_10`](./anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md)
   — The task-usage dashboard's $ column is blank for 1,993 of 2,622 completed task_usage rows (100% of Anthropic rows)
@@ -863,10 +869,6 @@ by hand._
   — Gated closeout for `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md` — machine-held via
   `depends_on` + `gate_on_depends: true` until all 17 of that doc's remaining todos (14 per-row REOPEN-or-FLIP
   verdicts + 3 follow-ups)…
-- [`ao_open_issues_consolidated_close_out_2026_07_17`](./ao_open_issues_consolidated_close_out_2026_07_17.md) —
-  2026-07-17 operator-session sweep of the 10 open AO issue docs — every doc's claims re-verified against the current
-  LDR code AND the production orchestrator on the planning VM (read-only SSM — live state.db, activity_log, process
-  table,…
 - [`ao_open_work_consolidated_tracker_2026_08_14`](./ao_open_work_consolidated_tracker_2026_08_14.md) — One place to see
   every genuinely-still-open todo across the ~44 AO-subject-matter plans/issues audited 2026-08-14 (agent-orchestrator
   dispatch, backlog, worker lifecycle, scheduled jobs, escalation queue, VM infra) — produced by a 5-agent…
@@ -913,13 +915,6 @@ by hand._
 - [`ao_satellite_ao_dispatch_batch19_finalize_2026_08_10`](./ao_satellite_ao_dispatch_batch19_finalize_2026_08_10.md) —
   Gated closeout for `ao_satellite_ao_dispatch_batch19_2026_08_10.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until both its todos are done. Reconciles evidence back into…
-- [`ao_satellite_ao_dispatch_batch20_2026_08_13`](./ao_satellite_ao_dispatch_batch20_2026_08_13.md) — Extraction batch
-  from the ao tranche's 2026-08-13 /na-eligibility-audit + /ag-closeout-audit full sweep — 30 conflict-cleared,
-  bounded/deterministic items pulled directly from 12 source docs (RECLASSIFY_SPLIT bounded items from the NA…
-- [`ao_satellite_ao_dispatch_batch20_2026_08_13_finalize`](./ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md) —
-  Gated closeout for ao_satellite_ao_dispatch_batch20_2026_08_13.md — machine-held via depends_on + gate_on_depends
-  until every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE source doc's
-  checkbox…
 - [`ao_satellite_ao_dispatch_batch3_2026_07_31`](./ao_satellite_ao_dispatch_batch3_2026_07_31.md) — THIRD AO-dispatch
   batch for the `ao` topic tranche, produced by the `/ag-closeout-audit ao` skill run (2026-07-31, autonomous mode,
   scheduled dispatch agt-23935a). Phase 0 re-derived the tranche's 41 current members via…

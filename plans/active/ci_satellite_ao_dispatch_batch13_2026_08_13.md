@@ -354,22 +354,96 @@ source: >-
       genuinely had 0/1 commits since baseline). Issue-doc checkbox reconciliation for the source doc's own todo is out
       of scope for this satellite batch (per this doc's own header) — deferred to
       `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`.
-- [ ] [CODE] P2. Hoist the superseded-promote-PR cleanup in ldr_to_main_fleet_promote.sh above the SIT gate, scoped to
-      ancestor-of-current-tip + concluded-failure PRs only (design constraint already specified in the todo) Source:
-      `plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md`
-- [ ] [CODE] P2. Fix sit-gate-stuck-detector.yml's dedup key to include the streak-count / monotonic-worsening signal
+- [x] ✅ [CODE] P2. Hoist the superseded-promote-PR cleanup in ldr_to_main_fleet_promote.sh above the SIT gate, scoped
+      to ancestor-of-current-tip + concluded-failure PRs only (design constraint already specified in the todo) Source:
+      `plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md` — ✅ **DONE 2026-08-14 (slot
+      15, infra)**: `unified-trading-pm@5ff1205e68`. New `_close_ancestor_failed_promote_prs()` runs right after
+      `$LDR_SHA`/`$PROMOTE_HEAD` are computed in `process_repo()` — before the content-identical skip and before the SIT
+      differ/gate section, both of which could previously `_done BLOCKED; return 0` before the original superseded-ref
+      cleanup (~200 lines further down) was ever reached. Enforces the exact design constraint from the source todo: a
+      stale-headed open `promote/$REPO/*` PR is closed ONLY when its head is a STRICT ANCESTOR of the current LDR tip
+      (GitHub compare-API verified, never inferred from ref-name mismatch alone) AND `quality-gates-v2` has already
+      CONCLUDED failure on that exact head SHA — an empty `$LDR_SHA` short-circuits to a total no-op rather than making
+      every open promote PR look superseded. New
+      `scripts/quality-gates-base/tests/test-ldr-promote-ancestor-cleanup-hoist.sh` extracts the real function + call
+      site: structurally asserts the hoist ordering (call site precedes both the content-identical skip return and the
+      covered-repo SIT-gate BLOCK) and functionally exercises all 4 branches (close+delete, non-ancestor skip,
+      not-yet-concluded skip, empty-LDR_SHA no-op) plus `DRY_RUN`. Full `quality-gates.sh` clean on this exact HEAD.
+      Issue-doc checkbox reconciliation deferred to `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` per this
+      batch's own header (source docs not touched here).
+- [x] [CODE] P2. ✅ Fix sit-gate-stuck-detector.yml's dedup key to include the streak-count / monotonic-worsening signal
       alongside the flat cooldown timer Source:
-      `plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md`
-- [ ] [CODE] P2. Re-check whether unified-api-contracts/market-tick-data-service SIT-gate streaks reset to 0 once LDR
+      `plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md` — ✅ **ALREADY DONE,
+      confirmed 2026-08-14 (slot 29, infra), no new code change.** Already shipped `unified-trading-pm@c91496e0db`
+      (2026-08-08, 5 days before this batch was drafted):
+      `dedup_key: sit-gate-stuck-${{ needs.check.outputs.max_streak }}` (line 131 of
+      `.github/workflows/sit-gate-stuck-detector.yml`, mirrored in the hosted-baseline copy) folds the detector's own
+      `max_streak` output into the key, so a worsening streak (e.g. 4→6) is a NEW key that always re-arms rather than
+      being suppressed by the flat 60-min cooldown — exactly the fix this todo asks for, plus a matching
+      `sit_gate_stuck_detector.py` change and a RESOLVED bookend job for the all-clear path. Live-verified on current
+      HEAD, not assumed. Issue-doc checkbox reconciliation deferred to
+      `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` per this batch's own header (source docs not touched
+      here).
+- [x] ✅ [CODE] P2. Re-check whether unified-api-contracts/market-tick-data-service SIT-gate streaks reset to 0 once LDR
       commit velocity drops Source:
-      `plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md`
-- [ ] [CODE] P2. Slack alerting via notify-slack.yml for the 3 governor triggers (over-cap RSS, >20% baseline drift,
-      host RAM >80% abort) Source: `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`
-- [ ] [CODE] P2. Raise the PYRIGHT_TIMEOUT default (or document the override) in base-service.sh / quality-gates.md
-      Source: `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`
-- [ ] [CODE] P2. Fix _qg_governor_default_k() to call the already-correct _qg_physical_cores() instead of its own
+      `plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md` — Already answered live in
+      the source issue doc (2026-08-10T19:00Z measurement): the streak resets on gate PASS even under sustained velocity
+      — a documented treadmill, not a masked second bug (issue doc's own P3 todo, closed). Re-verified fresh today,
+      2026-08-14, via `python3 scripts/cicd/sit_gate_stuck_detector.py`:
+      `sit-gate stuck detector: healthy (no repo has 3+ consecutive SIT GATE BLOCK ticks)` — both repos currently at 0,
+      confirming the reset behavior still holds 4 days later. No code fix needed; this was a re-check-only todo. No
+      further action.
+- [x] ✅ [CODE] P2. Slack alerting via notify-slack.yml for the 3 governor triggers (over-cap RSS, >20% baseline drift,
+      host RAM >80% abort) Source: `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` — ✅ **DONE
+      2026-08-14 (slot 11, infra)**: `unified-trading-pm@<PENDING-SHA>`. Added `_qg_governor_slack_alert()` to
+      `qg-host-governor.sh` — a direct Slack-webhook POST (`SLACK_CI_WEBHOOK_URL`/`SLACK_WEBHOOK_URL`) with a local
+      per-dedup-key marker-file cooldown, mirroring `notify-slack.yml`'s own severity/dedup/cooldown conventions; **not
+      a literal call INTO that reusable workflow** — it is `workflow_call`-only and unreachable from a bare bash script
+      running on a worker VM/laptop outside a GHA job (the same host-side pattern already used by
+      `scripts/repo-management/cron_liveness_watchdog.py`'s `post_slack()`). Wired into **2 of the 3** triggers, which
+      already had a live detection point: (1) **host RAM > abort-threshold abort** — `_qg_watchdog_loop` now posts
+      CRITICAL on the same trip that already SIGTERMs + writes the loud marker; (2) **per-run RSS over its 1.2× cap** —
+      new `_qg_governor_check_overrun()` fires CRITICAL when a MEM_WRAP-wrapped pytest/basedpyright exits 137 (cgroup
+      `MemoryMax` OOM-kill) under `QG_GOVERNOR_MODE=reservation`, wired at all 3 exit-capture sites in `base-service.sh`
+      (unit-only TESTS, integration TESTS, TYPE CHECK). **Trigger 3 (daily observed-peak >20% above committed baseline)
+      is NOT wired** — its own detection mechanism (a daily job promoting each run's observed peak-RSS into the
+      committed baseline + comparing) does not exist in code yet; it is the still-open, separate Phase-0 "Baseline
+      freshness loop" todo in the source plan (`qg_host_adaptive_resource_governor_2026_07_14.md`), out of this
+      satellite todo's scope to fabricate. New `tests/test-qg-slack-alert.sh` (curl mocked, no network): 8 assertions —
+      no-webhook/non-https no-op, post-and-dedup-marker, cooldown-suppression, cooldown-elapsed-reposts, and all 3
+      `_qg_governor_check_overrun` branches (token-mode no-op, reservation-mode-clean-exit no-op, reservation-mode-137
+      posts). All pre-existing governor suites (`test-qg-watchdog.sh`, `test-qg-admit.sh`, `test-qg-mem-cap.sh`,
+      `test-qg-reservation.sh`, `test-qg-ledger.sh`, `test-qg-governor-slice-gating.sh`) re-run green (one pre-existing,
+      unrelated `test-qg-watchdog.sh` failure — "token mode: watchdog does not start" — confirmed via `git stash` to
+      reproduce identically on a clean HEAD, not a regression from this change; not fixed here, out of scope).
+      Issue-doc/source-plan checkbox reconciliation deferred to
+      `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` per this batch's own header (source docs not touched
+      here).
+- [x] ✅ [CODE] P2. Raise the PYRIGHT_TIMEOUT default (or document the override) in base-service.sh / quality-gates.md
+      Source: `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` — ✅ **DONE 2026-08-14 (slot 10, infra).**
+      Documented the sanctioned override (new `### PYRIGHT_TIMEOUT` subsection in
+      `/codex/06-coding-standards/quality-gates.md`, right after the `run_timeout` Helper section) rather than raising
+      the shared `base-service.sh` default fleet-wide: the default stays 120s because bumping it for every consuming
+      repo risks pushing wall time past that repo's own `MAX_DURATION` meta-gate — a confirmed interaction the sibling
+      2026-08-09 finding in the same source plan already hit on market-tick-data-service. Documents the existing ad-hoc
+      per-repo override pattern (`PYRIGHT_TIMEOUT=300/480/600/1200`, citing deployment-api's own baked-in 1200s default)
+      plus the MAX_DURATION headroom caveat. Issue/source-plan checkbox reconciliation deferred to
+      `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` per this batch's own header (source docs not touched
+      here).
+- [x] ✅ [CODE] P2. Fix _qg_governor_default_k() to call the already-correct _qg_physical_cores() instead of its own
       undeduped lscpu invocation (hyperthreading double-count bug) Source:
-      `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`
+      `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` — ✅ **DONE 2026-08-14 (slot 20, infra).**
+      Evidence: `unified-trading-pm@918eee37ab`. `_qg_governor_default_k()`
+      (`scripts/quality-gates-base/qg-host-governor.sh`) now delegates to `_qg_physical_cores()` instead of its own
+      inline `lscpu -p=core | grep -vc '^#'` (which counted one row per LOGICAL cpu, no dedup — up to 2x too permissive
+      on a hyperthreaded host); `_qg_physical_cores()` already dedupes correctly via `sort -u`. New regression test in
+      `test-qg-host-capacity.sh` (block d): a fake `lscpu -p=core` simulating 32 physical cores × 2 HT threads (64
+      logical rows, each core id repeated twice) asserts `_qg_physical_cores` returns 32 (deduped) and
+      `_qg_governor_default_k` returns `floor(32/4)=8`, not the old-buggy `floor(64/4)=16`. All
+      `test-qg-host-capacity.sh` assertions pass (13/13, incl. the 2 new ones); full `quality-gates.sh` clean.
+      Issue-doc/source-plan checkbox reconciliation deferred to
+      `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` per this batch's own header (source docs not touched
+      here).
 - [ ] [CODE] P2. Stamp work-start after admission so MAX_DURATION excludes governor queue-wait (already-cited concrete
       fix, not a design question) Source: `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`
 - [ ] [CODE] P2. Re-measure GitHub Actions billing for the 17+PM reverted repos (should read $0/unmetered) and the

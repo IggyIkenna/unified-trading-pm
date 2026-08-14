@@ -76,6 +76,13 @@
 #   QG_WATCHDOG_INTERVAL_SECONDS  poll interval for the runtime abort-monitor (default 15)
 #   QG_WATCHDOG_CONSECUTIVE_HITS  consecutive over-threshold samples before abort (default 2)
 #   QG_GOVERNOR_WATCHDOG_DISABLE  set to "true" to disable the runtime abort-monitor (reservation mode only)
+#   SLACK_CI_WEBHOOK_URL / SLACK_WEBHOOK_URL  Slack incoming-webhook for governor alerts
+#                         (best-effort — unset/non-https silently disables posting, never
+#                         fails the calling QG run). See _qg_governor_slack_alert.
+#   QG_SLACK_RAM_ABORT_COOLDOWN_MIN  per-host dedup cooldown for the RAM-abort alert
+#                         (minutes, default 30)
+#   QG_SLACK_OVERRUN_COOLDOWN_MIN    per-repo dedup cooldown for the cap-overrun alert
+#                         (minutes, default 30)
 #
 # Safe to source repeatedly; functions are idempotent. No effect on correctness — purely
 # a scheduling throttle, so a missing flock(1) degrades gracefully to "no governor".
@@ -95,12 +102,19 @@
 # Mac Studio was capped at 2 instead of 6. `sysctl -n hw.physicalcpu` is the macOS
 # equivalent of `lscpu -p=core` (TRUE physical cores, not logical — `hw.ncpu` and
 # `hw.logicalcpu` would over-count on SMT Intel Macs).
+#
+# HYPERTHREADING DOUBLE-COUNT FIXED 2026-08-14 (plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
+# ci_satellite_ao_dispatch_batch13). This function used to re-implement its own
+# `lscpu -p=core | grep -vc '^#'` core count, which counts one row per LOGICAL cpu
+# (`lscpu -p=core` emits a row per hyperthread sibling, with the physical core id
+# repeating) — no dedup, so on a hyperthreaded host it returned the logical CPU
+# count (e.g. 16) instead of the true physical count (e.g. 8), making K up to 2x
+# too permissive there. `_qg_physical_cores()` below already dedupes correctly via
+# `sort -u` (added later for the TOTAL-INSTANCE cap) — delegate to it instead of
+# maintaining two diverging "count physical cores" implementations.
 _qg_governor_default_k() {
     local cores
-    # physical cores: lscpu (Linux) → sysctl (macOS) → logical nproc → 4
-    cores="$(lscpu -p=core 2>/dev/null | grep -vc '^#')"
-    [[ "${cores:-0}" -ge 1 ]] || cores="$(sysctl -n hw.physicalcpu 2>/dev/null)"
-    [[ "${cores:-0}" -ge 1 ]] || cores="$(nproc 2>/dev/null || echo 4)"
+    cores="$(_qg_physical_cores)"
     local k=$(( cores / 4 ))
     (( k >= 2 )) || k=2
     echo "$k"
@@ -561,6 +575,67 @@ _qg_governor_acquire_reservation() {
     done
 }
 
+# ── SLACK ALERTING (Phase 4 — qg_host_adaptive_resource_governor_2026_07_14.md) ──────
+# Direct webhook POST, NOT a call to the reusable .github/workflows/notify-slack.yml —
+# that workflow is `workflow_call`-only and unreachable from a bare bash script running
+# on a worker VM or laptop outside a GitHub Actions job. This mirrors its conventions
+# instead (severity-prefixed message, dedup_key + cooldown_min, best-effort/fail-open —
+# never fail the calling QG run) so the governor's alerts read consistently with the
+# rest of the CI alerting surface, same pattern already used host-side by
+# scripts/repo-management/cron_liveness_watchdog.py's post_slack().
+#
+# Dedup is LOCAL (a marker file per key under the shared governor dir, not the GCS alert
+# ledger notify-slack.yml reads/writes) — a bare host may have no gcloud ADC configured,
+# so this never depends on GCP auth succeeding.
+_qg_slack_alert_dir() { echo "$(_qg_ledger_dir)/slack-alerts"; }
+
+# <severity: INFO|WARNING|CRITICAL> <dedup_key> <cooldown_min> <message>
+# Best-effort throughout: unset/non-https webhook, curl failure, or an unwritable
+# marker dir are all silent no-ops — alerting must never break or slow down a QG run.
+_qg_governor_slack_alert() {
+    local severity="$1" dedup_key="$2" cooldown_min="${3:-30}" message="$4"
+    local webhook="${SLACK_CI_WEBHOOK_URL:-${SLACK_WEBHOOK_URL:-}}"
+    [[ -n "$webhook" ]] || return 0
+    case "$webhook" in https://*) ;; *) return 0 ;; esac
+    command -v curl >/dev/null 2>&1 || return 0
+
+    local dir marker now last age_min
+    dir="$(_qg_slack_alert_dir)"; mkdir -p "$dir" 2>/dev/null || return 0
+    marker="${dir}/$(printf '%s' "$dedup_key" | tr -c 'A-Za-z0-9._-' '_').ts"
+    now=$(date +%s 2>/dev/null || echo 0)
+    if [[ -f "$marker" ]]; then
+        last="$(cat "$marker" 2>/dev/null || echo 0)"
+        age_min=$(( (now - ${last:-0}) / 60 ))
+        (( age_min < cooldown_min )) && return 0   # within cooldown — suppressed, same key
+    fi
+    echo "$now" > "$marker" 2>/dev/null || true
+
+    local icon
+    case "$severity" in
+        CRITICAL) icon=":rotating_light:" ;;
+        WARNING)  icon=":warning:" ;;
+        *)        icon=":information_source:" ;;
+    esac
+    local safe_msg payload
+    safe_msg="$(printf '%s' "$message" | tr '\n' ' ' | sed 's/\\/\\\\/g; s/"/\\"/g')"
+    payload="$(printf '{"text":"%s *%s* — %s"}' "$icon" "$severity" "$safe_msg")"
+    curl -sS -X POST -H 'Content-Type: application/json' --max-time 10 -d "$payload" "$webhook" >/dev/null 2>&1 || true
+}
+
+# Trigger 2/3 — per-run cap overrun: a MEM_WRAP-wrapped heavy subprocess (pytest /
+# basedpyright) killed by its own systemd cgroup MemoryMax (exit 137) while running
+# under the reservation-mode 1.2×-baseline cap (_qg_repo_mem_cap). Token-mode's cap is
+# the flat legacy 10G default, so a 137 there is not "outgrew its measured baseline" —
+# gated to reservation mode only. Call sites: base-service.sh, right after each
+# MEM_WRAP-wrapped pytest/basedpyright invocation captures its exit code.
+_qg_governor_check_overrun() { # <repo> <phase> <exit_code>
+    local repo="$1" phase="$2" rc="$3"
+    [[ "${QG_GOVERNOR_MODE:-token}" == "reservation" ]] || return 0
+    [[ "$rc" -eq 137 ]] || return 0
+    _qg_governor_slack_alert "CRITICAL" "qg-governor-overrun:${repo}" "${QG_SLACK_OVERRUN_COOLDOWN_MIN:-30}" \
+        "QG ${phase} for ${repo} was OOM-killed (exit 137) inside its systemd cgroup — exceeded its ${QG_MEM_CAP:-1.2x-baseline} cap. Repo may have outgrown its committed baseline; re-profile via scripts/dev/measure-qg-baseline.sh."
+}
+
 # ── RUNTIME ABORT-MONITOR (Phase 4 hardening) ────────────────────────────────
 # Closes the gap named in plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
 # ("Global 80% valve — admission side SHIPPED; runtime ABORT of an already-running >80%
@@ -634,6 +709,9 @@ _qg_watchdog_loop() {
                     echo "aborted_at_epoch=$(date +%s 2>/dev/null || echo 0)"
                 } > "$marker" 2>/dev/null
                 echo "[qg-governor-watchdog] ${repo} pid=${target_pid}: host RAM pressure >= ${QG_HOST_RAM_ABORT_PCT:-75}% for ${hits_needed} consecutive checks — sending SIGTERM to its process tree (self-scoped, loud abort; marker: ${marker})" >&2
+                # Trigger 3/3 — host RAM > abort-threshold abort (Phase 4 Slack alerting).
+                _qg_governor_slack_alert "CRITICAL" "qg-governor-ram-abort:$(hostname 2>/dev/null || echo host)" "${QG_SLACK_RAM_ABORT_COOLDOWN_MIN:-30}" \
+                    "QG governor watchdog ABORTED ${repo} (pid ${target_pid}) on $(hostname 2>/dev/null || echo this host) — host RAM pressure >= ${QG_HOST_RAM_ABORT_PCT:-75}% for ${hits_needed} consecutive checks. marker: ${marker}"
                 _qg_watchdog_signal_tree "$target_pid"
                 return 0
             fi

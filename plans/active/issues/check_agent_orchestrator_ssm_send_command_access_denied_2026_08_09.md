@@ -131,3 +131,14 @@ on shared AWS infra, not something to self-grant.
   direct `escalation_queue` reads (slot-18), and now the CI-bootstrap bare-host proof (any approach that needs to run a
   command on a private-IP-only EC2 instance with no SSH key hits the identical wall). Task released GATED, not
   re-dispatched blind — resume only after this grant lands.
+- **2026-08-14 (slot-10, ci_reconciler)**: FOURTH independent confirmation, from `/ci-reconcile`'s own §0c
+  (host/VM-dispatched-watchdog sweep) and §5 (AO worker-liveness cross-check). `aws sts get-caller-identity` again
+  resolved `arn:aws:iam::427895769566:user/ikenna-worker`; `ssm send-command` against both the glue-runner host
+  (`i-042a6332509482556`) and the central orchestrator VM (via `check-ao-backlog-status.sh` against
+  `i-0c9b283b31d6b5ca7`) failed the identical `AccessDeniedException`; `sts assume-role` to the documented self-service
+  AWS identity `uts-orchestrator-epic-role` (`/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`) was
+  also denied, and no local AWS profile other than `default` exists to fall back to — this identity cannot route around
+  the gap. AO's own `:8765` HTTP surface (`/api/healthz`, `/api/escalations/active`) was directly reachable and used
+  instead, so the dispatch-freshness half of §5 still completed; only the tmux-session-count/host-watchdog-log liveness
+  cross-check was skipped and reported as an explicit coverage gap in that run's report. Fourth independent consumer now
+  blocked, adding `/ci-reconcile` to the list in the entry above.

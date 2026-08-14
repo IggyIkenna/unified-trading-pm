@@ -172,25 +172,69 @@ source:
       lightweight path is not, and a per-launcher census is needed to say which real VMs are uncovered. Either add the
       admission check to the `lc_` helper (it needs no venv — it can curl the marker) or document the lightweight path
       as deliberately ungated. Repo: deployment-service.
-- [ ] [CODE] P1. **The dependency-fan-out half of `targets_for_finding()` stays dormant for the non-VM findings Phase 6
-      tested, not just for future emitters generally** — found 2026-08-14 by a second session reading this commit's own
-      diffs before relaying "is this actually fine" back to the operator. `targets_for_finding()` needs EITHER `vm_name`
-      OR `upstream_entity` to produce a target; confirmed via
-      `grep -n "upstream_entity" meta_watchers.py     consolidator_scheduler_watcher.py` → zero hits. `DP-MANIFEST-001`
-      (consolidator-down) and `DP-CATALOG-001` (catalogue-stale) — 2 of the 4 P0 scenarios the archived plan's Phase 6
-      tests actually exercise — carry neither field in their `PipelineFinding.details` (they are not VM-lifecycle
-      alerts, so no `vm_name`; `upstream_entity` is never set by either watcher). So even once every todo above ships,
-      those two will resolve **zero actuation targets** in production — the VM-lifecycle family (DP-VM-001/002/003,
-      which is what is actually firing live right now) will genuinely work; the fan-out family will look armed (todos
-      ticked, tests green, the anti-inertness guard satisfied) but stay silently inert for these two, the exact "built ≠
-      called" shape this plan already named once. Fix: have
-      `meta_watchers.check_consolidator_liveness`/`check_catalogue_freshness` and
-      `consolidator_scheduler_watcher.check_consolidator_scheduler_paused` stamp `details["upstream_entity"]` (the UAC
-      entity name the failed check corresponds to — e.g. `"instrument-catalog"` for catalogue-stale) so
-      `targets_for_finding()`'s existing `resolve_dependents()` path actually has something to resolve against. Repo:
-      deployment-service.
+- [x] ✅ [CODE] P1. **`DP-CATALOG-001` (catalogue-stale) now stamps `upstream_entity`.** —
+      **deployment-service@2cc79b2a7c.** `meta_watchers.check_catalogue_freshness` now sets
+      `details["upstream_entity"] = "instrument-catalog"`, the registered UAC entity type
+      (`unified_api_contracts.instruments_preflight_dag`, `upstream_entity_type="instrument-catalog"` at 2 call sites).
+      `DP-CATALOG-001`'s policy is `_HOLD`/`_AGENT_URGENT` ("Catalog not running... Hold admission" —
+      `dependency_revocation.py`), so this closes a real dormant path: `route_finding()` was already reached, the policy
+      already said HOLD, only the target resolution was empty. Test updated (`test_catalogue_stale_emits_critical` now
+      asserts the stamped field). Repo: deployment-service.
+- [ ] [CODE] P0. **`DP-MANIFEST-001` — the operator's own named "money-burn" scenario — cannot actuate at all, and the
+      gap is deeper than a missing field.** Found 2026-08-14 correcting the todo above: `meta_watchers` has no
+      `check_consolidator_liveness` function (that name never existed under that spelling). The codex table's actual
+      DP-MANIFEST-001 emitter is `assert_consolidator_healthy` in **`unified-trading-library`**
+      (`unified_trading_library/monitors/consolidator_liveness.py`), which calls UTL's bare `log_event()` — confirmed by
+      reading it: `log_event` writes to the event-log spine (GCS/PubSub), NOT a `PipelineFinding`, and never reaches
+      deployment-service's `escalation.route_finding()`. Confirmed via
+      `grep -rn 'registry_id="DP-MANIFEST-001"' deployment_service/` → zero hits outside tests: this alert has **no
+      production `route_finding()` call site at all**, so it cannot be armed by anything this plan already shipped — it
+      never gets as far as `targets_for_finding()`. **Second, independent problem**: even a wired emitter would resolve
+      zero fan-out targets, because `"manifest-consolidator"` is not a registered `upstream_entity_type` in
+      `unified_api_contracts.instruments_preflight_dag` at all — the only 5 registered values are `fixtures` / `teams` /
+      `instrument-catalog` / `canonical_question_group_registry` / `instruments`
+      (`grep -n upstream_entity_type= instruments_preflight_dag.py`). `DP-WATCHER-004` (accidental scheduler pause, same
+      `_HOLD` policy, comment: "same dependent action" as DP-MANIFEST-001) DOES reach `route_finding()` today
+      (`meta_watchers._emit` call site in `consolidator_scheduler_watcher.py`) but hits the identical second problem —
+      stamping `upstream_entity` on it would be a no-op until the entity is registered. The closest thing that DOES
+      reach `route_finding()` with a real target-resolvable shape is `consolidator_oom_watcher.check_consolidator_oom`
+      (registry_id `DP-WATCHER-005`, OOM-only variant, details carry `asset_group` not `vm_name`/`upstream_entity` —
+      same dormancy). **This is a design decision, not a mechanical stamp**: either (a) add `manifest-consolidator` as a
+      real `upstream_entity_type` with a `PreflightRequirement` per asset_group in UAC (cross-repo, changes the
+      admission-gate semantics, needs an operator call on whether "manifest freshness" is a preflight requirement the
+      same way `fixtures`/`teams` are), or (b) give deployment-service its own non-OOM-gated
+      consolidator-heartbeat-staleness watcher that emits a real `PipelineFinding(registry_id="DP-MANIFEST-001")`
+      through `route_finding()`, mirroring `check_catalogue_freshness`'s shape, and use `vm_name`/family-style
+      resolution (bucket → asset_group → prefix family, no entity graph needed) instead of the entity-fan-out path.
+      Repo: unified-trading-library (read), deployment-service (fix), unified-api-contracts (if option a).
 
 ## Progress Log
+
+### 2026-08-14 (later) — `DP-CATALOG-001` armed; `DP-MANIFEST-001` found to be a deeper gap than the todo it replaces claimed.
+
+Picked up the open "dependency-fan-out stays dormant" P1. On implementing it, the todo's own premise was wrong on two
+points, found by reading the actual production code instead of trusting the prior session's grep:
+`meta_watchers.check_consolidator_liveness` never existed under that name, and `DP-MANIFEST-001` does not reach
+`route_finding()` at all today — it is emitted by `assert_consolidator_healthy` in **unified-trading-library**
+(`monitors/consolidator_liveness.py`) via UTL's bare `log_event()`, a different channel (event-log spine) with no
+`PipelineFinding`, confirmed by `grep -rn 'registry_id="DP-MANIFEST-001"' deployment_service/` → zero hits outside
+tests. Fixed what was real and re-scoped what wasn't:
+
+**Shipped: `deployment-service@2cc79b2a7c`.** `check_catalogue_freshness` (DP-CATALOG-001, genuinely reaches
+`route_finding()`, policy is `_HOLD`/`_AGENT_URGENT`) now stamps `details["upstream_entity"] = "instrument-catalog"` —
+the one registered UAC entity type this alert corresponds to. Test updated to assert the field. Gate green (`--test`,
+315s; `--fast`, 379s).
+
+**Re-scoped, not fixed: `DP-MANIFEST-001`.** The operator's own named "money-burn" scenario has TWO independent
+problems, not one missing field: (1) no production `route_finding()` call site exists for it at all — UTL's
+`log_event()` path never reaches deployment-service's escalation system; (2) even a wired emitter would resolve zero
+fan-out targets, because `"manifest-consolidator"` is not a registered `upstream_entity_type` in
+`unified_api_contracts.instruments_preflight_dag` (only `fixtures`/`teams`/`instrument-catalog`/
+`canonical_question_group_registry`/`instruments` are registered). `DP-WATCHER-004` (accidental scheduler pause, same
+`_HOLD` policy) DOES reach `route_finding()` but hits problem (2) identically. This needs an operator call between two
+real designs (register the entity in UAC vs. give deployment-service its own non-OOM consolidator-heartbeat watcher) —
+written up as its own P0 todo above rather than silently patched with a no-op stamp, which would have reproduced this
+plan's own headline lesson ("built ≠ called") on the operator's highest-named-priority scenario.
 
 ### 2026-08-14 — ARMED. The mechanism fires for the first time.
 

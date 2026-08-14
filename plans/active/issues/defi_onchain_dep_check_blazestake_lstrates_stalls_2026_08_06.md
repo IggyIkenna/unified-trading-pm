@@ -126,22 +126,50 @@ BLAZESTAKE still blocking — Option A still needed).
       slot-10): VM `features-onchain-defi-20260807-172238` (SPOT, asia-northeast1-c, 1-day benchmark date=2026-07-29)
       exit_code=0; dep-check ✅ passed; 7/13 groups; lending_rates: 28045 rows written, lst_yields: 18 rows written;
       wall_clock≈121s/benchmark-day. Numbers recorded in progress log below.
-- [ ] [DATA] P1. **Root-cause why `lending_indices` capture stopped 2026-08-01 — REOPENED 2026-08-08, live re-check
-      done, stall CONFIRMED real and ongoing.** The 2026-08-07 `BLOCKED-OPERATOR-DECISION` park (below, superseded) was
-      pending exactly this re-check; a sibling read-only agent this session ran the recommended live per-venue
-      `lending_indices` `availability_index.parquet` re-check directly (bounded pushdown read, no whole-corpus walk) and
-      found: captured-row counts by `date` show 07-25→143 declining through 07-31→250, then **zero** captured rows on
-      08-01/02/03/04/05, a one-off spike on 08-06→217 (a backfill/relabel batch — all 217 rows share ONE `attempted_at`
-      timestamp but span historical `date` values, i.e. a re-run writing PAST dates, not fresh same-day capture), then
-      **zero again** 08-07/08. This also resolves the specific contradiction that caused the park: the KAMINO "captured
-      a row 2026-08-05" counter-evidence (`defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` item 7 /
-      `defi_manifest_consolidator_stale_lock_silent_stall_2026_08_05.md`'s `KAMINO-SOLANA captured=80`) is the SAME trap
-      — a backfill-batch `attempted_at` misread as a resumed cron, not genuinely fresh capture. **Diagnosis scope**:
-      root-cause why the live/cron `lending_indices` capture path stopped writing 08-01 — the 08-06 spike proves SOME
-      process CAN still write (so this is not e.g. a fully broken/deleted handler), meaning the stall is most likely a
-      scheduling/trigger/cron-registration issue rather than a code-level capture bug. Read-only diagnosis is
-      AO-dispatchable (a checkable root-cause question, not an operator judgment call); any actual fix (e.g.
-      re-registering a stalled cron/Workflow trigger) may still need an `[OPERATOR]` follow-up once the cause is known.
+- [x] ✅ [DATA] P1. **Root-cause why `lending_indices` capture stopped 2026-08-01 — DIAGNOSED + FIXED 2026-08-14
+      (slot-5).** Cron/Workflow-trigger hypothesis FALSIFIED: `uts-prod-mtds-collect-lending-indices-cron` (Cloud
+      Scheduler, `45 0 * * *`) fired reliably every single day throughout the stall. Real root cause found via Cloud Run
+      Job execution history + logs: the target job `uts-prod-mtds-collect-lending-indices` has failed EVERY scheduled
+      run since 2026-08-02 except one (08-07) — `OOM ("configured memory limit reached")` 08-02..08-10, then
+      `timeout ("configured timeout reached")` 08-11..08-14 — because `LendingIndicesHandler.process()` called
+      `freshness_cache.bulk_load()` raw via `asyncio.to_thread`, unlike sibling handlers (`gas_fee_handler`,
+      `lst_rates_handler`, `_oracle_prices_freshness`) which already route the identical
+      `ManifestFreshnessCache.bulk_load()` call through `_gas_fee_helpers.bounded_freshness_warmup()` (the proven
+      gas_fees crash-loop fix). Cloud Logging on a live verification execution confirmed unbounded, near-linear RSS
+      growth (~67 MiB/s, no plateau — 481MiB→2493MiB→4514MiB→6524MiB across 4 samples 30s apart) entirely inside the
+      bulk_load call, both on the original attempt and its retry, killed by SIGKILL (signal 9) each time. **Fixed**: (1)
+      `market-tick-data-service@4925f88d73` — wired `lending_indices_handler.py` onto `bounded_freshness_warmup()`,
+      mirroring `lst_rates_handler.py`'s exact call-site pattern; (2) `deployment-service@21e6814616` — bumped the Cloud
+      Run Job to 2CPU/8Gi (from 1CPU/2Gi, unchanged since launch), matching the settled config for sibling jobs
+      `lst-rates`/`risk-params` that hit the identical OOM onset (2026-08-02) against the same ~42M-row defi
+      availability index and were already fixed this way; applied live via `gcloud run jobs update` + verified via
+      manual execution before landing the terraform sync. **Caveat — the resource bump alone was verified
+      INSUFFICIENT**: a fresh manual execution at 2CPU/8Gi (execution `uts-prod-mtds-collect-lending-indices-nzdsm`)
+      still OOM'd in ~5 min at the same growth rate, confirming this is a genuine unbounded-load issue in
+      `bulk_load()`/`read_availability_index()` for the defi bucket's current index size, not merely an undersized
+      ceiling — the `bounded_freshness_warmup()` code fix is the mechanism expected to actually resolve it (fails open
+      on a stuck/slow load instead of blocking the whole job on it), but its live effect could NOT be verified in this
+      diagnosis session: the Cloud Run Job's container image is built by `market-tick-data-service/cloudbuild.yaml`, so
+      the code fix only takes effect once that image is rebuilt + redeployed (async, outside this session). **Follow-up
+      needed**: after the next MTDS image build/deploy, run one more manual
+      `gcloud run jobs execute uts-prod-mtds-collect-lending-indices` and confirm it completes with
+      `records_written > 0` — if it still OOMs/times out even with the bounded wrapper, the underlying
+      `ManifestFreshnessCache.read_availability_index()` likely needs a genuine memory-bounded/streaming read path
+      (library-level UTL work, not a per-handler patch) since a `date_range=(target_day, target_day)` filter does not
+      appear to bound its memory footprint today.
+- [ ] [DATA] P2. **Verify the `bounded_freshness_warmup()` fix (`market-tick-data-service@4925f88d73`) actually resolves
+      the `lending_indices` OOM/timeout once a fresh MTDS Cloud Build image deploys it** — this fix could not be
+      live-verified in the 2026-08-14 diagnosis session (the running Cloud Run Job image predates the code change; MTDS
+      ships to the image via `market-tick-data-service/cloudbuild.yaml`, not directly on quickmerge-land). Once
+      redeployed:
+      `gcloud run jobs execute uts-prod-mtds-collect-lending-indices --region=asia-northeast1     --project=central-element-323112`
+      and confirm it completes with `records_written > 0` (not just exit_code=0 — check the manifest for real captured
+      rows). If it STILL OOMs/times out, `ManifestFreshnessCache.bulk_load()` / `read_availability_index()` needs a
+      genuine memory-bounded read path for a `date_range`-filtered call (the filter does not currently appear to bound
+      memory) — that would be library-level UTL work, not a per-handler patch, and should be filed as its own issue doc
+      against `unified_trading_library` if confirmed. AO-dispatchable once the image redeploy is confirmed (check
+      `gcloud run jobs describe uts-prod-mtds-collect-lending-indices` for a recent image digest change, or the next
+      `market-tick-data-service` Cloud Build history).
 - **[SCRIPT] P3. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** RULED 2026-08-08
   (operator), option (c): reclassify the 1,404 BLAZESTAKE retirement markers OUT of `attempted_failed` entirely** — the
   previously-open options (a)/(b) are superseded by this ruling. Disposition evidence: slot-6 escalation agt-d87c1c,
@@ -172,6 +200,15 @@ BLAZESTAKE still blocking — Option A still needed).
 
 ## Progress Log
 
+- **2026-08-14 (slot-5, backend_engineer)**: item 3 (`lending_indices` stall) root-caused and fixed — see the flipped
+  todo above for the full writeup. Summary: cron NOT stalled (falsified); the target Cloud Run Job OOM'd/timed out on
+  every scheduled run since 2026-08-02 except one, due to an unbounded `ManifestFreshnessCache.bulk_load()` call that 3
+  sibling handlers already route through the sanctioned `bounded_freshness_warmup()` fail-open wrapper.
+  `market-tick-data-service@4925f88d73` (code fix), `deployment-service@21e6814616` (2CPU/8Gi resource bump, live +
+  IaC-synced). Resource bump alone verified INSUFFICIENT (still OOM'd at 8Gi on a fresh manual execution); the code fix
+  could not be live-verified this session (needs a fresh MTDS Cloud Build image) — flagged as a follow-up check once
+  that image redeploys, plus a possible library-level (UTL `ManifestFreshnessCache`) memory-bounding gap if the wrapper
+  alone doesn't resolve it.
 - **round5-na-digest-defi 2026-08-08 (apply pass, item 72)**: operator answered the DP-FETCH-009 paging-policy question
   — option (c), reclassify the 1,404 markers out of `attempted_failed` entirely. Read `attempted_failed_staleness.py`
   first to scope the real change: confirmed it is a pure display-labeling helper (no `capture_status` mutation, no

@@ -163,7 +163,7 @@ this checkout unrelated to this change —
 `VENUES_BY_ASSET_GROUP["defi"]`, which this change never touches, so it cannot be affected by this diff.
 
 > **Owner for the stale-venv / `iter_route_contexts` ImportError**:
-> /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
+> /plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
 
 ## Recommended decision
 

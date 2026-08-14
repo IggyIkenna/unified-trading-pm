@@ -773,7 +773,7 @@ against the reproduction script.
   the orchestrator dispatch layer.
 
 > **Owner for the stale-venv / `iter_route_contexts` ImportError**:
-> /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
+> /plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md
 
 - **2026-08-03 (data_pipeline_failure escalation worker, agt-e11908, slot 9) — 20th+ dispatch, SAME escalation_id
   (`agt-e11908`) as the entry directly above, dispatched to a second slot (slot 4 then slot 9) — the fifth confirmed
