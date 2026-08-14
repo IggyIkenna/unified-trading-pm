@@ -278,9 +278,13 @@ source: >-
       `plans/active/issues/ci_reconcile_overnight_batch_2026_08_11.md`
 - [ ] [CODE] P2. Fix the 7 failing github-glue-slot-refresh-* systemd units on host i-042a6332509482556 (git-credential
       error on mirror-refresh side-timer) Source: `plans/active/issues/ci_reconcile_overnight_batch_2026_08_11.md`
-- [ ] [CODE] P2. Live-verify (or synthetically force) the cloud-build-failure-watcher's coverage-gap self-check actually
-      pages CRITICAL when a pool's oldest fetched build is newer than the lookback cutoff Source:
-      `plans/active/issues/cloud_build_failure_watcher_limit_30_coverage_gap_silently_drops_failures_under_load_2026_08_10.md`
+- [x] [CODE] P2. ✅ Live-verify (or synthetically force) the cloud-build-failure-watcher's coverage-gap self-check
+      actually pages CRITICAL when a pool's oldest fetched build is newer than the lookback cutoff Source:
+      `plans/archive/2026_08/issues/cloud_build_failure_watcher_limit_30_coverage_gap_silently_drops_failures_under_load_2026_08_10.md`
+      — already done directly against the source issue (unified-trading-pm, this commit): synthetic/forced test of the
+      extracted self-check logic against fabricated gap/no-gap Cloud Build JSON fixtures confirmed `alert=true` + the
+      `COVERAGE GAP` message fires on a genuine gap and stays silent when coverage is adequate. Duplicate of this
+      batch's copy; no separate dispatch needed.
 - [x] [CODE] P2. ✅ Add duration floor (N consecutive failed probes AND outage >= expected_recovery_time_seconds) to
       evaluate_dependency_health's no-fallback branch before any producer is wired Source:
       `plans/archive/2026_08/issues/dependency_health_alerting_never_wired_2026_08_12.md` — already shipped directly

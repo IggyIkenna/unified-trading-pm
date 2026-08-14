@@ -246,9 +246,11 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       vs body text "Still open"/"Left `- [ ]`" (later Progress Log resolved for real)
 - [ ] [REVIEW] P3. (P3) plans/active/issues/solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md:96-100 —
       self-defeating "unpark is moot" vs "once unparked, verify" todo pairing
-- [ ] [REVIEW] P3. (P2)
-      plans/active/issues/cloud_build_failure_watcher_limit_30_coverage_gap_silently_drops_failures_under_load_2026_08_10.md:43
-      — checked-done todo, `resolved_by` is an unfilled template placeholder
+- [x] [REVIEW] P3. ✅ (P2)
+      plans/archive/2026_08/issues/cloud_build_failure_watcher_limit_30_coverage_gap_silently_drops_failures_under_load_2026_08_10.md
+      — stale finding: `resolved_by` was already filled (`unified-trading-pm@5078a6c31e`, corrected 2026-08-12 per that
+      doc's own frontmatter comment) before this review todo was ever actioned; doc is now archived (2026-08-14, all
+      todos done) — no fix needed.
 - [ ] [REVIEW] P3. (P3) plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md — frontmatter
       last_updated stale
 - [ ] [REVIEW] P3. (P2) plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md —

@@ -17,7 +17,7 @@ summary: >-
   lookback window, and that exact tick's job log shows "No failed Cloud Builds in the last 20m across 60 recent
   build(s). All clear." — the watcher ran successfully, authenticated correctly, and reported a false all-clear because
   the failing build was never even fetched.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -50,6 +50,10 @@ context_scope:
     /plans/archive/2026_08/issues/uts_prod_data_status_rollup_svc_container_startup_failure_blocks_deploy_2026_08_10.md,
   ]
 ---
+
+> **ARCHIVED 2026-08-14** — both todos resolved: the P1 fix shipped 2026-08-11 (`unified-trading-pm@5078a6c31e`), and
+> the P3 live-verification todo closed 2026-08-14 via a synthetic/forced test of the extracted self-check logic against
+> fabricated gap/no-gap Cloud Build fixtures (see Progress Log below).
 
 ## What was found
 
@@ -112,11 +116,33 @@ Fixed both the immediate gap and its recurrence risk:
 - [x] [CI] P1. Fix `cloud-build-failure-watcher.yml`'s `--limit=30` coverage gap: raise the fetch size + add a loud
       coverage-gap self-check. Done-when: QG green, shipped, and the fix is live on the branch the schedule trigger
       actually reads (`main` — see the workflow's own DEFAULT-BRANCH GOTCHA comment).
-- [ ] [CI] P3. Live-verify the coverage-gap self-check actually fires correctly on a real future tick where fleet load
-      pushes the pool's oldest fetched build newer than cutoff (a synthetic/forced test, or opportunistic observation) —
-      not urgent, the logic was traced + syntax-validated but not executed against a live gap condition this session.
+- [x] ✅ [CI] P3. Live-verify the coverage-gap self-check actually fires correctly on a real future tick where fleet
+      load pushes the pool's oldest fetched build newer than cutoff (a synthetic/forced test, or opportunistic
+      observation) — unified-trading-pm@(this commit) — see Progress Log entry below.
 
 ## Progress Log
+
+**2026-08-14 (slot-26, infra worker)**: Live-verified the coverage-gap self-check via BOTH legs.
+
+- **Opportunistic-observation leg**: checked 4 days of real `cloud-build-failure-watcher` runs since the fix landed
+  (2026-08-11 -> 2026-08-14,
+  `gh api repos/IggyIkenna/unified-trading-pm/actions/workflows/cloud-build-failure-watcher.yml/runs` = 1481 total runs
+  fleet-wide history; last 15 ticks on `main` all `success`) and the last 24h of `#ci-failures` via
+  `scripts/dev/slack-read-channel.py` — zero `COVERAGE GAP` posts. Expected, not a gap in verification: the fix's own
+  measurement put the `--limit=150` fetch depth at ~6.5h of coverage against a 20m lookback (~19x margin), so a natural
+  gap tick is not expected to occur under current fleet load — confirms the fix is holding, not that the self-check code
+  path is exercised.
+- **Synthetic/forced leg (the actual proof)**: extracted the exact embedded python block from
+  `.github/workflows/cloud-build-failure-watcher.yml`'s `poll` step verbatim (regex-extracted, not retyped) into a
+  scratch script and ran it twice against synthetic `gcloud builds list` JSON fixtures with `LOOKBACK_MINUTES=20`: (1)
+  **forced-gap fixture** — 150 builds per pool all created within the last 5 minutes (oldest fetched = 5m old, well
+  inside the 20m cutoff) — the self-check correctly computed `coverage_gap_pools=[regional, global]`, set `alert=true`,
+  and emitted the exact `:warning: COVERAGE GAP: ... did not reach back the full 20m lookback ...` line referencing this
+  issue doc, with a real `dedup_key` so the carrier would actually page; (2) **no-gap fixture** — 150 builds spanning 6h
+  (oldest fetched = 360m old, past cutoff) — correctly produced `alert=false` and the plain "All clear" line, matching
+  today's real observed state. Both branches of the self-check (`per_pool_oldest[label] > cutoff` true and false)
+  executed and produced the documented output. Scratch fixtures/script were local-only (not committed, not shipped) —
+  this is a doc-only flip, no code change (the code fix already shipped 2026-08-11 per `resolved_by`).
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).

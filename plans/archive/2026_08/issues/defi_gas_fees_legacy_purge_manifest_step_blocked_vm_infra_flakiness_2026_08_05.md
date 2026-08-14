@@ -14,7 +14,7 @@ summary: >-
   currently-active, shared VM-launcher infra reliability issue, not a script bug — stopping further blind retries here;
   resumed the (never-touched) consolidator cron rather than leave DeFi-wide consolidation paused indefinitely for a
   stalled one-off task.
-status: open
+status: archived
 nature: issue
 asset_group: [defi, infrastructure]
 stage: [data]
@@ -57,6 +57,11 @@ context_scope:
 ---
 
 # gas_fees legacy purge — object-delete done, manifest-purge blocked by infra flakiness
+
+> **🟢 ARCHIVED 2026-08-14 — all todos complete.** GCS-object delete + manifest-row purge (12,425 phantom rows) both
+> confirmed complete 2026-08-07 17:26Z (see Progress Log). Zombie-watchdog daemon relaunched, code fixes shipped,
+> sibling doc `/plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` row 1 + its Deferred-work
+> table updated to match. No open work remains.
 
 ## What's actually done (verified, not claimed)
 
@@ -201,10 +206,11 @@ the highest-priority open question.
       `market-tick-data-service@eb380b71b` — `_purge_manifest_rows()` now uses `blob.download_as_bytes(timeout=900)`
       (single streaming response via `_raw_client()`) instead of `_download_index_chunked()` (range-request chunks) —
       this is the exact fix that made the later `-170630` relaunch succeed.
-- [ ] [DATA] P2. Update `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` row 1 once the manifest purge
-      actually completes (its current entry cites a different, never-committed script name
-      `delete_legacy_gas_fees_venue_2026_08_04.py` with different numbers — likely stale/abandoned WIP from an earlier,
-      since-lost session; this doc's script + numbers are the real, shipped, adversarially-reviewed lineage).
+- [x] ✅ [DATA] P2. **DONE 2026-08-14 (slot-29/infra).** Updated
+      `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` row 1 (line 105) + its "Deferred work" table entry
+      (line 198) to reflect the manifest purge's confirmed 2026-08-07 17:26Z completion (0/12,425 TARGET rows remain,
+      GCS 0 objects all 10 venues, consolidator cron resumed) — both previously still read "NOT complete"/"Not done"
+      despite this doc's own Progress Log already recording the completion evidence. — `unified-trading-pm@<pending>`.
 
 ## Progress Log
 
