@@ -420,6 +420,13 @@ leave). The strategy-service surface is the more complete one and is real today;
 - G10 (P3) UI→resolution-API wiring (`unified-trading-system-ui` use-reports.ts hooks) unverified. **Still genuinely
   open as of 2026-07-27** — rehomed as a P3 todo in `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`
   alongside G1/G3; naturally gated behind G1 (no point verifying UI wiring against a still-mock resolution API).
+  > **CORRECTED 2026-08-14 (cross_cutting_satellite_ao_dispatch_batch13b, Item G)**: DONE — §10's 2026-07-28 todo
+  > VERIFIED G10 (see below, "VERIFIED, still open") and pointed it to
+  > `/plans/archive/issues/blrs_g3_g10_rescope_2026_07_28.md`, which is now fully archived (`status: resolved`, all 4
+  > todos `[x]`): both gateway proxies shipped `unified-trading-api@d7fdea4` + `unified-trading-api@df6d5ee`, and the UI
+  > wiring shipped `unified-trading-system-ui@c92078e2` (useResolveBreak/useBookCorrection wired into the reconciliation
+  > page). Also flipped `[x]` as `P3.BLRS3` in `citadel_paper_batch_live_reconciliation_2026_06_19.md`. This line's
+  > "still genuinely open" framing is stale; kept verbatim below only as the historical §7.1 record.
 - G11 (P2) ✅ decision resolved — see §7.2 D4 (was: "(P2/❓)" — corrected 2026-07-14, doc-reconciliation verify-rerun-2
   finding 18: §7.2 D4 is stamped "✅ SEE BANNER — DECIDED FINAL 2026-06-01", including a 2026-07-12 correction pass,
   that was never mirrored back to this ❓ marker) Two `/reconciliation/resolve` APIs (BLRS mock + strategy-service real)
@@ -631,3 +638,9 @@ defect, just confirming the coupling is daily, not real-time.
   `archive_exempt: true` (the sanctioned flip-then-mv two-commit pattern documented in
   `scripts/plan-hygiene/check_archive_candidates.sh`) so this commit doesn't trip the archive-candidates pre-commit
   gate. The follow-on pass should drop `archive_exempt` and `git mv` this doc to `plans/archive/[issues/]`.
+- **2026-08-14** — Item G (`cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`): corrected §7.1's stale G10
+  status text (was still saying "still genuinely open as of 2026-07-27"). Verified `blrs_g3_g10_rescope_2026_07_28.md`
+  is fully archived/resolved (4/4 todos `[x]`) and `citadel_paper_batch_live_reconciliation_2026_06_19.md`'s `P3.BLRS3`
+  (was G10) is flipped `[x]` — added a CORRECTED annotation citing both, matching the G3 line's existing 2026-08-12
+  correction format. G3's own annotation was already corrected by a prior `/plan-reconcile` pass; no change needed
+  there.
