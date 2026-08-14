@@ -234,6 +234,61 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
 
 ## Progress Log
 
+- **2026-08-14 (autonomous build-out started)** — Invoked `/autonomous` to drive §B-§G to completion. §A already fully
+  resolved (real API testing). Started §B (UAC registry, `unified-api-contracts`) — the discovery pass found the removal
+  footprint is much larger than §B's 4 todos suggested: ~16 files in `unified_api_contracts/` carry
+  `# PACIFICA ... removed 2026-07-16` markers (registries + comments), not just `VENUES_BY_ASSET_GROUP`/
+  `COLLATERAL_REGISTRY`/`VENUE_DATA_TYPE_CAPABILITIES`/`onchain_perp_batch_handler.py`. Treating the full sweep as
+  necessary for §B to be genuinely correct (a partial UAC registration would leave §C-§F resolving against an
+  inconsistent venue picture) — this is IN PROGRESS, not yet a scope change to the plan itself, just a wider §B than
+  drafted. Done directly (uncommitted, local edits) so far:
+  - `unified_api_contracts/registry/market_data_categories.py` — `PACIFICA-SOLANA` back in
+    `VENUES_BY_ASSET_GROUP["cefi"]`, stale removal comment corrected to note the reversal.
+  - `unified_api_contracts/registry/venue_collateral.py` — `CollateralAcceptance` rows: `PACIFICA-SOLANA`/`USDC`
+    accepted (cross/isolated), `PACIFICA-SOLANA`/`{JitoSOL,mSOL}` explicitly not-accepted (no LST margin, confirmed live
+    2026-08-14).
+  - `unified_api_contracts/internal/architecture_v2/collateral_registry.py` — net-new `CollateralPolicy` for
+    `pacifica-solana` (`venue_kind=PERP_DEX`, USDC-only, cross+isolated margin modes), deriving its `AssetHaircut` from
+    the `venue_collateral.py` row above via `_ah_from_venue_collateral`.
+  - `unified_api_contracts/canonical/quarantine.py` — updated the `PACIFICA-SOLANA` `QUARANTINE_REGISTRY` entry's
+    `reason` to note the 2026-08-14 reversal; the 265 historically-quarantined objects are NOT auto-resolved by this
+    change (deliberate — resolving them requires a reconciliation pass against instruments-service's real catalogue once
+    §C lands, which is real data work, not a registry-code change). Tracked as a new follow-up todo below.
+  - Dispatched a background sub-agent (general-purpose, sonnet) to sweep the remaining ~14 files (`venue_constants.py`,
+    `venue_launch_dates.py`, `venue_mapping.py` [3 spots], `venue_adapter_keys.py`, `cefi_perp_venue_endpoints.py`,
+    `data_type_capability.py` [real `VENUE_DATA_TYPE_CAPABILITIES` entries — this covers §B3], `expected_coverage.py`,
+    `perp_funding_cadence.py`, `venue_instrument_config.py`, `capability_declarations/_cefi.py`,
+    `canonical/crosscutting/pipeline_mode.py`, `canonical/crosscutting/_source_priority_data.py` [3 spots],
+    `canonical/crosscutting/mvp_scope.py`, `canonical/crosscutting/_mvp_scope_rules.py`) — mirroring the
+    HYPERLIQUID/ASTER/EXTENDED-STARKNET/LIGHTER-ZKSYNC sibling pattern in each, fixing every stale "removed" comment it
+    touches. **Result pending** — not yet reviewed/shipped as of this journal entry.
+  - §B4 (`onchain_perp_batch_handler.py`, actually in `market-tick-data-service`, not UAC — the plan's file location for
+    this todo was wrong) — preliminary read: Pacifica has its own direct REST adapter (`_umi_pacifica.py`, confirmed
+    live in §A) exactly like the pre-cull code, NOT routed through this shared on-chain-perp batch handler (that
+    handler's `_VENUE_SOURCE`/`_VENUE_PIPELINE_MODE` dicts cover HYPERLIQUID/ASTER/EXTENDED-STARKNET/ LIGHTER-ZKSYNC
+    only). Tentative answer: **no row needed here** — will confirm when §D's batch adapter resurrection lands and
+    cross-check against the pre-cull commit's actual wiring (the deleted `_umi_pacifica.py` was never routed through
+    this handler either).
+  - Pulled the 3 deleted pre-cull files from git history for §C/§D (read-only, not yet applied):
+    `instruments-service@dee3f6a4~1:instruments_service/reference_data/adapters/cefi/pacifica.py` (167 lines, curated
+    10-coin list — needs the `/info`-dynamic-discovery modernization per §A/§C1),
+    `market-tick-data-service@2e674d1f~1:market_tick_data_service/adapters/_umi_pacifica.py` (495 lines, real REST
+    parsing — §A confirmed shapes still match, restore near-as-is),
+    `market-tick-data-service@2e674d1f~1:market_tick_data_service/live/connectors/pacifica_solana_perp_ws.py` (189
+    lines, the `BLOCKED-CREDENTIALS` scaffold — needs `_CREDENTIALS_AVAILABLE=True` + real `_drain_ws_messages` per
+    §D2). Confirmed the modern `instruments-service` adapter interface pattern via `hyperliquid.py` (uses
+    `classify_venue_error`, `log_event`, `_make_session`, `VenueMapping().get_instrument_discovery_start` — none of
+    which existed in the same form when the Pacifica adapter was deleted, so a straight `git show` restore would NOT
+    pass current QG; the `/info`-based rewrite needs to follow `hyperliquid.py`'s current shape, not the old file's).
+  - **New follow-up todo (not in original plan draft)**: after §C lands, run a reconciliation pass to attempt resolving
+    the 265 `QUARANTINE_REGISTRY`-listed `PACIFICA-SOLANA` objects against the real catalogue — see
+    `unified_api_contracts/canonical/quarantine.py`'s updated reason field. Not GCS-destructive (read/classify only);
+    still deferred until a real catalogue exists to resolve against.
+  - **Nothing committed/pushed yet** — §B is still mid-flight (waiting on the sub-agent sweep before running QG +
+    shipping as one coherent unit, since a partial/inconsistent UAC registration is worse than a slightly-delayed
+    complete one). Next tick: review the sub-agent's diff, run `quality-gates.sh`, `quickmerge` the whole §B batch, flip
+    §B's checkboxes with the commit SHA, then move to §C.
+
 - **2026-08-14** — Split out of `/plans/active/solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md`'s Track 2
   on operator instruction ("just pacifica then lets build plan from IS to Strategy service"), once real testing (that
   plan's §A.2) fully resolved every Pacifica gate while the Jupiter track's gates (§A.1 economics, §A.3 schema mapping)
