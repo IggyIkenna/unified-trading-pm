@@ -275,3 +275,22 @@ shipped independently or these findings would still be sitting entirely undocume
   doc's items 1-3 by path. Flipping this doc's own `assigned_vm` now would dispatch duplicate/conflicting work against
   an already-active reconciliation in flight. Item 5 (Playwright `webServer` config split) remains an explicit,
   operator-ask-gated design call per the doc's own text. Doc-level disposition unchanged.
+- **2026-08-14 (bookkeeping pass — evidence-only append, per this doc's own governance rule "do not edit checkboxes
+  beyond appending evidence; the paired finalize plan reconciles this")**: two items independently confirmed
+  code-complete since the last marker; neither checkbox is flipped here — that happens via the paired finalize plan
+  (`/plans/active/ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md`) per this doc's own rule.
+  - **Item 3 (`backlog-collision.spec.ts`) — fix confirmed real, holding up under independent re-verification.**
+    `agent-orchestrator@1e2ecac`+`@3ba4ba4` (batch8-003's fix) were independently re-verified by
+    `ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md`'s own 2026-08-08 slot-15 review pass: both SHAs confirmed
+    ancestors of `origin/live-defi-rollout`, diffs match the claimed fix exactly (including the static fixture
+    deletion), and 3 independent isolated re-runs (6/6 tests, zero flakes, zero fixture mutation) reproduced the
+    original claim perfectly — "CONFIRMED, no discrepancy" per that finalize plan's Progress Log. This is the strongest
+    evidence standard applied to any of batch8's claims (contrast item 1's deepseek-spec discrepancy, found by the SAME
+    review pass).
+  - **Item 5 (Playwright `webServer` config split) — SHIPPED, after this doc was filed.** The design call this item
+    flagged as operator-ask-gated has been resolved and implemented: `agent-orchestrator@9cd1fa0` (2026-08-11,
+    "feat(dashboard): resizable Fleet columns, and start only the e2e server pair a run needs") ships exactly the
+    per-project `webServer` scoping this item's own text describes as the fix direction — confirmed via `git show -s`
+    (date 2026-08-11, subject as quoted) and `git merge-base --is-ancestor` against `origin/live-defi-rollout`. This
+    postdates both this doc's filing (2026-08-07) and the finalize plan's authoring (2026-08-08), so it was never in
+    scope for either doc's original todo lists — noted here for whoever runs the actual reconciliation next.

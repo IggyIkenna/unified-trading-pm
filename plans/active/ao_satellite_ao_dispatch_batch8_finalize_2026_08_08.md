@@ -247,3 +247,25 @@ source: >-
     INFRA todo's scope. `worker-chat.spec.ts`: all 3/3 tests pass clean. Both specs "log in successfully from a
     `.tabs/N` (N≠0) slot checkout" per the todo's exact done-when wording; the residual `$3/$5` data bug is
     cross-referenced above, not silently absorbed or claimed as fixed here.
+
+- **2026-08-14 (bookkeeping pass, PM-only — no code touched, no checkbox flipped on todo 2 or on the source doc)**: read
+  todo 2's exact wording before acting, per instruction. It names three source docs and bundles specific item numbers
+  within each as ONE reconciliation action (`ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md` items 1-3;
+  `e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md` item 1;
+  `autostash_pop_can_silently_discard_ uncommitted_foreign_edits_2026_08_07.md` items 1-2) — and as of this pass, ZERO
+  of those flips have actually landed yet (verified: `ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md`'s own item
+  2, already fully "CONFIRMED, no discrepancy" by this finalize plan's own 2026-08-08 slot-15 entry above, is still
+  `- [ ]` today). Rather than cherry-pick 2 of the ~6 total flips todo 2 needs (which would leave todo 2 in a more
+  confusing partial state, not a cleaner one, and duplicates effort a dedicated review pass should do in one session
+  across all 3 docs), this pass instead appended evidence-only Progress Log entries (no checkboxes touched) to
+  `ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md` for its items 3 and 5:
+  - **Item 3 (`backlog-collision.spec.ts`)**: independently re-confirmed already-verified — no new information beyond
+    this finalize plan's own 2026-08-08 slot-15 entry ("CONFIRMED, no discrepancy"). Ready to flip the moment todo 2
+    executes.
+  - **Item 5 (Playwright `webServer` config split)**: NOT part of todo 2's original scope (todo 2 only names items 1-3
+    of that doc) — flagging here because it has since SHIPPED, `agent-orchestrator@9cd1fa0` (2026-08-11, after both this
+    doc's 2026-08-07 filing and this finalize plan's 2026-08-08 authoring), resolving the operator-ask-gated design call
+    that item's own text describes. Whoever executes todo 2 should also flip that doc's item 5 with this evidence, even
+    though it's outside todo 2's original enumeration. Todo 2 itself stays `- [ ]` — this pass is preparatory evidence
+    for whoever runs the full 3-doc, ~6-flip reconciliation session todo 2 actually requires; it does not attempt to
+    satisfy it in part.
