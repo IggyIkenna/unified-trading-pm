@@ -93,9 +93,39 @@ source: >-
       absent frontmatter still returns None. `_check_doc` + `main()` catch it and emit reason=`yaml-parse-error` with
       detail instead of the misleading `no-frontmatter`. Blocks by default (fail-closed via `partition_by_agency`).
       40/40 unit tests pass (14 new).
-- [ ] [CODE] P2. pull real AWS Cost Explorer / EC2 instance-hours data for the CI VM's 2026-07-27-present retry-storm
-      window and compute an attributable $ figure (flagged extraction-ready since 2026-08-01, never actually dispatched)
-      Source: `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`
+- [x] ✅ [CODE] P2. pull real AWS Cost Explorer / EC2 instance-hours data for the CI VM's 2026-07-27-present retry-storm
+      window and compute an attributable
+      $ figure (flagged extraction-ready since 2026-08-01, never actually dispatched)
+      Source: `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` — ✅ **DONE 2026-08-14
+      (slot 11, infra).** `ce:GetCostAndUsage`/`GetCostAndUsageWithResources` are DENIED for this worker's AWS identity
+      (`ikenna-worker`, not the self-service `uts-orchestrator-epic-role` — confirmed no IAM self-manage/AssumeRole
+      path either, so not self-fixable per `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`) — a
+      pre-documented, non-blocking drift (`billing-cost-observability.md` already notes `ce:*` DENIED for this exact
+      identity, verified 2026-07-08). Used the real replacement path that doc names: the AWS CUR→Athena billing stack
+      (`aws_billing.cur_uts_cost_usage`, workgroup `uts-billing`, region `us-east-1`) — same live data Cost Explorer
+      would have shown, already provisioned for exactly this purpose. Confirmed `i-0c9b283b31d6b5ca7` (EIP
+      `13.113.200.22`) is the CI/AO host in question. Queried real `BoxUsage` line items (`line_item_resource_id LIKE
+      '%i-0c9b283b31d6b5ca7%'`) for 2026-07-27→2026-08-13 (last complete CUR day; today not yet delivered), grouped by
+      day/usage-type/instance-type — 23 real billed rows, matching the archived
+      `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`'s independently-priced rate ($1.09368/hr
+      `m8i.4xlarge` /
+      $0.54684/hr `m8i.2xlarge`, ap-northeast-1) to 5 decimal places. **Real totals**: 394.97 instance-hours /
+      **$374.41**
+      BoxUsage spend across the full 07-27→08-13 window (91.4% uptime — gaps from the 08-07 stop/resize + 08-09
+      type-change reboot). **Retry-storm-attributable slice**: the resize-up fix (m8i.2xlarge→m8i.4xlarge, applied
+      2026-07-27, reverted 2026-08-07 per the rightsizing plan's downsize todo) ran 213.84h at m8i.4xlarge + 19.50h at a
+      brief `c7i.4xlarge` experiment (07-28/07-29) + 30.18h at m8i.2xlarge (the partial days either side of the resize)
+      = **$267.90 real spend over the 11-day 07-27→08-07 fix window**, vs a **$144.37** steady-state baseline (264h ×
+      $0.54684/hr had it stayed at m8i.2xlarge the whole window) — **retry-storm-attributable extra AWS EC2 compute
+      cost ≈ $123.53**
+      (≈$11.23/day while active; not sustained — reverted after 11 days once the CI-runner-fleet-split
+      absorbed the load). Side-by-side with this doc's existing GH-Actions-dollar figure (~$10
+      / 3.5-day sample, ≈$90/mo if sustained): the AWS EC2 compute bucket was **>12x larger** in absolute $ terms over
+      its active window, confirming the P2 finding's hypothesis that this was the bigger, previously-unquantified cost
+      bucket. The 2026-08-09+ move to `c8i-flex.4xlarge` is a SEPARATE, later rightsizing/generation change (not
+      retry-storm remediation) — excluded from the attributable figure. Reconciliation of this evidence back into the
+      source issue doc's own checkbox is out of scope for this satellite batch (per this doc's own header) — deferred to
+      `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`.
 - [ ] [CODE] P2. investigate the real cause of the 2026-07-30 14:54-15:01Z mass tmux_session_lost cluster via the doc's
       own named candidates (a/b/c: cgroup/systemd action, manual/scripted kill, AWS-side event) now that the OOM-killer
       hypothesis is ruled out Source: `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`
