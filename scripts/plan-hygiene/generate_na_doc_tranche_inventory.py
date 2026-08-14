@@ -80,12 +80,25 @@ _BOOKKEEPING_MARKER_SKILL_NAMES = (
     "context-scout",
 )
 
-# Strips entire lines that contain a bookkeeping marker so body_content_hash is
-# stable w.r.t. marker addition/update (the marker itself lives in the body, so
-# without this the hash would change every time one is written or updated).
+# Strips a bookkeeping marker's FULL block -- its dated header line plus every
+# indented continuation line that follows -- so body_content_hash is stable w.r.t.
+# marker addition/update (the marker itself lives in the body, so without this the
+# hash would change every time one is written or updated). Nearly every real
+# na-eligibility-audit verdict marker is multi-line (the reasoning/evidence prose is
+# indented continuation lines under the dated header bullet); stripping only the
+# header line left those continuation lines in the hashed body forever, so the
+# declared [body-hash:...] never matched a later recomputation even with zero real
+# content drift -- see
+# na_eligibility_multiline_marker_continuation_lines_never_stripped_from_hash_2026_08_10.md.
+# The continuation clause matches lines that start with whitespace (space/tab)
+# followed by non-whitespace -- the observed corpus convention for a marker's
+# reasoning lines -- and stops at the first line that doesn't (a blank line, a new
+# top-level `- ` bullet, or a `## ` header), which is exactly the boundary of the
+# next sibling marker or section.
 _BOOKKEEPING_MARKER_ALTERNATION = "|".join(re.escape(n) for n in _BOOKKEEPING_MARKER_SKILL_NAMES)
 _VERDICT_MARKER_LINE_RE = re.compile(
-    r"^[^\n]*\*\*(?:" + _BOOKKEEPING_MARKER_ALTERNATION + r") \d{4}-\d{2}-\d{2}[^\n]*\n?",
+    r"^[^\n]*\*\*(?:" + _BOOKKEEPING_MARKER_ALTERNATION + r") \d{4}-\d{2}-\d{2}[^\n]*\n?"
+    r"(?:[ \t]+\S[^\n]*\n?)*",
     re.MULTILINE,
 )
 

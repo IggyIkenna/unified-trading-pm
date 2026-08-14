@@ -474,6 +474,33 @@ def test_body_content_hash_stable_across_context_scout_marker_line():
     assert MOD.body_content_hash(before) == MOD.body_content_hash(after_context_scout_touch)
 
 
+def test_body_content_hash_stable_across_multiline_marker():
+    """A multi-line verdict marker's own continuation lines must not survive into the
+    hashed body -- the bug from
+    na_eligibility_multiline_marker_continuation_lines_never_stripped_from_hash_2026_08_10.md:
+    _VERDICT_MARKER_LINE_RE stripped only the marker's FIRST line, so the reasoning/
+    evidence prose on indented continuation lines (the norm for a real verdict, not the
+    exception) leaked into every later hash computation. This is the exact invariant the
+    issue doc's todo calls for: body_content_hash(body_before_marker) must equal
+    body_content_hash(body_before_marker + <the marker written with that exact hash>).
+    """
+    body_before = "---\ntitle: doc\n---\n# Body\n\n- [ ] a todo\n\n## Progress Log\n\n- **2026-08-01** -- initial.\n"
+    h0 = MOD.body_content_hash(body_before)
+    multiline_marker = (
+        f"- **na-eligibility-audit 2026-08-09** [body-hash:{h0}]: KEEP-NA, valid --\n"
+        "  a two-line continuation\n"
+        "  explaining why.\n"
+    )
+    body_after = body_before + multiline_marker
+    assert MOD.body_content_hash(body_after) == h0
+
+    # A sibling marker immediately following must still be stripped/parsed independently
+    # -- the continuation-lines clause must stop at the next top-level bullet, not eat it.
+    sibling_marker = "- **context-scout 2026-08-10**: refreshed context_scope (2 entries).\n"
+    body_with_sibling = body_after + sibling_marker
+    assert MOD.body_content_hash(body_with_sibling) == h0
+
+
 def test_incremental_skip_true_when_stored_hash_matches(monkeypatch, tmp_path):
     """A doc with a [body-hash:…] marker whose stored hash equals the current body hash
     must report incremental_skip=True — the primary (no-git) skip path.
