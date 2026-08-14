@@ -94,7 +94,15 @@ duplicate pairs found and reconciled from this exact mechanism).
    now propagates deletions: when a named file is absent from the caller tree but present at `origin/$BRANCH`, it is
    `rm`'d from the isolated worktree so `git add` stages the deletion. **If you are on a checkout that predates the fix,
    set `SDP_ISOLATED=0`** to use the shared-index fallback for any archival commit that includes a rename. Full
-   incident: `/plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md`.
+   incident: `/plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md`. **Recurrence caught
+   live 2026-08-14**: CLAUDE.md's general ship rule ("scope `--files` by name") pulls against this section's "no
+   `--only` path-scoping" preference — an agent following the general habit passed `--files` naming ONLY the NEW archive
+   path (the one that exists on disk after `git mv`), never the OLD active path. "Named" above means _listed in
+   `--files`_, not merely known-to-exist: the deletion-propagation check only fires for a path actually passed, so
+   omitting the old path silently reproduces the exact create-only duplicate this fix was meant to close — caught only
+   by diffing origin's tree object for both paths after push, not by the script's own exit code. **If you scope
+   `--files` for an archival `git mv`, name BOTH the old and new paths every time** (or drop scoping entirely per this
+   section's original preference).
 2. If a bare `git commit --only` is genuinely needed (e.g. staging alongside unrelated in-flight WIP you don't want to
    commit yet), the `--only` path list MUST name **both** the old and new paths:
    `git commit --only -m "<msg>" -- plans/active/issues/<slug>.md plans/archive/issues/<slug>.md`.
