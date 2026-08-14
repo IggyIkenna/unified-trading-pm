@@ -226,9 +226,19 @@ source: >-
       entry.
 - [ ] [CODE] P2. Determine the root cause of sports data being ~4 weeks stale Source:
       `plans/active/issues/pipeline_smoke_sweep_findings_2026_07_20.md`
-- [ ] [CODE] P2. dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md -- parallelize
+- [x] ✅ [CODE] P2. dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md -- parallelize
       exit_code_fleet_monitor.py/heartbeat_stall_watcher.py's sweep() via ThreadPoolExecutor Source:
-      `plans/active/issues/plan_reconciler_findings_all_2026_08_12.md`
+      `plans/active/issues/plan_reconciler_findings_all_2026_08_12.md` — **ALREADY SHIPPED, duplicate dispatch, no new
+      code needed (verified 2026-08-14).** `deployment-service@069ced1412` ("perf(dp-monitors): parallelize per-VM GCS
+      reads in exit-code + heartbeat sweeps", backend_engineer slot-28 2026-08-13) already parallelizes both sweeps'
+      pure per-VM I/O via `ThreadPoolExecutor` (`_SWEEP_IO_MAX_WORKERS`), keeping classify/route/emit sequential to
+      protect shared state — exactly this todo's ask. Confirmed live in the current worktree: both
+      `deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py` and `.../heartbeat_stall_watcher.py` import
+      `ThreadPoolExecutor` and wrap their per-VM read phases in it (`_SWEEP_IO_MAX_WORKERS=16`); `069ced1412` verified
+      an ancestor of current `deployment-service` HEAD. The source issue doc's own `archive_exempt: true` note
+      (2026-08-13) already flags this exact batch's item as one of two known duplicate "parallelize sweep()" dispatches
+      spawned from the same source finding — this flip closes that duplicate. The source doc itself stays open (further
+      follow-on classify/route/emit-phase work is tracked there, out of this todo's ThreadPoolExecutor-specific scope).
 - [x] [CODE] P2. dp_vm_002_mdps_cefi_2021_silent_zero_false_positive_2026_08_11.md -- re-launch mdps-cefi-2021 sharded
       backfill from checkpoint **OUT-OF-SCOPE FOR THIS BATCH (2026-08-13, operator scoping instruction)** —
       MDPS/features-service backfill/recompute work is excluded from this batch unless manifest-canonical or
