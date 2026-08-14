@@ -200,9 +200,14 @@ source: >-
       three-surface table (wallet_mapping.json / clients.yaml / strategy_service configs) + live-vs-not verdicts, the
       two known gaps (archetype-first keying, missing leverage/venue-selection/coin-universe fields), and a pointer to
       the operator's 2026-08-12 `(client_id, slot_label)` target-state ruling in the source issue doc.
-- [ ] [CODE] P2. Mine unified-trading-system-ui backtest views for the analytics surface before extending the analytics
-      schema section further Source:
-      `plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md`
+- [x] ✅ [CODE] P2. Mine unified-trading-system-ui backtest views for the analytics surface before extending the
+      analytics schema section further Source:
+      `plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md` — unified-trading-pm: mined
+      all 5 backtest-analytics views (`lib/types/backtest-analytics.ts`'s shared `BacktestAnalytics` bundle,
+      `backtest-vs-operating-panel.tsx`'s layered cost-of-reality attribution model, `backtest-comparison-panel.tsx`'s
+      per-`slot_label` breakdown table, and the two lighter KPI-card list views). Full inventory + reuse recommendations
+      recorded in the source issue doc's 2026-08-14 Progress Log entry; its own checkbox flipped there too. No code
+      changes — read-before-build mining pass, per the todo's own scope.
 - [ ] [CODE] P2. Verify current DeFi canonical-migration-defi-rebuild fleet completion and consolidated-manifest
       freshness state Source: `plans/active/issues/pipeline_smoke_sweep_findings_2026_07_20.md`
 - [ ] [CODE] P2. Determine the root cause of sports data being ~4 weeks stale Source:

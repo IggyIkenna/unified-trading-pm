@@ -263,10 +263,10 @@ Three consequences worth stating before anyone builds it:
       2026-08-12: _"slots registered in strategy service at runtime must be also inside execution service"_ — the link
       between the two services' config is the slot. Today nothing enforces that correspondence, so an execution-config
       block could reference a slot execution-service has never heard of.
-- [ ] [AGENT] P2. **Mine `unified-trading-system-ui` backtest views for the analytics surface.** Operator pointer: it
-      _"has some cool ideas on how strategy backtests could look and we can reap the analytics from there"_. Read the
-      existing views before extending the analytics section further, so the schema follows a surface that already works
-      rather than inventing a parallel one.
+- [x] [AGENT] P2. ✅ **Mined 2026-08-14 — see Progress Log for the full inventory + reuse recommendations.** Operator
+      pointer: it _"has some cool ideas on how strategy backtests could look and we can reap the analytics from there"_.
+      Read the existing views before extending the analytics section further, so the schema follows a surface that
+      already works rather than inventing a parallel one.
 - [ ] [AGENT] P1. **Define the execution-algo selection-criteria contract as a UAC type carried on the instruction**,
       not as a config read across the seam. Name the interpreting surface in execution-service explicitly so the seam is
       documented rather than discovered.
@@ -356,6 +356,43 @@ same tick. That is the difference between an implementation that works and one t
       leaves all three in place has not centralised anything.
 
 ## Progress Log
+
+- **2026-08-14 — mined `unified-trading-system-ui` backtest views for the analytics surface (P2 todo above)**: read
+  every backtest-analytics view in the UI repo before the governing-schema analytics section grows further. Findings:
+  - **`lib/types/backtest-analytics.ts` is already a mature, shared `BacktestAnalytics` schema** — explicitly built to
+    serve BOTH the Strategies tab (signal backtests) and the Execution tab (trade backtests) from one type, which is
+    itself the precedent for a single client-governing analytics schema rather than a parallel one per surface. It
+    covers: a KPI bar (headline metrics), an equity curve (vs buy-and-hold, with a `drawdown_pct` per point), trade
+    markers plotted on the equity chart, a bucketed P&L-distribution histogram, **per-direction performance
+    (All/Long/Short)** — ~30 fields each (net/gross profit, profit factor, win rate, avg/largest win/loss, bars-in-trade
+    stats, sharpe, sortino, max drawdown), capital efficiency (CAGR total/long/short, return on account size, account
+    size required), run-up/drawdown stats (avg/max duration, amount, pct, recovery days), a benchmark comparison
+    (buy-hold return vs strategy outperformance), and a monthly-returns heatmap.
+  - **`components/cockpit/backtest-vs-operating-panel.tsx` is the direct precedent for "benchmark PnL … alpha PnL,
+    latency, slippage measured FROM benchmark fills"** — the exact axis bounded in the analytics-axes todo below. It
+    already renders signal-only-backtest vs operating-adjusted-simulation as two snapshots plus a **per-layer
+    cost-of-reality attribution list** (execution, gas_fees, liquidation, client_flows, treasury, venue_routing, risk,
+    reporting — each a signed bps delta + note). This is a layered-attribution shape, not a flat metric list — the
+    `(client_id, slot_label)` governing schema's analytics section should mirror this shape (a benchmark snapshot + a
+    per-layer delta breakdown) for alpha PnL/latency/slippage rather than inventing new flat fields, since it is the
+    concrete "cool idea" the operator's pointer was referring to.
+  - **`components/signal-broadcast/backtest-comparison-panel.tsx` is the existing UI for the "breakdown per
+    venue/account/client/instrument/strategy slot" axis** — a three-way backtest-vs-paper-vs-live table keyed per
+    `slot_label` (sharpe/return/signal-count/hit-rate columns per stage). This is the working precedent for
+    `analytics_breakdown_dimensions` (already shipped in `strategy-service@664f5b42b2` per the analytics-axes todo
+    below) — the dimension already has a UI consumer at the `slot_label` grain today.
+  - **Two lighter, less analytically-rich backtest views exist** (`components/dashboards/quant/backtest-page.tsx`, a
+    KPI-card + detail-panel browser; `app/(platform)/services/research/strategy/backtests/backtests-page-client.tsx`,
+    the list/management view with sharpe/return/max-DD/sortino/hit-rate table columns and a DeFi-specific run-config
+    form in `backtests-page-support.tsx`). These consume a narrower `BacktestRun.metrics` shape, not the full
+    `BacktestAnalytics` bundle — they reinforce that `backtest-analytics.ts`'s type is the richest existing schema to
+    follow, not these narrower list-view projections of it.
+  - **Recommendation for the governing `(client_id, slot_label)` analytics section**: reuse `BacktestAnalytics`'s
+    per-cohort stat-bundle shape (a full stats object per breakdown dimension value, as `performance_by_direction`
+    already does for All/Long/Short) rather than a flat metric list, and model the benchmark/alpha/slippage fields on
+    `BacktestVsOperatingPanel`'s layered-attribution pattern. No code changes made in this pass — this todo was a
+    read-before-build mining pass; the schema-drafting todo above
+    (`Draft the full (client_id, slot_label) config schema`) is where this gets applied.
 
 - **context-scout 2026-08-14**: populated context_scope (5 entries).
 
