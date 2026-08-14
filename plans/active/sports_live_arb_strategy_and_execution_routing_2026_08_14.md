@@ -134,6 +134,12 @@ strategy is a fabricated position.
 
 ### P1 — migrate detection
 
+- [ ] [BACKEND] P1. Rule on the SECOND live arb path the P0 delta surfaced —
+      `arbitrage_detector.detect_sports_arbitrage()` (PubSub/FSS-driven, 1X2 only) and
+      `SportsArbDutchingEngine.on_tick()` (the migration's landing slot) are two non-sharing pipelines today, and #1's
+      logic becomes redundant once #2 covers 2-and-3-outcome complete sets — DoD: a recorded decision to retire
+      `arbitrage_detector.py` + `sports_feature_subscriber.py`'s arb leg or keep both, with the reason; a second live
+      path that nobody chose is how paper and live diverge.
 - [ ] [BACKEND] P1. Port the detection family (3-way, back-lay, DNB, 2-way, 2-way-pair) into the existing
       `sports_arb_dutching` archetype slot, keeping the scanner's semantics and adding the archetype's typed signal
       output — DoD: the golden fixture produces the same opportunity set as the scanner, asserted
@@ -273,10 +279,10 @@ parameter.
 initially blocked by an unrelated uncommitted change in the `unified-api-contracts` path dependency
 (`unified_api_contracts/canonical/crosscutting/dependency_revocation.py`, not touched here per operator scope
 instruction — UAC registry files are out of scope for this plan); retried once that cleared. The QG run also hit host
-RAM-pressure watchdog aborts twice (`qg-governor-watchdog`, unrelated host contention from concurrent slots on this
-box, not a content failure — both aborts showed every check passing up to the abort point) before landing green with
-`IGNORE_TIMEOUT=true` per the sanctioned transient-contention escape
-(`/codex/06-coding-standards/quality-gates.md` § "Sanctioned timeout overrides").
+RAM-pressure watchdog aborts twice (`qg-governor-watchdog`, unrelated host contention from concurrent slots on this box,
+not a content failure — both aborts showed every check passing up to the abort point) before landing green with
+`IGNORE_TIMEOUT=true` per the sanctioned transient-contention escape (`/codex/06-coding-standards/quality-gates.md` §
+"Sanctioned timeout overrides").
 
 All three P0 todos are now done. P0 is complete; P1/P2 remain gated on
 `sports_venue_universe_and_capability_route_axis_2026_08_14` and
