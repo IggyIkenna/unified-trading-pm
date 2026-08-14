@@ -176,11 +176,14 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       via the dashboard "Record top-up" form (or the exact amount if the operator knows it precisely) to restore the
       residual's sign and make the frozen-gap view's `residual_since_observability` meaningful. (repo:
       agent-orchestrator, operator action)
-- [ ] [UI] P2. **Surface the windowed view in `DeepSeekWalletPanel.tsx` with a 24h/7d toggle.** Must render the
-      `real_spend_usd=None` case as "sampling since <ts> — 24h view available at <ts+24h>" rather than a dash that reads
-      as zero, and show BOTH balance sample timestamps so the true differenced span is visible instead of assumed to
-      match the request. **Done when**: the panel renders live data and a cited playwright regression spec passes;
-      `[UI]` + `pw:L2 ✓` per `/codex/06-coding-standards/ui-testing-layers.md`.
+- [x] ✅ [UI] P2. **Surface the windowed view in `DeepSeekWalletPanel.tsx` with a 24h/7d toggle —
+      agent-orchestrator@4d2f9ed118.** `WINDOW_OPTIONS` (24h/168h) toggle wired to
+      `GET /api/accounts/deepseek/wallet-reconciliation/window?window_hours=`; `windowedSpendCellText` renders the
+      `real_spend_usd=None` case as "sampling since &lt;ts&gt; — &lt;label&gt; view available at &lt;ts+windowHours&gt;"
+      (anchored off `series_starts_at`, the oldest sample, not `window_start`) instead of a bare dash;
+      `fmtWindowBalance` shows both `balance_at_start_sampled_at`/`balance_at_end_sampled_at` so the true differenced
+      span is visible rather than assumed to match the request. pw:L2 ✓ — regression:
+      `dashboard/tests/e2e/deepseek-wallet-reconciliation.spec.ts` (4 passed, 14.0s, verified this session).
 - [ ] [INFRA] P2. **Pin `cleanupPeriodDays: 30` explicitly in `cursor-configs/settings.json`.** Measured 2026-08-11: the
       setting is absent from every settings file (all grep hits were Claude Code's own `cache/changelog.md`), so
       retention runs on an upstream default that the same changelog shows has already had two behaviour-changing bugs
