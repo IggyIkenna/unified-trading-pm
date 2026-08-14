@@ -21,11 +21,13 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import pytest
 from check_codex_doc_freshness import (
+    JITTER_DAYS,
     BaselineSnapshot,
     FreshnessViolation,
     FrontmatterParseError,
     _check_doc,
     _is_retired_with_successor,
+    _jitter_days,
     _load_baseline,
     _new_violations,
     _parse_frontmatter,
@@ -409,3 +411,55 @@ def test_check_doc_stale_without_owner_has_empty_owner(tmp_path: Path) -> None:
     v = _check_doc(p, 90, datetime.date(2026, 8, 9))
     assert v is not None
     assert v.owner == ""
+
+
+# ---------------------------------------------------------------------------
+# De-cohorting jitter (2026-08-14, qg_ratchets_block_unrelated_ships_2026_08_12.md).
+# A cohort of docs sharing one `last_reviewed` stamp must not all tip stale on the
+# same calendar day — each doc's effective window gets a deterministic per-path offset.
+# ---------------------------------------------------------------------------
+
+
+def test_jitter_days_is_within_band(tmp_path: Path) -> None:
+    for name in ("a.md", "b.md", "some-long-doc-name.md", "z" * 40 + ".md"):
+        offset = _jitter_days(tmp_path / name)
+        assert 0 <= offset < JITTER_DAYS
+
+
+def test_jitter_days_is_deterministic_per_path(tmp_path: Path) -> None:
+    p = tmp_path / "codex" / "02-data" / "repeatable.md"
+    assert _jitter_days(p) == _jitter_days(p)
+    # Same filename, different parent dir -> same jitter (hashed on filename only, so the
+    # offset does not depend on the calling worktree's absolute prefix).
+    assert _jitter_days(p) == _jitter_days(Path("/elsewhere") / "repeatable.md")
+
+
+def test_jitter_days_differs_across_distinct_filenames() -> None:
+    """Not a strict no-collision guarantee, just confirms the hash actually varies —
+    a same-cohort batch of differently-named docs should not all land on offset 0."""
+    offsets = {_jitter_days(Path(f"doc-{i}.md")) for i in range(20)}
+    assert len(offsets) > 1
+
+
+def test_same_day_cohort_tips_stale_on_different_days(tmp_path: Path) -> None:
+    """The actual de-cohorting property: two docs authored (and reviewed) on the SAME day
+    must not both flip to 'stale' on the SAME later day, for at least one probed date in the
+    jitter band -- proving the window really is desynchronized, not just the offsets computed."""
+    shared_last_reviewed = "2026-05-13"
+    doc_a = tmp_path / "cohort-doc-a.md"
+    doc_b = tmp_path / "cohort-doc-b.md"
+    doc_a.write_text(f"---\nlast_reviewed: {shared_last_reviewed}\n---\nbody\n", encoding="utf-8")
+    doc_b.write_text(f"---\nlast_reviewed: {shared_last_reviewed}\n---\nbody\n", encoding="utf-8")
+
+    offset_a = _jitter_days(doc_a)
+    offset_b = _jitter_days(doc_b)
+    assert offset_a != offset_b, "fixture picked colliding filenames -- pick different names"
+
+    base = datetime.date(2026, 5, 13)
+    earlier_offset, later_offset = sorted((offset_a, offset_b))
+    probe_day = base + datetime.timedelta(days=90 + earlier_offset + 1)
+    later_doc = doc_a if offset_a == later_offset else doc_b
+    earlier_doc = doc_b if later_doc is doc_a else doc_a
+
+    assert _check_doc(earlier_doc, 90, probe_day) is not None
+    assert _check_doc(later_doc, 90, probe_day) is None

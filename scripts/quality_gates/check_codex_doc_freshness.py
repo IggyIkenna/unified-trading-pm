@@ -40,6 +40,15 @@ convention exists to avoid. This is documented ONLY here and in scattered commit
 a codex doc, as of 2026-08-02 — grep `git log --grep="staggered re-review"` for the full history
 if the pattern needs extending to a new cohort.
 
+DE-COHORTING (2026-08-14, qg_ratchets_block_unrelated_ships_2026_08_12.md) — the manual
+future-dating trick above only fixes cohorts someone remembers to stagger. Every doc's
+*effective* staleness window is `staleness_days + a deterministic per-path jitter in
+[0, JITTER_DAYS)` (see `_jitter_days`), so a batch of docs authored (and reviewed) on the same
+day trickles past the window over up to two weeks instead of tipping in one clump — automatic,
+with no per-cohort authoring action required. This composes with, not replaces, the future-dating
+convention: jitter desyncs the *window*, staggered dates desync the *stamp*; either alone helps,
+both together are redundant-but-harmless.
+
 AGENCY SPLIT (2026-08-12) — this gate blocks only on what the author controls.
 The four violation reasons are not the same kind of thing:
 
@@ -93,6 +102,7 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import hashlib
 import sys
 from pathlib import Path
 from typing import cast
@@ -124,6 +134,11 @@ CUTOVER_CRITICAL_DIRS = (
 )
 DEFAULT_STALENESS_DAYS = 90
 DEFAULT_BASELINE_PATH = Path(__file__).parent / "codex_doc_freshness_baseline.yaml"
+
+# Width of the per-doc jitter band added to `staleness_days` (see `_jitter_days`). 14 matches
+# the todo's own worked example (90d + hash(path) % 14) — wide enough to spread a same-day
+# cohort over two weeks, narrow enough that the review cadence is still meaningfully ~90d.
+JITTER_DAYS = 14
 
 # A doc carrying one of these statuses is formally retired: it is no longer the SSOT for
 # anything, and it is not supposed to still match the running system.
@@ -203,6 +218,23 @@ def _parse_frontmatter(path: Path) -> dict[str, object] | None:
     return cast(dict[str, object], loaded)
 
 
+def _jitter_days(path: Path, jitter_days: int = JITTER_DAYS) -> int:
+    """Deterministic per-doc offset in ``[0, jitter_days)`` added to the staleness window.
+
+    Docs authored in a batch share a ``last_reviewed`` stamp, so a flat window makes the whole
+    cohort tip stale on the same calendar day — the exact clumping
+    ``qg_ratchets_block_unrelated_ships_2026_08_12.md`` exists to fix. Hashing the doc's own
+    filename spreads each doc's effective limit across the jitter band, so a cohort trickles past
+    the window over up to two weeks instead of tipping in one clump. Uses ``hashlib`` rather than
+    the builtin ``hash()`` because the latter is salted per-process via ``PYTHONHASHSEED`` — it
+    would give every check run (and every worker/slot) a different offset for the same file,
+    which defeats the point (the offset must be stable so a given doc always tips on the same
+    day, just not the SAME day as its cohort-mates).
+    """
+    digest = hashlib.sha256(path.name.encode("utf-8")).digest()
+    return digest[0] % jitter_days
+
+
 def _parse_last_reviewed(value: object) -> datetime.date | None:
     """Accept date or YYYY-MM-DD string."""
     if isinstance(value, datetime.date):
@@ -265,11 +297,12 @@ def _check_parsed(
     if last_reviewed is None:
         return FreshnessViolation(path, "invalid-last_reviewed-format", str(last_reviewed_raw)[:40])
     age = (today - last_reviewed).days
-    if age > staleness_days:
+    effective_staleness_days = staleness_days + _jitter_days(path)
+    if age > effective_staleness_days:
         return FreshnessViolation(
             path,
             "stale",
-            f"{age}d old (limit {staleness_days}d; last_reviewed={last_reviewed})",
+            f"{age}d old (limit {effective_staleness_days}d = {staleness_days}d+jitter; last_reviewed={last_reviewed})",
             owner=str(fm.get("owner") or ""),
         )
     return None
