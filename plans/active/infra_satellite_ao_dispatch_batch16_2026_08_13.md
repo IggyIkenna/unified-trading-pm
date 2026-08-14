@@ -187,8 +187,15 @@ source: >-
       correctly PASSES when invoked with the venv's own python (`.venv/bin/python`) and correctly FLAGS violations when
       mis-invoked with the wrong interpreter — confirmed live against slot 27's own PM venv. No new code needed;
       flipping this checkbox to match reality — unified-trading-pm@45d9248d68 (pre-existing).
-- [ ] [CODE] P2. Add a one-line pointer to this doc from the 9 referencing docs once todo 1 lands Source:
-      `plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md`
+- [x] ✅ [CODE] P2. Add a one-line pointer to this doc from the 9 referencing docs once todo 1 lands Source:
+      `plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` — STALE-CHECKBOX CORRECTION
+      (already-shipped-elsewhere, per `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §
+      3.4): the source issue doc's own todo 5 was already `[x] ✅ 2026-08-13 — slot-6` before this batch dispatched —
+      verified live: `rg -l "Owner for the stale-venv" plans/` finds the pointer already present in all 10 referencing
+      docs (9 listed in the source doc's Prior-art section + `fleet_venv_drift_after_pull_no_resync_2026_08_11.md`) plus
+      the archive sibling `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01_progress_log_archive_2026_08_14.md`
+      (landed via the source doc's own todo 6, 2026-08-14). No new code needed; flipping this checkbox to match reality
+      — unified-trading-pm (this batch, pre-existing content).
 - [ ] [CODE] P2. Confirm the 4 .stale-pre-history-rewrite-* archive dirs are dead weight and can be removed, or document
       why retained Source: `plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md`
 - [ ] [CODE] P2. Execute the 'immediately-safe ~40' script deletions (UI 2026-03 .tsx.bak splitters/codemods, done
