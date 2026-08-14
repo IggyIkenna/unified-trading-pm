@@ -164,34 +164,63 @@ weather.py:70, single edit at weather.py:95 fixes every invocation — lines 212
 Remaining direct sites: 126(127), 146(147), 314(317), 332(333), 531(534), 577(578), 595(596). Independent-literal lookup
 at weather.py:120 (`get_source_coverage_start`) — untouched.
 
-## Confirmed inventory — IN PROGRESS (partial; NOT fully classified — the two open todos below)
+### sports_reference_core.py — full file read, cluster fully classified
 
-### sports_reference_core.py cluster (large file — partial results this session)
+`emit_empty_gaps_for_entity` (core.py:297) is the cross-purpose hub: within ONE invocation its `data_type` param is
+consumed 4 different ways in this order — (1) core.py:330 `_presence_guarded_captured_leagues(data_type, ...)` —
+ALREADY-SAFE, see below; (2) core.py:334→252 `_manifest_index_guarded_captured_leagues` →
+`_manifest_captured_leagues_ for_data_type(data_type=data_type)` — needs LOWERCASE; (3) core.py:339
+`get_entity_league_coverage(data_type)` — needs UPPERCASE; (4) core.py:343 loop →
+`_emit_empty_gap_for_league(data_type, ...)` → core.py:262 `is_league_entity_covered` — needs UPPERCASE. Because (3)/(4)
+run AFTER (2) and need the ORIGINAL value, translation for (2) must be a call-site-local expression at core.py:252 —
+**never** a reassignment of the `data_type` parameter itself.
 
-Confirmed from `emit_empty_gaps_for_entity`/`_emit_empty_gap_for_league`/`_manifest_index_guarded_captured_leagues`
-(traced in the parent plan's session before this doc was split out):
+- `_emit_empty_gap_for_league` (core.py:257) — ORDERED. Bind
+  `_dt_lower = canonical_sports_is_data_type(data_type) or data_type` immediately AFTER the core.py:262
+  `is_league_entity_covered` check, then use `_dt_lower` in all three `record_empty` row_keys: core.py:265-266,
+  core.py:281-282, core.py:289-290 (each also has an independent `source=_orch._sports_ref_source(data_type.lower())` at
+  270/286/294 — already idempotent, untouched).
+- `_manifest_index_guarded_captured_leagues` (core.py:228) — the READ at core.py:252 needs LOWERCASE, translated inline
+  at that call only — do NOT mutate the function's own `data_type` param (reused UPPERCASE by the caller afterward, per
+  the hub's ordering above).
+- `_presence_guarded_captured_leagues` (core.py:187) — ALREADY-SAFE: its
+  `_list_present_parquet_leagues(..., data_type.lower())` call (core.py:200) already does a bare `.lower()`,
+  byte-identical to `canonical_sports_is_data_type()`'s output for any of the 19 tokens — do not touch.
+- `note_failed` (def core.py:148, write at core.py:163) and `note_empty` (def core.py:173, write at core.py:176) —
+  SIMPLE, single fix INSIDE each method body (no UAC-axis lookup anywhere in either method — the `data_type.lower()` at
+  core.py:156/184 is a cosmetic log/source string, not a lookup). One fix per method covers every caller:
+  `note_failed("TEAMS", ...)` (core.py:525, 536), `note_failed("STANDINGS", ...)` (core.py:643),
+  `note_failed("INJURIES", ...)` (core.py:871), `note_empty(FIXTURES_SCHEDULE, ...)`
+  (`sports_reference_fixtures.py:244`, the ONLY `note_empty` call in the whole codebase — confirmed by repo-wide grep),
+  `note_failed(FIXTURES_SCHEDULE, ...)` (`sports_reference_fixtures.py:281`).
+- Further `record_captured` sites found later in the file, all SIMPLE (literal token, no lookup dependency — the
+  `emit_empty_gaps_for_entity(...)` call each function makes afterward passes a FRESH literal, not a reused variable):
+  `_write_teams_and_venues` TEAMS (core.py:593-594 row_key, 598 kwarg), `_write_standings_per_league` STANDINGS
+  (core.py:679, 682, 688), `_fetch_injuries` INJURIES (core.py:798, 801, 807).
+- `_close_stale_enrichment_expected_unattempted_cells` (core.py:346) — 3× `record_empty` (core.py:440, 456, 477), all
+  ORDERED, all gated by the SAME per-iteration `is_league_entity_covered(_lid, _dt_str)` check at core.py:439 — bind one
+  translated local right after 439, reuse across all three.
+- No `record_captured_from_counts` calls exist in this file. No NOT-19-TOKEN sites found — every value resolves to a
+  confirmed member of the 19-key `SPORTS_DATA_TYPE_TO_SOURCE` vocabulary (verified against
+  `unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py:209-262`).
 
-- `_emit_empty_gap_for_league` (core.py:257) — 3× `record_empty` (lines ~265, ~281, ~289) want the row_key's `data_type`
-  LOWERED; the SAME parameter feeds `is_league_entity_covered(_canon_lid, data_type)` (line ~262) which must stay
-  UPPERCASE — ORDERED, translate inline at each `record_empty` row_key, not the function parameter.
-- `_manifest_index_guarded_captured_leagues` (core.py:228) —
-  `_manifest_captured_leagues_for_data_type(data_type= data_type)` (line ~252) is a manifest READ needing the LOWERED
-  form — ORDERED, translate inline at this one call.
-- `emit_empty_gaps_for_entity` (core.py:297) — `get_entity_league_coverage(data_type)` (line ~339) stays UPPERCASE, no
-  change needed there.
-- `_presence_guarded_captured_leagues` (core.py:187) — ALREADY SAFE: its
-  `_list_present_parquet_leagues(..., data_type .lower())` call (line ~200) already does a bare `.lower()`, which is
-  byte-identical to `canonical_sports_is_data_type()`'s output for any of the 19 tokens (the UAC mapping IS
-  `{key: key.lower() for key in ...}`) — do not touch this line.
-- **NEWLY FOUND mid-session** (raw grep, not yet fully traced): `note_failed`/`note_empty` (core.py:148/173) are called
-  with bare uppercase literals — `hooks.note_failed("TEAMS", exc, ...)` (core.py:525, 536),
-  `hooks.note_failed( "STANDINGS", exc, ...)` (core.py:643), `hooks.note_failed("INJURIES", exc, ...)` (core.py:871),
-  `hooks.note_empty(FIXTURES_SCHEDULE, ...)` (`sports_reference_fixtures.py:244`),
-  `hooks.note_failed( FIXTURES_SCHEDULE, exc)` (`sports_reference_fixtures.py:281`) — these are 6 MORE manifest-write
-  call sites (TEAMS/ STANDINGS/INJURIES/FIXTURES_SCHEDULE) not covered by the cluster above and not yet
-  lookup-dependency-checked.
+### sports_reference_fixtures_write.py — `af_entity_dt` question resolved: per-call-site translation, NOT upstream
 
-### process_fetch.py (found mid-session, not yet cross-checked against the other process_*.py files)
+Full-file read confirms `af_entity_dt` (from `_entity_dt_for_short()`) is used for exactly two purposes: (1) manifest
+writes wanting LOWERCASE, and (2) an opaque passthrough into `hooks.emit_empty_gaps_for_entity(af_entity_dt, ...)`
+(lines 226, 313) — a DIFFERENT-FILE hook (`sports_reference_core.py`) that internally needs the UPPERCASE form for its
+own lookups. **`af_entity_dt` is never used for a lookup within this file itself.** This means a single upstream
+translation at `_entity_dt_for_short()`'s call site (line 331) would be WRONG — it would silently corrupt the
+line-226/313 passthrough. Correct fix: translate a LOCAL COPY only at the write sites, leave `af_entity_dt` itself (and
+its two passthrough uses) untouched/uppercase:
+
+- `_write_fixture_entity_per_league` — `record_captured` at lines 163 (row_key) + 169 (kwarg).
+- `_handle_empty_fixture_entity` — `record_failed` at lines 285 (row_key) + 298 (row_key, the no-league-mapping fallback
+  branch) — these two branches are mutually exclusive within one call (the `if _fail_count > 0` / `else` at lines
+  275/303), and the `else` branch's passthrough (line 313) never runs alongside a write, so there is no shared-variable
+  reuse hazard here (unlike the per-league-loop case above).
+
+### process_fetch.py (found mid-session; the other 4 `process_*.py` files remain the one open todo below)
 
 `_per_fixture_gcs_fast_path` —
 `pf_manifest.record_captured_from_counts(row_key={"date": date, "data_type": entity_name.upper()}, ..., pipeline_mode=_orch._pipeline_mode_for_sports_data_type(entity_name.upper()), ...)`
@@ -201,15 +230,10 @@ call (row_key wants lowered, `pipeline_mode=` kwarg wants uppercase) — transla
 
 ## Todos
 
-- [ ] [DATA] P0. **Finish classifying `sports_reference_core.py` in full** (it is a large file — this session covered
-      the `emit_empty_gaps_for_entity` cluster + found `note_failed`/`note_empty` sites by grep but did not exhaustively
-      read the whole file). Confirm exact current line numbers (may have shifted), confirm no further
-      `record_captured`/`record_failed`/`record_empty`/`record_captured_from_counts` sites exist beyond what's listed
-      above, and classify the 6 `note_failed`/`note_empty` sites (TEAMS/STANDINGS/INJURIES/FIXTURES_SCHEDULE) per the
-      SIMPLE/ORDERED method above. Also confirm `sports_reference_fixtures_write.py`'s `af_entity_dt` (from
-      `_entity_dt_for_short()`) is used ONLY for manifest writes within that file (no lookup use there) — if so, a
-      single translation at the `_entity_dt_for_short()` call site (sports_reference_fixtures_write.py:331) is
-      sufficient for that file's 2 call-site families, rather than per-call-site translation.
+- [x] ✅ [DATA] P0. **Finish classifying `sports_reference_core.py` in full + resolve
+      `sports_reference_fixtures_write.py`'s `af_entity_dt` question.** DONE — see the "sports_reference_core.py" /
+      "sports_reference_fixtures_write.py" sections above (full-file reads, every call site classified with exact line
+      numbers; the `af_entity_dt` translation point is per-call-site, not upstream).
 - [ ] [DATA] P0. **Classify `process_write.py`, `process_zero_records.py`, `process_completeness.py`,
       `process_enrichment.py`, `process_fetch.py`** (beyond the one `process_fetch.py` site already found) for sports
       19-token manifest writes — these files handle MULTIPLE asset groups via shared helpers, so each call site needs
@@ -245,3 +269,12 @@ call (row_key wants lowered, `pipeline_mode=` kwarg wants uppercase) — transla
   cluster + `process_fetch.py` partially classified mid-session (found via targeted reads + a raw-transcript grep, not
   yet exhaustively verified) — left as open todos rather than rushed to completion, per main's explicit reasoning that a
   session-bounded hand-patch risks silently missing a site.
+- **2026-08-14 (same session, follow-up)** — `sports_reference_core.py` + `sports_reference_fixtures_write.py`
+  classification COMPLETED (the file-classification Explore agent finished after the entry above was written) — full
+  files read, every call site classified with exact line numbers, resolving both open questions from the entry above:
+  the `af_entity_dt` translation point is per-call-site (NOT upstream at `_entity_dt_for_short()`, which would have
+  corrupted the `emit_empty_gaps_for_entity` passthrough's own lookups), and `emit_empty_gaps_for_entity` is confirmed
+  as a 4-way cross-purpose hub needing call-site-local translation, never a parameter reassignment. See the updated
+  "sports_reference_core.py" / "sports_reference_fixtures_write.py" sections above (todo 1 from the original entry is
+  now folded into this doc's body, not a separate open item). Only the `process_*.py` sweep (todo below) and the
+  `TRANSFER_RECORDS` scope question remain open.
