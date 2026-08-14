@@ -16,7 +16,7 @@ summary: >-
   relaunch would ALSO re-fail: upstream entity=fixtures for day=2026-08-10 is STILL absent (19:00Z re-check), and the
   08-10 features were computed sparse (row_count 1-2/league) from partial inputs. Adjacent finding: 2022 year-sharded
   features VM has NO EXIT_STATUS (terminated mid-run 07:15Z, skip-if-fresh only).
-status: open
+status: closed
 nature: issue
 asset_group: [sports]
 stage: [meta]
@@ -56,6 +56,11 @@ context_scope:
     features-service/features_service/sports/cli/handlers/batch_handler.py,
   ]
 ---
+
+> **ARCHIVED**: all tracked follow-ups resolved (2026-08-14). Escalation-dispatch dedup fixed
+> (`deployment-service@427d6d2b91`, `agent-orchestrator@da2f9f6`/`74325fc`/`962e5c1`), relaunch-storm budget fixed
+> (`deployment-service@c7ed0077cb`), and the 2022 year-shard coverage gap verified as a non-issue (slot-5, 2026-08-14).
+> Successor: none (self-contained; no follow-up work).
 
 # sports features DP-VM-001 — upstream fixtures gap (2026-08-10)
 
@@ -144,9 +149,20 @@ context_scope:
       updated availability index (+98 entries). The parent features-backfill item can now be flipped done — the sparse
       15:42Z compute is superseded by this full-upstream recompute. (The 15:42Z compute was sparse; recomputed
       2026-08-13 once upstream fixtures_schedule/outcomes landed.)
-- [ ] [DATA] P3. Verify the 2022 year-sharded features VM (`features-sports-sports-2022-20260810-051126`): no
+- [x] ✅ [DATA] P3. Verify the 2022 year-sharded features VM (`features-sports-sports-2022-20260810-051126`): no
       EXIT_STATUS (terminated mid-run 07:15Z, skip-if-fresh only) — confirm 2022 features coverage in the availability
-      index.
+      index. **VERIFIED 2026-08-14 (slot-5) — no coverage gap.** `vm-logs/.../run.log` confirms no `EXIT_STATUS` blob
+      (only `TARBALL_PINS.json`/`WATCHDOG_TRACE.log`/`run.log` present) and the log itself ends abruptly mid-day
+      (2022-11-11, `SKIP <entity> for 2022-11-11 — manifest shows prior captured/empty` lines, no terminal `rc=`/exit
+      line) — consistent with a preemption/kill, not a controlled exit. A bounded pushdown read
+      (`pyarrow.fs.GcsFileSystem` + `dataset.scanner(columns=..., filter=...)`, never a full `to_table()`) of
+      `features-sports-prd-central-element-323112/_index/availability_index.parquet` shows **365/365 distinct dates
+      present for 2022** (2022-01-01..2022-12-31), 53,779 `captured` + 1,060 `empty_confirmed` (honest absence) + 25
+      `attempted_failed` (negligible) across 54,864 rows. The exact date the VM died on, 2022-11-11, itself shows 206
+      `captured` + 1 `empty_confirmed` rows — in line with its neighboring dates (2022-11-05..17 range: 53-398 captured
+      rows/day), not a gap. Conclusion: the skip-if-fresh design meant this VM's mid-run termination did not leave a
+      coverage hole — either this VM's own earlier progress or a separate run already covered the full year
+      before/around the death point. No relaunch or backfill needed.
 - [x] [CODE] P1. ✅ **(c) root-caused + FIXED** — `agent-orchestrator@da2f9f6` + `agent-orchestrator@74325fc`. Traced
       both structural gaps (see Progress Log for the full trace): (a) `check_dispatch_dedup_for_finding`'s vm_name
       fallback is NEVER reached in production — the `dp-exit-code-monitor` Cloud Run Job that actually files
@@ -428,3 +444,18 @@ is healthy. Shipped `deployment-service@c7ed0077cb`: `escalation_dedup.check_rel
 context now says `DO NOT RELAUNCH` once a launcher-family hits 2 dispatches for the day, instead of a bare
 `RELAUNCH vm=...`. 6 new unit tests, QG green (3459 passed), verified on origin. Flipped the P2 todo done. Remaining
 open: the P3 2022-year-shard verification (untouched by this fix).
+
+**slot-5 2026-08-14 (dedicated [DATA] P3 task, dispatched via this doc's own P3 todo)** — verified the 2022 year-sharded
+features VM's missing-EXIT_STATUS termination left no coverage gap. Read
+`vm-logs/features-sports-sports-2022-20260810-051126/` via the sanctioned UTL SDK
+(`get_storage_client().list_blobs`/`download_bytes`, no subprocess gsutil): confirms no `EXIT_STATUS` blob exists (only
+`TARBALL_PINS.json`, `WATCHDOG_TRACE.log`, `run.log`), and `run.log` ends abruptly mid-day (2022-11-11,
+mid-`SKIP <entity> — manifest shows prior captured/empty` lines, no terminal exit-code line) — consistent with a
+preemption/kill rather than a controlled exit. Cross-checked against the actual availability index (bounded pushdown
+read of `features-sports-prd-central-element-323112/_index/availability_index.parquet` via `pyarrow.fs.GcsFileSystem` +
+`dataset.scanner(columns=..., filter=...)`, never a full `to_table()`): 2022 shows **365/365 distinct dates present**,
+53,779 `captured` + 1,060 `empty_confirmed` + 25 `attempted_failed` out of 54,864 rows — and the specific date the VM
+died on (2022-11-11) itself shows 206 `captured` + 1 `empty_confirmed` rows, in line with its immediate neighbors
+(53-398 captured rows/day across 2022-11-05..17). No relaunch or backfill needed — the skip-if-fresh design meant this
+VM's own earlier progress (or a separate covering run) already had the full year before/around the termination point.
+This was the last open todo in this doc; no further action needed here.
