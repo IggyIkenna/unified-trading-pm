@@ -385,9 +385,23 @@ source: >-
 - [ ] [CODE] P2. Implement the safe-field allow-list + UnsafeConfigChangeError guard in
       strategy-service/strategy_service/config_reloaders.py per the operator-confirmed 2026-08-12 ruling (option A)
       Source: `plans/active/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`
-- [ ] [CODE] P2. FLEET-WIDE: instruments-store _index v9-COLUMN populate for cefi/tradfi/defi (+ prediction source) —
+- [x] ✅ [CODE] P2. FLEET-WIDE: instruments-store _index v9-COLUMN populate for cefi/tradfi/defi (+ prediction source) —
       pattern-identical to the already-shipped sports v9-column populate script Source:
-      `plans/active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md`
+      `plans/active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md` — unified-trading-pm (this batch):
+      **ALREADY SHIPPED + APPLIED LIVE, no new code needed (verified 2026-08-14).**
+      `instruments-service/scripts/populate_is_index_v9_2026_06_19.py` (`instruments-service@96fd4260`) is the
+      pattern-identical fleet-wide script this todo asked for — it already exists, covers all 4 AGs
+      (cefi/defi/tradfi/prediction), and was `--apply`'d live on 2026-06-19 (confirmed via
+      `_index/snapshots/pre_is_v9_{ag}_2026_06_19.parquet` present in all 4 buckets). Live-re-verified via a fresh
+      `--asset-group` dry-run against each of the 4 prod `_index` objects today: `schema_v9_pct` / `pipeline_mode_pct` /
+      `source_pct` / `asset_group_pct` all **100.0%** for prediction (31,625 rows, source_dist:
+      polymarket_gamma_api/polymarket_clob/instruments_service/kalshi), tradfi (27,516 rows, 100% instruments_service),
+      cefi (85,064 rows, 100% instruments_service), and defi (138,327 rows, 100% instruments_service). `captured` counts
+      unchanged in every dry-run (no data loss). Byproduct observation: defi's dry-run also reported
+      `venue_changes: 120088` from the SAME script's bundled venue-canonicalisation step (`canonicalise_venue_column`) —
+      this is DISTINCT from the v9-column scope of this todo and is already tracked under the existing active defi
+      venue-canonicalization plans (e.g. `plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`,
+      `plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md`), so no new issue doc filed here.
 - [ ] [CODE] P2. Key execution policies by (client_id, slot_label) — §B Source:
       `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
 - [ ] [CODE] P2. Give the execution-policy registry a GCS loader + DomainConfigReloader subscription — §B Source:
