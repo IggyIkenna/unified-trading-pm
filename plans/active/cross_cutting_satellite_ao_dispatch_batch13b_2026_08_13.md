@@ -149,8 +149,17 @@ source: >-
       ldr_main_qg_failure orchestrator escalation once confirmed. Evidence: `bash scripts/quality-gates.sh` green
       (sentinel = HEAD 99bfba4a9); YAML + embedded bash syntax verified (`python3 -c yaml.safe_load` + `bash -n` on the
       extracted `run:` block); quickmerge verified `7840229ddf` ancestor of `origin/live-defi-rollout`.
-- [ ] [CODE] P2. Extend the proven --diff-base pattern to check_ag_closeout_linkage Source:
-      `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md`
+- [x] ✅ [CODE] P2. Extend the proven --diff-base pattern to check_ag_closeout_linkage Source:
+      `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md` —
+      unified-trading-pm@96b33046f9: added `--diff-base <ref>` mode to `check_ag_closeout_linkage.py`, git-backed
+      (`ls-tree`/`cat-file --batch`, no live-disk read) rebuild of the orphan graph/closeout-family/body-blob at the
+      base ref, compared by PATH IDENTITY against the HEAD orphan set (not message text, since this check's wording can
+      legitimately reword the same orphan e.g. archived-coordinator phrasing). Wired into `run_hygiene_sweep.sh`'s
+      shared `DIFF_BASE_REF` guard alongside the other four consumers. Verified: `--diff-base HEAD`/`HEAD~50` both 0 new
+      (baseline currently 0 orphans); unresolvable ref falls back safe (empty base-orphan set); `--only`/`--tranche`
+      modes unaffected; full `run_hygiene_sweep.sh --no-regen` green (0 hard failures) with the new wiring live;
+      `bash scripts/quality-gates.sh` sentinel = HEAD `a4e15c8411`; quickmerge verified `96b33046f9` ancestor of
+      `origin/live-defi-rollout`.
 - [ ] [CODE] P2. Make check_ui_api_flow_coverage.py hard-fail instead of silently exiting 0 when its manifest file is
       missing Source:
       `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md`
