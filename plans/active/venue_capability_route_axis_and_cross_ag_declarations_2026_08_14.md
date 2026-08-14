@@ -146,21 +146,28 @@ that is expected and correct, not something to work around.
 
 ### P1 — declare what already captures
 
-- [ ] [DATA] P1. Add capability entries for the 7 defi venues that capture but are undeclared (`AAVE-PLASMA`,
+- [x] [DATA] P1. Add capability entries for the 7 defi venues that capture but are undeclared (`AAVE-PLASMA`,
       `BINANCE-BSC`, `BINANCE-ETHEREUM`, `COINBASE-ETHEREUM`, `FLUID-PLASMA`, `SANCTUM-SOLANA`, `SOLANA-NATIVE-SOLANA`),
       route=direct — DoD: start dates derived from each venue's earliest `captured` manifest row, not invented; cite the
-      query.
-- [ ] [DATA] P1. Add capability entries for `KALSHI-PERP` and `POLYMARKET-PERP` `perp_funding` (batch route=direct via
+      query. ✅ unified-api-contracts@4170f90d98 — see "2026-08-14 — P1 declarations" below. **Correction found**: 2 of
+      the 7 (`FLUID-PLASMA`, `SOLANA-NATIVE-SOLANA`) measured ZERO captured rows of any data_type — this todo's own
+      premise was wrong for them; they got `batch=None` (honest absence), not a fabricated date.
+- [x] [DATA] P1. Add capability entries for `KALSHI-PERP` and `POLYMARKET-PERP` `perp_funding` (batch route=direct via
       `perp_funding_handler.py`) — DoD: entries match the venues' real captured `perp_funding` first dates, and no
-      phantom EXPECTED cell is seeded for the data_types those venues only ever `empty_confirmed`.
-- [ ] [DATA] P1. Add capability entries for all 31 existing sports bookmaker venues with `route=aggregator:ODDS_API` and
+      phantom EXPECTED cell is seeded for the data_types those venues only ever `empty_confirmed`. ✅
+      unified-api-contracts@4170f90d98 — see Progress Log.
+- [x] [DATA] P1. Add capability entries for all 31 existing sports bookmaker venues with `route=aggregator:ODDS_API` and
       the batch start date each venue's manifest actually shows, clamped to the 2020-06-06 floor — DoD: no entry
-      predates the floor, and the four never-captured books get `batch = none` rather than a fabricated date.
-- [ ] [DATA] P1. Replace `NO_ADAPTER_YET` for the 31 sports venues with resolution through the route axis so an
+      predates the floor, and the four never-captured books get `batch = none` rather than a fabricated date. ✅
+      unified-api-contracts@4170f90d98 — no venue's real earliest date predated the floor, so no clamping was needed.
+- [x] [DATA] P1. Replace `NO_ADAPTER_YET` for the 31 sports venues with resolution through the route axis so an
       aggregator-served venue is adapter-backed, keeping `is_venue_executable()` as the SEPARATE execution-capability
       predicate it already documents itself to be — DoD: `is_venue_executable("PINNACLE")` stays False while the venue
       resolves a data-side route; the existing `test_venue_adapter_keys.py` assertions stay green or are updated with a
-      stated reason.
+      stated reason. ✅ New `is_venue_data_adapter_backed()` predicate in `venue_adapter_keys.py` —
+      `VENUE_TO_ADAPTER_KEY` itself is UNTOUCHED (still `NO_ADAPTER_YET` for all 31, so `is_venue_executable` behavior
+      is unchanged, confirmed by the existing test file staying green with zero edits) — the new function checks
+      `is_venue_executable(venue) or VENUE_DATA_TYPE_CAPABILITIES[venue].route != "direct"`.
 
 ### P1 — resolve the bookmaker spelling drift
 
@@ -346,6 +353,66 @@ Implemented in `unified-api-contracts` (my exclusively-owned `market_data_catego
   quickmerge may isolate/snapshot the worktree at launch, I could not be certain the in-flight run would pick up the
   fix, so I stopped it (`TaskStop`) rather than let an uncertain race ship a known-broken commit, verified the repo was
   left clean (no partial commit, no orphaned worktree), and re-ran gates fresh before re-attempting the ship.
+
+### 2026-08-14 — P1 declarations (defi 7, KALSHI-PERP/POLYMARKET-PERP, sports 31, adapter-backed predicate) — shipped unified-api-contracts@4170f90d98
+
+All dates measured via
+`pd.read_parquet("gs://<bucket>/_index/availability_index.parquet", columns=[...], filters=[...])` against the live prod
+manifest (read-only; no gcloud/gsutil subprocess — hook-blocked in this workspace, used a GCS-backed pandas read
+instead), `capture_status=="captured"` rows only, `.groupby(...)["date"].min()` for the earliest date. Full detail in
+`unified_api_contracts/registry/market_data_categories.py`'s inline comments at each addition (not duplicated here per
+the plan-references-codex-not-code convention, but summarized):
+
+- **KALSHI-PERP / POLYMARKET-PERP `perp_funding`** (bucket `market-data-tick-cefi-prd-central-element-323112`):
+  KALSHI-PERP 2026-06-03 (72 captured rows), POLYMARKET-PERP 2026-08-07 (7 rows, thin but real). Both venues also carry
+  thousands of `empty_confirmed` rows for OTHER data_types — only `perp_funding` was declared, per the DoD.
+- **7 defi venues** (bucket `market-data-tick-defi-prd-central-element-323112`): **naming finding first** — the manifest
+  does NOT store these as the hyphenated `"AAVE-PLASMA"` etc. token; it stores a bare-protocol `venue` column
+  (`AAVE_V3`, `BINANCE`, `COINBASE`, `FLUID`, `SANCTUM`, `SOLANA-NATIVE`) plus a separate `chain` column. Queried by
+  bare venue + chain filter, results mapped back to this registry's hyphenated keys (confirmed correct per
+  `venue_adapter_keys.py`'s own comments for AAVE-PLASMA/FLUID-PLASMA). Dates: AAVE-PLASMA `lending_indices` 2026-07-30
+  (36 rows); BINANCE-BSC/BINANCE-ETHEREUM `lst_rates` 2023-04-19 (2,593 rows, same underlying wBETH contract both
+  chains); COINBASE-ETHEREUM `lst_rates` 2022-02-05 (3,473 rows); SANCTUM-SOLANA `lst_rates` 2021-12-16 (3,571 rows).
+  **FLUID-PLASMA and SOLANA-NATIVE-SOLANA measured ZERO captured rows of any data_type** (123,068 and 21,155+7,029
+  non-captured rows respectively) — a correction to this plan's own P0 fact table, which assumed all 7 "capture but are
+  undeclared." Both got `batch=None` instead of a fabricated date (`lending_indices` for FLUID-PLASMA matching its
+  ETHEREUM sibling's declared type; `lst_rates` for SOLANA-NATIVE-SOLANA matching the other Solana LST venues — both are
+  stated ASSUMPTIONS about which data_type is "the" honest-absence cell, not measurements, since zero rows of anything
+  exist to measure from). **Separate, unresolved finding**:
+  COINBASE-ETHEREUM/SANCTUM-SOLANA/BINANCE-BSC/BINANCE-ETHEREUM's earliest CAPTURED row predates that same venue's own
+  `venue_launch_dates.py` entry by 8 days to ~1.5 years (2022-02-05 vs 2022-08-24; 2021-12-16 vs 2023-06-01; 2023-04-19
+  vs 2023-04-27). Plausible for on-chain data (manifest date = real block history; launch date might mean "UAC
+  registration date," not protocol genesis) but not reconciled here — used the measured manifest date per this todo's
+  explicit DoD instruction, flagging rather than silently picking a side. Worth a follow-up `plans/active/issues/` doc
+  if a future session wants to resolve it; not done here since it's outside this plan's scope and doesn't block the
+  declaration itself.
+- **31 sports bookmaker venues** (bucket `market-data-tick-sports-prd-central-element-323112`): captured `data_type`
+  values are ONLY `odds`/`odds_horizon_bucket`/`arbitrage_opportunity`/`odds_movement`/`odds_snapshot` — never
+  `trades`/`trades_inplay` (confirms those are reserved for the separate direct-feed venue set per
+  `DATA_TYPES_BY_ASSET_GROUP`'s own comments). Declared `odds` only — the real raw MTDS capture type; NOT
+  `arbitrage_opportunity`/`odds_horizon_bucket` (cross-bookmaker DERIVED types per that same comment, not a single-venue
+  capability) and NOT the retired `odds_movement`/`odds_snapshot` (removed 2026-08-08, sports taxonomy P1 — historical
+  artifacts, not current vocabulary). Earliest `odds` dates range 2020-06-06 (floor, 11 venues) to 2025-07-31 (4
+  venues); none predates the floor. `BETOPENLY`/`NOVIG`/`ONEXBET`/`PROPHETX` re-confirmed zero rows of any status —
+  `batch=None`. **PINNACLE correction**: it already had a `VENUE_DATA_TYPE_CAPABILITIES` key mapping to an empty `{}` (a
+  pre-existing placeholder, unrelated to this plan) — 30 venues had zero key, 1 had a vacuous key, all 31 were
+  functionally undeclared; the addition loop fills PINNACLE's existing key in rather than creating a duplicate.
+- **Adapter-backed predicate**: new `is_venue_data_adapter_backed()` in `venue_adapter_keys.py` —
+  `is_venue_executable(venue) or (VENUE_DATA_TYPE_CAPABILITIES.get(venue) is not None and cap.route != "direct")`.
+  `VENUE_TO_ADAPTER_KEY` itself is untouched (still `NO_ADAPTER_YET` for all 31 sports venues), so `is_venue_executable`
+  stays exactly as before — `test_venue_adapter_keys.py`'s 11 pre-existing tests pass unmodified, plus 3 new ones for
+  the PINNACLE/BINANCE-SPOT/UNDERSTAT cases.
+- **Regression found + fixed during P1 verification** (full UAC suite run, not just the new test files):
+  `test_data_status_registries.py::TestYahooFinancePhantomVenueRemoved::test_legit_sports_no_adapter_venue_keeps_fallback_types`
+  asserted `BETFAIR_EX_EU`/`DRAFTKINGS`/`FANDUEL` fall through to the FULL asset-group data_type cross-product — true
+  before this plan, now false BY DESIGN (they have real narrow declarations). Rewrote it in two parts: a
+  `monkeypatch`-based mechanism test proving the empty-caps fallback itself still works (via a SYNTHETIC venue, not a
+  real one — same "real venues aren't stable absent-fixtures" lesson
+  `test_row_data_types_capability_absent_venue_not_gated` in instruments-service already encodes), and a new
+  `TestSportsBookmakerCapabilities` class asserting the NEW narrowed behavior is the regression guard going forward.
+  Full UAC suite: 13,172 passed / 0 failed after the fix (was 1 failed / 8,240 passed on first full run, mid-P1).
+- Full UAC test suite re-run clean after all P1 additions: **13,172 passed, 672 skipped, 5 xfailed, 0 failed**.
+
 - **One-off scripts intentionally left untouched** (per the P0 consumer-enumeration entry above, script-homes lifecycle
   convention): `market-tick-data-service/scripts/delete_bybit_spot_spot_nonsense_manifest_2026_07_07.py` still reads
   `VENUE_DATA_TYPE_CAPABILITIES.get(_VENUE, {})` in its old raw-dict-assuming form. If this script is ever re-run before
