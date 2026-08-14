@@ -455,3 +455,12 @@ Two reasons, mirroring the UTL-34-bypass precedent
   Un-set this flag once the deadlock doc's `[OPERATOR]`/`[INFRA]` todos land and the deferred archival actually
   completes.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **cross_cutting_satellite_ao_dispatch_batch13b Item N, 2026-08-14**: **STALE CITATION traced + corrected.** The entry
+  above (line ~451) references "an over-1000L doc" via
+  `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`, which names
+  `plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` (1007L) as the over-cap referrer — confirmed the same
+  underlying stale claim `plan_reconciler_findings_cross_cutting_2026_08_10.md`'s Item N flagged for tracing.
+  Live-verified `cross_cutting_consolidated_closeout_2026_07_25.md` is now 733 lines, under the 1000-line hard cap — the
+  line-cap half of the archival deadlock this doc's `archive_exempt: true` cites is resolved. Text-only correction per
+  Item N's scope; did not re-verify the deadlock doc's other conditions or unset `archive_exempt` here (left to that
+  doc's own operator-decision-gated resolution path).

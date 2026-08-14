@@ -101,3 +101,9 @@ verification dispatch happened to run on `main` and surfaced it. Did not investi
   Un-set once the deadlock doc's operator decision lands and the archival can complete (same batch as the
   disposition-owner's own `[DOCS] P3` todo).
 - **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
+- **cross_cutting_satellite_ao_dispatch_batch13b Item N, 2026-08-14**: **STALE CITATION corrected.** The "1007L, already
+  over the 1000L hard line-cap" claim above no longer holds — live-verified
+  `cross_cutting_consolidated_closeout_2026_07_25.md` is 733 lines, under the 1000-line hard cap. The line-cap half of
+  the archival deadlock this doc's `archive_exempt: true` cites is resolved; text-only correction per Item N's scope
+  (`plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`) — did not re-verify the deadlock doc's
+  other conditions or unset `archive_exempt` here (left to that doc's own operator-decision-gated resolution path).
