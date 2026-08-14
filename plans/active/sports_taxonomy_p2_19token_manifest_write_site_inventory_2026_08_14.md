@@ -220,13 +220,58 @@ its two passthrough uses) untouched/uppercase:
   275/303), and the `else` branch's passthrough (line 313) never runs alongside a write, so there is no shared-variable
   reuse hazard here (unlike the per-league-loop case above).
 
-### process_fetch.py (found mid-session; the other 4 `process_*.py` files remain the one open todo below)
+### process_write.py / process_zero_records.py / process_completeness.py / process_enrichment.py / process_fetch.py — full sweep COMPLETE
 
-`_per_fixture_gcs_fast_path` —
-`pf_manifest.record_captured_from_counts(row_key={"date": date, "data_type": entity_name.upper()}, ..., pipeline_mode=_orch._pipeline_mode_for_sports_data_type(entity_name.upper()), ...)`
-— a DYNAMIC (not literal) 19-token value (`entity_name.upper()`), ORDERED: the SAME expression is evaluated twice in one
-call (row_key wants lowered, `pipeline_mode=` kwarg wants uppercase) — translate only the row_key occurrence, keep the
-`pipeline_mode=` kwarg's `entity_name.upper()` untouched.
+All 5 files read in full. Verified in UAC source: `FIXTURES_SCHEDULE` is an immutable module constant (never reassigned
+to a local var in these 5 files → inherently SIMPLE wherever it appears); `_pipeline_mode_for_sports_data_type`
+internally does `.upper()` on its input, so it is case-insensitive and NOT actually an ordering hazard despite being
+listed as an example lookup in the classification method above; `sports_reference.py`'s `_fetch_sports_reference_data`
+only ever populates `counts` with the 7 keys
+`{teams, standings, injuries, fixture_stats, fixture_events, fixture_lineups, player_stats}` — all confirmed 19-token
+members, closing the "which entity" ambiguity for every `entity_name.upper()` / `pf_entity` dynamic site below.
+
+**process_write.py** — 3 confirmed SIMPLE sites, all `FIXTURES_SCHEDULE`: line 293+299 (`record_captured`, one call,
+wrap both), line 363 (`record_empty`), line 376 (`record_empty`). Remaining sites (455, 531, 574, 870) are NOT-SPORTS
+(prediction / TradFi / venue-grain CEFI-DEFI-TRADFI) — confirmed out of scope, no fix needed.
+
+**process_zero_records.py** — richest file, 6 confirmed sports sites:
+
+- Lines 254+264 (`record_failed`/`record_empty`, share one `_row_key` built at line 247-251) — `FIXTURES_SCHEDULE`,
+  SIMPLE, single fix point at line 249.
+- Line 328 (`record_captured_from_counts`) + line 359 (`record_empty`) — `entity_name.upper()` ∈ {TEAMS, STANDINGS}
+  (confirmed closed set), SIMPLE, no lookup dependency (pipeline_mode at 339 independently recomputes `.upper()`).
+- Line 380 (`record_empty`) — `pf_entity` ∈ {FIXTURE_EVENTS, FIXTURE_LINEUPS, FIXTURE_STATS, PLAYER_STATS}, SIMPLE, fix
+  at line 383.
+- Line 436 (`record_empty`) — `_enr_entity` ∈ {PREDICTIONS, MATCHES, XG, WEATHER} — **ORDERED**: line 444 does
+  `_enr_entity_to_sports_ref_entity[_enr_entity]`, a plain dict keyed by the uppercase literal — a naive top-of-loop
+  reassignment would `KeyError`. Fix: wrap inline ONLY at the line-439 row_key literal
+  (`canonical_sports_is_data_type(_enr_entity) or _enr_entity`); leave the `_enr_entity` variable itself untouched so
+  line 444 still sees the original uppercase key.
+- Lines 572/654/720 (`record_expected_empty`) — NOT-SPORTS (CeFi/DeFi pre-launch, no-adapter-yet, TradFi non-trading) —
+  confirmed out of scope.
+
+**process_completeness.py** — 1 confirmed sports sub-case, GENERIC-SHARED: line 602 (`record_failed`) is a ternary —
+`FIXTURES_SCHEDULE` when `_failed_venue == "API_FOOTBALL"` (line 598), else a non-sports venue row_key. SIMPLE, fix ONLY
+the true-branch literal at line 598, leave the else-branch untouched. Line 244 (`record_zero_rows`) is outside this
+doc's 5 target write-methods, excluded per scope. Line 721 is NOT-SPORTS (CeFi-only thin-day correction).
+
+**process_enrichment.py** — 1 structurally-GENERIC-SHARED but **currently dead** branch: line 190
+(`record_captured_from_counts`, `entity_name.upper()`) is gated by `entity_name not in _self_manifested` (line 179-187),
+and `_self_manifested` already covers the full 7-key set `sports_reference.py` can ever emit — so this branch never
+executes today. No fix needed now; flag for re-check only if the sports-reference entity set ever grows beyond the
+current 7 keys.
+
+**process_fetch.py** — 1 confirmed sports site (matches the mid-session finding already in this doc, re-verified):
+`_per_fixture_gcs_fast_path`, `entity_name.upper()` evaluated twice in one `record_captured_from_counts` call — the
+row_key occurrence (line ~295) is ORDERED against the `pipeline_mode=` kwarg's independent `.upper()` re-evaluation
+(line ~305); translate ONLY the row_key occurrence, leave `pipeline_mode=`'s uppercase untouched. No exclusion filter on
+this site (unlike process_zero_records.py:328/359) — every entity `pf_counts` returns gets stamped here.
+
+**Sweep total**: 11 confirmed sports 19-token write statements across the 5 files (7 SIMPLE fix points + 1 ORDERED + 1
+GENERIC-SHARED/conditional-branch + 1 dead/no-fix-needed + the 1 already-known process_fetch.py ORDERED site), 10
+additional call sites confirmed NOT-SPORTS (correctly out of scope), 1 call site excluded as outside the 5 target
+write-methods. **Every `process_*.py` file is now fully classified — no remaining unclassified sports manifest-write
+call site in this codebase.**
 
 ## Todos
 
@@ -234,11 +279,12 @@ call (row_key wants lowered, `pipeline_mode=` kwarg wants uppercase) — transla
       `sports_reference_fixtures_write.py`'s `af_entity_dt` question.** DONE — see the "sports_reference_core.py" /
       "sports_reference_fixtures_write.py" sections above (full-file reads, every call site classified with exact line
       numbers; the `af_entity_dt` translation point is per-call-site, not upstream).
-- [ ] [DATA] P0. **Classify `process_write.py`, `process_zero_records.py`, `process_completeness.py`,
-      `process_enrichment.py`, `process_fetch.py`** (beyond the one `process_fetch.py` site already found) for sports
-      19-token manifest writes — these files handle MULTIPLE asset groups via shared helpers, so each call site needs
-      confirmation of whether the specific `data_type` passed is actually a sports 19-token value or a different
-      asset_group's, per the same SIMPLE/ORDERED method.
+- [x] ✅ [DATA] P0. **Classify `process_write.py`, `process_zero_records.py`, `process_completeness.py`,
+      `process_enrichment.py`, `process_fetch.py`** for sports 19-token manifest writes. DONE — see the
+      "process_write.py / process_zero_records.py / process_completeness.py / process_enrichment.py / process_fetch.py"
+      section above: 11 confirmed sports write statements classified (7 SIMPLE + 2 ORDERED + 1 conditional-branch
+      SIMPLE + 1 currently-dead branch), 10 sites confirmed NOT-SPORTS. Classification phase for the ENTIRE codebase is
+      now complete — remaining todos are code-authoring + verification, not further discovery.
 - [ ] [DATA] P1. **Resolve the `TRANSFER_RECORDS` open question** (found in transfermarkt.py): is it a 20th in-scope
       token for this re-stamp, or excluded? Check
       `unified_api_contracts.canonical.domain.sports.league_data .SPORTS_DATA_TYPE_TO_SOURCE` membership and cross-check
@@ -278,3 +324,11 @@ call (row_key wants lowered, `pipeline_mode=` kwarg wants uppercase) — transla
   "sports_reference_core.py" / "sports_reference_fixtures_write.py" sections above (todo 1 from the original entry is
   now folded into this doc's body, not a separate open item). Only the `process_*.py` sweep (todo below) and the
   `TRANSFER_RECORDS` scope question remain open.
+- **2026-08-14 (same session, second follow-up)** — `process_write.py`/`process_zero_records.py`/
+  `process_completeness.py`/`process_enrichment.py`/`process_fetch.py` classification COMPLETED (5th and final parallel
+  Explore agent finished, ~622s runtime). 11 confirmed sports 19-token write statements found across the 5 files (most
+  significant new finding: `process_zero_records.py:436` is a second, previously-unknown ORDERED site — a dict keyed on
+  the raw uppercase `_enr_entity` at line 444 that a naive fix would `KeyError`). All 10 files in the sports
+  reference-data write path are now fully classified with exact line numbers; **the classification phase for this entire
+  migration is done**. Only remaining open items: the `TRANSFER_RECORDS` scope question (P1, operator input needed) and
+  the 3 code-authoring/verification/land todos below.
