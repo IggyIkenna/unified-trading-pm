@@ -334,8 +334,12 @@ source: >-
       `execution_scope: local-only` — no code change needed. DOCS P3: fix orchestrator_vm_e2e_hardening_2026_07_24.md's
       self-contradictory assigned_vm:NA + execution_scope:orchestrator-agent frontmatter to local-only Source:
       `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
-- [ ] [CODE] P2. DOCS P3: update deepseek_flash_ab_routing_test_2026_08_05.md's stale Deferred-table rows for todos
-      2/4/17b Source: `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
+- [x] ✅ [CODE] P2. DOCS P3: update deepseek_flash_ab_routing_test_2026_08_05.md's stale Deferred-table rows for todos
+      2/4/17b — unified-trading-pm (this commit): the 3 rows read "Not done" while each item's own todo entry earlier in
+      the doc already recorded it DONE via `ao_satellite_ao_dispatch_batch12_2026_08_09.md` (todo 2:
+      `agent-orchestrator@4d27bc1`, todo 4: `agent-orchestrator@26f8a49`, todo 17b: `agent-orchestrator@64a0291`) —
+      updated all 3 rows to cite the same SHAs/dates and point back at each todo's own entry. Source:
+      `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
 - [ ] [CODE] P2. DOCS P3: repoint plans/epics/orchestrator_master.md's 2 stale referrers to the archived batch4_finalize
       path Source: `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
 - [ ] [CODE] P2. DOCS P3: fix ao_satellite_ao_dispatch_batch12_2026_08_09.md todo formatting (meta-commentary on first
