@@ -151,25 +151,25 @@ source: >-
       human-watched write window, not unsupervised) Source: `plans/active/sports_consolidated_closeout_2026_07_19.md`
 
       **INVESTIGATED 2026-08-14 (slot-12, backend_engineer) — target keys extinct, repair as specified is moot.**
-          Summary: the consolidator-pause safety question is resolved (incremental cycles pass through unchanged canonical
-          rows untouched, so a direct CAS-write would need no pause) — but a dry-run join of the pre-clobber snapshot against
-          the LIVE canonical (both the base 4-col dedup key and the full production key, `_dedup_key_sql`-normalized
-          identically to `manifest_consolidator`) found **0 matching rows**: `venue=BETFAIR` no longer exists and current
-          `data_type='trades'` rows all belong to `venue=ODDS_API`, unrelated. No prod write attempted (nothing to write).
-          **CORRECTION + CLOSED 2026-08-14 (slot-30, backend_engineer)** — the line above claimed the full investigation +
-          evidence lives "in the source doc's own Track O entry (this same commit)"; that's stale/false — re-checked the
-          source doc's live Track O section (`sports_consolidated_closeout_2026_07_19.md:659`) and it carries no such note,
-          only the original unedited todo text. The real evidence trail is the issue doc slot-12's SAME commit actually
-          filed: `plans/active/issues/sports_track_o_attempted_at_keys_extinct_2026_08_14.md` (`status: open`,
-          `assigned_vm: NA`, one `[DIAG]` follow-up todo). **Independently corroborated slot-12's "not a bounded key-swap"
-          call, not just deferred to it**: `BETFAIR_SB_UK`/`BETFAIR_EX_UK`/`BETFAIR_EX_EU` are registry-level DISTINCT
-          venues (`unified-api-contracts/registry/venue_constants.py:67-69`) — no migration/rename script exists anywhere in
-          `market-tick-data-service` or `unified-api-contracts` mapping bare `BETFAIR` rows 1:1 (or by any documented rule)
-          onto the three new venues; classifying which pre-clobber row belongs to which requires row-level
-          market/region inspection, not a mechanical key substitution. This todo's literal ask (repair the 112,277 rows) has
-          no executable target and no code to ship; closing it here. The genuine remaining work (trace + re-classify) is
-          correctly parked as NA/DIAG in the issue doc above — do not re-open this exact todo, extend that issue doc's todo
-          list instead.
+              Summary: the consolidator-pause safety question is resolved (incremental cycles pass through unchanged canonical
+              rows untouched, so a direct CAS-write would need no pause) — but a dry-run join of the pre-clobber snapshot against
+              the LIVE canonical (both the base 4-col dedup key and the full production key, `_dedup_key_sql`-normalized
+              identically to `manifest_consolidator`) found **0 matching rows**: `venue=BETFAIR` no longer exists and current
+              `data_type='trades'` rows all belong to `venue=ODDS_API`, unrelated. No prod write attempted (nothing to write).
+              **CORRECTION + CLOSED 2026-08-14 (slot-30, backend_engineer)** — the line above claimed the full investigation +
+              evidence lives "in the source doc's own Track O entry (this same commit)"; that's stale/false — re-checked the
+              source doc's live Track O section (`sports_consolidated_closeout_2026_07_19.md:659`) and it carries no such note,
+              only the original unedited todo text. The real evidence trail is the issue doc slot-12's SAME commit actually
+              filed: `plans/active/issues/sports_track_o_attempted_at_keys_extinct_2026_08_14.md` (`status: open`,
+              `assigned_vm: NA`, one `[DIAG]` follow-up todo). **Independently corroborated slot-12's "not a bounded key-swap"
+              call, not just deferred to it**: `BETFAIR_SB_UK`/`BETFAIR_EX_UK`/`BETFAIR_EX_EU` are registry-level DISTINCT
+              venues (`unified-api-contracts/registry/venue_constants.py:67-69`) — no migration/rename script exists anywhere in
+              `market-tick-data-service` or `unified-api-contracts` mapping bare `BETFAIR` rows 1:1 (or by any documented rule)
+              onto the three new venues; classifying which pre-clobber row belongs to which requires row-level
+              market/region inspection, not a mechanical key substitution. This todo's literal ask (repair the 112,277 rows) has
+              no executable target and no code to ship; closing it here. The genuine remaining work (trace + re-classify) is
+              correctly parked as NA/DIAG in the issue doc above — do not re-open this exact todo, extend that issue doc's todo
+              list instead.
 
 - [x] ✅ [CODE] P2. Track O: locate the emitter of the 139,620 venue=ODDS_API/source=api_football/empty_confirmed rows
       before folding into K2 **ALREADY DONE — duplicate of `sports_consolidated_native_ao_extract_2026_07_25.md`'s own
@@ -190,8 +190,24 @@ source: >-
       standalone diagnosis, not a K2-fold-in precondition. No new code needed here; stale-checkbox correction per
       `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3.4. Source:
       `plans/active/sports_consolidated_closeout_2026_07_19.md`
-- [ ] [CODE] P2. Track V: execute the 5-part-proof-gated DELETE of the old raw-keyed league_id GCS objects (COPY+SWAP
-      already done, reversibility-verified 604800s soft-delete window, unblocked since 2026-07-28) Source:
+- [x] ✅ [CODE] P2. Track V: execute the 5-part-proof-gated DELETE of the old raw-keyed league_id GCS objects (COPY+SWAP
+      already done, reversibility-verified 604800s soft-delete window, unblocked since 2026-07-28) **INVESTIGATED
+      2026-08-14 (slot-10) — did NOT execute the delete; the "unblocked since 2026-07-28" citation was STALE/WRONG.**
+      That date's Track C K1/K2 lowercase-revert is a different axis (instrument_type/data_type casing) from this todo's
+      raw-keyed `league_id` population — landing it cannot have unblocked this delete, and the plan's own next sentence
+      already says so ("the population is a DIFFERENT one from K1/K2's own casing"). The REAL 2026-07-22 blocker was
+      5-part-proof Part 3 (no live writer to the old shape) FAILING (`venue_fetch.py`'s `_build_sports_shard_path` call
+      site). **Fresh live re-verification this session**: read-only manifest probes (`read_availability_index`,
+      date-filtered, bounded via `run-bounded-analysis.sh`) across the full 2026-07-22..2026-08-13 gap window (19,797
+      `data_type=trades` rows total) found ZERO true-raw-noncanonical `league_id` values in any `capture_status` — Part
+      3 now genuinely passes. Parts 1/2/5 were NOT re-verified at the object level this session (last hard numbers:
+      2026-07-22, 275,136/275,136) — the todo's own text requires "its own fresh candidate-list re-verify before
+      running", which is real unstarted tooling work (a K1/K2-trio-style candidate-list generator + content-verify +
+      CAS-delete executor), not a citation to skip. Per finding T (`task_template.md`) and the K1/K2 sibling near-miss
+      (`plans/archive/issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md`), §3a reversibility alone
+      never supplies the five-part proof on its own — executing a 275K-object delete on a stale citation would repeat
+      that exact near-miss. Full findings + the 2 follow-up todos (build the executor trio; then launch + execute):
+      `plans/active/issues/sports_track_v_raw_league_id_delete_5part_proof_status_2026_08_14.md`. Source:
       `plans/active/sports_consolidated_closeout_2026_07_19.md`
 - [x] [CODE] P2. Clamp the per-year sports features backfill launcher's current-year window to end_date = min(today-1,
       {year}-12-31) so a current-day's not-yet-written upstream reference can never be a hard dependency at backfill
