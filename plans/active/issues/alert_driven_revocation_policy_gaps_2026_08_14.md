@@ -20,7 +20,7 @@ tags: [alerting, self-healing, vm-lifecycle, dependency-dag, revocation, policy-
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md,
+    /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
   ]

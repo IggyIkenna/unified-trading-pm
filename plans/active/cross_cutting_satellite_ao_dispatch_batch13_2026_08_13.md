@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [cross-cutting, ao-dispatch, satellite-batch, na-eligibility-audit, ag-closeout-audit]
 related: [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md,
+    /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
     /plans/active/bucket_estate_consolidation_closeout_2026_07_24.md,
     /plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md,
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
