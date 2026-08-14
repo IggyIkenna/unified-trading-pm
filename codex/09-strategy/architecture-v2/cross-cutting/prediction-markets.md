@@ -37,18 +37,21 @@ referenced_by:
     plans/epics/predictions_master.md,
   ]
 owner:
-last_reviewed: 2026-05-22
+last_reviewed: 2026-08-14
 code_refs:
 ---
 
-> **[DELTA 2026-05-22 — KALSHI API URL MIGRATION]** **Current state:** Kalshi migrated its API to
+> **[DELTA 2026-08-14 — KALSHI LIVE, NOT CREDENTIALS-BLOCKED]** **Current state:** Kalshi migrated its API to
 > `api.elections.kalshi.com`. The old host `trading-api.kalshi.com` (and any examples using `api.kalshi.com`) returns
 > HTTP 401. All 17 code sites across 5 repos were updated in Phase 1 of
 > `kalshi_api_migration_to_elections_subdomain_2026_05_20.md` (UAC@`5729197`, IS@`79ad855`, MTDS@`28b84ce`,
-> EXS@`8a3cbe48`, UI@`664c3992`). Cassettes re-recorded. **Any inline code examples in this doc that reference
-> `api.kalshi.com` or `trading-api.kalshi.com` are stale — use `api.elections.kalshi.com` instead.** Phase 3 (credential
-> unblock + integration verification) is `BLOCKED-CREDENTIALS` pending
-> `api_keys_wallets_accounts_readiness_2026_05_10.md` 5.B.2.
+> EXS@`8a3cbe48`, UI@`664c3992`). **Any inline code examples in this doc that reference `api.kalshi.com` or
+> `trading-api.kalshi.com` are stale — use `api.elections.kalshi.com` instead.** The prior `BLOCKED-CREDENTIALS` framing
+> for Phase 3 is stale: live capture has been running well past `day=2026-07-27`
+> (`prediction_phase_ab_residuals_2026_07_24.md`), the dead-host regression was fixed and regression-guarded
+> (`e2e-testing@371ac1b`, `kalshi_live_capture_regression_and_drift_2026_07_13.md`), and real
+> `KALSHI:PREDICTION_MARKET:...` rows are landing in the manifest. The actual current gate is an **operator ruling on
+> live-order verification** (not a credentials absence).
 
 # Prediction Markets — Cross-Cutting Concern
 
