@@ -37,15 +37,33 @@ alerting-service evaluates these policies in real-time and fires severity-graded
 
 ## DependencyClass taxonomy (5 members)
 
-Defined in `unified_api_contracts.dependency` (UAC):
+> **CORRECTED 2026-08-14 — every one of the five names in the previous version of this table was WRONG.** It listed
+> `EXTERNAL_API` / `EXTERNAL_BLOCKCHAIN_RPC` / `INTERNAL_SERVICE` / `INFRASTRUCTURE` / `MARKET_DATA_FEED`; none of those
+> members exists. The table below is read from the enum. This mattered: an agent reasoning about live-path failure
+> handling quoted "INTERNAL_SERVICE" back to the operator as though our own microservices were classified, which they
+> are not (see the coverage note below).
 
-| Class                     | Description                     | Examples                                    |
-| ------------------------- | ------------------------------- | ------------------------------------------- |
-| `EXTERNAL_API`            | Third-party REST/gRPC endpoints | Pyth, Alchemy, Helius, Sportradar           |
-| `EXTERNAL_BLOCKCHAIN_RPC` | On-chain RPC providers          | Ethereum RPC, Solana RPC                    |
-| `INTERNAL_SERVICE`        | Internal microservices          | instruments-service, MTDS, alerting-service |
-| `INFRASTRUCTURE`          | Cloud platform primitives       | GCS, PubSub, BigQuery, Cloud KMS            |
-| `MARKET_DATA_FEED`        | Real-time market data streams   | Bybit WS, Binance WS, Hyperliquid WS        |
+Defined in `unified_api_contracts.canonical.crosscutting.dependency.health_policy.DependencyClass`:
+
+| Class                           | What it covers                       | Registered examples                        |
+| ------------------------------- | ------------------------------------ | ------------------------------------------ |
+| `EXECUTION_CRITICAL_EXTERNAL`   | venues/protocols an order depends on | binance_rest, bybit_rest, uniswap_v3, aave |
+| `MARKET_DATA_CRITICAL_EXTERNAL` | price/oracle feeds                   | pyth_solana, chainlink_ethereum            |
+| `INTERNAL_CONTROL_PLANE`        | cloud primitives that run the fleet  | gcp_cloud_run, aws_ecs, gcp_secret_manager |
+| `INTERNAL_DATA_PLANE`           | cloud data primitives                | gcp_bigquery, redis_primary, gcp_cloud_sql |
+| `ALERTING_AND_OBSERVABILITY`    | the notification path itself         | pagerduty, telegram_bot, twilio_voice_sms  |
+
+The classes are criticality-graded by design, which is the useful property: `EXECUTION_CRITICAL_EXTERNAL` losing a venue
+is not the same event as `ALERTING_AND_OBSERVABILITY` losing Telegram.
+
+### Coverage gap — OUR OWN SERVICES ARE NOT REGISTERED (2026-08-14)
+
+All **27** registered dependencies are external venues, RPCs, cloud primitives, or notification channels. **Zero** are
+our own microservices: there is no entry for execution-service, strategy-service, risk, or reconciliation. "INTERNAL"
+here means _cloud infrastructure we depend on_, NOT _our services depending on each other_. So a silent strategy-service
+breaches no policy, because no policy describes it.
+
+Tracked in `/plans/active/issues/live_path_has_no_stale_producer_revocation_2026_08_14.md`.
 
 ## YAML schema (per-dependency entry)
 
@@ -84,6 +102,20 @@ Ships as: `alerting-service@839cb5f` (`evaluate_dependency_health()` + `evaluate
 - Runtime: alerting-service buffers + escalates per policy; wires into `connectivity_rules.py`
 - Tests: `@pytest.mark.dependency_fallback_<dep_id>` suite; CI: `pytest -m dependency_fallback`
 - Nightly: dependency-fallback suite must be green
+
+## This policy ALERTS. It does not ACT. (2026-08-14)
+
+The escalation ladder above produces WARN / SEV1 / SEV0 **alerts**. Nothing consumes it to change behaviour:
+`rg -l 'health_policy|DependencyHealth'` over execution-service (1384 `.py`) and strategy-service (1033 `.py`) returns
+**zero**. A SEV0 on a dependency pages a human and halts nothing — no retry policy is driven from it, no kill-switch
+scope is armed by it, no admission is held.
+
+That is worth stating plainly because the fields read like they govern behaviour: `expected_recovery_time_seconds`,
+`hard_escalation_seconds`, `fallback_available` and `protected_mode_available` all describe what SHOULD happen, and none
+of it is wired. The batch/data-pipeline side hit the identical failure mode — a complete, tested policy with no
+actuator, which reads as finished — see `/plans/active/revocation_arming_2026_08_14.md`.
+
+Until an actuator exists, treat this document as a paging contract, not a control contract.
 
 ## Anti-patterns
 

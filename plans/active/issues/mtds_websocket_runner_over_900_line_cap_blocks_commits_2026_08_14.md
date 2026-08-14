@@ -92,12 +92,15 @@ because a new filename cannot collide with a peer's in-flight edit of an existin
       in this doc who was consulted or that the owning session is confirmed finished. ✅ I am that owner (authored
       `0974060a` this session, per `mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md`'s P0 diagnose/fix
       todos) — no separate coordination needed, resolved it myself in the same session.
-- [ ] [DATA] P1. Ship the blocked consumer migration once the gate is green —
+- [x] [DATA] P1. Ship the blocked consumer migration once the gate is green —
       `scripts/delete_bybit_spot_spot_nonsense_manifest_2026_07_07.py` still did
       `VENUE_DATA_TYPE_CAPABILITIES.get(_VENUE, {})` then `sorted(caps.keys())` after the typed-record migration, which
       raises `AttributeError` on the new `VenueCapabilityRecord` inside a `--apply` delete script's safety gate; the fix
       plus 10 stale prose references to the deleted `VENUE_DATA_TYPE_NO_BATCH_SOURCE` are sitting uncommitted in the
-      slot-5 checkout — DoD: the fix landed via quickmerge with the gate green.
+      slot-5 checkout — DoD: the fix landed via quickmerge with the gate green. ✅ DONE 2026-08-14 —
+      `market-tick-data-service@5c0d4dae`, gate green beforehand (`✅ ALL QUALITY GATES PASSED (216s)`), landing
+      verified by reading the blobs on `origin/live-defi-rollout` (2 `caps.data_types` hits in the script, 0 remaining
+      `VENUE_DATA_TYPE_NO_BATCH_SOURCE` references repo-wide).
 - [ ] [DATA] P2. Consider whether the file-size gate should report the delta against the cap in its failure message so
       the introducing commit is obvious without a `git show | wc -l` bisect — DoD: a decision recorded here; this is a
       nice-to-have, not a blocker.
