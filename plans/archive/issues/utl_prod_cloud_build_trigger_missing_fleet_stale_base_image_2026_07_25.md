@@ -446,3 +446,19 @@ base-image pipeline without confirming the correct source config/IAM/connection 
     worker-callable resolve action or a wall-specific `_poll_wall_resolution` signal for `cloud_build_router_failure` so
     a genuinely-fixed instance stops re-dispatching fresh workers on every `RESOLUTION_DEADLINE_MINUTES` tick — the
     actual fix has been done since ~15:14Z; every dispatch after that is queue overhead, not real work.
+
+- **2026-08-14 (slot 5, cicd) — FIFTH dispatch of the same re-escalation loop for `agt-774a0e`, re-verified LIVE ~4h
+  fresher than slot 6's snapshot, confirmed still-fixed. No new fix applied.** Same known gap (no `_QG_SIGNAL_WALLS`
+  entry for `cloud_build_router_failure` → `verify_dispatched_escalations` re-dispatches on every deadline tick with no
+  auto-resolve signal). Measured live against GCP (not trusting prior notes):
+  - **Trigger unchanged, still correctly configured**: `gcloud builds triggers describe unified-trading-library-prod` →
+    `e9da54bb-ca66-40f6-b5fd-5caff6bfebf1`, `createTime 2026-07-25T12:44:13Z`.
+  - **Base image EVEN FRESHER than slot 6's snapshot**: artifact registry now shows `0.81.3`/`0.81.3-41747d0cbbbe`/
+    `latest` at `UPDATE_TIME 2026-08-13T23:59:08Z` (vs. slot 6's `0.81.2` at `19:52:27Z`) — the pipeline kept publishing
+    successfully in the intervening ~4h.
+  - **Recent trigger builds all SUCCESS**: `fc1916e8` (23:52:05Z) + `781e1751` (23:50:50Z) SUCCESS; zero TIMEOUTs since
+    the governor-disable fix landed (last TIMEOUT remains `42db60a4` at 13:13:02Z on 2026-08-13, pre-fix).
+  - **No new code fix required — closing this dispatch as confirmed-already-fixed**, same verdict as slots 14/28/6.
+    Reiterating the standing follow-up (still out of cicd one-shot scope, now confirmed FIVE times over): wire a
+    worker-callable resolve action or a wall-specific `_poll_wall_resolution` signal for `cloud_build_router_failure` so
+    a genuinely-fixed instance stops re-dispatching fresh workers every `RESOLUTION_DEADLINE_MINUTES` tick.
