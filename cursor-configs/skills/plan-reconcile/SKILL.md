@@ -55,10 +55,18 @@ dedicated `asset_group` enum values** (`ao`/`ci`/`infrastructure` since 2026-07-
 `docspec.py`/`PLAN_FORMAT.md`/`doc-frontmatter-schema.md` §5) — filter on `asset_group` directly exactly like the 5 real
 AGs; `parent_epic` (`ao_consolidated_closeout_2026_07_25.md` / `ci_consolidated_closeout_2026_07_25.md` /
 `infra_consolidated_closeout_2026_07_25.md` / `ui_consolidated_closeout_2026_07_30.md`'s own Sources lists) is only a
-secondary hint for docs the tag doesn't yet cover, same caveat as `/ag-closeout-audit`. The normative refs
-(`PLAN_FORMAT.md`, `task_template.md`, `INDEX.md`) and codex stay in scope for EVERY shard (they're corpus-wide policy,
-not tranche-owned). `plans/ACTIVE_INDEX.md` is a self-declared STALE Day-1-2 historical relic (superseded by
-`plans/active/INDEX.md`, per its own banner) — not a normative ref, out of scope for contradiction-checking.
+secondary hint for docs the tag doesn't yet cover, same caveat as `/ag-closeout-audit`. **Compute the tranche's doc set
+via `.venv/bin/python scripts/plan-hygiene/generate_tranche_doc_inventory.py --tranche <tranche>` — never a same-line
+`rg -l '^asset_group:.*<tranche>'`-style grep**: that misses a multi-line `asset_group:\n  [<tranche>]`-shaped
+frontmatter block (confirmed live 2026-08-11, `plans/active/issues/plan_reconciler_findings_ui_2026_08_11.md` — a
+same-line grep found only 9 `ui`-tagged docs against the script's real 24, missing
+`data_status_tab_and_downloads_remediation_2026_06_16.md` and `deployment_registry_firestore_migration_2026_07_14.md`
+outright); the script shares the same PyYAML-based `docspec.py` frontmatter parser as
+`generate_ag_closeout_audit_candidates.py` and `generate_na_doc_tranche_inventory.py`, so all three agree on membership.
+The normative refs (`PLAN_FORMAT.md`, `task_template.md`, `INDEX.md`) and codex stay in scope for EVERY shard (they're
+corpus-wide policy, not tranche-owned). `plans/ACTIVE_INDEX.md` is a self-declared STALE Day-1-2 historical relic
+(superseded by `plans/active/INDEX.md`, per its own banner) — not a normative ref, out of scope for
+contradiction-checking.
 
 **Why shard**: this corpus routinely runs 500+ active plans/issues — a full sweep is expensive enough that a
 scheduled/cron AO trigger benefits from a smaller, bounded-runtime shard instead of always paying for the whole corpus.
