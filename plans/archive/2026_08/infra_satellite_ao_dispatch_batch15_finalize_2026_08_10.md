@@ -101,8 +101,9 @@ early, regardless of whether the batch is `draft` or `active` at the time.
 - [x] ✅ [DOC] P3. **Archived both `infra_satellite_ao_dispatch_batch15_2026_08_10.md` and
       `infra_satellite_ao_dispatch_batch15_finalize_2026_08_10.md`** via the standard 6-step archival ritual — `git mv`
       to `plans/archive/2026_08/`, banner + `status: complete` on both, every corpus referrer path repointed (incl.
-      `codex/05-infrastructure/shared-host-tmp-tmpfs-capacity.md`), INDEX.md regenerated. `check_ag_closeout_linkage.py`
-      0 orphans (baseline 0) + `regenerate_active_plan_inventory.py` verified clean. (repo: unified-trading-pm)
+      `/codex/05-infrastructure/shared-host-tmp-tmpfs-capacity.md`), INDEX.md regenerated.
+      `check_ag_closeout_linkage.py` 0 orphans (baseline 0) + `regenerate_active_plan_inventory.py` verified clean.
+      (repo: unified-trading-pm)
 
 ## Codex SSOTs
 
@@ -129,5 +130,5 @@ early, regardless of whether the batch is `draft` or `active` at the time.
 - **2026-08-10 (slot-17, infra) — todo 3**: Archived `infra_satellite_ao_dispatch_batch15_2026_08_10.md` to
   `plans/archive/2026_08/` via the standard 6-step ritual, then archived this finalize plan alongside it (all 3 todos
   now done, unlocked). Both `git mv`'d + banner + `status: complete`; every corpus referrer repointed (incl.
-  `codex/05-infrastructure/shared-host-tmp-tmpfs-capacity.md`); INDEX.md regenerated. `check_ag_closeout_linkage.py` 0
+  `/codex/05-infrastructure/shared-host-tmp-tmpfs-capacity.md`); INDEX.md regenerated. `check_ag_closeout_linkage.py` 0
   orphans (baseline 0) + `regenerate_active_plan_inventory.py` clean.

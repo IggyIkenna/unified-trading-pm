@@ -198,9 +198,10 @@ behaviour recorded.
 > `agent-orchestrator@b5d38671d`) and this doc was fully archived. Done now: added a "Condition-derived BLOCKED rows
 > auto-retire..." section to `/codex/04-architecture/agent-orchestrator-alerting.md` documenting the `condition_cleared`
 > exit, the `condition_key`/`_CONDITION_SEEN_SET_RELPATHS` mechanism, and the `auto:condition_cleared` closure-bookend
-> treatment (verified absent before this edit: `grep -c auto-retir codex/04-architecture/agent-orchestrator-alerting.md`
-> → 0). No matching home found in `agent-orchestrator-scheduled-jobs.md` (that doc covers systemd-timer dispatch
-> mechanics, not blocked-queue reconciliation semantics) — not force-fit there.
+> treatment (verified absent before this edit:
+> `grep -c auto-retir /codex/04-architecture/agent-orchestrator-alerting.md` → 0). No matching home found in
+> `agent-orchestrator-scheduled-jobs.md` (that doc covers systemd-timer dispatch mechanics, not blocked-queue
+> reconciliation semantics) — not force-fit there.
 
 ## Why this is two plans, and why this one is `sequential: true`
 
