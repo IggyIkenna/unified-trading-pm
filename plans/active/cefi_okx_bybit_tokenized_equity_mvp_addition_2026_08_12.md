@@ -247,3 +247,34 @@ new symbols") didn't call out — added as a dedicated `[SCRIPT]` todo rather th
   PASSED, verified ancestor of origin/live-defi-rollout). Note: the `is_equity_perp`/`tracks_equity` catalogue **tags**
   for the OKX `X<UNDERLYING>` prefix form are a SEPARATE concern (the plan's own `_cefi_equity_tags` todo, now landed as
   instruments-service@aa3ded23) — orthogonal to this InstrumentRecord-registration todo.
+
+- **2026-08-14 — Todo 6 (launch the backfill) — LAUNCH READY, GATED on Tardis 1-VM cap, not launched this session.**
+  Slot-14 data_engineering worker. Confirmed the sibling equity-perp Tardis backfill (referenced by this todo's "or the
+  equity perps" wording) is itself STILL OPEN (`cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Phase 2
+  sub-item 4, `cefi_consolidated_closeout_2026_07_18.md` Track 0) — no prior launch to mirror by commit, so the plan was
+  built directly from the launcher script + the "Venue plumbing" finding already in this log (existing Tardis pipeline,
+  no new adapter). **Verified launch plan**
+  (`DRY_RUN=1 VENUES="OKX-SPOT BYBIT-SPOT" YEARS="2025 2026" SINGLE_VM_QUEUE=1 bash deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh`):
+  resolves to exactly ONE combined VM (`heavy|trades;book_snapshot_5`, e2-highmem-16,
+  `VM_START_DATE=2025-01-01 VM_END_DATE=2026-08-13`) covering both venues — no `--instrument-ids`/`VM_INSTRUMENT_IDS`
+  override needed, since the launcher is catalogue-mvp-driven (no code change required; confirmed by reading
+  `scripts/vm/launch-cefi-sharded-backfill.sh` directly, not just this log's earlier note) and the tokenized-equity
+  `SPOT_PAIR` symbols are already in the catalogue MVP universe per Todos 2/3/5 above. Existing ordinary
+  OKX-SPOT/BYBIT-SPOT shards for 2025-2026 will skip-if-fresh; only the newly-registered tokenized-equity instruments
+  (Bybit xstocks from 2025-06-30, OKX X-tokens from 2026-07-15) should actually capture new data. **Not launched**:
+  `gcloud compute instances list` (project `central-element-323112`) showed `cefi-okx-swap-2026-light-20260814-020834`
+  RUNNING (started 2026-08-13T18:09 PDT), progressing (`PROGRESS.json.last_completed_date` advanced
+  2026-01-01→2026-03-17 between VM start and this check) — the Tardis hard cap is 1 concurrent VM across both clouds
+  (operator ruling 2026-07-16), so this launch would be refused by the script's own `tardis_concurrency_guard` (or, if
+  forced past it, risks the N>1 mutual-403/false-attempted_failed regression the cap exists to prevent — NOT overridden
+  here). At the measured processing rate (~76 days/101 min ≈ 0.75 days/min) that VM's own remaining ~149 days to its
+  `end_date=2026-08-13` projects to ~3.3h more runtime as of this check (2026-08-14T02:5x UTC) — task skipped with
+  `reason_code: GATED` rather than held open in this session. **Also fixed in passing** (misleading-doc HARD RULE): the
+  script's header comment (lines 13-24) still described a 2026-04-19 hand-curated per-venue symbol-list filter as the
+  operative behavior; it was superseded 2026-06-23 by the catalogue-mvp-driven default documented later in the same file
+  (`cefi_universe_capture_rule` block) but never corrected — annotated as historical/superseded,
+  deployment-service@09955cb880. **Next worker**: run the exact command above (drop `DRY_RUN=1`) once the concurrency
+  guard allows it (re-check
+  `gcloud compute instances list --project=central-element-323112 --filter="metadata.items.key=VM_TARDIS_CONSUMER AND metadata.items.value=1"`
+  is empty, or the running VM's heartbeat/PROGRESS.json show it finished/terminated), then flip this checkbox with the
+  VM name + evidence.
