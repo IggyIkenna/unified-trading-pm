@@ -185,19 +185,19 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       needs its own bound.
 
       **RESOLVED 2026-08-02 (slot 10)**: `deployment-api@34a596b`. Took the documented alternative to raising the
-                                                                  ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
-                                                                  means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
-                                                                  accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
-                                                                  `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
-                                                                  `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
-                                                                  `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
-                                                                  observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
-                                                                  `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
-                                                                  AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
-                                                                  isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
-                                                                  isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
-                                                                  "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
-                                                                  records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
+                                                                      ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
+                                                                      means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
+                                                                      accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
+                                                                      `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
+                                                                      `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
+                                                                      `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
+                                                                      observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
+                                                                      `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
+                                                                      AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
+                                                                      isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
+                                                                      isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
+                                                                      "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
+                                                                      records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
 
 - [x] ✅ [INFRA] P3. The `data-status-rollup-worker` `GcsEventSink` (the
       `log_event(SERVICE_PROCESSED/SERVICE_FAILED, ...)` calls in `run_rollup`) has not written a new dated prefix under
@@ -669,6 +669,25 @@ worth closing the same way (isolate + surface the real error) rather than leavin
   leaving it bundled under a now-closed checkbox — it does not share MDPS's root cause (its own bucket was confirmed
   live-healthy at the same check).
 
+- **data_engineering (slot-12) 2026-08-14T~19:15Z**: closed the `features-onchain-service` P2 follow-up — CORRECTING the
+  17:20Z entry's "does not share MDPS's root cause" conclusion above. Live-traced the code (not the prior session's
+  primary-bucket-only check):
+  `sports.py::_UPSTREAM_SERVICE_MAP["features-onchain-service"] = "market-tick-data-service"` routes every onchain
+  manifest/coverage build through a hidden reference-driven read (`_maybe_reference_expected_dates` ->
+  `_get_reference_expected_dates` -> `_read_upstream_venue_dates`) of the SAME
+  `market-data-tick-defi-prd-central-element-323112` bucket MDPS's own read stalls on — confirmed via
+  `SERVICE_TO_KIND["market-tick-data-service"]="market-data"` + `asset_group="defi"` resolving to that exact bucket, and
+  via `gcloud logging read` showing manifest AND coverage failing together every occurrence in the last 24h
+  (2026-08-13T22:22:58Z / 2026-08-14T03:44:03Z / 07:47:00Z / 10:27:15Z), matching MDPS's own dual-timeout signature
+  exactly rather than a single-step failure. This also corrects the rollup worker's own code comment, which had
+  concluded "genuinely NOT root-caused yet" based on checking a DIFFERENT cross-bucket path
+  (`defi.py::_collect_defi_index_frames`, not the `_UPSTREAM_SERVICE_MAP` one) and a DEFI-grid-cost hypothesis that was
+  never actually right for this service. Resolution: same as MDPS's own P2 — accepted as a structural gap, no
+  rollup-worker-side fix (the shared bucket's lock contention is the already-tracked root cause; a per-service timeout
+  override can't beat the lock's ~85-90% hold rate within the shared sweep budget). Shipped `deployment-api@77b60c445e`
+  (comment-only root-cause documentation + `test_onchain_dual_timeout_does_not_block_next_service` regression test).
+  Full QG green, verified on origin.
+
 ## Follow-ups
 
 - [x] ✅ [DATA] P1. **NEW (2026-08-14), split out of the P0 below**: `MANIFEST_CONSOLIDATION_STALLED` is emitted
@@ -734,39 +753,39 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       Progress Log for the live run's outcome once it completes. Blocks the P2 below.
 
       **TEMPORARILY CLEARED 2026-08-14T06:20:36Z (slot-21), RECURRED — see the REOPENED note above and the newest
-                  Progress Log entries; do not treat this sub-section as the current status.** The peer's
-                  `defi-manifest-force-consolidate-20260814-031954` VM
-                      referenced above never actually ran `consolidate()` — it self-deleted ~2min after boot on an unrelated
-                      bootstrap bug (`VM_SERVICE=unified_trading_library` wasn't a recognised `SERVICE_TARBALLS` key, so the setup
-                      script fell through to installing all 19 repo tarballs, which then failed `uv pip install -e` on unsatisfiable
-                      cross-repo pins). Continuing from where that VM died (the launcher itself is a genuinely reusable asset now —
-                      fixed forward through 3 further bugs rather than hand-rolling a new one-off each time), fixed in sequence, each
-                      confirmed live before moving to the next: (1) `VM_SERVICE=deployment_service` (a recognised key whose tarball
-                      set already covers everything the consolidator CLI needs) — `deployment-service@42c003fbff`; (2)
-                      `setup-data-pipeline-vm.sh` had no `VM_TASK` dispatch branch for `defi-manifest-force-consolidate` at all (the
-                      script hard-refuses an unrecognised `VM_TASK` even with `VM_BACKFILL_CMD` present, by design) — added it to
-                      the existing generic one-off-script branch — `deployment-service@2dd149a321`; (3) the launcher's own
-                      bucket-name construction interpolated `DEPLOYMENT_ENV=prod` directly, producing the NONEXISTENT
-                      `market-data-tick-defi-prod-...` (bucket names use the 3-char tag `prd`, not the long form) — caught before
-                      the VM did any real work, deleted within seconds — `deployment-service@a32eff50b8`; (4) the consolidator ran
-                      for real (~8min) and hit a genuine DISK-based `max_temp_directory_size` OOM at 76.1GiB on the 100GB boot disk
-                      (NOT the `memory_limit` pragma — 16GB held fine the whole run) — bumped `BOOT_DISK_GB` 100→500 —
-                      `deployment-service@2ffc79af57`. The 5th launch (`defi-manifest-force-consolidate-20260814-052225`) completed
-                      cleanly in ~54min: `manifest-consolidator bucket=market-data-tick-defi-prd-central-element-323112 success=True
-                      shards=16 rows_in=159412020 rows_out=159218124 dedup_dropped=193896 latency_ms=3284266.8 error=-`, wrote a
-                      fresh 6.35GB `_index/availability_index.parquet` (confirmed via `gcs_describe_object`:
-                      `last_modified=2026-08-14T06:20:44Z`, `size=6353478442`), VM self-deleted on completion. **Live-verified the
-                      underlying stall itself cleared**, not just the one force-run: the very next incremental cron cycle
-                      (06:20:44Z, `gcloud logging read`) ran `success=True ... pruned_shards=15` with NO `SILENT STALL` CRITICAL
-                      log — confirms the incremental path is healthy again against the freshly-rebuilt canonical, not just this one
-                      force-rebuild succeeding in isolation. Each of the 4 fixes above shipped through the full Pass-1 QG →
-                      quickmerge → verify-on-origin loop before the next relaunch — none were combined into one speculative commit.
-                      The P0's own earlier root-cause entry (execution-timeout-vs-merge-duration mismatch on the Cloud Run job)
-                      explains WHY the stall recurred but is a separate, still-open concern for the STANDING Cloud Run job's own
-                      `timeoutSeconds=3600` — this VM-based one-off bypassed that ceiling entirely (no Cloud Run timeout applies to
-                      a GCE VM), so today's incident is closed, but nothing here changes the Cloud Run job's own timeout ceiling for
-                      a FUTURE recurrence at an even larger corpus size; that's worth a dedicated follow-up if the corpus keeps
-                      growing, not assumed fixed by this entry.
+                      Progress Log entries; do not treat this sub-section as the current status.** The peer's
+                      `defi-manifest-force-consolidate-20260814-031954` VM
+                          referenced above never actually ran `consolidate()` — it self-deleted ~2min after boot on an unrelated
+                          bootstrap bug (`VM_SERVICE=unified_trading_library` wasn't a recognised `SERVICE_TARBALLS` key, so the setup
+                          script fell through to installing all 19 repo tarballs, which then failed `uv pip install -e` on unsatisfiable
+                          cross-repo pins). Continuing from where that VM died (the launcher itself is a genuinely reusable asset now —
+                          fixed forward through 3 further bugs rather than hand-rolling a new one-off each time), fixed in sequence, each
+                          confirmed live before moving to the next: (1) `VM_SERVICE=deployment_service` (a recognised key whose tarball
+                          set already covers everything the consolidator CLI needs) — `deployment-service@42c003fbff`; (2)
+                          `setup-data-pipeline-vm.sh` had no `VM_TASK` dispatch branch for `defi-manifest-force-consolidate` at all (the
+                          script hard-refuses an unrecognised `VM_TASK` even with `VM_BACKFILL_CMD` present, by design) — added it to
+                          the existing generic one-off-script branch — `deployment-service@2dd149a321`; (3) the launcher's own
+                          bucket-name construction interpolated `DEPLOYMENT_ENV=prod` directly, producing the NONEXISTENT
+                          `market-data-tick-defi-prod-...` (bucket names use the 3-char tag `prd`, not the long form) — caught before
+                          the VM did any real work, deleted within seconds — `deployment-service@a32eff50b8`; (4) the consolidator ran
+                          for real (~8min) and hit a genuine DISK-based `max_temp_directory_size` OOM at 76.1GiB on the 100GB boot disk
+                          (NOT the `memory_limit` pragma — 16GB held fine the whole run) — bumped `BOOT_DISK_GB` 100→500 —
+                          `deployment-service@2ffc79af57`. The 5th launch (`defi-manifest-force-consolidate-20260814-052225`) completed
+                          cleanly in ~54min: `manifest-consolidator bucket=market-data-tick-defi-prd-central-element-323112 success=True
+                          shards=16 rows_in=159412020 rows_out=159218124 dedup_dropped=193896 latency_ms=3284266.8 error=-`, wrote a
+                          fresh 6.35GB `_index/availability_index.parquet` (confirmed via `gcs_describe_object`:
+                          `last_modified=2026-08-14T06:20:44Z`, `size=6353478442`), VM self-deleted on completion. **Live-verified the
+                          underlying stall itself cleared**, not just the one force-run: the very next incremental cron cycle
+                          (06:20:44Z, `gcloud logging read`) ran `success=True ... pruned_shards=15` with NO `SILENT STALL` CRITICAL
+                          log — confirms the incremental path is healthy again against the freshly-rebuilt canonical, not just this one
+                          force-rebuild succeeding in isolation. Each of the 4 fixes above shipped through the full Pass-1 QG →
+                          quickmerge → verify-on-origin loop before the next relaunch — none were combined into one speculative commit.
+                          The P0's own earlier root-cause entry (execution-timeout-vs-merge-duration mismatch on the Cloud Run job)
+                          explains WHY the stall recurred but is a separate, still-open concern for the STANDING Cloud Run job's own
+                          `timeoutSeconds=3600` — this VM-based one-off bypassed that ceiling entirely (no Cloud Run timeout applies to
+                          a GCE VM), so today's incident is closed, but nothing here changes the Cloud Run job's own timeout ceiling for
+                          a FUTURE recurrence at an even larger corpus size; that's worth a dedicated follow-up if the corpus keeps
+                          growing, not assumed fixed by this entry.
 
 - [x] ✅ [DATA] P1. **NEW (2026-08-13)**: root-cause + fix the `TypeError: '<' not supported between NoneType and str` /
       `AttributeError: Can only use .str accessor with string values!` errors now failing 7 of 14 `_DEFAULT_SERVICES`
@@ -826,12 +845,37 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       asserts the property that matters (loud, isolated failure), so no new test was needed. A real fix (MDPS tolerating
       a stale-but-bounded read, or its read moving off the shared sequential-sweep budget) is a genuine architecture
       call, out of scope here — not attempted.
-- [ ] [DATA] P2. `features-onchain-service`'s identical-looking 420s timeout is a SEPARATE, still-unexplained cause,
+- [x] ✅ [DATA] P2. `features-onchain-service`'s identical-looking 420s timeout is a SEPARATE, still-unexplained cause,
       split out of the combined P2 above (2026-08-14, slot-11) since it does NOT share MDPS's now-closed root cause. Its
       own bucket (`features-defi-prd-central-element-323112`) was confirmed live-healthy (index 351KB, fresh at 30min
       old, no consolidator lock held) at the same check that found MDPS's bucket stalled, so its timeout must originate
       elsewhere (likely the downstream honest-coverage grid compute, not the manifest read) — needs its own trace, not
-      assumed resolved by the MDPS P0/P2 work above. Repo: deployment-api.
+      assumed resolved by the MDPS P0/P2 work above. Repo: deployment-api. **ROOT-CAUSED 2026-08-14 (slot-12) —
+      CORRECTING the "does NOT share MDPS's root cause" premise above: it does, via a hidden cross-bucket path the prior
+      session's check missed.** `sports.py::_UPSTREAM_SERVICE_MAP` maps
+      `"features-onchain-service" ->     "market-tick-data-service"`, and every `_REFERENCE_DRIVEN_SERVICES` member
+      (onchain included) runs `venue_resolution.py::_maybe_reference_expected_dates` -> `_get_reference_expected_dates`
+      -> `_read_upstream_venue_dates` once per category during BOTH its manifest AND coverage build
+      (`_build_venue_breakdown` is shared by `manifest_category_builder.py` and `coverage.py` via
+      `venue_resolution_dual_scope.py`) — exactly matching the live pattern: BOTH steps time out together every
+      occurrence (`gcloud logging read`, 24h window: 2026-08-13T22:22:58Z, 2026-08-14T03:44:03Z, 07:47:00Z, 10:27:15Z —
+      all four entries show `manifest rollup failed` + `coverage rollup failed` for `features-onchain-service` within
+      milliseconds of each other). For onchain's DEFI category this resolves (`_resolve_upstream_bucket` ->
+      `SERVICE_TO_KIND["market-tick-data-service"]` = `"market-data"` + `asset_group="defi"`) to the SAME
+      `market-data-tick-defi-prd-central-element-323112` bucket as MDPS's own direct read — reached via
+      `_read_index_cached` -> `read_availability_index`, the identical lock-contention wait path already accepted as a
+      structural gap for MDPS's own P2 above (the consolidator now runs healthy ~57-58min cycles back-to-back with only
+      a ~10min free gap per hour). Onchain's own primary bucket (`features-defi-prd-central-element-323112`) IS healthy,
+      exactly as the prior session found — the earlier "does NOT share MDPS's root cause" conclusion was based only on
+      checking that primary bucket, missing this separate reference-driven read entirely. **Resolution: accepted as the
+      SAME structural gap as MDPS's P2, not a separate unexplained cause** — no rollup-worker-side fix applies (the
+      shared bucket's lock contention is the already-tracked root cause); do not add onchain to
+      `_CHILD_JOIN_TIMEOUT_OVERRIDES_S` (a longer wait still can't beat the lock's ~85-90% hold rate within the shared
+      sequential-sweep budget, per MDPS's own closing analysis). Shipped `deployment-api@77b60c445e` (comment-only
+      root-cause documentation correcting both this doc's stale premise and the rollup worker's own prior "genuinely NOT
+      root-caused yet" hypothesis, + a regression test — `test_onchain_dual_timeout_does_not_block_next_service` —
+      asserting the dual manifest/coverage timeout stays loud/isolated and doesn't block the next queued service). Full
+      QG green, verified on origin (`git merge-base --is-ancestor` confirmed).
 - [ ] [DATA] P3. Live-verify ml-service's full.json.gz actually refreshes on a real */20 uts-prod-data-status-rollup
       cron cycle post-fix (deployment-api@aaa0d1d)
 - [x] ✅ [DATA] P1. Once
