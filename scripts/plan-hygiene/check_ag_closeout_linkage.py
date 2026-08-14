@@ -66,7 +66,36 @@ Usage:
   python3 scripts/plan-hygiene/check_ag_closeout_linkage.py [--quiet] [--update-baseline]
   python3 scripts/plan-hygiene/check_ag_closeout_linkage.py --only <path> [<path> ...]
   python3 scripts/plan-hygiene/check_ag_closeout_linkage.py --tranche <name> [--quiet]
+  python3 scripts/plan-hygiene/check_ag_closeout_linkage.py --diff-base <ref> [--quiet]
 Exit 0 if the orphan count is <= baseline. NEVER hand-raise a baseline entry.
+
+``--diff-base <ref>`` (2026-08-14, extends the proven pattern from check_reference_paths.py /
+check_na_corpus_ratchet.py / check_archive_candidates.sh / check_effort_signal_ratchet.py — see
+their own --diff-base docs + plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_
+2026_08_09.md): this check was itself named as "another corpus-wide ratchet with no diff-scoped
+fast path — the same class" in na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_
+2026_08_10.md's own todo list, having independently tripped the identical lag-deadlock (frozen
+head reported 1 orphan baseline 0; LDR tip reported 0 the same minute — transient corpus state no
+individual commit owned, and the eventual drain was attributed to someone else's unrelated
+commit). Diff-scoped mode computes the orphan SET at HEAD (live worktree) and the orphan SET at
+`<ref>` (read via `git ls-tree`/`cat-file --batch`, never a live-disk read — no worktree
+checkout), and fails only on a path that is an orphan at HEAD but was NOT an orphan at `<ref>`.
+Unlike the flat string-diff the other consumers use, this compares by PATH IDENTITY (the doc
+itself), not by violation message text, since this check's message can legitimately reword (e.g.
+the archived-coordinator wording) across two states for the SAME underlying orphan — comparing
+paths avoids reading a pure message-text change as a false "new" orphan.
+
+Building the base-ref orphan set replicates the full graph/closeout-family/body-blob computation
+against `<ref>` content instead of the worktree: `_scan_dirs_at_ref` reads TARGET_DIRS (direct
+children only, exempt-filtered — mirrors target_files()) and CLOSEOUT_SEARCH_DIRS (recursive,
+unfiltered — mirrors closeout_search_paths()) via git, so no closeout-family body ever needs a
+live-disk fallback read for the base state. `related:` resolution against `<ref>` is backed by a
+ref-scoped basename index (`git ls-tree -r <ref> -- plans codex`, same directory scope
+check_reference_paths.py's own diff-base already uses) instead of `_md_basename_index()`'s live
+`PM_DIR.rglob`. Falls back safely to "no orphans at base" (every current orphan reads as new) if
+`<ref>` cannot be resolved locally — callers MUST verify the ref is fetched/resolvable before
+passing --diff-base (see run_hygiene_sweep.sh's DIFF_BASE_REF guard, which already gates every
+other --diff-base consumer this same way).
 
 ``--tranche <name>`` (2026-08-14, additive/opt-in): scopes the printed orphan list + count to
 ONE tranche (mirrors generate_ag_closeout_audit_candidates.py's --tranche flag) — a real,
@@ -215,7 +244,9 @@ def resolve_related_entry(entry: str, from_path: Path) -> Path | None:
 
 
 def build_related_graph(
-    all_docs: dict[Path, dict], extra_nodes: frozenset[Path] = frozenset()
+    all_docs: dict[Path, dict],
+    extra_nodes: frozenset[Path] = frozenset(),
+    resolve_fn=resolve_related_entry,
 ) -> dict[Path, set[Path]]:
     """Undirected adjacency from every doc's related: list, resolved to real files.
 
@@ -223,13 +254,17 @@ def build_related_graph(
     edge resolution runs, so a `related:` entry that resolves to one of them (e.g. an active
     doc linking to an ARCHIVED closeout family doc) is still recorded as an edge — the target
     membership check below (`target in graph`) would otherwise silently drop it.
+
+    `resolve_fn` defaults to the live-disk `resolve_related_entry` above; --diff-base mode
+    passes a ref-scoped resolver instead (see `_ref_resolver`) so graph construction never
+    touches the live worktree when evaluating a historical ref.
     """
     graph: dict[Path, set[Path]] = {p: set() for p in (*all_docs, *extra_nodes)}
     for path, fm in all_docs.items():
         for entry in docspec._as_list(fm.get("related")):
             if not isinstance(entry, str):
                 continue
-            target = resolve_related_entry(entry, path)
+            target = resolve_fn(entry, path)
             if target is not None and target in graph:
                 graph[path].add(target)
                 graph[target].add(path)
@@ -330,14 +365,16 @@ def _orphans_for(
     all_docs: dict[Path, dict],
     all_bodies: dict[Path, str],
     closeout_family: dict[str, set[Path]],
+    graph_resolver=resolve_related_entry,
 ) -> dict[Path, str]:
     """Every current orphan among `all_docs`, given a precomputed closeout_family (paths only —
     filename-glob-derived, does not depend on doc content, so it's safe to compute ONCE and
     reuse across the current-state pass and every staged file's HEAD-content-override pass).
-    Shared by full-sweep mode and `--only` mode so the two can never define "an orphan"
-    differently."""
+    Shared by full-sweep mode, `--only`, and `--diff-base` so no mode can ever define "an
+    orphan" differently. `graph_resolver` defaults to the live-disk resolver; --diff-base
+    mode passes a ref-scoped one (see `_ref_resolver`)."""
     closeout_targets = frozenset(p for fam in closeout_family.values() for p in fam)
-    graph = build_related_graph(all_docs, extra_nodes=closeout_targets)
+    graph = build_related_graph(all_docs, extra_nodes=closeout_targets, resolve_fn=graph_resolver)
 
     closeout_body_blob: dict[str, str] = {}
     for ag, fam in closeout_family.items():
@@ -346,7 +383,10 @@ def _orphans_for(
             body = all_bodies.get(p)
             if body is None:
                 # archived closeout doc, or a doc excluded by an --only override — not
-                # necessarily in the (possibly overridden) all_bodies scan.
+                # necessarily in the (possibly overridden) all_bodies scan. --diff-base mode
+                # never hits this fallback: its all_bodies is pre-merged with every
+                # closeout-family doc's ref content (see _run_diff_base), so this stays a
+                # LIVE-DISK read used only by the worktree-backed callers (full-sweep/--only).
                 try:
                     _, body = docspec.parse_frontmatter(p.read_text(encoding="utf-8"))
                 except (OSError, UnicodeDecodeError):
@@ -410,6 +450,163 @@ def _head_text(path: Path) -> str | None:
     return proc.stdout if proc.returncode == 0 else None
 
 
+def _tree_entries_md(ref: str, rel_dirs: tuple[str, ...]) -> list[tuple[str, str]]:
+    """[(relpath, blob_sha), ...] for .md files under `rel_dirs` at `ref` (recursive) — one
+    `git ls-tree -r` call regardless of corpus size. Mirrors check_reference_paths.py's
+    `_tree_entries_md` helper of the same name/shape."""
+    result = subprocess.run(
+        ["git", "-C", str(PM_DIR), "ls-tree", "-r", ref, "--", *rel_dirs],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return []
+    entries: list[tuple[str, str]] = []
+    for line in result.stdout.splitlines():
+        meta, _, path = line.partition("\t")
+        parts = meta.split()
+        if len(parts) != 3 or parts[1] != "blob":
+            continue
+        if path.endswith(".md"):
+            entries.append((path, parts[2]))
+    return entries
+
+
+def _batch_read_blobs(shas: list[str]) -> dict[str, str]:
+    """sha -> decoded text content, via ONE `git cat-file --batch` call for the whole list.
+    Mirrors check_reference_paths.py's `_batch_read_blobs` helper of the same name/shape."""
+    if not shas:
+        return {}
+    proc = subprocess.run(
+        ["git", "-C", str(PM_DIR), "cat-file", "--batch"],
+        input=("\n".join(shas) + "\n").encode("utf-8"),
+        capture_output=True,
+        check=False,
+    )
+    out = proc.stdout
+    result: dict[str, str] = {}
+    pos = 0
+    while pos < len(out):
+        nl = out.index(b"\n", pos)
+        header = out[pos:nl].decode("utf-8", "replace").split()
+        if len(header) != 3:
+            break
+        sha, _obj_type, size_s = header
+        size = int(size_s)
+        start = nl + 1
+        result[sha] = out[start : start + size].decode("utf-8", "replace")
+        pos = start + size + 1  # +1 skips the trailing newline after object data
+    return result
+
+
+def _scan_dirs_at_ref(
+    ref: str, rel_dirs: tuple[str, ...], *, direct_children_only: bool, filter_exempt: bool
+) -> tuple[dict[Path, dict], dict[Path, str]]:
+    """Parse frontmatter+body for every .md under `rel_dirs` at `ref` (git-backed, never a
+    live-disk read). `direct_children_only` restricts each dir to its own immediate .md files
+    (mirrors target_files()'s non-recursive `base.glob("*.md")`); False recurses (mirrors
+    closeout_search_paths()'s `base.rglob(...)`). `filter_exempt` applies docspec.is_exempt
+    (a path-string predicate, no disk I/O — safe against historical ref content), matching
+    target_files()'s candidacy filter."""
+    docs: dict[Path, dict] = {}
+    bodies: dict[Path, str] = {}
+    entries = _tree_entries_md(ref, rel_dirs)
+    blobs = _batch_read_blobs([sha for _, sha in entries])
+    for relpath, sha in entries:
+        if direct_children_only and str(Path(relpath).parent) not in rel_dirs:
+            continue
+        if filter_exempt and docspec.is_exempt(relpath):
+            continue
+        text = blobs.get(sha)
+        if text is None:
+            continue
+        try:
+            fm, body = docspec.parse_frontmatter(text)
+        except yaml.YAMLError:
+            # Malformed frontmatter at this historical ref (e.g. an archived doc whose YAML
+            # was never valid to begin with) — unparseable, same as fm is None below. A
+            # corrupt doc elsewhere in the corpus must never crash this check.
+            continue
+        if fm is None:
+            continue
+        p = PM_DIR / relpath
+        docs[p] = fm
+        bodies[p] = body
+    return docs, bodies
+
+
+def _ref_resolver(existing_relpaths: set[str], basename_index: dict[str, list[str]]):
+    """Build a resolve_related_entry-shaped callable backed by `ref` tree membership instead
+    of live disk — same resolution order as resolve_related_entry (leading-slash exact match;
+    same-dir relative .md; basename fallback; bare-slug under plans/)."""
+
+    def resolver(entry: str, from_path: Path) -> Path | None:
+        entry = entry.strip()
+        if not entry:
+            return None
+        if entry.startswith("/"):
+            rel = entry.lstrip("/")
+            return (PM_DIR / rel) if rel in existing_relpaths else None
+        if entry.endswith(".md"):
+            from_rel = from_path.relative_to(PM_DIR).as_posix()
+            candidate_rel = (Path(from_rel).parent / entry).as_posix()
+            if candidate_rel in existing_relpaths:
+                return PM_DIR / candidate_rel
+            for hit in basename_index.get(Path(entry).name, ()):
+                return PM_DIR / hit
+            return None
+        for hit in basename_index.get(f"{entry}.md", ()):
+            if hit.startswith("plans/"):
+                return PM_DIR / hit
+        return None
+
+    return resolver
+
+
+def _run_diff_base(base_ref: str, quiet: bool) -> int:
+    """Diff-scoped mode: fail only on orphans NEW at HEAD vs `base_ref` — see the module
+    docstring's --diff-base section for the deadlock this closes."""
+    head_docs, head_bodies = _scan_current()
+    head_search_paths = closeout_search_paths()
+    head_family = {ag: closeout_family_for(ag, head_search_paths) for ag in COVERED_ASSET_GROUPS}
+    head_orphans = _orphans_for(head_docs, head_bodies, head_family)
+
+    base_target_docs, base_target_bodies = _scan_dirs_at_ref(
+        base_ref, TARGET_DIRS, direct_children_only=True, filter_exempt=True
+    )
+    base_closeout_docs, base_closeout_bodies = _scan_dirs_at_ref(
+        base_ref, CLOSEOUT_SEARCH_DIRS, direct_children_only=False, filter_exempt=False
+    )
+    # Merge closeout bodies in so _orphans_for's body lookup never falls back to a live-disk
+    # read for the base-ref pass (that fallback would read WORKTREE content, not `base_ref`'s).
+    base_bodies = {**base_closeout_bodies, **base_target_bodies}
+    base_search_paths = list({**base_closeout_docs, **base_target_docs}.keys())
+    base_family = {ag: closeout_family_for(ag, base_search_paths) for ag in COVERED_ASSET_GROUPS}
+
+    basename_entries = _tree_entries_md(base_ref, ("plans", "codex"))
+    basename_index: dict[str, list[str]] = {}
+    for relpath, _sha in basename_entries:
+        basename_index.setdefault(Path(relpath).name, []).append(relpath)
+    existing_relpaths = {relpath for relpath, _sha in basename_entries}
+    resolver = _ref_resolver(existing_relpaths, basename_index)
+
+    base_orphans = _orphans_for(base_target_docs, base_bodies, base_family, graph_resolver=resolver)
+
+    new_orphans = sorted(v for p, v in head_orphans.items() if p not in base_orphans)
+
+    if not quiet:
+        for v in new_orphans:
+            print(f"  ORPHAN  {v}")
+
+    n = len(new_orphans)
+    print(
+        f"{'✅' if n == 0 else '❌'} check_ag_closeout_linkage (--diff-base {base_ref}): "
+        f"{n} NEW orphan(s) vs {base_ref}"
+    )
+    return 0 if n == 0 else 1
+
+
 def _run_only(paths: list[str], quiet: bool) -> int:
     all_docs, all_bodies = _scan_current()
     search_paths = closeout_search_paths()
@@ -468,6 +665,10 @@ def main() -> int:
     if "--only" in sys.argv:
         idx = sys.argv.index("--only")
         return _run_only(sys.argv[idx + 1 :], "--quiet" in sys.argv)
+
+    if "--diff-base" in sys.argv:
+        idx = sys.argv.index("--diff-base")
+        return _run_diff_base(sys.argv[idx + 1], "--quiet" in sys.argv)
 
     quiet = "--quiet" in sys.argv
     update = "--update-baseline" in sys.argv

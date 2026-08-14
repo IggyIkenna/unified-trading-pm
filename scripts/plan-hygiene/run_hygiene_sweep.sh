@@ -451,7 +451,16 @@ run_check "Reference path convention (/plans, /codex — ratchet)" hard python3 
 # to its AG's consolidated closeout plan, so a finding can never silently become an
 # orphan nothing will ever pick up. Same shrinking-ratchet shape as the two checks above
 # (ag_closeout_linkage_baseline.yaml): hard-fails only on a NEW orphan, never on debt.
-run_check "AG-closeout linkage (single-AG docs -> consolidated closeout, ratchet)" hard python3 "$SCRIPT_DIR/check_ag_closeout_linkage.py" --quiet
+# Uses the same DIFF_BASE_REF guard as reference-paths/na-corpus/effort-ratchet above
+# (2026-08-14, extending the proven pattern per na_corpus_ratchet_diff_base_vs_lagging_main_
+# deadlocks_promotion_2026_08_10.md's own todo — this check independently hit the identical
+# lag-deadlock: a frozen-head "1 orphan (baseline 0)" that read as 0 orphans at LDR tip a
+# minute later, transient corpus state no commit under test actually owned).
+AGCLOSEOUT_DIFF_ARGS=()
+if [ -n "$DIFF_BASE_REF" ]; then
+  AGCLOSEOUT_DIFF_ARGS=(--diff-base "$DIFF_BASE_REF")
+fi
+run_check "AG-closeout linkage (single-AG docs -> consolidated closeout, ratchet)" hard python3 "$SCRIPT_DIR/check_ag_closeout_linkage.py" "${AGCLOSEOUT_DIFF_ARGS[@]}"
 # Terminal-status-archived (operator finding 2026-07-25) — no plan/issue doc with a TERMINAL
 # status (issue: resolved/false-positive/superseded; plan: complete/superseded/cancelled) may
 # sit in plans/active/ or plans/active/issues/ instead of plans/archive/ — this is

@@ -348,13 +348,44 @@ than proceeding.
       = 30,498 (grown past this todo's 2026-08-08 6,306+16,207=22,513 count, as expected — real capture continued
       between the audit and the restamp). Fold is a genuine side effect of the 19-token restamp, not assumed: verified
       live, not from the prior mapping-code read alone.
-- [ ] [DATA] P0. **Move `odds_horizon_bucket` (135,980 shards) onto the `odds` + `horizon` model.** Three writers emit
-      it today (MDPS 121,762 / MTDS 14,656 / IS 1,106) at two different grains — 123,642 attributed to venue=ODDS_API
-      plus ~12,000 spread per-bookmaker. Re-attribute to the correct per-bookmaker venue and collapse the double-count;
-      state the resulting single grain explicitly.
-- [ ] [DATA] P1. **Re-attribute the ODDS_API and FOOTYSTATS venue rows.** ODDS_API's 123,642 `odds_horizon_bucket` + 8
-      `trades` and FOOTYSTATS' 22,513 rows must move to `source` with a real per-bookmaker `venue`, or be classified as
-      genuinely source-grain rows that need a different home. Do not silently drop them.
+- [ ] [DATA] P0. **Move `odds_horizon_bucket` onto the `odds` + `horizon` model.** ~~135,980 shards... MDPS 121,762/MTDS
+      14,656/IS 1,106... 123,642 attributed to venue=ODDS_API~~ **STALE — corrected 2026-08-14 (slot-26), live
+      re-measured**: total `odds_horizon_bucket` manifest rows = 1,070,078 (all `source=mdps_odds_horizon_bucket`, the
+      writer's own literal source tag, not 3 distinct sources); MDPS's own already-shipped
+      `migrate_odds_horizon_bucket_venue_to_bookmaker_2026_07_27.py` +
+      `reclassify_odds_horizon_bucket_unresolvable_rows_2026_07_28.py` (git history: `market-data-processing-service`
+      commits `5517dea9`→`bd9f0063`, `b2762129`→`ec2f9aa5`) had **already re-attributed the bulk to real per-bookmaker
+      venues** (BETVICTOR/WILLIAMHILL/FANDUEL/UNIBET/etc — 165,604 captured rows across 26 real bookmakers) before this
+      session — this todo's own scope was mostly already done, just never flipped. Remaining `venue=ODDS_API` captured =
+      30,608, of which **30,602 are the COARSE per-day aggregate rows the migration script deliberately leaves untouched
+      by design** (no league_id/timeframe — not a gap) and **6 are genuine fine (league_id+timeframe populated)
+      unmigrated rows** — live-probed via the script's own `_read_shard_bookmaker_breakdown`: 1
+      (2020-06-12/SUPERLIGA/T-6h, 4 sub-rows) reconciles cleanly (unibet/betvictor/sport888/paddypower ×1 each) and is
+      the ONLY genuine remaining gap; the other 5 are 404 NotFound against their backing `bucketed.parquet` — stale
+      manifest rows for shards `reprocess_sports_odds.py`'s own `_delete_stale_shards()` already removed, which the
+      migration script's own docstring explicitly classifies as expected/left-untouched, not a defect. **Confirmed via
+      the script's own live `--dry-run`** (generation `1786687266036554`, target-shard count == 6, matches the manual
+      probe exactly) — not assumed from the mapping-code read alone. **`--apply` attempted locally twice this session
+      and OOM-killed both times** (SIGKILL at ~28s despite `free -h` showing 18Gi host-available — a sandbox cgroup
+      limit, not genuine host exhaustion) because the script always loads+rewrites the FULL 15.6M-row manifest
+      regardless of target-row count — this is the "manifest rewrites never run locally" HARD RULE biting even at
+      trivial target scale; manifest verified UNCHANGED/uncorrupted after both kills (re-`--dry-run` showed identical
+      generation + target count). **Remaining scope, tracked explicitly, not silently closed**: run `--apply` on a tiny
+      VM (or accept the 4-row gap as a documented, non-blocking residual — an [OPERATOR] proportionality call, since a
+      dedicated VM launch for 4 rows is disproportionate; see Progress Log). Not marking this todo `[x]` until that gap
+      is either closed or explicitly operator-accepted.
+- [x] ✅ [DATA] P1. **Re-attribute the ODDS_API and FOOTYSTATS venue rows.** ~~ODDS_API's 123,642
+      `odds_horizon_bucket` + 8 `trades` and FOOTYSTATS' 22,513 rows~~ **CLOSED 2026-08-14 (slot-26), live re-measured —
+      all three sub-populations resolved, none silently dropped**: (1) ODDS_API's `odds_horizon_bucket` component is the
+      SAME population as the P0 todo above (this todo's number was a stale duplicate of that one) — tracked there, not
+      re-tracked here. (2) FOOTYSTATS venue currently has **0 captured rows of any data_type** — live census
+      (`data_type`/`venue`/`source`/`capture_status`) shows all 2,372 `venue in {FOOTYSTATS,footystats}` rows are
+      `empty_confirmed` — nothing left to re-attribute; the stale 22,513 figure predates whatever prior work already
+      cleared this population. (3) ODDS_API's 8 `trades` rows — dumped live (`pipeline_mode=batch_odds_api`,
+      `instrument_type=SPORT`, `instrument_id`s like `ODDS_API:SPORT:soccer_epl`) — are NOT re-attributable odds data at
+      all, they're the exact same junk population the "Delete the `SPORT` instrument_type residue" purge todo below
+      already names (8 rows) — correctly routed there as a delete, not force-fit into a bookmaker-venue re-attribution
+      here. No sub-population was silently dropped; each has an owning todo or is confirmed already-empty.
 
 ### The purges (each requires the §3a fresh check, in-run)
 
@@ -364,15 +395,48 @@ than proceeding.
       is a PATH segment so objects move, not just rows. Note the fork is currently split WITHIN venues — BETFAIR_EX_UK
       has 9,204 `exchange_odds` AND 3,405 pre-fork `odds` — so a partial purge would leave the same venue across two
       tokens; the end state must be ONE token per venue. **§3a fresh check required before any object delete.**
-- [ ] [DATA] P0. **Delete the 20,785 KALSHI `empty_confirmed` rows** (source `polymarket_clob`, 2020-06-06 → 2026-05-21)
-      from the sports manifest — prediction-market venues seeded into the sports denominator, ~3.4% of the manifest
-      being fictitious. Manifest-only; confirm zero backing GCS objects first (if any exist, that is a different and
-      larger finding — file it, do not delete). **§3a fresh check required if any object delete is involved.**
+- [x] ✅ [DATA] P0. **Delete the 20,785 KALSHI `empty_confirmed` rows** (source `polymarket_clob`, 2020-06-06 →
+      2026-05-21) from the sports manifest — prediction-market venues seeded into the sports denominator, ~3.4% of the
+      manifest being fictitious. **CLOSED 2026-08-14 (slot-26), live re-measured**: `venue=KALSHI` AND
+      `source=polymarket_clob` (exact match) = **0 rows**; widened to a case-insensitive substring check on both `venue`
+      (contains "KALSHI") and `source` (contains "polymarket") across the WHOLE manifest = **0 hits either way** — not a
+      wrong-vocabulary miss. No matching purge commit found in `instruments-service` git history
+      (`git     log -i --grep=kalshi`), so the mechanism is unconfirmed, but the population is genuinely absent from the
+      live manifest now, not just under the exact original spelling. Nothing to delete; the todo's stated population no
+      longer exists in the source of truth.
 - [ ] [DATA] P1. **Delete the 2,490 blank-venue rows** written by instruments-service into the MTDS tick manifest, once
       P1's writer fix has stopped the source. Verify the writer is genuinely fixed before cleanup — cleaning before the
-      writer stops just re-pollutes.
+      writer stops just re-pollutes. **Writer-stopped verification DONE 2026-08-14 (slot-26), live-measured** — this is
+      NOT the reference-data manifest's blank-venue population (14.4M rows there, but blank venue is CORRECT/expected
+      for league/team/fixture reference tokens like STANDINGS/XG/TEAMS — a wrong first-pass filter, corrected before
+      acting on it); the real target lives in the SEPARATE `market-data-tick-sports-prd-central-element-323112` manifest
+      (6.1M rows, distinct index from the reference-data one), where `service_name=instruments-service` + blank venue +
+      captured = **2,379** (`odds` 1,273 + `odds_horizon_bucket` 1,106 — matches
+      `sports_taxonomy_p2_consumer_inventory_2026_08_12.md`'s already-documented root cause exactly: the
+      `resolve_source_and_mode()` case-sensitivity bug in `backfill_orphan_class_e_sports.py`, fixed at
+      `instruments-service@d9994199`; the gap to 2,490 is the 111 `trades_inplay` rows already resolved by this plan's
+      own earlier in_play-column todo, so nothing missing). **Writer confirmed stopped**: `attempted_at` (write time)
+      for all 2,379 rows clusters 2026-07-21T16:02→2026-07-22T05:08 UTC — a one-time backfill batch, zero rows written
+      since, 3+ weeks before this fix landed and before today. Sampled rows carry no `instrument_id`/no real venue —
+      metadata-only artifacts of the buggy backfill, not real physical shards (no valid `venue=` path segment could have
+      been written for them). **Not yet deleted**: same "manifest rewrite never runs locally" constraint as the other
+      two pending tiny fixes above — batch all three (this + `odds_horizon_bucket`'s 4-row gap + the SPORT residue's 8
+      manifest rows) into ONE small VM run rather than three separate launches.
 - [ ] [DATA] P1. **Delete the `SPORT` instrument_type residue** (8 rows on ODDS_API's `trades`) — junk token, no backing
-      model.
+      model. **PARTIALLY DONE 2026-08-14 (slot-26)**: widened scope live — the manifest's 8 `trades` rows were only half
+      the population; a bounded per-day GCS listing found an EQUAL, entirely un-manifested `data_type=odds` twin at the
+      same junk path (`venue=ODDS_API/league_id=/instrument_type=sport/...`, identical byte-for-byte sizes to the
+      `trades` twin per date/league — a writer bug double-wrote the same content under two data_type labels, not two
+      real datasets) — 16 objects total across 4 dates × 2 leagues × 2 data_types, not 8. **§3a fresh check run
+      this-same-session**: both `market-data-tick-sports-prd-central-element-323112` (data) and
+      `instruments-store-sports-prd-central-element-323112` (manifest) return `soft_delete_retention_seconds=604800`
+      (≥604800 ✅). All 16 GCS objects deleted + verified 0 remain (re-listed the same 4 prefixes post-delete). **NOT
+      yet done**: the 8 manifest rows (data_type=trades only — no manifest rows existed for the odds twin) still say
+      `capture_status=captured` pointing at now-deleted objects — a real, temporary four-surface inconsistency until the
+      manifest side lands. Removing 8 rows from the 15.6M-row manifest hit the SAME "manifest rewrites never run
+      locally" wall as the `odds_horizon_bucket` todo above (OOM risk on a full-index rewrite, confirmed by that todo's
+      two local OOM-kills this session) — **batch this with that todo's own pending 4-row fix in one small VM run**, not
+      two separate launches.
 - [ ] [DATA] P1. **Sweep the `league=` vs `league_id=` path duplication.** Measured on day=2020-06-06: the same
       FOOTYSTATS shard exists under BOTH `league=BUNDESLIGA/ticks_migrated_*.parquet` AND
       `league_id=BUNDESLIGA/ticks.parquet`. Determine which is canonical (`league_id=` per the path SSOT), census the
