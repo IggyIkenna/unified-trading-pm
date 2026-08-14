@@ -2,11 +2,12 @@
 doc_type: codex-ssot
 title: Live strategy-config hot-reload
 summary:
-  "strategy-service hot-applies config deltas mid-session without restart via
-  strategy_service/config_reloaders.py (UTL DomainConfigReloader family, same shape as ApiKeyReloader), emitting
-  CONFIG_CHANGED / INSTRUMENT_UNIVERSE_CHANGED on atomic swap. The documented safe-field allow-list and
-  UnsafeConfigChangeError are DESIGN INTENT ONLY — neither exists in code, and the instrument universe is hot-swapped
-  today despite being listed unsafe. Batch and live share the same config object."
+  "strategy-service hot-applies config deltas mid-session without restart via strategy_service/config_reloaders.py (UTL
+  DomainConfigReloader family, same shape as ApiKeyReloader), emitting CONFIG_CHANGED / INSTRUMENT_UNIVERSE_CHANGED on
+  atomic swap. The strategies-domain safe-field allow-list (SAFE_STRATEGY_RELOAD_FIELDS) and UnsafeConfigChangeError are
+  now IMPLEMENTED (2026-08-14): strategy_params changes hot-reload, enabled_strategies changes are rejected (previous
+  config stays active). The instrument universe is still hot-swapped unconditionally — that contradiction is unresolved
+  and out of this guard's scope. Batch and live share the same config object."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -47,20 +48,20 @@ execution disagree on what's working. Hot-reload eliminates the restart.
 ## Pattern — as shipped (verified 2026-07-31)
 
 > **Naming correction.** There is no `StrategyConfigReloader` class. The shipped implementation is
-> `strategy-service/strategy_service/config_reloaders.py`, built on UTL's generic
-> `DomainConfigReloader` (`unified_trading_library/domain_config_reloader.py`) — the same family as `ApiKeyReloader`,
-> `LifecycleReloader` and `InstrumentLifecycleCacheDeltaReloader`.
+> `strategy-service/strategy_service/config_reloaders.py`, built on UTL's generic `DomainConfigReloader`
+> (`unified_trading_library/domain_config_reloader.py`) — the same family as `ApiKeyReloader`, `LifecycleReloader` and
+> `InstrumentLifecycleCacheDeltaReloader`.
 
 Entry points (module-level functions, not a single class):
 
-| Function                                             | Role                                                         |
-| ---------------------------------------------------- | ------------------------------------------------------------ |
-| `start_domain_config_reloaders(service_config)`      | Starts the strategies + instruments domain reloaders          |
-| `stop_domain_config_reloaders()`                     | Teardown                                                      |
-| `get_active_strategy_config()` / `get_active_instruments()` | Read the current atomically-swapped snapshot           |
-| `register_instrument_change_callback(...)`           | Subscribe an engine to instrument-universe deltas             |
-| `start_version_governance_reloader()` (`VersionGovernanceReloader`) | Strategy-version governance refresh             |
-| `start_directive_reloader(poll_interval_seconds=60)` (`StrategyDirectiveReloader`) | Directive polling               |
+| Function                                                                           | Role                                                 |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `start_domain_config_reloaders(service_config)`                                    | Starts the strategies + instruments domain reloaders |
+| `stop_domain_config_reloaders()`                                                   | Teardown                                             |
+| `get_active_strategy_config()` / `get_active_instruments()`                        | Read the current atomically-swapped snapshot         |
+| `register_instrument_change_callback(...)`                                         | Subscribe an engine to instrument-universe deltas    |
+| `start_version_governance_reloader()` (`VersionGovernanceReloader`)                | Strategy-version governance refresh                  |
+| `start_directive_reloader(poll_interval_seconds=60)` (`StrategyDirectiveReloader`) | Directive polling                                    |
 
 On reload the callbacks perform an **atomic swap** of the module-level snapshot, then emit lifecycle events. The
 instruments path additionally computes an added/removed delta against the previous snapshot and fans it out to
@@ -72,35 +73,41 @@ event**; that name appears nowhere in the workspace.
 
 ## What can hot-reload safely
 
-> **⚠️ This table is the DESIGN INTENT and is not enforced anywhere (verified 2026-07-31).** `config_reloaders.py`
-> contains no safe-list, allow-list, or unsafe-change guard — `rg -in 'unsafe|safe_list|allow_list|restart'` over the
-> module returns nothing. **`UnsafeConfigChangeError` does not exist in the workspace.** Every reload is applied
-> unconditionally via atomic swap. Treat the "NO" rows below as operator discipline, not as a guard-rail the code will
-> enforce for you.
+> **✅ Enforced for the strategies domain (2026-08-14).** `config_reloaders.py` now carries
+> `SAFE_STRATEGY_RELOAD_FIELDS = frozenset({"strategy_params"})` and `UnsafeConfigChangeError`. `_on_strategies_reload`
+> diffs the incoming `StrategyDomainConfig` against the currently active one field-by-field (skipping the first-ever
+> load, which has no baseline to diff against); a change to `strategy_params` swaps atomically as before, a change to
+> `enabled_strategies` raises `UnsafeConfigChangeError` and the previously active config stays in effect (the reloader
+> base's `FieldFilteredCallbackRegistry.notify` catches the `RuntimeError` subclass and logs it — the process does not
+> crash and no restart is forced automatically; an operator still has to actually perform the restart to apply the
+> archetype change). The instruments-domain row below remains **unenforced** — this guard is strategies-only, per the
+> operator-confirmed 2026-08-12 scoping in
+> `/plans/active/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`.
 
-| Field class                  | Hot-reload safe? | Notes                                                                  |
-| ---------------------------- | ---------------- | ---------------------------------------------------------------------- |
-| Sizing (notional, weights)   | Yes              | Applies to next signal; existing orders untouched                      |
-| Risk caps (per-position max) | Yes              | Cap drops trigger an immediate halt of orders that exceed              |
-| Venue-routing weights        | Yes              | Applies to next signal                                                 |
-| Signal-filter thresholds     | Yes              | Applies to next signal                                                 |
-| Kill-switch flags            | Yes              | Immediate; in-flight orders paused                                     |
-| Strategy archetype family    | NO (unenforced)  | Family change = different code path; restart required                  |
-| Underlying instruments       | ⚠️ CONTRADICTED  | See below — the shipped reloader DOES hot-swap the instrument universe |
+| Field class                  | Hot-reload safe?            | Notes                                                                                                                                |
+| ---------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Sizing (notional, weights)   | Yes                         | `strategy_params` — applies to next signal; existing orders untouched                                                                |
+| Risk caps (per-position max) | Yes                         | `strategy_params` — cap drops trigger an immediate halt of orders that exceed                                                        |
+| Venue-routing weights        | Yes                         | `strategy_params` — applies to next signal                                                                                           |
+| Signal-filter thresholds     | Yes                         | `strategy_params` — applies to next signal                                                                                           |
+| Kill-switch flags            | Yes                         | `strategy_params` — immediate; in-flight orders paused                                                                               |
+| Strategy archetype family    | **NO — enforced**           | `enabled_strategies` change raises `UnsafeConfigChangeError`; restart required                                                       |
+| Underlying instruments       | ⚠️ CONTRADICTED, unenforced | Separate `instruments` domain/reloader — the shipped reloader still DOES hot-swap the instrument universe unconditionally; see below |
 
 **The "Underlying instruments = NO" row contradicts shipped behaviour.** `_on_instruments_reload()` atomically swaps
-`_active_instruments`, computes the added/removed delta, and notifies strategy engines via
-`INSTRUMENT_UNIVERSE_CHANGED` — i.e. an instrument-universe change is hot-applied today, with no restart and no error
-raised. Either the code is doing something the design considers unsafe for position-state continuity, or the design row
-is obsolete. Resolve before relying on either statement:
-`/plans/active/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`.
+`_active_instruments`, computes the added/removed delta, and notifies strategy engines via `INSTRUMENT_UNIVERSE_CHANGED`
+— i.e. an instrument-universe change is hot-applied today, with no restart and no error raised. Either the code is doing
+something the design considers unsafe for position-state continuity, or the design row is obsolete. Resolve before
+relying on either statement: `/plans/active/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`.
 
 ## Live = batch
 
 Backtest replays consume the same config object. A config change in batch is just a new run; live applies it via
-hot-reload. **Caveat (2026-07-31):** the claim that "the SAME validation rules apply both paths so a config rejected by
-batch validation never reaches live" is aspirational — the live reload path applies an unconditional atomic swap with
-no validation gate, so there is currently nothing that would reject a bad config on the live side.
+hot-reload. **Caveat (2026-08-14, updated):** the strategies-domain reload path now has a validation gate
+(`SAFE_STRATEGY_RELOAD_FIELDS` / `UnsafeConfigChangeError`) — an `enabled_strategies` change is rejected on the live
+side. Batch has no equivalent gate (a batch run just picks up whatever config it's given), so this is not yet "the SAME
+validation rules apply both paths", only a live-side-only guard against one specific unsafe field. The instruments and
+clients reload paths still apply an unconditional atomic swap with no validation gate.
 
 ## Cross-references
 

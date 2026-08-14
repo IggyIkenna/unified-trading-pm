@@ -382,9 +382,25 @@ source: >-
       how it composes with (not duplicates) `check_codex_doc_freshness.py`'s existing clock-vs-authoring split. Linked
       from `quality-gates.md`'s `related:`. Source doc's own todo intentionally left untouched per this batch's stated
       policy (checkbox reconciliation into source docs happens in the paired finalize plan).
-- [ ] [CODE] P2. Implement the safe-field allow-list + UnsafeConfigChangeError guard in
+- [x] ✅ [CODE] P2. Implement the safe-field allow-list + UnsafeConfigChangeError guard in
       strategy-service/strategy_service/config_reloaders.py per the operator-confirmed 2026-08-12 ruling (option A)
-      Source: `plans/active/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`
+      Source: `plans/active/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` —
+      strategy-service@c688512912: added `SAFE_STRATEGY_RELOAD_FIELDS = frozenset({"strategy_params"})` +
+      `UnsafeConfigChangeError` (RuntimeError subclass) to `config_reloaders.py`. `_on_strategies_reload` now diffs the
+      incoming `StrategyDomainConfig` against the currently active snapshot field-by-field (skipping the very first
+      load, which has no baseline); a `strategy_params`-only change still atomic-swaps as before, an
+      `enabled_strategies` change (different archetype/code path) raises `UnsafeConfigChangeError` and the previously
+      active config stays in effect — `FieldFilteredCallbackRegistry.notify` (UTL) already catches `RuntimeError` from a
+      reload callback and logs it, so the reload is rejected without crashing the process; a restart is still required
+      to actually apply an archetype change (this guard does not auto-restart). 5 new unit tests in
+      `tests/unit/test_config_reloaders.py` (`TestStrategySafeFieldAllowList`): safe field hot-reloads, unsafe field
+      raises + keeps prev config, the registry-level end-to-end swallow path, first-load bypass. Updated
+      `/codex/04-architecture/live-strategy-config-hot-reload.md` (this batch, same commit set) to stop describing the
+      guard as unimplemented design intent — the "What can hot-reload safely" table and "Live = batch" section now
+      reflect the strategies-domain enforcement; the instruments-domain hot-swap contradiction remains open/unenforced
+      (out of this todo's scope — still tracked in the source issue doc). Evidence: `bash scripts/quality-gates.sh`
+      green (sentinel = HEAD `c688512912edae9a2efc254282bb1749404aa68e`, 5992 passed / 0 failed); quickmerge verified
+      `c6885129` ancestor of `origin/live-defi-rollout`.
 - [x] ✅ [CODE] P2. FLEET-WIDE: instruments-store _index v9-COLUMN populate for cefi/tradfi/defi (+ prediction source) —
       pattern-identical to the already-shipped sports v9-column populate script Source:
       `plans/active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md` — unified-trading-pm (this batch):
