@@ -300,10 +300,17 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       1,570,999 rows deleted (791,350 SFI expected_unattempted + 1 SFI attempted_failed + 779,177 weather
       expected_unattempted + 471 weather attempted_failed — operator explicitly extended scope to the small
       attempted_failed tails too). See Progress Log for the consolidator-race avoidance and rollup-refresh chain.
-- [ ] [SERVICE] P1. **deployment-api's sports coverage drilldown OOMs the 16GB Cloud Run instance on a cold cache**
-      (`GET /api/data-status/drilldown/instruments-service/SPORTS?source=...`) — confirmed live 2026-08-14 (2 crashes,
-      `Memory limit of 16384 MiB exceeded`, see Progress Log). Needs a memory-bounded compute path or a
-      guaranteed-warm-cache precondition before this endpoint is safe to call broadly; not fixed this session.
+- [x] ✅ [SERVICE] P1. **deployment-api's sports coverage drilldown OOMs the 16GB Cloud Run instance on a cold cache**
+      (`GET /api/data-status/drilldown/instruments-service/SPORTS?source=...`) — fixed 2026-08-14:
+      `deployment-api@f1d1d19c8` runs the `get_hierarchical_drilldown` build through `bounded_subprocess.run_bounded`
+      (defense-in-depth-layer-2, the same pattern already used for the manifest-status live-build guard) — an
+      RLIMIT_AS-capped (6 GiB) spawned child with a 120s wall-clock backstop, so an OOM/hang is caught inside the
+      throwaway child and mapped to a 503 + Retry-After instead of the platform OOM-killer taking down every other
+      request the container serves. See Progress Log for the full root-cause trace + why a bare date-window cap wouldn't
+      have been sufficient (row-group date-clustering isn't guaranteed). QG green, 5352 tests pass incl. a new
+      regression test (`test_bounded_subprocess_error_returns_503`) and updated mocks for the 4 existing drilldown-route
+      tests (patch `run_bounded` at its call-site path now, not the inner function — patching the inner fn would make
+      `run_bounded` try to pickle a `Mock` for a real `multiprocessing.spawn` child).
 - [ ] [SERVICE] P2. **data-status rollup worker: 420s per-service timeouts on features-onchain-service /
       features-delta-one-service / market-data-processing-service / market-tick-data-service**, observed during the
       03:00Z 2026-08-14 sweep that later OOM'd (32GB limit). Predates this session; not investigated — root cause
@@ -960,3 +967,14 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
     P-tier from this doc's SFI/weather scope); (b) the rollup worker's 420s per-service timeouts on
     features-onchain-service/features-delta-one-service/market-data-processing-service/market-tick-data-service predate
     this session and were not investigated.
+- **2026-08-14 (slot 7, AO dispatch) — deployment-api sports drilldown OOM FIXED.** `deployment-api@f1d1d19c8`: wrapped
+  `get_hierarchical_drilldown`'s build in `bounded_subprocess.run_bounded` (RLIMIT_AS 6GiB, 120s timeout) — the existing
+  `SLOTS=1` concurrency guard bounds concurrent builds, not one build's own peak RSS, and `source`/other row filters
+  apply AFTER the full date-window index decodes, so a single query can still OOM if the manifest's row-group
+  date-clustering is poor (confirmed unguaranteed for CeFi via `manifest_source.py`'s own docstring; not measured for
+  SPORTS specifically). **Correction to the line-961 citation above**: the "falls through to a multi-minute all-AG
+  compute on the 8 GiB service → 503" quote actually lives in `_rollup.py` (a DIFFERENT, unrelated code path — the
+  turbo/rollup compute), NOT in `manifest_source.py` and NOT in `get_hierarchical_drilldown`'s call graph — verified via
+  direct grep before citing. QG green (5352 passed); 4 existing drilldown-route tests updated to patch `run_bounded` at
+  its call-site path (patching the inner fn would make `run_bounded` try to pickle a `Mock` for a real spawned child) +
+  1 new regression test for the `BoundedSubprocessError` → 503 mapping.
