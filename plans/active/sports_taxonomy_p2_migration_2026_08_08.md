@@ -627,3 +627,56 @@ than proceeding.
   behind from the recovery — `git stash drop` is hook-blocked for autonomous workers, so it's harmless clutter for the
   operator to drop manually (`git stash drop stash@{0}` in `instruments-service`) whenever convenient; not functionally
   load-bearing. New follow-up todo added above for the still-unrun live `check_shard_freshness` end-to-end verification.
+- **2026-08-14 (slot-26, continued session)** — Self-caught + fixed a false-progress bug from earlier this session: a
+  commit (`fe9355c258`) claimed to close the split-decision todo but only appended prose, never flipped the checkbox
+  glyph — caught on re-read, corrected (`e0e49d5ec9`). Then worked the remaining open todos in file order
+  (`sequential: true`), each verified live before any claim:
+  - **Closed with live evidence**: the footystats `ODDS`+`odds` fold (0 uppercase rows remain, `faf3fc54dc`); the
+    ODDS_API/FOOTYSTATS venue re-attribution (`3755710c02` — each sub-population resolved or routed to a sibling todo,
+    none silently dropped); the KALSHI/`polymarket_clob` purge (`9031908cd4` — population already fully absent, exact +
+    case-insensitive re-check, no matching purge commit found so the mechanism is unconfirmed but the absence is real).
+  - **`odds_horizon_bucket` corrected + narrowed** (`4aa7584a4d`): the todo's own numbers were badly stale (claimed
+    135,980 shards/3 writers; live measured 1,070,078 rows, all `source=mdps_odds_horizon_bucket`). The bulk (165,604+
+    captured rows across 26 real bookmakers) was ALREADY re-attributed by MDPS's own already-shipped
+    `migrate_odds_horizon_bucket_venue_to_bookmaker_2026_07_27.py` +
+    `reclassify_odds_horizon_bucket_unresolvable_rows_2026_07_28.py` before this session touched it — this todo's scope
+    was mostly done, just never flipped. Remaining gap: 6 fine (league_id+timeframe-populated) `venue=ODDS_API` rows, of
+    which 5 are expected NotFound residue (shards already deleted by a later reconcile — the script's own docstring
+    calls this expected) and 1 genuinely reconciles (SUPERLIGA, 4 sub-rows).
+  - **`--apply` attempted locally TWICE and OOM-killed both times** (SIGKILL at ~28s, `free -h` showing 18Gi
+    host-available at the time — a sandbox cgroup limit, not genuine host exhaustion) — confirmed via re-`--dry-run`
+    that the manifest was left UNCHANGED/uncorrupted both times (same generation, same 6-target count). **Invariant
+    learned**: this script (and by extension any full-manifest-index rewrite) always loads+rewrites the ENTIRE 15.6M-row
+    index regardless of how few target rows are actually changing — "manifest rewrites never run locally" applies at ANY
+    target scale, not just large ones. Do not re-attempt this locally a third time.
+  - **SPORT instrument_type residue** (`f496626e52`): widened scope live after a bounded per-day GCS listing found an
+    entirely un-manifested `data_type=odds` twin (same junk population, identical byte-for-byte sizes to the `trades`
+    twin per date/league — a writer bug double-wrote the same content under two data_type labels). Fresh §3a check
+    this-session (`604800` on both buckets) → deleted + verified 0 remain for all 16 objects. Manifest side (8 rows)
+    hits the same OOM wall as above — not attempted.
+  - **Blank-venue writer-stopped verification** (`ad759e0cc0`): **measurement trap self-caught before acting on it** —
+    first pass filtered `venue` blank across the WHOLE reference-data manifest and got 14.4M hits (almost the entire
+    corpus), because blank venue is the CORRECT/expected state for league/team/fixture reference tokens
+    (STANDINGS/XG/TEAMS/etc), not a bug. Narrowed to the actual target population (a SEPARATE manifest,
+    `market-data-tick-sports-prd`, distinct index from the reference-data one) and the correct writer/data_type scope
+    (`service_name=instruments-service`, `data_type in [odds, odds_horizon_bucket]`) → 2,379 rows, matching the
+    consumer-inventory doc's already-documented root cause exactly (1,273+1,106, the gap to 2,490 being the 111
+    `trades_inplay` rows already resolved by an earlier todo). Writer confirmed stopped: `attempted_at` clusters
+    2026-07-21/22 UTC, a one-time backfill batch, 3+ weeks before today with zero rows since. Not yet deleted (same OOM
+    constraint).
+  - **CRITICAL finding, caught before any purge executed** (`8ef75ab36d`): the `league=`/`league_id=` sweep todo's own
+    stated canonical direction was BACKWARDS. The plan claimed `league_id=` was canonical; direct read of UAC's actual
+    path builder (`unified_api_contracts/canonical/domain/sports/gcs_paths.py:351`) proved `league=` is canonical. Had
+    this run as originally written, it would have purged the REAL canonical data and kept the legacy duplicate —
+    corrected in the plan text before any census/purge work began. Extent census (full corpus scope beyond the one known
+    2020-06-06 example) still genuinely not done.
+  - **New consolidated todo added** (`39b030bdb9`): a single small VM launch to close out all three pending
+    manifest-only fixes together (the 4-row `odds_horizon_bucket` gap, the SPORT-residue's 8 manifest rows, the 2,379
+    blank-venue rows) — each individually too small to justify its own VM; two of the three need a small new script
+    written (no existing tool covers them), the third re-runs an already-committed script now bounded to 6 targets.
+  - **Still open, untouched this session**: the `exchange_odds`/`fixed_odds` purge (P0, needs §3a + object moves), the
+    `league=`/`league_id=` extent census + purge (P1, direction now fixed, scope not measured), the
+    `odds_snapshot`/`odds_movement` re-stamp (P0, ~33k shards), and the full Verification section (four-surface
+    reconciliation, accepted-exception-set shrinkage, honest-coverage re-run) — the last three are gated on the pending
+    manifest fixes landing first. **Recommended next**: the batched-VM-run todo (closes 3 gaps at once cheaply), then
+    the `exchange_odds`/`fixed_odds` purge (largest remaining untouched P0).
