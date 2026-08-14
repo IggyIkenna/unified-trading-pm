@@ -324,7 +324,9 @@ SOFT_WARN=0
 RESULTS=()
 
 # ── Diff-scoped ratchet base (2026-08-09, plan_hygiene_ratchet_regressions_outpace_serial_
-# ci_fix_velocity_2026_08_09.md) ──
+# ci_fix_velocity_2026_08_09.md; refined 2026-08-14 — resolve the branch's own last-gated
+# point instead of a fixed origin/main proxy, per the P3 follow-up in
+# na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md) ──
 # Corpus-wide ambient ratchet checks (archive-candidates, reference-paths) attribute ANY
 # concurrent agent's new violation — landing anywhere in the corpus between a worker's
 # fix-push and the next CI re-run — to whoever happens to be re-triggering. On a
@@ -332,54 +334,76 @@ RESULTS=()
 # measured 4+ consecutive distinct-check regressions chasing one CI wall). Diff-scoped
 # mode (`--diff-base <ref>`) fixes the shape: only a violation NEW at HEAD vs <ref> fails
 # the gate; pre-existing corpus debt at <ref> is tolerated exactly like baseline mode.
-# ONLY set DIFF_BASE_REF when the ref is actually resolvable locally — both checkers'
-# diff-base mode is fail-UNSAFE on an unresolvable ref (git ls-tree/show against a
-# missing ref returns nothing, so EVERY current violation reads as "new"), and
-# `cron_hygiene_sweep_entrypoint.sh`'s shallow single-branch clone never fetches
-# origin/main, so this guard is what keeps that periodic path on baseline mode instead of
-# silently hard-failing on the corpus's entire pre-existing debt.
-# PROMOTION PRs GET NO DIFF BASE AT ALL (2026-08-10). A promote PR's diff IS the entire
-# LDR→main accumulation, so `--diff-base origin/main` there measures the whole unpromoted
-# backlog rather than the change under test — and the further behind main falls, the more
-# it measures, so the gate blocks the promote, main falls further behind, and the reported
-# violation count GROWS. Measured on the NA-corpus check the same day: 51→53→55 new docs
-# and 116→151→181 new todos across three runs on distinct HEADs while main went 1180→1440
-# commits behind. A count that climbs across distinct HEADs is definitionally not a fixable
-# regression, and no amount of retrying converges it.
 #
-# 4c964f8447 established this rule and the promote/ detection, scoped to the NA-corpus
-# check. It is set HERE instead so the SAME rule covers every DIFF_BASE_REF consumer —
-# reference-paths, archive-candidates and effort-ratchet carry the identical latent bug and
-# were already tripping it (`check_reference_paths (--diff-base origin/main): 2 NEW
-# violation(s)` hard-failed the 11:25Z promote-path run). Setting it once also avoids four
-# copies of one rule, which is precisely the shape that rotted the tranche lists (see
-# scripts/scheduled_job_already_ran.py's header). Falling back to baseline+buffer on the
-# promote path is safe: every commit in that batch already passed these same checks
-# diff-scoped on its way onto LDR, so re-gating the aggregate is double jeopardy.
+# A FIXED `origin/main` PROXY IS WRONG ONCE PROMOTION STALLS (2026-08-10 incident). It is
+# only a valid stand-in for "this change's base" while promotion is flowing — once main
+# lags, the diff spans the whole unpromoted backlog instead of the change under test, and
+# diff-base mode has ZERO tolerance, so the reported violation count GROWS as main falls
+# further behind: a positive-feedback deadlock, not a fixable regression (measured:
+# 51→53→55 new docs / 116→151→181 new todos across three CI runs on distinct HEADs while
+# main went 1180→1440 commits behind). THE FIX: resolve the base from the TRIGGERING EVENT
+# itself — this repo's `quality-gates-v2.yml` caller only fires `push` (branches:[main]) or
+# `pull_request` (targets main/staging) with a specific change under test:
+#   - push: the branch's own last-gated point is the event's `before` SHA — the tip this
+#     same gate already saw on the branch's PRIOR push. Read from $GITHUB_EVENT_PATH (the
+#     standard GH Actions event-payload path; needs no workflow change).
+#   - pull_request: the PR's own target branch (`$GITHUB_BASE_REF`) IS its last-gated
+#     point — every commit already on it passed this same gate on its way in.
+#   - anything else (workflow_dispatch, schedule, unset): no specific change under test —
+#     e.g. `cascade-qg-ordering.yml` / `ldr-to-staging-promote.yml` dispatch this gate
+#     directly at `live-defi-rollout` to answer the ABSOLUTE question "is LDR healthy?",
+#     which a diff base cannot answer (measured 2026-08-10: EIGHT such runs paged
+#     #ci-failures CRITICAL on backlog-scale counts no commit under test caused, burying one
+#     genuine failure the same day). Stays baseline+buffer (DIFF_BASE_REF="").
 #
-# A WHOLE-BRANCH RUN AGAINST THE INTEGRATION BRANCH GETS NO DIFF BASE EITHER (2026-08-10).
-# `cascade-qg-ordering.yml` (and `ldr-to-staging-promote.yml`) `workflow_dispatch` this gate
-# directly at `live-defi-rollout` to answer "is LDR healthy?" — LDR has no push-triggered CI of
-# its own. On a dispatch `GITHUB_HEAD_REF` is EMPTY (it is a PR-only variable), so the promote
-# rule above cannot fire, and the diff once again spans the entire unpromoted backlog. Measured
-# 2026-08-10: EIGHT such runs failed in one day (07:33/08:33/09:01/09:33/10:29/11:25/12:18/13:31Z),
-# each paging #ci-failures CRITICAL, each reporting the same backlog-scale number
-# (`61 new NA-population doc(s); 198 new open todo(s)`) that no commit under test caused.
-# The cost is not just noise — it is MASKING. The 13:31Z run also carried a REAL hard failure
-# (`No conflict markers (mid-line + mangled)` — genuine, transient corpus corruption, since
-# resolved), and it was buried under a permanent false failure that fires every hour. An alert
-# that always fires trains everyone to ignore the one time it means something.
-# "Is this whole branch healthy?" is an ABSOLUTE question, so baseline+buffer is its correct
-# shape; a diff base only makes sense when there is a specific change under test.
+# Both branches best-effort FETCH the resolved ref before verifying it (GitHub accepts a
+# fetch by arbitrary reachable SHA; `origin/main` may need a fetch too since the CI checkout
+# is `fetch-depth: 2`) — but ONLY set DIFF_BASE_REF once the ref actually verifies locally.
+# Diff-base mode is fail-UNSAFE on an unresolvable ref (git ls-tree/show against a missing
+# ref returns nothing, so EVERY current violation reads as "new"), so an unfetchable/
+# unresolvable base (a multi-commit push whose `before` predates the shallow history, a
+# first push to a new ref, a PR base branch this workflow's fetch step doesn't cover) falls
+# back to baseline+buffer rather than silently hard-failing. `cron_hygiene_sweep_entrypoint.
+# sh`'s shallow single-branch clone never sets GITHUB_EVENT_NAME either, so it lands in the
+# same safe fallback (the `*)` case below).
 #
-# NOT a blanket disable — a normal PR into main still gets full diff-scoping, which is where
-# these checks actually catch a specific change's new violations.
+# PROMOTION PRs GET NO DIFF BASE AT ALL, REGARDLESS OF THE ABOVE (2026-08-10). A promote
+# PR's diff IS the entire LDR→main accumulation; re-gating it against ANY base is double
+# jeopardy, since every commit in that batch already passed this same check diff-scoped on
+# its own way onto LDR. This exclusion is orthogonal to — and always wins over — the base
+# resolution below, which is why it's checked first.
 DIFF_BASE_REF=""
-if [ -n "$CI_MODE" ] \
-  && [[ ! "${GITHUB_HEAD_REF-}" =~ ^promote/ ]] \
-  && [ "${GITHUB_REF_NAME-}" != "live-defi-rollout" ] \
-  && git -C "$PM_DIR" rev-parse --verify -q origin/main >/dev/null 2>&1; then
-  DIFF_BASE_REF="origin/main"
+if [ -n "$CI_MODE" ] && [[ ! "${GITHUB_HEAD_REF-}" =~ ^promote/ ]]; then
+  case "${GITHUB_EVENT_NAME-}" in
+    push)
+      BEFORE_SHA=""
+      if [ -n "${GITHUB_EVENT_PATH-}" ] && [ -f "$GITHUB_EVENT_PATH" ]; then
+        BEFORE_SHA="$(python3 -c '
+import json, sys
+try:
+    with open(sys.argv[1]) as f:
+        print(json.load(f).get("before") or "")
+except Exception:
+    print("")
+' "$GITHUB_EVENT_PATH" 2>/dev/null || true)"
+      fi
+      if [ -n "$BEFORE_SHA" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+        git -C "$PM_DIR" fetch --quiet origin "$BEFORE_SHA" 2>/dev/null || true
+        if git -C "$PM_DIR" rev-parse --verify -q "${BEFORE_SHA}^{commit}" >/dev/null 2>&1; then
+          DIFF_BASE_REF="$BEFORE_SHA"
+        fi
+      fi
+      ;;
+    pull_request)
+      if [ -n "${GITHUB_BASE_REF-}" ]; then
+        git -C "$PM_DIR" fetch --quiet origin "${GITHUB_BASE_REF}:refs/remotes/origin/${GITHUB_BASE_REF}" 2>/dev/null || true
+        if git -C "$PM_DIR" rev-parse --verify -q "origin/${GITHUB_BASE_REF}" >/dev/null 2>&1; then
+          DIFF_BASE_REF="origin/${GITHUB_BASE_REF}"
+        fi
+      fi
+      ;;
+    *) ;; # workflow_dispatch / schedule / unset — no change under test; baseline+buffer
+  esac
 fi
 
 run_check() {
