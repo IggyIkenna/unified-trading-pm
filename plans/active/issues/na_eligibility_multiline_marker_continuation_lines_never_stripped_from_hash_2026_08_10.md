@@ -151,14 +151,18 @@ perfectly uniform in the docs this pass touched.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Fix `_VERDICT_MARKER_LINE_RE` (or replace with a proper multi-line-block strip) in
+- [x] ✅ [SCRIPT] P2. Fix `_VERDICT_MARKER_LINE_RE` (or replace with a proper multi-line-block strip) in
       `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` so a marker's full continuation-line span is excluded
       from `body_content_hash()`, not just its first line. Add a regression test asserting
       `body_content_hash(body_before_marker) == body_content_hash(body_before_marker + <the marker written with that exact hash>)`
       for a multi-line marker — this is the invariant that is currently violated. Verify against a sample of real
       multi-line markers already in the corpus (this run alone added 19 examples across `plans/active/tradfi_*` and
       `plans/active/issues/tradfi_*`) to confirm the new regex's stop condition doesn't over-strip into the NEXT bullet
-      or under-strip a trailing continuation line.
+      or under-strip a trailing continuation line. — unified-trading-pm@PENDING_SHA (extended `_VERDICT_MARKER_LINE_RE`
+      with a `(?:[ \t]+\S[^\n]*\n?)*` continuation clause that stops at the first non-indented line — a blank line, a
+      new top-level `- ` bullet, or a `## ` header — matching the corpus' observed marker-block convention; added
+      `test_body_content_hash_stable_across_multiline_marker` asserting the exact invariant this todo calls for, incl. a
+      sibling-marker-not-swallowed check)
 - [ ] [SCRIPT] P3. Once fixed, spot-check a handful of docs with old (pre-fix) markers to confirm the NEXT
       na-eligibility-audit run against them correctly reports `incremental_skip: true` when no real content changed
       since — i.e. confirm the fix actually restores the intended corpus-wide skip rate, not just that the unit test
