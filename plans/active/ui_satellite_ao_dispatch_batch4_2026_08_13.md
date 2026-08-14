@@ -97,8 +97,27 @@ source: >-
       `out_of_scope=True` for `(KALSHI, ohlcv_1m)` correctly signals "this source doesn't provide this data_type",
       exactly the doc's own hypothesis. No registry entry to add. No repo touched — this was a verification-only todo
       with a correct-by-design outcome on both venues.
-- [ ] [CODE] P2. Root-fix the per-service coverage BucketNamingError for
-      features-calendar/ml-service/features-cross-instrument Source:
+- [x] ✅ [CODE] P2. Root-fix the per-service coverage BucketNamingError for
+      features-calendar/ml-service/features-cross-instrument — **ALREADY ROOT-FIXED, verified live against current
+      deployment-api code (2026-08-14), no new change needed.** All 3 sub-cases from the source doc's P3 follow-up
+      confirmed resolved: (1) **features-cross-instrument-service**: `_resolve_defi_main_bucket` in
+      `deployment_api/services/data_status/defi.py:265-276` resolves per-AG kinds WITH `asset_group` (not kind-only) on
+      the prediction branch — landed `deployment-api@c1aab6e` (2026-06-17), still present at current HEAD. (2)
+      **features-calendar-service / ml-service (SHARED pseudo-key)**: `_resolve_defi_main_bucket` returns `None` for
+      `ag == "shared"` (`defi.py:257-264`) — an intentional honest-skip, never calls
+      `resolve_bucket_name(asset_group='shared')`, so `BucketNamingError` cannot raise — landed `deployment-api@b014ae9`
+      (2026-06-17), still present. Real cross-asset SHARED coverage (vs. honest-empty) is a distinct, larger feature
+      deliberately deferred by design (not a bug) — its tracking plan
+      `instruments_mtds_subset_consistency_remediation_2026_06_17.md` is `status: complete`/archived and was itself
+      3-way split (`instruments_store_cf_canonicalization_single_walk_2026_07_24.md`,
+      `instruments_mtds_consistency_remediation_residuals_2026_07_24.md`,
+      `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md`) — out of THIS todo's bounded scope (root-fixing
+      the error, not building the SHARED-coverage feature). (3) A separate resolver path
+      (`deployment_api/services/data_status_drilldown.py::build_bucket_name`) also already carries a regression test —
+      `TestBuildBucketName.test_every_service_to_kind_entry_resolves_a_real_bucket` (parametrized over every
+      `SERVICE_TO_KIND` entry incl. `ml-service`/`features-calendar`, `tests/unit/test_data_status_drilldown.py:1020`) —
+      guarding the sibling `data_status_rollup_ml_service_full_blob_missing_2026_07_26` bucket-alias bug class. No repo
+      touched — this was a verification-only todo; the root-fix commits predate this batch plan. Source:
       `plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md`
 - [ ] [DOC] P3. Add a one-line cross-file conflict-check note to
       ui_satellite_ao_dispatch_batch3_finalize_2026_08_09.md's todo 1, naming

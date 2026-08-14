@@ -194,6 +194,32 @@ Stale local registrations are swept: `scripts/workspace/link-claude-skills.sh` s
 from a machine's `.claude/settings.local.json`, so a host still carrying the retired block gets auto-compact back on its
 next run. SSOT for the failure mode: `/plans/archive/issues/ao_worker_context_saturation_unrecoverable_2026_08_06.md`.
 
+## `settings.local.json` must be a REAL per-clone file — never a symlink (2026-08-11)
+
+`.claude/settings.local.json` is personal, gitignored, per-clone state (allow-prompt grants, stale local hook
+registrations `link-claude-skills.sh` block (4.5) heals via `jq ... | echo > "$file"`). If it is ever a **symlink**
+(observed in `.tabs/1`, `.tabs/3`, `.tabs/6`, 2026-08-11) — most likely a manual `ln -s` typo substituting
+`settings.local.json` for `settings.json` in the per-slot symlink loop above, not created by any script (exhaustive
+`git log -S` search found none) — that healing write follows the link. When the link pointed at the TRACKED
+`cursor-configs/settings.json`, the write landed on the team SSOT instead: `del(.hooks.UserPromptSubmit)` silently
+stripped that hook from the shared file, and jq's pretty-print reformatted the rest, so two clones ran for a time
+without `context-threshold-nudge.sh`. Under `bypassPermissions` (the fleet default), `permissions.deny` is discarded, so
+hooks are the ONLY surviving guardrail — a mechanism that can silently delete hook registrations from the SSOT is a
+safety regression, not cosmetics. Fixed 2026-08-11 (`unified-trading-pm@9307f909af`): `link-claude-skills.sh` (4.5) now
+refuses to write when `settings.local.json` is a symlink, and `scripts/plan-hygiene/check_settings_symlink_hygiene.sh`
+(wired into `run_hygiene_sweep.sh`) fails the hygiene sweep if `cursor-configs/settings.json` is dirty in any clone OR
+any `.claude/settings.local.json` is a symlink — never create one by hand. Full investigation:
+`/plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md`.
+
+## `cursor-configs/settings.json` git-tracked status — confirmed current (2026-08-11 re-check)
+
+Re-verified during the same 2026-08-11 investigation: `cursor-configs/settings.json` **is git-tracked**, per the
+"2026-07-23 update" note above — this is not stale. The one place that IS still stale is
+`scripts/workspace/link-claude-skills.sh`'s own header/inline comments (lines ~21-22, ~113, ~124), which still describe
+the file as gitignored and instruct a manual re-seed; that script text was actively misleading during the 2026-08-11
+investigation and needs its own follow-up fix (tracked in the source issue doc above) — this codex doc's facts, not that
+script's comments, are authoritative.
+
 ## Notes
 
 - The per-slot symlink lives in `.tabs/<N>/.claude/` which is **not** inside any git repo, so it is never committed.

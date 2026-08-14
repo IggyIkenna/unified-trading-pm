@@ -1208,14 +1208,21 @@ if [ -f "$VERSION_COHERENCE_CHECKER" ]; then
         || log_warn "Version coherence checker errored (non-blocking)"
 fi
 
-# ── Post-gates: UI/API flow coverage checker (warning-only — non-blocking) ──
+# ── Post-gates: UI/API flow coverage checker (coverage gaps warn-only; a missing/unparseable
+# manifest is a HARD FAIL — a silently-swallowed config error means the coverage verdict below
+# it is never actually checked, which is worse than no check at all) ──
 FLOW_CHECKER="${REPO_ROOT}/scripts/checkers/check_ui_api_flow_coverage.py"
 if [ -f "$FLOW_CHECKER" ]; then
-    echo "Running UI/API flow coverage checker (warning-only)..."
-    if python3 "$FLOW_CHECKER" --workspace-root "$WORKSPACE_ROOT" --warning-only; then
-        log_success "UI/API flow coverage check completed"
-    else
+    echo "Running UI/API flow coverage checker (warning-only for coverage gaps)..."
+    FLOW_CHECKER_RC=0
+    python3 "$FLOW_CHECKER" --workspace-root "$WORKSPACE_ROOT" --warning-only || FLOW_CHECKER_RC=$?
+    if [ "$FLOW_CHECKER_RC" -eq 2 ]; then
+        log_fail "UI/API flow coverage checker config error (exit 2) — manifest missing or unparseable; coverage cannot be verified"
+        exit 1
+    elif [ "$FLOW_CHECKER_RC" -ne 0 ]; then
         log_warn "UI/API flow coverage checker failed (non-blocking)"
+    else
+        log_success "UI/API flow coverage check completed"
     fi
 fi
 

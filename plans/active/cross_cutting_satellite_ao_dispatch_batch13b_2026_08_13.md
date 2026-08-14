@@ -149,11 +149,33 @@ source: >-
       ldr_main_qg_failure orchestrator escalation once confirmed. Evidence: `bash scripts/quality-gates.sh` green
       (sentinel = HEAD 99bfba4a9); YAML + embedded bash syntax verified (`python3 -c yaml.safe_load` + `bash -n` on the
       extracted `run:` block); quickmerge verified `7840229ddf` ancestor of `origin/live-defi-rollout`.
-- [ ] [CODE] P2. Extend the proven --diff-base pattern to check_ag_closeout_linkage Source:
-      `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md`
-- [ ] [CODE] P2. Make check_ui_api_flow_coverage.py hard-fail instead of silently exiting 0 when its manifest file is
+- [x] ✅ [CODE] P2. Extend the proven --diff-base pattern to check_ag_closeout_linkage Source:
+      `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md` —
+      unified-trading-pm@96b33046f9: added `--diff-base <ref>` mode to `check_ag_closeout_linkage.py`, git-backed
+      (`ls-tree`/`cat-file --batch`, no live-disk read) rebuild of the orphan graph/closeout-family/body-blob at the
+      base ref, compared by PATH IDENTITY against the HEAD orphan set (not message text, since this check's wording can
+      legitimately reword the same orphan e.g. archived-coordinator phrasing). Wired into `run_hygiene_sweep.sh`'s
+      shared `DIFF_BASE_REF` guard alongside the other four consumers. Verified: `--diff-base HEAD`/`HEAD~50` both 0 new
+      (baseline currently 0 orphans); unresolvable ref falls back safe (empty base-orphan set); `--only`/`--tranche`
+      modes unaffected; full `run_hygiene_sweep.sh --no-regen` green (0 hard failures) with the new wiring live;
+      `bash scripts/quality-gates.sh` sentinel = HEAD `a4e15c8411`; quickmerge verified `96b33046f9` ancestor of
+      `origin/live-defi-rollout`.
+- [x] ✅ [CODE] P2. Make check_ui_api_flow_coverage.py hard-fail instead of silently exiting 0 when its manifest file is
       missing Source:
-      `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md`
+      `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md` —
+      unified-trading-pm@d5ea8d0755: **root-caused + fixed.** The checker script itself already returned a distinct exit
+      code 2 for a missing/unparseable manifest (verified: reproduced live,
+      `python3     check_ui_api_flow_coverage.py --workspace-root <missing> --warning-only` → exit 2, unaffected by
+      `--warning-only`). The actual gap was the CALLER: `quality-gates.sh`'s post-gate wraps the checker in
+      `--warning-only` (which forces the coverage-gap path to always exit 0), so under that invocation any non-zero exit
+      can only mean a config error — yet the wrapper's `if/else` only tested zero-vs-nonzero and routed exit 2 into the
+      same non-blocking `log_warn` as an ordinary coverage gap, so a missing manifest never failed CI at all. Fixed
+      `scripts/quality-gates.sh`'s FLOW_CHECKER block to capture the real exit code and hard-fail (`log_fail` +
+      `exit 1`) specifically on exit 2; other non-zero exits remain non-blocking. Verified both paths in isolation
+      (manifest-missing → exit 1; manifest-present → exit 0/pass) before shipping. Evidence:
+      `bash     scripts/quality-gates.sh` green (sentinel = HEAD `d5ea8d0755`, UI/API flow coverage check itself passed
+      4/4 journeys with the real manifest present); quickmerge verified `d5ea8d0755` ancestor of
+      `origin/live-defi-rollout`.
 - [ ] [CODE] P2. Fix the client_context.py docstring (remove the nonexistent max_leverage field, correct
       min_balance_per_venue naming) Source:
       `plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md`

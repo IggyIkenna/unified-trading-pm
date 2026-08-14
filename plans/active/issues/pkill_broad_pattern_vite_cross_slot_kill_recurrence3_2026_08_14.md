@@ -81,12 +81,13 @@ Immediate mitigation applied by me (slot 20, same session): re-ran
 into `~/.bashrc` and `~/.zshrc`. This protects future NEW shells on this host but not already-open sessions (including
 my own current one) and does not by itself explain why the guard was missing here in the first place.
 
-- [ ] [INFRA] P1. Determine WHY the pkill guard was absent in this worker session's shell despite the 2026-07-29
+- [x] ✅ [INFRA] P1. Determine WHY the pkill guard was absent in this worker session's shell despite the 2026-07-29
       "rollout COMPLETE on this host" resolution note on the 2026-07-28 doc — check whether AO worker tmux panes are
       spawned via a non-login/non-interactive shell path that skips `~/.bashrc` sourcing (common cause: `bash -c`
       without `-i`, or a shell that reads `~/.bash_profile`/`~/.profile` instead). If confirmed, fix the guard
       installation/sourcing path so it actually reaches every AO-spawned worker shell, not just manually-opened
-      interactive ones. (repo: agent-orchestrator or unified-trading-pm, whichever owns worker pane spawning)
+      interactive ones. (repo: agent-orchestrator or unified-trading-pm, whichever owns worker pane spawning) —
+      agent-orchestrator@2e4122b
 - [ ] [INFRA] P2. Re-verify (or re-run) the guard installer across every slot/host currently in the fleet — the
       2026-07-29 resolution only confirmed ONE host; if worker panes don't inherit it, every host needs the same
       re-check this incident surfaced.
@@ -99,3 +100,14 @@ my own current one) and does not by itself explain why the guard was missing her
 
 - 2026-08-14 (slot 20): incident occurred + self-reported; immediate mitigation (guard re-install) applied same session;
   issue doc filed per FINDINGS CLOSURE HARD RULE before continuing the original task.
+- 2026-08-14 (slot 7): confirmed the P1 root cause independently — `server/tmux_spawn.py::_start_session` spawns every
+  worker pane as `bash -c "..."` (no `-i`/`-l`), and bash only auto-sources `~/.bashrc`/`~/.zshrc` for
+  interactive-non-login or login shells respectively, so `install-pkill-guard-shell-env.sh`'s managed block in those rc
+  files was never reachable from an AO-spawned shell — the 2026-07-29 "rollout COMPLETE" note was only ever true for
+  manually-opened interactive shells, not dispatched worker panes. Implemented a fix sourcing the guard lib directly
+  into `bash_cmd`, then discovered slot 12 had landed an equivalent fix concurrently (agent-orchestrator@2e4122b, same
+  root cause, same mechanism — source the guard lib directly in `_start_session`, with its own test coverage in
+  `tests/test_tmux_spawn_targets.py`) while mine was mid-flight. Reconciled via `git pull --rebase` +
+  `git rebase --skip` on my own not-yet-pushed commit (discarding my duplicate implementation, not slot 12's landed
+  work) rather than shipping a second, functionally-redundant version — verified slot 12's landed fix + its 39 tests
+  pass. No further code change needed for this item.

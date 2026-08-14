@@ -187,8 +187,12 @@ source: >-
 - [ ] [CODE] P2. Surface the windowed 24h/7d reconciliation view in DeepSeekWalletPanel.tsx with a real cited Playwright
       L2 regression spec Source:
       `plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`
-- [ ] [CODE] P2. Pin cleanupPeriodDays: 30 explicitly in cursor-configs/settings.json (currently on an undocumented
-      upstream default with 2 known behaviour-changing bugs) Source:
+- [x] ✅ [CODE] P2. Pin cleanupPeriodDays: 30 explicitly in cursor-configs/settings.json (currently on an undocumented
+      upstream default with 2 known behaviour-changing bugs) — ALREADY SHIPPED prior to this batch's drafting:
+      `unified-trading-pm@5c373663c8` (2026-08-11) pinned it, `unified-trading-pm@ea53432c4e` (2026-08-12) re-confirmed
+      disk headroom before landing on 30 (174G free at the time). Re-verified 2026-08-14: value still reads
+      `"cleanupPeriodDays": 30` at `cursor-configs/settings.json:2`; current disk headroom 162G free (77% used) — still
+      healthy for 30-day retention. No further code change needed. Source:
       `plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`
 - [ ] [CODE] P2. Archive safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md via the standard 6-step
       archival ritual (all 3 of its own todos are done + unlocked, and its own Progress Log already flags it
