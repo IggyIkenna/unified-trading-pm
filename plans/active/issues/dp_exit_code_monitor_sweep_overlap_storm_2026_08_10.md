@@ -197,11 +197,11 @@ until the next sweep) and is a stopgap, not the root fix.
       in the Progress Log below (this session had live `gcloud`/GCS credential access, unlike the prior 3 sessions on
       this doc). Filed the next P1 investigate/fix todo.
 
-- [ ] [BACKEND] P1. **ADDED 2026-08-14 (slot 15, live-verify follow-up)** — the classify/route/emit phase (deliberately
-      kept SEQUENTIAL to protect shared state — `finding_sink`, `_EMITTED_THIS_SWEEP`, the RESOLVED bookend,
-      `route_finding` side effects) is now the dominant bottleneck, confirmed via live phase-boundary logs on execution
-      `f8k2v` (2026-08-14 18:00-18:30Z): only 15/266 terminated VMs got a logged `verdict=` between 18:09:31Z and
-      18:26:55Z (~1044s, ~70s/VM average) before the 1800s kill — vs. the FANNED-OUT read phases (`running-census`
+- [x] ✅ [BACKEND] P1. **ADDED 2026-08-14 (slot 15, live-verify follow-up)** — the classify/route/emit phase
+      (deliberately kept SEQUENTIAL to protect shared state — `finding_sink`, `_EMITTED_THIS_SWEEP`, the RESOLVED
+      bookend, `route_finding` side effects) is now the dominant bottleneck, confirmed via live phase-boundary logs on
+      execution `f8k2v` (2026-08-14 18:00-18:30Z): only 15/266 terminated VMs got a logged `verdict=` between 18:09:31Z
+      and 18:26:55Z (~1044s, ~70s/VM average) before the 1800s kill — vs. the FANNED-OUT read phases (`running-census`
       1.9s + `terminated-base-signals` 449.9s ≈ 452s total), which the candidate-c fix successfully sped up. Two
       candidates: (1) the classify loop's PER-VM `needs_reason` run.log fetch is a SEPARATE single-read (not part of the
       earlier fanned-out `_read_terminated_base` prefetch) and still hits the 30s bounded-call timeout + 1 retry (91
@@ -217,7 +217,32 @@ until the next sweep) and is a stopgap, not the root fix.
       size) is RULED OUT**: live `gcloud compute instances list --filter="status=RUNNING"` = 29 VMs total fleet-wide,
       confirmed via genuinely running census (not the stale 266-VM terminated backlog) — `_SWEEP_IO_MAX_WORKERS=16` is
       not undersized for the current fleet. Target: sweep completes well under 1800s with the terminated backlog
-      actually shrinking execution-over-execution. Repo: deployment-service.
+      actually shrinking execution-over-execution. Repo: deployment-service. — ✅ Shipped both candidates: (1a)
+      prefetches the classify loop's `needs_reason` run.log as part of a new fanned-out phase right after
+      `terminated-base-signals` (candidate set computed from the already-known base-signal values, intentionally
+      over-inclusive since `preemption_op_checker` can only flip `is_preempted` False→True, never the reverse, so the
+      loop's real `needs_reason` set is always a subset — the loop falls back to a synchronous read if a name is somehow
+      absent from the prefetch dict). (2) `write_census()` now checkpoints every 25 classified VMs (not only at the very
+      end): the checkpoint preserves not-yet-classified terminated VMs at their PRIOR captured value (so the next tick's
+      diff still sees them as terminated and retries them) while dropping already- classified ones (retired, never
+      re-flagged) — so a mid-loop task-timeout kill now saves real forward progress instead of restarting the same
+      backlog from scratch. Added a regression test
+      (`test_sweep_checkpoints_census_incrementally_during_terminated_loop`) asserting the exact checkpoint sequence +
+      preserved/dropped VM sets; the existing `test_sweep_gone_no_capture_downloads_run_log_at_most_once` still asserts
+      exactly 1 run.log download per VM (unchanged — just moved earlier into the fanned-out phase).
+      `deployment-service@cbe58d2d`, QG green (3448 passed). Live-verification of the next few hourly executions (does
+      the sweep now finish under 1800s, does the sentinel/backlog actually advance) is a fresh verify task, not bundled
+      into this fix.
+
+- [ ] [BACKEND] P2. **ADDED 2026-08-14 (slot 14, follow-up)** — live-verify the classify-loop fix
+      (`deployment-service@cbe58d2d`: run.log prefetch + incremental census checkpointing) actually collapses the
+      exit-code-monitor sweep under its 1800s task-timeout: confirm the image digest genuinely runs the post-fix commit
+      (same ancestor/digest-inspection discipline as prior verify todos on this doc), then read the phase- boundary logs
+      (`running-census` / `terminated-base-signals` / `run-log-prefetch` / `classify/route/emit`) on the next 2-3 hourly
+      executions to see whether the sweep now finishes, whether the terminated backlog is actually shrinking
+      execution-over-execution (via the new incremental census checkpoints), and whether the
+      `download_bytes(...) exceeded the 30s bounded-call timeout` warning rate dropped now that most of those reads
+      moved into the parallel prefetch phase. Repo: deployment-service.
 
 ## Related
 
@@ -229,6 +254,21 @@ until the next sweep) and is a stopgap, not the root fix.
   launcher-host exemption), and the DP_SOURCE_RATE_LIMITED cooldown.
 
 ## Progress Log
+
+- 2026-08-14 (slot 14, backend): Shipped the P1 classify/route/emit-bottleneck fix. (1) Added a new fanned-out phase
+  right after `terminated-base-signals` that prefetches the classify loop's conditional `needs_reason` run.log for
+  GONE_NO_CAPTURE candidates — computed from the already-known base-signal values (over-inclusive vs. the loop's own
+  `preemption_op_checker`-refined `needs_reason` set, but provably a superset since that fallback only ever flips
+  `is_preempted` False→True; the loop falls back to a synchronous read if a name is ever absent from the prefetch dict,
+  as a defensive belt). (2) `write_census()` now checkpoints every 25 classified VMs via a new `_checkpoint_census()`
+  helper instead of only once at the very end — the checkpoint keeps not-yet-classified terminated VMs at their PRIOR
+  captured value (so the next tick's diff still retries them) while dropping already-classified ones (retired). Added
+  `test_sweep_checkpoints_census_incrementally_during_terminated_loop` (asserts the exact checkpoint sequence + which
+  VMs survive/drop at each checkpoint) and verified the existing
+  `test_sweep_gone_no_capture_downloads_run_log_at_most_once` still passes unmodified (download moved earlier, not
+  duplicated). `deployment-service@cbe58d2d`, QG green (3448 passed, full suite). Filed a P2 live-verify follow-up todo
+  (next 2-3 hourly executions) rather than closing the loop myself — no live `gcloud`/GCS credential access from this
+  worker's environment this session.
 
 - 2026-08-14 (slot 15, backend): Live-verified the P2 candidate-c verify todo — this session had live `gcloud`/GCS
   credential access (`unified-trading-sa`), unlike the prior 3 sessions on this doc which explicitly noted the lack.
