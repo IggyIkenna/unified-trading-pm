@@ -314,6 +314,20 @@ all 142 identities to prove it). `deployment_service.data_pipeline_monitors.revo
 calls `admission_blocked(target)` before starting work. A revocation survives even if the actuator never runs, dies
 mid-sweep, or is never scheduled.
 
+**Where it fires — record this, and check it still holds.** `escalation.route_finding()` calls `actuate()` for EVERY
+finding, independent of tier: a `DEPS_DRAIN` applies whether the finding is `auto_recover`, `file_issue` or
+`page_operator`. The close half is `meta_watchers.reconcile_resolved()`, which calls `release()` once an alert stops
+re-firing. Both call sites are asserted by AST guards (`test_actuate_has_a_production_caller`,
+`test_release_has_a_production_caller`), because this mechanism shipped across SIX green phases with **no production
+caller at all** — every component complete, tested, and unreachable, which checkbox-level completeness could not see.
+The guards exist so that state fails the gate instead of passing review.
+
+Two constraints discovered the hard way, which must not be undone. The actuator takes its FLEET_HALT visibility as an
+**injected callable**: importing `escalation` for `PipelineFinding` was the single edge that stopped `escalation` from
+importing back, and that edge is why the mechanism sat uncalled. And the announcement emits `log_event` **directly**,
+never `meta_watchers.emit_finding` — that calls `route_finding`, and the announcement runs INSIDE `route_finding`, so
+routing it through would re-enter the escalation hop and re-run revocation against the announcement itself.
+
 **Every drain flushes through the UTL drain registry first**
 (`unified_trading_library.lifecycle.drain_registry. drain_all()`) — see the flush-contract convention in
 `/codex/06-coding-standards/README.md` and the full contract in `/codex/05-infrastructure/spot-vms-for-backfill.md` §

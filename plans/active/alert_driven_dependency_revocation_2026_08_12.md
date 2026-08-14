@@ -597,8 +597,15 @@ conserved and each line names where the work went, per `check_todo_regression.sh
 - [x] ✅ [DOC] P1. Add the flush contract to `/codex/06-coding-standards/` so every new buffered writer registers with
       the drain registry by convention, not by memory. — Added under "Error Handling Standards" alongside a matching
       RETRY_BUDGETS pointer (both landed together since they're the same shape of "hardcoded X → registry Y" rule).
-- [ ] [REVIEW] P0. Post-phase codex audit — verify no plan↔codex drift, every cited path resolves, and no doc still
-      claims a gap this plan closed.
+- [x] ✅ [REVIEW] P0. Post-phase codex audit — **RUN 2026-08-14, three criteria measured.** (1) Every `/codex/...` path
+      cited by this plan and its child resolves on disk — zero missing. (2) No codex doc still claims a gap this plan
+      closed: the `All recovery mechanisms are disabled in batch` claim is gone from the corpus, and
+      `autonomous-recovery-matrix.md` now names the revocation path. (3) One real drift FOUND and fixed: both
+      revocation-bearing docs described the mechanism without naming WHERE it fires — and "built but not called" was
+      this plan's entire failure mode. `data-pipeline-alerts.md` now records the two call sites, their AST guards, and
+      the two constraints that must not be undone (injected visibility; `log_event` not `emit_finding`, which would
+      re-enter `route_finding`). Separately corrected during this pass: `dependency-health-policy.md` had all FIVE
+      `DependencyClass` names wrong.
 - [ ] [REVIEW] P0. Archive this plan once every todo is done and unlocked, per the archival discipline (dated archive
       folder, banner, referrer sweep).
 
