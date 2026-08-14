@@ -122,9 +122,12 @@ source: >-
       `by_venue_instrument_type` when its entire row-set is `empty_confirmed`; a mixed leaf (real captured/
       attempted_failed rows alongside empty_confirmed) keeps its full counts. Checkbox reconciliation only — no new code
       change needed for this batch.
-- [ ] [CODE] P2. Add aggregator-routes as the 9th migrate_defi_full_v9_canonical.py migrator spec (per the 2026-08-08
+- [x] [CODE] P2. ✅ Add aggregator-routes as the 9th migrate_defi_full_v9_canonical.py migrator spec (per the 2026-08-08
       operator decision already ruling it a dedicated bucket, mirroring the shipped gas-fees/liquidations 7th/8th specs)
-      Source: `plans/active/defi_migration_audit_log_2026_07_24.md`
+      — market-tick-data-service@795ddf39e1: registered
+      `BucketSpec("aggregator-routes", "aggregator_route",     "spot_asset", grain="path")` in
+      `_migrate_defi_classify.py`, mirroring the gas-fees/liquidations 7th/8th specs. Source:
+      `plans/active/defi_migration_audit_log_2026_07_24.md`
 - [ ] [CODE] P2. Redirect the 4 DeFi live handlers (dex_swaps_handler, solana_defi_handler, evm_defi_handler,
       aggregator_route_handler) that still write to non-migrated legacy buckets onto their dedicated migrated-bucket
       targets Source: `plans/active/defi_migration_audit_log_2026_07_24.md`
