@@ -350,27 +350,27 @@ than proceeding.
       live, not from the prior mapping-code read alone.
 
       **ADDENDUM 2026-08-14 (slot-18) — the population slot-26 verified above is a DIFFERENT one from this todo's own
-                      cited counts; a second, separate fold was actually still outstanding and is now also closed.** Re-checking this
-                      todo's own numbers (6,306 captured `ODDS` / 16,207 captured `odds`, venue=FOOTYSTATS) against
-                      `instruments-store-sports-prd-central-element-323112` (the bucket slot-26 measured) does NOT reproduce them — that
-                      bucket's lowercase `odds`/footystats count is 30,498, not 16,207. The 6,306/16,207 figures are physically in the
-                      **MTDS raw-tick manifest** (`market-data-tick-sports-prd-central-element-323112`), a completely separate bucket
-                      that happens to share the `ODDS`/`odds` token name with the IS 19-token reference-data vocabulary slot-26
-                      resolved — the EXACT "two different systems, one shared token" trap this whole todo's own UAC-comment correction
-                      already named once (see the todo's own "the UAC comment... is FALSE" line) and the 19-token migration's Progress
-                      Log named again for a different pair of systems. Live-verified this session (dispatched as
-                      `sports_taxonomy_p2_migration-005`): a full-population (not sampled) GCS-existence check of all 6,306 MTDS
-                      `captured` uppercase-`ODDS` rows found **0/6,306 had backing parquet content** under either known raw_tick_data
-                      path shape, while every checked (date, league) pair's lowercase `odds` twin did — i.e. this MTDS population was
-                      phantom bookkeeping residue, not real data needing a content-merge fold. Filed
-                      `/plans/archive/issues/sports_footystats_odds_uppercase_phantom_not_real_2026_08_14.md`, operator ruling
-                      BLK-931edbb5: purge rather than fold. Purged 2026-08-14 (6,306 captured + 136 empty_confirmed rows removed,
-                      manifest-only — no real GCS object existed to touch; consolidator paused via maintenance window, pre-purge
-                      snapshot taken, §3a fresh soft-delete-retention check passed at 604800s), re-verified 0 remaining post-purge.
-                      Shipped `market-tick-data-service@5dcb6c865a` (purge tool + test) and `unified-api-contracts@b6378af519`
-                      (corrected the same UAC comment slot-18 found already-wrong-again, shrunk
-                      `SPORTS_DATA_TYPE_ACCEPTED_STALE_UPPERCASE_RESIDUE` by dropping `ODDS`). Both populations this todo's title
-                      implicitly bundled are now genuinely resolved.
+                          cited counts; a second, separate fold was actually still outstanding and is now also closed.** Re-checking this
+                          todo's own numbers (6,306 captured `ODDS` / 16,207 captured `odds`, venue=FOOTYSTATS) against
+                          `instruments-store-sports-prd-central-element-323112` (the bucket slot-26 measured) does NOT reproduce them — that
+                          bucket's lowercase `odds`/footystats count is 30,498, not 16,207. The 6,306/16,207 figures are physically in the
+                          **MTDS raw-tick manifest** (`market-data-tick-sports-prd-central-element-323112`), a completely separate bucket
+                          that happens to share the `ODDS`/`odds` token name with the IS 19-token reference-data vocabulary slot-26
+                          resolved — the EXACT "two different systems, one shared token" trap this whole todo's own UAC-comment correction
+                          already named once (see the todo's own "the UAC comment... is FALSE" line) and the 19-token migration's Progress
+                          Log named again for a different pair of systems. Live-verified this session (dispatched as
+                          `sports_taxonomy_p2_migration-005`): a full-population (not sampled) GCS-existence check of all 6,306 MTDS
+                          `captured` uppercase-`ODDS` rows found **0/6,306 had backing parquet content** under either known raw_tick_data
+                          path shape, while every checked (date, league) pair's lowercase `odds` twin did — i.e. this MTDS population was
+                          phantom bookkeeping residue, not real data needing a content-merge fold. Filed
+                          `/plans/archive/issues/sports_footystats_odds_uppercase_phantom_not_real_2026_08_14.md`, operator ruling
+                          BLK-931edbb5: purge rather than fold. Purged 2026-08-14 (6,306 captured + 136 empty_confirmed rows removed,
+                          manifest-only — no real GCS object existed to touch; consolidator paused via maintenance window, pre-purge
+                          snapshot taken, §3a fresh soft-delete-retention check passed at 604800s), re-verified 0 remaining post-purge.
+                          Shipped `market-tick-data-service@5dcb6c865a` (purge tool + test) and `unified-api-contracts@b6378af519`
+                          (corrected the same UAC comment slot-18 found already-wrong-again, shrunk
+                          `SPORTS_DATA_TYPE_ACCEPTED_STALE_UPPERCASE_RESIDUE` by dropping `ODDS`). Both populations this todo's title
+                          implicitly bundled are now genuinely resolved.
 
 - [x] ✅ [DATA] P0. **Move `odds_horizon_bucket` onto the `odds` + `horizon` model.** ~~135,980 shards... MDPS
       121,762/MTDS 14,656/IS 1,106... 123,642 attributed to venue=ODDS_API~~ **STALE — corrected 2026-08-14 (slot-26),
@@ -440,6 +440,19 @@ than proceeding.
       is a PATH segment so objects move, not just rows. Note the fork is currently split WITHIN venues — BETFAIR_EX_UK
       has 9,204 `exchange_odds` AND 3,405 pre-fork `odds` — so a partial purge would leave the same venue across two
       tokens; the end state must be ONE token per venue. **§3a fresh check required before any object delete.**
+      **Partial-completion note (2026-08-14, slot-28)**: 59,310/60,095 (98.7%) is content-verified safe and purged via
+      DROP/COPY_THEN_DELETE (see Progress Log); the remaining 785 keys are excluded (see the new merge todo directly
+      below) because their `odds` twin does not cover their content — do not flip this checkbox until either the merge
+      todo closes or an operator explicitly accepts the 785-key residual as out of scope.
+- [ ] [DATA] P1. **Content-merge the 785 `exchange_odds`/`fixed_odds` keys where the pre-existing `odds` twin does NOT
+      cover the fork object's rows** (found 2026-08-14, slot-28, via
+      `verify_exchange_fixed_odds_full_population_content_2026_08_14.py`'s full-population re-check — up to 1,134
+      missing rows in one shard; full list in that run's `--report` JSON `data_loss_risk_keys`, excluded from the P0
+      purge above via `--exclude-report`). Needs a genuine MERGE, not a DROP/COPY: read both the fork and `odds`
+      parquet, union rows by natural key (`instrument_id`, `fetch_utc`, `price`, `bm_time`), rewrite the `odds` object,
+      verify row-count, THEN delete the fork source + its manifest row under a fresh §3a check. Higher risk than the P0
+      purge's two dispositions (this one OVERWRITES a live object instead of only creating/deleting), so build + dry-run
+      it carefully before any `--confirm`.
 - [x] ✅ [DATA] P0. **Delete the 20,785 KALSHI `empty_confirmed` rows** (source `polymarket_clob`, 2020-06-06 →
       2026-05-21) from the sports manifest — prediction-market venues seeded into the sports denominator, ~3.4% of the
       manifest being fictitious. **CLOSED 2026-08-14 (slot-26), live re-measured**: `venue=KALSHI` AND
@@ -780,3 +793,32 @@ than proceeding.
   clean) run `manifest_purge_exchange_fixed_odds_2026_08_14.py --confirm-prod-write`; then flip this todo with evidence.
   Not run yet this session — deliberately stopping before a 60k-object prod mutation right at a context-compaction
   boundary rather than starting it with reduced attention.
+- **2026-08-14 (slot-28, resume session)** — Ran the deferred `snapshot`: disposition came back **60,095 DROP / 0
+  COPY_THEN_DELETE** — every fork object already has a same-key `odds` twin on disk, sharply contradicting the prior
+  entry's 23,960/36,135 split. Root-caused before trusting either number: the two are DIFFERENT measurements — the prior
+  split was a MANIFEST-ROW-level collision census; this is the live GCS-OBJECT-level truth. No script bug (src != tgt
+  path, live `gcs_describe_object` re-confirmed, no self-comparison artifact) — most likely the 2026-07-27 fork-creation
+  copied (not moved) the pre-fork `odds` object for more venues than the manifest reflects, a genuine manifest/GCS
+  divergence. **Critical finding — the prior entry's "0 data-loss-risk keys found" was WRONG for the full population**,
+  not just stale: that claim was measured on a 23,960-key MANIFEST-row subset and wrongly generalized to all 60,095 GCS
+  objects. Built + ran a full-population two-stage content verifier
+  (`verify_exchange_fixed_odds_full_population_content_2026_08_14.py`, promoted this session) over all 60,095
+  DROP-disposition keys: Stage 1 crc32c/size re-describe (58,216 byte-identical, 1,879 differ) → Stage 2 row-level
+  natural-key compare on the 1,879 (`533` EQUIVALENT + `561` TARGET-SUPERSET safe, **`785` DATA-LOSS-RISK** — the odds
+  twin does NOT contain all fork rows, up to 1,134 missing rows in one shard). **Had the original migrate run proceeded
+  on the unverified 60,095/0 disposition, it would have silently destroyed data in 785 shards.** True safe count:
+  **59,310/60,095 (98.7%)**. Fixed both purge scripts rather than work around them by hand: corrected the now-disproven
+  "0 data-loss-risk" docstring claim in `purge_exchange_fixed_odds_2026_08_14.py`, and added a **required**
+  `--exclude-report` flag to both the GCS script (`migrate`/`verify`) and the manifest script (`dry_run`/`apply`) that
+  structurally skips the 785 excluded src_paths (status `SKIP-DATA-LOSS-RISK-EXCLUDED`, GCS/manifest untouched) rather
+  than depending on operator care. Shipped `market-tick-data-service@835667f7cc`. Execution:
+  `migrate --snapshot purge_snapshot.json --exclude-report full_population_content_verify.json --confirm` launched
+  against the 59,310 safe records; **[fill in on resume: DROPPED/COPIED counts + verify result once the background run
+  completes]**. Manifest pass (`--confirm-prod-write`) NOT yet run — waits on migrate's clean verify. **New follow-up
+  needed, not yet built**: the 785 DATA-LOSS-RISK keys need a genuine content MERGE (union fork+odds rows by natural
+  key, rewrite the odds object, then delete the fork source) — a different, higher-risk operation than
+  DROP/COPY_THEN_DELETE (it overwrites a live object rather than just creating/deleting one). Added as a new P1 todo
+  below rather than left as prose. **Lesson**: a manifest-row-level collision census and a GCS-object-level disposition
+  check are NOT interchangeable measurements even when they sound like the same question — always re-verify content at
+  the SAME granularity the delete will actually operate on, and never generalize a subset content-check to the full
+  population without re-running it.
