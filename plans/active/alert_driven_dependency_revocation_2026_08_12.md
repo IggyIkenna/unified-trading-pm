@@ -107,15 +107,39 @@ bridges them; it does not extend one over the other.
 
 - [ ] [SCRIPT] P0. Measure p95 and max shard duration per launcher family from `vm-logs/` run.log PROGRESS markers —
       this is the drain-budget denominator, since worst-case waste is longest-shard-duration × dependent-count. Repo:
-      deployment-service.
-- [ ] [SCRIPT] P0. Enumerate every VM prefix in `LAUNCHER_FOR_VM_PREFIX` and classify each as drain-capable (emits
+      deployment-service. **ATTEMPTED 2026-08-14, BLOCKED-CREDENTIALS in this slot**:
+      `scripts.recovery._durable_state.     state_bucket()` resolves empty locally (gcloud auth present — 5 accounts
+      including a working SA — but the bucket name itself resolves from runtime-only config this dev checkout doesn't
+      carry). Needs either a slot with the runtime env wired or a VM-side run. Left open rather than faked.
+- [x] ✅ [SCRIPT] P0. Enumerate every VM prefix in `LAUNCHER_FOR_VM_PREFIX` and classify each as drain-capable (emits
       PROGRESS via `record_captured`) vs drain-blind (no checkpoint) — a drain-blind prefix can only ever receive
-      DEPS_HOLD. Repo: deployment-service.
-- [ ] [DATA] P0. Confirm from the classification above how many of the ~189 prefixes are drain-blind; if the count is
-      material, add a todo here to close the gap rather than silently degrading those edges to HOLD forever.
-- [ ] [SCRIPT] P1. Inventory every buffered writer in the fleet that can hold un-flushed rows — grep for
+      DEPS_HOLD. Repo: deployment-service. — **MEASURED 2026-08-14** (no code changed, read-only census): **243 total
+      prefixes** (the plan's own "~189" estimate was stale — corrected here per the doc-that-misled-you rule), of which
+      **65 map to `None`** (fan-out wrappers / live singletons / infra VMs — structurally never backfill-capture units,
+      so DEPS_DRAIN never targets them) and **178 map to 104 distinct `scripts/vm/launch-*.sh` files**. Of those 104:
+      **102 confirmed drain-capable** — each invokes a manifest_writer-using service (MTDS/MDPS/instruments-service/
+      features-service/SFI), directly or via a shared launcher lib (`_tradfi-ohlcv-launcher-lib.sh` sets
+      `VM_SERVICE=market_tick_data_service` for all 7 `launch-tradfi-bf-*` scripts, which a naive filename-prefix grep
+      would have missed). **2 are structurally not data-capture VMs** (`launch-scenario-runner-vm.sh` runs
+      `unified_trading_library.scenario.run_matrix` — reads existing data, writes no manifest-tracked shards;
+      `launch-ml-strategy-orphan-sweep-vm.sh` runs a standalone report script) — DEPS_DRAIN never applies to them either
+      way, so they are N/A rather than a gap.
+- [x] ✅ [DATA] P0. Confirm from the classification above how many of the ~189 prefixes are drain-blind; if the count is
+      material, add a todo here to close the gap rather than silently degrading those edges to HOLD forever. —
+      **MEASURED 2026-08-14: the count is NOT material — zero confirmed drain-blind-but-should-capture-data prefixes.**
+      Every backfill-capture launcher (102/104 distinct scripts) is drain-capable post Phase 1's structural fix
+      (`manifest_writer` installs the drain registry at import); the only 2 unconfirmed-by-service-name scripts turned
+      out to be non-capture tools where drain is simply inapplicable, not a gap. No follow-up todo needed.
+- [x] ✅ [SCRIPT] P1. Inventory every buffered writer in the fleet that can hold un-flushed rows — grep for
       `StreamingParquetWriter`, `StreamingShardFinalizer`, and any local accumulation before a GCS write. This is Phase
-      1's registration list. Repo: unified-trading-library.
+      1's registration list. Repo: unified-trading-library. — **MEASURED 2026-08-14**: grepped all 4 backfill service
+      repos (instruments-service, market-tick-data-service, market-data-processing-service, features-service) for
+      `upload_from_string`/`upload_blob`/direct-write patterns outside `StreamingParquetWriter`/`manifest_writer`. Every
+      non-`scripts/` hit was a `.write_bytes()` to a LOCAL side-cache file (EVM creation-block resolver, Solana pool
+      metadata) — synchronous per-call writes, not an accumulating buffer, so nothing to register. The `scripts/`-dir
+      hits are one-off migration/reconciliation scripts (lifecycle-marked TEMPORARY, not in `LAUNCHER_FOR_VM_PREFIX`,
+      not preemption-monitored the way a live backfill VM is) — out of Phase 1's registration scope. No unregistered gap
+      found.
 - [x] ✅ [SCRIPT] P1. Reconcile the slot-4 `unified-trading-pm` checkout. **DONE 2026-08-13 —
       `unified-trading-pm@25b9869550`.** No longer BLOCKED-OPERATOR-DECISION, and the diagnosis below was incomplete:
       the checkout was not merely ahead/behind, it was in **DETACHED HEAD with an interactive rebase interrupted 3.2
@@ -340,12 +364,21 @@ bridges them; it does not extend one over the other.
 - [x] 35. ✅ [CODE] P0. Deliver FLEET_HALT by pausing the relevant Cloud Scheduler jobs, reusing the existing
       scheduler-pause path rather than a new mechanism — and emit `DP_CONSOLIDATOR_SCHEDULER_PAUSED`-style visibility so
       a halt is never silent. Repo: deployment-service. — deployment-service@67e3b36c. Pauses every job serving the
-      target's asset group via the existing `scheduler_maintenance` pauser — one pause path in the repo, and
-      `check_consolidator_scheduler_paused` already suppresses DP-WATCHER-004 for a deliberately paused job so a halt
-      does not page as its own failure. Jobs resolve from the UAC `SCHEDULER_REGISTRY`, so a newly-registered scheduler
-      is halted automatically rather than silently exempt. Never silent: paused job names ride back on the outcome. A
-      failing pause does not abandon the rest (`test_a_failing_pause_does_not_abandon_the_remaining_jobs` — uses sports,
-      not cefi, because cefi resolves to a SINGLE job and the test would have been vacuous).
+      target's asset group via the existing `scheduler_maintenance` pauser — one pause path in the repo. **Correction
+      2026-08-14**: this note originally claimed `check_consolidator_scheduler_paused` "already suppresses
+      DP-WATCHER-004" — UNVERIFIED, not confirmed. The actuator calls the bare `make_scheduler_pauser()` action, never
+      `pause_for_maintenance()`, so no `MaintenanceWindow` is registered for a FLEET_HALT pause; the DP-WATCHER-004
+      suppression only fires when `maintenance_window_reader` finds a live window naming the job. See the new todo
+      below. Jobs resolve from the UAC `SCHEDULER_REGISTRY`, so a newly-registered scheduler is halted automatically
+      rather than silently exempt. Never silent: paused job names ride back on the outcome. A failing pause does not
+      abandon the rest (`test_a_failing_pause_does_not_abandon_the_remaining_jobs` — uses sports, not cefi, because cefi
+      resolves to a SINGLE job and the test would have been vacuous).
+- [ ] [CODE] P2. A FLEET_HALT pause registers no `MaintenanceWindow`, so `check_consolidator_scheduler_paused`
+      (DP-WATCHER-004) may page a deliberate FLEET_HALT pause as an accidental one — found 2026-08-14, not fixed
+      (adjacent to the visibility carry-over, out of scope for that pass). Either route `_pause_schedulers` through
+      `scheduler_maintenance.pause_for_maintenance()` (needs a `bucket`/`surface`/`ttl_minutes` design call this plan's
+      operator record does not make) or confirm via a live sweep that this genuinely never double-pages before closing
+      it as a non-issue. Repo: deployment-service.
 - [x] 28. ✅ [CODE] P0. Budget-bound every actuation per (alert_code, target, day) using the GCS-durable state pattern
       from `relaunch_backfill_vm.py` — the tempdir-backed budget was discarded every 5 minutes on Cloud Run and the
       documented cap never engaged. Repo: deployment-service. — deployment-service@e38b2a0e. `ShardedState`,
@@ -716,3 +749,52 @@ LIVE peer session (`tradfi_databento_account_billing_suspended_2026_08_09.md`,
 Per the liveness gate a live claim is PROTECT, so they were left untouched and every ship this session went through
 `safe-doc-push`/`quickmerge`'s isolated worktree, which reconciles against origin and is unaffected by the local
 divergence. Do NOT reconcile that checkout without the operator while the peer is live.
+
+### 2026-08-14 (continued) — housekeeping, FLEET_HALT visibility, Phase 0 census
+
+Housekeeping first: the `tradfi_fx_krw_usd_phantom_rows_fresh_confirmation_2026_08_12.md` UU-conflict scenario named in
+the resume brief did not apply — `git status` showed a clean tree, already up to date after `git pull --ff-only`. No
+peer conflict to route around.
+
+**Two already-shipped items were sitting unflipped** (doc-that-misled-you class): Phase 3's retry-budget-wiring todo was
+DONE (`instruments-service@1ae4b7d0` + `market-tick-data-service@554adf49`, both confirmed on origin) but still showed
+`- [ ]`; the "Deferred work after 2026-08-12" table claimed FLEET_HALT delivered as a hold marker and Phase 5 was
+2-of-7, when both phases had been fully shipped the day before. Both corrected in the same push
+(`unified-trading-pm@6b333cbc6e`).
+
+**FLEET_HALT visibility carry-over, closed.** `_pause_schedulers` previously only logged via `logger.warning` — nothing
+reached the alerting-service router, so a halt was invisible to Slack despite the plan's own todo asking for
+`DP_CONSOLIDATOR_SCHEDULER_PAUSED`-style visibility. Added `DP_REVOCATION_FLEET_HALT` (UTL event constant,
+`unified-trading-library@85df0de2b2`) and wired `RevocationActuator._emit_fleet_halt_visibility()` to call
+`meta_watchers.emit_finding()` with `tier=AUTO_RECOVER` and no wired actuator for the event — deliberate, not an
+oversight: the actuator itself IS the recovery, so on a Cloud Run Job (no PM clone on disk) this degrades to a silent
+no-op file_issue rather than paging, matching the AO-alerting rule that automatic lifecycle events log + digest but
+never page. Two new tests prove the event fires and that an emit failure never undoes the actual delivery
+(`deployment-service@05630397c4`). **Adjacent finding, NOT fixed, left as an open question**: `_pause_schedulers` calls
+the bare `make_scheduler_pauser()` action, never `scheduler_maintenance.pause_for_maintenance()` — so a FLEET_HALT pause
+registers no `MaintenanceWindow`, meaning `check_consolidator_scheduler_paused` (DP-WATCHER-004) has nothing to suppress
+it against. Path arithmetic on `_DEFAULT_PM_SIBLINGS` happens to make this NOT presently confirmed to double-page (would
+need a live sweep to prove), but the suppression claim in todo 35's own docstring ("already suppresses DP-WATCHER-004")
+is UNVERIFIED, not confirmed true. Scoped out of this pass — visibility was the asked-for carry-over, not the
+suppression wiring, and `pause_for_maintenance` needs a `bucket`/`ttl_minutes` design call this plan's own operator
+record doesn't make. Worth a follow-up todo before this fleet-wides.
+
+**Phase 0's 4 measurement todos, 3 of 4 closed.** Real numbers, not guesses: `LAUNCHER_FOR_VM_PREFIX` has 243 entries
+(the plan's "~189" was stale), 65 map to `None` (never backfill-capture, so DEPS_DRAIN is moot for them), 178 map to 104
+distinct launcher scripts. Verified drain-capability by grepping which service CLI each script actually invokes (not
+filename prefix — the `launch-tradfi-bf-*` family would have false-negatived on a naive check since they delegate
+through `_tradfi-ohlcv-launcher-lib.sh`). Result: 102/104 confirmed drain-capable, the other 2 are non-capture tools
+(scenario runner, orphan-sweep report) where drain is inapplicable rather than missing. Buffered-writer inventory found
+nothing outside what Phase 1 already registered. The p95/max shard-duration measurement is the one still open —
+`state_bucket()` resolves empty in this dev checkout even with working gcloud auth, so it needs either a properly-wired
+runtime env or a VM-side run; left BLOCKED rather than fabricated.
+
+**Next**: Phase 6 (12 bad-VM scenarios, repo: e2e-testing) is the largest remaining chunk. Scoping note for whoever
+picks it up: e2e-testing has ZERO existing revocation-domain test infra, but it DOES already depend directly on
+`execution-service`/`strategy-service` as editable path deps (confirmed precedent for cross-service test imports — this
+harness is explicitly exempted from the T4 no-service-deps rule). `deployment-service` is NOT yet an e2e-testing
+dependency and would need adding to import `RevocationActuator`/`revocation_gate` directly. Per the operator's own
+scoping note, where live -test- GCS bucket access isn't available, write the 12 scenarios against the marker/verdict
+contract with in-memory fakes (mirroring `deployment-service`'s own `written`/`local_only=True` test pattern) rather
+than fabricating VM behavior — this was verified as the honest path, not a shortcut. Phase 7 (codex audit + archive)
+still fully open behind Phase 6.
