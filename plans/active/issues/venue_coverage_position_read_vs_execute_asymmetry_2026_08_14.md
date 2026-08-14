@@ -31,14 +31,6 @@ created: 2026-08-14
 owner:
 resolved_by:
 locked_by:
-context_scope:
-  [
-    /codex/06-coding-standards/integration-testing-layers.md,
-    /plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md,
-    /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
-    strategy-service/strategy_service/position/position_interface/factory.py,
-    execution-service/execution_service/defi_execution/protocols,
-  ]
 ---
 
 # Venue coverage — read vs execute asymmetry
@@ -186,14 +178,17 @@ the build — do not delete the half that is unfinished.**
       actually closes, and list the residue explicitly. Writing 27 near-identical modules and writing one generic module
       plus 5 exceptions are very different amounts of surface to maintain and to disclose — and the second is also far
       easier for a client engineer to audit.
-- [ ] [AGENT] P0. **Make a simulation-only connector refuse live mode instead of reporting success.** All 16 tier-2
-      connectors accept `is_live` and never read it, so `LidoConnector(config, is_live=True).stake(...)` returns
-      `{"success": True}` having moved nothing on-chain. The fix is not per-module: put the guard in `BaseConnector` so
-      a connector that declares no live path raises on construction (or on first write) when `is_live=True`, and have
-      each tier-1 module opt in explicitly. A silent simulated success on a live path is the worst failure mode this
-      code can have — it is indistinguishable from a real fill to every downstream consumer, including reconciliation.
-      **Evidence**: `rg -c 'if self\.is_live|NotImplementedError'` returns 0 for all 16; `lido.py:118-154` is the worked
-      example.
+- [x] [AGENT] P0. ✅ **Make a simulation-only connector refuse live mode instead of reporting success** —
+      execution-service@9946ba5a3. `BaseConnector.supports_live` defaults to `False` (fail-closed) and `__init__` raises
+      `SimulationOnlyConnectorError` when `is_live=True` reaches a connector that has not declared a live path. The six
+      BaseConnector-tree connectors that genuinely execute opted in explicitly (`aave`, `hyperliquid`, `uniswap`,
+      `eigenlayer`, `aster`, `cctp`) so no working live path broke. **Evidence**: gate green (8101 passed, 0 failed —
+      the run before it caught 3 real defects in the new fixtures); verified at origin by reading the blobs back, all 6
+      opt-ins and 6 tests present. `tests/unit/defi_execution/test_connector_live_capability.py` carries negative
+      controls both ways (the guard fires; simulation still works; a declared connector is not blocked) plus a Lido
+      regression anchor asserting `supports_live is False` — **invert that anchor when Lido's live path lands, do not
+      delete it.** **Not covered**: the Solana tree (`BaseSolanaConnector`) — separate base class, all its connectors
+      are already live; mirror the declaration there when that tree is next touched.
 - [ ] [AGENT] P0. **Unify the duplicated connector classes to one SSOT path.** `LidoConnector`, `UniswapConnector` and
       `BaseConnector` are each defined twice — `execution_service/venues/` and
       `execution_service/defi_execution/protocols/`. Per the operator's standing ruling, **unify and complete the build;
@@ -306,7 +301,16 @@ silently-wrong result rather than a loud failure.
 - **ripgrep's `-r` is `--replace`, not `--recursive`** (grep's is recursive). `rg -rn 'LidoConnector|...'` silently
   substituted every match with the literal `n` and produced plausible-looking but corrupted output —
   `class n(BaseConnector)`. It fails _quietly_, as valid-looking results. rg recurses by default; drop the `-r`.
-
-## Progress Log
-
-- **context-scout 2026-08-14**: populated context_scope (5 entries).
+- **A wrapper that converts failure into a success-shaped value is the most dangerous shell habit in this workspace.**
+  Two instances in one session, both self-inflicted: `rg -c ... $f || echo 0` turned "file not found" (wrong cwd) into
+  "0 matches", i.e. a false ABSENCE across 16 modules; and `cmd > log 2>&1; echo "EXIT=$?"` reports **`echo`'s** status,
+  so a gate run with 3 failing tests was recorded as exit 0. Both produce a confident wrong answer rather than an error.
+  Put the command last in the pipeline, and never `||` a default onto a measurement.
+- **`cd` persists between tool calls; a compound `cd X && …` that gets killed may not persist it.** Several probes ran
+  from the wrong directory. Use absolute paths in any command whose result you intend to reason about.
+- **A passing test is invisible in gate output — only failures are named.** Grepping the log for the new test file
+  returned zero and looked like "it never ran". The real evidence was arithmetic: `8098 passed + 3 failed` became
+  `8101 passed`. Count the delta; don't grep for the filename.
+- **Read the class boundary before calling a docstring self-contradictory.** `strategy_id` appearing as a field while a
+  nearby docstring said it was "removed as redundant" looked like a contradiction; it was two adjacent types
+  (`WalletConfig` vs `TradingWalletConfig`) with opposite, and individually correct, resolutions.
