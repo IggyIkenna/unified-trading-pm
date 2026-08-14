@@ -196,7 +196,52 @@ than proceeding.
       freshness pre-flight run on a recent + a historical date each shows `is_fresh=True` with 0 spurious missing/stale;
       `[OPERATOR]` tag because this launches a VM + executes a corpus-scale prod manifest mutation (delete-safety codex
       §3a doesn't apply — no object delete, but the launch itself needs the same review a 16M-row prod-manifest rewrite
-      warrants).
+      warrants). **CORRECTION 2026-08-14 (slot-18, resume session) — step 2's "flip 8 registry sites to lowercase" is
+      WRONG as literally worded; do NOT rewrite these registries' literal values.** Traced all 8 call sites and found
+      they split into two disjoint classes the original wording conflates: **(a) UAC-axis lookup keys that MUST stay
+      uppercase** — `orchestrator/__init__.py::_SPORTS_DATA_TYPE_TO_PIPELINE_MODE` (looked up via
+      `_pipeline_mode_for_sports_data_type()` at `writers.py:270`, BEFORE the manifest-write casing decision — flipping
+      this dict's keys breaks the lookup, not the manifest) and any UAC-axis registry feeding
+      `get_entity_league_coverage()`/`SPORTS_DATA_TYPE_TO_SOURCE`; vs **(b) genuine manifest-boundary sites that DO need
+      the lowercase form, applied via a translation call at the boundary** (mirroring the already-proven
+      `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE`/`_sports_manifest_data_type()` pattern,
+      `enumerate_expected_universe.py:305-332`) — **not** by rewriting the registry literal, because several of the SAME
+      registries feed BOTH kinds of call in one file: `process_preflight.py:508-509` builds `expected` from
+      `_SPORTS_CORE_ENTITIES`/`_SPORTS_PER_FIXTURE_ENTITY_NAMES` and passes it straight into
+      `_orch.check_shard_freshness(expected_venues=expected, ...)` at `process_preflight.py:592-598` (confirmed exact
+      case-sensitive manifest-content match, `unified-trading-library/manifest_writer/_queries.py:149`) — but the SAME
+      `expected` also flows through `get_entity_league_coverage(entity)` at `process_preflight.py:469` (UAC-axis, stays
+      uppercase). Confirmed manifest-boundary sites needing a translation wrapper (not a registry rewrite):
+      `process_preflight.py:592-598`'s `check_shard_freshness(expected_venues=expected)` call;
+      `sports_dependency.py:218`'s `idx["data_type"].isin(_API_FOOTBALL_FIXTURES_DATA_TYPES)` — a DIRECT `.isin()`
+      against raw manifest content (`sports_dependency.py:97-98`'s own docstring: "the two manifest data_type values";
+      post-migration only `fixtures_schedule` will be present — the bare `FIXTURES` legacy literal was already fully
+      retired per `fixtures_manifest_legacy_backfill_2026_07_24.md`, so keeping both members lowered is harmless but
+      both must be lowered); `writers.py:270`+`writers.py:383-390`'s `_classify_venue_write()` —
+      `_pipeline_mode_for_sports_data_type     (manifest_data_type)` MUST run on the uppercase form BEFORE
+      `manifest_data_type` is lowered for the
+      `record_captured(row_key={"data_type": manifest_data_type}, data_type=manifest_data_type, ...)` write — ordering
+      matters WITHIN this one function, not just across files; `catalogue.py:131-171`'s equivalent legacy per-venue
+      write path (same extraction pattern, same fix). **Not yet traced to the same rigor this session**:
+      `sports_reference_fixtures_write.py::_ENTITY_DT_BY_SHORT`'s `record_captured(data_type=af_entity_dt, ...)` write
+      (~line 169, almost certainly the same writers.py pattern) and `_ENRICHMENT_ENTITY_VENUES`'s full consumer set
+      beyond the two call sites read this session. **Net effect**: step 2 shrinks from "8 registries, literal rewrite"
+      to "N manifest-boundary call sites, translation-wrapper insertion" — smaller blast radius but needs a fresh
+      per-site audit before code lands, not a mechanical global replace. **Both previously-untraced sites now confirmed
+      (same session, follow-up read)**: `sports_reference_fixtures_write.py:158-171`'s
+      `record_captured(row_key={...,     "data_type": af_entity_dt}, data_type=af_entity_dt, ...)` write is the
+      IDENTICAL writers.py pattern — lower `af_entity_dt` only immediately before this call, never
+      `_ENTITY_DT_BY_SHORT`'s dict values (which UAC-axis code elsewhere may still key uppercase).
+      `_ENRICHMENT_ENTITY_VENUES` has exactly 2 consumers, both in `process_preflight.py` (line 462, feeding
+      `expected.append(entity)` → the already-covered `check_shard_freshness` boundary; line 688, a
+      `{e for e, _ in ...}` set built only to test membership against `missing_set`, which itself derives from that same
+      already-translated `expected`/`missing`/`stale` — no separate casing risk). **All 8 original sites now fully
+      classified**: 0 need a literal registry rewrite; the manifest-boundary translation wrap is needed at exactly 5
+      call sites (`process_preflight.py:592-598`, `sports_dependency.py:218`, `writers.py:383-390`,
+      `catalogue.py:131-171`, `sports_reference_fixtures_write.py:158-171`) plus the `enumerate_expected_universe.py`
+      override-dict wiring already scoped in step 3. No step-2/3 code shipped this session pending operator review of
+      this corrected design (see BLK-8436a1a6 follow-up); step 1 (the manifest re-stamp script) is independent of this
+      correction and unaffected.
 - [ ] [DATA] P0. **Fold footystats `ODDS` (6,306 captured) + `odds` (16,207 captured) into a single `odds`.** These are
       the same vendor population under two spellings; `source=footystats` remains the discriminator against the odds_api
       population. Note the UAC comment calling the uppercase set "4 stale empty rows" is FALSE — expect 6,306 real
