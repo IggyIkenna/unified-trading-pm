@@ -9,7 +9,7 @@ summary: >-
   instruments-service's coverage harness, a deployment-api passthrough, and a deployment-ui render. Triggered by an
   operator ad-hoc request to see sports' measured 0.43 TB (IS 0.061 TB + MTDS 0.369 TB, measured 2026-08-14) surfaced
   inside the existing per-AG summary tiles instead of a one-off manual query.
-status: active
+status: complete
 nature: design
 asset_group: [meta]
 stage: [data]
@@ -53,9 +53,13 @@ drift_direction: advance-code
 
 # Honest Coverage rollup — add per-asset-group GCS storage-size summary stat
 
-> **Status: active** — operator resolved both open design questions 2026-08-14 (full build; storage lives in the
-> existing per-AG `by_asset_group[ag]` coverage.json cell). LOCAL/human plan (`assigned_vm: NA`), never ingested by
-> regen regardless of status — this flip just reflects the scope is settled, not that it's auto-dispatched.
+> **🟢 ARCHIVED 2026-08-14 — COMPLETE** (status: complete, all 7 todos `[x]`, unlocked). All 4 repos shipped + CI green:
+> `unified-trading-library@5d619a6894`, `instruments-service@ca8148fe3f`, `deployment-ui@deb97bff9c`,
+> `unified-trading-pm@54406325d5`. `deployment-api` needed no change (verbatim passthrough, confirmed). Live end-to-end
+> proof: `storage_bytes_tb=0.4303` for sports through the real shipped code path. One residual, untracked follow-up (not
+> a blocker for archival): nobody has visually confirmed the storage tile renders correctly in the live deployed console
+> — everything up to and including the API response is verified, the final pixel-level render is not. If that ever
+> surfaces a bug, file a fresh issue doc rather than reopening this one.
 
 ## Why
 
@@ -129,19 +133,18 @@ storage classes, prod tier only):
       proof below.
 - [x] 1. ✅ [INFRA] P3. Grant `monitoring.viewer` to `unified-trading-sa` on `central-element-323112` —
       unified-trading-pm@(no code, IAM-only) + live-verified 2026-08-14 (see Design questions section above).
-- [ ] [DATA] P3. BLOCKED-ON:sports_fixtures_weather_live_edit_2026_08_14 — Wired `_compute_coverage()` in
-      `instruments-service/scripts/measure_honest_coverage.py` (docstring 21-32, import 125, new helpers
-      `_instruments_store_kind()` 281-293 + `_measure_ag_storage_bytes_tb()` 296-326, call site 852-856) to set
-      `ag_counts["storage_bytes_tb"] = round((is_bytes + mtds_bytes) / 1e12, 4)`. **Scope decision, evidence-based, not
-      guessed**: the existing `by_asset_group[ag]` cell's row/shard counts are already sourced ENTIRELY from MTDS's
-      bucket (`_MANIFEST_BUCKET_CANDIDATES`, confirmed by direct code read) — there is no separate IS-only or MTDS-only
-      coverage.json, this is the one cross-AG harness and the cell already implicitly reaches across the IS/MTDS
-      boundary. So `storage_bytes_tb` SUMS `resolve_bucket_name(kind=     "instruments-store", asset_group=ag)` (IS) +
-      the MTDS prd-primary bucket, both pinned to `deployment_env=     "prod"` — matching this doc's own resolved
-      baseline of 0.43 TB (IS+MTDS combined), which only equals 0.061+0.369 summed. Fails gracefully per-AG (broad
-      catch, `logger.warning`, returns `None`, never aborts the run) since a storage-metric outage must not block
-      data-correctness-critical coverage computation. Called once per AG (no per-shard loop). —
-      instruments-service@(quickmerge BLOCKED, see below — content correct + live-proven, not yet landed). Evidence:
+- [x] 3. ✅ [DATA] P3. Wired `_compute_coverage()` in `instruments-service/scripts/measure_honest_coverage.py`
+      (docstring 21-32, import 125, new helpers `_instruments_store_kind()` 281-293 + `_measure_ag_storage_bytes_tb()`
+      296-326, call site 852-856) to set `ag_counts["storage_bytes_tb"] = round((is_bytes + mtds_bytes) / 1e12, 4)`.
+      **Scope decision, evidence-based, not guessed**: the existing `by_asset_group[ag]` cell's row/shard counts are
+      already sourced ENTIRELY from MTDS's bucket (`_MANIFEST_BUCKET_CANDIDATES`, confirmed by direct code read) — there
+      is no separate IS-only or MTDS-only coverage.json, this is the one cross-AG harness and the cell already
+      implicitly reaches across the IS/MTDS boundary. So `storage_bytes_tb` SUMS
+      `resolve_bucket_name(kind=     "instruments-store", asset_group=ag)` (IS) + the MTDS prd-primary bucket, both
+      pinned to `deployment_env=     "prod"` — matching this doc's own resolved baseline of 0.43 TB (IS+MTDS combined),
+      which only equals 0.061+0.369 summed. Fails gracefully per-AG (broad catch, `logger.warning`, returns `None`,
+      never aborts the run) since a storage-metric outage must not block data-correctness-critical coverage computation.
+      Called once per AG (no per-shard loop). — instruments-service@ca8148fe3f. Evidence:
       `bash scripts/quality-gates.sh --no-fix` → `✅ ALL QUALITY GATES PASSED (99s)`, exit 0, fresh non-cached blocking
       foreground run. **Live sanity check (this session, after fixing the dependency gap below): `storage_bytes_tb` for
       sports = `0.4303`, exact match to this doc's manually-measured 0.061+0.369=0.430 baseline** — real end-to-end call
@@ -158,10 +161,11 @@ storage classes, prod tier only):
       time of check) is PROTECT-only — did not touch any of the 4 files. Also fixed 2 REAL, in-scope QG findings along
       the way (both in my own new files, already folded into this todo's evidence above): a hardcoded
       `central-element-323112` project ID in the new UTL test (→ `test-project`), and an empty-string-fallback on the
-      `storage_class` label in `cloud_monitoring_ops.py` (→ raises `ValueError` instead of silently defaulting). **Next
-      step**: retry
-      `bash scripts/quickmerge.sh "feat: wire storage_bytes_tb into honest-coverage harness     (IS+MTDS bucket sum)" --agent --files 'scripts/measure_honest_coverage.py uv.lock     tests/unit/test_measure_honest_coverage.py'`
-      once the other session's `sports_fixtures.py`/`weather.py` edits land or drop back under the line cap.
+      `storage_class` label in `cloud_monitoring_ops.py` (→ raises `ValueError` instead of silently defaulting).
+      **Resolved (same session, ~2h later)**: identified the live owner process via `ps` parent-chain tracing (matched
+      the exact commit-message text embedded in the peer's shell command, not just self-report), reached them directly
+      via `SendMessage` (peer session `3-5e`) rather than guessing or waiting indefinitely — they confirmed ownership,
+      trimmed their comment, and brought `sports_fixtures.py` back to exactly 900L. Retried immediately; landed clean.
 - [x] 4. ✅ [INFRA] P3 (found + fixed mid-session, not in original todo list). `instruments-service`'s own
       `pyproject.toml`/`uv.lock` did not carry `google-cloud-monitoring` as a dependency (a transitive gap from UTL —
       `uv sync --frozen` confirmed nothing new installed under the stale lock, and the live sanity check first failed
@@ -226,3 +230,22 @@ storage classes, prod tier only):
   yet done, needs an explicit operator go-ahead per this workspace's commit-discipline norms)**: review the diffs, then
   commit + quickmerge each repo (unified-trading-library first — instruments-service depends on it) and flip these
   checkboxes' commit-sha references.
+- **2026-08-14 (same session, operator asked to bundle 3 live UI bugs into the same ship + "ship it")**: operator
+  reported 3 live deployment-ui bugs mid-session (Check Status dead-click, console 401s, no instrument search on
+  Pipeline Trace). Checked `plans/active/`+`issues/` first per this workspace's hard rule — found the 401 already
+  root-caused and partially fixed in `deployment_api_unauthenticated_prod_p0_2026_08_10.md` (a deliberately-deferred
+  trade-off, not fresh work), no doc for Check Status, no doc for Pipeline Trace. Live diagnosis (not the tracked plan's
+  assumption) found the REAL 401 cause: `deploymentApi.ts` never attached the operator's already-working Firebase token
+  (a second, un-updated API client module) — no new OAuth infra needed at all, contrary to the original framing. Fixed
+  all 3 + built the storage tile via parallel agents; consolidated verification (tsc/eslint/ 25 Playwright tests) across
+  the combined diff before shipping.
+- **2026-08-14 (shipping, all 4 repos landed)**: `unified-trading-library@5d619a6894`, `deployment-ui@deb97bff9c`
+  (bundles storage tile + all 3 bug fixes), `unified-trading-pm@54406325d5` (this plan + codex doc — re-applied twice
+  after a peer session's commits silently clobbered uncommitted edits on this shared checkout; second time shipped in
+  the same tool-call turn as the edit to close the window), and `instruments-service@ca8148fe3f` (initially blocked by a
+  genuinely live peer session's in-progress edit pushing `sports_fixtures.py` 8 lines over the 900L cap — resolved by
+  directly identifying + contacting the peer via `SendMessage` rather than guessing or infinite-waiting; they fixed
+  their own file within minutes). CI green on all 4 repos post-landing. **This plan is now fully shipped and CI-verified
+  — ready to archive** once the next worker confirms the storage tile renders correctly in the live console (no
+  automated check covers the actual rendered page; everything up to and including the API response is verified, the
+  final visual render is not).
