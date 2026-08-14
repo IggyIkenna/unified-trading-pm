@@ -164,7 +164,7 @@ source: >-
       stale name and cite only INDEX.md, or regenerate ACTIVE_INDEX.md if a distinct artifact was genuinely intended —
       `plans/ACTIVE_INDEX.md` DOES exist (not dangling) but self-declares STALE/superseded-by-`plans/active/INDEX.md`
       since 2026-07-14, so "genuinely distinct artifact" doesn't apply — dropped the stale name, both files now cite
-      only `INDEX.md` as a normative ref: unified-trading-pm@`<SHA>`. Source:
+      only `INDEX.md` as a normative ref: unified-trading-pm@`e8bb0b8524`. Source:
       `plans/active/issues/plan_reconciler_findings_2026_08_07.md`
 - [ ] [CODE] P2. Expand the ui-tranche doc discovery/inventory logic (used by /plan-reconcile ui and /ag-closeout-audit
       ui) to include multiline-frontmatter `asset_group:` docs missed by same-line grep (named examples:
