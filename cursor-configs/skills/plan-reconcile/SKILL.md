@@ -2,7 +2,7 @@
 name: plan-reconcile
 description:
   Audit the PM plans corpus (plans/active + plans/active/issues + plans/epics + the normative refs PLAN_FORMAT.md /
-  task_template.md / INDEX.md / ACTIVE_INDEX.md) for cross-doc contradictions, done-but-unchecked todos, AND
+  task_template.md / INDEX.md) for cross-doc contradictions, done-but-unchecked todos, AND
   AO-dispatch-readiness defects (first-line truncation, unenforced ordering, bare section-shorthand, ambiguous verbs,
   inconsistent delete-tagging, missing definition-of-done, uncited symbol/file forcing exploratory round-trips,
   markdown structural well-formedness, internal self-consistency — per task_template.md §3), AND data-pipeline-milestones drift for the 5 asset-group consolidated
@@ -56,8 +56,9 @@ dedicated `asset_group` enum values** (`ao`/`ci`/`infrastructure` since 2026-07-
 AGs; `parent_epic` (`ao_consolidated_closeout_2026_07_25.md` / `ci_consolidated_closeout_2026_07_25.md` /
 `infra_consolidated_closeout_2026_07_25.md` / `ui_consolidated_closeout_2026_07_30.md`'s own Sources lists) is only a
 secondary hint for docs the tag doesn't yet cover, same caveat as `/ag-closeout-audit`. The normative refs
-(`PLAN_FORMAT.md`, `task_template.md`, `INDEX.md`, `ACTIVE_INDEX.md`) and codex stay in scope for EVERY shard (they're
-corpus-wide policy, not tranche-owned).
+(`PLAN_FORMAT.md`, `task_template.md`, `INDEX.md`) and codex stay in scope for EVERY shard (they're corpus-wide policy,
+not tranche-owned). `plans/ACTIVE_INDEX.md` is a self-declared STALE Day-1-2 historical relic (superseded by
+`plans/active/INDEX.md`, per its own banner) — not a normative ref, out of scope for contradiction-checking.
 
 **Why shard**: this corpus routinely runs 500+ active plans/issues — a full sweep is expensive enough that a
 scheduled/cron AO trigger benefits from a smaller, bounded-runtime shard instead of always paying for the whole corpus.
