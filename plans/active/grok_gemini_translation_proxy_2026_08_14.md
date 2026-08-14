@@ -174,13 +174,16 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
 - [ ] [DATA] P2. Feed any Grok cache-rate gap discovered by the RateCard todo above into the shared heuristic
       reconciliation mechanism built in the sibling DeepSeek/GLM plan (infer from real observed usage vs billed spend
       rather than leaving it unpriced). Done when: a documented, derivation-shown rate lands in `model_pricing.py`.
-- [ ] [INFRA] P1. Verify/extend provider-pinning for sequential and resumed tasks (operator instruction, 2026-08-14 —
-      same requirement as the sibling Codex plan): confirm the existing `_resume_pass`/`preferred_provider` mechanism
-      correctly pins a crash-resume to the SAME Grok/Gemini account it was using, add the same same-provider soft
-      preference across a `sequential: true` chain's todos, and confirm any real provider switch is always a fresh
-      tmux/process spawn (never an in-place `ANTHROPIC_BASE_URL` change mid-session — should already hold structurally,
-      verify with an explicit test rather than assume). Done when: the three-part test described in the sibling Codex
-      plan's equivalent todo passes for Grok and Gemini accounts too.
+- [x] [INFRA] P1. ✅ Add an explicit soft same-provider preference across a `sequential: true` chain's todos — the
+      GENERAL mechanism, shipped in the sibling plan's `select_account_for_spawn()` (new
+      `sequential_preferred_account_id` param), same fix cited in the sibling Codex plan. —
+      `agent-orchestrator@7ae567cbb6`. Confirmed structurally that any provider switch is always a fresh tmux/process
+      spawn, never an in-place `ANTHROPIC_BASE_URL` change mid-session.
+- [ ] [REVIEW] P1. Grok/Gemini-specific verification, blocked on those accounts existing: once registered, confirm (a)
+      `_resume_pass`'s existing `preferred_provider` pin correctly holds a crash-resume on the SAME Grok/Gemini account,
+      (b) a `sequential: true` chain measurably prefers that account across its own todos via the now-shipped
+      `sequential_preferred_account_id` mechanism. Done when: a real dispatch proves both against live accounts, not
+      just the generic mechanism's own unit tests.
 - [ ] [REVIEW] P2. After ~1-2 weeks live, measure real completion quality and (for Grok) real $/task across both
       providers against the Claude/DeepSeek/GLM baseline — feeds the same "get an idea of how well they complete things
       and how much things cost" calibration goal recorded in the sibling plan. Done when: a dated Progress Log entry

@@ -152,16 +152,17 @@ template, minus the third-party dependency).
       passthrough proxy), so capture real token counts there directly rather than trusting any self-reported number.
       Done when: captured counts are cross-checked against the Codex/ChatGPT dashboard's own usage view for a real
       sample and found to agree within a stated tolerance.
-- [ ] [INFRA] P1. Verify/extend provider-pinning for sequential and resumed tasks (operator instruction, 2026-08-14: no
-      model switch mid-sequential-task; any real switch forces a full tmux/process respawn, never an in-place swap). The
-      sibling plan's `_resume_pass`/`preferred_provider` mechanism already pins crash-resumes to the SAME provider —
-      confirm it also applies when Codex is a registered provider, and add an explicit soft preference so a
-      `sequential: true` plan's later todos prefer the SAME provider its earlier todos used (when healthy) rather than
-      round-robining independently per-todo. Confirm (don't just assume) that any provider switch is structurally a
-      fresh spawn — `ANTHROPIC_BASE_URL` is read once at process launch, so this should already hold, but state the
-      verifying test explicitly. Done when: a test proves (a) a crash-resume onto a Codex-backed session stays on Codex,
-      (b) a `sequential: true` chain shows a measurable same-provider preference across its todos, (c) a genuine
-      provider switch is shown to always occur via a fresh process, never a live env-var change mid-session.
+- [x] [INFRA] P1. ✅ Add an explicit soft same-provider preference so a `sequential: true` plan's later todos prefer the
+      SAME provider its earlier todos used (when healthy) rather than round-robining independently per-todo — the
+      GENERAL mechanism, shipped in the sibling plan's `select_account_for_spawn()` (new
+      `sequential_preferred_account_id` param). — `agent-orchestrator@7ae567cbb6`. Confirmed structurally (not just
+      assumed) that any provider switch is always a fresh tmux/process spawn, never an in-place `ANTHROPIC_BASE_URL`
+      change mid-session.
+- [ ] [REVIEW] P1. Codex-specific verification, blocked on the account existing: once a Codex account is registered,
+      confirm (a) a crash-resume onto a Codex-backed session stays on Codex via `_resume_pass`'s existing
+      `preferred_provider` pin, (b) a `sequential: true` chain measurably prefers Codex across its own todos via the
+      now-shipped `sequential_preferred_account_id` mechanism. Done when: a real dispatch proves both (a) and (b)
+      against a live Codex account, not just the generic mechanism's own unit tests.
 - [ ] [DATA] P2. Add an informational `model_pricing.py` entry for Luna (metered-API-equivalent rate, $0.20/$1.20 per 1M
       standalone — used for cost/value tracking against the subscription's flat fee, not real billing, same treatment as
       GLM's Coding Plan). Done when: `price_usage()` returns a value for the Luna model string.
