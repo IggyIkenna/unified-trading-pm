@@ -458,8 +458,16 @@ source: >-
       ask) — no separate fix needed there either.
 - [ ] [CODE] P2. Add the reference price to the shared instruction envelope with its mark mode — §C Source:
       `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
-- [ ] [CODE] P2. Subscribe strategy-service to ClientDomainConfig — §D Source:
-      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
+- [x] ✅ [CODE] P2. Subscribe strategy-service to ClientDomainConfig — §D Source:
+      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` — **ALREADY SHIPPED, no new code
+      needed (verified 2026-08-14).** `strategy-service@c55b586c9c` already wires this (docstring cites it as "B1,
+      2026-08-13"): `strategy_service/config_reloaders.py` imports `ClientDomainConfig`, maintains a module-level
+      `_client_reloader: DomainConfigReloader[ClientDomainConfig]` + `_active_clients` snapshot, `_on_clients_reload()`
+      atomic-swaps the config, invalidates `ClientConfigStore`'s cache, and fans out to
+      `register_client_change_callback()` registrants with the same shard-isolation discipline as the instrument-change
+      loop; `start_domain_config_reloaders()` starts the `clients` domain reloader alongside `strategies`/`instruments`
+      — mirroring execution-service's existing three-reloader pattern exactly, per this todo's own ask. Confirmed live
+      in the current worktree; `c55b586c9c` verified an ancestor of `origin/live-defi-rollout`.
 - [ ] [CODE] P2. Resolve execution-service's missing config.py (rename-vs-document decision applied consistently) — §D
       Source: `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
 - [ ] [CODE] P2. Close the Bybit API-key reload asymmetry in DATA_SOURCE_TO_SECRET — §D Source:
