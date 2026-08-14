@@ -1,6 +1,8 @@
 ---
 doc_type: issue
-title: main/review forced-compact is gated behind an idle verdict a permanently-ticking loop agent never satisfies
+title:
+  main/review forced-compact idle gate is rarely reached because the cooperative nudge lands first — working as
+  designed, not unreachable
 summary: >-
   The main/review forced-compact fallback requires classify_pane == "idle" on 3 CONSECUTIVE keeper ticks, plus an empty
   input box, plus <=1 child process under the pane shell. main is a continuously-ticking loop agent, so the streak
@@ -61,7 +63,7 @@ context_scope:
 > `test_main_and_review_never_reach_force_compact_without_the_idle_verdict`) is live on `live-defi-rollout`. Moved by
 > the 2026-08-10 checkbox-flip + archive pass (slot 23).
 
-# main/review forced-compact is gated behind an unreachable idle verdict
+# main/review forced-compact idle gate is rarely reached by design, not unreachable
 
 ## The gap
 
@@ -189,7 +191,7 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
   the full `test_context_lifecycle.py` suite pre-ship, not shipped broken.
 - 2026-08-09 (slot 19) — Dispatched todo 1 independently and implemented the same instrumentation, then found slot 15
   had already shipped an equivalent, already-QG-green version at `agent-orchestrator@279e07b` (a known double-dispatch
-  pattern per `/plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md`). Skipped my
+  pattern per `/plans/archive/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md`). Skipped my
   duplicate commit during rebase (`git rebase --skip`, no code conflict landed) and flipped this checkbox against
   279e07b instead of shipping a redundant second implementation.
 - 2026-08-09 (slot 15) — Was dispatched todo 2 (the >=6h measurement) directly, before todo 1 had shipped — confirmed
