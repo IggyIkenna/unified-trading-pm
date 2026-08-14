@@ -184,8 +184,21 @@ source: >-
       checkbox just never flipped"), citing the SHA here rather than re-doing the work — same pattern as the two
       `deepseek_wallet_residual` todos above. Source:
       `plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`
-- [ ] [CODE] P2. Surface the windowed 24h/7d reconciliation view in DeepSeekWalletPanel.tsx with a real cited Playwright
-      L2 regression spec Source:
+- [x] ✅ [CODE] P2. Surface the windowed 24h/7d reconciliation view in DeepSeekWalletPanel.tsx with a real cited
+      Playwright L2 regression spec — `agent-orchestrator@4d2f9ed118`: 24h/7d toggle + windowed reconciliation table
+      (`DeepSeekWalletPanel.tsx`), new `getDeepSeekWalletWindowReconciliation` API client
+      (`api.ts`/`types.ts` — the `GET /api/accounts/deepseek/wallet-reconciliation/window` backend was already live from
+      an earlier todo in this same doc), 4 vitest pinning tests for the new pure mappers, and a real 4-test Playwright
+      L2 spec (`deepseek-wallet-reconciliation.spec.ts`) exercising the default-24h render, the not-yet-answerable
+      "sampling since" case, and the 7d toggle re-fetch — actually run headed against the real e2e backend+fixture
+      (`npx playwright test`), not just claimed green. Caught + fixed 2 real bugs surfaced by that live run rather than
+      shipping on faith: (1) the existing lifetime-table `row()` locator's `hasText` substring match was ambiguous
+      between "Residual" and "Residual since observability" (both inside `.deepseek-wallet-lifetime`, a pre-existing
+      collision from the earlier `a3eda085f6` opening-balance todo that had apparently never been e2e-verified) — fixed
+      by exact-matching the label cell via `page.getByText(label, { exact: true })`; (2) a new windowed-view assertion
+      incorrectly asserted `not.toContainText("—")` against a message that legitimately contains an em-dash as its own
+      separator ("sampling since ‹ts› — 24h view available at ‹ts›") — replaced with an exact-string check for the bare
+      fallback-dash render. QG green (3686 py + 346 vitest), all 4 Playwright tests pass live. Source:
       `plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`
 - [x] ✅ [CODE] P2. Pin cleanupPeriodDays: 30 explicitly in cursor-configs/settings.json (currently on an undocumented
       upstream default with 2 known behaviour-changing bugs) — ALREADY SHIPPED prior to this batch's drafting:

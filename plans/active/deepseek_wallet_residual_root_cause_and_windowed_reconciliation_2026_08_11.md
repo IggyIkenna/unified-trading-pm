@@ -176,11 +176,15 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       via the dashboard "Record top-up" form (or the exact amount if the operator knows it precisely) to restore the
       residual's sign and make the frozen-gap view's `residual_since_observability` meaningful. (repo:
       agent-orchestrator, operator action)
-- [ ] [UI] P2. **Surface the windowed view in `DeepSeekWalletPanel.tsx` with a 24h/7d toggle.** Must render the
-      `real_spend_usd=None` case as "sampling since <ts> — 24h view available at <ts+24h>" rather than a dash that reads
-      as zero, and show BOTH balance sample timestamps so the true differenced span is visible instead of assumed to
-      match the request. **Done when**: the panel renders live data and a cited playwright regression spec passes;
-      `[UI]` + `pw:L2 ✓` per `/codex/06-coding-standards/ui-testing-layers.md`.
+- [x] ✅ [UI] P2. **Surface the windowed view in `DeepSeekWalletPanel.tsx` with a 24h/7d toggle.** —
+      `agent-orchestrator@4d2f9ed118` (also tracked at
+      `plans/active/ao_satellite_ao_dispatch_batch20_2026_08_13.md` todo 12, see that entry for the full record):
+      24h/7d toggle + windowed table; `real_spend_usd=None` renders as "sampling since <ts> — <N>h view available at
+      <ts+Nh>" (`windowedSpendCellText`), both balance sample timestamps shown via `fmtWindowBalance`. `pw:L2 ✓` — 4
+      Playwright tests run live against the real e2e backend+fixture (`deepseek-wallet-reconciliation.spec.ts`), all
+      passing; caught + fixed 2 real bugs the live run surfaced (an existing ambiguous lifetime-table row locator, and
+      an incorrect em-dash assertion in the new windowed test) rather than shipping on an unverified claim. `[UI]` +
+      `pw:L2 ✓` per `/codex/06-coding-standards/ui-testing-layers.md`.
 - [ ] [INFRA] P2. **Pin `cleanupPeriodDays: 30` explicitly in `cursor-configs/settings.json`.** Measured 2026-08-11: the
       setting is absent from every settings file (all grep hits were Claude Code's own `cache/changelog.md`), so
       retention runs on an upstream default that the same changelog shows has already had two behaviour-changing bugs
