@@ -273,6 +273,44 @@ additional call sites confirmed NOT-SPORTS (correctly out of scope), 1 call site
 write-methods. **Every `process_*.py` file is now fully classified — no remaining unclassified sports manifest-write
 call site in this codebase.**
 
+## NEW FINDING (2026-08-14, mid-code-authoring) — the READ side (skip-checks) has the SAME exact-match hazard, and is COMPLETELY OUTSIDE this doc's scope
+
+This doc's title and every classification pass so far ("full manifest-**write** call-site inventory") only ever swept
+`record_captured(...)`/`record_failed(...)`/`record_empty(...)`/`record_captured_from_counts(...)`/
+`record_expected_empty(...)`/`note_empty(...)`/`note_failed(...)`. While mechanically fixing `understat.py`, found that
+`_orch._should_skip_shard()` (def `venue_core.py:315`) does `manifest.lookup(row_key)` — and `ManifestWriter.lookup()`'s
+own docstring (`unified-trading-library/unified_trading_library/manifest_writer/ _writer_io.py:166`) states plainly:
+"Dimension matching is **exact** on every populated key." Independently confirmed in
+`_should_skip_date_for_per_league()` (def `sports.py:416`), whose docstring says outright it matches "**exactly as**
+`ManifestWriter.lookup` would" and whose body does `_df[_col].fillna("").astype(str) == _want` — a hardcoded exact
+string equality against the raw uppercase `data_type` argument every caller passes it today.
+
+**Failure mode if shipped as-is**: post-restamp, the manifest stores LOWERCASE `data_type`, but every vendor file still
+calls these two skip-check functions with the UPPERCASE literal (same variable the WRITE side used pre-fix). The exact
+match against the now-lowercase manifest will find **zero rows, forever** — the skip-check permanently returns "not yet
+captured" even for shards that ARE captured. This does not corrupt data (writes still go through, now correctly
+lowercase), but it silently defeats every per-date/per-league skip-check across every vendor that uses them — i.e. a
+**permanent re-fetch storm** against every vendor API, for every date, from the moment the restamp lands. This is a
+DIFFERENT bug shape than the one `check_shard_freshness()` produces (which the parent plan + `process_preflight.py`'s
+already-shipped fix already cover), but it is the same ROOT hazard (exact-match manifest read against a raw uppercase
+literal) and is **just as capable of reproducing "the exact split-token bug this whole migration exists to fix"** — this
+time as silent cost/quota blowup rather than a stale-shard bug.
+
+**Confirmed call-site count** (`grep -c "_should_skip_shard(\|_should_skip_date_for_per_league("` across the 7
+vendor/core files already classified for writes): footystats.py=3, sfi.py=1, transfermarkt.py=1, understat.py=2,
+weather.py=0, sports_reference_core.py=0, sports_reference_fixtures_write.py=0 — **7 confirmed read call sites**, not
+yet individually classified (which literal each one passes, whether it's SIMPLE-safe to just wrap the argument at the
+call, or whether the same variable is ALSO used in a write earlier/later in the same function — the ORDERED-vs-SIMPLE
+method above applies here too, just for reads instead of writes). **`process_preflight.py`'s `check_shard_freshness()`
+fix is NOT reusable here** — different function, different manifest-read primitive (`check_shard_freshness` vs
+`.lookup()`/`_should_skip_date_for_per_league`'s own inline exact-match filter).
+
+**This is a genuinely new, cross-cutting scope item — NOT silently folded into the write-side branch.** The write-side
+mechanical fixes below remain correct and necessary regardless (writes must still become lowercase), but **this branch
+must NOT be represented as "the fix" for the 19-token migration until the read side is also inventoried and fixed** —
+doing so would ship a migration that looks complete (writes fixed, tests presumably pass since writes still succeed) but
+silently reproduces a variant of the exact bug it exists to prevent. See the new P0 todo below.
+
 ## Todos
 
 - [x] ✅ [DATA] P0. **Finish classifying `sports_reference_core.py` in full + resolve
@@ -285,11 +323,23 @@ call site in this codebase.**
       section above: 11 confirmed sports write statements classified (7 SIMPLE + 2 ORDERED + 1 conditional-branch
       SIMPLE + 1 currently-dead branch), 10 sites confirmed NOT-SPORTS. Classification phase for the ENTIRE codebase is
       now complete — remaining todos are code-authoring + verification, not further discovery.
-- [ ] [DATA] P1. **Resolve the `TRANSFER_RECORDS` open question** (found in transfermarkt.py): is it a 20th in-scope
-      token for this re-stamp, or excluded? Check
-      `unified_api_contracts.canonical.domain.sports.league_data .SPORTS_DATA_TYPE_TO_SOURCE` membership and cross-check
-      against the parent plan's explicit 19-token list. Escalate to the operator if ambiguous (affects re-stamp scope,
-      not just this doc).
+- [x] ✅ [DATA] P1. **Resolve the `TRANSFER_RECORDS` open question** (found in transfermarkt.py). DONE — confirmed by
+      direct read of `unified_api_contracts/canonical/domain/sports/league_data.py:208-262`:
+      `SPORTS_DATA_TYPE_TO_SOURCE` has NO `"TRANSFER_RECORDS"` key (only `"PLAYER_VALUES": "transfermarkt"`), and
+      `SPORTS_IS_DATA_TYPE_LOWERCASE_FORM` (line 297) is comprehension-derived FROM that dict's keys, so
+      `canonical_sports_is_data_type("TRANSFER_RECORDS")` returns `None`. **Not a 20th in-scope token** — the existing
+      `canonical_sports_is_data_type(_tm_data_type) or _tm_data_type` fallback formula already handles this correctly
+      with zero special-casing: `PLAYER_VALUES` → `"player_values"`, `TRANSFER_RECORDS` → `None` → falls back to the
+      original literal, untouched. No operator escalation needed; the single fix point at transfermarkt.py:606 is
+      confirmed scope-safe as specified.
+- [ ] [DATA] P0. **NEW (discovered mid-code-authoring): classify + fix the READ-side exact-match hazard** —
+      `_should_skip_shard()`/`_should_skip_date_for_per_league()` call sites (7 confirmed: footystats.py=3, sfi.py=1,
+      transfermarkt.py=1, understat.py=2) each pass a raw uppercase `data_type` into an exact-match manifest read
+      (`ManifestWriter.lookup()` / `sports.py:416`'s own inline exact-match filter) — completely outside this doc's
+      write-only scope, and NOT covered by `process_preflight.py`'s existing `check_shard_freshness()` fix (different
+      primitive). Unfixed, this produces a permanent post-restamp skip-check failure (re-fetch storm), not data
+      corruption — but still reproduces the migration's own failure class in a new shape. See the "NEW FINDING" section
+      above for the full mechanism + evidence.
 - [ ] [DATA] P0. **Once every site above is classified, author + locally validate the fix code for ALL remaining files**
       (footystats.py, sfi.py, transfermarkt.py, understat.py, weather.py, sports_reference_core.py,
       sports_reference_fixtures_write.py, and whichever `process_*.py` files todo 2 confirms) on the SAME held-back
@@ -303,8 +353,10 @@ call site in this codebase.**
       for in the diff. A partial fix that looks complete is the exact failure mode this doc exists to prevent.
 - [ ] [OPERATOR] P0. **Bring the completed branch back to `sports_taxonomy_p2_migration_2026_08_08.md`'s `[OPERATOR]`
       19-token execution todo for the atomic land-and-launch decision** — this doc's job ends at a fully classified +
-      coded + locally-validated branch; the actual merge + VM launch stays gated on that parent todo per BLK-0a3f3791's
-      resolution (Cloud Run Job auto-deploy risk) and the parent plan's own atomicity rule.
+      coded + locally-validated branch (WRITE side AND the newly-discovered READ side both fixed); the actual merge + VM
+      launch stays gated on that parent todo per BLK-0a3f3791's resolution (Cloud Run Job auto-deploy risk) and the
+      parent plan's own atomicity rule. **Do not bring this back until the READ-side todo above is also done** — a
+      writes-only branch would fix the stale-shard bug while introducing a permanent re-fetch-storm bug in its place.
 
 ## Progress Log
 
