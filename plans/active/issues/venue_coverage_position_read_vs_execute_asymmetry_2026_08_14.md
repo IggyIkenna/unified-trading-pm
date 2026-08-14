@@ -28,10 +28,9 @@ related:
     /codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md,
   ]
 created: 2026-08-14
+owner:
 resolved_by:
 locked_by:
-drift_direction: advance-code
-depends_on: []
 ---
 
 # Venue coverage — read vs execute asymmetry
@@ -116,15 +115,27 @@ So today we can open both legs of a staked-basis position and reconcile neither.
       are not "more venues"; they are the reconciliation side of the two archetypes we are shipping real. Build the code
       fully (operator: _"we don't need credentials to fully build the code, not just stubs"_) — credentials gate RUNNING
       an adapter, not writing one.
-- [ ] [AGENT] P0. **Decide: per-protocol adapters, or a generic on-chain balance reader?** A large share of DeFi
-      position reading is an ERC-20/SPL token balance plus a protocol-specific position call. A generic token-balance
-      adapter (wallet + token + chain → balance) would cover every LST and most DEX LP positions in one module and
-      shrink the ~27 gap dramatically; only genuinely stateful protocols (lending health factors, Pendle maturities,
-      concentrated-liquidity ranges) then need bespoke modules. **Measure what fraction of the gap a generic reader
-      closes before writing 27 modules.**
-- [ ] [AGENT] P1. **Assert the two surfaces stay in step, with a gate.** For every venue an archetype can emit an
-      instruction to, a position adapter must resolve. Today nothing detects the asymmetry — it took a manual audit.
-      Fail on execute-without-read; warn on read-without-execute (harmless).
+- [ ] [AGENT] P0. **Generic-first, bespoke-by-exception — operator ruling 2026-08-14, and it applies to BOTH services.**
+      A large share of DeFi position reading is an ERC-20/SPL token balance plus a protocol-specific call, so a generic
+      **token-balance reader** (wallet + token + chain → balance) covers every LST and most LP positions in one module
+      and shrinks the ~27 gap dramatically. **The same shape applies on the execution side**: bundle what shares a
+      mechanism into one module and carve out only what genuinely differs. The exceptions in both directions are
+      **on-chain dynamics** — state that cannot be read or written as a plain balance: lending health factors, Pendle
+      maturities, concentrated-liquidity ranges/ticks, restaking withdrawal queues, and anything with a
+      slippage/route-dependent write path. **Measure before building**: count what fraction of the ~27 a generic reader
+      actually closes, and list the residue explicitly. Writing 27 near-identical modules and writing one generic module
+      plus 5 exceptions are very different amounts of surface to maintain and to disclose — and the second is also far
+      easier for a client engineer to audit.
+- [ ] [AGENT] P1. **Build the venue-coverage cascade as THREE SIT invariants** — operator ruling 2026-08-14, recorded as
+      the SSOT in
+      [integration-testing-layers § "The venue-coverage cascade"](/codex/06-coding-standards/integration-testing-layers.md).
+      In-repo checks belong in `quality-gates.sh`; these are cross-repo, so no single repo's gate can see the other side
+      of the implication and they must run in SIT. Directional, and the direction is the point: **(1)** every MTDS batch
+      capture adapter has a live one (**not** the reverse — a live venue may predate its backfill); **(2)** every MTDS
+      venue has a strategy-service position reader on batch, live AND paper; **(3)** every venue strategy-service
+      supports has an execution-service adaptor. Invariant 3 is the one that would have caught this issue. **It must
+      compare instruction ACTIONS, not venue names** — a module that swaps but cannot stake passes a naive existence
+      check, which is exactly the blind spot noted in the caveat below.
 - [ ] [AGENT] P1. **Audit execution-service instruction coverage per venue.** This audit measured that protocol modules
       EXIST; it did not verify each handles every `InstructionActionV2` an archetype may emit for that venue. A module
       that swaps but cannot stake is a partial gap this table would score as ✅.
