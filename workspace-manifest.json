@@ -69,10 +69,10 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.49.5",
     "deployment-api": "0.85.8",
-    "deployment-service": "0.135.0",
+    "deployment-service": "0.135.1",
     "deployment-ui": "0.1.0",
     "execution-service": "0.69.0",
-    "features-service": "0.81.7",
+    "features-service": "0.81.8",
     "fund-administration-service": "0.9.39",
     "ibkr-gateway-infra": "0.5.1",
     "instruments-service": "0.101.29",
@@ -402,7 +402,7 @@
         "large_file_count": 6,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "a1cd835a50cebfac08dff607b9ec3aab3696523f"
+      "ldr_ci_status_sha": "c9a92c6e6313877a96b5d4e9996cd4aa5e78a852"
     },
     "execution-service": {
       "promotion_model": "ldr_main",
@@ -467,7 +467,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "17d2d92e88fa1804dfa550ab380d55c585874e1f"
+      "ldr_ci_status_sha": "9946ba5a3e80a99d1f4754857e007352f375fd20"
     },
     "features-service": {
       "promotion_model": "ldr_main",
@@ -544,7 +544,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "8646ddb0f301f62a20165c85c66d659ae30ca159"
+      "ldr_ci_status_sha": "9aa8f53933da4ceb3d05cff42754d5571e8caf3f"
     },
     "fund-administration-service": {
       "promotion_model": "ldr_main",
@@ -780,7 +780,7 @@
         "coverage_pct": 91.04,
         "warn_file_count": 11
       },
-      "ldr_ci_status_sha": "ebfb4c674e398fe1ef7ee5807cb8e1df1445a8c3"
+      "ldr_ci_status_sha": "283101a79d844acc5fc21122b565738363c1787c"
     },
     "market-data-processing-service": {
       "promotion_model": "ldr_main",
@@ -905,7 +905,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "740d7faa9e7cfe42a1d3d7b56de42adf9c330c95"
+      "ldr_ci_status_sha": "8da8eac329991e2635eb681561bd1a0aeaf3860d"
     },
     "ml-service": {
       "promotion_model": "ldr_main",
@@ -1039,7 +1039,7 @@
         "warn_file_count": 10
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "45ee5bf800ff9e82fdb832ed0dd4cff9b29425bf"
+      "ldr_ci_status_sha": "486a61b975c56321534214721f1600acc79d3a85"
     },
     "system-integration-tests": {
       "promotion_model": "ldr_main",
@@ -1132,7 +1132,7 @@
         "coverage_pct": null,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "25a09d8924448de3beb298dc026d2e3afa3cf1dd"
+      "ldr_ci_status_sha": "21cc5122bcd5ac05d5a60d55e77a51beb9f5f9c7"
     },
     "trading-agent-service": {
       "promotion_model": "ldr_main",
@@ -1244,7 +1244,7 @@
         "coverage_pct": null,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "ebda13eb285ed5b9841b377546a88f777b7a801a"
+      "ldr_ci_status_sha": "e2c4ca835b15c1b05c8c8e9f1cbbba0225a91bdf"
     },
     "unified-trading-library": {
       "promotion_model": "ldr_main",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "be449b00b60ef148519e78119e3ec23936a97fcf"
+      "ldr_ci_status_sha": "0969b125714c42abbd7cb3c8d7178a4d7547011d"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
@@ -1517,9 +1517,9 @@
         "qg_red_reason": null,
         "coverage_pct": null
       },
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "tests",
-      "ldr_ci_status_sha": "094246df1a97abe97c6eeeeefb301ba4af8363fa"
+      "ldr_ci_status_sha": "8f5b045dbe05bc3207ef2d67d97a58f17bd7970f"
     },
     "agent-orchestrator": {
       "promotion_model": "ldr_terminal",
@@ -1562,7 +1562,7 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server",
-      "ldr_ci_status_sha": "e1038c631e43b9bd378d41b4501359da006061c1"
+      "ldr_ci_status_sha": "c107c96a527e9f16d4ee28661a8279645fdc2605"
     },
     "unified-trading-ci": {
       "type": "infrastructure",
