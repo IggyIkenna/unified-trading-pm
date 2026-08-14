@@ -106,10 +106,22 @@ source: >-
       generate_context_scope_inventory.py's live NEVER_SCOUTED count), then flip docspec.py's context_scope FieldSpec
       from Req.E to Req.R for plan+issue as the final hardening commit Source:
       `plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`
-- [ ] [CODE] P2. Confirm whether the production VM's pinned claude CLI binary supports Claude Code Skills at all, and if
-      not, fix context_lifecycle.py's forced /pre-compact path to detect an 'Unknown slash command' failure and fall
-      back/alert instead of silently proceeding to /compact Source:
-      `plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md`
+- [x] ✅ [CODE] P2. Confirmed the production VM's pinned claude CLI binary DOES support Claude Code Skills —
+      `agent-orchestrator@c00dc13f9d`: checked directly on the production orchestrator VM (i-0c9b283b31d6b5ca7,
+      confirmed via IMDSv2 instance-id) — the actually-running spawn binary is `claude 2.1.202`
+      (`/home/ubuntu/.local/bin/claude`, resolved the same way `tmux_spawn`'s default `claude_bin="claude"` resolves
+      it), well past the pre-Skills gap the 2026-08-04 finding identified (`claude 1.0.112`); `DISABLE_AUTOUPDATER=1` is
+      still set but the binary was independently bumped via a deliberate redeploy since then. Verified the pinned
+      2.1.175 install-script version (`bootstrap_vm.sh`) also carries full Skills support by downloading its real
+      published binary and grepping for the `.claude/skills/<name>/SKILL.md` skill-creator documentation embedded in it.
+      Hardened `context_lifecycle.py`'s forced `/pre-compact` path regardless (the underlying detection gap is real
+      independent of current binary state — a future pin regression or missing SKILL.md would otherwise silently no-op
+      again): added `tmux_spawn.pane_shows_unknown_command()`, checked in `_force_compact_now` before trusting phase 1
+      as done; on detection it logs `forced_precompact_unsupported`, pages once per force episode via a new
+      `notify_precompact_unsupported` Slack alert, and still advances to phase 2 (`/compact`) so context keeps
+      compacting instead of overflowing. New pinning test
+      `test_worker_precompact_unknown_command_alerts_and_falls_back_to_compact`; QG green (3613 passed, dashboard 336
+      passed). Source: `plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md`
 - [ ] [CODE] P2. Write (or document inline in config.py) a read-only readout script for the flash-vs-pro
       deepseek_flash_route_fraction split so the code's own 're-measure rather than trusting this block' instruction has
       an actual method to carry out, not just a query an agent has to re-derive from scratch Source:
