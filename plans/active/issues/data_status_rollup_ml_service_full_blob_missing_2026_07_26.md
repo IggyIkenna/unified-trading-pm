@@ -185,19 +185,19 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       needs its own bound.
 
       **RESOLVED 2026-08-02 (slot 10)**: `deployment-api@34a596b`. Took the documented alternative to raising the
-                              ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
-                              means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
-                              accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
-                              `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
-                              `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
-                              `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
-                              observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
-                              `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
-                              AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
-                              isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
-                              isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
-                              "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
-                              records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
+                                  ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
+                                  means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
+                                  accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
+                                  `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
+                                  `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
+                                  `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
+                                  observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
+                                  `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
+                                  AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
+                                  isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
+                                  isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
+                                  "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
+                                  records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
 
 - [x] ✅ [INFRA] P3. The `data-status-rollup-worker` `GcsEventSink` (the
       `log_event(SERVICE_PROCESSED/SERVICE_FAILED, ...)` calls in `run_rollup`) has not written a new dated prefix under
@@ -487,8 +487,58 @@ worth closing the same way (isolate + surface the real error) rather than leavin
      next step), not something to force to completion under time pressure. Filed as an update to the existing P2 todo
      below rather than a new one — same open item, now scoped precisely instead of vaguely.
 
+- **2026-08-14 (continuation, P2 ROOT-CAUSED — traced to a live consolidator incident, NOT a code/timeout-fit
+  problem)**: Followed the prior entry's own prescribed next step (bounded metadata reads instead of an unbounded
+  listing) and it worked cleanly. (1) Traced `_read_index_cached` → `read_availability_index`
+  (`unified_trading_library/manifest_writer/_read_index.py:617`) to its real GCS access pattern: ONE fixed-key blob
+  (`_index/availability_index.parquet`) on the fast path, no listing — the earlier hung `list_blobs(bucket, prefix="")`
+  attempt was never actually replicating the real read path, it was enumerating the whole raw data bucket, an unrelated
+  and much heavier operation. (2) Bounded `blob.exists()`/`blob.reload()` stats (single HEAD request per object, no
+  download) on both DEFI buckets' index+lock objects found `market-data-tick-defi-prd-central-element-323112` stale for
+  7+ hours with a lock 69+ min old (near the 4200s DOWN-detection horizon), while
+  `features-defi-prd-central-element-323112` was fresh (30min) with no lock — immediately falsifying "same root cause
+  for both services." (3) A bounded, prefix-scoped listing (`_index/per_vm/`, `max_results=50`, NOT a whole-bucket
+  listing) confirmed 16 real pending shards on the MDPS bucket, several written within the hour. (4) Checked the Cloud
+  Run job's own execution history (`gcloud run jobs executions list`, region `asia-northeast1` — the job silently wasn't
+  in `us-central1` where I first looked) and its live logs (`gcloud logging read`): the consolidator IS running
+  healthily every ~60s and completing in 38-55s, but its own health-check code is emitting
+  `CRITICAL: SILENT STALL ... streak=150+ cycles ... shards keep landing but no cycle has merged them` every single
+  cycle — a genuine, already self-diagnosed incident, not a theory. Filed as the new P0 above (blocks this P2);
+  root-caused the SYMPTOM (MDPS's 420s timeout) but the live incident's own root cause (why the incremental mtime-cutoff
+  blind spot recurred here) is explicitly NOT resolved by this entry — that's the P0's own open question. Did not
+  attempt `consolidate(bucket, force=True)` — its docstring's OOM warning for this exact bucket class + the
+  heavy-I/O-belongs-on-a-VM rule made self-serving it without operator sign-off the wrong call; escalated in-chat
+  instead.
+
 ## Follow-ups
 
+- [ ] [DATA] P0. **NEW (2026-08-14) — LIVE INCIDENT, UNPAGED, OPERATOR DECISION NEEDED.**
+      `market-data-tick-defi-prd-central-element-323112`'s manifest-consolidator (Cloud Run job
+      `uts-prod-manifest-consolidator-market-data-defi`, region `asia-northeast1`) is in a genuine `SILENT STALL`
+      (`unified_trading_library/manifest_consolidator.py:1441` `_check_consolidation_stall`, log emitted at
+      `:1492-1500`, event `MANIFEST_CONSOLIDATION_STALLED` at `:1502-1518`): 16 real per-VM shards have been sitting
+      unmerged for 150+ consecutive 1-minute cycles (confirmed live via `gcloud logging read`, streak climbing in real
+      time as of 2026-08-14T02:26-02:35Z) — the consolidated `_index/availability_index.parquet` (7.3GB) hasn't been
+      rewritten in 7+ hours (age=25408s at the 2026-08-14 check, vs. `AG_STALENESS_BUDGET_SEC["defi"]=3600s`). The job
+      itself is "succeeding" every cycle (`success=True shards=0 ... error=locked`) because the incremental mtime-cutoff
+      logic (blind spot documented at `manifest_consolidator.py:408-420`) is silently skipping the pending shards, not
+      because nothing needs merging. **This is NOT the same incident as the archived
+      `/plans/archive/issues/defi_manifest_consolidator_stale_lock_silent_stall_2026_08_05.md`** — that one was a
+      calibration false-positive (fixed by raising `manifest_consolidator_stall_alert_cycles["market-data-defi"]` from
+      10 to 90 cycles); the CURRENT streak (150+) already exceeds that raised 90-cycle threshold, so this is either a
+      genuine recurrence or new merge-duration drift, not the same false alarm. **No alerting pipes this to on-call**:
+      `MANIFEST_CONSOLIDATION_STALLED` is not in `codex/05-infrastructure/data-pipeline-alerts.registry.yaml` and no
+      Cloud Logging sink/alert-policy exists on the raw `CRITICAL` log — this session is very likely the first to
+      notice. **Named remedy exists but is NOT safe to self-serve blind**: `consolidate(bucket, force=True)`
+      (`manifest_consolidator.py:685`, docstring `:686-708`) full-rebuilds canonical + every shard, but its own
+      docstring (`:703-706`) warns to pair it with a high `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT` on a big-RAM host — this
+      exact bucket class previously caused a 16GiB OOM on an unbounded pandas concat/sort (`:476-496`) and a 2099-shard
+      OOM/SIGKILL that orphaned a lock (`:382-386`). Per the workspace's heavy-I/O rule, a force-consolidate of a 7.3GB
+      index with this OOM history should run on a properly-sized VM, not laptop-local. **Escalated to the operator
+      in-chat 2026-08-14 rather than self-served** — flagged as cross-cutting (other consumers of this bucket's manifest
+      beyond the rollup worker are also reading a 7+ hour stale index) and needing a human call on whether to
+      force-consolidate now vs. investigate the recurrence first (was there a genuine bulk shard rewrite/drop that
+      produced the predates-cutoff mtimes?). Blocks the P2 below.
 - [x] ✅ [DATA] P1. **NEW (2026-08-13)**: root-cause + fix the `TypeError: '<' not supported between NoneType and str` /
       `AttributeError: Can only use .str accessor with string values!` errors now failing 7 of 14 `_DEFAULT_SERVICES`
       manifest-rollup builds (`features-delta-one-service`/`features-volatility-service`/
@@ -513,27 +563,16 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       mixed None+str, clean-strings, v4 guards). 58 targeted tests pass; full QG green; verified on origin. Live `*/20`
       cycle re-verification is the next `[DATA] P3`-style follow-up (the deploy gate: LDR→main promote + Cloud Run
       build).
-- [ ] [DATA] P2. **NEW (2026-08-13)**: `market-data-processing-service` and `features-onchain-service` now also timeout
-      at 420s (same failure mode as the already-tracked `market-tick-data-service` gap) — not previously documented as
-      failing in this doc. Confirm whether this is the SAME root cause as the tracked `market-tick-data-service` timeout
-      or a distinct one before folding them into that fix. **Scoping progress 2026-08-13/14 (see Progress Log entry
-      below for the full evidence) — NOT root-caused yet, do not attempt a fix without reading it first**: (1) the
-      shared read `data_status_service._read_index_cached` is DELIBERATELY unprojected (its own docstring warns a naive
-      `columns=`/`filters=` projection risks silently dropping a column a DIFFERENT caller needs — defi.py and sports.py
-      share this one function with different downstream needs) — do NOT "just add column projection" here without
-      threading a per-caller column allowlist through explicitly, the way the fix needs to be done, not a shortcut. (2)
-      Production's own error is `"timed out after 420s"`, never `MemoryError` — unlike `market-tick-data-service`'s
-      already-accepted MemoryError-class gap, this is evidence the failure is TIME-bound within the existing 18Gi child
-      rlimit, not memory-unsafe — which points toward the SAME low-risk pattern already proven for `instruments-service`
-      (`_CHILD_JOIN_TIMEOUT_OVERRIDES_S`, a per-service timeout raise) as the likely right fix, NOT a rewrite of the
-      shared read path. That needs a REAL measured duration to size correctly (the instruments-service override was
-      "sized from 3 consistent live measurements") — not yet obtained; see below. (3) A naive
-      `list_blobs(bucket, prefix='')` (no cap) against MDPS's/features-onchain's DEFI buckets to get that measurement
-      HUNG for hours without returning (confirmed via `TaskStop` on the still-alive process) — do not repeat that
-      approach. Next attempt should use a bounded/paginated listing (a `max_results` cap) or a pyarrow-dataset
-      FOOTER-ONLY metadata read (row-count/byte-size without materializing rows — same technique already used for the
-      SPORTS 19.5GB/42-col measurement referenced elsewhere in this doc), then size a per-service timeout override from
-      that, mirroring the instruments-service precedent's own rigor.
+- [ ] [DATA] P2. **NEW (2026-08-13), ROOT-CAUSED 2026-08-14 — see Progress Log entry below for full evidence.**
+      `market-data-processing-service`'s 420s timeout is NOT a read-size/timeout-budget-fit problem — it is a DOWNSTREAM
+      SYMPTOM of the live incident tracked as the new P0 below (`market-data-tick-defi-prd-central-element-323112`'s
+      consolidator SILENT STALL). Once that P0 is resolved, verify this P2 clears on its own (re-check for
+      `"timed out after 420s"` on MDPS in a post-fix rollup cycle) before assuming any additional rollup-worker-side
+      change is still needed. **`features-onchain-service`'s identical-looking 420s timeout is a SEPARATE,
+      still-unexplained cause** — its own bucket (`features-defi-prd-central-element-323112`) was confirmed live-healthy
+      (index 351KB, fresh at 30min old, no consolidator lock held) at the same check that found MDPS's bucket stalled,
+      so its timeout must originate elsewhere (likely the downstream honest-coverage grid compute, not the manifest
+      read) — do not assume the P0 fix also resolves this one; needs its own trace once the P0 is out of the way.
 - [ ] [DATA] P3. Live-verify ml-service's full.json.gz actually refreshes on a real */20 uts-prod-data-status-rollup
       cron cycle post-fix (deployment-api@aaa0d1d)
 - [x] ✅ [DATA] P1. Once
