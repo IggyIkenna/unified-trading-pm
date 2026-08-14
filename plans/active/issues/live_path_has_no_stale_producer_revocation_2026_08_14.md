@@ -85,6 +85,42 @@ action downstream. Is that the flow?"_
 3. **No scope arms on internal-service silence.** The kill switch has a `STRATEGY` scope in its taxonomy, and nothing
    publishes to it for a silent strategy-service.
 
+## WORSE THAN "ALERTS ONLY" — the system is inert at THREE levels (measured 2026-08-14)
+
+Found while attempting to register our services. Registering them would have produced rows nothing can observe, so it
+was deliberately NOT done — that would be coverage-shaped inaction, the same pattern as a policy with no actuator.
+
+1. **Nothing probes.** `dependency_health_prober`'s built-in per-method probes are, in its own module docstring,
+   "SCAFFOLDS that report healthy by default — fail-open". A real probe must be injected via `probe_fn`, and `probe_fn`
+   has **zero** production injection sites — the only references are its own parameter declaration and assignment. So
+   every registered dependency reports healthy forever, and **no dependency-health alert has ever fired or can fire.**
+2. **Even if one fired, nothing acts** — zero consumers in execution-service or strategy-service.
+3. **Our own services are not registered** — all 27 entries are external venues, RPCs, cloud primitives or notification
+   channels.
+
+The escalation ladder, the buffers, the runbook links and all 27 policies are real, tested, and unreachable. Same defect
+as the batch revocation actuator, three layers deep: each layer is individually complete and the chain never executes.
+
+**Sequencing this implies — do not reorder, each step is inert without the one before it:** inject a real `probe_fn` →
+register our services so there is something to probe → wire an actuator that consumes the verdict. Registering first is
+the tempting cheap step and produces rows that report healthy forever.
+
+## Admission-gate coverage for the lightweight launcher path — BLOCKED by a guardrail (2026-08-14)
+
+The ~158 launchers using `launcher_common.sh`'s `lc_` helper have no admission gate. The obvious fix — read the hold
+marker from object storage inside the emitted startup snippet, since that path deliberately has no venv and the helper
+already shells out to the cloud CLI for its own log streaming — is **blocked by the orchestrator guardrail banning
+subprocess cloud-CLI object operations**, which covers reads, and would fail QG STEP 5.105 at commit time anyway.
+
+Not circumvented, per the guardrail's own instruction to escalate. Three options for the operator:
+
+- **Migrate the lightweight launchers onto `vm-exec-with-gcs-tee.sh`** — removes the second path rather than duplicating
+  the gate into it. Most work, best end state.
+- **Grant a narrow documented exception** for a single-object read in a VM startup script. The rule's stated rationale
+  is recursive listing buffering through `/tmp` and exhausting it; a one-object read does not do that.
+- **Accept the lightweight path as deliberately ungated** and record it in the codex, so 148/184 stops reading as an
+  accident.
+
 ## Why this matters more than "no new orders"
 
 A stopped strategy-service is not fail-safe by default. New target positions stop arriving, so execution holds — but
