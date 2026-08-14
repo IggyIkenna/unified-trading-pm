@@ -151,14 +151,24 @@ perfectly uniform in the docs this pass touched.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Fix `_VERDICT_MARKER_LINE_RE` (or replace with a proper multi-line-block strip) in
+- [x] ✅ [SCRIPT] P2. Fix `_VERDICT_MARKER_LINE_RE` (or replace with a proper multi-line-block strip) in
       `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` so a marker's full continuation-line span is excluded
       from `body_content_hash()`, not just its first line. Add a regression test asserting
       `body_content_hash(body_before_marker) == body_content_hash(body_before_marker + <the marker written with that exact hash>)`
       for a multi-line marker — this is the invariant that is currently violated. Verify against a sample of real
       multi-line markers already in the corpus (this run alone added 19 examples across `plans/active/tradfi_*` and
       `plans/active/issues/tradfi_*`) to confirm the new regex's stop condition doesn't over-strip into the NEXT bullet
-      or under-strip a trailing continuation line.
+      or under-strip a trailing continuation line. — `unified-trading-pm@fcaaa677f1`. Regex now strips the marker line +
+      continuation lines up to the first blank line / new top-level bullet / markdown header / next dated marker
+      (content-shape-based, not indentation-based — real corpus markers do not indent continuations uniformly, e.g.
+      `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`'s 2026-08-13-style unbulleted markers). Verified: (1)
+      the issue's own minimal repro now round-trips (h0==h1); (2) two real back-to-back bulleted markers in
+      `tradfi_consolidated_closeout_2026_07_18.md` (lines 876-887) each strip cleanly, correctly bounded at the next
+      bullet; (3) an unbulleted marker followed by an unrelated bullet without a blank-line separator preserves the
+      unrelated bullet's text. New regression test: `test_body_content_hash_stable_across_own_multiline_marker` (+ a
+      stop-condition test, `test_body_content_hash_multiline_marker_stops_at_next_bullet`) in
+      `tests/unit/test_generate_na_doc_tranche_inventory.py`; full suite (25 tests) + repo `quality-gates.sh` both green
+      on the shipped SHA.
 - [ ] [SCRIPT] P3. Once fixed, spot-check a handful of docs with old (pre-fix) markers to confirm the NEXT
       na-eligibility-audit run against them correctly reports `incremental_skip: true` when no real content changed
       since — i.e. confirm the fix actually restores the intended corpus-wide skip rate, not just that the unit test
