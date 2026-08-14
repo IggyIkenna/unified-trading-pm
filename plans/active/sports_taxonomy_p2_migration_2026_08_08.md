@@ -148,7 +148,7 @@ than proceeding.
       `market-data-processing-service@a9de0ff14b` — `_is_consumable_trades_blob` now EXPLICITLY excludes
       `inplay_ticks.parquet` (the endswith-`ticks.parquet` matcher would otherwise consume the quarantined post-kickoff
       population as pre-match trades). See Progress Log.
-- [ ] [DATA] P0. **Lowercase the instruments-service reference vocabulary** across all 19 tokens (`FIXTURES`,
+- [x] ✅ [DATA] P0. **Lowercase the instruments-service reference vocabulary** across all 19 tokens (`FIXTURES`,
       `FIXTURES_OUTCOMES`, `FIXTURES_SCHEDULE`, `FIXTURE_EVENTS`, `FIXTURE_LINEUPS`, `FIXTURE_STATS`, `INJURIES`,
       `MATCHES`, `ODDS`, `PLAYER_STATS`, `PLAYER_VALUES`, `PREDICTIONS`, `SFI_PROGRESSIVE_STATS`, `STANDINGS`, `TEAMS`,
       `WEATHER`, `XG`, `XG_SHOTS`, `ODDS_HORIZON_BUCKET`). Only after the API-Football campaign has converged (the
