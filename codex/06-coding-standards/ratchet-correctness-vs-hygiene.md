@@ -17,7 +17,7 @@ related:
   [
     /codex/06-coding-standards/quality-gates.md,
     /codex/11-project-management/plan-hygiene.md,
-    /plans/active/issues/qg_ratchets_block_unrelated_ships_2026_08_12.md,
+    /plans/archive/2026_08/issues/qg_ratchets_block_unrelated_ships_2026_08_12.md,
   ]
 created: 2026-08-14
 authoritative_for: [correctness-ratchet vs hygiene-ratchet classification, who may re-baseline a ratchet and when]

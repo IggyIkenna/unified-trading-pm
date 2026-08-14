@@ -11,7 +11,7 @@ summary: >-
   identical per-cell failures instead of one clear message. Separately the sweep caught that the CeFi backfill had been
   silently down for ~15 hours, and produced a per-asset-group data-recency map showing sports is ~4 weeks stale and
   prediction cannot resolve its bucket at all.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -37,9 +37,9 @@ assigned_role: backend
 drift_direction: advance-code
 depends_on: []
 source: ["cross-asset-group smoke sweep run 2026-07-20 while completing the CeFi throughput close-out"]
-resolved_by:
+resolved_by: unified-trading-pm (this batch, cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md)
 locked_by:
-archive_exempt: true
+last_updated: "2026-08-14"
 context_scope:
   [
     /plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md,
@@ -47,6 +47,10 @@ context_scope:
     /plans/archive/issues/backfill_vm_disk_starvation_misdiagnosed_as_tardis_quota_2026_07_18.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-14 — RESOLVED** (status: resolved, all sub-items `[x]`, unlocked). All three tooling defects
+> fixed+shipped; live-verified 2026-08-14 the DeFi canonical-migration-rebuild fleet is complete and the sports
+> ~4-week-stale reading was a false verdict (root-caused, no ongoing outage). Archived by review worker (slot 20).
 
 # Pipeline smoke sweep — findings
 

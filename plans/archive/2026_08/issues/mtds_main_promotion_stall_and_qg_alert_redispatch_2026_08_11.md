@@ -27,7 +27,7 @@ summary: >-
   re-triggers the run each tick (the workflow's actual `on:` triggers weren't found via grep on the per-repo file,
   meaning it's likely a reusable-workflow call into `unified-trading-ci` — check there next) and whether this Slack step
   should route through the shared dedup'd carrier instead of firing raw.
-status: open
+status: resolved
 nature: issue
 scope: [engineer]
 asset_group: [cross-cutting]
@@ -49,18 +49,22 @@ context_scope:
   ]
 created: 2026-08-11
 author: claude-agent
-last_updated: 2026-08-11
+last_updated: "2026-08-14"
 parent_epic: infrastructure_master
 priority: P1
 source: /ci-reconcile session, operator-observed duplicate Slack alerts 2026-08-11 09:34/09:49
 assigned_vm: NA
-resolved_by:
+resolved_by: unified-trading-ci@67698d8
 locked_by:
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-archive_exempt: true
 ---
+
+> **🟢 ARCHIVED 2026-08-14 — RESOLVED** (status: resolved, 2/2 todos `[x]`, unlocked). MTDS main-promotion stall
+> diagnosed as correct SKIP behavior (squash-skew SHA noise, not unpromoted content) and the ~15-min QG-alert redispatch
+> root-caused + fixed fleet-wide via `notify-slack.yml`'s condition-tracking debounce (`unified-trading-ci@67698d8`).
+> Archived by review worker (slot 20).
 
 > **Progress Log 2026-08-14 (slot-29, review, `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13_finalize.md`
 > todo 1)**: reached 0 open todos this session via checkbox reconciliation from
