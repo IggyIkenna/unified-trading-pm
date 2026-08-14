@@ -278,3 +278,23 @@ new symbols") didn't call out — added as a dedicated `[SCRIPT]` todo rather th
   `gcloud compute instances list --project=central-element-323112 --filter="metadata.items.key=VM_TARDIS_CONSUMER AND metadata.items.value=1"`
   is empty, or the running VM's heartbeat/PROGRESS.json show it finished/terminated), then flip this checkbox with the
   VM name + evidence.
+
+- **2026-08-14T07:39 UTC — Todo 6 re-checked, STILL GATED, not launched.** Slot-18 data_engineering worker. Re-verified
+  via `unified_trading_library.cloud_interface.get_storage_client()` (never subprocess `gsutil` — blocked by the
+  workspace guardrail hook): `cefi-okx-swap-2026-light-20260814-020834` is still `RUNNING`
+  (`gcloud compute instances list`), heartbeat fresh (`vm-heartbeat/<vm>.txt` updated ~07:12 UTC, this check ~07:39
+  UTC), `PROGRESS.json.last_completed_date` now `2026-05-12` (advanced from the prior check's `2026-03-17`) — actively
+  progressing, not stalled/zombied. **Rate has slowed vs. the prior check's estimate**: prior check measured ~0.75
+  days/min (2026-01-01→2026-03-17 in ~101min) and projected ~3.3h remaining; this check's segment (2026-03-17→2026-05-12
+  = 56 days in ~257min) measures ~0.22 days/min, and the full-run average (2026-01-01→2026-05-12 = 131 days in ~362min)
+  is ~0.36 days/min — both well below the prior single-segment estimate, so the earlier ETA undershot. At the full-run
+  average rate, the remaining 93 days to `end_date=2026-08-13` project to ~4.3h more; at the slower recent-segment rate,
+  ~7.1h more — genuine uncertainty band, not a single point estimate. Tardis 1-VM-cap still applies (operator ruling
+  2026-07-16) — launching now would collide with this still-running consumer. Task skipped again with
+  `reason_code: GATED`, `estimated_unblock_minutes: 180` (the fleet cooldown cap; real ETA is longer per above, so the
+  NEXT worker must re-check freshly rather than trust this cooldown alone). **Next worker**: re-run the same two checks
+  (`gcloud compute instances list --filter="name~cefi-okx-swap"` for RUNNING/TERMINATED state + the
+  `PROGRESS.json`/heartbeat freshness via `get_storage_client()`, never `gsutil` directly — this repo's guardrail hook
+  blocks subprocess GCS calls) before assuming the gate has cleared; once clear, run the exact
+  `launch-cefi-sharded-backfill.sh` command two entries above (drop `DRY_RUN=1`), then flip this checkbox with the VM
+  name + evidence.
