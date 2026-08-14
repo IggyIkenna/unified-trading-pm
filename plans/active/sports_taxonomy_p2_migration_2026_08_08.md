@@ -403,7 +403,20 @@ than proceeding.
       P1's writer fix has stopped the source. Verify the writer is genuinely fixed before cleanup — cleaning before the
       writer stops just re-pollutes.
 - [ ] [DATA] P1. **Delete the `SPORT` instrument_type residue** (8 rows on ODDS_API's `trades`) — junk token, no backing
-      model.
+      model. **PARTIALLY DONE 2026-08-14 (slot-26)**: widened scope live — the manifest's 8 `trades` rows were only half
+      the population; a bounded per-day GCS listing found an EQUAL, entirely un-manifested `data_type=odds` twin at the
+      same junk path (`venue=ODDS_API/league_id=/instrument_type=sport/...`, identical byte-for-byte sizes to the
+      `trades` twin per date/league — a writer bug double-wrote the same content under two data_type labels, not two
+      real datasets) — 16 objects total across 4 dates × 2 leagues × 2 data_types, not 8. **§3a fresh check run
+      this-same-session**: both `market-data-tick-sports-prd-central-element-323112` (data) and
+      `instruments-store-sports-prd-central-element-323112` (manifest) return `soft_delete_retention_seconds=604800`
+      (≥604800 ✅). All 16 GCS objects deleted + verified 0 remain (re-listed the same 4 prefixes post-delete). **NOT
+      yet done**: the 8 manifest rows (data_type=trades only — no manifest rows existed for the odds twin) still say
+      `capture_status=captured` pointing at now-deleted objects — a real, temporary four-surface inconsistency until the
+      manifest side lands. Removing 8 rows from the 15.6M-row manifest hit the SAME "manifest rewrites never run
+      locally" wall as the `odds_horizon_bucket` todo above (OOM risk on a full-index rewrite, confirmed by that todo's
+      two local OOM-kills this session) — **batch this with that todo's own pending 4-row fix in one small VM run**, not
+      two separate launches.
 - [ ] [DATA] P1. **Sweep the `league=` vs `league_id=` path duplication.** Measured on day=2020-06-06: the same
       FOOTYSTATS shard exists under BOTH `league=BUNDESLIGA/ticks_migrated_*.parquet` AND
       `league_id=BUNDESLIGA/ticks.parquet`. Determine which is canonical (`league_id=` per the path SSOT), census the
