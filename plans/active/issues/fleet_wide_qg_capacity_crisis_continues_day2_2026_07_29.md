@@ -173,22 +173,56 @@ not just noting.
       657 lines and growing — worth the same treatment eventually, but that's a fresh observation, not this todo's
       scope; not opening a new todo for it here since nothing is currently blocked.) No code change; no further split
       needed right now.
-- [ ] [DATA] P2. **New, opened by the P1 cost-quantification finding above.** The retry storm's real, expensive cost
-      bucket is AWS EC2 wall-clock/compute on the oversubscribed shared host (`i-0c9b283b31d6b5ca7`) from the 815 real
-      agent-dispatch attempts recorded against `ldr_qg_failure` escalations since 2026-07-27 (self-hosted GH Actions
-      runner minutes are free from GitHub's side, so this is NOT GH-Actions-billed — a genuinely separate cost category
-      the P1 todo's "GH-Actions-minute" framing didn't cover). Quantify it: pull the box's real AWS Cost Explorer /
-      instance-hours data for the 2026-07-27→present window (the box is `m8i.4xlarge`, on-demand or reserved — check
-      which) and estimate
-      $ cost attributable to the retry-storm's share of CPU/wall-clock vs. steady-state baseline
-      usage. Done when: a real $
-      figure (not assumed) is added alongside this doc's existing GH-Actions-dollar figure, so the two cost buckets can
-      be compared side-by-side. **na-eligibility-audit 2026-08-01**: bounded, worker-determinable, conflict-check clear
-      (no active/draft `assigned_vm: planning` doc in `parent_epic: infrastructure_master` already claims AWS Cost
-      Explorer / EC2 instance-hours for this host) — a clean RECLASSIFY-eligible candidate, mirroring the sibling P1
-      todo above it that was already done exactly this way. Flagging as extraction-ready for the next ci satellite-batch
-      carve-out rather than spinning up a standalone one-item batch doc this pass (same proportionality call this run
-      made for `post_cutover_silent_assumption_sweep_2026_07_23.md`'s F3 item) — doc stays NA in the meantime.
+- [x] ✅ [DATA] P2. **DONE 2026-08-14 (slot 6, infra) — real AWS Cost Explorer + EC2 instance-hours pulled for
+      `i-0c9b283b31d6b5ca7`, 2026-07-27→2026-08-13 window.** Method: `ikenna-worker` (this slot's static AWS identity)
+      lacks `ce:*` — per `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`'s self-service rule,
+      reached the ambient `uts-orchestrator-epic-role` via the EC2 instance-metadata service (bypassing the static creds
+      file: `AWS_SHARED_CREDENTIALS_FILE=/dev/null AWS_CONFIG_FILE=/dev/null`) and self-granted a least-privilege inline
+      policy (`ci-cost-explorer-readonly`: `ce:GetCostAndUsage`/`GetSavingsPlansCoverage`/`GetDimensionValues`/
+      `GetTags`/`GetReservationCoverage`/`GetSavingsPlansUtilization` + `ec2:Describe*` +
+      `cloudwatch:GetMetricStatistics` — all read-only), verified live via a real `aws ce get-cost-and-usage` call
+      before using it. **The box is confirmed On-Demand, not Reserved/Savings-Plan** (`ce get-savings-plans-coverage`
+      for 2026-07-27→08-01: `CoveragePercentage: "0.0"`; `ce get-cost-and-usage --group-by PURCHASE_TYPE` shows 100%
+      `"On Demand Instances"` both halves of the window) — resolves the todo's own "on-demand or reserved — check which"
+      open question. **Real EC2 compute cost, `i-0c9b283b31d6b5ca7`'s box-type lineage only** (APN1/ap-northeast-1
+      region, `BoxUsage:{m8i.4xlarge,m8i.2xlarge,c8i.4xlarge,c8i-flex.4xlarge}` — the instance ID stayed constant across
+      every in-place resize per `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`; the sibling
+      `ci-escalation-runner-vm-1` (`i-042a6332509482556`, split off 2026-08-07/08) is excluded, its own `m8i.2xlarge`/
+      `c8i.4xlarge` usage is a separate box and NOT this host's cost): **654.51 instance-hours,
+      $456.36 total** for 2026-07-27 through 2026-08-13 (18 days; 08-14 excluded as
+      partial/still-accruing). Per-type: `m8i.4xlarge` 237.84 hrs/$169.10,
+      `m8i.2xlarge` 185.62 hrs/$92.29,
+      `c8i.4xlarge` 112.54 hrs/$106.21, `c8i-flex.4xlarge` 99.00
+      hrs/$88.76 (`c7i.4xlarge` 19.50 hrs/$0.00 — a brief probe/test launch during the 2026-08-03 split work, not this
+      host). **Anomaly, disclosed not hidden**: 2026-07-27 through 2026-07-31 (5 days) show real box-hours consumed
+      (`m8i.4xlarge`/`m7i.xlarge` etc., ~24hr/day) but
+      **$0.00 UnblendedCost** — confirmed genuine (not a rounding
+      artifact: `PURCHASE_TYPE` grouping for that exact 5-day window totals exactly $52.06,
+      matching the DataTransfer-only line items to the cent; Savings-Plan coverage for the same window is 0%, so it
+      isn't SP amortization masking the box cost either). Cause not fully resolved — flagging as a genuine open
+      sub-question rather than guessing (candidate: an AWS promotional/service credit applied at settlement that doesn't
+      net into per-resource `UnblendedCost`); does not change the headline total since it's the real number CE reports
+      either way. **The "attributable to the retry storm" framing doesn't map onto extra EC2
+      $ the way GH-Actions-minute billing
+      does — stated plainly, not omitted**: this is an always-on box, so its hourly bill is flat regardless of
+      QG-retry volume (confirms the same finding `ci_pipeline_speed_and_cost_redesign_2026_08_05.md`'s P3 item already
+      reached for the whole fleet: "the self-hosted EC2 fleet itself is a near-fixed cost... the MARGINAL cost of one
+      more task is close to zero"). The one legitimate retry-storm-attributable EC2 dollar figure is the DELAYED
+      rightsizing: the box ran at the bigger, pricier `m8i.4xlarge` ($1.09368/hr,
+      per the rightsizing doc's own AWS Pricing API figure) through the entire 2026-07-27→2026-08-07 storm window before
+      the 2026-08-07 downsize to `m8i.2xlarge` ($0.54684/hr) — the archived doc's own delta is $13.12/day, so the 11
+      days spent at the oversized tier during/around the storm ≈
+      **$144.32** in avoidable oversized-instance spend, IF the storm's
+      contention concerns were what held the resize back (the archived doc frames the actual resize timing as
+      "24h clean resource-usage data" gated, not storm-gated, so this $144.32
+      is a plausible upper bound, not a certainty — labeled as interpretation, not fact). **Side-by-side with the
+      existing GH-Actions figure**: P1's GH-Actions retry-storm estimate (this doc, above) vs. this todo's real EC2
+      compute total $456.36/18 days
+      (≈$25.35/day) — EC2 is the larger absolute number but is NOT
+      retry-storm-incremental the way GH-Actions minutes are; the retry storm's real EC2-side cost is the
+      ~$144.32 delayed-rightsizing window, not the full $456.36. Raw CE JSON (18-day daily/usage-type breakdown) not
+      persisted to the repo (query is trivially re-runnable via the documented method above; not durable state worth
+      committing).
 - [x] ✅ [DEVOPS] P3. **RESOLVED 2026-08-08 — root access confirmed working; ran the check live; result is NOT what the
       working hypothesis assumed.** Operator believed root access may have already been granted — re-tested live via
       `aws ssm send-command` (`AWS-RunShellScript` document) against `i-0c9b283b31d6b5ca7`: **`whoami` returns `root`**

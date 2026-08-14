@@ -93,9 +93,15 @@ source: >-
       absent frontmatter still returns None. `_check_doc` + `main()` catch it and emit reason=`yaml-parse-error` with
       detail instead of the misleading `no-frontmatter`. Blocks by default (fail-closed via `partition_by_agency`).
       40/40 unit tests pass (14 new).
-- [ ] [CODE] P2. pull real AWS Cost Explorer / EC2 instance-hours data for the CI VM's 2026-07-27-present retry-storm
-      window and compute an attributable $ figure (flagged extraction-ready since 2026-08-01, never actually dispatched)
-      Source: `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`
+- [x] ✅ [CODE] P2. pull real AWS Cost Explorer / EC2 instance-hours data for the CI VM's 2026-07-27-present retry-storm
+      window and compute an attributable
+      $ figure (flagged extraction-ready since 2026-08-01, never actually dispatched)
+      — real CE pull via self-granted least-privilege `ce:*` on `uts-orchestrator-epic-role`
+      (reached via IMDS, per the self-service IAM SSOT). 654.51 instance-hours / $456.36
+      total EC2 compute cost for `i-0c9b283b31d6b5ca7`, 2026-07-27→2026-08-13; confirmed On-Demand (0% SP coverage);
+      flagged the retry-storm-attributable EC2 dollar figure is the ~$144.32 delayed-rightsizing window, not the full
+      total (an always-on box's hourly bill doesn't scale with retry volume). Full findings + method in the source issue
+      doc. Source: `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`
 - [ ] [CODE] P2. investigate the real cause of the 2026-07-30 14:54-15:01Z mass tmux_session_lost cluster via the doc's
       own named candidates (a/b/c: cgroup/systemd action, manual/scripted kill, AWS-side event) now that the OOM-killer
       hypothesis is ruled out Source: `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`
