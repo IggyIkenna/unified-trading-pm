@@ -69,7 +69,7 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.49.11",
     "deployment-api": "0.86.0",
-    "deployment-service": "0.135.7",
+    "deployment-service": "0.135.8",
     "deployment-ui": "0.1.0",
     "execution-service": "0.69.4",
     "features-service": "0.81.9",
@@ -350,7 +350,7 @@
         "coverage_pct": null,
         "warn_file_count": 17
       },
-      "ldr_ci_status_sha": "dcc72be10426f3255431e4d669ee4f53250ba366"
+      "ldr_ci_status_sha": "7f8fb83651cceecebe4e3e043272ddf48ae75fa6"
     },
     "deployment-service": {
       "promotion_model": "ldr_main",
@@ -402,7 +402,7 @@
         "large_file_count": 6,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "ce470ac0dc0f493b4475d0acb0ab5e4e7685ff63"
+      "ldr_ci_status_sha": "b66adc0553cd13b53d215b8908724a72881f2ce2"
     },
     "execution-service": {
       "promotion_model": "ldr_main",
@@ -905,7 +905,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "ab73940f7c8a67065ba51dfd51c63190165ade6b"
+      "ldr_ci_status_sha": "ba8b314635d86ce164599dd3a0e7a5da24e146c1"
     },
     "ml-service": {
       "promotion_model": "ldr_main",
@@ -1039,7 +1039,7 @@
         "warn_file_count": 10
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "d36b53404ed30b0d3e30cc9a20d9aab785d0a73f"
+      "ldr_ci_status_sha": "3f8fd14f18d97e3f9f21f64036580097a22eda3f"
     },
     "system-integration-tests": {
       "promotion_model": "ldr_main",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "e103a86d6c3c289b0a876d3b862184dc89bd88ee"
+      "ldr_ci_status_sha": "550455d81baaf518a1e1f9538694a54088bb0163"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
