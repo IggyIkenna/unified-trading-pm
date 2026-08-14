@@ -105,11 +105,22 @@ instruction executes, the position changes, and nothing can confirm it landed or
 
 `defi_execution/protocols/` ships 38 `.py` modules, but they are not one kind of thing:
 
-| Tier                    | What it is                                                                                                | Modules                                                                                                                                                                    |
-| ----------------------- | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1 — live-capable**    | branches on `is_live` into a real executor, or makes real RPC/HTTP calls and `send_transaction`s          | `aave` (+`aave_live`), `uniswap` (+`uniswap_live`), `hyperliquid`, `marinade`, `kamino`, `jupiter`, `orca`, `raydium`, `eigenlayer`                                        |
-| **2 — simulation-only** | in-memory `_balances` dict, seeded by `set_balance()`; write ops do arithmetic and return `success: True` | `lido`, `rocket_pool`, `etherfi`, `renzo`, `puffer`, `kelpdao`, `symbiotic`, `karak`, `jito_restaking`, `solblaze`, `yearn`, `beefy`, `convex`, `idle`, `pendle`, `morpho` |
-| **3 — infrastructure**  | not protocols: chain plumbing, transfer rails, encoding                                                   | `base`, `solana_base`, `cctp`, `bridge`, `weth`, `uniswap_encoding`, `_hyperliquid_*`, `solana_lst_devnet`, `bybit`, `aster`                                               |
+| Tier                     | What it is                                                                                                | Modules                                                                                                                                                                                              |
+| ------------------------ | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1 — live-capable**     | branches on `is_live` into a real executor, or makes real RPC/HTTP calls and `send_transaction`s          | `aave` (+`aave_live`), `uniswap` (+`uniswap_live`), `hyperliquid`, `marinade`, `kamino`, `jupiter`, `orca`, `raydium`, `eigenlayer`                                                                  |
+| **2 — simulation-only**  | in-memory `_balances` dict, seeded by `set_balance()`; write ops do arithmetic and return `success: True` | `lido`, `rocket_pool`, `etherfi`, `renzo`, `puffer`, `kelpdao`, `symbiotic`, `karak`, `jito_restaking`, `solblaze`, `yearn`, `beefy`, `convex`, `idle`, `pendle`, `morpho`, **`weth`**, **`bridge`** |
+| **3 — libraries / ABCs** | correctly not-live: base classes, encoders, mode routers                                                  | `base`, `solana_base` (ABCs holding the live machinery), `uniswap_encoding`, `solana_lst_devnet` (paper-mode devnet router, by design), `_hyperliquid_*`                                             |
+
+**Tier 1 also includes** the Solana tree, which inherits `BaseSolanaConnector` rather than `BaseConnector`: `marinade`,
+`kamino`, `jupiter`, `orca`, `raydium` — all real (`aiohttp` + `send_transaction`). And `bybit.py` is live via
+`BybitCCXTAdapter`; it sits in this directory but is a CeFi perp connector, not a DeFi protocol.
+
+**Corrected 2026-08-14 (second pass): the simulation-only count is 18, not 16.** `weth` and `bridge` were initially
+filed as infrastructure and are not — `WethConnector.wrap()` logs, then returns a simulated `WrapResult` unconditionally
+(the code comment says "Paper trade mode" but there is no branch), and `bridge.py` carries `SOCKET_API_BASE` plus
+docstrings describing the Socket v2 integration while containing no calling code at all. Both are scaffolds. The first
+pass mis-filed them because "infrastructure" was inferred from the module's ROLE rather than read off its write path —
+the same error as the original audit, one level down.
 
 **Tier 2 is the finding.** `LidoConnector.stake()` does not build a transaction — it subtracts from
 `self._balances["WETH"]`, adds to `self._balances["wstETH"]`, and returns `{"success": True, ...}`. `get_balance()`

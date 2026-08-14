@@ -270,6 +270,59 @@ Added 2026-05-19 per api_keys Phase 4.C.
 | Fork (Tenderly)   | Mainnet state snapshot         | Yes (deploy per fork)    |
 | Live (mainnet)    | Real execution, real money     | Yes (deployed, verified) |
 
+## Connector liveness standard — code-complete, credentials-gated (operator ruling 2026-08-14)
+
+**Every protocol connector must be LIVE-CAPABLE in code. The only thing allowed to be missing at rest is credentials.**
+A connector whose write path exists only as an in-memory simulation is not "a connector we haven't configured yet" — it
+is an unbuilt connector, and it must not be counted as coverage in any audit, plan or client-facing statement.
+
+This is the connector-level instance of the standing
+[external-data-always-available rule](/codex/02-data/external-data-always-available-rule.md): running out of credentials
+is a credential ask, never a descope. Build the full path; let it fail loudly at `connect()` when the key is absent.
+
+### `supports_live` — the declaration, and why it fails closed
+
+`BaseConnector` carries the live machinery already — `_load_wallet_credentials()`, `_require_wallet_config()`,
+`sign_and_send_transaction()` (nonce, signing, broadcast, receipt wait), and `get_defi_rpc_url()`. A subclass becomes
+live by USING it, then declaring:
+
+```python
+class LidoConnector(BaseConnector):
+    venue_id = "LIDO-ETHEREUM"
+    supports_live = True   # only once the write path really builds and sends a tx
+```
+
+`supports_live` defaults to **`False`**, and `BaseConnector.__init__` raises `SimulationOnlyConnectorError` when
+`is_live=True` reaches a connector that has not declared it.
+
+**The default is fail-closed for a specific reason.** Before this guard, 18 of 38 protocol modules accepted `is_live`
+and never read it: `LidoConnector(config, is_live=True).stake(...)` subtracted from `self._balances["WETH"]`, added to
+`self._balances["wstETH"]`, and returned `{"success": True}`. **A simulated success on a live path is the worst failure
+this code can produce** — it is indistinguishable from a real fill to every downstream consumer, including the four
+ledgers and reconciliation, so it surfaces as an unexplained position discrepancy long after the trade, if at all. An
+exception at construction is strictly better than a fill that never happened.
+
+Note the guard covers the `BaseConnector` tree. Solana connectors inherit `BaseSolanaConnector` (`solana_base.py`); they
+are live today, but the same declaration should be mirrored there when that tree is next touched.
+
+### What "live-capable" requires per connector
+
+Most of these are not bespoke integrations — the shared shape dominates, so build the shared thing first (the
+generic-first ruling, `/codex/06-coding-standards/integration-testing-layers.md` § the venue-coverage cascade):
+
+| Shape                 | Read side                                                                               | Write side                                                    |
+| --------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| LST / restaking token | ERC-20 `balanceOf` (SPL equivalent on Solana)                                           | protocol deposit/stake method + `sign_and_send_transaction()` |
+| Vault share           | share `balanceOf` + a `pricePerShare`-style view call                                   | deposit/withdraw method                                       |
+| Genuinely stateful    | protocol-specific — health factors, PT/YT maturities, CL tick ranges, withdrawal queues | protocol-specific                                             |
+
+**Simulation stays.** It is a designed mode (backtest, and `_simulated_tx_result()` in `BaseConnector` supports paper
+trade), not an accident to delete. The requirement is that `is_live` genuinely ROUTES between the two, rather than being
+accepted and ignored.
+
+Provenance and the full per-module tier table:
+[`/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`](/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md).
+
 ## Slippage Protection
 
 Uniswap swaps use on-chain slippage protection:
