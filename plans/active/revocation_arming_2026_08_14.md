@@ -131,14 +131,33 @@ source:
       (`gcloud run jobs describe`), (b) an execution actually invoked revocation (log a `DP-REVOCATION-*` line), and (c)
       a marker appears in `vm-census/admission-hold/` for a real condition. A green Cloud Build is NOT this —
       `Evidence: cloudbuild=<id>` plus an execution log line is. Repo: deployment-service.
-- [ ] [CODE] P1. **Admission-gate coverage is ~148/184 launchers, not all of them** (measured 2026-08-14). Only
-      launchers routing through `setup-data-pipeline-vm.sh` → `vm-exec-with-gcs-tee.sh` get the admission check and the
-      heartbeat drain poll; the 158 that use `launcher_common.sh`'s `lc_` helper get the LIGHTWEIGHT observability
-      snippet, which deliberately omits the tarball+venv+heartbeat-daemon install and therefore has neither gate. The
-      two sets overlap, so the honest statement is: the canonical path is gated, the lightweight path is not, and a
-      per-launcher census is needed to say which real VMs are uncovered. Either add the admission check to the `lc_`
-      helper (it needs no venv — it can curl the marker) or document the lightweight path as deliberately ungated. Repo:
-      deployment-service.
+
+> **📏 COVERAGE NUMBERS CORRECTED 2026-08-14 — I got this wrong twice, both times by counting the wrong thing.** First I
+> reported "179/184 covered" by counting launchers that SOURCE `launcher_common.sh`; that lib only MENTIONS the wrapper
+> in comments. Then "148/184 gated, 158 ungated" by counting `lc_` helper USERS — but those sets overlap, so the two
+> numbers were not complements and 158 was never the ungated count.
+>
+> **Measured properly** (direct reference OR via a lib that actually routes to the wrapper): **173 of 186 gated, 13
+> truly ungated.** Of those 13: **8 are the AWS path** (`launch-*-aws.sh` — a genuinely separate cloud path, the real
+> gap), 1 is a GCP capture VM (`launch-features-backfill-vm.sh`), and 4 are structurally non-capture
+> (`launch-cefi-week-test.sh`, `launch-orchestrator-worker-vm.sh`, `launch-sku-matrix-v2-benchmark.sh`,
+> `launch-data-pipeline-fleet-monitor.sh`).
+>
+> **`launch-data-pipeline-fleet-monitor.sh` must NEVER be gated.** It runs the sweep that DELIVERS revocation, so
+> holding it on a revocation marker would be self-locking: the fleet could not clear a hold because the thing that
+> clears holds is itself held. Any future "gate everything" pass must carve it out explicitly.
+>
+> Two lessons, both mine this session: reading what a lib DOES beats counting who sources it (twice); and two
+> overlapping sets are not complements.
+
+- [ ] [CODE] P1. **Admission-gate coverage is 173/186 launchers — the real gap is the 8 AWS-path launchers** (measured
+      2026-08-14). Only launchers routing through `setup-data-pipeline-vm.sh` → `vm-exec-with-gcs-tee.sh` get the
+      admission check and the heartbeat drain poll; the 158 that use `launcher_common.sh`'s `lc_` helper get the
+      LIGHTWEIGHT observability snippet, which deliberately omits the tarball+venv+heartbeat-daemon install and
+      therefore has neither gate. The two sets overlap, so the honest statement is: the canonical path is gated, the
+      lightweight path is not, and a per-launcher census is needed to say which real VMs are uncovered. Either add the
+      admission check to the `lc_` helper (it needs no venv — it can curl the marker) or document the lightweight path
+      as deliberately ungated. Repo: deployment-service.
 
 ## Progress Log
 
