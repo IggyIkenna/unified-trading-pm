@@ -184,9 +184,17 @@ source: >-
       checkbox just never flipped"), citing the SHA here rather than re-doing the work — same pattern as the two
       `deepseek_wallet_residual` todos above. Source:
       `plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`
-- [ ] [CODE] P2. Surface the windowed 24h/7d reconciliation view in DeepSeekWalletPanel.tsx with a real cited Playwright
-      L2 regression spec Source:
-      `plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`
+- [x] ✅ [CODE] P2. Surface the windowed 24h/7d reconciliation view in DeepSeekWalletPanel.tsx with a real cited
+      Playwright L2 regression spec — STALE-CHECKBOX correction, not new work: already SHIPPED at
+      `agent-orchestrator@4d2f9ed` (verified on `origin/live-defi-rollout`) — `DeepSeekWalletPanel.tsx` already renders
+      the `WINDOW_OPTIONS` 24h/7d toggle + `.deepseek-wallet-window` table (balance at start/end, top-ups, real spend,
+      attributed total, residual), and `dashboard/tests/e2e/deepseek-wallet-reconciliation.spec.ts` carries two
+      dedicated windowed-view tests ("windowed view defaults to 24h and renders the balance-at-end sample plus a
+      sampling-since message, not a dash" + "switching the windowed toggle to 7d re-fetches and relabels the
+      sampling-since message") verifying the exact done_definition (no bare-dash render). Per the AO-dispatch
+      conflict-check protocol's rule 4 ("already-shipped elsewhere, checkbox just never flipped"), citing the SHA here
+      rather than re-doing the work — same pattern as the earlier `deepseek_wallet_residual` todos in this batch.
+      Source: `plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`
 - [x] ✅ [CODE] P2. Pin cleanupPeriodDays: 30 explicitly in cursor-configs/settings.json (currently on an undocumented
       upstream default with 2 known behaviour-changing bugs) — ALREADY SHIPPED prior to this batch's drafting:
       `unified-trading-pm@5c373663c8` (2026-08-11) pinned it, `unified-trading-pm@ea53432c4e` (2026-08-12) re-confirmed

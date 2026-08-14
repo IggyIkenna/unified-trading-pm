@@ -264,6 +264,13 @@ the build — do not delete the half that is unfinished.**
 - [ ] [AGENT] P1. **Audit execution-service instruction coverage per venue.** This audit measured that protocol modules
       EXIST; it did not verify each handles every `InstructionActionV2` an archetype may emit for that venue. A module
       that swaps but cannot stake is a partial gap this table would score as ✅.
+- [ ] [AGENT] P2. **Wire real write paths for Solblaze and Jito Restaking** — the last 2 of the 18 originally-scoped
+      tier-2 modules, execution-service@2b92d6ac69 gave both real SPL balance reads but left writes simulation-only
+      (documented, not silently closed): their stake-pool programs are Anchor-based with a fixed account list, not a
+      named-function ABI, and neither the `spl-stake-pool` nor `jito-restaking` SDK is a dependency of this repo —
+      hand-rolling the instruction bytes from memory was judged too risky to guess. Add the SDK dependency (or find the
+      raw instruction-encoding spec) and wire `deposit()`/`withdraw()` the same way the other 16 modules were done this
+      session.
 - [ ] [OPERATOR] P2. **Disclosure decision on out-of-mandate adapters.** `betfair`, `ibkr` and `polymarket` are working
       credentialed integrations for sports betting, retail brokerage and prediction markets — nothing to do with a DeFi
       mandate. They are inert unless a venue is configured, so shipping them costs nothing operationally. Purely a
@@ -325,11 +332,12 @@ correct and is now verified at the ABC rather than inferred.
 | Unify the 3 duplicated connector classes                            | **Done, shipped**    | execution-service@2b92d6ac69                                                                                                                                                                                                                                                                                                                                                                |
 | Wire real writes for 16 of the 18 tier-2 modules                    | **Done, shipped**    | execution-service@2b92d6ac69; Solblaze/Jito Restaking stay simulation-only pending the SPL SDK dependency                                                                                                                                                                                                                                                                                   |
 
-**Recommended next: measure the generic-reader coverage, then fix the tier-2 live-mode guard.** The review of the peer
-session's work is _not_ the next item any more — its output is still uncommitted in a live session, so there is nothing
-at origin to verify and touching that tree would race their edits. The measurement decides whether the venue gap is 27
-modules of work or roughly one plus a handful of exceptions; the guard closes the one finding here that could produce a
-silently-wrong result rather than a loud failure.
+**Update 2026-08-14 (later same day): the tier-2 live-mode guard AND the peer-session review are both done — see
+`execution-service@2b92d6ac69` and `execution-service@9946ba5a3` above.** The remaining recommended next items, in
+order: (1) the 3 directional SIT invariants (P1, nobody started), (2) the per-venue instruction-ACTION coverage audit
+(P1, nobody started — modules existing was verified, not that each handles every action), (3) the Solblaze/Jito
+Restaking SPL-SDK write path (P2, new todo above), (4) Marinade/Kamino/Jupiter position adapters (P0, still open at the
+top of this list).
 
 ## Lessons — 2026-08-14
 

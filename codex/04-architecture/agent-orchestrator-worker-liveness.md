@@ -716,6 +716,39 @@ SSOT: `plans/active/orchestrator_consolidated_remaining_2026_06_25.md` § "Opera
 
 ---
 
+## Pane-guard-before-cap-branch ordering invariant (2026-08-06, `agent-orchestrator@9d26598`)
+
+**The invariant.** In `check_spawn_heartbeat_timeouts` (`server/worker_liveness/_auth_failover.py`, ~L54-181), pane
+diagnosis (`_diagnose_unbooted_pane`) MUST run and be consulted **before** the retry-cap branch, never after. The
+function's real order, top to bottom once a slot has passed the grace window
+(`elapsed >= SPAWN_HEARTBEAT_TIMEOUT_SECONDS`):
+
+1. `_diagnose_unbooted_pane(slot.tmux_session)` runs first (~L140), unconditionally, for every slot that has reached the
+   timeout — one `capture_pane` per slot per tick.
+2. If the diagnosis reads `pane_state == "working"` (~L150-166): the slot is skipped WITHOUT burning a retry, and
+   `kicker._spawn_cap_alerted.discard(slot.slot_id)` re-arms the cap alert for that slot — the same re-arm a real
+   `/heartbeat` triggers earlier in the function. This is a hard `continue`, so a working pane never reaches the
+   retry-cap branch at all.
+3. Only a slot whose pane is NOT working falls through to the retry-cap check
+   (`retry_count >= _SPAWN_HEARTBEAT_MAX_RETRIES`, ~L168) and, if capped, fires `spawn_retry_cap_reached` + the operator
+   page.
+
+**Why the order is the whole bug, not a detail.** Before this commit, the pane-working guard sat AFTER the cap branch,
+which `continue`s on its own — so once a slot burned its `spawn_retry_count` retries, the guard was structurally
+unreachable for that slot ever again, regardless of what its pane actually showed. Measured 2026-07-30..08-06 on the
+orchestrator VM: 8 of 45 `spawn_retry_cap_reached` pages carried `pane_state == "working"` — i.e. the operator was paged
+about a spawn that had already, demonstrably, succeeded. Hoisting the diagnosis above the cap branch and re-arming
+`_spawn_cap_alerted` on a working-pane hit closes both halves at once: a working pane can no longer be reported as
+capped, and a slot that recovers after being capped is not left permanently marked as such.
+
+**A future refactor must preserve this order.** Any change to `check_spawn_heartbeat_timeouts` that reintroduces the
+retry-cap check ahead of the pane diagnosis (or that adds a new early-return between "timeout elapsed" and "diagnose
+pane") silently reopens this exact false-page class — it will not show up as a test failure unless the test specifically
+asserts on ordering, since both branches remain individually correct in isolation; the bug is only in their sequence.
+Source: `plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md`.
+
+---
+
 ## Calibration-source contract: only CLI-rendered percentages may calibrate a learned window (2026-08-09)
 
 **The rule.** `context_probe.observe(model, tokens, *, pane_pct=...)` treats `pane_pct` as an AUTHORITATIVE calibration

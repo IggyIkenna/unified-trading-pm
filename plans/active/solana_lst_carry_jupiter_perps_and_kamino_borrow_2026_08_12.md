@@ -192,46 +192,46 @@ from 2020-12-18).
       not `staking_yields`:
 
       | Venue                  | Declared                                        |
-                      | ---------------------- | ----------------------------------------------- |
-                      | `MARINADE-SOLANA`      | `lst_rates` from **2021-08-01**                 |
-                      | `JITO-SOLANA`          | `lst_rates` from **2021-11-01**                 |
-                      | `SOLBLAZE-SOLANA`      | `lst_rates` from 2022-10-15                     |
-                      | `JITORESTAKING-SOLANA` | `staking_yields` — restaking, correctly distinct |
+                          | ---------------------- | ----------------------------------------------- |
+                          | `MARINADE-SOLANA`      | `lst_rates` from **2021-08-01**                 |
+                          | `JITO-SOLANA`          | `lst_rates` from **2021-11-01**                 |
+                          | `SOLBLAZE-SOLANA`      | `lst_rates` from 2022-10-15                     |
+                          | `JITORESTAKING-SOLANA` | `staking_yields` — restaking, correctly distinct |
 
-                      `lst_rates_handler.py` writes **both** `lst_rates` and `staking_yields`, so the vocabulary split is deliberate and the
-                      registry matches the handler exactly. The split is also semantically right: `lst_rates` is the LST exchange-rate/APY
-                      series, `staking_yields` is protocol staking APY.
+                          `lst_rates_handler.py` writes **both** `lst_rates` and `staking_yields`, so the vocabulary split is deliberate and the
+                          registry matches the handler exactly. The split is also semantically right: `lst_rates` is the LST exchange-rate/APY
+                          series, `staking_yields` is protocol staking APY.
 
-                      **Third correction on the same question, so the lesson is the point, not the fact:** my first verdict was
-                      "possibly BLOCKED-DATA" (from reading the registry for the wrong key), my second was "the registry is wrong"
-                      (from finding the handlers and still not re-checking the registry with the right key), and the truth is that both the
-                      registry and the handlers were right all along. This is exactly the failure
-                      `/codex/02-data/four-surface-reconciliation-procedure.md` warns about — **an absence result is evidence ONLY once you
-                      have confirmed you probed the vocabulary the WRITER actually emits.** Before declaring any data absent, enumerate the
-                      data types the writer emits and grep for those, never for the name you expect.
+                          **Third correction on the same question, so the lesson is the point, not the fact:** my first verdict was
+                          "possibly BLOCKED-DATA" (from reading the registry for the wrong key), my second was "the registry is wrong"
+                          (from finding the handlers and still not re-checking the registry with the right key), and the truth is that both the
+                          registry and the handlers were right all along. This is exactly the failure
+                          `/codex/02-data/four-surface-reconciliation-procedure.md` warns about — **an absence result is evidence ONLY once you
+                          have confirmed you probed the vocabulary the WRITER actually emits.** Before declaring any data absent, enumerate the
+                          data types the writer emits and grep for those, never for the name you expect.
 
-          **Consequence for § A.1, in the good direction:** SOL LST history starts **2021-08**, roughly 22 months EARLIER than
-                      Kamino's `lending_indices` (2023-06). So the binding constraint on the Solana spread is the **borrow** series, not the
-                      staking series, and the full Kamino window is computable. ETH remains deeper (Lido `staking_yields` 2020-12-18) but
-                      Solana is in no way blocked.
+              **Consequence for § A.1, in the good direction:** SOL LST history starts **2021-08**, roughly 22 months EARLIER than
+                          Kamino's `lending_indices` (2023-06). So the binding constraint on the Solana spread is the **borrow** series, not the
+                          staking series, and the full Kamino window is computable. ETH remains deeper (Lido `staking_yields` 2020-12-18) but
+                          Solana is in no way blocked.
 
 - [ ] [AGENT] P0. **Use `lst_rates`, NOT `staking_yields`, for the § A.1 spread — they measure different things.**
       Measured 2026-08-12; recorded here because § A.1's answer is wrong if the wrong series is used.
 
       | | `lst_rates` | `staking_yields` |
-                      | --- | --- | --- |
-                      | `instrument_type` | `lst` | `staking` |
-                      | Payload | `exchange_rate` (float64, **non-null**) | `apy` + `total_staked` (nullable) |
-                      | Source | **on-chain** — contract / `exchangeRate` / `getPooledEth` / subgraph | **reported** — `yields.llama.fi/pools`, `LIDO_APY_URL`, `ETHERFI_APY_URL` |
-                      | Meaning | The LST's redemption rate; **drift over time IS realised accrual** | A published forward-looking APY |
-                      | Venues | 14 LST issuers | 26, mostly vaults + restaking |
+                          | --- | --- | --- |
+                          | `instrument_type` | `lst` | `staking` |
+                          | Payload | `exchange_rate` (float64, **non-null**) | `apy` + `total_staked` (nullable) |
+                          | Source | **on-chain** — contract / `exchangeRate` / `getPooledEth` / subgraph | **reported** — `yields.llama.fi/pools`, `LIDO_APY_URL`, `ETHERFI_APY_URL` |
+                          | Meaning | The LST's redemption rate; **drift over time IS realised accrual** | A published forward-looking APY |
+                          | Venues | 14 LST issuers | 26, mostly vaults + restaking |
 
-                      **The axis is reported-vs-measured, not protocol-native-vs-DEX-swapped** (a hypothesis considered and rejected), and it
-                      is not about token mechanics either — rebasing vs price-appreciating cuts across both. For a staked-basis P&L you want
-                      the **measured** series, because exchange-rate drift is the yield actually earned rather than the number a protocol
-                      advertises. `sim_schemas.py` already does exactly that: `stake_apy_bps  # staking yield from MTDS lst_rates`.
-                      Only **three** venues declare both (LIDO, ETHERFI, PUFFER) — protocols that genuinely both issue an LST and run a
-                      vault/restaking product, so the overlap lets you cross-check advertised against realised rather than being duplication.
+                          **The axis is reported-vs-measured, not protocol-native-vs-DEX-swapped** (a hypothesis considered and rejected), and it
+                          is not about token mechanics either — rebasing vs price-appreciating cuts across both. For a staked-basis P&L you want
+                          the **measured** series, because exchange-rate drift is the yield actually earned rather than the number a protocol
+                          advertises. `sim_schemas.py` already does exactly that: `stake_apy_bps  # staking yield from MTDS lst_rates`.
+                          Only **three** venues declare both (LIDO, ETHERFI, PUFFER) — protocols that genuinely both issue an LST and run a
+                          vault/restaking product, so the overlap lets you cross-check advertised against realised rather than being duplication.
 
 - [ ] [AGENT] P1. **Compare LTV and borrow cost across the three Solana lending venues** (Kamino / Solend / MarginFi)
       and against Aave on the ETH side. Operator asked which has better LTV and lower stable borrow rates. **Note for
@@ -243,35 +243,76 @@ from 2020-12-18).
       extended rather than invented. Gate on whether § A.1 shows the ranking actually changes hands often enough to pay
       for itself; a static best-venue choice is correct if it does not.
 
-## A.2 Pacifica gate — re-verify credential status BEFORE designing live capture
+## A.2 Pacifica gate — RESOLVED 2026-08-14, real API calls made, no code written
 
 The pre-cull live connector (`market-tick-data-service` history, deleted `2e674d1f`) was a **BLOCKED-CREDENTIALS
 scaffold, never activated** — as of 2026-07-06 it documented `wss://ws.pacifica.fi/v1` as gated behind a paid
-Helius/Triton-tier Solana RPC key plus a Pacifica partner authorisation header, with the free public tier not exposing
-the aggregated tick channels needed for capture. **This session's fresh research (2026-08-14) found conflicting signal**
-— Pacifica's own marketing/docs now describe "a comprehensive suite of REST and websocket API endpoints" with a Python
-SDK, and `docs.pacifica.fi/api-documentation/api/websocket` reads like an openly-documented public API (idle-timeout and
-max-connection-lifetime behaviour, not credential-gate language). **These are not necessarily the same claim** — public
-documentation existing does not by itself prove the market-data channels are free-tier-accessible; the 2026-07-06
-assessment could have been about a different/higher tier than what's now documented, or Pacifica genuinely opened it up.
-**Do not build a live-WS design against either claim without re-testing the actual endpoint.**
+Helius/Triton-tier Solana RPC key plus a Pacifica partner authorisation header. **This gate is now closed by direct
+testing, not documentation-reading** — see the three DONE todos below.
 
-- [ ] [AGENT] P0. **Re-test `wss://ws.pacifica.fi/v1` (or whatever the current WS host is per fresh docs) against the
-      free/public tier with no special credentials.** Confirm whether `trades`/`book`/`ticker`-shaped channels are
-      reachable without a paid RPC key or partner header. Report the exact result (which channels work, what auth if any
-      is required) — this determines whether Track 2's MTDS live connector can be built for real or must stay a
-      documented BLOCKED-CREDENTIALS scaffold like before.
-- [ ] [AGENT] P1. **Confirm the REST base URL and symbol/margin facts still hold**: `https://api.pacifica.fi/api/v1`
-      (mainnet), `https://test-api.pacifica.fi/api/v1` (testnet) per fresh docs — matches the pre-cull adapter's
-      hardcoded base URL, good sign of stability, but re-verify a live `GET` succeeds and the response shape matches the
-      deleted parser code (`_parse_pacifica_trades`, `_build_pacifica_book_row` — see git history,
-      `market-tick-data-service@2e674d1f~1:market_tick_data_service/adapters/_umi_pacifica.py`) before assuming a
-      straight restore.
-- [ ] [AGENT] P2. **Check whether Pacifica now exposes a real `/markets` discovery endpoint.** The pre-cull adapter used
-      a hand-curated top-10-coin list (`BTC, ETH, SOL, HYPE, XRP, DOGE, BNB, SUI, PUMP, FARTCOIN`) because "the API does
-      not expose a public markets discovery endpoint" at adapter-authoring time (pre-2026-07-16). Fresh docs describe
-      "20 or more perpetual markets" and a full REST suite — if a discovery endpoint now exists, resurrect the adapter
-      to call it dynamically instead of re-hardcoding a stale curated list.
+- [x] [AGENT] P0. ✅ **DONE 2026-08-14 — real WS test, zero credentials.** Connected to `wss://ws.pacifica.fi/ws` (note:
+      `/ws` path, not `/v1` as the old scaffold assumed) with no API key, no RPC tier, no partner header. Subscribed to
+      the `trades` channel for `BTC` and received real live trade ticks within ~2s:
+      `{"channel":"trades","data":[{"h":252234313,"s":"BTC","a":"0.00351","p":"62759","d":"open_long",     "tc":"normal","t":1786714266923,"li":11622278699,"it":0}]}`.
+      **The 2026-07-06 BLOCKED-CREDENTIALS assessment no longer holds** — whether Pacifica opened it up since or the
+      original assessment was about a different tier, the CURRENT state is unambiguous: public, unauthenticated live
+      streaming works. §D.2's live-connector todo can target a real implementation, not a permanent scaffold.
+- [x] [AGENT] P1. ✅ **DONE 2026-08-14 — real REST calls, base URL confirmed.** `https://api.pacifica.fi/api/v1` is
+      live: `GET /trades?symbol=BTC` returns real recent-trade rows (`price`/`amount`/`side`/`created_at` — matches
+      `_parse_pacifica_trades`'s expected fields exactly); `GET /book?symbol=BTC` returns real order-book levels
+      (`l: [[bids],[asks]]` with `p`/`a`/`n` per level, `t` timestamp — matches `_build_pacifica_book_row`'s expected
+      shape exactly). **The deleted parser code is not stale** — restore it as-is per §D.2, no shape migration needed.
+- [x] [AGENT] P2. ✅ **DONE 2026-08-14 — real markets-discovery endpoint confirmed, curated list is now obsolete.**
+      `GET /info` returns a full live market list (verified: BTC, ETH, SOL, PUMP, XRP, and more), each row carrying
+      `symbol`, `tick_size`, `lot_size`, `max_leverage`, `min_order_size`, `instrument_type: "perpetual"`, AND
+      **`funding_rate`/`next_funding_rate` inline** — meaning `/info` alone can serve both instrument discovery (§D.2's
+      IS adapter) and a funding-rate snapshot, without needing a separate funding endpoint for the current rate. §D.2's
+      resurrected adapter should call `/info` dynamically instead of restoring the hardcoded 10-coin list — the "no
+      discovery endpoint" constraint that justified the curated list is gone.
+
+## A.3 Jupiter Perps schema/asset_group gate — NEW finding 2026-08-14, genuinely unresolved
+
+**Real API calls made** (`https://perps-api.jup.ag/v1/positions?walletAddress=...` and
+`.../v1/pool-info?mint=<SOL mint>`) confirm the API is live, public, no-auth: `pool-info` returns real current data —
+`longBorrowRatePercent`, `shortBorrowRatePercent`, `longUtilizationPercent`, `shortUtilizationPercent`,
+`longAvailableLiquidity`, `shortAvailableLiquidity`, `openFeePercent` — confirming the borrow-fee/utilization mechanism
+(not funding rate) this plan already claimed. **What's newly found and NOT yet resolved: which existing UAC schema this
+data should write to, and it is not a clean fit.**
+
+Checked directly against the live UAC schema registry (`find_schema`, 2026-08-14):
+
+| data_type                                             | Schema exists for `cefi`?                                                                            | Schema exists for `defi`?                                                                                                                                                                                                    |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `derivative_ticker`                                   | ✅ yes — `funding_rate`, `mark_price`, `index_price`, `open_interest`, `predicted_funding_rate`, ... | ❌ **no schema registered**, despite appearing in `DATA_TYPES_BY_ASSET_GROUP["defi"]`'s generic valid-list                                                                                                                   |
+| `perp_funding` / `perp_daily_ctx` / `perp_mark_price` | (not checked — cefi doesn't need them, `derivative_ticker` already bundles this)                     | ❌ **no schema registered**, same false-positive as above                                                                                                                                                                    |
+| `utilization`                                         | ❌ no schema registered                                                                              | ✅ yes — `borrow_rate_apy`, `variable_borrow_rate_apy`, `stable_borrow_rate_apy`, `utilization_rate`, `liquidity_rate_apy`, `supply_rate_apy` — **single-sided, no long/short split, no mark/index price, no open interest** |
+
+**The practical problem**: `JUPITER-SOLANA` is pinned to `defi` in `VENUE_TO_ASSET_GROUP` (confirmed live — it's a
+strict 1:1 dict, a venue cannot span two asset_groups), and `defi` has no working `derivative_ticker`/`perp_funding`/
+`perp_mark_price` schema — those data_types are asset-group-declared but schema-less for defi, a trap: "valid data_type
+for this asset_group" and "has a real schema to write against" are DIFFERENT claims, and the generic capability list
+doesn't distinguish them. `defi/utilization` DOES have a real schema and is a genuinely good semantic match for the
+borrow-rate/utilization fields specifically — but it's single-row-per-instrument shaped, not long/short-split, and
+carries no mark/index price or open-interest columns, so it cannot alone serve as a `derivative_ticker`-equivalent for
+this venue.
+
+- [ ] [AGENT] P0. **Decide how Jupiter Perps market data maps onto an EXISTING schema, per the operator's explicit
+      "ideally without creating new data types" constraint.** Three real options, no clean fourth: (1) write TWO
+      `utilization` rows per poll (long side, short side) and accept it doesn't carry mark/index/OI — those would need a
+      separate signal source (Jupiter position-account queries can supply mark/index price directly from Solana RPC,
+      untested this session); (2) register the perps product under a DIFFERENT venue token than `JUPITER-SOLANA` (e.g. a
+      `JUPITER-PERPS` variant) classified under `cefi` instead, where `derivative_ticker`'s real schema already fits —
+      but this breaks the "one Jupiter venue" assumption and needs its own UAC venue-registry decision; (3) accept this
+      is the one genuine case needing a new/extended schema (e.g. add `borrow_rate_long`/
+      `borrow_rate_short`/`utilization_long`/`utilization_short` columns to `defi/utilization`, or a defi-side
+      `derivative_ticker` schema) despite the stated preference to avoid it. **This decision blocks §D.1's Jupiter
+      market-data todo — do not write capture code before it resolves.**
+- [ ] [AGENT] P1. **Check whether Solana RPC / on-chain Position/Custody account reads can supply Jupiter Perps mark
+      price, index price, and open interest** (the fields `pool-info` does NOT return) — the Perpetuals API docs
+      describe these as queryable on-chain accounts via standard RPC or Anchor, not necessarily via the REST surface
+      tested this session. Untested this session — needed to know whether option (1) above is actually viable (a
+      `utilization` row plus a second on-chain read) or whether mark/index/OI simply aren't available at all without
+      building an Anchor account decoder.
 
 ## B. Registry layer (UAC) — the correct first code change, and it needs no strategy edits
 
@@ -351,14 +392,18 @@ at all.**
 
 ### D.1 Jupiter + Kamino
 
-- [ ] [SCRIPT] P2. **Emit Jupiter PERPETUAL instruments** from `reference_data/adapters/defi/jupiter.py`, which today
-      emits `SPOT_PAIR` only. Respect the PERP-vs-PERPETUAL canonicalisation the adapter's own docstring already cites,
-      and register the venue token in the UAC venue registry rather than hand-rolling a key.
-- [ ] [SCRIPT] P2. **Wire Jupiter perp market-data capture** (borrow-fee/utilization + mark/oracle price — NOT
-      `perp_funding`, Jupiter has no funding-rate mechanism, see the collateral/mechanism finding above) so the hedge
-      leg has the inputs the engines read. Declare the data types in `VENUE_DATA_TYPE_CAPABILITIES` with real
-      coverage-start dates, and route zero-row days through `record_zero_rows` rather than leaving honest absence
-      implicit.
+- [ ] [SCRIPT] P2. **BLOCKED on §A.3.** Emit Jupiter PERPETUAL instruments from
+      `reference_data/adapters/defi/jupiter.py` (today emits `SPOT_PAIR` only) — but which venue token/asset_group it
+      registers under depends on §A.3's unresolved decision (same `JUPITER-SOLANA` token under `defi`, or a new
+      perps-specific token under `cefi`). Resolve §A.3 first or this todo just re-derives the same open question
+      mid-implementation.
+- [ ] [SCRIPT] P2. **BLOCKED on §A.3.** Wire Jupiter perp market-data capture (borrow-fee/utilization + mark/oracle
+      price — NOT `perp_funding`, Jupiter has no funding-rate mechanism, confirmed via real API call: `pool-info`
+      returns `longBorrowRatePercent`/`shortBorrowRatePercent`, no `funding_rate` field anywhere). §A.3 found no
+      existing `defi` schema cleanly fits this (2 sides, no mark/index/OI in `utilization`) — the actual schema target
+      is undecided, so this todo cannot be scoped precisely yet. Once §A.3 resolves: declare the chosen data type(s) in
+      `VENUE_DATA_TYPE_CAPABILITIES` with real coverage-start dates, and route zero-row days through `record_zero_rows`
+      rather than leaving honest absence implicit.
 - [ ] [SCRIPT] P3. **Confirm Kamino `lending_indices` capture is actually live, not merely advertised.** The capability
       registry claims `2023-06-01`; a declared start date is a claim, not evidence. Verify real objects exist across the
       window before § A.1's backtest depends on them — an entity-agnostic check passes while the target writes zero rows
@@ -519,3 +564,31 @@ at all.**
   Widened `repos`/`tags`/estimates accordingly (baseline 12→20 AI-days, calibrated 9.6→15.4) — Pacifica's execution-
   service build is genuine net-new scope on top of Track 1's narrower additions. `status: draft` unchanged — both tracks
   are still gated (§A.1 economics, §A.2 credential re-verification).
+
+- **2026-08-14 (part 3)** — Operator pushed back correctly: everything above was research and git-history archaeology,
+  not execution — "did you test that we can download data" and "are you sure about the schemas" were both fair, and the
+  honest answer to both was no. Did the actual work this time:
+
+  **Real API tests, no code written.** Pacifica: `wss://ws.pacifica.fi/ws` (public, zero credentials) streamed real live
+  BTC trades within 2 seconds of connecting — the 2026-07-06 BLOCKED-CREDENTIALS assessment is confirmed dead, §A.2's
+  live-capture gate is now genuinely resolved rather than "documentation says maybe." `GET /trades`, `GET /book` or the
+  same host matched the deleted parser's expected field shapes exactly — the resurrection plan in §D.2 is not
+  speculative. `GET /info` turned out to be a real, live markets-discovery endpoint carrying `funding_rate` inline — the
+  old "no discovery endpoint" justification for the hardcoded 10-coin list is obsolete, one more thing corrected in
+  §A.2. Jupiter Perps: `perps-api.jup.ag/v1/pool-info` is real and live, confirmed the borrow-fee/utilization mechanism
+  (no `funding_rate` field anywhere in the response) this plan had already claimed from docs alone.
+
+  **Real schema check found a genuine gap the plan had glossed over (new §A.3).** Queried UAC's live schema registry
+  directly (`find_schema`) instead of trusting the asset-group-wide "valid data types" list, which turned out to be a
+  trap: `derivative_ticker`/`perp_funding`/`perp_daily_ctx`/`perp_mark_price` all show as "valid" for `defi` but have
+  **no schema actually registered** for defi — only for `cefi`. `JUPITER-SOLANA` is pinned to `defi` in a strict 1:1
+  `VENUE_TO_ASSET_GROUP` mapping (confirmed — no venue spans two asset_groups), and `defi`'s only real schema in this
+  neighborhood is `utilization` — a genuinely good semantic match for the borrow-rate/utilization fields specifically,
+  but single-sided (no long/short split) and carries no mark/index price or open-interest columns. **This is not
+  resolved** — filed as §A.3's P0 todo with three real options (dual `utilization` rows + a separate on-chain price
+  read; a new perps-specific venue token under `cefi` where `derivative_ticker` already fits; or accept this is the one
+  case that needs schema extension despite the stated preference not to). §D.1's two Jupiter todos are now marked
+  BLOCKED on this decision rather than describing capture work that can't actually be scoped yet. Confirmed
+  `InstrumentType.PERPETUAL` already exists (no new instrument_type needed either way) and `cefi/derivative_ticker`
+  genuinely has everything Pacifica needs (`funding_rate`, `mark_price`, `index_price`, `open_interest`) — so Track 2's
+  schema story is clean; only Track 1's Jupiter leg has an open question.

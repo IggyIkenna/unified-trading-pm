@@ -138,11 +138,37 @@ until the next sweep) and is a stopgap, not the root fix.
       `run_log_signals`, then `error_snippet_from_run_log`), each a separate GCS round-trip — this is what the
       ~30-90s-per-VM classify-loop spacing measured. Fixed by fetching run.log once per VM (lazily) and reusing the text
       across all consumers; regression test asserts ≤1 download per VM. `deployment-service@3c9d65dd50`, QG green.
-- [ ] [BACKEND] P2. **ADDED 2026-08-14 (slot 12, follow-up)** — Live-verify the redundant-download dedup
+- [x] [BACKEND] P2. **ADDED 2026-08-14 (slot 12, follow-up)** — ✅ Live-verified the redundant-download dedup
       (`deployment-service@3c9d65dd50`) actually collapses the exit-code-monitor sweep under its 1800s task-timeout:
       check the next few hourly Cloud Run executions after this fix deploys. If still timing out, candidates (b) fleet
       size past `_SWEEP_IO_MAX_WORKERS=32` and (c) GCS throttling under 32 concurrent readers (see the original
       investigate-todo above) remain unaddressed and need their own timed/profiled sweep run. Repo: deployment-service.
+      **Result: still timing out — dedup fix insufficient.** Confirmed the deployed image (execution `q9wbf`,
+      13:00-13:30Z, digest `a7b0293...`) is genuinely post-fix (ancestor check: `3c9d65dd50` is an ancestor of the
+      vendored `deployment-service` commit baked into that build) — this is the first Cloud Run execution to actually
+      run the fix (all 06:00-12:00Z executions ran the prior digest `bd4a2a8...`, pre-fix). It STILL hit the full 1800s
+      timeout. Strong evidence for candidate (c): 116 `download_bytes(...) exceeded the 30s bounded-call timeout`
+      warnings across 114 distinct VMs (~67% of the ~170-VM fleet) in that one execution's logs — every one of those
+      stalls burns the full 30s bounded-call budget before the read is abandoned and classified as failed, which at
+      `_SWEEP_IO_MAX_WORKERS=32` alone accounts for ~107s of pure stall time even under perfect parallelization, on top
+      of ordinary per-VM read latency. This rate (two-thirds of VMs stalling their run.log read) is far above what
+      normal network variance would produce and points at GCS throttling under 32 concurrent readers against the same
+      `vm-logs/` prefix, not a residual redundant-download issue. Filed the next investigate/fix todo below. Repo:
+      deployment-service.
+
+- [ ] [BACKEND] P1. **ADDED 2026-08-14 (slot 7, live-verify follow-up)** — the dedup fix
+      (`deployment-service@3c9d65dd50`) is confirmed live and confirmed insufficient (see the P2 verify todo above):
+      execution `q9wbf` (13:00-13:30Z, first execution on the post-fix image digest) still hit the full 1800s timeout,
+      with 116/~170 (≈67%) per-VM `run.log` reads hitting the 30s bounded-call timeout. Investigate + fix candidate (c)
+      (GCS throttling under `_SWEEP_IO_MAX_WORKERS=32` concurrent readers against the same `vm-logs/` prefix): (1) run a
+      profiled/instrumented sweep that logs per-phase wall-clock (running-census / terminated-classify) and per-call
+      latency distribution, not just the 30s-timeout tail, to confirm throttling vs. genuinely slow individual reads;
+      (2) if throttling is confirmed, try reducing `_SWEEP_IO_MAX_WORKERS` (fewer concurrent readers, less contention)
+      AND/OR adding jittered backoff-retry on a stalled `download_bytes` call instead of treating a single 30s stall as
+      terminal-failed (a retry after backoff may succeed where the first attempt was throttled); (3) also re-check
+      candidate (b) (fleet size — is `_SWEEP_IO_MAX_WORKERS=32` sized for the CURRENT ~170-VM census, or did the fleet
+      grow past what was true when 32 was chosen). Target: sweep completes well under 1800s with a near-zero
+      bounded-call-timeout rate. Repo: deployment-service.
 
 ## Related
 
@@ -154,6 +180,22 @@ until the next sweep) and is a stopgap, not the root fix.
   launcher-host exemption), and the DP_SOURCE_RATE_LIMITED cooldown.
 
 ## Progress Log
+
+- 2026-08-14 (slot 7, backend): Live-verified the P2 todo. Confirmed the redundant-download-dedup fix
+  (`deployment-service@3c9d65dd50`) is genuinely live in the running Cloud Run job image (job spec references
+  `deployment-api:latest`; the FIRST execution to actually run the post-fix digest was `q9wbf`, started 13:00:04Z — the
+  six preceding hourly executions 06:00-12:00Z all ran the prior digest `bd4a2a8...`, confirmed via
+  `gcloud run jobs executions describe --format=value(spec.template.spec.containers[0].image)` per-execution digest
+  comparison against the image push timestamp `2026-08-14T12:36:20Z`). `q9wbf` still hit the full 1800s task timeout
+  (completed 13:30:29Z, "The configured timeout was reached") — the dedup fix alone does not collapse the sweep.
+  `gcloud logging read` on that execution's logs shows 116 `download_bytes(...) exceeded the 30s bounded-call timeout`
+  warnings across 114 distinct VMs (of the ~170-VM fleet), i.e. roughly two-thirds of VMs stalled their run.log read for
+  the full 30s bounded-call budget before it was abandoned — a rate consistent with GCS throttling under
+  `_SWEEP_IO_MAX_WORKERS=32` concurrent readers (candidate (c) from the earlier investigate-todo), not ordinary network
+  latency. Flipped the P2 verify todo done with the result recorded inline; filed a new P1 investigate/fix todo
+  (candidate (c) profiling + mitigation, re-checking candidate (b) fleet-size sizing) since this is a genuinely new fix
+  attempt, not a mechanical follow-through of this verify-only task. No code changed this session (verification +
+  issue-doc update only).
 
 - 2026-08-14 (slot 12, backend): Picked up the 08-14 investigate/fix todo. Root cause confirmed: the terminated-VM
   classify loop in `exit_code_fleet_monitor.sweep()` called `no_capture_reason_from_run_log`, then (on SILENT)

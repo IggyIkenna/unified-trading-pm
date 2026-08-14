@@ -139,8 +139,38 @@ source:
       CWD-fallback bug in `regen_backlog_from_plan.py`), not the earlier, well-known 08:1x UTC `/tmp`-ENOSPC blip (which
       was real but contained). Root-fixed same day, `agent-orchestrator@fc9ac53`. Full hourly-breakdown methodology +
       activity-log evidence lives in that plan's Progress Log — not duplicated here.
-- [ ] [UI] P3. **Backlog-relations view.** ⏳ **STILL BLOCKED-UPSTREAM-DESIGN, re-checked 2026-07-23 (6 days later, no
-      movement):** `docs/BACKLOG_RELATIONS_UX_BRIEF.md` is present, but there is **no design deliverable, no
+- [ ] [UI] P3. **Backlog-relations view.** ⏳ **RE-DECIDED 2026-08-14 (6+ weeks after the 2026-07-23 recheck found no
+      movement) — the brief itself is READY TO DISPATCH; do not close this as un-actionable.** Re-read
+      `agent-orchestrator/docs/BACKLOG_RELATIONS_UX_BRIEF.md` in full. This doc's earlier framing ("cannot start until a
+      design lands") was correct as of 2026-07-23, but the brief itself has never actually been un-actionable — it
+      already carries a concrete `GET /api/backlog/graph` data contract (brief §9, fully specified JSON shape, already
+      extractable from live tables per the brief's own text), an explicit resolved organizing-principle decision (§3:
+      the model is a cross-cutting dependency GRAPH, not a plan-grouped tree — this is stated as a conclusion, not an
+      open question), three concretely-documented rejected approaches with the specific reason each failed (§7, so a
+      future attempt does not repeat them), real worked examples to design/test against (§10), and the existing
+      dashboard's design tokens + stack constraints (§8: React 18.3+TS strict, no d3/mermaid/cytoscape, hand-rolled SVG
+      precedent). What was missing 2026-07-23 was a human/design-agent turning this into an accepted visual mockup — but
+      the brief is substantive enough that a single scoped implementation task can execute it directly (build the
+      endpoint + a graph-oriented view per the brief's own resolved constraints) rather than waiting on a separate
+      design-only pass that never happened in 4 weeks. **Recommended one-paragraph spec for the next AO-dispatch plan
+      that picks this up** (agent-orchestrator + dashboard, NOT actioned here — this doc stays PM-only, the code lives
+      in the other repo): Build `GET /api/backlog/graph` (`server/routes/`) returning the brief §9 shape —
+      `{slots_total, plans[], tasks[]` (id/title/plan_ref/status/tier/priority/dispatched_to/assigned_role/
+      collision_group/repos/needs_conditions/after_tasks/explain/skips/orphan), `conditions[]`
+      (name/value/set_by/set_at/gates[])`}`. Build a dashboard view organized around the dependency/condition GRAPH, not
+      a plan tree (three tree/DAG-column/kanban attempts were already built and rejected — brief §7 documents exactly
+      why each failed, do not re-propose them); the two must-answer questions per the brief's own priority ranking (§5)
+      are "why is nothing running" (<5s, no clicking) and "which single condition unblocks the most work" (a fan-out
+      question a table cannot answer). Must visually surface a condition shared across plans (§3: the majority of
+      task→task edges cross plan boundaries) and the "backend says ready, N workers disagree" contradiction (§10 example
+      A — the actual incident that motivated this brief, 15/17 slots declining a task the dispatcher believed was
+      ready). Reuse the existing dashboard tokens (`dashboard/src/styles.css`) and dark-first theme; test against the
+      brief's §10 worked examples A-D; design for ~10× today's scale (brief §4: currently ~18 actionable tasks, target
+      readable at ~180). **If a future pass judges a dedicated design-agent mockup pass is still preferred over
+      collapsing design+implementation into one engineering task, that is a legitimate alternate call — but "wait
+      indefinitely for an unscoped design pass" is no longer the only option, and this brief should not keep re-reading
+      as blocked on the same 2026-07-17 handoff it already resolved most of.** Original 2026-07-23 recheck text (kept
+      for context): `docs/BACKLOG_RELATIONS_UX_BRIEF.md` is present, but there is **no design deliverable, no
       `GET /api/backlog/graph` endpoint** (grepped `server/routes/`), and no relations UI commit in `dashboard/src`. The
       blocker is unchanged — this cannot start. **If the design is not coming, say so and close this**; an
       indefinitely-blocked P3 that nobody owns is noise in every future sweep. Brief + real data + a 100-task synthetic
@@ -208,3 +238,17 @@ source:
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since
   round11; all 3 items remain in the exact same state (citation-fix pending an epic todo, blocked-upstream-design UI
   item, void-pending-retest l2_book gate). No new facts apply.
+- **2026-08-14 (bookkeeping pass) — DECIDED on the backlog-relations UI todo, per this session's operating authority to
+  decide rather than defer.** Read `agent-orchestrator/docs/BACKLOG_RELATIONS_UX_BRIEF.md` in full (not re-derived from
+  a prior summary). Verdict: the brief is substantive enough to dispatch directly as a scoped implementation task — it
+  carries a fully-specified `GET /api/backlog/graph` data contract, an already-resolved organizing-principle decision
+  (graph, not plan-tree), three documented rejected approaches with the specific failure reason for each, real worked
+  examples, and the dashboard's existing stack/token constraints. What has been missing for 4 weeks is not "the brief
+  isn't good enough" but "nobody ever turned it into either an accepted mockup or a scoped implementation task" — the
+  design-agent handoff from 2026-07-17 was never actioned by anyone. Rewrote the todo itself with a one-paragraph
+  extracted spec (see the todo's own text above) so the next AO-dispatch plan authored against this doc does not need to
+  re-read the full brief to scope the work. **Explicitly NOT done here**: no code written, no endpoint built, no plan
+  authored — that is Track-6 work for agent-orchestrator + dashboard, a different repo and a different wave, out of this
+  session's scope. This is a recommendation + spec extraction only. The todo's checkbox stays `- [ ]` since the actual
+  UI/endpoint work remains undone; only the "is this still blocked" verdict changed, from blocked-upstream-design to
+  ready-to-dispatch.

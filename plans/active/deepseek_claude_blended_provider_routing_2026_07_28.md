@@ -406,18 +406,18 @@ default from an external reference.
       (OmniRoute no-go) — one coherent call about which providers this workspace routes to, recorded in two docs.
 
       **Why closed rather than left open**: the original done-when required proving the abstraction "via a real
-                                                          isolated local pilot dispatch", which needs a provisioned credential for a provider the operator has just ruled
-                                                          out — "for now we are going to work with claude and deepseek only" (same session). As written the todo was
-                                                          **unsatisfiable without reversing that ruling**, so leaving it open would put a permanently un-actionable item in
-                                                          front of every future audit. When a second provider IS adopted, running that pilot dispatch simply *is* the
-                                                          integration work — not a separate task to remember — and the operator's own estimate for that integration is "a
-                                                          few hours".
+                                                              isolated local pilot dispatch", which needs a provisioned credential for a provider the operator has just ruled
+                                                              out — "for now we are going to work with claude and deepseek only" (same session). As written the todo was
+                                                              **unsatisfiable without reversing that ruling**, so leaving it open would put a permanently un-actionable item in
+                                                              front of every future audit. When a second provider IS adopted, running that pilot dispatch simply *is* the
+                                                              integration work — not a separate task to remember — and the operator's own estimate for that integration is "a
+                                                              few hours".
 
-                                                          **Known, accepted risk — state it plainly rather than let the ✅ imply more than it should**: this code has never
-                                                          executed against a real second provider. It is tested (34 pre-existing routing tests pass unmodified, plus
-                                                          simulated multi-provider-failover tests) but unproven in production, and a no-op cannot regress anything today.
-                                                          **The first real second-provider integration must treat this as unverified code**, not as a working feature to
-                                                          configure. Do not re-file this as a standing todo — re-open it at that moment instead.
+                                                              **Known, accepted risk — state it plainly rather than let the ✅ imply more than it should**: this code has never
+                                                              executed against a real second provider. It is tested (34 pre-existing routing tests pass unmodified, plus
+                                                              simulated multi-provider-failover tests) but unproven in production, and a no-op cannot regress anything today.
+                                                              **The first real second-provider integration must treat this as unverified code**, not as a working feature to
+                                                              configure. Do not re-file this as a standing todo — re-open it at that moment instead.
 
 - [x] [DATA] P2. ✅ Generalize the DeepSeek-specific health-gate ring to a per-provider map (failing free provider
       degrades to the next-priority free provider before falling back to Claude). — `agent-orchestrator@24bd611`, proven
@@ -437,9 +437,9 @@ default from an external reference.
       directly rather than waiting for the abstraction.
 
       **Explicitly NOT a permanent no**, and the reason it needs no standing todo: per the operator, integrating a
-                                                          further model later is **"not going to be hard, maybe a few hours of work only."** A cheap, well-understood
-                                                          future option does not need to sit open in the corpus being re-audited every sweep — re-open this only when
-                                                          there is an actual decision to add a provider. **Do not re-file this as a follow-up**: closing it is the point.
+                                                              further model later is **"not going to be hard, maybe a few hours of work only."** A cheap, well-understood
+                                                              future option does not need to sit open in the corpus being re-audited every sweep — re-open this only when
+                                                              there is an actual decision to add a provider. **Do not re-file this as a follow-up**: closing it is the point.
 
 - [x] [UI] P1. ✅ Surface DeepSeek's real dollar balance on the dashboard (available-balance-only design — DeepSeek's
       API exposes no spend/usage-history endpoint). — New `DeepSeekBalancePoller` (30-min cadence) +
@@ -478,25 +478,25 @@ default from an external reference.
       exact resource name is recorded in this todo.
 
       **PREPARED 2026-08-08 (operator ruling, ao round-5 apply session item 19): "Operator will create it - needs
-                                          Claude to provide the exact secret name + gcloud/aws command to run."** Proposed name (matching this repo's
-                                          existing `{vendor}-api-key` GSM convention — see `tardis-api-key`/`databento-api-key`/`graph-api-key` in
-                                          `/codex/05-infrastructure/auth-setup.md`, extended with the account variant since DeepSeek now has 2 distinct
-                                          keys, pro + flash, per `deepseek_flash_ab_routing_test_2026_08_05.md`): **`deepseek-v4-pro-api-key`** (project
-                                          `central-element-323112`, matching every other secret cited above). Exact command (run on whichever host holds
-                                          the live literal key, currently `~/.claude-accounts/deepseek-v4-pro.env`'s `ANTHROPIC_AUTH_TOKEN` value — do
-                                          NOT paste the key into shell history; use the `-n`-into-stdin form or a temp file deleted after):
-                                          ```bash
-                                          gcloud config set project central-element-323112
-                                          echo -n "<the literal ANTHROPIC_AUTH_TOKEN value from ~/.claude-accounts/deepseek-v4-pro.env>" | \
-                                            gcloud secrets create deepseek-v4-pro-api-key \
-                                              --data-file=- \
-                                              --replication-policy=automatic
-                                          ```
-                                          If/when the flash account (`deepseek-v4-flash.env`, provisioned on the orchestrator VM per the A/B test plan's
-                                          todo 6, not present on this host) also needs GSM-sourcing, the matching name is **`deepseek-v4-flash-api-key`**
-                                          (same command, swap the secret name + source the flash env file's token instead). Once created, hand the exact
-                                          name(s) to an agent session to wire the re-sourcing (next todo) — no guessing needed, this doc already states
-                                          the name.
+                                              Claude to provide the exact secret name + gcloud/aws command to run."** Proposed name (matching this repo's
+                                              existing `{vendor}-api-key` GSM convention — see `tardis-api-key`/`databento-api-key`/`graph-api-key` in
+                                              `/codex/05-infrastructure/auth-setup.md`, extended with the account variant since DeepSeek now has 2 distinct
+                                              keys, pro + flash, per `deepseek_flash_ab_routing_test_2026_08_05.md`): **`deepseek-v4-pro-api-key`** (project
+                                              `central-element-323112`, matching every other secret cited above). Exact command (run on whichever host holds
+                                              the live literal key, currently `~/.claude-accounts/deepseek-v4-pro.env`'s `ANTHROPIC_AUTH_TOKEN` value — do
+                                              NOT paste the key into shell history; use the `-n`-into-stdin form or a temp file deleted after):
+                                              ```bash
+                                              gcloud config set project central-element-323112
+                                              echo -n "<the literal ANTHROPIC_AUTH_TOKEN value from ~/.claude-accounts/deepseek-v4-pro.env>" | \
+                                                gcloud secrets create deepseek-v4-pro-api-key \
+                                                  --data-file=- \
+                                                  --replication-policy=automatic
+                                              ```
+                                              If/when the flash account (`deepseek-v4-flash.env`, provisioned on the orchestrator VM per the A/B test plan's
+                                              todo 6, not present on this host) also needs GSM-sourcing, the matching name is **`deepseek-v4-flash-api-key`**
+                                              (same command, swap the secret name + source the flash env file's token instead). Once created, hand the exact
+                                              name(s) to an agent session to wire the re-sourcing (next todo) — no guessing needed, this doc already states
+                                              the name.
 
 - [ ] [INFRA] P2. **Re-source `ANTHROPIC_AUTH_TOKEN` from the GSM secret on BOTH hosts** — this machine and the planning
       VM — so `~/.claude-accounts/deepseek-v4-pro.env` no longer contains the literal key. ~~BLOCKED on the operator
@@ -513,14 +513,14 @@ default from an external reference.
       this doc's own new `[OPERATOR] P2` balance-recurrence todo above.
 
       > **⚠️ Measurement trap recorded 2026-08-06 — do not repeat it.** This todo's earlier line "Confirmed 2026-08-04:
-                                                          > no `deepseek*` secret exists in GSM yet" should be re-verified before being trusted. A 2026-08-06 attempt to
-                                                          > re-confirm it returned an empty list that looked like proof of absence but was **permission denial**: the
-                                                          > session identity (`github-actions-deploy@central-element-323112`) lacks `secretmanager.secrets.list` on
-                                                          > `central-element-323112`, `uts-prod`, and `unified-trading-system`, and `gcloud secrets list --filter=...`
-                                                          > exits 0 with no rows rather than erroring visibly when filtered. **Check the identity's permission before
-                                                          > reading an empty secret list as absence** — same class as the journald-retention trap recorded in
-                                                          > `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`, where a `--since` predating
-                                                          > retention returned a confident zero that meant nothing.
+                                                              > no `deepseek*` secret exists in GSM yet" should be re-verified before being trusted. A 2026-08-06 attempt to
+                                                              > re-confirm it returned an empty list that looked like proof of absence but was **permission denial**: the
+                                                              > session identity (`github-actions-deploy@central-element-323112`) lacks `secretmanager.secrets.list` on
+                                                              > `central-element-323112`, `uts-prod`, and `unified-trading-system`, and `gcloud secrets list --filter=...`
+                                                              > exits 0 with no rows rather than erroring visibly when filtered. **Check the identity's permission before
+                                                              > reading an empty secret list as absence** — same class as the journald-retention trap recorded in
+                                                              > `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`, where a `--since` predating
+                                                              > retention returned a confident zero that meant nothing.
 
 - [x] [INFRA] P1. ✅ Durable per-task token usage (`TaskUsageRow`, any provider), persisted at `/done`. —
       `agent-orchestrator@b310c68`. Same-session follow-up: historical backfill script (dry-run default) +
@@ -549,27 +549,37 @@ default from an external reference.
       verified live via `GET /api/backlog/usage/windows`: 1h=5 tasks/$0.47, 5h=54 tasks, 24h=269 tasks, 7d=1235 tasks,
       lifetime=1252 tasks (37.3M input / 234.5M cache-creation / 26.8B cache-read / 54.2M output tokens) — the
       dashboard's Task Usage Windows panel is now populated with real data end to end.
-- [ ] [INFRA] P3. **Give `deepseek_flash_route_fraction`'s "re-measure rather than trusting this block" instruction an
-      actual way to be carried out.** `server/config.py` (just above the field) tells the next reader to re-measure the
+- [x] [INFRA] P3. ✅ **DONE — `agent-orchestrator@ae44244` (2026-08-14) shipped the runnable tool.**
+      `agent-orchestrator/scripts/orchestrator/deepseek_flash_pro_split_readout.py` (lifecycle: permanent, per its own
+      header markers) is exactly this instruction carried out: a read-only readout of the live flash-vs-pro split,
+      driven by `account_id` rows in `activity_log` cross-referenced against each account's declared
+      `AccountDef.variant` in `accounts.json` — its own docstring states verbatim that it satisfies this todo, and
+      repeats the same measurement-trap warning ("the split is visible ONLY in `account_id`, not a distinct event
+      name"). Verified live: `server/config.py`'s `deepseek_flash_route_fraction` field comment (still current,
+      ~L1370-1386) still tells the next reader to "re-measure rather than trusting this block" — that instruction is now
+      actionable via `python3 scripts/orchestrator/deepseek_flash_pro_split_readout.py [--hours N]` on the orchestrator
+      VM. Original todo text (kept for context, not re-derived — the tool already exists): **Give
+      `deepseek_flash_route_fraction`'s "re-measure rather than trusting this block" instruction an actual way to be
+      carried out.** `server/config.py` (just above the field) tells the next reader to re-measure the
       flash-vs-non-flash split if they change the fraction — but no committed tool does that, so the instruction is
       currently unactionable and the next agent will re-derive the query from scratch, as this session did. The method,
       recorded here so it survives even if nobody writes the script (read-only, runs on the AO VM):
 
       ```sql
-              -- account_id distribution over spawns/dispatches, last 24h
-              -- DB: file:<repo>/agent-orchestrator/data/state/state.db?mode=ro   (open read-only; run as ubuntu)
-              SELECT json_extract(details_json,'$.account_id') AS a, COUNT(*) AS n
-              FROM activity_log
-              WHERE ts > datetime('now','-24 hours')
-                AND json_extract(details_json,'$.account_id') NOT IN ('')
-              GROUP BY a ORDER BY n DESC;
-              ```
+                  -- account_id distribution over spawns/dispatches, last 24h
+                  -- DB: file:<repo>/agent-orchestrator/data/state/state.db?mode=ro   (open read-only; run as ubuntu)
+                  SELECT json_extract(details_json,'$.account_id') AS a, COUNT(*) AS n
+                  FROM activity_log
+                  WHERE ts > datetime('now','-24 hours')
+                    AND json_extract(details_json,'$.account_id') NOT IN ('')
+                  GROUP BY a ORDER BY n DESC;
+                  ```
 
-              Done when: either a small read-only readout script lands under `agent-orchestrator/scripts/orchestrator/` with a
-              lifecycle marker, or the config.py comment carries the query inline so "re-measure" names its own method. Note the
-              measurement trap found this session: the split is only visible in `account_id` on spawn/dispatch rows — event-type
-              greps for `deepseek`/`free_provider` return nothing useful, so an agent probing that way concludes the A/B is
-              inactive when it is running normally. Repo: agent-orchestrator.
+                  Done when: either a small read-only readout script lands under `agent-orchestrator/scripts/orchestrator/` with a
+                  lifecycle marker, or the config.py comment carries the query inline so "re-measure" names its own method. Note the
+                  measurement trap found this session: the split is only visible in `account_id` on spawn/dispatch rows — event-type
+                  greps for `deepseek`/`free_provider` return nothing useful, so an agent probing that way concludes the A/B is
+                  inactive when it is running normally. Repo: agent-orchestrator.
 
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
@@ -596,6 +606,14 @@ default from an external reference.
   real Claude-headroom-dependent run this checkout cannot exercise), 1 is a CLI-version/design fix on a fleet-wide
   worker-boot-critical-path file, 1 is a data check explicitly "not locally doable — `accounts.json` is
   gitignored/per-VM." None bounded for a background worker today.
+
+**2026-08-14 (bookkeeping pass) — `[INFRA] P3` remeasure-tool todo flipped, confirmed already shipped.**
+`agent-orchestrator/scripts/orchestrator/deepseek_flash_pro_split_readout.py` (introduced
+`agent-orchestrator@ae44244c7f3ae53f9b71c56411d1a4167612a65b`, "feat(scripts): add read-only flash-vs-pro DeepSeek A/B
+readout script") is that tool — verified via its own docstring (states verbatim that it satisfies this exact todo, cites
+this plan by path) and via `server/config.py`'s `deepseek_flash_route_fraction` field comment (~L1370-1386), which still
+carries the "re-measure rather than trusting this block" instruction the script now makes actionable. No code changed
+this pass — pure checkbox reconciliation.
 
 ## Phase 3 — GLM (Zhipu) onboarding + DeepSeek peak/off-peak pricing (2026-08-14)
 
