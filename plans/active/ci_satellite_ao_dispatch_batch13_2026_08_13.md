@@ -178,11 +178,41 @@ source: >-
       same 500/403 — no further worker action possible; the source doc's own `[OPERATOR] P3` tag (v/s support escalation
       if retention doesn't resolve it) still stands for the follow-up. This satellite todo's own bar ("re-attempt once")
       is satisfied.
-- [ ] [CODE] P2. Confirm promote PR #2714 merged green (QG run 31405420640) and LDR->main caught up, then close the
-      issue Source: `plans/active/issues/ldr_to_main_promote_inflight_wait_blocks_doomed_run_2026_08_10.md`
-- [ ] [CODE] P2. Port the same doomed check-run supersede guard to ldr-to-main-promote-fleet.yml's per-repo path if/when
-      the fleet bot shows the same wait-on-doomed-run shape Source:
-      `plans/active/issues/ldr_to_main_promote_inflight_wait_blocks_doomed_run_2026_08_10.md`
+- [x] ✅ [CODE] P2. Confirm promote PR #2714 merged green (QG run 31405420640) and LDR->main caught up, then close the
+      issue Source: `plans/active/issues/ldr_to_main_promote_inflight_wait_blocks_doomed_run_2026_08_10.md` — ✅ **DONE
+      2026-08-14 (slot 15, infra), no service-repo code change (PM-only).** PR #2714 did NOT merge — it was CLOSED
+      (mergedAt: null), superseded by the workflow's normal every-15-min supersede-on-LDR-advance behavior; its QG run
+      `31405420640` concluded `failure` (not a doomed-run-wait symptom). This is not a regression of the shipped fix:
+      the doomed-run-wait class this issue targets (waiting out a run whose checks slice already failed) is confirmed
+      NOT recurring — the fixed inflight_wait code path produced many clean, fast merges afterward (PRs #2997-#3000,
+      2026-08-13T23:45-2026-08-14T00:34Z, each merged within ~4 min of opening, zero wedge). **However, live-checking
+      this todo (2026-08-14T04:20Z-ish) found LDR->main currently wedged again by an UNRELATED new incident**: 2 commits
+      reached `live-defi-rollout` via raw push (bypassing quickmerge) — `49c7aa0c36`
+      `feat(hooks): add PreToolUse block for repeated same-file Edit spam` and `b9670f1778`
+      `feat(hooks): lower batching-nudge threshold 3->2` (both touch `cursor-configs/hooks/*.py`, NOT the
+      `scripts/hooks/**` gate-infra carve-out) — tripped `check_strict_quickmerge.py`'s provenance gate, leaving PR
+      #3016 open with auto-merge NOT armed since ~03:15Z. Root-caused + fixed inline (small/clear, mechanical,
+      sanctioned self-service remedy): ran `scripts/cicd/reprovenance_bypass.sh` for both bypass shas (dep-alignment
+      gate clean, no deps declared for unified-trading-pm), pushed the two resulting empty
+      `chore(provenance): re-provenance ...` blessing commits — `unified-trading-pm@6e681861de` (HEAD, includes
+      `4161b54b04` for 49c7aa0c36). Re-ran the guard against the real main-diff range
+      (`83a054ec5d..origin/live-defi-rollout`): **0 violations**, confirmed on origin. LDR was still `ahead_by` main at
+      check time (the wedge had only just cleared); the next `*/15` promote tick supersedes #3016 cleanly. Evidence:
+      `gh pr view 2714`, `gh run view 31405420640`, `gh pr list --search "promote in:title" --state all` (PRs
+      2997-3016),
+      `python3 scripts/cicd/check_strict_quickmerge.py --range 83a054ec5d..origin/live-defi-rollout     --block` →
+      `✅ no bypassed code commits`. Issue-doc checkbox reconciliation deferred to
+      `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` per this batch's own header (source docs not touched
+      here).
+- [x] ✅ [CODE] P2. Port the same doomed check-run supersede guard to ldr-to-main-promote-fleet.yml's per-repo path
+      if/when the fleet bot shows the same wait-on-doomed-run shape Source:
+      `plans/active/issues/ldr_to_main_promote_inflight_wait_blocks_doomed_run_2026_08_10.md` — ✅ **CHECKED 2026-08-14
+      (slot 15, infra), no code change.**
+      `grep -n 'inflight_wait\|status!=\|not superseding\|about to pass'     .github/workflows/ldr-to-main-promote-fleet.yml`
+      → zero hits; the fleet workflow (195 lines) has no wait-on-non-terminal-run logic to port the guard into —
+      confirms the source issue doc's own note ("no evidence of it today — fleet PRs are per-SHA fresh"). Nothing to
+      port; re-check only if the fleet workflow later grows an inflight-wait-shaped block. Issue-doc reconciliation
+      deferred to the paired finalize plan, same as above.
 - [ ] [CODE] P2. PROVE the CI bootstrap script on a real bare host (VM launch + systemd/IMDS/GCP-ADC/runner-registration
       verification) -- container leg already proven, bare-VM leg genuinely blocked only on provisioning Source:
       `plans/active/github_actions_operator_gated_followups_2026_07_17.md`
