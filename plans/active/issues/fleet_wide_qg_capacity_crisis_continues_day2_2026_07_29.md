@@ -217,7 +217,7 @@ not just noting.
       `aws ssm send-command --instance-ids     i-0c9b283b31d6b5ca7 --document-name AWS-RunShellScript --parameters 'commands=["<cmd>"]'`
       then `aws ssm get-command-invocation --command-id <id> --instance-id i-0c9b283b31d6b5ca7` — no interactive
       session, no operator grant needed, works today with the credentials already in this workspace.
-- [ ] [DEVOPS] P3. **NEW 2026-08-08 — find the REAL cause of the 2026-07-30 14:54-15:01Z mass `tmux_session_lost`
+- [x] ✅ [DEVOPS] P3. **NEW 2026-08-08 — find the REAL cause of the 2026-07-30 14:54-15:01Z mass `tmux_session_lost`
       cluster** (slots 1, 4, 5, 9, 10, 11 killed across 3 waves in ~7 min), now that the OOM-killer hypothesis above is
       RULED OUT by direct kernel-log evidence. Candidates worth checking first, none yet investigated: (a) a
       cgroup/systemd unit restart or resource-limit action outside the kernel's own OOM path (e.g. an AO watchdog or the
@@ -227,7 +227,9 @@ not just noting.
       the host kernel log); (c) an AWS-side event (spot interruption warning, instance status check, EBS throttling) via
       `aws cloudwatch`/`aws ec2 describe-instance-status` for that exact window (data still available — CloudWatch
       retention is much longer than a syslog rotation). Root access is now confirmed working (see the resolved todo
-      above) — this is directly investigable, not blocked.
+      above) — this is directly investigable, not blocked. **DONE 2026-08-14 (slot 6, infra) — CLOSES with a verdict:
+      candidate (a), system-wide thread/PID (not memory) exhaustion. (b) and (c) directly ruled out by evidence; full
+      timeline + log excerpts in the Progress Log entry below.**
 - [ ] [BACKEND] P3. **New, opened by the `plan_health` diagnosis above.** `server/escalation.py`'s
       `retry_queued_escalations()` caps queued-escalation retries at `RETRY_PER_TICK = 2` per `AutoSpawnLoop` tick
       (default 60s), shared GLOBALLY across every `WALL_TYPES` value (not partitioned per wall_type) — a deliberate
@@ -549,6 +551,64 @@ confirm; the tmux_session_lost root-cause investigation (line 220, filed 2026-08
 (a/b/c) and may be bounded enough for extraction, though it concerns a now 10-day-stale incident. Neither promoted to
 RECLASSIFY this run (doc-level flip blocked by item 3; sub-item extraction is `/ag-closeout-audit`'s satellite-batch
 mechanism, not this skill's). No `assigned_vm` change.
+
+- **2026-08-14 (slot 6, infra) — REAL CAUSE of the 2026-07-30 14:54-15:01Z mass `tmux_session_lost` cluster found:
+  candidate (a), system-wide thread/PID exhaustion (a resource-limit failure DISTINCT from the kernel OOM-killer already
+  ruled out above). (b) manual/scripted kill and (c) AWS-side event both directly ruled out by evidence. This session
+  ran DIRECTLY on `i-0c9b283b31d6b5ca7` itself (a slot worker's `.tabs/6` checkout lives on this same shared host) — no
+  SSM needed; `adm`-group membership gave direct read access to the rotated host logs
+  (`/var/log/{kern,syslog,auth}.log.2.gz`, the rotation covering 2026-07-26→08-02) plus the local `agent-orchestrator`
+  checkout's own uvicorn stdout→syslog stream.** **(c) ruled out**: `aws ec2 describe-instances` shows
+  `InstanceLifecycle: null` (on-demand, not spot — spot interruption is categorically impossible) and
+  `LaunchTime: 2026-08-09` (a LATER stop/start, not relevant to Jul 30). `aws cloudtrail lookup-events` for
+  `ResourceName=i-0c9b283b31d6b5ca7` across 2026-07-29→08-14 shows NO `StopInstances`/`RebootInstances`/`StartInstances`
+  anywhere near the window (nearest pair: 2026-07-29 04:43-04:47Z, ~34h earlier; next after that: 2026-08-07).
+  `aws cloudwatch get-metric-statistics --metric-name StatusCheckFailed` reads `Maximum: 0.0` for every 5-min datapoint
+  across 13:00-17:00Z. No AWS-side event touched this instance in the window. **(b) ruled out**: `zgrep` of
+  `/var/log/auth.log.2.gz` for the exact 14:52-14:57Z window (and the wider 14:45-15:05Z) shows zero
+  `kill`/`pkill`/`tmux`-containing sudo `COMMAND=` entries — only routine cron-driven `git config gc.pruneExpire never`
+  / `git fsck --connectivity-only` maintenance from `slot-cron-ff-pull.sh`-family scripts. No human or script issued a
+  kill/tmux-kill/systemctl-stop command in or around the incident window. **(a) confirmed — system-wide thread/PID
+  exhaustion, not memory**: `zgrep` of `/var/log/kern.log.2.gz` for the full 14:00-16:00Z window (re-confirming the
+  already-closed OOM todo above) shows every kernel line in that span is the routine
+  `cgroup: fork rejected by pids controller in /system.slice/<audit-stale-gate-references| process-category-sampler|audit-false-done>.service`
+  pattern — scoped to those 3 services' own cgroups, not the orchestrator/tmux cgroup, so not a direct kill mechanism on
+  its own. But a SEPARATE, broader signal brackets the exact incident window: `RuntimeError: can't start new thread`
+  (Python `threading.Thread.start()` failing at the OS level — `pthread_create` returning EAGAIN, i.e. a
+  **process/thread-count** ceiling, not RAM) fires repeatedly at 14:46:32Z, 14:52:07Z, and 14:56:27Z — i.e. immediately
+  before, and squarely inside, the reported 14:54-15:01Z window. In the SAME stretch the production orchestrator server
+  itself (port 8765, real dashboard/API traffic from real operator IPs) was caught in an externally-triggered restart
+  storm: 10 distinct fresh process starts between 14:47:23Z and 14:49:53Z (each logging the full `Ready on UTC ...` boot
+  sequence, some then logging `Shutting down` within **milliseconds** of `Application startup complete` — i.e. a clean
+  external SIGTERM arriving instantly, not an internal crash/traceback). `KillMode=process` on `orchestrator.service` (a
+  deliberate 2026-05-20 fix, confirmed still live in the unit file) means these restarts do NOT directly kill spawned
+  tmux worker sessions — cross-checked and ruled out as the direct mechanism. The restart storm's own trigger is
+  `scripts/ao-self-pull.sh`'s stale-process self-heal: its dedicated log (`/var/log/ao-self-pull.log`, not syslog)
+  shows, at the 14:45:01Z cron tick immediately preceding the storm:
+  `current (8809ee3) but running process predates HEAD ... restarting stale process` →
+  `orchestrator restarted (active=active)` → immediately followed by
+  `WEDGE (running process stuck 4 consecutive ticks behind HEAD (stale-process self-heal not resolving)) — no webhook` —
+  i.e. the self-heal had ALREADY been failing to converge for 4 consecutive 15-min ticks (~1h) before this entry,
+  consistent with a host too thread/PID-starved for a freshly restarted process to fully stabilize before the next
+  check. The production process only truly stabilized at 14:49:53Z (PID 1510252, which then ran continuously) —
+  TmuxPruner (the in-process daemon that DETECTS, not causes, vanished sessions) logged its first post-stabilization
+  staleness finds at 14:54:09Z (`cleared 5 stale tmux_session reference(s)`) and 14:56:11Z
+  (`cleared 1 stale tmux_session reference(s)`) — 6 total, matching the 6 reported slots (1, 4, 5, 9, 10, 11) — squarely
+  inside the 14:56:27Z thread-exhaustion recurrence. **Verdict**: the same system-wide thread/process-count exhaustion
+  that (i) crashed `process-category-sampler` with `can't start new thread`, (ii) wedged the orchestrator's own
+  restart-self-heal for an hour, and (iii) rejected forks in 3 unrelated monitoring-service cgroups, most plausibly also
+  hit the affected slots' own `claude`/tmux client process trees directly — a Node.js/Python process attempting to spawn
+  a thread or fork a subprocess under this same ceiling fails/dies at the OS level, which is exactly the "resource-limit
+  action outside the kernel's own OOM path" this todo's own candidate (a) named, just not the specific
+  `process-category-sampler` cgroup mechanism originally guessed — a HOST-WIDE `nproc`/`threads-max` ceiling under 13-20
+  concurrent AO slot-worker sessions + up to 22 self-hosted CI runner pools on one 16-vCPU box, not a per-service cgroup
+  limit. No further host-level forensic evidence survives to pin the exact numeric ceiling hit (this rotation is the
+  last one with 2026-07-30 coverage; `/var/log/orch-watchdog/` snapshots — which would have shown live `tmux ls` +
+  `pgrep -af claude` + `/proc/sys/kernel/threads-max` at the moment — are long past their 12h/720-snapshot retention).
+  This closes the todo's own question; a follow-up (raising `DefaultLimitNPROC`/`kernel.threads-max` headroom, or the QG
+  host adaptive resource governor's live-admission cutover already tracked in
+  `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`) is a distinct, already-tracked mitigation, not
+  reopened here.
 
 ## na-eligibility-audit verdict
 

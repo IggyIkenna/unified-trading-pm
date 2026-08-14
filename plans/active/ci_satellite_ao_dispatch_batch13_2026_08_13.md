@@ -126,9 +126,16 @@ source: >-
       retry-storm remediation) — excluded from the attributable figure. Reconciliation of this evidence back into the
       source issue doc's own checkbox is out of scope for this satellite batch (per this doc's own header) — deferred to
       `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`.
-- [ ] [CODE] P2. investigate the real cause of the 2026-07-30 14:54-15:01Z mass tmux_session_lost cluster via the doc's
-      own named candidates (a/b/c: cgroup/systemd action, manual/scripted kill, AWS-side event) now that the OOM-killer
-      hypothesis is ruled out Source: `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`
+- [x] ✅ [CODE] P2. investigate the real cause of the 2026-07-30 14:54-15:01Z mass tmux_session_lost cluster via the
+      doc's own named candidates (a/b/c: cgroup/systemd action, manual/scripted kill, AWS-side event) now that the
+      OOM-killer hypothesis is ruled out Source:
+      `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` — ✅ **DONE 2026-08-14 (slot 6,
+      infra).** Verdict: candidate (a), system-wide thread/PID exhaustion (NOT memory — distinct from the
+      already-ruled-out kernel OOM-killer). (b) manual/scripted kill and (c) AWS-side event both directly ruled out via
+      CloudTrail/CloudWatch/auth.log evidence. Full timeline + log excerpts in the source doc's Progress Log (2026-08-14
+      entry) and its own todo checkbox (now flipped). No code change — a forensic finding, not a fix; the mitigation
+      (host thread-headroom / QG governor live-admission cutover) is already tracked separately in
+      `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`.
 - [ ] [CODE] P2. Hold/confirm a clean 60-consecutive-minute zero-new-CI-alert window before closing the incident
       (worker-monitorable, outcome-determinable, same shape as the AO-dispatched monitoring pattern used in the sibling
       pytest_timeout_60s doc) Source:
