@@ -437,31 +437,90 @@ bridges them; it does not extend one over the other.
 > Every scenario is exercised against `-test-` buckets, never prod. Each asserts three things: the alert fires, the
 > right dependency action is taken, and no in-flight shard is lost.
 
-- [ ] [TEST] P0. Scenario OOM — force a 137 exit mid-shard; assert DP-VM-001 fires, self restarts resize-up, dependents
-      HOLD, and the drain registry flushed before death. Repo: e2e-testing.
-- [ ] [TEST] P0. Scenario stall — wedge the process past the heartbeat budget; assert DP-VM-003 fires, the stall-kill
-      path (not the drain path) handles it, and dependents HOLD. Repo: e2e-testing.
-- [ ] [TEST] P0. Scenario preemption — SIGTERM with the SPOT grace window; assert the drain registry flushes, PROGRESS
-      does not advance past the flushed shard, and relaunch resumes from PROGRESS rather than START_DATE. Repo:
-      e2e-testing.
-- [ ] [TEST] P0. Scenario gone-no-capture — drain a VM whose captured count never climbed; assert DP-VM-002 fires and
-      dependents DRAIN rather than proceeding on absent data. Repo: e2e-testing.
-- [ ] [TEST] P0. Scenario consolidator-down — stop the consolidator; assert MANIFEST-001 fires and every
-      manifest-writing dependent drains, the headline money-burn case. Repo: e2e-testing.
-- [ ] [TEST] P0. Scenario mostly-empty — drive a run past the empty ratio threshold; assert it drains AT the threshold
-      crossing rather than at run end. Repo: e2e-testing.
-- [ ] [TEST] P0. Scenario wrong-path — force a non-canonical write; assert the write is blocked, the VM drains, and
-      dependents drain. Repo: e2e-testing.
-- [ ] [TEST] P0. Scenario catalogue-stale — age the catalogue past 24h; assert DP-CATALOG-001 fires and that asset
-      group's capture VMs drain. Repo: e2e-testing.
-- [ ] [TEST] P0. Scenario deadman — stale a monitor sentinel; assert FLEET_HALT blocks new launches and that
-      already-running VMs are NOT drained (fail-closed on admission, not on running work). Repo: e2e-testing.
-- [ ] [TEST] P0. Scenario drain-blind prefix — assert a prefix with no checkpoint receives HOLD and is never sent a
-      drain marker it cannot honour. Repo: e2e-testing.
-- [ ] [TEST] P1. Scenario double-booking — two VMs on the same shard range; assert the interlock prevents the second
-      from starting. Repo: e2e-testing.
-- [ ] [TEST] P1. Scenario recovery — assert every scenario above emits its resolved-bookend and releases holds once the
-      upstream alert clears. Repo: e2e-testing.
+> **2026-08-14 — all 12 scenarios landed, `e2e-testing/tests/integration/revocation/`.** Written against the
+> ACTUAL/shipped policy table (Phase 2), not this prose — 3 of the descriptions below were stale relative to
+> already-shipped, already-tested behavior and are corrected in place rather than left to mislead the next reader
+> (doc-that-misled-you rule). Two new follow-up todos below capture the real gaps this pass surfaced. Gate green
+> (independently re-run, 78s), 20 tests collected / 19 passing / 1 skipped with a cited reason.
+
+- [x] ✅ [TEST] P0. Scenario OOM — force a 137 exit mid-shard; assert DP-VM-001 fires (dependents HOLD — self-restart is
+      deployment-service's own existing actuator, out of scope here), and the drain registry flushed before death. Repo:
+      e2e-testing. — `test_oom_137_exit_dependents_hold` + `test_oom_flushes_the_drain_registry_before_death`.
+- [x] ✅ [TEST] P0. Scenario stall — wedge the process past the heartbeat budget; assert DP-VM-003 fires. **Corrected**:
+      the shipped policy is `SELF_RESTART` (self-scoped, `dependent_lifecycle_strength == 0` — no dependent touched at
+      all), not "dependents HOLD" as originally written here — stale prose from before Phase 2's table was finalized.
+      Repo: e2e-testing. — `test_stall_is_a_self_restart_not_a_dependent_hold`.
+- [x] ✅ [TEST] P0. Scenario preemption — SIGTERM with the SPOT grace window; assert DP-VM-008 resolves to `NONE`
+      (routine SPOT churn, not over-escalated — DP-VM-009 is the distinct escalated case) and the drain registry flushes
+      buffered rows. The PROGRESS-marker resume mechanism itself is UTL-internal and already covered by UTL's own
+      tests + the spot-vms-for-backfill.md contract — out of scope for a black-box test here. Repo: e2e-testing. —
+      `test_preemption_alone_is_not_over_escalated` + `test_preemption_drain_flushes_the_shard_in_flight`.
+- [x] ✅ [TEST] P0. Scenario gone-no-capture — drain a VM whose captured count never climbed; assert DP-VM-002 fires and
+      dependents DRAIN rather than proceeding on absent data. Repo: e2e-testing. —
+      `test_gone_no_capture_dependents_drain` + `test_gone_no_capture_full_round_trip_observes_and_drains` (full
+      actuator-write → gate-read round trip).
+- [x] ✅ [TEST] P0. Scenario consolidator-down — stop the consolidator; assert DP-MANIFEST-001 fires. **Corrected**: the
+      shipped policy is `DEPS_HOLD`, not "every dependent drains" — deployment-service's own already-committed
+      `test_revocation_gate.py::test_a_hold_does_not_imply_a_drain` docstring states this is deliberate ("that
+      distinction is the reason CONSOLIDATOR_DOWN holds rather than drains"). The "no in-flight shard lost" property is
+      satisfied MORE strongly by a hold than a drain would give — nothing running is touched at all. Repo: e2e-testing.
+      — `test_consolidator_down_holds_admission_not_a_drain` +
+      `test_consolidator_down_blocks_new_launches_but_leaves_running_work_alone`.
+- [x] ✅ [TEST] P0. Scenario mostly-empty — drive a run past the empty ratio threshold; assert DP-FETCH-007/DP-FETCH-009
+      (both emit `DP_RUN_MOSTLY_EMPTY`) resolve to DEPS_DRAIN identically. The threshold-crossing TIMING is the
+      detector's own concern, out of scope here. Repo: e2e-testing. —
+      `test_mostly_empty_drains_regardless_of_which_detector_fired` (parametrized over both identities).
+- [x] ✅ [TEST] P0. Scenario wrong-path — force a non-canonical write; assert DP-PATH-001 fires and dependents DRAIN
+      (clean mapping, no plan/policy mismatch). Repo: e2e-testing. —
+      `test_wrong_path_write_drains_the_vm_and_its_dependents`.
+- [x] ✅ [TEST] P0. Scenario catalogue-stale — age the catalogue past 24h; assert DP-CATALOG-001 fires. **Corrected**:
+      identity mapping was exact (registry.yaml `fires:` text matches this trigger verbatim), but the shipped policy is
+      `DEPS_HOLD`, not "capture VMs drain" — same shape of stale prose as consolidator-down above. Repo: e2e-testing. —
+      `test_catalogue_stale_holds_admission_for_the_asset_group`.
+- [x] ✅ [TEST] P0. Scenario deadman — stale a monitor sentinel; assert FLEET_HALT blocks new launches and that
+      already-running VMs are NOT drained. **Gap found, not silently routed around**: no alert identity for the actual
+      watch-the-watchers condition (DP-WATCHER-001/002, `deadman_poster`) resolves to FLEET_HALT in the shipped table —
+      both resolve to DEPS_HOLD. The full `DP_FAILURE_MODE_ACTIONS`/`ALERT_CODE_ACTIONS` search found exactly two
+      identities that DO resolve to FLEET_HALT (`DP-RATE-002` key-pool exhaustion, `GAS_SURGE_50X` DeFi gas), used
+      `DP-RATE-002` as an identity-independent mechanism proof (new launches blocked, running VMs untouched) since the
+      plan's asserted PROPERTY is what's identity-independent, not which alert triggers it. See the new follow-up todo
+      below. Repo: e2e-testing. — `test_deadman_fleet_halt_blocks_new_launches` +
+      `test_deadman_fleet_halt_does_not_drain_already_running_vms`.
+- [x] ✅ [TEST] P0. Scenario drain-blind prefix — assert a prefix with no checkpoint receives HOLD and is never sent a
+      drain marker it cannot honour. Repo: e2e-testing. — `test_drain_blind_prefix_clamps_to_hold` (asserts the clamp is
+      VISIBLE via `outcome.detail["clamped_from"]`, not silent) +
+      `test_drain_blind_prefix_gate_observes_hold_never_a_drain_request`.
+- [x] ✅ [TEST] P1. Scenario double-booking — two VMs on the same shard range; assert the interlock prevents the second
+      from starting. **CUT, documented reason, not silently dropped**: searched deployment-service for a shard-range
+      interlock/claim mechanism (`interlock|double.booking|ShardRangeLock|range_interlock`) — zero hits. This
+      presupposes a VM-launcher CONCURRENCY-CONTROL mechanism that is a different subsystem entirely, not built in
+      Phases 2-5 of this plan. Kept as a named, collected-but-skipped test (shows in every pytest summary, per QG STEP
+      5.107's cited-reason requirement) rather than deleted. Repo: e2e-testing. —
+      `test_double_booking_interlock_prevents_the_second_vm` (skipped, reason cited).
+- [x] ✅ [TEST] P1. Scenario recovery — assert every scenario above emits its resolved-bookend and releases holds once
+      the upstream alert clears. Repo: e2e-testing. — `test_release_clears_the_marker_and_the_gate_observes_the_clear`,
+      parametrized across a representative HOLD (DP-MANIFEST-001) and DRAIN (DP-VM-002) verdict, round-tripped through
+      the gate to prove the marker is actually gone post-release, not just that `release()` reports success.
+- [ ] [DOC] P2. Reconcile Phase 6's stale prose against the shipped policy table for the 3 scenarios corrected above
+      (stall, consolidator-down, catalogue-stale) — either this was intentional drift the plan's author accepted, or the
+      ORIGINAL Phase 2 policy assignments for these 3 identities deserve a second look now that Phase 6 makes the
+      mismatch concrete. Not a code change — a design-review todo. Repo: unified-trading-pm (this plan) +
+      unified-api-contracts (if the policy itself needs revisiting).
+- [ ] [CODE] P2. No alert identity in the shipped policy table resolves to FLEET_HALT for the actual watch-the-watchers
+      condition (DP-WATCHER-001/002 both resolve to DEPS_HOLD) — either add a watcher-category identity that maps to
+      FLEET_HALT, or determine the "deadman" scenario was never meant to route through revocation at all (the deadman
+      poster is explicitly independent of the alerting-service per `/codex/05-infrastructure/data-pipeline-alerts.md` §
+      "Watching the watchers" Layer 2) and Phase 6's scenario description needs correcting instead. Repo:
+      unified-api-contracts (policy) or unified-trading-pm (plan correction).
+- [ ] [CODE] P2. `DependentAction.DEPS_DRAIN`'s docstring claims draining "AND admission is held", but
+      `RevocationActuator._MARKER_PATH_FOR` maps DEPS_DRAIN to the drain marker ONLY — a fresh launch into a
+      currently-draining target is NOT actually blocked by the shipped code (confirmed:
+      `test_gone_no_capture_full_round_trip_observes_and_drains` asserts `admission_blocked(...).blocked is False`
+      immediately after a DEPS_DRAIN actuation). The actuator module's own docstring is internally consistent with this
+      (drain = running units only, hold = new launches only) and CONTRADICTS the enum comment. Either fix the enum
+      docstring (if drain-without-hold is the intended design) or make DEPS_DRAIN also write a hold marker (a real
+      behavior change needing its own design call on `revocation_gate.admission_blocked()` semantics). Repo:
+      unified-api-contracts (docstring) + deployment-service (behavior, if changed).
 
 ## Phase 7 — Codex SSOT and close-out
 
