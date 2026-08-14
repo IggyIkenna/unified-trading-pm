@@ -460,26 +460,26 @@ source: >-
       `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
 
       **DONE 2026-08-14 (slot-21, infra).** `unified-api-contracts@c869c35bcb`: added `reference_price: Decimal | None`
-          + `reference_price_mark_mode: ReferencePriceMarkMode` (new StrEnum: `STATIC_AT_SEND` |
-          `UPDATE_AS_UNDERLYING_MOVES`, default `STATIC_AT_SEND`) to `StrategyInstructionEnvelope`
-          (`internal/architecture_v2/schemas.py`) — not just `QuoteInstruction`, which now narrows the envelope's
-          optional field to its own pre-existing required `Decimal` (unaffected). Re-exported `ReferencePriceMarkMode`
-          via `unified_api_contracts.internal`. This is the field the strategy-service `reference_price` param-schema
-          section (`refprice_mark_mode`/`refprice_source`/`refprice_max_drift_bps`, shipped inert in `4762c211ab`)
-          configures once a construction site sets it — wiring construction sites + the actual repricing/drift-cap
-          behavior is out of this todo's scope (separate open §C todos: "prove the standalone-backtest property",
-          "reconcile ref price with the ε=0 spine"). 3 new unit tests
-          (`tests/internal/unit/test_instruction_envelope_reference_price.py`): envelope defaults (`None`/
-          `STATIC_AT_SEND`), a `TradeInstruction` (no dedicated field of its own) carrying both fields, and
-          `QuoteInstruction.reference_price` staying required. Regression-verified against the local editable UAC
-          install: execution-service's `test_quote_maintenance.py` + `test_router_and_handlers.py` (34 tests, both
-          construct `QuoteInstruction`) unaffected. **Byproduct fix, separate commit same session**: found + fixed a
-          pre-existing UAC QG red (`tests/test_deployment_ui_cross_repo_invariant.py` expecting a `builds_history`
-          route module deployment-api deliberately deleted per `ui_satellite_ao_dispatch_batch4_2026_08_13.md`) —
-          verified pre-existing on a clean tree at `HEAD~1` before touching it; a peer (slot-2,
-          `unified-api-contracts@8771a4b7`) landed the identical fix independently in the same window, so mine was
-          dropped via `git rebase --skip` during reconciliation (kept the peer's better-documented version, zero
-          duplicate diff). `bash scripts/quality-gates.sh` green on the rebased HEAD (sentinel = `c869c35bcb`).
+              + `reference_price_mark_mode: ReferencePriceMarkMode` (new StrEnum: `STATIC_AT_SEND` |
+              `UPDATE_AS_UNDERLYING_MOVES`, default `STATIC_AT_SEND`) to `StrategyInstructionEnvelope`
+              (`internal/architecture_v2/schemas.py`) — not just `QuoteInstruction`, which now narrows the envelope's
+              optional field to its own pre-existing required `Decimal` (unaffected). Re-exported `ReferencePriceMarkMode`
+              via `unified_api_contracts.internal`. This is the field the strategy-service `reference_price` param-schema
+              section (`refprice_mark_mode`/`refprice_source`/`refprice_max_drift_bps`, shipped inert in `4762c211ab`)
+              configures once a construction site sets it — wiring construction sites + the actual repricing/drift-cap
+              behavior is out of this todo's scope (separate open §C todos: "prove the standalone-backtest property",
+              "reconcile ref price with the ε=0 spine"). 3 new unit tests
+              (`tests/internal/unit/test_instruction_envelope_reference_price.py`): envelope defaults (`None`/
+              `STATIC_AT_SEND`), a `TradeInstruction` (no dedicated field of its own) carrying both fields, and
+              `QuoteInstruction.reference_price` staying required. Regression-verified against the local editable UAC
+              install: execution-service's `test_quote_maintenance.py` + `test_router_and_handlers.py` (34 tests, both
+              construct `QuoteInstruction`) unaffected. **Byproduct fix, separate commit same session**: found + fixed a
+              pre-existing UAC QG red (`tests/test_deployment_ui_cross_repo_invariant.py` expecting a `builds_history`
+              route module deployment-api deliberately deleted per `ui_satellite_ao_dispatch_batch4_2026_08_13.md`) —
+              verified pre-existing on a clean tree at `HEAD~1` before touching it; a peer (slot-2,
+              `unified-api-contracts@8771a4b7`) landed the identical fix independently in the same window, so mine was
+              dropped via `git rebase --skip` during reconciliation (kept the peer's better-documented version, zero
+              duplicate diff). `bash scripts/quality-gates.sh` green on the rebased HEAD (sentinel = `c869c35bcb`).
 
 - [x] ✅ [CODE] P2. Subscribe strategy-service to ClientDomainConfig — §D Source:
       `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` — **ALREADY SHIPPED, no new code
@@ -516,8 +516,18 @@ source: >-
       (`_resolve_bybit_credentials`), a capability the generic single-secret-name `ApiKeyReloader` structurally does not
       implement — a real, documented capability gap distinct from the registry gap this todo targeted, not an accidental
       "silently unmaintained" duplicate. No further registry or reloader change is warranted by this todo's scope.
-- [ ] [CODE] P2. G1 — feed config_algorithm through the already-threaded selector hook Source:
-      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
+- [x] ✅ [CODE] P2. G1 — feed config_algorithm through the already-threaded selector hook Source:
+      `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` — **ALREADY SHIPPED, no new code
+      needed (verified 2026-08-14).** `execution-service@c2053c47` (confirmed ancestor of current HEAD `ff12d5fb87`)
+      already does exactly what G1 asks: resolves the per-`(client_id, slot_label)` execution policy and feeds its
+      `then_algo` into the existing `config_algorithm` hook. Verified at BOTH real call sites, not just the
+      `HandlerRegistry.select_algorithm()` wrapper this batch's earlier "Wire policy evaluation into the live execution
+      path — §B" todo already confirmed: `execution_service/v2/handlers.py`'s `TradeHandler.handle()` and
+      `SwapHandler.handle()` (lines 180/200) both call `_resolve_selected_algorithm(instruction, self.action)`, which
+      resolves `get_active_policy_resolver()` and calls
+      `resolve_config_algorithm(resolver, instruction.identity.     client_id, instruction.identity.strategy_instance_id, context)`
+      — the v2 live-instruction path's own concrete caller of the hook. This closes the same underlying gap as that
+      earlier §B todo (identical §D framing of the same ask); no separate code change is warranted.
 - [ ] [CODE] P2. Delete the shadow BookType (J1) and import UAC's enum Source:
       `plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md`
 - [ ] [CODE] P2. Add a participation cap to the passive fill path, filtered to the filling side per PB.8 — §K Source:
