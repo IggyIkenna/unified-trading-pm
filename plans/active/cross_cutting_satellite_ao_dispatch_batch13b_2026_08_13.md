@@ -176,9 +176,13 @@ source: >-
       `bash     scripts/quality-gates.sh` green (sentinel = HEAD `d5ea8d0755`, UI/API flow coverage check itself passed
       4/4 journeys with the real manifest present); quickmerge verified `d5ea8d0755` ancestor of
       `origin/live-defi-rollout`.
-- [ ] [CODE] P2. Fix the client_context.py docstring (remove the nonexistent max_leverage field, correct
+- [x] ✅ [CODE] P2. Fix the client_context.py docstring (remove the nonexistent max_leverage field, correct
       min_balance_per_venue naming) Source:
-      `plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md`
+      `plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md` —
+      strategy-service@3146cfd068: `risk_limits` docstring now lists the real fields
+      (`max_position_usd`/`max_drawdown_pct`/`max_order_size_usd`), notes `min_balance_per_venue` lives on
+      `ClientsYamlEntry` (not inside `risk_limits`), removes the nonexistent `max_leverage`, and points at
+      `unified_api_contracts.canonical.domain.strategy.clients_yaml_schema` as the schema SSOT.
 - [ ] [CODE] P2. Instantiate or explicitly waive clients.yaml for every factory-registered archetype that can run
       Source: `plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md`
 - [ ] [CODE] P2. Record the resolved per-client config surface ownership in codex (per-client-isolation-architecture.md)
