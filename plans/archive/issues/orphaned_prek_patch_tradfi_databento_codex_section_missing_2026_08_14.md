@@ -1,7 +1,7 @@
 ---
 doc_type: issue
 title: Orphaned prek patch — tradfi_satellite_ao_dispatch_batch13 checkbox claims a codex section that isn't in the file
-status: open
+status: resolved
 assigned_vm: planning
 created: "2026-08-14"
 author: ui_developer-slot-7
@@ -57,11 +57,26 @@ rule). Cannot tell which from this vantage point without deeper git-log archaeol
 
 ## Recommended decision
 
-- [ ] [DOC] P2. Investigate whether `/codex/02-data/tradfi-databento-sourcing-ssot.md` ever received the "Billing-health
-      verification MUST include one real scoped data-pull" section (check `git log -p` / `git log --all` across the
-      codex file's history for a 2026-08-14 slot-10 commit that may have been lost the same way, or reverted). If found
-      live elsewhere: apply the orphaned plan-patch as-is (the checkbox flip is then honest) and delete both patch
-      files. If genuinely never landed: re-do the codex-doc edit for real, THEN apply the plan-patch's checkbox flip,
-      then delete both patch files. Do not apply the patch's checkbox+Progress Log claim without one of these two
-      resolutions — it would otherwise fabricate a "DONE" entry for work not present in the cited file. (repo:
+- [x] ✅ [DOC] P2. Investigate whether `/codex/02-data/tradfi-databento-sourcing-ssot.md` ever received the
+      "Billing-health verification MUST include one real scoped data-pull" section (check `git log -p` / `git log --all`
+      across the codex file's history for a 2026-08-14 slot-10 commit that may have been lost the same way, or
+      reverted). If found live elsewhere: apply the orphaned plan-patch as-is (the checkbox flip is then honest) and
+      delete both patch files. If genuinely never landed: re-do the codex-doc edit for real, THEN apply the plan-patch's
+      checkbox flip, then delete both patch files. Do not apply the patch's checkbox+Progress Log claim without one of
+      these two resolutions — it would otherwise fabricate a "DONE" entry for work not present in the cited file. (repo:
       unified-trading-pm + codex is a subtree of unified-trading-pm)
+
+      **RESOLVED 2026-08-14 (slot 30).** `git log --all` found commit `1e1883ee6b` ("docs(codex): codify Databento
+          billing-health verification requires a real scoped data-pull") and confirmed it IS an ancestor of
+          `origin/live-defi-rollout` (it landed under a different mechanism than the orphaned patch pair, hence the patch's
+          original blind-`git apply --check` still reading clean at file-time). `codex/02-data/tradfi-databento-sourcing-ssot.md`
+          carries the section live today at line 330. Separately, the plan-side checkbox flip the orphaned patch would have
+          restored was ALSO already landed independently, via `37b0627acc` ("docs(plans): flip todo 2") +
+          `8d67b7323b` ("docs(plans): fix SHA citation for todo 2") — `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s
+          todo already reads `[x]` with a Progress Log entry citing the real SHA `unified-trading-pm@1e1883ee6b` (not the
+          patch's `<SHA>` placeholder). `git apply --check` against both orphaned patches now fails
+          (`patch does not apply`, context mismatch against the already-flipped file) — confirming they are dead, fully
+          superseded duplicates, not a real gap. No re-application needed; both patch files deleted
+          (`/home/ubuntu/.cache/prek/patches/1786739146281-2091562.patch`,
+          `/home/ubuntu/.cache/prek/patches/1786739151604-2093993.patch`). No referrers cite this issue doc — archiving in
+          the same commit.
