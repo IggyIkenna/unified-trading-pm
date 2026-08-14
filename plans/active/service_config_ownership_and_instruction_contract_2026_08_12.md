@@ -118,24 +118,34 @@ wires one of these must also delete or update whatever doc claims it is already 
 
 ## § B. Make the execution-policy registry real (unblocks B1)
 
-- [ ] [AGENT] P0. **Key execution policies by `(client_id, slot_label)`** so "execution's strategy-client config tells
-      it which algos to use per instruction type" is expressible. Reuse the pair the event tag already carries; do not
-      invent a third identity.
-- [ ] [AGENT] P0. **Give the registry a GCS loader + `DomainConfigReloader` subscription**, so a policy change is
+- [x] ✅ [AGENT] P0. **Key execution policies by `(client_id, slot_label)`** so "execution's strategy-client config
+      tells it which algos to use per instruction type" is expressible. Reuse the pair the event tag already carries; do
+      not invent a third identity. — **ALREADY SHIPPED**, reconciled from
+      `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: `execution-service@c2053c47` implements
+      `binding_key(client_id, slot_label)` + `ExecutionPolicyResolver`.
+- [x] ✅ [AGENT] P0. **Give the registry a GCS loader + `DomainConfigReloader` subscription**, so a policy change is
       dynamic rather than a deploy. Follow execution-service's existing three-reloader pattern rather than a new
-      mechanism.
-- [ ] [AGENT] P0. **Wire policy evaluation into the live execution path** and have `select_algorithm()` take its
+      mechanism. — **ALREADY SHIPPED**, reconciled from `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`:
+      `execution-service@c2053c47` added `v2/policy_reloader.py` following the existing three-reloader pattern.
+- [x] ✅ [AGENT] P0. **Wire policy evaluation into the live execution path** and have `select_algorithm()` take its
       `config_algorithm` from the resolved policy. The parameter already exists and already validates per instruction
-      type, so this is connection, not design.
+      type, so this is connection, not design. — **ALREADY SHIPPED**, reconciled from
+      `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: `execution-service@c2053c47` —
+      `HandlerRegistry.select_algorithm()` falls back to `resolve_config_algorithm()` when no explicit
+      `config_algorithm` is supplied; the v2 `TradeHandler`/`SwapHandler` path calls the identical helper.
 - [ ] [AGENT] P1. **Reject an unknown `execution_policy_ref` loudly.** Default-deny is already the rule-evaluation
       semantic; make an unresolvable REF equally loud rather than silently falling back to a default algo, which would
       hide a misconfigured client.
 
 ## § C. Put the reference price on the contract (unblocks B2, and the backtest property)
 
-- [ ] [AGENT] P0. **Add the reference price to the shared instruction envelope**, not just `QuoteInstruction` — with the
-      mark mode (static at send vs updating as the underlying moves) so execution knows which to apply. This is the
-      field the `refprice_*` params shipped in `4762c211ab` configure, and they are inert until it exists.
+- [x] ✅ [AGENT] P0. **Add the reference price to the shared instruction envelope**, not just `QuoteInstruction` — with
+      the mark mode (static at send vs updating as the underlying moves) so execution knows which to apply. This is the
+      field the `refprice_*` params shipped in `4762c211ab` configure, and they are inert until it exists. — **DONE**,
+      reconciled from `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: `unified-api-contracts@c869c35bcb`
+      added `reference_price: Decimal | None` + `reference_price_mark_mode: ReferencePriceMarkMode` to
+      `StrategyInstructionEnvelope`. Wiring construction sites + the repricing/drift-cap behavior remains out of scope
+      (separate open todos below: "prove the standalone-backtest property", "reconcile ref price with the ε=0 spine").
 - [x] [AGENT] P0. ✅ **The benchmark-fill assumption IS already written and shared — no new contract needed.**
       `/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md` is the contract,
       `/codex/04-architecture/backtest-groups.md` § "Group B" is the isolation model, and both services implement it
@@ -153,22 +163,34 @@ wires one of these must also delete or update whatever doc claims it is already 
 
 ## § D. Per-service config centralisation + hot reload (unblocks B3)
 
-- [ ] [AGENT] P0. **Subscribe strategy-service to `ClientDomainConfig`.** The single highest-value item in this plan: it
-      is what turns a client leverage change from a restart into a hot reload, and the substrate already exists in UTL
-      and is already used by execution-service. Pair it with the param-change callback and versioned-event discipline in
+- [x] ✅ [AGENT] P0. **Subscribe strategy-service to `ClientDomainConfig`.** The single highest-value item in this plan:
+      it is what turns a client leverage change from a restart into a hot reload, and the substrate already exists in
+      UTL and is already used by execution-service. Pair it with the param-change callback and versioned-event
+      discipline in
       [per-client config keying](/plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md) §
-      "Dynamic param updates" — a silent swap breaks the ε=0 proof.
+      "Dynamic param updates" — a silent swap breaks the ε=0 proof. — **ALREADY SHIPPED**, reconciled from
+      `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: `strategy-service@c55b586c9c` — module-level
+      `_client_reloader` + `_on_clients_reload()` atomic-swap, invalidates `ClientConfigStore`'s cache, fans out to
+      `register_client_change_callback()` registrants.
 - [ ] [AGENT] P1. **Give `client_configs` a typed schema.** It is `dict[str, dict[str, DomainConfigValue]]` — the
       transport, keying and reload are right, but the payload is an untyped bag, so nothing validates a client's
       leverage is a number in range. Type it against the governing schema so the wizard and the reloader agree.
-- [ ] [AGENT] P1. **Resolve execution-service's missing `config.py`.** The operator's goal is schema + defaults in each
-      service's `config.py`; execution-service has **no such file** — its typed config is
+- [x] ✅ [AGENT] P1. **Resolve execution-service's missing `config.py`.** The operator's goal is schema + defaults in
+      each service's `config.py`; execution-service has **no such file** — its typed config is
       `service_config.py::ExecutionServicesConfig(UnifiedCloudConfig)`. Decide rename-vs-document and apply it
-      consistently across services, so "look in config.py" is true everywhere or nowhere.
-- [ ] [AGENT] P1. **Close the Bybit API-key reload asymmetry.** Hyperliquid reloads via the shared `ApiKeyReloader`;
+      consistently across services, so "look in config.py" is true everywhere or nowhere. — **DONE (DOCUMENT, not
+      rename)**, reconciled from `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`:
+      `execution-service@ff12d5fb87` — renaming would collide with the existing `execution_service/config/` package
+      (confirmed live, broke imports, reverted); rationale documented in `config/__init__.py`'s module docstring
+      pointing to `service_config.py` as the real target.
+- [x] ✅ [AGENT] P1. **Close the Bybit API-key reload asymmetry.** Hyperliquid reloads via the shared `ApiKeyReloader`;
       Bybit needs a bespoke `_BybitKeyReloader` because UAC's `DATA_SOURCE_TO_SECRET` registry cannot express it. Fix
       the registry so one mechanism serves both — two reloaders for the same job is how one of them silently stops being
-      maintained.
+      maintained. — **DONE**, reconciled from `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`:
+      `unified-api-contracts@8c72b501` added `"BYBIT": "bybit"` to `VENUE_TO_DATA_SOURCE` +
+      `"bybit": "bybit-trade-api-key"` to `DATA_SOURCE_TO_SECRET`. The bespoke `_BybitKeyReloader` remains but is now
+      documented as resolving a genuinely distinct capability (trade-scope secret pair with unscoped fallback) the
+      generic reloader doesn't implement — not an accidental duplicate.
 - [ ] [AGENT] P2. **Inventory every remaining `config.py`-shaped knob per service** and state, per knob, whether it is
       hot-reloadable. The goal is "everything centralised and hot-reloadable"; without the inventory there is no way to
       say how far along that is, and partial coverage reads as full coverage.
@@ -196,7 +218,11 @@ exists to protect, and it is already implemented rather than aspirational.
 
 ### The three real gaps
 
-- [ ] [AGENT] P0. **G1 — feed `config_algorithm`; nothing supplies it.** The hook is threaded through THREE levels —
+- [x] ✅ [AGENT] P0. **DONE**, reconciled from `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`:
+      `execution-service@c2053c47` (ancestor of `ff12d5fb87`) resolves the per-`(client_id, slot_label)` policy and
+      feeds its `then_algo` into `config_algorithm` at both real call sites (`TradeHandler.handle()` /
+      `SwapHandler.handle()` via `_resolve_selected_algorithm`), not just the `HandlerRegistry` wrapper. **G1 — feed
+      `config_algorithm`; nothing supplies it.** The hook is threaded through THREE levels —
       `selector.select_algorithm(instruction_type, requested_algorithm, config_algorithm)`, the
       `HandlerRegistry.select_algorithm()` wrapper that forwards it, and validation against `ALGOS_BY_INSTRUCTION_TYPE`
       — and **zero call sites supply it** (the only `requested="TWAP"` is a docstring example, not live code). So the
@@ -574,10 +600,14 @@ assumptions? **Mechanisms: mostly yes. Parameterisation: no — and the missing 
 | Fallback ladder: book-walk fails → next-1m open + flat `TAKER_SLIP_BP`; no 1m bar → `unfilled-no1m`                                                                             | not modelled as a tiered fallback                                                                                                        | ❌ needs verification / build |
 | `real_slip` guard so a genuine VWAP walk does not double-count synthetic slip                                                                                                   | no equivalent flag found                                                                                                                 | ❌                            |
 
-- [ ] [AGENT] P0. **Add a participation cap to the passive fill path.** This is the single knob that separates e2e's
+- [x] ✅ [AGENT] P0. **Add a participation cap to the passive fill path.** This is the single knob that separates e2e's
       model from execution-service's, it is per-strategy in e2e (PB.12 tuned it: high-turnover `cs` 25%, `basis` 100%),
       and PB.7 measured that ignoring it is exactly the "liquidity drag" gap versus the full-fill ideal. Without it,
-      execution-service's passive fills are the optimistic model PB.7 was built to disprove.
+      execution-service's passive fills are the optimistic model PB.7 was built to disprove. — **DONE (wired, not just
+      primitive)**, reconciled from `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`:
+      `execution-service@f3402a7c11` wired the pre-existing `TradeMatcher.capped_passive_fill_quantity` primitive into
+      `L1Matcher._match_passive()`, filtered to the filling side per PB.8 (see next todo), routed via
+      `policy_resolver.participation_cap_from_params`. 8 new tests.
 - [ ] [AGENT] P0. **Carry PB.8's correction into the cap's definition.** The cap must apply to volume that crosses the
       limit **on the filling side** (for a resting BUY at L: aggressive SELLS at price ≤ L, `isBuyerMaker=True`), not to
       total candle volume — `_ledgers.py` already resolves the maker fill "against the REAL aggTrades flow that crossed

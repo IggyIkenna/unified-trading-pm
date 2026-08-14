@@ -39,6 +39,7 @@ depends_on: []
 source: ["cross-asset-group smoke sweep run 2026-07-20 while completing the CeFi throughput close-out"]
 resolved_by:
 locked_by:
+archive_exempt: true
 context_scope:
   [
     /plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md,
@@ -108,13 +109,26 @@ Yahoo daily path end-to-end. Bucket paths showed no parquet/manifest asymmetry.
 
 ## Todos
 
-- [ ] [DATA] P1. **Unblock the 3 still-open smoke gaps** — prediction cannot be smoked until its bucket resolution is
+- [x] ✅ [DATA] P1. **Unblock the 3 still-open smoke gaps** — prediction cannot be smoked until its bucket resolution is
       fixed (dedicated `pred` flat kind, not a per-asset_group `market-data` entry); DeFi smoke stays blocked while
       `canonical-migration-defi-rebuild` runs (consolidated manifest goes stale, a watcher is armed but has not yet
-      fired); sports is ~4 weeks stale and the cause is unconfirmed.
+      fired); sports is ~4 weeks stale and the cause is unconfirmed. — **All 3 sub-items now resolved.** Sub-item 1
+      (prediction bucket resolution): already stale/fixed-elsewhere per the 2026-07-30/2026-08-06 na-eligibility-audit
+      entries above. Sub-items 2-3, reconciled from `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`
+      (`unified-trading-pm`, this batch): **DeFi** — canonical-migration-defi-rebuild fleet VERIFIED complete (zero live
+      VMs, latest `-rebuild-*` run confirms terminal SUCCESS, `total_shards: 5,832,208`) and consolidated manifest fresh
+      (~250s, inside the 3600s DeFi override). **Sports** — ROOT-CAUSED, no ongoing outage: live manifest verification
+      shows zero real capture gap since 2026-06-01; the 2026-07-20 "~4 weeks stale" reading was itself a false-stale
+      verdict caused by the manifest-merge-cycle-vs-staleness-budget defect already fixed 2026-07-21
+      (`plans/archive/issues/manifest_consolidator_stale_sports_bucket_2026_07_21.md`).
 
 ## Progress Log
 
+- **2026-08-14 (slot-29, review, `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13_finalize.md` todo 1)**:
+  reached 0 open todos this session via checkbox reconciliation from
+  `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`. `archive_exempt: true` set deliberately — full 6-step
+  archival (incl. corpus-wide referrer fixup) is that finalize plan's separate todo 2, not this reconciliation pass's
+  scope. Drop this field and archive when todo 2 runs.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA-STALE — `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`
   analysed this doc's '## 4. Still open' 3 items verbatim and found sub-item (1) (prediction bucket resolution)
   DUPLICATE/STALE — the same BucketNamingError class already root-caused and fixed elsewhere. Citation fix, not a

@@ -96,10 +96,13 @@ idempotency guard silently no-ops re-park attempts (observed 4x/26x redundant re
 
 ## Section 2 — zero-checkbox docs (need conversion to tracked todos, or archival)
 
-- [ ] [DOC] P2. `plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md` — genuine unresolved
+- [x] ✅ [DOC] P2. `plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md` — genuine unresolved
       structural bug (exit-code-monitor `sweep()` takes >30min sequentially while cron fires every 5min, causing 4-6
       overlapping runs). Add: parallelize per-VM GCS reads in `exit_code_fleet_monitor.py` +
-      `heartbeat_stall_watcher.py`'s `sweep()` via `ThreadPoolExecutor` (precedent in `cli.py`).
+      `heartbeat_stall_watcher.py`'s `sweep()` via `ThreadPoolExecutor` (precedent in `cli.py`). — **ALREADY SHIPPED**,
+      reconciled from `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: `deployment-service@069ced1412`
+      (backend_engineer slot-28, 2026-08-13) already parallelizes both sweeps' per-VM I/O via `ThreadPoolExecutor`
+      (`_SWEEP_IO_MAX_WORKERS`), keeping classify/route/emit sequential.
 - [ ] [DOC] P3. `plans/active/issues/plan_reconciler_findings_ui_2026_08_11.md` — add: expand the ui-tranche doc
       inventory to include multiline-frontmatter `asset_group:\n  [ui]` docs missed by same-line grep.
 - [ ] [OPERATOR] P2. `plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md` —

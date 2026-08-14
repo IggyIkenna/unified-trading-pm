@@ -429,7 +429,7 @@ credits. Tracked todos below.
       data_types LEAGUES/VENUES/SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES — honest, the SSOT defines what is
       source-attributable). ROW-PRESERVING — captured 659,693 unchanged. pipeline_mode left blank (reference data, no
       mode model). Snapshot pre_sports_is_v9_20260619. — instruments-service
-- [ ] [DATA] P2. **FLEET-WIDE: instruments-store `_index` v9-COLUMN populate for cefi/tradfi/defi (+ prediction
+- [x] ✅ [DATA] P2. **FLEET-WIDE: instruments-store `_index` v9-COLUMN populate for cefi/tradfi/defi (+ prediction
       source)** — the plan's earlier "instruments-store `_index` v9-canonical for ALL 5 AGs — DONE" (line ~575)
       OVERCLAIMS: it ran only the blank-status/dedup canonicalisation, NOT the v9 columns. VERIFIED 2026-06-19 all IS
       indices are the SAME as sports-was: schema_version mixed, **source=0** (cefi/tradfi/defi), asset_group ABSENT
@@ -437,7 +437,13 @@ credits. Tracked todos below.
       cefi/defi need a UAC source SSOT; tradfi has databento/massive in UAC SOURCE_PRIORITY). The live-WRITER
       source-auto-stamp (so NEW rows carry source, not just the historical backfill) is the larger scope. — homed under
       `data_source_provenance_all_asset_groups_2026_06_01.md` (the named owning plan for the source RED gap). —
-      instruments-service / unified-trading-library (writer) / unified-api-contracts (per-AG source SSOT)
+      **ALREADY SHIPPED + APPLIED LIVE**, reconciled from `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`:
+      `instruments-service/scripts/populate_is_index_v9_2026_06_19.py` (`instruments-service@96fd4260`) is the
+      pattern-identical fleet-wide script, `--apply`'d live 2026-06-19, covering all 4 AGs. Live-re-verified 2026-08-14:
+      `schema_v9_pct`/`pipeline_mode_pct`/`source_pct`/`asset_group_pct` all 100.0% for prediction/tradfi/cefi/defi,
+      zero `captured`-count data loss. (Live-WRITER source-auto-stamp for NEW rows remains the larger,
+      separately-tracked scope this todo already named.) instruments-service / unified-trading-library (writer) /
+      unified-api-contracts (per-AG source SSOT)
 
 ### Sports credentialed sources (C) + MD twin-verify (2026-06-19, autonomous tick 4)
 

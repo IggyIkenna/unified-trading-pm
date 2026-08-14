@@ -167,19 +167,28 @@ rather than a new invention.
       [venue-eligibility RULING 3](/codex/09-strategy/architecture-v2/axes/venue-eligibility.md), so it should reuse
       that three-way split rather than inventing a second mechanism; **coin universe** interacts with the ADV-ranked
       dynamic universe — decide whether a client can narrow the resolved set, or only veto names from it.
-- [ ] [AGENT] P1. **Fix the `client_context.py` docstring** — it cites `max_leverage`, which exists nowhere, and
+- [x] ✅ [AGENT] P1. **Fix the `client_context.py` docstring** — it cites `max_leverage`, which exists nowhere, and
       `min_balance` for what is really `min_balance_per_venue` on the entry rather than inside `risk_limits`. Name the
-      real fields, and point at `ClientsYaml` as the schema SSOT.
-- [ ] [AGENT] P1. **Instantiate or explicitly waive `clients.yaml` for every archetype that can run.** 2 of 60 have one;
-      the absence is indistinguishable from "no clients configured" versus "surface never created". A gate asserting
-      every factory-registered archetype has a `clients.yaml` (or an explicit waiver) makes the distinction visible.
+      real fields, and point at `ClientsYaml` as the schema SSOT. — **DONE**, reconciled from
+      `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: `strategy-service@3146cfd068` — docstring now lists
+      the real fields, notes `min_balance_per_venue` lives on `ClientsYamlEntry`, removes `max_leverage`, points at the
+      UAC schema SSOT.
+- [x] ✅ [AGENT] P1. **Instantiate or explicitly waive `clients.yaml` for every archetype that can run.** 2 of 60 have
+      one; the absence is indistinguishable from "no clients configured" versus "surface never created". A gate
+      asserting every factory-registered archetype has a `clients.yaml` (or an explicit waiver) makes the distinction
+      visible. — **DONE**, reconciled from `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`:
+      `deployment-service@e355c14ad3` — created `clients_waiver.yaml` for all 30 uncovered factory-registered archetypes
+      (only 2 have real per-client data); `uncovered_archetypes()` now returns `[]`.
 - [ ] [AGENT] P2. **Move the three treasury knobs off `wallet_mapping`** (`reserve_pct`, `min_threshold_pct`,
       `max_threshold_pct`) onto whichever client-config surface the P0 above settles on. They are client policy, and
       they are the reason the operator reasonably asked whether `wallet_mapping` was the client-config home.
-- [ ] [AGENT] P2. **Record the resolved surface in codex** — no doc currently states which of the three surfaces owns
+- [x] ✅ [AGENT] P2. **Record the resolved surface in codex** — no doc currently states which of the three surfaces owns
       what, which is why the question needed a code audit to answer. The three-surface table above is the content;
       [per-client-isolation-architecture](/codex/04-architecture/per-client-isolation-architecture.md) is the likely
-      home.
+      home. — **DONE**, reconciled from `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`:
+      `unified-trading-pm` (this batch) added a "Config surface ownership" section to
+      `/codex/04-architecture/per-client-isolation-architecture.md` with the three-surface table + live-vs-not
+      verdicts + the two known gaps + a pointer to the operator's 2026-08-12 ruling.
 
 ## Target state — operator ruling 2026-08-12: the `(client, archetype slot)` config governs everything
 

@@ -59,7 +59,14 @@ locked_by:
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
+archive_exempt: true
 ---
+
+> **Progress Log 2026-08-14 (slot-29, review, `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13_finalize.md`
+> todo 1)**: reached 0 open todos this session via checkbox reconciliation from
+> `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`. `archive_exempt: true` set deliberately — full 6-step
+> archival (incl. corpus-wide referrer fixup) is that finalize plan's separate todo 2, not this reconciliation pass's
+> scope. Drop this field and archive when todo 2 runs.
 
 # market-tick-data-service main promotion stall + QG-slice-failed Slack redispatch
 
@@ -140,9 +147,16 @@ applies.
       #963-#980); #981 (tip cbc6531b) is open now. Code fix added: the content-gate SKIP line now prints compare
       ahead_by to self-document the squash-skew. Note: the QG-redispatch half of this issue (Finding 2) is a SEPARATE
       todo in cross_cutting_satellite_ao_dispatch_batch13b, not covered here.
-- [ ] [SCRIPT] P2. Read `unified-trading-ci/.github/workflows/python-quality-gates-v2.yml`'s `on:` trigger config to
-      find what re-dispatches a promote-PR's `quality-gates-v2` check on an unchanged head every ~15 min, and fix the
-      redispatch (or, if redispatch is intentional/correct, migrate the "QG Slice Failed" Slack step to the dedup'd
+- [x] ✅ [SCRIPT] P2. **ALREADY FIXED, no new code needed** — reconciled from
+      `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: the redispatch was root-caused to the promote-PR
+      head being a per-SHA frozen ref (`promote/<repo>/<sha12>`) that PM's drain bot supersedes roughly every ~15min,
+      minting a fresh dedup key each time — matching the observed cadence. The Slack step was already routed through the
+      dedup'd `notify-slack.yml` carrier before this todo was drafted; 3 peer `unified-trading-ci` commits (`45eabc2`
+      15-min debounce, `e499f9d` tier-3 escalation at 30min, `ec6d421` redesign to track the underlying condition across
+      PR supersessions) fully closed the gap. Confirmed live on `unified-trading-ci@67698d8`. Original text: Read
+      `unified-trading-ci/.github/workflows/python-quality-gates-v2.yml`'s `on:` trigger config to find what
+      re-dispatches a promote-PR's `quality-gates-v2` check on an unchanged head every ~15 min, and fix the redispatch
+      (or, if redispatch is intentional/correct, migrate the "QG Slice Failed" Slack step to the dedup'd
       `notify-slack.yml` carrier so an unchanged repeat failure doesn't repage). (repo: unified-trading-ci)
 - [x] [OPERATOR] P2. ~~Slack read access... needs an interactive `gcloud auth login`~~ — **SUPERSEDED 2026-08-11,
       corrected finding**: this todo's premise was wrong on two counts. (1) AO itself was never actually blocked —
