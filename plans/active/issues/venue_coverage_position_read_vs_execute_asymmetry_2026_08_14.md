@@ -144,6 +144,35 @@ So today we can open both legs of a staked-basis position and reconcile neither.
       mandate. They are inert unless a venue is configured, so shipping them costs nothing operationally. Purely a
       question of what we disclose. Record the decision in the Elysium plan § E.
 
+## What sharing strategy-service actually conveys (measured 2026-08-14)
+
+Operator question ahead of the pre-carve-out repository send: _"do we end up giving them any live adaptors to do
+anything, or does everything route to execution-service?"_ **Complete read, zero write.**
+
+| Working in their hands                                                                     | Inert without execution-service                                                                     |
+| ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| Every archetype engine — the alpha logic itself                                            | Order placement — `correction_dispatcher._submit_order()` POSTs to `{execution_service_url}/orders` |
+| **Group B backtesting, fully self-contained** — benchmark fills replace execution entirely | Fill realism — all five matchers are execution-service                                              |
+| Instruction emission — they can see exactly what each strategy would do                    | Transfers — emit-side netting only; every rail is execution-service                                 |
+| Read-only venue balances/positions across 14 adapters                                      | Algo selection — the execution-policy registry                                                      |
+| Netting, risk, PnL attribution, the four ledgers                                           |                                                                                                     |
+
+**No signing, no chain writes, no order placement anywhere in strategy-service** — zero `web3` / `eth_account` / Solana
+imports, and `BasePositionAdapter` declares only getters.
+
+### Why the carve-out spec still matters (operator question, answered 2026-08-14)
+
+The question was whether a carve-out is moot, since `ExecutionService` is one of the ten interfaces and everything that
+does real work routes to a service we keep. **It is not moot, and the reason is Group B**: strategy-service plus
+pipeline data is a complete research and backtest system with no execution-service involvement, so the carved package
+delivers genuine, self-sufficient value — the alpha and the research loop. What it cannot do is trade.
+
+**This strengthens the commercial position rather than weakening it.** The carve-out document is what makes the seam
+legible: a reader of §04's per-interface resolution table should be able to see how much sits behind `ExecutionService`
+— the policy registry, five matchers, fill realism, the transfer rails, custody — and conclude that reimplementing that
+side is a serious programme. Declining to describe the seam would hide the very asymmetry that argues against carving
+out. **Keep the spec; let §04 do the persuading.**
+
 ## Correction recorded (2026-08-13/14)
 
 An earlier chat answer to the operator stated strategy-service had **only** a ccxt adapter and could therefore read CeFi
@@ -153,3 +182,37 @@ via `_defi_rpc.py` rather than importing `web3`, so the probe could not have fou
 have taken one command. Same failure class as the `venue_balance_tracker` and shadow-`BookType` errors the same week —
 recorded here because a repository-disclosure decision was being made partly on that answer. The read-only property was
 correct and is now verified at the ABC rather than inferred.
+
+## Deferred work after 2026-08-14
+
+| Item                                                                | Kind               | Blocked on                                                                                                             |
+| ------------------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Measure what the generic token-balance reader closes of the ~27 gap | Not done           | nobody — do this BEFORE building 27 modules                                                                            |
+| Build generic reader + bespoke exceptions (both services)           | Not done           | the measurement above                                                                                                  |
+| Lido / Marinade / Kamino / Jupiter position adapters                | Not done           | may be subsumed by the generic reader — measure first                                                                  |
+| 3 directional SIT invariants                                        | Not done           | nobody                                                                                                                 |
+| Per-venue instruction-ACTION coverage audit                         | Not done           | nobody — this audit proved modules EXIST, not that each handles every action                                           |
+| B6 — a consumer per governing section                               | **Operator-owned** | a design call on which consumer owns each section; an agent already investigated 4 and correctly declined to force one |
+| Disclosure call on betfair / ibkr / polymarket adapters             | **Operator-owned** | out-of-mandate venues; inert unless configured, so cost-free to ship                                                   |
+| Review of the other session's 7 shipped tasks                       | Not done           | their ships landing; UAC confirmed at `8c72b501`                                                                       |
+| Artifact pass (reconciliation + venue/instruction registry)         | Not done           | the chunks being verified landed                                                                                       |
+
+**Recommended next: verify the other session's ships, then measure the generic-reader coverage.** The first is
+verification of work already claimed done (and two of its codex outputs were found orphaned tonight, so the claim needs
+checking); the second decides whether the venue gap is 27 modules of work or roughly one plus a handful of exceptions —
+an order-of-magnitude difference in both build cost and disclosure surface.
+
+## Lessons — 2026-08-14
+
+- **A method name is not its return type.** `venue_balance_tracker.get_all_balances()` returns the SPORTS `VenueBalance`
+  (`is_exchange`, "Betfair, Matchbook", float `balance`). Naming it as the DeFi balance source in a spec cost a
+  sub-agent real time before it pushed back correctly. **Read the type.**
+- **Wrong-vocabulary probes produced FIVE false conclusions this week**, the last one tonight: verifying
+  `transfer-rebalance.md` at origin with a phrase that belongs to `benchmark-fills.md` and briefly reading MISSING on
+  work that had shipped hours earlier. Before concluding absence, confirm the probe could have found the thing.
+- **`git status` untracked (`??`) does not mean unshipped.** `safe-doc-push` commits from an isolated worktree, so a
+  file it pushed still shows untracked locally. Four PM files looked at-risk tonight and were already at origin — but
+  **two genuinely were not**, and only checking each against `origin/` separated them.
+- **Orphaned outputs are a real failure mode of task-splitting.** Chunk 2 wrote two codex docs; the ship tasks named
+  UAC, strategy-service and execution-service and nobody owned PM, so both sat uncommitted for 2.5 hours. **When
+  splitting work, name the doc repo in someone's ship scope.**
