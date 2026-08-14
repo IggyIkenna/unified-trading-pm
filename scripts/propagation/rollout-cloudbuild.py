@@ -217,6 +217,45 @@ def find_dropped_markers(live_content: str, new_content: str) -> list[str] | Non
     return diagnostics
 
 
+def _substitution_keys(data: dict) -> set[str]:
+    """Extract top-level `substitutions` keys from a parsed cloudbuild.yaml doc."""
+    subs = data.get("substitutions")
+    if not isinstance(subs, dict):
+        return set()
+    return set(subs.keys())
+
+
+def find_dropped_substitutions(live_content: str, new_content: str) -> list[str] | None:
+    """Diagnose `substitutions` keys the LIVE file carries that the freshly
+    -rendered NEW content is about to drop.
+
+    Deliberately SEPARATE from find_dropped_markers()/_cloudbuild_markers():
+    those two feed check_cloudbuild_template_drift.py's baseline ratchet
+    (reused via load_rollout_module()), and legitimate per-repo substitutions
+    (e.g. deployment-api's `_DEPLOY`/`_ROLLUP_JOB`/`_ROLLUP_SVC`, absent from
+    cloudbuild-api-template.yaml on purpose) are common enough that folding
+    substitution keys into that ratchet's marker categories would raise the
+    drift COUNT for every consumer carrying one — a change the ratchet's own
+    "NEVER raise a count" rule requires an operator-sanctioned one-off
+    re-baseline for (see plans/active/issues/
+    cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md's P1 todo).
+    This function instead gates ONLY rollout-cloudbuild.py's own `--apply`
+    write path (main(), below) — it is never imported by the drift checker,
+    so it cannot move the ratchet's baseline at all. Same conservative-None
+    contract as find_dropped_markers(): unparseable input refuses rather than
+    risks a blind overwrite.
+    """
+    live_data = _parse_cloudbuild_yaml(live_content)
+    if live_data is None:
+        return None
+    new_data = _parse_cloudbuild_yaml(new_content)
+    if new_data is None:
+        return None
+    live_keys = _substitution_keys(live_data)
+    new_keys = _substitution_keys(new_data)
+    return [f"substitutions key dropped: {key}" for key in sorted(live_keys - new_keys)]
+
+
 def add_deploy_via_dispatch_comment(content: str) -> str:
     """Insert deploy-via-dispatch comment after first line if not present."""
     if "deploy-via-dispatch" in content or "deploys-via-dispatch" in content.lower():
@@ -353,7 +392,16 @@ def main() -> int:
                 )
                 would_regress += 1
                 continue
-            if dropped:
+            dropped_subs = find_dropped_substitutions(live_content, content)
+            if dropped_subs is None:
+                print(
+                    f"  WOULD-DROP-SUBSTITUTIONS CHECK UNAVAILABLE ({repo_name}) — cannot parse the existing"
+                    " cloudbuild.yaml (or the yaml module is missing); refusing an unverifiable overwrite.",
+                    file=sys.stderr,
+                )
+                would_regress += 1
+                continue
+            if dropped or dropped_subs:
                 print(
                     f"  WOULD DROP CONTENT ({repo_name}) — the rendered template is missing content the"
                     " live file already carries; refusing to write. Forward-port the template or"
@@ -361,6 +409,8 @@ def main() -> int:
                     file=sys.stderr,
                 )
                 for diag in dropped:
+                    print(f"    {diag}", file=sys.stderr)
+                for diag in dropped_subs:
                     print(f"    {diag}", file=sys.stderr)
                 would_regress += 1
                 continue

@@ -270,9 +270,28 @@ source: >-
       `image-build-gate.yml`) + `instruments-service@054a67ba04` (new `consumer-qg-check.yml` listener) +
       `unified-trading-pm` (this commit — codex doc `/codex/08-workflows/ci-cd-flow.md` updated, source issue doc's todo
       flipped, follow-up branch-protection-wiring todo added). See the source issue doc's own checkbox for full detail.
-- [ ] [CODE] P2. fix or prove rollout-cloudbuild.py's --apply preserves consumer-only `substitutions` keys (currently
+- [x] ✅ [CODE] P2. fix or prove rollout-cloudbuild.py's --apply preserves consumer-only `substitutions` keys (currently
       invisible to _cloudbuild_markers()), per the doc's own stated done-when Source:
-      `plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`
+      `plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md` — ✅ **DONE 2026-08-14 (slot
+      6, infra).** Proved first, then fixed: `--apply` did NOT preserve consumer-only substitution keys —
+      `generate_cloudbuild()` returns the template's rendered content wholesale with no merge against the live file, so
+      deployment-api's `_DEPLOY`/`_ROLLUP_JOB`/`_ROLLUP_SVC` (absent from `cloudbuild-api-template.yaml`) would have
+      been silently rendered away had the pre-existing "would drop content" guard not been blind to `substitutions`
+      entirely (`_cloudbuild_markers()` only ever walked `data["steps"]`). Fixed via a NEW, deliberately independent
+      `find_dropped_substitutions()` in `scripts/propagation/rollout-cloudbuild.py`, wired into `main()`'s `--apply`
+      write-guard only — it is never imported by `check_cloudbuild_template_drift.py` (which reuses only
+      `find_dropped_markers()`/`generate_cloudbuild()`), so this fix needs **no operator-sanctioned baseline re-seed**:
+      verified live, `check_cloudbuild_template_drift.py --repo deployment-api` still reads `16 (== baseline)` before
+      and after. Verified the guard itself fires: `rollout-cloudbuild.py --repo deployment-api` (dry-run) now reports
+      `substitutions key dropped: _DEPLOY/_ROLLUP_JOB/_ROLLUP_SVC` alongside the pre-existing step-content diagnostics
+      and refuses to write (exit 1) — previously it would have proceeded past the substitutions loss undetected. 5 new
+      unit tests in `tests/unit/test_rollout_cloudbuild_substitutions.py` (positive detection, negative/clean case,
+      unparseable-input None-conservatism, non-pollution of `_cloudbuild_markers()`'s ratchet-facing categories, and an
+      end-to-end `--apply` refusal against a synthetic fixture) + the 25 pre-existing
+      `test_check_cloudbuild_template_drift.py`/`test_check_cloudbuild_substitutions.py` tests all pass (25/25).
+      `unified-trading-pm@<pending-sha>`. Reconciling this back into the source issue doc's own checkbox is out of scope
+      for this satellite batch (per this doc's own header) — deferred to
+      `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`.
 - [ ] [CODE] P2. fix/annotate the ~23 basedpyright errors in
       deployment_service/sports_trigger_{evaluation,periodic,scheduler,state}.py to drop BASEDPYRIGHT_MAX_ERRORS back to
       <=1293 (coordinate file-family ownership with sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md first,
