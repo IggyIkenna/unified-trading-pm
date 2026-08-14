@@ -419,8 +419,17 @@ source: >-
       Issue-doc/source-plan checkbox reconciliation deferred to
       `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` per this batch's own header (source docs not touched
       here).
-- [ ] [CODE] P2. Raise the PYRIGHT_TIMEOUT default (or document the override) in base-service.sh / quality-gates.md
-      Source: `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`
+- [x] ✅ [CODE] P2. Raise the PYRIGHT_TIMEOUT default (or document the override) in base-service.sh / quality-gates.md
+      Source: `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` — ✅ **DONE 2026-08-14 (slot 10, infra).**
+      Documented the sanctioned override (new `### PYRIGHT_TIMEOUT` subsection in
+      `/codex/06-coding-standards/quality-gates.md`, right after the `run_timeout` Helper section) rather than raising
+      the shared `base-service.sh` default fleet-wide: the default stays 120s because bumping it for every consuming
+      repo risks pushing wall time past that repo's own `MAX_DURATION` meta-gate — a confirmed interaction the sibling
+      2026-08-09 finding in the same source plan already hit on market-tick-data-service. Documents the existing ad-hoc
+      per-repo override pattern (`PYRIGHT_TIMEOUT=300/480/600/1200`, citing deployment-api's own baked-in 1200s default)
+      plus the MAX_DURATION headroom caveat. Issue/source-plan checkbox reconciliation deferred to
+      `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` per this batch's own header (source docs not touched
+      here).
 - [ ] [CODE] P2. Fix _qg_governor_default_k() to call the already-correct _qg_physical_cores() instead of its own
       undeduped lscpu invocation (hyperthreading double-count bug) Source:
       `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`

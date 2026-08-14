@@ -1494,6 +1494,24 @@ run_timeout 120 basedpyright unified_trading_library/
 `run_timeout` is not found (exit 127), run `workspace-bootstrap.sh` to install the standalone binary — do not source
 `quality-gates.sh` as a workaround.
 
+### `PYRIGHT_TIMEOUT` — sanctioned override for large repos under host contention
+
+`base-service.sh`'s TYPE CHECK step wraps `basedpyright` via `run_timeout "${PYRIGHT_TIMEOUT:-120}"` — a 120s default.
+On a repo with hundreds of source files (e.g. `features-service`) under multi-slot host contention, 120s can undershoot:
+TYPE CHECK gets killed (`exit=143`, not a real type error) rather than completing (observed 2026-07-24). Several repos
+already override this per-invocation ad hoc (`PYRIGHT_TIMEOUT=300`/`480`/`600`/`1200`) with no shared guidance —
+documented here so slots stop rediscovering it independently:
+
+- **Sanctioned override**: `export PYRIGHT_TIMEOUT=<seconds>` before invoking `quality-gates.sh`, or bake a
+  repo-specific default into that repo's own `scripts/quality-gates.sh` (e.g. `deployment-api` already does
+  `export PYRIGHT_TIMEOUT="${PYRIGHT_TIMEOUT:-1200}"`). Pick the smallest value that clears TYPE CHECK reliably under
+  normal contention — 600s cleared the 2026-07-24 features-service kill.
+- **The shared `base-service.sh` default stays 120s** (not raised fleet-wide) — bumping it for every consuming repo
+  risks pushing total wall time past that repo's own `MAX_DURATION` meta-gate (confirmed interaction, 2026-08-09:
+  raising `PYRIGHT_TIMEOUT` to unblock TYPE CHECK on market-tick-data-service pushed measured run time past its
+  then-current `MAX_DURATION` budget, requiring a separate bump there too). Override per-repo, and check whether your
+  repo's own `MAX_DURATION` needs headroom to match before shipping the change.
+
 ### Memory Governance (OOM Prevention)
 
 When 8+ parallel slot agents each run `quality-gates.sh` concurrently, peak memory can exceed available RAM and trigger
