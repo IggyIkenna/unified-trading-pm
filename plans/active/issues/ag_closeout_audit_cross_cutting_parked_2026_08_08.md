@@ -125,13 +125,14 @@ tranche reports, the owning tranche's own audit retags).
    dual-tagged `[cross-cutting, ci]`. A reusable GHA workflow extracted to `unified-trading-ci` without re-auditing its
    `runs-on:` choice, stranding `image-build-validate.yml` on deregistered runners and stalling LDR→main promotion
    fleet-wide. 2 open todos (fleet-wide sweep for the same pattern; add a standing check), AO-eligible.
-8. **`plans/active/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md`** — bare `[cross-cutting]`,
-   found only via the `check_ag_closeout_linkage.py` cross-check (`parent_epic: plan_hygiene_master`, zero citations).
-   MTDS-local `# type: ignore` freeze-and-shrink ratchet blocking quickmerge's re-gate. Todo 1 (root-cause the ratchet
-   overage) is very likely already fixed out-of-band — a same-day archived doc's progress log records an independent fix
-   (`market-tick-data-service@d3260d2f`+`@5893ae3e`) landing ~4h before this doc's own todo-2 shipped, but this doc's
-   own checkboxes were never updated to reflect it (flagged for the `ci` tranche to verify-and-close, not just retag).
-   Todo 3 (quickmerge-regate-vs-standalone-QG inconsistency) remains genuinely open.
+8. **`plans/archive/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md`** (archived 2026-08-14,
+   resolved) — bare `[cross-cutting]`, found only via the `check_ag_closeout_linkage.py` cross-check
+   (`parent_epic: plan_hygiene_master`, zero citations). MTDS-local `# type: ignore` freeze-and-shrink ratchet blocking
+   quickmerge's re-gate. Todo 1 (root-cause the ratchet overage) is very likely already fixed out-of-band — a same-day
+   archived doc's progress log records an independent fix (`market-tick-data-service@d3260d2f`+`@5893ae3e`) landing ~4h
+   before this doc's own todo-2 shipped, but this doc's own checkboxes were never updated to reflect it (flagged for the
+   `ci` tranche to verify-and-close, not just retag). Todo 3 (quickmerge-regate-vs-standalone-QG inconsistency) remains
+   genuinely open.
 9. **`plans/active/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md`** — bare
    `[cross-cutting]`. `prettier --write` deterministically mangling a `{{RUNS_ON}}` YAML placeholder in workflow
    templates, breaking `quality-gates-v2` fleet-wide. 4 open todos (re-roll+ship for 6 more repos, fleet sweep,

@@ -24,7 +24,7 @@ related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/active/issues/mtds_main_promotion_stall_and_qg_alert_redispatch_2026_08_11.md,
-    /plans/active/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md,
+    /plans/archive/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md,
     /plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md,
     /plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md,
     /plans/active/issues/pipeline_smoke_sweep_findings_2026_07_20.md,
@@ -102,9 +102,17 @@ source: >-
       (`.github/workflows/python-quality-gates-v2.yml` — `debounce-promote-qg-fail` job derives `duration_min` from run
       history and only fires `notify-qg-fail` once the streak is genuinely ≥15min old, with a 120min cooldown after
       that). No further action.
-- [ ] [CODE] P2. Investigate and document why standalone quality-gates.sh --no-fix treats the local type:ignore ratchet
-      (STEP 5.94/5.95) as non-fatal while quickmerge's internal re-gate treats the identical finding as fatal Source:
-      `plans/active/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md`
+- [x] ✅ [CODE] P2. Investigate and document why standalone quality-gates.sh --no-fix treats the local type:ignore
+      ratchet (STEP 5.94/5.95) as non-fatal while quickmerge's internal re-gate treats the identical finding as fatal
+      Source: `plans/archive/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md` —
+      `market-tick-data-service@9effa3529c`. **ROOT-CAUSED + DOCUMENTED (2026-08-14).** Not a --no-fix-vs-full-mode
+      difference (STEP 5.94/5.95 has no branch on that flag) — it's a MOVING-HEAD attribution window: both invocation
+      paths run the identical script/flags, but 5.94/5.95 scope to `git diff <merge-base> HEAD`, and quickmerge's
+      `--agent` re-gate only fires after its sentinel-invalid retry rebases local HEAD onto whatever a peer slot pushed
+      meanwhile — widening the window enough to surface a peer commit's net-new bare `# type: ignore` that an earlier,
+      narrower-scoped standalone run never saw. Full mechanism + code-line citations documented in the issue doc's todo
+      3 and as a code comment at `market-tick-data-service/scripts/quality-gates.sh` (diff-scoped-attribution helper
+      docstring). Issue doc flipped `status: open -> resolved` (all 3 todos closed).
 - [ ] [CODE] P2. Resolve the diff base to the branch's own last-gated point instead of a fixed origin/main proxy Source:
       `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md`
 - [ ] [CODE] P2. Add a detector for a non-convergeable (monotonically-growing-violation-count) ratchet gate distinct
