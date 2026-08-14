@@ -106,15 +106,58 @@ diverging matcher on the same problem.
 
 ### P0 — fix the live sports path that is already broken
 
-- [ ] [DATA] P0. Diagnose why the running `mtds-live-sports-odds-api-trades` VM produces zero captured rows — the sports
+- [x] [DATA] P0. Diagnose why the running `mtds-live-sports-odds-api-trades` VM produces zero captured rows — the sports
       manifest holds 97 live rows since 2026-06-21 and every one is `empty_confirmed` or `attempted_failed`, with
       `ODDS_API` trades `empty_confirmed` as recently as 2026-08-14 — DoD: root cause named with evidence (VM log
-      excerpt plus the failing call), not a restart.
-- [ ] [DATA] P0. Fix that root cause and prove recovery — DoD: at least one `captured` sports row with a `live_odds_api`
-      pipeline_mode and a date after the fix lands; cite the manifest query.
-- [ ] [DATA] P0. Add a live-capture staleness check for sports so a zero-capture live VM pages instead of running
+      excerpt plus the failing call), not a restart. ✅ Root cause: `LiveWebsocketRunner.record_tick()`
+      (`market_tick_data_service/live/websocket_runner.py`) did an exact-match dict lookup against the ORIGINAL
+      subscription instrument_ids (`ODDS_API:SPORT:{sport_key}`), but `OddsApiWSFeedConnector` is a fan-out poller whose
+      yielded ticks carry a different, richer id (`ODDS_API:BOOKMAKER:{bm}:LEAGUE:{league}:FIXTURE:{fixture}` — its own
+      docstring documents the two id spaces as unrelated). Every tick silently missed the lookup and was dropped with
+      zero logging. Verified: (1) VM `mtds-live-sports-odds-api-trades-20260804-131449`'s run.log (64,567 lines,
+      2026-08-04→08-14) has zero ERROR/Exception/"OddsApi" lines and zero `MTDS_LIVE_WS_STARTED`/connect-related
+      activity beyond heartbeat/resource-sample noise; (2) manifest at
+      `gs://market-data-tick-sports-prd-central-element-323112/_index/per_vm/mtds-live-sports-odds-api-trades-20260804-131449.parquet`
+      — all 25 rows `capture_status=empty_confirmed, error_reason=SOURCE_RETURNED_ZERO`; (3) direct API call with the
+      production `odds-api-key` secret returned real fixture/bookmaker data for all 5 subscribed leagues (200 OK, 10.3M
+      credits remaining — ruling out credentials/quota despite the stale `BLOCKED-CREDENTIALS` module comment); (4)
+      standalone repro of `OddsApiWSFeedConnector.connect()`+`.stream()` yielded real ticks immediately, proving the
+      connector itself is correct and isolating the bug to the runner's buffer-key matching.
+- [x] [DATA] P0. Fix that root cause and prove recovery — DoD: at least one `captured` sports row with a `live_odds_api`
+      pipeline_mode and a date after the fix lands; cite the manifest query. ✅ Fix: `record_tick()` now lazily
+      registers a new buffer for an unseen instrument_id (mirrors the existing `apply_instrument_delta` pattern) and
+      logs a WARNING on the mismatch so a genuine 1:1-connector canonical-id regression (the BYBIT incident the
+      pre-existing test guarded) stays observable. Shipped `market-tick-data-service@0974060ae0` (fix) + `@adf74dcf11`
+      (900-line-cap follow-up — see
+      `/plans/active/issues/mtds_websocket_runner_over_900_line_cap_blocks_commits_2026_08_14.md`, now resolved).
+      Quality gates green both times (10,676 tests). Deployed `mtds-live-sports-odds-api-trades-20260814-110648` (old
+      broken VM `...-20260804-131449` deleted). Recovery verified: per-VM manifest
+      (`gs://market-data-tick-sports-prd-central-element-323112/_index/per_vm/mtds-live-sports-odds-api-trades-20260814-110648.parquet`)
+      shows 779 `capture_status=captured` rows (climbing) vs. only the original 5 coarse subscription keys still
+      `empty_confirmed` (expected — they never receive direct ticks under this fan-out connector). Sample row:
+      `instrument_id=ODDS_API:BOOKMAKER:UNIBET_UK:LEAGUE:LIGUE_1:FIXTURE:600aeb3560814afc9a02bec5126b249d`,
+      `pipeline_mode=live_odds_api`, `source=odds_api`, `date=2026-08-14`, `written_at=2026-08-14T11:11:01Z`. NOTE:
+      attempted to also correct the shard's `data_type` from `trades` to the batch-matching `ODDS` (batch
+      `odds_api_adapter.py:759` writes `data_type=ODDS`) for full batch=live symmetry, but that crashes
+      `live_pipeline_mode_for_venue` — UAC's `SPORTS_DATA_TYPE_TO_SOURCE["ODDS"]` (an IS/footystats reference-entity
+      registry, `unified_api_contracts/canonical/domain/sports/league_data.py:224`) resolves to source=`footystats`,
+      which has no `LIVE_FOOTYSTATS` `PipelineMode` —
+      `ValueError: No PipelineMode for source 'footystats' in mode     'live'`. Reverted to `trades` (the only
+      currently-launchable data_type for this venue) to unblock this recovery; the `trades`-vs-`ODDS` batch/live
+      data_type mismatch is a real, separate cross-cutting gap — tracked as a new P1 todo below rather than blocking
+      this fix on it.
+- [x] [DATA] P0. Add a live-capture staleness check for sports so a zero-capture live VM pages instead of running
       silently for weeks — DoD: the check fires on the pre-fix condition when replayed against the historical manifest
-      window, and routes per `/codex/04-architecture/agent-orchestrator-alerting.md`'s actionable-only rule.
+      window, and routes per `/codex/04-architecture/agent-orchestrator-alerting.md`'s actionable-only rule. ✅ Already
+      satisfied — `DP-LIVE-004` / `check_live_capture_productivity` in
+      `deployment-service/deployment_service/data_pipeline_monitors/live_stream_watcher.py` (shipped
+      `deployment-service@ebeef843c` this morning, 2026-08-14 05:00, `cross_ag_live_capture_parity_2026_08_14.md`
+      Finding C), generically covers every running `LONG_LIVED_LIVE` VM via `VM_PREFIX_TO_BUCKET` + the live GCP compute
+      census — no sports-specific code needed. Wired into the CLI sweep (`data_pipeline_monitors/cli.py`).
+      `test_dp_live_004_fires_when_shard_alive_but_never_captured` in `tests/unit/test_data_pipeline_monitors.py`
+      already reproduces this exact VM's pre-fix shape (`vm_name="mtds-live-sports-odds-api-trades-20260804-131449"`,
+      `empty_confirmed` rows) and asserts it fires `DP_CRON_DID_NOT_FIRE` at `PAGE_OPERATOR` tier. Routes through
+      `emit_finding`/`PipelineFinding`, the shared actionable-only path.
 
 ### P0 — connector foundation
 
@@ -129,6 +172,22 @@ diverging matcher on the same problem.
 - [ ] [DATA] P0. Decide and document how an unresolved fixture is recorded — an honest-absence manifest row, never a
       fabricated fixture id — DoD: the decision is written into `/codex/02-data/honest-absence-downstream-handling.md`
       or a sibling, and a test asserts no tick is written under a guessed fixture id.
+
+### P1 — batch/live data_type symmetry gap (found 2026-08-14 during P0 recovery)
+
+- [ ] [DATA] P1. Resolve the `ODDS_API` venue's batch/live `data_type` mismatch — the batch adapter
+      (`market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py:759`) writes `data_type="ODDS"`,
+      but the live shard (`sports:ODDS_API:trades`) uses `data_type="trades"` because `"ODDS"` crashes
+      `live_pipeline_mode_for_venue`: UAC's `SPORTS_DATA_TYPE_TO_SOURCE["ODDS"]`
+      (`unified_api_contracts/canonical/domain/sports/league_data.py:224`) resolves the source to `footystats` — an
+      unrelated IS reference-entity registry entry (footystats' own pre-match odds snapshot, per that file's own
+      2026-06-27 operator-decision comment) — which has no `LIVE_FOOTYSTATS` `PipelineMode`, raising
+      `ValueError: No     PipelineMode for source 'footystats' in mode 'live'`. Live and batch currently write under
+      different shard identities for the same data, breaking the "Live = batch" shard-atom-identical contract — DoD:
+      either (a) make `live_pipeline_mode_for_venue` venue-aware so `ODDS_API` + `data_type=ODDS` resolves
+      source=odds_api instead of falling through to the data_type-only `SPORTS_DATA_TYPE_TO_SOURCE` lookup, or (b)
+      rename the live shard's `data_type` and get the batch adapter to match it — state which and cite the resolved
+      shard identity used by both sides.
 
 ### P1 — the three providers
 
@@ -190,4 +249,15 @@ sports cell that we actually have a provider for.
 
 ## Progress Log
 
-_(append dated entries here)_
+- 2026-08-14: Closed all three P0 "fix the live sports path that is already broken" todos in one session. Root cause of
+  the 10-day zero-capture outage: `LiveWebsocketRunner.record_tick()` exact-matched tick instrument_ids against the
+  original subscription set only, silently dropping every tick from `OddsApiWSFeedConnector` (a fan-out poller whose
+  ticks carry a different, richer per-(bookmaker,fixture) id than its coarse subscription key). Fixed via lazy buffer
+  registration (`market-tick-data-service@0974060ae0`, follow-up line-cap cleanup `@adf74dcf11`). Redeployed
+  `mtds-live-sports-odds-api-trades-20260814-110648` (old broken VM deleted); verified 779 `captured` rows within 2
+  minutes of boot, `pipeline_mode=live_odds_api`. The staleness-check todo turned out to already be satisfied by
+  `DP-LIVE-004` (shipped same morning by other work, `deployment-service@ebeef843c`) — no new code needed. Also
+  attempted to fix a batch/live `data_type` mismatch found along the way (batch writes `ODDS`, live used `trades`) by
+  relaunching under `data_type=ODDS`, but that crashes `live_pipeline_mode_for_venue` (UAC's
+  `SPORTS_DATA_TYPE_TO_SOURCE["ODDS"]` resolves to `footystats`, which has no live `PipelineMode`) — reverted to
+  `trades` to unblock this recovery and filed it as a new P1 todo instead of blocking on it.

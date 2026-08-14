@@ -80,13 +80,18 @@ because a new filename cannot collide with a peer's in-flight edit of an existin
 
 ## Todos
 
-- [ ] [DATA] P0. Bring `market_tick_data_service/live/websocket_runner.py` back under 900 lines by extracting a cohesive
+- [x] [DATA] P0. Bring `market_tick_data_service/live/websocket_runner.py` back under 900 lines by extracting a cohesive
       unit (the tick-id fan-out buffer added by `0974060a` is the obvious candidate, being the newest and most
       self-contained addition) — DoD: `bash scripts/quality-gates.sh` exits green in market-tick-data-service, cited by
-      its terminal output, not by the line count alone.
-- [ ] [DATA] P0. Coordinate with whoever owns `market-tick-data-service@0974060a` before editing — the commit is hours
+      its terminal output, not by the line count alone. ✅ market-tick-data-service@adf74dcf11 — extracted
+      `_register_lazy_buffer()` out of `record_tick()`; file is 897 lines committed
+      (`git show HEAD:...websocket_runner.py     | wc -l`); `bash scripts/quality-gates.sh --no-fix` exits 0, "✅ ALL
+      QUALITY GATES PASSED", 10676 tests passed.
+- [x] [DATA] P0. Coordinate with whoever owns `market-tick-data-service@0974060a` before editing — the commit is hours
       old, the slot is shared, and the multi-agent rule is not to edit a peer's recently-pushed file blind — DoD: state
-      in this doc who was consulted or that the owning session is confirmed finished.
+      in this doc who was consulted or that the owning session is confirmed finished. ✅ I am that owner (authored
+      `0974060a` this session, per `mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md`'s P0 diagnose/fix
+      todos) — no separate coordination needed, resolved it myself in the same session.
 - [ ] [DATA] P1. Ship the blocked consumer migration once the gate is green —
       `scripts/delete_bybit_spot_spot_nonsense_manifest_2026_07_07.py` still did
       `VENUE_DATA_TYPE_CAPABILITIES.get(_VENUE, {})` then `sorted(caps.keys())` after the typed-record migration, which
@@ -99,4 +104,6 @@ because a new filename cannot collide with a peer's in-flight edit of an existin
 
 ## Progress Log
 
-_(append dated entries here)_
+- 2026-08-14: P0 line-cap breach resolved by the introducing commit's own author, market-tick-data-service@adf74dcf11
+  (extracted `_register_lazy_buffer()`, 897 lines, quality gates green). P1 (blocked bybit consumer migration) and P2
+  (gate error-message improvement) left open for their respective owners — not touched.
