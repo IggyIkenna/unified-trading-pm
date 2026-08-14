@@ -393,8 +393,32 @@ source: >-
       `sit-gate stuck detector: healthy (no repo has 3+ consecutive SIT GATE BLOCK ticks)` — both repos currently at 0,
       confirming the reset behavior still holds 4 days later. No code fix needed; this was a re-check-only todo. No
       further action.
-- [ ] [CODE] P2. Slack alerting via notify-slack.yml for the 3 governor triggers (over-cap RSS, >20% baseline drift,
-      host RAM >80% abort) Source: `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`
+- [x] ✅ [CODE] P2. Slack alerting via notify-slack.yml for the 3 governor triggers (over-cap RSS, >20% baseline drift,
+      host RAM >80% abort) Source: `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` — ✅ **DONE
+      2026-08-14 (slot 11, infra)**: `unified-trading-pm@<PENDING-SHA>`. Added `_qg_governor_slack_alert()` to
+      `qg-host-governor.sh` — a direct Slack-webhook POST (`SLACK_CI_WEBHOOK_URL`/`SLACK_WEBHOOK_URL`) with a local
+      per-dedup-key marker-file cooldown, mirroring `notify-slack.yml`'s own severity/dedup/cooldown conventions; **not
+      a literal call INTO that reusable workflow** — it is `workflow_call`-only and unreachable from a bare bash script
+      running on a worker VM/laptop outside a GHA job (the same host-side pattern already used by
+      `scripts/repo-management/cron_liveness_watchdog.py`'s `post_slack()`). Wired into **2 of the 3** triggers, which
+      already had a live detection point: (1) **host RAM > abort-threshold abort** — `_qg_watchdog_loop` now posts
+      CRITICAL on the same trip that already SIGTERMs + writes the loud marker; (2) **per-run RSS over its 1.2× cap** —
+      new `_qg_governor_check_overrun()` fires CRITICAL when a MEM_WRAP-wrapped pytest/basedpyright exits 137 (cgroup
+      `MemoryMax` OOM-kill) under `QG_GOVERNOR_MODE=reservation`, wired at all 3 exit-capture sites in `base-service.sh`
+      (unit-only TESTS, integration TESTS, TYPE CHECK). **Trigger 3 (daily observed-peak >20% above committed baseline)
+      is NOT wired** — its own detection mechanism (a daily job promoting each run's observed peak-RSS into the
+      committed baseline + comparing) does not exist in code yet; it is the still-open, separate Phase-0 "Baseline
+      freshness loop" todo in the source plan (`qg_host_adaptive_resource_governor_2026_07_14.md`), out of this
+      satellite todo's scope to fabricate. New `tests/test-qg-slack-alert.sh` (curl mocked, no network): 8 assertions —
+      no-webhook/non-https no-op, post-and-dedup-marker, cooldown-suppression, cooldown-elapsed-reposts, and all 3
+      `_qg_governor_check_overrun` branches (token-mode no-op, reservation-mode-clean-exit no-op, reservation-mode-137
+      posts). All pre-existing governor suites (`test-qg-watchdog.sh`, `test-qg-admit.sh`, `test-qg-mem-cap.sh`,
+      `test-qg-reservation.sh`, `test-qg-ledger.sh`, `test-qg-governor-slice-gating.sh`) re-run green (one pre-existing,
+      unrelated `test-qg-watchdog.sh` failure — "token mode: watchdog does not start" — confirmed via `git stash` to
+      reproduce identically on a clean HEAD, not a regression from this change; not fixed here, out of scope).
+      Issue-doc/source-plan checkbox reconciliation deferred to
+      `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` per this batch's own header (source docs not touched
+      here).
 - [ ] [CODE] P2. Raise the PYRIGHT_TIMEOUT default (or document the override) in base-service.sh / quality-gates.md
       Source: `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`
 - [ ] [CODE] P2. Fix _qg_governor_default_k() to call the already-correct _qg_physical_cores() instead of its own

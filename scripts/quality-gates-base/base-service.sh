@@ -1012,6 +1012,7 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
         # Stream live via `tee -a` (see rationale above); preserve pytest's real exit via PIPESTATUS[0].
         "${MEM_WRAP[@]}" $PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV 2>&1 | tee -a "$_pytest_log"
         _pytest_rc=${PIPESTATUS[0]}
+        _qg_governor_check_overrun "$SERVICE_NAME" "TESTS" "$_pytest_rc"
         if [ "$_pytest_rc" -ne 0 ]; then
             # Retry-once-on-timeout: only when EVERY failure is a pytest-timeout (see helper above).
             if [ "${PYTEST_TIMEOUT_RETRIES:-1}" != "0" ] && _qg_pytest_timeout_retry; then
@@ -1027,6 +1028,7 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     else
         "${MEM_WRAP[@]}" $PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} tests/integration/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV 2>&1 | tee -a "$_pytest_log"
         _pytest_rc=${PIPESTATUS[0]}
+        _qg_governor_check_overrun "$SERVICE_NAME" "TESTS" "$_pytest_rc"
         if [ "$_pytest_rc" -ne 0 ]; then
             # Retry-once-on-timeout: only when EVERY failure is a pytest-timeout (see helper above).
             if [ "${PYTEST_TIMEOUT_RETRIES:-1}" != "0" ] && _qg_pytest_timeout_retry; then
@@ -1338,6 +1340,7 @@ if [ "$SKIP_TYPECHECK" != "true" ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; 
     fi
     qg_prof end typecheck
     trap - INT TERM
+    _qg_governor_check_overrun "$SERVICE_NAME" "TYPE CHECK" "${PYRIGHT_EXIT:-0}"
     if [ "${PYRIGHT_EXIT}" -ne 0 ] && [ "${ERROR_COUNT:-0}" -eq 0 ] && [ "${WARN_COUNT:-0}" -eq 0 ]; then
         echo "$PYRIGHT_OUT"; log_fail "Type check FAILED/timeout (exit=${PYRIGHT_EXIT})"; exit 1
     fi
