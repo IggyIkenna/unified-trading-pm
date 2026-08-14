@@ -185,19 +185,19 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       needs its own bound.
 
       **RESOLVED 2026-08-02 (slot 10)**: `deployment-api@34a596b`. Took the documented alternative to raising the
-                                  ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
-                                  means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
-                                  accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
-                                  `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
-                                  `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
-                                  `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
-                                  observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
-                                  `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
-                                  AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
-                                  isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
-                                  isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
-                                  "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
-                                  records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
+                                      ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
+                                      means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
+                                      accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
+                                      `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
+                                      `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
+                                      `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
+                                      observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
+                                      `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
+                                      AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
+                                      isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
+                                      isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
+                                      "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
+                                      records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
 
 - [x] ✅ [INFRA] P3. The `data-status-rollup-worker` `GcsEventSink` (the
       `log_event(SERVICE_PROCESSED/SERVICE_FAILED, ...)` calls in `run_rollup`) has not written a new dated prefix under
@@ -509,6 +509,24 @@ worth closing the same way (isolate + surface the real error) rather than leavin
   attempt `consolidate(bucket, force=True)` — its docstring's OOM warning for this exact bucket class + the
   heavy-I/O-belongs-on-a-VM rule made self-serving it without operator sign-off the wrong call; escalated in-chat
   instead.
+
+- **data_engineering (slot-21) 2026-08-14T03:22Z**: dispatched onto this doc's P0 follow-up; live-reconfirmed the SILENT
+  STALL still active (streak=168 cycles at 02:52:41Z, climbing) — the prior session's "escalated in-chat" was not a
+  tracked dashboard escalation, so filed a formal `/blocked` (BLK-838e73de) with the two options from the P0's own text.
+  **Operator answered Option A** ("launch a dedicated VM now and run `consolidate(bucket, force=True)` with a bounded
+  `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT`, verify live" — ruled not operator-gated per Data Pipeline Correctness Is The
+  Heartbeat, since the staleness is actively growing). Built a new one-off launcher
+  (`deployment-service/scripts/vm/launch-defi-manifest-force-consolidate-vm.sh`; no reusable launcher existed for this
+  exact CLI invocation) + registered the `defi-manifest-force-consolidate-` prefix in `vm_prefix_registry.py`
+  (bucket=None — writes direct to the canonical index, not a per-VM shard, mirroring `defi-manifest-projection-`) and
+  `launcher_registry.py` (`None` — non-relaunchable, OOM history on this bucket class, manual relaunch only). Full QG
+  green, shipped `deployment-service@2f1c7597`. Launched `defi-manifest-force-consolidate-20260814-031954`
+  (e2-highmem-8, ON-DEMAND not spot — a force-rebuild isn't safely resumable mid-merge, `asia-northeast1-c`,
+  `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT=16GB`, threads left at default per the module's own "24GB made it worse" finding).
+  Armed a `run_in_background` watchdog on `run.log` (UTL `download_from_storage`, not a subprocess `gsutil`/`gcloud`
+  read — the workspace GCS-object-CLI ban applies to reads too) polling every 90s for the `=== VM setup complete ===`
+  terminal marker, 2400s ceiling. **Result pending** — see the next Progress Log entry for the verified outcome; do not
+  treat this entry alone as confirmation the stall cleared.
 
 ## Follow-ups
 
