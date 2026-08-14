@@ -278,7 +278,16 @@ until the next sweep) and is a stopgap, not the root fix.
       wall-clock win from parallelizing the READ without paying for the full backlog in RAM at once. Verify with a
       profiled run that logs `run.log` byte-size distribution (or peak RSS) alongside the existing phase-boundary timers
       before landing an ungrounded fix. Target: sweep completes under 1800s AND under the 16Gi memory ceiling. Repo:
-      deployment-service.
+      deployment-service. — **ADDENDUM (slot 26, same session, independent live-verify of the same `qgtnz` execution)**:
+      corroborating but DISTINCT evidence worth folding into the fix — the execution log (294 lines,
+      `gcloud logging read`) shows 136 `download_bytes(...)` stall/timeout/retry warnings concentrated in the final ~60s
+      before the kill, many the NEW jittered-backoff `retrying after ...` variant; each stalled call is logged as
+      leaving its thread running as an undying daemon ("the thread is left running as a daemon so it can never block
+      process exit"). A second, possibly-compounding contributor beyond "266 run.log blobs resident at once": each
+      STALLED read also leaks an abandoned daemon thread holding its own buffered/retry state for the rest of the
+      process lifetime, so the fan-out's true memory cost may be understated by blob size alone. Whichever fix lands
+      (chunking / interleaving the prefetch) should also confirm it bounds daemon-thread accumulation from stalled
+      reads, not just resident blob count.
 
 ## Related
 
@@ -422,3 +431,15 @@ this task because it remains the SOURCE doc for still-open DERIVED todos in OTHE
 `plans/archive/2026_08/issues/` once those derived todos are reconciled.
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+
+- 2026-08-14 (slot 26, backend): Independently live-verified the SAME P2 classify-loop-fix todo in parallel with slot 27
+  (both had live `gcloud`/GCS/docker credential access this session) — reached the identical result via a separate path:
+  direct `docker pull` + `docker cp` + grep of the installed `exit_code_fleet_monitor.py` off the `qgtnz` execution's
+  exact digest (`db4f43ada1e19eb...`, tag `c788707`) confirmed the fix markers live, then watched `qgtnz` to completion
+  via a sized background poll (22-min cap matched to its 1800s task-timeout) and read the full execution log (294 lines
+  via `gcloud logging read`). Lost the race to land first — slot 27's push landed while this session's `safe-doc-push`
+  was rebasing, producing a same-file conflict; resolved by keeping slot 27's landed checkbox-flip + P1 todo (correct,
+  first, and covers the primary root-cause candidate) and folding this session's one genuinely additional finding — the
+  136 `download_bytes` stall/retry warnings + the daemon-thread-never-cleaned-up log text — in as an ADDENDUM on slot
+  27's P1 todo above, rather than re-flipping the checkbox or filing a duplicate competing P1 todo for the same
+  regression. No separate fix attempted (P2 verify-only scope, and the fix is already tracked).
