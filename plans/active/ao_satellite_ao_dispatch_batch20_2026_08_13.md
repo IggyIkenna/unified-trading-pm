@@ -222,8 +222,22 @@ source: >-
       AO-dispatch conflict-check protocol's rule 4 ("already-shipped elsewhere, checkbox just never flipped"), citing
       the SHA here rather than re-doing the work. Source:
       `plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`
-- [ ] [CODE] P2. Check the fleet's pinned Claude Code CLI version against the two upstream anthropics/claude-code issues
-      (#27705, #27734) reported-affected versions (2.1.47, 2.1.50) Source:
+- [x] ✅ [CODE] P2. Check the fleet's pinned Claude Code CLI version against the two upstream anthropics/claude-code
+      issues (#27705, #27734) reported-affected versions (2.1.47, 2.1.50) — CONFIRMED fleet is well past both affected
+      versions, no code change needed: `bootstrap_vm.sh` pins `CLAUDE_CODE_VERSION=2.1.175`
+      (`agent-orchestrator/scripts/bootstrap_vm.sh:332`) and the actual running production spawn binary is
+      `claude     2.1.202` (independently confirmed 2026-08-13,
+      `plans/active/ao_satellite_ao_dispatch_batch20_2026_08_13.md`'s own earlier todo) — both newer than 2.1.47/2.1.50.
+      Read both upstream issues via `gh issue view`: #27705 ("[Bug] Crash on network interruption (VPN disconnect) with
+      no session recovery", v2.1.47, closed `stale` — auto-bot closure, no maintainer fix confirmation or cited fix
+      version) and #27734 ("CLI crashes silently on intermittent network issues instead of recovering gracefully",
+      v2.1.50, auto-closed as a duplicate of #27705) — both describe the CLI process itself dying silently on transient
+      network errors (no `SessionEnd`, no graceful shutdown), a genuinely different mechanism from this doc's own
+      confirmed root cause (shared default tmux socket reachable by any process's `kill-server`, plus the
+      `tmpfs-disk-cleanup.sh` delete + `ExecStartPre`-once gaps) — that root cause is orchestrator/host-level, not a
+      CLI-internal network-recovery bug, and is already independently fixed per this doc's Progress Log. Neither
+      upstream issue carries a confirmed-fixed-in version to track against; noting for the record in case a FUTURE CLI
+      bump lands on/near 2.1.47-2.1.50-adjacent regressions, but no action needed today. Source:
       `plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`
 - [ ] [CODE] P2. Build the dashboard UI toggle for scheduled-dispatch pause/resume (the API is already shipped and live;
       only the UI wiring + Playwright pw:L2 coverage remains) Source:
