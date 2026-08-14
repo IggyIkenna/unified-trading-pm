@@ -171,14 +171,20 @@ that is expected and correct, not something to work around.
 
 ### P1 — resolve the bookmaker spelling drift
 
-- [ ] [DATA] P1. Document the current four-way bookmaker spelling split before changing anything —
+- [x] [DATA] P1. Document the current four-way bookmaker spelling split before changing anything —
       `VENUES_BY_ASSET_GROUP` uses `LADBROKES`/`BET888SPORT`, `REQUESTED_ODDS_API_BOOKMAKERS` +
       `BOOKMAKER_LEAGUE_COVERAGE` use `ladbrokes_uk`/`sport888`, `AUDITED_BOOKMAKERS` uses unsuffixed
       `BETFAIR_EX`/`BETFAIR_SB` — DoD: a mapping table in the Progress Log covering every book in any of the four lists.
+      ✅ See "2026-08-14 — Four-way bookmaker spelling drift" above — full table, every book in any of the 4 registries,
+      plus 2 extra findings (a stray `BET365` audited entry not in any venue registry; an internal 2-way split within
+      `_odds_api_maps.py` itself).
 - [ ] [DATA] P1. Pick ONE canonical spelling per book and migrate the other three registries plus every consumer to it,
       per the entity-rename-and-split rule — DoD: manifest venue values, request keys, coverage-JSON keys and
       audited-bookmaker keys all resolve through a single canonical token; state explicitly whether historical manifest
-      rows are being re-keyed or an alias map is retained, and why.
+      rows are being re-keyed or an alias map is retained, and why. **DEFERRED, not done this session** — see the
+      "Deferred — NOT executed this pass" note above (21/19-file blast radius incl. peer-occupied execution-service,
+      plus a directly-relevant prior-art doc — `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`
+      — that must be read first).
 - [ ] [OPERATOR] P1. If the chosen canonicalisation implies re-keying historical sports manifest rows, gate that on the
       delete-safety protocol — cite `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` and get explicit
       approval before any manifest mutation. An alias-map-only resolution needs no gate; state which path was taken.
