@@ -48,9 +48,9 @@ source: >-
   plans/issues (created on/before 2026-08-07) directly against live agent-orchestrator code — not just checkbox state.
   Found ~10 items already implemented but never checked off (flipped separately this session, see the 3 commits cited in
   the Progress Log), one live security gap now fixed + verified on the production VM
-  (`orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md`, archived), and the ~55 items below confirmed
-  genuinely still open. This plan is the tracking artifact requested to hold that remainder before deciding what to
-  dispatch.
+  (`orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md`, archived), and the 51 items below (58 as swept, 7
+  DeepSeek/Luna-bridge items removed per operator direction — see Notes) confirmed genuinely still open. This plan is
+  the tracking artifact requested to hold that remainder before deciding what to dispatch.
 context_scope:
   [
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
@@ -152,20 +152,27 @@ context_scope:
       checkout goes stale between runs — `plan_reconciler.md` already has this fix, the na-eligibility skill doesn't).
       Source: same doc.
 - [ ] [DOC] P2. Update the published skills-benchmark artifact once the two re-runs above land. Source: same doc.
-- [ ] [REVIEW] P2. Pilot the DeepSeek/Claude blended pool for one week at the default split vs. a Claude-only baseline
-      (blocked while accounts stay credit-exhausted per the doc's own caveat — re-check that gate before starting).
-      Source: `/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md`.
-- [ ] [REVIEW] P2. Confirm whether the flash-vs-pro ~56/44 routing split is real skew or accumulator noise — second
-      measurement window needed. Source: same doc.
-- [ ] [REVIEW] P3. Investigate why the flash variant trips `free_provider_health_gate_skipped` ~30% more than pro —
-      `autospawn.py` only emits the raw event today, no root-cause analysis exists. Source: same doc.
-- [ ] [REVIEW] P1. Re-run the local DeepSeek-routing pilot against the REDESIGNED policy specifically (3 stated
-      done-when criteria, none met yet per any dated Progress Log entry). Source: same doc.
-- [ ] [DATA] P2. Give the `deepseek_flash_route_fraction` remeasure instruction an actual runnable tool — neither the
-      inline comment in `config.py` nor `deepseek_spend_probe.py` (wrong scope) satisfies this. Source: same doc.
-- [ ] [OPERATOR] P2. Ratio-check DeepSeek account-count/cost assumptions against real `accounts.json` + `/usage` data —
-      stated as "not locally doable" in the source doc. Source: same doc.
-- [ ] [OPERATOR] P2. Address the DeepSeek wallet balance top-up recurrence (financial action). Source: same doc.
+      _(DeepSeek/Claude blended-routing work — `/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md` —
+      and the Luna/Flex bridge — `codex_luna_flex_bridge_2026_08_14.md` (local-only, not yet pushed to origin as of this
+      edit) — are out of scope for this tracker per operator direction 2026-08-14: handled elsewhere. The 7 todos below
+      are CANCELLED here (not real deletions — the source docs still carry the live work); the DeepSeek account-credit
+      gate the first one originally cited was stale at authoring — accounts are funded and DeepSeek is actively
+      reconciling + taking tasks.)_
+
+- **[REVIEW] P2. CANCELLED — SUPERSEDED 2026-08-14 (operator, out-of-tracker-scope).** Was: pilot the DeepSeek/Claude
+  blended pool for one week. Source: `/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md`.
+- **[REVIEW] P2. CANCELLED — SUPERSEDED 2026-08-14 (operator, out-of-tracker-scope).** Was: confirm whether the
+  flash-vs-pro ~56/44 routing split is real skew. Source: same doc.
+- **[REVIEW] P3. CANCELLED — SUPERSEDED 2026-08-14 (operator, out-of-tracker-scope).** Was: investigate why the flash
+  variant trips `free_provider_health_gate_skipped` ~30% more than pro. Source: same doc.
+- **[REVIEW] P1. CANCELLED — SUPERSEDED 2026-08-14 (operator, out-of-tracker-scope).** Was: re-run the local
+  DeepSeek-routing pilot against the redesigned policy. Source: same doc.
+- **[DATA] P2. CANCELLED — SUPERSEDED 2026-08-14 (operator, out-of-tracker-scope).** Was: give the
+  `deepseek_flash_route_fraction` remeasure instruction an actual runnable tool. Source: same doc.
+- **[OPERATOR] P2. CANCELLED — SUPERSEDED 2026-08-14 (operator, out-of-tracker-scope).** Was: ratio-check DeepSeek
+  account-count/cost assumptions. Source: same doc.
+- **[OPERATOR] P2. CANCELLED — SUPERSEDED 2026-08-14 (operator, out-of-tracker-scope).** Was: address the DeepSeek
+  wallet balance top-up recurrence. Source: same doc.
 
 ## Track 3 — Boot / context / session hygiene
 
@@ -283,6 +290,10 @@ before touching the source doc directly._
   indefinitely); `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` (correctly blocked on a named
   unmet condition); `orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md` (fully resolved + archived
   2026-08-14, see this session's commits).
+- **Also excluded, per operator direction 2026-08-14**: all `deepseek_claude_blended_provider_routing_2026_07_28.md` and
+  `codex_luna_flex_bridge_2026_08_14.md` open items (7 todos removed from Track 2 at authoring) — operator is handling
+  both elsewhere, not via this tracker. Note the removed items' "credit-exhausted" framing was already stale at
+  authoring time: DeepSeek accounts are funded and actively taking tasks/reconciling.
 - **Not re-verified line-by-line at authoring time** — every item above reflects the 2026-08-14 sweep's findings. Given
   how actively this corpus ships (multiple concurrent sessions, ~900 commits/day observed this session), grep each
   source doc's current checkbox state before dispatching any item here — some may have landed since. Confirmed live at
@@ -296,5 +307,7 @@ before touching the source doc directly._
 - **2026-08-14 (authoring)**: Created from the 5-parallel-agent code-audit sweep of 44 AO-subject-matter docs run
   earlier this session. 10 already-implemented-but-unflipped items were fixed directly (not tracked here — see
   `unified-trading-pm@0969b12571`/`9906379de6`); the gcloud WIF-poisoning security issue was fully resolved + archived
-  (`unified-trading-pm@f34adbc7f1` + supporting commits); the ~55 items above are everything the sweep confirmed
-  genuinely still open, as of that sweep.
+  (`unified-trading-pm@f34adbc7f1` + supporting commits); 58 items confirmed genuinely still open, as of that sweep.
+- **2026-08-14 (same-day correction)**: 7 DeepSeek-routing todos CANCELLED per operator direction — that work + the
+  Luna/Flex bridge are handled outside this tracker; the "credit-exhausted" gate the first cancelled item cited was
+  already stale (accounts funded, DeepSeek actively taking tasks). 51 items remain genuinely open above.
