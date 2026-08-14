@@ -129,3 +129,14 @@ probe-return contract). Gate: only apply when the escalate payload actually name
   `last_error` confirm collision-guard block. PR states verified via `gh pr view` (all 2708-2713 CLOSED).
 - 2026-08-10 ~18:45Z — Step 3: posted BLK-f7bb0212 to main_agent; polled 2 min bounded, no answer; deferred to operator
   via /api/blocked. Filed this issue doc per Step 4.
+- 2026-08-14 ~01:24Z — agt-6bf014 (cicd, slot 6) dispatched for `sit_failure` on `unified-trading-pm`#2940
+  (`promote/unified-trading-pm/724456002781→main`), escalation `created_at=2026-08-13T07:31:40Z`. Confirmed the exact
+  same failure mode: PR #2940 `state=CLOSED` (`closedAt=2026-08-13T07:35:52Z`, `mergedAt=null` — superseded ~4 min after
+  the escalation was created), yet the row still shows `attempts=135`, `reescalations=5`,
+  `resolution="still_red_reescalated"` as of `2026-08-13T19:57:13Z`, then re-dispatched fresh onto slot 6 ~18h later at
+  `2026-08-14T01:23:39Z`. Live-verified no code fix is needed: the QG slice (tests) failure on #2940's run
+  (`31675074151`/job `94367829697`) was a batch of flaky bats failures (disk-stat `integer expression expected`,
+  `cloned an empty repository` git-clone race, tmux-liveness timing) — the promotion pipeline has cycled cleanly since
+  (#2997-#3000 MERGED, current open promote PR #3004 all quality-gates-v2 checks SUCCESS as of `2026-08-14T01:17:38Z`).
+  No action taken beyond this evidence append (the P1 fix below is still pending operator approval) — closed out
+  agt-6bf014 via `/done` with no repo changes.
