@@ -23,7 +23,7 @@ related:
     /plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md,
     /plans/active/issues/na_eligibility_multiline_marker_continuation_lines_never_stripped_from_hash_2026_08_10.md,
     /plans/active/issues/plan_reconciler_findings_infra_2026_08_10.md,
-    /plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md,
+    /plans/archive/2026_08/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md,
     /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md,
     /plans/active/repo_scripts_governance_audit_2026_06_18.md,
   ]
@@ -121,11 +121,15 @@ source: >-
       no "finding W" section; the actual anchor for the self-fixable-permission-gap rule is `## The rule`. Reworded the
       citation to `... § "The rule"` and dropped the undefined "finding W" phrasing (incl. its self-reference in the
       surrounding prose).
-- [ ] [INFRA] P2. Verify quickmerge isolation on a second (service) repo with a heavier suite and confirm the cached
+- [x] ✅ [INFRA] P2. Verify quickmerge isolation on a second (service) repo with a heavier suite and confirm the cached
       venv (~/.cache/qm-iso-venv/<repo>) refreshes correctly across a dependency-lock bump, before flipping
       laptop-default isolation back on. Done when: two repos pass an isolated --isolated quickmerge end-to-end and the
       cache is shown to refresh on a lock change. Source:
-      `plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`
+      `plans/archive/2026_08/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md` —
+      execution-service@866acb2496 (581-test suite, `--isolated` end-to-end + cache-refresh proof; full writeup in the
+      source issue doc's flipped todo + 2026-08-14 Progress Log entry). Also filed
+      `plans/active/issues/execution_service_contributing_doc_stale_2026_08_14.md` (unrelated stale-doc finding hit
+      while picking the verification vehicle).
 - [ ] [CODE] P2. Coordinated pip-audit dependency bump for pyarrow 23.0.0->24.0.0 (needs a PM canonical-range widen,
       same pattern as the already-shipped lxml unit) + twisted/mako/ujson in-range bumps, execution-service +
       unified-trading-pm Source: `plans/active/codex_violations_ratchet_to_five_2026_06_10.md`

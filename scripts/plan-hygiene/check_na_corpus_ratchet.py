@@ -76,7 +76,33 @@ BASELINE = Path(__file__).resolve().parent / "na_corpus_baseline.yaml"
 # check_reference_paths.py / check_effort_signal_ratchet.py for the same convention) so this
 # checker's git-ref path never depends on that script's disk-only _iter_docs().
 _NA_DOC_SUBDIRS = ("plans/active", "plans/active/issues")
-_CHECKBOX_RE = re.compile(r"^\s*[-*]\s*\[ \]", re.MULTILINE)
+_CHECKBOX_RE = re.compile(r"^\s*[-*]\s*\[ \]")
+_FENCE_RE = re.compile(r"^\s*```")
+
+
+def _count_open_checkboxes_fence_aware(text: str) -> int:
+    """Fence-aware `- [ ]` / `* [ ]` count -- skips checkbox-shaped lines inside fenced
+    (```) code blocks, e.g. a doc quoting another plan's todo list as evidence (the exact
+    live case: gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md reported 5
+    open todos with 0 real ones). Same toggle-flag shape as
+    check_na_duplicate_staleness.py's own FENCE_RE. This --diff-base path's _CHECKBOX_RE is
+    a deliberate hand-kept duplicate of generate_na_doc_tranche_inventory.py's own
+    CHECKBOX_RE (see the module comment above) -- that script's own copy carries the
+    identical fence-blindness gap and is tracked separately at
+    na_inventory_counts_fenced_code_block_checkboxes_as_open_todos_2026_08_02.md; this fixes
+    only the --diff-base mode's duplicated regex, not the shared baseline-mode population
+    helper."""
+    in_fence = False
+    count = 0
+    for line in text.splitlines():
+        if _FENCE_RE.match(line):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if _CHECKBOX_RE.match(line):
+            count += 1
+    return count
 
 
 def _load_docspec():
@@ -155,7 +181,7 @@ def _na_open_todos_from_text(text: str) -> int | None:
         return None
     if fm.get("status") not in ("active", "open"):
         return None
-    return len(_CHECKBOX_RE.findall(text))
+    return _count_open_checkboxes_fence_aware(text)
 
 
 def _counts_map_live() -> dict[str, int]:

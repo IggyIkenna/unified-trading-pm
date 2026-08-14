@@ -19,7 +19,7 @@ summary: >-
   rows/613 rows). Today (08-10) is a forward/T+1 item (features-sports T+1 recon at 02:30 per t1_batch_scheduler.tf),
   not a batch-backfill gap. A blind relaunch of the exact window (`end=2026-08-10`) would re-fail identically and
   exceeds RB-INFRA-RELAUNCH's `≤2/(vm-prefix,day)` bound (12+ `features-sports-sports` launches today) — so no relaunch.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [features]
@@ -59,6 +59,10 @@ context_scope:
 ---
 
 # `features-sports-sports-2026-20260810-051126` rc=1 — launch-window (end=today) honest-halt, no relaunch
+
+> **ARCHIVED 2026-08-14** — The sole todo (clamp the current-year sharded-features launcher's window to
+> `end_date = min(today-1, {year}-12-31)`) is fixed and shipped: deployment-service@3a18bc5ce0
+> (`scripts/vm/launch-features-sharded-backfill.sh`'s `launch_year_shard()`).
 
 ## The finding (DP-VM-001, escalation agt-af22dd)
 
@@ -117,10 +121,11 @@ launch window.
 
 ## Todos
 
-- [ ] [CONFIG] P2. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — Clamp the per-year
+- [x] ✅ [CONFIG] P2. **ADDED 2026-08-12 (/plan-reconcile, Section 2 zero-checkbox conversion)** — Clamp the per-year
       sports features backfill launcher's current-year window to `end_date = min(today-1, {year}-12-31)` so a
       current-day's not-yet-written upstream reference can never be a hard dependency at backfill time (the four
       corrected-window runs on 2026-08-10 already demonstrate the intended window). Repo: deployment-service (launcher).
+      — deployment-service@3a18bc5ce0
 
 ## Progress Log
 
@@ -128,3 +133,8 @@ launch window.
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **slot-11 2026-08-14**: fixed `launch-features-sharded-backfill.sh`'s `launch_year_shard()` — the current-year branch
+  was hardcoded to `year == "2026"` (a second staleness bug) and set `end_date` to _today_ instead of clamping to
+  `min(today-1, year-12-31)`. Now compares against `date -u +%Y` dynamically and clamps via lexical ISO-8601 string
+  comparison against `date -u -d 'yesterday'`. Verified `bash -n` clean, `quality-gates.sh` green (sentinel=3a18bc5c),
+  shipped via quickmerge — deployment-service@3a18bc5ce0.

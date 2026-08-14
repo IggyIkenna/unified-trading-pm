@@ -1,21 +1,3 @@
 {
-  "drift": [
-    "batch-live-reconciliation-service/notify-slack.yml",
-    "client-reporting-api/notify-slack.yml",
-    "deployment-api/notify-slack.yml",
-    "deployment-service/notify-slack.yml",
-    "deployment-ui/notify-slack.yml",
-    "e2e-testing/notify-slack.yml",
-    "execution-service/notify-slack.yml",
-    "features-service/notify-slack.yml",
-    "fund-administration-service/notify-slack.yml",
-    "greeks-service/notify-slack.yml",
-    "ibkr-gateway-infra/notify-slack.yml",
-    "instruments-service/notify-slack.yml",
-    "market-data-processing-service/notify-slack.yml",
-    "ml-service/notify-slack.yml",
-    "trading-agent-service/notify-slack.yml",
-    "unified-trading-api/notify-slack.yml",
-    "unified-trading-system-ui/notify-slack.yml"
-  ]
+  "drift": ["unified-api-contracts/image-build-gate.yml"]
 }

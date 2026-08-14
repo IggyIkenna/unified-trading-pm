@@ -135,7 +135,8 @@ command-substitution wrapper around the actual lock acquisition) — see `_qg_tr
 
 ## 1b. PM is the fleet's single write hotspot — why the same gate livelocks in PM and not AO
 
-Measured 2026-08-10 (`plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`, F1):
+Measured 2026-08-10 (`plans/archive/2026_08/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`,
+F1):
 
 | Quantity                                                 | Measured value                  | How                                                   |
 | -------------------------------------------------------- | ------------------------------- | ----------------------------------------------------- |
@@ -163,8 +164,18 @@ or move out of PM's contended path. Two mitigations landed against this: `check-
 wrapper's post-commit rebase enforces the same invariant afterwards for seconds instead of 118s) and
 isolated-worktree-by-default in `safe-doc-push.sh` (each commit stages in a private throwaway worktree at `origin/HEAD`,
 so the drift gate starts satisfied and prek's stash save/restore cycle never collides with a peer's foreign WIP). Both
-are detailed in `plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`; do not
-re-derive throughput limits assuming AO's commit-rate profile applies to PM.
+are detailed in `/plans/archive/2026_08/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`; do
+not re-derive throughput limits assuming AO's commit-rate profile applies to PM.
+
+**Isolated venv cache refresh is guaranteed by `base-service.sh`, not by `quickmerge.sh`'s own provisioning check
+(verified 2026-08-14, execution-service, 581-test suite).** `quickmerge.sh`'s `~/.cache/qm-iso-venv/<repo>` provisioning
+is gated `if [ ! -x "$_qm_iso_venv/bin/python" ]` — first-run-only; it does NOT re-sync an already-populated cache. The
+reason a stale cache never actually ships stale dependencies is a SEPARATE mechanism: `base-service.sh` runs
+`UV_PROJECT_ENVIRONMENT=.venv uv sync --frozen --quiet` unconditionally on every QG invocation (the isolated worktree's
+`.venv` is a symlink into the cache), which reconciles the cache to whatever lock file is present in the tree it runs
+against — confirmed directly (bumped a package via `uv lock --upgrade-package`, re-ran the sync against the same cache
+dir, installed version moved to match; reverted and re-confirmed). Don't reason about cache freshness from quickmerge's
+provisioning check alone — the refresh guarantee lives in the QG step that runs after it.
 
 ## 2. `safe-doc-push.sh`'s own concurrency budget
 
@@ -188,7 +199,7 @@ mechanism in this doc**, including section 4 below (which now catches exactly th
 
 Both states are equally consistent with the work having been **destroyed**. Four measured instances on 2026-08-10, on
 one host in about an hour (SSOT:
-`/plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`, finding F8):
+`/plans/archive/2026_08/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`, finding F8):
 
 1. A staged, passing comment edit was dropped by quickmerge's reconcile — the run reported SUCCESS and pushed the OTHER
    named files; the edit survived in neither worktree nor HEAD.

@@ -302,13 +302,37 @@ source: >-
       reconciliation back into each source doc happens in the paired finalize plan"), citing the finding for
       `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` to reconcile. Source:
       `plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md`
-- [ ] [CODE] P2. Cross-check plans/active/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md's own
+- [x] ✅ [CODE] P2. Cross-check plans/active/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md's own
       logged death timestamps against journalctl orphan_reap-sweep/kill_session signatures for the same incident
       windows, to determine whether some or all of its RAM-exhaustion incidents were actually this doc's
-      nohup/orphan_reap bug misdiagnosed, and correct that doc's root-cause framing if confirmed Source:
+      nohup/orphan_reap bug misdiagnosed, and correct that doc's root-cause framing if confirmed — **PARTIALLY
+      CONFIRMED, not a wholesale misdiagnosis**: unified-trading-pm@(this commit). Live `journalctl` on this host only
+      retains back to the 2026-08-11 boot, but the rotated archive `/var/log/syslog.2.gz` (Jul26-Aug2, readable via
+      `adm` group) still carries the raw `orphan_reap sweep`/`kill_session` log stream for the full window.
+      Code-verified `orphan_reap`'s hard floor is `boot_grace_seconds=300` (`agent-orchestrator/server/config.py:795`) —
+      nothing younger than 300s can be an `orphan_reap` kill. Real `orphan_reap`/`kill_session` events fired
+      continuously fleet-wide all day 2026-07-27, hitting every one of the RAM-doc's corroborating slots
+      (5,7,8,10,12,14) repeatedly at ages 300-360s. Per-entry verdict: **slot-8's 4th corroboration is a PLAUSIBLE
+      MISATTRIBUTION** (its own text confirms `nohup`+`disown` methodology, "died within seconds of admission" after a
+      150-292s wait ≈ matches the 300-360s orphan_reap band, and its orphaned-pytest-xdist-worker-reparented-to-PID-1
+      detail is a distinctive orphan_reap fingerprint — real orphan_reap KILLED slot 8 7+ times that day). The
+      **original slot-12 incident's sub-300s deaths (as short as 32s) are code-confirmed NOT orphan_reap** (structurally
+      impossible under the 300s floor); **slot-14/slot-7/slot-10's signatured failures** (PYRIGHT_EXIT, pytest
+      INTERNALERROR, per-test pytest timeout) **are NOT orphan_reap** (leave a live app-level error, inconsistent with
+      orphan_reap's silent raw SIGKILL); slot-3 never died (no kill to correlate); slot-2 is a different CI-runner host
+      entirely (out of scope). Net: this doc's overall RAM-exhaustion framing stays correct for the majority/mechanism
+      of its own evidence — only the slot-8 entry likely conflates the separate nohup/orphan_reap bug. Addendum appended
+      to the archived doc (`plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`) rather
+      than rewriting its root-cause title. Source doc's own checkbox reconciliation deferred to
+      `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` per this batch's stated design. Source:
       `plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`
-- [ ] [CODE] P2. DOCS P3: fix orchestrator_vm_e2e_hardening_2026_07_24.md's self-contradictory assigned_vm:NA +
-      execution_scope:orchestrator-agent frontmatter to local-only Source:
+- [x] ✅ [CODE] P2. ALREADY-DONE 2026-08-14 — verified via
+      `git log -S"execution_scope: local-only" --     plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md`: the
+      frontmatter fix landed in commit c7cddb75f6 ("docs(plans): reconcile ao delta — 5 fixes (frontmatter
+      contradiction, ...)") prior to this dispatch. Current file
+      (`plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md:22-23`) already reads `assigned_vm: NA` +
+      `execution_scope: local-only` — no code change needed. DOCS P3: fix orchestrator_vm_e2e_hardening_2026_07_24.md's
+      self-contradictory assigned_vm:NA + execution_scope:orchestrator-agent frontmatter to local-only Source:
       `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
 - [ ] [CODE] P2. DOCS P3: update deepseek_flash_ab_routing_test_2026_08_05.md's stale Deferred-table rows for todos
       2/4/17b Source: `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`

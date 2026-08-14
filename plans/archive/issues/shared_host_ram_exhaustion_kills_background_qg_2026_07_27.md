@@ -329,3 +329,60 @@ defect; it is purely a function of host capacity at any given moment.
      flapping); the standing `ldr-to-main-promote.yml` cycle will keep generating fresh promote PRs and retrying on its
      own 15-min cadence independent of this one-shot worker holding the slot. Pinged authoring slot with outcome;
      closing escalation without a code change.
+
+## Cross-check addendum (2026-08-14) — orphan_reap/kill_session misdiagnosis check
+
+**Requested by** `nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`'s own open-work item 3
+("cross-check this doc's logged death timestamps against `journalctl | grep -E 'orphan_reap sweep|kill_session'` for the
+same windows"). **Verdict: PARTIALLY CONFIRMED, not a wholesale misdiagnosis** — this doc's overall "shared-host RAM
+exhaustion" framing stays substantially correct; ONE of its ~8 corroborating entries (slot-8) plausibly conflates the
+separate `nohup`/`orphan_reap` bug.
+
+**Data source**: live `journalctl` on this host only retains back to the current boot (`2026-08-11`, confirmed via
+`journalctl --list-boots`) — too recent to reach 2026-07-27 directly. The rotated rsyslog archive `/var/log/syslog.2.gz`
+(`ip-172-31-5-118`, spans `2026-07-26T00:00Z` → `2026-08-02T00:00Z`, readable via the `adm` group without root) DOES
+still carry the raw `orphan_reap sweep: ... KILLED` / `kill_session(orch-slot-N): reaped ...` log stream for the full
+incident window — a future retro cross-check of this vintage should reach for the archived `.gz` rotation, not bare
+`journalctl`.
+
+**Code-verified fact**: `orphan_reap`'s sweep has a hard-coded minimum kill age, `boot_grace_seconds` (default `300`,
+`agent-orchestrator/server/config.py:795`) — nothing younger than 300s can structurally be an `orphan_reap` kill.
+
+**What the archive shows**: `orphan_reap sweep: ... KILLED` and `kill_session(orch-slot-N): reaped ...` fired
+continuously and fleet-wide throughout 2026-07-27 — far more pervasive than the nohup doc's own "5+ slots in one hour"
+framing (hundreds of KILLED lines across nearly every slot 1-16, all day), observed `age` consistently 300-360s
+(occasional >500s outliers from stale/backlogged sweeps), hitting every one of this doc's own corroborating slots (5, 7,
+8, 10, 12, 14) repeatedly.
+
+**Per-entry cross-check**:
+
+- **Slot-8 (4th corroboration, market-tick-data-service) — PLAUSIBLE MISATTRIBUTION.** This entry's own text states the
+  background method was `nohup`+`disown` and that 3/4 attempts "died within seconds of admission" after a 150-292s
+  governor wait — total elapsed ≈150-300+s, overlapping the observed 300-360s `orphan_reap` kill-age band almost
+  exactly. Its own noted detail — an orphaned pytest-xdist worker reparented to PID 1 surviving its parent's death — is
+  a distinctive `orphan_reap` fingerprint (a per-PID `SIGKILL`, not a process-group-wide OOM sweep, leaves
+  already-forked children orphaned rather than dying together). Real `orphan_reap` KILLED events hit slot 8 repeatedly
+  that day: `02:03:19 age=355s`, `05:42:43 age=304s`, `05:49:54 age=331s`, `05:58:15 age=322s`, `07:03:39 age=306s`,
+  `10:58:31 age=325s` (×2), `11:39:48-49 age=349s` (×3) — no single line is provably THE kill (this entry never logged
+  an exact timestamp), but the mechanism, methodology, and timing band all line up.
+- **Original slot-12 incident, attempts 2-7 (32s-520s elapsed) — NOT `orphan_reap`.** Several deaths (e.g. the 32s one)
+  occurred well under the 300s `boot_grace_seconds` floor — code-confirmed structurally impossible to be an
+  `orphan_reap` kill. A genuine, different external kill mechanism explains these (consistent with this doc's own
+  RAM-pressure diagnosis).
+- **Slot-14 (5th corroboration) / slot-7 / slot-10 (6th corroboration) — NOT `orphan_reap`.** Their failure signatures
+  (`PYRIGHT_EXIT` nonzero with empty output, pytest `INTERNALERROR` on `threading.Timer` creation, a per-test 60s pytest
+  timeout stall inside `pandas`) all leave a live application-level error/exit code, inconsistent with `orphan_reap`'s
+  silent raw `SIGKILL` (no trace at all in the killed process's own output). These remain genuine host RAM/CPU/thread
+  contention, as originally diagnosed.
+- **Slot-3 (~22:04-22:09 UTC)** — the process did NOT die (survived, just slow) — no kill occurred, so no
+  `orphan_reap`/`kill_session` correlation applies either way; still an open CPU-vs-RAM-mechanism question as this doc's
+  own entry already flagged.
+- **Slot-2 (2026-07-28, CI)** — a self-hosted GHA runner (`github-glue-runners-features-service`), a DIFFERENT host
+  identity from this orchestrator VM; `orphan_reap`/`kill_session` are AO-server worker-slot mechanisms and do not run
+  against CI runner infrastructure — categorically out of scope for this cross-check.
+
+**Conclusion**: not correcting this doc's root-cause title/framing (it remains correct for the majority — and the
+mechanism — of its own evidence), but flagging the slot-8 corroboration specifically as likely a second, distinct kill
+mechanism (`nohup`/`orphan_reap`) riding alongside the genuine RAM-exhaustion pattern this doc otherwise documents,
+rather than independent confirmation of it. Cross-check closed via
+`/plans/active/ao_satellite_ao_dispatch_batch20_2026_08_13.md`.

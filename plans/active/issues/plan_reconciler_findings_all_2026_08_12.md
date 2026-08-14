@@ -123,8 +123,10 @@ idempotency guard silently no-ops re-park attempts (observed 4x/26x redundant re
       backfill for day=2026-08-10 to replace false `empty_confirmed` rows. Verified slot-29 2026-08-14: manifest shows
       `fixture_features`/`derived_features` `captured` for 2026-08-10 with real GCS output (172 blobs, 40+ leagues); doc
       resolved + archived.
-- [ ] [CONFIG] P2. `plans/active/issues/sports_features_2026_backfill_launch_window_was_today_2026_08_10.md` — clamp the
-      per-year sports features backfill launcher's `end_date = min(today-1, {year}-12-31)` for the current year.
+- [x] ✅ [CONFIG] P2. `plans/archive/2026_08/issues/sports_features_2026_backfill_launch_window_was_today_2026_08_10.md`
+      — clamp the per-year sports features backfill launcher's `end_date = min(today-1, {year}-12-31)` for the current
+      year. FIXED: `launch-features-sharded-backfill.sh`'s `launch_year_shard()` now clamps dynamically —
+      deployment-service@3a18bc5ce0. Source doc resolved + archived 2026-08-14.
 - [ ] [OPERATOR] P2. `plans/active/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md` — flip
       `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md` and `...batch12_2026_08_10.md` from `draft`→`active`
       (unblocks 4 docs + 8 open todos) — cross-check against Section 1's wave_launcher-mechanism reconciliation first.
@@ -221,7 +223,8 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       fix already investigated + differently resolved by the pytest-timeout doc-chain
 - [ ] [REVIEW] P3. (P3) plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md — frontmatter `repos:`
       list stale against body (~22 repos actually touched)
-- [ ] [REVIEW] P3. (P2) plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md:634-638 —
+- [ ] [REVIEW] P3. (P2)
+      plans/archive/2026_08/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md:634-638 —
       Deferred-work table lists 2 items as unresolved that later Todos/Progress-Log entries close
 - [ ] [REVIEW] P3. (P3) plans/active/codex_violations_ratchet_to_five_2026_06_10.md:26 — stale
       `locked_by: live-defi-rollout` despite a documented operator unlock over a month prior

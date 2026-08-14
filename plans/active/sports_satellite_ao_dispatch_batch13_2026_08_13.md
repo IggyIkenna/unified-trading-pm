@@ -28,7 +28,7 @@ related:
     /plans/archive/2026_08/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md,
     /plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md,
     /plans/active/issues/sports_catalog_dp_catalog_001_oom_manifest_read_2026_08_10.md,
-    /plans/active/issues/sports_features_2026_backfill_launch_window_was_today_2026_08_10.md,
+    /plans/archive/2026_08/issues/sports_features_2026_backfill_launch_window_was_today_2026_08_10.md,
     /plans/active/issues/sports_features_dp_vm_001_upstream_fixtures_gap_2026_08_10.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md,
@@ -110,7 +110,8 @@ source: >-
       BATCH (2026-08-13, operator scoping instruction)** — MDPS/features-service backfill/recompute work is excluded
       from this batch unless manifest-canonical or migration-related. The underlying item remains open in its own source
       doc, untouched by this batch/commit. Source:
-      `plans/active/issues/sports_features_2026_backfill_launch_window_was_today_2026_08_10.md`
+      `plans/archive/2026_08/issues/sports_features_2026_backfill_launch_window_was_today_2026_08_10.md` (resolved +
+      archived 2026-08-14, deployment-service@3a18bc5ce0)
 - [ ] [CODE] P2. Track upstream sports reference entity=fixtures for day=2026-08-10 until it exists under
       instruments-store-sports-prd; confirm the af-backfill historical backfill writes it when it reaches that date
       (instruments-service reference-capture gap). Source:

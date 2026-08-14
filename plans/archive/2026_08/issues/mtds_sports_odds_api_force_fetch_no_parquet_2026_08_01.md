@@ -16,7 +16,7 @@ summary: >-
   itself worth checking, may be a distinct bucket/path convention for the ODDS_API adapter or a parallel observability
   gap). Filed per findings-closure discipline rather than absorbed into the Track K checkpoint task, which is scoped to
   running + citing the 3 dated checkpoints, not root-causing every failure.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -36,7 +36,7 @@ execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 source: sports_consolidated_native_ao_extract_2026_07_25.md, Track K (MTDS) baseline checkpoint (2025-12-20), slot 15
-resolved_by:
+resolved_by: slot-14 2026-08-14, all 3 top-level todos done — see Progress Log
 locked_by:
 drift_direction: advance-code
 depends_on: []
@@ -51,6 +51,12 @@ context_scope:
 ---
 
 # MTDS SPORTS/ODDS_API force-fetch writes no parquet for odds_horizon_bucket + trades
+
+> **🟢 ARCHIVED 2026-08-14 — RESOLVED** (status: resolved, 0 open todos, unlocked). Root-caused as an upstream
+> `the-odds-api.com` 401 (not an MTDS defect — shard-isolation + honest-absence both worked correctly) plus a real
+> checker enumeration bug (`odds_horizon_bucket` is MDPS-derived, excluded from the checker,
+> market-tick-data-service@bc269b51). The 401 has since cleared — verified live 2026-08-14 via 3 direct vendor calls,
+> all HTTP 200, no code change needed; capture resumes automatically.
 
 ## What I found
 
@@ -180,14 +186,27 @@ here — worth folding into whichever future pass touches `DataTypeCapability` f
         correctness HARD RULE (this would mean ODDS_API's `odds_horizon_bucket`/`trades` capture is silently broken). —
         ✅ CONFIRMED reproduces against PROD (same credential regardless of `IS_TEST_RUN`; see Diagnosis §2). Not an
         MTDS code defect — shard-isolation + honest-absence both worked correctly. This is a vendor quota/billing gap:
-  - [ ] [DATA] P2. **RETAGGED 2026-08-13 (operator confirmed): account has ample available credit (~$10M) — the
+  - [x] ✅ [DATA] P2. **RETAGGED 2026-08-13 (operator confirmed): account has ample available credit (~$10M) — the
         2026-08-01 401 was not a quota-exhaustion cutover after all, or the balance has since been topped up.** No
         longer an operator-only credential ask; the remaining action is worker-executable: re-test the SPORTS/ODDS_API
         historical-endpoint force-fetch (`apiKey=5634d6f1***REDACTED***2c46c`) and confirm the 401 has cleared. If it
         clears, resume SPORTS/ODDS_API capture (test + prod) normally. If the SAME 401 signature still reproduces
         despite confirmed available credit, this is a genuinely different vendor-side fault (e.g. a stale/rotated key,
         an IP allowlist change, or an account-flag issue) — escalate as a new, distinct finding rather than
-        re-diagnosing it as quota exhaustion.
+        re-diagnosing it as quota exhaustion. — **DONE 2026-08-14 (slot-14, `data_engineering`): 401 has CLEARED**,
+        confirmed via 3 direct calls to the real historical-discovery endpoint (`OddsApiAdapter._discover_fixtures`'s
+        exact URL/params shape,
+        `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py:549-592`),
+        API key resolved live from Secret Manager via the adapter's own `_resolve_api_key()` (no hardcoded key, no
+        `os.getenv`): `soccer_epl`/day=2026-06-24 (the auto-day-substituted `trades` cell from this doc's original
+        finding) → HTTP 200 with real event data; `soccer_epl`/day=2026-08-01 (the exact day the original 401 cutover
+        began) → HTTP 200 with real event data; `basketball_nba`/day=2026-06-15 (different sport/season, cross-check) →
+        HTTP 200 with real event data. 0/3 calls hit 401 — a real HTTP status observed directly on each call, not
+        inferred from the checker's downstream verdict. No pause/disable mechanism existed for ODDS_API batch capture to
+        "resume" (verified: no allowlist/denylist entry gates it in `configs/venue_data_types.yaml`, no cron/systemd
+        toggle) — the 401 was a pure downstream vendor-side effect via the existing shard-failure-isolation path, so
+        normal capture already resumes on its own now that the vendor call succeeds. No code change needed; this todo
+        was confirmation-only.
   - [x] [DATA] P3. Confirm whether `odds_horizon_bucket`'s `batch_mdps_...` pipeline_mode label reflects a genuine
         ownership split (MDPS writes this data_type, not MTDS) that the pipeline-check's SPORTS enumeration should
         exclude, rather than a real MTDS capture defect. — ✅ CONFIRMED via UAC trace (Diagnosis §3): `SOURCE_PRIORITY`
@@ -209,3 +228,10 @@ here — worth folding into whichever future pass touches `DataTypeCapability` f
   confirmed via UAC `SOURCE_PRIORITY` — it should be excluded from MTDS's own force-fetch enumeration. Filed the
   vendor-credential ask as `[OPERATOR]` P2 and the enumeration-exclusion as a new `[DATA]` P3 code-fix todo.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **slot-14 2026-08-14**: re-tested the SPORTS/ODDS_API historical-endpoint 401 per the operator's 2026-08-13 retag.
+  Confirmed cleared — 3 direct calls to the real vendor endpoint (same URL/params shape as
+  `OddsApiAdapter._discover_fixtures`, key resolved live from Secret Manager) all returned genuine HTTP 200 with real
+  event data, including the exact `soccer_epl`/2026-08-01 cell that originally 401'd. Confirmed no separate
+  pause/disable mechanism exists for ODDS_API batch capture — the 401 was a pure downstream vendor effect, so capture
+  resumes automatically now that the vendor call succeeds; no code change required. Every open todo in this doc is now
+  resolved; all 3 top-level todos are `[x]`.

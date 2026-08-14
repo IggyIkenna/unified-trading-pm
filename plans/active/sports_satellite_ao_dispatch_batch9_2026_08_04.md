@@ -43,10 +43,10 @@ related:
     /plans/archive/2026_08/issues/instrument_availability_league_and_question_group_partition_shapes_2026_08_03.md,
     /plans/archive/issues/manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md,
     /plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md,
-    /plans/active/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md,
+    /plans/archive/2026_08/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md,
     /plans/archive/issues/mdt_canonical_odds_poll_key_duplicate_rows_2026_07_25.md,
     /plans/archive/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md,
-    /plans/active/issues/mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md,
+    /plans/archive/2026_08/issues/mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md,
     /plans/archive/2026_08/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
     /plans/archive/issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md,
     /plans/active/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md,
@@ -181,7 +181,7 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       recorded in the doc with the ManifestWriter query evidence cited, the resolved-vs-still-attempted_failed date list
       in the doc is corrected to be internally consistent, and the todo itself is checked off as settled.
 - [x] ✅ [DATA] P2. Implement the ruled option A (2026-08-02 operator ruling, cited in
-      `/plans/active/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`) in
+      `/plans/archive/2026_08/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`) in
       `live_workers_chain.py::_write_or_record_empty_timeframe` and
       `live_workers_streaming.py::_record_streaming_empty_timeframe`: route the `SOURCE_RETURNED_ZERO`-fallback case
       from `classify_sports_empty_reason` to `record_failed_for_shard` instead of `record_empty`, matching the existing

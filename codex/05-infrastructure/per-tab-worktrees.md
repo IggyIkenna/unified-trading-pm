@@ -1300,7 +1300,7 @@ auth-fail boot prompts inline the same ff-only-when-behind + divergence-STOP blo
 
 **Authoritative for**: how `safe-doc-push.sh` and `quickmerge.sh` behave under concurrency, what their exit codes mean,
 and when isolation is on. Root-cause evidence:
-[`/plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`](/plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md).
+[`/plans/archive/2026_08/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`](/plans/archive/2026_08/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md).
 
 ### The hazard, stated once
 
@@ -1442,12 +1442,12 @@ patches dir does not reproduce, isolated or not.** A same-file concurrency test 
 was also clean. So this hardening is kept because host-global cache sharing across worktrees is bad isolation hygiene
 regardless, and it's free (every repo gets it via the `quickmerge.sh` symlink) — but do NOT cite it as "the fix" for a
 specific revert report; that connection was tested and falsified. See
-`/plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md` for the full elimination trail
-(7 mechanisms tested) and the still-open root cause. Both `quickmerge.sh` and `safe-doc-push.sh` export a per-run
-`PREK_HOME` (`$TMPDIR/{qm,sdp}-iso-$$/prek-home`) into the isolated re-exec — `repos`/`hooks`/`tools`/`cache` (the
-expensive hook-environment installs, not part of the race) are symlinked in from a shared per-repo cache
-(`~/.cache/qm-iso-prek/<repo>`, mirroring the venv-cache pattern), while `patches`/`scratch` are left for prek to create
-fresh, private to that one run.
+`/plans/archive/2026_08/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md` for the full
+elimination trail (7 mechanisms tested) and the still-open root cause. Both `quickmerge.sh` and `safe-doc-push.sh`
+export a per-run `PREK_HOME` (`$TMPDIR/{qm,sdp}-iso-$$/prek-home`) into the isolated re-exec —
+`repos`/`hooks`/`tools`/`cache` (the expensive hook-environment installs, not part of the race) are symlinked in from a
+shared per-repo cache (`~/.cache/qm-iso-prek/<repo>`, mirroring the venv-cache pattern), while `patches`/`scratch` are
+left for prek to create fresh, private to that one run.
 
 **If a revert IS ever detected again**, both scripts now dump a forensic snapshot automatically
 (`unified-trading-pm@340bae9f60`) — entry fingerprints, HEAD state, recent commits on the named files, `git status`,
