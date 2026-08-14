@@ -69,7 +69,7 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.49.11",
     "deployment-api": "0.86.1",
-    "deployment-service": "0.138.3",
+    "deployment-service": "0.138.4",
     "deployment-ui": "0.1.0",
     "execution-service": "0.70.0",
     "features-service": "0.81.10",
@@ -402,7 +402,7 @@
         "large_file_count": 6,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "aadf6946c6cb6f156b5c6316e5545fea6494922d"
+      "ldr_ci_status_sha": "5bf87bdcfa9bcdcedc9507ed5a813ec1a1eefb92"
     },
     "execution-service": {
       "promotion_model": "ldr_main",
@@ -467,7 +467,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "e0ff94304c9399c555209ff9922c895133185dd1"
+      "ldr_ci_status_sha": "5e69c81275ff06a59e7083969021e7d343c1cda1"
     },
     "features-service": {
       "promotion_model": "ldr_main",
@@ -1132,7 +1132,7 @@
         "coverage_pct": null,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "3c8d2761046770028d84bfa016f7a62969d8fc6e"
+      "ldr_ci_status_sha": "fed92604e5647c8209854aa7a6d12a42ed34c14e"
     },
     "trading-agent-service": {
       "promotion_model": "ldr_main",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "e6fb4093d18583263c206dec3fbe77bc40f1edc4"
+      "ldr_ci_status_sha": "e9b54b1f3e54c6c635f0b545a297431bf28af33b"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
@@ -1519,7 +1519,7 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "tests",
-      "ldr_ci_status_sha": "393684da622033255222680a5d4cc6e8a937a040"
+      "ldr_ci_status_sha": "70acee036f2ea7ff7d41505820cb1017bd22bb5a"
     },
     "agent-orchestrator": {
       "promotion_model": "ldr_terminal",
@@ -1562,7 +1562,7 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server",
-      "ldr_ci_status_sha": "6cfe7adbb45fbb0690fa8e3aa74b5cc1a79996c8"
+      "ldr_ci_status_sha": "2c8302ceff92eb91eba478fc0d517b6a0dc788fe"
     },
     "unified-trading-ci": {
       "type": "infrastructure",
