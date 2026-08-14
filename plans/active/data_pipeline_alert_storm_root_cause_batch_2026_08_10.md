@@ -499,6 +499,22 @@ attempted_failed cells accruing), and its diagnosis just reversed, so nobody sho
   same conclusion as the slot-6 entry; nothing new to measure since that investigation was itself the same-day
   same-numbers reading. `AUTHORING_SLOT=dp-fleet-monitor` (not a numbered slot) — no ping sent, per the role's own skip
   rule. Read-only: no GCS write, no manifest change, no code shipped; PM plan-doc edit only.
+- **2026-08-14 (data_pipeline_failure escalation worker, agt-07b27b, slot 21) — THIRD+ worker spawn for the same
+  `(cefi, book_snapshot_5)` DP-FETCH-009 STATIC BACKLOG condition, same session day.** Received a dispatch with numbers
+  7,799 attempted_failed of 187,140 attempted (ratio 4.2%), labeled STATIC BACKLOG — no new attempted_failed activity in
+  2d, already-tracked, not a fresh regression. Read this doc first per the pre-task plan/issue conflict-check rule; the
+  numerator (7,799) is within window-roll noise of the two entries directly above (7,806 and 7,802) — the same frozen
+  `max_attempted_at=2026-08-11T14:47:01Z` backlog, denominator drifting only because the trailing-14-day window keeps
+  rolling forward while the failed count itself hasn't moved in 3+ days. Per the same two entries' precedent (a fresh
+  live GCS-streaming manifest read is redundant against an already-frozen `max_attempted_at`), did the cheap
+  deterministic check instead: re-verified all four historical fix commits are still ancestors of
+  `origin/live-defi-rollout` after a fresh `git fetch` — `market-tick-data-service@339ca767` YES, `@6bf568ee` YES,
+  `unified-api-contracts@8db188fe` YES, `@1c4d8864` YES. **Verdict: no fresh regression, no code fix required** — same
+  conclusion as the two entries above; this is now the 3rd `data_pipeline_failure` worker dispatch today for the
+  identical already-resolved condition, further corroborating
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s recommendation that the escalation dispatch path
+  needs an open-issue-doc dedup check. `AUTHORING_SLOT=dp-fleet-monitor` (not a numbered slot) — no ping sent, per the
+  role's own skip rule. Read-only: no GCS write, no manifest change, no code shipped; PM plan-doc edit only.
 
 ## Liquidations re-drive — operator decision recorded 2026-08-11
 
