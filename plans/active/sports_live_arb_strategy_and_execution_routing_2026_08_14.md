@@ -127,12 +127,10 @@ strategy is a fabricated position.
       before porting either — DoD: cite the grep; if an equivalent exists, the port reuses it rather than adding a
       second implementation. ✅ `_american_to_decimal` exists in UAC, reuse it; no UAC/UTL stake-allocation equivalent
       exists — see Progress Log 2026-08-14.
-- [ ] [BACKEND] P0. Capture a golden fixture from the scanner — a recorded multi-book quote set with known arb outcomes
+- [x] [BACKEND] P0. Capture a golden fixture from the scanner — a recorded multi-book quote set with known arb outcomes
       — DoD: a fixture file plus expected opportunities, so the migrated detector can be proven equivalent rather than
-      merely green. Fixture is WRITTEN and VERIFIED against the real scanner
-      (`strategy-service/tests/fixtures/sports_odds/live_arb_scanner_golden.py`) but not yet shipped — BLOCKED on an
-      unrelated uncommitted change in `unified-api-contracts` from a concurrent worker (out of this plan's scope; not
-      touched per operator instruction). See Progress Log 2026-08-14 for the retry command.
+      merely green. ✅ `strategy-service/tests/fixtures/sports_odds/live_arb_scanner_golden.py` —
+      strategy-service@37aadae01a (landed on live-defi-rollout, post-push ancestry verified).
 
 ### P1 — migrate detection
 
@@ -271,11 +269,18 @@ subclass override), or the staleness control silently fires an arb instead of co
 archetype doesn't inherit this problem: `BaseArchetypeEngineV2.on_tick` already takes `now_utc` as an explicit
 parameter.
 
-**Shipping status**: fixture is written and verified but **not yet committed** — `strategy-service` quickmerge is
-currently blocked by an unrelated uncommitted change in its `unified-api-contracts` path dependency
-(`unified_api_contracts/canonical/crosscutting/dependency_revocation.py`, 6/-2 lines, not touched here per operator
-scope instruction — UAC registry files are explicitly out of scope for this plan). Retry once that lands:
-`cd strategy-service && bash scripts/quickmerge.sh "test(sports): add golden fixture for live_arb_scanner migration delta (P0)" --agent --files 'tests/fixtures/sports_odds/live_arb_scanner_golden.py'`.
+**Shipping status**: shipped — `strategy-service@37aadae01a` on `live-defi-rollout`, post-push ancestry verified. Was
+initially blocked by an unrelated uncommitted change in the `unified-api-contracts` path dependency
+(`unified_api_contracts/canonical/crosscutting/dependency_revocation.py`, not touched here per operator scope
+instruction — UAC registry files are out of scope for this plan); retried once that cleared. The QG run also hit host
+RAM-pressure watchdog aborts twice (`qg-governor-watchdog`, unrelated host contention from concurrent slots on this
+box, not a content failure — both aborts showed every check passing up to the abort point) before landing green with
+`IGNORE_TIMEOUT=true` per the sanctioned transient-contention escape
+(`/codex/06-coding-standards/quality-gates.md` § "Sanctioned timeout overrides").
+
+All three P0 todos are now done. P0 is complete; P1/P2 remain gated on
+`sports_venue_universe_and_capability_route_axis_2026_08_14` and
+`mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14` per `gate_on_depends: true` and were not started.
 
 This Progress Log entry is written from an isolated `git worktree` checked out fresh at `origin/live-defi-rollout` (this
 session's `.tabs/3/unified-trading-pm` checkout had 4 other live sessions sharing it per the SessionStart collision
