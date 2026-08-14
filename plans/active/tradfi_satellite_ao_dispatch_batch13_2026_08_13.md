@@ -179,7 +179,7 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   ~500 objects/min, 0 errors, ~3,500/25,922 renamed so far (~45 min remaining at that pace). **tradfi-micro-remap has
   not been started yet** — same dry→full sequence still needed once sector-remap's apply self-verifies 0-remaining. **To
   resume**: check the VM's `run.log` via UTL
-  `get_storage_client().download_bytes('deployment-scripts-central-element-323112', 'vm-logs/canonical-migration-tradfi-sector-remap-20260814-040712/run.log')`
+  `unified_trading_library.cloud_interface.gcs_read_object_with_generation(uri='gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-tradfi-sector-remap-20260814-040712/run.log')`
   (NEVER gsutil/gcloud subprocess for object ops — hook-blocked) for `✅ VERIFIED: 0 rows...remain`. If sector-remap is
   done, launch `tradfi-micro-remap`
   (`bash deployment-service/scripts/vm/launch-canonical-migration-vm.sh tradfi-micro-remap 2026-08-13 2026-08-13 dry`
@@ -198,3 +198,27 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   0 errors both reads). **Status at last check (~04:27 UTC)**: 7,500/25,922 renamed, 0 errors, steady ~500/min — no
   drift from the dry-run's 25,922-object count. Sector-remap apply not yet complete; micro-remap not yet started. No
   code changes this checkpoint — pure monitoring.
+
+- **2026-08-14 (slot-18, in-flight, same todo — pre-compact checkpoint, AO heartbeat lifecycle notes)**: also fixed the
+  **"To resume" line above** (was still citing the dead `download_bytes(...)` pattern even after the entry below it had
+  already corrected the general reference — a doc can have the same stale claim in two places; grep for all occurrences,
+  not just the first). **Status at last check (~04:38 UTC)**: 12,000/25,922 renamed, 0 errors, steady ~500/min — still
+  no drift. **AO worker lifecycle findings this checkpoint** (useful for any future slot-18 session resuming this task):
+  (1) `POST /api/slots/18/heartbeat` returned three stale `🟥 GIT STATUS RED` nudges (UAC/MTDS "ahead=1 unpushed", PM
+  "behind 1 commits for 14m") — re-checking `git status --porcelain=2 --branch` directly in each repo immediately after
+  showed all three already at clean `+0 -0`; the heartbeat's git-health snapshot can lag actual state by double-digit
+  minutes on a busy shared branch, so treat a RED nudge as "verify locally before acting", not "act on the string" —
+  acked all three (`message_ids` 7770/7776/7783) once confirmed stale. (2) Per CLAUDE.md's
+  async-wait-and-poll-discipline HARD RULE, `ScheduleWakeup` is explicitly NOT a reliable wake mechanism for an AO
+  worker mid-task — the correct pattern (used successfully here) is a self-armed `run_in_background` Python watchdog
+  polling the VM's `run.log` + `EXIT_STATUS` object every 120s with a safety-cap timeout sized to the measured ETA (here
+  45 min, vs. a ~30 min measured completion ETA at 500/min pace); the harness notifies on completion, no manual
+  re-polling needed. The watchdog script itself lives at `<scratchpad>/monitor_sector_remap.py` on slot-18's local disk
+  — NOT committed (correctly: it's a one-shot script hardcoded to this exact VM name, not a reusable tool, so no
+  `scripts/` promotion needed) and NOT durable across a full session teardown; if a fresh session inherits this task and
+  the watchdog is gone, just re-run the manual `gcs_read_object_with_generation` check above — nothing is lost, the
+  migration itself is server-side on the VM, not dependent on this monitor. (3) Own-mistake note: chaining
+  `cd repoA && git status; echo; echo "=== repoB ===" && git status` in one Bash call does NOT re-`cd` into repoB — `cd`
+  only affects commands after it in the same `&&` chain, so a label echoed without its own `cd` silently repeats the
+  PREVIOUS repo's output under the wrong heading. Hit this twice this session (once in the original audit, once again in
+  this checkpoint) — each repo's status check needs its own explicit `cd <repo> &&` prefix, every time, no exceptions.
