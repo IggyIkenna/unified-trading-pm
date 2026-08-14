@@ -354,9 +354,23 @@ source: >-
       genuinely had 0/1 commits since baseline). Issue-doc checkbox reconciliation for the source doc's own todo is out
       of scope for this satellite batch (per this doc's own header) — deferred to
       `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`.
-- [ ] [CODE] P2. Hoist the superseded-promote-PR cleanup in ldr_to_main_fleet_promote.sh above the SIT gate, scoped to
-      ancestor-of-current-tip + concluded-failure PRs only (design constraint already specified in the todo) Source:
-      `plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md`
+- [x] ✅ [CODE] P2. Hoist the superseded-promote-PR cleanup in ldr_to_main_fleet_promote.sh above the SIT gate, scoped
+      to ancestor-of-current-tip + concluded-failure PRs only (design constraint already specified in the todo) Source:
+      `plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md` — ✅ **DONE 2026-08-14 (slot
+      15, infra)**: `unified-trading-pm@5ff1205e68`. New `_close_ancestor_failed_promote_prs()` runs right after
+      `$LDR_SHA`/`$PROMOTE_HEAD` are computed in `process_repo()` — before the content-identical skip and before the SIT
+      differ/gate section, both of which could previously `_done BLOCKED; return 0` before the original superseded-ref
+      cleanup (~200 lines further down) was ever reached. Enforces the exact design constraint from the source todo: a
+      stale-headed open `promote/$REPO/*` PR is closed ONLY when its head is a STRICT ANCESTOR of the current LDR tip
+      (GitHub compare-API verified, never inferred from ref-name mismatch alone) AND `quality-gates-v2` has already
+      CONCLUDED failure on that exact head SHA — an empty `$LDR_SHA` short-circuits to a total no-op rather than making
+      every open promote PR look superseded. New
+      `scripts/quality-gates-base/tests/test-ldr-promote-ancestor-cleanup-hoist.sh` extracts the real function + call
+      site: structurally asserts the hoist ordering (call site precedes both the content-identical skip return and the
+      covered-repo SIT-gate BLOCK) and functionally exercises all 4 branches (close+delete, non-ancestor skip,
+      not-yet-concluded skip, empty-LDR_SHA no-op) plus `DRY_RUN`. Full `quality-gates.sh` clean on this exact HEAD.
+      Issue-doc checkbox reconciliation deferred to `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` per this
+      batch's own header (source docs not touched here).
 - [ ] [CODE] P2. Fix sit-gate-stuck-detector.yml's dedup key to include the streak-count / monotonic-worsening signal
       alongside the flat cooldown timer Source:
       `plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md`
