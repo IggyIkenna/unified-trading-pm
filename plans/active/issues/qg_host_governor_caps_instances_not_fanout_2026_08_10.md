@@ -128,3 +128,13 @@ deliberate decision rather than changed mid-session.
   separate issue, since the fix candidates above (cap on aggregate fan-out) would likely also resolve this. Not actioned
   (same "deliberately not hot-patched" blast-radius reasoning applies); MTDS fix left committed locally (`d6ca0a67`)
   pending a successful QG run, tracked as a follow-up in `infra_satellite_ao_dispatch_batch16_2026_08_13.md`.
+- **2026-08-14 (operator root-cause lead, via BLK-cec1d239 answer)**: `orchestrator.service` on this host restarted at
+  `2026-08-14T23:45:18Z` — roughly 1 minute before the blocked question above was filed — and `systemctl status` for
+  that cgroup showed peak memory 23.0G / peak swap 20.0G. This matches the exact incident class RULES.md § "Bound memory
+  BEFORE running any heavy script" already documents (3 prior same-shape outages where a heavy subprocess's memory
+  footprint got a background QG/analysis run externally killed on this shared host) even though this session's own
+  point-in-time `free -h` snapshots looked clear throughout — a transient spike during/around a service restart would
+  not show up in a later snapshot taken after the spike subsided. This more directly explains the "silent external kill,
+  no traceback" signature than the CPU-thrash hypothesis above (both may be contributing factors under the same root
+  umbrella of "the instance cap doesn't model real resource cost"). Operator noted it's worth checking whether other
+  slots hit the same kill pattern in the same window — not verified in this pass.
