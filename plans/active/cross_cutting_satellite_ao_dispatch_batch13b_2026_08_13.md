@@ -123,9 +123,19 @@ source: >-
       unresolvable base fails safe to baseline+buffer rather than reading all pre-existing debt as new. Promote-PR
       exclusion unchanged, still wins over base resolution. Verified via 5 simulated scenarios (push/PR/promote-PR/
       workflow_dispatch/unresolvable-SHA) against the extracted resolution block — all matched expected behavior.
-- [ ] [CODE] P2. Add a detector for a non-convergeable (monotonically-growing-violation-count) ratchet gate distinct
+- [x] ✅ [CODE] P2. Add a detector for a non-convergeable (monotonically-growing-violation-count) ratchet gate distinct
       from an ordinary retryable failure Source:
-      `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md`
+      `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md` —
+      agent-orchestrator@197c5ca521: Added `detect_non_convergeable_gate()` + `_extract_violation_count()` +
+      `_root_key_violation_history()` in `server/escalation.py` — walks a wall's `root_key` re-escalation chain (the
+      same chronic-wall lineage `_resolve_root_key` already threads) and flags `resolution="non_convergeable"` when the
+      parsed violation count grows for `NON_CONVERGEABLE_MIN_STREAK` (3) consecutive attempts, paging immediately
+      instead of waiting out the normal `PAGE_AFTER_REESCALATIONS` grace period. `notify_escalation_unresolved`
+      (`server/notifications/slack.py`) now takes a `non_convergeable` kwarg and renders a distinct "NON-CONVERGEABLE
+      gate" header. 4 new tests in `tests/test_escalation.py` (pure extractor/detector + a real-SQLite-session
+      root_key-chain walk + a full wiring test asserting the first-miss immediate page). Evidence:
+      `bash scripts/quality-gates.sh` green (3640 pytest passed, 336 vitest passed); quickmerge verified `197c5ca52`
+      ancestor of `origin/live-defi-rollout`.
 - [ ] [CODE] P2. Fix the ldr-to-main-promote.yml rate mismatch that lets a fast-failing check manufacture an unbounded
       stream of superseded PRs Source:
       `plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md`
