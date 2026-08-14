@@ -76,10 +76,10 @@
     "fund-administration-service": "0.9.32",
     "ibkr-gateway-infra": "0.5.1",
     "instruments-service": "0.101.22",
-    "market-tick-data-service": "0.129.6",
+    "market-tick-data-service": "0.130.0",
     "system-integration-tests": "0.15.1",
     "unified-api-contracts": "0.119.2",
-    "unified-trading-library": "0.81.2",
+    "unified-trading-library": "0.81.3",
     "unified-trading-pm": "1.2.741",
     "market-data-processing-service": "0.29.11",
     "e2e-testing": "0.41.3",
@@ -2244,8 +2244,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.81.2",
-      "published_at": "2026-08-13T19:44:09Z",
+      "version": "0.81.3.dev1+g2f0586a0f",
+      "published_at": "2026-08-13T23:51:44Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
