@@ -226,7 +226,7 @@ below rather than duplicated here.
       `/plans/archive/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md` (`[DEVOPS] P1`
       only). Repo: agent-orchestrator (verification, read-only + a possible checkbox flip).
 
-- [ ] [DOCS] P2. [OPERATOR] **DESCRIPTIVE content only — do NOT resolve or pre-empt the still-open `[OPERATOR] P1`
+- [x] ✅ [DOCS] P2. [OPERATOR] **DESCRIPTIVE content only — do NOT resolve or pre-empt the still-open `[OPERATOR] P1`
       decision in the source doc.** Fold the 2026-08-01 multi-agent slot-collision incident into two governance docs. In
       `/codex/05-infrastructure/per-tab-worktrees.md`'s "Troubleshooting" section, add a subsection naming this as a
       DISTINCT failure mode from AO-worker-to-AO-worker slot collision: multiple concurrent `claude` processes/operators
