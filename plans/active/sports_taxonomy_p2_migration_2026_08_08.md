@@ -155,7 +155,12 @@ than proceeding.
       `gate_on_depends` above enforces this, but re-verify at run time — a gate is not a substitute for looking).
       **SPLIT 2026-08-14 (BLK-8436a1a6, operator-approved Option A)**: census + risk-analysis this session found the
       scope far larger and riskier than the 1h estimate — see the new dedicated todo immediately below and the Progress
-      Log. This todo now tracks ONLY the split decision; the physical work moved to that todo.
+      Log. This todo now tracks ONLY the split decision; the physical work moved to that todo. ✅ **CLOSED 2026-08-14
+      (slot-26)** — the delegated physical-work todo directly below is done (`instruments-service@3637252f81`,
+      `f2586ada09`, VM `canonical-migration-sports-19token-restamp-20260814-045346` ran to completion, 0 uppercase-token
+      rows remaining) and its own closing verification todo is also done (live `check_shard_freshness` cross-check, 0
+      case-driven spurious missing/stale) — this split-tracking todo's sole remaining scope was already satisfied by
+      those two; nothing further to do under it.
 - [x] ✅ [DATA] P0. **[OPERATOR] Execute the 19-token lowercase re-stamp on a dedicated VM (in-region, SPOT +
       progress-checkpoint resume) — census + code diff prepared 2026-08-14, execution not yet run.** Scope, in ONE
       atomic change (must land together, per the analysis below): 1. Metadata-only manifest re-stamp: rewrite
