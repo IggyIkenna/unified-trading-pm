@@ -29,7 +29,7 @@ tags: [manifest-consolidator, stale-fallback, data-completeness, silent-failure,
 related:
   [
     /plans/active/issues/lc_verify_tarball_freshness_auto_mode_silent_dirty_skip_2026_08_06.md,
-    /plans/active/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md,
+    /plans/archive/2026_08/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md,
   ]
 created: "2026-08-07"
 author: unknown
