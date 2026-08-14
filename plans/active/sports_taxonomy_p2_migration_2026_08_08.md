@@ -338,10 +338,16 @@ than proceeding.
       since cleared. **The `[OPERATOR]` execute todo directly above stays intentionally UNCHECKED** — no VM was
       launched, no live write was attempted; BLK-20f1ba56 remains open pending the operator's actual go/no-go on the
       launch, and steps 2-3 still need code written (scoped, not yet drafted) before that launch can happen.
-- [ ] [DATA] P0. **Fold footystats `ODDS` (6,306 captured) + `odds` (16,207 captured) into a single `odds`.** These are
-      the same vendor population under two spellings; `source=footystats` remains the discriminator against the odds_api
-      population. Note the UAC comment calling the uppercase set "4 stale empty rows" is FALSE — expect 6,306 real
-      shards.
+- [x] ✅ [DATA] P0. **Fold footystats `ODDS` (6,306 captured) + `odds` (16,207 captured) into a single `odds`.** These
+      are the same vendor population under two spellings; `source=footystats` remains the discriminator against the
+      odds_api population. Note the UAC comment calling the uppercase set "4 stale empty rows" is FALSE — expect 6,306
+      real shards. **CLOSED 2026-08-14 (slot-26)** — `ODDS` was one of the 19 tokens in the reference-vocabulary restamp
+      above; live re-census of `instruments-store-sports-prd-central-element-323112`'s
+      `_index/availability_index.parquet` (columns `data_type`/`source`/`capture_status`, no filter assumptions) shows
+      **zero** `data_type=ODDS` rows of any status remain — only lowercase `odds` exists, `source=footystats`+`captured`
+      = 30,498 (grown past this todo's 2026-08-08 6,306+16,207=22,513 count, as expected — real capture continued
+      between the audit and the restamp). Fold is a genuine side effect of the 19-token restamp, not assumed: verified
+      live, not from the prior mapping-code read alone.
 - [ ] [DATA] P0. **Move `odds_horizon_bucket` (135,980 shards) onto the `odds` + `horizon` model.** Three writers emit
       it today (MDPS 121,762 / MTDS 14,656 / IS 1,106) at two different grains — 123,642 attributed to venue=ODDS_API
       plus ~12,000 spread per-bookmaker. Re-attribute to the correct per-bookmaker venue and collapse the double-count;
