@@ -553,69 +553,28 @@ bridges them; it does not extend one over the other.
       scripts. Either bound it (batch the syntax check into one `bash -n` invocation, or serialise it) or mark it with a
       cited flake issue — "re-run and see" is currently costing more than the check is worth. Repo: deployment-service.
 
-## Phase 8 — ARM IT (the mechanism is built but INERT in production — found 2026-08-14)
+## Phase 8 — ARM IT → SPLIT OUT 2026-08-14
 
-> **This plan cannot be archived until this phase is done.** Phases 1-6 are genuinely complete and green, and the READ
-> side is fully wired: `heartbeat_cli` polls for a drain marker on every tick, and `vm-exec-with-gcs-tee.sh` gates
-> admission and exits 75. But **nothing writes a marker.** Measured 2026-08-14: `rg 'RevocationActuator|\.actuate\('`
-> over deployment-service, excluding tests, returns **its own definition and nothing else** — zero production call
-> sites. `resolve_dependents()` is likewise consumed only inside UAC. The fleet is listening and nothing is speaking, so
-> no alert has ever revoked anything and none will.
->
-> This was not visible from the plan's own state: every Phase 4 todo is ✅ and each is honestly ticked — the actuator
-> WAS built, tested and shipped. "Built" and "called" are different properties, and Phase 4 only ever claimed the first.
-> Recording that here because the same shape of gap will hide in any plan that ships a component without an explicit
-> caller-side todo.
+> Phase 8 now lives in **`/plans/active/revocation_arming_2026_08_14.md`**. Split because this file hit its 1000-line
+> HARD cap (every edit was failing `check_line_caps`) and because arming is genuinely separate work from building.
+> **This plan stays `active` and MUST NOT be archived until the child closes** — the mechanism it describes has still
+> never fired in production.
 
-> **OPERATOR DECISION 2026-08-14 — target granularity: DEPS_DRAIN targets the SPECIFIC RUNNING VM.** Admission actions
-> (`DEPS_HOLD` / `FLEET_HALT`) target the PREFIX FAMILY. This follows the semantics rather than cutting across them: a
-> drain speaks to a process that is running right now and must flush what it is holding, so it needs that instance's
-> name; a hold speaks to launches that have not happened yet, which are only identifiable by family. It also means the
-> two markers a `DEPS_DRAIN` now writes are keyed differently on purpose — `vm-logs/<vm-name>/` for the drain,
-> `vm-census/admission-hold/<prefix>/` for the hold — and the resolver must return both, not one reused twice.
+Each Phase 8 todo below is converted to the documented SUPERSEDED disposition rather than deleted — the todo count is
+conserved and each line names where the work went, per `check_todo_regression.sh`'s CANCELLED/SUPERSEDED convention.
 
-- [ ] [CODE] P0. **Resolve dependents to actuation targets.** `evaluate_revocation()` answers WHAT action; nothing
-      answers WHO to apply it to. `resolve_dependents(upstream_entity, asset_group)` returns `(asset_group, data_type)`
-      pairs, but the actuator takes a VM prefix / Cloud Run job name — the translation layer between them does not
-      exist, and it is the reason nothing calls `actuate()`. Build it against the registries the Phase 0 census already
-      enumerated (`LAUNCHER_FOR_VM_PREFIX` / `VM_PREFIX_TO_BUCKET`: 243 prefixes, 178 mapping to 104 launcher scripts).
-      **Needs a design call this plan's operator record does not make**: whether a DEPS_DRAIN targets the specific
-      running VM name or the whole prefix family (drain is per-instance, hold is per-family — they may not want the same
-      target). Repo: deployment-service.
-
-> **Resolver groundwork (measured 2026-08-14, read-only).** `VmPrefixSpec` has NO `asset_group` field, so
-> `(asset_group, entity)` must match on the prefix STRING — reuse `_scheduler_jobs_for()`'s technique, not a second one.
-> `vm_prefix_registry` resolves buckets AT IMPORT and raises `BucketNamingError` without `GCP_PROJECT_ID`, so import it
-> lazily and degrade (same contract as `_STORAGE_AVAILABLE`). `resolve_dependents()` is fleet-wide when
-> `asset_group=None`, so one alert fans out to many targets — the budget is keyed per (alert, target).
-
-- [ ] [CODE] P0. **Call `actuate()` from `escalation.route_finding()`.** That is the seam every DP finding already
-      passes through, and revocation must fire there INDEPENDENT of tier — a `DEPS_DRAIN` verdict applies whether the
-      finding is `auto_recover`, `file_issue` or `page_operator`, unlike `_DP_RECOVERY_ACTIONS` which is auto-recover
-      only. Use `finding.registry_id` as the alert identity (the finer key — `DP-FETCH-007`/`009` share one `AlertCode`)
-      and fall back to `finding.event`. Must never crash the sweep: same `except Exception` contract the existing
-      actuator dispatch already uses. Record the outcome in `event_details` so the Slack alert says what was revoked.
-      Repo: deployment-service.
-- [ ] [CODE] P0. **Emit and release the bookend.** `RevocationActuator.release()` exists and is tested but has no
-      production caller either, so even once holds are written, nothing clears them — a revocation that cannot be
-      released is an outage with extra steps, and this is the alerting SSOT's close-bookend rule. Wire release to the
-      condition-resolved path. Repo: deployment-service.
-- [ ] [TEST] P0. An anti-inertness guard: a test asserting `actuate()` has at least one non-test caller. The whole
-      mechanism sat wired-but-unreachable through six green phases; a grep-level guard is what makes that unrepeatable.
-      Repo: deployment-service.
-- [ ] [OPERATOR] P0. **Confirm it live after wiring**: the monitor runs as the `uts-prod-dp-exit-code-monitor` Cloud Run
-      Job on a `*/5` schedule, so verify (a) the job's deployed image contains the wiring commit
-      (`gcloud run jobs describe`), (b) an execution actually invoked revocation (log a `DP-REVOCATION-*` line), and (c)
-      a marker appears in `vm-census/admission-hold/` for a real condition. A green Cloud Build is NOT this —
-      `Evidence: cloudbuild=<id>` plus an execution log line is. Repo: deployment-service.
-- [ ] [CODE] P1. **Admission-gate coverage is ~148/184 launchers, not all of them** (measured 2026-08-14). Only
-      launchers routing through `setup-data-pipeline-vm.sh` → `vm-exec-with-gcs-tee.sh` get the admission check and the
-      heartbeat drain poll; the 158 that use `launcher_common.sh`'s `lc_` helper get the LIGHTWEIGHT observability
-      snippet, which deliberately omits the tarball+venv+heartbeat-daemon install and therefore has neither gate. The
-      two sets overlap, so the honest statement is: the canonical path is gated, the lightweight path is not, and a
-      per-launcher census is needed to say which real VMs are uncovered. Either add the admission check to the `lc_`
-      helper (it needs no venv — it can curl the marker) or document the lightweight path as deliberately ungated. Repo:
-      deployment-service.
+- **[CODE] P0. CANCELLED — SUPERSEDED 2026-08-14 (slot-4, per /plans/active/revocation_arming_2026_08_14.md).** Resolve
+  dependents to actuation targets. DONE there: deployment-service@cf5e041e7.
+- **[CODE] P0. CANCELLED — SUPERSEDED 2026-08-14 (slot-4, per /plans/active/revocation_arming_2026_08_14.md).** Call
+  `actuate()` from `escalation.route_finding()` — blocked on an import cycle, detailed in the child.
+- **[CODE] P0. CANCELLED — SUPERSEDED 2026-08-14 (slot-4, per /plans/active/revocation_arming_2026_08_14.md).** Emit and
+  release the bookend.
+- **[TEST] P0. CANCELLED — SUPERSEDED 2026-08-14 (slot-4, per /plans/active/revocation_arming_2026_08_14.md).**
+  Anti-inertness guard. SHIPPED as `xfail(strict=True)` at deployment-service@cf5e041e7.
+- **[OPERATOR] P0. CANCELLED — SUPERSEDED 2026-08-14 (slot-4, per /plans/active/revocation_arming_2026_08_14.md).**
+  Confirm it live after wiring.
+- **[CODE] P1. CANCELLED — SUPERSEDED 2026-08-14 (slot-4, per /plans/active/revocation_arming_2026_08_14.md).**
+  Admission-gate coverage is 148/184 launchers, not all of them.
 
 ## Phase 7 — Codex SSOT and close-out
 
