@@ -465,15 +465,23 @@ bridges them; it does not extend one over the other.
 
 ## Phase 7 — Codex SSOT and close-out
 
-- [ ] [DOC] P0. Add a revocation section to `/codex/05-infrastructure/data-pipeline-alerts.md` — the action vocabulary,
-      the drain-only ruling and its rationale, and the alert→action table. It references the code, it does not duplicate
-      the map.
-- [ ] [DOC] P0. Update `/codex/04-architecture/autonomous-recovery-matrix.md` to state that batch/backfill now has a
+- [x] ✅ [DOC] P0. Add a revocation section to `/codex/05-infrastructure/data-pipeline-alerts.md` — the action
+      vocabulary, the drain-only ruling and its rationale, and the alert→action table. It references the code, it does
+      not duplicate the map. — New "Alert-driven dependency revocation" section (action-vocabulary table, drain-only
+      ruling, both delivery paths, drain-registry pointer) placed before "Watching the watchers"; also corrected a stale
+      "~189" VM prefix count to the measured 243 (Phase 0 census) and added `DP-REVOCATION-001` to both the doc table
+      and `data-pipeline-alerts.registry.yaml`.
+- [x] ✅ [DOC] P0. Update `/codex/04-architecture/autonomous-recovery-matrix.md` to state that batch/backfill now has a
       revocation path, correcting its current "Live-mode only. All recovery mechanisms are disabled in batch/backtest."
-- [ ] [DOC] P0. Record the retry registry as the SSOT for retry counts in the recovery matrix, replacing the prose "3
-      attempts" with a pointer to `RETRY_BUDGETS`.
-- [ ] [DOC] P1. Add the flush contract to `/codex/06-coding-standards/` so every new buffered writer registers with the
-      drain registry by convention, not by memory.
+      — Scoped the "Live-mode only" claim to the execution-side decision tree specifically and added a correction
+      pointing to the new revocation section, noting the two systems are deliberately disjoint.
+- [x] ✅ [DOC] P0. Record the retry registry as the SSOT for retry counts in the recovery matrix, replacing the prose "3
+      attempts" with a pointer to `RETRY_BUDGETS`. — Added a scope-split pointer on the `RETRY` row (live per-request
+      path stays as-is; batch/backfill retry-COUNT SSOT is now named) rather than overwriting the live-mode semantics,
+      since RETRY_BUDGETS' backoff ladder must not be conflated with the live circuit-breaker cooldown timeline.
+- [x] ✅ [DOC] P1. Add the flush contract to `/codex/06-coding-standards/` so every new buffered writer registers with
+      the drain registry by convention, not by memory. — Added under "Error Handling Standards" alongside a matching
+      RETRY_BUDGETS pointer (both landed together since they're the same shape of "hardcoded X → registry Y" rule).
 - [ ] [REVIEW] P0. Post-phase codex audit — verify no plan↔codex drift, every cited path resolves, and no doc still
       claims a gap this plan closed.
 - [ ] [REVIEW] P0. Archive this plan once every todo is done and unlocked, per the archival discipline (dated archive

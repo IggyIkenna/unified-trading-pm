@@ -222,10 +222,11 @@ An `auto_recover` escalation does not just label — it dispatches a real actuat
 | `DP_VM_STALL` / hung            | `relaunch_stalled_vm.py`                          | ≤2 / (vm-prefix, day); idempotent |
 
 The actuator resolves **which launcher** to re-run from `data_pipeline_monitors/launcher_registry.py` —
-`resolve_launcher_for_vm(vm_name)` does a **longest-prefix** match over `LAUNCHER_FOR_VM_PREFIX` (~189 VM prefixes: 118
-→ a `deployment-service/scripts/vm/launch-*.sh`, 71 → `None` + a typed reason so an unrecoverable prefix is explicit,
-not a silent miss). A prefix with no entry fails the guard test (every launchable VM-prefix must map or be explicitly
-`None`). Never fire-and-forget — the actuator verifies STARTED at T+60s (the no-fire-and-forget rule).
+`resolve_launcher_for_vm(vm_name)` does a **longest-prefix** match over `LAUNCHER_FOR_VM_PREFIX` (**243 VM prefixes**
+measured 2026-08-14, correcting a stale "~189" — 178 → a `deployment-service/scripts/vm/launch-*.sh` (104 distinct
+scripts, 102 confirmed drain-capable per the revocation census below), 65 → `None` + a typed reason so an unrecoverable
+prefix is explicit, not a silent miss). A prefix with no entry fails the guard test (every launchable VM-prefix must map
+or be explicitly `None`). Never fire-and-forget — the actuator verifies STARTED at T+60s (the no-fire-and-forget rule).
 
 > **PACKAGING — load-safe lazy import (2026-06-23 incident + fix; HARD RULE):** the actuator classes live in the
 > top-level `deployment-service/scripts/recovery/` dir, which is **NOT in the installed `deployment_service` wheel** —
@@ -276,6 +277,60 @@ When `auto_recover` is exhausted or N/A, the tier escalates: **`file_issue`** wr
 > SHIPPED; the e2e `_dp_common.file_escalation_issue` actionable-frontmatter half is code-complete + QG-green but **not
 > yet quickmerged** (strategy-service dirty-dep blocked) — until it lands, e2e-audit findings file a plain
 > (non-actionable) issue. Tracked in `/plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md`.
+
+## Alert-driven dependency revocation (2026-08-14, `alert_driven_dependency_revocation_2026_08_12.md`)
+
+An alert firing changes nothing for a unit's DEPENDENTS by default — the self-heal actuators above
+(`_DP_RECOVERY_ACTIONS`) act on the FAILING unit itself (restart, relaunch), not on the VMs/jobs reading its output.
+Revocation closes that gap:
+`unified_api_contracts.dependency_revocation.evaluate_revocation(alert_identity, upstream_entity=, drain_capable=)` is
+the single policy SSOT (142 alert identities across `DP_FAILURE_MODE_ACTIONS` + `ALERT_CODE_ACTIONS`), returning a
+`DependentAction`:
+
+| Action         | Meaning                                                                               |
+| -------------- | ------------------------------------------------------------------------------------- |
+| `NONE`         | No dependent action.                                                                  |
+| `SELF_RETRY`   | The failing unit retries; dependents unaffected.                                      |
+| `SELF_RESTART` | The failing unit restarts; dependents unaffected.                                     |
+| `SELF_DRAIN`   | The failing unit drains itself; no dependent-side action.                             |
+| `DEPS_HOLD`    | Block admission — a held dependent never STARTS. Running work is left alone.          |
+| `DEPS_DRAIN`   | Request a running dependent finish its current shard, flush, then exit.               |
+| `FLEET_HALT`   | Pause the target's Cloud Scheduler jobs — admission-scoped, not per-VM.               |
+| `KILL_SWITCH`  | Halts TRADING via the existing kill-switch bus — does not touch a data-pipeline unit. |
+
+**Drain-only ruling (operator decision, 2026-08-12): `DependentAction` deliberately has no `DEPS_KILL`.** Revocation
+never terminates a running unit — the strongest action is "finish your shard and exit cleanly." This removed the
+per-prefix checkpoint-resume audit as a prerequisite: a drain-blind prefix (no `record_captured` checkpoint) simply
+degrades `DEPS_DRAIN` to `DEPS_HOLD` (the evaluator clamps it, recording `clamped_from` on the outcome) rather than
+being a blocking special case.
+
+**Delivery is two independent paths, not one.**
+`deployment_service.data_pipeline_monitors.revocation_actuator. RevocationActuator` is the PUSH path — it consults the
+evaluator and writes a marker (`vm-logs/{target}/ DRAIN_REQUESTED.json` or `vm-census/admission-hold/{target}.json`); it
+carries no policy of its own (the anti-drift test `test_actuator_verdict_matches_the_evaluator_for_every_alert` iterates
+all 142 identities to prove it). `deployment_service.data_pipeline_monitors.revocation_gate` is the fail-closed BACKSTOP
+— a running VM's heartbeat polls `drain_requested(target)` every tick
+(`unified_trading_library.lifecycle.HeartbeatDaemon(drain_check=...)`), and a launcher preflight / Cloud Run entrypoint
+calls `admission_blocked(target)` before starting work. A revocation survives even if the actuator never runs, dies
+mid-sweep, or is never scheduled.
+
+**Every drain flushes through the UTL drain registry first**
+(`unified_trading_library.lifecycle.drain_registry. drain_all()`) — see the flush-contract convention in
+`/codex/06-coding-standards/README.md` and the full contract in `/codex/05-infrastructure/spot-vms-for-backfill.md` §
+"The graceful-flush contract". A drained partial shard is recorded as bytes written, never `captured` — the resume
+re-attempts it.
+
+**Retry attempt counts are a registry, not a convention** — `unified_api_contracts.RETRY_BUDGETS` (Phase 3), replacing
+the "3 attempts" prose that used to live only in `/codex/04-architecture/autonomous-recovery-matrix.md`. See the
+coding-standards pointer above for the batch-vs-live scope distinction.
+
+| ID                | Sev | Fires when                                                                                          | Detector                                   | Escalation                                                                 | Status |
+| ----------------- | --- | --------------------------------------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------------------- | ------ |
+| DP-REVOCATION-001 | 🔵  | `RevocationActuator` delivers `FLEET_HALT` — Cloud Scheduler jobs paused for a target's asset group | [S] `RevocationActuator._pause_schedulers` | auto-recover (visibility only, never pages — the actuator IS the recovery) | active |
+
+**Known gap (not yet closed, 2026-08-14)**: a `FLEET_HALT` pause registers no `MaintenanceWindow`, so `DP-WATCHER-004`
+(above) may treat it as an ACCIDENTAL pause rather than a deliberate one — tracked as an open todo in the plan rather
+than confirmed either way. Do not assume suppression works until that's verified or fixed.
 
 ## Watching the watchers — meta-monitoring coverage + the KNOWN SPOF (2026-06-23)
 

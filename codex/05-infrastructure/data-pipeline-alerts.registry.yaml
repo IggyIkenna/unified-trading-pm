@@ -591,6 +591,21 @@ failure_modes:
         DP_FLEET_MONITOR_RUN_FAILED",
     }
 
+  # --- DP-REVOCATION (alert-driven dependency revocation, 2026-08-14) ---
+  - {
+      id: DP-REVOCATION-001,
+      category: REVOCATION,
+      severity: INFO,
+      event: DP_REVOCATION_FLEET_HALT,
+      detector: RevocationActuator._pause_schedulers,
+      kind: scriptable,
+      escalation: auto_recover,
+      status: active,
+      fires:
+        "RevocationActuator delivered FLEET_HALT — Cloud Scheduler jobs paused for a target's asset group. Visibility
+        only (tier=auto_recover with no wired second actuator — the actuator IS the recovery), never pages.",
+    }
+
   # --- DP-DIGEST (daily summaries, INFO) ---
   - {
       id: DP-DIGEST-001,
