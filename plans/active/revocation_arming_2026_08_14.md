@@ -127,7 +127,9 @@ source:
       **@375835a9a** (same guard now covers `release()`). The whole mechanism sat wired-but-unreachable through six
       green phases; a grep-level guard is what makes that unrepeatable. Repo: deployment-service.
 - [ ] [OPERATOR] P0. **Confirm it live after wiring**: the monitor runs as the `uts-prod-dp-exit-code-monitor` Cloud Run
-      Job on a `*/5` schedule, so verify (a) the job's deployed image contains the wiring commit
+      Job on an hourly `0 * * * *` schedule (CORRECTED 2026-08-14 — this todo said `*/5`; the live
+      `uts-prod-dp-exit-code-monitor-cron` is `0 * * * *`, ENABLED, measured via `gcloud scheduler jobs list`, and
+      executions start on the hour), so verify (a) the job's deployed image contains the wiring commit
       (`gcloud run jobs describe`), (b) an execution actually invoked revocation (log a `DP-REVOCATION-*` line), and (c)
       a marker appears in `vm-census/admission-hold/` for a real condition. A green Cloud Build is NOT this —
       `Evidence: cloudbuild=<id>` plus an execution log line is. Repo: deployment-service.

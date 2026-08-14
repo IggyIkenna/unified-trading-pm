@@ -140,19 +140,21 @@ active, and a client engineer reading this repo will find it.
 
 ### It hits the carve-out archetypes directly
 
-| Archetype                  | Leg           | Execute                                  | Read position |
-| -------------------------- | ------------- | ---------------------------------------- | ------------- |
-| `CARRY_STAKED_BASIS` (ETH) | Lido stETH    | ❌ **simulated only** (`lido.py` tier 2) | ❌            |
-| `CARRY_STAKED_BASIS` (SOL) | Marinade mSOL | ✅ real (`aiohttp` + `send_transaction`) | ❌            |
-| `CARRY_RECURSIVE_STAKED`   | Kamino borrow | ✅ real (`aiohttp`)                      | ❌            |
-| SOL perp leg               | Jupiter       | ✅ real (`aiohttp`)                      | ❌            |
+| Archetype                  | Leg           | Execute                                              | Read position |
+| -------------------------- | ------------- | ---------------------------------------------------- | ------------- |
+| `CARRY_STAKED_BASIS` (ETH) | Lido stETH    | ❌ **simulated only** (`lido.py` tier 2)             | ❌            |
+| `CARRY_STAKED_BASIS` (SOL) | Marinade mSOL | ⚠️ real write path, **unreachable** (see below)      | ❌            |
+| `CARRY_RECURSIVE_STAKED`   | Kamino borrow | ❌ **no `borrow`/`repay` method exists** (see below) | ❌            |
+| SOL perp leg               | Jupiter       | ⚠️ real write path, **unreachable** (see below)      | ❌            |
 
 The ETH row is the correction. **The ETH staked-basis archetype has no live Lido execution at all** — neither
 `defi_execution/protocols/lido.py` nor `venues/lido.py` (see the dual-path finding below) can stake ETH on-chain. The
 earlier "✅ execute" was read off module existence, which this table now shows is not evidence of the property.
 
-So today we can open both legs of a staked-basis position on SOL and reconcile neither; on ETH we cannot open the
-staking leg for real either.
+**Update 2026-08-14 (session 3) — the SOL/Kamino rows are corrected again, for a second and deeper reason.** The
+Marinade/Kamino/Jupiter "✅ real" marks above were true of the connector's write path in isolation but false of whether
+anything in production ever calls it — see "Module reachability" below. So today we cannot open either leg of a
+staked-basis position for real, on ETH or SOL, and the Kamino leg additionally lacks a method to call at all.
 
 ### Dual path — three connector classes exist twice
 
@@ -161,6 +163,53 @@ and `execution_service/defi_execution/protocols/`. Both `LidoConnector`s are tie
 simulation); `venues/uniswap.py` has zero network references while `protocols/uniswap.py` has a live executor. This is a
 same-data-consumption dual path and falls under the operator's standing ruling: **unify to one SSOT path and complete
 the build — do not delete the half that is unfinished.**
+
+### Module reachability — the deeper finding (measured 2026-08-14, session 3)
+
+**A connector having a real write path is not the same as anything in production calling it.** This session audited
+whether execution-service actually routes an `InstructionActionV2` to each protocol module's methods — the P1 todo below
+— and found the wiring layer, not just the connector layer, is where most of the real capability is lost.
+
+**Three dispatchers exist, and none of them reaches most of the 30 protocol modules:**
+
+- **`adapters/defi_adapter.py`'s `DeFiAdapter`** is the one actually wired into live execution
+  (`cli/handlers/live_execution_handler.py:474-497`, `_build_defi_adapter`) — but that call site constructs it with
+  `uniswap_connector=None, aave_connector=<real>, lido_connector=None`, and never passes `jupiter_connector` at all
+  (defaults `None`). Its `_dispatch_defi_operation` (lines 176-190) raises `ValueError` on any operation it doesn't
+  recognize — no silent no-op — but a live SWAP or STAKE instruction hits `"UniswapConnector not configured"` /
+  `"LidoConnector not configured"` immediately. **AAVE is the only connector this dispatcher can actually reach today.**
+- **`v2/router.py`'s `V2InstructionRouter`** has syntactically complete coverage of all 14 `InstructionActionV2` values
+  (`v2/handlers.py`'s `ACTION_HANDLER_REGISTRY`) and never silently drops an action — but `LP_MINT`/`LP_BURN`/
+  `CONVERT_DUST` handlers are thin bookkeeping objects that attach a note like
+  `"route via UniswapConnector.mint_position"` without calling it, and a repo-wide grep found **zero production
+  callers** of `V2InstructionRouter` — it is exported and referenced only in docstrings as an aspirational typed
+  dispatch point.
+- **`defi_execution/orchestrators/recursive_loop_orchestrator.py`'s `RecursiveLoopOrchestrator`** is the driver named in
+  the `CARRY_RECURSIVE_STAKED`/`CARRY_RECURSIVE_BORROW_LENDING_ONLY` archetype docs, and it never calls any of the 30
+  protocol connector modules — it hand-encodes Aave V3 ABI selectors against a literal `"AAVE_POOL_PLACEHOLDER"` string
+  address. Its real-execution branch is dead code, not a stub with a fallback: `_execute_open_iter`/
+  `_execute_close_iter`/`_submit_flash_loan` return a fabricated `0xSIM_...` hash when `w3_client is None`, and return
+  `(None, 0, zero_position)` — nothing — when a real `w3_client` is supplied. The only genuinely real, reachable,
+  connector-calling path found anywhere in execution-service is the perp-hedge leg
+  (`perp_hedge_consumer.dispatch_rebalance`/`dispatch_margin_topup` calling `HyperliquidConnector`/
+  `BybitPerpHedgeConnector.place_order()`).
+
+**Consequence: 20 of the 30 protocol connector classes are never instantiated anywhere in execution-service outside
+their own module and tests** — Marinade, Kamino, Orca, Raydium, Pendle, Convex, Yearn, Beefy, KelpDAO, Renzo, Puffer,
+Rocket Pool, Solblaze, Symbiotic, Jito Restaking, Karak, Idle, WETH, Bridge, CCTP. Today's "16 of 30 modules are
+genuinely live" measurement (the P0 todo above) described connector-internal capability, correctly, but it is not the
+same property as connector-reachability, and this session's original "✅ real" archetype-table marks for Marinade/
+Kamino/Jupiter conflated the two.
+
+**Two additional, narrower gaps found by reading the archetype docs against the connector method surfaces:**
+
+- **`kamino.py` has no `borrow`/`repay` method** — only `supply`/`withdraw` (lines 203-211) — yet
+  `carry-recursive-staked.md` names a `jito-kamino-sol-prod` cell whose recursive loop requires the borrow leg. The
+  connector cannot fulfill it as coded, independent of the reachability problem above.
+- **No connector implements Jito's jitoSOL liquid-staking stake pool.** `jito_restaking.py`'s own docstring states it
+  implements Jito's **restaking VRT product**, explicitly distinct from jitoSOL liquid staking — yet `JITO` appears as a
+  liquid-staking venue in `carry-staked-basis.md` and `carry-recursive-staked.md`'s `venue_universe`. This is a missing
+  module, not a wiring gap.
 
 ## Todos
 
@@ -260,10 +309,52 @@ the build — do not delete the half that is unfinished.**
       venue has a strategy-service position reader on batch, live AND paper; **(3)** every venue strategy-service
       supports has an execution-service adaptor. Invariant 3 is the one that would have caught this issue. **It must
       compare instruction ACTIONS, not venue names** — a module that swaps but cannot stake passes a naive existence
-      check, which is exactly the blind spot noted in the caveat below.
-- [ ] [AGENT] P1. **Audit execution-service instruction coverage per venue.** This audit measured that protocol modules
-      EXIST; it did not verify each handles every `InstructionActionV2` an archetype may emit for that venue. A module
-      that swaps but cannot stake is a partial gap this table would score as ✅.
+      check, which is exactly the blind spot noted in the caveat below. **Research done 2026-08-14 (session 3), not yet
+      implemented**: (a) invariant 1 is tractable — `VENUE_DATA_TYPE_CAPABILITIES` (UAC) for batch vs
+      `market_tick_data_service.live.connector_registry.registered_venues()` for live, both real code-level registries,
+      needs venue-token normalization (legacy lowercase aliases, DeFi chain-suffix mismatches). (b) **invariant 2 as
+      worded cannot be measured** — `strategy-service`'s `position_interface/factory.py::get_position_adapter()` has
+      exactly ONE boolean per venue (adapter registered or `ValueError`); there is no batch/live/paper mode axis
+      anywhere in `position_interface/` or `account_query_client.py` to check against — the only mode-like switch found
+      is a service-level `mock_mode` flag, not per-venue. Implement as the one boolean that exists ("does a position
+      adapter exist for this venue at all") and log the mode-axis gap as its own todo below, rather than fabricating a
+      3-way check the codebase has no data for. (c) **invariant 3 must check reachability, not just method-surface
+      existence**, per the "Module reachability" finding above — a naive per-module method-name check would still score
+      Marinade/Kamino/Jupiter ✅ despite nothing calling them in production; the audit's method (grep for
+      `<ConnectorClass>(` instantiation sites outside `protocols/`+`tests/`) is a workable static proxy for
+      reachability. (d) **the codex doc's illustrative `python3 -c "from <repo_package> import <Symbol>"` invariant
+      template does not match what's actually implemented** — sibling service repos (`market-tick-data-service`,
+      `strategy-service`) are not importable from `unified-api-contracts`'s own venv; the real, established pattern for
+      exactly this situation is AST-based static parsing of the sibling's source tree via workspace-relative `Path` (see
+      `tests/test_mdps_cross_repo_invariant.py` / `tests/test_execution_service_cross_repo_invariant.py` in UAC) — new
+      invariants should follow that shape.
+- [x] [AGENT] P1. ✅ **Audit execution-service instruction coverage per venue** — done 2026-08-14 (session 3), findings
+      recorded in "Module reachability — the deeper finding" above. The audit found something worse than the scoped
+      question: it's not just that a module might swap-but-not-stake, it's that 20 of 30 protocol connector classes are
+      never called by anything in production at all (three disagreeing dispatchers, none reaching most connectors), plus
+      two narrower gaps (`kamino.py` has no borrow/repay method; no connector implements Jito's actual jitoSOL
+      liquid-staking product). Follow-up work tracked as new todos below.
+- [ ] [AGENT] P0. **Wire a real dispatcher that reaches the connectors execution-service already has.** Root cause of
+      the reachability finding above: `DeFiAdapter` (the only dispatcher wired into `live_execution_handler.py`)
+      hardcodes `uniswap_connector=None, lido_connector=None` and never passes `jupiter_connector` at
+      `_build_defi_adapter` (`cli/handlers/live_execution_handler.py:474-497`) despite those connectors having real
+      write paths since `execution-service@2b92d6ac69`; `V2InstructionRouter` has complete `InstructionActionV2`
+      coverage but zero production callers; `RecursiveLoopOrchestrator` (the driver the recursive-carry archetypes name)
+      never calls the protocol connectors and its real-execution branch (`_execute_open_iter`/`_execute_close_iter`/
+      `_submit_flash_loan`) is dead code returning `(None, 0, zero_position)` when given a real `w3_client`. Fix in
+      priority order: (1) pass the real Uniswap/Lido/Jupiter connectors into `_build_defi_adapter` instead of `None`,
+      (2) either wire `V2InstructionRouter` into a real call site or delete it as aspirational dead code (do not leave a
+      syntactically-complete-looking router nobody calls — it reads as coverage that doesn't exist), (3) replace
+      `RecursiveLoopOrchestrator`'s placeholder-address ABI encoding + dead real-execution branch with calls into the
+      real `aave.py`/`kamino.py` connectors the same way `perp_hedge_consumer.py` calls `place_order()` for real.
+- [ ] [AGENT] P1. **Add `borrow`/`repay` to `kamino.py`.** Currently only `supply`/`withdraw` exist (lines 203-211);
+      `carry-recursive-staked.md`'s `jito-kamino-sol-prod` cell needs the borrow leg to execute its recursive loop at
+      all. Independent of the dispatcher-wiring gap above — this is a missing method, not just an unreached one.
+- [ ] [AGENT] P1. **Build a real Jito jitoSOL liquid-staking connector.** `jito_restaking.py` implements a different
+      product (VRT restaking, per its own docstring) — there is no connector for the liquid-staking stake pool that
+      `carry-staked-basis.md`/`carry-recursive-staked.md`'s `JITO` venue actually needs. This is a new module, following
+      the same generic-first `_evm_generic.py`-equivalent-for-Solana pattern the other SPL connectors use (see the
+      Solblaze/Jito Restaking todo below for why hand-rolling Anchor instruction bytes needs an SDK dependency first).
 - [ ] [AGENT] P2. **Wire real write paths for Solblaze and Jito Restaking** — the last 2 of the 18 originally-scoped
       tier-2 modules, execution-service@2b92d6ac69 gave both real SPL balance reads but left writes simulation-only
       (documented, not silently closed): their stake-pool programs are Anchor-based with a fixed account list, not a
@@ -275,6 +366,13 @@ the build — do not delete the half that is unfinished.**
       credentialed integrations for sports betting, retail brokerage and prediction markets — nothing to do with a DeFi
       mandate. They are inert unless a venue is configured, so shipping them costs nothing operationally. Purely a
       question of what we disclose. Record the decision in the Elysium plan § E.
+- [ ] [OPERATOR] P2. **Decide whether strategy-service position reading needs a batch/live/paper axis at all.** Research
+      2026-08-14 (session 3) found `position_interface/factory.py::get_position_adapter()` has exactly one boolean per
+      venue — no code anywhere distinguishes batch/live/paper position reading (the only mode-like switch is a
+      service-level `mock_mode` flag, not per-venue). SIT invariant 2 above was scoped by the codex ruling as "batch,
+      live AND paper" but that three-way distinction has no corresponding data structure to check today. Either this is
+      genuinely needed (in which case it's new strategy-service scaffolding, not a SIT-invariant task) or the ruling
+      should be narrowed to the one boolean that exists — an operator call, not an engineering one.
 
 ## What sharing strategy-service actually conveys (measured 2026-08-14)
 
@@ -317,20 +415,20 @@ correct and is now verified at the ABC rather than inferred.
 
 ## Deferred work after 2026-08-14
 
-| Item                                                                | Kind                 | Blocked on                                                                                                                                                                                                                                                                                                                                                                                  |
-| ------------------------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Measure what the generic token-balance reader closes of the ~27 gap | **Partly done**      | closes the LST-shaped share (Lido et al.); Kamino/Jupiter's non-balance-shaped positions still unmeasured                                                                                                                                                                                                                                                                                   |
-| Build generic reader + bespoke exceptions (both services)           | **Done**             | `_evm_generic.py` (execution-service) + `generic_token_balance.py` (strategy-service), this session                                                                                                                                                                                                                                                                                         |
-| Lido / Marinade / Kamino / Jupiter position adapters                | **Partly done**      | Lido's wstETH balance is coverable via the new generic reader (not yet wired as a named adapter); Marinade/Kamino/Jupiter still need their own read logic                                                                                                                                                                                                                                   |
-| 3 directional SIT invariants                                        | Not done             | nobody                                                                                                                                                                                                                                                                                                                                                                                      |
-| Per-venue instruction-ACTION coverage audit                         | Not done             | nobody — this audit proved modules EXIST, not that each handles every action                                                                                                                                                                                                                                                                                                                |
-| B6 — a consumer per governing section                               | **Operator-owned**   | a design call on which consumer owns each section; an agent already investigated 4 and correctly declined to force one                                                                                                                                                                                                                                                                      |
-| Disclosure call on betfair / ibkr / polymarket adapters             | **Operator-owned**   | out-of-mandate venues; inert unless configured, so cost-free to ship                                                                                                                                                                                                                                                                                                                        |
-| Review of the other session's 7 shipped tasks                       | **Done, indirectly** | its `execution-service@9946ba5a3` (the live-mode guard) landed at origin mid-session here and was reconciled via `git pull --rebase --autostash` — verified by reading the merged blob back; one real defect caught in reconciliation (its `aster.py` opt-in declared `supports_live=True` WITHOUT fixing the underlying silent-success bug, which this session's `aster.py` fix addresses) |
-| Artifact pass (reconciliation + venue/instruction registry)         | Not done             | the chunks being verified landed, AND the corrected tier numbers above                                                                                                                                                                                                                                                                                                                      |
-| Live-mode guard base mechanism (`supports_live` + fail-closed)      | **Done, shipped**    | execution-service@9946ba5a3 (base mechanism) + execution-service@2b92d6ac69 (Solana declaration + extension to all 18 modules)                                                                                                                                                                                                                                                              |
-| Unify the 3 duplicated connector classes                            | **Done, shipped**    | execution-service@2b92d6ac69                                                                                                                                                                                                                                                                                                                                                                |
-| Wire real writes for 16 of the 18 tier-2 modules                    | **Done, shipped**    | execution-service@2b92d6ac69; Solblaze/Jito Restaking stay simulation-only pending the SPL SDK dependency                                                                                                                                                                                                                                                                                   |
+| Item                                                                | Kind                            | Blocked on                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Measure what the generic token-balance reader closes of the ~27 gap | **Partly done**                 | closes the LST-shaped share (Lido et al.); Kamino/Jupiter's non-balance-shaped positions still unmeasured                                                                                                                                                                                                                                                                                   |
+| Build generic reader + bespoke exceptions (both services)           | **Done**                        | `_evm_generic.py` (execution-service) + `generic_token_balance.py` (strategy-service), this session                                                                                                                                                                                                                                                                                         |
+| Lido / Marinade / Kamino / Jupiter position adapters                | **Partly done**                 | Lido's wstETH balance is coverable via the new generic reader (not yet wired as a named adapter); Marinade/Kamino/Jupiter still need their own read logic                                                                                                                                                                                                                                   |
+| 3 directional SIT invariants                                        | **Researched, not implemented** | invariant 1 tractable; invariant 2 as worded has no data to check (operator todo above); invariant 3 needs a reachability check, design done, code not written — session 3                                                                                                                                                                                                                  |
+| Per-venue instruction-ACTION coverage audit                         | **Done**                        | session 3 — found a deeper "module reachability" gap than the scoped question; see section above + 3 new todos                                                                                                                                                                                                                                                                              |
+| B6 — a consumer per governing section                               | **Operator-owned**              | a design call on which consumer owns each section; an agent already investigated 4 and correctly declined to force one                                                                                                                                                                                                                                                                      |
+| Disclosure call on betfair / ibkr / polymarket adapters             | **Operator-owned**              | out-of-mandate venues; inert unless configured, so cost-free to ship                                                                                                                                                                                                                                                                                                                        |
+| Review of the other session's 7 shipped tasks                       | **Done, indirectly**            | its `execution-service@9946ba5a3` (the live-mode guard) landed at origin mid-session here and was reconciled via `git pull --rebase --autostash` — verified by reading the merged blob back; one real defect caught in reconciliation (its `aster.py` opt-in declared `supports_live=True` WITHOUT fixing the underlying silent-success bug, which this session's `aster.py` fix addresses) |
+| Artifact pass (reconciliation + venue/instruction registry)         | Not done                        | the chunks being verified landed, AND the corrected tier numbers above                                                                                                                                                                                                                                                                                                                      |
+| Live-mode guard base mechanism (`supports_live` + fail-closed)      | **Done, shipped**               | execution-service@9946ba5a3 (base mechanism) + execution-service@2b92d6ac69 (Solana declaration + extension to all 18 modules)                                                                                                                                                                                                                                                              |
+| Unify the 3 duplicated connector classes                            | **Done, shipped**               | execution-service@2b92d6ac69                                                                                                                                                                                                                                                                                                                                                                |
+| Wire real writes for 16 of the 18 tier-2 modules                    | **Done, shipped**               | execution-service@2b92d6ac69; Solblaze/Jito Restaking stay simulation-only pending the SPL SDK dependency                                                                                                                                                                                                                                                                                   |
 
 **Update 2026-08-14 (later same day): the tier-2 live-mode guard AND the peer-session review are both done — see
 `execution-service@2b92d6ac69` and `execution-service@9946ba5a3` above.** The remaining recommended next items, in
@@ -338,6 +436,18 @@ order: (1) the 3 directional SIT invariants (P1, nobody started), (2) the per-ve
 (P1, nobody started — modules existing was verified, not that each handles every action), (3) the Solblaze/Jito
 Restaking SPL-SDK write path (P2, new todo above), (4) Marinade/Kamino/Jupiter position adapters (P0, still open at the
 top of this list).
+
+**Update 2026-08-14 (session 3): the per-venue instruction-ACTION coverage audit is done, and it surfaced a bigger
+problem than scoped — see "Module reachability" above.** Capability (a connector's write path is real) and reachability
+(something in production calls it) turned out to be different properties, and this session's earlier "✅ real"
+archetype-table marks conflated them. The 3 SIT invariants are researched but not implemented — invariant 1 is ready to
+build, invariant 2 needs an operator call first (new todo above; the "batch, live AND paper" framing has no matching
+data in strategy-service today), invariant 3's design changed from "does the module exist" to "is the module reachable",
+per the reachability finding. **Recommended next items, in order**: (1) the P0 dispatcher-wiring todo above — it's the
+root cause and blocks the SOL leg of `CARRY_STAKED_BASIS`/`CARRY_RECURSIVE_STAKED` regardless of what SIT catches, (2)
+implement SIT invariant 1 (no blocker), (3) the operator call on invariant 2's scope, (4) `kamino.py` borrow/repay + the
+Jito liquid-staking connector (P1, both new todos above), (5) Marinade/Kamino/Jupiter position adapters (P0, still open,
+and now known to need the dispatcher fix first to be worth anything operationally).
 
 ## Lessons — 2026-08-14
 
@@ -404,3 +514,29 @@ top of this list).
   reproducing the failure on a byte-for-byte clean tree proved it was pre-existing flakiness (xdist worker-order
   sensitive), unrelated to anything in this session — the ship succeeded on retry with no code change. Assuming
   causation from mere sequencing would have sent this session chasing an unrelated bug in a different subsystem.
+
+## Lessons — 2026-08-14 (session 3)
+
+- **Capability and reachability are different properties, and "module existence is not capability" (session 1's lesson)
+  has a second layer.** A connector's write path being real is necessary but not sufficient — this session's earlier "✅
+  real" archetype-table marks for Marinade/Kamino/Jupiter were true of the connector in isolation and false of the
+  system, because nothing in execution-service's production dispatch path ever calls those connectors. Reading a
+  method's body answers "can this connector act." Grepping for its instantiation sites outside its own module answers
+  the actually-relevant question: "does anything ask it to."
+- **A dispatcher with syntactically complete coverage can still be doing nothing.** `V2InstructionRouter` handles all 14
+  `InstructionActionV2` values with no silent drops — a naive audit of the router alone would score it as the well-built
+  one. It has zero production callers. Completeness of a component's interface says nothing about whether the component
+  sits on a live path; check the caller graph, not just the callee.
+- **An operator ruling can describe a data shape the code doesn't have yet.** The venue-coverage cascade's invariant 2
+  ("batch, live AND paper") was written as a reasonable-sounding three-way check; `strategy-service` turned out to have
+  exactly one boolean per venue with no mode axis anywhere in `position_interface/`. Discovering this required reading
+  the actual adapter-resolution code, not just the codex doc describing the invariant — a SIT-invariant spec is a claim
+  about what the code SHOULD assert, not evidence that the code CAN assert it yet.
+- **A codex doc's illustrative code template can be aspirational, not descriptive, of the real pattern.**
+  `integration-testing-layers.md`'s cross-repo invariant template shows
+  `python3 -c "from <repo_package> import <Symbol>"` — a live cross-package import. The actually-implemented invariants
+  in `system-integration-tests/scripts/run_cross_repo_invariants.sh` use AST-based static parsing of the sibling repo's
+  source tree instead, because sibling service repos aren't installed as importable dependencies of
+  `unified-api-contracts`'s venv. Confirmed by attempting the import directly and getting `ModuleNotFoundError` before
+  trusting the doc's template. Read the real invariant files, not just the doc describing the pattern, before writing a
+  new one.
