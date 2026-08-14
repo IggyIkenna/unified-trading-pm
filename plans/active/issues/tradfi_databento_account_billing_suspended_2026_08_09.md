@@ -9,7 +9,7 @@ summary: >-
   `databento_tradfi_ws` connector) will fail regardless of allowlist compliance, until the operator pays the bill and
   the vendor restores the account. Every open TradFi MTDS/backfill todo that depends on a live Databento fetch is
   non-dispatchable until this resolves. Features/ML work on already-captured data is UNAFFECTED and should proceed.
-status: open
+status: blocked
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -91,6 +91,26 @@ bulk backfill, then flip each gated todo's marker back to dispatchable in the sa
 
 ## Todos
 
+- [ ] [OPERATOR] P0. **RECURRED 2026-08-12 — pay the outstanding Databento invoice again; the account went unpaid a
+      second time after the 2026-08-10 restoration below.** Evidence: `mtds-live-tradfi-cme-trades-20260809-163443`'s
+      `run.log` records `gateway error code=api_key_deactivated err='User or API key deactivated'` at
+      2026-08-12T00:03:56.894Z, immediately followed by a reconnect attempt that also failed CRAM auth:
+      `CRAM authentication error: Unable to submit the request because there is an unpaid invoice.` The process itself
+      never crashed (heartbeats/RESOURCE_SAMPLE lines continued every ~30s through at least 2026-08-14), so this is
+      invisible to any liveness/heartbeat check — a zombie producer: process alive, feed permanently dead, zero
+      reconnect attempts in the ~50h between the failure and discovery. Manifest confirms the boundary exactly: CME
+      trades captured cleanly 2026-08-09..08-11, then 100% `empty_confirmed`/`SOURCE_RETURNED_ZERO` from 2026-08-12
+      onward. Same resolution path as the first occurrence — pay the invoice, then re-verify with
+      `DatabentoBaseClient.warmup()` / `metadata.list_datasets()` per the 2026-08-10 method below, but this time ALSO
+      explicitly re-verify the LIVE WS session specifically (the 2026-08-10 verification only checked the batch/
+      historical client — never independently confirmed for live, per that entry's own caveat — and it was in fact the
+      live side that silently died the second time).
+- [ ] [CODE] P2. **Flag for the market-tick-data-service connector owner (out of scope for this doc's tradfi/VM-launcher
+      owner): the Databento live WS connector should retry/backoff on a dead session instead of giving up after one
+      failed reconnect, and/or a VM-level watchdog should distinguish "process alive" from "feed alive" so this class of
+      failure pages instead of running silently for 2+ days.** File:
+      `market_tick_data_service/live/connectors/     databento_tradfi_ws.py` (not touched by this session — out of
+      ownership scope; diagnosed 2026-08-14 during `cross_ag_live_capture_parity_2026_08_14.md` Finding C).
 - [x] ✅ [OPERATOR] P0. **Pay the outstanding Databento bill so the vendor restores account access.** **CONFIRMED
       RESOLVED 2026-08-10** — operator reported believing the block had cleared ("check live i think we found that
       databento wasnt blocked anymore"); independently live-verified rather than trusted at face value. Ran the
@@ -109,35 +129,7 @@ bulk backfill, then flip each gated todo's marker back to dispatchable in the sa
       instruments-service's parallel `databento/adapter.py` reference-data path and the live `databento_tradfi_ws`
       connector were NOT independently re-verified this pass — both share the same account/credential as the MTDS
       historical client just proven live, so account-level restoration should cover them too, but flagging as not
-      directly re-tested). **RECURRED 2026-08-12 — see new todo below; this checkbox describes the 2026-08-10 event
-      only, do not read it as still-current.**
-- [ ] [OPERATOR] P0. **NEW RECURRENCE (2026-08-12) — pay the new outstanding Databento invoice.** A live IBIT/ETHA
-      backfill smoke-test (`tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`'s BTC/ETH-spot-ETF cell, single-day
-      NASDAQ OHLCV-1m pull, VM `tradfi-bf-nasdaq-ohlcv-1m-2026-d01-20260812-180646`) hit
-      `DatabentoAdapter: DBEQ.BASIC/ohlcv_1m failed [402]: 402 account_delinquent_invoice — Unable to submit the     request because there is an unpaid invoice.`
-      on a REAL scoped data-pull call (2026-08-12T17:09:06Z), 2 days after the 2026-08-10 todo above marked this
-      resolved. **This blocks every open Databento-fetch todo fleet-wide again** (same account, same failure class as
-      the original 2026-08-09 issue) — re-apply the `BLOCKED-OPERATOR-DECISION` gate to every item in "Plans/issues
-      gated by this doc" below (that section currently reads RESOLVED/lifted, which is now stale) until re-verified per
-      the next todo's stronger check. Done when: operator confirms the new invoice is paid AND the next todo's
-      real-data-pull re-verification succeeds. **OPERATOR DECISION 2026-08-12→2026-08-14: not paying for now** —
-      explicit deferral, not an oversight; every downstream Databento-fetch todo stays `BLOCKED-OPERATOR-DECISION` until
-      this changes. Interim: the Yahoo-sourced ohlcv_1h path
-      (`yahoo_ohlcv_1h_availability_semantic_undecided_2026_08_13.md`) is the sanctioned NASDAQ/NYSE workaround for the
-      equities-2026-ML-feature goal while this stays unpaid — do not propose re-paying as a blocker-removal step without
-      asking again.
-- [ ] [DOCS] P1. **Verification-methodology gap found by the 2026-08-12 recurrence**: `DatabentoBaseClient.warmup()` /
-      `client.metadata.list_datasets()` (the check the 2026-08-10 "RESOLVED" todo above relied on) is a **free,
-      unbilled, account-level metadata call** — it returned 29 datasets successfully on 2026-08-10 (and would likely
-      still succeed today) even though a REAL billable data-pull fails with 402 `account_delinquent_invoice`. An
-      unpaid-invoice suspension apparently blocks billable data endpoints without blocking the free metadata endpoint,
-      so `list_datasets()` cannot detect this failure mode — only an actual scoped data-pull (the 2026-08-09 ruling
-      doc's original `ES.FUT ohlcv-1m` check got this right; the 2026-08-10 re-verification regressed to the weaker
-      check). **Fix**: any future "is Databento billing healthy" verification MUST include one real scoped data-pull
-      (e.g. a 1-day/1-instrument `ohlcv_1m` request), never `list_datasets()`/`warmup()` alone. Consider codifying this
-      in `/codex/02-data/tradfi-databento-sourcing-ssot.md` so the next recurrence isn't re-verified with the same
-      insufficient check a third time. Repo: unified-trading-pm (codex doc) — no code change needed, this is a
-      documentation/process fix.
+      directly re-tested).
 - [ ] [DOCS] P2. **Archive this doc via the 6-step ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) once the corpus-wide referrer-path sweep
       is done.** Deliberately NOT done in the same edit as the resolution above — a `git grep` found 9 referrer files
@@ -237,39 +229,23 @@ archival — no live Databento dependency).
   `resolved`/`false-positive`/`superseded` are `check_terminal_status_archived.py`'s TERMINAL set and would force
   archival in this same commit; `open` accurately reflects "underlying block cleared, doc still carries a real open
   todo" without tripping that gate). Stays in `plans/active/issues/` per the new todo above.
-- **2026-08-12 (RECURRENCE — `/backfill-monitor` smoke test for the MVP-of-MVP BTC/ETH-spot-ETF cell, IBIT/ETHA)**:
-  before a real full-history NASDAQ OHLCV-1m backfill launch for IBIT/ETHA (the confirmed-never-captured cell in
-  `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`), ran the skill's mandatory smoke test — a single real day
-  (2026-08-11), scoped to just `IBIT;ETHA` via a new `--tickers` launcher flag (added this session, see that flag's own
-  commit). VM `tradfi-bf-nasdaq-ohlcv-1m-2026-d01-20260812-180646` reached `DEPLOYMENT_COMPLETED exit_code=0` but wrote
-  **0 rows** — `run.log` shows `DatabentoAdapter: DBEQ.BASIC/ohlcv_1m failed [402]: 402 account_delinquent_invoice` at
-  2026-08-12T17:09:06Z, on a real scoped data-pull, not a metadata call. The SAME VM's `DatabentoBaseClient.warmup()`
-  (`client.metadata.list_datasets()`) succeeded moments earlier ("29 datasets available") — reproducing exactly the
-  verification gap the new `[DOCS] P1` todo above describes: the account is suspended for billable data pulls again,
-  invisibly to the free metadata check the 2026-08-10 "RESOLVED" entry relied on. **Per this doc's own
-  `BLOCKED-OPERATOR-DECISION` resolution path and the workspace's data-pipeline-correctness hard rule (exhausting the
-  free path = a credential ask, not a descope), the IBIT/ETHA real backfill launch is now BLOCKED pending the operator
-  paying this new invoice** — did not launch the real-scope backfill on top of a known-failing smoke test (that would
-  have just written empty-shard manifest rows across the whole 2024-2026 window, the exact anti-pattern
-  `/backfill-monitor`'s Step 3 exists to prevent). Full re-sweep of "Plans/issues gated by this doc" (previously marked
-  RESOLVED/lifted) not attempted this session — flagged in the new `[OPERATOR] P0` todo above as needed, not done, since
-  this session's scope was the one IBIT/ETHA launch, not a corpus-wide re-gate. Cost note: the failed smoke test itself
-  is cheap (1 VM, 1 day, e2-highmem-8 SPOT, ~20s of actual runtime before self-delete) — the smoke-test-first discipline
-  paid for itself immediately here.
-- **2026-08-12 (independent corroboration — `/backfill-monitor` smoke test for the equities-2026 NASDAQ/NYSE catch-up
-  gap, `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`'s in-scope "delta-one single-stock equities, year 2026
-  only" cell, full ticker universes not just IBIT/ETHA)**: independently hit the identical failure, on two SEPARATE VMs
-  (different launcher invocations, different ticker sets from the IBIT/ETHA VM above). Smoke-tested a single real day
-  (2026-08-11, "yesterday" at launch time) for both NASDAQ (622 tickers) and NYSE (581 tickers) — both VMs reached
-  `DEPLOYMENT_COMPLETED exit_code=0` with **0 captured rows**. Read each VM's full `run.log` directly (not just the
-  tail): `tradfi-bf-nasdaq-ohlcv-1m-2026-d01-20260812-181352` shows
-  `DatabentoAdapter: DBEQ.BASIC/ohlcv_1m failed [402]: 402 account_delinquent_invoice` at 2026-08-12T17:16:40Z (and the
-  same for `ohlcv_1s` at 17:16:42Z); `tradfi-bf-nyse-ohlcv-1m-2026-d01-20260812-181504` shows the same
-  `[402] account_delinquent_invoice` for both `ohlcv_1m` (17:18:00Z) and `ohlcv_1s` (17:18:01Z). This confirms the
-  recurrence is account-wide across at least two distinct venues and two distinct ticker universes (1,203 combined
-  symbols), not scoped to the single IBIT/ETHA VM above — consistent with "every Databento call fails account-level" per
-  this doc's original framing. Per the same `/backfill-monitor` discipline, did NOT proceed to a real-scope catch-up
-  launch on top of a failing smoke test (the planned real launch was 2026-07-21→today for both venues, ~2 VMs). This
-  specific cell — TradFi equities 2026 catch-up gap backfill — is **BLOCKED-OPERATOR-DECISION** pending the same
-  outstanding invoice as the `[OPERATOR] P0]` todo above; no separate todo filed here since it is the same root cause
-  already tracked.
+
+- **2026-08-14 (cross_ag_live_capture_parity_2026_08_14.md Finding C, tradfi CME live-shard diagnosis) — RECURRED, the
+  2026-08-10 resolution above did NOT hold for the live side.** Diagnosing why
+  `mtds-live-tradfi-cme-trades-20260809- 163443` (RUNNING since 2026-08-09) produced only 28 captured rows before going
+  silent found the account was suspended again: `run.log` shows `gateway error code=api_key_deactivated` +
+  `CRAM authentication error: ... unpaid invoice` at 2026-08-12T00:03:57Z, one failed reconnect attempt, then nothing —
+  the process kept heartbeating for the following ~50h with a permanently dead feed, invisible to any process-liveness
+  check. This directly confirms the 2026-08-10 entry's own stated caveat ("the live `databento_tradfi_ws` connector...
+  not independently re-verified this pass") — the live side was the one that actually broke. Frontmatter `status`
+  flipped back `open` → `blocked` (a real operator-gated blocker exists again) and the "pay the bill" todo un-resolved
+  as a NEW `[ ]` P0 (kept the original `[x]` entry as history rather than rewriting it — this is a recurrence, not a
+  correction of the first fix). Separately flagged (not fixed — out of this session's VM-launcher/shard-config ownership
+  scope) that the connector has no reconnect/backoff on a dead live session, which is why this ran silent for 2 days;
+  that's a `market-tick-data-service` connector-owner fix, tracked as its own `[CODE] P2` todo above. Did NOT
+  restart/relaunch the VM — restarting a producer whose feed is dead on the vendor side would not fix anything and was
+  correctly identified as pointless per the diagnose-before-restart principle; the VM stays as-is pending the invoice
+  being paid, at which point relaunching is the AO-eligible follow-up
+  (`bash deployment-service/scripts/vm/launch-mtds- live.sh --asset-group tradfi --shard-spec tradfi:CME:trades --instrument-ids <ids>`
+  per that launcher's usage, or simply confirming the existing VM's connector auto-recovers once the account is live
+  again — untested either way).
