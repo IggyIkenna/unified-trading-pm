@@ -86,8 +86,17 @@ source: >-
       unified-trading-pm (this batch): added "Cursor permission-mode: two PER-MACHINE settings, not Claude Code
       settings" section to `/codex/05-infrastructure/claude-code-settings-symlink.md` with the exact keys, the
       per-machine (non-propagating) framing, and the two recorded dead ends.
-- [ ] [CODE] P2. Confirm no workflow depended on the disabled pyright-lsp in-session diagnostics before making the
-      disable permanent Source: `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md`
+- [x] ✅ [CODE] P2. Confirm no workflow depended on the disabled pyright-lsp in-session diagnostics before making the
+      disable permanent Source: `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md` —
+      unified-trading-pm (this batch): grepped every `.json`/`.md`/`.sh`/`.py`/`.yml`/`.yaml` file in the repo for
+      `pyright-lsp`/`pyright_lsp` — the only live hit is `cursor-configs/settings.json:35`
+      (`"pyright-lsp@claude-plugins-official": false`); no skill (`cursor-configs/skills/`), codex doc (`codex/`), CI
+      workflow, or script references the plugin or its "in-session diagnostics" (grepped for "language server"/"lsp"/
+      "in-session diagnostic" across both trees — zero hits). `quality-gates.sh` runs `basedpyright` itself
+      independently of the plugin, so the QG gate is unaffected either way (already noted in the source issue). The
+      disable is already the tracked, git-committed team default (`e5be0047c1`, 2026-07-23, "re-track
+      cursor-configs/settings.json") and propagates fleet-wide via `git pull` — nothing further needs to ship to make it
+      permanent.
 - [ ] [CODE] P2. Re-verify (live find/ls) whether codex_vs_repo_docs_ssot_audit_2026_06_01.md's MDPS/instruments-service
       [x] items have the same DELETE-half-unshipped pattern already confirmed for 3 other items. Source:
       `plans/active/issues/plan_reconciler_findings_infra_2026_08_10.md`

@@ -95,7 +95,7 @@ source: >-
 2026-08-01) ·
 [issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md](/plans/active/issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md)
 (`quickmerge.sh` `ENVIRONMENT` auto-detect bug on `live-defi-rollout`) ·
-[issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md](/plans/active/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md)
+[issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md](/plans/archive/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md)
 (GitHub Actions self-hosted-runner WIF job steps overwrite the shared gcloud config fleet-wide).
 
 **Close-out criterion**: QG sentinel environment-aware; quickmerge new-file-only ships no longer no-op; provenance gate

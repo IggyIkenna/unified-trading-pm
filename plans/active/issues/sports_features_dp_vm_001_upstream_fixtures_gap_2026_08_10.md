@@ -215,3 +215,13 @@ in one day — escalating the severity read on the tracked P2 dispatch-gating to
 dispatch gap is actively burning slot capacity every cycle"; did not re-bump the priority number myself (P2 already
 reflects "confirmed recurring", and priority is agent-orchestrator-repo-scoped work this wall cannot action) but
 flagging for whoever picks up that todo that 5 occurrences in <24h materially raises its urgency.
+
+**slot-5 2026-08-14 (data_pipeline_failure escalation agt-7664d3, SIXTH occurrence)** — another fresh escalation id
+(`agt-7664d3`) dispatched for the SAME VM `features-sports-sports-2026-20260810-051126`, same stale-context shape
+(`"Filed issue: (none — alert carries the details)"` + bare `RELAUNCH` instruction, no reference to this issue doc or
+the standing operator do-not-relaunch ruling BLK-4fecb718). Given six same-day dispatches of one resolved wall, each
+prior one already re-verifying upstream-present + recompute-done + relaunch-bound-exceeded, did not re-run the
+GCS/manifest checks a sixth time — no relaunch performed, no code change in `deployment-service` (this wall's `$REPO`;
+the defect is in agent-orchestrator's escalation dispatch/lifecycle layer, outside this one-shot wall's scope). Not
+bumping the tracked P2 dispatch-gating todo's priority number again — six occurrences in one day is now unambiguous
+evidence for whoever actions it in agent-orchestrator.

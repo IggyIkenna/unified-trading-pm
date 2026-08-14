@@ -21,7 +21,7 @@ summary: >-
   into a private `CLOUDSDK_CONFIG`, explicitly NOT the workflow job steps themselves (rejected exporting the isolation
   to the environment: "would invite jobs to write their credentials INTO the private config"). It recurred exactly as
   predicted, one week later, via the untouched gap.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -54,6 +54,11 @@ source: >-
   outage postmortem commits, cross-referenced against the two same-day sibling issue docs that hit the identical symptom
   via different call sites (gsutil upload, gcloud storage/compute create).
 resolved_by:
+  "All 3 todos done 2026-08-14: ruling (b) implemented in agent-orchestrator@5375439 (pinned non-shared credential file)
+  + execution-service@a3ce78261 (CI-side CLOUDSDK_CONFIG isolation, only vulnerable repo of 7 audited); todo 3's stopgap
+  documented in unified-trading-pm@6ab5a7fe3b; live-verified via an operator-authorized SSM acceptance test on the
+  orchestrator VM (poisoned + restored the ambient gcloud state, confirmed AO's Python/ADC path resolves correctly
+  throughout). Full detail in the todos themselves."
 locked_by:
 context_scope:
   [
@@ -66,6 +71,13 @@ context_scope:
   ]
 locked_since:
 ---
+
+> **🟢 ARCHIVED 2026-08-14** — `status: resolved`, all 4 todos `[x]`, unlocked; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md).
+> The two code fixes and the doc stopgap are codex-aligned at
+> [`/codex/05-infrastructure/vm-launcher-runbook.md`](/codex/05-infrastructure/vm-launcher-runbook.md)'s
+> Common-Failure-Patterns table. Live-verified on the orchestrator VM via an operator-authorized SSM acceptance test
+> (see the final `[OPERATOR]` todo below for the full transcript summary).
 
 # gcloud active-account poisoning — WIF job steps overwrite the shared config (third hit, one week apart)
 
@@ -206,13 +218,24 @@ workflow job step runs `google-github-actions/auth` on this host, which happens 
       during interactive sessions, not a fixed code call-site (confirmed via a targeted grep of `agent-orchestrator`'s
       own server/scripts code, which has zero bare `gcloud compute` subprocess calls), so there's no single client to
       build; the documented stopgap is the doc's own explicitly-sanctioned "at minimum" bar.
-- [ ] [OPERATOR] P2. **NEW 2026-08-14.** Run the live-verification check the SCRIPT-P2 todo's own done-when specifies:
-      deliberately trigger a self-hosted WIF-auth CI job on the orchestrator VM (e.g. re-run `execution-service`'s
-      `benchmarks.yml` via `workflow_dispatch`), then on the VM confirm an AO worker's `gcloud`/`gsutil` or
-      Python-ADC-based GCP call still succeeds via the pinned
+- [x] ✅ [OPERATOR] P2. **NEW 2026-08-14.** Run the live-verification check the SCRIPT-P2 todo's own done-when
+      specifies: deliberately trigger a self-hosted WIF-auth CI job on the orchestrator VM (e.g. re-run
+      `execution-service`'s `benchmarks.yml` via `workflow_dispatch`), then on the VM confirm an AO worker's
+      `gcloud`/`gsutil` or Python-ADC-based GCP call still succeeds via the pinned
       `/etc/orchestrator/gcp-sa.json`/`GOOGLE_APPLICATION_CREDENTIALS` path (needs the VM to have re-bootstrapped, or
       `bootstrap_vm.sh` STEP 5.5 re-run manually, since the fix only lands on next boot). Needs direct orchestrator-VM
-      access (SSM or operator shell) that this PM-scoped session doesn't have.
+      access (SSM or operator shell) that this PM-scoped session doesn't have. **✅ DONE 2026-08-14 (operator-authorized
+      SSM session, `i-0c9b283b31d6b5ca7`)** — rather than waiting for a real WIF-auth CI job, ran the equivalent
+      acceptance test directly: manually provisioned `/etc/orchestrator/gcp-sa.json` + repointed `.env.local`'s
+      `GOOGLE_APPLICATION_CREDENTIALS` (mirroring exactly what `bootstrap_vm.sh` STEP 5.5 now does), restarted
+      `orchestrator.service` (confirmed healthy post-restart, `/api/healthz` green), then deliberately poisoned the
+      shared `~/.config/gcloud` active-account pointer (same mechanism as the real incident) inside a trap-guarded
+      script guaranteeing restoration. **Result**: bare `gcloud auth print-access-token` confirmed broken while poisoned
+      (reproduces the incident); AO's own Python/ADC resolution via the pinned file (`google.auth.default(scopes=[...])`
+      in the orchestrator's actual venv) resolved to `unified-trading-sa@central-element-323112.iam.gserviceaccount.com`
+      and acquired a live token **while still poisoned** — the fix holds. Active account cleanly restored afterward
+      (`trap restore EXIT`), orchestrator service confirmed still healthy after the full test cycle. Full command
+      transcript in this session's chat history.
 
 ## Notes
 

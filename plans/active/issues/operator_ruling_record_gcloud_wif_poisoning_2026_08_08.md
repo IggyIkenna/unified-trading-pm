@@ -20,14 +20,14 @@ scope: [admin]
 tags: [operator-ruling, evidence, plan-hygiene, quality-gates, findings-triage]
 related:
   [
-    /plans/active/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md,
+    /plans/archive/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md,
     /plans/active/issues/operator_ruling_record_ao_round5_apply_session_2026_08_08.md,
     /plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md,
     /plans/active/ci_consolidated_closeout_2026_07_25.md,
   ]
 context_scope:
   [
-    /plans/active/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md,
+    /plans/archive/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md,
     /plans/active/issues/operator_ruling_record_ao_round5_apply_session_2026_08_08.md,
   ]
 created: 2026-08-09
@@ -66,7 +66,7 @@ a third party cannot tell which from the outside). The confirmation todo below s
 
 - **Durable direction for the shared `~/.config/gcloud` active-account poisoning** — _"option (b) — non-shared
   credential file per job."_ Cited by
-  `/plans/active/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md`'s head `[OPERATOR-DECISION] P1`
+  `/plans/archive/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md`'s head `[OPERATOR-DECISION] P1`
   todo ("**RESOLVED 2026-08-08 -- operator ruling: option (b), a non-shared credential file per job.**"), which lists
   the 4 candidate directions (a)-(d) it chose among: (a) extend `CLOUDSDK_CONFIG` isolation to workflow job steps, (b)
   move `unified-trading-sa`'s activation to a non-shared `GOOGLE_APPLICATION_CREDENTIALS` file, (c) stop dual-purposing

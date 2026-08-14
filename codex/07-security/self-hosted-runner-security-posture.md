@@ -26,7 +26,7 @@ related:
   ]
 created: 2026-07-17
 authoritative_for: [self-hosted runner ambient-identity posture, glue-runner credential-exposure facts]
-referenced_by: [/plans/active/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md]
+referenced_by: [/plans/archive/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md]
 owner:
 last_reviewed: 2026-08-12
 code_refs: [unified-trading-pm/scripts/self-hosted-runners/]
@@ -128,14 +128,15 @@ checked repo visibility before adding a repo to the self-hosted list.
   self-hosted has ambient ADC. STEP 2b's trim (drop `auth@v3` + per-run pip installs in `ci-status-update`) is the
   canonical example, and it was **probed on the box first** (`env -i` + unit PATH → python Firestore client write OK) —
   gcloud CLI credentials and the ADC file are DIFFERENT stores; always probe ADC specifically before dropping an auth
-  step. **Caveat, ruled failure mode (2026-07-25, recurring, open — not fixed by this posture):** "ambient ADC is there"
-  assumes the shared `~/.config/gcloud` active account stays `unified-trading-sa`. A self-hosted job that itself calls
+  step. **Caveat, ruled failure mode (2026-07-25, recurring, fixed 2026-08-14):** "ambient ADC is there" assumed the
+  shared `~/.config/gcloud` active account stays `unified-trading-sa`. A self-hosted job that itself calls
   `google-github-actions/auth` (WIF, e.g. `cloud-build-router.yml`'s `github-actions-deploy@` SA) overwrites that SAME
   shared config with a job-scoped credential that cannot outlive the job, poisoning every later shell on the host
   (including AO worker slots) until manually repointed — documented recurring (5+ occurrences) in
-  `/plans/active/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md`. Durable fix (operator-ruled
-  option (b), 2026-08-08: a non-shared per-job credential file) is decided but not yet implemented — see that issue
-  doc's Todos.
+  `/plans/archive/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md`. Durable fix (operator-ruled
+  option (b), 2026-08-08: a non-shared per-job credential file) shipped `agent-orchestrator@5375439` +
+  `execution-service@a3ce78261`, live-verified on the orchestrator VM 2026-08-14 — see that archived issue doc's Todos
+  for the full evidence.
 - **Moving self-hosted → hosted requires restoring the auth steps** (hosted has no ambient identity) — the reverse
   migration is NOT a plain `runs-on` flip (see also `hosted-baseline.sh`, which exists because the forward flip deleted
   hosted-only setup steps).

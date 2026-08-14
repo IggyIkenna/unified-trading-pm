@@ -182,7 +182,7 @@ Two independent fix directions, either or both:
   decision needed... resolution is to implement BOTH options"), which on its face clears the 2026-08-04/08-06 KEEP-NA
   rationale ("needing a direction decision first"). **Held, not flipped**: this doc's own subject (a shared-host
   `gcloud` active-account race across ALL concurrent AO slots) closely overlaps
-  `plans/active/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md` (already cites this doc in its
+  `/plans/archive/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md` (already cites this doc in its
   own `context_scope`) -- a related but distinct root cause (GH Actions WIF job auth vs multi-slot
   `gcloud config set account` races) proposing the same class of fix (per-invocation identity pinning / named configs)
   against the SAME shared `~/.config/gcloud` mutable state. Per the conflict-check protocol's caution on
