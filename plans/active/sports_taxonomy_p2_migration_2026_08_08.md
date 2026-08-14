@@ -281,6 +281,18 @@ than proceeding.
     re-stamp reproduces the identical 209,526-vs-123,642 zero-overlap incident the dict's own history already documents;
     the diff is drafted in the new todo's scope description instead of merged standalone, to land atomically with the VM
     re-stamp. Checkbox on the original todo stays unflipped per the operator's explicit instruction.
+- **2026-08-14 (resume)** — Census script committed (`instruments-service@3fbcf108`) but **quickmerge blocked at ship
+  step by an unrelated, foreign QG red**: `test_expected_matches_golden[defi]` (fleet-wide, not caused by this commit —
+  same failure class as the archived `instruments_service_defi_golden_red_capability_lockstep_gap_2026_08_05.md`
+  incident). Root UAC commit (`unified-api-contracts@6a001ea4`, AAVE_V3 rewards) is settled, but the sanctioned
+  `regenerate_expected_universe_golden.py` fix produces a much broader 2280-line diff (MORPHO/SPARK/oracle_prices/
+  lst_rates/etc.) I could not verify is all intentional, and its unscoped run also nearly silently resolved an unrelated
+  open `[OPERATOR]` design question in `tradfi.json` (caught via `1 xpassed` where `xfail` was expected, reverted before
+  commit). Filed `/plans/active/issues/instruments_service_defi_golden_red_capability_drift_2026_08_14.md`
+  (`unified-trading-pm@0c8e9c26fc`) rather than attempt a fix outside this task's scope. **Census script stays local/
+  unpushed in slot-18's checkout** (`instruments-service`, ahead=1, tree otherwise clean) until that issue clears — no
+  data at risk: the census numbers + risk analysis this entry documents are the actual deliverable, already durable on
+  `origin/live-defi-rollout`.
 
 ## Codex SSOTs
 
