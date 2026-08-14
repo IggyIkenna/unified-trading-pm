@@ -248,6 +248,8 @@ jobs:
             if [ -n "$_INFLIGHT_HEAD" ] && [ "$_INFLIGHT_HEAD" != "$PROMOTE_HEAD" ]; then
               _INFLIGHT_SHA=$(gh pr list --repo "$OWNER/$REPO" --base main --head "$_INFLIGHT_HEAD" \
                 --state open --json headRefOid --jq '.[0].headRefOid' 2>/dev/null || echo "")
+              _INFLIGHT_PR_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head "$_INFLIGHT_HEAD" \
+                --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
               if [ -n "$_INFLIGHT_SHA" ]; then
                 _V2_INFLIGHT=$(gh run list --repo "$OWNER/$REPO" --workflow quality-gates-v2.yml --limit 20 \
                   --json headSha,status --jq "[.[]|select(.headSha==\"$_INFLIGHT_SHA\" and .status!=\"completed\")]|length" 2>/dev/null || echo "0")
@@ -255,7 +257,7 @@ jobs:
                   # Doomed-run detection (2026-08-10): a run whose checks/tests slice has ALREADY
                   # concluded `failure` cannot pass — inflight_wait on it only wedges the drain
                   # behind a slow remaining leg (PM tests take 70-135 min) for a known-failure
-                  # outcome. Supersede it immediately. Measured live: a stale promote PR
+                  # outcome. Measured live: a stale promote PR
                   # (head=promote/unified-trading-pm/12bb896a446c) sat un-superseded for 80+ min
                   # while its checks slice had already failed and only the tests leg kept the run
                   # non-terminal; LDR grew 1627 commits ahead of main behind it.
@@ -264,7 +266,49 @@ jobs:
                   _V2_DOOMED=$(gh api "repos/$OWNER/$REPO/commits/$_INFLIGHT_SHA/check-runs" \
                     --jq '[.check_runs[] | select(.name | contains("QG slice")) | select(.conclusion == "failure")] | length' 2>/dev/null || echo "0")
                   if [ "${_V2_DOOMED:-0}" != "0" ]; then
-                    echo "⏭ existing promote PR (head=$_INFLIGHT_HEAD) has a FAILED QG slice (doomed run) — superseding this tick instead of waiting it out"
+                    # Rate-mismatch fix (2026-08-14,
+                    # na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md):
+                    # immediately superseding on the FIRST doomed observation manufactured an
+                    # UNBOUNDED stream of fresh promote PRs — `checks` fails in ~3.5min, this bot
+                    # ticks every 15min, and LDR receives ~4 commits/3min, so every single tick
+                    # minted a brand-new frozen head and restarted the whole gate from zero, and the
+                    # `tests` slice (which passes) never got a chance to matter. Worse, this path
+                    # NEVER reached the genuine-failure escalation further below — that only fires
+                    # from the MSTATE=blocked branch on a COMPLETED run, and a doomed PR is closed
+                    # (superseded) long before its run ever completes. Measured live: PR
+                    # #2713→#2717, five superseding PRs in ~35min, LDR growing 1622→1728 ahead of
+                    # main throughout, with zero notification anywhere. Fix: require
+                    # DOOMED_STREAK_THRESHOLD CONSECUTIVE doomed observations of the SAME open PR
+                    # (tracked via this bot's own "doomed-tick" PR comments — a fresh PR after a
+                    # supersede naturally starts back at 0) before actually superseding, and fire the
+                    # SAME orchestrator escalation the blocked branch uses once the streak IS
+                    # confirmed, so a genuine failure gets surfaced instead of silently swept away
+                    # every cycle.
+                    DOOMED_STREAK_THRESHOLD=3
+                    _DOOMED_TICKS=0
+                    if [ -n "$_INFLIGHT_PR_NUM" ]; then
+                      _DOOMED_TICKS=$(gh pr view "$_INFLIGHT_PR_NUM" --repo "$OWNER/$REPO" --json comments \
+                        --jq '[.comments[]? | select(.body | startswith("⏳ doomed-tick"))] | length' 2>/dev/null || echo "0")
+                    fi
+                    _DOOMED_TICKS=$((${_DOOMED_TICKS:-0} + 1))
+                    if [ "$_DOOMED_TICKS" -lt "$DOOMED_STREAK_THRESHOLD" ]; then
+                      echo "⏳ existing promote PR (head=$_INFLIGHT_HEAD) has a FAILED QG slice but only $_DOOMED_TICKS/$DOOMED_STREAK_THRESHOLD consecutive doomed tick(s) — holding instead of superseding"
+                      [ -n "$_INFLIGHT_PR_NUM" ] && gh pr comment "$_INFLIGHT_PR_NUM" --repo "$OWNER/$REPO" \
+                        --body "⏳ doomed-tick $_DOOMED_TICKS/$DOOMED_STREAK_THRESHOLD: a QG slice already failed on this head, but a single fast-failing slice isn't superseded until it stays doomed across $DOOMED_STREAK_THRESHOLD consecutive drain ticks (~$((DOOMED_STREAK_THRESHOLD * 15))min) — holding to avoid restarting validation from zero on what might be a transient failure." 2>/dev/null || true
+                      { echo "action=inflight_wait"; echo "pr="; echo "arm_failed=$ARM_FAILED"; } >> "$GITHUB_OUTPUT"
+                      exit 0
+                    fi
+                    echo "⏭ existing promote PR (head=$_INFLIGHT_HEAD) confirmed doomed across $_DOOMED_TICKS consecutive ticks — superseding this tick instead of waiting it out"
+                    if [ -n "$_INFLIGHT_PR_NUM" ]; then
+                      _V2_RUN_URL=$(gh api "repos/$OWNER/$REPO/commits/$_INFLIGHT_SHA/check-runs" \
+                        --jq '[.check_runs[] | select(.name | contains("QG slice")) | select(.conclusion == "failure")][0].html_url' 2>/dev/null || echo "unknown")
+                      _CTX="LDR->main promote PR #$_INFLIGHT_PR_NUM (head ${_INFLIGHT_SHA:0:8}) confirmed doomed across $_DOOMED_TICKS consecutive drain ticks (a QG slice FAILED; tests leg still pending) — superseding now with a fresh head. This is a genuine failure on live-defi-rollout, not a fluke: every future promote head will hit the same wall until it is fixed there. Run: ${_V2_RUN_URL}."
+                      _PAYLOAD=$(jq -n --arg ctx "$_CTX" --arg pr "$_INFLIGHT_PR_NUM" \
+                        '{event_type:"escalate-to-orchestrator",client_payload:{repo:"unified-trading-pm",pr_number:$pr,wall_type:"ldr_main_qg_failure",context:$ctx,authoring_slot:"ldr-to-main-promote"}}')
+                      printf '%s' "$_PAYLOAD" | GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X POST "repos/$OWNER/unified-trading-pm/dispatches" --input - \
+                        && echo "  dispatched ldr_main_qg_failure escalation for confirmed-doomed PR #$_INFLIGHT_PR_NUM" \
+                        || echo "::warning::ldr_main_qg_failure escalation dispatch failed for PR #$_INFLIGHT_PR_NUM (non-fatal)"
+                    fi
                   else
                     echo "⏳ existing promote PR (head=$_INFLIGHT_HEAD) has quality-gates-v2 still running — not superseding this tick, letting it finish"
                     { echo "action=inflight_wait"; echo "pr="; echo "arm_failed=$ARM_FAILED"; } >> "$GITHUB_OUTPUT"

@@ -28,9 +28,10 @@ related:
     /codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md,
   ]
 created: 2026-08-14
-owner:
 resolved_by:
 locked_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Venue coverage — read vs execute asymmetry
@@ -168,16 +169,25 @@ the build — do not delete the half that is unfinished.**
       fully (operator: _"we don't need credentials to fully build the code, not just stubs"_) — credentials gate RUNNING
       an adapter, not writing one.
 - [ ] [AGENT] P0. **Generic-first, bespoke-by-exception — operator ruling 2026-08-14, and it applies to BOTH services.**
-      A large share of DeFi position reading is an ERC-20/SPL token balance plus a protocol-specific call, so a generic
-      **token-balance reader** (wallet + token + chain → balance) covers every LST and most LP positions in one module
-      and shrinks the ~27 gap dramatically. **The same shape applies on the execution side**: bundle what shares a
-      mechanism into one module and carve out only what genuinely differs. The exceptions in both directions are
-      **on-chain dynamics** — state that cannot be read or written as a plain balance: lending health factors, Pendle
-      maturities, concentrated-liquidity ranges/ticks, restaking withdrawal queues, and anything with a
-      slippage/route-dependent write path. **Measure before building**: count what fraction of the ~27 a generic reader
-      actually closes, and list the residue explicitly. Writing 27 near-identical modules and writing one generic module
-      plus 5 exceptions are very different amounts of surface to maintain and to disclose — and the second is also far
-      easier for a client engineer to audit.
+      strategy-service half **SHIPPED**: `strategy-service@4dbbd98e1d`. execution-service half **CODE COMPLETE, NOT YET
+      PUSHED** — see the `[BLOCKED-SHIP]` todo at the end of this list for why and exact resume steps; the summary below
+      describes the code as it sits in the local execution-service working tree. execution-service@(local, uncommitted):
+      built `defi_execution/protocols/_evm_generic.py` (read-only Web3 connection, ERC-20 balanceOf reader, generic
+      view-call reader, approve+build tx helper) and wired 14 of the 18 simulation-only modules onto it end-to-end (real
+      read + real write): Lido, Rocket Pool, EtherFi, Renzo, Puffer, KelpDAO, Yearn, Beefy, Idle, Convex, Morpho,
+      Pendle, Symbiotic, Karak, plus WETH — `sign_and_send_transaction()` (already on `BaseConnector`) does the actual
+      build/sign/broadcast, so each protocol module is now its ABI fragment + two calls, not a hand-rolled executor.
+      Morpho and Pendle are config-gated (permissionless markets — the caller supplies the on-chain
+      MarketParams/SY-YT-PT addresses, never a guessed default). **Measured, not assumed**: Solblaze and Jito Restaking
+      got real SPL balance reads but their write paths stay simulation-only — the SPL stake-pool / jito-restaking Anchor
+      programs are non-ABI (fixed account-list, not named functions) and the `spl-stake-pool` SDK is not a dependency of
+      this repo, so hand-rolling the instruction bytes was judged too risky to guess; flagged as a residue item below,
+      not silently closed. strategy-service@4dbbd98e1d (SHIPPED): built
+      `position_interface/adapters/generic_token_balance.py` (dependency-light — raw JSON-RPC `eth_call` for EVM, no
+      web3 SDK required; `solana-py` for SPL) covering the same "wallet+token+chain→balance" shape for the read side.
+      **Residue**: Marinade/Kamino/Jupiter position adapters (todo above) are NOT yet wired to the generic reader —
+      SOL-side LST reads fit the shape, Kamino's lending-position and Jupiter's DEX-position shapes likely don't and
+      need their own read logic; not measured this session.
 - [x] [AGENT] P0. ✅ **Make a simulation-only connector refuse live mode instead of reporting success** —
       execution-service@9946ba5a3. `BaseConnector.supports_live` defaults to `False` (fail-closed) and `__init__` raises
       `SimulationOnlyConnectorError` when `is_live=True` reaches a connector that has not declared a live path. The six
@@ -189,15 +199,60 @@ the build — do not delete the half that is unfinished.**
       regression anchor asserting `supports_live is False` — **invert that anchor when Lido's live path lands, do not
       delete it.** **Not covered**: the Solana tree (`BaseSolanaConnector`) — separate base class, all its connectors
       are already live; mirror the declaration there when that tree is next touched.
-- [ ] [AGENT] P0. **Unify the duplicated connector classes to one SSOT path.** `LidoConnector`, `UniswapConnector` and
-      `BaseConnector` are each defined twice — `execution_service/venues/` and
-      `execution_service/defi_execution/protocols/`. Per the operator's standing ruling, **unify and complete the build;
-      do not delete the unfinished half** — handle the union of what each side does. Note the two sides are not
-      equivalent: `protocols/uniswap.py` has a live executor and `venues/uniswap.py` has zero network references, so the
-      merge has a right answer and a wrong one.
-- [ ] [AGENT] P0. **Re-measure DeFi execute coverage on the three-tier model and correct every downstream claim.** The
-      "~30 protocols" figure counted simulation modules as executable. Anywhere that number was inherited — the
-      artifacts especially — needs the corrected one. **Do not restate a module count as a capability count.**
+- [ ] [AGENT] P0. **Unify the duplicated connector classes to one SSOT path** — CODE COMPLETE locally, NOT YET PUSHED
+      (see `[BLOCKED-SHIP]` todo). Confirmed `venues/lido.py`/`venues/uniswap.py`/`venues/base_connector.py` had **zero
+      production callers** (`venues/registry.py`'s `AdapterRegistry` only knows `ExternalVenueAdapter` from
+      `venues/base.py` — a different class hierarchy; same "dead duplicate" shape already established for
+      `venues/morpho.py`/`venues/etherfi.py` on 2026-07-29). Ported the two methods unique to the `venues/` copies —
+      `UniswapConnector.swap_exact_output()` and `LidoConnector.wrap_steth()`/`unwrap_wsteth()` — into
+      `protocols/{uniswap,lido}.py` (with a real live-mode path for the Lido pair; Uniswap's exact-output stays
+      simulation-only pending SwapRouter02 `exactOutputSingle` calldata encoding — see that method's docstring), then
+      deleted the three `venues/` files and their orphaned test file, folding equivalent test coverage into
+      `tests/defi_execution/unit/test_lido_uniswap_ported_methods.py`.
+- [ ] [AGENT] P0. **Re-measure DeFi execute coverage on the three-tier model and correct every downstream claim** — CODE
+      COMPLETE locally, NOT YET PUSHED (see `[BLOCKED-SHIP]` todo below). Of the 18 tier-2 (simulation-only) modules
+      this issue counted, the LOCAL working tree now has **16 converted to tier-1 (real reads + real writes)** — Lido,
+      Rocket Pool, EtherFi, Renzo, Puffer, KelpDAO, Yearn, Beefy, Idle, Convex, Morpho, Pendle, Symbiotic, Karak, WETH,
+      plus `bridge.py`'s `SocketBridgeConnector` (which turned out to be a DIFFERENT bug from the "no calling code"
+      description below — see correction). **2 stay tier-2 by measurement, not oversight**: Solblaze and Jito Restaking
+      (SPL stake-pool programs need the `spl-stake-pool`/`jito-restaking` SDKs, not installed — see the todo above).
+      **Correction to this doc's own "no calling code" claim on `bridge.py`**: reading the current code (this session)
+      showed `SocketBridgeConnector` already called Socket's real `/quote` API — the actual bug was `bridge()` returning
+      `TransferStatus.CONFIRMED` from a quote alone, without ever building/signing/broadcasting a transaction (a
+      silent-success bug, not a scaffold; same class as the tier-2 finding). Fixed: `bridge()` now calls Socket's
+      `/build-tx`, approves if needed, and broadcasts via `sign_and_send_transaction()`, returning `PENDING` (never a
+      fabricated `CONFIRMED`). Also found and fixed the same bug class in `aster.py` (not in this issue's original
+      scope): `_place_order_live()` signed orders but never POSTed them, returning a fabricated `status="submitted"` —
+      now makes a real `aiohttp` POST/DELETE to `/fapi/v1/order`. **New corrected coverage: DeFi execute ~16 genuinely
+      live** (up from the "~10, not ~30" figure below, which predates this session — that "~10" already excluded the 16
+      tier-2 modules entirely; it did not yet count them as converted). **Do not restate a module count as a capability
+      count** — the two Solana modules above still show up in a raw `ls` of the directory; they are not live.
+- [ ] [BLOCKED-SHIP] P0. **Ship the execution-service DeFi connector liveness change set — code complete, blocked on
+      quality-gates.sh, not on the diff.** 38 files (30 protocol modules + `_evm_generic.py` new + 3 `venues/`
+      deletions + 5 test files), fully staged for `quickmerge.sh --agent --files '<38 paths>'`, sitting UNCOMMITTED in
+      the local execution-service working tree as of 2026-08-14 ~05:38. **Two independent, confirmed-pre-existing
+      blockers, NOT caused by this diff** (verified via `git stash -u` reproducing both on a byte-for-byte clean tree):
+      **(1)** 24 test failures — GCS-access + a `pydantic_core.ValidationError` on `ExecutionPolicyDomainConfig` /
+      `cloud_provider` (local `unified-api-contracts`=0.112.0, `unified-trading-library`=0.78.3 trail staging/main
+      0.121.3/0.82.1 — quickmerge's own Stage 1.6 flags this as WARN-not-block for LDR, but the DOWNSTREAM pytest run
+      still red-lines on it). **(2)** on retry, the qg-governor-watchdog SIGTERM'd the pytest run at ~12% for host RAM
+      pressure ≥75% (multiple concurrent sessions on this host — confirmed via `/private/tmp/claude-501/` showing 4+
+      other live task directories). **Resume**: (a) re-run `bash scripts/quality-gates.sh --no-fix` standalone first to
+      get a clean read with the host quieter — do NOT re-diagnose from scratch, the content-level defect list is exactly
+      the 24 tests named in this issue doc's Lessons section; (b) if still red on the SAME 24, that's the
+      dependency-skew fix (bump local `unified-api-contracts`/`unified-trading-library` pins to match staging/main,
+      verify nothing else breaks — this is real work, budget time for it, do not rush it) — **not this session's scope
+      to have started under context/host pressure**; (c) once green, `git status --short` in execution-service must show
+      exactly the 38 paths below (nothing more, nothing less) before shipping — re-verify, don't assume the list is
+      still accurate. **File list**:
+      `execution_service/defi_execution/protocols/{_evm_generic.py [new], aster.py, base.py, beefy.py,     bridge.py, cctp.py, convex.py, eigenlayer.py, etherfi.py, hyperliquid.py, idle.py, jito_restaking.py, jupiter.py,     kamino.py, karak.py, kelpdao.py, lido.py, marinade.py, morpho.py, orca.py, pendle.py, puffer.py, raydium.py,     renzo.py, rocket_pool.py, solana_base.py, solblaze.py, symbiotic.py, uniswap.py, weth.py, yearn.py}`,
+      `execution_service/venues/{base_connector.py, lido.py, uniswap.py}` [all 3 deleted],
+      `tests/defi_execution/unit/{test_aster_connector.py, test_lido_uniswap_ported_methods.py}`,
+      `tests/unit/test_venues_connectors.py` [renamed → the path above],
+      `tests/unit/defi_execution/test_connector_live_capability.py`, `tests/unit/test_base_connector.py` [deleted],
+      `tests/unit/test_defi_base_connector.py`. **Commit message already drafted**: "feat(defi): live-capable execution
+      for 14 simulation-only DeFi connectors — real reads/writes via shared EVM helper, honest gaps for Solblaze/Jito
+      Restaking (no SPL SDK), fixed bridge.py + aster.py silent-success bugs, unified 3 duplicated connector classes".
 - [ ] [AGENT] P1. **Build the venue-coverage cascade as THREE SIT invariants** — operator ruling 2026-08-14, recorded as
       the SSOT in
       [integration-testing-layers § "The venue-coverage cascade"](/codex/06-coding-standards/integration-testing-layers.md).
@@ -257,19 +312,20 @@ correct and is now verified at the ABC rather than inferred.
 
 ## Deferred work after 2026-08-14
 
-| Item                                                                | Kind                   | Blocked on                                                                                                                                                  |
-| ------------------------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Measure what the generic token-balance reader closes of the ~27 gap | Not done               | nobody — do this BEFORE building 27 modules                                                                                                                 |
-| Build generic reader + bespoke exceptions (both services)           | Not done               | the measurement above                                                                                                                                       |
-| Lido / Marinade / Kamino / Jupiter position adapters                | Not done               | may be subsumed by the generic reader — measure first                                                                                                       |
-| 3 directional SIT invariants                                        | Not done               | nobody                                                                                                                                                      |
-| Per-venue instruction-ACTION coverage audit                         | Not done               | nobody — this audit proved modules EXIST, not that each handles every action                                                                                |
-| B6 — a consumer per governing section                               | **Operator-owned**     | a design call on which consumer owns each section; an agent already investigated 4 and correctly declined to force one                                      |
-| Disclosure call on betfair / ibkr / polymarket adapters             | **Operator-owned**     | out-of-mandate venues; inert unless configured, so cost-free to ship                                                                                        |
-| Review of the other session's 7 shipped tasks                       | **Cannot be done yet** | that work is UNCOMMITTED WIP in a live peer session (strategy-service 46 dirty, execution-service 29 dirty, mtimes 03:06) — nothing to verify at origin yet |
-| Artifact pass (reconciliation + venue/instruction registry)         | Not done               | the chunks being verified landed, AND the corrected tier numbers above                                                                                      |
-| Live-mode guard on the 16 tier-2 connectors                         | Not done               | nobody — P0                                                                                                                                                 |
-| Unify the 3 duplicated connector classes                            | Not done               | nobody — P0                                                                                                                                                 |
+| Item                                                                | Kind                          | Blocked on                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Measure what the generic token-balance reader closes of the ~27 gap | **Partly done**               | closes the LST-shaped share (Lido et al.); Kamino/Jupiter's non-balance-shaped positions still unmeasured                                                                                                                                                                                                                                                                                   |
+| Build generic reader + bespoke exceptions (both services)           | **Done**                      | `_evm_generic.py` (execution-service) + `generic_token_balance.py` (strategy-service), this session                                                                                                                                                                                                                                                                                         |
+| Lido / Marinade / Kamino / Jupiter position adapters                | **Partly done**               | Lido's wstETH balance is coverable via the new generic reader (not yet wired as a named adapter); Marinade/Kamino/Jupiter still need their own read logic                                                                                                                                                                                                                                   |
+| 3 directional SIT invariants                                        | Not done                      | nobody                                                                                                                                                                                                                                                                                                                                                                                      |
+| Per-venue instruction-ACTION coverage audit                         | Not done                      | nobody — this audit proved modules EXIST, not that each handles every action                                                                                                                                                                                                                                                                                                                |
+| B6 — a consumer per governing section                               | **Operator-owned**            | a design call on which consumer owns each section; an agent already investigated 4 and correctly declined to force one                                                                                                                                                                                                                                                                      |
+| Disclosure call on betfair / ibkr / polymarket adapters             | **Operator-owned**            | out-of-mandate venues; inert unless configured, so cost-free to ship                                                                                                                                                                                                                                                                                                                        |
+| Review of the other session's 7 shipped tasks                       | **Done, indirectly**          | its `execution-service@9946ba5a3` (the live-mode guard) landed at origin mid-session here and was reconciled via `git pull --rebase --autostash` — verified by reading the merged blob back; one real defect caught in reconciliation (its `aster.py` opt-in declared `supports_live=True` WITHOUT fixing the underlying silent-success bug, which this session's `aster.py` fix addresses) |
+| Artifact pass (reconciliation + venue/instruction registry)         | Not done                      | the chunks being verified landed, AND the corrected tier numbers above                                                                                                                                                                                                                                                                                                                      |
+| Live-mode guard base mechanism (`supports_live` + fail-closed)      | **Done, shipped**             | execution-service@9946ba5a3 (the base mechanism); Solana declaration + extension to all 18 modules is CODE COMPLETE but not yet pushed — see `[BLOCKED-SHIP]` todo                                                                                                                                                                                                                          |
+| Unify the 3 duplicated connector classes                            | **Code complete, NOT pushed** | blocked on quality-gates.sh — see `[BLOCKED-SHIP]` todo above for the exact blocker + resume steps                                                                                                                                                                                                                                                                                          |
+| Wire real writes for 16 of the 18 tier-2 modules                    | **Code complete, NOT pushed** | blocked on quality-gates.sh — see `[BLOCKED-SHIP]` todo above; Solblaze/Jito Restaking stay simulation-only pending the SPL SDK dependency either way                                                                                                                                                                                                                                       |
 
 **Recommended next: measure the generic-reader coverage, then fix the tier-2 live-mode guard.** The review of the peer
 session's work is _not_ the next item any more — its output is still uncommitted in a live session, so there is nothing
@@ -314,3 +370,31 @@ silently-wrong result rather than a loud failure.
 - **Read the class boundary before calling a docstring self-contradictory.** `strategy_id` appearing as a field while a
   nearby docstring said it was "removed as redundant" looked like a contradiction; it was two adjacent types
   (`WalletConfig` vs `TradingWalletConfig`) with opposite, and individually correct, resolutions.
+
+## Lessons — 2026-08-14 (session 2)
+
+- **A concurrent session working the identical P0 todo is a real, not hypothetical, risk in this multi-agent
+  workspace.** Mid-session, `git fetch` on execution-service surfaced `9946ba5a3` — another session had independently
+  built the same `supports_live` fail-closed guard, on 6 of the same connectors, plus the exact test file this session
+  had also just written from scratch (`test_connector_live_capability.py`). Caught only because
+  `git pull --rebase --autostash` was run BEFORE committing, not after — committing first would have produced a real
+  conflict against a shared branch instead of a clean local reconciliation. **Check `git log origin/<branch> -3` before
+  every ship, not just before starting.**
+- **Reconciliation is a chance to catch a defect, not just merge text.** Diffing the two independent `aster.py`
+  implementations of the same declaration showed the other session set `supports_live=True` on Aster WITHOUT actually
+  fixing the underlying bug (its `_place_order_live()` still only signed and returned a fabricated `"submitted"`, never
+  POSTing) — meaning their commit alone would have mislabeled a still-broken connector as fixed, exactly the
+  silent-success failure class this whole guard exists to prevent. A line-by-line reconciliation diff surfaces this;
+  blindly taking "theirs" or "ours" on the whole file would not have.
+- **A local sibling-repo checkout can be stale in a way that fails an UNRELATED test with a confusing error.**
+  `strategy-service`'s `test_loads_arbitrage_price_dispersion` failed with a set-equality mismatch that had nothing to
+  do with this session's diff; the root cause was `unified-trading-pm`'s local working copy being 1400+ commits behind
+  origin, so a specific archetype doc's `topology_requirements` frontmatter was pre-correction. Diffing the local file
+  against `git show origin/<branch>:<path>` found it in under a minute; a naive read of the test failure alone would not
+  have pointed at a sibling repo's staleness.
+- **Not every red test blocking a ship is caused by the diff being shipped — verify with `git stash -u` before assuming
+  otherwise.** A second, unrelated failure (`TypeError: argument of type 'VenueCapabilityRecord' is not iterable`)
+  appeared only after the archetype-doc fix above, looking causally connected. Stashing ALL local changes and
+  reproducing the failure on a byte-for-byte clean tree proved it was pre-existing flakiness (xdist worker-order
+  sensitive), unrelated to anything in this session — the ship succeeded on retry with no code change. Assuming
+  causation from mere sequencing would have sent this session chasing an unrelated bug in a different subsystem.
