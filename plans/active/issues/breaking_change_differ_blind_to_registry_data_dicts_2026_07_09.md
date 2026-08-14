@@ -203,7 +203,7 @@ Close Layer 1 (make the gate fire) AND Layer 2 (give it teeth when it does):
       explicitly-deferred no-op -- this closes the exact class of gap this doc exists to fix (a registry-data-dict
       change landing on `main` with nothing catching the downstream break before IS's own QG did, live). Design decision
       closed; the mechanical spec + implementation is the new todo below.
-- [ ] [SCRIPT] P2. **NEW 2026-08-08 -- implement the consumer-QG promote fan-out per the ruling above.** Scope: on a
+- [x] ✅ [SCRIPT] P2. **NEW 2026-08-08 -- implement the consumer-QG promote fan-out per the ruling above.** Scope: on a
       `unified-api-contracts` (UAC) staging->main promote that touches a registry/data-dict module (the same class of
       change `detect_breaking_change.py` already tracks per this doc's fix -- venue/capability/instrument-type
       constants, not just exports/enums/routes/annotations), the promote gate must additionally dispatch and require
@@ -214,7 +214,21 @@ Close Layer 1 (make the gate fire) AND Layer 2 (give it teeth when it does):
       pass before merge; this adds a third required signal, consumer QG, scoped to registry-touching changes only so it
       does not fire on every UAC change). SSOT once shipped: update `/codex/08-workflows/ci-cd-flow.md`'s
       breaking-differ section (already documents registry-data-constant tracking per this doc's earlier fix) to also
-      document the new consumer-QG fan-out gate.
+      document the new consumer-QG fan-out gate. — ✅ **DONE 2026-08-14 (slot 14, infra).** Shipped
+      `unified-api-contracts@ae2f4ce4c5` (new `consumer-qg-gate` job in `image-build-gate.yml`: file-level scopes the
+      promote PR diff to `venue_constants.py`/`market_data_categories.py`, dispatches `consumer-qg-check` to
+      instruments-service on a touch, polls the `consumer-qg/instruments-service` commit status for up to 25min, fails
+      closed on timeout/failure) + `instruments-service@054a67ba04` (new `consumer-qg-check.yml` listener: checks out
+      the candidate UAC SHA as the sibling editable dep, runs `quality-gates.sh --no-fix` against it, posts the result
+      back as a commit status on the UAC candidate SHA) + `unified-trading-pm` (this commit, codex doc updated below).
+      **Caveat, tracked as a new follow-up todo below**: not yet wired into `pin_branch_protection_rulesets.py`'s
+      required-context set, so it currently blocks its own workflow run but not the PR merge button.
+- [ ] [SCRIPT] P3. **NEW 2026-08-14.** Wire `consumer-qg-gate` (context: the `consumer-qg-gate (instruments-service)`
+      job in `unified-api-contracts/.github/workflows/image-build-gate.yml`, shipped this session) into
+      `scripts/repo-management/pin_branch_protection_rulesets.py`'s required-status-check set for
+      `unified-api-contracts`'s main ruleset (or fold it into the `ldr_main` MVP gate set alongside
+      `sit-gate/fleet-green`), so a candidate that fails consumer QG actually blocks the PR merge button instead of only
+      failing its own workflow run. (repo: unified-trading-pm)
 - [x] ✅ [DOCS] P2. Once landed, update the breaking-differ section of `/codex/08-workflows/ci-cd-flow.md` to document
       registry-data-constant tracking (remove the implicit "only exports/enums/routes/annotations" mental model). (repo:
       unified-trading-pm) — shipped `unified-trading-pm@5607023a2`. **Citation corrected 2026-07-31** — see note above.
