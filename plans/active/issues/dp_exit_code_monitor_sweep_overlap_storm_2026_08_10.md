@@ -257,7 +257,7 @@ until the next sweep) and is a stopgap, not the root fix.
       phase this fix added. 136 `download_bytes(...) exceeded the 30s bounded-call timeout` warnings still fired before
       the kill. Filed the next P1 investigate/fix todo below. Repo: deployment-service.
 
-- [ ] [BACKEND] P1. **ADDED 2026-08-14 (slot 27, live-verify follow-up)** — the `run-log-prefetch` phase
+- [x] ✅ [BACKEND] P1. **ADDED 2026-08-14 (slot 27, live-verify follow-up)** — the `run-log-prefetch` phase
       (`deployment-service@cbe58d2d`) fixed the wall-clock problem but introduced a NEW memory regression: execution
       `qgtnz` (2026-08-14 20:00:04Z-20:13:35Z, first execution on the post-fix `deployment-api:latest` digest
       `db4f43ada1e1…`) OOM-killed (signal 9, `"The configured memory limit was reached"`) ~13.5 min in, mid-way through
@@ -287,7 +287,36 @@ until the next sweep) and is a stopgap, not the root fix.
       STALLED read also leaks an abandoned daemon thread holding its own buffered/retry state for the rest of the
       process lifetime, so the fan-out's true memory cost may be understated by blob size alone. Whichever fix lands
       (chunking / interleaving the prefetch) should also confirm it bounds daemon-thread accumulation from stalled
-      reads, not just resident blob count.
+      reads, not just resident blob count. — ✅ **FIXED (slot 26, same session)**: a live probe of every
+      `vm-logs/*/run.log` blob in the log bucket (`StorageClient.list_blobs(resolve_size=True)`, not `gsutil`) found
+      sizes ranging **1.1KB to 12.2GB** (mean 46.5MB, p50 1.6MB, p90 106MB, p99 694MB) — this reframes the root cause
+      from "266 blobs resident at once" (which chunking/interleaving would only partially fix, since even a chunk of
+      16-32 can still OOM if a few are multi-GB outliers) to **"blob SIZE is unbounded, not blob COUNT"**. Every
+      consumer of a run.log classification read only ever needs the RECENT tail (last-match scans for
+      markers/timestamps/rc=), never full history, so the fix caps each read to its last 2MiB via a new
+      `read_text_tail()` helper (`_gcs_tail.py`, split out to stay under the 960-line file cap — mirrors the
+      `_classify.py` split precedent) using `StorageClient.download_bytes_range` (existing UAC/UTL primitive) with a
+      `get_blob_metadata` size check first, falling back to a normal whole-blob read when already under the cap. Wired
+      into all 4 run-log-prefetch/classify/stall-marker/alert-snippet read sites in `exit_code_fleet_monitor.py` plus
+      `heartbeat_stall_watcher.py`'s `_read_liveness_base()` (same `RUN_LOG_BLOB` unbounded-read exposure, confirmed via
+      code read — not previously flagged). Bounds worst-case fan-out memory to
+      `_SWEEP_IO_MAX_WORKERS(16) × 2MiB ≈ 32MiB` regardless of backlog size, independent of the daemon-thread-leak
+      addendum above (that mechanism still applies per abandoned/stalled call, but is now capped in per-thread payload
+      size too). `deployment-service@e69f8aeda4`, QG green (full suite, after fixing a `_FakeBlobMeta`/`FakeStorage`
+      test fixture gap — missing `.size` field silently `None`-ed 13 tests via the helper's blanket exception catch).
+      Residual NOT fixed this session (scope-boxed to the confirmed OOM mechanism): `_gcs.py`'s internal
+      `read_terminal_exit_code` fallback run.log read stays unbounded — low-risk (single-VM synchronous path, not
+      fanned-out) but should be swept up if it ever shows in a future OOM's phase logs. Live-verification of the next
+      hourly execution (does `qgtnz`'s OOM class actually stop recurring) is a fresh verify task, not bundled here.
+
+- [ ] [BACKEND] P2. **ADDED 2026-08-14 (slot 26, follow-up)** — live-verify the tail-cap fix
+      (`deployment-service@e69f8aeda4`: `read_text_tail()` 2MiB cap wired into all run-log read sites in
+      `exit_code_fleet_monitor.py` + `heartbeat_stall_watcher.py`) actually stops the `qgtnz`-class OOM: confirm the
+      image digest genuinely runs the post-fix commit (same content-inspection discipline as the `qgtnz` verify — SHA
+      ancestor-check false-negatives under Option-B direct-promote), then check the next 2-3 hourly executions for (a)
+      no OOM/signal-9 kill, (b) a completed `run-log-prefetch phase took...` log line, (c) sweep finishing under 1800s.
+      If still OOM-ing, the residual unbounded `read_terminal_exit_code` fallback read in `_gcs.py` (noted as NOT fixed
+      this session, scope-boxed out) is the next suspect. Repo: deployment-service.
 
 ## Related
 
@@ -431,6 +460,21 @@ this task because it remains the SOURCE doc for still-open DERIVED todos in OTHE
 `plans/archive/2026_08/issues/` once those derived todos are reconciled.
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+
+- 2026-08-14 (slot 26, backend): Shipped the tail-cap fix for the `qgtnz` OOM (own P1 fix task
+  `dp_exit_code_monitor_sweep_overlap_storm-ff7c1ef84543`, following the live-verify task below in the same session).
+  Live probe of every `vm-logs/*/run.log` blob (`StorageClient.list_blobs(resolve_size=True)`) found sizes 1.1KB-12.2GB
+  — the real driver was unbounded blob SIZE, not resident blob COUNT, so chunking/interleaving (the todo's original
+  candidates) would only partially help. Added `read_text_tail()` (`_gcs_tail.py`, new file — split out of `_gcs.py` to
+  stay under the 960-line cap) capping reads to the last 2MiB via `StorageClient.download_bytes_range`, since every
+  consumer only scans for the LAST match of a marker. Wired into all 4 run-log read sites in
+  `exit_code_fleet_monitor.py` plus `heartbeat_stall_watcher.py._read_liveness_base()` (same unbounded-read exposure,
+  found via code read, not previously flagged on this doc). Fixed a `_FakeBlobMeta`/`FakeStorage` test-fixture gap
+  (missing `.size`) that silently `None`-ed 13 tests via the helper's blanket exception catch.
+  `deployment-service@ e69f8aeda4`, QG green full suite (3rd QG retry succeeded after 2 prior SIGTERM kills from
+  shared-host resource- governor contention — confirmed via `.benchmarks/qg-governor/killed.<pid>` markers, not a code
+  defect). Flipped the P1 todo done; filed a P2 live-verify follow-up (does the OOM class actually stop recurring on the
+  next hourly execution).
 
 - 2026-08-14 (slot 26, backend): Independently live-verified the SAME P2 classify-loop-fix todo in parallel with slot 27
   (both had live `gcloud`/GCS/docker credential access this session) — reached the identical result via a separate path:
