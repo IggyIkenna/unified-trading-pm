@@ -250,8 +250,16 @@ source: >-
 - [ ] [CODE] P2. Build the dashboard UI toggle for scheduled-dispatch pause/resume (the API is already shipped and live;
       only the UI wiring + Playwright pw:L2 coverage remains) Source:
       `plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`
-- [ ] [CODE] P2. Wire resource-watchdog's existing pressure/cgroup_mem tick log into the same death-correlation capture
-      path as the other host/account/pane fields Source:
+- [x] ✅ [CODE] P2. Wire resource-watchdog's existing pressure/cgroup_mem tick log into the same death-correlation
+      capture path as the other host/account/pane fields — STALE-CHECKBOX correction, not new work: the source doc's own
+      copy of this exact todo is already
+      `[x] [INFRA] P3. Wire resource-watchdog's tick log into death correlation —     superseded, root cause found.`
+      (line 241, in its "All 32 items below predate the confirmed root cause" section) — the tmux-server death root
+      cause was confirmed 2026-08-13 (`ROOT CAUSE CONFIRMED + Two-layer fix`) via a different mechanism (live-catch +
+      strace + auditd), making the resource-watchdog pressure/cgroup_mem correlation wiring moot before it was ever
+      built; this batch20 extraction never picked up that supersession. Per the AO-dispatch conflict-check protocol's
+      rule 4 ("already-shipped elsewhere, checkbox just never flipped" — here, already superseded), citing the source
+      doc's own resolution rather than building unneeded correlation wiring. Source:
       `plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`
 - [ ] [CODE] P2. Confirm sub-E (odum3default@gmail.com) / sub-D (odum1default@gmail.com) account identity mapping
       against accounts.json / .claude-accounts/*.env before using either as a calibration sample Source:
