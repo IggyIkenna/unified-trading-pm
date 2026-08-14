@@ -20,8 +20,8 @@ tags: [ao, agent-orchestrator, tracker, consolidated, open-work, worker-lifecycl
 related:
   [
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
-    /plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
-    /plans/active/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
     /plans/active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
     /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
@@ -256,9 +256,15 @@ before touching the source doc directly._
 
 ## Track 6 — Archival + reconciliation bookkeeping
 
-- [ ] [REVIEW] P0. Archive `ao_satellite_ao_dispatch_batch6_2026_08_04.md` + run its finalize plan's remaining 3 todos
+- [x] [REVIEW] P0. Archive `ao_satellite_ao_dispatch_batch6_2026_08_04.md` + run its finalize plan's remaining 3 todos
       (reconcile evidence into named source docs, archive zero-open-todo sources, self-archive) — confirmed 0 open todos
-      on the batch plan itself. Source: `/plans/active/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md`.
+      on the batch plan itself. Source: `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md`.
+      **DONE 2026-08-14** — batch6_finalize's 3 remaining todos (reconcile evidence, archive zero-open-todo sources,
+      self-archive) all confirmed already-satisfied-or-completed and flipped `[x]`; both batch6 and batch6_finalize
+      `git mv`'d to `plans/archive/2026_08/`, banners added, `status: active → complete`, all corpus-wide referrers
+      repointed. See these docs' own Progress Logs for full evidence. Evidence: this commit (doc edits) plus a follow-up
+      corrective commit closing a create-only-commit gap left by the automated inventory-regen step's own commit
+      (`unified-trading-pm@6d8a610d77`).
 - [ ] [INFRA] P0. Archive `ao_satellite_ao_dispatch_batch7_2026_08_06.md` (confirmed 0 open todos) via its finalize
       plan's 1 remaining todo (self-archival ritual + inventory regen). Source:
       `/plans/active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md`.

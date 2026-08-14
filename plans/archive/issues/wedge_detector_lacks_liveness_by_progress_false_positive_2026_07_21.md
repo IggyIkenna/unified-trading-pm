@@ -174,8 +174,8 @@ progress-signal half.
 - **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — re-affirmed on a full re-read. Todo 1
   is now `[x]` (shipped `agent-orchestrator@0757a751`/`@0cc12fdb`, closed today by the same-day sibling
   `/ag-closeout-audit ao` run). The 2 remaining items (`[DOCS] P2` review-heuristic mirror + `[REVIEW] P3` operator
-  sign-off) are both already extracted into `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md` todo 5
-  (bundled together, since the sign-off explicitly gates the code change). Not reclassified — same tranche-standing-NA
+  sign-off) are both already extracted into `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md` todo
+  5 (bundled together, since the sign-off explicitly gates the code change). Not reclassified — same tranche-standing-NA
   convention as `fleet_git_health_ip_185...`'s marker today; the doc's own self-declared safety rationale (a careless
   suppression predicate could blind genuine wedge detection) independently supports the same verdict.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

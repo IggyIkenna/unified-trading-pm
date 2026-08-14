@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 295 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 296 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -626,11 +626,14 @@ by hand._
   direction is UAC-as-SSOT (Option A), executed as a scoped migration, not a blind rename. Picks deliberate field names
   for…
 
-### cross-cutting (62)
+### cross-cutting (64)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
   cefi, defi, tradfi, prediction — each of which already carries its own…
+- [`alert_driven_dependency_revocation_2026_08_12`](./alert_driven_dependency_revocation_2026_08_12.md) — Today an alert
+  fires and nothing downstream reacts. A dead manifest consolidator, a catalogue 24h stale, or a VM that drained without
+  capturing anything all leave dependent VMs downloading into a pipeline whose inputs are already known bad…
 - [`asset_class_to_asset_group_rename_2026_07_21`](./asset_class_to_asset_group_rename_2026_07_21.md) — Rename the
   DOMAIN-level unified_api_contracts.AssetClass (crypto/equity/fx/commodity/fixed_income) to AssetGroup across UAC + 7
   downstream consumer repos + the UI, in one coordinated atomic landing per repo (no backward-compat shims…
@@ -819,6 +822,9 @@ by hand._
 - [`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`](./pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md)
   — Standardise pipeline_mode to source-aware live/batch/replay schema across all repos, gating all v9 manifest --apply
   runs on Phase 0 completion.
+- [`revocation_arming_2026_08_14`](./revocation_arming_2026_08_14.md) — The revocation mechanism is BUILT and INERT.
+  Measured 2026-08-14: nothing calls RevocationActuator.actuate() outside tests, so no alert has ever revoked anything
+  and none will. The read side is fully wired (heartbeat drain poll, vm-exec…
 - [`service_config_ownership_and_instruction_contract_2026_08_12`](./service_config_ownership_and_instruction_contract_2026_08_12.md)
   **[draft]** — Establishes the target the operator set 2026-08-12: the strategy↔execution contract is the INSTRUCTION
   (trade / swap / back-lay / atomic) plus a strategy-sent reference price, execution-service owns algo selection
@@ -840,7 +846,7 @@ by hand._
   — Cross-AG registry foundation. Adds a route axis (aggregator/broker/direct) and a mode axis (batch/live) to
   VENUE_DATA_TYPE_CAPABILITIES so an aggregator-served venue reads as a venue WITH an adapter, folds in the…
 
-### ao (43)
+### ao (42)
 
 - [`anthropic_per_task_actual_spend_and_account_calibration_2026_08_10`](./anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md)
   — The task-usage dashboard's $ column is blank for 1,993 of 2,622 completed task_usage rows (100% of Anthropic rows)
@@ -861,6 +867,9 @@ by hand._
   2026-07-17 operator-session sweep of the 10 open AO issue docs — every doc's claims re-verified against the current
   LDR code AND the production orchestrator on the planning VM (read-only SSM — live state.db, activity_log, process
   table,…
+- [`ao_open_work_consolidated_tracker_2026_08_14`](./ao_open_work_consolidated_tracker_2026_08_14.md) — One place to see
+  every genuinely-still-open todo across the ~44 AO-subject-matter plans/issues audited 2026-08-14 (agent-orchestrator
+  dispatch, backlog, worker lifecycle, scheduled jobs, escalation queue, VM infra) — produced by a 5-agent…
 - [`ao_satellite_ao_dispatch_batch10_finalize_2026_08_09`](./ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md) —
   Gated closeout for `ao_satellite_ao_dispatch_batch10_2026_08_09.md` — machine-held via `depends_on` +
   `gate_on_depends` until all 6 of that batch's todos are done. Reconciles each verified todo's evidence back into its
@@ -923,13 +932,6 @@ by hand._
   scheduled dispatch, real `Workflow` fan-out over all 41 currently mechanically-flagged never-cited…
 - [`ao_satellite_ao_dispatch_batch5_finalize_2026_08_03`](./ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md) —
   Gated closeout for ao_satellite_ao_dispatch_batch5_2026_08_03.md — machine-held via depends_on + gate_on_depends until
-  every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE source issue doc(s)
-  (the…
-- [`ao_satellite_ao_dispatch_batch6_2026_08_04`](./ao_satellite_ao_dispatch_batch6_2026_08_04.md) — SIXTH AO-dispatch
-  batch for the `ao` topic tranche, produced by the `/ag-closeout-audit ao` skill run (2026-08-04, autonomous mode,
-  scheduled `ag_closeout_auditor` dispatch). Phase 1 ran a real `Workflow` fan-out over all 64 current…
-- [`ao_satellite_ao_dispatch_batch6_finalize_2026_08_04`](./ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md) —
-  Gated closeout for ao_satellite_ao_dispatch_batch6_2026_08_04.md — machine-held via depends_on + gate_on_depends until
   every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE source issue doc(s)
   (the…
 - [`ao_satellite_ao_dispatch_batch7_2026_08_06`](./ao_satellite_ao_dispatch_batch7_2026_08_06.md) — SEVENTH AO-dispatch

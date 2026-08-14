@@ -29,7 +29,7 @@ related:
     /plans/active/ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md,
     /plans/active/ao_satellite_ao_dispatch_batch7_2026_08_06.md,
     /plans/active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md,
-    /plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
     /plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,

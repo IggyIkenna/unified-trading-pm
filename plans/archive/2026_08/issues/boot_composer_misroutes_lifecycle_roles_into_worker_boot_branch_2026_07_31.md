@@ -56,7 +56,7 @@ context_scope:
     agent-orchestrator/server/routes/slots_worker.py,
     agent-orchestrator/server/state_store/tasks.py,
     /agents/ag_closeout_auditor.md,
-    /plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
   ]
 ---
 
@@ -247,13 +247,13 @@ cefi-specific** — same defect now reproduced on a second tranche.
   the tranche-level BLOCKED-OPERATOR-DECISION in `infra_consolidated_closeout_2026_07_25.md`'s 2026-08-02 marker.
 - **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — re-affirmed on the standing corpus
   ruling above (not re-litigated). All 3 open todos are now already extracted into
-  `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md` todos 6-7 (composer-guard fix + one-shot-role extension
-  as todo 6; the `/done` empty-sha data-integrity fix as todo 7) — same tranche-standing-NA convention as
+  `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md` todos 6-7 (composer-guard fix + one-shot-role
+  extension as todo 6; the `/done` empty-sha data-integrity fix as todo 7) — same tranche-standing-NA convention as
   `fleet_git_health_ip_185...`'s marker today. `asset_group` now correctly `[ao]` (retagged 2026-08-04, no longer the
   flagged mistag).
 - **context-scout 2026-08-05**: re-scouted; swapped `/agents/review.md` for
-  `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md` (now the doc actually tracking the remaining 2 open
-  todos per the 2026-08-04 na-eligibility-audit marker above), 5 entries.
+  `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md` (now the doc actually tracking the remaining 2
+  open todos per the 2026-08-04 na-eligibility-audit marker above), 5 entries.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

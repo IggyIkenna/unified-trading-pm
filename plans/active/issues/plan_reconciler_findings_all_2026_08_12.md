@@ -265,9 +265,9 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       P3 as "Opus/high", propagating the same stale claim
 - [ ] [REVIEW] P3. (P3) plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md — bogus lock predates doc
       creation
-- [ ] [REVIEW] P3. (P2) plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md — Deferred section claims a doc is
-      still operator-gated; its own finalize twin shows it was reclassified NA→planning the same day, self-flagged but
-      never corrected
+- [ ] [REVIEW] P3. (P2) plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md — Deferred section claims a
+      doc is still operator-gated; its own finalize twin shows it was reclassified NA→planning the same day,
+      self-flagged but never corrected
 - [ ] [REVIEW] P3. (P3) plans/archive/2026_08/issues/ao_park_disposition_blocked_answer_no_follow_through_2026_07_31.md
       — `locked_since` predates `created` by 2 months (impossible); `locked_by` is a branch name, not an owner
 - [ ] [REVIEW] P3. (P2) plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md:87,96 — Phase-3 checkbox still asserts

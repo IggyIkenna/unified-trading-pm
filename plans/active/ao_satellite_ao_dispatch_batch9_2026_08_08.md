@@ -26,8 +26,8 @@ tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-9, satellite-docs, 
 related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch9_finalize_2026_08_08.md,
-    /plans/active/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
-    /plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
     /plans/active/ao_satellite_ao_dispatch_batch8_2026_08_08.md,
     /plans/archive/2026_08/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
     /plans/archive/2026_08/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md,

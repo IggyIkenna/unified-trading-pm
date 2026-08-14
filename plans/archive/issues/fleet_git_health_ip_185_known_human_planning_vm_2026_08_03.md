@@ -90,8 +90,8 @@ re-discovering it and asking whether it's a decommissioned host whose worker WIP
   flagging to whoever picks up the todo.
 - **na-eligibility-audit 2026-08-04** (autonomous, tranche `ao`): KEEP-NA, valid — first marker on this doc. The sole
   open todo (allowlist the human-planning VM in the fleet git-health scanner) is bounded/mechanical on its own, but its
-  content is already extracted verbatim into `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md` todo 9
-  (same-day sibling `/ag-closeout-audit ao` run) — that batch, per this tranche's own 100%-consistent,
+  content is already extracted verbatim into `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md` todo
+  9 (same-day sibling `/ag-closeout-audit ao` run) — that batch, per this tranche's own 100%-consistent,
   previously-flagged convention (`ao_open_issues_consolidated_close_out_2026_07_17.md:136`, na-eligibility-audit
   2026-08-01), stays `assigned_vm: NA`/interactive-only even once its extracted content clears AO-dispatch-scope
   eligibility. Reclassifying this source doc directly would create a competing/duplicate dispatch claim against batch6

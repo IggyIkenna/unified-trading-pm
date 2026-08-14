@@ -145,7 +145,7 @@ task is already in-flight on another live slot.
       log naming both slot ids + the task) so `/api/state` never shows one task `working` in two slots — makes the
       condition observable instead of something main has to catch by pane inspection. — **Shipped
       agent-orchestrator@82578c3** (dispatched + executed via
-      `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`, full evidence there) — checkbox flipped by
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md`, full evidence there) — checkbox flipped by
       plan_reconciler agt-c7578b 2026-08-10, independently re-verified: `82578c3` confirmed ancestor of
       `origin/live-defi-rollout` and its commit message explicitly cites this exact todo. (batch6-finalize's own todo 2,
       which would normally do this reconciliation, is still open — flipping directly here since the source doc exited
