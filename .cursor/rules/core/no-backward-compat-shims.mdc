@@ -81,4 +81,4 @@ rg "# MIGRATED|backward compat|backward-compat|Re-export.*backward|re-export.*co
 ```
 
 CODEX: 06-coding-standards/README.md (no backwards-compatibility hacks rule)
-AUDIT: plans/active/SCHEMA_CONTRACTS_AUDIT.md
+AUDIT: plans/archive/SCHEMA_CONTRACTS_AUDIT.md

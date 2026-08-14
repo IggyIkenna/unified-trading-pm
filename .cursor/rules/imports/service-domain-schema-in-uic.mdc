@@ -26,7 +26,7 @@ WHY: If schemas are defined in service repos, other services cannot discover the
 cross-service imports.
 
 CODEX: 02-data/contracts-scope-and-layout.md, 02-data/schema-governance.md
-AUDIT: plans/active/SCHEMA_CONTRACTS_AUDIT.md
+AUDIT: plans/archive/SCHEMA_CONTRACTS_AUDIT.md
 
 ## WHAT GOES IN UAC internal/domain/<service-name>/
 
@@ -83,7 +83,7 @@ AUDIT: plans/active/SCHEMA_CONTRACTS_AUDIT.md
 
 ## KNOWN VIOLATIONS (from 2026-03-05 audit)
 
-See plans/active/SCHEMA_CONTRACTS_AUDIT.md Section 3b:
+See plans/archive/SCHEMA_CONTRACTS_AUDIT.md Section 3b:
 - execution-service/sports/models.py → internal/domain/execution-service/sports.py
 - strategy-service/models/domain_data.py + order.py → internal/domain/strategy-service/
 - market-data-processing-service/models.py + base_adapter.py → internal/domain/market-data-processing/

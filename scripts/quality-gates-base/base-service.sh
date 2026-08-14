@@ -1917,7 +1917,7 @@ DOMAIN_CONTRACTS_IN_SERVICE=$(codex_rg 'class \w+\(BaseModel\)' --type py \
     "$SOURCE_DIR/" 2>/dev/null | grep -v '#.*CORRECT-LOCAL' || :)
 [[ -n "$DOMAIN_CONTRACTS_IN_SERVICE" ]] && {
     log_fail "Pydantic BaseModel subclasses found in service source — domain data contracts must live in UIC domain/<service-name>/"
-    log_fail "See: unified-trading-pm/plans/active/SCHEMA_CONTRACTS_AUDIT.md Section 3b"
+    log_fail "See: unified-trading-pm/plans/archive/SCHEMA_CONTRACTS_AUDIT.md Section 3b"
     echo "$DOMAIN_CONTRACTS_IN_SERVICE" | head -5
     V=$(( V + 1 ))
 } || log_success "No domain BaseModel contracts in service source"
