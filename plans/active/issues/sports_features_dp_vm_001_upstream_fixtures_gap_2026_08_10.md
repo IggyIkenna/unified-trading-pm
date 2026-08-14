@@ -20,7 +20,7 @@ status: open
 nature: issue
 asset_group: [sports]
 stage: [meta]
-repos: [deployment-service, instruments-service, features-service]
+repos: [deployment-service, instruments-service, features-service, agent-orchestrator]
 scope: [engineer, admin]
 tags:
   [data-correctness, dp-alerts, dp-vm-001, vm-relaunch, sports, features-service, upstream-dependency, relaunch-storm]
@@ -129,23 +129,28 @@ context_scope:
 - [ ] [DATA] P3. Verify the 2022 year-sharded features VM (`features-sports-sports-2022-20260810-051126`): no
       EXIT_STATUS (terminated mid-run 07:15Z, skip-if-fresh only) — confirm 2022 features coverage in the availability
       index.
-- [ ] [CODE] P1. **Bumped P2→P1 2026-08-14 (7th occurrence, slot-5, agt-66cc86)** — seven same-day duplicate dispatches
-      of one already-resolved wall is no longer a "recurring gap", it is active, ongoing capacity burn in
-      `agent-orchestrator`; escalate priority accordingly. AO re-dispatched already-resolved escalation agt-af22dd to a
-      fresh slot (22:18Z) with a stale boot context carrying no resolution — gate escalation dispatch on
-      already-resolved (or carry the resolution summary in the boot context) so a resolved wall cannot spawn a
-      conflicting relaunch worker. **Bumped P3→P2 2026-08-14: a THIRD occurrence confirmed** (see Late dispatch note,
-      slot-30) — this is a recurring dispatch-gating gap, not a one-off. **FOURTH occurrence, 2026-08-14, sharper
-      evidence (slot-6)**: this time it is the SAME `escalation_id` (`agt-bc9148`) re-dispatched — not merely a fresh id
-      for the same underlying VM — only ~30s after its own prior worker (slot-30) reached `lifecycle-complete`.
-      `/api/activity` event ids 488567 (`tmux_session_lost`/`archived_lifecycle_complete: true`, agent `agt-bc9148`,
-      02:49:40Z) → 488570/488575 (`escalation_dispatch_initiated`/`escalation_dispatched`, same
-      `escalation_id: agt-bc9148`, to slot 6, 02:50:10Z / 02:50:25Z) prove the dispatcher re-fired the identical
-      escalation object right after its own completion, rather than clearing it — a tighter mechanical bug than "stale
-      boot context," pointing at a completion-ack/clear race in the escalation lifecycle, not just a missing
-      already-resolved check. No relaunch performed (nothing could have changed in 30s; slot-30's same-day verification
-      stands unchanged). No code fix in `deployment-service` — the gap is in `agent-orchestrator`'s escalation
-      dispatch/lifecycle layer, outside this wall's `$REPO` scope.
+- [x] [CODE] P1. ✅ **(a) dedup-layer fix SHIPPED** — `deployment-service@427d6d2b91` adds
+      `escalation_dedup.find_open_issue_for_vm` + `check_dispatch_dedup_vm`, mirroring the existing
+      `(asset_group, data_type)`-keyed path but matched on the exact `vm_name` (immutable once a VM has terminated, so a
+      match on an OPEN issue doc is sufficient to skip — no checkpoint concept needed).
+      `check_dispatch_dedup_for_finding` now falls back to the `vm_name` shape whenever a finding's `details` doesn't
+      carry both `asset_group_name`/`data_type` (e.g. every `DP_VM_EXIT_NONZERO`/`DP_VM_STALL`/`DP_VM_PREEMPTED`
+      finding) — closing the "structurally CANNOT match, zero dedup coverage" gap the slot-5 (7th occurrence) diagnosis
+      identified. Unit tests added in `tests/unit/test_escalation_dedup.py` (`find_open_issue_for_vm` match/no-match/
+      wrong-vm/missing-tag cases + a `route_finding` wiring test reproducing this exact incident shape). QG green,
+      verified on origin. **(b) the agent-orchestrator completion-ack/clear race remains OPEN** — tracked as its own
+      todo below (distinct repo, distinct fix — see `agt-bc9148`/slot-6's same-escalation-object-bounce evidence, which
+      (a) alone does not address since that dedup only gates deployment-service's OWN re-scan-triggered fast-spawn, not
+      an already-dispatched-then-immediately-redispatched escalation row inside `agent-orchestrator` itself).
+- [ ] [CODE] P2. **agent-orchestrator escalation completion-ack/clear race** (slot-6, FOURTH occurrence, agt-bc9148):
+      `/api/activity` event 488567 (`tmux_session_lost`/`archived_lifecycle_complete: true`, agent `agt-bc9148`,
+      02:49:40Z) immediately followed by 488570/488575 (`escalation_dispatch_initiated`/`escalation_dispatched`, SAME
+      `escalation_id: agt-bc9148`, to slot 6, 02:50:10Z/02:50:25Z) — the dispatcher re-fired the identical escalation
+      object ~30s after its own worker's `lifecycle-complete`, rather than clearing/acking it first. Diagnose + fix in
+      `agent-orchestrator`'s escalation dispatch/lifecycle code (repo: `agent-orchestrator`) — whatever marks an
+      `EscalationQueueRow` `resolved`/cleared on worker completion must do so BEFORE the next dispatch tick can re-see
+      it as dispatchable. The vm_name-keyed dedup fix above (repo: `deployment-service`) closes the SEPARATE
+      re-scan-triggered re-fire path but does not touch this same-escalation-object bounce.
 
 ## Late dispatch note (slot-23, 2026-08-10)
 
@@ -249,3 +254,20 @@ could plausibly have changed, did not re-run those checks — no relaunch perfor
 authoring it blind under a one-shot wall's time-box risks a wrong-shaped fix for a bug whose full mechanism spans two
 repos; leaving it to a dedicated fix task with both repos in scope). Bumped the tracked todo P2→P1 above given the
 now-unambiguous, ongoing capacity cost.
+
+**slot-30 2026-08-14 (dedicated [CODE] P1 fix task, EIGHTH occurrence of the underlying dispatch-gap discussion)** —
+shipped part (a) of the slot-5 diagnosis: `escalation_dedup.find_open_issue_for_vm` + `check_dispatch_dedup_vm` added to
+`deployment-service` (`deployment-service@427d6d2b91`), and `check_dispatch_dedup_for_finding` now falls back to a
+`vm_name`-keyed match whenever a finding's `details` doesn't carry both `asset_group_name`/`data_type` — closing the
+structural "DP_VM_EXIT_NONZERO can never match, zero dedup coverage" gap. This gates deployment-service's OWN
+re-scan-of-durable-run.log re-fire path (what actually reproduces this incident's exact shape — a terminated VM's
+run.log surviving self-delete and being re-swept indefinitely with no persistent "already handled" state). Verified: QG
+green on the shipped SHA (`quality-gates.sh` full run, incl. the empty-string-fallback ratchet at exactly baseline after
+adding two `# noqa: qg-empty-fallback` sites for the new absent-field checks), SHA confirmed an ancestor of
+`origin/live-defi-rollout`. Unit tests added (match/no-match/wrong-vm/missing-registry-tag + a `route_finding` wiring
+test reproducing this exact incident's VM+registry_id shape). **Did NOT attempt part (b)** (the agent-orchestrator
+completion-ack/clear race slot-6 pointed at) — different repo, different subsystem (SQLAlchemy `EscalationQueueRow`
+lifecycle, not a PM-doc dedup check), and this task's own issue-doc scope (`repos:` at pickup time) didn't cover
+`agent-orchestrator`; added it to `repos:` and split it into its own tracked P2 todo above rather than guessing a fix in
+an unfamiliar subsystem under one session's time-box. Flipped the P1 CODE todo to done for part (a); part (b) stays open
+as its own todo.
