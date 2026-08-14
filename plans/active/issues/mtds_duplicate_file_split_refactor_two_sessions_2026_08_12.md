@@ -47,7 +47,13 @@ resolved_by:
 source: >-
   Interactive session 2026-08-12 slot 3, found while syncing market-tick-data-service to origin during a pre-compact
   checkpoint. Measured from git (line counts + `git merge-base --is-ancestor`), not inferred.
-context_scope: []
+context_scope:
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/active/issues/unified_trading_pm_stash_pile_accumulation_2026_07_26.md,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/partitioned_writer.py,
+    market-tick-data-service/market_tick_data_service/scripts/migrate_tradfi_canonical_2026_07.py,
+  ]
 ---
 
 # Two sessions, one refactor, two incompatible answers
@@ -99,3 +105,7 @@ Recover with `git stash apply stash@{0}` if any of it is worth salvaging.
       dirty on the SAME file) exists — nothing consumes it as a collision warning. Done when: either a warning is
       emitted on same-file dirty overlap across slots, or this is explicitly rejected as not worth the noise (record
       which, and why). Repo: unified-trading-pm.
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (4 entries).

@@ -23,6 +23,7 @@ repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [agent-orchestrator, git-health, base-checkout, dirty-state, operator-decision]
 related: [/codex/05-infrastructure/per-tab-worktrees.md, /plans/active/ao_satellite_ao_dispatch_batch19_2026_08_10.md]
+context_scope: [/codex/05-infrastructure/per-tab-worktrees.md, unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh]
 created: 2026-08-11
 last_updated: 2026-08-11
 parent_epic: infrastructure_master
@@ -76,3 +77,7 @@ fast-forward).
 - [ ] [SCRIPT] P3. **Identify + fix the source of the stray `<repo>/<repo>` self-referential symlinks** (2026-08-09
       15:28, uniform across every repo in the base checkout) and clean up the existing ones — cosmetic (doesn't block
       FF), but worth tracing to stop it recurring. Repo: unified-trading-pm.
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (2 entries).

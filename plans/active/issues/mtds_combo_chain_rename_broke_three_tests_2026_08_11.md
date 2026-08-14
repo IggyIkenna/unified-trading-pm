@@ -48,6 +48,12 @@ related:
     /plans/archive/issues/mtds_blanket_pyright_suppressions_ssot_contradiction_2026_07_30.md,
     /plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md,
   ]
+context_scope:
+  [
+    /plans/active/issues/ci_reconcile_overnight_batch_2026_08_11.md,
+    /plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md,
+    market-tick-data-service/market_tick_data_service/reader.py,
+  ]
 created: 2026-08-11
 author: claude-agent
 last_updated: 2026-08-11
@@ -233,6 +239,8 @@ would have been wrong per the `git add -A` ban.
       plan-completion-and-archival-discipline rule.
 
 ## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (3 entries).
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).

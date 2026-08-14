@@ -25,6 +25,12 @@ related:
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch10_2026_08_09.md,
   ]
+context_scope:
+  [
+    /plans/epics/infrastructure_master.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/monitoring_control_plane_master_2026_06_10.md,
+  ]
 created: 2026-08-06
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -143,6 +149,8 @@ failure (75 orphans vs 69 baseline).
       grace expired and the archive already happened.
 
 ## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (3 entries).
 
 - **2026-08-09, slot-22 (backend_engineer)**: found this doc's own `related:` list failing QG's `check_reference_paths`
   (3 dangling entries) while shipping an unrelated task. `ag_closeout_audit_ci_parked_2026_08_06.md` never existed in

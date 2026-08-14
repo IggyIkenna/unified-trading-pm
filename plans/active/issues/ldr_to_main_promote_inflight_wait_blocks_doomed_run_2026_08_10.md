@@ -30,6 +30,12 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
     /plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md,
   ]
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md,
+    unified-trading-pm/.github/workflows/ldr-to-main-promote.yml,
+  ]
 created: 2026-08-10
 source: ci-reconciler sweep
 resolved_by:
@@ -92,3 +98,7 @@ can't.
 - [ ] [DEVOPS] P3. Consider the same doomed-run guard in `ldr-to-main-promote-fleet.yml`'s per-repo supersede path if
       the fleet bot ever shows the same wait-on-doomed-run shape (no evidence of it today — fleet PRs are per-SHA
       fresh).
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (3 entries).

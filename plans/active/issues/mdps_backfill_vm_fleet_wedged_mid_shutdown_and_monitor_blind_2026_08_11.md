@@ -28,6 +28,14 @@ related:
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
   ]
+context_scope:
+  [
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
+    /plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md,
+    deployment-service/scripts/vm/reap_vms.py,
+    deployment-service/scripts/recovery/relaunch_backfill_vm.py,
+  ]
 created: "2026-08-11"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -225,6 +233,8 @@ guest liveness on 2 samples) — a future check should confirm they're actually 
       guest-alive).
 
 ## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (5 entries).
 
 - **data_pipeline_failure escalation `agt-68d94a` (2026-08-12, slot 5)**: dispatched via `rb_infra_relaunch.md` with
   `CONTEXT=CRITICAL DP_VM_EXIT_NONZERO (DP-VM-001) — VM mdps-cefi-2019-20260810-023141 terminated with exit_code=1 ... RELAUNCH`.

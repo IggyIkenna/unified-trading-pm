@@ -45,6 +45,13 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on:
+context_scope:
+  [
+    unified-trading-pm/scripts/quality-gates-base/qg-common.sh,
+    unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh,
+    /plans/active/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md,
+    /codex/06-coding-standards/quality-gates.md,
+  ]
 source: found 2026-08-11 while shipping the DeepSeek wallet sampler — the repo's own test suite could not run
 ---
 
@@ -167,3 +174,4 @@ leaves the environment behind, silently, forever.
 - **2026-08-11** — Found while shipping the DeepSeek wallet sampler: this repo's own suite could not collect. Swept
   laptop + orchestrator VM, remediated all drifted venvs, shipped the fail-closed gate check, and recorded the three
   self-corrections above.
+- **context-scout 2026-08-14**: populated context_scope (4 entries).

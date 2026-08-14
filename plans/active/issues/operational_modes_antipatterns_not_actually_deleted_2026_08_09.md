@@ -24,6 +24,12 @@ related:
     /codex/04-architecture/paper-vs-live-execution-seam.md,
     /codex/05-infrastructure/per-venue-paper-policy.md,
   ]
+context_scope:
+  [
+    /codex/04-architecture/operational-modes.md,
+    /codex/04-architecture/paper-vs-live-execution-seam.md,
+    unified-api-contracts/unified_api_contracts/internal/modes.py,
+  ]
 created: 2026-08-09
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
@@ -166,6 +172,8 @@ each anti-pattern, and their `last_reviewed` bumped to reflect a review that act
       Repo: execution-service.
 
 ## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (3 entries).
 
 - **2026-08-09 (slot 3, interactive)** — Found while unblocking a codex-freshness red during an unrelated ship. The gate
   did its job precisely as designed: a 90-day timer forced a re-read of an SSOT that had drifted badly from the code it

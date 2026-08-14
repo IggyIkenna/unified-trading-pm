@@ -37,6 +37,13 @@ locked_since:
 resolved_by:
 source: "plan_reconciler dispatch agt-24f6e5 — sharded ui tranche run 2026-08-11"
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md,
+    /plans/active/ui_satellite_ao_dispatch_batch3_2026_08_09.md,
+    /plans/active/ui_satellite_ao_dispatch_batch3_finalize_2026_08_09.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # plan_reconciler findings — ui tranche, 2026-08-11
@@ -133,3 +140,7 @@ include multiline-frontmatter ui-tagged docs.
 - Contradiction sweep across all ui-tagged docs once the grace window clears.
 - Batch3 todo 3 adjudication (moot-or-not) — operator or next reconciler with write access to the source doc.
 - The 4 items routed to operator by yesterday's run (agt-ec1688) — check for operator answers.
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (4 entries).

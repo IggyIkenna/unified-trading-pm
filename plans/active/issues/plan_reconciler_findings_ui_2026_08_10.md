@@ -37,6 +37,14 @@ locked_since:
 resolved_by:
 source: "plan_reconciler dispatch agt-ec1688 — sharded ui tranche run 2026-08-10"
 depends_on: []
+context_scope:
+  [
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
+    /codex/05-infrastructure/deployment-observability.md,
+    /codex/03-deployment/data-status-ui-surface.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # plan_reconciler findings — ui tranche, 2026-08-10
@@ -330,3 +338,4 @@ staged batch before commit).
   matches this script's own date exactly. Filed as a dedicated cross-cutting issue (see Filed section) since fixing it
   corpus-wide is out of this ui-scoped run's mandate, but it directly blocks a ui-tranche archival decision. Fan-out
   hunters dispatched next for fresh contradiction/hygiene/AO-readiness/ codex-alignment coverage.
+- **context-scout 2026-08-14**: populated context_scope (5 entries).

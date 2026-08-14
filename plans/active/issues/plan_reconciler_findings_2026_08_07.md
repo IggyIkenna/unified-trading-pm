@@ -24,6 +24,12 @@ related:
     /plans/active/deployment_registry_firestore_p5_verify_2026_07_14.md,
     /plans/active/deployment_registry_firestore_migration_2026_07_14.md,
   ]
+context_scope:
+  [
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
+    /plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md,
+    /plans/active/deployment_registry_firestore_p5_verify_2026_07_14.md,
+  ]
 created: "2026-08-07"
 last_updated: "2026-08-07"
 parent_epic: deployment_and_user_management_master
@@ -169,6 +175,8 @@ None — all 15 ui-tranche docs were identified and their grace/lock/open-todo s
 were not read end-to-end (active work in flight, <12h old — reading them for context is safe but modifying them is not).
 
 ## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (3 entries).
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).

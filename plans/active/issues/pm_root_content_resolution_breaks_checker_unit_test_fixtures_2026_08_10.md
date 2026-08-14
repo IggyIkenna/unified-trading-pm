@@ -40,6 +40,13 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by: unified-trading-pm@8a7b1860a0
+context_scope:
+  [
+    scripts/quality_gates/_pm_root.py,
+    scripts/quality_gates/test_check_finalize_plan_coverage.py,
+    tests/unit/test_check_workspace_code_workspace_drift.py,
+    /plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md,
+  ]
 source: slot-17 quality-gates Pass-1 run on cross_cutting_satellite_ao_dispatch_batch6 todo 3 (2026-08-10)
 ---
 
@@ -118,3 +125,4 @@ root). That alternative is operator-gated if ever wanted.
   (`tests/unit/test_check_workspace_code_workspace_drift.py`,
   `scripts/quality_gates/test_check_finalize_plan_coverage.py`); archiving it now would break those references and force
   a code change, so it is intentionally kept active for fleet-wide bulk archival later).
+- **context-scout 2026-08-14**: populated context_scope (4 entries).
