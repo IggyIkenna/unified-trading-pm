@@ -163,9 +163,16 @@ source: >-
       AO-dispatch conflict-check protocol's rule 4 ("already-shipped elsewhere, checkbox just never flipped"), citing
       the SHA here rather than re-doing the work — same pattern as the todo immediately above this one. Source:
       `plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`
-- [ ] [CODE] P2. Discover DeepSeek transcripts by glob (~/.claude-configs/_/projects/_/_.jsonl plus
+- [x] ✅ [CODE] P2. Discover DeepSeek transcripts by glob (~/.claude-configs/_/projects/_/_.jsonl plus
       ~/.claude/projects/_/*.jsonl) instead of enumerating live slot rows, so a retired slot's transcripts are still
-      swept Source: `plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`
+      swept — STALE-CHECKBOX correction, not new work: already SHIPPED at `agent-orchestrator@60fd7ba` (2026-08-13,
+      verified on `origin/live-defi-rollout`) — `deepseek_usage.discover_all_transcripts()` globs
+      `<config_base>/*/projects/*/*.jsonl` + `~/.claude/projects/*/*.jsonl`, deriving slot_id from the session-name dir
+      so retired slots (orch-slot-97/99) and `~/.claude/projects` are swept. The source doc's own copy of this exact
+      todo was already flipped `[x]` there but this batch20 extraction never picked up the SHA. Per the AO-dispatch
+      conflict-check protocol's rule 4 ("already-shipped elsewhere, checkbox just never flipped"), citing the SHA here
+      rather than re-doing the work — same pattern as the two todos immediately above this one. Source:
+      `plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`
 - [ ] [CODE] P2. Freeze the pre-observability gap as an explicit labelled opening balance in the lifetime
       wallet-reconciliation view Source:
       `plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`
