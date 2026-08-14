@@ -67,12 +67,12 @@
   },
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
-    "batch-live-reconciliation-service": "0.49.13",
+    "batch-live-reconciliation-service": "0.49.15",
     "deployment-api": "0.86.5",
-    "deployment-service": "0.140.2",
+    "deployment-service": "0.140.3",
     "deployment-ui": "0.1.0",
     "execution-service": "0.70.5",
-    "features-service": "0.81.12",
+    "features-service": "0.81.13",
     "fund-administration-service": "0.9.41",
     "ibkr-gateway-infra": "0.5.2",
     "instruments-service": "0.101.47",
@@ -144,7 +144,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 0,
         "large_file_count": 1,
@@ -152,7 +152,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "c07485f4e8d8cc7e1eb8a6339833dae94d516f08"
+      "ldr_ci_status_sha": "411922e2fe2a96baaac1662cc18f747dcae2f1a9"
     },
     "batch-live-reconciliation-service": {
       "promotion_model": "ldr_main",
@@ -350,7 +350,7 @@
         "coverage_pct": null,
         "warn_file_count": 17
       },
-      "ldr_ci_status_sha": "cfd9c59df4f4fb1045ba484ef10c1b07ddb9c12c"
+      "ldr_ci_status_sha": "3f13e4435ea3d51264236e9adb0a257fa5fdbfd5"
     },
     "deployment-service": {
       "promotion_model": "ldr_main",
@@ -402,7 +402,7 @@
         "large_file_count": 6,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "e69f8aeda4eeca6fd773457a369f057743da317d"
+      "ldr_ci_status_sha": "a9d19692b0067e56db15fa2b0e6467a98e1da8f6"
     },
     "execution-service": {
       "promotion_model": "ldr_main",
@@ -780,7 +780,7 @@
         "coverage_pct": 91.04,
         "warn_file_count": 11
       },
-      "ldr_ci_status_sha": "1de3bbfdb3d67f67dfe2bf61745d70eaa9de2470"
+      "ldr_ci_status_sha": "622b64162893785eb7cd30937a60a8f6a8075b8e"
     },
     "market-data-processing-service": {
       "promotion_model": "ldr_main",
@@ -905,7 +905,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "1eba03aebb26e21483c5a4559fa591912b32d35c"
+      "ldr_ci_status_sha": "d518aca80d8cd81e65c17c8513c495ed72dc98c5"
     },
     "ml-service": {
       "promotion_model": "ldr_main",
@@ -1039,7 +1039,7 @@
         "warn_file_count": 10
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "8f1aefc07c1723fc5d3228ebc6b0701e419b8595"
+      "ldr_ci_status_sha": "f16b215e4b61ad372466338bd23fb31e2921926b"
     },
     "system-integration-tests": {
       "promotion_model": "ldr_main",
@@ -1244,7 +1244,7 @@
         "coverage_pct": null,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "c5893eba452c050db28c1934868f5247e0b810bb"
+      "ldr_ci_status_sha": "31b4ad958e1c9d8ec4ca1b21ffbd6bcec57dcdfa"
     },
     "unified-trading-library": {
       "promotion_model": "ldr_main",
@@ -1297,7 +1297,7 @@
         "qg_red_reason": null,
         "large_file_count": 7
       },
-      "ldr_ci_status_sha": "d9930e0419002d62f727ccd7f1ab72472692e3ad"
+      "ldr_ci_status_sha": "ebf8d082771cb0cbbc6280243d99e8b16a840f18"
     },
     "unified-trading-pm": {
       "type": "devops",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "1814d6672c5e6b490e20eb35bedc579bcd4f6076"
+      "ldr_ci_status_sha": "5bbec41dca13b8349ccda5ccb01458390488223a"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
@@ -2075,7 +2075,7 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT failed — open for fixes",
+    "locked_reason": "SIT passed — validated + unlocked",
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -2254,13 +2254,13 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.124.2",
-      "published_at": "2026-08-14T22:06:55Z",
+      "version": "0.125.1.dev1+gb35899eb3",
+      "published_at": "2026-08-14T23:04:18Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.101.47.dev1+g7836cef53",
-      "published_at": "2026-08-14T22:19:44Z",
+      "version": "0.102.1.dev1+gee9f05a6b",
+      "published_at": "2026-08-14T23:05:53Z",
       "registry": "artifact-registry"
     }
   }
