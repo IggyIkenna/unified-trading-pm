@@ -790,25 +790,20 @@ genuine-UI, out of scope.
       replaced hardcoded `central-element-323112` with `{project_id}`. unified-trading-pm@codex-doc-commit +
       client-reporting-api@77b2d54 (quickmerge, landed LDR). Doc gates: prettier-clean, doc-body-links clean, my refs
       add 0 danglers.
-- [ ] [OPERATOR] P2. **ibkr-gateway-infra internal contradictions (⚠️ ground-truth needed)**: the repo contradicts
-      itself on (a) archived-vs-live status (`QUALITY_GATE_BYPASS_AUDIT.md` says archived; README/docs/coverage-floor
-      treat it as live) and (b) 2FA automation (README/ARCHITECTURE claim IBGA+TOTP "no human 2FA";
-      `DEPLOYMENT_GUIDE`/`FIRST_TIME_LOGIN` describe manual GUI/IB-Key login). Needs an operator/owner call on the
-      repo's actual status + the canonical 2FA path before the FIX-STALE rewrite can land. (repo: ibkr-gateway-infra)
-      **⏸ PARKED 2026-07-31 (main, Option A of BLK-273ddfda — false prereq `ibkr-owner-decision-made`, priority:999):**
-      dispatch-scope mismatch — this is an owner decision, not worker/main-determinable, so it was churning through
-      workers. Ground-truth captured for the owner (slot-6, so the eventual rewrite need not re-derive it): (a)
-      **STATUS** — every objective signal says LIVE (active README describing a live deployed gateway;
-      actively-maintained `.coverage-floor-exception.md` @2026-03-08, floor 51% / actual 52.38%; on `live-defi-rollout`;
-      active workspace scope); the lone dissent is `QUALITY_GATE_BYPASS_AUDIT.md` L7 "Repo is archived", which reads
-      STALE — but status was deliberately owner-gated (an intent to wind IBKR down would not be visible in code), so NOT
-      overridden. (b) **2FA** — the README already reconciles the layering (`docker-compose.ibga.yml` IBGA
-      fully-automated TOTP = primary L62; `docker-compose.yml` gnzsnz manual 2FA = fallback L63; `DEPLOYMENT_GUIDE` Step
-      3 frames GUI login as First-Time / One-Time); the one residual is whether the IBGA path is truly zero-touch or
-      still needs that one-time GUI bootstrap (`DEPLOYMENT_GUIDE` L58/L189 + `FIRST_TIME_LOGIN.md` say a first-login IS
-      required on first start / re-provision). **UNPARK**: owner answers (a)+(b) → set `ibkr-owner-decision-made=true`,
-      restore priority 50 + `priority_override:     false`, reload → apply the FIX-STALE rewrite reconciling all 4 ibkr
-      docs per their call. Do NOT proceed before that.
+- [x] ✅ P2. **ibkr-gateway-infra internal contradictions** — RESOLVED 2026-08-14 (docs_reconciler, slot-26) per the
+      operator's CORRECTED ruling 2026-08-13 (supersedes the earlier 2026-08-13 12:17 ruling, which wrongly inferred
+      "being wound down"): (a) **STATUS** — repo is NOT wound down / NOT archived; every objective signal already said
+      LIVE (active README, actively-maintained coverage-floor exception, on `live-defi-rollout`) — that reading was
+      correct and those 3 docs were left as-is. Only `QUALITY_GATE_BYPASS_AUDIT.md` L7 "Repo is archived" was the stale
+      line — fixed to state the repo is deployable/actively maintained, just not currently prioritized to run LIVE
+      (current backtesting needs are already met from other data sources). (b) **2FA** — kept
+      `DEPLOYMENT_GUIDE`/`FIRST_TIME_LOGIN.md`'s more precise "a first-login IS required on first start/re-provision" as
+      canonical; corrected README's "no human 2FA required" framing (it overstated how zero-touch the IBGA path is) to
+      note steady-state re-auth is automated but a one-time interactive GUI login is still required on first
+      start/re-provisioning. `ARCHITECTURE.md` already described the one-time GUI login correctly — no change needed
+      there. (repo: ibkr-gateway-infra)
+      Evidence: ibkr-gateway-infra@905a3173c0 (quickmerge, landed LDR, verified ancestor of
+      `origin/live-defi-rollout`).
 
 ### deployment-service refreshed registry (2026-07-27) — supersedes the stale Appendix-A `(~52)` entry
 
