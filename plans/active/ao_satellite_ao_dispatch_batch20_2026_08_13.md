@@ -349,8 +349,16 @@ source: >-
       only, `**status**: active` prose left as-is per that precedent). Not touching the source doc's own copy of this
       todo here — per this batch's stated design ("checkbox reconciliation back into each source doc happens in the
       paired finalize plan"). Source: `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
-- [ ] [CODE] P2. DOCS P3: fix ao_satellite_ao_dispatch_batch12_2026_08_09.md todo formatting (meta-commentary on first
-      line + [BACKEND]-vs-[OPERATOR]-adjacent tag mismatch) Source:
+- [x] ✅ [CODE] P2. DOCS P3: fix ao_satellite_ao_dispatch_batch12_2026_08_09.md todo formatting (meta-commentary on
+      first line + [BACKEND]-vs-[OPERATOR]-adjacent tag mismatch) — unified-trading-pm (this commit): in
+      `plans/archive/2026_08/ao_satellite_ao_dispatch_batch12_2026_08_09.md`'s `backfill_task_usage.py` todo, moved the
+      tag-history meta-commentary ("Retagged 2026-08-09 (was `[OPERATOR] [BACKEND]`) …") off the todo's literal first
+      physical line — it now opens with the real instruction ("Extend
+      `agent-orchestrator/scripts/orchestrator/backfill_task_usage.py` …"), with the retag note following as the second
+      sentence. Reconciled the tag mismatch: the body's "Tagged `[OPERATOR]`-adjacent since the `--apply` step mutates
+      live production rows directly via SSM" claim predated the retag and no longer matched the checkbox's actual
+      `[BACKEND]` tag — reworded to "Originally tagged `[OPERATOR]`-adjacent … (retagged to plain `[BACKEND]` above to
+      match the source todo)" so the body is internally consistent with the checkbox tag. Source:
       `plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md`
 - [ ] [CODE] P2. BACKEND P3: add sequential/gate_on_depends ordering between
       ao_model_main_agent_as_first_class_slot_2026_08_10.md's 2 same-file open todos Source:
