@@ -220,6 +220,38 @@ the file as gitignored and instruct a manual re-seed; that script text was activ
 investigation and needs its own follow-up fix (tracked in the source issue doc above) — this codex doc's facts, not that
 script's comments, are authoritative.
 
+## Cursor permission-mode: two PER-MACHINE settings, not Claude Code settings (2026-08-11)
+
+Constant Bash permission prompts in the Cursor IDE panel despite `permissions.defaultMode: bypassPermissions` in both
+the team and personal `settings.json` — root cause: **the Cursor extension resolves its own session permission mode, and
+`permissions.defaultMode` in any `settings.json` (team or personal) does not reach it.** Sessions silently landed in
+`acceptEdits` (confirmed in session transcripts: `"permissionMode":"acceptEdits"`).
+
+Fix — two **Cursor** settings (not Claude Code's `settings.json`), in Cursor's own user settings
+(`~/Library/Application Support/Cursor/User/settings.json` on macOS; the equivalent per-OS Cursor user-settings path
+elsewhere):
+
+```json
+"claudeCode.allowDangerouslySkipPermissions": true,
+"claudeCode.initialPermissionMode": "bypassPermissions"
+```
+
+**This is deliberately PER-MACHINE, not fleet-propagating.** Cursor's user settings are personal and untracked by design
+(same reasoning as `~/.claude/settings.json` above) — they live outside all 12 repos, so a `git pull` never carries
+them, and every operator machine needs this applied once, by hand. Both keys are user-level, so once set they apply to
+every tab/slot on that machine.
+
+Two dead ends confirmed during the 2026-08-11 investigation, recorded so they aren't re-walked:
+
+1. Editing `permissions.allow` is not the lever — neither a 95-entry `Bash(cmd:*)` prefix list nor a bare `Bash(*)`
+   changed which commands prompted; in bypass mode the allow list is not consulted at all.
+2. `permissions.defaultMode` in the team OR personal `settings.json` is inert for IDE sessions — the Cursor extension
+   setting above is the only control that reaches it.
+
+Note the rest of `settings.json` stays fully load-bearing under bypass mode — hooks, `mcpServers`, `env`,
+`enabledPlugins` all still apply; only the `permissions` block goes inert. Full investigation:
+`/plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md`.
+
 ## Notes
 
 - The per-slot symlink lives in `.tabs/<N>/.claude/` which is **not** inside any git repo, so it is never committed.

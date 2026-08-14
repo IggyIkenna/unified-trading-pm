@@ -81,8 +81,11 @@ source: >-
       batch): added "`settings.local.json` must be a REAL per-clone file — never a symlink" section (mechanism, fix,
       hygiene-check pointer) + a "`cursor-configs/settings.json` git-tracked status — confirmed current" section
       flagging `link-claude-skills.sh`'s own header comments as the stale artifact, not this codex doc.
-- [ ] [CODE] P2. Record the Cursor claudeCode.allowDangerouslySkipPermissions / initialPermissionMode per-machine fix in
-      the same codex doc Source: `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md`
+- [x] ✅ [CODE] P2. Record the Cursor claudeCode.allowDangerouslySkipPermissions / initialPermissionMode per-machine fix
+      in the same codex doc Source: `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md` —
+      unified-trading-pm (this batch): added "Cursor permission-mode: two PER-MACHINE settings, not Claude Code
+      settings" section to `/codex/05-infrastructure/claude-code-settings-symlink.md` with the exact keys, the
+      per-machine (non-propagating) framing, and the two recorded dead ends.
 - [ ] [CODE] P2. Confirm no workflow depended on the disabled pyright-lsp in-session diagnostics before making the
       disable permanent Source: `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md`
 - [ ] [CODE] P2. Re-verify (live find/ls) whether codex_vs_repo_docs_ssot_audit_2026_06_01.md's MDPS/instruments-service
