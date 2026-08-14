@@ -384,9 +384,15 @@ source: >-
       HEAD, not assumed. Issue-doc checkbox reconciliation deferred to
       `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` per this batch's own header (source docs not touched
       here).
-- [ ] [CODE] P2. Re-check whether unified-api-contracts/market-tick-data-service SIT-gate streaks reset to 0 once LDR
+- [x] ✅ [CODE] P2. Re-check whether unified-api-contracts/market-tick-data-service SIT-gate streaks reset to 0 once LDR
       commit velocity drops Source:
-      `plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md`
+      `plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md` — Already answered live in
+      the source issue doc (2026-08-10T19:00Z measurement): the streak resets on gate PASS even under sustained velocity
+      — a documented treadmill, not a masked second bug (issue doc's own P3 todo, closed). Re-verified fresh today,
+      2026-08-14, via `python3 scripts/cicd/sit_gate_stuck_detector.py`:
+      `sit-gate stuck detector: healthy (no repo has 3+ consecutive SIT GATE BLOCK ticks)` — both repos currently at 0,
+      confirming the reset behavior still holds 4 days later. No code fix needed; this was a re-check-only todo. No
+      further action.
 - [ ] [CODE] P2. Slack alerting via notify-slack.yml for the 3 governor triggers (over-cap RSS, >20% baseline drift,
       host RAM >80% abort) Source: `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`
 - [ ] [CODE] P2. Raise the PYRIGHT_TIMEOUT default (or document the override) in base-service.sh / quality-gates.md
