@@ -203,7 +203,7 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       self-contradiction
 - [ ] [REVIEW] P3. (P2) plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20_finalize_2026_07_27.md —
       frontmatter/body status self-contradiction
-- [ ] [REVIEW] P3. (P2) plans/active/issues/plan_reconciler_findings_2026_08_07.md:73-75 — falsely attributes a
+- [ ] [REVIEW] P3. (P2) plans/archive/2026_08/issues/plan_reconciler_findings_2026_08_07.md:73-75 — falsely attributes a
       shipped-commit citation to a different, unshipped todo
 - [ ] [REVIEW] P3. (P3) plans/active/github_actions_operator_gated_followups_2026_07_17.md:244 — "still unfixed"
       present-tense claim contradicted by its own SSOT doc (3-of-4 fixes shipped)
