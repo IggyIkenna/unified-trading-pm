@@ -174,17 +174,20 @@ Measured from prod manifests on 2026-08-14:
 The sports leg is already owned by `/plans/active/mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md` P0.
 The rest is unowned.
 
-- [ ] [DATA] P0. Unblock market-tick-data-service commits — `market_tick_data_service/live/websocket_runner.py` is 902
+- [x] [DATA] P0. Unblock market-tick-data-service commits — `market_tick_data_service/live/websocket_runner.py` is 902
       lines against the flat 900-line hard gate, taken from 892 to 902 by `market-tick-data-service@0974060a`
       (2026-08-14, "lazily register a buffer for fan-out connector tick ids"), so `quality-gates.sh` fails for every
       MTDS change regardless of what it touches — DoD: `bash scripts/quality-gates.sh` green in
       market-tick-data-service; coordinate with whoever owns 0974060a before editing, the commit is hours old and the
-      slot is shared.
+      slot is shared. ✅ Resolved by the introducing commit's own author, `market-tick-data-service@adf74dcf11`
+      (extracted `_register_lazy_buffer()`, 897 lines, quality gates green — 10,676 tests). See
+      `/plans/active/issues/mtds_websocket_runner_over_900_line_cap_blocks_commits_2026_08_14.md`.
 - [ ] [DATA] P1. Close the pending captured-row verification for the four cefi shards — the fix is deployed but recovery
       was never proven, because instruments-service had published 0 CEFI catalog blobs for 2026-08-14 at check time (vs
       22 on 08-12/08-13), blocking every venue on the VM uniformly — DoD: at least one `captured` live row for each of
       BYBIT-FUTURES, DERIBIT derivative_ticker, COINBASE-SPOT depth_of_book_10 and OKX-SWAP depth_of_book_10 dated after
       the fix; if the catalog gap recurs, file it as its own issue rather than re-deferring this.
+
 - [ ] [DATA] P1. Diagnose the prediction live-capture stall — captured rows stop 2026-08-03/08-05 while three VMs run —
       DoD: root cause named with evidence, then a captured row dated after the fix. **DIAGNOSED 2026-08-14, NOT CLOSED —
       DoD's captured-row half unmet, fix is out of this session's ownership.** Two independent root causes, both with
