@@ -32,7 +32,7 @@ related:
   ]
 created: 2026-08-10
 author: slot-31
-last_updated: 2026-08-10
+last_updated: 2026-08-14
 source: >-
   DP-VM-001 escalation agt-af22dd (dp-fleet-monitor exit_code-aware fleet monitor) for
   features-sports-sports-2026-20260810-051126, 2026-08-10
@@ -122,9 +122,11 @@ locked_since:
 - [ ] [DATA] P3. Verify the 2022 year-sharded features VM (`features-sports-sports-2022-20260810-051126`): no
       EXIT_STATUS (terminated mid-run 07:15Z, skip-if-fresh only) — confirm 2022 features coverage in the availability
       index.
-- [ ] [CODE] P3. AO re-dispatched already-resolved escalation agt-af22dd to a fresh slot (22:18Z) with a stale boot
+- [ ] [CODE] P2. AO re-dispatched already-resolved escalation agt-af22dd to a fresh slot (22:18Z) with a stale boot
       context carrying no resolution — gate escalation dispatch on already-resolved (or carry the resolution summary in
-      the boot context) so a resolved wall cannot spawn a conflicting relaunch worker.
+      the boot context) so a resolved wall cannot spawn a conflicting relaunch worker. **Bumped P3→P2 2026-08-14: a
+      THIRD occurrence confirmed** (see Late dispatch note, slot-30) — this is a recurring dispatch-gating gap, not a
+      one-off.
 
 ## Late dispatch note (slot-23, 2026-08-10)
 
@@ -150,3 +152,17 @@ no corpus walk): `fixtures_schedule` 43 + `fixtures_outcomes` 42 objects present
 returns 69 rows with no DependencyError. The 08:02Z failure was genuine same-day upstream lag (split not yet written for
 that date), now self-healed. **The sibling "Recompute day=2026-08-10 features" todo is now UNBLOCKED** — upstream is
 present, so the sparse 15:42Z compute can be redone. No bare-entity backfill is needed; do not relaunch the frozen path.
+
+**slot-30 2026-08-14 (data_pipeline_failure escalation agt-bc9148)** — THIRD stale re-dispatch of this already-resolved
+wall: AO handed a fresh `data_pipeline_failure` worker a boot `CONTEXT` identical in shape to the slot-23 stale dispatch
+(`"Filed issue: (none — alert carries the details)"` + an explicit `RELAUNCH vm=features-sports-sports-2026-...`
+instruction), again with no reference to this issue doc or the operator's do-not-relaunch ruling. Root-caused before
+acting (per this role's "diagnose, never guess" mandate): read `run.log` (EXIT_STATUS=1, non-OOM — `DP-VM-001`'s own
+table + `RelaunchBackfillVm.relaunch()` both route non-OOM exit codes to the page tier, not auto-relaunch), confirmed
+via the sanctioned UTL SDK that day=2026-08-10 upstream (`fixtures_schedule` 43 objs / `fixtures_outcomes` 42 objs) and
+the recomputed `sports_features/by_date/day=2026-08-10/` output both still exist, i.e. nothing regressed since slot-15's
+2026-08-13 verification. **No relaunch performed** (would be a pure resource-waste repeat of the already- completed
+recompute + would defy the standing operator ruling). Bumped the dispatch-gating todo above P3→P2 given this is now a
+confirmed recurring pattern, not a one-off; no code change made in `deployment-service` (nothing to fix there — the gap
+is in agent-orchestrator's escalation-dispatch layer, outside this worker's `$REPO` scope for a one-shot
+`data_pipeline_failure` wall).
