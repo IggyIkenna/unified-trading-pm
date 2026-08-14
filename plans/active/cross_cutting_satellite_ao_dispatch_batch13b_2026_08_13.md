@@ -310,10 +310,24 @@ source: >-
       `[x]`) and `citadel_paper_batch_live_reconciliation_2026_06_19.md`'s `P3.BLRS3` (flipped `[x]`), matching the
       existing G3 correction's format/style. **G3 needed no change** — a prior `/plan-reconcile` pass already corrected
       its status line on 2026-08-12.
-- [ ] [CODE] P2. Item H -- live re-verify citadel_paper_batch_live_reconciliation_2026_06_19.md P9.2's UAC version-drift
-      citation against current UAC Source: `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`
-- [ ] [CODE] P2. Item J -- fix check_na_corpus_ratchet.py's --diff-base fenced-code-block checkbox-overcounting regex
-      bug Source: `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`
+- [x] ✅ [CODE] P2. Item H -- live re-verify citadel_paper_batch_live_reconciliation_2026_06_19.md P9.2's UAC
+      version-drift citation against current UAC Source:
+      `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md` — unified-trading-pm@f32a181dcc:
+      **RE-VERIFIED live 2026-08-14 — self-resolved, no fix needed.** The cited `unified-api-contracts=0.26.0` (local)
+      vs `0.27.0` (main) pairing from the 2026-06-20 provenance no longer exists at any version: UAC's current tag is
+      `v0.124.0`; strategy-service's `pyproject.toml` constraint `unified-api-contracts>=0.123.0,<1.0.0` (path/editable
+      dep, not a frozen pin) is satisfied. Live check-only run of `run-version-alignment.sh` (no `--fix`) confirms
+      "Alignment OK" — no strategy-service/UAC drift flagged. Two unrelated, currently-open drift conditions exist (PM
+      self-version drift; a fleet-wide 21-repo local-vs-origin/main `staging_versions` lag) but neither is the cited
+      pairing — out of scope. P9.2 in the target doc flipped `[x]` with the full re-verify citation.
+- [x] ✅ [CODE] P2. Item J -- fix check_na_corpus_ratchet.py's --diff-base fenced-code-block checkbox-overcounting regex
+      bug Source: `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md` —
+      unified-trading-pm@4484ad1200: **ALREADY SHIPPED, verified 2026-08-14 (same underlying defect this batch's own
+      preceding "Section 3 log" todo above already closed).** `_count_open_checkboxes_fence_aware()` (toggle-flag fence
+      skip) is wired into `_na_open_todos_from_text()` in `scripts/plan-hygiene/check_na_corpus_ratchet.py`, replacing
+      the bare `_CHECKBOX_RE` scan that previously double-counted checkbox-shaped lines inside fenced code blocks.
+      Commit verified ancestor of `origin/live-defi-rollout`. No new code needed — this checkbox closes the duplicate
+      dispatch.
 - [ ] [CODE] P2. Item K -- add the missing backlog todo to
       plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md once grace lifts Source:
       `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`

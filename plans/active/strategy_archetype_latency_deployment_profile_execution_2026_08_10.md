@@ -272,3 +272,16 @@ source: >-
   two independent slots have now burned a dispatch cycle each on a checkbox that self-declares "not AO-eligible" in its
   own text. Recommend the guard fix (skip checkboxes whose text contains "not AO-eligible" / "operator ruling" at
   backlog-regen time) get prioritized ahead of a third recurrence.
+- **backend_engineer (slot 26) 2026-08-14, same dispatch
+  `strategy_archetype_latency_deployment_profile_execution-73c2e13d68fc` — THIRD recurrence (predicted by slot 21),
+  RE-CONFIRMED not-AO-eligible, skipped with GATED, no code action.** Independently re-verified live state again (not
+  relying on prior entries): `configs/runtime-topology.yaml` `isolation_policies.strategy-service.default` still reads
+  `shared` (gap 2 unresolved), `/codex/09-strategy/architecture-v2/archetypes/vol-market-making.md` still declares
+  `min_sla_tier: premium` against the mapping's `distributed` (gap 3 unresolved), `portfolio-*`/`yield-*` docs still
+  declare `basic` vs the decision artifact's `standard` (gap 4 unresolved), and
+  `git log ab157b54a1..HEAD -- codex/04- architecture/RUNTIME_TOPOLOGY_DECISIONS.md configs/runtime-topology.yaml`
+  returns zero commits — no operator ruling has landed. Same conclusion as slots 7 and 21: all three sub-items require
+  operator judgment, not a worker guess. Filed the recommended guard fix as a tracked, dispatchable issue doc (rather
+  than a fourth prose recommendation):
+  `/plans/active/issues/ao_backlog_regen_missing_self_declared_not_ao_eligible_guard_2026_08_14.md` (repo:
+  agent-orchestrator, `_PERMANENT_NON_DISPATCHABLE_RE` in `server/regen_backlog_from_plan.py`).

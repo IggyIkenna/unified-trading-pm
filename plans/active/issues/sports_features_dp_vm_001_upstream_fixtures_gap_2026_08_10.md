@@ -115,10 +115,28 @@ context_scope:
       correct, not a gap; the reader already resolves "fixtures" split-first. Verified 2026-08-13 via
       `get_storage_client().list_blobs` (single-day prefix) + `read_fixtures_joined` + `read_reference_entity`.
       (instruments-service reference-capture gap — RESOLVED upstream, no backfill of the frozen bare entity needed)
-- [ ] [DATA] P2. Relaunch-storm observation: 19 `features-sports-sports-*` VMs launched 2026-08-10 (~8 with empty
-      vm-logs, e.g. `-181406`) ≈ 12× the ≤2/(prefix,day) bound. Verify the self-heal actuator dedup
-      (`launch_budget_registry`) and whether an external launcher loop is firing without real workloads. Resource-waste
-      observation.
+- [x] [DATA] P2. ✅ Relaunch-storm observation: 19 `features-sports-sports-*` VMs launched 2026-08-10 (~8 with empty
+      vm-logs, e.g. `-181406`) ≈ 12× the ≤2/(prefix,day) bound — VERIFIED + FIXED, `deployment-service@c7ed0077cb`.
+      `launch_budget_registry.py` itself carries no dedup (rate-budget/machine-sizing only, name was imprecise); the
+      actual ≤2/(vm-prefix,day) bound (`scripts/recovery/relaunch_backfill_vm.py::RelaunchBackfillVm`,
+      ShardedState-backed) only guards the IN-PROCESS OOM (`exit_code==137`) actuator, and — confirmed by reading
+      `escalation.py::route_finding` / `_dispatch_to_orchestrator` — that actuator's own gate (`_ACTUATORS_AVAILABLE`)
+      means the Cloud Run `dp-exit-code-monitor` job (which fires every `DP_VM_EXIT_NONZERO`, incl. our rc=1 case)
+      routes essentially EVERY VM-lifecycle finding to `escalate-to-orchestrator` → a planning-VM worker who relaunches
+      BY HAND per RB-INFRA-RELAUNCH — a path with ZERO code-level relaunch-count bound (the runbook's ≤2/day is prose
+      only). That is the external "loop": each of the 9 same-VM re-dispatches this doc's Progress Log documents
+      (2026-08-14, slots 30/6/5×4/7) was a worker told to `RELAUNCH vm=...` with no machine check on how many DISTINCT
+      VMs of this launcher-family had already been relaunched that day — the empty-vm-log VMs are workers who launched,
+      then discovered this issue doc, and self-deleted mid-setup. The escalation-dedup gaps that let the SAME/fresh
+      escalations keep re-firing were already root-caused + fixed by this doc's own CODE todos
+      (`deployment-service@427d6d2b91`, `agent-orchestrator@da2f9f6`/`74325fc`/`962e5c1`) — but even with dedup fixed,
+      nothing stopped a genuinely-distinct VM failure for the same prefix from exceeding the bound. Fix: added
+      `escalation_dedup.check_relaunch_dispatch_budget` (GCS-durable `ShardedState`, day-partitioned, mirrors
+      `revocation_actuator.py`'s pattern) — `_dispatch_to_orchestrator` now checks it for every VM-lifecycle finding
+      before embedding a RELAUNCH instruction; once a launcher-family hits 2 dispatches today, the worker's context says
+      `DO NOT RELAUNCH` instead. 6 new unit tests (`test_escalation_dedup.py`: budget counting, per-vm-prefix scoping,
+      re-check idempotency; `test_data_pipeline_monitors.py`: dispatch context suppression). QG green (3459 passed),
+      verified `git merge-base --is-ancestor c7ed0077cb origin/live-defi-rollout`.
 - [x] [DATA] P1. ✅ Recompute day=2026-08-10 sports features once upstream fixtures land — DONE. Ran
       `features-service --feature-family sports --operation compute --mode batch --date 2026-08-10 --skip-fetch --force`
       (single-day, bounded) → exit 0, "Processing completed successfully",
@@ -392,3 +410,21 @@ operator's ruling anticipated back on 2026-08-10 — "residual open item = upstr
 escalation-dispatch mechanism itself needed this fix to stop re-paging on an already-closed incident. Remaining open
 todos in this doc: the P2 relaunch-storm-actuator observation and the P3 2022-year-shard verification — neither touches
 the code changed here.
+
+**slot-14 2026-08-14 (dedicated [DATA] P2 fix task, dispatched via this doc's own P2 todo)** — verified + fixed the
+relaunch-storm-actuator todo. `launch_budget_registry.py` (the todo's literal name) has no dedup at all — it's rate
+allocation + machine-sizing. Traced the REAL bound: `RelaunchBackfillVm`'s ShardedState budget only guards the
+in-process OOM (exit_code==137) actuator, and `escalation.py`'s `_ACTUATORS_AVAILABLE` gating means the Cloud Run
+`dp-exit-code-monitor` job routes essentially every `DP_VM_EXIT_NONZERO` (any exit code, not just OOM) to
+`escalate-to-orchestrator` → a planning-VM worker who relaunches by hand per RB-INFRA-RELAUNCH — a path with ZERO
+code-enforced relaunch-count bound (the runbook's ≤2/(prefix,day) was prose only). That is the "external loop": every
+one of the nine same-VM re-dispatches this doc's Progress Log already recorded today was a worker told to
+`RELAUNCH vm=...` with nothing checking how many distinct VMs of that launcher-family had already been relaunched —
+consistent with the ~8 empty-vm-log VMs (workers who launched, found this issue doc mid-setup, self-deleted). The
+escalation-DEDUP gaps that let the same/fresh escalations keep re-firing were already fixed by this doc's earlier CODE
+todos; this fix closes the separate remaining gap — no machine bound on DISTINCT-VM relaunch dispatches even once dedup
+is healthy. Shipped `deployment-service@c7ed0077cb`: `escalation_dedup.check_relaunch_dispatch_budget` (GCS-durable
+`ShardedState`, day-partitioned by vm-prefix, mirrors `revocation_actuator.py`'s pattern) — the worker's dispatched
+context now says `DO NOT RELAUNCH` once a launcher-family hits 2 dispatches for the day, instead of a bare
+`RELAUNCH vm=...`. 6 new unit tests, QG green (3459 passed), verified on origin. Flipped the P2 todo done. Remaining
+open: the P3 2022-year-shard verification (untouched by this fix).
