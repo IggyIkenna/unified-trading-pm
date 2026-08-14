@@ -98,4 +98,5 @@ repoint itself (a labeling fix), this is a distinct blob-matching defect.
       QG green. **Live-bucket verification also surfaced a THIRD, separate defect** (upstream prefix mismatch —
       canonical writes live under an intervening `pipeline_mode=batch_api_football/` segment this handler's prefix never
       reaches) — out of scope for this todo (needs its own range-scan-safe design), filed as
-      `/plans/active/issues/rescan_sports_fixtures_canonical_missing_pipeline_mode_prefix_2026_08_14.md`.
+      `/plans/archive/2026_08/issues/rescan_sports_fixtures_canonical_missing_pipeline_mode_prefix_2026_08_14.md`
+      (resolved instruments-service@6e81874504).

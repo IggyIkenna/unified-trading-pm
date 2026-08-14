@@ -38,11 +38,14 @@ priority: P2
 locked_by:
 resolved_by: instruments-service@6e81874504
 source: [instruments-service/scripts/rescan_sports_fixtures_canonical.py]
-status: open
+status: resolved
 drift_direction: advance-code
 depends_on: []
-archive_exempt: true
 ---
+
+> **ARCHIVED 2026-08-14** — 1/1 todo resolved. P2: canonical-prefix-first/legacy-prefix-fallback added to
+> `_list_entity_blob_paths()` (`instruments-service@6e81874504`), verified live against the real bucket. Successor: none
+> (fully resolved).
 
 # rescan_sports_fixtures_canonical.py FIXTURES handler missing the canonical pipeline_mode= prefix segment
 
