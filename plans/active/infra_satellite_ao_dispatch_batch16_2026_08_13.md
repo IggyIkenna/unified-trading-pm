@@ -208,7 +208,9 @@ source: >-
       `/plans/archive/issues/git_health_scan_exclusion_infra_routing_2026_08_10.md` — main confirmed these `*.stale-*`
       dirs are intentional 08-05 pre-history-rewrite backups and directed "no deletions"; the git-health
       scan/reporter/FF-cron already exclude them from drift noise (`agent-orchestrator@b4ab17e84e` +
-      `unified-trading-pm@71f10bc0f`). No repo/code changes; retained by existing operator/main ruling.
+      `unified-trading-pm@71f10bc0f`). No repo/code changes; retained by existing operator/main ruling. Corroborated by
+      slot 20's independent 6-slot sample the same day (same no-`.venv` fact; slot 27's citation of the 2026-08-10
+      ruling is the authoritative verdict).
 - [ ] [CODE] P2. Execute the 'immediately-safe ~40' script deletions (UI 2026-03 .tsx.bak splitters/codemods, done
       deployment-service bucket migrations, the 5 dead checkers) -- the sub-list this doc's own Delete-execution item
       names as unconditionally safe, distinct from the campaign-gated cohort it's bundled with Source:

@@ -62,6 +62,15 @@ d351f3ceb7, and this doc's own final todo-6 resolution (no code change, investig
 
 # Stale service venvs below their own declared fastapi floor
 
+> **📦 ARCHIVED 2026-08-14 — every todo done, no open work.** All 6 todos closed: the fastapi floor drift was re-synced,
+> the swallowed ImportError now fails loud, a preflight/QG gate prevents recurrence, the fleet-wide sweep found the
+> staleness was slot-5-only, referrers were pointed here, and the final P3 investigate todo (below) confirmed the
+> `.stale-pre-history-rewrite-*` archive dirs carry no venv at all but are **RETAINED per an existing 2026-08-10
+> operator ruling** (`/plans/archive/issues/git_health_scan_exclusion_infra_routing_2026_08_10.md` — intentional
+> pre-history-rewrite backups, "no deletions") — not dead weight, no removal action. No new codex contract: todo 4's
+> preflight/QG gate (`check_installed_satisfies_pyproject.py`) is the standing prevention mechanism and is already the
+> SSOT for "don't let installed drift below declared floor again" — nothing here changes that.
+
 ## What I measured
 
 All figures from slot 5 (`.tabs/5`) on 2026-08-11. **Other slots and the AO VM were not checked** — see todo 3.
@@ -222,7 +231,10 @@ itself; the CVE doc keeps ownership of the `--ignore-vuln` allowlist.
       git-health scan, slot reporter, and FF-cron were already patched to exclude them from drift/dirty noise
       (`agent-orchestrator@b4ab17e84e` + `unified-trading-pm@71f10bc0f`). This todo's own investigation reproduces the
       same facts independently and reaches the same conclusion — **retained by existing operator/main ruling**, no new
-      action needed. No repo/code changes; evidence is this todo + the cited archived doc.
+      action needed. No repo/code changes; evidence is this todo + the cited archived doc. **Corroboration (slot 20,
+      same 2026-08-14):** independently sampled slots 1/2/3/5/8/16 (~1.4GB), same result — `.git` present, no `.venv`
+      anywhere; the retained-per-ruling verdict above is authoritative over an earlier draft "dead weight" framing this
+      slot initially wrote before seeing slot 27's decisive citation.
 
 ## Progress Log
 
@@ -235,6 +247,11 @@ HARD RULE it is archived in this same turn to `plans/archive/2026_08/issues/`. R
 corpus references from `plans/archive/2026_08/issues/stale_service_venvs_below_declared_fastapi_floor_2026_08_11.md` to
 the new archive path (the two mentions inside this doc's own prior Progress Log entries were left as historical
 narrative, unaffected by the move).
+
+**2026-08-14 (slot 20, reconciling a concurrent-edit conflict with slot 27's above entry)** — Independently reached the
+same "no `.venv` present" fact via a 6-slot sample, but had drafted a "dead weight, removal optional" verdict before
+rebasing onto slot 27's commit, which cites the decisive 2026-08-10 operator ruling this slot missed. Deferred to slot
+27's RETAINED verdict as authoritative (corroboration note added to the checkbox above); no separate action taken.
 
 **2026-08-14 (slot 20, todo 6)** — Split `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` under its
 1000-line hard cap (was 1008L canonical) so the deferred owner-pointer from todo 5 could finally land. Folded the
