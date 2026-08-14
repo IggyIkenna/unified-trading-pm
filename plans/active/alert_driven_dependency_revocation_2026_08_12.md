@@ -15,7 +15,7 @@ summary: >-
   ships without touching any launcher, and a VM-side poll hook that lands incrementally as a fail-closed backstop. Phase
   1 is a hard prerequisite — a graceful-flush contract that every buffered writer honours, because drain-only is only
   safe if a drained unit writes out the shards it is holding.
-status: complete
+status: active
 nature: design
 asset_group: [cross-cutting]
 stage: [meta]
@@ -70,13 +70,6 @@ source:
 
 # Alert-driven dependency revocation
 
-> **ARCHIVED (2026-08-14) — complete.** Every phase (0-7) shipped and evidenced: policy evaluator + retry-budget
-> registry (unified-api-contracts), graceful-flush contract + drain registry (unified-trading-library), push actuator +
-> VM-side poll/skip gate (deployment-service, deployment-api), 12-scenario bad-VM test matrix (e2e-testing), 4 codex
-> SSOT updates. 6 findings surfaced during Phase 6 verification — real, but about already-shipped Phase 2 policy, not
-> incomplete Phase 6/7 work — are tracked at `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md`
-> rather than left on this archived plan. Record-only from here.
-
 > **Operator decisions (2026-08-12, recorded before authoring).** (1) Enforcement point: **both** — the DAG owns policy,
 > the actuator executes, VM polling lands incrementally as a fail-closed backstop. (2) `DEPS_KILL` semantics:
 > **drain-at-checkpoint only, never terminate.** Both were chosen over the alternatives explicitly; do not re-litigate
@@ -112,13 +105,12 @@ bridges them; it does not extend one over the other.
 
 ## Phase 0 — Preconditions and measurement (nothing is armed until these land)
 
-- [x] ✅ [SCRIPT] P0. Measure p95 and max shard duration per launcher family from `vm-logs/` run.log PROGRESS markers —
+- [ ] [SCRIPT] P0. Measure p95 and max shard duration per launcher family from `vm-logs/` run.log PROGRESS markers —
       this is the drain-budget denominator, since worst-case waste is longest-shard-duration × dependent-count. Repo:
-      deployment-service. **ATTEMPTED 2026-08-14, BLOCKED-CREDENTIALS in this slot; MIGRATED** to
-      `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` § 1 rather than left dangling on an
-      archived plan. `scripts.recovery._durable_state.state_bucket()` resolves empty locally (gcloud auth present — 5
-      accounts including a working SA — but the bucket name itself resolves from runtime-only config this dev checkout
-      doesn't carry). Needs either a slot with the runtime env wired or a VM-side run. Left open rather than faked.
+      deployment-service. **ATTEMPTED 2026-08-14, BLOCKED-CREDENTIALS in this slot**:
+      `scripts.recovery._durable_state. state_bucket()` resolves empty locally (gcloud auth present — 5 accounts
+      including a working SA — but the bucket name itself resolves from runtime-only config this dev checkout doesn't
+      carry). Needs either a slot with the runtime env wired or a VM-side run. Left open rather than faked.
 - [x] ✅ [SCRIPT] P0. Enumerate every VM prefix in `LAUNCHER_FOR_VM_PREFIX` and classify each as drain-capable (emits
       PROGRESS via `record_captured`) vs drain-blind (no checkpoint) — a drain-blind prefix can only ever receive
       DEPS_HOLD. Repo: deployment-service. — **MEASURED 2026-08-14** (no code changed, read-only census): **243 total
@@ -180,12 +172,12 @@ bridges them; it does not extend one over the other.
       `/plans/active/issues/yahoo_ohlcv_1h_availability_semantic_undecided_2026_08_13.md`. Verified in the landed code
       (9/9 claims): `DependentAction` StrEnum with all 6 members, `evaluate_revocation()`, `resolve_dependents()`,
       `ALERT_CODE_ACTIONS` + `DP_FAILURE_MODE_ACTIONS`, `RetryBudget`, `RETRY_BUDGETS`,
-      `MISSING_CREDENTIAL     max_attempts=0`, Tardis `max_attempts=1`; 41 tests green. Repo: unified-api-contracts.
-- [x] ✅ [OPERATOR] P2. Bootstrap a `.venv` in this slot's `unified-trading-library` — absent, so every verification
+      `MISSING_CREDENTIAL max_attempts=0`, Tardis `max_attempts=1`; 41 tests green. Repo: unified-api-contracts.
+- [ ] [OPERATOR] P2. Bootstrap a `.venv` in this slot's `unified-trading-library` — absent, so every verification
       round-trip is a full `quality-gates.sh` run (measured this session: 103s / 119s / 218s / 406s, plus a 74s
       tests-slice). Roughly 20 minutes of one session's wall-clock went to gates for changes checkable in seconds
-      locally. **MIGRATED** to `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` § 6 —
-      operator-owned, doesn't block anything already shipped.
+      locally. This is the dominant cost on the remaining todos and Phase 6's 12 bad-VM scenarios will be the worst of
+      it.
 
 ## Phase 1 — The graceful-flush contract (HARD PREREQUISITE — no DEPS_DRAIN edge is armed before this)
 
@@ -381,10 +373,12 @@ bridges them; it does not extend one over the other.
       rather than silently exempt. Never silent: paused job names ride back on the outcome. A failing pause does not
       abandon the rest (`test_a_failing_pause_does_not_abandon_the_remaining_jobs` — uses sports, not cefi, because cefi
       resolves to a SINGLE job and the test would have been vacuous).
-- [x] ✅ [CODE] P2. A FLEET_HALT pause registers no `MaintenanceWindow`, so `check_consolidator_scheduler_paused`
-      (DP-WATCHER-004) may page a deliberate FLEET_HALT pause as an accidental one — found 2026-08-14. **MIGRATED** to
-      `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` § 2 (needs a design call or a live sweep
-      this dev checkout can't do). Repo: deployment-service.
+- [ ] [CODE] P2. A FLEET_HALT pause registers no `MaintenanceWindow`, so `check_consolidator_scheduler_paused`
+      (DP-WATCHER-004) may page a deliberate FLEET_HALT pause as an accidental one — found 2026-08-14, not fixed
+      (adjacent to the visibility carry-over, out of scope for that pass). Either route `_pause_schedulers` through
+      `scheduler_maintenance.pause_for_maintenance()` (needs a `bucket`/`surface`/`ttl_minutes` design call this plan's
+      operator record does not make) or confirm via a live sweep that this genuinely never double-pages before closing
+      it as a non-issue. Repo: deployment-service.
 - [x] 28. ✅ [CODE] P0. Budget-bound every actuation per (alert_code, target, day) using the GCS-durable state pattern
       from `relaunch_backfill_vm.py` — the tempdir-backed budget was discarded every 5 minutes on Cloud Run and the
       documented cap never engaged. Repo: deployment-service. — deployment-service@e38b2a0e. `ShardedState`,
@@ -508,20 +502,116 @@ bridges them; it does not extend one over the other.
       parametrized across a representative HOLD (DP-MANIFEST-001) and DRAIN (DP-VM-002) verdict, round-tripped through
       the gate to prove the marker is actually gone post-release, not just that `release()` reports success.
 - [x] ✅ [DOC] P2. Reconcile Phase 6's stale prose against the shipped policy table for the 3 scenarios corrected above
-      (stall, consolidator-down, catalogue-stale). **MIGRATED** to
-      `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` § 3 — the plan's OWN prose is already
-      corrected (see Phase 6 above); the open question is whether Phase 2's original policy assignment deserves a second
-      look, a design-review item not a code change.
-- [x] ✅ [CODE] P2. No alert identity in the shipped policy table resolves to FLEET_HALT for the actual
-      watch-the-watchers condition (DP-WATCHER-001/002 both resolve to DEPS_HOLD). **MIGRATED** to
-      `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` § 4 — a real design call on
-      safety-relevant fleet behavior, not mine to make unilaterally.
-- [x] ✅ [CODE] P2. `DependentAction.DEPS_DRAIN`'s docstring claimed draining "AND admission is held", contradicting the
-      shipped actuator (`_MARKER_PATH_FOR` maps DEPS_DRAIN to the drain marker only — a fresh launch into a
-      currently-draining target is NOT blocked). **FIXED 2026-08-14** — corrected the docstring to match shipped
-      behavior rather than change behavior (changing behavior is its own design call, migrated to
-      `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` § 4's sibling if ever revisited).
-      `unified-api-contracts@e2c4ca835b`.
+      (stall, consolidator-down, catalogue-stale). **REVIEWED 2026-08-14 — the drift is the PROSE's fault in all three;
+      the Phase 2 policy assignments are right and stay.** The plan's scenario list was written before the policy
+      existed and reached for the strongest-sounding action each time. Each shipped assignment survives scrutiny on the
+      same principle — _the action must match what is actually in doubt_: `stall` (`DP-VM-003` → `SELF_RESTART`) — a
+      restarted VM re-runs its range, so the data is LATE, not WRONG, and holding the estate on lateness would halt it
+      for the commonest transient there is; `consolidator-down` (`DP-MANIFEST-001` → `DEPS_HOLD`) — a down consolidator
+      makes the manifest STALE, not false, and it is `AUTO_RECOVER`, so draining every manifest-writing VM would destroy
+      in-flight work over a condition that heals itself (the LYING-manifest case, `DP-MANIFEST-003` phantom rows, is the
+      one that correctly drains — see the follow-up todo below); `catalogue-stale` (`DP-CATALOG-001` → `DEPS_HOLD`) — a
+      stale catalogue means do not START against a universe nobody refreshed, but capture already running is still
+      writing valid raw data against the universe it launched with. No `unified-api-contracts` change.
+- [x] ✅ [CODE] P2. `DependentAction.DEPS_DRAIN`'s docstring claims draining "AND admission is held", but
+      `RevocationActuator._MARKER_PATH_FOR` maps DEPS_DRAIN to the drain marker ONLY — a fresh launch into a
+      currently-draining target is NOT actually blocked by the shipped code. **RESOLVED 2026-08-14 by changing the
+      BEHAVIOUR, not the docstring** — deployment-service@_TBD_. The flag (raised in e2e-testing's Phase 6 suite for
+      this session to arbitrate) was correct, and the actuator was the lone dissenter among three sources: the enum
+      docstring says drain subsumes hold, and `DEPENDENT_LIFECYCLE_STRENGTH` ranks `DEPS_DRAIN=2` above `DEPS_HOLD=1`,
+      **CODE WRITTEN + TESTED, NOT LANDED — see the 2026-08-14 Progress Log entry; blobs
+      `761ebc9d6f62c2dac050b8bc50881c801ca342a8` (actuator), `667a148a05479228da0828c37516c196973a3497` (ds tests),
+      `8add413ed86b783a6374bdab1fa4a7d26c3adac7` (e2e assertion). e2e-testing gated GREEN with the change; the
+      deployment-service gate could not be gotten green on a host at load average 39 with 10 concurrent QG runs.** which
+      only means anything if the stronger action does everything the weaker one does. **The hole was real but bounded**:
+      nothing blocked the scheduler relaunching a drained target into the same bad-input window, where the heartbeat
+      daemon would drain the new instance on its first tick and again on the next launch — a launch/drain loop lasting
+      as long as the condition did. Not data-corrupting (the relaunch drains before writing), but it burns quota and
+      fires noise for the entire outage. `_MARKER_PATH_FOR` → `_MARKER_PATHS_FOR` (a tuple of builders per action);
+      `release()` clears both, so a resolved condition still frees the target completely. Repos: deployment-service
+      (behaviour + 2 tests) + e2e-testing (the flagged assertion inverted, its FLAG comment replaced with the
+      resolution).
+- [x] ✅ [CODE] P2. No alert identity in the shipped policy table resolves to FLEET_HALT for the watch-the-watchers
+      condition. **RESOLVED 2026-08-14 — the second branch this todo offered is the correct one: the deadman does not
+      route through revocation at all, and `DP-WATCHER-001/002 → DEPS_HOLD` is right as shipped.** The deadman poster is
+      documented as deliberately INDEPENDENT of the alerting-service (`/codex/05-infrastructure/`
+      `data-pipeline-alerts.md` § "Watching the watchers", Layer 2) — that independence is the whole point of an
+      out-of-band deadman, and routing it back through the alerting spine it exists to backstop would re-couple them.
+      What DP-WATCHER-001/002 actually represent is an in-band watcher FAILURE, and for that `DEPS_HOLD` is exactly
+      right: we are blind, so do not start new work, but do not destroy the work already running (which Phase 6's own
+      scenario text asked for verbatim — "blocks new launches, running VMs NOT drained" IS strength-1 admission scope,
+      not FLEET_HALT). `FLEET_HALT` stays reserved for `DP-RATE-002` / `GAS_SURGE_50X`, where every venue call fails and
+      pausing at the scheduler is the only thing that stops the bleeding. No policy change; Phase 6's scenario prose is
+      corrected instead. Repo: unified-trading-pm (this plan).
+- [ ] [TEST] P2. Two policy rows Phase 6's suite does not assert, both worth a row because they are the CONTRAST that
+      makes a neighbouring scenario meaningful: `DP-MANIFEST-003` (phantom rows → `DEPS_DRAIN`) is the money-burn case
+      that consolidator-down is routinely confused with, and asserting only the HOLD side leaves the distinction
+      untested; `DP-VM-009` (preemption-no-relaunch → `DEPS_HOLD`) is the escalated counterpart to `DP-VM-008` → `NONE`,
+      which the suite currently mentions in a comment but never asserts. Add both to
+      `e2e-testing/tests/integration/revocation/`. Repo: e2e-testing.
+- [ ] [TEST] P2. `deployment-service`'s `tests/unit/test_vm_launcher_scripts.py::TestErrorHandling::`
+      `test_script_syntax_validation` has now flaked THREE times across this plan's sessions (returncode -13 SIGPIPE, -5
+      SIGTRAP, and a bare failure under concurrent gate load), each time on a tree that touched no shell script, and
+      each time costing a full ~11-minute gate re-run to disprove. It shells out to `bash -n` per launcher across ~120
+      scripts. Either bound it (batch the syntax check into one `bash -n` invocation, or serialise it) or mark it with a
+      cited flake issue — "re-run and see" is currently costing more than the check is worth. Repo: deployment-service.
+
+## Phase 8 — ARM IT (the mechanism is built but INERT in production — found 2026-08-14)
+
+> **This plan cannot be archived until this phase is done.** Phases 1-6 are genuinely complete and green, and the READ
+> side is fully wired: `heartbeat_cli` polls for a drain marker on every tick, and `vm-exec-with-gcs-tee.sh` gates
+> admission and exits 75. But **nothing writes a marker.** Measured 2026-08-14: `rg 'RevocationActuator|\.actuate\('`
+> over deployment-service, excluding tests, returns **its own definition and nothing else** — zero production call
+> sites. `resolve_dependents()` is likewise consumed only inside UAC. The fleet is listening and nothing is speaking, so
+> no alert has ever revoked anything and none will.
+>
+> This was not visible from the plan's own state: every Phase 4 todo is ✅ and each is honestly ticked — the actuator
+> WAS built, tested and shipped. "Built" and "called" are different properties, and Phase 4 only ever claimed the first.
+> Recording that here because the same shape of gap will hide in any plan that ships a component without an explicit
+> caller-side todo.
+
+> **OPERATOR DECISION 2026-08-14 — target granularity: DEPS_DRAIN targets the SPECIFIC RUNNING VM.** Admission actions
+> (`DEPS_HOLD` / `FLEET_HALT`) target the PREFIX FAMILY. This follows the semantics rather than cutting across them: a
+> drain speaks to a process that is running right now and must flush what it is holding, so it needs that instance's
+> name; a hold speaks to launches that have not happened yet, which are only identifiable by family. It also means the
+> two markers a `DEPS_DRAIN` now writes are keyed differently on purpose — `vm-logs/<vm-name>/` for the drain,
+> `vm-census/admission-hold/<prefix>/` for the hold — and the resolver must return both, not one reused twice.
+
+- [ ] [CODE] P0. **Resolve dependents to actuation targets.** `evaluate_revocation()` answers WHAT action; nothing
+      answers WHO to apply it to. `resolve_dependents(upstream_entity, asset_group)` returns `(asset_group, data_type)`
+      pairs, but the actuator takes a VM prefix / Cloud Run job name — the translation layer between them does not
+      exist, and it is the reason nothing calls `actuate()`. Build it against the registries the Phase 0 census already
+      enumerated (`LAUNCHER_FOR_VM_PREFIX` / `VM_PREFIX_TO_BUCKET`: 243 prefixes, 178 mapping to 104 launcher scripts).
+      **Needs a design call this plan's operator record does not make**: whether a DEPS_DRAIN targets the specific
+      running VM name or the whole prefix family (drain is per-instance, hold is per-family — they may not want the same
+      target). Repo: deployment-service.
+- [ ] [CODE] P0. **Call `actuate()` from `escalation.route_finding()`.** That is the seam every DP finding already
+      passes through, and revocation must fire there INDEPENDENT of tier — a `DEPS_DRAIN` verdict applies whether the
+      finding is `auto_recover`, `file_issue` or `page_operator`, unlike `_DP_RECOVERY_ACTIONS` which is auto-recover
+      only. Use `finding.registry_id` as the alert identity (the finer key — `DP-FETCH-007`/`009` share one `AlertCode`)
+      and fall back to `finding.event`. Must never crash the sweep: same `except Exception` contract the existing
+      actuator dispatch already uses. Record the outcome in `event_details` so the Slack alert says what was revoked.
+      Repo: deployment-service.
+- [ ] [CODE] P0. **Emit and release the bookend.** `RevocationActuator.release()` exists and is tested but has no
+      production caller either, so even once holds are written, nothing clears them — a revocation that cannot be
+      released is an outage with extra steps, and this is the alerting SSOT's close-bookend rule. Wire release to the
+      condition-resolved path. Repo: deployment-service.
+- [ ] [TEST] P0. An anti-inertness guard: a test asserting `actuate()` has at least one non-test caller. The whole
+      mechanism sat wired-but-unreachable through six green phases; a grep-level guard is what makes that unrepeatable.
+      Repo: deployment-service.
+- [ ] [OPERATOR] P0. **Confirm it live after wiring**: the monitor runs as the `uts-prod-dp-exit-code-monitor` Cloud Run
+      Job on a `*/5` schedule, so verify (a) the job's deployed image contains the wiring commit
+      (`gcloud run jobs describe`), (b) an execution actually invoked revocation (log a `DP-REVOCATION-*` line), and (c)
+      a marker appears in `vm-census/admission-hold/` for a real condition. A green Cloud Build is NOT this —
+      `Evidence: cloudbuild=<id>` plus an execution log line is. Repo: deployment-service.
+- [ ] [CODE] P1. **Admission-gate coverage is ~148/184 launchers, not all of them** (measured 2026-08-14). Only
+      launchers routing through `setup-data-pipeline-vm.sh` → `vm-exec-with-gcs-tee.sh` get the admission check and the
+      heartbeat drain poll; the 158 that use `launcher_common.sh`'s `lc_` helper get the LIGHTWEIGHT observability
+      snippet, which deliberately omits the tarball+venv+heartbeat-daemon install and therefore has neither gate. The
+      two sets overlap, so the honest statement is: the canonical path is gated, the lightweight path is not, and a
+      per-launcher census is needed to say which real VMs are uncovered. Either add the admission check to the `lc_`
+      helper (it needs no venv — it can curl the marker) or document the lightweight path as deliberately ungated. Repo:
+      deployment-service.
 
 ## Phase 7 — Codex SSOT and close-out
 
@@ -542,13 +632,9 @@ bridges them; it does not extend one over the other.
 - [x] ✅ [DOC] P1. Add the flush contract to `/codex/06-coding-standards/` so every new buffered writer registers with
       the drain registry by convention, not by memory. — Added under "Error Handling Standards" alongside a matching
       RETRY_BUDGETS pointer (both landed together since they're the same shape of "hardcoded X → registry Y" rule).
-- [x] ✅ [REVIEW] P0. Post-phase codex audit — verify no plan↔codex drift, every cited path resolves, and no doc still
-      claims a gap this plan closed. — Corpus-wide broken-path grep on every `/codex/` and `/plans/` reference in this
-      plan: 0 broken. Searched the whole codex tree for other docs citing the stale "~189" VM-prefix count this plan
-      corrected: 0 hits outside the 2 docs already fixed. The 6 findings that surfaced during Phase 6 verification (not
-      plan↔codex drift — genuine new discoveries about already-shipped Phase 2 policy) are migrated to
-      `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` rather than left unaddressed.
-- [x] ✅ [REVIEW] P0. Archive this plan once every todo is done and unlocked, per the archival discipline (dated archive
+- [ ] [REVIEW] P0. Post-phase codex audit — verify no plan↔codex drift, every cited path resolves, and no doc still
+      claims a gap this plan closed.
+- [ ] [REVIEW] P0. Archive this plan once every todo is done and unlocked, per the archival discipline (dated archive
       folder, banner, referrer sweep).
 
 ---
@@ -871,34 +957,62 @@ contract with in-memory fakes (mirroring `deployment-service`'s own `written`/`l
 than fabricating VM behavior — this was verified as the honest path, not a shortcut. Phase 7 (codex audit + archive)
 still fully open behind Phase 6.
 
-### 2026-08-14 (final) — Phase 6 landed, Phase 7 closed out, plan archived
+### 2026-08-14 (later) — the mechanism is INERT in production; Phase 8 opened
 
-Phase 6's sub-agent delivered all 12 scenarios (`e2e-testing@094246df1a`) against the marker/verdict contract as scoped.
-Its work was reviewed line-by-line before shipping (all 4 test files read in full, not just the summary trusted), and
-the alert_identity mappings were spot-checked against `dependency_revocation.py` directly. Quality: the sub-agent's own
-honesty was the standout — every plan/policy mismatch it hit was asserted against the ACTUAL shipped behavior and
-flagged in a module-level comment for this session to judge, never silently routed around, and the one genuinely
-un-implementable scenario (double-booking — no shard-range interlock exists anywhere in deployment-service) was cut with
-a cited, reproducible search rather than faked.
+**The finding that matters more than anything else in this plan.** Six phases are green and the revocation mechanism has
+never revoked anything, because **nothing calls `RevocationActuator.actuate()`**. Measured, not assumed:
+`rg 'RevocationActuator|\.actuate\('` over deployment-service excluding tests returns the class definition and nothing
+else; `resolve_dependents()` is consumed only inside UAC. The READ side is fully wired — `heartbeat_cli` polls for a
+drain marker every tick, `vm-exec-with-gcs-tee.sh` gates admission and exits 75 — so the fleet is listening and nothing
+is speaking.
 
-**Shipping hit a real cross-agent conflict, not a self-collision this time.** A live peer bumped
-`strategy-service>=0.52.0` → `>=0.59.0` in `e2e-testing/pyproject.toml` while my quickmerge was mid-flight; the
-auto-reconcile's stash-pop produced a genuine merge conflict (not the earlier self-collision pattern). Resolved by
-keeping BOTH sides — the peer's version bump and my new `deployment-service` dependency line — then regenerating
-`uv.lock` fresh against the merged file and re-verifying the gate before shipping. A SEPARATE pre-flight block (a peer's
-untracked golden-fixture file in `strategy-service`, confirmed unrelated to my change and confirmed live via mtime) was
-bypassed with `--skip-preflight` per this plan's own established precedent, never by touching the peer's file.
+**Why six green phases hid it.** Every Phase 4 todo is ✅ and each is honestly ticked: the actuator WAS built, tested
+and shipped. "Built" and "called" are different properties and Phase 4 only ever claimed the first. The generalisable
+lesson: a plan that ships a component needs an explicit caller-side todo, or completeness is unfalsifiable from the
+plan's own state. Phase 8 now carries that work.
 
-**Verification found 6 genuine findings, not incomplete Phase 6/7 work**: 3 of Phase 6's own scenario descriptions were
-stale relative to Phase 2's already-shipped, already-tested policy (corrected in place — see Phase 6 above); a real gap
-(no alert identity maps to FLEET_HALT for the actual watch-the-watchers condition); an adjacent risk found during the
-FLEET_HALT visibility fix (DP-WATCHER-004 double-page); and a genuine code/docstring contradiction in UAC's
-`DependentAction.DEPS_DRAIN` (fixed in place, since it was a documentation-only correction, not a behavior change). None
-of these block this plan's completion — they're new discoveries ABOUT already-shipped work, not gaps in Phase 6/7
-themselves — so they're migrated to `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` rather than
-left dangling on an archived plan or force-resolved by unilateral judgment on live-safety-relevant policy.
+**The missing piece is a translation layer, not a call.** `evaluate_revocation()` answers WHAT action;
+`resolve_dependents()` returns `(asset_group, data_type)` pairs; the actuator wants a VM prefix or job name. Nothing
+bridges them, which is precisely why no caller could exist. Bridging it needs a design call this plan's operator record
+does not make: whether DEPS_DRAIN targets the specific running VM or the whole prefix family (drain is per-instance,
+hold is per-family).
 
-**Final state**: every phase (0-7) is done; the plan is archiving in this same commit per the single-repo
-same-commit-flip+archival rule (this worktree IS the plan-of-record's home). Total shipped this session: 2 commits to
-`unified-trading-library`, 4 to `deployment-service`, 1 to `unified-api-contracts`, 1 to `e2e-testing`, plus this PM
-repo's doc/plan commits.
+**Admission-gate coverage is partial, and a naive grep says otherwise.** 148 of 184 launchers route through
+`setup-data-pipeline-vm.sh` → `vm-exec-with-gcs-tee.sh` and are gated; 158 use `launcher_common.sh`'s `lc_` helper,
+which is a deliberately LIGHTWEIGHT observability snippet with no tarball/venv/heartbeat-daemon install and therefore
+neither the admission check nor the drain poll. `rg -l 'launcher_common'` initially read as "179/184 covered" — the lib
+only MENTIONS `vm-exec-with-gcs-tee.sh` in its comments. Reading what a lib does beats counting who sources it.
+
+**Todo 515 resolved by changing behaviour, not the docstring** — written, tested, NOT landed. The actuator was the lone
+dissenter among three sources; `_MARKER_PATH_FOR` → `_MARKER_PATHS_FOR` (tuple of builders per action) so DEPS_DRAIN
+writes both markers, and `release()` clears both. The hole was real but bounded: a relaunched target drains before
+writing, so it burnt quota and fired noise rather than corrupting data. e2e-testing gated GREEN with the change (its
+venv was bootstrapped this session — `uv sync` clean — and it resolves both `deployment_service` and
+`unified_api_contracts` to the local checkouts, so the change was genuinely exercised).
+
+**Why it did not land, and how to land it.** Two full deployment-service gate runs failed on DIFFERENT tests in
+`tests/unit/test_vm_launcher_scripts.py` — first `test_script_syntax_validation`, then
+`test_genuinely_healthy_run_with_real_action_lines_is_not_false_killed` with `rc=124`, a subprocess TIMEOUT on a test
+that shells out and sleeps 12s. Host load average was 39 with 10 concurrent QG processes. Different test each run =
+load, not the change; and `revocation_actuator.py` is not on the `vm-exec` path the failing file exercises. **Do not
+re-run blind a third time** — wait for the host to quiesce (`ps aux | grep -c '[q]uality-gates'` near 1), then one run
+should green. Restore with `git cat-file -p <blob> > <path>` using the three SHAs on todo 515 above, deployment-service
+FIRST (e2e-testing's inverted assertion depends on it).
+
+### 2026-08-14 (later still) — UN-ARCHIVED; the archive copy was removed
+
+A parallel session archived this plan (`status: complete`, 0 open todos) minutes after this session pushed Phase 8
+documenting that it must NOT be archived. For a short window both copies were on `origin/live-defi-rollout` saying
+opposite things; then the archive move dropped the active copy entirely, taking Phase 8 with it.
+
+**Resolved on the operator's instruction: the ACTIVE copy survives, the archive copy is deleted.** The archived version
+was the misleading half — it presented six green phases as finished work for a mechanism that has never fired once, and
+anyone grepping the archive first would have concluded the work was done. The active copy is restored from
+`unified-trading-pm@f9c97dd4c6` with Phase 8 and 13 open todos intact.
+
+**Why this happened is worth more than the fix.** The archival was not careless: by the plan's own state at that moment,
+every phase was ✅ and the archival discipline says a plan with every todo done must be archived immediately. The plan's
+state was simply wrong — Phase 4 claimed "built", never "called", and nothing in the corpus could tell the difference. A
+completeness check that reads only checkboxes will keep reaching this same wrong answer. The Phase 8 anti-inertness
+guard (a test asserting `actuate()` has a non-test caller) is the durable fix, because it makes the gap visible to the
+gate rather than to whoever happens to grep for call sites.
