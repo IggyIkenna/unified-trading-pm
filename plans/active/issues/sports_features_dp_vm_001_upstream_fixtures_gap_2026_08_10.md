@@ -126,7 +126,16 @@ locked_since:
       context carrying no resolution — gate escalation dispatch on already-resolved (or carry the resolution summary in
       the boot context) so a resolved wall cannot spawn a conflicting relaunch worker. **Bumped P3→P2 2026-08-14: a
       THIRD occurrence confirmed** (see Late dispatch note, slot-30) — this is a recurring dispatch-gating gap, not a
-      one-off.
+      one-off. **FOURTH occurrence, 2026-08-14, sharper evidence (slot-6)**: this time it is the SAME `escalation_id`
+      (`agt-bc9148`) re-dispatched — not merely a fresh id for the same underlying VM — only ~30s after its own prior
+      worker (slot-30) reached `lifecycle-complete`. `/api/activity` event ids 488567
+      (`tmux_session_lost`/`archived_lifecycle_complete: true`, agent `agt-bc9148`, 02:49:40Z) → 488570/488575
+      (`escalation_dispatch_initiated`/`escalation_dispatched`, same `escalation_id: agt-bc9148`, to slot 6, 02:50:10Z /
+      02:50:25Z) prove the dispatcher re-fired the identical escalation object right after its own completion, rather
+      than clearing it — a tighter mechanical bug than "stale boot context," pointing at a completion-ack/clear race in
+      the escalation lifecycle, not just a missing already-resolved check. No relaunch performed (nothing could have
+      changed in 30s; slot-30's same-day verification stands unchanged). No code fix in `deployment-service` — the gap
+      is in `agent-orchestrator`'s escalation dispatch/lifecycle layer, outside this wall's `$REPO` scope.
 
 ## Late dispatch note (slot-23, 2026-08-10)
 
@@ -166,3 +175,18 @@ recompute + would defy the standing operator ruling). Bumped the dispatch-gating
 confirmed recurring pattern, not a one-off; no code change made in `deployment-service` (nothing to fix there — the gap
 is in agent-orchestrator's escalation-dispatch layer, outside this worker's `$REPO` scope for a one-shot
 `data_pipeline_failure` wall).
+
+**slot-6 2026-08-14 (data_pipeline_failure escalation agt-bc9148, FOURTH occurrence)** — the SAME `escalation_id`
+(`agt-bc9148`) that slot-30 just resolved was re-dispatched to me ~30s after slot-30's session reached
+`lifecycle-complete`. Confirmed via `/api/activity`: event 488567 (`tmux_session_lost`,
+`archived_lifecycle_complete: true`, `agent_id: agt-bc9148`, tmux `orch-slot-30`, 02:49:40Z) immediately followed by
+488570/488575 (`escalation_dispatch_initiated`/`escalation_dispatched`, same `escalation_id: agt-bc9148`, `slot_id: 6`,
+02:50:10Z / 02:50:25Z). This is sharper evidence than the prior three occurrences: it is not a fresh escalation id for
+the same underlying VM issue re-dispatched with stale context — it is the literal same escalation object bouncing back
+to a new slot seconds after its own worker finished, which reads as a completion-ack/clear race in the AO's escalation
+lifecycle rather than only a missing "already-resolved" dispatch check. Given the ~30s gap, nothing on the ground could
+plausibly have changed since slot-30's same-day verification (upstream 2026-08-10 fixtures present, recompute done,
+relaunch bound massively exceeded, operator do-not-relaunch ruling standing) — did not re-run those checks, no relaunch
+performed, no code change in `deployment-service` (this wall's `$REPO`; the fix belongs in agent-orchestrator's
+escalation dispatch/lifecycle code, outside scope here). Bumped the tracked P2 dispatch-gating todo above with this
+occurrence's evidence rather than opening a new todo — same underlying defect class.
