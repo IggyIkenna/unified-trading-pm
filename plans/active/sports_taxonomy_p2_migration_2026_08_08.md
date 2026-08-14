@@ -449,6 +449,27 @@ than proceeding.
       census still NOT done** (do not assume one day generalises, per the todo's own text) — flagging the corrected
       direction now, before any census/purge work proceeds, precisely to prevent that catastrophic wrong-way execution.
       **§3a fresh check still required before any purge.**
+- [ ] [SCRIPT] P1. **Launch one small VM to close out the 3 tiny manifest-only fixes found + fully characterized this
+      session (2026-08-14, slot-26) but blocked on "manifest rewrites never run locally"** (confirmed twice: local
+      `--apply` on `odds_horizon_bucket`'s migration script OOM-killed at ~28s despite `free -h` showing 18Gi
+      host-available — a sandbox cgroup limit, not genuine exhaustion). Safe-idempotent justification (no `[OPERATOR]`
+      needed): all three are pure manifest-row operations on already-verified-frozen/orphaned rows, re-running any of
+      them is a no-op once done (each script's own dry-run reports 0 remaining targets), and none involves a NEW GCS
+      object delete beyond what's already completed. Scope, all three in
+      `instruments-store-sports-prd-central-element-323112` or `market-data-tick-sports-prd-central-element-323112`: 1.
+      `market-data-processing-service/scripts/migrate_odds_horizon_bucket_venue_to_bookmaker_2026_07_27.py --apply` —
+      re-run as-is (already committed + tested), now bounded to exactly 6 targets (1 reconciles, 5 expected NotFound
+      residue). 2. instruments-service: delete the 8 remaining `SPORT`-instrument_type-residue manifest rows
+      (`venue=ODDS_API`, `data_type=trades`, `instrument_type=SPORT`, `capture_status=captured`) — their 16 backing GCS
+      objects are ALREADY deleted+verified this session; this is the manifest-only remainder. No existing script — write
+      one (small, CAS-guarded, mirrors the already-committed pattern). 3. instruments-service or MTDS: delete the 2,379
+      confirmed-frozen blank-venue rows in the `market-data-tick-sports-prd` manifest
+      (`service_name=instruments-service`, blank `venue`, `data_type in        [odds, odds_horizon_bucket]`,
+      `capture_status=captured`) — writer confirmed stopped (`attempted_at` frozen 2026-07-21/22, root cause fixed at
+      `instruments-service@d9994199`). No existing script — write one. Batch all three into ONE VM launch (per
+      `/codex/05-infrastructure/vm-launcher-runbook.md` — no fire-and-forget, verify STARTED + a terminal state,
+      rightsizing check if >30min) rather than three separate launches — each is individually too small to justify its
+      own VM.
 
 ### Added 2026-08-08 (operator, mid-flight) — re-stamp the collapsed derived types
 
