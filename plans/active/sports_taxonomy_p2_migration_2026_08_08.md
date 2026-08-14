@@ -350,27 +350,27 @@ than proceeding.
       live, not from the prior mapping-code read alone.
 
       **ADDENDUM 2026-08-14 (slot-18) — the population slot-26 verified above is a DIFFERENT one from this todo's own
-                                      cited counts; a second, separate fold was actually still outstanding and is now also closed.** Re-checking this
-                                      todo's own numbers (6,306 captured `ODDS` / 16,207 captured `odds`, venue=FOOTYSTATS) against
-                                      `instruments-store-sports-prd-central-element-323112` (the bucket slot-26 measured) does NOT reproduce them — that
-                                      bucket's lowercase `odds`/footystats count is 30,498, not 16,207. The 6,306/16,207 figures are physically in the
-                                      **MTDS raw-tick manifest** (`market-data-tick-sports-prd-central-element-323112`), a completely separate bucket
-                                      that happens to share the `ODDS`/`odds` token name with the IS 19-token reference-data vocabulary slot-26
-                                      resolved — the EXACT "two different systems, one shared token" trap this whole todo's own UAC-comment correction
-                                      already named once (see the todo's own "the UAC comment... is FALSE" line) and the 19-token migration's Progress
-                                      Log named again for a different pair of systems. Live-verified this session (dispatched as
-                                      `sports_taxonomy_p2_migration-005`): a full-population (not sampled) GCS-existence check of all 6,306 MTDS
-                                      `captured` uppercase-`ODDS` rows found **0/6,306 had backing parquet content** under either known raw_tick_data
-                                      path shape, while every checked (date, league) pair's lowercase `odds` twin did — i.e. this MTDS population was
-                                      phantom bookkeeping residue, not real data needing a content-merge fold. Filed
-                                      `/plans/archive/issues/sports_footystats_odds_uppercase_phantom_not_real_2026_08_14.md`, operator ruling
-                                      BLK-931edbb5: purge rather than fold. Purged 2026-08-14 (6,306 captured + 136 empty_confirmed rows removed,
-                                      manifest-only — no real GCS object existed to touch; consolidator paused via maintenance window, pre-purge
-                                      snapshot taken, §3a fresh soft-delete-retention check passed at 604800s), re-verified 0 remaining post-purge.
-                                      Shipped `market-tick-data-service@5dcb6c865a` (purge tool + test) and `unified-api-contracts@b6378af519`
-                                      (corrected the same UAC comment slot-18 found already-wrong-again, shrunk
-                                      `SPORTS_DATA_TYPE_ACCEPTED_STALE_UPPERCASE_RESIDUE` by dropping `ODDS`). Both populations this todo's title
-                                      implicitly bundled are now genuinely resolved.
+                                          cited counts; a second, separate fold was actually still outstanding and is now also closed.** Re-checking this
+                                          todo's own numbers (6,306 captured `ODDS` / 16,207 captured `odds`, venue=FOOTYSTATS) against
+                                          `instruments-store-sports-prd-central-element-323112` (the bucket slot-26 measured) does NOT reproduce them — that
+                                          bucket's lowercase `odds`/footystats count is 30,498, not 16,207. The 6,306/16,207 figures are physically in the
+                                          **MTDS raw-tick manifest** (`market-data-tick-sports-prd-central-element-323112`), a completely separate bucket
+                                          that happens to share the `ODDS`/`odds` token name with the IS 19-token reference-data vocabulary slot-26
+                                          resolved — the EXACT "two different systems, one shared token" trap this whole todo's own UAC-comment correction
+                                          already named once (see the todo's own "the UAC comment... is FALSE" line) and the 19-token migration's Progress
+                                          Log named again for a different pair of systems. Live-verified this session (dispatched as
+                                          `sports_taxonomy_p2_migration-005`): a full-population (not sampled) GCS-existence check of all 6,306 MTDS
+                                          `captured` uppercase-`ODDS` rows found **0/6,306 had backing parquet content** under either known raw_tick_data
+                                          path shape, while every checked (date, league) pair's lowercase `odds` twin did — i.e. this MTDS population was
+                                          phantom bookkeeping residue, not real data needing a content-merge fold. Filed
+                                          `/plans/archive/issues/sports_footystats_odds_uppercase_phantom_not_real_2026_08_14.md`, operator ruling
+                                          BLK-931edbb5: purge rather than fold. Purged 2026-08-14 (6,306 captured + 136 empty_confirmed rows removed,
+                                          manifest-only — no real GCS object existed to touch; consolidator paused via maintenance window, pre-purge
+                                          snapshot taken, §3a fresh soft-delete-retention check passed at 604800s), re-verified 0 remaining post-purge.
+                                          Shipped `market-tick-data-service@5dcb6c865a` (purge tool + test) and `unified-api-contracts@b6378af519`
+                                          (corrected the same UAC comment slot-18 found already-wrong-again, shrunk
+                                          `SPORTS_DATA_TYPE_ACCEPTED_STALE_UPPERCASE_RESIDUE` by dropping `ODDS`). Both populations this todo's title
+                                          implicitly bundled are now genuinely resolved.
 
 - [x] ✅ [DATA] P0. **Move `odds_horizon_bucket` onto the `odds` + `horizon` model.** ~~135,980 shards... MDPS
       121,762/MTDS 14,656/IS 1,106... 123,642 attributed to venue=ODDS_API~~ **STALE — corrected 2026-08-14 (slot-26),
@@ -431,7 +431,7 @@ than proceeding.
       all, they're the exact same junk population the "Delete the `SPORT` instrument_type residue" purge todo below
       already names (8 rows) — correctly routed there as a delete, not force-fit into a bookmaker-venue re-attribution
       here. No sub-population was silently dropped; each has an owning todo or is confirmed already-empty.
-- [ ] [DATA] P1. **Purge/re-stamp the `venue=ODDS_API`/`pipeline_mode=batch_footystats` legacy-seed residue (20,095
+- [x] ✅ [DATA] P1. **Purge/re-stamp the `venue=ODDS_API`/`pipeline_mode=batch_footystats` legacy-seed residue (20,095
       rows) the todo above missed.** Found live 2026-08-14 via
       `/plans/active/issues/sports_footystats_mislabel_contradiction_2026_08_14.md`: the todo above's 2026-08-14
       (slot-26) closure verified `venue=FOOTYSTATS` (the RENAMED target) reached 0 captured rows, but never re-checked
@@ -448,7 +448,23 @@ than proceeding.
       rows; the operator-ruled fix is a de-cased PURGE). Whatever purge tool lands next MUST re-stamp/purge the matching
       rows in BOTH `_index/availability_index.parquet` AND `_index/per_vm/_legacy_seed.parquet` in the SAME change, or
       the consolidator resurrects them again exactly as it did in 2026-07-27. **§3a fresh check required before any
-      object delete.** (repo: market-tick-data-service)
+      object delete.** (repo: market-tick-data-service) — **DONE 2026-08-14 (slot-30)**: shipped a MANIFEST-ONLY purge
+      tool, `market-tick-data-service@679227552f`
+      (`scripts/sports/purge_footystats_odds_api_legacy_seed_2026_08_14.py`), that writes BOTH manifest surfaces in one
+      invocation per the todo's own requirement. Content redundancy already established+executed by the 2026-07-17
+      `merge_migrated_odds_into_canonical` run (all 1,815 days probed, real-derive-verified — see the archived
+      2026-07-16 mistamped-footystats doc's Progress Log); re-confirmed live this session via a seeded 30-date random
+      sample of the current population: 26/30 had a real same-day `batch_odds_api` (any-venue) twin, 0/30 had an object
+      with NO twin (the one dangerous case), 4/30 had neither object (already-orphaned claims, safe either way). Live
+      re-census confirmed the exact counts before writing (main index 19,782 / legacy seed 20,095, matching the todo's
+      own numbers). Executed against prod with pre-write snapshots on both blobs
+      (`_index/snapshots/pre_footystats_odds_api_legacy_seed_purge_2026_08_14_*`): **removed 19,782 rows from
+      `_index/availability_index.parquet` (6,079,121→6,059,339) and 20,095 rows from
+      `_index/per_vm/_legacy_seed.parquet` (362,753→342,658); VERIFY 0 remaining on both surfaces.** No GCS object was
+      deleted (manifest-metadata-only fix — §3a's object-delete gate does not apply); the underlying
+      `ticks_migrated_*.parquet` objects (still real, still on disk) remain covered by the separate, larger,
+      already-tracked "purge the mis-stamped rows + their ~17K objects" todo in the archived 2026-07-16 doc, out of
+      scope for this todo.
 
 ### The purges (each requires the §3a fresh check, in-run)
 
