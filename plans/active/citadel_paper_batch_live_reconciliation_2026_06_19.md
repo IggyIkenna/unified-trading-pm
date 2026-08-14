@@ -301,12 +301,23 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       clones currently mis-roots its TESTS phase to unified-trading-pm (`rootdir: …/unified-trading-pm`, runs PM's 6
       tests) — a fleet-wide QG-harness defect, NOT this code; the authoritative server `quality-gates-v2` runs
       test-in-image with correct rootdir. Repo: strategy-service. Provenance: paper/batch spine fix session 2026-06-20.
-- [ ] [SCRIPT] P9.2 (was: mislabeled P3.2 — collided with Phase 3's real P3.2 "PassiveLedger synthesiser" item above;
-      renumbered per verify-rerun-2 finding 17, 2026-07-14). **DEFERRED (pre-existing, NOT this work) — UAC version
-      drift blocks strategy-service QG preflight.** `quality-gates.sh` version-alignment gate: local
+- [x] ✅ [SCRIPT] P9.2 (was: mislabeled P3.2 — collided with Phase 3's real P3.2 "PassiveLedger synthesiser" item above;
+      renumbered per verify-rerun-2 finding 17, 2026-07-14). ~~DEFERRED (pre-existing, NOT this work) — UAC version
+      drift blocks strategy-service QG preflight.~~ `quality-gates.sh` version-alignment gate: local
       `unified-api-contracts=0.26.0` vs main `0.27.0`. Run
       `bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh --fix` (after `git pull origin main` in
-      PM). Repo: strategy-service (dep alignment). Provenance: paper/batch spine fix session 2026-06-20.
+      PM). Repo: strategy-service (dep alignment). Provenance: paper/batch spine fix session 2026-06-20. **RE-VERIFIED
+      2026-08-14 — self-resolved, no fix needed.** The cited `0.26.0`/`0.27.0` pairing no longer exists at any level:
+      UAC's current version is `0.124.0` (latest git tag `v0.124.0`, `[tool.hatch.version] dynamic`); strategy-service's
+      `pyproject.toml` constrains `unified-api-contracts>=0.123.0,<1.0.0` (path/editable dependency on
+      `../unified-api-contracts`, not a frozen pin) — satisfied. Live run of
+      `bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh` (check-only, no `--fix`) confirms: "OK:
+      All dependencies aligned with manifest and canonical constraints." / "Alignment OK." Two unrelated, currently-open
+      conditions exist in the same script's output — a PM self-version drift (pyproject 1.2.596 vs manifest 1.2.741) and
+      a fleet-wide 21-repo local-vs-`origin/main` `staging_versions` lag (incl. UAC itself, local=0.124.0 vs origin/main
+      staging_versions=0.72.0) — neither is the strategy-service-QG-preflight-blocking pairing this todo cited; both are
+      pre-existing, tracked separately, and out of this todo's scope. Source:
+      `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md` Item H.
 - [x] ✅ [SCRIPT] P3.3. **SWAP leg `size_units` now denominated in the OUT asset (ETH), not the USDC-in notional** —
       DONE (strategy-service@67e7826c). `staked_basis.py` both SWAP legs (open `_build_atomic_legs` + rescale) now set
       `size_units` to the canonical OUT-asset qty (`eth_qty = usdc_to_stake / eth_price`; rescale `eth_delta_qty`),
