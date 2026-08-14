@@ -65,9 +65,11 @@ source: >-
 
 ## Todos
 
-- [ ] [CODE] P2. Add a hygiene-sweep check that fails when cursor-configs/settings.json is dirty in any clone, or when
-      any .claude/settings.local.json is a symlink Source:
-      `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md`
+- [x] ✅ [CODE] P2. Add a hygiene-sweep check that fails when cursor-configs/settings.json is dirty in any clone, or
+      when any .claude/settings.local.json is a symlink Source:
+      `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md` — unified-trading-pm@99a13bea88
+      (`scripts/plan-hygiene/check_settings_symlink_hygiene.sh` + wired into `run_hygiene_sweep.sh`; verified PASS on a
+      clean workspace and FAIL on both violation modes via a scratch fake-clone)
 - [ ] [CODE] P2. Find where the settings.local.json symlinks came from (which bootstrap path/manual step created them)
       Source: `plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md`
 - [ ] [CODE] P2. Update /codex/05-infrastructure/claude-code-settings-symlink.md with the corrected symlink-target and
