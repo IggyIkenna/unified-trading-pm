@@ -28,7 +28,7 @@ summary: >-
   single bounded worker todo should resolve unilaterally — a wrong choice risks either silently reopening the CME crash
   this exclusion was built to close, or shipping incorrect/misattributed shard identity for a bundle-grain candle write
   (see "Why it matters").
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -56,7 +56,7 @@ source:
     live read-only GCS query of
     gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet,
   ]
-resolved_by:
+resolved_by: slot-30, 2026-08-14
 locked_by:
 context_scope:
   [
@@ -68,6 +68,13 @@ context_scope:
   ]
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-08-14 — RESOLVED.** All 4 todos done: `[OPERATOR]` ruled option (a) 2026-08-13; the
+> `(venue, instrument_type)`-keyed carve-out shipped (`market-data-processing-service@3c86d4ef1` +
+> `unified-api-contracts@8688745b`); the adapter-selection bug this live-verify surfaced fixed
+> (`market-data-processing-service@d720375bb9`); the scanner file-candidate-listing gap for `ohlcv_24h` fixed
+> (`market-data-processing-service@afc7cf263b`); both `ohlcv_15m` (20 rows) and `ohlcv_24h` (5 rows) live-verified
+> `captured` for `venue=CBOE/instrument_type=FUTURE`, CME combo exclusion confirmed intact throughout. No successor doc.
 
 # What I found
 
@@ -209,28 +216,28 @@ market-tick-data-service, not MDPS) to additionally emit or re-key per-contract 
       coarse-timeframe carve-out set).
 
       **Re-ran** (`mdps-backfill-tradfi-20260814-013207`, same CLI, tarball re-pinned to `d720375bb9`) and confirmed
-              via the run's own per-VM manifest shard (`_index/per_vm/mdps-backfill-tradfi-20260814-013207.parquet`,
-              queried read-only via UTL `download_from_storage`, not gsutil): **`venue=CBOE, instrument_type=FUTURE,
-              data_type=ohlcv_15m, capture_status=captured` — 20 real rows** across the 5-date/2-venue run — this doc's
-              done-when for `ohlcv_15m` is MET. **CME stayed clean**: zero `COMBO` mentions anywhere in the run.log, and
-              zero manifest rows of any kind for CME in this VM's shard — the 2026-08-06 combo exclusion is intact, not
-              reopened.
+                          via the run's own per-VM manifest shard (`_index/per_vm/mdps-backfill-tradfi-20260814-013207.parquet`,
+                          queried read-only via UTL `download_from_storage`, not gsutil): **`venue=CBOE, instrument_type=FUTURE,
+                          data_type=ohlcv_15m, capture_status=captured` — 20 real rows** across the 5-date/2-venue run — this doc's
+                          done-when for `ohlcv_15m` is MET. **CME stayed clean**: zero `COMBO` mentions anywhere in the run.log, and
+                          zero manifest rows of any kind for CME in this VM's shard — the 2026-08-06 combo exclusion is intact, not
+                          reopened.
 
-              **`ohlcv_24h` for CBOE FUTURE — NOT confirmed, needs its own follow-up (new todo below).** The explicit
-              `ohlcv_24h` processing pass in both runs found only 5 candidate files/date (vs. 12 for `ohlcv_15m`) and never
-              touched the CBOE `futures_chain` blob at all (0 rows, captured or failed, for `venue=CBOE,
-              instrument_type=FUTURE, data_type=ohlcv_24h` in the manifest) — a scanner file-candidate-listing asymmetry
-              between the two coarse data_types, distinct from both bugs fixed so far. Not investigated further this pass
-              (scope/time-bounded) — see the new todo.
+                          **`ohlcv_24h` for CBOE FUTURE — NOT confirmed, needs its own follow-up (new todo below).** The explicit
+                          `ohlcv_24h` processing pass in both runs found only 5 candidate files/date (vs. 12 for `ohlcv_15m`) and never
+                          touched the CBOE `futures_chain` blob at all (0 rows, captured or failed, for `venue=CBOE,
+                          instrument_type=FUTURE, data_type=ohlcv_24h` in the manifest) — a scanner file-candidate-listing asymmetry
+                          between the two coarse data_types, distinct from both bugs fixed so far. Not investigated further this pass
+                          (scope/time-bounded) — see the new todo.
 
-              **Unrelated finding, already tracked — not a new issue**: the second run's SchemaContractNotFoundError count
-              (`instrument_type='OPTION'`, `venue='CME'`, `underlying∈{GOLD,NASDAQ100,SILVER,SP500}`) is CME single-leg
-              options-on-futures, a DIFFERENT instrument_type than the `combo`/`futures_chain` this doc's own scope
-              excludes — it's per-shard isolated (does not abort the date's other shards; CBOE's 20 rows landed in the SAME
-              runs), and matches the already-open, already-unblocked "OPTION half" todo in
-              `/plans/active/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` (`("tradfi","option")`
-              is `frozenset()` in `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`) — no new todo needed here, just noting the
-              live evidence lines up with that doc's existing scope.
+                          **Unrelated finding, already tracked — not a new issue**: the second run's SchemaContractNotFoundError count
+                          (`instrument_type='OPTION'`, `venue='CME'`, `underlying∈{GOLD,NASDAQ100,SILVER,SP500}`) is CME single-leg
+                          options-on-futures, a DIFFERENT instrument_type than the `combo`/`futures_chain` this doc's own scope
+                          excludes — it's per-shard isolated (does not abort the date's other shards; CBOE's 20 rows landed in the SAME
+                          runs), and matches the already-open, already-unblocked "OPTION half" todo in
+                          `/plans/active/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` (`("tradfi","option")`
+                          is `frozenset()` in `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`) — no new todo needed here, just noting the
+                          live evidence lines up with that doc's existing scope.
 
 - [x] ✅ [CODE] P2. **DONE 2026-08-14 (slot-11, worker) — `market-data-processing-service@afc7cf263b`.** Root-caused:
       the CBOE `(venue, futures_chain)` coarse-timeframe admission (`_COARSE_TIMEFRAME_CHAIN_ADMISSIONS`) was only ever
@@ -250,15 +257,20 @@ market-tick-data-service, not MDPS) to additionally emit or re-key per-contract 
       manifest confirmation NOT run this pass** — see the new `[SCRIPT]` todo below, split out the same way the
       `ohlcv_15m` live-verify was split from its own `[CODE]` fix earlier in this doc.
 
-- [ ] [SCRIPT] P2. **Live-verify: re-run `mdps-backfill-tradfi-*` to confirm a real
-      `venue=CBOE/instrument_type=FUTURE/data_type=ohlcv_24h/capture_status=captured` manifest row lands**, now that
-      `market-data-processing-service@afc7cf263b` (the `[CODE]` todo above) fixes the scanner-admission gap. Refresh the
-      MDPS tarball, content-verify it pins `afc7cf263b` (or later), and re-run the same CLI shape prior runs in this doc
-      used (`--force --data-types "ohlcv_15m ohlcv_24h" --venues "CBOE CME" tradfi <affected-dates> full`). Confirm via
-      the run's own per-VM manifest shard (UTL `download_from_storage`, not gsutil): a real
-      `venue=CBOE/instrument_type=FUTURE/data_type=ohlcv_24h/capture_status=captured` row, and that CME still shows zero
-      manifest pollution / zero `COMBO` mentions (combo exclusion intact). Repo: market-data-processing-service. This is
-      the doc's own remaining `ohlcv_24h` done-when — the final live-verification step.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-14 (slot-30, worker) — live-verified, no code change needed.** Pulled MDPS to
+      `a7e844f3055c` (`afc7cf263b` confirmed ancestor via `git merge-base --is-ancestor`), launched
+      `bash scripts/vm/launch-mdps-backfill-vm.sh --force --data-types "ohlcv_15m ohlcv_24h" --venues "CBOE CME" tradfi 2026-07-20 2026-07-24 full`
+      (VM `mdps-backfill-tradfi-20260814-025425`; the launcher's own `lc_verify_tarball_freshness` auto-republished the
+      stale mtds/uac/deployment-service tarballs, MDPS was already current). Run completed `exit_code=0`, all 5 dates
+      processed, self-deleted. Confirmed via the run's own per-VM manifest shard
+      (`_index/per_vm/mdps-backfill-tradfi-20260814-025425.parquet`, queried read-only via UTL `download_from_storage`,
+      not gsutil): **`venue=CBOE, instrument_type=FUTURE,     data_type=ohlcv_24h, capture_status=captured` — 5 real
+      rows** across the 5-date run (the run.log shows the per-date `ohlcv_24h` pass now lists 7 candidate files, up from
+      the pre-fix 5, and processes CBOE's `futures_chain` blob alongside the pre-existing Yahoo Treasury-tenor `INDEX`
+      data every date). `ohlcv_15m` still shows its prior 20 `captured` rows (unaffected by this fix, re-confirmed).
+      **CME stayed clean: zero `venue=CME` rows of any kind in the shard** — the 2026-08-06 combo exclusion remains
+      intact, not reopened. This doc's done-when is now fully met for both `ohlcv_15m` and `ohlcv_24h`; every todo in
+      this doc is done.
 
 # Progress Log
 
@@ -325,3 +337,17 @@ market-tick-data-service, not MDPS) to additionally emit or re-key per-contract 
   a real captured manifest row" done-when into a new `[SCRIPT]` live-verify todo (mirrors how the `ohlcv_15m`
   live-verify was already split from its own `[CODE]` fix earlier in this doc) rather than launch a VM within this
   narrower `[CODE]`-scoped todo.
+
+- 2026-08-14 (slot-30, worker): dispatched the final `[SCRIPT] P2 Live-verify ohlcv_24h` todo. Pulled MDPS to
+  `a7e844f3055c` (confirmed `afc7cf263b` ancestor), launched `mdps-backfill-tradfi-20260814-025425` with the same CLI
+  shape prior runs in this doc used. Run completed cleanly (`exit_code=0`, 5/5 dates). Read the per-VM manifest shard
+  directly (UTL `download_from_storage`):
+  **`venue=CBOE, instrument_type=FUTURE, data_type=ohlcv_24h, capture_status=captured` — 5 rows**, `ohlcv_15m` still 20
+  rows, **zero `venue=CME` rows of any kind** (combo exclusion intact). Doc's done-when fully met for both timeframes —
+  every todo now done, archiving this doc per the 6-step archival ritual
+  (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): no codex SSOT documents the coarse-timeframe
+  exclusion mechanism (grepped `codex/` for
+  `_INSTRUMENT_TYPES_EXCLUDED_FROM_COARSE_TIMEFRAMES`/`_COARSE_TIMEFRAME_CHAIN_ADMISSIONS`, zero hits), so no
+  codex-alignment update needed; updated the one formal leading-slash referrer
+  (`plans/active/issues/instruments_service_defi_golden_red_capability_drift_2026_08_14.md`'s `related:` list + a stale
+  "explicitly open [OPERATOR]" claim, since the operator ruling actually landed 2026-08-13) to reflect resolution.

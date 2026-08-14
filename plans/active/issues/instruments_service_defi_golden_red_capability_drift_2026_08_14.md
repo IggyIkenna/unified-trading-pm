@@ -17,8 +17,9 @@ summary: >-
   is settled/intentional (same "blind regen silently bakes unverified state" risk the 07-10 and 08-05 incidents both
   warn about). Separately confirmed the regen script also touches tradfi.json — running it unscoped would have silently
   resolved the tradfi CBOE futures_chain xfail
-  (`mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md`, an explicitly open `[OPERATOR]` design
-  question) by baking in whichever side is currently live in UAC — I reverted that file before it could ship.
+  (`mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md`, an `[OPERATOR]` design question that
+  was actually already ruled 2026-08-13 and is now fully resolved/archived) by baking in whichever side is currently
+  live in UAC — I reverted that file before it could ship.
 status: open
 nature: issue
 asset_group: [defi]
@@ -29,7 +30,7 @@ tags: [defi, expected-universe, golden-drift, aave-v3, rewards, qg-red, cross-re
 related:
   [
     /plans/active/issues/instruments_service_defi_golden_red_capability_lockstep_gap_2026_08_05.md,
-    /plans/active/issues/mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md,
+    /plans/archive/2026_08/issues/mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md,
     /plans/active/sports_taxonomy_p2_migration_2026_08_08.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
