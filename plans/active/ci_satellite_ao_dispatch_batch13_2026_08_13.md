@@ -371,9 +371,19 @@ source: >-
       not-yet-concluded skip, empty-LDR_SHA no-op) plus `DRY_RUN`. Full `quality-gates.sh` clean on this exact HEAD.
       Issue-doc checkbox reconciliation deferred to `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` per this
       batch's own header (source docs not touched here).
-- [ ] [CODE] P2. Fix sit-gate-stuck-detector.yml's dedup key to include the streak-count / monotonic-worsening signal
+- [x] [CODE] P2. ✅ Fix sit-gate-stuck-detector.yml's dedup key to include the streak-count / monotonic-worsening signal
       alongside the flat cooldown timer Source:
-      `plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md`
+      `plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md` — ✅ **ALREADY DONE,
+      confirmed 2026-08-14 (slot 29, infra), no new code change.** Already shipped `unified-trading-pm@c91496e0db`
+      (2026-08-08, 5 days before this batch was drafted):
+      `dedup_key: sit-gate-stuck-${{ needs.check.outputs.max_streak }}` (line 131 of
+      `.github/workflows/sit-gate-stuck-detector.yml`, mirrored in the hosted-baseline copy) folds the detector's own
+      `max_streak` output into the key, so a worsening streak (e.g. 4→6) is a NEW key that always re-arms rather than
+      being suppressed by the flat 60-min cooldown — exactly the fix this todo asks for, plus a matching
+      `sit_gate_stuck_detector.py` change and a RESOLVED bookend job for the all-clear path. Live-verified on current
+      HEAD, not assumed. Issue-doc checkbox reconciliation deferred to
+      `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` per this batch's own header (source docs not touched
+      here).
 - [ ] [CODE] P2. Re-check whether unified-api-contracts/market-tick-data-service SIT-gate streaks reset to 0 once LDR
       commit velocity drops Source:
       `plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md`
