@@ -7,7 +7,7 @@ summary: >-
   checkbox (this was an extraction batch, so the source docs' own checkboxes are the ones that go stale), archives any
   source doc that reaches zero open todos as a result, and runs the standard 6-step archival ritual on the batch plan
   itself.
-status: active
+status: archived
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -15,9 +15,12 @@ repos: [unified-trading-pm]
 scope: [engineer]
 tags: [ao, ao-dispatch, satellite-batch, close-out, finalize]
 related:
-  [/plans/active/ao_satellite_ao_dispatch_batch20_2026_08_13.md, /plans/active/ao_consolidated_closeout_2026_08_12.md]
+  [
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch20_2026_08_13.md,
+    /plans/active/ao_consolidated_closeout_2026_08_12.md,
+  ]
 created: "2026-08-13"
-last_updated: "2026-08-13"
+last_updated: "2026-08-14"
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -37,7 +40,7 @@ gate_on_depends: true
 sequential: true
 context_scope:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch20_2026_08_13.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch20_2026_08_13.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
   ]
@@ -50,7 +53,12 @@ source: >-
 
 # ao satellite AO batch 20 — finalize
 
-> **Machine-gated on `/plans/active/ao_satellite_ao_dispatch_batch20_2026_08_13.md`** (`depends_on` +
+> **ARCHIVED 2026-08-14** — all 3 todos done. The gated batch
+> (`/plans/archive/2026_08/ao_satellite_ao_dispatch_batch20_2026_08_13.md`) reached zero open todos, so this finalize
+> plan closed itself out via the standard 6-step archival ritual, same-commit flip+archival (single-repo mode-1,
+> sanctioned per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).
+
+> **Machine-gated on `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch20_2026_08_13.md`** (`depends_on` +
 > `gate_on_depends: true`) — will not dispatch until every todo in that batch is `done`. The batch itself stays
 > `status: draft` until the operator approves it; this finalize plan needs no separate flip either way.
 
@@ -106,7 +114,21 @@ source: >-
       (baseline 0), `check_line_caps.sh` not a regression. `run_hygiene_sweep.sh` itself not run standalone (heavy
       full-corpus script; the 5 constituent checks this todo's done-condition depends on were run directly and are all
       clean).
-- [ ] [REVIEW] P2. Once `ao_satellite_ao_dispatch_batch20_2026_08_13.md` itself has zero open todos, run the standard
+- [x] ✅ [REVIEW] P2. Once `ao_satellite_ao_dispatch_batch20_2026_08_13.md` itself has zero open todos, run the standard
       6-step archival ritual on it, then archive this finalize plan too. Done when: the batch plan and this finalize
       plan are both under `plans/archive/`, and `regenerate_active_plan_inventory.py` reports zero orphan referrers to
-      either.
+      either. **DONE 2026-08-14** — unified-trading-pm(this commit): confirmed batch20 had 0 open todos (grep-verified),
+      then ran the 6-step ritual on both docs in one commit (single-repo mode-1 finalize plan — plan-of-record is this
+      worker's own PM worktree, so same-commit flip+archival is the sanctioned shape per
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): ARCHIVED banner + `status: archived` on
+      both docs, `git mv` both to `plans/archive/2026_08/`, mutual cross-references between the two docs repointed to
+      the new archive path. Corpus-wide referrer check: `check_reference_paths.py`'s machine oracle only flags
+      leading-slash `/plans/...`/`/codex/...` refs (`GOOD_REF_RE`) plus unpathed `related:`-frontmatter bare refs
+      (`BARE_MD_RE`, scoped to the `related:` field only, not body prose) — a corpus grep for leading-slash refs to
+      either doc's old `/plans/active/...` path found zero hits outside the two docs' own mutual references (now fixed)
+      and one hit inside an already-archived doc (`plans/archive/` is excluded from the scan by design). The ~10
+      active-corpus docs citing either doc by bare filename in body prose (Source: citations, evidence pointers) are out
+      of the oracle's scope and were left as historical citations, per the same precedent todo 2 above already
+      established for the 3 earlier source-doc archivals. `regenerate_active_plan_index.py` +
+      `regenerate_active_plan_inventory.py` re-run post-move to drop both from `INDEX.md` and confirm zero orphan
+      referrers.

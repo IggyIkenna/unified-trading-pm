@@ -9,7 +9,7 @@ summary: >-
   into each source doc happens in the paired finalize plan). Conflict-checked against every existing active
   batch/finalize plan for this tranche via basename-citation cross-reference before drafting — no item here duplicates
   ground an existing dispatched Todos entry already claims.
-status: active
+status: archived
 nature: process
 asset_group: [ao]
 stage: [data]
@@ -33,7 +33,7 @@ related:
     /plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md,
   ]
 created: "2026-08-13"
-last_updated: "2026-08-13"
+last_updated: "2026-08-14"
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -63,6 +63,11 @@ source: >-
 ---
 
 # ao satellite AO dispatch batch 20 — 2026-08-13
+
+> **ARCHIVED 2026-08-14** — all 30 todos done. Closed out by
+> `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md`, which reconciled every todo's
+> evidence back into its cited `Source:` doc's own checkbox (12 unique source docs) and archived the 3 source docs that
+> reached zero open todos as a result.
 
 > **Operator-approved 2026-08-13 — `status: active`, dispatchable.** Every todo below was classified
 > bounded/deterministic (worker-determinable outcome, no open design/judgment call) by the 2026-08-13 full-sweep audit
