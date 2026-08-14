@@ -2048,3 +2048,5 @@
 {"timestamp": "2026-08-14T07:19:49Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "market-tick-data-service=0.131.5 (branch=main, bump=patch)", "commit_sha": "445c9f3e3bfc4d66c86f89156085699118a337ff"}
 {"timestamp": "2026-08-14T07:21:01Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "deployment-service=0.135.6 (branch=main, run=31779520804)", "commit_sha": "a43a2400a59da086be182000b4c294d5b6003b49"}
 {"timestamp": "2026-08-14T07:21:05Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "deployment-service=0.135.6 (branch=main, bump=patch)", "commit_sha": "a43a2400a59da086be182000b4c294d5b6003b49"}
+{"timestamp": "2026-08-14T07:35:17Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "deployment-api=0.86.0 (branch=main, run=31780478452)", "commit_sha": "0d21395caec49635dec4014fccc756e65bcf28bf"}
+{"timestamp": "2026-08-14T07:35:20Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "deployment-api=0.86.0 (branch=main, bump=minor)", "commit_sha": "0d21395caec49635dec4014fccc756e65bcf28bf"}
