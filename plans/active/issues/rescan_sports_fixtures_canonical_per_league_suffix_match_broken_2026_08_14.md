@@ -28,6 +28,8 @@ locked_by:
 resolved_by:
 source: [instruments-service/scripts/rescan_sports_fixtures_canonical.py]
 status: open
+drift_direction: advance-code
+depends_on: []
 ---
 
 # rescan_sports_fixtures_canonical.py FIXTURES handler suffix-match is per-league-incompatible
