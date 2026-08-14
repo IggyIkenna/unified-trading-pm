@@ -76,9 +76,27 @@ source: >-
       regression: `tests/unit/components/DataStatusDrilldown.test.tsx` (new test: "explains the by-design structural
       difference vs MTDS's 5-axis shards for instruments-service"). Source:
       `plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md`
-- [ ] [CODE] P2. Investigate + resolve the Yahoo/Kalshi market-tick-view out-of-scope registry check (add to
+- [x] ✅ [CODE] P2. Investigate + resolve the Yahoo/Kalshi market-tick-view out-of-scope registry check (add to
       EXPECTED_COVERAGE_BY_ASSET_GROUP if genuinely provided, else confirm correct-by-design) Source:
-      `plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md`
+      `plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md`. **CONFIRMED CORRECT-BY-DESIGN, no code
+      change needed** — both cases investigated live against current code (2026-08-14): 1. **YAHOO_FINANCE**: the
+      June-reported symptom is structurally impossible today — `YAHOO_FINANCE` was removed as a venue token entirely on
+      2026-07-15 (`data_status_tab_and_downloads_remediation_2026_06_16.md`'s todo predates that fix), an UNRELATED
+      source-as-venue modeling correction (Yahoo is a SOURCE, not a venue; Yahoo-sourced rows now land under their REAL
+      venues — DXY→ICE, KRW/USD→FX — tagged `source=yahoo`). Confirmed via
+      `unified-api-contracts/unified_api_contracts/registry/expected_coverage.py:140,201`, `venue_adapter_keys.py:139`,
+      `market_data_categories.py:521,850` (all cite the same 2026-07-15 removal; `market_data_categories.py:858-863`'s
+      `TRADFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES` explicitly documents the pre-removal manifest rows as "genuinely
+      dead, not a registry gap" via a bounded manifest spot-check at day=2025-01-02). No `venue=YAHOO_FINANCE` row can
+      reach the market-tick-view `is_expected()` check anymore — nothing to add. 2. **KALSHI ohlcv_1m**: confirmed
+      genuinely NOT provided — `KALSHI` is already correctly scoped to `["trades", "book_snapshot_5"]` in
+      `expected_coverage.py:503` (`_PREDICTION`), and
+      `market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py` has NO ohlcv fetch path at all
+      (grep for `ohlcv`/candle methods: zero hits — only trades/batch-trades methods exist). Kalshi is a CLOB prediction
+      market; raw OHLCV bars are not a data shape it exposes (trades + order-book snapshots are the real granularity) —
+      `out_of_scope=True` for `(KALSHI, ohlcv_1m)` correctly signals "this source doesn't provide this data_type",
+      exactly the doc's own hypothesis. No registry entry to add. No repo touched — this was a verification-only todo
+      with a correct-by-design outcome on both venues.
 - [ ] [CODE] P2. Root-fix the per-service coverage BucketNamingError for
       features-calendar/ml-service/features-cross-instrument Source:
       `plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md`
