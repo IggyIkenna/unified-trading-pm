@@ -103,9 +103,18 @@ source: >-
       batch): live `git ls-files` check in both repo clones found ALL 7 DELETE-class docs (5 MDPS + 2
       instruments-service, per the SSOT audit's refreshed 2026-07-27 registries) genuinely absent — suspicion REFUTED,
       no half-done pattern found; full writeup in the source issue doc's 2026-08-14 Filed-item update.
-- [ ] [CODE] P2. Fix fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md's todo 5/6 repo-count off-by-ones
-      (states 23/'22 of 23', enumerated lists count 24) and defi_compute_gcp_migration_2026_08_08.md's missing related:
-      back-reference to its finalize twin. Source: `plans/active/issues/plan_reconciler_findings_infra_2026_08_10.md`
+- [x] ✅ [CODE] P2. Fix fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md's todo 5/6 repo-count
+      off-by-ones (states 23/'22 of 23', enumerated lists count 24) and defi_compute_gcp_migration_2026_08_08.md's
+      missing related: back-reference to its finalize twin. Source:
+      `plans/active/issues/plan_reconciler_findings_infra_2026_08_10.md` — re-counted both enumerated repo lists
+      programmatically (comma-split, parentheticals stripped): todo 5's list = 24 entries (text said "23" — the plan's
+      own todo 4 already established 24 as the correct non-PM fleet-repo count, matching); todo 6's list = 23 entries
+      (text said "22 of 23" — should be "23 of 24", since todo 6 assesses the same 24-repo fleet minus the 1
+      `deployment-service` exception that kept its local copy). Fixed both stated counts to match their enumerated lists
+      in `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` todos 5+6. Added the missing
+      one-directional `related:` back-reference from `defi_compute_gcp_migration_2026_08_08.md` to its finalize twin
+      `/plans/active/defi_compute_gcp_migration_2026_08_08_finalize_2026_08_08.md` (which already pointed at the
+      parent). unified-trading-pm@6ea81d3e15
 - [ ] [CODE] P2. Fix prod_terraform_drift_backlog_reconcile_2026_07_24.md:177's dangling 'finding W' citation to point
       at the actual section name in orchestrator-cloud-identity-self-service.md. Source:
       `plans/active/issues/plan_reconciler_findings_infra_2026_08_10.md`
