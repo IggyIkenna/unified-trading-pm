@@ -54,7 +54,17 @@ description:
   for the bats subprocess so this class is caught locally at commit time; (p) a debounce/escalate mechanism scoped to a
   single ephemeral unit (one PR number) that a DIFFERENT automated process (a drain/supersede bot) recycles on almost
   the same cadence as the debounce window itself, making the escalation structurally unreachable — track the underlying
-  CONDITION across recycles (real run-history streak, no sleep) instead of one unit's lifetime. **When a fix reveals a
+  CONDITION across recycles (real run-history streak, no sleep) instead of one unit's lifetime. Also (2026-08-14): (q) a
+  diagnostic/health-check script itself has a calling-context bug (wrong effective user, missing an isolated env var,
+  e.g. AO's tmux-liveness check) that prints a false "the automation is down" verdict — cross-check against the target's
+  own logs before escalating, and when an operator flags the automation as known-down, triage in its place AND
+  separately fix the checker, don't just treat "AO is down" as a standing excuse; (r) a legitimate fix for one QG/codex
+  check (e.g. de-duplicating a literal into a constant) regresses a DIFFERENT check that silently assumed the pre-fix
+  code shape (e.g. eager fallback-file resolution that never handled same-file constants) — re-run the FULL suite after
+  any compliance fix, not just the check being satisfied. §2b covers ship-time host-contention retry discipline (retry
+  once with `IGNORE_TIMEOUT` on a confirmed-clean pure-duration timeout, stop immediately on a DIFFERENT failure
+  signature) and cross-session collision handling (verify before accepting a peer's blame/credit misattribution). **When
+  a fix reveals a
   whole bug CLASS, not just one instance, the auto-fix mandate extends to building the structural prevention for that
   class in the SAME pass** — a local dev-parity flag, a hardened detector, an extended liveness check — not just
   patching the one instance and moving on; this is the highest-leverage thing this skill can do beyond firefighting
@@ -464,12 +474,75 @@ For every repo whose current `quality-gates-v2` conclusion is `failure`, pull th
   any escalation/alert mechanism "fired zero times, so nothing must have qualified," check whether it COULD have fired
   given the real incident timeline — a mechanism with zero true positives ever is worth suspecting on sight, the same
   way a monitor with zero false positives ever is.
+- **(q) A diagnostic/health-check script itself has a calling-context bug that produces a false "the automation is down"
+  verdict** (2026-08-14). Tell: the script that's supposed to prove a mechanism (AO's dispatch loop, a systemd watchdog)
+  is alive returns a verdict that contradicts other direct evidence (the target's own logs show it actively working).
+  Root cause seen: `check-ao-backlog-status.sh`'s `tmux list-sessions` liveness check ran via SSM as root with no
+  `TMUX_TMPDIR` set, while the orchestrator's own workers run as a DIFFERENT user (`ubuntu`) under an ISOLATED tmux
+  socket (`/tmp/ao-fleet-tmux`, itself a slot-collision hardening measure) — tmux's socket path embeds the CALLING
+  process's own uid, so setting `TMUX_TMPDIR` alone wasn't enough; the check had to impersonate the target user
+  (`sudo -u ubuntu env TMUX_TMPDIR=... tmux list-sessions`), not just mirror its env vars, to see the real sessions.
+  Before accepting a printed "WORKER-LIVENESS GAP"/"automation is dead" verdict from ANY diagnostic script,
+  independently cross-check against the target's own logs/journal (§0c's "don't trust a monitor's own internal
+  reasoning" principle, applied here to a HEALTH CHECK rather than an alert) — a script that shells out to inspect a
+  peer process is only as good as its own effective user/env matching that peer's, and a uid/env mismatch silently reads
+  as "zero liveness" instead of "I couldn't see it." Fix the checker at the root (§2/§5) the same as any other bug, then
+  re-verify it against live state before trusting its next run.
+- **(r) Fixing one QG/codex-compliance violation regresses a DIFFERENT check that assumed the pre-fix code shape**
+  (2026-08-14). Tell: a legitimate fix for one STEP (e.g. de-duplicating a hardcoded literal into a named module
+  constant, satisfying a "no inline hardcoded values" check) causes a LATER, unrelated STEP to fail on the very next
+  full run — because that later check's own resolution logic silently assumed something about the pre-fix layout (e.g.
+  "a constant reference always resolves from a sibling `parser.py` file") that was never true for every case, just the
+  cases exercised so far. Confirm by stashing the fix and re-running the newly-failing check alone — if it passes clean
+  on the unmodified tree, the fix (not unrelated drift) triggered it. Root-cause the SPECIFIC assumption (read the
+  checker's own resolution code, not just its error message) rather than reverting the original fix or re-introducing
+  the violation it existed to catch. A concrete bug shape to watch for: **eager tuple/expression construction that
+  evaluates a fallback branch unconditionally** — `(primary, _parse(fallback_path))` calls `_parse()` (and can raise)
+  even when `primary` alone would have resolved the answer; the fix is lazy short-circuit resolution (try primary, only
+  construct/read the fallback if primary comes up empty), not just special-casing the one family that tripped it.
+  **After any codex-compliance/QG-gate fix, re-run the FULL suite before shipping — not just the one check you were
+  satisfying** — a green single-check re-run is not evidence the fix didn't regress a neighbor.
 
 ## 2. Fix (b), (c), (d) directly in the target repo
 
 Standard single-repo fix path: root-cause, fix, `bash scripts/quality-gates.sh --no-fix`,
 `quickmerge.sh "fix: …" --agent --files '<paths>'`, then re-poll `gh run list` until the sha is green. No template/fleet
 blast radius here — ship it the moment you're sure of the root cause, per findings-triage.
+
+## 2b. Shipping under host contention or a peer's unrelated collision — retry discipline
+
+A quickmerge/QG run can fail for reasons that have nothing to do with your content. Two recurring shapes, both seen the
+same session (2026-08-14):
+
+**Pure duration-budget timeout, content clean.** The gate prints something like "Re-gate hit ONLY the duration budget —
+every content check passed... this is HOST CONTENTION, not your change" — that message is the gate's own diagnosis,
+trust it. Before retrying, check `uptime`/`vm_stat` directly: if load average and free memory are genuinely bad (this
+workspace's own `qg-governor-watchdog` actively SIGTERM'ing processes for RAM pressure is a strong signal), retry with
+`IGNORE_TIMEOUT=true` once — that's documented, sanctioned behavior when content already gated green, not a bypass. If
+it fails on the SAME pure-duration signature again, wait for load to visibly drop (re-check `uptime`) before retrying
+again, rather than hammering an already-distressed shared host with more QG runs.
+
+**A DIFFERENT failure signature on retry means STOP — that's not contention, it's a real blocker.** If a retry fails
+with new/different content (a frontmatter violation, a workflow-template-parity drift, a dependency conflict) instead of
+the same duration-budget message, diagnose it on its own terms — don't assume it's transient and blindly retry again. If
+it's YOUR bug (verify via your own diff), fix it and re-ship. If it's confirmed NOT yours (verify via your own
+`git status` on the flagged path/repo — zero unstaged changes there means it's not you), it's either (a) a peer's
+unrelated uncommitted WIP blocking Stage 2's pre-flight audit — safe to bypass with `--skip-preflight` (documented as a
+multi-agent safety check, not a quality gate; never touch the peer's dirty files yourself) — or (b) a standing,
+unrelated corpus drift (e.g. a different repo's workflow-template mismatch) that isn't going to clear from retrying
+alone. For (b): make at most one or two confirmation attempts, then stop and report it as a separate, out-of-scope
+finding rather than forcing the ship through or chasing a fix outside this sweep's actual scope — fixing an unrelated
+repo's drift is its own piece of work, not a retry-until-it-clears situation.
+
+**Cross-session collision during a ship**: a peer sharing this same slot checkout may message you about a file your
+process appears to be touching. Verify factually before accepting blame (or credit) — check your OWN `git status`/commit
+history for the specific file/message they describe; multiple Claude Code sessions commonly share one slot checkout
+(`ps aux | grep claude` shows every live PID), so a peer's "looks like your session" identification is a guess, not
+evidence, and is often wrong. Correct a misattribution explicitly and promptly (including a SECOND correction if they
+thank you for a fix you didn't make) rather than silently accepting either blame or unearned credit — both corrupt the
+record for whoever reads `git blame`/commit messages later. Never touch another session's live uncommitted WIP to "help"
+unblock them, even with good intentions — that's exactly the collision this workspace's multi-agent safety rules exist
+to prevent.
 
 ## 3. Fix (a) and (e) via the template, never a per-repo hand-edit
 
@@ -514,7 +587,14 @@ its live state is more current than the alert text.
   (`plans/archive/issues/utl_ldr_main_blocked_34_foreign_quickmerge_bypasses_2026_07_21.md` and
   `plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`). If the operator
   authorizes the bulk path, still diff-review every commit for anything destructive/secret-leaking/production-credential
-  -touching before sweeping it in, and flag-not-sweep anything that fails that screen.
+  -touching before sweeping it in, and flag-not-sweep anything that fails that screen. **Check the bypass commit's
+  author identity string before classifying it** (2026-08-14) — `[slot-N·host]` is the expected per-tab-worktree
+  pattern; a `[main·laptop]` (or any non-numbered, bare-branch) identity usually means someone pushed from a plain
+  `main`-branch checkout outside the slot model entirely (e.g. iterating on `cursor-configs/hooks/*.py` directly), not a
+  malicious or careless bypass — still needs reprovenancing through the normal path, but say so explicitly in § 7 rather
+  than implying intent you haven't checked. If the SAME irregular identity recurs across multiple bypass incidents, name
+  it as its own pattern (a person/workflow that structurally sits outside the slot model) rather than re-diagnosing it
+  fresh each time.
 - **Just lagging past the promote cadence, not blocked**: verify the fleet promote cron
   (`scripts/cicd/ldr_to_main_fleet_promote.sh` / the `ldr-to-main-promote-fleet.yml` workflow, `*/15`) is actually
   firing and succeeding (`gh run list --workflow=<it> --limit 5`). If it's healthy and just hasn't ticked yet, don't
@@ -542,6 +622,21 @@ same day) now cross-checks this automatically and prints a `⚠️ WORKER-LIVENE
 tasks exist but tmux worker count is 0 — run it (or `/check-agent-orchestrator`) as part of this section's check, not
 just a bare `/api/healthz` curl, and treat a printed gap as a `[OPERATOR]` finding (AO's own dispatch-loop health is not
 this skill's repo to fix) rather than assuming a healthy-looking server means escalations are actually being worked.
+
+**A printed WORKER-LIVENESS GAP is itself a claim to verify, not an automatic `[OPERATOR]` finding** — see (q) above:
+the checker script that prints it can itself be wrong (a calling-context user/env mismatch). Before escalating,
+cross-check the orchestrator's own `journalctl`/log tail directly via SSM for independent evidence of a live dispatch
+loop (`PlanRegenLoop`/`WorkerLivenessKicker`/`TmuxPruner` ticking, `git-status` polling across slots) — only escalate
+once BOTH the checker's verdict and a direct log read agree the loop is actually dead.
+
+**When the automated fixer looks down, triage in its place AND fix the automation separately — don't just proceed
+assuming it's permanently unavailable.** If an operator flags that AO/the escalation queue "isn't running" as a known
+concession before a sweep, that's a claim to verify (per (q)), not license to skip § 5 entirely: (1) do the sweep's own
+root-cause-and-fix work yourself, standing in for whatever the escalation queue would have done, for every item this
+pass touches; (2) separately and explicitly diagnose WHY the automation looked down — a genuinely dead dispatch loop is
+a real `[OPERATOR]` finding needing escalation per the existing rule, but a checker-script bug (q) is fixable in the
+same pass like any other code fix, and conflating the two means a real, fixable bug goes unfixed under the assumption
+"AO is just down today."
 
 ## 6. Verify — full-fleet sweep AND full-monitor sweep, not just the repos/monitors that were named
 
