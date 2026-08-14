@@ -15,7 +15,7 @@ summary: >-
   `prettier-autostage.sh` refuses to format while behind origin (so the fast path can never self-correct), and the
   exit-5 "transient, just re-run" path leaves the caller's uncommitted edits reverted to HEAD while reporting nothing
   wrong.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -62,6 +62,14 @@ context_scope:
     /plans/active/issues/autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md,
   ]
 ---
+
+> 🟢 **RESOLVED 2026-08-14 — archived.** Every mechanical fix + regression test in this doc shipped. The one remaining
+> open item (the laptop-default isolation flip DECISION, as opposed to the verification prerequisite) is tracked as its
+> own `- [ ]` todo in the Todos section below, which survives archival. Two Deferred-table rows that named
+> already-tracked-elsewhere work were repointed at their real homes; one prose-only deferral (release-tag stall / UTL
+> prod trigger / glue-runner restarts) was migrated to
+> `/plans/active/issues/release_tag_stall_utl_glue_runner_backlog_2026_08_14.md` rather than left to evaporate with this
+> archive.
 
 # The commit critical section is longer than the gap between commits
 
@@ -549,12 +557,12 @@ Directions, cheapest first — each is a todo below:
       unified-trading-pm@d85ad41fac.
 
       **Done when, confirmed**: the precommit sweep on one staged file is now **20.8s** total wall (measured 2026-08-12,
-                                              isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
-                                              down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
-                                              concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
-                                              single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
-                                              `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
-                                              nothing left to move out of the per-commit path. Repo: unified-trading-pm.
+                                                          isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
+                                                          down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
+                                                          concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
+                                                          single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
+                                                          `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
+                                                          nothing left to move out of the per-commit path. Repo: unified-trading-pm.
 
 - [x] ✅ [INFRA] P2. **Record the AO-vs-PM volume asymmetry in the codex** so the next person does not re-derive it —
       unified-trading-pm@baae1922bb. New § "1b. PM is the fleet's single write hotspot" in
@@ -584,12 +592,33 @@ Directions, cheapest first — each is a todo below:
       post-push ancestry, the SHA that actually landed rather than the pre-rebase one the worker sees at commit time.
       Evidence: unified-trading-pm@7f9bd2a366; 11/11 in `scripts/dev/test-cross-repo-citation-reconcile.sh`, A/B 5/9
       against the pre-change reconciler. Repo: unified-trading-pm.
-- [ ] [INFRA] P2. **quickmerge isolation is opt-in until the cached-venv path is proven under load.** The
-      miniature-workspace + `~/.cache/qm-iso-venv/<repo>` fix took the isolated re-gate from 18 QG failures to 0 (1913
-      passed), but it has been exercised on ONE repo (PM) on ONE host. Before flipping laptop default back on, verify on
-      a service repo with a heavier suite and confirm the cached venv stays valid across a dependency bump. **Done
-      when**: two repos pass an isolated `--isolated` quickmerge end-to-end and the cache is shown to refresh on a lock
-      change. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P2. **quickmerge isolation is opt-in until the cached-venv path is proven under load.** DONE 2026-08-14
+      — verified against **execution-service** (581 test files, the heaviest suite of the 7 service repos compared: MTDS
+      551, features-service 550, strategy-service 443, instruments-service 267, ml-service 173, MDPS 134). **Isolated
+      quickmerge end-to-end**: shipped a real fix (CONTRIBUTING.md's `git add -A` → named-file staging, found while
+      looking for a small safe verification vehicle) via
+      `quickmerge.sh "..." --agent --isolated --files CONTRIBUTING.md` — `🔒 quickmerge isolated-worktree mode`
+      confirmed in the log, full re-gate ran clean in the isolated worktree (184s, incl. the 581-file suite), landed as
+      `execution-service@866acb2496` and verified an ancestor of `origin/live-defi-rollout`. **Cache refresh on a lock
+      change**: captured the shared `~/.cache/qm-iso-venv/execution-service` venv's certifi version at baseline
+      (`2026.1.4`, matching the committed lock); in a throwaway detached `git worktree` (sibling-placed so local path
+      deps resolve, never committed/pushed) ran `uv lock --upgrade-package certifi` (bumped to `2026.7.22`; also
+      surfaced pre-existing, harmless lock drift — a sibling repo now declares `google-cloud-monitoring`, invisible
+      under `--frozen` mode since that never re-resolves, only reconciles installed packages to the EXISTING lock); ran
+      the exact command `base-service.sh` runs unconditionally on every QG invocation,
+      `UV_PROJECT_ENVIRONMENT=<cache> uv sync --frozen --quiet`, against the bumped lock — the cache's certifi version
+      moved to `2026.7.22` and `google-cloud-monitoring` installed, confirming the shared cache is NOT pinned-stale
+      despite quickmerge's own provisioning check being first-run-only (`if [ ! -x     "$_qm_iso_venv/bin/python" ]`) —
+      the refresh guarantee lives in `base-service.sh`'s unconditional `uv sync     --frozen`, not in quickmerge's
+      cache-provisioning check. Restored the cache to match origin's real lock afterward (re-ran the sync against the
+      unmodified lock; confirmed certifi back to `2026.1.4` and `google-cloud-monitoring` pruned) so no shared state was
+      left divergent for the next real ship. **Two repos now proven**: PM (1913 tests, prior session) +
+      execution-service (this session). **Scope note**: this todo's own "Done when" is the verification only — flipping
+      quickmerge's laptop DEFAULT to isolated-on is a separate decision, not made here (see the "quickmerge isolation
+      back to laptop-default" Deferred-table row below, still open). **Unrelated finding filed, not fixed inline**:
+      execution-service's CONTRIBUTING.md is an unadapted instruments-service copy (wrong title, wrong workflow model) —
+      small `git add -A` fix shipped inline, full rewrite tracked at
+      `plans/active/issues/execution_service_contributing_doc_stale_2026_08_14.md`. Repo: unified-trading-pm.
 - [x] ✅ [INFRA] P2. **Slot 2's PM checkout is wedged and cannot receive any of these fixes.** CLOSED 2026-08-12 —
       re-verified directly
       (`git -C .tabs/2/unified-trading-pm fetch origin live-defi-rollout && git rev-list     HEAD..origin/live-defi-rollout --count`
@@ -736,6 +765,13 @@ Directions, cheapest first — each is a todo below:
       landed under this same commit but was never flipped here; caught + flipped 2026-08-13 while closing out the
       sibling `pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`).
 
+- [ ] [INFRA] P2. **Make the actual laptop-default flip decision** now that the second-repo + cache-refresh prerequisite
+      todo above is done — either flip `quickmerge.sh`'s isolation default to ON (per
+      `/codex/05-infrastructure/per-tab-worktrees.md`'s host-based isolation-default resolution) or record why not, and
+      update this doc / the codex SSOT with the decision. Not done in the same session as the verification: a default
+      flip affecting every laptop ship is a separate, larger decision than proving the mechanism works. Repo:
+      unified-trading-pm.
+
 ## Deferred work after 2026-08-12
 
 | Item                                                                                            | State / why deferred                                                                                                                                                                                                                                                                                                                                                           | Blocked on                                                                      |
@@ -750,21 +786,21 @@ longer load-bearing since the fix stands on its own measured evidence.
 
 ## Deferred work after 2026-08-10
 
-| Item                                                              | State / why deferred                                                                                                                                                                                                                                            | Blocked on               |
-| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| ~~Cross-repo citation reconciliation~~                            | **DONE 2026-08-10** — unified-trading-pm@7f9bd2a366; reachability + patch-id, neither design option needed                                                                                                                                                      | —                        |
-| ~~`fix_prosewrap_padding.py` line-scoping~~                       | **CORRECTED 2026-08-12 (/plan-reconcile): DONE** — unified-trading-pm@a29967623a; fixer now takes the check's flagged line set, leaves everything else alone (byte-identical repair on pre-existing corruption vs whole-file mode, per the Todos section above) | —                        |
-| quickmerge isolation back to laptop-default                       | **Not done** — proven on one repo/host only; wants a second repo + cache-invalidation check                                                                                                                                                                     | nobody; pick it up       |
-| Slot 2 unwedge                                                    | **Operator-owned** — live conflict in another session's WIP, must not be resolved by a third party                                                                                                                                                              | that WIP's owner         |
-| `check_chain_set_inclusion` 3 failures                            | **Not done** — pre-existing, unrelated to this work                                                                                                                                                                                                             | nobody; low priority     |
-| PM CI green (ldr-docs-gate, na_corpus ratchet promotion deadlock) | **Cannot be done yet** — separate CI/promotion defects already being worked by a peer (two issue docs in slot 2's WIP)                                                                                                                                          | that peer's work landing |
+| Item                                                              | State / why deferred                                                                                                                                                                                                                                            | Blocked on            |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| ~~Cross-repo citation reconciliation~~                            | **DONE 2026-08-10** — unified-trading-pm@7f9bd2a366; reachability + patch-id, neither design option needed                                                                                                                                                      | —                     |
+| ~~`fix_prosewrap_padding.py` line-scoping~~                       | **CORRECTED 2026-08-12 (/plan-reconcile): DONE** — unified-trading-pm@a29967623a; fixer now takes the check's flagged line set, leaves everything else alone (byte-identical repair on pre-existing corruption vs whole-file mode, per the Todos section above) | —                     |
+| quickmerge isolation back to laptop-default                       | **Prereq DONE 2026-08-14**, decision itself tracked as its own Todo above (see Todos section)                                                                                                                                                                   | —                     |
+| Slot 2 unwedge                                                    | **CLOSED 2026-08-12** — superseded by the checked Todo above ("Slot 2's PM checkout is wedged")                                                                                                                                                                 | —                     |
+| `check_chain_set_inclusion` 3 failures                            | **CLOSED 2026-08-12** — superseded by the checked Todo above (re-verified, all 3 now pass)                                                                                                                                                                      | —                     |
+| PM CI green (ldr-docs-gate, na_corpus ratchet promotion deadlock) | **Already tracked separately** — `/plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`, `/plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md`                             | those docs' own todos |
 
-| Item                                                                    | State / why deferred                                                                                                                                                                                                                                                | Blocked on         |
-| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| UTL `_per_vm_shard_backlog` foreign WIP                                 | **Operator-owned** — uncommitted edit in a sibling clone; reverting it destroys another agent's work                                                                                                                                                                | that WIP's owner   |
-| ~~Commit-time citation-resolves-against-origin gate~~                   | **CORRECTED 2026-08-12 (/plan-reconcile): DONE** — unified-trading-pm@b7ba752839; `check_plan_commit_sha_evidence.py` now requires a self-citation `<repo>@<sha>` to be reachable from `origin/*`/local `HEAD`, not merely a present loose object (see Todos above) | —                  |
-| PM bats: 60/229 failing, ungated                                        | **Not done** — pre-existing, none from this session                                                                                                                                                                                                                 | nobody; pick it up |
-| Release-tag stall (7 repos), UTL prod trigger, glue runner 228 restarts | **Not done** — untouched CI groups from the alert audit                                                                                                                                                                                                             | nobody; pick it up |
+| Item                                                                    | State / why deferred                                                                                                                                                                                                                                                | Blocked on       |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| UTL `_per_vm_shard_backlog` foreign WIP                                 | **CLOSED 2026-08-12** — superseded by the checked Todo above (premise gone, refactor already shipped, nothing blocked)                                                                                                                                              | —                |
+| ~~Commit-time citation-resolves-against-origin gate~~                   | **CORRECTED 2026-08-12 (/plan-reconcile): DONE** — unified-trading-pm@b7ba752839; `check_plan_commit_sha_evidence.py` now requires a self-citation `<repo>@<sha>` to be reachable from `origin/*`/local `HEAD`, not merely a present loose object (see Todos above) | —                |
+| PM bats: 60/229 failing, ungated                                        | **CLOSED 2026-08-13** — superseded by the checked Todo above (`unified-trading-pm@ef552936b3`, re-measured 0/320 clean)                                                                                                                                             | —                |
+| Release-tag stall (7 repos), UTL prod trigger, glue runner 228 restarts | **Migrated 2026-08-14** — `/plans/active/issues/release_tag_stall_utl_glue_runner_backlog_2026_08_14.md` (re-verify-first todos; none of the three re-checked since 2026-08-10)                                                                                     | that doc's todos |
 
 > **CORRECTED formatting 2026-08-12 (/plan-reconcile)**: this table's rows were previously merged into unwrapped run-on
 > paragraph text (a prosewrap-style line-wrap corruption — ironic given this doc's own subject matter) and have been
@@ -956,3 +992,13 @@ reconciliation, the previous recommendation, shipped 2026-08-10.)
   session (6 of 7 docs-reconcile fixes, all also doc-only, one also via `safe-doc-push.sh`) hit this — it was isolated
   to this one file across this one ~15-minute window, consistent with a transient extreme-churn window rather than a
   per-file defect. checked, not skipped. Full detail in the F9 todo above.
+
+- **2026-08-14 (slot-20, infra — closed the second-repo isolation-verification todo)**: picked execution-service (581
+  test files, heaviest of 7 service repos measured) as the second repo. Noticed `~/.cache/qm-iso-venv/` already held
+  entries for `execution-service` AND `market-tick-data-service` (mtimes ~1h before this session, an unexplained
+  `.qm-lock-hash` file present only in the execution-service one, not referenced anywhere in tracked code) — flagging as
+  an unattributed observation, not chased further (host-shared cache, not a git-tracked worktree, so not in-flight-WIP
+  in the sense the multi-agent-safety rules protect; did not block or corrupt this verification). Ran the real
+  isolated-quickmerge ship (execution-service@866acb2496) and the cache-refresh proof (certifi
+  2026.1.4→2026.7.22→2026.1.4 restore, via a throwaway sibling-placed `git worktree`, never committed) exactly as
+  detailed in the flipped Todo above. Full writeup there; this entry is the pointer.

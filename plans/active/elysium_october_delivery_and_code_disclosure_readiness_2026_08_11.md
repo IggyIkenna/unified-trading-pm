@@ -536,8 +536,8 @@ it with `--quiet`, which **prints the violation count without the filename**.
       a non-event into real risk. Fix: before declaring 13, check whether the file's content already matches
       `origin/<branch>` (already-landed → exit 0 with a note), and compare content **normalised for prose re-wrap**,
       since prek re-wraps in the isolated worktree and that alone changes the hash. Recommend recording as an F-finding
-      in `/plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`, which is the SSOT the
-      script's own messages cite (F4/F6/F8).
+      in `/plans/archive/2026_08/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`, which is the
+      SSOT the script's own messages cite (F4/F6/F8).
 - [ ] [SCRIPT] P3. **A plan-hygiene grep for a phrase can fail purely because prettier wrapped it mid-sentence.** Cost
       time three times today: `"they can have it"`, `"portfolio-allocator.md describes a service"` and
       `"no templates directory"` all returned 0 hits while present, because a newline sat inside the phrase. Any

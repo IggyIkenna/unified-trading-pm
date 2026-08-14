@@ -37,9 +37,9 @@ superseded_by:
 source: >-
   Found while verifying quickmerge `--isolated` end-to-end on execution-service for
   `plans/active/infra_satellite_ao_dispatch_batch16_2026_08_13.md`'s "Verify quickmerge isolation on a second (service)
-  repo" todo (Source: `plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`). Needed a
-  small, real, safe content change to ship through the isolated path and this doc's `git add -A` instances were the
-  first thing that surfaced — worth its own todo rather than a full silent rewrite mid-task.
+  repo" todo (Source: `plans/archive/2026_08/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`).
+  Needed a small, real, safe content change to ship through the isolated path and this doc's `git add -A` instances were
+  the first thing that surfaced — worth its own todo rather than a full silent rewrite mid-task.
 depends_on: []
 context_scope: [execution-service/CONTRIBUTING.md, /codex/12-agent-workflow/commit-push-flip-rule.md]
 ---
