@@ -303,8 +303,13 @@ source: >-
       (its fix touches a sports-domain registry despite the doc's own tag), per
       `ag_closeout_audit_cross_cutting_parked_2026_08_06.md`'s `[WORKER REC]`. Progress Log entry added to the target
       doc.
-- [ ] [CODE] P2. Item G -- correct stale G3/G10 status text in batch_live_reconciliation_service_audit_2026_05_27.md
-      citing the successor doc Source: `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`
+- [x] ✅ [CODE] P2. Item G -- correct stale G3/G10 status text in batch_live_reconciliation_service_audit_2026_05_27.md
+      citing the successor doc Source: `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md` —
+      unified-trading-pm@df3a908b1a: **G10 corrected.** Added a CORRECTED 2026-08-14 annotation to §7.1's G10 line (was
+      "still genuinely open as of 2026-07-27") citing `blrs_g3_g10_rescope_2026_07_28.md` (fully archived, 4/4 todos
+      `[x]`) and `citadel_paper_batch_live_reconciliation_2026_06_19.md`'s `P3.BLRS3` (flipped `[x]`), matching the
+      existing G3 correction's format/style. **G3 needed no change** — a prior `/plan-reconcile` pass already corrected
+      its status line on 2026-08-12.
 - [ ] [CODE] P2. Item H -- live re-verify citadel_paper_batch_live_reconciliation_2026_06_19.md P9.2's UAC version-drift
       citation against current UAC Source: `plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`
 - [ ] [CODE] P2. Item J -- fix check_na_corpus_ratchet.py's --diff-base fenced-code-block checkbox-overcounting regex
