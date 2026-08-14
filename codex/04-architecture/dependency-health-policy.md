@@ -85,16 +85,37 @@ test_method: string # pytest mark or description
 
 ## Escalation rule
 
-Evaluated by `alerting_service.rules.evaluate_dependency_health(dependency_id, current_outage_seconds)`:
+Evaluated by `alerting_service.rules.evaluate_dependency_health(event_details, policy)`:
 
 ```
-outage < expected_recovery_time                              → None (no alert)
-outage in [expected, expected + warning_buffer]              → WARN
-outage in [warning+buffer, warning+buffer + human_inv_buffer (900s)] → SEV1
-outage > hard_escalation_seconds OR fallback_available=False → SEV0
+outage < expected_recovery_time                                          → None (no alert)
+outage in [expected, expected + warning_buffer]                          → WARN
+outage in [warning+buffer, warning+buffer + human_inv_buffer (900s)]     → SEV1
+outage >= hard_escalation_seconds                                        → SEV0
+outage >= expected_recovery_time AND fallback_available=False            → SEV0
 ```
 
-Ships as: `alerting-service@839cb5f` (`evaluate_dependency_health()` + `evaluate_dependency_recovered()`).
+**No-fallback is a severity floor, not a duration bypass (fixed 2026-08-13)**: `fallback_available=False` alone no
+longer escalates to SEV0 on any `outage > 0` — that shipped bug would have paged on a single failed probe for the 10
+policies with `fallback_available: false`. It now requires the outage to have already reached
+`expected_recovery_time_seconds` before "no fallback" raises severity to SEV0.
+
+## Status — WIRED end-to-end (2026-08-13)
+
+This was contract-and-config-only through 2026-08-12 (rule + schema + YAML shipped, but nothing produced
+`outage_seconds` or called the rule — see the now-closed
+`/plans/archive/2026_08/issues/dependency_health_alerting_never_wired_2026_08_12.md`). As of 2026-08-13 the path is
+wired:
+
+- **Rule** (with the duration-floor fix above): `alerting-service@324ffa5`
+- **Producer + subscriber**: `alerting-service@42347de` — `dependency_health_prober.py` (probe-driven, dispatches on
+  each policy's `test_method`, N-consecutive-failure gate before the outage clock starts) +
+  `dependency_health_event_handler.py`, registered in `subscribers/alert_subscriber.py` under `DEPENDENCY_DEGRADED` /
+  `DEPENDENCY_RECOVERED`
+- **Integration test proving the wire, not just the arithmetic**: `alerting-service@7291bee`
+  (`tests/integration/test_dependency_health_wiring.py`) — drives a simulated outage through the real
+  producer→handler→rule→router chain (only the router boundary mocked); the pre-existing unit tests of
+  `evaluate_dependency_health` alone would still pass with the path fully unwired.
 
 ## Enforcement
 

@@ -97,12 +97,14 @@ isolation rule, SSOT `/codex/04-architecture/shard-level-failure-isolation.md`).
 > - `PROCESSING` is not a member. It is a PAIR: `PROCESSING_STARTED` / `PROCESSING_COMPLETED`. A stall rule written
 >   against a single `PROCESSING` event will never fire.
 > - `DEPENDENCY_DEGRADED` was REMOVED from this table — it never belonged. It is an alerting-service **AlertCode**
->   (`unified_api_contracts.canonical.crosscutting.alerting.codes.AlertCode`), raised by
->   `alerting_service.rules.evaluate_dependency_health()` on an outage-duration ladder, not a lifecycle event a workload
->   emits about itself via `log_event()`. Different producer, different mechanism. The neighbouring
->   `classify_venue_error()` genuinely does live under `canonical.crosscutting`, which is probably why the wrong home
->   looked plausible. **That path is currently UNWIRED and cannot fire** — see
->   `/plans/active/issues/dependency_health_alerting_never_wired_2026_08_12.md`.
+>   (`unified_api_contracts.alerting.AlertCode` — the deep `canonical.crosscutting.alerting.codes` module is
+>   UAC-internal; import the public facade), raised by `alerting_service.rules.evaluate_dependency_health()` on an
+>   outage-duration ladder, not a lifecycle event a workload emits about itself via `log_event()`. Different producer,
+>   different mechanism. The neighbouring `classify_venue_error()` genuinely does live under `canonical.crosscutting`,
+>   which is probably why the wrong home looked plausible. **That path is WIRED end-to-end as of 2026-08-13** (probe
+>   producer + subscriber + rule + router, `alerting-service@42347de` / `@324ffa5` / `@7291bee`) — see
+>   `/plans/archive/2026_08/issues/dependency_health_alerting_never_wired_2026_08_12.md` and
+>   `/codex/04-architecture/dependency-health-policy.md`.
 
 ## Per-archetype heartbeat matrix
 
