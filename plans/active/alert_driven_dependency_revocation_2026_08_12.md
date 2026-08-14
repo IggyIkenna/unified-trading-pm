@@ -540,18 +540,20 @@ bridges them; it does not extend one over the other.
       not FLEET_HALT). `FLEET_HALT` stays reserved for `DP-RATE-002` / `GAS_SURGE_50X`, where every venue call fails and
       pausing at the scheduler is the only thing that stops the bleeding. No policy change; Phase 6's scenario prose is
       corrected instead. Repo: unified-trading-pm (this plan).
-- [ ] [TEST] P2. Two policy rows Phase 6's suite does not assert, both worth a row because they are the CONTRAST that
-      makes a neighbouring scenario meaningful: `DP-MANIFEST-003` (phantom rows → `DEPS_DRAIN`) is the money-burn case
-      that consolidator-down is routinely confused with, and asserting only the HOLD side leaves the distinction
-      untested; `DP-VM-009` (preemption-no-relaunch → `DEPS_HOLD`) is the escalated counterpart to `DP-VM-008` → `NONE`,
-      which the suite currently mentions in a comment but never asserts. Add both to
-      `e2e-testing/tests/integration/revocation/`. Repo: e2e-testing.
-- [ ] [TEST] P2. `deployment-service`'s `tests/unit/test_vm_launcher_scripts.py::TestErrorHandling::`
-      `test_script_syntax_validation` has now flaked THREE times across this plan's sessions (returncode -13 SIGPIPE, -5
-      SIGTRAP, and a bare failure under concurrent gate load), each time on a tree that touched no shell script, and
-      each time costing a full ~11-minute gate re-run to disprove. It shells out to `bash -n` per launcher across ~120
-      scripts. Either bound it (batch the syntax check into one `bash -n` invocation, or serialise it) or mark it with a
-      cited flake issue — "re-run and see" is currently costing more than the check is worth. Repo: deployment-service.
+- [x] ✅ [TEST] P2. — **e2e-testing@0fe3cc520.** Two policy rows Phase 6's suite does not assert, both worth a row
+      because they are the CONTRAST that makes a neighbouring scenario meaningful: `DP-MANIFEST-003` (phantom rows →
+      `DEPS_DRAIN`) is the money-burn case that consolidator-down is routinely confused with, and asserting only the
+      HOLD side leaves the distinction untested; `DP-VM-009` (preemption-no-relaunch → `DEPS_HOLD`) is the escalated
+      counterpart to `DP-VM-008` → `NONE`, which the suite currently mentions in a comment but never asserts. Add both
+      to `e2e-testing/tests/integration/revocation/`. Repo: e2e-testing.
+- [x] ✅ [TEST] P2. — **deployment-service@ad73fdf6d**: batched ~184 per-script subprocesses into ONE (1/184 the churn)
+      and raised two 25s timeouts on a ~12s workload to 90s. `deployment-service`'s
+      `tests/unit/test_vm_launcher_scripts.py::TestErrorHandling::` `test_script_syntax_validation` has now flaked THREE
+      times across this plan's sessions (returncode -13 SIGPIPE, -5 SIGTRAP, and a bare failure under concurrent gate
+      load), each time on a tree that touched no shell script, and each time costing a full ~11-minute gate re-run to
+      disprove. It shells out to `bash -n` per launcher across ~120 scripts. Either bound it (batch the syntax check
+      into one `bash -n` invocation, or serialise it) or mark it with a cited flake issue — "re-run and see" is
+      currently costing more than the check is worth. Repo: deployment-service.
 
 ## Phase 8 — ARM IT → SPLIT OUT 2026-08-14
 
