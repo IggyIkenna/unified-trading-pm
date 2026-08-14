@@ -173,8 +173,16 @@ source: >-
       conflict-check protocol's rule 4 ("already-shipped elsewhere, checkbox just never flipped"), citing the SHA here
       rather than re-doing the work — same pattern as the two todos immediately above this one. Source:
       `plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`
-- [ ] [CODE] P2. Freeze the pre-observability gap as an explicit labelled opening balance in the lifetime
-      wallet-reconciliation view Source:
+- [x] ✅ [CODE] P2. Freeze the pre-observability gap as an explicit labelled opening balance in the lifetime
+      wallet-reconciliation view — STALE-CHECKBOX correction, not new work: already SHIPPED at
+      `agent-orchestrator@a3eda085f6` (2026-08-13, verified on `origin/live-defi-rollout` —
+      `DeepSeekWalletOpeningBalanceRow` + `record_deepseek_opening_balance`/`get_deepseek_opening_balance`,
+      `opening_balance_usd` + `residual_since_observability_usd` on the lifetime reconciliation,
+      `POST     /api/accounts/deepseek/wallet-reconciliation/opening-balance`, and the `DeepSeekWalletPanel` freeze
+      form). The source doc's own copy of this exact todo was already flipped `[x]` there but this batch20 extraction
+      never picked up the SHA. Per the AO-dispatch conflict-check protocol's rule 4 ("already-shipped elsewhere,
+      checkbox just never flipped"), citing the SHA here rather than re-doing the work — same pattern as the two
+      `deepseek_wallet_residual` todos above. Source:
       `plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`
 - [ ] [CODE] P2. Surface the windowed 24h/7d reconciliation view in DeepSeekWalletPanel.tsx with a real cited Playwright
       L2 regression spec Source:
