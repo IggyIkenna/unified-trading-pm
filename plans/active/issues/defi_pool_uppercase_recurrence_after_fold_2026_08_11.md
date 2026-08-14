@@ -58,6 +58,13 @@ source: >-
   block) — this doc documents a second, independent blocking gap found while researching how to safely resolve the first
   one.
 execution_scope: orchestrator-agent
+context_scope:
+  [
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/canonical-cutover-register.md,
+    market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_dex_swaps_queries.py,
+  ]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -142,3 +149,7 @@ Before todo 2 (or 3/4) attempts another retirement:
 
 No irreversible action taken or proposed here — this is a manifest-status-flip-adjacent investigation gap, not a GCS
 delete, but the same evidentiary bar applies given real financial data is at stake.
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (4 entries).

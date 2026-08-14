@@ -41,6 +41,13 @@ locked_by:
 resolved_by:
 last_updated: 2026-08-13
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md,
+    /plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md,
+    deployment-service/deployment_service/data_pipeline_monitors/_attempted_failed_index.py,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+  ]
 source: >-
   Side-discovery during the 2026-08-13 slot-18 confirmation of
   `/plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md` todo 1. That task's Cloud Logging history sweep
@@ -141,3 +148,4 @@ events belong to `uts-prod-dp-meta-watchers`, not the exit-code job:
   `test_streaming_index_reader_filters_capture_status_before_pandas` (streaming path) — both new, both green under
   `quality-gates.sh`. Evidence: deployment-service@f425eb12b3, `.qg_last_passed_sha` verified, ancestry verified on
   `origin/live-defi-rollout`.
+- **context-scout 2026-08-14**: populated context_scope (4 entries).

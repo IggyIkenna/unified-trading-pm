@@ -45,6 +45,14 @@ related:
     /plans/active/deployment_registry_firestore_p5_verify_2026_07_14.md,
     /plans/active/issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md,
   ]
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    deployment-service/scripts/recovery/relaunch_backfill_vm.py,
+    market-data-processing-service/market_data_processing_service/app/adapters/cefi/options_chain_adapter.py,
+  ]
 created: "2026-08-10"
 parent_epic: observability_master
 assigned_vm: NA
@@ -471,6 +479,7 @@ attempted_failed cells accruing), and its diagnosis just reversed, so nobody sho
   Track-1). `AUTHORING_SLOT=dp-fleet-monitor` (not a numbered slot) — no ping sent, per the role's own skip rule; the
   dispatch-time Slack alert already covers the FYI. Read-only: no GCS write, no manifest change, no code shipped; PM
   plan-doc edit only.
+- **context-scout 2026-08-14**: populated context_scope (5 entries).
 
 ## Liquidations re-drive — operator decision recorded 2026-08-11
 

@@ -22,6 +22,8 @@ related:
     /plans/archive/2026_08/issues/plan_operator_ruling_evidence_blocks_quickmerge_under_race_2026_08_08.md,
     /plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md,
   ]
+context_scope:
+  - scripts/quality_gates/check_plan_operator_ruling_evidence.py
 created: 2026-08-08
 parent_epic: plan_hygiene_master
 assigned_vm: NA
@@ -88,3 +90,4 @@ docs, not an isolated unverifiable claim (contrast the incident that motivated t
   into existence, not worker-determinable today. Doc is load-bearing (cited by the plan-operator-ruling-evidence fix);
   repointed the referrer citation above — the target doc archived today (`plans/archive/2026_08/issues/...`, resolved:
   ratchet fix verified via gate run 31262418685).
+- **context-scout 2026-08-14**: populated context_scope (1 entry).

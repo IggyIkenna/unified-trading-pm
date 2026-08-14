@@ -41,6 +41,9 @@ scope: [engineer, admin]
 tags: [ci-cd, cloud-build-router, regional-fallback, escalation, false-positive, stale-escalation]
 related:
   [/codex/08-workflows/ci-cd-flow.md, /plans/archive/issues/cloud_build_router_concurrency_drops_dispatch_2026_07_27.md]
+context_scope:
+  - .github/workflows/cloud-build-router.yml
+  - agent-orchestrator/server/escalation.py
 created: 2026-08-14
 priority: P3
 parent_epic: infrastructure_master
@@ -102,3 +105,7 @@ same-region "fallback" would just fail the same way the primary did.
       permanent design and rename `CLOUD_BUILD_FALLBACK_REGION` / the escalation + Telegram message wording (both in
       `cloud-build-router.yml`) to stop claiming cross-region fallback, so a future transient-retry-succeeded event
       doesn't misread as a regional outage again.
+
+## Progress Log
+
+- **context-scout 2026-08-14**: populated context_scope (2 entries).

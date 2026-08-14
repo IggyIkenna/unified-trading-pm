@@ -15,6 +15,9 @@ related:
   - /plans/active/tradfi_consolidated_closeout_2026_07_18.md
   - /plans/active/tradfi_satellite_ao_dispatch_batch11_2026_08_10.md
   - /plans/active/tradfi_satellite_ao_dispatch_batch12_2026_08_10.md
+context_scope:
+  - /cursor-configs/skills/ag-closeout-audit/SKILL.md
+  - /plans/active/tradfi_consolidated_closeout_2026_07_18.md
 created: "2026-08-10"
 author: slot-24 (ag_closeout_auditor)
 priority: P3
@@ -104,3 +107,4 @@ doc archives once batch6 todo#2 (ES_OPT coverage) resolves.
 - **2026-08-10, slot-24 (ag_closeout_auditor)**: Phase 0-2 audit complete. 27 tradfi-primary candidates classified. 3
   genuinely orphaned (operator-gated/conflicted), 4 draft-covered, 14 covered-by-active-plans-or-self-dispatched, 6
   archivable (0 open). No batch13 draft — no AO-eligible bounded orphaned work to extract.
+- **context-scout 2026-08-14**: populated context_scope (2 entries).

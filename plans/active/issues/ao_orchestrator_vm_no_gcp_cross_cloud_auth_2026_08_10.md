@@ -28,6 +28,11 @@ related:
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
     /codex/04-architecture/runtime-deployment-topology.md,
   ]
+context_scope:
+  [
+    /codex/05-infrastructure/agent-slack-read-access.md,
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+  ]
 created: 2026-08-10
 author: unknown
 priority: P2
@@ -97,3 +102,4 @@ so nobody takes the fast-but-wrong shortcut under time pressure.
 - 2026-08-10: Filed after direct SSM verification contradicted a same-day codex doc's optimistic claim. Codex doc
   corrected in the same session (see `related`). No fix attempted — this is a real infra/architecture decision (WIF
   setup), correctly left for operator/infra scoping rather than an ad-hoc SSM-deployed key.
+- **context-scout 2026-08-14**: populated context_scope (2 entries).

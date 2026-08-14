@@ -46,6 +46,13 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+context_scope:
+  [
+    /codex/14-customer-journeys/commercial-model/ODUM_SLA_v4_2026-07-24.md,
+    /codex/14-customer-journeys/commercial-model/contracts/elysium-consulting-agreement-2025-03.md,
+    /codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md,
+    /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
+  ]
 source: >-
   interactive session, 2026-08-08 Elysium client-pack reconciliation. Never committed — sat as an uncommitted new file
   in a `.tabs/2` working tree, swept into a protective `foreign-wip-elysium-not-mine-preserved-during-quickmerge-3`
@@ -421,3 +428,4 @@ they were independent. Worth the operator knowing before forwarding it.
   origin held 334 lines** — editing the local copy would have destroyed ~200 lines of the previous pass's work. It was
   re-synced from `origin` before editing (stale copy preserved at `/tmp/issue-local-stale-backup.md`). **Any session
   working in a behind-HEAD checkout must read the file from `origin/<branch>` before editing it, not from disk.**
+- **context-scout 2026-08-14**: populated context_scope (4 entries).

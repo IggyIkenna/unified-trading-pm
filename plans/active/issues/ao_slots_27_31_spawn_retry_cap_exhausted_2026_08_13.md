@@ -21,6 +21,9 @@ related:
   - /plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md
   - /codex/04-architecture/agent-orchestrator-scheduled-jobs.md
   - /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md
+context_scope:
+  - agent-orchestrator/server/worker_liveness_watchdog.py
+  - /codex/04-architecture/agent-orchestrator-scheduled-jobs.md
 created: "2026-08-13"
 author: main (Claude Code, interactive session)
 parent_epic: orchestrator_master
@@ -82,3 +85,4 @@ actively-running-but-stuck worker.
 - 2026-08-13: doc created from a chat-only finding surfaced while working an unrelated investigation — flagged, not
   chased, per the operator's own framing at the time ("I don't want to burn time chasing that down fully right now"). No
   further investigation performed yet.
+- **context-scout 2026-08-14**: populated context_scope (2 entries).

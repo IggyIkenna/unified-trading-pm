@@ -23,6 +23,11 @@ related:
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch9_finalize_2026_08_09.md,
     /agents/RULES.md,
   ]
+context_scope:
+  [
+    scripts/plan-hygiene/check_archive_candidates.sh,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 created: 2026-08-09
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -151,3 +156,4 @@ One of:
     once the wrapping batch plan (`ci_satellite_ao_dispatch_batch12_2026_08_10.md`) and its sibling finalize plan are
     also resolved. `archive_exempt: true` set to satisfy `check_archive_candidates.sh --only` — per the codex-sanctioned
     bridge pattern; will be dropped in the actual archival commit.
+- **context-scout 2026-08-14**: populated context_scope (2 entries).
