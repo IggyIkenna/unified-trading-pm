@@ -53,18 +53,24 @@ source:
 ## Todos
 
 - [x] ✅ [OPERATOR] P1. **Approve/dispatch `ao_satellite_ao_dispatch_batch2_2026_07_30.md`** (flip `status: draft` →
-      `active`). It already carries real, ready fixes for 6 docs from the orphan sweep (was 7 —
+      `active`). It already carries real, ready fixes for 5 docs from the orphan sweep (was 7 —
       `orphan_rootm_branch_unmerged_work_2026_06_05` resolved + archived 2026-07-30 directly, moot, no batch2 fix
       needed): `ao_done_require_origin_not_enforced_2026_07_29`, `dispatch_sequential_gate_fix_2026_07_24`,
       `branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27`,
       `git_status_reporter_stale_public_url_token_expiry_2026_07_24`,
-      `orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24`,
-      `ao_recovery_audit_layer1_deleted_2026_07_15` — nothing else is needed to unblock them. **Done when**:
-      `status: active` + AO has picked it up (`/check-agent-orchestrator`). **na-eligibility-audit 2026-08-03
-      (blocker-currency check): the first half is done — `ao_satellite_ao_dispatch_batch2_2026_07_30.md` now reads
-      `status: active`** (flipped from `draft`), and shows real, substantive progress (4 of 8 todos already `[x]`,
-      including a root-caused-and-fixed `agent-orchestrator@77769ab` item and a confirmed-moot item) — i.e. it has been
-      worked, not merely approved-on-paper. Did not independently re-verify the second half (AO backlog pickup via
+      `orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24` — nothing else is needed to unblock
+      them. **Correction 2026-08-14 (`ao_satellite_ao_dispatch_batch20_2026_08_13.md`, source:
+      `plan_reconciler_findings_ao_2026_08_10.md`)**: the original 6-doc list above also named
+      `ao_recovery_audit_layer1_deleted_2026_07_15` — that was always false (5 prior re-verifications, context-scout
+      2026-08-03/05/07 + `/plan-reconcile` 2026-08-10, all confirm zero hits naming that doc or its Layer-1-producer
+      subject matter anywhere in `ao_satellite_ao_dispatch_batch2_2026_07_30.md`; re-confirmed again this pass). Struck
+      from the list rather than left to keep propagating — that doc's own recovery-audit gap was independently resolved
+      via a different route (`deployment-service@1a8346db`, see its own archived doc). **Done when**: `status: active` +
+      AO has picked it up (`/check-agent-orchestrator`). **na-eligibility-audit 2026-08-03 (blocker-currency check): the
+      first half is done — `ao_satellite_ao_dispatch_batch2_2026_07_30.md` now reads `status: active`** (flipped from
+      `draft`), and shows real, substantive progress (4 of 8 todos already `[x]`, including a root-caused-and-fixed
+      `agent-orchestrator@77769ab` item and a confirmed-moot item) — i.e. it has been worked, not merely
+      approved-on-paper. Did not independently re-verify the second half (AO backlog pickup via
       `/check-agent-orchestrator`) this pass. Checkbox stays open since 4 of batch2's own todos remain `[ ]`, but the
       "approve/dispatch" ask itself is satisfied; a future toucher should check batch2's own remaining todos rather than
       re-approving anything here. **CLOSED 2026-08-06 (`/plan-reconcile ao`, operator present)** — measured at HEAD:
@@ -97,60 +103,60 @@ source:
       batch, park explicitly, or close as moot).
 
       **PRE-SCREEN 2026-08-06 (`/plan-reconcile ao`, operator present) — 5 of the 12 need no ruling; measured at HEAD,
-                                                          not recalled.** The list was assembled 2026-07-30 and has decayed since. Current state:
+                                                                      not recalled.** The list was assembled 2026-07-30 and has decayed since. Current state:
 
-                                                          | Doc                                                    | State at HEAD                     | Ruling needed? |
-                                                          | ------------------------------------------------------ | --------------------------------- | -------------- |
-                                                          | `escalation_backlog_repo_collision_blind_spot_2026_07_25` | ARCHIVED, `resolved`, 0 open / 2 done | **No — moot**  |
-                                                          | `autostash_pop_restores_foreign_wip_into_the_index_2026_07_17` | ARCHIVED, `resolved`, 0 open / 3 done | **No — moot**  |
-                                                          | `idle_slot_dirty_wip_never_auto_resolves_2026_07_20`    | ARCHIVED, `resolved`, 0 open / 9 done | **No — moot**  |
-                                                          | `per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27` | ARCHIVED, `resolved`, 0 open / 3 done | **No — moot**  |
-                                                          | `external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25` | hold RELEASED 2026-08-06 (its blocking plan is archived, 0 open / 11 done) | **No — cleared** |
-                                                          | `blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24` | active, 1 open `[DESIGN] P2`      | Yes — genuine  |
-                                                          | `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15` | active, 1 open `[INFRA] P2`       | Yes — genuine  |
-                                                          | `mdps_odds_horizon_bucket_launch_prep_stale_todo_duplicate_dispatch_2026_07_27` | active, 1 open `[BACKEND] P3`     | Yes — genuine  |
-                                                          | `prediction_trades_migration_concurrent_dispatch_2026_07_28` | active, 3 open `[BACKEND] P2`     | Partly         |
-                                                          | `unified_trading_pm_stash_pile_accumulation_2026_07_26` | active, 2 open `[OPERATOR] P3`    | Action, not decision |
-                                                          | `long_lived_vm_logs_not_backed_up_2026_07_02`           | active, 3 open `[SCRIPT] P2/P3`   | **Likely mis-tagged** |
-                                                          | `wip_preserve_refs_silently_unrecovered_2026_07_29`     | **ARCHIVED 2026-08-07**, 0 open / 5 done | **No — complete** |
+                                                                      | Doc                                                    | State at HEAD                     | Ruling needed? |
+                                                                      | ------------------------------------------------------ | --------------------------------- | -------------- |
+                                                                      | `escalation_backlog_repo_collision_blind_spot_2026_07_25` | ARCHIVED, `resolved`, 0 open / 2 done | **No — moot**  |
+                                                                      | `autostash_pop_restores_foreign_wip_into_the_index_2026_07_17` | ARCHIVED, `resolved`, 0 open / 3 done | **No — moot**  |
+                                                                      | `idle_slot_dirty_wip_never_auto_resolves_2026_07_20`    | ARCHIVED, `resolved`, 0 open / 9 done | **No — moot**  |
+                                                                      | `per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27` | ARCHIVED, `resolved`, 0 open / 3 done | **No — moot**  |
+                                                                      | `external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25` | hold RELEASED 2026-08-06 (its blocking plan is archived, 0 open / 11 done) | **No — cleared** |
+                                                                      | `blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24` | active, 1 open `[DESIGN] P2`      | Yes — genuine  |
+                                                                      | `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15` | active, 1 open `[INFRA] P2`       | Yes — genuine  |
+                                                                      | `mdps_odds_horizon_bucket_launch_prep_stale_todo_duplicate_dispatch_2026_07_27` | active, 1 open `[BACKEND] P3`     | Yes — genuine  |
+                                                                      | `prediction_trades_migration_concurrent_dispatch_2026_07_28` | active, 3 open `[BACKEND] P2`     | Partly         |
+                                                                      | `unified_trading_pm_stash_pile_accumulation_2026_07_26` | active, 2 open `[OPERATOR] P3`    | Action, not decision |
+                                                                      | `long_lived_vm_logs_not_backed_up_2026_07_02`           | active, 3 open `[SCRIPT] P2/P3`   | **Likely mis-tagged** |
+                                                                      | `wip_preserve_refs_silently_unrecovered_2026_07_29`     | **ARCHIVED 2026-08-07**, 0 open / 5 done | **No — complete** |
 
-                                                          **Correction to this todo's own framing**: it asserts each of the 12 "is a genuine design/judgment fork with no
-                                                          evidence-based tiebreaker". That is no longer true, and for at least one doc was probably never true.
-                                                          `long_lived_vm_logs_not_backed_up_2026_07_02`'s three open items are bounded implementation todos naming
-                                                          concrete files (`launcher_common.sh`, `aws_ec2_launch_lib.sh`, `test_vm_launcher_scripts.py`) with stated
-                                                          done-whens — that is dispatch-eligible work under the workspace's own bounded-outcome bar, not an operator
-                                                          decision. `unified_trading_pm_stash_pile_accumulation_2026_07_26`'s two items are operator *actions* (agents are
-                                                          barred from `git stash drop` on foreign WIP), which is a different category again from a judgment call. Whoever
-                                                          picks this up should re-classify per-doc rather than inheriting the blanket "all 12 are judgment forks" label.
+                                                                      **Correction to this todo's own framing**: it asserts each of the 12 "is a genuine design/judgment fork with no
+                                                                      evidence-based tiebreaker". That is no longer true, and for at least one doc was probably never true.
+                                                                      `long_lived_vm_logs_not_backed_up_2026_07_02`'s three open items are bounded implementation todos naming
+                                                                      concrete files (`launcher_common.sh`, `aws_ec2_launch_lib.sh`, `test_vm_launcher_scripts.py`) with stated
+                                                                      done-whens — that is dispatch-eligible work under the workspace's own bounded-outcome bar, not an operator
+                                                                      decision. `unified_trading_pm_stash_pile_accumulation_2026_07_26`'s two items are operator *actions* (agents are
+                                                                      barred from `git stash drop` on foreign WIP), which is a different category again from a judgment call. Whoever
+                                                                      picks this up should re-classify per-doc rather than inheriting the blanket "all 12 are judgment forks" label.
 
-          **FINAL DISPOSITION 2026-08-14** — re-checked all 12 directly against live state; every one is now resolved or
-          accounted for, no fold-into-batch action was actually needed for any of them (the standing daily
-          `/na-eligibility-audit` + `/ag-closeout-audit` cadence, plus operator rulings, closed them independently between
-          2026-08-06 and today):
-          - **Archived/resolved, 0 open todos (10 of 12)**: `escalation_backlog_repo_collision_blind_spot_2026_07_25`,
-            `external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25`,
-            `autostash_pop_restores_foreign_wip_into_the_index_2026_07_17`,
-            `mdps_odds_horizon_bucket_launch_prep_stale_todo_duplicate_dispatch_2026_07_27`,
-            `prediction_trades_migration_concurrent_dispatch_2026_07_28`,
-            `idle_slot_dirty_wip_never_auto_resolves_2026_07_20`,
-            `per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27`,
-            `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15`,
-            `wip_preserve_refs_silently_unrecovered_2026_07_29` (all already archived by earlier sessions), and
-            `long_lived_vm_logs_not_backed_up_2026_07_02` — this todo's own "likely mis-tagged" correction was right: its 3
-            items were bounded implementation work, not a judgment fork; all 3 shipped
-            (`deployment-service@cebb2425`/`@a2f5ee2a`) and the doc was archived directly in this pass (its
-            `archive_exempt: true` bridge explicitly named this as the follow-on pass to do so).
-          - **0 open todos, `status: open` (archival owned elsewhere, not this todo's scope) (1 of 12)**:
-            `blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24` — all 4 build todos shipped by 2026-08-10;
-            `archive_exempt: true` deliberately preserves it for a companion plan's cross-references. No fold-into-batch
-            action needed — the design item this todo's own pre-screen table flagged as "genuine" has already been built.
-          - **Still genuinely gated, correctly so (1 of 12)**: `unified_trading_pm_stash_pile_accumulation_2026_07_26` — its
-            1 remaining `[OPERATOR] P3` item is explicitly tagged `[BLOCKED on the re-audit — do not run as written]` in
-            its own text; this is a literal operator-action item (running a mechanical `git stash drop` for named slots),
-            not audit/code work — the "Action, not decision" category this todo's own correction already named, and
-            "fold into nearest active batch" does not apply to a single operator command. Left as-is, correctly gated.
-          **No new batch fold-in was drafted** — every genuine "Yes — genuine"/"Partly" item from the 2026-08-06 pre-screen
-          has since been independently resolved by other work, so there is nothing left needing a home in an active batch.
+                      **FINAL DISPOSITION 2026-08-14** — re-checked all 12 directly against live state; every one is now resolved or
+                      accounted for, no fold-into-batch action was actually needed for any of them (the standing daily
+                      `/na-eligibility-audit` + `/ag-closeout-audit` cadence, plus operator rulings, closed them independently between
+                      2026-08-06 and today):
+                      - **Archived/resolved, 0 open todos (10 of 12)**: `escalation_backlog_repo_collision_blind_spot_2026_07_25`,
+                        `external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25`,
+                        `autostash_pop_restores_foreign_wip_into_the_index_2026_07_17`,
+                        `mdps_odds_horizon_bucket_launch_prep_stale_todo_duplicate_dispatch_2026_07_27`,
+                        `prediction_trades_migration_concurrent_dispatch_2026_07_28`,
+                        `idle_slot_dirty_wip_never_auto_resolves_2026_07_20`,
+                        `per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27`,
+                        `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15`,
+                        `wip_preserve_refs_silently_unrecovered_2026_07_29` (all already archived by earlier sessions), and
+                        `long_lived_vm_logs_not_backed_up_2026_07_02` — this todo's own "likely mis-tagged" correction was right: its 3
+                        items were bounded implementation work, not a judgment fork; all 3 shipped
+                        (`deployment-service@cebb2425`/`@a2f5ee2a`) and the doc was archived directly in this pass (its
+                        `archive_exempt: true` bridge explicitly named this as the follow-on pass to do so).
+                      - **0 open todos, `status: open` (archival owned elsewhere, not this todo's scope) (1 of 12)**:
+                        `blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24` — all 4 build todos shipped by 2026-08-10;
+                        `archive_exempt: true` deliberately preserves it for a companion plan's cross-references. No fold-into-batch
+                        action needed — the design item this todo's own pre-screen table flagged as "genuine" has already been built.
+                      - **Still genuinely gated, correctly so (1 of 12)**: `unified_trading_pm_stash_pile_accumulation_2026_07_26` — its
+                        1 remaining `[OPERATOR] P3` item is explicitly tagged `[BLOCKED on the re-audit — do not run as written]` in
+                        its own text; this is a literal operator-action item (running a mechanical `git stash drop` for named slots),
+                        not audit/code work — the "Action, not decision" category this todo's own correction already named, and
+                        "fold into nearest active batch" does not apply to a single operator command. Left as-is, correctly gated.
+                      **No new batch fold-in was drafted** — every genuine "Yes — genuine"/"Partly" item from the 2026-08-06 pre-screen
+                      has since been independently resolved by other work, so there is nothing left needing a home in an active batch.
 
 - [x] ✅ [REVIEW] P2. **Re-triage the 8 "conflict-gated" docs against current state** before drafting `batch3` — per the
       skill's own iterative-drain methodology, check whether the competing claim each collided with (in
@@ -186,21 +192,21 @@ source:
       verdict buckets (conflict-gated / operator-gated / archivable / covered) with reasoning.
 
       **DONE 2026-08-14** — re-checked all 7 directly against live state:
-              - **archivable — already archived/resolved, 0 open todos (6 of 7)**:
-                `ao_context_pct_0_for_monitor_heavy_workers_2026_07_29`,
-                `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28`,
-                `na_eligibility_auditor_timer_not_yet_installed_2026_07_27`,
-                `mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29`,
-                `plan_health_tests_leak_real_slack_alerts_2026_07_24`,
-                `watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26` — all reached `status: resolved`, `locked_by`
-                empty, `grep -c '^\s*- \[ \]'` = 0, and were archived by earlier/concurrent sessions between 2026-07-31 and
-                today. No action needed.
-              - **covered — genuinely open, already tracked (1 of 7)**: `orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25`
-                — still `plans/active/`, 2 open todos (the leak-vs-concurrency `[BACKEND] P2` item is itself already `[x]`; the
-                remaining 2 are the DB-aware readiness-probe design item and its `autonomous-recovery-matrix.md` codex edit).
-                Not orphaned: already tracked as its own item in
-                `/plans/active/ao_open_work_consolidated_tracker_2026_08_14.md` Track 4 ("Infra / VM / host hygiene" — the
-                DB-aware readiness-probe `[BACKEND] P2` item) — covered, no new fold-in needed.
+                          - **archivable — already archived/resolved, 0 open todos (6 of 7)**:
+                            `ao_context_pct_0_for_monitor_heavy_workers_2026_07_29`,
+                            `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28`,
+                            `na_eligibility_auditor_timer_not_yet_installed_2026_07_27`,
+                            `mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29`,
+                            `plan_health_tests_leak_real_slack_alerts_2026_07_24`,
+                            `watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26` — all reached `status: resolved`, `locked_by`
+                            empty, `grep -c '^\s*- \[ \]'` = 0, and were archived by earlier/concurrent sessions between 2026-07-31 and
+                            today. No action needed.
+                          - **covered — genuinely open, already tracked (1 of 7)**: `orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25`
+                            — still `plans/active/`, 2 open todos (the leak-vs-concurrency `[BACKEND] P2` item is itself already `[x]`; the
+                            remaining 2 are the DB-aware readiness-probe design item and its `autonomous-recovery-matrix.md` codex edit).
+                            Not orphaned: already tracked as its own item in
+                            `/plans/active/ao_open_work_consolidated_tracker_2026_08_14.md` Track 4 ("Infra / VM / host hygiene" — the
+                            DB-aware readiness-probe `[BACKEND] P2` item) — covered, no new fold-in needed.
 
 ## Progress Log
 

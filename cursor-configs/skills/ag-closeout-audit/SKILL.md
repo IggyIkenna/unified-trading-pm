@@ -302,9 +302,15 @@ For the target `<ag>`:
 3. **AG-primary doc inventory**: for the 5 real AGs + `cross-cutting` + `ao`/`ci`/`infrastructure`/`ui` (all 10 now have
    a real dedicated `asset_group` value as of 2026-07-30 — see the classification-mechanism section above), enumerate
    every `plans/active/*.md` and `plans/active/issues/*.md` whose frontmatter `asset_group` list contains `<ag>`
-   (`infra` reads as `infrastructure` here, matching the enum). **Discovery MUST be a frontmatter-block-aware parse that
-   strips YAML comments before tokenising — a single-line `rg '^asset_group:.*<ag>'` is NOT sufficient** (added
-   2026-07-26, `issues/ag_closeout_audit_asset_group_comment_grep_blindspot_2026_07_26.md`): a multi-line
+   (`infra` reads as `infrastructure` here, matching the enum). **Run
+   `.venv/bin/python scripts/plan-hygiene/generate_tranche_doc_inventory.py --tranche <ag>` for the raw doc set** — it
+   parses frontmatter via the same PyYAML `docspec.py` module `generate_ag_closeout_audit_candidates.py` already uses,
+   so it is immune to the single-line-grep blindspot by construction; don't re-derive the inventory by hand. **Discovery
+   MUST be a frontmatter-block-aware parse that strips YAML comments before tokenising — a single-line
+   `rg '^asset_group:.*<ag>'` is NOT sufficient** (added 2026-07-26,
+   `issues/ag_closeout_audit_asset_group_comment_grep_blindspot_2026_07_26.md`; re-confirmed 2026-08-11 for the `ui`
+   tranche specifically — see `plans/active/issues/plan_reconciler_findings_ui_2026_08_11.md`, a same-line grep found 9
+   `ui` docs against the script's real 24): a multi-line
    `asset_group:\n  [<ag>] # corrected ... -- was [<old-ag>], a genuine mistag`-shaped block (the orthogonality-retag
    convention this same skill's HARD CHECK below prescribes) defeats single-line grep entirely (the value sits on a
    continuation line, past the line-anchored colon), and it ALSO defeats a naive block-aware tokenizer that doesn't

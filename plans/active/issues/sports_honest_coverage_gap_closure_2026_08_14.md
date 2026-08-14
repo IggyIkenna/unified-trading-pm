@@ -43,12 +43,14 @@ campaign.
   `gcloud compute instances describe mtds-backfill-odds-smallchunk-20260814 --zone=asia-northeast1-c --format='value(status)'`;
   progress via `gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-odds-smallchunk-20260814/run.log`
   (read via UTL `download_from_storage`, never raw gsutil).
-- **VM `weather-backfill-20260814-110817`** (e2-standard-8, SPOT) — launched to re-run 2024-01-03→2026-08-02 for the
+- **VM `weather-backfill-20260814-123105`** (e2-standard-8, SPOT) — re-run to re-run 2024-01-03→2026-08-02 for the
   15,736 `attempted_failed` weather rows, all of which are leftover from an already-fixed bug
   (`instruments-service@a17e5dd0`, landed 2026-08-07 — the backfill that produced these rows ran BEFORE the fix, at
-  12:02 UTC same day, fix landed 15:12 UTC, never re-run until now). **After this VM completes, run
-  `bash deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh`** — required to materialize empty_confirmed
-  rows, per the launcher's own printed instruction.
+  12:02 UTC same day, fix landed 15:12 UTC, never re-run until now). **This is the SECOND launch** — the first
+  (`weather-backfill-20260814-110817`) was killed after log evidence showed it never picked up the rotated OpenMeteo key
+  (see below) across 43+ minutes / 8+ `ApiKeyReloader` refresh cycles; the fresh instance shows zero of the same
+  failures. **After this VM completes, run `bash deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh`** —
+  required to materialize empty_confirmed rows, per the launcher's own printed instruction.
 - Both VMs confirmed alive and doing real work as of launch (not hung) — odds on chunk 1/453 LIGUE_1, weather correctly
   hitting-and-recovering from the (now-fixed) forecast-skip path.
 
@@ -64,9 +66,13 @@ forecast columns are structurally empty.
 
 - **Fixed**: operator supplied a new key (`muJrislIpPsezh6M`, 5M calls/month). Verified live against both
   `customer-previous-runs-api.open-meteo.com` and `customer-archive-api.open-meteo.com` — both return real 200 data now.
-  Rotated into GSM: `open-meteo-api-key` version 2 (now latest). `ApiKeyReloader` hot-reloads every 300s from Secret
-  Manager (`unified-trading-library/unified_trading_library/api_key_reloader.py`) — **no service/VM restart needed**,
-  including the already-running weather-backfill VM above.
+  Rotated into GSM: `open-meteo-api-key` version 2 (now latest). `ApiKeyReloader` is DOCUMENTED to hot-reload every 300s
+  from Secret Manager (`unified-trading-library/unified_trading_library/api_key_reloader.py`) — **but this did NOT hold
+  in practice**: the already-running `weather-backfill-20260814-110817` VM kept failing with the OLD-key error for 43+
+  minutes / 8+ refresh cycles after rotation, confirmed via live log evidence, not inferred. Worked around by killing
+  and relaunching the VM (`-123105`, see "Live infra" above) rather than by fixing the reloader — **the
+  hot-reload-not-propagating-to-an-already-running-batch-process gap itself is real and unroot-caused.** Do not trust
+  "just rotate the GSM secret, no restart needed" for a long-running batch VM process again without re-verifying this.
 - **Code fix written, NOT yet shipped** (see "in-flight" section below for why): added a free-tier fallback for the
   Previous Runs API call in `open_meteo.py` (mirrors the existing customer-archive→ free-archive fallback pattern
   already in the file). Confirmed live: free tier has real non-null forecast-run data for RECENT dates (tested
@@ -97,57 +103,74 @@ forecast columns are structurally empty.
       genuine gaps needing real investigation, not reclassification** — 1,204 excluded (`SOURCE_RETURNED_ZERO`, no safe
       `FetchEvidence` to mirror). **Next: operator reviews these dry-run counts, then someone runs `--apply`.**
 
+- [x] ✅ [SCRIPT] P1. **af_league_id → league_id resolution scope bug — root-caused, fixed, hardened everywhere.**
+      `instruments-service@578beffc5b`. Root cause: `_write_fixtures_per_league()` (`sports_fixtures.py`,
+      `_write_fixtures_per_league`) was reverse-mapping api_football's raw `af_league_id` against the narrow 33-league
+      `get_prediction_leagues()` set instead of the full write-universe
+      `get_expected_leagues_for_source("api_football")` — the SAME bug class already fixed twice before in this file
+      (`_fetch_teams_and_standings` 2026-07-13, `_build_fixture_league_map_from_gcs` 2026-07-14), silently dropping
+      Reference/Features-tier fixtures from the per-league write with a blank `league_id`. Fixed at the writer
+      (registry-first, per operator direction). Hardened with a defense-in-depth fallback in `weather.py`: any
+      already-written (pre-fix) row, or a future regression, that reaches `weather.py` with a blank `league_id` but a
+      populated `af_league_id` now gets recovered via the same correct wide-registry reverse-map before use, instead of
+      silently degrading. **Registry itself checked, not assumed clean**: confirmed live against 46 real `af_league_id`
+      values already in `LEAGUE_REGISTRY` — zero needed adding, zero found to be junk/wrong-division entries. Checked
+      for other consumers needing the same hardening per operator's explicit ask (instruments- service + MTDS +
+      strategy-service + execution-service + features-market-data-processing-service scanned) — `weather.py` was the
+      only other live consumer of a blank-`league_id`-bearing fixtures dataframe; no other service reads `af_league_id`
+      directly. QG green (host-contention SIGTERM retries along the way, not real failures).
+
 - [ ] [SERVICE] P1. **api_football derived-entity architecture: enumerate-then-classify instead of gate-before-enumerate
       — confirmed real, ~94-97% denominator impact, NOT fixed yet.** Read-only audit completed (live queries against
       15,650,808-row prod manifest + code reads, no edits made). Two findings:
 
       **(a) Classification is 80-86% genuine, but a real live bug exists in the rest.** FIXTURE_EVENTS/STATS/
-              LINEUPS/PLAYER_STATS empty_confirmed is dominated (80-86%) by `EXPECTED_NO_PROVIDER_COVERAGE` (correct —
-              spot-checked: those leagues have ZERO captured rows ever, genuine MVP-scoping, ~88-96 leagues not 385).
-              But `EXPECTED_NO_FIXTURE` (10-16% of empty_confirmed) contradicts real captured sibling data for the
-              SAME (league,date) cell in **12,815 FIXTURE_STATS rows (9.76% of that reason), 6,618 PLAYER_STATS
-              (7.47%), 2,971 FIXTURE_LINEUPS (2.37%), 1,234 FIXTURE_EVENTS (1.00%)** — 23,638 rows total, and 10,614 of
-              the FIXTURE_STATS ones were freshly (re-)stamped in the last 14 days, i.e. still actively happening, not
-              stale history. Example: `SUPERETTAN, 2020-06-27` — FIXTURES/FIXTURES_SCHEDULE/FIXTURES_OUTCOMES/
-              FIXTURE_EVENTS/FIXTURE_LINEUPS all show real captured data (5 matches, 60 events, 216 lineup rows) for
-              that exact cell, yet FIXTURE_STATS and PLAYER_STATS stamp it `empty_confirmed(EXPECTED_NO_FIXTURE)`.
-              Root cause: `instruments_service/engine/orchestrator/sports_reference_core.py:275-317`
-              (`_emit_empty_gap_for_league`) unconditionally stamps `EXPECTED_NO_FIXTURE` for any league absent from
-              *that run's* `captured_league_ids`, with NO cross-check against sibling entities' captured status — the
-              cross-check DOES exist elsewhere in the same file (`_close_stale_enrichment_expected_unattempted_cells`,
-              lines 368-518, has 4 safety gates) but that sweep doesn't run in this live emission path.
+                  LINEUPS/PLAYER_STATS empty_confirmed is dominated (80-86%) by `EXPECTED_NO_PROVIDER_COVERAGE` (correct —
+                  spot-checked: those leagues have ZERO captured rows ever, genuine MVP-scoping, ~88-96 leagues not 385).
+                  But `EXPECTED_NO_FIXTURE` (10-16% of empty_confirmed) contradicts real captured sibling data for the
+                  SAME (league,date) cell in **12,815 FIXTURE_STATS rows (9.76% of that reason), 6,618 PLAYER_STATS
+                  (7.47%), 2,971 FIXTURE_LINEUPS (2.37%), 1,234 FIXTURE_EVENTS (1.00%)** — 23,638 rows total, and 10,614 of
+                  the FIXTURE_STATS ones were freshly (re-)stamped in the last 14 days, i.e. still actively happening, not
+                  stale history. Example: `SUPERETTAN, 2020-06-27` — FIXTURES/FIXTURES_SCHEDULE/FIXTURES_OUTCOMES/
+                  FIXTURE_EVENTS/FIXTURE_LINEUPS all show real captured data (5 matches, 60 events, 216 lineup rows) for
+                  that exact cell, yet FIXTURE_STATS and PLAYER_STATS stamp it `empty_confirmed(EXPECTED_NO_FIXTURE)`.
+                  Root cause: `instruments_service/engine/orchestrator/sports_reference_core.py:275-317`
+                  (`_emit_empty_gap_for_league`) unconditionally stamps `EXPECTED_NO_FIXTURE` for any league absent from
+                  *that run's* `captured_league_ids`, with NO cross-check against sibling entities' captured status — the
+                  cross-check DOES exist elsewhere in the same file (`_close_stale_enrichment_expected_unattempted_cells`,
+                  lines 368-518, has 4 safety gates) but that sweep doesn't run in this live emission path.
 
-              **(b) The operator's architectural point is CONFIRMED CORRECT, and broader than stated** — it applies to
-              BOTH the day axis (`EXPECTED_NO_FIXTURE`) AND the (larger, 80-86%) league-scope axis
-              (`EXPECTED_NO_PROVIDER_COVERAGE`). Confirmed: `enumerate_expected_universe.py:2450-2773`
-              (`_enumerate_v2_sports`) iterates every league × every date for every sports data_type — the manifest
-              atom itself has no `fixture_id` in its key (`_SPORTS_PRESENT_COLS = ["data_type","league_id","date"]`,
-              line 158) for ANY sports entity. The one fixture-existence gate in this file
-              (`_AfFixtureCalendar.is_no_fixture_day`, lines 2248-2398) is scoped only to the legacy `FIXTURES` entity
-              — never extended to the 4 enrichment entities. **Checked for a legitimate reason this might be
-              required** (not just validating the intuition): the only real consumer,
-              `unified_api_contracts/canonical/domain/sports/feature_upstream.py:245-303` (`in_coverage()`), is a pure
-              static lookup that never reads manifest row-presence at all — **no downstream consumer needs a
-              materialized cell for a structurally-inapplicable league/day.** Also checked and REFUTED an assumed
-              precedent: the "116-each FIXTURE_STATS/LINEUPS floor" from an earlier session finding is NOT a
-              fixture-keyed model — `census_fixture_stats_lineups_widening_volume_2026_07_31.py` still computes needed
-              work at (date,league_id) grain. **There is no existing fixture-keyed precedent in this codebase.**
+                  **(b) The operator's architectural point is CONFIRMED CORRECT, and broader than stated** — it applies to
+                  BOTH the day axis (`EXPECTED_NO_FIXTURE`) AND the (larger, 80-86%) league-scope axis
+                  (`EXPECTED_NO_PROVIDER_COVERAGE`). Confirmed: `enumerate_expected_universe.py:2450-2773`
+                  (`_enumerate_v2_sports`) iterates every league × every date for every sports data_type — the manifest
+                  atom itself has no `fixture_id` in its key (`_SPORTS_PRESENT_COLS = ["data_type","league_id","date"]`,
+                  line 158) for ANY sports entity. The one fixture-existence gate in this file
+                  (`_AfFixtureCalendar.is_no_fixture_day`, lines 2248-2398) is scoped only to the legacy `FIXTURES` entity
+                  — never extended to the 4 enrichment entities. **Checked for a legitimate reason this might be
+                  required** (not just validating the intuition): the only real consumer,
+                  `unified_api_contracts/canonical/domain/sports/feature_upstream.py:245-303` (`in_coverage()`), is a pure
+                  static lookup that never reads manifest row-presence at all — **no downstream consumer needs a
+                  materialized cell for a structurally-inapplicable league/day.** Also checked and REFUTED an assumed
+                  precedent: the "116-each FIXTURE_STATS/LINEUPS floor" from an earlier session finding is NOT a
+                  fixture-keyed model — `census_fixture_stats_lineups_widening_volume_2026_07_31.py` still computes needed
+                  work at (date,league_id) grain. **There is no existing fixture-keyed precedent in this codebase.**
 
-              **Quantified impact of fixing**: restricting enumeration to real applicable (league,day) cells (gate
-              BEFORE enumerate, using the already-existing `_AfFixtureCalendar` oracle + `get_entity_league_coverage`
-              — no new oracle needs building) would shrink each entity's denominator by roughly **94-97%** — e.g.
-              FIXTURE_EVENTS would drop from 877,974 rows to ~48,409 (40,582 captured + 4,996 attempted_failed + 2,831
-              genuine expected_unattempted), flipping the headline reading from "94.49% empty" to effectively
-              near-100%-resolved for what can actually exist. STANDINGS (46.62% empty_confirmed, 100%
-              `EXPECTED_NO_PROVIDER_COVERAGE`) and TEAMS (18.67%, same reason) would shrink similarly if the same
-              league-scope gate were applied to them.
+                  **Quantified impact of fixing**: restricting enumeration to real applicable (league,day) cells (gate
+                  BEFORE enumerate, using the already-existing `_AfFixtureCalendar` oracle + `get_entity_league_coverage`
+                  — no new oracle needs building) would shrink each entity's denominator by roughly **94-97%** — e.g.
+                  FIXTURE_EVENTS would drop from 877,974 rows to ~48,409 (40,582 captured + 4,996 attempted_failed + 2,831
+                  genuine expected_unattempted), flipping the headline reading from "94.49% empty" to effectively
+                  near-100%-resolved for what can actually exist. STANDINGS (46.62% empty_confirmed, 100%
+                  `EXPECTED_NO_PROVIDER_COVERAGE`) and TEAMS (18.67%, same reason) would shrink similarly if the same
+                  league-scope gate were applied to them.
 
-              **NOT fixed this session** — this is a genuine design change (move the fixture/league-coverage check
-              from post-hoc classification to pre-enumeration gating in both `enumerate_expected_universe.py` and
-              `sports_reference_core.py`), bigger in scope than the FIXTURES_OUTCOMES classification-only fix above,
-              and touches the same live daily-cron files that fix is already mid-editing — sequence AFTER that fix
-              lands, don't run both in parallel on the same files. Needs operator sign-off on scope before starting
-              (this changes the historical denominator materially, ~94-97% down, for 6 data_types at once).
+                  **NOT fixed this session** — this is a genuine design change (move the fixture/league-coverage check
+                  from post-hoc classification to pre-enumeration gating in both `enumerate_expected_universe.py` and
+                  `sports_reference_core.py`), bigger in scope than the FIXTURES_OUTCOMES classification-only fix above,
+                  and touches the same live daily-cron files that fix is already mid-editing — sequence AFTER that fix
+                  lands, don't run both in parallel on the same files. Needs operator sign-off on scope before starting
+                  (this changes the historical denominator materially, ~94-97% down, for 6 data_types at once).
 
 - [ ] [SCRIPT] P1. **SFI: retry the 7 dates behind the 112 `attempted_failed` rows** — 2 confirmed-retriable root
       causes, no structural gap: 79 rows (`JSONDecodeError`, 6 dates in 2022-2023, all attempted 2026-08-07) were hit by

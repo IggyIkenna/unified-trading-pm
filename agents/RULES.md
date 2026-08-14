@@ -63,10 +63,19 @@ STALE — report or fix it, do not act on it. SSOT: `codex/05-infrastructure/per
   / any pattern lacking a slot-specific discriminator (full absolute cwd, or PID/PGID). Every slot invokes shared
   scripts with identical argv, so a name-based pattern is host-wide, not slot-scoped, and will kill a DIFFERENT slot's
   live QG run — confirmed incident (now resolved + archived, two recurrences):
-  `plans/archive/issues/pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md`. **Mechanically enforced** on any host
-  where `scripts/dev/install-pkill-guard-shell-env.sh` has run: a `pkill`/`pgrep` shell function REFUSES a bare
-  name-only pattern instead of executing it host-wide — see `/codex/05-infrastructure/per-tab-worktrees.md` §
-  "pkill/pgrep cross-slot-kill guard".
+  `plans/archive/issues/pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md`. **Mechanically enforced on every
+  AO-spawned worker pane** (`agent-orchestrator/server/tmux_spawn.py` sources `scripts/hooks/pkill-guard.sh` directly
+  into the spawn command — not a per-host `~/.bashrc` install, which recurrence #3 proved worker panes never source
+  anyway): a `pkill`/`pgrep` shell function REFUSES a bare name-only pattern instead of executing it host-wide — see
+  `/codex/05-infrastructure/per-tab-worktrees.md` § "pkill/pgrep cross-slot-kill guard". **A SAFE alternative for the
+  common "my own dev server is stuck" case** (e.g. a stale `vite`/Playwright `webServer` process before a retry) —
+  recurrence #3 (`plans/active/issues/pkill_broad_pattern_vite_cross_slot_kill_recurrence3_2026_08_14.md`): scope the
+  pattern to your own slot's absolute worktree path instead of a bare process name, e.g.
+  `pkill -f ".tabs/${SLOT_ID}/.*vite"` — every slot's `.tabs/<N>/` cwd substring is unique, so this cannot cross-match
+  another slot's process, and the guard recognizes exactly this shape (see `pkill-guard.sh`'s own
+  `_pkill_guard_slot_token` check) instead of refusing it. When you have the exact PID (e.g. from
+  `ps aux | grep ".tabs/${SLOT_ID}/"` or a webServer log line), `kill <pid>` is simpler and always safe — it takes an
+  exact target by construction and isn't even wrapped by the guard.
 - **Bound memory BEFORE running any heavy script directly on this shared host (HARD RULE, RECURRING incident class — 3
   same-shape outages: 2026-07-27 `candle_coverage_gap.py` 15.8GB degraded AO's poll loop; 2026-07-31
   `expand_defi_pool_catalogue_from_manifest.py` 43.6GB caused a full AO outage; 2026-08-01

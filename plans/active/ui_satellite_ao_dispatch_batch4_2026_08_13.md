@@ -166,10 +166,17 @@ source: >-
       since 2026-07-14, so "genuinely distinct artifact" doesn't apply — dropped the stale name, both files now cite
       only `INDEX.md` as a normative ref: unified-trading-pm@`e8bb0b8524`. Source:
       `plans/active/issues/plan_reconciler_findings_2026_08_07.md`
-- [ ] [CODE] P2. Expand the ui-tranche doc discovery/inventory logic (used by /plan-reconcile ui and /ag-closeout-audit
-      ui) to include multiline-frontmatter `asset_group:` docs missed by same-line grep (named examples:
-      data_status_tab_and_downloads_remediation_2026_06_16.md, deployment_registry_firestore_migration_2026_07_14.md).
-      Source: `plans/active/issues/plan_reconciler_findings_ui_2026_08_11.md`
+- [x] ✅ [CODE] P2. Expand the ui-tranche doc discovery/inventory logic (used by /plan-reconcile ui and
+      /ag-closeout-audit ui) to include multiline-frontmatter `asset_group:` docs missed by same-line grep —
+      unified-trading-pm@`b2e3e5f8fe`. Added `scripts/plan-hygiene/generate_tranche_doc_inventory.py` (reuses
+      `docspec.py`'s PyYAML frontmatter parser, same as its two sibling scripts) — returns the full doc set for any of
+      the 10 tranches regardless of `assigned_vm`/`status`, immune to the same-line-grep blindspot by construction.
+      Verified live: `--tranche ui` returns 24 docs (incl. both named examples,
+      `data_status_tab_and_downloads_remediation_2026_06_16.md` and
+      `deployment_registry_firestore_migration_2026_07_14.md`) vs 9-15 from a same-line `rg -l '^asset_group:.*ui'`.
+      Wired the script into `/plan-reconcile`'s topic-scoped-run section and `/ag-closeout-audit`'s
+      AG-primary-doc-inventory step so both skills point to it instead of ad hoc grep. QG green. Source:
+      `plans/active/issues/plan_reconciler_findings_ui_2026_08_11.md`
 
 ## Deferred
 
