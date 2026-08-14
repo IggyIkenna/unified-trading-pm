@@ -156,7 +156,7 @@ until the next sweep) and is a stopgap, not the root fix.
       `vm-logs/` prefix, not a residual redundant-download issue. Filed the next investigate/fix todo below. Repo:
       deployment-service.
 
-- [ ] [BACKEND] P1. **ADDED 2026-08-14 (slot 7, live-verify follow-up)** — the dedup fix
+- [x] ✅ [BACKEND] P1. **ADDED 2026-08-14 (slot 7, live-verify follow-up)** — the dedup fix
       (`deployment-service@3c9d65dd50`) is confirmed live and confirmed insufficient (see the P2 verify todo above):
       execution `q9wbf` (13:00-13:30Z, first execution on the post-fix image digest) still hit the full 1800s timeout,
       with 116/~170 (≈67%) per-VM `run.log` reads hitting the 30s bounded-call timeout. Investigate + fix candidate (c)
@@ -168,7 +168,31 @@ until the next sweep) and is a stopgap, not the root fix.
       terminal-failed (a retry after backoff may succeed where the first attempt was throttled); (3) also re-check
       candidate (b) (fleet size — is `_SWEEP_IO_MAX_WORKERS=32` sized for the CURRENT ~170-VM census, or did the fleet
       grow past what was true when 32 was chosen). Target: sweep completes well under 1800s with a near-zero
-      bounded-call-timeout rate. Repo: deployment-service.
+      bounded-call-timeout rate. Repo: deployment-service. — ✅ Shipped both requested mitigations for (c):
+      `_SWEEP_IO_MAX_WORKERS` lowered 32→16 in both `exit_code_fleet_monitor.py` and `heartbeat_stall_watcher.py`
+      (mirrors the same throttled-`vm-logs/`-prefix pattern), and `_gcs._call_with_timeout` now takes a `retries` kwarg
+      (jittered ~0.5-1.0s backoff) wired into `read_text`'s `download_bytes` call — the confirmed-stalling call per the
+      `q9wbf` evidence. Also added phase-boundary wall-clock logging (running-census / terminated-base-signals /
+      classify-route-emit) to `exit_code_fleet_monitor.sweep()` per profiling ask (1), so the NEXT execution's Cloud
+      Logging output attributes any remaining timeout to a specific phase instead of only the aggregate 30s-stall count.
+      Candidate (b) (fleet-size re-check) could NOT be independently re-measured this session — no live `gcloud`/GCS
+      credential access from this worker's environment — so it remains open evidence-wise; the worker count reduction
+      (16) is a defensible mitigation regardless of the exact current fleet size. `deployment-service@     f9cf85a4b5`,
+      QG green. Live-verification of the NEXT few hourly executions (does the sweep now finish under 1800s, does the
+      stall-timeout rate drop) is a fresh verify task, not bundled into this fix.
+
+- [ ] [BACKEND] P2. **ADDED 2026-08-14 (slot 7, follow-up)** — live-verify the candidate-c mitigation
+      (`deployment-service@f9cf85a4b5`: `_SWEEP_IO_MAX_WORKERS` 32→16 + jittered-backoff retry on `download_bytes`)
+      actually collapses the exit-code-monitor sweep under its 1800s task-timeout: check the next 2-3 hourly Cloud Run
+      executions after this fix's image deploys — confirm via
+      `gcloud run jobs executions describe     --format=value(spec.template.spec.containers[0].image)` that the
+      execution genuinely ran the post-fix digest (same ancestor-check discipline as the prior P2 verify), then read the
+      new phase-boundary INFO logs (`running-census phase took...` / `terminated-base-signals phase took...` /
+      `classify/route/emit phase took...`) to see which phase now dominates wall-clock, plus count remaining
+      `download_bytes(...) exceeded the 30s     bounded-call timeout` warnings (retry-recovered stalls should no longer
+      appear as terminal failures). If still timing out, candidate (b) (current live fleet size vs
+      `_SWEEP_IO_MAX_WORKERS=16`) needs an actual live census count this task's environment couldn't obtain. Repo:
+      deployment-service.
 
 ## Related
 
@@ -180,6 +204,19 @@ until the next sweep) and is a stopgap, not the root fix.
   launcher-host exemption), and the DP_SOURCE_RATE_LIMITED cooldown.
 
 ## Progress Log
+
+- 2026-08-14 (slot 7, backend): Shipped the candidate-(c) fix for the P1 investigate/fix todo. Lowered
+  `_SWEEP_IO_MAX_WORKERS` 32→16 in both `exit_code_fleet_monitor.py` and `heartbeat_stall_watcher.py` (same
+  `vm-logs/`-prefix throttling pattern), added a `retries` kwarg (jittered ~0.5-1.0s backoff) to
+  `_gcs._call_with_timeout`, wired into `read_text`'s `download_bytes` call (the confirmed-stalling call per the `q9wbf`
+  evidence) — a non-timeout failure still never retries. Added phase-boundary wall-clock INFO logging (running-census /
+  terminated-base-signals / classify-route-emit) to `exit_code_fleet_monitor.sweep()` so a future timeout is directly
+  attributable to a phase. Regression tests: retry-succeeds-on-transient-stall at both the `_call_with_timeout` and
+  `read_text` layers. Could NOT re-check candidate (b) (live fleet size vs worker count) — no `gcloud`/GCS credential
+  access from this worker's environment this session; left that half of the todo's ask open and filed a new P2
+  live-verify follow-up todo rather than closing it silently. `deployment-service@f9cf85a4b5`, QG green (had to trim
+  `_gcs.py` twice more to stay under the 960-line file cap after two concurrent slots' `_gcs.py` edits landed
+  mid-session and forced two rebases).
 
 - 2026-08-14 (slot 7, backend): Live-verified the P2 todo. Confirmed the redundant-download-dedup fix
   (`deployment-service@3c9d65dd50`) is genuinely live in the running Cloud Run job image (job spec references
