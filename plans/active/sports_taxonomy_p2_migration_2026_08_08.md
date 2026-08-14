@@ -285,6 +285,12 @@ than proceeding.
       scheduled firing) shows 0 new mismatched-case `expected_unattempted` seeds for the 17 newly-covered tokens,
       confirming the step-3 gap-closure (`instruments-service@f2586ada09`) actually holds end-to-end, not just at the
       unit-test level.
+- [ ] [SCRIPT] P2. **Delete the two one-off migration scripts** now that the physical re-stamp is verified complete (0
+      uppercase-token rows remaining, confirmed twice):
+      `instruments-service/scripts/restamp_sports_19token_lowercase_2026_08_14.py` and
+      `instruments-service/scripts/census_sports_19token_lowercase_scope_2026_08_14.py`. Both are lifecycle-marked
+      one-offs (per `/codex/06-coding-standards/script-homes.md`) whose job is done; keep them only until this todo is
+      picked up, then delete via quickmerge.
 - [x] ✅ [DATA] P0. **Draft + locally validate the 19-token re-stamp's step 1 (manifest relabel script) — NOT
       execution.** Per operator interim guidance on BLK-20f1ba56 ("write + locally validate, stop short of VM
       launch/live execution"): shipped `instruments-service@5ec75509`
