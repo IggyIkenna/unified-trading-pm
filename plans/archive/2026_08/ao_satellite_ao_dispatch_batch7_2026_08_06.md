@@ -17,7 +17,7 @@ summary: >-
   (`shared_ci_workflow_repo_extraction_2026_08_06.md`) — surfaced, not silently dropped. One doc
   (`deepseek_flash_ab_routing_test_2026_08_05.md`) confirmed NOT orphaned: a large, actively-maintained, self-covering
   LOCAL plan with its own live Deferred table.
-status: active
+status: complete
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -26,7 +26,7 @@ scope: [engineer]
 tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-7, satellite-docs]
 related:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
     /plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md,
@@ -54,7 +54,7 @@ context_scope:
   [
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
-    /plans/active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     agent-orchestrator/server/worker_liveness_watchdog.py,
     agent-orchestrator/server/autospawn.py,
@@ -70,6 +70,10 @@ source: >-
 ---
 
 # AO satellite AO batch 7
+
+> **🔴 ARCHIVED 2026-08-14 — COMPLETE (all 3 todos `[x]`, unlocked).**
+> `ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md`'s own 5 todos are now all `[x]` and it has self-archived
+> alongside this doc (see its own banner) — no further successor to chase.
 
 > **`status: active`** — approved 2026-08-08 after a fresh conflict-check found no blocking overlap and all 3 todos
 > re-verified still genuinely open (see Progress Log). **`assigned_vm: planning` /
@@ -105,8 +109,8 @@ conflict/operator/time-gated (parked below, not silently dropped).
   checkbox. Re-pull that doc fresh immediately before flipping your checkbox regardless of which todo you picked up — no
   code-file overlap, but a stale read on the source doc's own file could silently clobber the other todo's flip.
 - Do not edit a source issue doc's checkboxes beyond appending your evidence line to the todo you executed. The paired
-  finalize plan (`/plans/active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md`) reconciles evidence back into
-  every source doc and runs archival.
+  finalize plan (`/plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md`) reconciles evidence
+  back into every source doc and runs archival.
 - No todo below deletes prod data, mutates a GCS bucket, or launches a VM.
 
 ## Todos

@@ -22,7 +22,7 @@ related:
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
-    /plans/active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
     /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
   ]
@@ -265,9 +265,15 @@ before touching the source doc directly._
       repointed. See these docs' own Progress Logs for full evidence. Evidence: this commit (doc edits) plus a follow-up
       corrective commit closing a create-only-commit gap left by the automated inventory-regen step's own commit
       (`unified-trading-pm@6d8a610d77`).
-- [ ] [INFRA] P0. Archive `ao_satellite_ao_dispatch_batch7_2026_08_06.md` (confirmed 0 open todos) via its finalize
+- [x] [INFRA] P0. Archive `ao_satellite_ao_dispatch_batch7_2026_08_06.md` (confirmed 0 open todos) via its finalize
       plan's 1 remaining todo (self-archival ritual + inventory regen). Source:
-      `/plans/active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md`.
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md`. **DONE 2026-08-14** —
+      batch7_finalize's last todo (archive the batch plan + regen inventory) completed and flipped `[x]`; both batch7
+      and batch7_finalize `git mv`'d to `plans/archive/2026_08/`, banners added, `status: active → complete`, all
+      corpus-wide referrers repointed (including the epic's relative links and `INDEX.md`/inventory regen). Note: a
+      concurrent session also independently moved the same two files around the same time (a bare `git mv` with no
+      banner/status update landed via the inventory-regen script's own commit) — reconciled cleanly, no data lost, this
+      commit layers the full ritual (banner, status, referrer fixups) on top of that move.
 - [ ] [REVIEW] P1. **`ao_satellite_ao_dispatch_batch5_2026_08_03.md` now shows 0 open todos** (as of this session's
       checkbox flip) — check whether it needs its own archival, and confirm `batch5_finalize`'s `gate_on_depends` has
       genuinely cleared before running its 5 todos. Source:

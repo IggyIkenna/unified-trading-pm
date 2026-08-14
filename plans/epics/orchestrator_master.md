@@ -55,8 +55,8 @@ related_plans:
   - ../active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md
   - ../archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md
   - ../archive/2026_08/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md
-  - ../active/ao_satellite_ao_dispatch_batch7_2026_08_06.md
-  - ../active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md
+  - ../archive/2026_08/ao_satellite_ao_dispatch_batch7_2026_08_06.md
+  - ../archive/2026_08/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md
   - ../active/ao_satellite_ao_dispatch_batch8_2026_08_08.md
   - ../active/ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md
   - ../active/ao_satellite_ao_dispatch_batch9_2026_08_08.md
@@ -406,12 +406,12 @@ batch extracted from the AO tranche's satellite docs
 
 **status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: AO satellite AO batch 6 — finalize
 
-### [`ao_satellite_ao_dispatch_batch7_2026_08_06`](../active/ao_satellite_ao_dispatch_batch7_2026_08_06.md)
+### [`ao_satellite_ao_dispatch_batch7_2026_08_06`](../archive/2026_08/ao_satellite_ao_dispatch_batch7_2026_08_06.md)
 
 **status**: active · **estimate**: 0.48 cal AI-days (class: refactor) **title**: AO satellite AO batch 7 — seventh
 dispatch batch extracted from the AO tranche's satellite docs
 
-### [`ao_satellite_ao_dispatch_batch7_finalize_2026_08_06`](../active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md)
+### [`ao_satellite_ao_dispatch_batch7_finalize_2026_08_06`](../archive/2026_08/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md)
 
 **status**: active · **estimate**: 0.32 cal AI-days (class: infra) **title**: AO satellite AO batch 7 — finalize
 

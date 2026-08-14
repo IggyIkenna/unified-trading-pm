@@ -934,13 +934,6 @@ by hand._
   Gated closeout for ao_satellite_ao_dispatch_batch5_2026_08_03.md — machine-held via depends_on + gate_on_depends until
   every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE source issue doc(s)
   (the…
-- [`ao_satellite_ao_dispatch_batch7_2026_08_06`](./ao_satellite_ao_dispatch_batch7_2026_08_06.md) — SEVENTH AO-dispatch
-  batch for the `ao` topic tranche, produced by the `/ag-closeout-audit ao` skill run (2026-08-06, autonomous mode,
-  scheduled `ag_closeout_auditor` dispatch, slot 10). Phase 0 re-derived the tranche's covering-plan set…
-- [`ao_satellite_ao_dispatch_batch7_finalize_2026_08_06`](./ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md) —
-  Gated closeout for ao_satellite_ao_dispatch_batch7_2026_08_06.md — machine-held via depends_on + gate_on_depends until
-  every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE source issue doc(s)
-  (the…
 - [`ao_satellite_ao_dispatch_batch8_2026_08_08`](./ao_satellite_ao_dispatch_batch8_2026_08_08.md) — EIGHTH AO-dispatch
   batch for the `ao` topic tranche, produced by the `/ag-closeout-audit ao` skill run (2026-08-08, autonomous mode,
   scheduled `ag_closeout_auditor` dispatch, slot 12). Phase 0 re-confirmed the tranche's covering-plan set…
@@ -958,6 +951,9 @@ by hand._
   — Two tracks. (A) Drain the 25 remaining plan_reconciler review-branch PRs stuck open since 2026-08-02 (0 merged, 0
   reviewed) after graduating plan_reconciler to steady-state direct-push — each needs real per-PR judgment (rebase +
   re-verify…
+- [`codex_luna_flex_bridge_2026_08_14`](./codex_luna_flex_bridge_2026_08_14.md) — Bridge Claude Code's Anthropic
+  Messages protocol to OpenAI's Codex App Server (JSON-RPC/SDK), authenticated via a $200/mo ChatGPT Pro subscription,
+  so AO can dispatch sonnet-tier fallback work to Luna (GPT-5.6) while every…
 - [`content_derived_backlog_task_ids_2026_08_08`](./content_derived_backlog_task_ids_2026_08_08.md) —
   `regen_backlog_from_plan` derives a task id as `slug` + next free positional index, so a todo's id is a function of
   its POSITION among that plan's todos, not its text. When earlier todos are checked off and their yaml entries pruned,…
@@ -981,6 +977,9 @@ by hand._
   — Gated closeout for deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md — machine-held via
   depends_on + gate_on_depends until every todo in that plan is done. Reconciles the plan's own checkboxes
   (self-contained,…
+- [`grok_gemini_translation_proxy_2026_08_14`](./grok_gemini_translation_proxy_2026_08_14.md) — Stand up a self-hosted
+  LiteLLM-based proxy presenting an Anthropic-compatible endpoint in front of Grok (xAI, OpenAI-shaped backend) and
+  Gemini (Google-shaped backend, free-tier only), so AO can dispatch to both while Claude Code's harness…
 - [`multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08`](./multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08.md)
   — Gated closeout for `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md` — machine-held
   via `depends_on` + `gate_on_depends: true` until all 4 of that doc's remaining todos (rename-corruption fix, the…

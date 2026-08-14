@@ -46,7 +46,7 @@ context_scope:
     agents/worker.md,
     cursor-configs/SUB_AGENT_MANDATORY_RULES.md,
     /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md,
-    /plans/active/ao_satellite_ao_dispatch_batch7_2026_08_06.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_2026_08_06.md,
   ]
 ---
 
@@ -116,8 +116,8 @@ them"), but the instruction is not being followed in practice, at least in this 
   here — unscoped design fork, not batch material.
 
 - **context-scout 2026-08-07**: refreshed context_scope (5 entries) — added
-  `/plans/active/ao_satellite_ao_dispatch_batch7_2026_08_06.md`, which now carries this doc's items 1-2 as a combined
-  todo (item 3 is the only one still open here).
+  `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_2026_08_06.md`, which now carries this doc's items 1-2 as a
+  combined todo (item 3 is the only one still open here).
 
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — verified `ao_satellite_ao_dispatch_batch7_2026_08_06.md` (todo
   1, real verbatim match on the confirm-systemic + strengthen-prompt combined ask) is still `status: draft` /
