@@ -2082,3 +2082,5 @@
 {"timestamp": "2026-08-14T11:54:08Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "deployment-service=0.137.0 (branch=main, bump=minor)", "commit_sha": "85268a8ef63a921354607e0645d20de951e7becd"}
 {"timestamp": "2026-08-14T12:08:44Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "deployment-service=0.137.1 (branch=main, run=31799062586)", "commit_sha": "2ff68e9f9fb8d2307f832bc7bb47357fcd6a06e5"}
 {"timestamp": "2026-08-14T12:08:48Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "deployment-service=0.137.1 (branch=main, bump=patch)", "commit_sha": "2ff68e9f9fb8d2307f832bc7bb47357fcd6a06e5"}
+{"timestamp": "2026-08-14T12:18:09Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "ibkr-gateway-infra=0.5.2 (branch=main, run=31799716121)", "commit_sha": "7fb43c3b71f808f4ea6935ee4ee25bb1203bd4ba"}
+{"timestamp": "2026-08-14T12:18:12Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "ibkr-gateway-infra=0.5.2 (branch=main, bump=patch)", "commit_sha": "7fb43c3b71f808f4ea6935ee4ee25bb1203bd4ba"}
