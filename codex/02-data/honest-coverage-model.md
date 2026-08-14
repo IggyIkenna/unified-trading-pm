@@ -702,30 +702,31 @@ unit tests); live measure `coverage_v3.json` 2026-06-29 06:00 UTC.
 reconciliation landed** (`honest_coverage_uac_writer_matrix_reconciliation_2026_06_29`: cefi venue-suffix fold, defi
 lending grain roll-up, `rate_indices` dialect fold, ASTER over-seed carve-out + 17,282-row manifest purge):
 
-| AG         | Layer-1 completeness                                                                                                                                                                                                                                                         | present/expected    | real holes | strays | Layer-2 (lower bound, gated) |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ---------- | ------ | ---------------------------- |
-| cefi       | ⚠️ STALE — 79.55% (was 65.91%), dated 2026-07-03; other AG rows refreshed 2026-07-28, this row was not — do not cite as current without re-running `instruments-service/scripts/check_enumeration_completeness.py` for cefi first (flagged 2026-08-09, not re-measured here) | 35/44 (as of 07-03) | 9          | 104    | 37.90%                       |
-| defi       | 94.81% (was 69.44%)                                                                                                                                                                                                                                                          | 73/77               | 4          | 128    | 58.02%                       |
-| tradfi     | 51.43%                                                                                                                                                                                                                                                                       | 18/35               | 17         | 52     | 95.15%                       |
-| sports     | 30.77%                                                                                                                                                                                                                                                                       | 8/26                | 18         | 24     | 100.00%                      |
-| prediction | 66.67%                                                                                                                                                                                                                                                                       | 4/6                 | 2          | 17     | 22.73%                       |
+| AG         | Layer-1 completeness                                                                                                                      | present/expected    | real holes | strays                                            | Layer-2 (lower bound, gated)                         |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ---------- | ------------------------------------------------- | ---------------------------------------------------- |
+| cefi       | 94.52% — refreshed 2026-08-14, read directly (not recomputed) from `gs://central-element-323112-honest-coverage/2026-08-12/coverage.json` | 69/73 (as of 08-12) | 4          | 104 (2026-07-03, not re-measured in this refresh) | 37.90% (2026-07-03, not re-measured in this refresh) |
+| defi       | 94.81% (was 69.44%)                                                                                                                       | 73/77               | 4          | 128                                               | 58.02%                                               |
+| tradfi     | 51.43%                                                                                                                                    | 18/35               | 17         | 52                                                | 95.15%                                               |
+| sports     | 30.77%                                                                                                                                    | 8/26                | 18         | 24                                                | 100.00%                                              |
+| prediction | 66.67%                                                                                                                                    | 4/6                 | 2          | 17                                                | 22.73%                                               |
 
 (Historical: the 2026-06-29 06:00 UTC certification measured cefi 65.91% / defi 69.44%; defi rose to 94.81% via the
 protocol enumeration work landed 06-29→06-30, cefi to 79.55% via the reconciliation dialect folds — 6 of cefi's 15
 "holes" were captured-under-suffix false holes (OKX-SPOT/-SWAP/-FUTURES rows vs bare-OKX expectation). Pre-alignment
 artifacts remain retired: defi 0%/EXPECTED=3,581, sports 0%, cefi 14.9% were dialect-mismatch artifacts.)
 
-**Real Layer-1 holes (honest backfill backlog, correctly surfaced — NOT silent):** cefi BITFINEX-FUTURES +
-KRAKEN-FUTURES `future` grain (writer stamps PERPETUAL — dated-futures capture gap), BYBIT `spot_pair` (writer
-mis-stamps BYBIT-SPOT rows as PERPETUAL — see `plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md`), OKX
-`options_chain` (never enumerated); defi EIGENLAYER-ETHEREUM `spot_asset` ×4; tradfi CBOE `index` ohlcv + ICE
+**Real Layer-1 holes (honest backfill backlog, correctly surfaced — NOT silent):** cefi (refreshed 2026-08-14 from
+`gs://central-element-323112-honest-coverage/2026-08-12/coverage.json`) `BITGET-FUTURES/future/book_snapshot_5`,
+`BITGET-FUTURES/future/derivative_ticker`, `OKX-FUTURES/perpetual/book_snapshot_5`,
+`OKX-FUTURES/perpetual/derivative_ticker`; defi EIGENLAYER-ETHEREUM `spot_asset` ×4; tradfi CBOE `index` ohlcv + ICE
 `combo`/`options_chain` ohlcv_1m + YAHOO_FINANCE grains; sports BETFAIR/ODDS_API/PINNACLE bookmaker snapshot types;
 prediction KALSHI/POLYMARKET `market_lifecycle`.
 
-> **Known cefi denominator caveat (2026-07-03):** the 44-tuple cefi expected matrix omits whole venues the (venue,itype)
-> gate + capability table are blind to (Tier-3 BITFINEX-SPOT/BITGET-\*/KRAKEN-SPOT, non-Tardis HYPERLIQUID/ASTER/
-> EXTENDED, capability-absent BYBIT-SPOT/COINBASE-FUTURES/BINANCE-DELIVERY/KALSHI-PERP/…) — the cefi % is measured over
-> a fraction of the real universe. SSOT: `plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md`.
+> **Known cefi denominator caveat (2026-07-03, matrix size since grown to 73 tuples per the 2026-08-14 read above):**
+> the (then-44-tuple) cefi expected matrix omits whole venues the (venue,itype) gate + capability table are blind to
+> (Tier-3 BITFINEX-SPOT/BITGET-\*/KRAKEN-SPOT, non-Tardis HYPERLIQUID/ASTER/EXTENDED, capability-absent
+> BYBIT-SPOT/COINBASE-FUTURES/BINANCE-DELIVERY/KALSHI-PERP/…) — whether this omission still holds against the grown
+> 73-tuple matrix has not been re-verified. SSOT: `plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md`.
 
 **CERTIFICATION CAVEAT — completeness % is an UPPER bound where UAC under-specifies.** The high stray counts surfaced a
 **UAC↔writer contract gap** (a newly-discovered cross-repo finding, NOT a measurement bug): the writer captures real

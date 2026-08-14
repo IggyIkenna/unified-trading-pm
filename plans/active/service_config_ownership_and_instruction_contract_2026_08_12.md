@@ -202,11 +202,17 @@ exists to protect, and it is already implemented rather than aspirational.
       — and **zero call sites supply it** (the only `requested="TWAP"` is a docstring example, not live code). So the
       change is: resolve the per-`(client_id, slot_label)` policy, pass its `then_algo` as `config_algorithm`. **No new
       plumbing** — the parameter, the validation and the fallback chain already exist.
-- [ ] [AGENT] P0. **G2 — add instruction-level `received_at` / `sent_at`; latency is the ONLY missing analytic.** Alpha
-      and slippage are built; latency has nothing to compute from. The timestamps that exist are unrelated —
-      `received_at_mark_price_eth` (restaking rewards), `token.received_at_utc` (dust quote sources), `submitted_at` (an
-      order-adapter idempotency cache). **There is no instruction-level received/sent pair in either service.** Both
-      sides need it, per the operator, so define it once in UAC on the envelope and the fill record rather than twice.
+- [x] [AGENT] P0. ✅ **G2 mostly closed.** Schema landed earlier (`received_at_utc`/`sent_at_utc` on
+      `StrategyInstructionEnvelope` + `CanonicalFill`). Real-path stamping shipped `execution-service@c2053c47bc`
+      (`V2InstructionRouter.route()` stamps `received_at_utc` on first dispatch; `match_result_to_canonical_fill()` —
+      the shared batch=live choke point — forwards both fields; `PaperMatchingEngine.submit_order()` always populates
+      `sent_at_utc`; `manual_request_to_instruction()` populates `received_at_utc` for that path) and
+      `execution-service@739cbda4cf` (threaded `received_at_utc` through all 10 `engine/execution/algorithms/`
+      `ChildOrder` construction sites — direct constructors + the `lib_child_order_to_svc` library bridge — proven with
+      tests asserting `sent_at_utc >= received_at_utc` and that a missing value is never fabricated). **Remaining gap**:
+      `execution_service/algo_library/algorithms/*.py` (a DIFFERENT `ChildOrder` in `algo_library/schemas.py`) and
+      `execution_service/algorithms/tradfi/*.py` (`TradFiChildOrder`, yet another type) do not carry the field — two
+      more dataclasses would need it to close this fully.
 - [ ] [AGENT] P0. **G3 — collapse the benchmark's TWO independent implementations into one sent value.** _Corrected from
       an earlier draft of this plan that framed this as two competing benchmarks — it is not._ There is **one**
       benchmark-fills contract bridging the backtest groups
@@ -438,6 +444,17 @@ the clearest surviving statement of what transfers were meant to support.
       address) while `CEX_WITHDRAW` is CEFI (an exchange API call) — the asymmetry is correct and matches
       `CompositeTransferAdapter`'s split. A pre-existing test hardcoding the old 5-member closed set was updated in the
       same change; it would otherwise have failed the moment the enum legitimately grew.
+- [x] [AGENT] P0. ✅ **The three superseded enums' importers migrated onto `BusTransferType` — 2026-08-14.** UAC
+      `unified-api-contracts@08954d8d6a`: `execution_service/transfer_types.py::classify_transfer_type()` now returns
+      `BusTransferType` (its local 5-member `TransferType` deleted — strict subset, no unique members); the two
+      zero-production-importer enums (`architecture_v2.enums.TransferType` 7 members,
+      `domain/defi/transfers.TransferType` 6 members) deleted outright, and `tests/unit/test_transfer_events.py`
+      rewritten to assert union-completeness against hardcoded historical values instead of iterating the (now-deleted)
+      enum classes. Real importers migrated with verified 1:1 value mapping (`CEX_INTERNAL`→`SUBACCOUNT_MOVE`,
+      `CEX_WITHDRAWAL`→`CEX_WITHDRAW`, `CROSS_CHAIN`/`SAME_CHAIN`→`BRIDGE`/`ON_CHAIN`): `execution-service@3a72912c85`
+      (`transfer_handler.py`, `bridge.py`, `cctp.py`) and `strategy-service@793df0ef7a` (`event_consumers.py`,
+      `test_transfer_reconciler.py`). Each migrated call site verified to still resolve to a rail
+      `CompositeTransferAdapter` can actually service (CeFi-vs-on-chain routing unchanged by the rename).
 - [x] [AGENT] P0. ✅ **Transfer break (a) fixed — `strategy-service@db6e38ae3a`**, gate green. `colocated_engine.py` now
       reads `enable_transfer_rebalancing` from config and forwards it to `make_worker_target`, so the flag can finally
       do something. Regression test asserts **both** `True` and `False` reach the call — asserting only `True` would
@@ -513,13 +530,20 @@ someone scoped and did not finish**. Deleting it silently discards the design de
 - [x] [AGENT] P1. ✅ **Shadow-SSOT-type gate added — `strategy-service@c55b586c9c`**
       (`scripts/quality_gates/check_no_shadow_ssot_types.py` + `shadow_ssot_types_baseline.yaml`, shrink-only baseline).
       J1 and J6 are one defect class: a local class/enum redefining a name UAC owns; the gate catches both at commit
-      time. Baselined 15 pre-existing collisions at wire-in time; 2 resolved so far — `WalletConfig` (unioned
+      time. Baselined 15 pre-existing collisions at wire-in time; 3 resolved so far — `WalletConfig` (unioned
       `strategy_id` into UAC `unified-api-contracts@77cceb6c9d`, then deleted the local class and imported UAC's —
-      `strategy-service@486a61b975`) and `SportsVenueType` (deleted outright — zero real consumers anywhere in the tree,
+      `strategy-service@486a61b975`), `SportsVenueType` (deleted outright — zero real consumers anywhere in the tree,
       and its members described a different axis than UAC's same-named enum, so unioning would have corrupted UAC rather
-      than helped — same commit). 13 remain: `CadenceKind`, `ClientContext`, `ExecutionMode`, `FillEvent`,
-      `GroupBMetrics`, `OrderRecord`, `PnLAttribution`, `PnLSummary`, `Position`, `SettlementEvent`, `StrategyType`,
-      `TradeDeviation`, `VenueAuthStatus`.
+      than helped — same commit), and `CadenceKind` (renamed to `AllocationCadenceKind` — UAC's `CadenceKind` is fund
+      subscription/redemption cadence (DAILY/WEEKLY/MONTHLY), a different axis from this file's allocator
+      rebalance-trigger cadence (DAILY/HOURLY/WEEKLY/ON_EVENT) — `strategy-service@793df0ef7a`). 12 remain:
+      `ClientContext`, `ExecutionMode`, `FillEvent`, `GroupBMetrics`, `OrderRecord`, `PnLAttribution`, `PnLSummary`,
+      `Position`, `SettlementEvent`, `StrategyType`, `TradeDeviation`, `VenueAuthStatus`. Of these, `ExecutionMode` is
+      confirmed a genuine near-duplicate (UAC's `HUF`/`SCE`/`EVT` = this file's `HOLD_UNTIL_FLIP`/`SAME_CANDLE_EXIT` +
+      one UAC-only value) but blocked on a live-config migration (8 real strategy YAMLs reference the current wire
+      values directly); `PnLAttribution`/`PnLSummary` are confirmed NOT a clean subset/union (UAC's versions require
+      `attribution_id`/`summary_id` + shard dims this file lacks, and rename `start_time`/`end_time` →
+      `start_date`/`end_date`) — a real PnL-domain data-shape migration, deliberately not rushed.
 - [ ] [AGENT] P1. **For every remaining row, name the SSOT in codex and mark the other path.** Where both must exist for
       a real reason (Group B / Group C in J3), **state in both places which is authoritative and why**. A dual path
       documented as intentional stops costing an auditor an hour; an undocumented one costs it every time.
@@ -562,6 +586,21 @@ assumptions? **Mechanisms: mostly yes. Parameterisation: no — and the missing 
 
 ## Progress Log
 
+- **2026-08-14 (later)** — Continued from the earlier same-day batch: (1) J6 importer migration — all 5 real
+  `BusTransferType` importers migrated + the 2 zero-importer legacy enums deleted (`unified-api-contracts@08954d8d6a`,
+  `strategy-service@793df0ef7a`, `execution-service@3a72912c85`). (2) `CadenceKind` shadow-SSOT renamed to
+  `AllocationCadenceKind` (`strategy-service@793df0ef7a`) — 3/15 baseline items now resolved. (3) G2 latency: real paths
+  stamped in the v2 router + matching-engine converter + manual-instruction path (`execution-service@c2053c47bc`), then
+  threaded through all 10 `engine/execution/algorithms/` `ChildOrder` construction sites
+  (`execution-service@739cbda4cf`) — `algo_library`'s own `ChildOrder` and `TradFiChildOrder` remain unwired (different
+  dataclasses). (4) ADV `as_of_date` manifest stamping: added `RunManifest.dynamic_universe_as_of_dates`
+  (`unified-api-contracts@964bc3a91b`) plus the plumbing through
+  `build_run_manifest`/`write_paper_run`/`emit_paper_run_ledger` and a `get_resolved_carry_universe_as_of_date()`
+  getter, with `batch_rerun.py` passing the paper manifest's value through for provenance
+  (`strategy-service@2a8506a18f`) — the top-level paper-run CLI handler (`paper_run_handler.py`, 2800+ lines) does not
+  yet CALL the getter, and true batch-rerun reproduction is additionally blocked by `catalog_carry.py`'s
+  dynamic-universe resolution being a process-level, import-time-computed singleton (a documented pre-existing
+  architectural limitation, not something this pass introduced or could cheaply close).
 - **2026-08-14** — Shipped the two-repo-batch backlog + closed the wallet-balance-source gap: UAC (`8c72b501` I001
   import-order + client-scoped batch, `77cceb6c9d` `WalletConfig.strategy_id` union), strategy-service (`c55b586c9c`
   wallet-balance source + Phase A/B batch, `486a61b975` WalletConfig/SportsVenueType shadow-SSOT resolution),

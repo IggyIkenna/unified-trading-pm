@@ -480,6 +480,22 @@ attempted_failed cells accruing), and its diagnosis just reversed, so nobody sho
   dispatch-time Slack alert already covers the FYI. Read-only: no GCS write, no manifest change, no code shipped; PM
   plan-doc edit only.
 - **context-scout 2026-08-14**: populated context_scope (5 entries).
+- **2026-08-14 (data_pipeline_failure escalation worker, agt-8ec9c8, slot 14) — SECOND worker spawn for the IDENTICAL
+  escalation_id already resolved by the entry directly above (slot 6, same session day).** Received a
+  `data_pipeline_failure` dispatch for `escalation_id=agt-8ec9c8`, `(cefi, book_snapshot_5)`, numbers byte-identical to
+  the slot-6 entry above: 7,806 attempted_failed of 208,624 attempted (ratio 3.7%), STATIC BACKLOG — no new
+  attempted_failed activity in 2d. This is a genuine duplicate dispatch of one escalation event to a second slot, not a
+  re-fired/re-evaluated condition — the same `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` failure
+  mode this doc's earlier entries repeatedly hit. Read this doc first per the pre-task plan/issue conflict-check rule;
+  found the identical escalation_id already fully investigated and concluded immediately above with "no fresh
+  regression, no code fix required." Per that entry's own note that a fresh live manifest read was "redundant given the
+  frozen `max_attempted_at`," did not repeat the GCS-streaming read; instead re-verified the cheap, deterministic signal
+  — all four historical fix commits are still ancestors of `origin/live-defi-rollout`
+  (`market-tick-data-service@339ca767`/`@6bf568ee`, `unified-api-contracts@8db188fe`/`@1c4d8864`, all confirmed via
+  `git merge-base --is-ancestor` against a fresh `git fetch`). **Verdict: no fresh regression, no code fix required** —
+  same conclusion as the slot-6 entry; nothing new to measure since that investigation was itself the same-day
+  same-numbers reading. `AUTHORING_SLOT=dp-fleet-monitor` (not a numbered slot) — no ping sent, per the role's own skip
+  rule. Read-only: no GCS write, no manifest change, no code shipped; PM plan-doc edit only.
 
 ## Liquidations re-drive — operator decision recorded 2026-08-11
 

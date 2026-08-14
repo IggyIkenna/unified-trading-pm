@@ -71,10 +71,14 @@ source: >-
 
 ## Todos
 
-- [ ] [CODE] P2. Delete the now-dead `_parse_curve` function in
+- [x] [CODE] P2. ✅ Delete the now-dead `_parse_curve` function in
       market-tick-data-service/market_tick_data_service/cli/handlers/_dex_pools_parsers.py (confirmed unreferenced dead
       code, mechanical deletion) Source:
-      `plans/active/issues/defi_balancer_dex_pool_state_writer_schema_mismatch_2026_08_04.md`
+      `plans/active/issues/defi_balancer_dex_pool_state_writer_schema_mismatch_2026_08_04.md` —
+      market-tick-data-service@97a8b8e870. Deleted the function, its `DexPoolsHandler._parse_curve` class binding, and
+      its direct unit test (`test_parse_curve_full`); confirmed no other code references remain (only historical
+      comments in `_dex_pools_subgraph.py`/`_parse_balancer`'s docstring, left as-is — accurate prose, not broken code).
+      Full quality-gates.sh green.
 - [ ] [CODE] P2. Determine the real scope of the HYPERLIQUID perp_funding gap around 2026-04-20 via a bounded manifest
       query across April-May 2026 (explicitly not a corpus walk, worker-determinable outcome) Source:
       `plans/active/issues/defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md`
