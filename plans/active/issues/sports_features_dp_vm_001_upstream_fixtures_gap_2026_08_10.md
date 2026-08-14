@@ -129,16 +129,20 @@ context_scope:
 - [ ] [DATA] P3. Verify the 2022 year-sharded features VM (`features-sports-sports-2022-20260810-051126`): no
       EXIT_STATUS (terminated mid-run 07:15Z, skip-if-fresh only) — confirm 2022 features coverage in the availability
       index.
-- [ ] [CODE] P1. Both slot-30's dedup fix (`deployment-service@427d6d2b91`) and slot-21's completion-ack-race fix
-      (`agent-orchestrator@962e5c1`) are confirmed live on `origin/live-defi-rollout` (re-verified 2026-08-14 by slot-6,
-      occurrence TEN — see Progress Log) yet a FRESH escalation id (`agt-8e558e`) for the SAME VM still fired after both
-      landed. Neither shipped fix is the full story — a third, still-undiagnosed path is creating new
-      `EscalationQueueRow`s for this VM. Candidates NOT yet checked: (a) whether `check_dispatch_dedup_for_finding`'s
-      vm_name fallback is actually reached on THIS finding's code path (vs. a different finding-construction site that
-      bypasses it), (b) whether the dedup's "open issue" lookup is matching this doc correctly (`status:`/path-pattern
-      mismatch), (c) a distinct AO-side re-queue trigger unrelated to the completion-ack race part (b) fixed. Needs a
-      dedicated fix task spanning both repos with request/response tracing on a live reproduction, not another one-shot
-      wall re-diagnosis.
+- [x] [CODE] P1. ✅ **(c) root-caused + FIXED** — `agent-orchestrator@da2f9f6` + `agent-orchestrator@74325fc`. Traced
+      both structural gaps (see Progress Log for the full trace): (a) `check_dispatch_dedup_for_finding`'s vm_name
+      fallback is NEVER reached in production — the `dp-exit-code-monitor` Cloud Run Job that actually files
+      `DP_VM_EXIT_NONZERO` every 5 min (`data_pipeline_fleet_monitor_scheduler.tf`) passes no `--pm-repo-path` and has
+      no PM clone baked into the `deployment-api` image, so `_resolve_pm_path(None)` returns `None` and the dedup call
+      at `route_finding` L904-906 never executes; (c) AO's own `enqueue()` ingestion layer had NO vm-aware dedup at all
+      — `_find_open_escalation`'s `(repo, pr_number, wall_type)` key degenerates to one bucket per repo for
+      `data_pipeline_failure` (`pr_number` is always `"0"`), so once that bucket's row resolves there is zero memory
+      that this exact VM was already diagnosed. Fix: `enqueue()` now extracts `vm_name` from the `RELAUNCH vm=...`
+      context segment and checks the PM issue-doc corpus directly (mirrors deployment-service's
+      `find_open_issue_for_vm`, reimplemented locally since AO's server — unlike the stateless Cloud Run Job — reliably
+      has a live PM clone on disk via `regen_backlog_from_plan.resolve_pm_repo_path()`). QG green (3740 passed +
+      dashboard tsc/vitest), 12 new unit tests, verified
+      `git merge-base --is-ancestor 74325fc     origin/live-defi-rollout`.
 - [x] [CODE] P1. ✅ **(a) dedup-layer fix SHIPPED** — `deployment-service@427d6d2b91` adds
       `escalation_dedup.find_open_issue_for_vm` + `check_dispatch_dedup_vm`, mirroring the existing
       `(asset_group, data_type)`-keyed path but matched on the exact `vm_name` (immutable once a VM has terminated, so a
@@ -343,3 +347,48 @@ blind under this one-shot wall's time-box. No relaunch performed (upstream state
 are unchanged from the nine prior re-verifications — did not re-run those checks). No code change in
 `deployment-service` this session (this wall's `$REPO`; diagnosing the residual dispatch-gap mechanism needs cross-repo
 tracing better suited to a dedicated task, per the new todo).
+
+**slot-28 2026-08-14 (dedicated [CODE] P1 fix task, spanning both repos, dispatched via this doc's own CODE todo)** —
+root-caused and fixed the residual gap the slot-6 TENTH-occurrence todo flagged. Read `route_finding`
+(`deployment-service/deployment_service/data_pipeline_monitors/escalation.py:758-933`) end to end:
+`_dispatch_to_orchestrator` (the fast-spawn path) IS gated by `check_dispatch_dedup_for_finding`, but
+`log_event(finding.event, ...)` at the bottom of `route_finding` ALWAYS fires regardless of dedup — that's expected (the
+DP_* Slack mirror must always emit), and is NOT the mechanism, since `log_event` doesn't itself create an
+`EscalationQueueRow`. Traced the actual creation path instead: **(a) confirmed structurally unreachable** —
+`data_pipeline_fleet_monitor_scheduler.tf`'s `dp-exit-code-monitor` Cloud Run Job (the ONLY thing that files
+`DP_VM_EXIT_NONZERO`, `*/5` cron) runs `python -m deployment_service.data_pipeline_monitors.cli --mode exit-code` with
+no `--pm-repo-path` arg, and the `deployment-api` image (the job's `image`) has no PM clone baked in — confirmed via the
+terraform file's own args list and `escalation._resolve_pm_path`'s fallback
+(`_DEFAULT_PM_SIBLINGS = ("../unified-trading-pm", "../../unified-trading-pm")`, relative to the CONTAINER's
+`escalation.py` location, which has no such sibling). So `route_finding`'s
+`dedup_pm_root = _resolve_pm_path(pm_repo_path)` is `None` on EVERY invocation from this job, and
+`check_dispatch_dedup_for_finding` (slot-30's shipped fix) never even executes — it's live, correct code that is dead in
+the one runtime that actually matters for this incident. **(c) confirmed as the second, independent gap** — read
+`agent-orchestrator/server/escalation.py`'s `escalate_endpoint` → `enqueue()` (the actual `/api/escalate` handler;
+`escalate()` is a DIFFERENT function used elsewhere, not this path). `enqueue()`'s two existing dedup layers
+(`_find_open_escalation` keyed on `(repo, pr_number, wall_type)`, and a cooldown keyed the same way + an exact `context`
+snapshot match) are BOTH scoped to `(repo, pr_number, wall_type)` — and `_dispatch_to_orchestrator` always sends
+`pr_number="0"` for `data_pipeline_failure`, so EVERY VM-lifecycle finding for a given repo shares one dedup bucket
+regardless of WHICH VM it's about. `_find_open_escalation`'s own docstring assumes "pr_number=0 dedups per-repo, which
+is correct — there is only one such wall per repo at a time" — true for `main_ci_red`/`ldr_qg_failure`, false for
+`data_pipeline_failure` (distinct VMs are distinct incidents). Once the one open row for a repo resolves, there is zero
+memory that a specific VM was already diagnosed, so the next `*/5` sweep's re-discovery of the same terminated VM's
+durable `run.log` creates a brand-new escalation every time. **Fix shipped**: `agent-orchestrator@da2f9f6` (+
+`agent-orchestrator@74325fc`, a basedpyright `reportPrivateUsage` follow-up) adds VM-name-keyed dedup directly in
+`enqueue()` — extracts `vm_name` from the `RELAUNCH vm=<name> launcher=` context segment `_dispatch_to_orchestrator`
+already embeds, and checks the PM issue-doc corpus for an OPEN doc already covering that exact `vm_name` (reimplements
+deployment-service's `find_open_issue_for_vm` locally — no cross-repo import between T4 services — since AO's OWN server
+process, unlike the stateless Cloud Run Job, reliably has a live PM clone on disk via
+`regen_backlog_from_plan.resolve_pm_repo_path()`, the same path `regen_backlog_from_plan` already reads plans/backlog
+from). This makes `enqueue()` the one common chokepoint every dispatch source passes through, regardless of which
+environment fired it — deployment-service's `pm_repo_path`-dependent dedup stays as a belt-and-suspenders first layer
+for callers that DO have PM access, but AO's own gate no longer depends on it. 12 new unit tests (context-extraction
+edge cases incl. the `vm=?` placeholder, `_find_open_issue_for_vm_name` doc-matching on a real `tmp_path` corpus, and
+full `enqueue()` integration coverage for both the dedup-skip and genuinely-new-VM paths). QG green both times (full
+`quality-gates.sh`: 3740 passed + 2 skipped, dashboard `tsc --noEmit` + `vitest` 346 passed, 0 basedpyright errors after
+the follow-up fix). Verified `git merge-base --is-ancestor 74325fc origin/live-defi-rollout`. This closes the loop the
+operator's ruling anticipated back on 2026-08-10 — "residual open item = upstream sports reference-data availability gap
+... requires the sports reference-data pipeline to backfill, not a features relaunch" was right about the DATA, but the
+escalation-dispatch mechanism itself needed this fix to stop re-paging on an already-closed incident. Remaining open
+todos in this doc: the P2 relaunch-storm-actuator observation and the P3 2022-year-shard verification — neither touches
+the code changed here.
