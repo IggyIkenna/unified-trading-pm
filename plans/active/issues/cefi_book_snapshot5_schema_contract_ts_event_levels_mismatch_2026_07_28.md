@@ -1049,3 +1049,8 @@ against the reproduction script.
   2026-07-31T04:02:18Z — same checkpoint as slot-11/-18/-26. Re-fire is the filed dedup-inert gap
   (`dp_escalation_dispatch_dedup_inert_monitor_host_no_pm_clone_2026_08_13.md`), not a regression. No code change, no
   GCS write, no VM launch. Doc over cap — 1-line close-out only.**
+- **2026-08-14 (data_pipeline_failure escalation worker, agt-8ec9c8, slot 7) — FIFTH fan-out of the same escalation_id
+  today (slots 11/26/5); no code fix. All 11 fix commits (MTDS 339ca767/6bf568ee/2ddc6d4a/6a067cf1/6c6fab03, UAC
+  8db188fe/1c4d8864, deployment-service a564cca/6f464325/9102eb9b/1b035c52) re-verified ancestors of
+  origin/live-defi-rollout. Re-fire is the filed dedup-inert gap, not a regression. No code change, no GCS write, no VM
+  launch. Doc over cap — 1-line close-out only.**
