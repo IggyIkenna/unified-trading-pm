@@ -209,8 +209,18 @@ source: >-
       `_prek_race_check` — the slot-11 claim that this had already landed was itself part of the same never-pushed
       commit). `scripts/plans/regenerate_active_plan_inventory.py` re-run after the moves. Source:
       `plans/active/issues/ag_closeout_audit_ao_parked_2026_08_10.md`
-- [ ] [CODE] P2. Attribute the 7 deepseek_spawn_selected calls preceding a death to their actual caller by adding a
-      source field (autospawn/escalation/plan_health) to that log line Source:
+- [x] ✅ [CODE] P2. Attribute the 7 deepseek_spawn_selected calls preceding a death to their actual caller by adding a
+      source field (autospawn/escalation/plan_health) to that log line — STALE-CHECKBOX correction, not new work:
+      already SHIPPED at `agent-orchestrator@64a559f` (2026-08-12, verified on `origin/live-defi-rollout`) —
+      `select_account_for_spawn(..., caller: str = "unknown")` logs `caller` alongside `deepseek_spawn_selected`/
+      `free_provider_spawn_selected`; every one of the 12 real call sites (server.py, main_agent_keeper.py x4,
+      autospawn.py x3, escalation.py x2, plan_health.py, worker_liveness_watchdog.py) already passes a distinct
+      `caller=` label (e.g. `autospawn_refill`, `autospawn_resume`, `escalation_escalate`, `plan_health_dispatch`,
+      `worker_liveness_watchdog_usage_cap`); a call site that omits it degrades to `"unknown"` rather than raising,
+      covered by 2 pinning tests (`test_deepseek_spawn_selected_logs_the_caller`,
+      `test_deepseek_spawn_selected_caller_defaults_to_unknown` in `tests/test_deepseek_provider_routing.py`). Per the
+      AO-dispatch conflict-check protocol's rule 4 ("already-shipped elsewhere, checkbox just never flipped"), citing
+      the SHA here rather than re-doing the work. Source:
       `plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`
 - [ ] [CODE] P2. Check the fleet's pinned Claude Code CLI version against the two upstream anthropics/claude-code issues
       (#27705, #27734) reported-affected versions (2.1.47, 2.1.50) Source:
