@@ -151,10 +151,16 @@ source: >-
       `CODEX_MAX_VIOLATIONS` ratcheted 4 -> 3 (STEP 5.37 class cleared); full QG green on both repos
       (unified-api-contracts 352s, strategy-service 141s, sentinel-verified). Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
-- [ ] [CODE] P2. Fix or re-baseline the <300s quality-gate budget (326s+12s measured) — **note (2026-08-14 diagnosis
-      above): NOT reproducible on a clean, uncontended host (measured 112s today) and likely already substantially fixed
-      by `quickmerge.sh`'s same-day 2026-08-10 CPU-vs-wall billing rework; re-verify under real contention before sizing
-      further work — may already be resolved.** Source:
+- [x] ✅ [CODE] P2. **RESOLVED — already fixed by the 2026-08-10 CPU-vs-wall billing rework, no code change needed.**
+      strategy-service@ac5cab7edb (2026-08-14, slot-27·infra). Re-verified under genuine contention (not just the 112s
+      clean-host figure from the diagnosis todo above): 2 fresh `bash scripts/quality-gates.sh --no-fix` runs on the
+      current LDR-tip HEAD, both under real host load — run 1: 134s wall (`time` real 2m14.415s), exit 0; run 2: 44s
+      governor queue-wait (excluded from billable per base-service.sh's CPU-vs-wall rework) +
+      `✅ ALL QUALITY GATES PASSED (152s)` billable work. Both comfortably under the 300s `MAX_DURATION` cap, including
+      one run with real governor contention (30-44s queue-wait) — the exact contention scenario that produced the
+      original 326s+12s=338s failure on 2026-08-10. Confirms the diagnosis todo's hypothesis: the billing rework already
+      resolved this before this todo was ever picked up; no `MAX_DURATION` re-baseline or suite optimization is
+      warranted. Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
 - [ ] [CODE] P2. Fix the gate's stale SCHEMA_CONTRACTS_AUDIT.md pointer message (and grep the fleet for the same
       template) Source:
