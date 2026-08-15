@@ -51,6 +51,7 @@ execution_scope: orchestrator-agent
 drift_direction: advance-docs
 depends_on: []
 locked_by:
+archive_exempt: true # bridge for the cross-repo flip/mv two-commit split — dropped in the immediately-following archival commit; see /codex/12-agent-workflow/plan-completion-and-archival-discipline.md
 context_scope:
   [
     market-tick-data-service/market_tick_data_service/cli/handlers/staking_yields_handler.py,
@@ -364,6 +365,9 @@ independent plans.
   that remaining work: swapped the resolved-finding docs (`defi_track01_...md`, `defi-data-types-catalog.md`) for the
   `market_interface/adapters/defi` directory (the 11 existing IS adapters §7 names) and `lst_rates_handler.py` (the
   exchange-rate-yield reference pattern §7 explicitly cites for the 3 AAVE-Oracle protocols).
+- **data_engineering slot-7 2026-08-15**: Phase 2 (§7's 3 AAVE-Oracle protocols) implemented and shipped —
+  market-tick-data-service@11bccb8c38. Full evidence on the Follow-ups checkbox below. All §6/§7 work is now done;
+  doc appears eligible for closeout review (not this task's scope to act on).
 
 ## Follow-ups
 
@@ -374,10 +378,18 @@ independent plans.
       `tests/unit/test_staking_yields_handler.py`; all 8 venues
       (YEARN_V3/CONVEX/BEEFY/PENDLE/IDLE/SYMBIOTIC/KARAK/JITORESTAKING) batch-fetched from
       `https://yields.llama.fi/pools` and fan-out per project slug. QG green. Phase 2 tracked in follow-up below.
-- [ ] [SERVICE] P3. Implement staking-yields Phase 2: 3 AAVE Oracle protocols (RENZO/KELPDAO/PUFFER ~1.5 AI days) — each
-      uses AAVE V3 Oracle `getAssetPrice()` + DefiLlama coins fallback; Alchemy key already in Secret Manager. Add fetch
-      functions to `staking_yields_handler.py`, add to `fixed_venues` list, add unit tests. See §7 for per-protocol
-      data-source details.
+- [x] ✅ [SERVICE] P3. Implement staking-yields Phase 2: 3 AAVE Oracle protocols (RENZO/KELPDAO/PUFFER ~1.5 AI days) —
+      each uses AAVE V3 Oracle `getAssetPrice()` + DefiLlama coins fallback; Alchemy key already in Secret Manager. Add
+      fetch functions to `staking_yields_handler.py`, add to `fixed_venues` list, add unit tests. See §7 for
+      per-protocol data-source details. — DONE 2026-08-15, market-tick-data-service@11bccb8c38: added
+      `_query_aave_oracle_price` / `_resolve_aave_exchange_rate` / `_resolve_defillama_exchange_rate` /
+      `_resolve_exchange_rate` / `_annualized_yield_pct` / `_make_aave_oracle_yield_fetcher` + `_AAVE_ORACLE_VENUES`
+      tuple; APY annualized from the token/ETH exchange-rate drift over a 30-day lookback (AAVE Oracle primary,
+      DefiLlama `coins.llama.fi` historical fallback — mirrors RenzoAdapter/KelpDAOAdapter/PufferAdapter's documented
+      priority), wired into `fixed_venues` alongside LIDO/ETHERFI/EIGENLAYER. Unit tests added/extended in
+      `tests/unit/test_staking_yields_handler.py` + `tests/market_interface/unit/test_defi_handlers.py` (the latter's
+      pre-existing `process()`-level test needed a compatibility patch since `process()` now always builds AAVE-oracle
+      fetchers). QG green (Pass-1 sentinel verified on d0cba15f).
 
 > **2026-08-06 archive-candidate audit**: All 4 checkboxes are [x], but §7 describes ~30-32h of unimplemented work
 > ('File as a single plan with two sequential phases') — the capability-completion for
