@@ -299,9 +299,13 @@ source: >-
 - [ ] [BACKEND] P2. add a meta-assertion that any job publishing a notify-consumed verdict output emits it on the
       failure path too Source:
       `plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`
-- [ ] [CODE] P2. Pass --build-arg SETUPTOOLS_SCM_PRETEND_VERSION=$$VERSION in strategy-service and greeks-service
-      cloudbuild.yaml once each repo's own blocking issue clears Source:
-      `plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md`
+- [x] ✅ [CODE] P2. Pass --build-arg
+      SETUPTOOLS_SCM_PRETEND_VERSION=$$VERSION in strategy-service and greeks-service
+      cloudbuild.yaml once each repo's own blocking issue clears — strategy-service@b569635c28 +
+      greeks-service@d4b796dfd5 (2026-08-15, slot-12·infra). Both prior blockers were already clear: strategy-service's
+      own QG is not red at LDR tip (confirmed by an earlier todo in this same batch); greeks-service's git status is
+      clean (no peer WIP conflict). Added `--build-arg SETUPTOOLS_SCM_PRETEND_VERSION=$$VERSION`to the`build`step's    `docker
+      build`in both`cloudbuild.yaml`files, matching the fleet pattern already used in     agent-orchestrator/deployment-service/alerting-service/features-service. QG green + sentinel-verified on both     repos; both quickmerge-landed on LDR (post-push ancestry verified). Source:    `plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md`
 - [ ] [CODE] P2. Re-run hosted-baseline.sh to resync the derived cloud-build-router.yml snapshot with the live workflow
       Source: `plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md`
 - [x] ✅ [DATA] P1. **MOOT — already deleted, confirmed live (2026-08-13, slot 29).** This todo's premise (run a fresh
