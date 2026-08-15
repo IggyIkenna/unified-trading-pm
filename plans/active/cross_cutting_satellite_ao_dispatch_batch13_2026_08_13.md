@@ -382,9 +382,14 @@ source: >-
       `-t "="` exact-match semantics) — tagged `# bats test_tags=integration,tmux` so it's selectable via
       `bats --filter-tags` even though the fleet's current bats invocation doesn't filter. All 5 tests green locally.
       Source: `plans/active/issues/pm_bats_tmux_fixture_leak_wedges_shared_host_2026_08_10.md`
-- [ ] [CODE] P2. Implement the schema/NaN contract in e2e-testing/scripts/validation/validate_shards_4pillar.py per the
-      operator-ruled spec (wire _TICK_REQUIRED, add tick to _NAN_SCAN_COLUMNS, wire _DEFI_REQUIRED/_SPORTS_REQUIRED
-      narrowly) Source: `plans/active/issues/silent_wrong_answer_audit_untracked_followups_2026_07_28.md`
+- [x] ✅ [CODE] P2. **PARTIAL — tick contract wired + tested; defi/sports deliberately NOT wired (new finding: flat UAC
+      contracts don't match live production schema for either candidate data_type).** e2e-testing@0270b15d6a
+      (2026-08-15, slot-31·cicd/infra). Wired `_TICK_REQUIRED` into `required_row_columns_for()` for `family=="tick"`
+      (verified against live CEFI connectors) + added `"tick": ("price", "quantity")` to `_NAN_SCAN_COLUMNS`; added
+      `tests/unit/test_validate_shards_4pillar_required_columns.py` pinning both the tick contract and the deliberate
+      defi/sports non-wiring. QG green (`✅ ALL QUALITY GATES PASSED`, sentinel-verified at HEAD); quickmerge landed on
+      LDR (post-push ancestry verified). Full evidence trail + corrected DESIGN follow-up scope in the source issue
+      doc's Progress Log. Source: `plans/active/issues/silent_wrong_answer_audit_untracked_followups_2026_07_28.md`
 - [x] ✅ [CODE] P2. **MOOT — already captured live; the todo's own premise (a hand-curated `--instrument-ids` filter to
       edit) no longer exists.** (2026-08-15, slot-29·infra)
       `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh` carries its own 2026-08-14 stale-description
