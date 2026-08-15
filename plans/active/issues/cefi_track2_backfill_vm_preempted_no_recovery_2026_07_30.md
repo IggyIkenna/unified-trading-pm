@@ -987,10 +987,11 @@ produced reports) — see the plan diff in the same commit as this issue doc.
   slot-3's 13:36Z rationale — periodic re-verify beats a park that risks the silent-stall class) per the established
   mechanism (slot-13's finding, 2026-08-02).
 
-- [ ] [INFRA] P1. **NEW 2026-08-15 (slot-7) — 9th relaunch.** 8th VM (`...binancefutu-x17-20260809-083733`) died: last
-      write `last_completed_date=2020-12-21`/`updated=2026-08-11T12:13:33Z` (day ~721/2769, ~26%), `run.log` cuts off
-      mid-request `15:21:43Z` same day; dead ~4d, no relaunch since. Reproduce 8th VM's `LAUNCH_PARAMS.json` via
-      `launch-cefi-sharded-backfill.sh --on-demand` (stall fixes already live). Repo: deployment-service.
+- [x] ✅ [INFRA] P1. **DONE 2026-08-15 (slot-24)** — 9th relaunch, 8th VM dead ~4d (`updated=2026-08-11T12:13:33Z`, day
+      ~721/2769). Repo: deployment-service. N=1 cap clear both clouds (`tardis_running_vm_count`=0); fetched 8th VM's
+      `LAUNCH_PARAMS.json` via UTL `download_bytes` (`gcloud storage`/`gsutil` hook-blocked), reproduced env verbatim,
+      dry-run confirmed 1 VM. Launched `cefi-queue-heavy-binancefutu-x17-20260815-220349`, `tardis-guard` 1/1. Verified
+      STARTED (`RUNNING` ~45s) + PROGRESS (2 UTL reads, `2019-01-14`→`2019-02-04`, monotonic). `-003` blocked.
 
 - **2026-08-15T21:53Z (slot-7, dispatched on `cefi_track2_coverage_backfill_checkpoints-005`)**: Re-verified — 8th VM
   dead 4 days, undocumented until now (todo above); both docs' Progress Logs went quiet after 2026-08-10, the
