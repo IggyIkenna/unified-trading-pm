@@ -34,7 +34,8 @@ on:
       wall_type:
         description:
           "merge_conflict | label_mismatch | sit_failure | stuck_promotion_pr | ldr_qg_failure | ldr_main_qg_failure |
-          main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap | harness_lint | provenance_blocked"
+          main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap | harness_lint | provenance_blocked |
+          cloud_build_failure | backmerge_sync_failure"
         required: true
         type: string
       context:
@@ -64,7 +65,8 @@ on:
       wall_type:
         description:
           "merge_conflict | label_mismatch | sit_failure | stuck_promotion_pr | ldr_qg_failure | ldr_main_qg_failure |
-          main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap | harness_lint | provenance_blocked"
+          main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap | harness_lint | provenance_blocked |
+          cloud_build_failure | backmerge_sync_failure"
         required: true
         type: choice
         options:
@@ -81,6 +83,8 @@ on:
             sit_retry_cap,
             harness_lint,
             provenance_blocked,
+            cloud_build_failure,
+            backmerge_sync_failure,
           ]
       context:
         description: "Free-text context for the worker"
@@ -146,9 +150,9 @@ jobs:
 
           # wall_type must be in the orchestrator's closed set (server/escalation.py WALL_TYPES).
           case "$IN_WALL" in
-            merge_conflict | label_mismatch | sit_failure | stuck_promotion_pr | ldr_qg_failure | ldr_main_qg_failure | main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap | harness_lint | provenance_blocked) ;;
+            merge_conflict | label_mismatch | sit_failure | stuck_promotion_pr | ldr_qg_failure | ldr_main_qg_failure | main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap | harness_lint | provenance_blocked | cloud_build_failure | backmerge_sync_failure | promote_qg_failure | release_tag_stall | sit_gate_stuck | semver_agent_failure | cloud_build_router_failure | glue_pool_starvation) ;;
             *)
-              echo "::error::invalid wall_type '$IN_WALL' (valid: merge_conflict | label_mismatch | sit_failure | stuck_promotion_pr | ldr_qg_failure | ldr_main_qg_failure | main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap | harness_lint | provenance_blocked)"
+              echo "::error::invalid wall_type '$IN_WALL' (valid: merge_conflict | label_mismatch | sit_failure | stuck_promotion_pr | ldr_qg_failure | ldr_main_qg_failure | main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap | harness_lint | provenance_blocked | cloud_build_failure | backmerge_sync_failure | promote_qg_failure | release_tag_stall | sit_gate_stuck | semver_agent_failure | cloud_build_router_failure | glue_pool_starvation)"
               exit 1
               ;;
           esac

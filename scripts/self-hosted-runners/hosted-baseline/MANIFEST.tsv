@@ -1,62 +1,60 @@
 workflow	source	provenance_sha	captured_from
-agent-audit.yml	worktree	4efb7923d2	never flipped
-agent-runner.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
-branch-health.yml	worktree	4efb7923d2	never flipped
-build-smoke-all-repos.yml	worktree	4efb7923d2	never flipped
-cascade-qg-ordering.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
+agent-audit.yml	worktree	6e859da36b	never flipped
+agent-runner.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
+branch-health.yml	worktree	6e859da36b	never flipped
+build-smoke-all-repos.yml	worktree	6e859da36b	never flipped
+cascade-qg-ordering.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
 cassette-drift-check.yml	history-logic-stale	e9d02e5d66939e7a944240f277ec7d8dd8975ea5^	pre-flip parent of e9d02e5d6 (flip bundled logic changes)
-change-freeze-check.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
-ci-health.yml	worktree	4efb7923d2	never flipped
-ci-status-consolidator.yml	derived	4efb7923d2	live minus the mechanical flip 23ce709cc
-ci-status-update.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
-cloud-build-failure-watcher.yml	worktree	4efb7923d2	never flipped
-cloud-build-router-aws.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
-cloud-build-router.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
-cold-storage-cleanup.yml	derived	4efb7923d2	live minus the mechanical flip 23ce709cc
-conflict-resolution-agent.yml	derived	4efb7923d2	live minus the mechanical flip 23ce709cc
-conflict-resolution-merged.yml	worktree	4efb7923d2	never flipped
-deterministic-promotion-conflict-resolve.yml	rehosted	4efb7923d2	live + rehost/deterministic-promotion-conflict-resolve.yml.ok
-digest-drift-sweep.yml	derived	4efb7923d2	live minus the mechanical flip 23ce709cc
-escalate-to-orchestrator.yml	rehosted	4efb7923d2	live + rehost/escalate-to-orchestrator.yml.ok
-fix-approval-timeout.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
-freeze-deferred-build-replay.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
-glue-pool-starvation-monitor.yml	worktree	4efb7923d2	never flipped
-glue-runner-health-monitor.yml	worktree	4efb7923d2	never flipped
-hotfix-mode.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
-image-build-validate.yml	derived	4efb7923d2	live minus the mechanical flip 0e33e0840
-ldr-ci-monitor.yml	worktree	4efb7923d2	never flipped
+change-freeze-check.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
+ci-health.yml	worktree	6e859da36b	never flipped
+ci-status-consolidator.yml	derived	6e859da36b	live minus the mechanical flip 23ce709cc
+ci-status-update.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
+cloud-build-failure-watcher.yml	worktree	6e859da36b	never flipped
+cloud-build-router-aws.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
+cloud-build-router.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
+cold-storage-cleanup.yml	derived	6e859da36b	live minus the mechanical flip 23ce709cc
+conflict-resolution-agent.yml	derived	6e859da36b	live minus the mechanical flip 23ce709cc
+conflict-resolution-merged.yml	worktree	6e859da36b	never flipped
+deterministic-promotion-conflict-resolve.yml	rehosted	6e859da36b	live + rehost/deterministic-promotion-conflict-resolve.yml.ok
+digest-drift-sweep.yml	derived	6e859da36b	live minus the mechanical flip 23ce709cc
+escalate-to-orchestrator.yml	rehosted	6e859da36b	live + rehost/escalate-to-orchestrator.yml.ok
+fix-approval-timeout.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
+freeze-deferred-build-replay.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
+glue-pool-starvation-monitor.yml	worktree	6e859da36b	never flipped
+glue-runner-health-monitor.yml	worktree	6e859da36b	never flipped
+hotfix-mode.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
+ldr-ci-monitor.yml	worktree	6e859da36b	never flipped
 ldr-docs-gate.yml	NO-HOSTED-FORM	0383b5df7	created self-hosted; needs a reviewed rehost overlay
-ldr-to-main-promote-fleet.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
+ldr-to-main-promote-fleet.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
 ldr-to-main-promote.yml	history-logic-stale	513f16773f709034124dd09c4dca3b771bf2b099^	pre-flip parent of 513f16773 (flip bundled logic changes)
-ldr-to-staging-promote.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
-main-backmerge-to-ldr.yml	worktree	4efb7923d2	never flipped
-major-bump-issue-handler.yml	worktree	4efb7923d2	never flipped
-notify-slack.yml	worktree	4efb7923d2	never flipped
-overnight-agent-orchestrator.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
-overnight-dead-man-switch.yml	worktree	4efb7923d2	never flipped
-plan-notification.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
-promote-fleet-startup-failure-monitor.yml	worktree	4efb7923d2	never flipped
-publish-package.yml	worktree	4efb7923d2	never flipped
-python-quality-gates-v2.yml	worktree	4efb7923d2	never flipped
-quality-gates-v2.yml	derived	4efb7923d2	live minus the mechanical flip b99b96817
-readiness-verifier.yml	derived	4efb7923d2	live minus the mechanical flip 23ce709cc
-reconcile-release-tags.yml	derived	4efb7923d2	live minus the mechanical flip 23ce709cc
+ldr-to-staging-promote.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
+main-backmerge-to-ldr.yml	worktree	6e859da36b	never flipped
+major-bump-issue-handler.yml	worktree	6e859da36b	never flipped
+notify-slack.yml	worktree	6e859da36b	never flipped
+overnight-agent-orchestrator.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
+overnight-dead-man-switch.yml	worktree	6e859da36b	never flipped
+plan-notification.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
+promote-fleet-startup-failure-monitor.yml	worktree	6e859da36b	never flipped
+publish-package.yml	worktree	6e859da36b	never flipped
+quality-gates-v2.yml	derived	6e859da36b	live minus the mechanical flip b99b96817
+readiness-verifier.yml	derived	6e859da36b	live minus the mechanical flip 23ce709cc
+reconcile-release-tags.yml	derived	6e859da36b	live minus the mechanical flip 23ce709cc
 reconcile-staging-versions.yml	history-logic-stale	23ce709cc07cfe86da70ebc63803a56a21768365^	pre-flip parent of 23ce709cc (flip bundled logic changes)
 removed-symbols-workspace-sweep.yml	history-logic-stale	513f16773f709034124dd09c4dca3b771bf2b099^	pre-flip parent of 513f16773 (flip bundled logic changes)
-request-major-bump.yml	worktree	4efb7923d2	never flipped
-rules-alignment-agent.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
-ruleset-drift-alert.yml	derived	4efb7923d2	live minus the mechanical flip 23ce709cc
-secret-health-check.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
-semver-agent.yml	worktree	4efb7923d2	never flipped
-sit-debounce-trigger.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
-sit-gate-stuck-detector.yml	worktree	4efb7923d2	never flipped
-sit-gate.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
-sit-unlock.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
-staging-conflict-ldr-main-fallback.yml	derived	4efb7923d2	live minus the mechanical flip 23ce709cc
+request-major-bump.yml	worktree	6e859da36b	never flipped
+rules-alignment-agent.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
+ruleset-drift-alert.yml	derived	6e859da36b	live minus the mechanical flip 23ce709cc
+secret-health-check.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
+semver-agent.yml	worktree	6e859da36b	never flipped
+sit-debounce-trigger.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
+sit-gate-stuck-detector.yml	worktree	6e859da36b	never flipped
+sit-gate.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
+sit-unlock.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
+staging-conflict-ldr-main-fallback.yml	derived	6e859da36b	live minus the mechanical flip 23ce709cc
 staging-to-main.yml	history-logic-stale	513f16773f709034124dd09c4dca3b771bf2b099^	pre-flip parent of 513f16773 (flip bundled logic changes)
-stale-build-watcher.yml	worktree	4efb7923d2	never flipped
-supersede-stale-dep-update-prs.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
-update-repo-version.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
-version-coherence-check.yml	rehosted	4efb7923d2	live + rehost/version-coherence-check.yml.ok
-version-registry-update.yml	derived	4efb7923d2	live minus the mechanical flip 513f16773
-workspace-quickmerge-validation.yml	rehosted	4efb7923d2	live + rehost/workspace-quickmerge-validation.yml.ok
+stale-build-watcher.yml	worktree	6e859da36b	never flipped
+supersede-stale-dep-update-prs.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
+update-repo-version.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
+version-coherence-check.yml	rehosted	6e859da36b	live + rehost/version-coherence-check.yml.ok
+version-registry-update.yml	derived	6e859da36b	live minus the mechanical flip 513f16773
+workspace-quickmerge-validation.yml	rehosted	6e859da36b	live + rehost/workspace-quickmerge-validation.yml.ok

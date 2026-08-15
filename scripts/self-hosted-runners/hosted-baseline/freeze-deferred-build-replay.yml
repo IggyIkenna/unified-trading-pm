@@ -21,7 +21,14 @@ name: freeze-deferred-build-replay
 
 on:
   schedule:
-    - cron: "0 * * * *" # hourly (Phase-3 ci-cost 2026-07-17: post-freeze drain tolerates ≤1h; was */30)
+    # F4 vacuous-cron fix (2026-08-14, post_cutover_silent_assumption_sweep_2026_07_23.md): hourly
+    # was nearly always a no-op ("No active PROD_DEPLOY freeze" on every sampled run — freeze windows
+    # are <=30min and rare) while occupying the shared self-hosted glue pool ~174x/week. The
+    # stale-deferral guard below already tolerates 6h before paging, and GitHub itself only delivers
+    # ~37% of scheduled runs under load (see ldr-to-main-promote-fleet.yml's own measured note), so an
+    # "hourly" cron already ticks more like every 2-3h in practice. Widening to */2h stays comfortably
+    # inside the 6h stale threshold (2 missed ticks = 4h) while roughly halving vacuous occupancy.
+    - cron: "0 */2 * * *" # every 2h (was hourly; Phase-3 ci-cost 2026-07-17 set hourly, was */30)
   workflow_dispatch:
     inputs:
       dry_run:
@@ -45,12 +52,22 @@ jobs:
       replayed_count: ${{ steps.drain.outputs.replayed_count }}
       stale: ${{ steps.stale.outputs.stale }}
       stale_detail: ${{ steps.stale.outputs.stale_detail }}
+      recovered: ${{ steps.recovery.outputs.recovered }}
     steps:
-      - name: Checkout PM (freeze calendar)
+      - name: Checkout PM (freeze calendar + alert-recovery helper)
         uses: actions/checkout@v5
         with:
           sparse-checkout: |
             plans/ops/change-freeze-calendar.csv
+            scripts/cicd/alert_recovery.py
+
+      - name: Restore freeze-deferred-stale alert state cache
+        uses: actions/cache@v5
+        with:
+          path: .freeze-deferred-stale-alert-state.json
+          key: freeze-deferred-stale-alert-state-${{ github.run_id }}
+          restore-keys: |
+            freeze-deferred-stale-alert-state-
 
       - name: Am I in a PROD_DEPLOY freeze window now? (non-failing — SSOT logic mirrors change-freeze-check.yml)
         id: freeze
@@ -106,7 +123,7 @@ jobs:
           # On a scheduled tick we always replay; manual dispatch honours dry_run (default true).
           echo "dry_run=$DRY_RUN"
           ARTS=$(gh api --paginate "repos/${OWNER}/unified-trading-pm/actions/artifacts" \
-            --jq '.artifacts[] | select(.name | startswith("deferred-build-")) | select(.expired == false) | "\(.id)\t\(.name)"' 2>/dev/null || true)
+            --jq '.artifacts[] | select((.name | startswith("deferred-build-")) or (.name | startswith("deferred-aws-build-"))) | select(.expired == false) | "\(.id)\t\(.name)"' 2>/dev/null || true)
           if [ -z "$ARTS" ]; then
             echo "No deferred-build artifacts to replay."
             exit 0
@@ -120,8 +137,13 @@ jobs:
               echo "  WARN: download failed — skipping"; continue
             fi
             unzip -o -q "$TMP/a.zip" -d "$TMP" || { echo "  WARN: unzip failed — skipping"; continue; }
-            PAYLOAD_FILE="$(find "$TMP" -name 'payload.json' | head -1)"
-            [ -z "$PAYLOAD_FILE" ] && { echo "  WARN: no payload.json — skipping"; continue; }
+            # cloud-build-router.yml (GCP) emits payload.json; cloud-build-router-aws.yml emits
+            # payload-aws.json — same schema (repo/branch/version/commit_sha/repo_type), different
+            # filename. This search only matched the GCP name, so every deferred-aws-build-*
+            # artifact was silently un-drainable from day one (found 2026-08-08: a real deferral
+            # sat 162h, 27x past the 6h stale-guard threshold, until this exact bug was found).
+            PAYLOAD_FILE="$(find "$TMP" \( -name 'payload.json' -o -name 'payload-aws.json' \) | head -1)"
+            [ -z "$PAYLOAD_FILE" ] && { echo "  WARN: no payload.json/payload-aws.json — skipping"; continue; }
             REPO=$(jq -r '.repo' "$PAYLOAD_FILE"); BRANCH=$(jq -r '.branch' "$PAYLOAD_FILE")
             VERSION=$(jq -r '.version' "$PAYLOAD_FILE"); SHA=$(jq -r '.commit_sha' "$PAYLOAD_FILE")
             RTYPE=$(jq -r '.repo_type' "$PAYLOAD_FILE")
@@ -183,7 +205,7 @@ jobs:
             AGE_H=$(( (NOW - C) / 3600 ))
             if [ "$AGE_H" -gt "$OLDEST_H" ]; then OLDEST_H=$AGE_H; OLDEST_NAME="$name"; fi
           done <<< "$(gh api --paginate "repos/${OWNER}/unified-trading-pm/actions/artifacts" \
-            --jq '.artifacts[] | select(.name | startswith("deferred-build-")) | select(.expired == false) | "\(.created_at)\t\(.name)"' 2>/dev/null || true)"
+            --jq '.artifacts[] | select((.name | startswith("deferred-build-")) or (.name | startswith("deferred-aws-build-"))) | select(.expired == false) | "\(.created_at)\t\(.name)"' 2>/dev/null || true)"
 
           echo "oldest deferred-build artifact: ${OLDEST_NAME:-<none>} (${OLDEST_H}h old; threshold ${STALE_HOURS}h)"
           if [ -n "$OLDEST_NAME" ] && [ "$OLDEST_H" -ge "$STALE_HOURS" ]; then
@@ -193,6 +215,14 @@ jobs:
           else
             echo "stale=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Compute recovery transition (state-diffed)
+        id: recovery
+        if: always()
+        run: |
+          python3 scripts/cicd/alert_recovery.py \
+            --state-file .freeze-deferred-stale-alert-state.json \
+            --current "${{ steps.stale.outputs.stale }}" >> "$GITHUB_OUTPUT"
 
   # The ONLY actionable alert on this path (2026-07-20). change-freeze-check.yml deliberately no
   # longer pages on a routine block — a short, self-resolving window is not news. A deferral that
@@ -215,6 +245,28 @@ jobs:
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       dedup_key: "stale-freeze-deferral"
       cooldown_min: 720
+    secrets: inherit
+
+  # ── RESOLVED bookend (2026-08-08) ──────────────────────────────────────────────────────
+  # notify-stale-deferral above never announced when a stuck deferral finally drained — an
+  # operator watching #ci-failures had no way to tell "still stuck" from "silently forgotten
+  # about". State-diffed via the shared alert_recovery.py helper.
+  notify-stale-deferral-resolved:
+    name: Slack — STALE freeze deferral RESOLVED
+    needs: [replay]
+    if: always() && needs.replay.outputs.recovered == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        ":ballot_box_with_check: *STALE FREEZE DEFERRAL RESOLVED* — the previously-stuck deferred prod build has drained
+        (prior tick paged CRITICAL)"
+      severity: "INFO"
+      conclusion: "success"
+      recovery: true
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: "stale-freeze-deferral-resolved"
+      cooldown_min: 30
     secrets: inherit
 
   notify:

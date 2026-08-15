@@ -38,14 +38,18 @@ name: ldr-to-main-promote-fleet
 
 on:
   schedule:
-    # OVER-DECLARED to ~every 5 min (2026-07-18). GitHub silently DROPS most scheduled runs under
-    # load — measured ~37% delivery on this fleet — so a declared */15 was DELIVERING ~every 45 min
-    # (runs at 05:42/06:31/07:14/08:04 on 2026-07-18). That, times a 2-3 round SIT-validate cycle,
-    # is what pushed agent-orchestrator's promote to ~156 min. Declaring */5 means the surviving ~1/3
-    # of ticks still land ~every 15 min. Cheap: a sweep is ~37s on the free self-hosted glue pool, and
-    # the `ldr-to-main-promote-fleet` concurrency group (cancel-in-progress:false) serialises overlaps.
-    # every 5 min; the /5 minutes never collide with ldr-to-staging's 2/17/32/47 slots.
-    - cron: "*/5 * * * *"
+    # CORRECTED 2026-08-07 (was over-declared to */5 since 2026-07-18): that over-declaration was
+    # compensating for GitHub's own unreliable schedule delivery (measured ~37% at the time, later
+    # ~80-90%) by tripling the tick rate so ~1/3 surviving ticks still landed ~every 15 min. Since
+    # then, ldr-to-main-promote-heartbeat.timer (a deterministic systemd `*/15` on the orchestrator
+    # VM, `gh workflow run`, NOT subject to GHA schedule-drop) was added as the reliable backstop —
+    # this native schedule is now redundant on top of it, and the extra tick volume was found to be
+    # a contributing factor in a 2+ hour queued-run-starvation livelock (see
+    # plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md).
+    # Matching the heartbeat's own cadence removes that redundant load without changing the
+    # effective promotion SLA (still ≤15 min worst case, now delivered deterministically by the
+    # heartbeat rather than probabilistically by this schedule).
+    - cron: "*/15 * * * *"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -155,6 +159,13 @@ jobs:
         needs.promote-ldr-to-main.outputs.conflicted_count }} conflicted (repos: ${{
         needs.promote-ldr-to-main.outputs.ldr_main_repos }}). Conflict resolver dispatched for: ${{
         needs.promote-ldr-to-main.outputs.conflicted }}. WS-L Phase-0 canary — SSOT: ldr-to-main-promote-fleet.yml.
+      # Standing condition on a `*/15` cron — job-level key (not per-repo: the message already
+      # aggregates every currently-conflicted repo into one post, and the conflicted-repo set can
+      # shift tick-to-tick, so "any conflict exists in the fleet" is the condition worth deduping,
+      # matching promote-fleet-startup-failure-monitor.yml's single-key pattern). Without this a
+      # standing conflict re-paged every 15 min (ci_monitor_recovery_bookend_residual_gaps finding 1).
+      dedup_key: ldr-main-conflict
+      cooldown_min: 60
     secrets: inherit
 
   # Hardening (2026-08-02, ci_satellite_ao_dispatch_batch1 [CI] P1 — MTDS auto-merge-arm
@@ -177,4 +188,8 @@ jobs:
         ${{ needs.promote-ldr-to-main.outputs.arm_failed }} — PR exists + provenance-clean but needs a MANUAL `gh pr
         merge --auto` (or plain merge once green); check repo `allow_auto_merge` + branch protection. WS-L Phase-0
         canary — SSOT: ldr-to-main-promote-fleet.yml.
+      # Standing condition on a `*/15` cron — see the `notify` job's comment above for the
+      # job-level-vs-per-repo dedup rationale (ci_monitor_recovery_bookend_residual_gaps finding 1).
+      dedup_key: ldr-main-arm-failed
+      cooldown_min: 60
     secrets: inherit

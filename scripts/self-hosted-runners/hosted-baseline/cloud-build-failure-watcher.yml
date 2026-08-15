@@ -20,6 +20,21 @@ name: cloud-build-failure-watcher
 # carrier cooldown posts ONCE — collapsing the boundary-overlap double-fire to a single,
 # transition-based alert (alert_quality_audit_2026_06_18 item: route via carrier + transition).
 #
+# 2026-08-12 revert: the Phase-3 cost throttle (*/30 -> hourly) never widened
+# LOOKBACK_MINUTES (still 20) to match — a 20-min lookback on a 60-min cron leaves a
+# ~40-min BLIND SPOT every hour (builds created in roughly [tick+20, tick+60) are covered
+# by NEITHER the tick that just fired NOR the next one), silently reopening exactly the
+# gap this watcher exists to close. The throttle's cost premise was also never actually
+# true for this workflow: unified-trading-pm is a PUBLIC repo, so ubuntu-latest minutes
+# here are free/unlimited regardless of cron frequency — there was no cost to save.
+# Reverted to */30 (restoring the original 2x-overlap, zero-gap design the comments above
+# already describe) rather than raising LOOKBACK_MINUTES, since faster detection is pure
+# upside once the cost premise is gone. Before ever throttling a poller's schedule for
+# "ci-cost" again: (1) confirm the repo is actually private (gh api repos/<o>/<r> --jq
+# '.visibility') — GH Actions minutes on public repos are free on any runner regardless of
+# frequency; (2) if a real cron-interval change is still warranted, widen any
+# lookback/dedup window in the SAME change so coverage isn't silently split.
+#
 # DEFAULT-BRANCH GOTCHA: GitHub `schedule:` triggers fire ONLY from the DEFAULT branch
 # (main). This workflow is INERT on live-defi-rollout until it reaches main via the
 # standing LDR->main promote (ldr-to-main-promote.yml). Use workflow_dispatch to run
@@ -31,7 +46,7 @@ name: cloud-build-failure-watcher
 
 on:
   schedule:
-    - cron: "0 * * * *" # hourly (Phase-3 ci-cost 2026-07-17; watcher backstop — was */30, before that */15)
+    - cron: "*/30 * * * *" # reverted 2026-08-12 (see comment above) — hourly + 20min lookback left a ~40min gap
   workflow_dispatch:
 
 permissions:
@@ -52,6 +67,7 @@ jobs:
       report: ${{ steps.poll.outputs.report }}
       dedup_key: ${{ steps.poll.outputs.dedup_key }}
       recovered: ${{ steps.poll.outputs.recovered }}
+      escalation_repos: ${{ steps.poll.outputs.escalation_repos }}
     steps:
       # Secrets are not directly testable in `if:` without exposing them; map to env
       # in a probe step and emit presence flags so the auth steps can be skipped
@@ -141,15 +157,31 @@ jobs:
           # regional pool (router-triggered image builds) and global, then filter
           # locally by createTime + status — server-side create_time filters proved
           # flaky across regions, so the time window is enforced in python below.
+          #
+          # LIMIT RAISED 30 -> 150 (2026-08-10, cloud_build_failure_watcher_limit_30_coverage_gap
+          # _silently_drops_failures_under_load_2026_08_10.md): a fixed --limit=30 silently drops
+          # builds OLDER than the fetch window whenever fleet-wide Cloud Build volume exceeds ~30
+          # builds within LOOKBACK_MINUTES — the python cutoff filter below only ever sees what
+          # gcloud actually returned, so a build that fell off the --limit=30 page is
+          # indistinguishable from "did not fail." MEASURED live 2026-08-10: at normal fleet
+          # load, the oldest of the top-30 most-recent builds (both pools) was only ~55 MINUTES
+          # old — meaning a --limit=30 fetch could not reliably see even one full 20-minute
+          # lookback window, let alone the 20-minute window used here. Root-caused via a real
+          # miss: a deployment-api Cloud Build failed at 15:20:28Z, squarely inside the
+          # 15:23:06Z tick's own declared [15:03,15:23] lookback, and that tick's own gcloud
+          # fetch never returned it — confirmed via the job log ("No failed Cloud Builds ... All
+          # clear"). 150 is not a permanent fix for further fleet growth — see the
+          # OLDEST-fetched-build self-check below, which now makes a recurrence of THIS class
+          # LOUD instead of silent.
           gcloud builds list \
             --project="$GCP_PROJECT" \
             --region="$CLOUD_BUILD_REGION" \
-            --limit=30 \
+            --limit=150 \
             --format=json > /tmp/cb_builds_regional.json \
             || echo "[]" > /tmp/cb_builds_regional.json
           gcloud builds list \
             --project="$GCP_PROJECT" \
-            --limit=30 \
+            --limit=150 \
             --format=json > /tmp/cb_builds_global.json \
             || echo "[]" > /tmp/cb_builds_global.json
 
@@ -166,12 +198,21 @@ jobs:
           SHA_KEYS = ("_SHA", "COMMIT_SHA", "SHORT_SHA", "REVISION_ID")
           MAX_LINES = 8  # cap per tick; overflow collapses to "+N more"
           failed_ids: list[str] = []  # for the carrier content dedup_key (sorted set of build IDs)
+          # AO escalation fan-out (cloud_build_failure wall_type, 2026-08-11): the distinct set of
+          # REAL, repo-attributable failing builds this tick -- deliberately excludes the silent
+          # config-rejection class (no repo to check out / fix) and the manual-submit class (no
+          # trigger/commit context either) below, only ever populated in the genuine "else" branch.
+          escalation_repos: set[str] = set()
 
           lookback = timedelta(minutes=int(os.environ.get("LOOKBACK_MINUTES", "20")))
           cutoff = datetime.now(timezone.utc) - lookback
 
           builds: dict[str, dict] = {}
-          for path in ("/tmp/cb_builds_regional.json", "/tmp/cb_builds_global.json"):
+          per_pool_oldest: dict[str, datetime] = {}  # pool label -> oldest createTime FETCHED
+          for label, path in (
+              ("regional", "/tmp/cb_builds_regional.json"),
+              ("global", "/tmp/cb_builds_global.json"),
+          ):
               try:
                   with open(path, encoding="utf-8") as fh:
                       payload = json.load(fh)
@@ -182,6 +223,24 @@ jobs:
               for build in payload:
                   if isinstance(build, dict) and build.get("id"):
                       builds.setdefault(str(build["id"]), build)
+                  ts_raw = str((build or {}).get("createTime", ""))
+                  try:
+                      ts = datetime.strptime(ts_raw[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
+                  except ValueError:
+                      continue
+                  if label not in per_pool_oldest or ts < per_pool_oldest[label]:
+                      per_pool_oldest[label] = ts
+
+          # COVERAGE-GAP self-check (2026-08-10, cloud_build_failure_watcher_limit_30_coverage_gap
+          # _silently_drops_failures_under_load_2026_08_10.md): if a pool's OLDEST fetched build is
+          # still NEWER than the declared lookback cutoff, the --limit fetch may not have reached
+          # far enough back to see everything in-window — a real failure just outside the fetched
+          # page would be silently invisible to the filter below, indistinguishable from
+          # "genuinely no failures." Surface this LOUDLY (as its own alertable finding) rather than
+          # let a future volume spike quietly repeat the exact miss this fix was written for.
+          coverage_gap_pools = sorted(
+              label for label, oldest in per_pool_oldest.items() if oldest > cutoff
+          )
 
           failed: list[tuple[bool, str]] = []  # (is_silent_rejection, message_line)
           for build in builds.values():
@@ -258,6 +317,8 @@ jobs:
                           f"build {build_id} — {log_url}",
                       )
                   )
+                  if repo:
+                      escalation_repos.add(repo)
 
           # Silent rejections first — they are the invisible class.
           failed.sort(key=lambda item: (not item[0]))
@@ -267,21 +328,39 @@ jobs:
           if len(failed) > MAX_LINES:
               lines.append(f"... +{len(failed) - MAX_LINES} more failed build(s) this tick")
 
+          if coverage_gap_pools:
+              gap_desc = ", ".join(
+                  f"{label} (oldest fetched build is only {int((datetime.now(timezone.utc) - per_pool_oldest[label]).total_seconds() // 60)}m old)"
+                  for label in coverage_gap_pools
+              )
+              lines.append(
+                  f":warning: COVERAGE GAP: the {gap_desc} fetch did not reach back the full "
+                  f"{int(lookback.total_seconds() // 60)}m lookback — fleet build volume may have "
+                  "pushed an older failing build off the page; treat this tick's result as "
+                  "INCOMPLETE, not a confirmed all-clear. See "
+                  "cloud_build_failure_watcher_limit_30_coverage_gap_silently_drops_failures_under_load_2026_08_10.md"
+              )
+
           report = ""
           dedup_key = ""
-          if failed:
+          alertable = bool(failed) or bool(coverage_gap_pools)
+          if alertable:
+              count_desc = f"{len(failed)} failed" if failed else "0 failed (but see coverage gap)"
               header = (
-                  f":building_construction: *cloud-build-failure-watcher: {len(failed)} failed "
+                  f":building_construction: *cloud-build-failure-watcher: {count_desc} "
                   f"Cloud Build(s)* in the last {int(lookback.total_seconds() // 60)}m "
                   f"({silent_count} silent config-rejection(s)) — project "
                   f"{os.environ.get('GCP_PROJECT', 'central-element-323112')}"
               )
               report = header + "\n" + "\n".join(lines)
               print(report)
-              # CONTENT dedup_key: the sorted SET of failing build IDs. The carrier suppresses a
-              # repeat of the SAME failure-set within its cooldown → the boundary-overlap re-detect
-              # posts once (transition-based), while a NEW failing build (different set) re-arms it.
-              digest = hashlib.sha256("\n".join(sorted(failed_ids)).encode()).hexdigest()[:16]
+              # CONTENT dedup_key: the sorted SET of failing build IDs (+ the coverage-gap pool
+              # names, so a gap alone still gets its own stable, re-arming dedup identity distinct
+              # from any concurrent real-failure dedup_key). The carrier suppresses a repeat of the
+              # SAME set within its cooldown -> the boundary-overlap re-detect posts once
+              # (transition-based), while a NEW failing build or a NEW gap re-arms it.
+              digest_input = "\n".join(sorted(failed_ids)) + "\n" + "\n".join(coverage_gap_pools)
+              digest = hashlib.sha256(digest_input.encode()).hexdigest()[:16]
               dedup_key = f"cloud-build-fail:{digest}"
           else:
               print(
@@ -295,14 +374,18 @@ jobs:
           # failure set) are NOT recoveries — the latter is still red, just a new dedup_key, and
           # the existing `notify` job (gated on alert==true) already re-pages it correctly.
           prev_alert = os.environ.get("PREV_ALERT", "false") == "true"
-          recovered = prev_alert and not failed
+          recovered = prev_alert and not alertable
 
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
-              fh.write(f"alert={'true' if failed else 'false'}\n")
+              fh.write(f"alert={'true' if alertable else 'false'}\n")
               fh.write(f"count={len(failed)}\n")
               fh.write(f"silent={silent_count}\n")
               fh.write(f"dedup_key={dedup_key}\n")
               fh.write(f"recovered={'true' if recovered else 'false'}\n")
+              # cloud_build_failure escalation fan-out (2026-08-11): one matrix job per
+              # distinct real-failure repo this tick, consumed by the "escalate" job below
+              # (mirrors ldr-ci-monitor.yml's red_transitions_json -> escalate matrix pattern).
+              fh.write(f"escalation_repos={json.dumps(sorted(escalation_repos))}\n")
               # Multiline report via a randomized heredoc delimiter (GitHub-recommended).
               fh.write("report<<__CB_RPT__\n")
               fh.write(report + "\n")
@@ -316,7 +399,7 @@ jobs:
 
           bucket = os.environ.get("CICD_EVENTS_BUCKET", "")
           if bucket:
-              state = json.dumps({"alert": bool(failed), "silent_count": silent_count})
+              state = json.dumps({"alert": alertable, "silent_count": silent_count})
               proc = subprocess.run(
                   ["gsutil", "cp", "-", f"gs://{bucket}/cicd/watchers/cloud-build-failure-watcher/state.json"],
                   input=state.encode(),
@@ -386,4 +469,42 @@ jobs:
       # Explicit recovery flag — the carrier's routine-green suppressor only posts an INFO/success
       # message when `recovery: true` (same belt-and-suspenders as ci-status-update.yml's notify job).
       recovery: true
+    secrets: inherit
+
+  # ── ESCALATE REAL FAILURES TO THE ORCHESTRATOR (2026-08-11, cloud_build_failure wall_type) ──
+  # Closes Structural Finding A (ci_reconcile_overnight_batch_2026_08_11.md): GH Actions
+  # quality-gates-v2 can stay green while a repo's Cloud Build image pipeline is completely
+  # broken (a separate pipeline) -- before this, the ONLY path from a CRITICAL Cloud Build alert
+  # to an actual fix was a human reading this workflow's Slack post and manually running
+  # `gcloud builds log`/`gcloud builds list` (confirmed live: both real fixes in that session --
+  # features-service's stale uv.lock, unified-api-contracts' qg-governor livelock -- sat
+  # FAILING/TIMEOUT for 9+ hours with zero AO-dispatched attempt). One matrix job per DISTINCT
+  # repo among this tick's REAL (non-silent-config-rejection, non-manual-submit -- see the `poll`
+  # step's `escalation_repos` set, only populated in the genuine per-repo failure branch) failing
+  # builds -- mirrors ldr-ci-monitor.yml's existing red_transitions_json -> escalate matrix
+  # pattern exactly. Not PR-scoped (pr_number: 0) -- the worker fixes it directly on
+  # live-defi-rollout. escalate-to-orchestrator.yml's OWN notify job already pages on both
+  # outcomes (dispatched ✅ / hard-failure ⚠️, deduped), so this job has no notify step of its own.
+  escalate:
+    needs: watch
+    if: needs.watch.outputs.escalation_repos != '' && needs.watch.outputs.escalation_repos != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        repo: ${{ fromJson(needs.watch.outputs.escalation_repos) }}
+    uses: ./.github/workflows/escalate-to-orchestrator.yml
+    with:
+      repo: ${{ matrix.repo }}
+      pr_number: 0
+      wall_type: cloud_build_failure
+      context:
+        'cloud-build-failure-watcher detected a Cloud Build FAILURE/TIMEOUT/INTERNAL_ERROR/EXPIRED for ${{ matrix.repo
+        }} in the last ~20m. GH Actions quality-gates-v2 can be green while this repo''s Cloud Build image pipeline is
+        broken -- they are separate pipelines. Diagnose via `gcloud builds list --project=central-element-323112
+        --filter=''substitutions.REPO_NAME="${{ matrix.repo }}" OR substitutions._REPO_NAME="${{ matrix.repo }}"''
+        --limit=5` (check both --region=asia-northeast1 and the global pool) then `gcloud builds log <build-id>` for the
+        failing step''s actual error. Fix on live-defi-rollout (cloudbuild.yaml / a dependency lock file / Dockerfile,
+        per what the log shows), verify quality-gates.sh --no-fix green, ship via quickmerge.'
+      authoring_slot: "cloud-build-failure-watcher"
+      model: sonnet
     secrets: inherit

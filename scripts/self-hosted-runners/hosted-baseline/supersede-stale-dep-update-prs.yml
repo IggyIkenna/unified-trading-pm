@@ -42,7 +42,13 @@ name: supersede-stale-dep-update-prs
 
 on:
   schedule:
-    - cron: "23 */2 * * *" # every 2h, offset; supersession is low-urgency cleanup
+    # F4 vacuous-cron fix (2026-08-14, post_cutover_silent_assumption_sweep_2026_07_23.md): sampled
+    # runs found "Superseded: 0 | obsolete-closed: 0" 6/6 times — every 2h was occupying the shared
+    # self-hosted glue pool ~91x/week for a role this file's own header already calls "low-urgency
+    # cleanup". Widened to every 6h: promotion_lag_monitor.py separately alerts on any dep-update PR
+    # parked CONFLICTING past its own SLA, so this bot's job (close/escalate) tolerates a few extra
+    # hours of latency without leaving a conflict silently unwatched.
+    - cron: "23 */6 * * *" # every 6h, offset; supersession is low-urgency cleanup (was */2h)
   workflow_dispatch:
     inputs:
       dry_run:

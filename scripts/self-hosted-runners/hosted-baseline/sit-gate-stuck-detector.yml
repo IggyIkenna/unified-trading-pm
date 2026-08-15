@@ -17,7 +17,7 @@ name: sit-gate-stuck-detector
 # SSOT: codex/04-architecture/ci-alerting.md (notify-slack.yml dedup contract).
 # Source: plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md
 #         ([DEVOPS] P3), tracked to completion via
-#         plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md ([INFRA] P3).
+#         plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md ([INFRA] P3).
 
 on:
   schedule:
@@ -44,11 +44,19 @@ jobs:
       stuck: ${{ steps.scan.outputs.stuck }}
       report: ${{ steps.scan.outputs.report }}
       max_streak: ${{ steps.scan.outputs.max_streak }}
+      recovered: ${{ steps.recovery.outputs.recovered }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
+      - name: Restore sit-gate-stuck alert state cache
+        uses: actions/cache@v5
+        with:
+          path: .sit-gate-stuck-alert-state.json
+          key: sit-gate-stuck-alert-state-${{ github.run_id }}
+          restore-keys: |
+            sit-gate-stuck-alert-state-
       - name: Scan ldr-to-main-promote-fleet.yml for a SIT-gate-block streak
         id: scan
         env:
@@ -67,6 +75,40 @@ jobs:
             echo "$REPORT"
             echo "__EOR__"
           } >> "$GITHUB_OUTPUT"
+
+      - name: Compute recovery transition (state-diffed)
+        id: recovery
+        run: |
+          python3 scripts/cicd/alert_recovery.py \
+            --state-file .sit-gate-stuck-alert-state.json \
+            --current "${{ steps.scan.outputs.stuck }}" >> "$GITHUB_OUTPUT"
+
+  # ── Escalate to an agent (2026-08-12) ─────────────────────────────────────────────────
+  # Previously Slack-only — see reconcile-release-tags.yml's escalate job for the audit +
+  # rationale (same pattern). SSOT: codex/04-architecture/agent-orchestrator-ci-escalation-wall-types.md.
+  escalate:
+    needs: check
+    if: needs.check.outputs.stuck == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch sit_gate_stuck escalation
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          REPORT: ${{ needs.check.outputs.report }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping escalation dispatch" && exit 0
+          GH_TOKEN="${GH_PAT}" gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=${{ github.event.repository.name }}" \
+            -f "client_payload[pr_number]=0" \
+            -f 'client_payload[wall_type]=sit_gate_stuck' \
+            -f "client_payload[context]=sit-gate-stuck-detector found a SIT-gate-block streak: ${REPORT}. Run: ${RUN_URL}. Diagnose why ldr-to-main-promote-fleet.yml is stuck on sit-gate/fleet-green for the named repo(s) — check whether this is the known dedup-suppression treadmill (sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md) or a genuinely stuck SIT run." \
+            -f 'client_payload[model]=sonnet' \
+            >/dev/null 2>&1 && echo "escalated sit_gate_stuck to orchestrator" \
+            || echo "::warning::orchestrator escalation dispatch failed (non-fatal — Slack alert still fires)"
 
   notify:
     needs: check
@@ -88,4 +130,26 @@ jobs:
       # dedupes for the full hour.
       dedup_key: sit-gate-stuck-${{ needs.check.outputs.max_streak }}
       cooldown_min: 60
+    secrets: inherit
+
+  # ── RESOLVED bookend (2026-08-08) ──────────────────────────────────────────────────────
+  # Previously no all-clear path — a per-streak-value dedup_key means the alert also never
+  # re-posts on its own once the streak resets to 0, so silence was the only "it cleared"
+  # signal. State-diffed via the shared alert_recovery.py helper.
+  notify-resolved:
+    name: Slack — sit-gate-stuck-detector RESOLVED
+    needs: check
+    if: needs.check.outputs.recovered == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        ":ballot_box_with_check: *sit-gate-stuck-detector: RESOLVED* — the SIT-gate-block streak has cleared (prior tick
+        paged WARNING)"
+      severity: INFO
+      conclusion: success
+      recovery: true
+      workflow_name: sit-gate-stuck-detector
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: sit-gate-stuck-resolved
+      cooldown_min: 30
     secrets: inherit

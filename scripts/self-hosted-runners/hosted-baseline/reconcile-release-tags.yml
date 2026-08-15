@@ -128,6 +128,37 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           exit $RC
 
+  # ── Escalate to an agent (2026-08-12) ─────────────────────────────────────────────────
+  # Previously Slack-only — confirmed via a fleet-wide audit of every CRITICAL/WARNING-
+  # posting workflow cross-referenced against an actual escalate-to-orchestrator dispatch.
+  # Fires alongside stall-notify (not gated on it) so a dispatch-failure never blocks the
+  # Slack post; escalation.py's own server-side cooldown (dedup_key) absorbs repeat fires
+  # on every */30 tick the stall persists, same as every other wall type. SSOT:
+  # codex/04-architecture/agent-orchestrator-ci-escalation-wall-types.md.
+  escalate:
+    needs: reconcile
+    if: needs.reconcile.outputs.stalled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch release_tag_stall escalation
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          STALL_REPORT: ${{ needs.reconcile.outputs.stall_report }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping escalation dispatch (Slack alert already fires separately)" && exit 0
+          GH_TOKEN="${GH_PAT}" gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=${{ github.event.repository.name }}" \
+            -f "client_payload[pr_number]=0" \
+            -f 'client_payload[wall_type]=release_tag_stall' \
+            -f "client_payload[context]=Release-tag reconciler found stalled repo(s): ${STALL_REPORT}. Run: ${RUN_URL}. For each: verify the semver-agent trigger actually resolves to real code (check source_dir against the repo's real package layout — a stall can mean the detector's own config is pointed at nothing, not just that no release happened), then either the tag genuinely needs a manual catch-up or the underlying minter is broken." \
+            -f 'client_payload[model]=sonnet' \
+            >/dev/null 2>&1 && echo "escalated release_tag_stall to orchestrator" \
+            || echo "::warning::orchestrator escalation dispatch failed (non-fatal — Slack alert still fires)"
+
   stall-notify:
     needs: reconcile
     if: needs.reconcile.outputs.stalled == 'true'

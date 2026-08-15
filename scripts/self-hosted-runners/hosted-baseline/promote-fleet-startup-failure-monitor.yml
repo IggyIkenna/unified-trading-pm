@@ -13,19 +13,35 @@ name: promote-fleet-startup-failure-monitor
 # `startup_failure` — a single failure is noise, N in a row with nothing else in between is a
 # standing outage, not latency.
 #
+# Hardened 2026-08-07 (root incident #2 —
+# plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md): the
+# check above cannot catch a run stuck in `status: queued` forever — it never reaches `completed`,
+# so it has no conclusion to stream into the streak check. That exact shape (a `schedule`-triggered
+# run firing against a stale workflow-file version on `main` that requested a dead runner pool)
+# permanently occupied `ldr-to-main-promote-fleet.yml`'s single `cancel-in-progress: false`
+# concurrency slot for 2+ hours, silently blocking every later trigger, with this monitor reporting
+# `success` throughout. Now also pages when either workflow has a run sitting `status: queued`
+# longer than `queued_threshold_min` — a structurally separate signal, checked alongside (not
+# instead of) the streak check above, sharing this same monitor's alert/dedup surface.
+#
 # SSOT: codex/04-architecture/ci-alerting.md (notify-slack.yml dedup contract).
 # Source: plans/archive/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md
-#         ([SCRIPT] P2, migrated into ci_satellite_ao_dispatch_batch1_2026_07_26.md)
+#         ([SCRIPT] P2, migrated into plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md);
+#         plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md
+#         (zombie-queued hardening, [DEVOPS] P2)
 
 on:
   schedule:
-    - cron: "*/15 * * * *" # every 15 min — cheap (2 workflow-run lookups) and well inside the ~10h
-      # window the source incident ran undetected
+    - cron: "*/15 * * * *" # every 15 min — cheap (4 workflow-run lookups) and well inside both the
+      # ~10h window root-incident-#1 ran undetected and the 30-min default queued-threshold below
   workflow_dispatch:
     inputs:
       threshold:
         description: "Consecutive startup_failure runs (on either target workflow) before paging"
         default: "3"
+      queued_threshold_min:
+        description: "Minutes a run may sit status=queued (permanently occupying the concurrency slot) before paging"
+        default: "30"
 
 permissions:
   contents: read
@@ -42,20 +58,30 @@ jobs:
     outputs:
       stuck: ${{ steps.scan.outputs.stuck }}
       report: ${{ steps.scan.outputs.report }}
+      recovered: ${{ steps.recovery.outputs.recovered }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
-      - name: Scan promote-fleet workflows for a startup_failure streak
+      - name: Restore promote-fleet-startup-failure alert state cache
+        uses: actions/cache@v5
+        with:
+          path: .promote-fleet-startup-failure-alert-state.json
+          key: promote-fleet-startup-failure-alert-state-${{ github.run_id }}
+          restore-keys: |
+            promote-fleet-startup-failure-alert-state-
+      - name: Scan promote-fleet workflows for a startup_failure streak or a zombie-queued run
         id: scan
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           THRESH: ${{ github.event.inputs.threshold || '3' }}
+          QUEUED_THRESH: ${{ github.event.inputs.queued_threshold_min || '30' }}
         run: |
           set +e
           REPORT=$(python3 scripts/cicd/promote_fleet_startup_failure_monitor.py \
-            --repo "${{ github.repository }}" --threshold "$THRESH" --slack)
+            --repo "${{ github.repository }}" --threshold "$THRESH" \
+            --queued-threshold-min "$QUEUED_THRESH" --slack)
           RC=$?
           echo "$REPORT"
           [ "$RC" -eq 1 ] && STUCK=true || STUCK=false
@@ -65,6 +91,13 @@ jobs:
             echo "$REPORT"
             echo "__EOR__"
           } >> "$GITHUB_OUTPUT"
+
+      - name: Compute recovery transition (state-diffed)
+        id: recovery
+        run: |
+          python3 scripts/cicd/alert_recovery.py \
+            --state-file .promote-fleet-startup-failure-alert-state.json \
+            --current "${{ steps.scan.outputs.stuck }}" >> "$GITHUB_OUTPUT"
 
   notify:
     needs: check
@@ -81,4 +114,26 @@ jobs:
       # a cooldown.
       dedup_key: promote-fleet-startup-failure
       cooldown_min: 60
+    secrets: inherit
+
+  # ── RESOLVED bookend (2026-08-08) ──────────────────────────────────────────────────────
+  # Previously no all-clear path — an operator seeing the CRITICAL page had no way to tell,
+  # short of manually checking, whether the startup_failure streak / zombie-queued run had
+  # since cleared. State-diffed via the shared alert_recovery.py helper.
+  notify-recovered:
+    name: Slack — promote-fleet-startup-failure RESOLVED
+    needs: check
+    if: needs.check.outputs.recovered == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        ":ballot_box_with_check: *promote-fleet-startup-failure-monitor: RESOLVED* — no more startup_failure streak or
+        zombie-queued run (prior tick paged CRITICAL)"
+      severity: INFO
+      conclusion: success
+      recovery: true
+      workflow_name: promote-fleet-startup-failure-monitor
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: promote-fleet-startup-failure-resolved
+      cooldown_min: 30
     secrets: inherit

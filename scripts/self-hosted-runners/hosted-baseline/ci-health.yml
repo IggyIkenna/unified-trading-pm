@@ -33,7 +33,14 @@ on:
     # before a routine sweep caught it). Handled by the separate glue-runner-alert job below, NOT
     # the watch/notify pair (those scan GHA-visible CI state; a dead runner can't self-report
     # there — this event carries the VM's OWN systemctl observation instead).
-    types: [ci-failure-alert, glue-runner-health]
+    # ci-vm-resource-alert: same pattern, dispatched by a systemd timer on the DEDICATED
+    # CI/self-hosted-runner VM (ci-escalation-runner-vm-1, scripts/self-hosted-runners/
+    # ci-vm-resource-watchdog.sh) every 60 min — reads the box's own resource-history-sampler
+    # JSONL log for the last hour and pages ONLY on a genuine box-down risk signal (a real
+    # kernel OOM-kill, or sustained near-saturation swap/load+iowait), never on a tolerated
+    # temporary burst. See glue-runner-health's own comment for why this has to be a VM-side
+    # push rather than anything GHA-visible-state-based can observe.
+    types: [ci-failure-alert, glue-runner-health, ci-vm-resource-alert]
   workflow_dispatch:
 
 permissions:
@@ -150,6 +157,24 @@ jobs:
       cooldown_min: ${{ github.event.client_payload.cooldown_min }}
       recovery: ${{ github.event.client_payload.recovery == true }}
       workflow_name: glue-runner-crash-loop-watchdog
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+
+  # Same relay pattern as glue-runner-alert above, for the CI VM's own resource-strain
+  # watchdog (scripts/self-hosted-runners/ci-vm-resource-watchdog.sh) — kept as a separate job
+  # rather than folded into glue-runner-alert to avoid overloading that job's fixed
+  # `workflow_name` label with a semantically different condition class.
+  ci-vm-resource-alert:
+    if: github.event_name == 'repository_dispatch' && github.event.action == 'ci-vm-resource-alert'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ github.event.client_payload.message }}
+      severity: ${{ github.event.client_payload.severity }}
+      dedup_key: ${{ github.event.client_payload.dedup_key }}
+      cooldown_min: ${{ github.event.client_payload.cooldown_min }}
+      recovery: ${{ github.event.client_payload.recovery == true }}
+      workflow_name: ci-vm-resource-watchdog
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
       GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
