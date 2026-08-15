@@ -26,7 +26,7 @@ related:
     /plans/archive/2026_07/deployment_full_estate_cost_provenance_2026_07_09.md,
   ]
 created: "2026-07-09"
-last_updated: "2026-07-10"
+last_updated: "2026-08-07" # (was: 2026-07-10 -- plan-reconcile 2026-08-15: bumped to match latest Progress Log entry, context-scout 2026-08-07)
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only
