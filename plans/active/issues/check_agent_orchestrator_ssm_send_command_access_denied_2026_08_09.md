@@ -192,3 +192,12 @@ on shared AWS infra, not something to self-grant.
   self-service role from), and `iam:ListAttachedUserPolicies`/`iam:ListUserPolicies` on `ikenna-worker` itself are still
   denied. §0c's glue-runner watchdog sweep is reported as an explicit coverage gap in this run rather than a fresh
   finding — this issue doc already covers the root cause and remains the correct escalation. Eleven days unresolved.
+- **2026-08-15 (slot-6, ci_reconciler)**: TWELFTH independent confirmation, from `/ci-reconcile`'s §0c — checking the
+  same live `glue-runner-crash-loop-watchdog` CRITICAL (`github-glue-runner-unified-api-contracts@glue-1.service` on
+  `i-042a6332509482556`, 26.3h active). Identical `AccessDeniedException` on `ssm:SendCommand`, confirmed against both
+  the glue-runner host and the default orchestrator VM (`i-0c9b283b31d6b5ca7`, via `ssm-run.sh`); `sts assume-role` to
+  `uts-orchestrator-epic-role` denied; no instance-profile present (IMDS query for
+  `/latest/meta-data/iam/security-credentials/` returned empty — confirms this session runs on static
+  `~/.aws/credentials` for `ikenna-worker`, not an EC2 instance profile). AO's own `:8765` HTTP surface (`/api/healthz`)
+  remained directly reachable, so §5's dispatch-freshness half completed independent of this gap. §0c's watchdog sweep
+  reported as a coverage gap in this run's report rather than re-diagnosed. Twelve days unresolved.
