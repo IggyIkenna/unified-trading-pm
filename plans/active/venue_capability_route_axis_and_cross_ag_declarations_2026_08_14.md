@@ -186,7 +186,13 @@ that is expected and correct, not something to work around.
       before touching any file, and retracted). **BETFAIR_EX/BETFAIR_SB → BETFAIR_EX_UK/BETFAIR_SB_UK**: renamed,
       alias-map NOT needed (only 3 consumers workspace-wide, no manifest values ever used the bare form since this was
       purely a registry-key drift, not a writer-key drift) — unified-api-contracts + e2e-testing, see Progress Log.
-      **Registry C staleness**: not a rename, fixed by re-running its own existing refresh script — see Progress Log.
+      **Registry C staleness**: attempted via its own existing refresh script
+      (`refresh_sports_bookmaker_league_coverage_2026_06_21.py`, dry-run, read-only) — the script stalled reading the
+      live sports `_index` parquet (process alive, zero CPU progress over an extended window; killed rather than left
+      dangling). **NOT completed this session** — re-run standalone
+      (`GCP_PROJECT_ID=central-element-323112 PROJECT_ID=central-element-323112 DEPLOYMENT_ENV_SHORT=prd python scripts/refresh_sports_bookmaker_league_coverage_2026_06_21.py --write`,
+      from market-tick-data-service) and diagnose if it stalls again — low risk either way (read-only against GCS,
+      `--write` only touches a local JSON file, commit via UAC quickmerge after). See Deferred-work table.
 - [x] [OPERATOR] P1. If the chosen canonicalisation implies re-keying historical sports manifest rows, gate that on the
       delete-safety protocol — cite `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` and get explicit
       approval before any manifest mutation. An alias-map-only resolution needs no gate; state which path was taken. ✅
@@ -532,3 +538,14 @@ re-running its own existing refresh script (see below), not a registry rename.
    match every other registry's region-suffixed convention. **Region is an ASSUMPTION (UK), not a measurement** — no
    source records which region the recorded `accuracy`/`is_exchange` numbers were actually measured against; flagged
    inline in the code, not silently resolved.
+
+## Deferred work after 2026-08-14
+
+| Item                                                                                                              | State                                                             | Blocked on                                                                            |
+| ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Refresh stale `BOOKMAKER_LEAGUE_COVERAGE` JSON (`refresh_sports_bookmaker_league_coverage_2026_06_21.py --write`) | Not done — script stalled mid-read (killed), not a design blocker | Nobody — re-run standalone from market-tick-data-service, diagnose if it stalls again |
+| P2 — expand the universe (Unity child books, priority-14 arb books, drift-guard test)                             | Not done                                                          | Nobody — explicitly out of scope for this pass per the original task instruction      |
+
+All P0 + P1 (schema, migrations, 7 defi + 2 perp_funding + 31 sports declarations, adapter-backed predicate, bookmaker
+spelling — including the same-session self-correction on LADBROKES/BET888SPORT) are shipped and verified. Every commit
+cited above is `ahead=0` against origin at time of writing.
