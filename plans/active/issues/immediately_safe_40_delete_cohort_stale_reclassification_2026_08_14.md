@@ -122,10 +122,15 @@ has actually verified).
       `--operation aggregate` CLI replacement and found none (the closest candidate,
       `instruments-service/scripts/build_instrument_catalogue.py`, is unconfirmed as the actual completed migration);
       its own `Delete-when` condition remains unmet. See follow-up todo below.
-- [ ] [AUDIT] P3. Confirm whether `instruments-service/scripts/build_instrument_catalogue.py` (or another live
+- [x] ✅ [AUDIT] P3. Confirm whether `instruments-service/scripts/build_instrument_catalogue.py` (or another live
       `--operation`) is the actual completed replacement for `deployment-service/scripts/aggregate_instruments.py`; if
       confirmed, `git rm aggregate_instruments.py` citing the replacement's evidence, else leave it and note why in this
-      doc. Repo: instruments-service + deployment-service.
+      doc. Repo: instruments-service + deployment-service. — **Not `build_instrument_catalogue.py`** (that script
+      derives an unrelated lifecycle-window catalogue from instruments-service's own daily `by_date/` snapshots). The
+      actual completed replacement is `deployment-service/scripts/download_instruments.py`'s `InstrumentAggregator`
+      class (`Lifecycle: permanent`, invoked via `--aggregate`/`--aggregate-only`, same dedup-by-instrument_key +
+      GCS-upload logic) — confirmed no live caller of `aggregate_instruments.py` remained (grep: only self-refs + plan
+      docs). `git rm`'d. `deployment-service@b47a372e`.
 - [ ] [CODE] P3. Re-run `codemods/migrate_page_headers.py` against the ~20 still-unmigrated `app/**/page.tsx` files (or
       confirm they're intentionally excluded, e.g. non-standard header shape) before re-evaluating its `Delete-when`
       gate. Repo: unified-trading-system-ui.
@@ -144,3 +149,6 @@ has actually verified).
 - **2026-08-15 (slot 30)**: Ran the deferred GCS orphan-sweep todo. `deployment-service@a981eb4cd5` deletes the 4
   bucket-migration scripts (orphan-sweep=0 confirmed both clouds); `aggregate_instruments.py` stays — no live
   replacement CLI operation confirmed in instruments-service. New follow-up todo added to resolve that gap.
+- **2026-08-15 (slot 28)**: Flipped the `aggregate_instruments.py` follow-up todo — slot-29 had already resolved it in
+  code (`deployment-service@b47a372e`) but the checkbox wasn't flipped. Confirmed the replacement is
+  `download_instruments.py`'s `InstrumentAggregator`, not `build_instrument_catalogue.py`.
