@@ -100,33 +100,54 @@ is deliberately thin; reported honestly rather than padded.
       `vix_features`'s required-input is genuinely fed.
 
       **BLOCKED 2026-08-09 (slot-28, backend_engineer) — dispatched, found genuine POLICY CONFLICT, not an
-          implementation gap.** The aggregation mechanism itself already ships + is proven live for CME/NASDAQ/NYSE
-          (`mdps-backfill-tradfi-20260803-104812`: 99,711 candles, 788 captured rows) — this todo's own "genuinely new
-          build" framing is stale. The real blocker: CBOE VX-futures raw `ohlcv_1m`/`ohlcv_1s` is captured ONLY at
-          `instrument_type=futures_chain` grain (confirmed live on GCS, 2,942 captured rows), which
-          `market-data-processing-service@68f95f6`'s `_INSTRUMENT_TYPES_EXCLUDED_FROM_COARSE_TIMEFRAMES` (shipped
-          2026-08-06, one day before this todo's ruling) deliberately excludes from `ohlcv_15m`/`ohlcv_24h` — justified at
-          the time as "no downstream consumer expects combo-grain 15m/24h candles," a premise this todo's own 2026-08-07
-          ruling now contradicts for CBOE/VIX specifically. Filed
-          `issues/mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md` with 2 candidate fix paths +
-          an `[OPERATOR]` decision todo rather than unilaterally reopen the CME-combo crash that exclusion was built to
-          close.
+              implementation gap.** The aggregation mechanism itself already ships + is proven live for CME/NASDAQ/NYSE
+              (`mdps-backfill-tradfi-20260803-104812`: 99,711 candles, 788 captured rows) — this todo's own "genuinely new
+              build" framing is stale. The real blocker: CBOE VX-futures raw `ohlcv_1m`/`ohlcv_1s` is captured ONLY at
+              `instrument_type=futures_chain` grain (confirmed live on GCS, 2,942 captured rows), which
+              `market-data-processing-service@68f95f6`'s `_INSTRUMENT_TYPES_EXCLUDED_FROM_COARSE_TIMEFRAMES` (shipped
+              2026-08-06, one day before this todo's ruling) deliberately excludes from `ohlcv_15m`/`ohlcv_24h` — justified at
+              the time as "no downstream consumer expects combo-grain 15m/24h candles," a premise this todo's own 2026-08-07
+              ruling now contradicts for CBOE/VIX specifically. Filed
+              `issues/mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md` with 2 candidate fix paths +
+              an `[OPERATOR]` decision todo rather than unilaterally reopen the CME-combo crash that exclusion was built to
+              close.
 
-      **STALE ANNOTATION UPDATE 2026-08-14 (citation-only, no new work) — this todo stays `- [ ]` open, now pointing at
-          real progress instead of the 2026-08-09 blocked state above.** The sibling issue doc has since resolved the
-          operator decision (RULED 2026-08-13, option (a)), shipped the carve-out
-          (`market-data-processing-service@3c86d4ef1` + `unified-api-contracts@8688745b`), and live-verified it
-          (slot-20, `mdps-backfill-tradfi-20260814-013207`, independently corroborated same-day via direct manifest read
-          of `_index/per_vm/mdps-backfill-tradfi-20260814-013207.parquet`): a real
-          `venue=CBOE/instrument_type=FUTURE/data_type=ohlcv_15m/capture_status=captured` row lands (20 rows across the
-          5-date run) via the existing `TradfiOhlcv15mAdapter` aggregator (not a new build — this todo's original
-          "genuinely new build" framing was already stale per the 2026-08-09 entry above), and CME's combo/futures_chain
-          exclusion is confirmed intact (zero CME rows, zero `COMBO` log mentions). This todo's own done-when needs BOTH
-          `ohlcv_15m` AND `ohlcv_24h` to land plus `vix_features` genuinely fed — `ohlcv_24h` for CBOE FUTURE is NOT yet
-          confirmed (0 manifest rows either way, a distinct scanner file-candidate-listing gap), tracked as its own new
-          `[CODE] P2` todo in the issue doc. Stays `- [ ]` until that lands and `vix_features` is confirmed fed. Full
-          detail + evidence: `issues/mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md`
-          Progress Log, 2026-08-14 entries.
+          **STALE ANNOTATION UPDATE 2026-08-14 (citation-only, no new work) — this todo stays `- [ ]` open, now pointing at
+              real progress instead of the 2026-08-09 blocked state above.** The sibling issue doc has since resolved the
+              operator decision (RULED 2026-08-13, option (a)), shipped the carve-out
+              (`market-data-processing-service@3c86d4ef1` + `unified-api-contracts@8688745b`), and live-verified it
+              (slot-20, `mdps-backfill-tradfi-20260814-013207`, independently corroborated same-day via direct manifest read
+              of `_index/per_vm/mdps-backfill-tradfi-20260814-013207.parquet`): a real
+              `venue=CBOE/instrument_type=FUTURE/data_type=ohlcv_15m/capture_status=captured` row lands (20 rows across the
+              5-date run) via the existing `TradfiOhlcv15mAdapter` aggregator (not a new build — this todo's original
+              "genuinely new build" framing was already stale per the 2026-08-09 entry above), and CME's combo/futures_chain
+              exclusion is confirmed intact (zero CME rows, zero `COMBO` log mentions). This todo's own done-when needs BOTH
+              `ohlcv_15m` AND `ohlcv_24h` to land plus `vix_features` genuinely fed — `ohlcv_24h` for CBOE FUTURE is NOT yet
+              confirmed (0 manifest rows either way, a distinct scanner file-candidate-listing gap), tracked as its own new
+              `[CODE] P2` todo in the issue doc. Stays `- [ ]` until that lands and `vix_features` is confirmed fed. Full
+              detail + evidence: `issues/mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md`
+              Progress Log, 2026-08-14 entries.
+
+          **CITATION UPDATE 2026-08-15 (citation-only, no new work) — `ohlcv_24h` now ALSO confirmed; the ONE remaining
+              gap is verifying `vix_features` is genuinely fed.** The sibling issue doc's `ohlcv_24h` gap flagged above is
+              resolved: root-caused (slot-11, static read — CBOE also has genuine directly-captured raw
+              `data_type=ohlcv_24h` content for an unrelated instrument_type=INDEX Yahoo Treasury-tenor series, which made
+              the scanner's day-wide "nothing matched" fallback never fire for `ohlcv_24h` requests specifically, silently
+              dropping the admitted CBOE `futures_chain` candidates — `ohlcv_15m` has no such raw content anywhere so its
+              fallback always fired), fixed (`market-data-processing-service@afc7cf263b`, QG-green, regression test), and
+              live-verified TWICE independently with byte-identical results: slot-30's `mdps-backfill-tradfi-20260814-025425`
+              and a second, independently-launched corroborating run (`mdps-backfill-tradfi-20260815-075235`, this session) —
+              both read the per-VM manifest shard directly (UTL `download_from_storage`, not gsutil) and found
+              `venue=CBOE, instrument_type=FUTURE, data_type=ohlcv_24h, capture_status=captured` — **5 rows** (one per date
+              across the 5-date range), `ohlcv_15m` unaffected at its prior 20 captured rows, and **zero `venue=CME` rows of
+              any kind** (combo/futures_chain exclusion confirmed intact, not reopened). The issue doc's own done-when is
+              now fully met on both timeframes and it has been archived
+              (`plans/archive/2026_08/issues/mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md`).
+              **This todo stays `- [ ]`** — its own done-when has a clause the issue doc never covered:
+              `unified_api_contracts.canonical.domain.features.required_inputs`'s `"vix_features"` `InputReq` must be
+              genuinely fed by the now-landing `ohlcv_15m` data, not just confirmed present in the MDPS manifest. That
+              check (a features-service-side compute/consumption verification) was out of scope for the MDPS-only issue doc
+              and was not run by any of the sessions above — it is the sole remaining piece of this todo's done-when.
 
 ## Not extracted this batch — items that stay behind
 
@@ -158,3 +179,16 @@ is deliberately thin; reported honestly rather than padded.
   `issues/mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md` (2 candidate fixes + `[OPERATOR]`
   decision todo) rather than absorb an unplanned architecture-judgment call. Todo 2 left `- [ ]`, annotated in place
   with the finding. No code shipped this session (nothing was safe to ship without the decision).
+
+- 2026-08-15 (worker, dispatched against the sibling issue doc's now-closed `[CODE] P2` `ohlcv_24h` follow-up):
+  independently root-caused the `ohlcv_24h` scanner-admission gap (genuine unrelated raw `data_type=ohlcv_24h` content
+  for CBOE `instrument_type=INDEX` was suppressing the day-wide fallback the `futures_chain` admission depended on) —
+  found a concurrent peer session (slot-11) had already shipped the identical fix
+  (`market-data-processing-service@afc7cf263b`); reconciled a local quickmerge conflict by adopting the peer's
+  already-landed version rather than duplicating it. Independently launched a live-verify VM
+  (`mdps-backfill-tradfi-20260815-075235`) to corroborate — found slot-30 had ALREADY live-verified
+  (`mdps-backfill-tradfi-20260814-025425`) and archived the sibling issue doc before my own run completed; my run's
+  manifest evidence is byte-identical (5 `ohlcv_24h` captured, 20 `ohlcv_15m` captured, 0 CME rows), corroborating
+  rather than superseding. Updated this todo's own annotation above to cite the now-resolved `ohlcv_24h` half and
+  isolate the ONE genuinely remaining gap (`vix_features` required-input consumption, never checked by any session in
+  this chain) — todo stays `- [ ]`, not a false-done flip.
