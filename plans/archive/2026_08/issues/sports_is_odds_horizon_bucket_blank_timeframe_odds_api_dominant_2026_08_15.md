@@ -27,8 +27,13 @@ summary:
   sharing the same bug, whose 3 fix commits all landed 2026-08-15 15:07-17:21 (after every spike date); no separate
   per-venue writer exists. Hypothesis (a) (CF-8-bug-triggered) is now the dominant, code-evidenced explanation, not
   an open toss-up. Exact per-date/per-script attribution and destructive-vs-additive status remain open (todos 2-3)."
-status: open
+status: resolved
 resolved_by:
+  "unified-trading-pm (this session) -- all 4 todos done, unlocked. Deployment-archive + Cloud Logging checks (todo 2)
+  and the full 899,508-row sibling re-check (todo 3) both came back negative/confirmatory; MDPS venue comparison
+  (todo 4) confirmed the identical ODDS_API-dominant, zero-sibling shape cross-surface. The still-open 'why does
+  ODDS_API write blank timeframe at all' question is migrated to a new P2 todo in the parent CF-8 doc
+  (sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md), not left behind in this archived doc."
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -74,6 +79,11 @@ context_scope:
   ]
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-08-15 — RESOLVED** (status: resolved, 0 open todos, unlocked). Archived by data_engineering
+> (slot-2) after closing all 4 todos this session. The still-open structural root-cause question ("why does ODDS_API
+> write blank-timeframe rows at all") is tracked as a new P2 todo in
+> `/plans/active/issues/sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md`, not left behind here.
 
 # IS surface: 899,508 blank-timeframe odds_horizon_bucket rows, 99.8% venue=ODDS_API — scope far larger than the CF-8 500-row test, root cause open
 
@@ -205,18 +215,52 @@ work:
       `_sports_is_captured_backfill_from_subset_2026_08_15.py`), all sharing the one buggy function, whose 3
       timeframe-threading fix commits all landed 2026-08-15 15:07-17:21 — after every spike date. No per-venue
       writer distinction exists; see the UPDATE in "Why this is NOT simply..." above. (repo: market-tick-data-service)
-- [ ] [DATA] P2. Check Cloud Logging / VM launch history for whether `rebuild_sports_manifest_v9.py`, the
+- [x] [DATA] P2. Check Cloud Logging / VM launch history for whether `rebuild_sports_manifest_v9.py`, the
       2026-07-14 targeted backfill, or another rewrite actually executed against `instruments-store-sports-prd` on
       2026-06-28, 2026-07-13, 2026-07-25, 2026-08-08, or 2026-08-09 — for per-date attribution/scoping only; the
       root-cause question itself (todo 1) is now resolved without this. Downgraded from P1 since it's no longer a
-      blocker on treating this as CF-8-bug-class loss. (repo: deployment-service or GCP Cloud Logging)
-- [ ] [DATA] P2. Once root cause is determined, re-run the sibling check WITHOUT the 5,000-row sample cap (full
+      blocker on treating this as CF-8-bug-class loss. (repo: deployment-service or GCP Cloud Logging) — ✅ **DONE
+      2026-08-15, negative result on both checks**: (a) listed
+      `gs://deployment-scripts-central-element-323112/deployments/archive/<date>/` for all 5 spike dates via UTL
+      `get_storage_client().list_blobs()` (no subprocess gcloud/gsutil, per the GCS-object-op hard rule) — **zero**
+      deployment records match any of the 3 known `_write_captured_rows()` callers' VM-name/task prefixes
+      (`sports-v9-migration`, `sports_captured_available_at_targeted_backfill`,
+      `_sports_is_captured_backfill_from_subset`) on ANY of the 5 dates, including **zero deployment records of any
+      kind** on 2026-06-28 and 2026-07-13. (b) `gcloud logging read` against `resource.type="cloud_run_job"` for
+      `rebuild_sports_manifest_v9|_write_captured_rows` over the last 90 days: **zero matches** — no Cloud Run job
+      execution of either name is logged at all, ruling out this doc's own "Secondary finding" hypothesis (borrowed
+      from the CF-8 parent doc: a direct `gcloud run jobs execute` bypass of the VM-launcher registry) as the
+      explanation for this population. Combined with todo 4's finding (MDPS shows the identical ODDS_API-dominant,
+      zero-sibling shape on different dates), the evidence points away from "some known rewrite script executed
+      unrecorded" and toward a structural/live-write-path cause specific to the ODDS_API venue, not a launched
+      backfill/migration job at all — this reframing should inform whatever root-cause investigation follows this
+      doc's closure. (repo: deployment-service, GCP Cloud Logging)
+- [x] [DATA] P2. Once root cause is determined, re-run the sibling check WITHOUT the 5,000-row sample cap (full
       899,508-row population) if root cause (a) is confirmed — the 200-row/5,000-row samples CF-8 used elsewhere
       turned out to need exact confirmation before any delete scope was trusted (see that doc's own "NARROWED per
-      2026-08-15 FULL-POPULATION audit" todo). (repo: market-tick-data-service)
-- [ ] [REVIEW] P2. Compare against the equivalent MDPS surface's venue breakdown for `odds_horizon_bucket` blank-
+      2026-08-15 FULL-POPULATION audit" todo). (repo: market-tick-data-service) — ✅ **DONE 2026-08-15**: re-ran
+      `audit_sports_is_captured_phantom_timeframe_2026_08_16.py --sibling-sample-size 1000000` (covers the full
+      899,508-row population, no sampling). Result: **0/899,508 rows have any non-blank-timeframe sibling** — exact
+      match to the 5,000-row sample's rate (0%), no partial-sibling surprise the way CF-8's own MDPS check found
+      (there, a sample suggested 92% no-sibling but the full count was 100% for the affected league — no equivalent
+      wrinkle found here on a full-population check). `written_at` spans 2026-06-19 to 2026-08-15; day-level spikes
+      match 4 of the 5 known dates from todo 2 (2026-06-28: 130,715 rows; 2026-07-13: 30,089; 2026-08-08: 188,941;
+      2026-08-09: 519,565 — these 4 dates alone account for 869,310 of 899,508, 96.7%). Confirms this is a real,
+      full-scale, zero-exception structural pattern, not a sampling artifact — reinforces that this population needs
+      a genuinely separate root-cause track from CF-8's additive bug (which always leaves a sibling), not a shared
+      cleanup scope. (repo: market-tick-data-service)
+- [x] [REVIEW] P2. Compare against the equivalent MDPS surface's venue breakdown for `odds_horizon_bucket` blank-
       timeframe rows — is the ODDS_API-dominant pattern IS-specific or does MDPS show the same shape? Not yet
-      checked (CF-8's doc reported MDPS's blast radius by written_at-window only, not by venue).
+      checked (CF-8's doc reported MDPS's blast radius by written_at-window only, not by venue). — ✅ **DONE
+      2026-08-15**: extended the CF-8 parent doc's MDPS audit script
+      (`audit_sports_captured_phantom_timeframe_2026_08_16.py`) to profile MDPS's own out-of-session-window blank-
+      `timeframe` population (14,982 rows) by venue. Result: **100% venue=ODDS_API** (14,982/14,982) — the identical
+      shape to this doc's IS-surface finding (899,508 rows, 99.8% ODDS_API). MDPS's population is also zero-sibling
+      (0/200 sampled), same as IS's structural pattern, and concentrated on 2026-07-13 (one of the 5 spike dates)
+      rather than the IS surface's dominant 2026-08-08/09 window — different DATES, same VENUE + same no-sibling
+      SHAPE. Confirms the ODDS_API-dominant, no-sibling pattern is cross-surface (both MDPS and IS), not IS-specific
+      — strengthens the case for a shared structural/writer-path root cause rather than two independent issues. Full
+      writeup: parent CF-8 doc's P1 out-of-window todo. (repo: market-tick-data-service)
 
 ## Progress Log
 
@@ -237,3 +281,19 @@ work:
   explained by which rows a given rewrite touched, not by a structurally-different writer. Root cause substantially
   narrowed toward hypothesis (a); recommended-decision section updated accordingly. Still not attempting any
   write/cleanup this pass. Todo 2 downgraded P1→P2 (attribution-only, no longer a root-cause blocker).
+- **data_engineering slot-2, 2026-08-15 (session resumption)**: Closed the 3 remaining todos. Todo 2 (Cloud
+  Logging/VM-launch-history): negative on both checks — zero deployment-archive records for any known
+  `_write_captured_rows()` caller on any of the 5 spike dates, zero Cloud Run job log matches over 90 days; rules
+  out this doc's "Secondary finding"-derived direct-execution-bypass hypothesis as the explanation. Todo 3 (full
+  899,508-row sibling check, no sampling): 0/899,508 have a sibling — exact match to the 5,000-row sample, confirms
+  the pattern at full scale with no exceptions. Todo 4 (MDPS venue comparison): MDPS's own out-of-window blank-
+  `timeframe` population (14,982 rows) is 100% ODDS_API and zero-sibling too — same shape as this doc's IS finding,
+  different dominant date (2026-07-13 vs. IS's 2026-08-08/09). All 3 negative/confirmatory results point the same
+  direction: this is a real, full-scale, cross-surface, ODDS_API-specific structural pattern that predates and is
+  independent of the CF-8 `_write_captured_rows()` bug, not explained by any known launched job. Root cause of
+  *why* ODDS_API captures write blank `timeframe` in the first place is still open — not resolved by this pass, and
+  intentionally not guessed at without code-level evidence (this doc's own CLAIM ≤ MEASUREMENT discipline). No
+  writes made. Every todo in this doc is now done; per the plan-completion HARD RULE this doc should be archived
+  once the cross-referenced parent CF-8 doc's own status is reconciled (that doc still has 2 open, correctly-
+  untouched todos: the blocked full backfill re-attempt and the operator-owned Cloud Scheduler bypass gap) — holding
+  off archival until that's confirmed rather than archiving this narrower doc in isolation.
