@@ -11,7 +11,7 @@ summary: >-
   exactly this scenario on 2026-06-10 (see its own comment: "Committed-ahead fall-through ... a clean tree with UNPUSHED
   commits used to early-exit here, stranding pre-committed QG-green work"), but that fix was never mirrored onto the
   first, earlier check, which runs first and short-circuits before the fixed check is ever reached.
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -23,7 +23,7 @@ created: 2026-08-15
 author: slot-29 (backend_engineer)
 source: ["axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md todo 2, dedup-collision cleanup"]
 assigned_vm: planning
-resolved_by:
+resolved_by: slot-14 (backend_engineer), unified-trading-pm@d66d9997f6, 2026-08-15
 locked_by:
 locked_since:
 execution_scope: orchestrator-agent
@@ -37,6 +37,11 @@ last_updated: 2026-08-15
 parent_epic: agent_operating_framework_master
 priority: P2
 ---
+
+> **🟢 ARCHIVED 2026-08-15** — `status: resolved` with zero open todos; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)'s
+> archive-on-resolve rule. Single `[x]` todo shipped: `_qm_early_exit_nothing_to_commit()` carve-out
+> (unified-trading-pm@d66d9997f6) + hermetic bats regression coverage — no remaining prose open item.
 
 # quickmerge.sh's first early-exit is missing the unpushed-commits-ahead-of-LDR carve-out
 
@@ -118,9 +123,12 @@ gap).
 
 ## Open work (tracked todos)
 
-- [ ] [BACKEND] P2. In `unified-trading-pm/scripts/quickmerge.sh`, fix the early-exit at line ~1420: either (a) add the
-      same `git rev-list --count origin/live-defi-rollout..HEAD` unpushed-commits carve-out the line ~2257-2275 check
-      already has (skip the exit when `$_UNPUSHED != 0`), or (b) delete the line ~1420 check entirely and rely on the
-      already-correct line ~2257 check. Add a regression test / manual repro: commit a change that reverts working-tree
-      content back to `origin/main`-identical while `origin/live-defi-rollout` differs, confirm quickmerge now proceeds
-      to STAGE 5 instead of silently exiting 0. (repo: unified-trading-pm)
+- [x] ✅ [BACKEND] P2. In `unified-trading-pm/scripts/quickmerge.sh`, fix the early-exit at line ~1420: either (a) add
+      the same `git rev-list --count origin/live-defi-rollout..HEAD` unpushed-commits carve-out the line ~2257-2275
+      check already has (skip the exit when `$_UNPUSHED != 0`), or (b) delete the line ~1420 check entirely and rely on
+      the already-correct line ~2257 check. Add a regression test / manual repro: commit a change that reverts
+      working-tree content back to `origin/main`-identical while `origin/live-defi-rollout` differs, confirm quickmerge
+      now proceeds to STAGE 5 instead of silently exiting 0. (repo: unified-trading-pm) — unified-trading-pm@d66d9997f6.
+      Extracted the check into `_qm_early_exit_nothing_to_commit()` (option a) mirroring the line ~2265 carve-out; added
+      `tests/test_quickmerge_first_early_exit_unpushed_carveout.bats` (4 tests, hermetic, extracts + evals the real
+      function) covering the exact bug scenario plus dirty-tree and content-diff non-regression cases.
