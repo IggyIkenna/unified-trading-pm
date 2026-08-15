@@ -396,3 +396,24 @@ Two independent angles, not mutually exclusive:
   disproportionate for a single P2 CODE root-cause todo; the still-open [DATA] P2 re-run todo above already owns
   re-running DEFI (and CEFI/SPORTS) now that fixes exist for all three failure classes (OOM, wall-clock timeout, Phase-0
   unbounded read) — whoever picks that up next should use the now-corrected §1a command set for all five asset_groups.
+- **2026-08-15 (slot 5 worker, data_engineering)**: picked up the still-open [DATA] P2 re-run todo per operator's
+  earlier "fuller solution no matter the time spent" ruling to slot 18. Checked slot 18's two in-flight VMs first
+  (`pipeline-e2e-check-mtds-20260815-043557-fc5255` CEFI, `pipeline-e2e-check-mtds-20260815-043735-ff56b9` SPORTS,
+  `--wall-clock-timeout-sec 14400`, launched 04:35-04:37Z) — both had reached terminal `EXIT_STATUS`:
+  - **SPORTS**: `EXIT_STATUS=1` (partial pass, real report — not a crash). Rescued to
+    `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_01_SPORTS.md` from the now-`_sports`-suffixed GCS report
+    (confirms the earlier report-collision fix works for real per-AG runs).
+  - **CEFI**: `EXIT_STATUS=3` again — but this run PRE-DATES slot 29's re-arm fix (launched 04:40:32Z; crashed at
+    exactly 08:40:30Z, i.e. exactly 14400s later — the OLD flat-deadline behavior, confirmed via `run.log`'s
+    `DEPLOYMENT_STARTED`/crash timestamps 4h apart to the second, RSS flat ~19.7GB throughout — not a new bug, just ran
+    before the re-arm fix's tarball was live). Re-launched CEFI fresh (`pipeline-e2e-check-mtds-20260815-093348-fc5255`,
+    tarball `mtds-code@cebc26190130` — confirmed post-`64d10930` re-arm fix + post-`d89f43488e` — same
+    `--wall-clock-timeout-sec 14400`, now a stall detector not a flat deadline).
+  - **DEFI**: re-launched fresh (`pipeline-e2e-check-mtds-20260815-093408-4ffa29`, same tarball, post-`d89f43488e`
+    Phase-0 bound-read fix — no prior DEFI attempt existed with this fix live).
+  - Both new VMs launched ~09:34Z; a bounded background monitor (5-min poll, ~3.2h cap) is tracking both to
+    `EXIT_STATUS` via GCS (not log-activity). **If picking this up fresh**: check
+    `gs://deployment-scripts-central-element-323112/vm-logs/<vm_name>/EXIT_STATUS` for both names above before assuming
+    stalled/relaunching —
+    `gcloud compute instances list --project central-element-323112 --filter="name~pipeline-e2e-check-mtds"` shows the
+    live fleet.
