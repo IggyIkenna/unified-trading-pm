@@ -2352,3 +2352,5 @@
 {"timestamp": "2026-08-15T05:23:35Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "market-tick-data-service=0.132.14 (branch=main, bump=patch)", "commit_sha": "e00adf00083268e081505babb4e620acd076d97e"}
 {"timestamp": "2026-08-15T05:28:05Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "greeks-service=0.18.32 (branch=main, run=31867004363)", "commit_sha": "dc269c859d4b99efb68e23756b1cdeefc8b86625"}
 {"timestamp": "2026-08-15T05:28:09Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "greeks-service=0.18.32 (branch=main, bump=patch)", "commit_sha": "dc269c859d4b99efb68e23756b1cdeefc8b86625"}
+{"timestamp": "2026-08-15T05:29:40Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "e2e-testing=0.41.8 (branch=main, run=31867063577)", "commit_sha": "e6378b7c9280743ed1d4b63eb87a1586d3d28c59"}
+{"timestamp": "2026-08-15T05:29:43Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "e2e-testing=0.41.8 (branch=main, bump=patch)", "commit_sha": "e6378b7c9280743ed1d4b63eb87a1586d3d28c59"}
