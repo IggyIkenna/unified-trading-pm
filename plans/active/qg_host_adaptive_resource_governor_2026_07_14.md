@@ -752,51 +752,51 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       `market-tick-data-service@8b353ef2`).
 
       **FINAL UPDATE this session — run6 reached 690s, still alive, still legitimately queued** (log progressed cleanly
-                  30s→690s in 30s increments, no death marker, no admission yet — last observed state before this session ended).
-                  690s is now well over **double** the ~300s mark that killed all 4 priors, with zero sign of a periodic reaper
-                  firing at any multiple of 300s (no death at 600s either, which a "reaper tolerating one missed cycle" theory would
-                  have predicted). This is the strongest evidence yet toward possibility (a) above — the 4 prior deaths were tied to
-                  something specific about those launch contexts/sessions, not a structural timeout in the governor's pre-admission
-                  wait loop itself. Next session: check `bticjctmt`'s final outcome first (via the harness's automatic task
-                  notification, do not manually re-poll) — if it completed clean and green, ship `market-tick-data-service@8b353ef2`
-                  immediately via quickmerge and treat this investigation as closed/deprioritized (downgrade to "rare and
-                  unreproduced, no fix needed" rather than continuing to chase root cause); if it eventually died, record the exact
-                  death time here (still worth checking against 300s multiples, though 690s already argues against a clean periodic
-                  cause).
+                          30s→690s in 30s increments, no death marker, no admission yet — last observed state before this session ended).
+                          690s is now well over **double** the ~300s mark that killed all 4 priors, with zero sign of a periodic reaper
+                          firing at any multiple of 300s (no death at 600s either, which a "reaper tolerating one missed cycle" theory would
+                          have predicted). This is the strongest evidence yet toward possibility (a) above — the 4 prior deaths were tied to
+                          something specific about those launch contexts/sessions, not a structural timeout in the governor's pre-admission
+                          wait loop itself. Next session: check `bticjctmt`'s final outcome first (via the harness's automatic task
+                          notification, do not manually re-poll) — if it completed clean and green, ship `market-tick-data-service@8b353ef2`
+                          immediately via quickmerge and treat this investigation as closed/deprioritized (downgrade to "rare and
+                          unreproduced, no fix needed" rather than continuing to chase root cause); if it eventually died, record the exact
+                          death time here (still worth checking against 300s multiples, though 690s already argues against a clean periodic
+                          cause).
 
-              **SECOND FINAL UPDATE (later same continuation) — run6 reached 960s, still alive, still zero deaths at ANY 300s
-                  multiple** (600s, 900s both passed clean). This is now over **3x** the ~300s mark that killed all 4 priors,
-                  which all but rules out a periodic reaper as the cause of those 4 deaths. The open question has now shifted:
-                  16 minutes queued with no admission is itself notable — check on eventual completion whether this reflects
-                  genuine host saturation (sub-cap 1 / host-wide cap 6, other slots' concurrent QG runs holding tokens) rather
-                  than anything wrong with run6 itself; if so this is a capacity/fairness observation, not a death-cause one.
-                  Next session: same guidance as above — check `bticjctmt`'s terminal outcome via the harness notification
-                  (don't re-poll manually); if clean, ship immediately and close this investigation as closed/deprioritized; if
-                  it eventually dies, record the death time (now very unlikely to land on a 300s multiple given 960s clean).
+                      **SECOND FINAL UPDATE (later same continuation) — run6 reached 960s, still alive, still zero deaths at ANY 300s
+                          multiple** (600s, 900s both passed clean). This is now over **3x** the ~300s mark that killed all 4 priors,
+                          which all but rules out a periodic reaper as the cause of those 4 deaths. The open question has now shifted:
+                          16 minutes queued with no admission is itself notable — check on eventual completion whether this reflects
+                          genuine host saturation (sub-cap 1 / host-wide cap 6, other slots' concurrent QG runs holding tokens) rather
+                          than anything wrong with run6 itself; if so this is a capacity/fairness observation, not a death-cause one.
+                          Next session: same guidance as above — check `bticjctmt`'s terminal outcome via the harness notification
+                          (don't re-poll manually); if clean, ship immediately and close this investigation as closed/deprioritized; if
+                          it eventually dies, record the death time (now very unlikely to land on a 300s multiple given 960s clean).
 
-              **THIRD FINAL UPDATE (later same continuation) — capacity/fairness question RESOLVED: run6's 1170s+ wait is
-              genuine legitimate contention, NOT a bug.** Direct host inspection (`fuser` on the governor's flock slot
-              files under `.benchmarks/qg-governor-total/`) shows: global host-wide slots 2-6 are completely UNUSED
-              (only slot.1 has any holder) — ruling out host-wide-cap saturation as the bottleneck. The real bottleneck
-              is mtds's own repo sub-cap of **1** — its single repo-slot.1 is held by an entirely separate slot-19 QG
-              run (PID 3014181, elapsed ~22.5min, mid-pytest), and `ps` shows at least 4 MORE concurrent
-              `quality-gates.sh --no-fix` processes for mtds queued behind it from slots 29 (=run6/mine), 33, 18, and
-              one more unattributed — all serialized 1-at-a-time by the sub-cap. Checked slots 19/33/18's actual mtds
-              HEAD commits: all three are on completely unrelated, independent fixes (a provenance-checker wire-up, a
-              sports manifest fix, a docstring trim) — **this is ordinary fleet parallelism colliding with a repo cap
-              of 1, not duplicate/wasted effort and not a stuck/leaked token.** Each run appears to take ~20+ minutes,
-              so a queue of 4-5 ahead of run6 fully explains 1170s+ elapsed with zero deaths and zero admission. This
-              closes the capacity/fairness question definitively: **not a bug, genuine queue depth.** It does NOT
-              explain the original 4/4 deaths at ~300s from prior segments — those remain unexplained and now look even
-              more clearly session/launch-context-specific rather than tied to this queue-wait mechanism (confirmed
-              earlier by code read: `qg_governor_acquire_total_instance` is a plain `while true; sleep 1` loop with
-              zero internal timeout/self-kill logic, so nothing in the governor itself would ever kill a queued waiter).
-              **New follow-up worth a future look (not urgent, not blocking)**: whether mtds's repo sub-cap of 1 is
-              too restrictive given how many slots routinely work this repo concurrently — a possible future governor
-              tuning question, distinct from this investigation. Next session: unchanged guidance — check `bticjctmt`'s
-              terminal outcome via the harness notification; if clean, ship immediately; the death-cause question for
-              the original 4 is now the ONLY open thread and is low-priority (unreproduced for 1170s+, i.e. ~4x the
-              original threshold).
+                      **THIRD FINAL UPDATE (later same continuation) — capacity/fairness question RESOLVED: run6's 1170s+ wait is
+                      genuine legitimate contention, NOT a bug.** Direct host inspection (`fuser` on the governor's flock slot
+                      files under `.benchmarks/qg-governor-total/`) shows: global host-wide slots 2-6 are completely UNUSED
+                      (only slot.1 has any holder) — ruling out host-wide-cap saturation as the bottleneck. The real bottleneck
+                      is mtds's own repo sub-cap of **1** — its single repo-slot.1 is held by an entirely separate slot-19 QG
+                      run (PID 3014181, elapsed ~22.5min, mid-pytest), and `ps` shows at least 4 MORE concurrent
+                      `quality-gates.sh --no-fix` processes for mtds queued behind it from slots 29 (=run6/mine), 33, 18, and
+                      one more unattributed — all serialized 1-at-a-time by the sub-cap. Checked slots 19/33/18's actual mtds
+                      HEAD commits: all three are on completely unrelated, independent fixes (a provenance-checker wire-up, a
+                      sports manifest fix, a docstring trim) — **this is ordinary fleet parallelism colliding with a repo cap
+                      of 1, not duplicate/wasted effort and not a stuck/leaked token.** Each run appears to take ~20+ minutes,
+                      so a queue of 4-5 ahead of run6 fully explains 1170s+ elapsed with zero deaths and zero admission. This
+                      closes the capacity/fairness question definitively: **not a bug, genuine queue depth.** It does NOT
+                      explain the original 4/4 deaths at ~300s from prior segments — those remain unexplained and now look even
+                      more clearly session/launch-context-specific rather than tied to this queue-wait mechanism (confirmed
+                      earlier by code read: `qg_governor_acquire_total_instance` is a plain `while true; sleep 1` loop with
+                      zero internal timeout/self-kill logic, so nothing in the governor itself would ever kill a queued waiter).
+                      **New follow-up worth a future look (not urgent, not blocking)**: whether mtds's repo sub-cap of 1 is
+                      too restrictive given how many slots routinely work this repo concurrently — a possible future governor
+                      tuning question, distinct from this investigation. Next session: unchanged guidance — check `bticjctmt`'s
+                      terminal outcome via the harness notification; if clean, ship immediately; the death-cause question for
+                      the original 4 is now the ONLY open thread and is low-priority (unreproduced for 1170s+, i.e. ~4x the
+                      original threshold).
 
 ## Measured runtime drift — RESOLVED 2026-07-22 (plan-reconcile follow-up)
 
@@ -990,3 +990,9 @@ against the same MTDS repo concurrently (a `drilldown_reconciliation_guard` QG w
 `websocket_runner` blocking-write fix respectively) — direct proof this is genuine multi-slot host contention at the
 moment of failure, not a one-off. No retry10 launched (per the consuming task's retry-discipline stop, cross-linked
 above); still awaiting operator decision on option 1 vs option 2.
+
+**Progress Log 2026-08-15 (slot-25, later window) — 9th consecutive silent death; retry10 launched non-blind (queue had
+measurably drained), died identically (self-logging wrapper, no `EXIT=` line). Rules out "prior deaths were a fluke of
+that contention window." No retry11 launched. Full detail in the consuming issue doc's own Progress Log**
+(`/plans/active/issues/tradfi_instrument_type_lowercase_residual_381k_2026_08_15.md`). Still awaiting operator decision
+on option 1 vs option 2.
