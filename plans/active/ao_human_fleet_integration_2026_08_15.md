@@ -188,6 +188,16 @@ investigation confirmed are both achievable with existing primitives:
   `/autonomous` skill's "usually opus-required" default for long loops — staying Sonnet, `effort: high` (already
   declared). Todo 4 (assigned_vm retroactive-eligibility check) still running as of this log entry; Phase 1 backend work
   starts once it resolves (a real gap there would add a new Phase 1 todo, per that todo's own "done when").
+- **2026-08-15, tick 2 (autonomous, main session)**: Phase 0 todo 4 resolved by sub-agent — found a REAL gap, not just a
+  documentation question: `assigned_vm` gates task CREATION and prune-time survival only, never dispatch eligibility of
+  an already-`queued` row (`_FILTERS`, `server/dispatch.py:320-427`, has zero `assigned_vm` reference; confirmed via
+  full grep of `server/backlog.py`/`server/models/_types.py` too). A flip to NA is only enforced once (a)
+  `pm-pull.timer` fetches the push (~5min) and (b) the next `PlanRegenLoop` tick or a manual `POST /api/backlog/regen`
+  runs `_prune_stale` and deletes the now-orphaned queued row — **worst-case ~10min window where AO could still dispatch
+  the task out from under the human's escape hatch**. Added a new P0 Phase 1 todo (live `assigned_vm` dispatch-time
+  filter, mirroring the already-proven `gate_on_depends_on_disk` live-disk-read pattern) to close this to zero rather
+  than ship a "safe within ~10 minutes, best-effort" guarantee — the plan's own hard constraint #2 promised
+  no-competition, not eventually-no-competition. Phase 0 fully resolved; starting Phase 1 implementation this tick.
 
 ## Todos
 
@@ -207,15 +217,23 @@ investigation confirmed are both achievable with existing primitives:
       reusing `_build_ctx`/`first_blocking_filter`/`pick_next_task`'s exact sort key, following the proven read-only
       sentinel-slot pattern `explain_blocked_bulk()` (`dispatch.py:852-880`) already uses in production. Recorded in
       Design decisions above. Evidence: sub-agent investigation, tick 1 Progress Log.
-- [ ] [BACKEND] P0. **Confirm whether flipping a plan's `assigned_vm` from `planning` to `NA` retroactively removes
-      already-generated `BacklogTask`/`TaskRow` rows from AO's dispatch-eligible pool**, or only affects future
-      `regen_backlog_from_plan.py` runs (read `regen_backlog_from_plan.py`'s reconciliation path + `dispatch.py`'s
-      eligibility check to see if either consults the CURRENT plan doc's `assigned_vm` at dispatch time or only a cached
-      value on the row). Done when: the escape-hatch mechanism either works today, or a specific fix is scoped as a
-      Phase 1 todo below (add one if the answer is "only affects future regen").
+- [x] 4. ✅ [BACKEND] P0. **Confirm whether flipping a plan's `assigned_vm` from `planning` to `NA` retroactively
+      removes already-generated `BacklogTask`/`TaskRow` rows from AO's dispatch-eligible pool** — resolved: NO, not
+      immediately — `assigned_vm` gates creation/prune-survival only, `_FILTERS` never checks it live, leaving a ~10min
+      race window (prune-cycle-dependent). A new Phase 1 P0 todo below closes this gap. Evidence: sub-agent
+      investigation, tick 2 Progress Log.
 
 ### Phase 1 — AO backend: vocabulary, exemption, pre-flight check, human-claim/done wiring
 
+- [ ] [BACKEND] P0. **Close the `assigned_vm` live-dispatch-eligibility gap found in Phase 0 todo 4** — add a new
+      `FilterScope.FLEET` entry to `_FILTERS` (`server/dispatch.py:320-427`) mirroring `gate_on_depends_on_disk`'s
+      already-proven pattern (`:366-377`, re-derives state straight from the plan file on every dispatch attempt): call
+      the existing `_parse_frontmatter_assigned_vm(plan_path)` helper (`server/regen_backlog_from_plan.py:501`) for
+      `task.plan_ref` and block dispatch if the current on-disk value is an unassigned sentinel
+      (`_UNASSIGNED_SENTINELS`, `regen_backlog_from_plan.py:790`). This is what makes the `assigned_vm` escape hatch
+      actually immediate rather than best-effort-within-~10min. Done when: a test proves a task whose owning plan is
+      `assigned_vm: NA` on disk is never returned by `pick_next_task`/`rank_eligible_tasks` even while its `TaskRow`
+      still exists as `queued`, and the existing `_FILTERS` test suite still passes.
 - [ ] [BACKEND] P1. **Add `"human"` and `"planning-human"` as deliberate, explicit buckets in `task_role_group()`**
       (`server/state_store/slots.py:703-720`) rather than letting either silently collapse to `"planning"` — extend
       `TASK_ROLE_GROUPS` and the membership-set logic. Done when: a unit test asserts
