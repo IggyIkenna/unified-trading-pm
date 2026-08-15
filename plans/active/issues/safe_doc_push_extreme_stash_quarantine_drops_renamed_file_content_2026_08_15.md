@@ -391,4 +391,5 @@ tracked-but-missing shape.
   coverage: it exercises a still-distinct reconcile trigger (ahead>0 from a prior local commit, forcing the retry
   loop's `else` branch unconditionally) from both slot-23's peer-conflict-forced rebase and slot-19/25's
   rebase-free harnesses, so the corpus now has three independently-triggered reconcile shapes covered instead of
-  one. No further code change made.
+  one. No further code change made. Landed: `unified-trading-pm@5ce3cf95f9` (the new repro script, via quickmerge,
+  QG green).
