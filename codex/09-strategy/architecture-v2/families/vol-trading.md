@@ -213,7 +213,7 @@ replays historical data at compute speed). Baseline: the archived
 table — SUPERSEDED as a doc, but its **Volatility Arb** row (Tick-to-Signal <10 s / Signal-to-Order <5 s / Total E2E <15
 s, Category **Medium**) is the operative baseline and is **confirmed, not corrected**, here. **Derivation reasoning**
 (per the 2026-08-10 audit rubric at
-[`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)):
+[`/plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)):
 the operator's ms-realm ruling did NOT name vol-trading, so the family inherits the archived doc's closest analog —
 Volatility Arb at Medium. The family's own content does not contradict that at the decision level: the dominant
 archetypes (IV-vs-RV, skew, term-structure, surface-residual dislocations) fire off surface-fitter + RV-computer outputs
@@ -237,7 +237,7 @@ budget (see below).
 discrepancy the derivation todo needs to resolve. It SHOULD, however, note the intra-family fast subset
 (`VOL_MARKET_MAKING`, `VOL_0DTE_GAMMA_SCALPING`): those two behave like market-making and may warrant a
 co-located/`premium` carve-out when instantiated, which the
-[`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)
+[`/plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)
 deployment-derivation todo 8 should call out.
 
 ### Decision latency vs. inter-leg execution gap

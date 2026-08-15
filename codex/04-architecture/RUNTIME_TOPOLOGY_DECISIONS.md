@@ -17,7 +17,7 @@ related:
   [
     unified-trading-pm/configs/runtime-topology.yaml,
     /codex/04-architecture/client-isolation-sla-and-runtime-profiles.md,
-    /plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md,
+    /plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md,
   ]
 created: 2026-08-10
 authoritative_for: [runtime-topology.yaml change rationale, deployment_profile decision history]
@@ -36,7 +36,7 @@ yaml's own content here, only the reasoning that isn't obvious from the diff.
 ## 2026-08-10 — archetype-family deployment_profile derivation
 
 **Derivation rule** (from the audit plan's fixed rubric,
-`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`):
+`/plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`):
 
 - `Low` (sub-second E2E / ms-realm inter-leg execution gap) → `co_located_vm`
 - `Medium` / `High` (seconds-to-minutes E2E) → `distributed`

@@ -1,5 +1,6 @@
 ---
 doc_type: plan
+status: archived
 title: >-
   bucket_iam_write_protection_per_tier_2026_06_09 — finalize (reconcile + archive gate)
 summary: >-
@@ -9,7 +10,6 @@ summary: >-
   closed. Authored 2026-07-27 as part of na_docs_validity_and_ao_eligibility_audit_2026_07_26.md's Phase 1
   reclassification pass, per task_template.md's finalize-plan-coverage rule (every assigned_vm:planning plan needs a
   companion gated finalize plan).
-status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -24,7 +24,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-27"
-last_updated: "2026-07-30"
+last_updated: "2026-08-15"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -55,20 +55,21 @@ context_scope:
 
 # bucket_iam_write_protection_per_tier_2026_06_09 — finalize
 
-> **STATUS: `active` — dispatched (corrected 2026-08-15 by a /plan-reconcile hunter pass; this banner had gone stale).**
-> The gated plan (`bucket_iam_write_protection_per_tier_2026_06_09.md`) reached 0 open todos on 2026-08-10, so per this
-> banner's own stated trigger the plan is now dispatchable — frontmatter `status: active` was already correct, only this
-> body banner lagged.
+> **🟢 ARCHIVED 2026-08-15 (/plan-reconcile).** The gated plan (`bucket_iam_write_protection_per_tier_2026_06_09.md`)
+> was itself archived to `/plans/archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md` by
+> `unified-trading-pm@5ee2edd598` ("...archive bucket_iam plan..."), which also cleared its
+> `locked_by: live-defi-rollout` — `BLK-df57c9fc` (the operator unlock question this doc's Progress Log was blocked on)
+> resolved. This finalize doc's sole todo is now satisfied by that archival; this doc itself carries no lock and 0
+> remaining open todos, so it archives alongside its target per the same pass.
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile `bucket_iam_write_protection_per_tier_2026_06_09.md`'s checkboxes** against whatever
-      shipped -- flip each `- [ ]` to `- [x]` citing the landing commit(s), confirm no residual work was missed, then
-      run the standard 6-step archival ritual (migrate DEFERRED items, banner, codex-alignment check, update any
-      CLAUDE.md/codex pointer on a new contract, update every referrer's path corpus-wide, clear lock) if the plan is
-      fully closed. If real work remains after the AO-dispatched todos land, leave
-      `bucket_iam_write_protection_per_tier_2026_06_09.md` active (do not force-archive) and note what's still open here
-      instead.
+- [x] ✅ [REVIEW] P2. **DONE — resolved by the source plan's own archival, not a separate reconciliation pass.**
+      `bucket_iam_write_protection_per_tier_2026_06_09.md` was confirmed 100% `[x]` (26/26) by this doc's own Progress
+      Log well before this point; the remaining blocker was purely the `locked_by: live-defi-rollout` archival gate
+      (`BLK-df57c9fc`). `unified-trading-pm@5ee2edd598` unlocked + archived it directly
+      (`/plans/archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md`, `status: archived`, `locked_by:`
+      cleared). No residual work found. Archiving this finalize doc in the same commit.
 
 ## Progress Log
 

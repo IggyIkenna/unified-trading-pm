@@ -10,7 +10,7 @@ summary: >-
   latency specs using a defined rubric (not open-ended judgment) and derives each archetype's required
   deployment_profile from the populated data, producing a single decision artifact the paired execution plan implements
   against. Audit-only — no runtime-topology.yaml/family-doc wiring change ships from this plan.
-status: active
+status: archived
 nature: process
 asset_group: [cross-cutting]
 stage: [strategy]
@@ -29,7 +29,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-10
-last_updated: 2026-08-10
+last_updated: "2026-08-15"
 parent_epic: strategy_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -42,7 +42,6 @@ assigned_role: quant_dev
 effort: high
 drift_direction: advance-code
 depends_on: []
-archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
 locked_by:
 locked_since:
 context_scope:
@@ -62,6 +61,14 @@ source: >-
 ---
 
 # Audit — per-archetype latency requirements + deployment-profile derivation
+
+> **🟢 ARCHIVED 2026-08-15 (/plan-reconcile).** All 10 todos are `[x]` with hard commit evidence (each populated family
+> doc + the binding decision artifact at `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`). No lock. The paired
+> execution plan (`/plans/active/strategy_archetype_latency_deployment_profile_execution_2026_08_10.md`) still has real
+> open work and is intentionally left `active` — only this audit doc archives. The `archive_exempt` BRIDGE marker
+> (2026-08-12, deferred pending a follow-on pass per the `locked_by:live-defi-rollout` placeholder-clearing ruling) is
+> dropped in this same commit per its own stated instruction. Every corpus referrer's path updated to
+> `/plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md` in the same commit.
 
 ## Decision rubric (apply consistently — this is what makes the audit worker-determinable, not a judgment call)
 
@@ -100,9 +107,8 @@ collapsing them into one number the way the archived doc did.
       formal `## Latency Requirements` section added (tick-to-signal <50ms / signal-to-order <50ms / order-to-fill
       venue-dep. / total E2E <100ms / category `Low`, archived baseline confirmed + cited with venue baselines), plus a
       `### Decision latency vs. inter-leg execution gap` subsection (options-MM delta-hedge + cross-venue quote legs at
-      ms timing per the 2026-08-10 operator ruling,
-      `/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md` frontmatter `source:`) and the
-      Low→`co_located_vm` deployment implication referencing `runtime-topology.yaml` + the SLA-tier doc.
+      ms timing per the 2026-08-10 operator ruling, this doc frontmatter `source:`) and the Low→`co_located_vm`
+      deployment implication referencing `runtime-topology.yaml` + the SLA-tier doc.
 - [x] ✅ [DOC] P2. **Populate `arbitrage-structural.md`** with the same section, category `Low`, distinguishing stat-arb
       vs. cross-exchange arb's inter-leg execution gap explicitly (two legs on two different venues — the gap is the
       real risk surface). **Done**: `unified-trading-pm@b62348bb59` — formal `## Latency Requirements` section added
@@ -120,13 +126,12 @@ collapsing them into one number the way the archived doc did.
       just a decision-latency number. **Done**: `unified-trading-pm@47c6b8ffd6` — formal `## Latency Requirements`
       section added (category `Low`, decision-cycle Tol.-to-Signal <5 s / Signal-to-Order <2 s / Order-to-Fill
       venue-dep. / inter-leg execution gap ms-realm <500 ms operating target / Total E2E <40 s CeFi, block-time + <5 s
-      DeFi staked), archived Delta-One Basis Medium baseline CORRECTED per the operator ruling at
-      `/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md` frontmatter `source:`, including
-      a `### Decision latency vs. inter-leg execution gap` subsection breaking down all 10 archetypes (8 multi-leg
-      basis/ staking-basis variants at ms-realm gap, 2 single-sided yield/staking variants inherit Medium), the Low→
-      `co_located_vm` deployment implication flagging the current `CARRY_BASIS_PERP`/`CARRY_STAKED_BASIS`
-      topology_requirements discrepancy (co-location `no` / min SLA `standard`), and a pre-existing reference-path fix
-      (`market-making.md` → leading-slash path in `related:` frontmatter).
+      DeFi staked), archived Delta-One Basis Medium baseline CORRECTED per the operator ruling at this doc frontmatter
+      `source:`, including a `### Decision latency vs. inter-leg execution gap` subsection breaking down all 10
+      archetypes (8 multi-leg basis/ staking-basis variants at ms-realm gap, 2 single-sided yield/staking variants
+      inherit Medium), the Low→ `co_located_vm` deployment implication flagging the current
+      `CARRY_BASIS_PERP`/`CARRY_STAKED_BASIS` topology_requirements discrepancy (co-location `no` / min SLA `standard`),
+      and a pre-existing reference-path fix (`market-making.md` → leading-slash path in `related:` frontmatter).
 - [x] ✅ [DOC] P2. **Populate `ml-directional.md`** with the same section, category `Low` per operator correction — this
       family doc currently has ZERO latency content, so this is greenfield within the doc (not a correction of existing
       numbers). **Done**: `unified-trading-pm@d631674085` — formal `## Latency Requirements` section added (category
@@ -135,11 +140,10 @@ collapsing them into one number the way the archived doc did.
       strategy eval <20ms / execution submit <50ms + the sports venue-latency table). 3-row per-expression table
       (continuous single-instrument / continuous options expression / event-settled → totals <200ms / <200ms / <1s, all
       `Low`), the `### Decision latency vs. inter-leg execution gap` subsection (options synthetics + delta hedges bound
-      at ms-realm inter-leg timing per the operator ruling
-      (`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md` frontmatter `source:`);
-      event-settled cross-venue best-odds freshness), and the Low→`co_located_vm` deployment implication flagging the
-      current `ML_DIRECTIONAL_CONTINUOUS` / `ML_DIRECTIONAL_EVENT` § 6 topology_requirements rows (`no` co-location /
-      min SLA `standard`) as a discrepancy the deployment-profile derivation todo resolves.
+      at ms-realm inter-leg timing per the operator ruling (this doc frontmatter `source:`); event-settled cross-venue
+      best-odds freshness), and the Low→`co_located_vm` deployment implication flagging the current
+      `ML_DIRECTIONAL_CONTINUOUS` / `ML_DIRECTIONAL_EVENT` § 6 topology_requirements rows (`no` co-location / min SLA
+      `standard`) as a discrepancy the deployment-profile derivation todo resolves.
 - [x] ✅ [DOC] P2. **Populate `rules-directional.md`** with the same section, category `Low` per operator correction —
       same greenfield situation as ml-directional. **Done**: `unified-trading-pm@a7bc00e23c` — formal
       `## Latency Requirements` section added (category `Low`; greenfield — archived `latency-profiles.md` has no Rules
@@ -151,25 +155,23 @@ collapsing them into one number the way the archived doc did.
       feature-update-dominated). 3-row per-expression table (continuous single-instrument / continuous options
       expression / event-settled → totals <200ms / <200ms / <1s, all `Low`), the
       `### Decision latency vs. inter-leg execution gap` subsection (options synthetics + delta hedges at ms-realm
-      inter-leg timing per the operator ruling
-      (`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md` frontmatter `source:`); in-play
-      event-settled rules bounded by odds/feature freshness), and the Low→`co_located_vm` deployment implication
-      flagging the current `RULES_DIRECTIONAL` § 6 topology_requirements row (`no` co-location / min SLA `basic` — the
-      weakest of any latency-relevant family) as a discrepancy the deployment-profile derivation todo resolves. Same
-      commit fixed a pre-existing bare-filename `related:` frontmatter reference (`ml-directional.md`/`event-driven.md`
-      → leading-slash paths) flagged by plan-hygiene.
+      inter-leg timing per the operator ruling (this doc frontmatter `source:`); in-play event-settled rules bounded by
+      odds/feature freshness), and the Low→`co_located_vm` deployment implication flagging the current
+      `RULES_DIRECTIONAL` § 6 topology_requirements row (`no` co-location / min SLA `basic` — the weakest of any
+      latency-relevant family) as a discrepancy the deployment-profile derivation todo resolves. Same commit fixed a
+      pre-existing bare-filename `related:` frontmatter reference (`ml-directional.md`/`event-driven.md` → leading-slash
+      paths) flagged by plan-hygiene.
 - [x] ✅ [DOC] P2. **Populate `stat-arb-pairs.md`** with the same section, category `Low`. **Done**:
       `unified-trading-pm@0004728881` — formal `## Latency Requirements` section added (category `Low`, archived
       Statistical Arb row confirmed as the baseline: <100ms / <100ms / venue-dep. / <200ms E2E; the cross-venue /
       cross-asset fixed-pair row borrows the archived Cross-Exchange Arb <300ms E2E ceiling; the cross-sectional row
       notes its rank-update-driven decision cadence), the `### Decision latency vs. inter-leg execution gap` subsection
       (same-venue ATOMIC pairs bounded by the family's Atomic multi-leg execution primitive; cross-venue / leader-lagger
-      pairs the real risk surface — ms-realm operating target per the 2026-08-10 operator ruling
-      (`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md` frontmatter `source:`)), and
-      the Low→`co_located_vm` deployment implication flagging the current `STAT_ARB_PAIRS` § 6 `topology_requirements`
-      row (co-location `no` / min SLA `standard`) as a discrepancy the deployment-profile derivation todo resolves. Same
-      commit fixed a pre-existing bare-filename `related:` frontmatter reference (`ml-directional.md` → leading-slash
-      path) flagged by plan-hygiene.
+      pairs the real risk surface — ms-realm operating target per the 2026-08-10 operator ruling (this doc frontmatter
+      `source:`)), and the Low→`co_located_vm` deployment implication flagging the current `STAT_ARB_PAIRS` § 6
+      `topology_requirements` row (co-location `no` / min SLA `standard`) as a discrepancy the deployment-profile
+      derivation todo resolves. Same commit fixed a pre-existing bare-filename `related:` frontmatter reference
+      (`ml-directional.md` → leading-slash path) flagged by plan-hygiene.
 - [x] ✅ [DOC] P3. **Populate `vol-trading.md`, `event-driven.md`, `portfolio.md`** with the same section — derive
       category from the archived doc's closest analog per the rubric table above; state the derivation reasoning inline
       in each doc so a future reader can see it wasn't a guess. **Done**: `unified-trading-pm@1fced39e8f` — formal
@@ -189,8 +191,7 @@ collapsing them into one number the way the archived doc did.
       identified (all currently co-loc no → should be yes, SLA standard/basic → should be premium), ~37 MISSING rows
       flagged, 2 intra-family edge cases noted (VOL_MARKET_MAKING, VOL_0DTE_GAMMA_SCALPING), SLA-tier implication
       documented (all Low→co_located_vm require min SLA premium), decision-latency-vs-inter-leg-gap distinction per the
-      2026-08-10 operator ruling at `/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`
-      frontmatter `source:`.
+      2026-08-10 operator ruling at this doc frontmatter `source:`.
 - [x] ✅ [DATA] P2. **Check whether `isolation_policies.strategy-service`'s existing SLA-tier framework already accounts
       for `Low`-category archetypes needing more than the `premium` tier's 40ms budget provides** — some archived-doc
       figures (MM <100ms total E2E) fit inside 40ms; verify the others (arb <200-300ms, and the newly ms-realm-ruled
@@ -341,21 +342,21 @@ collapsing them into one number the way the archived doc did.
   the boot gate already reads them), NOT build a new family-doc→runtime parser. UAC `archetypes/<kebab>.md` citations +
   `openapi/prospectus/*.md` `[CODEX-DERIVED]` docs are build-time/doc-gen, not runtime family-doc reads.
 - **quant_dev (slot 8) 2026-08-10T20:53Z**: Todo 10 done. Wrote the final decision artifact as a single BINDING section
-  appended to `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` (`unified-trading-pm@8b27db5cc4`): the family →
-  latency category → required deployment_profile → min_sla_tier → premium-coverage mapping the paired execution plan
-  implements against. Every Low family (market-making / arbitrage-structural / carry-and-yield basis / ml-directional /
-  rules-directional / stat-arb-pairs) → `co_located_vm` → `min_sla_tier: premium`, and premium's 40ms
-  `latency_budget_ms` does NOT cover any of their real requirements (MM <100ms / arb <200-300ms /
-  basis+ML+rules+stat-arb ms-realm inter-leg gap) — a real, unresolved framework gap the execution plan's derivation
-  must surface as a warning/exception (execution plan todo 8 — **CORRECTED 2026-08-12 (/plan-reconcile)**: was cited as
-  "todo 6", but a P1 todo was inserted at position 7 in that plan on 2026-08-12, pushing the matching "Cross-check
-  against the SLA-tier gap the audit plan may have flagged" todo from 6 to 8; verified against
-  `strategy_archetype_latency_deployment_profile_execution_2026_08_10.md`'s current numbered todo list). The binding
-  contract also fixes the `client-isolation-sla-and-runtime-profiles.md` §6 row set (7 inconsistent rows →
-  premium/co-located, `EVENT_SETTLED_SPORTS` label resolution, ~37 missing rows), the stale `archetypes/*.md` runtime
-  frontmatter (5 values + 5 invalid `min_sla_tier` enums that raise on the `SLATier()` cast), and the interpretation
-  ruling that `latency_budget_ms` is a decision-segment budget, not a total-E2E promise (order-to-fill is
-  venue-controlled, 20-70ms floor). Medium/High families (vol-trading / event-driven / portfolio) → `distributed` /
-  standard, covered by premium. The 2 single-sided carry exceptions (`YIELD_ROTATION_LENDING`, `YIELD_STAKING_SIMPLE`) →
-  `Medium`/`distributed`. VOL edge-case override (`VOL_MARKET_MAKING`, `VOL_0DTE_GAMMA_SCALPING`) deferred with a stated
-  default (`distributed`) so it cannot block the rollout.
+appended to `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` (`unified-trading-pm@8b27db5cc4`): the family →
+latency category → required deployment_profile → min_sla_tier → premium-coverage mapping the paired execution plan
+implements against. Every Low family (market-making / arbitrage-structural / carry-and-yield basis / ml-directional /
+rules-directional / stat-arb-pairs) → `co_located_vm` → `min_sla_tier: premium`, and premium's 40ms `latency_budget_ms`
+does NOT cover any of their real requirements (MM <100ms / arb <200-300ms / basis+ML+rules+stat-arb ms-realm inter-leg
+gap) — a real, unresolved framework gap the execution plan's derivation must surface as a warning/exception (execution
+plan todo 8 — **CORRECTED 2026-08-12 (/plan-reconcile)**: was cited as "todo 6", but a P1 todo was inserted at position
+7 in that plan on 2026-08-12, pushing the matching "Cross-check against the SLA-tier gap the audit plan may have
+flagged" todo from 6 to 8; verified against `strategy_archetype_latency_deployment_profile_execution_2026_08_10.md`'s
+current numbered todo list). The binding contract also fixes the `client-isolation-sla-and-runtime-profiles.md` §6 row
+set (7 inconsistent rows → premium/co-located, `EVENT_SETTLED_SPORTS` label resolution, ~37 missing rows), the stale
+`archetypes/*.md` runtime frontmatter (5 values + 5 invalid `min_sla_tier` enums that raise on the `SLATier()` cast),
+and the interpretation ruling that `latency_budget_ms` is a decision-segment budget, not a total-E2E promise
+(order-to-fill is venue-controlled, 20-70ms floor). Medium/High families (vol-trading / event-driven / portfolio) →
+`distributed` / standard, covered by premium. The 2 single-sided carry exceptions (`YIELD_ROTATION_LENDING`,
+`YIELD_STAKING_SIMPLE`) → `Medium`/`distributed`. VOL edge-case override (`VOL_MARKET_MAKING`,
+`VOL_0DTE_GAMMA_SCALPING`) deferred with a stated default (`distributed`) so it cannot block the rollout.
+</content>

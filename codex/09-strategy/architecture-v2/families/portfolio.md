@@ -98,7 +98,7 @@ historical data at compute speed). Baseline: the archived
 table — SUPERSEDED as a doc, but its **Yield Optimization** row (Tick-to-Signal <300 s / Signal-to-Order <30 s /
 Order-to-Fill 12–24 s L1 / Total E2E <360 s, Category **High**) is the closest analog (scheduled, batch-adjacent
 decision cadence). **Derivation reasoning** (per the 2026-08-10 audit rubric at
-[`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)):
+[`/plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)):
 the operator's ms-realm ruling did NOT name portfolio, and — decisive here — the doc's OWN content already declares the
 category explicitly in the Alpha thesis: "**Latency profile:** Higher-latency-tolerant. Portfolio archetypes re-run on
 scheduled cadences (daily / weekly / intraday for tactical overlay) — not on each market-data tick. `latency_budget_ms`
@@ -119,7 +119,7 @@ strategies, not per-tick trade decisions — there is no tick-to-signal race by 
 [`/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md`](/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md)
 § 6. There is currently **no `PORTFOLIO` row in the § 6 `topology_requirements` table** — the paired deployment-profile
 derivation todo
-([`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)
+([`/plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)
 todo 8) should add one consistent with `distributed`: execution `isolated` (execution is always isolated), strategy
 `shared OK`, co-location `no`, min SLA `basic`-or-`standard` (a cadence-driven meta-allocator has no latency guarantee
 to sell; `basic` is the honest floor, `standard` is defensible). Nothing in this family needs co-location.

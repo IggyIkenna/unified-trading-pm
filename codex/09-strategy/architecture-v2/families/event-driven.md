@@ -170,7 +170,7 @@ replays historical data at compute speed). Baseline: the archived
 table — SUPERSEDED as a doc, but its **Momentum** row (Tick-to-Signal <5 s / Signal-to-Order <2 s / Order-to-Fill
 venue-dep. / Total E2E <7 s, Category **Medium**) is the closest analog and is used as the baseline here. **Derivation
 reasoning** (per the 2026-08-10 audit rubric at
-[`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)):
+[`/plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)):
 the operator's ms-realm ruling did NOT name event-driven, and the archived doc has no direct Event-Driven row, so the
 category is derived from the closest analog. Momentum at Medium is that analog: a directional, time-bounded reaction
 strategy whose edge is capturing a move after a signal, not racing ticks. The doc's own content independently confirms
@@ -194,7 +194,7 @@ family — but that fast-urgency is an execution-policy trait, not a deployment-
 [`/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md`](/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md)
 § 6. There is currently **no `EVENT_DRIVEN` row in the § 6 `topology_requirements` table** — the paired
 deployment-profile derivation todo
-([`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)
+([`/plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)
 todo 8) should add one consistent with `distributed`: execution `isolated`, strategy `shared OK`, co-location `no`, min
 SLA `standard` (matching the other Medium/Low-but-not-co-located rows such as `ARBITRAGE_STRUCTURAL`). Nothing in this
 family needs co-located execution+strategy on the same VM.

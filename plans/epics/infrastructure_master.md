@@ -42,7 +42,7 @@ related_plans:
   - ../active/bucket_fold_ml_2026_07_17.md
   - ../active/bucket_fold_portfolio_state_2026_07_17.md
   - ../archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md
-  - ../active/bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27.md
+  - ../archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27.md
   - ../active/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08_finalize_2026_08_08.md
   - ../active/ci_pipeline_speed_and_cost_redesign_2026_08_05.md
   - ../active/ci_vm_exposure_remediation_2026_08_06.md
@@ -656,9 +656,9 @@ feature for CeFi instruments — strategy-side volume caps
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Bucket fold — portfolio-state 6 stores → 1
 (portfolio-state-{env}-{pid}) — LAST
 
-### [`bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27`](../active/bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27.md)
+### [`bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27`](../archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27.md)
 
-**status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
+**status**: archived · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
 
 ### [`codex_violations_ratchet_to_five_2026_06_10`](../active/codex_violations_ratchet_to_five_2026_06_10.md)
 
@@ -866,6 +866,14 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
       (`features_sports_reconcile_available_at.py` UTL storage client + resolve_bucket_name + --cloud flag). QG green
       all 3. - [x] ✅ [AGENT] P2-sub. **Fix IS coverage to ≥77%** — boosted from 74.47% to 77.03% via 39 new tests
       (understat ×19, sports_fixtures_daily_repoll ×11, urdi_reference_provider ×9) — IS@d6b8f42e.
+
+> **⚠️ 2026-08-15 (/plan-reconcile) — direction reversal in flight, pending resolution.** The 2 todos immediately below
+> ("Operator sign-off on dual-cloud parity", "GCP bucket decommission") assume AWS-primary/GCS-decommission. That's now
+> the OPPOSITE direction from `/plans/active/defi_compute_gcp_migration_2026_08_08.md`, which is ~72% executed moving
+> DeFi compute OFF AWS ONTO GCP. That plan's own still-open DOC P1 todo ("Resolve
+> `/plans/epics/infrastructure_master.md`'s stale open todos") is the one that resolves/supersedes these 2 items — don't
+> hand-edit them here until that todo lands; it hasn't executed yet as of this note.
+
 - [ ] [OPERATOR] P2. **Operator sign-off on dual-cloud parity** — after parity tests pass: operator signs off in
       handover doc confirming GCS + S3 are byte-equivalent for DeFi asset_group.
 - [ ] [AGENT] P3. **Repeat Phase 2-7 for sports/predictions/tradfi/cefi** — extend AWS migration to remaining
