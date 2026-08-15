@@ -536,3 +536,34 @@ issue's scope); flagged as a follow-up todo below.
   not been checked); then todo #2b (root-cause the 14,982 out-of-window blank-timeframe MDPS population — note
   LA_LIGA_2's real timeframe-labeled rows only starting 2026-03-28 may be a relevant clue for that investigation too,
   since it establishes a precedent for "no timeframe data before a certain date" on this same surface).
+- **data_engineering slot-2, 2026-08-15 (execution prep for the 13,371-row MDPS delete)**: built + landed
+  `market-tick-data-service/scripts/sports/delete_cf8_phantom_timeframe_sibling_confirmed_2026_08_15.py`
+  (`market-tick-data-service@27484b18e9`), adapted directly from the proven
+  `purge_sport_residue_and_blank_venue_manifest_rows_2026_08_14.py` template (same row-group-streamed CAS-write shape,
+  same §3a fresh soft-delete-retention check, same snapshot-before-write, same independent post-write re-verify).
+  Predicate: `data_type=odds_horizon_bucket`, blank `timeframe`, `written_at` in the session window, HAS a non-blank
+  sibling under the coarse key — i.e. exactly the 13,371-row subset this todo scoped, excluding the 959 no-sibling
+  rows. Hard-refuses `--confirm-prod-write` unless the LIVE count matches 13,371/959 exactly (extra caution beyond the
+  template, since this predicate is a compound sibling-join, not a flat mask). **Dry-run executed against the live
+  prod index** (safe — column-projected read only): `live index rows: 6,246,538`, `MATCH: 13,371` (exact match to this
+  doc's confirmed count), `NO-SIBLING: 959` (exact match) — full re-confirmation, not reused from the earlier audit.
+  Fresh §3a check also run standalone: `market-data-tick-sports-prd-central-element-323112` soft-delete retention =
+  604800s (qualifies). **NOT yet executed** (`--confirm-prod-write` unrun): per
+  `purge_sport_residue_and_blank_venue_manifest_rows_2026_08_14.py`'s own docstring, a local `--confirm-prod-write`
+  attempt on a comparable `odds_horizon_bucket` MDPS-index rewrite already OOM-killed twice this session (sandbox
+  cgroup limit, not genuine host exhaustion) — that precedent is why this doc's own P0 sits under the VM-launcher
+  runbook's heavy-I/O hard rule, not a plain local run. Investigated wiring a new category into
+  `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` (the sanctioned reuse path, `sports-manifest-
+  cleanup` is the closest precedent) but stopped short of editing it this session: it is a single 2911-line file shared
+  across ~90 launch categories in a repo this session has not otherwise touched, and the mode-flag-append convention
+  differs per category (some bake `--apply`/`--confirm-prod-write` inline, some use a generic suffix) — a
+  same-session, first-read edit to it carries real blast-radius risk for an unrelated category if mis-wired. **Next
+  actionable item**: either (a) add a new `sports-cf8-phantom-timeframe` category to that launcher (5 touch-points:
+  usage string, the compound-chain case block ~line 1642, VM_SERVICE dispatch ~2450 — likely NOT needed, this script
+  lives in mtds which is the dispatcher default, unlike instruments-service-based `sports-manifest-cleanup` — asset-
+  group dispatch ~2493, main dispatch case ~2896), mirroring `sports-manifest-cleanup`'s compound-chain pattern but
+  with the `--confirm-prod-write` flag this script actually uses (not `--apply`); or (b) a raw one-off
+  `gcloud compute instances create` VM per the generic `VM_MIGRATION_CMD`/`setup-data-pipeline-vm.sh` pattern, IF
+  registered under an existing `VM_PREFIX_TO_BUCKET` prefix first (never hand-roll a name — the runbook's own 2026-07-09
+  incident). Either way: launch, verify STARTED + TERMINAL, confirm `>>> VERIFY PASSED` in the run.log, then flip this
+  todo with the base/removed/remaining row counts + run.log path as evidence.
