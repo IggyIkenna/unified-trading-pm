@@ -12,7 +12,7 @@ summary: >-
   divergence.py`'s manifest reader loads this into a pandas DataFrame in full, which no in-process fix can bound within
   32Gi. A genuine redesign (streaming/DuckDB pushdown, or reducing defi's manifest row-count at the source) is needed;
   this exceeds what a one-shot escalation worker should freelance-rewrite for a data-correctness-critical oracle.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi, cross-cutting]
 stage: [data]
@@ -38,6 +38,9 @@ source:
     per the escalation context.",
   ]
 resolved_by:
+  unified-trading-pm (this doc's own scope: escalation-trail + the two shipped mitigations documented, Option-A
+  rewrite handed off to data_pipeline_self_healing_completion_residual_2026_07_24.md's P1 todo, Option-C investigation
+  completed 2026-08-15 with findings recorded below — see Progress Log)
 locked_by:
 locked_since:
 context_scope:
@@ -50,6 +53,12 @@ context_scope:
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-08-15** — this doc's own scope is closed: the escalation trail is documented, the two shipped
+> mitigations (32Gi ceiling bump + vectorized aggregation) are KEPT, the durable Option-A streaming/DuckDB rewrite is
+> handed off to `/plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md`'s P1 todo (dispatch from
+> there, this doc is not the tracking home for it), and the Option-C non-blocking investigation completed this same
+> session with findings recorded in the Follow-up section below. 0 open todos here.
 
 # dp-manifest-hygiene-changed OOM — defi manifest index scale exceeds Cloud Run's ceiling
 
@@ -163,8 +172,43 @@ investigation. Option C (defi manifest granularity) is now tracked below (non-bl
 
 ## Follow-up
 
-- [ ] [DIAG] P3. **Investigate whether defi's manifest SHOULD be this granular at write time (Option C, non-blocking on
-      Option A).** If per-pool/per-instrument rows could be aggregated coarser at write time (or the index itself
+- [x] ✅ [DIAG] P3. **Investigate whether defi's manifest SHOULD be this granular at write time (Option C, non-blocking
+      on Option A).** If per-pool/per-instrument rows could be aggregated coarser at write time (or the index itself
       pre-aggregated to a smaller companion artifact), the problem shrinks at the source instead of every downstream
       reader needing to cope with 160M rows. Separate investigation, does not gate the Option-A streaming/DuckDB
-      rewrite.
+      rewrite. — unified-trading-pm (docs-only, this session, 2026-08-15). Findings below.
+
+### Investigation finding (Option C), 2026-08-15
+
+**Confirmed: defi's manifest IS this granular by deliberate design, not by accident or a writer bug.**
+`DefiManifestRecorder.record_captured` / `record_empty`
+(`market-tick-data-service/market_tick_data_service/cli/ handlers/_defi_manifest.py::_build_row_key`) accepts an
+optional `instrument_id` (bare pool address, lowercase) that gets folded into the manifest `row_key` for
+`dex_pools`/`dex_swaps` and per-feed oracle rows whenever non-blank — so the manifest grain for those data_types is
+`(date, venue, chain, data_type, instrument_id)`, one row PER POOL, not per `(date, venue, chain, data_type)`.
+
+**Scale check.** The prod DeFi instrument catalogue is **79,005 instruments** (measured 2026-08-05,
+`defi_satellite_ao_dispatch_batch6_2026_07_30.md`) vs. the oracle's 226 `(venue, data_type)` pairs — a ~350x multiplier,
+consistent with the observed 160M manifest rows: a venue-level grain would produce on the order of 226 pairs ×
+~3,149-day span ≈ 710K rows (same order as cefi's 205K measured in this doc's Attempt 1 above), whereas per-pool grain ×
+per-instrument effective lifespan lands at 160M.
+
+**Why it's this granular is intentional, not a bug.** Per-pool manifest rows are the documented honest-coverage
+mechanism: a per-pool `empty_confirmed`/`captured` row reconciles against the IS-seeded per-pool `expected_unattempted`
+row (`_defi_manifest.py::record_empty` docstring: "a catalogue pool the subgraph returned no data for lands a PER-POOL
+EXPECTED_NOT_ENOUGH_TVL reconciling its IS-seeded EU row"). Coarsening the WRITE-time grain to venue/chain level would
+regress this per-pool honest-absence tracking — the SAME class of regression the lending A_TOKEN/DEBT_TOKEN per-token
+retire caused (attempted twice, reverted twice, now ruled "WON'T-DO, permanently" —
+`/codex/02-data/defi-canonical-naming-ssot.md` § lending; that retire's own investigation found flipping the write grain
+silently regresses ~1.04M EU→captured conversions without a matching IS re-seed).
+
+**Recommendation: do NOT change the write-time grain.** The "aggregate per-pool rows coarser at write time" half of
+Option C is unsafe for the reason above. The safe half of Option C is a separate **READ-SIDE pre-aggregated companion
+artifact** — e.g. a consolidator-materialized `_index/availability_index_by_venue.parquet` rollup
+(venue/chain/data_type/date grain, alongside the existing per-pool index) — for `detect_manifest_divergence.py` to read
+instead of the full 160M-row per-pool index, since the UAC oracle's `expected_coverage()` only ever classifies at
+venue/chain/data_type/date grain and never needs per-pool detail for its DIVERGENT_EMPTY/MISSING_EXPECTED
+classification. This does not replace Option A (the DuckDB/streaming rewrite is still the durable general fix and covers
+every AG, not just defi) but would let a future divergence-detector redesign skip touching the per-pool rows entirely
+for defi. Feeds Option A's design; no code changed in this investigation — tracked as design input for the P1 todo in
+`data_pipeline_self_healing_completion_residual_2026_07_24.md`, not a new separate follow-up.
