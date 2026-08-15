@@ -505,3 +505,44 @@ clean window let it through — same governor, same root cause, independent conf
 **Scope note**: this fix is real and adjacent but does NOT itself resolve the revised P2 atom-format-mismatch todo above
 (disjoint files, disjoint mechanism) — see the RESOLVED note above: that todo shipped separately as
 `market-tick-data-service@65dc99a5ff` (not `c35af0713c`, which never reached origin).
+
+### 2026-08-15 — independent parallel session (slot 2): actuator confirmed PAUSED, complementary coverage + wrapper-echo fix shipped
+
+Working the original todo list concurrently and independently, converged on the SAME two root causes
+(`_apply_freshness_skip`'s `explicit_venues` bypass; the CME atom-format mismatch) already fixed above by slots 12/13 —
+both landed first, so no code conflict beyond a routine `git pull --rebase --autostash` reconcile on
+`tick_data_handler.py` (resolved by taking the already-landed side; verified `bash -n` + the full test suite green
+post-merge).
+
+**New finding not otherwise captured in this doc**: definitively confirmed which actuator issues these relaunches.
+`gcloud scheduler jobs describe uts-prod-tradfi-wave-launcher-cron` (`--account=unified-trading-sa@...`) shows
+**`state: PAUSED`**, and
+`gcloud run jobs executions list --job=uts-prod-tradfi-wave-launcher --sort-by=~status.startTime` shows its most recent
+execution was **2026-06-25** — 7 weeks before this incident. wave_launcher.py physically cannot have issued the
+2026-08-15T06:17:03 relaunch that motivated this whole investigation; the "wave_launcher wins the race" hypothesis (todo
+2 above) is conclusively ruled out on this evidence, not just via code-reading. The actual actuator is
+`relaunch_backfill_vm.py`'s `RelaunchPreemptedVm`, invoked as `exit_code_fleet_monitor.py`'s documented `auto_recover`
+actuator (grepped: `deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py` references
+`relaunch_backfill_vm.RelaunchPreemptedVm` directly) via the `uts-prod-dp-exit-code-monitor` Cloud Run Job — consistent
+with this doc's own already-documented execution `6p2nq` starting ~2026-08-15T06:00Z, 17 minutes before the manifest
+write burst. Also confirmed `RelaunchPreemptedVm` DOES correctly forward-resume from `PROGRESS.json`'s
+`last_completed_date` (`relaunch_backfill_vm.py:648-669`, monotonic-forward `START_DATE`/`RESUME_START_DATE` env
+overrides) — so "checkpoint invisible to the dispatcher" is ruled out too. No `[OPERATOR]` follow-up needed: this closes
+the actuator question this doc's summary/todo-2 originally raised as unresolved.
+
+**Shipped** (both additive/complementary to the already-landed fixes above, no functional overlap):
+
+- `market-tick-data-service@5a57a8c89f` — 3 regression tests in
+  `tests/unit/test_freshness_source_scope.py::TestApplyFreshnessSkipExplicitVenuesScoping` for the already-landed
+  `abc40d9f` fix (venue-scoped freshness now skips when fresh; retries only the genuinely-missing venue among several;
+  `--force` still bypasses unconditionally).
+- `deployment-service@b12a559ac5` — extends `1877346c9e`'s zone-rotation pattern to the 9 TradFi OHLCV wrapper families
+  it didn't touch (cboe/cboe-indices/cfe/fred/fx/ice-1m/ice-24h/krx/nasdaq/nyse): their completion echo lines still
+  referenced the legacy single-zone `TRADFI_OHLCV_ZONE` instead of the new `TRADFI_OHLCV_ZONE_POOL_CSV`, which would
+  have printed a stale/misleading zone in the launch summary for every family except CME. Cosmetic/observability only —
+  the actual rotation mechanism was already complete and unaffected.
+
+Both verified `quality-gates.sh`-green and ancestor-of-`origin/live-defi-rollout` before landing. Host was under
+genuinely extreme concurrent load throughout this session (`qg-governor` host-wide token cap of 7 saturated for 20+ min
+at a stretch, load average peaking >200, two runs SIGTERM'd by the RAM-pressure watchdog) — consistent with, and
+independent confirmation of, the RAM-valve/governor contention this doc's slot-12/13 entries above already diagnosed.
