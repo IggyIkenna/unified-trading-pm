@@ -148,7 +148,17 @@ Two independent angles, not mutually exclusive:
       **SPORTS** with `--wall-clock-timeout-sec 14400` (now the §1a default in SKILL.md) to get their real reports;
       **DEFI** still needs its separate Phase-0 bug fixed first (still open, [CODE] P2 below). Did not launch either
       re-run this session (each needs 1-2.5hrs of VM wall-clock, out of proportion for this P2 data todo's
-      `est_hours: 1.0`) — leaving unchecked for whoever picks this back up next.
+      `est_hours: 1.0`) — leaving unchecked for whoever picks this back up next. **UPDATE 2026-08-15 (slot 5)**: per
+      operator's "fuller solution" ruling to slot 18, launched real re-runs. **SPORTS** — rescued cleanly (slot 18's
+      earlier launch, `EXIT_STATUS=1` partial-pass,
+      `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_01_SPORTS.md`). **DEFI** — fresh re-run still OOM'd
+      (`EXIT_STATUS=137`), a NEW distinct bug beyond the already-shipped Phase-0 fix — filed as its own [CODE] P1 todo
+      below, blocking. **CEFI** — fresh re-run (post-re-arm-fix) was still cleanly `RUNNING` 35+ minutes in (past both
+      prior crash points) when this session's two independent background monitors were killed by the harness itself
+      before reaching terminal state — genuinely still in-flight, not stalled; whoever picks this up next should poll
+      `gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mtds-20260815-093348-fc5255/EXIT_STATUS`
+      before re-launching. Still leaving unchecked — 1/3 remaining asset_groups done this session, 1 blocked on new
+      code, 1 needs terminal-state confirmation.
 - [x] [CODE] P1. ✅ **NEW (found 2026-08-15).** The report writer's GCS mirror path has NO `asset_group` segment
       (`pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/<run_date>/data_pipeline_e2e_check_mtds_<run_date>.md`,
       no `{AG}` component) — confirmed live: running the §1a per-`--asset-group` loop sequentially, each completing
@@ -442,3 +452,14 @@ Two independent angles, not mutually exclusive:
     needs its own investigation, out of scope for this P2 data-todo to chase further. **CEFI**'s fresh re-run
     (`pipeline-e2e-check-mtds-20260815-093348-fc5255`) is still RUNNING cleanly past 30 minutes (confirmed
     post-`64d10930` re-arm fix tarball) as of this entry — tracking to terminal state.
+  - **CLOSING UPDATE (same slot 5 session)**: two independent `run_in_background` GCS-poll monitors both got killed by
+    this session's own harness well before CEFI's expected 1-2.5h completion window (first covering CEFI+DEFI survived
+    ~26min of active work then was killed; a second CEFI-only monitor was killed within ~2min of launch with no interim
+    output) — this session's environment does not reliably sustain an hours-long backgrounded wait, unlike prior
+    sessions on this doc. Confirmed via direct poll at 10:08:39Z (35 min post-launch, past the OLD ~10min OOM-137 point
+    and the OLD ~1hr flat-deadline point) that CEFI is genuinely still `RUNNING`, not stalled or crashed — this is real
+    progress, not evidence the fix failed. Leaving the [DATA] P2 checkbox below UNCHECKED (honest partial completion,
+    matching this doc's own established pattern): SPORTS is genuinely done and rescued this session, DEFI needs the new
+    [CODE] P1 fix first, CEFI needs a future session to confirm its terminal state
+    (`gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mtds-20260815-093348-fc5255/EXIT_STATUS`)
+    and rescue its report if it lands `EXIT_STATUS=0`/`1` (pass/partial-pass) before re-launching anything.
