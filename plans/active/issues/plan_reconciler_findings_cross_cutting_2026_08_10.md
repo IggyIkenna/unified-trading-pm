@@ -256,7 +256,7 @@ Script/tooling-level, backend_engineer scope, not a plan-doc fix:
 - Item J. `check_na_corpus_ratchet.py`'s new `--diff-base` mode inherits an already-documented fenced-code-block
   checkbox-overcounting bug (open, unfixed since 2026-08-02). Code-verified live today: `_CHECKBOX_RE` has no
   fence-awareness.
-- Item K. `plans/active/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md` — 4
+- Item K. `plans/archive/2026_08/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md` — 4
   Progress Log entries claim a "P3 backlog todo" exists for prosewrap `--diff-base` conversion; no such checkbox exists
   anywhere in the doc. Real still-needed work has no tracked home. This doc was grace-protected when checked (touched by
   a same-tranche dispatch <12h earlier), so I could not add the missing todo myself.
@@ -359,7 +359,7 @@ diagnosed but did not apply. Re-verified 2026-08-10 (same day) before conversion
       `unified-trading-pm@4484ad1200`**: `_count_open_checkboxes_fence_aware()` wired into `_na_open_todos_from_text()`,
       verified ancestor of `origin/live-defi-rollout`.
 - [x] ✅ [DOC] P2. **Item K — add the real backlog todo to
-      `plans/active/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`** — 4 of that
+      `plans/archive/2026_08/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`** — 4 of that
       doc's own Progress Log entries claim a "P3 backlog todo" exists for the prosewrap `--diff-base` conversion
       (mirroring the pattern already shipped for `check_archive_candidates.sh` and `check_na_corpus_ratchet.py`), but no
       such checkbox exists anywhere in the doc — the real, still-needed work has no tracked home. Was grace-protected

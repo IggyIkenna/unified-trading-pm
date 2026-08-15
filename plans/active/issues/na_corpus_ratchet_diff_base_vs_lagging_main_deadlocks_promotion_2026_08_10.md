@@ -23,7 +23,7 @@ repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [ci, quality-gates-v2, ratchet, plan-hygiene, promotion, deadlock, live-incident]
 related:
-  - /plans/active/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md
+  - /plans/archive/2026_08/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md
   - /plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md
   - /plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md
 created: 2026-08-10
