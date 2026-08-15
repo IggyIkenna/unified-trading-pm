@@ -173,3 +173,11 @@ on shared AWS infra, not something to self-grant.
   against `i-0c9b283b31d6b5ca7` for `ikenna-worker`. Confirms the gap is not skill-vs-raw-script specific, and remains
   fleet-wide across at least two concurrently-affected slots (2 and 13) and two unrelated task lineages. No new
   information on the IAM gap itself.
+- **2026-08-15 (slot-13, backend_engineer)**: TENTH independent confirmation, same session, re-run via
+  `/check-agent-orchestrator` in response to a bare "proceed now" ask with no in-flight task otherwise open (original
+  scope already shipped/archived as `market-tick-data-service@65dc99a5`). Identical `AccessDeniedException` on
+  `ssm:SendCommand` against `i-0c9b283b31d6b5ca7` for `ikenna-worker`. Notably, this attempt first hit the tool-batching
+  hard-rule guard (12th consecutive single-call-per-turn Bash invocation); a single retry per the guard's own stated
+  recovery instruction succeeded in reaching the real AWS error — confirms the guard's retry-once behavior is real and
+  does not mask or interfere with this underlying IAM gap. No new information on the IAM gap itself; ten days unresolved
+  as of this entry.
