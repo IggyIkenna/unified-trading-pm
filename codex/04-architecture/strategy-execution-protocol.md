@@ -280,10 +280,16 @@ The schema above is the contract; this is the state of the code that honours it.
 - **⚠️ NO LIVE RUNTIME SEAM YET (the gap):** nothing routes an emitted `AtomicInstruction` to that executor in a
   live/paper-live tick loop. `emit_instructions` only records; `V2EngineOrchestrator.on_tick` returns the list for a
   caller to forward, and the ONLY realized caller is the backtest/paper runtime (`GroupBRunner._process_tick` →
-  `BenchmarkFillEngine.settle`, which is what produces deterministic paper fills). The v2
-  `AtomicHandler`/`V2InstructionRouter` are typed + tested but unwired, and the legacy live handler speaks the old
-  single-`BET` `Instruction`. Because the **T4 tier ban** forbids strategy-service importing execution-service, the seam
-  cannot be a direct call — it needs a transport decision (the UTL `EventTransport` event-log seam is the
+  `BenchmarkFillEngine.settle`, which is what produces deterministic paper fills). **Correction 2026-08-15**: the v2
+  `AtomicHandler`/`V2InstructionRouter` this paragraph used to cite were deleted — a repo-wide audit found zero
+  production callers (every one of the 14 `ACTION_HANDLER_REGISTRY` handlers, `AtomicHandler` included, was a stateless
+  note-attacher; see `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`). The real
+  ATOMIC live/paper seam is a separate mechanism, `execution_service/v2/atomic_instruction_router.py`'s
+  `route_atomic_instructions`, wired into `cli/handlers/live_execution_handler.py`'s `_run_atomic_routing_loop` and
+  calling `AtomicLegExecutor` directly — not audited here for live-vs-paper-only status, so the rest of this paragraph's
+  "no live runtime seam" claim is unverified against that mechanism, not confirmed false. The legacy live handler speaks
+  the old single-`BET` `Instruction`. Because the **T4 tier ban** forbids strategy-service importing execution-service,
+  the seam cannot be a direct call — it needs a transport decision (the UTL `EventTransport` event-log seam is the
   architecturally-indicated option). Until then ATOMIC is **paper/backtest-only**. Cross-repo proof of the seam's two
   halves meeting lives in `e2e-testing` (`e2e-testing@7665a027`), the only repo permitted to import both services.
 - **Known incomplete:** compensation unwinds via `cancel_bet`, which does not offset an **already-matched** leader; a
