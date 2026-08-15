@@ -669,6 +669,33 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
   `dmesg` depending on cgroup v1/v2 config, which would explain the silence. **Not verified this session** — check
   current `QG_MEM_CAP` state (`qg-host-governor.sh --status`) and whether it applies pre- or post-admission before
   trusting this.
+- **UPDATE 2026-08-15, later same session (slot 29) — cgroup hypothesis above is RULED OUT, root cause still open, fleet
+  contention confirmed real**: a 3rd death occurred (run 4, wrapper PID `2089309`, again at exactly `queued 300s` — same
+  threshold as run 2). This time the `setsid`-wrapper wrapper itself (not just the inner `quality-gates.sh`) was
+  confirmed gone with NO `QG_WRAPPER_EXIT=` line ever written, ruling out a plain SIGKILL of the inner process alone
+  (the wrapper's own trailing `echo` would still have run). Investigated further:
+  - **`orchestrator.service` cgroup checked directly** (`systemctl show -p MemoryCurrent,MemoryHigh,MemoryMax`):
+    `MemoryCurrent≈14.5GiB` vs `MemoryHigh=23GiB`/`MemoryMax=26GiB` — well under both. No
+    `journalctl -u orchestrator.service` or `journalctl -k` OOM/kill entries in the death window either. **The Phase-3
+    cgroup-cap hypothesis above is not supported by this measurement** — leaving it un-corrected would mislead the next
+    reader.
+  - **This plan's OWN Phase-4 `qg-governor-watchdog` mechanism (`_qg_watchdog_start`,
+    `scripts/quality-gates-base/qg-host-governor.sh` line ~570) was traced end-to-end and is ALSO ruled out for this
+    symptom**: it is only started from inside `_qg_governor_acquire_reservation()`, gated on `ADMIT|SOLO_ADMIT` — i.e.
+    strictly AFTER the per-repo memory-reservation admission succeeds. All 3 deaths occurred earlier, still inside
+    `qg_governor_acquire_total_instance()`'s plain `sleep 1; waited+=1` flock-token queue loop (the "total-instance
+    tokens busy... queued Ns" log line, ~line 891) — a loop with **no internal timeout or self-kill of any kind**. My
+    run5 log also has zero matches for `qg-governor-watchdog|SIGTERM|abort`, consistent with this trace.
+  - **Fleet contention is real and severe for this specific gate**: at time of death, `ps aux` showed 4-5 _other_ slots
+    (15, 16 ×2, 28) concurrently attempting `market-tick-data-service` quality-gates/quickmerge — against a **sub-cap of
+    1** for this repo host-wide (`market-tick-data-service sub-cap 1 / host-wide cap 6`). This alone explains a long
+    queue, but not a clean kill at ~300s from a loop with no timeout logic.
+  - **New, unconfirmed lead**: CLAUDE.md documents `slot-cron-ff-pull.sh` + `slot-git-status-report.sh` running "every 5
+    min" (=300s) per slot — the exact interval at which all 3 deaths occurred. Not verified this session whether that
+    cron path can reap a peer's backgrounded child; flagging the coincidence rather than asserting causation.
+  - **Net**: root cause remains OPEN. Two plausible mechanisms (cgroup cap, this plan's own watchdog) are now positively
+    ruled out by direct measurement — narrowing, not closing, the search. Whoever picks up todo 258 should start from
+    "not the cgroup, not `_qg_watchdog_start`, look at what else touches a slot's process tree every ~300s."
 - **Reusable diagnostic**: wrap the launch so a killed child logs its OWN exit code instead of vanishing —
   `setsid bash -c 'bash scripts/quality-gates.sh --no-fix > "$LOG" 2>&1; echo "EXIT=$? at $(date +%T)" >> "$LOG"' < /dev/null &`
   — the `setsid`-detached wrapper shell survives even if the inner command is SIGKILLed, and appends the real exit code
