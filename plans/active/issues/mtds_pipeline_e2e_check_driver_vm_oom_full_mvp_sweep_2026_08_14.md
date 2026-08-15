@@ -463,3 +463,22 @@ Two independent angles, not mutually exclusive:
     [CODE] P1 fix first, CEFI needs a future session to confirm its terminal state
     (`gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mtds-20260815-093348-fc5255/EXIT_STATUS`)
     and rescue its report if it lands `EXIT_STATUS=0`/`1` (pass/partial-pass) before re-launching anything.
+- **2026-08-15 (slot 27 worker, data_engineering)**: picked up this same still-open [DATA] P2 re-run todo. Checked the
+  same CEFI driver (`pipeline-e2e-check-mtds-20260815-093348-fc5255`): `gcloud compute instances describe` → `RUNNING`;
+  its own `run.log` tail shows healthy, ongoing per-shard progress at ~2h20m post-launch (driver RSS flat at ~17.4GB —
+  no growth, matching slot 29's re-arm fix; regularly launching + polling per-shard sub-VMs, e.g.
+  `mtds-backfill-cefi-pipelinecheck-20260815-114758-fdd5b9` for an ASTER shard mid-poll) — this is real progress, not a
+  stall, and no `EXIT_STATUS` blob exists yet. **Reproduced the exact same environment limitation slot 5 already
+  documented above**: armed one `run_in_background` GCS-poll monitor (120s interval, 1h cap) — it was killed by this
+  session's own harness after ~15min / 6 poll ticks (all `PENDING`), before CEFI could plausibly reach terminal state. A
+  direct re-poll immediately after confirmed still `RUNNING`/no `EXIT_STATUS` as of ~12:12Z (≈2h38m post-launch). Per
+  the async-wait-discipline HARD RULE (don't chain repeated ≤30-min re-arms when a job's realistic duration exceeds what
+  this session's environment can sustain in background), NOT re-arming a third monitor — leaving the [DATA] P2 checkbox
+  below UNCHECKED again (same honest-partial-completion pattern as every prior session on this doc: SPORTS done, DEFI
+  blocked on its own [CODE] P1 todo, CEFI still genuinely in-flight with no new evidence of failure). Whoever picks this
+  up next: re-check
+  `gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mtds-20260815-093348-fc5255/EXIT_STATUS`
+  directly (now ~3h+ post-launch, past the documented 1-2.5h estimate — plausibly already terminal) before doing
+  anything else; if it landed `EXIT_STATUS=0`/`1`, rescue the (now `_cefi`-suffixed) report and this is the LAST piece
+  needed to finally flip this checkbox (SPORTS + CEFI real reports in hand, DEFI's remaining blocker tracked
+  separately).
