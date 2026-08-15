@@ -302,7 +302,21 @@ source: >-
       `gh workflow run <wf>.yml --ref live-defi-rollout` escape hatch used to verify the `ldr-docs-gate.yml` `set +e`
       fix ahead of promotion. Source:
       `plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`
-- [ ] [BACKEND] P2. sweep the fleet for the same 'set -uo pipefail' + RC=$? -e trap via the given rg command Source:
+- [x] ✅ [BACKEND] P2. **Fleet swept — zero unfixed instances of the trap; only hit is the already-fixed source site.**
+      (2026-08-15, slot-15·backend) Ran the cited command
+      (`rg -n 'set -uo pipefail' -A 4 .github/workflows/ | rg -B1 'RC=\$\?'`) against every repo's `.github/workflows/`
+      in the fleet checkout (28 repos incl. unified-trading-pm; excluded only the `*.stale-pre-history-rewrite-*`
+      snapshot dirs and `scratch/`, neither of which carries live workflows). Single hit:
+      `unified-trading-pm/.github/workflows/ldr-docs-gate.yml` lines 104-105 — these are the comment lines of the
+      `set +e` fix this same issue doc's todo 1 already shipped 2026-08-10, not a live occurrence (the actual capture on
+      line 115-116 already has `set +e` before it). Broadened the check beyond the literal 4-line window to catch
+      variant spacing/ordering: grepped every repo's workflows for any `RC=$?`-shaped capture
+      (`rg -n 'RC=\$\?' .github/workflows/`) and manually inspected the preceding shell state for each of the 7
+      additional PM hits found this way (`promote-fleet-startup-failure-monitor.yml`, `sit-gate-stuck-detector.yml`,
+      `glue-pool-starvation-monitor.yml`, `stale-build-watcher.yml`, `glue-runner-health-monitor.yml`,
+      `branch-health.yml`, `reconcile-release-tags.yml`) — every one already has an explicit `set +e` immediately before
+      its output-capturing `$(...)` call, so none carries the inherited-`-e` trap. No repo outside `unified-trading-pm`
+      has any `.github/workflows/` file matching either pattern at all. No code change needed. Source:
       `plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`
 - [ ] [BACKEND] P2. add a meta-assertion that any job publishing a notify-consumed verdict output emits it on the
       failure path too Source:
