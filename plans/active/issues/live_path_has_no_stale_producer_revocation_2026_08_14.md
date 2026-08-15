@@ -209,10 +209,17 @@ none of them appear as todos in that plan.
       (`_dispatch()` unconditionally returns `True`; `probe_fn` has zero production injection sites, confirmed via
       `rg`). Added that caveat inline in the WIRED section so a reader doesn't come away thinking probing is real.
 - [ ] [OPERATOR] P1. Decide the lightweight-launcher admission-gate question (see "Admission-gate coverage for the
-      lightweight launcher path" above) — one of: migrate the ~158 `launcher_common.sh` launchers onto
+      lightweight launcher path" above) — one of: migrate the affected `launcher_common.sh` launchers onto
       `vm-exec-with-gcs-tee.sh`; grant a narrow documented exception to the cloud-CLI-in-startup-script guardrail for a
       single-object hold-marker read; or accept the lightweight path as deliberately ungated and record it in the codex.
-      Blocked on this decision, not further investigation.
+      Blocked on this decision, not further investigation. **SCOPE CORRECTED 2026-08-15 — this todo said "~158", which
+      would have sized the decision wrongly by an order of magnitude.** That figure counted every launcher using ANY of
+      `launcher_common.sh`'s ~20 shared `lc_*` helpers (singleton locks, tarball pins, gcloud-create wrappers — used by
+      canonical-path launchers too). The launchers actually on the lightweight-observability opt-out are those calling
+      `lc_log_upload_trap_block`/`lc_log_upload_continuous_block`: **12**, of which the census in
+      `/plans/active/revocation_arming_2026_08_14.md` found **1** genuine migration candidate
+      (`launch-prediction-pipeline-vm.sh`). Read that census before deciding — at this size "migrate them" is a small
+      job, not a migration plan.
 
 ## Evidence
 
