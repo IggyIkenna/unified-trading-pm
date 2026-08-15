@@ -273,7 +273,20 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
       actively watch each step (rollback-ready), not dispatch-and-check-later. Repo: instruments-service +
       market-tick-data-service. Prior text preserved: this item previously carried the standard operator-STOP tag citing
       `BLK-d9137d48` + `sports-cf8-maintenance-window-scheduled`, operator had chosen option A (wait for a scheduled
-      maintenance window); gate re-verified 2026-08-05 (slot-16) as still FALSE at that time.
+      maintenance window); gate re-verified 2026-08-05 (slot-16) as still FALSE at that time. — **ATTEMPTED, NOT
+      COMPLETED, slot-2, 2026-08-15**: followed the execution notes exactly (maintenance window, snapshots, small-scale
+      test first, spot-check). Small-scale (500-row) tests on both surfaces looked correct on a coarse sample. Scaling
+      MDPS toward the full backfill, a precise full-row-key re-verification (prompted by a suspicious "0 net change"
+      aggregate reading) found a NEW correctness bug in the shipped write path: `_write_captured_rows()` never threads
+      `timeframe=` through `writer.add()`, so every `odds_horizon_bucket` rewrite silently drops the row's real
+      horizon-bucket value and collapses N distinct target rows into one phantom blank-timeframe row instead of
+      superseding the correct one — non-destructive (no original row overwritten/lost) but the backfill did not land as
+      intended. Stopped immediately on discovery; released both maintenance windows, resumed both crons; did NOT attempt
+      the IS full backfill or the CF-3/CF-4 cleanup given the shared buggy write path. Full evidence + fix/cleanup
+      todos: `/plans/active/issues/sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md`. **This todo stays
+      open** — matches this doc's own established precedent (CF-8 todos above marked "diagnosed, not GREEN" rather than
+      falsely checked off) — real completion needs the write-path fix + phantom-row cleanup that new issue doc tracks,
+      then a re-attempt of this exact backfill.
 - [x] ✅ [DATA] P3. Add a per-AG exception to `cf_manifest_audit.py::_check_era_b` so tradfi's already-adjudicated
       bundle-grain `data_type in {options_chain,futures_chain}` captured rows stop reading RED on every audit run
       (currently 107,296 rows, CME+ICE only, all historical — see the Era-B todo above for the full evidence chain).
@@ -359,3 +372,13 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
   script/lease/verification sequence a background-research pass just confirmed. Not executed this session — this is a
   live production manifest rewrite on a twice-regressed surface; recommend a dedicated, actively-watched session, not
   unattended dispatch.
+- **data_engineering slot-2, 2026-08-15**: dispatched onto the P3 CF-8 backfill todo, executed it as an actively-watched
+  session per the prior note's own recommendation (maintenance window, snapshots, small-scale-first, spot-check, worked
+  through 3 real shared-host obstacles — tmpfs exhaustion, OOM, a cross-slot `gcloud run jobs execute` collision — to
+  land 2 of 3 MDPS service_name groups). A precise row-key re-verification then surfaced a NEW correctness bug
+  (`_write_captured_rows()` drops the `timeframe` field, collapsing distinct `odds_horizon_bucket` rows into phantom
+  duplicates instead of superseding them) — non-destructive but the backfill did not complete on either surface. Stopped
+  immediately, released both maintenance windows, resumed both crons. Full evidence + fix/cleanup/re-attempt todos:
+  `/plans/active/issues/sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md`. The P3 todo above stays open (not
+  checked off) — this is a genuine "diagnosed, not GREEN" outcome, matching this doc's own established precedent for the
+  sibling CF-8 todos.
