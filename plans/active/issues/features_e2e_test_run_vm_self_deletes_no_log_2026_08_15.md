@@ -169,18 +169,18 @@ Exactly the observed symptom: the VM can read its startup script but can never w
       GCP IAM change, not code)
 
           **PROVEN 2026-08-15 (slot 5, infra craft) — the fix works, todo DONE.** Picked up todo 2 below (dispatched
-                  independently by the backlog) and found todo 1 already in-flight; continued monitoring its verification VM
-                  instead of duplicating work. `features-e2e-tradfi-20260815-100817-679e08` progressed through the FULL real
-                  lifecycle for the first time across 4 total attempts on this launch shape: `EXIT_STATUS=RUNNING` written at
-                  ~10:14Z (the early sentinel `vm-exec-with-gcs-tee.sh` writes at start — never written on any of the 3 prior
-                  failures), then `run.log` appeared, then `EXIT_STATUS=0` at 10:15:07Z with a clean `DEPLOYMENT_COMPLETED
-                  exit_code=0` — the VM ran its full command and self-deleted normally, not the silent self-delete-with-zero-objects
-                  crash this whole doc tracks. Confirms the `uts-test-sa` write-access gap really was the sole cause of the
-                  self-delete/no-log symptom. **Independently corroborated 2026-08-15 (slot-6, infra craft)** via
-                  `gcs_describe_object`/`gcs_read_object_with_generation` on the same VM: `run.log` = 27,656 bytes
-                  (`last_modified=2026-08-15T10:15:16Z`), `EXIT_STATUS` = `b'0\n'` (generation `1786788913139745`) — matches
-                  slot-5's finding exactly; see the SCRIPT P2 todo below for a related poll-loop bug this cross-check also
-                  surfaced.
+                      independently by the backlog) and found todo 1 already in-flight; continued monitoring its verification VM
+                      instead of duplicating work. `features-e2e-tradfi-20260815-100817-679e08` progressed through the FULL real
+                      lifecycle for the first time across 4 total attempts on this launch shape: `EXIT_STATUS=RUNNING` written at
+                      ~10:14Z (the early sentinel `vm-exec-with-gcs-tee.sh` writes at start — never written on any of the 3 prior
+                      failures), then `run.log` appeared, then `EXIT_STATUS=0` at 10:15:07Z with a clean `DEPLOYMENT_COMPLETED
+                      exit_code=0` — the VM ran its full command and self-deleted normally, not the silent self-delete-with-zero-objects
+                      crash this whole doc tracks. Confirms the `uts-test-sa` write-access gap really was the sole cause of the
+                      self-delete/no-log symptom. **Independently corroborated 2026-08-15 (slot-6, infra craft)** via
+                      `gcs_describe_object`/`gcs_read_object_with_generation` on the same VM: `run.log` = 27,656 bytes
+                      (`last_modified=2026-08-15T10:15:16Z`), `EXIT_STATUS` = `b'0\n'` (generation `1786788913139745`) — matches
+                      slot-5's finding exactly; see the SCRIPT P2 todo below for a related poll-loop bug this cross-check also
+                      surfaced.
 
 - [x] ✅ [INFRA] P1. If the IAM hypothesis is refuted, get real evidence of what actually kills the VM in its first
       ~30-60s of boot — **N/A, not executed: the hypothesis was CONFIRMED (todo 1 above), not refuted**, so this
@@ -196,16 +196,24 @@ Exactly the observed symptom: the VM can read its startup script but can never w
       lives)
 
       **NEW related finding, same verification run (2026-08-15, slot-6, infra craft):** `_poll_until_terminal` has a
-              separate false-negative bug, distinct from the reason-field gap above. The VM's `EXIT_STATUS` object goes through
-              an intermediate state — content literal `"RUNNING"` — written early and overwritten with the real numeric code
-              (`"0\n"`) only once the deployment actually finishes. The poller's tick-5 log line proves it hit this window mid-flight:
-              `EXIT_STATUS present but unreadable/unparsable: invalid literal for int() with base 10: 'RUNNING'` — and instead of
-              treating an unparsable-but-present `EXIT_STATUS` as "not yet terminal, keep polling," it gave up immediately and the
-              report was written with `exit=-1, failed, objects=0`. Ground truth (checked ~1 minute later, same run, no new
-              launch): `EXIT_STATUS` had already flipped to `0` and `run.log` existed complete — i.e. **the run actually
-              succeeded but was reported as failed** because the poller read it at exactly the wrong moment and did not retry.
-              This is a real, reproducible false-negative in the terminal-detection logic, not a flaky one-off — add explicit
-              handling for the `RUNNING` sentinel (treat as non-terminal, continue polling) alongside the reason-field work above.
+          separate false-negative bug, distinct from the reason-field gap above. The VM's `EXIT_STATUS` object goes through
+          an intermediate state — content literal `"RUNNING"` — written early and overwritten with the real numeric code
+          (`"0\n"`) only once the deployment actually finishes. The poller's tick-5 log line proves it hit this window mid-flight:
+          `EXIT_STATUS present but unreadable/unparsable: invalid literal for int() with base 10: 'RUNNING'` — and instead of
+          treating an unparsable-but-present `EXIT_STATUS` as "not yet terminal, keep polling," it gave up immediately and the
+          report was written with `exit=-1, failed, objects=0`. Ground truth (checked ~1 minute later, same run, no new
+          launch): `EXIT_STATUS` had already flipped to `0` and `run.log` existed complete — i.e. **the run actually
+          succeeded but was reported as failed** because the poller read it at exactly the wrong moment and did not retry.
+          This is a real, reproducible false-negative in the terminal-detection logic, not a flaky one-off — add explicit
+          handling for the `RUNNING` sentinel (treat as non-terminal, continue polling) alongside the reason-field work above.
+          **✅ FIXED 2026-08-15 (slot-6, infra craft)**: `_read_exit_status` now treats the literal `RUNNING` sentinel
+          content as "not yet present" (returns `None`) instead of an unparsable `-1` failure, so `_poll_until_terminal`'s
+          existing not-terminal-yet loop keeps polling through it — `unified-trading-library@2c412cc367`
+          (`unified_trading_library/pipeline_e2e_check/launcher.py` + 4 new regression tests in
+          `tests/unit/test_pipeline_e2e_check_launcher_running_sentinel.py`, QG green). **The reason-field-threading half of
+          this todo (surfacing the launcher's self-delete/timeout distinction in the report's `reason` string) is still
+          open** — checkbox stays unflipped until that's also done; this was a genuinely separable regression fix, not the
+          whole todo.
 
 - [ ] [DATA] P1. Once fixed, relaunch `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s "Todo 2: relaunch
       TRADFI:volatility benchmark once todo 1 lands"
@@ -228,44 +236,44 @@ Exactly the observed symptom: the VM can read its startup script but can never w
       (repo: features-service)
 
       **Independently corroborated 2026-08-15 (slot-6, infra craft)** via a direct `run.log` read of the same VM —
-              identical `Completed 0/11 groups` result, same `No captured perp for VX` / `No data for VX` /
-              `empty_confirmed manifest write failed` pattern across every group and date. One addition to the guidance above:
-              relaunching with the SAME recent window will reproduce this 0/11 result — check the manifest for a window with
-              confirmed VX captures before spending another billable VM launch on this todo, don't retry blind.
+                  identical `Completed 0/11 groups` result, same `No captured perp for VX` / `No data for VX` /
+                  `empty_confirmed manifest write failed` pattern across every group and date. One addition to the guidance above:
+                  relaunching with the SAME recent window will reproduce this 0/11 result — check the manifest for a window with
+                  confirmed VX captures before spending another billable VM launch on this todo, don't retry blind.
 
-          **ROOT-CAUSED 2026-08-15 (slot-17, data_engineering) — neither hypothesis in the todo's own framing is quite
-          right; the actual root cause is a THIRD option: a code gap in the resolver, not a genuine data absence and not
-          a masked/silent fetch failure.** `VolatilityDataLoader._resolve_spot_future_tradfi`
-          (`features_service/volatility/core/data_loader.py:439`) — the TRADFI spot-price-proxy resolver shipped by
-          `tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`'s Option A fix — looks up
-          `_TRADFI_FX_UNDERLYING_TO_PRODUCT_ROOT` (line 122), which contains ONLY the 5 FX underlyings that doc's own
-          2026-08-06 diagnosis covered (`6A/6B/6C/6E/6J`); VX was never in that doc's scope (it only ever saw "10 feature
-          groups, all FX" — VX must have been added to the enumerated TRADFI:volatility universe separately, sometime
-          between 2026-08-06 and this session, without anyone updating the resolver). `_resolve_spot_future_tradfi("VX",
-          ...)` hits `product_root = _TRADFI_FX_UNDERLYING_TO_PRODUCT_ROOT.get("VX")` → `None` → returns `None`
-          IMMEDIATELY, before ever querying the manifest — structurally guaranteed for every date, regardless of what's
-          actually captured. **Even if VX were added to that dict, the lookup would still fail**: `_tradfi_future_candidates`
-          (line 482) filters for `instrument_type=="FUTURE"` + `data_type=="trades"` with the FX-specific
-          `{PRODUCT_ROOT}-USD@LIN-{expiry}` `instrument_id` convention — but VX's real captured data (confirmed via a
-          column-pruned manifest read, `venue=CBOE`) is shaped `instrument_type=="futures_chain"` +
-          `data_type=="ohlcv_1m"` + `instrument_id=="CBOE:FUTURE:VIX"`, a structurally different shape the current lookup
-          would never match. This is WHY the honest-absence guard correctly rejects the write — there was never a genuine
-          upstream fetch attempt behind the "no perp resolved" result (a code-level miss, not a real 200+empty response),
-          so no real `FetchEvidence` exists to attach.
+              **ROOT-CAUSED 2026-08-15 (slot-17, data_engineering) — neither hypothesis in the todo's own framing is quite
+              right; the actual root cause is a THIRD option: a code gap in the resolver, not a genuine data absence and not
+              a masked/silent fetch failure.** `VolatilityDataLoader._resolve_spot_future_tradfi`
+              (`features_service/volatility/core/data_loader.py:439`) — the TRADFI spot-price-proxy resolver shipped by
+              `tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`'s Option A fix — looks up
+              `_TRADFI_FX_UNDERLYING_TO_PRODUCT_ROOT` (line 122), which contains ONLY the 5 FX underlyings that doc's own
+              2026-08-06 diagnosis covered (`6A/6B/6C/6E/6J`); VX was never in that doc's scope (it only ever saw "10 feature
+              groups, all FX" — VX must have been added to the enumerated TRADFI:volatility universe separately, sometime
+              between 2026-08-06 and this session, without anyone updating the resolver). `_resolve_spot_future_tradfi("VX",
+              ...)` hits `product_root = _TRADFI_FX_UNDERLYING_TO_PRODUCT_ROOT.get("VX")` → `None` → returns `None`
+              IMMEDIATELY, before ever querying the manifest — structurally guaranteed for every date, regardless of what's
+              actually captured. **Even if VX were added to that dict, the lookup would still fail**: `_tradfi_future_candidates`
+              (line 482) filters for `instrument_type=="FUTURE"` + `data_type=="trades"` with the FX-specific
+              `{PRODUCT_ROOT}-USD@LIN-{expiry}` `instrument_id` convention — but VX's real captured data (confirmed via a
+              column-pruned manifest read, `venue=CBOE`) is shaped `instrument_type=="futures_chain"` +
+              `data_type=="ohlcv_1m"` + `instrument_id=="CBOE:FUTURE:VIX"`, a structurally different shape the current lookup
+              would never match. This is WHY the honest-absence guard correctly rejects the write — there was never a genuine
+              upstream fetch attempt behind the "no perp resolved" result (a code-level miss, not a real 200+empty response),
+              so no real `FetchEvidence` exists to attach.
 
-          Separately (a DIFFERENT, MTDS-capture-side observation, not the primary cause of the reported symptom): a
-          bounded per-date manifest scan of `venue=CBOE` across 2026-08-07..14 found exactly ONE genuine `captured`
-          `futures_chain`/VX row in the whole window (`2026-08-07`, `CBOE:FUTURE:VIX`/`ohlcv_1m`) — every other date
-          (08-08 through 08-14) shows CBOE rows only as `expected_unattempted`/`empty_confirmed`, never `captured` and
-          never `attempted_failed` (i.e. no fetch was even logged as attempted, not that one failed). This MAY be related
-          to the ongoing TradFi Databento billing saga (`tradfi_databento_account_billing_suspended_2026_08_09.md`, still
-          `blocked` as of today — VX/CBOE is exclusively Databento-sourced via `XCBF.PITCH`, no Massive fallback), but
-          that doc's own 2026-08-15 finding says the LATEST recurrence is narrower than account-wide
-          (`GLBX.MDP3`/CME-specific — other venues wrote successfully), and `expected_unattempted`/no-attempt is a
-          different signature than that doc's `attempted_failed`/`402`/`api_key_deactivated` pattern — not confirmed
-          whether VX/CBOE capture is even scheduled to run daily at all. Flagging as a related but genuinely SEPARATE
-          question (MTDS/CBOE capture cadence, not features-service's resolver) — not root-caused further here, out of
-          proportion for this diagnostic todo to absorb. Filed the concrete resolver fix as its own follow-up todo below.
+              Separately (a DIFFERENT, MTDS-capture-side observation, not the primary cause of the reported symptom): a
+              bounded per-date manifest scan of `venue=CBOE` across 2026-08-07..14 found exactly ONE genuine `captured`
+              `futures_chain`/VX row in the whole window (`2026-08-07`, `CBOE:FUTURE:VIX`/`ohlcv_1m`) — every other date
+              (08-08 through 08-14) shows CBOE rows only as `expected_unattempted`/`empty_confirmed`, never `captured` and
+              never `attempted_failed` (i.e. no fetch was even logged as attempted, not that one failed). This MAY be related
+              to the ongoing TradFi Databento billing saga (`tradfi_databento_account_billing_suspended_2026_08_09.md`, still
+              `blocked` as of today — VX/CBOE is exclusively Databento-sourced via `XCBF.PITCH`, no Massive fallback), but
+              that doc's own 2026-08-15 finding says the LATEST recurrence is narrower than account-wide
+              (`GLBX.MDP3`/CME-specific — other venues wrote successfully), and `expected_unattempted`/no-attempt is a
+              different signature than that doc's `attempted_failed`/`402`/`api_key_deactivated` pattern — not confirmed
+              whether VX/CBOE capture is even scheduled to run daily at all. Flagging as a related but genuinely SEPARATE
+              question (MTDS/CBOE capture cadence, not features-service's resolver) — not root-caused further here, out of
+              proportion for this diagnostic todo to absorb. Filed the concrete resolver fix as its own follow-up todo below.
 
 - [ ] [CODE] P2. **NEW (filed 2026-08-15, slot-17) — fix `_resolve_spot_future_tradfi` for VX per the root-cause
       above.** Extend `VolatilityDataLoader`'s TRADFI spot-price resolver to also resolve VX: add a VX-specific branch
@@ -350,3 +358,19 @@ Exactly the observed symptom: the VM can read its startup script but can never w
   finding says the current recurrence is CME-specific, not account-wide, and the CBOE signature here is "never
   attempted" not "attempted and failed"). No code changed this session — pure diagnostic, per this todo's own
   "root-cause" framing; the fix itself needs its own scoped dispatch.
+
+- **2026-08-15 (slot-6, infra craft, todo `[SCRIPT] P2` RUNNING-sentinel half, DONE)**: server cancelled the prior task
+  (`-d63cea8bbc07`, `dispatch_reason: cancelled`) before this session could call `/done` on it — resolved via
+  `/skip-current-task` per `worker.md`'s cancellation contract (found already `status=idle` server-side by the time of
+  the call, so nothing left to skip; no uncommitted WIP to revert, prior todo's work was already shipped). Next
+  heartbeat dispatched this doc's `[SCRIPT] P2` todo (id `features_e2e_test_run_vm_self_deletes_no_log-683c21ffc662`).
+  Fixed the RUNNING-sentinel false-negative in `_read_exit_status`
+  (`unified_trading_library/pipeline_e2e_check/launcher.py`): the VM's deliberate non-terminal `"RUNNING"` stamp (see
+  `launcher_common.sh`'s "Stamp a non-terminal RUNNING sentinel FIRST" comment — a whole-unit-SIGKILL false-success
+  guard, not a bug on the writer side) now returns `None` ("not yet present") instead of `-1` ("unparsable failure"), so
+  `_poll_until_terminal`'s existing not-terminal loop naturally keeps polling through it. Added 4 regression tests
+  (`test_pipeline_e2e_check_launcher_running_sentinel.py`) covering the sentinel, a real terminal rc,
+  genuinely-unparsable content, and an end-to-end poll-through-RUNNING-to-real-rc case. QG green, shipped
+  `unified-trading-library@2c412cc367`. Left the todo's checkbox unflipped — the reason-field-threading half (surfacing
+  self-delete/timeout distinction in the report's `reason` string) is a separate, still-open piece of the same todo, not
+  touched this session.
