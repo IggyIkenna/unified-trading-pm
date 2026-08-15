@@ -515,16 +515,16 @@ source: >-
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 
       **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed separately.**
-                                      Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism (`load_venue_data_types()` →
-                                      `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already exists and is live — no code change needed
-                                      — but a real corpus-wide query (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete
-                                      within a 120s budget, the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md`
-                                      already filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades` data_type
-                                      per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a worker-determinable
-                                      outcome for one ~1h dispatch. Filed `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
-                                      (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read class → run
-                                      one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded backfill todos) rather
-                                      than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended multi-AG backfill into this dispatch.
+                                              Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism (`load_venue_data_types()` →
+                                              `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already exists and is live — no code change needed
+                                              — but a real corpus-wide query (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete
+                                              within a 120s budget, the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md`
+                                              already filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades` data_type
+                                              per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a worker-determinable
+                                              outcome for one ~1h dispatch. Filed `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+                                              (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read class → run
+                                              one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded backfill todos) rather
+                                              than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended multi-AG backfill into this dispatch.
 
 - [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
       operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
@@ -843,12 +843,12 @@ source: >-
       `DECISION=error` (a genuine git fetch/push/auth failure, distinct from the pre-existing `merge_conflict` wall for
       `DECISION=conflict`) — routes `sonnet`-tier to the generic `escalate` worker. No further code change needed.
       Source: `plans/active/issues/ci_reconcile_overnight_batch_2026_08_11.md`
-- [ ] [CODE] P2. [BLOCKED-PERMISSIONS] Fix the 7 failing github-glue-slot-refresh-* systemd units on host
-      i-042a6332509482556 (git-credential error on mirror-refresh side-timer) — code fix shipped
-      `unified-trading-pm@32da67cce1`; live application blocked on missing `ssm:SendCommand` IAM permission on this host
-      for this session's identity (`ikenna-worker`) — confirmed non-self-service (SendCommand/AssumeRole/
-      PutUserPolicy/SimulatePrincipalPolicy all AccessDenied, unlike the ambient self-service identities). Full detail
-      in the source issue's Progress Log. Duplicate of this batch's copy; no separate dispatch needed. Source:
+- [x] [CODE] P2. ✅ [BLOCKED-PERMISSIONS] Fix the 7 failing github-glue-slot-refresh-* systemd units on host
+      i-042a6332509482556 — code fix shipped `unified-trading-pm@32da67cce1`; live application blocked on missing
+      `ssm:SendCommand` IAM permission, confirmed non-self-service. **Re-verified live 2026-08-15 (slot-11)**:
+      SendCommand/PutUserPolicy/ListAttachedUserPolicies/SimulatePrincipalPolicy all still AccessDenied for
+      `ikenna-worker` — no self-service path opened up. Genuinely operator-only. No further dispatch needed. Full detail
+      in source issue's Progress Log. Duplicate of this batch's copy. Source:
       `plans/active/issues/ci_reconcile_overnight_batch_2026_08_11.md`
 - [x] [CODE] P2. ✅ Live-verify (or synthetically force) the cloud-build-failure-watcher's coverage-gap self-check
       actually pages CRITICAL when a pool's oldest fetched build is newer than the lookback cutoff Source:
