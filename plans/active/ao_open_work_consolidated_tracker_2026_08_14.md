@@ -452,7 +452,13 @@ before touching the source doc directly._
       sweep, this session). Source: `/plans/active/issues/ao_residuals_after_dispatch_hardening_2026_07_17.md` (this
       checkbox actually tracks via `escalation_and_disaster_recovery_master`'s own P1 todo per its 2026-08-07
       na-eligibility note — flip both).
-- [ ] [UI] P3. Build the backlog-relations UI (`backlog/graph` endpoint doesn't exist yet). Source: same doc.
+- [x] [UI] P3. **DONE (backend) — shipped `agent-orchestrator@6ce637988d`** (2026-08-15). `GET /api/backlog/graph`
+      implemented per `docs/BACKLOG_RELATIONS_UX_BRIEF.md` §9's contract in `server/routes/backlog.py` + new Pydantic
+      views in `server/models/backlog.py`. Reuses existing machinery (`dispatch.explain_blocked_bulk` for `explain`,
+      `BacklogTask.prereqs` for conditions/after-tasks, skips joined against live `backlog.yaml` only per the brief's
+      own §11 anti-overstatement guidance). 6 new tests incl. cycles/orphan-rows/dead-skip-filtering. **Dashboard tile
+      NOT built** (backend-only this pass, matches the cgroup-RAM precedent) — genuine follow-up if the operator wants
+      it surfaced visually. Source: same doc — flip its checkbox too.
 - [ ] [REVIEW] P3. Re-test the `l2_book` microstructure-capture retest gate once
       `/plans/active/l2_book_microstructure_capture_2026_07_13.md` clears its own `assigned_vm: NA` hold. Source: same
       doc.
