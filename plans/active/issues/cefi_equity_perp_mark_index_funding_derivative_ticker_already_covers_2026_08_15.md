@@ -43,6 +43,9 @@ source:
   ]
 resolved_by:
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # CeFi equity-perp indexPrice/markPrice/fundingRate — existing `derivative_ticker` already covers it

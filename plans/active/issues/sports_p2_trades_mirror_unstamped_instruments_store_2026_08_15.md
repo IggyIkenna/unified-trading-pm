@@ -27,6 +27,8 @@ source: ["sports_taxonomy_p2_migration_2026_08_08.md REVIEW todo, live census 20
 resolved_by:
 locked_by:
 locked_since:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Sports IS-bucket `trades` mirror rows never re-stamped

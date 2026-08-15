@@ -109,10 +109,14 @@ execution-service-only).
       `instruments-service`'s own copy is correct (it IS about itself). `market-tick-data-service` and
       `unified-api-contracts` have their own distinct, non-stale content. The
       `*.stale-pre-history-rewrite-20260805T112618Z` shadow checkouts were excluded — not live working repos.
-- [ ] [DOC] P3. Rewrite `deployment-service/CONTRIBUTING.md` end-to-end against the current workflow, following the same
-      pattern as `execution-service@72fbc742da` (title, File Locations for deployment-service's actual package layout,
-      quickmerge section replacing the PR-branch flow, Branch Protection, Working with Multiple Agents/Sessions per
-      `/codex/05-infrastructure/per-tab-worktrees.md`) — repo: deployment-service.
+- [x] ✅ [DOC] P3. **DONE 2026-08-15 — rewrote `deployment-service/CONTRIBUTING.md` end-to-end** against the current
+      `.claude/CLAUDE.md` workflow, following the `execution-service@72fbc742da` pattern: title
+      (`Contributing to Deployment Service`), File Locations (actual `deployment_service/` package layout plus
+      `terraform/`, `infra/`, `cloud-build/`, `packer/`, `deploy/`, `functions/`, `contracts/`, `runbooks/`, `grafana/`,
+      `audit/`, `scripts/`, `tools/`), the quickmerge section (direct commit on `live-defi-rollout` via
+      `--agent --files`, no PR branch, no `gh pr` step), Branch Protection, and Working with Multiple
+      Agents/Sessions (per-slot-worktree model, citing `/codex/05-infrastructure/per-tab-worktrees.md`). Evidence:
+      `deployment-service@514e0f8ff9`.
 - [ ] [DOC] P3. Rewrite `market-data-processing-service/CONTRIBUTING.md` end-to-end, same pattern as
       `execution-service@72fbc742da` — repo: market-data-processing-service.
 - [ ] [DOC] P3. Rewrite `unified-trading-library/CONTRIBUTING.md` end-to-end, same pattern as
@@ -138,3 +142,8 @@ execution-service-only).
   pre-existing `execution-service@72fbc742da` citation against — a structural limitation of isolated mode in this
   multi-repo workspace, not a defect in the edit. Re-shipping from the main checkout (non-isolated) instead, since no
   other session has this file dirty.
+- **2026-08-15 (slot-15, interactive, cont'd)**: picked up todo 3. Rewrote `deployment-service/CONTRIBUTING.md`
+  end-to-end following the `execution-service@72fbc742da` pattern; shipped via quickmerge (non-isolated, `--agent
+  --files 'CONTRIBUTING.md'`), full quality gate passed (docs-only fast path, 24s). Landed on `live-defi-rollout` at
+  `514e0f8ff9`, post-push ancestry verified. Todos 4-5 (market-data-processing-service,
+  unified-trading-library) remain open — not attempted this session.
