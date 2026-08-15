@@ -66,7 +66,7 @@ drift_direction: advance-code
 
 ## Findings → todos
 
-- [ ] [BACKEND] P2. Replace execution-service's hardcoded LST address constants (`STETH_ADDRESS`, `WSTETH_ADDRESS`,
+- [x] ✅ [BACKEND] P2. Replace execution-service's hardcoded LST address constants (`STETH_ADDRESS`, `WSTETH_ADDRESS`,
       `RETH_ADDRESS`, `WEETH_ADDRESS`, `EZETH_ADDRESS`, `PUFETH_ADDRESS` in
       `execution_service/defi_execution/protocols/{lido,rocket_pool,etherfi,renzo,puffer}.py`) with imports from
       `unified_api_contracts.registry.lst_token_addresses` — the same import strategy-service's
@@ -75,7 +75,16 @@ drift_direction: advance-code
       (its own docstring states duplicating them "would have created a second source of truth"); values currently agree
       only because UAC was derived from these, but a future edit to either side won't propagate. Repo:
       execution-service. Done-when: grep for the 6 hardcoded hex-literal constants in `defi_execution/protocols/`
-      returns zero hits, both repos' `quality-gates.sh` are green.
+      returns zero hits, both repos' `quality-gates.sh` are green. **✅ Done — execution-service@d981725c24**. Added a
+      shared fail-loud `required_lst_address()` lookup helper to `_evm_generic.py` and wired it into
+      `lido.py`/`rocket_pool.py`/`etherfi.py`/`renzo.py`/`puffer.py`'s token-address constants. Also found + fixed a 6th
+      occurrence of the same duplication bug the grep surfaced outside this todo's named file list: `symbiotic.py`'s
+      `WSTETH_ADDRESS` (not one of the 5 files originally cited, but the identical hardcoded-`wstETH` pattern) —
+      migrated it too so the done-when's "zero hits" grep is genuinely clean across all of `defi_execution/protocols/`,
+      not just the 5 named files. Non-token addresses (`DEPOSIT_POOL`, `RESTAKE_MANAGER`, `OPERATOR_DELEGATOR`,
+      `LIQUIDITY_POOL_ADDRESS`, `DEFAULT_COLLATERAL_WSTETH`) and the deliberately-unmigrated `EETH_ADDRESS` are
+      unchanged — out of the registry's scope per its own docstring. `unified-api-contracts` was not modified (read-only
+      reference), so only execution-service's `quality-gates.sh` was run (green, 369s).
 
 - [ ] [BACKEND] P3. Add unit-test coverage for the `GoogleAPICallError` catch that 2b92d6ac6 added to the GCS
       blob-existence probe in `loader_transforms.py` and `loaders/base.py` (widened from
