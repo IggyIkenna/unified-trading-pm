@@ -337,8 +337,15 @@ source: >-
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [ ] [CODE] P2. Fix sports reference-table exporter fabricating http_status=200 FetchEvidence for a GCS-missing
       upstream Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
-- [ ] [CODE] P2. Recompute the 2026-08-10 sports reference tables once instruments-service backfills that day Source:
-      `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
+- [x] ✅ [CODE] P2. Recompute the 2026-08-10 sports reference tables once instruments-service backfills that day
+      **CLOSED — stale-checkbox correction (2026-08-15), already-shipped elsewhere per the AO-dispatch conflict-check
+      protocol §3(4).** The source doc's own identical todo was verified done by slot-29 on 2026-08-14 (manifest lookup:
+      `day=2026-08-10` `fixture_features`/`derived_features` `capture_status=captured`, real non-placeholder GCS output
+      — 172 blobs, 17-490KB each, across 40+ leagues; instruments-service `sports_reference` upstream for 2026-08-10
+      also confirmed real, 648 objects) and the source doc itself is `[x] ✅` there. Full evidence:
+      `/plans/archive/2026_08/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md`
+      Progress Log (slot-29, 2026-08-14) — that issue doc is `status: resolved` and already archived. No recompute run
+      by this todo; nothing left to do. Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [x] [CODE] P2. Shard the slow date in the MDPS per-date backfill so one date cannot fail a complete run **OUT-OF-SCOPE
       FOR THIS BATCH (2026-08-13, operator scoping instruction)** — MDPS/features-service backfill/recompute work is
       excluded from this batch unless manifest-canonical or migration-related. The underlying item remains open in its
