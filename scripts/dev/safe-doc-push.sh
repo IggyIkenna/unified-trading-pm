@@ -946,27 +946,36 @@ check_orphaned_prek_patches() {
 }
 
 # KNOWN_RENAME_SOURCES -- captured ONCE, right here, before the loop below (or any
-# fetch/pull/rebase) touches the tree. This is the only point where the caller's staged
-# rename is guaranteed to still be intact and unambiguous (a clean R100 pair). Every
-# reconcile step downstream (merge-pull's own conflict handling, rebase, autostash
-# pop-against-a-moved-HEAD) can decompose that pair into a staged ADD of the destination
-# plus an UNSTAGED delete of the source -- observed live: when the concurrent commit that
-# forces reconciliation ALSO touched the source path's content, the autostash pop can no
-# longer cleanly re-apply the rename as one unit, so the deletion half comes back unstaged
-# instead of re-detectable via `git diff --cached -M`. Capturing once up front and
-# reasserting unconditionally before every commit sidesteps re-detecting a rename whose
-# staged shape is not guaranteed to survive reconciliation.
+# fetch/pull/rebase) touches the tree. Every reconcile step downstream (merge-pull's own
+# conflict handling, rebase, autostash pop-against-a-moved-HEAD) can decompose a staged
+# rename pair into a staged ADD of the destination plus an UNSTAGED delete of the source --
+# observed live: when the concurrent commit that forces reconciliation ALSO touched the
+# source path's content, the autostash pop can no longer cleanly re-apply the rename as one
+# unit, so the deletion half comes back unstaged instead of re-detectable via
+# `git diff --cached -M`. Capturing once up front and reasserting unconditionally before
+# every commit sidesteps re-detecting a rename whose staged shape is not guaranteed to
+# survive reconciliation.
+#
+# Detection is FILES-based, not `git diff --cached -M`-based (fixed 2026-08-15,
+# safe_doc_push_extreme_stash_quarantine_drops_renamed_file_content_2026_08_15.md): any named
+# `--files` entry that is absent from the working tree but still present in HEAD is, by
+# construction, the deletion half of a caller-completed `git mv` (or a plain deletion) --
+# regardless of whether anything has been `git add`ed yet. The old `-M` rename-pair heuristic
+# required the rename to ALREADY be staged at this exact point, which is true for the
+# shared-index path (the caller `git mv`s before invoking this script) but FALSE for the
+# isolated-worktree child: its copy loop only `cp`/`rm -f`s the caller's files onto disk (see
+# "propagating deletion of $_f" above) and never runs `git add`, so `git diff --cached` was
+# always empty when this block ran there -- KNOWN_RENAME_SOURCES was silently EMPTY for every
+# isolated-mode run, and the reassert_renames() safety net below was a permanent no-op on the
+# exact code path (isolated mode, the default) the incident hit. Mirrors the isolated-worktree
+# "propagate deletions" fix's own decision rule (line ~407 above): absent-from-disk AND
+# present-in-HEAD is a deletion that must be reasserted through every reconcile cycle.
 KNOWN_RENAME_SOURCES=()
-while IFS=$'\t' read -r _status _src _dst; do
-  [[ -z "$_status" ]] && continue
-  case "$_status" in
-    R*)
-      if is_named "$_dst"; then
-        KNOWN_RENAME_SOURCES+=("$_src")
-      fi
-      ;;
-  esac
-done < <(git diff --cached --name-status -M 2>/dev/null)
+for _f in "${FILES[@]}"; do
+  if [[ ! -e "$_f" ]] && git cat-file -e "HEAD:$_f" 2>/dev/null; then
+    KNOWN_RENAME_SOURCES+=("$_f")
+  fi
+done
 
 # reassert_renames -- re-stage the deletion of every KNOWN_RENAME_SOURCES path that is
 # currently missing from disk, regardless of whether the index still shows it as a clean
@@ -988,6 +997,47 @@ reassert_renames() {
     echo "  -> re-staging deletion of rename source (would otherwise leave the doc at both paths): $src"
     git add -- "$src" 2>/dev/null || true
   done
+}
+
+# stage_named_files -- replaces a bare `git add -- "${FILES[@]}"` for the staging step below.
+#
+# Root cause confirmed 2026-08-15 (safe_doc_push_extreme_stash_quarantine_drops_renamed_file_
+# content_2026_08_15.md): `git add -- <path>` fails with "did not match any files" not only
+# when a path is a caller typo, but ALSO when a tracked-but-missing path's deletion is ALREADY
+# staged -- once the index has no entry for it (matching the desired post-deletion state),
+# there is nothing left for `git add` to "add", even though `git diff --cached` correctly
+# shows it as a staged deletion and it would commit fine as-is. Reproduced directly:
+#   git rm/rm a tracked file, `git add -- f` (rc=0, stages the deletion) -- then `git add -- f`
+#   AGAIN on the same now-already-staged path fatals with the exact pathspec error this
+#   incident's transcript shows, verbatim.
+# A single retry loop attempt is unaffected (first `git add` of a fresh deletion always
+# succeeds), but every attempt AFTER the first one that already staged it hits this -- and
+# because the pre-fix call named every FILES entry in ONE command, that one already-staged
+# path's failure aborted staging of every OTHER named file too, so the loop retried forever
+# with nothing ever landing. Staging per-file and checking the INDEX directly (not trusting
+# `git add`'s exit code) for the missing-from-disk case distinguishes "needs staging" from
+# "already staged, nothing to do" from "never existed anywhere -- a real caller error".
+stage_named_files() {
+  local f rc=0
+  for f in "${FILES[@]}"; do
+    if [[ -e "$f" ]]; then
+      git add -- "$f" || rc=1
+      continue
+    fi
+    if git ls-files --error-unmatch -- "$f" >/dev/null 2>&1; then
+      # Tracked in the index but missing from disk -- a genuine not-yet-staged deletion.
+      git add -- "$f" || rc=1
+    elif git cat-file -e "HEAD:$f" 2>/dev/null; then
+      # Absent from disk AND already absent from the index, but HEAD still has it: the
+      # deletion is already correctly staged (by an earlier attempt or reassert_renames) --
+      # nothing to do, and re-running `git add` here would only fail loudly for no reason.
+      :
+    else
+      echo "named path does not exist in the working tree, the index, or HEAD: $f" >&2
+      rc=1
+    fi
+  done
+  return "$rc"
 }
 
 # Pre-commit hooks whose failure is a genuine RACE against a concurrent slot -- the retry
@@ -1305,7 +1355,7 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
       fi
     fi
 
-    if ! git add -- "${FILES[@]}" 2>/tmp/_sdp_add_err; then
+    if ! stage_named_files 2>/tmp/_sdp_add_err; then
       # safe_doc_push_reports_success_having_committed_nothing_2026_08_09 (todo 3): `git add`'s
       # own exit code was never checked, so an index.lock failure here (the exact incident
       # mechanism -- a peer session's autostash sweep holding the lock) silently produced an
