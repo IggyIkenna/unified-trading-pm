@@ -41,7 +41,7 @@ related:
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-07
-last_updated: 2026-08-09
+last_updated: 2026-08-15
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -268,12 +268,60 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
       `tofu apply -target='google_cloud_scheduler_job.t1_batch_schedule'` (`0 to add, 0 to change, 10 destroyed`).
       Dev's 14 + the europe-west1 trigger deleted directly via `gcloud scheduler jobs delete` (mirroring this doc's
       own original pause action, which was also direct-gcloud, never Terraform). **All 25 verified `NOT_FOUND`.**
-- [ ] [DIAG] P3. **NEW 2026-08-15 (slot-7)** — Root-cause the 3 PROD dead-target schedulers found while re-deriving
-      this doc's live count (see Progress Log): `uts-prod-execution-config-snapshot-t1-schedule`,
-      `uts-prod-ml-inference-t1-schedule`, `uts-prod-ml-t1-schedule` (all `ENABLED→PAUSED` in the original 2026-08-07
-      bulk-pause, never explained by any repoint candidate or the already-paused-prod-features rows — prod SHOULD
-      have real Cloud Run Jobs for these families). Determine why + fix (repoint or retire) — mirrors this doc's own
-      already-proven method. Repo: unified-trading-pm (diag) + deployment-service (fix, if Terraform-retire applies).
+- [x] ✅ [DIAG] P3. **RESOLVED 2026-08-15 (slot-22)** — Root-caused the 3 PROD dead-target schedulers; two distinct
+      root causes, NOT one shared cause.
+      1. **`uts-prod-ml-inference-t1-schedule` — pure orphan, RETIRED (deleted).** NOT in the `t1_batch_services_all`
+         Terraform map at all (confirmed via grep — no `"ml-inference"` key exists), so it was never Terraform-tracked;
+         some manually-created leftover from before `ml-training-service` + `ml-inference-service` were consolidated
+         into `ml-service` (2026-05-21, `ml_repo_consolidation_2026_05_19.md` — confirmed via 3 independent code
+         comments citing that consolidation in `shared/gcp/main.tf`, `modules/shared-infrastructure/gcp/variables.tf`,
+         `cloud-build/gcp/main.tf`). The file header's own schedule-design comment (`t1_batch_scheduler.tf` lines
+         36-37) still names a separate "08:00 — ml-inference CEFI" phase, but no live successor exists for it — the
+         unified `ml` job (see finding 2) was presumably meant to absorb this CeFi-specific inference pass, but that
+         job itself was never deployed either. Deleted directly via
+         `gcloud scheduler jobs delete uts-prod-ml-inference-t1-schedule --location=asia-northeast1` (not
+         Terraform-tracked, so no `.tf`/state change needed — mirrors this doc's own precedent for the dev-tier
+         schedulers, which were also confirmed non-Terraform-tracked before direct deletion). Verified `NOT_FOUND`
+         post-delete.
+      2. **`uts-prod-execution-config-snapshot-t1-schedule` + `uts-prod-ml-t1-schedule` — NOT dead-from-birth, NOT
+         retirement candidates: a genuine half-finished deployment.** Both scheduler resources ARE Terraform-tracked
+         (`"execution-config-snapshot"` and `"ml"` keys in `t1_batch_services_all`, `t1_batch_scheduler.tf` lines
+         157-161 and 202-206) with `job_name`s `uts-prod-execution-service-config-snapshot` and
+         `uts-prod-ml-service-t1-recon` respectively — but **no `google_cloud_run_v2_job` resource with either name
+         exists anywhere in the Terraform tree** (grepped every `.tf` file; `ml-service` has no
+         `terraform/services/` directory at all, unlike every sibling T1-batch family — features-\*, instruments,
+         market-tick-data, market-data-processing, strategy, batch-live-reconciliation all have theirs). Confirmed
+         **not** a code gap: `execution-service/execution_service/cli/batch_backtest.py` and
+         `ml-service/ml_service/inference/cli/main.py` both already support a `--tag t1-recon` GCS-output-prefix mode
+         (line 370 and 135 respectively) — the application-level T1-recon logic was BUILT, but the Cloud Run Job
+         deployment (Docker image build, IAM, `google_cloud_run_v2_job` Terraform resource) to actually run it was
+         never provisioned. Every sibling family in the same `for_each` map has both halves (scheduler + job); these
+         two only ever got the scheduler half — the schedulers have been firing into `NOT_FOUND` since inception,
+         never a regression. **Not auto-fixed here**: unlike a pure retire (sports-t1-recon, dev/staging), deciding
+         whether to (a) finish the deployment (these ARE load-bearing per the schedule-design comments — execution
+         config-snapshot is described as "prerequisite for Stage 3 recon", and strategy-service-t1-recon's own
+         description says it "reads t1-recon/ml/" as input, meaning ml-service's T1-recon output has apparently never
+         been produced) or (b) retire the schedulers because the function is genuinely obsolete now, is a product
+         decision this DIAG-scoped todo can't make alone — filed as a new `[OPERATOR]` todo below. Left both
+         schedulers `PAUSED` (as they already were since the 2026-08-07 bulk-pause) — no infra state changed by this
+         todo beyond the ml-inference deletion.
+      Repos touched: unified-trading-pm (this doc, diag-only); no deployment-service change this pass (see follow-up
+      todo below for the judgment call finding 2 needs).
+- [ ] [OPERATOR] P2. **NEW 2026-08-15 (slot-22)** — Decide disposition of the `execution-config-snapshot` and `ml`
+      T1-recon Cloud Run Jobs, which were never deployed despite their schedulers existing since inception (root
+      cause + evidence in the DIAG todo above). Two options: **(a) finish the deployment** — add
+      `google_cloud_run_v2_job` Terraform resources for `uts-prod-execution-service-config-snapshot` and
+      `uts-prod-ml-service-t1-recon` (mirroring the sibling per-family modules in `audit03_cron_provisioning.tf` /
+      `t1_recon_instruments_jobs.tf`), since both services' CLI already supports the `--tag t1-recon` mode — this
+      closes a real data-pipeline gap if `strategy-service-t1-recon`'s `t1-recon/ml/` input and Stage-3 recon's
+      execution-config-snapshot prerequisite are genuinely still consumed downstream (not independently verified this
+      pass — check before deploying, since a downstream consumer that's been silently tolerating the gap since
+      inception may have its own fallback by now); or **(b) retire** both schedulers (mirroring this doc's
+      sports-t1-recon precedent) if the T1-recon function for these two families is confirmed obsolete/superseded.
+      Also re-decide `uts-prod-ml-inference-t1-schedule`'s already-executed retirement above in light of whichever way
+      this goes — if (a) is chosen and the unified `ml` job ships, confirm it truly covers the CeFi-specific
+      "ml-inference" phase the original schedule design called for (or file a follow-up if it doesn't). Repo:
+      deployment-service (if (a)); no further action if (b) (already paused, ml-inference already deleted).
 - [ ] [INFRA] P3. **NEW 2026-08-15 (slot-7)** — Clean up 2 orphaned staging Terraform-state entries:
       `google_cloud_scheduler_job.t1_batch_schedule["features-onchain"]` and `["features-sports"]`, tracked in
       staging's state but absent from the current `t1_batch_services_all` map keys entirely. Low-risk/self-resolving
@@ -353,3 +401,14 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
   `git status --porcelain` clean). **Lesson**: a quickmerge-shipped commit's SHA is not stable until AFTER the ship
   completes — always re-derive via `git rev-parse HEAD` post-quickmerge before citing it as evidence; never trust a
   pre-ship commit SHA recorded earlier in the session.
+- **2026-08-15 (slot-22) — DIAG todo resolved: 2 distinct root causes for the 3 PROD dead-target schedulers, not
+  one.** `uts-prod-ml-inference-t1-schedule` was a pure orphan (not Terraform-tracked at all, a leftover from the
+  2026-05-21 ml-inference-service→ml-service consolidation) — deleted directly via `gcloud scheduler jobs delete`,
+  verified `NOT_FOUND`. `uts-prod-execution-config-snapshot-t1-schedule` and `uts-prod-ml-t1-schedule` are a
+  different, more serious shape: both ARE Terraform-tracked (real `for_each` map keys) and their application-level
+  CLI code already supports the T1-recon mode, but the `google_cloud_run_v2_job` resource to actually run them was
+  never provisioned in any `.tf` file — the schedulers have fired into `NOT_FOUND` since inception. Whether to finish
+  the deployment (closing a possible silent data-pipeline gap — `strategy-service-t1-recon` says it reads
+  `t1-recon/ml/`) or retire the function is a product call, not resolvable by this DIAG-scoped todo alone — filed as
+  a new `[OPERATOR]` todo. No deployment-service change shipped this pass; the ml-inference deletion is the only
+  live-infra change.
