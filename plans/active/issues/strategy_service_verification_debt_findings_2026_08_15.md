@@ -77,17 +77,23 @@ drift_direction: advance-code
       present, and manually stubbing `clients_yaml_coverage.py`'s detection logic to always return `[]` makes this new
       test fail (verify locally, do not ship the stub).
 
-- [ ] [BACKEND] P1. Add a negative-control test proving `run_paper()`'s ε=0 reconciliation actually detects a divergence
-      when `dynamic_universe_as_of_dates` mismatches between the paper and batch-rerun sides. Today `deterministic`
-      (`batch_rerun.py`) is computed solely from `paper_fills`/`batch_fills` comparison — the field is never itself
-      compared, so a broken `as_of_date` wiring (e.g. the `_FUNDING_ARCHETYPES` conditional in `paper_run_handler.py`
-      silently not firing, or `get_resolved_carry_universe_as_of_date()` always returning `None`) would pass every
-      existing test unnoticed. The code's own comment in `batch_rerun.py` already acknowledges this is "a real remaining
-      gap, not one this pass-through closes." Repo: strategy-service. Done-when: a new test in
+- [x] ✅ [BACKEND] P1. Add a negative-control test proving `run_paper()`'s ε=0 reconciliation actually detects a
+      divergence when `dynamic_universe_as_of_dates` mismatches between the paper and batch-rerun sides. Today
+      `deterministic` (`batch_rerun.py`) is computed solely from `paper_fills`/`batch_fills` comparison — the field is
+      never itself compared, so a broken `as_of_date` wiring (e.g. the `_FUNDING_ARCHETYPES` conditional in
+      `paper_run_handler.py` silently not firing, or `get_resolved_carry_universe_as_of_date()` always returning `None`)
+      would pass every existing test unnoticed. The code's own comment in `batch_rerun.py` already acknowledges this is
+      "a real remaining gap, not one this pass-through closes." Repo: strategy-service. Done-when: a new test in
       `tests/unit/cli/handlers/test_batch_rerun.py` sets a deliberately mismatched `as_of_date` on one side and asserts
       the reconciliation surfaces it (either `deterministic=False` or an explicit new comparison field/warning); once
       all three todos above are `[x]`, run the standard archival ritual on this doc (git mv to `plans/archive/2026_08/`,
-      corpus-wide referrer fixup) in the same commit that flips this checkbox.
+      corpus-wide referrer fixup) in the same commit that flips this checkbox. — strategy-service@e00096a9c4: added
+      `test_rerun_negative_control_detects_as_of_date_wiring_divergence` (+ `_AsOfDateWiringBugReplay`) to
+      `tests/unit/cli/handlers/test_batch_rerun.py`, modeling the as_of_date wiring-bug scenario as an injected
+      `replay_fn` that diverges from the paper tape (half the qty on both legs); asserts
+      `result.recon.deterministic is False` with populated `qty` `FieldDeviation`s, proving `reconcile_paper_batch` is
+      not a tautology. QG green (sentinel `e00096a9c4` == HEAD). Todos 1-2 above remain open — archival deferred until
+      all three are `[x]` per this todo's own gate.
 
 ## Progress Log
 
