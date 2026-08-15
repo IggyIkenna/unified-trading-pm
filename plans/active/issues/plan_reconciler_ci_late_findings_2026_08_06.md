@@ -19,7 +19,7 @@ related:
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
-    /plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md,
+    /plans/archive/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md,
     /plans/active/ci_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_08/mtds_retry_safe_default_audit_2026_07_14.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch9_2026_08_09.md,

@@ -37,7 +37,7 @@ tags: [ci-cd, quickmerge, environment, ldr-is-ssot, false-flaky, quickmerge-bloc
 related:
   [
     /plans/active/issues/qg_sentinel_environment_blind_2026_07_23.md,
-    /plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md,
+    /plans/archive/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md,
   ]
 created: 2026-07-25
 author: unknown
@@ -65,7 +65,7 @@ context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
     /plans/active/issues/qg_sentinel_environment_blind_2026_07_23.md,
-    /plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md,
+    /plans/archive/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md,
     unified-trading-pm/scripts/quickmerge.sh,
     unified-trading-library/unified_trading_library/config_interface/base_config.py,
     unified-trading-library/unified_trading_library/core/config.py,

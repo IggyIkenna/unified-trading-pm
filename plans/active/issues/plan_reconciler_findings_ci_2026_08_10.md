@@ -347,8 +347,8 @@ Writable set (32 docs, outside 12h grace):
 - plans/active/issues/deployment_api_mtds_meta_missing_blocks_workspace_qg_step_5_83_2026_08_03.md
 - plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md
 - plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md
-- plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md
-- plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md
+- plans/archive/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md
+- plans/archive/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md
 - plans/active/issues/operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md
 - plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md
 - plans/active/issues/plan_reconciler_ci_late_findings_2026_08_06.md

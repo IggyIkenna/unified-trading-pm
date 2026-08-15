@@ -33,8 +33,8 @@ related:
     /plans/active/issues/release_tag_stall_utl_glue_runner_backlog_2026_08_14.md,
     /plans/archive/2026_08/issues/promote_ref_orphaned_on_manual_pr_close_2026_08_06.md,
     /plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md,
-    /plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md,
-    /plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md,
+    /plans/archive/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md,
+    /plans/archive/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md,
   ]
 created: "2026-08-15"
 last_updated: "2026-08-15"
@@ -240,13 +240,24 @@ source: >-
       over-cap doc is archived with all 11 referrers repointed; `validate_plan_links.py` and `check_line_caps.sh` both
       pass clean on the result.
 
-- [ ] [BACKEND] P2. **Instrument quickmerge's `STAGE 0: Cascade`/pull step with an `os.environ` diff before/after**, to
-      find the real trigger surface for the `DEPLOYMENT_ENV` leak shared by two open MTDS investigations — this is the
-      agreed next step for BOTH docs (do not duplicate investigation; read them together per their own explicit
-      instruction). Source: `plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md`
-      and `plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md`. Gate: the diff either
+- [x] ✅ [BACKEND] P2. **Instrument quickmerge's `STAGE 0: Cascade`/pull step with an `os.environ` diff before/after**,
+      to find the real trigger surface for the `DEPLOYMENT_ENV` leak shared by two open MTDS investigations — this is
+      the agreed next step for BOTH docs (do not duplicate investigation; read them together per their own explicit
+      instruction). Source: `plans/archive/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md`
+      and `plans/archive/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md`. Gate: the diff either
       identifies the exact point `DEPLOYMENT_ENV` (or another env var) leaks across the cascade/pull step, or positively
-      rules out the cascade step as the source with reproducible evidence either way.
+      rules out the cascade step as the source with reproducible evidence either way. — **Both.** Traced
+      `scripts/quickmerge.sh` directly: literal `STAGE 0: Cascade` (`cascade_dep_branch()`) is `--dep-branch`-gated and
+      never ran in any of the 14+ reproducing invocations (all plain `--agent --files`), ruling it out structurally. The
+      real leak: STAGE 2's "ENVIRONMENT AUTO-DETECT" block unconditionally `export ENVIRONMENT="development"` for any
+      non-main branch (every slot), inherited by STAGE 3's re-gate child-process `quality-gates.sh` invocation when the
+      AGENT_MODE sentinel is stale — `bucket_naming.py`'s `DEPLOYMENT_ENV`-then-`ENVIRONMENT` fallback then resolves
+      `"dev"`. **Already root-caused and fixed 3 weeks ago**: `market-tick-data-service@1dbdbb90` (2026-07-25) added an
+      autouse conftest fixture scrubbing both vars; archived as
+      `plans/archive/issues/mtds_flaky_is_test_run_pollution_2026_07_25.md`. Both open MTDS docs were never
+      cross-referenced against it (6 subsequent na-eligibility-audit passes reasserted "mechanism not identified" after
+      it had been); both closed out with full Resolution sections + `status: resolved` this turn. No code change needed
+      — the fix already ships on `origin/live-defi-rollout`. Evidence: `unified-trading-pm` doc commit (this push).
 
 ## Deferred (not batched — needs a human, not a worker)
 

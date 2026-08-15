@@ -17,7 +17,7 @@ summary: >-
   4th run (quickmerge retry, no code change from the 3rd) shipped clean. So the race reproduces serially too —
   intermittently, not deterministically either way — meaning `PYTEST_WORKERS=1` reduces but does not eliminate exposure;
   it is a mitigation, not the structural fix the commit message claims.
-status: open
+status: resolved
 nature: notes
 asset_group: [ci]
 stage: [meta]
@@ -27,7 +27,7 @@ tags: [pytest, flake, deployment-env, test-pollution, ci, cross-agent-followup]
 related:
   [
     /plans/archive/issues/pytest_posixpath_str_drv_attributeerror_flake_2026_07_17.md,
-    /plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md,
+    /plans/archive/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md,
   ]
 created: 2026-07-23
 author: unknown
@@ -44,17 +44,23 @@ execution_scope: local-only
 locked_by:
 context_scope:
   [
-    /plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md,
+    /plans/archive/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md,
     /plans/archive/issues/pytest_posixpath_str_drv_attributeerror_flake_2026_07_17.md,
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
     unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py,
   ]
 resolved_by:
+  market-tick-data-service@1dbdbb90 (2026-07-25); root-caused/closed out 2026-08-15 via ci_satellite_ao_dispatch_batch14
+  todo 13
 drift_direction: advance-code
 depends_on: []
 ---
 
 # MTDS DEPLOYMENT_ENV race survives `PYTEST_WORKERS=1` — not fully structural
+
+> **🟢 ARCHIVED 2026-08-15** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule (root-caused + closed via ci_satellite_ao_dispatch_batch14 todo 13 — see Resolution section
+> below).
 
 ## What's confirmed across both investigations (mine + bc5d1490's)
 
@@ -141,19 +147,34 @@ them, since `unified_config` is built once at import and doesn't re-read `os.env
 be ambient-default. **Does not touch or explain this doc's actual DEPLOYMENT_ENV race** — left exactly as still open
 below.
 
+## Resolution (2026-08-15, ci_satellite_ao_dispatch_batch14 todo 13)
+
+**Instrumented per this doc's own todo — result: `STAGE 0: Cascade` is RULED OUT (it's `--dep-branch`-gated and never
+executed in any of these repro invocations), and the real leak point was already found and fixed 3 weeks ago.** Full
+trace + evidence recorded in the sibling doc's Resolution section
+(`mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md`, read together per this doc's own instruction —
+do not duplicate here): the actual mechanism is quickmerge.sh's STAGE 2 "ENVIRONMENT AUTO-DETECT" block
+(`export ENVIRONMENT="development"` for any non-main branch) leaking into the STAGE 3 re-gate's child-process
+`quality-gates.sh` invocation — exactly matching this doc's own "direct run clean, quickmerge re-gate dirty" bisection
+finding (this doc's own "Recommendation" section correctly identified quickmerge's pull/cascade _area_ as the
+differentiator, one stage number off from the real one). Fixed by `market-tick-data-service@1dbdbb90` (2026-07-25,
+autouse `tests/conftest.py` fixture scrubbing both `DEPLOYMENT_ENV` and `ENVIRONMENT`), archived as
+`plans/archive/issues/mtds_flaky_is_test_run_pollution_2026_07_25.md`. Zero recurrences recorded in either doc since.
+
 ## Todos
 
-- [ ] [INFRA] P2. **Instrument quickmerge's cascade/pull step** — diff `os.environ` before/after `STAGE 0: Cascade` and
-      check whether ancestor repos' dependency-install steps execute Python in the same shell; per "Recommendation,"
-      this is the concrete next step to root-cause the race, not another blind retry loop.
+- [x] ✅ [INFRA] P2. **Instrument quickmerge's cascade/pull step** — done; `STAGE 0: Cascade` ruled out
+      (`--dep-branch`-gated, never invoked in these repros), real leak point (STAGE 2 `ENVIRONMENT` export → STAGE 3
+      re-gate child-process inheritance) identified and confirmed already fixed. See Resolution section above.
 
 ## na-eligibility-audit verdict
 
 **na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid —
 `/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred **E7** (2026-07-29) explicitly rules
 this class NOT bounded as currently framed: five independent investigation sessions have failed to pin the leak
-mechanism, and this doc plus `/plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md`
-are to be "read together, do not duplicate investigation". Stays parked on that single shared blocker.
+mechanism, and this doc plus
+`/plans/archive/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md` are to be "read together,
+do not duplicate investigation". Stays parked on that single shared blocker.
 
 **na-eligibility-audit 2026-07-31** (tranche `ci`, autonomous): **CONFIRMS the verdict above, unchanged.** The "Update
 (2026-07-30)" section added since documents a LOOK-ALIKE failure (`test_bucket_resolution_uses_category_tradfi`, a

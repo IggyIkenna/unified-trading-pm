@@ -23,7 +23,7 @@ summary: >-
   (pytest-xdist worker-teardown edge case vs an async/asyncio-mode interaction -- this test file's surrounding warnings
   included multiple "coroutine was never awaited" RuntimeWarnings, which is at least circumstantially suggestive of
   async-fixture-teardown fragility, but this was NOT confirmed as the mechanism).
-status: open
+status: resolved
 nature: issue
 asset_group: [ci] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [data]
@@ -32,7 +32,7 @@ scope: [engineer]
 tags: [ci, testing, pytest-xdist, flake, quickmerge-blocker, test-isolation, monkeypatch]
 related:
   - /plans/active/defi_consolidated_closeout_2026_07_18.md
-  - /plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md
+  - /plans/archive/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md
   - /plans/active/ci_consolidated_closeout_2026_07_25.md
 created: 2026-07-23
 author: unknown
@@ -49,7 +49,7 @@ depends_on: []
 locked_by:
 context_scope:
   [
-    /plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md,
+    /plans/archive/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md,
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
     unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py,
     market-tick-data-service/tests/unit/test_prediction_universe_prod_catalogue_gating.py,
@@ -62,7 +62,13 @@ source: >-
   plans/active/defi_consolidated_closeout_2026_07_18.md "Glued-id manifest rebuild verify + delete `_migrated_` markers"
   row for the parent task.
 resolved_by:
+  market-tick-data-service@1dbdbb90 (2026-07-25); root-caused/closed out 2026-08-15 via ci_satellite_ao_dispatch_batch14
+  todo 13
 ---
+
+> **🟢 ARCHIVED 2026-08-15** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule (root-caused + closed via ci_satellite_ao_dispatch_batch14 todo 13 — see Resolution section
+> below).
 
 ## What was observed (measured, not inferred)
 
@@ -330,12 +336,55 @@ sibling-slot push — auto-fast-forward mid-session via the 5-min slot cron, see
 `sports_t6_8_oneoff_retirement_residual_2026_07_25.md`). Not chased further (matches this doc's "do not duplicate
 investigation" guidance) — retrying with real spacing (not back-to-back) per this doc's established remedy.
 
+## Resolution (2026-08-15, ci_satellite_ao_dispatch_batch14 todo 13)
+
+**Root-caused and FIXED — the STAGE-0-cascade theory this doc's own todo names as "leading candidate" is WRONG; the real
+mechanism was found and shipped 3 weeks ago, on 2026-07-25, in a doc this one never cross-referenced.**
+
+Instrumented/traced `scripts/quickmerge.sh`'s pull/cascade surface directly (no live repro needed — the mechanism is
+deterministic and already confirmed fixed by 3 weeks of zero recurrence):
+
+- **`STAGE 0: Cascade` (`cascade_dep_branch()`, quickmerge.sh:1207-1386) is gated on `--dep-branch` / `--to-staging`
+  (`DEP_BRANCH` defaults to `""`, only set by those two flags — quickmerge.sh:166,321,1160). Every quickmerge invocation
+  that reproduced this leak was a plain `quickmerge.sh "..." --agent --files ...` (the standard worker ship path, per
+  `unified-trading-pm/agents/RULES.md` §2) — **`DEP_BRANCH` was empty, so `cascade_dep_branch()` never ran at all** in
+  any of the 14+ observed occurrences. STAGE 0 is positively RULED OUT as the leak source — not merely unconfirmed, but
+  structurally inapplicable to the invocations that hit this bug.
+- **The real mechanism: quickmerge.sh's STAGE 2 "ENVIRONMENT AUTO-DETECT" block** (quickmerge.sh:2233-2264, the "BRANCH
+  MODE" export) unconditionally `export ENVIRONMENT="development"` whenever the current branch isn't `main` — true for
+  essentially every slot (all live on `live-defi-rollout`). When quickmerge's own AGENT_MODE sentinel check is stale
+  (STAGE 3, ~line 2437) it re-invokes `bash scripts/quality-gates.sh --no-fix` as a **child process of that same shell**
+  (quickmerge.sh:2473), which **inherits the STAGE-2 export**.
+  `unified_trading_library.cloud_interface.bucket_naming.resolve_raw_deployment_env` falls back
+  `os.environ.get("DEPLOYMENT_ENV") or os.environ.get("ENVIRONMENT") or "prod"` — so `ENVIRONMENT=development` reads as
+  the `"dev"` tier, exactly matching every observed assertion failure. A direct standalone `quality-gates.sh` run (never
+  invoked as quickmerge's own child) never has `ENVIRONMENT` exported this way — matching this doc's own
+  repeatedly-observed "only via quickmerge's re-gate, never standalone" pattern precisely, and explaining the
+  intermittency (only fires when a re-gate actually happens, i.e. the sentinel is stale).
+- **Already fixed**: `market-tick-data-service@1dbdbb90` (2026-07-25T15:21:42Z,
+  `fix(tests): scrub ambient DEPLOYMENT_ENV/ENVIRONMENT before every test`) added an autouse
+  `_scrub_ambient_deployment_env` fixture to `tests/conftest.py` that `monkeypatch.delenv`s both `DEPLOYMENT_ENV` and
+  `ENVIRONMENT` before every test — verified present on `origin/live-defi-rollout` (fresh-pulled, 2026-08-15). Its own
+  docstring names this exact mechanism (STAGE-2 BRANCH MODE export → re-gate child-process inheritance) and cites the
+  two prior falsified fixes (delenv `DEPLOYMENT_ENV`-only) this doc itself documents above — they scrubbed the wrong
+  variable; `ENVIRONMENT` was the actual leak.
+- **Root-cause doc**: `plans/archive/issues/mtds_flaky_is_test_run_pollution_2026_07_25.md` (archived, resolved) — this
+  doc and its sibling (`mtds_deployment_env_race_survives_single_worker_2026_07_23.md`) were never cross-referenced
+  against it, so both stayed open/KEEP-NA through 6 subsequent na-eligibility-audit passes (last 2026-08-10) reasserting
+  "mechanism not identified" after it had already been identified and fixed.
+- **Corroborating evidence**: neither this doc nor its sibling records any occurrence dated after 2026-07-25 (the fix's
+  own day) across 3 weeks and multiple subsequent audit passes — consistent with the fix holding, against a pre-fix
+  baseline of 14+ occurrences in under a week.
+
+**`PYTEST_WORKERS=1` stays pinned** (per `market-tick-data-service/scripts/quality-gates.sh`'s own comment) — reverting
+it requires independent verification under real `-n 2` runs, which is separate scope from this root-cause task and not
+attempted here.
+
 ## Todos
 
-- [ ] [SCRIPT] P2. **Root-cause the `DEPLOYMENT_ENV` monkeypatch leak recurring under quickmerge's re-gate** — 14+
-      confirmed occurrences, mechanism still not identified (the cascade-step theory — quickmerge's STAGE 0 re-pulling
-      ancestor repos before re-running the suite — is the leading candidate); `PYTEST_WORKERS=1` is a stopgap, not a
-      fix, and the practical impact (quickmerge blocked) recurred worse than the original "resolved" status claimed.
+- [x] ✅ [SCRIPT] P2. **Root-cause the `DEPLOYMENT_ENV` monkeypatch leak recurring under quickmerge's re-gate** — root
+      cause identified and fix confirmed already shipped; see Resolution section above.
+      `market-tick-data-service@1dbdbb90`.
 
 ## Progress Log
 
