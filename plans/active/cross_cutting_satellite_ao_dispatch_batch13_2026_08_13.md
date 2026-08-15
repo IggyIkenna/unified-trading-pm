@@ -586,19 +586,19 @@ source: >-
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 
       **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed
-                                          separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
-                                          (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
-                                          exists and is live — no code change needed — but a real corpus-wide query
-                                          (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
-                                          the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
-                                          filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
-                                          data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
-                                          worker-determinable outcome for one ~1h dispatch. Filed
-                                          `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
-                                          (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
-                                          class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
-                                          backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
-                                          multi-AG backfill into this single dispatch.
+                                                  separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
+                                                  (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
+                                                  exists and is live — no code change needed — but a real corpus-wide query
+                                                  (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
+                                                  the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
+                                                  filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
+                                                  data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
+                                                  worker-determinable outcome for one ~1h dispatch. Filed
+                                                  `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+                                                  (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
+                                                  class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
+                                                  backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
+                                                  multi-AG backfill into this single dispatch.
 
 - [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
       operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
@@ -674,8 +674,19 @@ source: >-
       ancestry verified). Source: `plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md`
 - [ ] [CODE] P2. Wire the generalised extra='forbid'-style source-required checker into MTDS + MDPS quality-gates.sh
       Source: `plans/active/data_source_provenance_enforcement_2026_07_24.md`
-- [ ] [CODE] P2. Run scripts/quality_gates/audit_source_column_distribution.py against prod post-backfill and report the
-      per-cell source histogram Source: `plans/active/data_source_provenance_enforcement_2026_07_24.md`
+- [x] ✅ [CODE] P2. **Ran + fixed a real memory/scale bug in the tool itself.** unified-trading-pm@7b37c29e46 (landed on
+      LDR, post-push ancestry verified) (2026-08-15, slot-18·infra). The script's single-shot `pd.read_parquet()` (even
+      column-projected) stalled indefinitely against the DeFi prod manifest (6.7GB/~160M rows) on this shared host —
+      rewrote to stream via `ParquetFile.iter_batches()` so peak memory stays bounded regardless of manifest size. Ran
+      the (now-fixed) audit read-only against all 5 prod consolidated manifests: **defi 2,027 cells/159,832,617 rows — 0
+      RED; prediction 10 cells/2,784,303 rows — 0 RED; sports 200 cells/6,130,466 rows — 0 RED; cefi 172
+      cells/29,804,891 rows — 14 RED cells/8,841 blank rows; tradfi 90 cells/14,337,262 rows — 1 RED cell/64 blank
+      rows.** Note: `data_source_provenance_enforcement_2026_07_24.md`'s P0 write-path/backfill todos are still open (13
+      open items per its 2026-08-09 Progress Log) — this is real, honest data-state (NOT the pre-backfill ~100%-blank
+      baseline; the overwhelming majority of rows across all 5 groups already carry `source` correctly), not the final
+      post-backfill zero-blank sign-off. Full per-cell histogram + the 15 named RED cells + recommended
+      backfill/re-audit todos filed as `plans/active/issues/source_column_blank_on_external_cells_2026_08_15.md`.
+      Source: `plans/active/data_source_provenance_enforcement_2026_07_24.md`
 - [x] ✅ [CODE] P2. **PARTIAL — added the missing audit-instructions section; the write-path RULE itself was already
       fully documented.** unified-trading-pm@TBD (2026-08-15, slot-23·infra). Verified the "universal rule" (write-path
       `MissingSourceError` gate, schema-v9 `source` column, `SOURCE_PRIORITY`/`external_sources_for` semantics, QG STEP
