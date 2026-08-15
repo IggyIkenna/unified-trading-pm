@@ -159,11 +159,23 @@ source: >-
       Slack-visibility-only split; `code_refs` gained `agent-orchestrator/server/escalation.py`; `last_reviewed`
       bumped. Cross-referenced both directions: the new subsection cites this plan + the source issue doc; the
       source issue doc (see its own note, same date) now cites this codex doc back.
-- [ ] [INFRA] P2. Add a regression test pinning the full happy path (breach detected -> unresolved past 15 minutes ->
+- [x] ✅ [INFRA] P2. Add a regression test pinning the full happy path (breach detected -> unresolved past 15 minutes ->
       enqueue -> dispatch -> fix lands -> detector re-run confirms resolved) in
       `agent-orchestrator/tests/test_escalation.py`, alongside the existing wall-type test suite. Done-when: the new
       test is green under `bash scripts/quality-gates.sh` and covers both the self-heal-within-15-minutes (no
-      escalation) and the still-breached-after-15-minutes (escalation fires) branches.
+      escalation) and the still-breached-after-15-minutes (escalation fires) branches. — agent-orchestrator@f1965181d4:
+      two new tests, `test_local_ratchet_gate_breach_self_heal_within_window_never_escalates` (self-heal branch —
+      breach then clean before the window elapses never calls `escalation.enqueue`, tracker clears) and
+      `test_local_ratchet_gate_breach_full_happy_path_dispatch_and_resolve` (still-breached branch — the full pinned
+      chain: real detector state machine arms -> window simulated elapsed -> real `escalation.enqueue()` creates a
+      queued row -> real `escalation.escalate()` dispatches it, mocking only the external spawn side effects (tmux,
+      account/slot pool) -> a later detector re-run against clean results confirms resolved at the detector level
+      -> `escalation.resolve_escalation_manually()` closes the escalation row). Both drive the REAL detector module
+      (`escalate_local_ratchet_gate_breaches.run`) and REAL `escalation.enqueue`/`escalate`/`resolve_escalation_manually`
+      against one shared, schema-backed in-memory session (the `_af1b_session`/`_mock_scope_yielding` pattern already
+      established lower in the same test file for real CooldownRow/EscalationQueueRow column arithmetic — a plain
+      MagicMock session can't support the real column reads/writes both the detector and escalation sides do).
+      `bash scripts/quality-gates.sh` green (3978 passed, up from 3976; dashboard 374 passed).
 - [ ] [REVIEW] P2. Full-fleet dry run: run the detector (todo 2) once against real `origin/live-defi-rollout` HEAD
       across the whole fleet in read-only mode (no `--apply`/enqueue side effects) and record the actual current
       breach/no-breach state per repo as evidence the detector doesn't false-positive against production reality.
