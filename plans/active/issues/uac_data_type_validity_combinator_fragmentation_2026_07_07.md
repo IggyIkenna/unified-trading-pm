@@ -909,6 +909,11 @@ just belongs on a different layer than instrument_type does, and conflating the 
       now-rolled-back ROCKETPOOL-ETHEREUM/oracle_prices pair as a real drift example) to a `monkeypatch`-injected
       synthetic violation, since no real drift pair remains to exercise the discrimination path. 6/6 tests pass, QG
       green. (repo: unified-api-contracts)
+- [x] ✅ [SCRIPT] P2. **Author + ship a dedicated `collect-oracle-prices` VM launcher (prerequisite for the prod
+      backfill below).** No launcher existed — the generic one hardcodes `--operation download`, a different CLI path.
+      Shipped `launch-mtds-oracle-prices-backfill-vm.sh` + a chunked `VM_TASK=oracle-prices-backfill` dispatch branch
+      (fixes a real OOM found mid-launch — single-shot full-range call exit-137'd) — `deployment-service@823a36c41a` +
+      `@278328bf80`. Full detail in Progress Log 2026-08-15.
 - [ ] [DATA] P2. **Prod full-history backfill — IN PROGRESS, launched 2026-08-15 (see Progress Log).** Scoped to the 5
       landed EVM pairs (SPARK/COMPOUND_V3/MORPHO/RADIANT/FLUID) — AAVE_V3 rewards excluded (no handler yet);
       ROCKETPOOL/SOLBLAZE resolved ROLL-BACK, never candidates; KAMINO-SOLANA excluded (architectural, see follow-up
