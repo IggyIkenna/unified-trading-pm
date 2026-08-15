@@ -212,3 +212,28 @@ converge on the same lowercase `odds` string with no residual mismatch between t
   Confirmed no conflict with the parallel `sports_odds_api_data_type_casing_standardization_2026_08_15.md` (different
   write surface, same convergent target) or the open IS-mirror issue (referenced, not duplicated). Confirmed the
   `mtds-backfill-odds-1` VM the casing plan flagged as a collision risk has since terminated.
+- 2026-08-15 (execution): Phase 0 todos 1-4 code-complete across `unified-api-contracts`, `market-tick-data-service`,
+  `deployment-api` (all pulled ff-clean first). Todo 1: registered `SOURCE_PRIORITY[("sports","odds")]=["odds_api"]` +
+  matching `AVAILABILITY_AT_SEMANTICS` entry (a whole-suite QG run surfaced that the two registries must stay symmetric
+  -- `era_b_legacy_purge.py`'s purge-safety guard checks it -- fixed, verified via direct import check). Todo 2/3:
+  flipped `venue_fetch.py::_build_sports_shard_path` + its `shard_counts` key, `manifest_finalize.py`'s sports
+  discriminator, 6 sites in `sentinels.py`, `sports_catalog_reader.py`,
+  `rebuild_sports_manifest_v9.py::_source_from_row` (kept `"trades"` alongside new `"odds"` -- historical rows), and --
+  found via direct read, not in the original file list -- the LIVE writer's own hardcoded leaf in
+  `live/_sports_tick_path.py::sports_live_tick_blob_path` (would have broken live/batch shape parity at Phase 1 deploy
+  if missed). deployment-api's `mtds.py`/`_schema.py` flipped. MDPS (`market-data-processing-service`) consumers
+  CONFIRMED already dual-accept `"odds"`, zero changes needed there. All touched test fixtures updated in the same pass.
+  Todo 4: kept `SPORTS_ODDS_DATA_TYPE_CANONICAL_FORM` stub as-is, NOT wired into the write path -- the direct literal
+  fixes above are simpler and already meet the DoD; the helper stays useful for future readers normalizing
+  mixed-vocabulary historical data. **Shipping blocked by shared-slot contention, not code correctness**: this machine
+  hit load avg 88+ / 15+ concurrent `quality-gates.sh` processes (consistent with the SessionStart collision warning --
+  4 other live sessions in this same slot). First UAC `quickmerge.sh` attempt queued 3320s on the QG-governor token then
+  failed re-gate on an UNRELATED SIM300 lint violation in another live session's untracked WIP
+  (`tests/internal/unit/test_flatten_readiness.py` + siblings, a risk/flatten feature, zero overlap with this plan) --
+  left untouched (not owned) and a retry was launched rather than editing/inheriting their in-flight work. This same
+  edit was ALSO lost once mid-session (file reverted to its pre-edit committed state with a clean `git status` despite
+  an unstaged edit having been made) -- likely another session's concurrent git operation on this shared PM checkout;
+  committing this entry immediately via `safe-doc-push.sh` rather than leaving it staged uncommitted, per the measured
+  "Write+git add in ONE step" loss pattern in `/codex/05-infrastructure/per-tab-worktrees.md`. Repo@sha ship evidence +
+  Phase 0 checkbox flips land in the next entry once each repo's quickmerge actually lands (not yet true as of this
+  entry).
