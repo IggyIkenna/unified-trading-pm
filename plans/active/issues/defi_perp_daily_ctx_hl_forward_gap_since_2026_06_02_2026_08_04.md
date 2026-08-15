@@ -148,12 +148,13 @@ is the open question below.
       pattern. Repo: market-tick-data-service. Done-when: a live/backfill run produces real `perp_daily_ctx` manifest
       rows for HYPERLIQUID on a fresh date (closing the forward gap since 2026-06-02) and existing `perp_funding` tests
       stay green.
-- [ ] [DIAG] P3. Once the forward-write gap is closed, confirm whether the CeFi Tardis `perp_funding_corpus.py` writer
-      (features-service, fixed to include a manifest write this same session per
-      `issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`) has ever actually run in production since —
-      it was confirmed NOT to have run as of 2026-07-13; re-check post-fix whether it's been invoked (scheduled or
-      manual) and producing real CeFi `perp_daily_ctx` rows, or whether it too needs a live-scheduling gap closed. Repo:
-      features-service.
+- [x] ✅ [DIAG] P3. **DONE 2026-08-15 (slot-23, data_engineering) — writer HAS run in production once, but is NOT
+      currently fresh and still needs a live-scheduling gap closed.** Once the forward-write gap is closed, confirm
+      whether the CeFi Tardis `perp_funding_corpus.py` writer (features-service, fixed to include a manifest write this
+      same session per `issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`) has ever actually run in
+      production since — it was confirmed NOT to have run as of 2026-07-13; re-check post-fix whether it's been invoked
+      (scheduled or manual) and producing real CeFi `perp_daily_ctx` rows, or whether it too needs a live-scheduling gap
+      closed. Repo: features-service. Full evidence in Progress Log below.
 
 ## Progress Log
 
@@ -203,3 +204,32 @@ is the open question below.
   code + unit-level proof; the finalize plan's `[REVIEW] P2` todo re-verifies against a real fresh-date manifest read
   once this deploys and the next daily cron cycle runs. `[DIAG] P3` (CeFi Tardis writer re-check) remains open —
   separate scope, not part of this todo.
+- **slot-23 2026-08-15 (data_engineering, task `defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02-002`)**: `[DIAG] P3`
+  closed. **Verdict: the CeFi Tardis `perp_funding_corpus.py` writer HAS run in production (once, historically) but is
+  NOT currently producing fresh rows — it still needs a live-scheduling gap closed, and the gap is now root-caused, not
+  just re-confirmed.**
+  1. **Historical run confirmed** (supersedes this todo's own cited 2026-07-13 "never run" finding): the writer DID
+     execute in production for a manual window, 2026-05-16→2026-05-22 (98 real objects: 7 venues incl. DERIBIT × 7
+     days × 2 data_types `perp_funding`+`perp_daily_ctx`), per direct GCS evidence already established in
+     `/plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md` (P1 root-cause entries,
+     2026-07-30) — a run happened sometime between 2026-07-13 and 2026-07-28.
+  2. **Promotion + cron code shipped 2026-08-06**: `features-service@b2d14c9d` (CLI subcommand,
+     `features_service/cefi/cli/main.py`, confirmed by direct read) + `deployment-service@8eff211`
+     (`scripts/vm/launch-cefi-perp-funding-daily-cron-vm.sh`, a SCHEDULED_RECURRING daily 07:00 UTC cron-host
+     launcher, confirmed by direct read).
+  3. **Fresh verification today (2026-08-15) shows the corpus is still NOT fresh**: bounded `list_blobs` probe (UTL
+     `get_storage_client`, never a corpus walk — 5 days × 6 `catalog_carry.py` venues × 2 surfaces) found **0**
+     `perp_funding`/`perp_daily_ctx` objects in the DeFi bucket (`market-data-tick-defi-prd-central-element-323112`)
+     for 2026-08-11..15, all 6 venues — matching the unbroken run of identical findings from 5 prior re-check slots in
+     the sibling doc (slot-8/2/13/6/30, 2026-08-10/11).
+  4. **Root cause identified (new — the 5 prior re-checks confirmed the symptom, not the cause)**:
+     `gcloud compute instances list` shows **no `cefi-perp-funding-daily-cron-*` instance at all** in the live fleet
+     (running or terminated) — the corpus-compute cron host has apparently never actually been launched despite its
+     launcher shipping 2026-08-06. Separately, the raw-input forward-poll cron host
+     (`cefi-fwd-daily-cron-20260809-110236`, launched 2026-08-09) IS present but **TERMINATED** — confirmed via the
+     same bounded probe: 0 raw `derivative_ticker` objects for the same 6-venue/5-day window, consistent with a dead
+     capture cron rather than a quiet data day.
+  Filed a concrete `[DATA] P1` follow-up todo naming both launch actions in the sibling doc (which already owns this
+  exact freshness gate + its established re-check pattern), rather than duplicating tracking here — see
+  `/plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md`'s 2026-08-15 Progress Log entry + new
+  todo. No code changed for this todo (diagnostic-only, per its own `[DIAG]` tag).
