@@ -53,6 +53,21 @@ code_refs:
 > so there is nothing to unwind. See `/plans/active/sports_taxonomy_p2_migration_2026_08_08.md` Progress Log (2026-08-15
 > entry) for the plan-side todo corrections this triggered.
 
+> **⚠️ CORRECTION (2026-08-15, second) — `odds_snapshot`/`odds_movement` "Production (captured shards since 2026-07-25)"
+> claims below are FALSE.** Live census against `instruments-store-sports-prd-central-element-323112`
+> (`market-tick-data-service/scripts/sports/census_odds_snapshot_movement_horizon_bucket_fold_scope_2026_08_15.py`,
+> 2026-08-15) found only 3,234 manifest rows for EACH of `odds_snapshot`/`odds_movement`, **100% `empty_confirmed`** (0
+> real captures), with `venue` populated by SOURCE names (`footystats`/`TRANSFERMARKT`/`MDPS_ODDS_HORIZON_BUCKET`) and
+> blank/`None` `league_id` — phantom bookkeeping residue, not real data. Root cause: the archived issue
+> `/plans/archive/issues/sports_mdps_derived_odds_products_zero_prod_objects_2026_07_23.md` (resolved 2026-07-25 — the
+> exact date this doc claims "Production" began) already found these adapters are **dead code**: registered in
+> `CandleAdapterRegistry` + `SOURCE_PRIORITY` + `DATA_TYPES_BY_ASSET_GROUP` but never wired into any production schedule
+> (the only live sports MDPS Cloud Run job, `reprocess_sports_odds.py`, hardcodes `odds_horizon_bucket` only). That
+> issue explicitly left "wire up vs retire" as an **operator decision, never made**. This doc's "Production" status for
+> both types was never re-verified against live data before being written — see
+> `/plans/active/sports_taxonomy_p2_migration_2026_08_08.md` Progress Log (2026-08-15 entry) for the todo-side
+> correction this triggered.
+
 > **Rewritten 2026-08-08 (P1, `sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`).** This doc supersedes all
 > pre-2026-08-08 content. Three sections of the prior version were wrong:
 >
@@ -154,15 +169,15 @@ One row per (fixture, market, outcome, venue, timestamp). `in_play=True` rows we
 
 ### 2. `odds_snapshot` — MDPS periodic resample
 
-| Field               | Value                                                                                                                                                                           |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Producer**        | MDPS `odds_snapshot_adapter` (derived from `odds`)                                                                                                                              |
-| **Shard key**       | `venue` × `league_id` × `day`                                                                                                                                                   |
-| **Instrument type** | `odds`                                                                                                                                                                          |
-| **NEEDS_CANDLE**    | True                                                                                                                                                                            |
-| **Schema fields**   | `fixture_id`, `league_id`, `venue`, `market_type`, `outcome`, `odds_decimal`, `ts_snapshot`, `interval_minutes`                                                                 |
-| **Upstream guard**  | `DependencyChecker.check_sports_raw_source_captured` blocks if raw `odds` source is absent/stale                                                                                |
-| **Status**          | **REVISED 2026-08-15**: folds into `odds_horizon_bucket` (§4) as `computation_type=snapshot`, not a standalone type. Was: Production (16,521 captured shards since 2026-07-25). |
+| Field               | Value                                                                                                                                                                                                                                                                                                                                   |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Producer**        | MDPS `odds_snapshot_adapter` (derived from `odds`)                                                                                                                                                                                                                                                                                      |
+| **Shard key**       | `venue` × `league_id` × `day`                                                                                                                                                                                                                                                                                                           |
+| **Instrument type** | `odds`                                                                                                                                                                                                                                                                                                                                  |
+| **NEEDS_CANDLE**    | True                                                                                                                                                                                                                                                                                                                                    |
+| **Schema fields**   | `fixture_id`, `league_id`, `venue`, `market_type`, `outcome`, `odds_decimal`, `ts_snapshot`, `interval_minutes`                                                                                                                                                                                                                         |
+| **Upstream guard**  | `DependencyChecker.check_sports_raw_source_captured` blocks if raw `odds` source is absent/stale                                                                                                                                                                                                                                        |
+| **Status**          | **REVISED 2026-08-15**: folds into `odds_horizon_bucket` (§4) as `computation_type=snapshot`, not a standalone type. **"Production (16,521 captured shards since 2026-07-25)" was NEVER TRUE — CORRECTED 2026-08-15 (second): live census found 0 captured rows, adapter is dead code (never scheduled). See correction banner above.** |
 
 LOCF resample of raw `odds` ticks at fixed intervals (default 15m). One row per (fixture, market, outcome, venue,
 snapshot-time). The MDPS staleness guard (landed `market-data-processing-service@41cdb702d`) blocks derivation when the
@@ -176,15 +191,15 @@ MDPS snapshot runs. A partial venue set corrupts downstream cross-bookmaker comp
 
 ### 3. `odds_movement` — MDPS OHLC candle
 
-| Field               | Value                                                                                                                                                                                                                           |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Producer**        | MDPS `SportsOddsMovementAdapter` (`odds_movement_adapter.py`, derived from raw `odds`/`trades` ticks)                                                                                                                           |
-| **Shard key**       | `venue` × `league_id` × `day`                                                                                                                                                                                                   |
-| **Instrument type** | `odds`                                                                                                                                                                                                                          |
-| **NEEDS_CANDLE**    | True                                                                                                                                                                                                                            |
-| **Schema fields**   | `timestamp`, `timestamp_out`, `venue`, `symbol`, `instrument_id`, `open`, `high`, `low`, `close`, `volume` (always 0), `trade_count` (tick count in the interval) — genuine OHLC of `home_odds`, one row per timeframe interval |
-| **Upstream guard**  | Same `DependencyChecker` staleness gate as `odds_snapshot`                                                                                                                                                                      |
-| **Status**          | **REVISED 2026-08-15**: folds into `odds_horizon_bucket` (§4) as `computation_type=movement`, not a standalone type. Was: Production (16,470 captured shards since 2026-07-25).                                                 |
+| Field               | Value                                                                                                                                                                                                                                                                                                                                   |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Producer**        | MDPS `SportsOddsMovementAdapter` (`odds_movement_adapter.py`, derived from raw `odds`/`trades` ticks)                                                                                                                                                                                                                                   |
+| **Shard key**       | `venue` × `league_id` × `day`                                                                                                                                                                                                                                                                                                           |
+| **Instrument type** | `odds`                                                                                                                                                                                                                                                                                                                                  |
+| **NEEDS_CANDLE**    | True                                                                                                                                                                                                                                                                                                                                    |
+| **Schema fields**   | `timestamp`, `timestamp_out`, `venue`, `symbol`, `instrument_id`, `open`, `high`, `low`, `close`, `volume` (always 0), `trade_count` (tick count in the interval) — genuine OHLC of `home_odds`, one row per timeframe interval                                                                                                         |
+| **Upstream guard**  | Same `DependencyChecker` staleness gate as `odds_snapshot`                                                                                                                                                                                                                                                                              |
+| **Status**          | **REVISED 2026-08-15**: folds into `odds_horizon_bucket` (§4) as `computation_type=movement`, not a standalone type. **"Production (16,470 captured shards since 2026-07-25)" was NEVER TRUE — CORRECTED 2026-08-15 (second): live census found 0 captured rows, adapter is dead code (never scheduled). See correction banner above.** |
 
 **Corrected 2026-08-08** (P1 discriminator todo): the schema fields above were previously mis-documented as
 `price_prev`/`price_curr`/`delta`/`delta_pct` (a two-point delta shape) — verified against the live adapter code
