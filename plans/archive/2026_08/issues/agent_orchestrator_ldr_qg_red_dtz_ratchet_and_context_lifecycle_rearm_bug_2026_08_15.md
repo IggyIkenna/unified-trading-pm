@@ -7,7 +7,7 @@ summary: >-
   fresh-pulled agent-orchestrator clone at origin/live-defi-rollout HEAD fails for TWO independent, pre-existing reasons
   — neither touches any file this task's own diff (a brand-new, additive script) came anywhere near. Both were
   cross-validated against a clean local clone with zero uncommitted changes.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting, meta]
 stage: [meta]
@@ -32,8 +32,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by: ""
-archive_exempt: true
+resolved_by: "agent-orchestrator@c884ce3c9c,ed15e2c596,6d00256,f5b199c797"
 context_scope:
   [
     agent-orchestrator/server/context_lifecycle.py,
@@ -43,6 +42,11 @@ context_scope:
   ]
 related: [/plans/active/local_ratchet_gate_breach_escalation_detector_2026_08_15.md]
 ---
+
+> **ARCHIVED**: resolved by agent-orchestrator@c884ce3c9c,ed15e2c596,6d00256,f5b199c797 (slots 6/20/16/24,
+> 2026-08-15) — all 4 todos done (DTZ ratchet, fallback-import, empty-string-fallback ratchet,
+> `context_lifecycle` rearm-vs-force test-isolation bug). Successor: none (self-contained fix set; no follow-up
+> work spun off).
 
 ## What I found
 
