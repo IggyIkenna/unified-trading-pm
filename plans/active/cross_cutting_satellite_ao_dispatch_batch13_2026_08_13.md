@@ -531,8 +531,6 @@ source: >-
       `plans/active/issues/plan_reconciler_findings_2026_08_08.md:212-220`. Verified live against current HEAD — the
       row's own inline note cites both corrections by date and SHA. No further edit needed. Source:
       `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md`
-- [ ] [CODE] P2. Launch the now-unblocked EXTENDED-STARKNET instrument-catalogue + perp backfill
-      (candles/funding/orderbook/trades) Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 - [x] ✅ [CODE] P2. **Step 2 IS-store backfill — premise mostly STALE, real gap found + closed.** (2026-08-15,
       slot-18·infra). Ran `scripts/verify_instrument_manifest_coverage.py` (reads the IS reference-data catalogue
       manifest, 2019-03-30..2026-08-14) against all 5 named venues: KRAKEN-SPOT, KRAKEN-FUTURES, BITGET-SPOT,
@@ -545,23 +543,63 @@ source: >-
       — wrote 74 records/day × 27 dates, `Batch complete: 27     results collected`. Re-verified: `missing_dates=0` for
       PACIFICA-SOLANA over the full 2019-03-30..2026-08-14 range. No code changes required (data-op only); no commit to
       ship. Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
+- [x] ✅ [CODE] P2. **Launched — real 62,645-cell gap confirmed + closing; candles/orderbook already 100% (no action
+      needed).** (2026-08-15, slot-4·infra) Live manifest read (bounded, column-projected
+      `read_availability_index(columns=[...])`) found `ohlcv_1m` (candles) and `book_snapshot_5` (orderbook) already
+      have ZERO `expected_unattempted` cells — the original todo's premise that all 4 sub-types needed a backfill was
+      stale; only `derivative_ticker` (funding/ticker, 37,961 cells) and `trades` (24,684 cells) had a real gap,
+      spanning 2024-10-01→2026-08-15 across 267 instruments, including 5,147+5,179 cells in the last 30 days alone
+      (still actively growing). Root cause: the daily forward-poll launcher
+      (`deployment-service/scripts/vm/launch-cefi-onchain-forward-poll.sh`) hardcodes EXTENDED-STARKNET's instrument
+      list to `BTC;ETH;SOL` — but the live IS catalogue (`instruments-store-cefi-prd/prod/catalog.parquet`) has **200
+      mvp=True perpetuals** for this venue, so only 3/200 were ever attempted daily; `derivative_ticker` was also
+      missing from that launcher's per-venue data_types list entirely. **Fix path traced + verified live before
+      shipping** (an initial launcher edit using the `--onchain-perp-symbols ALL` catalogue-driven sentinel was REVERTED
+      after confirming `VM_TASK=cefi-onchain-forward-poll` has no dedicated branch in `setup-data-pipeline-vm.sh` and
+      falls through to the generic `--operation download` path, which does NOT route onchain-perp venues through
+      `OnchainPerpBatchHandler`/the `ALL` sentinel at all — shipping that edit would have been a silent no-op or
+      regression). Instead launched the historical backfill via the ALREADY-CORRECT `launch-mtds-backfill-vm.sh`
+      (`VM_TASK=mtds-backfill`, which DOES auto-detect onchain-perp venues via `ONCHAIN_PERP_VENUE_CHAIN` and route to
+      `collect-onchain-perp-batch --onchain-perp-symbols ALL`):
+      `bash scripts/vm/launch-mtds-backfill-vm.sh --asset-group CEFI --venues EXTENDED-STARKNET --data-types     'trades;derivative_ticker' --instrument-ids ALL --start 2024-10-01 --end 2026-08-14 --vm-name     mtds-backfill-cefi-extended-starknet-fullhist-1`.
+      VM `mtds-backfill-cefi-extended-starknet-fullhist-1` (asia-northeast1-c, e2-highmem-4, SPOT) confirmed RUNNING at
+      T+3min (heartbeat blob live) and T+~4min run.log showed REAL progress:
+      `OnchainPerpBatch: catalogue-driven universe for EXTENDED-STARKNET on 2024-10-02 = 76     symbols`
+      (catalogue-driven, not the old 3-symbol hardcode) +
+      `ManifestWriter: per-VM shard updated (202 total     entries, 151 new...)` — day-chunked (5-day chunks,
+      auto-selected for the recent-history tail), SPOT-preemption resumable, self-healing per the standard launcher
+      contract; no further manual monitoring required this session. **Follow-up filed** (NOT fixed here — shared
+      daily-cron script, 4-venue blast radius, needs its own verification): new todo below + in the source doc's banner
+      for fixing `launch-cefi-onchain-forward-poll.sh`'s EXTENDED-STARKNET (and likely LIGHTER-ZKSYNC/HYPERLIQUID/ASTER,
+      same hardcoded-list pattern) instrument scoping so the gap doesn't re-accumulate once this one-time backfill
+      converges. Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
+- [ ] [INFRA] P3. Fix `launch-cefi-onchain-forward-poll.sh`'s per-venue `VENUE_INSTRUMENTS`/`VENUE_DATA_TYPES` tables
+      (EXTENDED-STARKNET hardcoded to `BTC;ETH;SOL` vs. the live IS catalogue's 200 mvp perpetuals; `derivative_ticker`
+      missing from its data_types) so the daily forward-poll doesn't keep re-accumulating the gap the
+      `mtds-backfill-cefi-extended-starknet-fullhist-1` VM (2026-08-15) is closing. Requires re-pointing this venue's
+      `VM_TASK` at the `mtds-backfill`-style onchain-perp-batch routing (the only VM_TASK branch in
+      `setup-data-pipeline-vm.sh` that actually threads `--data-types`/catalogue-driven `ALL` symbols through for
+      onchain-perp venues — the plain `--operation download` path the forward-poll launcher currently uses does not) —
+      audit whether LIGHTER-ZKSYNC/HYPERLIQUID/ASTER share the same narrow-instrument-list gap before touching the
+      shared script, since it's a daily-cron launcher for all 4 venues. Repo: deployment-service. Source: this doc's own
+      2026-08-15 diagnosis, folded in per the EXTENDED-STARKNET todo above.
 - [ ] [CODE] P2. Step 3 cross-data_type completeness capture per venue_data_types.yaml Source:
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 
       **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed
-                      separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
-                      (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
-                      exists and is live — no code change needed — but a real corpus-wide query
-                      (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
-                      the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
-                      filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
-                      data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
-                      worker-determinable outcome for one ~1h dispatch. Filed
-                      `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
-                      (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
-                      class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
-                      backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
-                      multi-AG backfill into this single dispatch.
+                          separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
+                          (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
+                          exists and is live — no code change needed — but a real corpus-wide query
+                          (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
+                          the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
+                          filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
+                          data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
+                          worker-determinable outcome for one ~1h dispatch. Filed
+                          `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+                          (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
+                          class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
+                          backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
+                          multi-AG backfill into this single dispatch.
 
 - [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
       operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
