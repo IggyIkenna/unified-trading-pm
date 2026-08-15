@@ -9,7 +9,7 @@ summary: >-
   updates the quality-gates codex doc if the new phase changes its documented gate composition, reconciles
   ci_satellite_ao_dispatch_batch4_2026_07_31.md's D4-10 escalated-question entry, and archives the source doc via the
   standard 6-step ritual once genuinely zero open work remains.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [ci-cd, bats, shell-tests, quality-gates, ao-dispatch, close-out, reclassification, na-audit]
 related:
   [
-    /plans/active/issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md,
+    /plans/archive/2026_08/issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
     /codex/06-coding-standards/quality-gates.md,
@@ -47,7 +47,7 @@ source: >-
   /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md §1(b).
 context_scope:
   [
-    /plans/active/issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md,
+    /plans/archive/2026_08/issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md,
     /codex/06-coding-standards/quality-gates.md,
     scripts/quality-gates-base/base-service.sh,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
@@ -57,6 +57,13 @@ locked_since:
 supersedes:
 superseded_by:
 ---
+
+> **📦 ARCHIVED 2026-08-15 — all 3 todos done, genuinely zero open work remains.** Todo 3 archived
+> `issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md` (both its own todos independently re-verified
+> shipped) via the standard 6-step ritual, and this finalize plan archives alongside it in the same session (all
+> top-level todos `[x]`, no `locked_by`, per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 1's
+> archive-immediately rule and the single-repo same-commit flip+archival sanction). Both docs now at
+> `/plans/archive/2026_08/`. Archived as COMPLETE, not superseded — `superseded_by` stays empty.
 
 # PM bats-tests-never-invoked — finalize
 
@@ -105,12 +112,19 @@ superseded_by:
       phase-agnostic and needs no edit). **Done when**: either the codex doc is updated and accurate against the shipped
       phase, or a note confirms no update was needed and why. — unified-trading-pm@3116bd0dd5
 
-- [ ] [DOC] P3. **Archive the source doc via the standard 6-step ritual** once todo 1 confirms both its todos are
+- [x] ✅ [DOC] P3. **Archive the source doc via the standard 6-step ritual** once todo 1 confirms both its todos are
       genuinely done and no other open item remains in its body: migrate any still-open follow-up to a tracked todo →
       add the archive banner → confirm no other active doc's contract needs updating beyond todo 2 above → grep the
       corpus for every referrer of `pm_bats_tests_never_invoked_by_quality_gates_2026_07_26` and repoint each to the
       archived path → clear `locked_by` (already empty) → move to `plans/archive/2026_08/issues/`. **Done when**: the
-      doc is archived, every corpus referrer resolves, and `check_reference_paths.py` has not regressed.
+      doc is archived, every corpus referrer resolves, and `check_reference_paths.py` has not regressed. — checked (1)
+      no deferred prose item to migrate (the "checkbox-flip gap" the source doc's own Progress Log flagged was already
+      resolved — `pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`'s bats todo is `[x]` in its
+      archived form); (2) archive banner added to the source doc; (3)-(4) no further codex contract change needed beyond
+      todo 2's already-shipped edit; (5) every active-corpus leading-slash referrer repointed to the archive path
+      (`git_status_reporter_stale_public_url_token_expiry_2026_07_24.md`, `quality-gates.md`, `infrastructure_master.md`
+      ×2 for this finalize plan's own path); (6) `locked_by` was already empty, doc moved to
+      `plans/archive/2026_08/issues/`. `check_reference_paths.py --only <touched files>` verified clean.
 
 ## Codex SSOTs
 
@@ -145,3 +159,12 @@ superseded_by:
   actionlint transitional pattern, and the per-repo `BATS_HARD_FAIL=1` opt-in (PM only, post clean-baseline re-measure)
   — matches the shipped code exactly, no invented behavior. `grep -in bats /codex/06-coding-standards/quality-gates.md`
   was 0 hits before this edit, confirming the gap was real.
+
+- **2026-08-15 (slot 31, cicd craft)**: Flipped todo 3 — archived the source doc
+  (`issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`, now at
+  `plans/archive/2026_08/issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`) via the standard 6-step
+  ritual, confirming both its todos were genuinely done first (independently re-checked, matching the 2026-08-13
+  verification). With all 3 todos here now done and no `locked_by`, this finalize plan also archives in the same session
+  per the plan-completion-and-archival-discipline HARD RULE — now at
+  `plans/archive/2026_08/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md`. Every active
+  leading-slash (`/plans/...`) corpus referrer repointed; `INDEX.md` regenerated (auto-generated file, not hand-edited).

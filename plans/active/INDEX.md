@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 290 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 288 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -139,7 +139,7 @@ by hand._
   via depends_on + gate_on_depends: true until that doc's 2 remaining todos (P0 vendor-catalog request gate; P1
   `--apply`…
 
-### defi (40)
+### defi (38)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -209,13 +209,6 @@ by hand._
 - [`defi_satellite_ao_dispatch_batch11_2026_08_09_finalize`](./defi_satellite_ao_dispatch_batch11_2026_08_09_finalize.md)
   — Gated closeout for defi_satellite_ao_dispatch_batch11_2026_08_09.md — machine-held via depends_on + gate_on_depends:
   true until every one of that plan's 12 todos is done. Reconciles each of the 6 source docs (flip/cite the item each…
-- [`defi_satellite_ao_dispatch_batch13_2026_08_13`](./defi_satellite_ao_dispatch_batch13_2026_08_13.md) — Extraction
-  batch from the defi tranche's 2026-08-13 /na-eligibility-audit + /ag-closeout-audit full sweep — 16 conflict-cleared,
-  bounded/deterministic items pulled directly from 13 source docs (RECLASSIFY_SPLIT bounded items from the NA…
-- [`defi_satellite_ao_dispatch_batch13_2026_08_13_finalize`](./defi_satellite_ao_dispatch_batch13_2026_08_13_finalize.md)
-  — Gated closeout for /plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md — machine-held via
-  depends_on + gate_on_depends until every todo in that batch is done. Reconciles each completed todo's evidence back
-  into its TRUE source doc's checkbox…
 - [`defi_satellite_ao_dispatch_batch2_2026_07_26`](./defi_satellite_ao_dispatch_batch2_2026_07_26.md) — Second
   AO-dispatch batch for defi, produced by the `/ag-closeout-audit` skill's full Phase-1 (per-doc classify) + Phase-3
   (conflict-check + draft) triage over all 56 defi AG-primary docs not already covered by the consolidated closeout,…
@@ -449,6 +442,10 @@ by hand._
 - [`sports_live_arb_strategy_and_execution_routing_2026_08_14`](./sports_live_arb_strategy_and_execution_routing_2026_08_14.md)
   — Migrates the arb detection, lifecycle and sizing logic out of e2e-testing's live_arb_scanner into strategy-service's
   existing sports arb archetype, and wires execution routing per the operator model — Betfair direct, Unity for its own…
+- [`sports_odds_api_data_type_casing_standardization_2026_08_15`](./sports_odds_api_data_type_casing_standardization_2026_08_15.md)
+  — "The odds_api adapter writes uppercase 'ODDS' as data_type (both in manifest content AND embedded in the GCS object
+  path) while the rest of the sports taxonomy (DATA_TYPES_BY_ASSET_GROUP, VM launcher env, validation) uses lowercase
+  'odds'.…
 - [`sports_odds_bookmaker_coverage_enumeration_2026_06_20`](./sports_odds_bookmaker_coverage_enumeration_2026_06_20.md)
   — Enumerate expected bookmaker × market sets per league tier, perform NaN-fill on ODDS coverage blanks, and validate
   odds cluster configurations for the sports vertical.
@@ -456,6 +453,10 @@ by hand._
   — Operator-ruled 2026-07-21 (BLK-a1ce4719) resolution of sports_odds_feature_naming_four_way_mismatch_2026_07_21.md —
   direction is UAC-as-SSOT (Option A), executed as a scoped migration, not a blind rename. Picks deliberate field names
   for…
+- [`sports_odds_writer_flip_and_trades_path_retirement_2026_08_15`](./sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md)
+  — Odds-api bookmaker quotes are market data (a per-bookmaker odds snapshot, no volume) -- not a TRADE (an actual fill
+  on our own book or a market fill with volume+price). The 2026-08-12/13 P2 migration already bulk-relabeled 382K
+  historical…
 - [`sports_predictions_live_mode_activation_readiness_2026_07_21`](./sports_predictions_live_mode_activation_readiness_2026_07_21.md)
   — Scopes the full MTDS/MDPS/FSS/strategy-service live-mode activation chain for asset_group=sports and
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
@@ -483,14 +484,6 @@ by hand._
   — Gated closeout for sports_satellite_ao_dispatch_batch12_2026_08_09.md — machine-held via depends_on +
   gate_on_depends: true until all 4 of that plan's todos are done. Mirrors the batch2-11-finalize pattern: reconcile
   each of the 4 distinct…
-- [`sports_satellite_ao_dispatch_batch13_2026_08_13`](./sports_satellite_ao_dispatch_batch13_2026_08_13.md) — Extraction
-  batch from the sports tranche's 2026-08-13 /na-eligibility-audit + /ag-closeout-audit full sweep — 16 live
-  conflict-cleared, bounded/deterministic items (21 total todos, 5 marked out-of-scope, see below) pulled directly from
-  10…
-- [`sports_satellite_ao_dispatch_batch13_2026_08_13_finalize`](./sports_satellite_ao_dispatch_batch13_2026_08_13_finalize.md)
-  — Gated closeout for /plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md — machine-held via
-  depends_on + gate_on_depends until every todo in that batch is done. Reconciles each completed todo's evidence back
-  into its TRUE source doc's…
 - [`sports_satellite_ao_dispatch_batch5_2026_07_26`](./sports_satellite_ao_dispatch_batch5_2026_07_26.md) — Fifth
   AO-dispatch batch for sports, produced by the `/ag-closeout-audit` skill's full Phase-1 (per-doc classify) + Phase-3
   (conflict-check + draft) triage over all 60 sports AG-primary docs not already covered by the consolidated closeout,…
@@ -844,7 +837,7 @@ by hand._
   — Cross-AG registry foundation. Adds a route axis (aggregator/broker/direct) and a mode axis (batch/live) to
   VENUE_DATA_TYPE_CAPABILITIES so an aggregator-served venue reads as a venue WITH an adapter, folds in the…
 
-### ao (38)
+### ao (39)
 
 - [`anthropic_per_task_actual_spend_and_account_calibration_2026_08_10`](./anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md)
   — The task-usage dashboard's $ column is blank for 1,993 of 2,622 completed task_usage rows (100% of Anthropic rows)
@@ -857,6 +850,10 @@ by hand._
 - [`ao_consolidated_closeout_2026_08_12`](./ao_consolidated_closeout_2026_08_12.md) — The `ao` topic tranche's
   consolidated close-out was archived on 2026-07-30 (/plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md plus
   its finalize sibling), but `ao`-tagged work did not stop: 115 docs under plans/active still…
+- [`ao_death_diagnostics_compaction_kpis_and_sequential_carveout_2026_08_15`](./ao_death_diagnostics_compaction_kpis_and_sequential_carveout_2026_08_15.md)
+  — Operator-driven follow-up from a 2026-08-14 tmux_session_lost cluster investigation (see
+  ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md's Progress Log) — consolidate death diagnostics into one event,
+  distinguish benign session…
 - [`ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08`](./ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md)
   — Gated closeout for `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md` — machine-held via
   `depends_on` + `gate_on_depends: true` until all 17 of that doc's remaining todos (14 per-row REOPEN-or-FLIP
@@ -979,7 +976,7 @@ by hand._
   does NOT satisfy its done_definition — today the only action is a conversational ping. This plan gives review two
   narrow,…
 
-### ci (11)
+### ci (10)
 
 - [`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`](./capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
   — Small follow-up plan forking the 2 residual items left open when `capability_wizard_and_manifest_2026_06_11.md`
@@ -1009,10 +1006,6 @@ by hand._
 - [`monitoring_control_plane_master_2026_06_10`](./monitoring_control_plane_master_2026_06_10.md) — Master coordinator
   for the monitoring control plane — CI dashboard in deployment-ui and fleet git-health in the orchestrator, providing a
   single-pane view of repo pipeline state and slot health.
-- [`pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08`](./pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md)
-  — Gated closeout for the retroactive reclassification of
-  issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md (NA → planning, 2026-08-08 na-eligibility-audit
-  round7 RECLASSIFY sweep). Machine-held via depends_on +…
 - [`qg_host_adaptive_resource_governor_2026_07_14`](./qg_host_adaptive_resource_governor_2026_07_14.md) — Replace
   quality-gates.sh's fixed-K host-concurrency token bucket with a host-adaptive admission controller that reads each
   host's real MemTotal/MemAvailable + physical cores at runtime and admits a QG heavy phase only when BOTH a RAM…

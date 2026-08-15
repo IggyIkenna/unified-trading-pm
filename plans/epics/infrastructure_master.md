@@ -74,7 +74,7 @@ related_plans:
   - ../archive/2026_08/infra_satellite_ao_dispatch_batch9_2026_08_09.md
   - ../archive/2026_08/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md
   - ../active/lst_rate_honest_coverage_2026_07_21.md
-  - ../active/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md
+  - ../archive/2026_08/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md
   - ../active/qg_host_adaptive_resource_governor_2026_07_14.md
   - ../active/repo_scripts_governance_audit_2026_06_18.md
   - ../active/self_hosted_runner_public_repo_revert_2026_08_05.md
@@ -710,7 +710,7 @@ fix the unified-trading-system-ui mock dev-server crash under sustained Playwrig
 **status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: Infra satellite AO dispatch batch 9 —
 finalize (reconcile source-doc checkboxes + archive)
 
-### [`pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08`](../active/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md)
+### [`pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08`](../archive/2026_08/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md)
 
 **status**: active · **estimate**: 0.3 cal AI-days (class: infra) **title**: PM bats-tests-never-invoked — finalize
 (reconcile + archive)

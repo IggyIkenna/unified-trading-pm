@@ -129,7 +129,8 @@ the public URL + token, so the fix must be conditional, not a blanket default fl
       HEAD). **"Wire into quality-gates.sh"**: NOT done — discovered `bats tests/` is not actually invoked anywhere in
       this repo's QG pipeline (bats-core is installed by CI tooling but never run), a pre-existing gap spanning every
       `.bats` file and the shared `base-service.sh` framework, out of scope for this one-script fix. Filed as
-      `/plans/active/issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`.
+      `/plans/archive/2026_08/issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md` (both its todos shipped
+      and it archived 2026-08-15).
 - [x] [INFRA] ✅ **MOOT — verified resolved 2026-08-06, no action needed.** Immediate unblock (independent of the code
       fix): refresh `~/.orch_token` on ip-172-31-5-118 so the reporter resumes now, and confirm `reporter_stale` clears
       within one tick. **Why moot:** the 2026-07-26 loopback fix removed that host's token dependency entirely, exactly

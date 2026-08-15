@@ -19,7 +19,7 @@ summary: >-
   fixing it properly means adding a bats-invocation phase to the SHARED `base-service.sh` (3880 lines, used fleet-wide),
   which is out of scope for a 1-hour infra todo about one script's URL-preference logic, so it is filed here instead of
   silently absorbed.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -59,6 +59,15 @@ supersedes:
 superseded_by:
 depends_on: []
 ---
+
+> **📦 ARCHIVED 2026-08-15 — both todos shipped, no open work remains.** Todo 1 (warn-only BATS phase in
+> `scripts/quality-gates-base/base-service.sh`) landed `unified-trading-pm@d3f7b6497`; todo 2 (re-harden, satisfied via
+> a PM-repo-scoped `BATS_HARD_FAIL=1` opt-in after a confirmed 0/320 clean baseline, per the todo's own
+> `(repo: unified-trading-pm)` qualifier) landed `unified-trading-pm@ef552936b3`. Both independently re-verified as
+> ancestors of `origin/live-defi-rollout` (slot 21, 2026-08-13) and again at archival time (slot 31, 2026-08-15). The
+> paired finalize plan `pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md` also updated
+> `/codex/06-coding-standards/quality-gates.md` with the new BATS phase's documented gate composition and archives
+> alongside this doc in the same session. Archived as COMPLETE, not superseded — `superseded_by` stays empty.
 
 # PM's bats shell-test suite is never actually invoked by quality-gates.sh
 
