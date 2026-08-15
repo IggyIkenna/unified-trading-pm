@@ -12,7 +12,7 @@ summary: >-
   historical corpus but never touched this live write path, so it keeps writing new `trades`-labeled objects (+
   presumably matching manifest rows via the `shard_counts[(bm_str, "trades", league_str, "odds", fixture_str)]`
   accumulator at the same lines) every day the writer stays unfixed.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -36,7 +36,7 @@ source:
     "sports_taxonomy_p2_migration_2026_08_08.md 'Four-surface reconciliation' REVIEW todo, live census 2026-08-15
     (slot-9)",
   ]
-resolved_by:
+resolved_by: slot-19 2026-08-15
 locked_by:
 locked_since:
 drift_direction: advance-code
@@ -169,7 +169,7 @@ rather than a dedicated VM launch, per proportionality.
       confirmed via direct per-VM manifest-shard read: 325/325 rows `data_type=odds`, growing clean. The live writer is
       now genuinely fixed at the deployment-parameter level, not just the code level.
 
-- [ ] [SCRIPT] P2. **Sweep the 1,604 `trades` rows orphaned in the deleted mislabeled VM's per-VM manifest shard**
+- [x] ✅ [SCRIPT] P2. **Sweep the 1,604 `trades` rows orphaned in the deleted mislabeled VM's per-VM manifest shard**
       (`_index/per_vm/mtds-live-sports-odds-api-trades-20260815-111158.parquet`, all `date=2026-08-15`) once the sports
       asset_group's manifest consolidator (hourly Cloud Scheduler cron,
       `/codex/05-infrastructure/manifest-consolidator-ssot.md`) merges that orphaned shard into the durable surfaces —
@@ -360,3 +360,19 @@ rather than a dedicated VM launch, per proportionality.
      `unified_trading_library.canonical.canonicalize_manifest_instrument_type` had already correctly reversed per
      `/plans/active/issues/tradfi_instrument_type_lowercase_residual_381k_2026_08_15.md`'s live investigation); no new
      tradfi red found in this turn's redeploy work.
+
+- **2026-08-15 (slot-19, data_engineering) — P2 residual sweep COMPLETE, issue RESOLVED.** The bounded 75min monitor's
+  own "SWEPT" verdict was a false positive (its `--apply-prod` subprocess call produced empty captured output —
+  investigated rather than trusted; the monitor declared success unconditionally after apply+verify without actually
+  checking the verify count). Re-ran the apply directly in the foreground to see the real result:
+  `manifest_swap_trades_to_odds_2026_08_12.py --apply-prod --confirm-prod-write` →
+  `merged: base=6,132,674 relabeled=1,604 final_rows=6,132,674` (the consolidator had by then merged the orphaned per-VM
+  shard into the durable index, base row count grew from 6,120,990 → 6,132,674 confirming the merge happened). Verified
+  clean via TWO independent checks: (1) fresh dry-run of the same script — `0` rows to relabel on both surfaces; (2) an
+  independent census via this issue's own established methodology,
+  `read_availability_index_safe(bucket="market-data-tick-sports-prd-central-element-323112", columns=[...], filters=[("data_type","==","trades")])`
+  — **0 `trades` rows in the sports manifest, period**. P2 checkbox flipped above. **Full closure state**: code fix
+  (P0) + launch-parameter fix (this turn) both shipped and verified; all historical + regrown + orphaned-shard `trades`
+  residue swept to `odds` on both GCS and manifest surfaces; live writer
+  (`mtds-live-sports-odds-api-odds-20260815-112335`) confirmed actively writing clean `data_type=odds` rows.
+  `status: resolved`. Nothing blocking archival next sweep — no `locked_by`, all todos done.
