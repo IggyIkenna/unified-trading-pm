@@ -830,7 +830,7 @@ source: >-
       `agent-orchestrator/server/escalation.py`, a fleet-wide detector against live `origin/live-defi-rollout` HEAD, the
       15-minute delayed re-check state machine, AO dispatch as primary remediation, and Slack-alert-ownership
       verification. Not yet executed — that is the new plan's own scope, not this todo's. Source:
-      `plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md`
+      `plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md`
 - [x] ✅ [CODE] P2. MOOT — already shipped: agent-orchestrator@8380074 + unified-trading-pm@a21d3305e4 (2026-08-15,
       slot-4·infra, confirmed live on LDR). Source: `plans/active/issues/ci_reconcile_overnight_batch_2026_08_11.md`
 - [x] ✅ [CODE] P2. **MOOT — already shipped, confirmed live.** (2026-08-15, slot-17·infra) `agent-orchestrator@8380074`

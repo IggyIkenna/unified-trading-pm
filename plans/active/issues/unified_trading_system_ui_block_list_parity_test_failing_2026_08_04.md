@@ -95,7 +95,7 @@ verification dispatch happened to run on `main` and surfaced it. Did not investi
 - **cicd escalation agt-558c62 2026-08-09**: 0 open todos, genuinely archival-eligible, but
   `plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` (1007L, already over the 1000L hard line-cap) cites
   this doc via a markdown-syntax link — archiving would hit the exact deadlock documented in
-  `/plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` (a same-line link-repoint
+  `/plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` (a same-line link-repoint
   edit in an over-cap file has no `check_line_caps.sh` carve-out). Set `archive_exempt: true`, kept `status: open`.
   Un-set once the deadlock doc's operator decision lands and the archival can complete (same batch as the
   disposition-owner's own `[DOCS] P3` todo).

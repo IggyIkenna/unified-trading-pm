@@ -107,7 +107,7 @@ idempotency guard silently no-ops re-park attempts (observed 4x/26x redundant re
       (`_SWEEP_IO_MAX_WORKERS`), keeping classify/route/emit sequential.
 - [ ] [DOC] P3. `plans/active/issues/plan_reconciler_findings_ui_2026_08_11.md` — add: expand the ui-tranche doc
       inventory to include multiline-frontmatter `asset_group:\n  [ui]` docs missed by same-line grep.
-- [ ] [OPERATOR] P2. `plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md` —
+- [ ] [OPERATOR] P2. `plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md` —
       decide the resolution path for the local-quality-gate-breach escalation coverage gap (fleet-wide detector +
       escalation wall type, vs accept as a known gap).
 - [x] ✅ [DATA] P2. `plans/archive/issues/dp_vm_002_mdps_cefi_2021_silent_zero_false_positive_2026_08_11.md` — re-launch
@@ -268,7 +268,7 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       carries a `CORRECTED 2026-08-12 (/plan-reconcile)` annotation qualifying "open→merge" vs the ~7.5min pre-PR
       promotion-cron latency as two different, non-conflicting spans — fixed same-day as the original finding. No
       further action.
-- [x] ✅ [REVIEW] P3. (P2) plans/active/issues/tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md — audit entry
+- [x] ✅ [REVIEW] P3. (P2) plans/archive/2026_08/issues/tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md — audit entry
       says "both open todos" but only 1 is actually unchecked. **VERIFIED RESOLVED 2026-08-15**: the doc's own
       na-eligibility-audit Progress Log entry already carries a `CORRECTED 2026-08-12 (/plan-reconcile)` annotation
       pinpointing the exact commit/timing (`unified-trading-pm@b53eade639` flipped todo 1 before the audit entry was

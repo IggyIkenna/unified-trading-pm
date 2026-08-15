@@ -23,16 +23,16 @@ related:
     /plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md,
     /plans/active/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md,
     /plans/active/issues/codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md,
-    /plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md,
+    /plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md,
     /plans/archive/2026_08/issues/escalation_queue_autospawn_enqueue_lag_45min_2026_08_15.md,
-    /plans/active/issues/escalation_queue_sit_failure_no_pr_closed_resolution_2026_08_10.md,
-    /plans/active/issues/tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md,
+    /plans/archive/2026_08/issues/escalation_queue_sit_failure_no_pr_closed_resolution_2026_08_10.md,
+    /plans/archive/2026_08/issues/tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md,
     /plans/active/issues/autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md,
-    /plans/active/issues/plan_alignment_npm_global_eacces_on_glue_runners_2026_08_10.md,
+    /plans/archive/2026_08/issues/plan_alignment_npm_global_eacces_on_glue_runners_2026_08_10.md,
     /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
-    /plans/active/issues/release_tag_stall_utl_glue_runner_backlog_2026_08_14.md,
+    /plans/archive/2026_08/issues/release_tag_stall_utl_glue_runner_backlog_2026_08_14.md,
     /plans/archive/2026_08/issues/promote_ref_orphaned_on_manual_pr_close_2026_08_06.md,
-    /plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md,
+    /plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md,
     /plans/archive/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md,
     /plans/archive/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md,
   ]
@@ -102,7 +102,7 @@ source: >-
 - [x] ✅ [DEVOPS] P1. **Extend the `sit_failure` wall type's direct PR-closed/merged auto-resolution check**, mirroring
       the already-shipped fix for other wall types (commit `d990ed5`) — add a regression test, ship via quickmerge.
       Resolves BLK-f7bb0212 (approved, previously timed out unanswered). Source:
-      `plans/active/issues/escalation_queue_sit_failure_no_pr_closed_resolution_2026_08_10.md`. Gate: a `sit_failure`
+      `plans/archive/2026_08/issues/escalation_queue_sit_failure_no_pr_closed_resolution_2026_08_10.md`. Gate: a `sit_failure`
       wall whose PR is closed/merged resolves automatically without burning further dispatch attempts; regression test
       added mirroring `d990ed5`'s. — agent-orchestrator@de26a5e911: added a direct `_pr_merge_state` check for
       `sit_failure` (no head-branch QG poll, deliberately unlike `ldr_qg_failure`); 5 new regression tests in
@@ -111,7 +111,7 @@ source: >-
 - [x] ✅ [BACKEND] P2. **Pin the Tier-A `ci_status` gate's push-time UAC re-verification to the exact commit the PR
       validated against**, instead of content-first re-resolving UAC at HEAD — the design call this doc's remaining todo
       describes (Suggested resolution path #3). Source:
-      `plans/active/issues/tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md`. Gate: a push-time
+      `plans/archive/2026_08/issues/tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md`. Gate: a push-time
       re-verification against a UAC ref that has moved since PR validation no longer produces a spurious
       `ci_status=FAILING`; existing deadlock-reproduction scenario from the source doc no longer occurs. —
       `unified-trading-ci@e76a821`: added a `dep-pin/<repo>` commit-status write at PR-time (records the exact
@@ -151,7 +151,7 @@ source: >-
 
 - [x] ✅ [DEVOPS] P2. **Remove the root-owned pre-installed `@anthropic-ai/claude-code` from the self-hosted glue-runner
       image**; let the workflow's own install step run clean as the runner user instead. Source:
-      `plans/active/issues/plan_alignment_npm_global_eacces_on_glue_runners_2026_08_10.md`. Gate: a fresh glue-runner
+      `plans/archive/2026_08/issues/plan_alignment_npm_global_eacces_on_glue_runners_2026_08_10.md`. Gate: a fresh glue-runner
       image has no root-owned global `@anthropic-ai/claude-code`; `plan-alignment-agent.yml`'s `npm install -g` step
       succeeds without the existing EACCES guard needing to fire. ✅ Done 2026-08-15: `install_claude_code()` (which ran
       `npm install -g @anthropic-ai/claude-code` under the script's own `sudo`, i.e. root) removed from
@@ -186,7 +186,7 @@ source: >-
 - [x] ✅ [DEVOPS] P1. **Implement the local-ratchet-gate-breach escalation coverage design** ruled 2026-08-12: route a
       local, pre-push `quality-gates.sh` ratchet-gate breach (e.g. TID251) through the existing AO escalation infra with
       a 15-minute grace window before it pages, AO-driven remediation on timeout. Source:
-      `plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md`. Gate: a simulated
+      `plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md`. Gate: a simulated
       local ratchet breach (not observed via a GitHub Actions run conclusion) produces an escalation-queue entry within
       the 15-minute grace window if unresolved. **DUPLICATE — 2026-08-15 (slot-16·infra) finding**: this exact scope was
       already covered by a dedicated, more-detailed implementation plan authored the same day —
@@ -238,7 +238,7 @@ source: >-
       documented public-repo revert + dedicated-VM split
       (`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`, $0/day billing confirmed 8 consecutive days) —
       nothing currently running to restart; confirmed stale. Source:
-      `plans/active/issues/release_tag_stall_utl_glue_runner_backlog_2026_08_14.md`.
+      `plans/archive/2026_08/issues/release_tag_stall_utl_glue_runner_backlog_2026_08_14.md`.
 
 - [x] ✅ [DOC] P3. **Repoint `cross_cutting_consolidated_closeout_2026_07_25.md`'s link off the
       `promote_ref_orphaned_on_manual_pr_close_2026_08_06.md` stub directly to its archived path, then delete the
@@ -254,7 +254,7 @@ source: >-
       `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` — the other 7 of the originally-cited 11 were
       already-archived docs, frozen historical state, not live referrers needing a fix). Verified directly against
       `origin/live-defi-rollout` (not just exit code): archived path exists, active path gone, referrer link resolves.
-      Source: `plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`.
+      Source: `plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`.
 
 - [x] ✅ [BACKEND] P2. **Instrument quickmerge's `STAGE 0: Cascade`/pull step with an `os.environ` diff before/after**,
       to find the real trigger surface for the `DEPLOYMENT_ENV` leak shared by two open MTDS investigations — this is

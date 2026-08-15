@@ -28,7 +28,7 @@ tags: [plan-hygiene, line-caps, tooling-gap, tradfi]
 related:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md,
+    /plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md,
     /plans/active/issues/tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md,
     /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
   ]
@@ -53,7 +53,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md,
+    /plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md,
     /plans/active/issues/tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md,
     unified-trading-pm/scripts/plan-hygiene/check_line_caps.sh,
   ]

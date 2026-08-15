@@ -218,7 +218,7 @@ different tranche by `parent_epic` (`## Flagged`, following the established batc
       `issues/tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md` (todo 3) +
       `issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`. ✅ `PM@d765b4cfb1` — bounded
       same-line link-repoint carve-out (ADDED≤DELETED, path-normalized content match), per
-      /plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md option (a).
+      /plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md option (a).
 - [x] [DATA] P2. **Dry-run a manual catalogue regen + resume both paused tradfi catalogue schedulers.** The durable
       build-time exclusion filter this was gated on ALREADY SHIPPED (`instruments-service@22a5f197`, via the
       cross-cutting tranche's own batch2 — outside this doc's own tradfi covering-doc set, which is why its checkbox

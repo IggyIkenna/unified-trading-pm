@@ -4,7 +4,7 @@ title:
   AO dispatch keeps redispatching an [INFRA] todo whose own same-doc [OPERATOR] predecessor todo is still unchecked,
   producing repeated identical blocked-questions across 4 distinct slots
 summary: >-
-  `plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` has an [OPERATOR] P1 todo
+  `plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` has an [OPERATOR] P1 todo
   ("decide a/b/c") immediately followed by an [INFRA] todo ("once (a)/(b)/(c) is decided, implement it"). The [OPERATOR]
   todo is correctly tracked as a genuinely operator-gated blocked item
   (`BLK-op-plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock-182a19732410`, "no worker will be spawned for it").
@@ -27,7 +27,7 @@ repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [agent-orchestrator, dispatch, todo-ordering, task-affinity, live-incident, park]
 related:
-  - /plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md
+  - /plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md
   - /plans/archive/2026_08/issues/ao_park_disposition_blocked_answer_no_follow_through_2026_07_31.md
   - /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md
 created: 2026-08-08
@@ -84,7 +84,7 @@ Live, directly-observed during routine blocked-queue sweeps:
       it automatically rather than relying on a worker to self-discover the block. Repo: agent-orchestrator (dispatch
       logic) + unified-trading-pm (template convention).
 - [x] ✅ [DOC] P1. **RULED 2026-08-09** — option (a) decided + implemented in
-      `plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` (see that doc's
+      `plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` (see that doc's
       Progress Log for the full ruling + `unified-trading-pm@d765b4cfb1` implementation evidence; not duplicated here).
       Retagged from `[OPERATOR]` in the same edit. **Standing follow-up, not done here**: the parked backlog task
       `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock-0d5981dddb99` still needs a live

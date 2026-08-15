@@ -349,12 +349,16 @@ nothing: it is architecturally cached against exactly the input that changed.
 - [ ] [OPERATOR] P2. ~~Make the differ set `is_breaking` on value change~~ **DO NOT** — verified to false-break the
       fleet on benign recalibrations (e.g. `EMISSION_LATENCY_MS_BY_SOURCE`). Use the decoupled signal in [B] instead.
       **Retagged `[DEVOPS]` → `[OPERATOR]` 2026-08-09**, same reason as the item above.
-- [ ] [OPERATOR] P2. **EXTRACTED 2026-08-02** (operator ruling on
+- [x] ✅ [OPERATOR] P2. **EXTRACTED 2026-08-02** (operator ruling on
       `plan_reconcile_parked_operator_decisions_2026_08_02.md` na-eligibility-audit item 18, option A) to
       `ci_satellite_ao_dispatch_batch1_2026_07_26.md` — this doc's main P0/P1 chain stays `locked_by`/operator-gated as
       before; only this bounded item moved. ~~Fix the invalid `sit_retry_cap` wall_type in `sit-debounce-trigger.yml`
       (it can never succeed)~~ and decide whether a red SIT should escalate to a background worker rather than Issue +
-      Slack only. **STALE (na-eligibility-audit 2026-08-03)** — the struck phrase is DONE:
+      Slack only. **RESOLVED 2026-08-15** (`ci_satellite_ao_dispatch_batch14_2026_08_15.md` todo 7): red-SIT escalation
+      wired to a background-worker dispatch. `unified-trading-pm@1a6000484b` — an `escalate-to-orchestrator`
+      (`wall_type=sit_failure`) dispatch added to `sit-unlock.yml`'s `sit-failed` path, alongside the existing Issue +
+      Slack post; reuses the existing `sit_failure` wall type (no new wall_type needed). Previously **STALE
+      (na-eligibility-audit 2026-08-03)** — the struck phrase was already DONE:
       `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (~line 240) records `unified-trading-pm@2e5a42479` +
       `agent-orchestrator@dbdccb6` fixing the choice-list + `EscalateRequest` Literal (confirmed live in this repo —
       `escalate-to-orchestrator.yml` now accepts `sit_retry_cap` at lines 37/67/81/150/152), with a full round-trip

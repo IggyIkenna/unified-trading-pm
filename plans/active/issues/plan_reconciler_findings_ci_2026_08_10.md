@@ -350,7 +350,7 @@ Writable set (32 docs, outside 12h grace):
 - plans/archive/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md
 - plans/archive/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md
 - plans/active/issues/operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md
-- plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md
+- plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md
 - plans/active/issues/plan_reconciler_ci_late_findings_2026_08_06.md
 - plans/archive/2026_08/issues/plan_reconciler_findings_ci_2026_08_09.md
 - plans/active/issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md

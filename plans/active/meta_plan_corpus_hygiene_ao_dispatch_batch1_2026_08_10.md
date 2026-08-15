@@ -155,7 +155,7 @@ Two independent causes, both now fixed:
       `[infrastructure]` (owner TBD by content — pick one and say why). **Done when**: all 5 carry a single real tranche
       tag.
 - [ ] [DOCS] P3. **Resolve the `[ci, cross-cutting]` dual-tag on
-      `/plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`** to a single owner.
+      `/plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`** to a single owner.
       Two prior audits (2026-08-09 Finding 4, 2026-08-10 Finding 2) both read the content as closer to
       `infrastructure`/`meta` than `ci` — i.e. the `ci` half may itself be wrong, not just the `cross-cutting` half.
       **RETAGGED from `[OPERATOR]` per `task_template.md` finding U**: this is a named-doc, named-field content call a

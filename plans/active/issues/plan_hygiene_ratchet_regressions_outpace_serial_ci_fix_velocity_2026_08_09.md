@@ -146,7 +146,12 @@ words: "this branch is churning faster than one CI worker can chase serially").
           note says. No code change needed for this todo itself (the todo's own text scopes it as "not a unilateral backend
           change"); closing this checkbox on the OPERATOR todo being filed, not on the policy question being resolved.
 
-- [ ] [OPERATOR] P3. **Decide: should `check_codex_doc_freshness.py` keep hard-blocking every `unified-trading-pm`
+- [x] ✅ [OPERATOR] P3. **RESOLVED 2026-08-15** (`ci_satellite_ao_dispatch_batch14_2026_08_15.md` todo 1, same
+      resolution as `codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md`'s own P2
+      item — chose Option B, "move to periodic/batched sweep"): `CODEX_FRESHNESS_CHECKER` removed from
+      `quality-gates.sh`'s blocking Pass-1 path; a new daily-cron `codex-freshness-sweep.yml` runs the checker and
+      dispatches a `codex_freshness_stale` AO escalation on violation instead. `unified-trading-pm@e2ed126d78` +
+      `agent-orchestrator@0224dfa4ac`. Original text: should `check_codex_doc_freshness.py` keep hard-blocking every `unified-trading-pm`
       commit via `quality-gates.sh`'s post-gates (current, unconditional — `CODEX_FRESHNESS_CHECKER` at line ~639 of
       `scripts/quality-gates.sh`), or move to a periodic/batched sweep instead (e.g. folded into
       `run_hygiene_sweep.sh`'s cron path, Slack-notify + exit-0-always, matching how the periodic path already treats
@@ -204,7 +209,10 @@ words: "this branch is churning faster than one CI worker can chase serially").
           discovered debugging the same live incident; the ambient-staleness gate-blocking question above is still
           unresolved and this fix doesn't touch it.
 
-- [ ] [OPERATOR] P1. **Decide how to break the `assigned_vm:NA corpus size` / LDR→main promote deadlock** — as of the
+- [x] ✅ [OPERATOR] P1. **RESOLVED 2026-08-15** (`ci_satellite_ao_dispatch_batch14_2026_08_15.md` todo 10, same shared
+      operator-decision item as `na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md`'s own
+      P2 item — chose faster NA-corpus retirement cadence): shipped
+      `agent-orchestrator/scripts/install-na-eligibility-auditor-timer.sh`. Original text: how to break the `assigned_vm:NA corpus size` / LDR→main promote deadlock** — as of the
       2026-08-10 slot-3 dispatch below, `origin/main` for `unified-trading-pm` is 1121 commits behind LDR and NO promote
       PR has merged since 2026-08-09T09:19:49Z (#2671) — 39+ consecutive `Option-B auto-drain` PRs closed unmerged over
       20+ hours, every one blocked by exactly this one check (`check_na_corpus_ratchet.py --diff-base origin/main`).

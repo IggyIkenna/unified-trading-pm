@@ -18,7 +18,7 @@ summary: >-
   unrelated passengers): execution-service@62ca29a43, features-service@5e7f2fe3, market-tick-data-service@89cdd578,
   strategy-service@86696b7e. Scope correction worth keeping: only FOUR repos run `[self-hosted, glue]` —
   `instruments-service` and `market-data-processing-service` are `ubuntu-latest` and never had this bug.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -57,7 +57,7 @@ source:
     list` conclusions, and the shared cause from `gh run view --log-failed` on strategy-service run 31420755852 — not
     from the Slack alert text, which named only the check",
   ]
-resolved_by:
+resolved_by: "ci_satellite_ao_dispatch_batch14_2026_08_15.md todo 6 — bootstrap-ci-host.sh edit, 2026-08-15"
 locked_by:
 locked_since:
 context_scope: [scripts/templates/plan-alignment-agent.yml, scripts/propagation/rollout-agent-workflows.sh]
@@ -123,11 +123,15 @@ unified-trading-pm@d901c4e050 — YAML parses, `bash -n` clean, actionlint uncha
       `scripts/templates/plan-alignment-agent.yml` — that is the SSOT and it stays current, whereas the one-off patch
       script written for this propagation was deliberately not promoted (all four repos are done; a tool with no
       remaining consumer is debt). Repo: unified-trading-pm.
-- [ ] [DEVOPS] P3. **Decide whether the runner image should stop shipping a root-owned global
+- [x] ✅ [DEVOPS] P3. **Decide whether the runner image should stop shipping a root-owned global
       `@anthropic-ai/claude-code` at all.** The workflow guard makes the symptom survivable, but the underlying setup —
       a root-installed global package that the runner user is then asked to update on every run — will keep producing
       this class. Either drop it from the image (let each run install into a user-writable prefix) or pin it in the
-      image and remove the install step entirely. Needs the runner-image owner. Repo: unified-trading-pm.
+      image and remove the install step entirely. Needs the runner-image owner. Repo: unified-trading-pm. **RESOLVED
+      2026-08-15** (`ci_satellite_ao_dispatch_batch14_2026_08_15.md` todo 6): chose "drop it from the image." Removed
+      `install_claude_code()` (ran under root `sudo`) from `scripts/self-hosted-runners/bootstrap-ci-host.sh` + its
+      call site; `plan-alignment-agent.yml`'s own `npm install -g` step now installs into the runner user's writable
+      prefix with no root-owned copy in the way. The EACCES guard is kept as defense-in-depth, not removed.
 
 ## Why unified-trading-pm itself is NOT in scope
 

@@ -248,8 +248,8 @@ necessary fix), different shape of edit. Bounded the same way, via `check_line_c
 dangling-link repoint to unblock a downstream archival — SCOPED mode refused it, deadlocking against the archival
 discipline's own referrer-fixup requirement (a stale ref must be fixed before the target can safely archive). Full
 incident + the shipped fix (`unified-trading-pm@d765b4cfb1`, `scripts/plan-hygiene/check_line_caps.sh`):
-`/plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`. Regression coverage:
-verified via an isolated scratch repo, not the live corpus.
+`/plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`. Regression
+coverage: verified via an isolated scratch repo, not the live corpus.
 
 ## 2. Every follow-up is a canonical `- [ ]` todo — never prose
 

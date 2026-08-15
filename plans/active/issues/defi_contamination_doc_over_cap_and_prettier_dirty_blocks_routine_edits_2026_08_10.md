@@ -25,7 +25,7 @@ related:
   [
     /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
     /plans/active/issues/tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md,
-    /plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md,
+    /plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md,
   ]
 created: "2026-08-10"
 author: slot-6
@@ -41,7 +41,7 @@ source: >-
 context_scope:
   [
     /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
-    /plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md,
+    /plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md,
     unified-trading-pm/scripts/plan-hygiene/check_line_caps.sh,
     unified-trading-pm/scripts/hooks/prettier-autostage.sh,
   ]

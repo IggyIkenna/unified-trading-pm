@@ -24,7 +24,7 @@ scope: [engineer, admin]
 tags: [ci, quality-gates-v2, ratchet, plan-hygiene, promotion, deadlock, live-incident]
 related:
   - /plans/active/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md
-  - /plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md
+  - /plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md
   - /plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md
 created: 2026-08-10
 author: /ci-reconcile (interactive, slot-2·laptop)
@@ -131,17 +131,20 @@ a normal ratchet into a self-reinforcing wall.
       dispatches, none of which escalated "this gate cannot converge" as distinct from "this gate is red". Add a
       detector for a _non-convergeable_ gate — e.g. the same check failing across N consecutive distinct HEADs with a
       MONOTONICALLY GROWING violation count is definitionally not a fixable regression. Cross-reference
-      `/plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md` (adjacent gap:
+      `/plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md` (adjacent gap:
       local pre-push ratchet breaches) — this one is the opposite side, a remote gate that IS observed but is
       mis-classified as retryable. Repo: agent-orchestrator (`server/escalation.py`, `server/ci_reconcile.py`). —
       **DONE**, reconciled from `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`:
       `agent-orchestrator@197c5ca521` (`detect_non_convergeable_gate()` + violation-count-history walk in
       `server/escalation.py`, pages immediately on a 3-streak monotonic growth instead of waiting the normal grace
       period; 4 new tests).
-- [ ] [ADMIN] P2. **The NA corpus genuinely outgrew its ceiling** (391 docs vs 372+10; todos 1119 vs 1109+30 passing),
+- [x] ✅ [ADMIN] P2. **The NA corpus genuinely outgrew its ceiling** (391 docs vs 372+10; todos 1119 vs 1109+30 passing),
       and this is the third re-baseline in ~2 days. The fleet's own mandated processes (findings-triage "every follow-up
       is a `- [ ]` todo", `/plan-reconcile`, `/ci-reconcile`) create NA docs faster than `/na-eligibility-audit` retires
-      them. Decide whether the answer is a higher steady-state ceiling, a faster retirement cadence, or narrowing what
+      them. **RESOLVED 2026-08-15** (`ci_satellite_ao_dispatch_batch14_2026_08_15.md` todo 10, operator ruling): chose
+      faster retirement cadence over a higher ceiling or narrowed scope. Shipped
+      `agent-orchestrator/scripts/install-na-eligibility-auditor-timer.sh` (systemd `--user`, no sudo). Original text:
+      decide whether the answer is a higher steady-state ceiling, a faster retirement cadence, or narrowing what
       must become a tracked NA doc — re-baselining on each breach is not a steady state. Owner: operator.
 
 - [x] ✅ [BACKEND] P1. **The deadlock SURVIVED the cancellation fix — it is now a supersede TREADMILL, and this is the
