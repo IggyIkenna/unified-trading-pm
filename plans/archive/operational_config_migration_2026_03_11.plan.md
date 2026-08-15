@@ -30,7 +30,27 @@ todos:
 - {id: update-dockerfile, content: Add COPY pm-configs/ ./pm-configs/ to deployment-api Dockerfile (both api and api-dev stages via base), status: done, note: DONE — COPY pm-configs/ added to api stage}
 - {id: quality-gates, content: Run bash scripts/quality-gates.sh in deployment-api — all tests must pass, status: done, note: 'DONE — All tests pass, coverage maintained'}
 - {id: remove-backward-compat-symlinks, content: 'Remove all 51 backward-compat symlinks from deployment-service/configs/ — clean migration, no transitional shims', status: done, note: 'DONE — git rm of all symlinks. Commit: af31e2e (deployment-service)'}
-- {id: update-code-references, content: Update all deployment-service/configs/ path references in Python/YAML source files to unified-trading-pm/configs/, status: done, note: 'DONE — instruments-service catalogue_updater.py + CI workflow (c12c35e, 824e723); strategy-service cascade_subscriber.py (07e1044); system-integration-tests error string (3a41740); deployment-api docstrings (3ba90bf)'}
+- {
+    id: update-code-references,
+    content: Update all deployment-service/configs/ path references in Python/YAML source files to unified-trading-pm/configs/,
+    status: done,
+    note: 'DONE — instruments-service catalogue_updater.py + CI workflow (c12c35e, 824e723); strategy-service cascade_subscriber.py (07e1044); system-integration-tests error string (3a41740); deployment-api docstrings (3ba90bf)',
+    verified:
+      '2026-08-15 VERIFIED (review, slot 3, per measurement-claims-discipline — confirmed via gh api commit lookup
+      against instruments-service on GitHub, not a local-workspace-absence assumption; the local shallow clone was
+      inconclusive per the audit that flagged this): the DONE (c12c35e, 824e723) claim is ACCURATE. Commit c12c35e
+      (pre-history-rewrite SHA — this repo underwent a documented history rewrite 2026-08-05; the identical change
+      is reachable post-rewrite as 9e752677d4, same date/message) genuinely modified
+      instruments_service/catalogue_updater.py + pyproject.toml (2026-03-11T21:41:12Z, "fix: update catalogue path
+      to unified-trading-pm/configs/"); commit 824e723 genuinely modified .github/workflows/quality-gates.yml the
+      same day. catalogue_updater.py itself was CREATED 2026-03-08 (724990c60e, "feat(catalogue): add
+      catalogue_updater post-batch hook") and later REMOVED — not renamed (previous_filename: null) — 2026-03-24 by
+      commit 29f34ff083 ("feat: production-ready instruments-service ... per-bucket ManifestWriter catalogue ..."),
+      which deleted both catalogue_updater.py and its test file as part of a documented architectural refactor
+      superseding it with a ManifestWriter-based catalogue. The workspace absence today is
+      CONFIRMED-BUILT-THEN-SUPERSEDED-VIA-REFACTOR, not fabrication. No correction to the done-claim itself is
+      needed.',
+  }
 - {id: clean-ssot-docs, content: 'Remove all backward-compat symlink language from SSOT docs (00-SSOT-INDEX.md, 10-audit/README.md)', status: done, note: 'DONE — 4 backward-compat references removed from codex. Commit: 009e823 (unified-trading-codex)'}
 - {id: update-gha-path-triggers, content: 'Update GHA workflow paths: triggers in sync-check.yml, epic-alignment-check.yml, weekly-sync.yml to point to unified-trading-pm/configs/', status: done, note: 'DONE — All 3 workflow files updated. Commit: 20ca23e (unified-trading-codex)'}
 isProject: false

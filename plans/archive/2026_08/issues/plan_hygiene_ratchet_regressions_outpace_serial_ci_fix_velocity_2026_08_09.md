@@ -11,7 +11,7 @@ summary: >-
   fixing issues one at a time can converge on. Worker correctly declined to keep chasing a 5th time (own recommendation:
   hand off) rather than burning further CI cycles on a race it cannot win serially; main answered "hand off" and is
   filing this as the systemic finding rather than asking for more chase attempts.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -41,6 +41,10 @@ context_scope: [unified-trading-pm/scripts/plan-hygiene/, unified-trading-pm/.gi
 ---
 
 # plan-hygiene ratchet checks regress faster than serial CI-fix chasing can converge on a high-churn branch
+
+> **🗄️ ARCHIVED 2026-08-15** — every todo is `[x]`, zero remaining, `locked_by:` empty. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, a doc with every todo done archives
+> immediately.
 
 ## What was found
 
@@ -254,7 +258,7 @@ words: "this branch is churning faster than one CI worker can chase serially").
       `unified-trading-pm@e89d4931e5`, verified ancestor of `origin/live-defi-rollout`. This closes the LAST of the 4
       originally-named option-(c) checks — only `check_todo_regression.sh` (different fix shape, own P3 todo below) and
       the 2 `[OPERATOR]`-gated policy calls above remain open on this doc.
-- [ ] [BACKEND] P3. `check_todo_regression.sh` needs a DIFFERENT fix shape than the diff-base pattern above — it already
+- [x] ✅ [BACKEND] P3. `check_todo_regression.sh` needs a DIFFERENT fix shape than the diff-base pattern above — it already
       compares two snapshots (PR-head vs `origin/live-defi-rollout`), but the SECOND side is a live MOVING target
       (re-fetched fresh every run), not a stable ref like `origin/main`, so it races on every CI run rather than being
       fixable by pointing `--diff-base` at it. The correct fix compares each touched file's OWN todo count only against
@@ -264,7 +268,20 @@ words: "this branch is churning faster than one CI worker can chase serially").
       deeper/targeted fetch (`git fetch --deepen=<N>` or a merge-base-aware shallow fetch) or a restructure to scope the
       scan to only files this push's own diff touched (skip files nobody in this push edited entirely, regardless of
       what origin's tip does). Scope this as its own investigation, not a copy-paste of the diff-base pattern above — it
-      doesn't fit that shape. Repo: unified-trading-pm (`scripts/plan-hygiene/`).
+      doesn't fit that shape. Repo: unified-trading-pm (`scripts/plan-hygiene/`). — DONE 2026-08-15 (backend_engineer,
+      slot 19): took the merge-base approach (option (a) from this todo's own text, not the diff-touched-files
+      restructure). `_check_one()` now compares each file's todo count against `git show
+      $(git merge-base HEAD origin/live-defi-rollout):<path>` when the merge-base resolves, falling back to the old
+      raw `origin/live-defi-rollout` tip otherwise (same fail-open shape as every other best-effort probe in this
+      script) — see Progress Log entry below for the reasoning on why merge-base directly fixes every documented
+      incident in this doc (the moving-tip GROWTH cases) without any coverage loss vs the old check. Companion CI-side
+      fix in `unified-trading-ci` unshallows the `checks`-leg checkout (bounded, one-time, same `--unshallow` pattern
+      already used for pinned-sha reachability in that same workflow) when merge-base doesn't resolve under the
+      existing `fetch-depth: 2`, so the fallback stays the rare case, not the common one. Shipped
+      `unified-trading-pm@9bf6a3f567` (`scripts/plan-hygiene/check_todo_regression.sh`) +
+      `unified-trading-ci@6834a50` (`.github/workflows/python-quality-gates-v2.yml`), both verified ancestors of their
+      respective origins. This closes the last open item from the original option-(c) 4-check list on this doc — only
+      the 2 `[OPERATOR]`-gated policy items above remain, both already resolved 2026-08-15 per their own entries.
 - [x] ✅ [REVIEW] P3. Once the structural fix above lands, verify by watching the next 2-3 `quality-gates-v2` runs on
       `live-defi-rollout` for whether ratchet regressions still chain the way they did here. — DONE 2026-08-09 (review,
       slot 12): watched 7 consecutive `quality-gates-v2` runs on `live-defi-rollout` spanning 16:13Z-23:09Z
@@ -962,3 +979,22 @@ words: "this branch is churning faster than one CI worker can chase serially").
   hard-refuse to persist a value higher than what's already on disk, so raising either requires hand-editing around a
   deliberate safety clamp, not just a documented convention). No further action taken this dispatch; PR #3180 is moot
   (superseded). `AUTHORING_SLOT=ldr-to-main-promote` sentinel — no slot-ping applicable per this role's skip-rule.
+- 2026-08-15 (backend_engineer, slot 19, dispatched for the last-open `check_todo_regression.sh` P3 todo): implemented
+  the merge-base fix. Why merge-base fully resolves this doc's documented `check_todo_regression` incidents without
+  losing coverage: every incident logged here (slot-30 2026-08-09's `quality_gates_quickmerge_timing_baseline_2026_07_31.md`
+  origin=14/current=13 "lost=1", slot-4's follow-up root-cause on the same case) was actually `origin/live-defi-rollout`
+  GAINING a todo in a file this branch never touched, in the gap between this branch's fork and the CI job's fetch —
+  not a real deletion. Since a promote-PR / LDR-dispatch HEAD is itself a (past) snapshot of `origin/live-defi-rollout`,
+  `merge-base(HEAD, origin/live-defi-rollout)` resolves to that same fork-point commit, so comparing against it instead
+  of the freshly-fetched moving tip removes exactly the unrelated-growth noise these incidents describe, while a
+  genuine loss introduced by THIS branch's own commits (the check's actual purpose, per its docstring: catching a
+  regression that bypassed local pre-commit) still shows up, because that loss postdates the fork point either way.
+  Verified locally: `bash scripts/plan-hygiene/check_todo_regression.sh --quiet` passes on synced HEAD, merge-base
+  resolves trivially to HEAD when local is in sync with origin (the common case for this repo's direct-on-LDR slot
+  model), confirming no behavior change in the steady state. Ran PM's full `quality-gates.sh` (Pass 1, exit 0, sentinel
+  verified against the committed HEAD) before shipping via quickmerge. Files: `scripts/plan-hygiene/check_todo_regression.sh`
+  (unified-trading-pm), `.github/workflows/python-quality-gates-v2.yml` (unified-trading-ci — the companion unshallow-on-
+  demand fix so the CI job's merge-base lookup can actually resolve under its shallow `fetch-depth: 2` checkout; shipped
+  as a direct push to `unified-trading-ci`'s `main` per that repo's own README "Branch model" section — single-branch,
+  no LDR/staging tiers, "edited directly"). Shipped `unified-trading-pm@9bf6a3f567` + `unified-trading-ci@6834a50`, both
+  verified `git merge-base --is-ancestor` of their respective origins.

@@ -1,7 +1,7 @@
 ---
 doc_type: issue
 title: "immediately-safe ~40 DELETE cohort — 5 of 9 named items reclassified NOT-safe on live re-verification"
-status: open
+status: resolved
 asset_group: [infrastructure]
 created: "2026-08-14"
 author: slot-15 [infra worker]
@@ -34,7 +34,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-archive_exempt: true
+superseded_by:
 context_scope:
   [
     /plans/active/repo_scripts_governance_audit_2026_06_18.md,
@@ -45,6 +45,10 @@ context_scope:
 ---
 
 # "immediately-safe ~40" DELETE cohort — 5 of 9 named items reclassified NOT-safe
+
+> **🟢 ARCHIVED 2026-08-15 — RESOLVED** (status: resolved, 0 open todos, unlocked). All 6 follow-up todos resolved; see
+> Progress Log for the final resolution (`dedupe-openapi-operation-ids.py` KEEP, relabeled
+> `Lifecycle: permanent`, `unified-trading-system-ui@9f21cb5357`).
 
 ## What I found
 

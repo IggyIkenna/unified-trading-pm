@@ -182,7 +182,7 @@ context_scope:
 - [x] [REVIEW] P3. **DONE — measured 2026-08-15 (reconciliation, this session).** False-positive RATE dropped from 17.8%
       (8/45 baseline) to 0.7% (8/1148) since `agent-orchestrator@9d26598` — 1,148 spawn-retry-cap declarations in the
       `2026-08-06..present` window, still only 8 showing `pane=working` at declaration. The guard fix worked. Source:
-      `/plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md` — flip its checkbox with these
+      `/plans/archive/2026_08/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md` — flip its checkbox with these
       numbers.
 - [x] [DOC] P3. **DONE — RESTORED 2026-08-15 (this session), root cause identified.** The doc edit genuinely landed once
       already (`unified-trading-pm@69468f0164`, 2026-08-14) — verified via `git show`, the full "Pane-guard-
@@ -200,7 +200,7 @@ context_scope:
       adjacent `[DATA] P3` measurement todo in the source doc using the same numbers (1,148 cap declarations, 8
       `pane=working`, 17.8%→0.7%). This is a finding for whoever runs a corpus-wide staleness audit next: the SAME
       failure class could be silently dropping other sessions' concurrent doc edits to this heavily-contended file.
-      Source: `/plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md` — both checkboxes flipped
+      Source: `/plans/archive/2026_08/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md` — both checkboxes flipped
       there too.
 
 - [x] [REVIEW] P3. **DONE.** Decision made + recorded live: `server/models/scheduled_jobs.py:19-27` carries a dated

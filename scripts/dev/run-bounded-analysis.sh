@@ -113,14 +113,22 @@ fi
 # space accounting, not physical residency, and fails spuriously on pyarrow/grpc-heavy
 # workloads well below the intended cap).
 #
-# Process-group isolation via bash job control (`set -m`), NOT `setsid` — confirmed
-# 2026-08-12: `setsid` is a Linux util-linux tool with NO macOS equivalent, so the original
-# `setsid "$@" &` line failed outright on every macOS host and this whole fallback silently
-# never engaged (macOS fell straight through to the fully-unwrapped/advisory-only branch —
-# this wrapper enforced NOTHING on the operator's own laptop, exactly the host class that
-# needs it most). Under `set -m`, bash gives a backgrounded job its own new process group
-# with PID==PGID (same property `setsid` provides), so `kill -- -$cmd_pid` below still kills
-# the whole group — verified working identically on macOS and Linux, no external binary.
+# Process-group isolation prefers `setsid` (Linux, util-linux) when available, falling back
+# to bash job control (`set -m`) only when it isn't (macOS/BSD — confirmed 2026-08-12: `setsid`
+# has no macOS equivalent, so a setsid-only launch failed outright there and this whole
+# fallback silently never engaged, leaving the wrapper enforcing NOTHING on the operator's own
+# laptop). Both give the launched job its own new process group with PID==PGID, so
+# `kill -- -$cmd_pid` below kills the whole group either way. `setsid` is preferred where it
+# exists (2026-08-15,
+# `run_bounded_analysis_rss_poll_numpy_rec_breakage_2026_08_15.md`): enabling job control
+# (`set -m`) mid-script is the ONE thing this fallback changes relative to an unwrapped run —
+# it flips how bash manages the launched job (job-control notifications, pgrp/session
+# reassociation semantics) — and was identified as the most plausible source of a confirmed
+# live regression (`ModuleNotFoundError: No module named 'numpy.rec'` deep inside a
+# `pandas.DataFrame.groupby()` call, reproducible only when the identical script ran through
+# this fallback, never when run directly). `setsid` gets the same PID==PGID process-group
+# property via a syscall instead of bash job-control state, so it avoids that class of
+# side effect entirely on the host class (Linux) where the regression was confirmed.
 _read_rss_kb() {
     local pid="$1"
     if [[ -r "/proc/$pid/status" ]]; then
@@ -137,10 +145,15 @@ _run_with_rss_poll_cap() {
     shift
     local poll_interval="${ANALYSIS_POLL_INTERVAL_S:-2}"
 
-    set -m
-    "$@" &
-    local cmd_pid=$!
-    set +m
+    if command -v setsid >/dev/null 2>&1; then
+        setsid "$@" &
+        local cmd_pid=$!
+    else
+        set -m
+        "$@" &
+        local cmd_pid=$!
+        set +m
+    fi
 
     (
         while kill -0 "$cmd_pid" 2>/dev/null; do
@@ -176,7 +189,11 @@ if [[ "$MEM_CAP" != "0" ]]; then
         MEM_WRAP=(systemd-run --user --scope -p MemoryMax="$MEM_CAP" -p MemorySwapMax=0 --quiet --)
         echo "[run-bounded-analysis] cgroup mem cap active: MemoryMax=${MEM_CAP} MemorySwapMax=0" >&2
     else
-        echo "⚠️  [run-bounded-analysis] systemd-run unavailable on this host (macOS / no user systemd instance)" >&2
+        if [[ "$(uname -s)" == "Darwin" ]]; then
+            echo "⚠️  [run-bounded-analysis] systemd-run unavailable on this host (macOS — no systemd at all)" >&2
+        else
+            echo "⚠️  [run-bounded-analysis] systemd-run unavailable on this host (no systemd --user instance enabled)" >&2
+        fi
         MEM_CAP_KB="$(_mem_cap_to_kb "$MEM_CAP")"
         if [[ -n "$MEM_CAP_KB" ]] && { [[ -r /proc/self/status ]] || command -v ps >/dev/null 2>&1; }; then
             USE_RSS_POLL=1

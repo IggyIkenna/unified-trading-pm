@@ -196,7 +196,8 @@ a verdict). Heaviest:
       `aggregate_instruments`. **Struck 2026-08-14 — live CI tooling, NOT dead**: UTL `check-ruff-versions.sh` (CI Step
       0 in `cloudbuild.yaml`, self-declares `Lifecycle: permanent`) and SIT `check-sit-readiness.py` (invoked from
       `.github/workflows/smoke-test-gate.yml`, self-declares `Lifecycle: permanent`) — see
-      `/plans/active/issues/immediately_safe_40_delete_cohort_stale_reclassification_2026_08_14.md`). Target: per-repo.
+      `/plans/archive/2026_08/issues/immediately_safe_40_delete_cohort_stale_reclassification_2026_08_14.md`). Target:
+      per-repo.
       **Immediately-safe subset EXECUTED 2026-08-15 (slot 15, `infra_satellite_ao_dispatch_batch16_2026_08_13.md`)**: 4
       UI `.tsx.bak` splitters deleted (`unified-trading-system-ui@181ae65d8f`); a stale-pointer fix (not a deletion) in
       a live QG script's SSOT citation (`market-tick-data-service@eda08816ef`); UAC `check_schema_organization.py`

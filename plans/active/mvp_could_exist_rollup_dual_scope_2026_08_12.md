@@ -19,8 +19,9 @@ related:
   [
     /plans/archive/2026_08/mvp_scope_catalogue_tagging_2026_06_08.md,
     /plans/active/issues/venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md,
-    /plans/active/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md,
+    /plans/archive/2026_08/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md,
     /plans/active/issues/honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-12"
 last_updated: "2026-08-12"

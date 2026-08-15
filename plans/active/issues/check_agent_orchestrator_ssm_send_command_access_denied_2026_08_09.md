@@ -192,3 +192,28 @@ on shared AWS infra, not something to self-grant.
   self-service role from), and `iam:ListAttachedUserPolicies`/`iam:ListUserPolicies` on `ikenna-worker` itself are still
   denied. §0c's glue-runner watchdog sweep is reported as an explicit coverage gap in this run rather than a fresh
   finding — this issue doc already covers the root cause and remains the correct escalation. Eleven days unresolved.
+- **2026-08-15 (slot-6, ci_reconciler)**: TWELFTH independent confirmation, from `/ci-reconcile`'s §0c — checking the
+  same live `glue-runner-crash-loop-watchdog` CRITICAL (`github-glue-runner-unified-api-contracts@glue-1.service` on
+  `i-042a6332509482556`, 26.3h active). Identical `AccessDeniedException` on `ssm:SendCommand`, confirmed against both
+  the glue-runner host and the default orchestrator VM (`i-0c9b283b31d6b5ca7`, via `ssm-run.sh`); `sts assume-role` to
+  `uts-orchestrator-epic-role` denied; no instance-profile present (IMDS query for
+  `/latest/meta-data/iam/security-credentials/` returned empty — confirms this session runs on static
+  `~/.aws/credentials` for `ikenna-worker`, not an EC2 instance profile). AO's own `:8765` HTTP surface (`/api/healthz`)
+  remained directly reachable, so §5's dispatch-freshness half completed independent of this gap. §0c's watchdog sweep
+  reported as a coverage gap in this run's report rather than re-diagnosed. Twelve days unresolved.
+- **2026-08-15 (slot-4, data_engineering)**: THIRTEENTH independent confirmation, and a THIRD distinct consumer class
+  (live `account_usage_history` reads, not backlog status or `escalation_queue`). Working
+  `anthropic_per_task_actual_spend_and_account_calibration-827796b01804` (todo "Verify the reservation actually held
+  over the first post-reset window", `/plans/active/anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md`),
+  which needs to run `scripts/orchestrator/calibrate_account_value.py --account sub-a-ikenna` /
+  `--account sub-e-odum3default` against the live VM to check the post-2026-08-12-reset window. Sent directly via
+  `aws ssm send-command` (not the wrapper scripts) with a `cd <repo> && python3 calibrate_account_value.py` payload
+  (not the stdin-piped pattern `query-ao-state-db-readonly.sh` uses, since that script's `Path(__file__)` breaks under
+  `python3 -`) — identical `AccessDeniedException` on `ssm:SendCommand` against `i-0c9b283b31d6b5ca7` for
+  `ikenna-worker`. Also confirmed no bearer-token path exists for this identity to use the equivalent authed HTTP
+  endpoints instead (`GET /api/accounts/claude/wallet-reconciliation/window`, which already computes a windowed
+  boost_multiplier per account and would have been a usable substitute) — `:8765/api/accounts` and `:8765/api/backlog`
+  both return `{"detail":"missing bearer token"}` from this identity, and no script in `scripts/orchestrator/` mints one
+  for a worker. No new information on the IAM gap itself; thirteen days unresolved. This task's own "Done when" also
+  depends separately on todo 21 (laptop-side login sampler, `[OPERATOR]`, not yet shipped) — even a resolved IAM grant
+  would not alone close that task, so it is being reported/skipped rather than retried.

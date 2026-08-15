@@ -19,7 +19,7 @@ repos: [unified-trading-library, instruments-service]
 scope: [engineer]
 tags: [gcs, cloud_interface, staleness, caching, vm-monitoring, false-positive, big-finding]
 related:
-  [/plans/active/cefi_residual_ao_dispatch_2026_08_15_finalize.md, /codex/05-infrastructure/gcs-object-operations.md]
+  [/plans/archive/2026_08/cefi_residual_ao_dispatch_2026_08_15_finalize.md, /codex/05-infrastructure/gcs-object-operations.md]
 created: "2026-08-15"
 author: ikennaigboaka [slot-16]
 priority: P3

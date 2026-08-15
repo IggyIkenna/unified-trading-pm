@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [ao, fleet-health, billing, ci, scheduled-jobs, follow-up, ci-wedge, backmerge-conflict]
 related:
   [
-    /plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md,
+    /plans/archive/2026_08/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md,
     /plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md,
     /plans/active/issues/defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md,
   ]
@@ -39,7 +39,7 @@ context_scope:
     agent-orchestrator/.github/workflows/main-backmerge-to-ldr.yml,
     /codex/08-workflows/ci-cd-flow.md,
     /plans/archive/issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md,
-    /plans/active/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md,
+    /plans/archive/2026_08/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md,
   ]
 ---
 

@@ -205,7 +205,7 @@ issue's scope); flagged as a follow-up todo below.
       `1c9a7858` to `e0b34e77fd` — quickmerge amended HEAD to add the missing `Quickmerge: agent` trailer before pushing
       (content unchanged, not a rebase this time), exactly the kind of sha drift this doc's own note warned about.
       `quality-gates.sh` was GREEN (10865 passed, 0 failed) before commit.
-- [ ] [DATA] P0. **NARROWED per 2026-08-15 FULL-POPULATION audit (see Progress Log) — do NOT blanket-delete.** (a) is
+- [x] [DATA] P0. **NARROWED per 2026-08-15 FULL-POPULATION audit (see Progress Log) — do NOT blanket-delete.** (a) is
       now DONE: of the live 14,330 in-window phantom rows (full population, not sampled — confirmed exact, matching the
       200-sample extrapolation), 959 (6.69%) have NO non-blank-timeframe sibling under their coarse
       (date,venue,league_id,data_type,service_name) key — deleting THOSE would be destructive, contradicting this doc's
@@ -232,8 +232,17 @@ issue's scope); flagged as a follow-up todo below.
       LEAVE AS-IS (already excluded from delete scope below) and this exclusion is now evidence-backed, not merely
       cautious. (c): exclude every no-sibling row (959, enumerated by date/venue/league_id/service_name in the retry
       audit log) from delete scope entirely (leave those as-is) — no further action needed on this sub-step, the
-      confirmation above IS the justification. Only the sibling-confirmed 13,371-row subset is safe to delete; snapshot
-      first, verify via row-count before/after. IS sub-step **DONE (2026-08-15)**: audited via
+      confirmation above IS the justification. ✅ **EXECUTED 2026-08-15**: dry-run-verified on VM first (category
+      `sports-cf8-tf-delete` added to `deployment-service/scripts/vm/launch-canonical-migration-vm.sh`,
+      `deployment-service@f827fad297`), then a live `--confirm-prod-write` run on VM
+      `canonical-migration-sports-cf8-tf-delete-20260815-214633` (per the workspace hard rule, this class of write
+      never runs on a laptop). Pre-write snapshot:
+      `gs://market-data-tick-sports-prd-central-element-323112/_index/snapshots/pre_cf8_phantom_timeframe_delete_20260815T215119Z.parquet`.
+      Result: base=6,252,484 rows → removed 13,371 sibling-confirmed phantom blank-timeframe rows (959 no-sibling rows
+      left as-is, per (b) above) → post-write base_rows=6,239,113 (exactly matched the expected count) →
+      `>>> VERIFY PASSED`, exit 0. Full log:
+      `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-sports-cf8-tf-delete-20260815-214633/run.log`.
+      IS sub-step **DONE (2026-08-15)**: audited via
       `audit_sports_is_captured_phantom_timeframe_2026_08_16.py` (memory-bounded, row-group-streamed — IS's 15.7M-row
       index OOMs a naive full read). Answer to the literal question ("does the same phantom-row class exist on IS")
       is yes, trivially — but the real population found is **899,508 rows (84% of ALL IS odds_horizon_bucket data)**,

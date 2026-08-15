@@ -21,7 +21,7 @@ summary: >-
   completions before the fix, 3-of-3 immediately after. This file (`scripts/github.slice`) is committed in
   agent-orchestrator but the LIVE VM config was applied directly via SSM during this session and has not yet been
   re-verified after a VM restart/redeploy cycle — that's the one open risk this doc tracks.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -70,6 +70,9 @@ context_scope:
 ---
 
 # 2026-08-04: "dispatched" != done, and it took four stacked fixes to actually close the gap
+
+> **🟢 ARCHIVED 2026-08-15 — RESOLVED.** Zero open todos as of this session (slot-28) — the last remaining todo
+> (CLAUDE.md stale-sudo checkbox) was already shipped by slot-5 (`unified-trading-pm@12bfdac32f`) and is flipped here.
 
 ## What was asked
 
@@ -492,15 +495,22 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       heartbeat-timeout grace window (~L140), a `pane_state == "working"` hit `continue`s WITHOUT burning a retry and
       re-arms `kicker._spawn_cap_alerted` (~L150-166), and only a non-working pane falls through to the retry-cap branch
       (~L168). Documented the exact ordering + a warning against reintroducing it (repo: unified-trading-pm).
-- [ ] [SCRIPT] P3. `no_capacity` is now a legacy status for scheduled callers only reachable by an ad-hoc caller that
+- [x] ✅ [SCRIPT] P3. `no_capacity` is now a legacy status for scheduled callers only reachable by an ad-hoc caller that
       omits `job_name` (agent-orchestrator@5087f30). Once the queue has a few days of live evidence, decide whether to
       (a) drop it from `ScheduledJobStatus` entirely and make `job_name` required on the dispatch route, or (b) keep it
       as the deliberate opt-out for operator one-offs that want fail-fast. Do not leave both paths undocumented. (repo:
-      agent-orchestrator)
-- [ ] [DOCS] P3. **CLAUDE.md's "AO scheduled jobs" line is stale (confirmed live 2026-08-15).** Codex SSOT
+      agent-orchestrator) — **Verdict (b) KEEP, shipped 2026-08-14; re-verified live 2026-08-15.** Documented in
+      `server/models/scheduled_jobs.py:19-30` + `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md:173,
+      181-183`. `job_name` stays optional (`server/models/escalation.py:226`); omitting it skips the queue path -> 503
+      (`server/plan_health.py:682-690,720-730`, covered by `test_dispatch_endpoint_no_capacity_maps_to_503`). All 9
+      `install-*-timer.sh` scripts pass `job_name`, so only a hypothetical ad-hoc caller hits it; no code change needed.
+- [x] ✅ [DOCS] P3. **CLAUDE.md's "AO scheduled jobs" line is stale (confirmed live 2026-08-15).** Codex SSOT
       (`agent-orchestrator-scheduled-jobs.md:131,138`) correctly says "NO sudo" per the P1 todo above, but CLAUDE.md
-      still says "re-run `sudo bash scripts/install-<job>-timer.sh`". CLAUDE.md edits are operator-gated regardless of
-      evidence (blast radius) — not auto-applied. Fix: drop "sudo" from that clause.
+      still said "re-run `sudo bash scripts/install-<job>-timer.sh`". CLAUDE.md edits are operator-gated regardless of
+      evidence (blast radius) — not auto-applied. — **ALREADY SHIPPED** by slot-5 (`unified-trading-pm@12bfdac32f`,
+      2026-08-15 19:31 UTC, "fix CLAUDE.md stale sudo instruction") before this task was dispatched; verified live in
+      `cursor-configs/CLAUDE.md:365-366` ("NO `sudo` since 2026-08-08 — now hard-fails, see codex"). This checkbox was
+      never flipped in that commit — flipping it now (slot-28).
 - [x] ✅ [CODE] P1. **Trigger 3 (heartbeat-silent) no longer reaps a worker that is genuinely working** — the
       "undersized timeouts" half of this issue's own title, root-caused live 2026-08-08 and fixed in
       agent-orchestrator@1c8c54ac9. Two carve-outs: (a) `_pane_shows_live_work(pane, prev_pane)` — Triggers 1.4/1.5

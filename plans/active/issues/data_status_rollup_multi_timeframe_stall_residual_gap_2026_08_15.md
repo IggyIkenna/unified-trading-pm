@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [data-status, rollup, cloud-run, maintenance-window, dead-lock, honest-absence]
 related:
   [
-    /plans/active/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md,
+    /plans/archive/2026_08/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md,
     /plans/active/data_status_cell_grid_rearchitecture_2026_07_18.md,
   ]
 created: 2026-08-15
@@ -46,7 +46,7 @@ context_scope:
   [
     deployment-api/deployment_api/scripts/data_status_rollup_worker.py,
     deployment-api/deployment_api/routes/data_status/_rollup.py,
-    /plans/active/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md,
+    /plans/archive/2026_08/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md,
   ]
 ---
 
@@ -56,9 +56,9 @@ context_scope:
 
 Live-verifying `deployment-api@0bb3694c80` (the maintenance-window dead-lock fix — heartbeat-renew the lock after each
 service, TTL 150min→40min) against its own done-when
-(`/plans/active/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md`'s P2 todo: "a 24h Cloud Logging
-trace showing every one of the 14 services processed at least once every ~40min, never silently skipped on a stale
-dead-man's lock"):
+(`/plans/archive/2026_08/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md`'s P2 todo, now marked
+verified-partial in that archived doc: "a 24h Cloud Logging trace showing every one of the 14 services processed at
+least once every ~40min, never silently skipped on a stale dead-man's lock"):
 
 Confirmed the fix commit reached the live revision `uts-prod-data-status-rollup-svc-00480-v7t` (created
 2026-08-15T18:44:01Z). `gcloud logging read` over 2026-08-15T18:44Z-21:02Z (~2h18m of the requested 24h window — not
@@ -119,17 +119,20 @@ Diagnose live (not guess) which of the two candidates is the actual cause on a r
 
 ## Todos
 
-- [ ] [DATA] P1. Reproduce the `features-multi-timeframe-service` stall live (repeat `gcloud logging read` across 2-3
+- [x] ✅ [DATA] P1. Reproduce the `features-multi-timeframe-service` stall live (repeat `gcloud logging read` across 2-3
       more `*/20min` cycles, or trigger `POST /api/data-status/rollup-run?services=features-multi-timeframe-service`
       directly and watch it in isolation) to distinguish the two candidate root causes in "What I found" above. Repo:
       deployment-api. Done when: the Progress Log records which candidate is confirmed, with log/trace evidence.
-- [ ] [CODE] P1. Once the root cause is confirmed, fix it per the matching option in "Recommended decision" above +
+      **CONFIRMED 2026-08-15 (slot-5)** — candidate 1 (instance-level kill/recycle), not candidate 2 (child hang past
+      its own SIGTERM/SIGKILL). See Progress Log entry below for the full evidence chain.
+- [x] ✅ [CODE] P1. Once the root cause is confirmed, fix it per the matching option in "Recommended decision" above +
       add the regression test from Recommended-decision item 3. Repo: deployment-api. Done when: QG green, shipped,
-      verified on origin.
-- [ ] [DATA] P2. Once the fix lands, re-run the live-verify from
-      `/plans/active/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md`'s P2 todo (24h Cloud
-      Logging trace, every one of the 14 services processed at least once every ~40min, never silently skipped) and
-      flip that todo there. Repo: deployment-api. Done when: the trace confirms the cadence with no unexplained stall.
+      verified on origin. **FIXED 2026-08-15 (slot-5)**: `deployment-api@26470d4b91`. See Progress Log entry below.
+- [ ] [DATA] P2. Once the fix lands, re-run the original 24h Cloud Logging live-verify (every one of the 14 services
+      processed at least once every ~40min, never silently skipped) — the source doc
+      (`/plans/archive/2026_08/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md`) is now archived,
+      so record the confirming trace here instead. Repo: deployment-api. Done when: the trace confirms the cadence
+      with no unexplained stall.
 
 ## Progress Log
 
@@ -138,3 +141,62 @@ Diagnose live (not guess) which of the two candidates is the actual cause on a r
   (`deployment-api@0bb3694c80`) genuinely helps but doesn't fully close the gap — see "What I found" above for the
   full evidence trail (`gcloud logging read` across 18:44Z-21:02Z). Did not flip the parent doc's P2 todo (done-when
   not met); did not attempt a fix here (root cause not yet confirmed between the two live candidates — see Todos).
+- **data_engineering (slot-5) 2026-08-15**: root-caused todo 1 + shipped todo 2's fix. **Root cause confirmed via
+  `gcloud logging read` on `uts-prod-data-status-rollup-svc`, 2026-08-15T20:45Z-21:05Z window**: the sweep that
+  started 19:20:36Z logged `Shutting down API...` (TWICE, one per gunicorn worker) + `Event logging closed` at
+  20:55:37.4Z — a graceful whole-CONTAINER shutdown, not a per-request cancellation — followed at 21:00:00.7Z by
+  `Starting new instance. Reason: AUTOSCALING`, which then acquired a FRESH lock and restarted the sweep from
+  service #1. `gcloud run revisions list` confirmed no new revision was deployed in that window (still
+  `-00480-v7t`, created 18:44:01Z) — this was Cloud Run's own instance-lifecycle/recycling decision, not a
+  redeploy. This matches candidate 1 exactly (an instance-level kill/recycle orphans the in-flight isolated child
+  before `_run_service_isolated`'s own `join(timeout=...)`/killpg path — which WOULD have logged something within
+  its own budget — ever gets scheduled again): the whole Python process (parent request thread + any live isolated
+  child) was torn down atomically, which is also why zero renewal/failure log appeared for the full ~50min stall
+  (candidate 2, a child hung past its own timeout, would have surfaced a `killpg`/`timed out after Ns` log line
+  within `join_timeout_s` + a few seconds, never zero log entries for 50 minutes straight). **Fix**
+  (`deployment-api@26470d4b91`, `deployment_api/routes/data_status/_rollup.py`): per Recommended-decision option 1
+  ("checkpoint progress so a fresh instance can resume from the next unprocessed service instead of restarting at
+  #1") — added a `_ROLLUP_CHECKPOINT_BLOB` (`_locks/rollup_progress.json`) written incrementally via the existing
+  `on_service_done` heartbeat (same call already renewing the maintenance-window lock) for the unscoped
+  (`services=None`, i.e. the real scheduler sweep) case only; a fresh sweep reads it first and skips any
+  already-done service, and the checkpoint is cleared once a sweep reaches NATURAL completion (an
+  instance-recycle-killed sweep never reaches the clear line, so its partial progress survives for the next
+  instance to resume from). Guarded against a stale/complete checkpoint silently skipping every service (falls
+  through to a full re-run instead). 6 new regression tests in
+  `tests/unit/test_rollup_resume_checkpoint.py` cover: resume skips done services, a checkpoint covering every
+  service is ignored (not silently no-op'd), an ad-hoc `?services=X` probe never touches the checkpoint, the
+  checkpoint is cleared on natural completion, it's updated incrementally via `on_service_done`, and it survives
+  uncleared when the sweep never reaches natural completion (the actual incident's shape). Full QG green
+  (`.qg_last_passed_sha` == `26470d4b9140e456e65b6d5fe7e140623e667e10`), verified ancestor of
+  `origin/live-defi-rollout`. Todo 3 (P2 live re-verify) remains open — needs a real post-fix multi-cycle
+  `gcloud logging read` to confirm the resume actually closes the gap in production, not something to fake from a
+  unit test.
+- **data_engineering (slot-24) 2026-08-15T21:58Z**: was independently dispatched the same todo 1 (dispatch race — both
+  slots picked it up before either flip landed) and had already reproduced it live before a fresh re-read surfaced
+  slot-6/slot-5's entries above; not duplicating the flip, but the SECOND independent live occurrence found here is
+  new evidence worth keeping — it confirms the failure mode is trigger-agnostic (matters for todo 3's scope).
+  **Second live occurrence, DIFFERENT trigger than slot-5's (deploy rollout, not autoscaling) and a DIFFERENT
+  orphaned service (`features-calendar-service`, not multi-timeframe)**: watched sweep
+  `rollup-run-366530a48656490cbbf8478f8ec0ebea` (started 21:00:36Z, running on the PRE-checkpoint-fix revision
+  `-00480-v7t`) renew cleanly after each service — instruments-service (21:08:20Z), `market-tick-data-service`
+  (timeout, 21:15:20Z), `market-data-processing-service` (timeout, 21:22:20Z), `features-delta-one-service` (timeout,
+  21:29:21Z), `features-volatility-service` (success, 21:36:03Z), `features-onchain-service` (21:40:57Z),
+  `features-sports-service` (21:44:31Z) — then went completely silent while `features-calendar-service` (#8) was in
+  flight. At 21:46:20-21:47:27Z, `gcloud logging read` showed a live `DEPLOYMENT_ROLLOUT`
+  (`"Starting new instance. Reason: DEPLOYMENT_ROLLOUT..."`, new revision `-00481-hwh` created 21:46:21Z) tear down
+  the `-00480` instance mid-request (`"Shutting down user disabled instance"` + `"Shutting down API..."` x2 +
+  `"Event logging closed"`) — calendar-service never got a chance to renew or fail-log, matching candidate 1 exactly
+  (zero log output for the whole stall, vs. candidate 2's expected `killpg`/`timed out after Ns` line within its own
+  budget). A SECOND deploy-kill followed almost immediately (`-00482-gzx` created 21:55:23Z, instance killed again at
+  21:56:13Z — only 9s after boot) confirming this was an active CI/CD rollout window, not a one-off (`gcloud builds
+  list` showed ~20 builds landing across the fleet in the same ~21:32-21:55Z span — this service's long-lived
+  synchronous sweep request is at recurring risk from ANY frequent-redeploy window, not just this one incident). As
+  of 21:58:25Z no new sweep had started; the dead-held lock (last renewal 21:44:31Z, TTL 40min → expires ~22:24:31Z)
+  means the 22:00Z and 22:20Z scheduler ticks will both still see it held and skip, so calendar-service onward —
+  calendar, multi-timeframe, cross-instrument, commodity, ml-service (again), strategy, execution — get zero chance
+  to run until ~22:40Z at the earliest, ~56min after the last successful renewal: same order of magnitude as the
+  original ~50min finding, via a different trigger. Did not confirm whether `-00481`/`-00482` already carry the
+  checkpoint-resume fix (`26470d4b91`) — `gcloud run revisions describe` only gives an image digest, and correlating
+  it to a commit needs the Cloud Build trigger history, which is genuinely todo 3's job (a real post-fix multi-cycle
+  trace), not something to shortcut here. No code changed this pass; released the task as already-resolved rather
+  than re-flip an already-flipped checkbox.

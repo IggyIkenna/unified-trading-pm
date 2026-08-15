@@ -6,7 +6,7 @@ summary: >-
   already covers the 586 marker-less catalogue rows before force-decomposing them, and (2) proceed with the ~4.5M-file
   corpus-wide parquet CONTENT instrument_id backfill via --apply, re-authorized despite its true scope having grown ~2
   orders of magnitude past the original estimate.
-status: active
+status: completed
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -41,6 +41,12 @@ resolved_by:
 ---
 
 # CeFi 586-row marker decompose + 4.5M-file instrument_id backfill
+
+> **ARCHIVED 2026-08-15** — both todos done: decision-4 scope question correctly filed as `BLK-96fd40c0` (still
+> open/unanswered, not this todo's scope to resolve); shard-24's checkpoint-resumed relaunch
+> (`canonical-migration-cefi-content-apply-20260815-181337`) completed with `EXIT_STATUS=0`, closing out the
+> corpus-wide 4.5M-file `--apply` campaign. Independently re-verified + archived by
+> `cefi_residual_ao_dispatch_2026_08_15_finalize.md` (also archived). Referrers swept corpus-wide.
 
 ## Why this exists
 

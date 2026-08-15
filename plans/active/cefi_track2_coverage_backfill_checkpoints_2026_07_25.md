@@ -317,6 +317,19 @@ context_scope:
   `issues/cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md`, the 2026-08-09 cross-reference
   finding the doc's own newest `[INFRA] P1` todo cites.
 
+- **2026-08-15T21:53Z (slot-7, data_engineering, dispatched on `-005` again — the `/data-pipeline-check-mtds`
+  POST-BACKFILL gate)**: Re-verified the gate before touching it, per this plan's standing 2026-07-28 operator ruling.
+  **Still NOT met — and the 8th VM has died again since my own 2026-08-10 check above, undocumented until now.**
+  `gcloud compute instances list --filter="name~cefi-queue"` → empty, no VM running. Bounded UTL storage-client read of
+  `cefi-queue-heavy-binancefutu-x17-20260809-083733`'s logs: `PROGRESS.json` last write `last_completed_date=2020-12-21`
+  (`updated=2026-08-11T12:13:33Z`), `run.log` last activity `2026-08-11T15:21:43Z` cutting off mid-request — day
+  ~721/2769 (~26.0%) of the `2019-01-01..2026-08-08` scope, well short of completion. Full evidence + the filed 9th
+  relaunch todo are in `issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md` (not duplicated here, per
+  this plan's own established cross-reference convention) — including a process observation that this gate's redispatch
+  cadence dropped off after 2026-08-10, which is how a 4-day VM death went unnoticed until this check. Declining
+  `/data-pipeline-check-mtds` — running it now would misrepresent a ~26%-complete backfill as the POST-BACKFILL FINAL
+  GATE verdict. Skipping `-005` via `reason_code: "GATED"` per the established mechanism.
+
 ## Reconciliation
 
 Once this plan's todos ship, flip Track 2's resume-backfill checkbox and the 4 MID/POST checkpoint checkboxes in

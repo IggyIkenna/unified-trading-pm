@@ -679,3 +679,10 @@ accordingly.
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **context-scout 2026-08-07 (batch11 independent re-verify)**: all 5 entries confirmed resolving on disk (2 sibling
   issue docs, the rb_infra_relaunch runbook, the migration script, the launcher); content unchanged.
+- **2026-08-15T21:10Z (slot-3, review)**: Pointer, not a resolution of this doc's own still-open P1/P2 todos above.
+  `cefi_content_migration_shard24_recurring_wedge_needs_diagnosis_2026_08_09.md` — the shard this doc's own history
+  tracked as an ongoing holdout — now shows a confirmed clean completion (`EXIT_STATUS=0`, 52,519/52,519 files) as of
+  2026-08-15T20:13:16Z, per `cefi_residual_ao_dispatch_2026_08_15.md`'s independently-verified todo 2. Did not re-run
+  this doc's own corpus-wide 44-shard grep (out of scope for the task that surfaced this) — whoever picks up the P1/P2
+  todos above should treat shard 24 as resolved and confirm the remaining count directly rather than assuming 44/44
+  from this note alone.

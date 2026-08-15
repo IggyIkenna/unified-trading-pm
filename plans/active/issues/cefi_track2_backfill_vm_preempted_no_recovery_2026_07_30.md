@@ -986,3 +986,15 @@ produced reports) — see the plan diff in the same commit as this issue doc.
   Gate remains unmet — VM mid-run, no terminal exit. Declining `-003` via `reason_code: "GATED"` (no `park_now`, per
   slot-3's 13:36Z rationale — periodic re-verify beats a park that risks the silent-stall class) per the established
   mechanism (slot-13's finding, 2026-08-02).
+
+- [x] ✅ [INFRA] P1. **DONE 2026-08-15 (slot-24)** — 9th relaunch, 8th VM dead ~4d (`updated=2026-08-11T12:13:33Z`, day
+      ~721/2769). Repo: deployment-service. N=1 cap clear both clouds (`tardis_running_vm_count`=0); fetched 8th VM's
+      `LAUNCH_PARAMS.json` via UTL `download_bytes` (`gcloud storage`/`gsutil` hook-blocked), reproduced env verbatim,
+      dry-run confirmed 1 VM. Launched `cefi-queue-heavy-binancefutu-x17-20260815-220349`, `tardis-guard` 1/1. Verified
+      STARTED (`RUNNING` ~45s) + PROGRESS (2 UTL reads, `2019-01-14`→`2019-02-04`, monotonic). `-003` blocked.
+
+- **2026-08-15T21:53Z (slot-7, dispatched on `cefi_track2_coverage_backfill_checkpoints-005`)**: Re-verified — 8th VM
+  dead 4 days, undocumented until now (todo above); both docs' Progress Logs went quiet after 2026-08-10, the
+  silent-stall class the 2026-08-04 entry warned about (flagging, not re-diagnosing). `okxspot-x2-20260815-151408`
+  (todo 6's supplement) also ran+terminated (15:15-15:49Z), unchecked — out of scope. Declining `-005`, skip
+  `reason_code: "GATED"` (no `park_now` — this gap just proved periodic re-verify beats parking).

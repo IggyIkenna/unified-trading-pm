@@ -330,26 +330,33 @@ in this read-only audit pass (time-bounded scope).
       time — must genuinely re-verify clean this run) before any delete. Do NOT run concurrently with an in-flight
       defi-bucket rebuild/consolidator-CAS rewrite. **Repo: unified-trading-library / market-tick-data-service** (UTL
       `gcs_delete_object`, never subprocess).
-- [ ] [DATA] P1. **NEW 2026-08-15 (slot-23) — root cause of the corpus-freshness gate, found while diagnosing the
-      sibling `[DIAG] P3` todo in `/plans/active/issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md`.**
-      The 2026-08-10/11 re-checks (slot-8/2/13/6/30) confirmed the SYMPTOM (0 current `perp_funding`/`perp_daily_ctx`
-      objects) five times running without diagnosing WHY. Root cause, confirmed via `gcloud compute instances list`:
-      (1) **the corpus-compute cron host was never actually launched** — no `cefi-perp-funding-daily-cron-*` instance
-      exists, running or terminated, despite its launcher (`deployment-service/scripts/vm/
-      launch-cefi-perp-funding-daily-cron-vm.sh`, `deployment-service@8eff211`, shipped 2026-08-06) being ready; (2)
-      **the raw-input forward-poll cron host is TERMINATED** — `cefi-fwd-daily-cron-20260809-110236` (launched
-      2026-08-09) is down, so even a running corpus-compute cron would honest-skip today (re-confirmed 2026-08-15: 0
-      raw `derivative_ticker` objects for all 6 `catalog_carry.py` venues × 2026-08-11..15, bounded `list_blobs`
-      probe). Fix: (a) `bash scripts/vm/launch-cefi-fwd-daily-cron-vm.sh` to relaunch the raw-capture host, verify it
-      fires + writes `derivative_ticker` within one cron interval; (b)
-      `bash scripts/vm/launch-cefi-perp-funding-daily-cron-vm.sh` to launch the corpus-compute host for the first
-      time, verify STARTED + a first successful fire (07:00 UTC) that either honest-skips (if raw is still catching
-      up) or writes `perp_funding`/`perp_daily_ctx`. Both launchers are singleton-locked + SCHEDULED_RECURRING —
-      idempotent, re-launch-safe (the delete-safety-gating rule's "stated safe-idempotent justification" carve-out
-      applies; no `[OPERATOR]` tag needed for the launch itself). Once both are confirmed running, re-run this doc's
-      own corpus-freshness probe (`list_blobs`, 6 venues × `perp_funding`/`perp_daily_ctx`, DeFi bucket) for a day
-      AFTER both crons have had a chance to fire — do not re-check same-day. **Repo: deployment-service** (VM launch
+- [x] ✅ [DATA] P1. **DONE 2026-08-15 (slot-4) — both cron hosts launched + verified RUNNING; fire verification is the
+      new follow-up todo below (both cadences are 9-11h out from launch time, can't be verified same-session).** Root
+      cause was: (1) the corpus-compute cron host was never actually launched — no `cefi-perp-funding-daily-cron-*`
+      instance existed; (2) the raw-input forward-poll cron host `cefi-fwd-daily-cron-20260809-110236` was TERMINATED.
+      Fix executed: (a) `bash scripts/vm/launch-cefi-fwd-daily-cron-vm.sh` → `cefi-fwd-daily-cron-20260815-212910`
+      (asia-northeast1-c, RUNNING, fires 09:00 UTC daily); (b)
+      `bash scripts/vm/launch-cefi-perp-funding-daily-cron-vm.sh` → `cefi-perp-funding-daily-cron-20260815-212924`
+      (asia-northeast1-c, RUNNING, fires 07:00 UTC daily). Both `gcloud compute instances describe … --format='value(status)'`-verified
+      RUNNING at 2026-08-15T21:29:57Z (launch time was 2026-08-15T21:29 UTC — both launchers are singleton-locked +
+      SCHEDULED_RECURRING, idempotent re-launch-safe, no `[OPERATOR]` tag needed for the launch itself). Neither
+      launcher's own harness has fired yet (next fires: perp-funding 2026-08-16T07:00Z, fwd 2026-08-16T09:00Z) — per
+      async-wait discipline, a 9-11h wait does not belong in this single-task session; verifying the actual first fire
+      + corpus-freshness recovery is the follow-up todo immediately below. **Repo: deployment-service** (VM launch
       only, no code change).
+- [ ] [DATA] P1. **NEW 2026-08-15 (slot-4) — follow-up: verify the two cron hosts launched above (task -1b75e9a1f3d4)
+      actually FIRED and, once raw input catches up, that the corpus-freshness gate clears.** No earlier than
+      2026-08-16T09:10Z (after both `cefi-fwd-daily-cron-20260815-212910` @ 09:00 UTC and
+      `cefi-perp-funding-daily-cron-20260815-212924` @ 07:00 UTC have had their first fire): (1) confirm each cron
+      actually fired — `gcloud compute ssh cefi-fwd-daily-cron-20260815-212910 --zone=asia-northeast1-c --command
+      'sudo tail -50 /var/log/cefi-fwd-cron.log'` (expect a `cefi-fwd-{TS}` worker-VM launch line, no `FAILED rc=`) and
+      the perp-funding twin's `/var/log/cefi-perp-funding-cron.log` (expect a `features-cefi-cefi-{TS}` worker-VM
+      launch line); (2) bounded `list_blobs` probe of the DeFi bucket for `derivative_ticker` (6 `catalog_carry.py`
+      venues, 2026-08-16) — if still 0, the raw side is honest-skipping, not broken, re-check the day after; (3) once
+      raw input is confirmed flowing, re-run this doc's own corpus-freshness probe (`list_blobs`, 6 venues ×
+      `perp_funding`/`perp_daily_ctx`, DeFi bucket) for a day AFTER both crons have had a chance to fire on fresh raw
+      input — do not re-check same-day as the raw fire. **Repo: deployment-service** (verification only, no code
+      change expected unless a cron fire genuinely fails).
 - [x] ✅ [DATA] P2 (c). **RESOLVED 2026-08-03 — investigated, no code/registry change needed; documented below.** The
       `gas_fees` venue==chain shape is NOT an open design question between the two options this todo originally posed —
       a THIRD option, already shipped, supersedes both. `gas_fee_handler.py`'s `venue=<chain-name>` reuse was fixed
@@ -519,6 +526,17 @@ doc for the full history).
   todo above naming both launch actions concretely (both launchers are singleton-locked/SCHEDULED_RECURRING —
   idempotent, safe to re-run). Not launched here — outside this task's own scope (a P3 diagnostic todo in a different
   doc); flagging for whoever picks up the todo above next. No code changed.
+
+- **slot-7 2026-08-15 ~21:36Z (data_engineering, task `defi_cefi_venue_chain_axis_contamination-7a50eb15bb1e`,
+  follow-up cron-verification re-check)**: Picked up the follow-up todo above (verify
+  `cefi-fwd-daily-cron-20260815-212910` + `cefi-perp-funding-daily-cron-20260815-212924`). The todo's own done-when
+  is explicit — "No earlier than 2026-08-16T09:10Z" (both crons' first fires are 07:00Z/09:00Z on 2026-08-16, per the
+  launch entry directly above). Current time confirmed **2026-08-15T21:36Z** — ~11.5h before the gate opens; none of
+  the todo's 3 verification steps (cron log tail, raw `derivative_ticker` probe, corpus-freshness re-probe) can
+  produce a meaningful result yet, so no GCS/gcloud calls were made this pass. Skipping `reason_code=GATED` (real ETA
+  ~694min exceeds the fleet's 180min dispatch-cooldown cap — `estimated_unblock_minutes` left unset so the standard
+  GATED cooldown policy applies rather than passing a value the server would discard anyway). Re-dispatch any time
+  at/after 2026-08-16T09:10Z.
 
 ## Session final report — 2026-08-04 (`/autonomous`, operator away ~8h from ~01:00)
 

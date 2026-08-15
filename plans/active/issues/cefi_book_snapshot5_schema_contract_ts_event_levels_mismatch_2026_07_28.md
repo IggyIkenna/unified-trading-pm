@@ -1065,3 +1065,10 @@ against the reproduction script.
   commits re-verified ancestors of origin/live-defi-rollout via fresh `git fetch` in MTDS/UAC/deployment-service.
   Numbers continue the decay trend (7,800→5,799). No code change, no GCS write, no VM launch. Doc over cap — 1-line
   close-out only.**
+- **2026-08-15 (data_pipeline_failure escalation worker, agt-27238a, slot 22) — another fan-out of the same
+  escalation, reading 5,799/172,714 = 3.4%, STATIC BACKLOG — no new af activity in 4d; no code fix. All 4
+  book_snapshot_5 fix commits (MTDS 339ca767/6bf568ee, UAC 8db188fe/1c4d8864) re-verified ancestors of
+  origin/live-defi-rollout. Own live column-projected manifest read: af=293,765 lifetime, max
+  attempted_at=2026-08-11T14:47:01Z (4d stale, matches alert), zero `"schema contract violated"` rows since
+  2026-07-31T04:02:18Z (15d stale) — byte-consistent with every prior checkpoint. Re-fire is the filed dedup-inert
+  gap, not a regression. No code change, no GCS write, no VM launch. Doc over cap — 1-line close-out only.**

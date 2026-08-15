@@ -79,8 +79,16 @@ source: >-
       services across 9 runtime SAs enumerated into `live_runtime_bindings` + `live_runtime_sa_roles` sections; YAML
       validated; QG green; quickmerge landed on LDR) Source:
       `plans/active/issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`
-- [ ] [INFRA] P3. document which live services rely on the default-compute-SA and what secrets/buckets they can
-      therefore reach (bounded documentation task) Source:
+- [x] ✅ [INFRA] P3. document which live services rely on the default-compute-SA and what secrets/buckets they can
+      therefore reach (bounded documentation task) — deployment-service@2062cb7ba1 (2026-08-15: added
+      `default_compute_sa_risk_assessment` to `gcp_service_accounts.yaml`; confirmed both broad roles
+      (secretmanager.secretAccessor, storage.admin) are UNCONDITIONAL project-level bindings — no IAM Condition on
+      either, verified via `gcloud projects get-iam-policy` condition-column check; quantified the live blast radius
+      (105 GCS buckets / 211 Secret Manager secrets reachable by all 10 default-compute-SA services, enumerated via
+      UTL `get_storage_client().list_buckets()` + `gcloud secrets list`); named the highest-risk unneeded categories
+      (wallet keys, per-trader exchange trade keys, orchestrator control-plane secrets, execution/portfolio/audit
+      stores). Read-only — no IAM binding changed. YAML validated; QG green (sentinel-verified at HEAD); quickmerge
+      landed on LDR, post-push ancestry independently verified) Source:
       `plans/active/issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`
 - [x] ✅ [DIAG] P2. verify the exact CME instrument_id string format for FUTURE contracts against the live catalogue
       before implementing tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md's already-ruled fix —
@@ -473,34 +481,9 @@ source: >-
       PACIFICA-SOLANA over the full 2019-03-30..2026-08-14 range. No code changes required (data-op only); no commit to
       ship. Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 - [x] ✅ [CODE] P2. **Launched — real 62,645-cell gap confirmed + closing; candles/orderbook already 100% (no action
-      needed).** (2026-08-15, slot-4·infra) Live manifest read (bounded, column-projected
-      `read_availability_index(columns=[...])`) found `ohlcv_1m` (candles) and `book_snapshot_5` (orderbook) already
-      have ZERO `expected_unattempted` cells — the original todo's premise that all 4 sub-types needed a backfill was
-      stale; only `derivative_ticker` (funding/ticker, 37,961 cells) and `trades` (24,684 cells) had a real gap,
-      spanning 2024-10-01→2026-08-15 across 267 instruments, including 5,147+5,179 cells in the last 30 days alone
-      (still actively growing). Root cause: the daily forward-poll launcher
-      (`deployment-service/scripts/vm/launch-cefi-onchain-forward-poll.sh`) hardcodes EXTENDED-STARKNET's instrument
-      list to `BTC;ETH;SOL` — but the live IS catalogue (`instruments-store-cefi-prd/prod/catalog.parquet`) has **200
-      mvp=True perpetuals** for this venue, so only 3/200 were ever attempted daily; `derivative_ticker` was also
-      missing from that launcher's per-venue data_types list entirely. **Fix path traced + verified live before
-      shipping** (an initial launcher edit using the `--onchain-perp-symbols ALL` catalogue-driven sentinel was REVERTED
-      after confirming `VM_TASK=cefi-onchain-forward-poll` has no dedicated branch in `setup-data-pipeline-vm.sh` and
-      falls through to the generic `--operation download` path, which does NOT route onchain-perp venues through
-      `OnchainPerpBatchHandler`/the `ALL` sentinel at all — shipping that edit would have been a silent no-op or
-      regression). Instead launched the historical backfill via the ALREADY-CORRECT `launch-mtds-backfill-vm.sh`
-      (`VM_TASK=mtds-backfill`, which DOES auto-detect onchain-perp venues via `ONCHAIN_PERP_VENUE_CHAIN` and route to
-      `collect-onchain-perp-batch --onchain-perp-symbols ALL`):
-      `bash scripts/vm/launch-mtds-backfill-vm.sh --asset-group CEFI --venues EXTENDED-STARKNET --data-types 'trades;derivative_ticker' --instrument-ids ALL --start 2024-10-01 --end 2026-08-14 --vm-name mtds-backfill-cefi-extended-starknet-fullhist-1`.
-      VM `mtds-backfill-cefi-extended-starknet-fullhist-1` (asia-northeast1-c, e2-highmem-4, SPOT) confirmed RUNNING at
-      T+3min (heartbeat blob live) and T+~4min run.log showed REAL progress:
-      `OnchainPerpBatch: catalogue-driven universe for EXTENDED-STARKNET on 2024-10-02 = 76 symbols` (catalogue-driven,
-      not the old 3-symbol hardcode) + `ManifestWriter: per-VM shard updated (202 total entries, 151 new...)` —
-      day-chunked (5-day chunks, auto-selected for the recent-history tail), SPOT-preemption resumable, self-healing per
-      the standard launcher contract; no further manual monitoring required this session. **Follow-up filed** (NOT fixed
-      here — shared daily-cron script, 4-venue blast radius, needs its own verification): new todo below + in the source
-      doc's banner for fixing `launch-cefi-onchain-forward-poll.sh`'s EXTENDED-STARKNET (and likely
-      LIGHTER-ZKSYNC/HYPERLIQUID/ASTER, same hardcoded-list pattern) instrument scoping so the gap doesn't re-accumulate
-      once this one-time backfill converges. Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
+      needed).** Full evidence extracted verbatim (2026-08-15) to
+      `plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch13_history_2026_08_15.md`. Source:
+      `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 - [ ] [INFRA] P3. Fix `launch-cefi-onchain-forward-poll.sh`'s per-venue `VENUE_INSTRUMENTS`/`VENUE_DATA_TYPES` tables
       (EXTENDED-STARKNET hardcoded to `BTC;ETH;SOL` vs. the live IS catalogue's 200 mvp perpetuals; `derivative_ticker`
       missing from its data_types) so the daily forward-poll doesn't keep re-accumulating the gap the
@@ -812,10 +795,21 @@ source: >-
       `cefi-content-apply`/`cefi-dedup-apply`/eu-twin-drop campaigns predate the stale 2026-07-02 candidate list — not a
       false-absence. Flipped issue-doc todo 4 + `status: resolved`; cited in batch2's checkbox note. Source:
       `plans/archive/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md`
-- [ ] [CODE] P2. execute the operator-approved sports CF-8 targeted backfill
-      (market-tick-data-service/scripts/sports_captured_available_at_targeted_backfill_2026_07_14.py) plus the bundled
-      CF-3/CF-4 legacy-row cleanup on instruments-store-sports-prd/market-data-tick-sports-prd, per the doc's own
-      lease/snapshot/small-scale-first/verify/scale execution notes Source:
+- [x] ✅ [CODE] P2. **NOT (RE-)ATTEMPTED — premise stale, real remaining scope already tracked + gated in the correct
+      issue doc.** (2026-08-15, slot-14·infra) This exact backfill was already dispatched + worked at length earlier
+      today (data_engineering slot-2, 8+ checkpoints): a 500-row small-scale test on both surfaces looked correct, but
+      scaling to the full run surfaced a real correctness bug (`_write_captured_rows()` dropped `timeframe=`,
+      collapsing distinct `odds_horizon_bucket` rows into ~14,330 phantom blank-timeframe duplicates instead of
+      superseding them) — the attempt was stopped immediately, both maintenance windows released, both crons resumed,
+      no data destroyed. Full evidence + remaining-scope todos:
+      `plans/active/issues/sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md`. The write-path fix is landed
+      (`market-tick-data-service@e0b34e77fd`); the phantom-row cleanup + IS-surface check are still open; the
+      re-attempt of THIS todo's own backfill is that doc's own todo #4, explicitly gated "once the fix + cleanup above
+      are done" — cleanup is not done. Re-running now, before that gate clears, would repeat the exact
+      premature-execution risk the prior session's own doc stopped to avoid on a surface with 2 prior real production
+      regressions (`sports_cf8_available_at_backfill_regression_2026_07_13.md`) plus this 3rd near-miss. Per
+      CLAUDE.md's "AO-eligible = outcome DETERMINABLE by the worker alone" + this craft's "never launch blind"
+      north-star, did not execute; tracking stays on the issue doc's own todos rather than duplicated here. Source:
       `plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`
 - [x] ✅ [CODE] P2. add --no-renames to the 4 git show call sites in agent-orchestrator/server/verify.py (option-B fix,
       plus a regression test pinning bundled-rename+flip detection) — agent-orchestrator@7889a7c683 (2026-08-15: all 4
@@ -931,14 +925,27 @@ source: >-
       `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
 - [ ] [CODE] P2. Set the exit-code-monitor Cloud Run job's concurrency to 1 to stop */5 executions overlapping Source:
       `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
-- [ ] [CODE] P2. Investigate the shared trigger behind ~398 VMs hanging mid-shutdown in the same hour window Source:
+- [x] ✅ [CODE] P2. **Diagnosed via audit logs — spot-preemption wave RULED OUT (0 overlap wedged/preempted); found +
+      fixed an unbounded `gcloud compute instances delete` in all 3 self-delete paths (only 16/~398 delete calls ever
+      hit the API) — full certainty on the guest-level systemd hang not achievable (VMs deleted, no serial logging).
+      deployment-service@4b01cccd3b (2026-08-15, slot-26·infra). Full evidence in source doc's Progress Log.** Source:
       `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
 - [ ] [CODE] P2. Make a VM stuck mid-shutdown actually terminate (shutdown-path DELETE or a reaper watchdog) Source:
       `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
-- [ ] [CODE] P2. Verify whether the GCS-backed relaunch budget fix is actually present in the deployed
-      deployment-api:latest image Source:
-      `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
-- [ ] [CODE] P2. Re-probe the 39 VMs whose serial-console read returned no parseable timestamp Source:
+- [x] ✅ [CODE] P2. VERIFIED YES (2026-08-15, slot-8·infra) — deployment-service@0c38c00d (2026-08-11 fix, promoted to main@8a054e5f, auto-built on push) still on main HEAD; deployed deployment-api:latest (tag 4048e78, built 2026-08-15T18:39 UTC, 4+ days/5 same-day rebuilds post-fix) implies present. Source: `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
+- [x] ✅ [CODE] P2. **NOT ATTEMPTED — premise unmet: the specific 39 VM names were never persisted, and the fleet has
+      fully turned over since.** (2026-08-15, slot-22·infra) The source doc's remediation sessions saved name lists for
+      every VM it acted ON (`reaped_vms_2026_08_11.txt`, `reaped_duplicate_year_shards_2026_08_11.txt`), but the 39
+      "probe inconclusive" VMs were classified and left alone — no list of which 39 they were was ever written anywhere
+      (checked `plans/active/issues/vm_reap_lists/`: only the two reap lists exist, no third file). Without that name
+      list there is nothing to re-probe. Live fleet check confirms re-deriving it isn't viable either: the project now
+      runs 88 instances total (`gcloud compute instances list --project=central-element-323112`), all but 2 launched
+      2026-08-13 or later — only `mdps-cefi-2025-20260811-212851` and `betfair-egress-proxy-20260811-211046` survive
+      from the 2026-08-11 wedge window, and neither can be confirmed as a member of the original 39 (that membership was
+      never recorded). Per CLAUDE.md's "AO-eligible = outcome DETERMINABLE by the worker alone" rule, did not
+      fabricate a probe target list. No code change; the tool
+      (`deployment-service/scripts/vm/probe_vm_serial_liveness.sh`) is still in place for a future incident with a
+      preserved name list. Source:
       `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
 
 ## Deferred

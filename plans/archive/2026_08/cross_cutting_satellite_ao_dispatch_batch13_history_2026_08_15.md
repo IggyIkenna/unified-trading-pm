@@ -128,3 +128,32 @@ source: >-
       no other verbatim copy of the gate check outside this repo (the UI repo's separate `context/` doc mirror was left
       untouched — out of this plan's repo scope). Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
+- [x] ✅ [CODE] P2. **Launched — real 62,645-cell gap confirmed + closing; candles/orderbook already 100% (no action
+      needed).** (2026-08-15, slot-4·infra) Live manifest read (bounded, column-projected
+      `read_availability_index(columns=[...])`) found `ohlcv_1m` (candles) and `book_snapshot_5` (orderbook) already
+      have ZERO `expected_unattempted` cells — the original todo's premise that all 4 sub-types needed a backfill was
+      stale; only `derivative_ticker` (funding/ticker, 37,961 cells) and `trades` (24,684 cells) had a real gap,
+      spanning 2024-10-01→2026-08-15 across 267 instruments, including 5,147+5,179 cells in the last 30 days alone
+      (still actively growing). Root cause: the daily forward-poll launcher
+      (`deployment-service/scripts/vm/launch-cefi-onchain-forward-poll.sh`) hardcodes EXTENDED-STARKNET's instrument
+      list to `BTC;ETH;SOL` — but the live IS catalogue (`instruments-store-cefi-prd/prod/catalog.parquet`) has **200
+      mvp=True perpetuals** for this venue, so only 3/200 were ever attempted daily; `derivative_ticker` was also
+      missing from that launcher's per-venue data_types list entirely. **Fix path traced + verified live before
+      shipping** (an initial launcher edit using the `--onchain-perp-symbols ALL` catalogue-driven sentinel was REVERTED
+      after confirming `VM_TASK=cefi-onchain-forward-poll` has no dedicated branch in `setup-data-pipeline-vm.sh` and
+      falls through to the generic `--operation download` path, which does NOT route onchain-perp venues through
+      `OnchainPerpBatchHandler`/the `ALL` sentinel at all — shipping that edit would have been a silent no-op or
+      regression). Instead launched the historical backfill via the ALREADY-CORRECT `launch-mtds-backfill-vm.sh`
+      (`VM_TASK=mtds-backfill`, which DOES auto-detect onchain-perp venues via `ONCHAIN_PERP_VENUE_CHAIN` and route to
+      `collect-onchain-perp-batch --onchain-perp-symbols ALL`):
+      `bash scripts/vm/launch-mtds-backfill-vm.sh --asset-group CEFI --venues EXTENDED-STARKNET --data-types 'trades;derivative_ticker' --instrument-ids ALL --start 2024-10-01 --end 2026-08-14 --vm-name mtds-backfill-cefi-extended-starknet-fullhist-1`.
+      VM `mtds-backfill-cefi-extended-starknet-fullhist-1` (asia-northeast1-c, e2-highmem-4, SPOT) confirmed RUNNING at
+      T+3min (heartbeat blob live) and T+~4min run.log showed REAL progress:
+      `OnchainPerpBatch: catalogue-driven universe for EXTENDED-STARKNET on 2024-10-02 = 76 symbols` (catalogue-driven,
+      not the old 3-symbol hardcode) + `ManifestWriter: per-VM shard updated (202 total entries, 151 new...)` —
+      day-chunked (5-day chunks, auto-selected for the recent-history tail), SPOT-preemption resumable, self-healing per
+      the standard launcher contract; no further manual monitoring required this session. **Follow-up filed** (NOT fixed
+      here — shared daily-cron script, 4-venue blast radius, needs its own verification): new todo in the parent batch
+      plan + in the source doc's banner for fixing `launch-cefi-onchain-forward-poll.sh`'s EXTENDED-STARKNET (and likely
+      LIGHTER-ZKSYNC/HYPERLIQUID/ASTER, same hardcoded-list pattern) instrument scoping so the gap doesn't re-accumulate
+      once this one-time backfill converges. Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`

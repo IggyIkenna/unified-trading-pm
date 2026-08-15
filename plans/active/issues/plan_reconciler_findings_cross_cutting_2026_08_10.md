@@ -230,7 +230,7 @@ Operator/judgment-gated, not mine to decide:
   `storage.admin` drift reflected) — doesn't qualify for the f2 mechanical carve-out.
 - Item C. `/codex/02-data/external-data-always-available-rule.md` — prescribes a RETIRED ping-file mechanism plus a
   stale cross-link to an archived doc. Multi-part rewrite, not a single substitution.
-- Item D. `plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md` — open `[OPERATOR]` re-install
+- Item D. `plans/archive/2026_08/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md` — open `[OPERATOR]` re-install
   todo whose literal instructions now hard-fail (the script it names moved to `systemd --user`, refuses `sudo`), and
   whose "not-live" premises are contradicted by dated evidence elsewhere in the corpus, including this run. Needs a
   careful rewrite, not a quick substitution.
@@ -256,7 +256,7 @@ Script/tooling-level, backend_engineer scope, not a plan-doc fix:
 - Item J. `check_na_corpus_ratchet.py`'s new `--diff-base` mode inherits an already-documented fenced-code-block
   checkbox-overcounting bug (open, unfixed since 2026-08-02). Code-verified live today: `_CHECKBOX_RE` has no
   fence-awareness.
-- Item K. `plans/active/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md` — 4
+- Item K. `plans/archive/2026_08/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md` — 4
   Progress Log entries claim a "P3 backlog todo" exists for prosewrap `--diff-base` conversion; no such checkbox exists
   anywhere in the doc. Real still-needed work has no tracked home. This doc was grace-protected when checked (touched by
   a same-tranche dispatch <12h earlier), so I could not add the missing todo myself.
@@ -308,7 +308,7 @@ diagnosed but did not apply. Re-verified 2026-08-10 (same day) before conversion
       `storage.admin` drift. `unified-trading-pm@<pending local commit>`.
 - [ ] [DOC] P2. **Item C — rewrite `/codex/02-data/external-data-always-available-rule.md`** — prescribes a RETIRED
       ping-file mechanism plus a stale cross-link to an archived doc; needs a multi-part rewrite.
-- [x] ✅ [OPERATOR] P2. **Item D — rewrite `plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md`'s
+- [x] ✅ [OPERATOR] P2. **Item D — rewrite `plans/archive/2026_08/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md`'s
       open `[OPERATOR]` re-install todo** (line 491) — its literal instructions now hard-fail (the script it names moved
       to `systemd --user`, refuses `sudo`), and its "not-live" premises are contradicted by dated evidence elsewhere in
       the corpus (including this run). Needs a careful rewrite of the existing todo's instructions, not a quick
@@ -359,7 +359,7 @@ diagnosed but did not apply. Re-verified 2026-08-10 (same day) before conversion
       `unified-trading-pm@4484ad1200`**: `_count_open_checkboxes_fence_aware()` wired into `_na_open_todos_from_text()`,
       verified ancestor of `origin/live-defi-rollout`.
 - [x] ✅ [DOC] P2. **Item K — add the real backlog todo to
-      `plans/active/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`** — 4 of that
+      `plans/archive/2026_08/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`** — 4 of that
       doc's own Progress Log entries claim a "P3 backlog todo" exists for the prosewrap `--diff-base` conversion
       (mirroring the pattern already shipped for `check_archive_candidates.sh` and `check_na_corpus_ratchet.py`), but no
       such checkbox exists anywhere in the doc — the real, still-needed work has no tracked home. Was grace-protected

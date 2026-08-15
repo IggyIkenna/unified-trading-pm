@@ -5,7 +5,7 @@ summary: >-
   `ML_DIRECTIONAL_EVENT_SETTLED` archetype — event-settled ML value betting: model P(outcome) vs vig-free implied odds,
   gates on `model_confidence_threshold` / `max_odds` / `min_edge_threshold`, stakes fractional Kelly (capped at
   `max_stake_fraction`), routes to best odds via Unity; covers 1X2 / O-U / BTTS / 1H / HT-FT + binary prediction.
-implementation_status: design
+implementation_status: code-shipped
 status: current
 nature: ssot
 asset_group: [meta]
@@ -50,8 +50,10 @@ topology_requirements:
 # Archetype: `ML_DIRECTIONAL_EVENT_SETTLED`
 
 > **Family:** [ML Directional](../families/ml-directional.md) **Settlement model:** Event-settled — position resolves
-> discretely on an external event (match result, prediction market resolution). **Code module (target):**
-> `strategy-service/engine/strategies/ml_directional_event_settled_engine.py`
+> discretely on an external event (match result, prediction market resolution). **Code module:**
+> `strategy-service/strategy_service/engine/strategies/v2/ml_directional/event_settled.py`
+> (`MLDirectionalEventSettledEngine`) — confirmed shipped 2026-08-15 (169 lines, no stub markers), wired to 3
+> production-labeled sports slots in `archetype_slots_sports.py`.
 
 ## What it does
 

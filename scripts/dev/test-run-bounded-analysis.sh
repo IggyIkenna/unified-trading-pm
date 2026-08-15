@@ -69,6 +69,31 @@ else
     echo "SKIP: /proc present on this host (Linux) — the ps-fallback-selection assertion only applies on macOS/BSD"
 fi
 
+# --- Test 5: a real pandas groupby() completes under the RSS-poll fallback ---------------
+# Regression guard for run_bounded_analysis_rss_poll_numpy_rec_breakage_2026_08_15.md:
+# `set -m` job-control backgrounding was the suspected cause of a
+# `ModuleNotFoundError: No module named 'numpy.rec'` raised deep inside
+# `pandas.DataFrame.groupby()` ONLY when run through this wrapper's RSS-poll fallback, never
+# when run directly. Requires a python with pandas installed — set TEST_PYTHON to a venv
+# python if the ambient `python3` doesn't have it (this dev-test's default `python3` usually
+# won't); skips rather than false-fails when pandas isn't importable.
+TEST_PYTHON="${TEST_PYTHON:-python3}"
+if "$TEST_PYTHON" -c "import pandas" >/dev/null 2>&1; then
+    out5="$(ANALYSIS_MEM_CAP=2G bash "$TARGET" -- "$TEST_PYTHON" -c "
+import pandas as pd
+df = pd.DataFrame({'a': [1, 1, 2, 2], 'b': [10, 20, 30, 40]})
+print('GROUPBY_OK', df.groupby(['a']).sum()['b'].tolist())
+" 2>&1)"
+    rc5=$?
+    if [[ "$rc5" -eq 0 ]] && [[ "$out5" == *"GROUPBY_OK [30, 70]"* ]]; then
+        pass "pandas groupby() completes under the RSS-poll fallback (numpy.rec regression guard)"
+    else
+        fail "pandas groupby() under the RSS-poll fallback did not complete correctly (rc=$rc5, output: $out5)"
+    fi
+else
+    echo "SKIP: pandas not importable via \$TEST_PYTHON ($TEST_PYTHON) — set TEST_PYTHON=/path/to/venv/python to exercise this test"
+fi
+
 echo ""
 if [[ "$FAILS" -eq 0 ]]; then
     echo "ALL PASSED"
