@@ -102,14 +102,19 @@ context_scope:
       regardless of backlog state, no `_do_spawn` gate. Verified 2026-08-15 (reconciliation sweep, this session).
       Source: `/plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md` — its own
       checkbox + Progress Log are stale (still describe the gap as open as of 2026-08-03), flip + close.
-- [x] [INFRA] P3. **DELIBERATE WON'T-BUILD — 2026-08-15 (this session).** `orphan_reap.py` special-casing a
-      worker-shell-parented detached background process. The source doc's own "Recommended decision" section already
-      hedges this as "optional... there might not be a legitimate use case" — the PRIMARY fix (RULES.md/worker.md
-      callout: never `nohup <cmd> & echo $!`, use the harness's own `run_in_background` instead) already shipped
-      2026-07-28 and worked (5+ occurrences before the fix, zero confirmed since). Building a structural exception would
-      risk recreating the exact "genuinely orphaned/leaked process never reaped" hazard the sweep exists to prevent, for
-      a use case the doc's own author couldn't confirm is real. Correctly stays unbuilt. Source:
-      `/plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`.
+- [x] [INFRA] P3. **DONE — CORRECTED 2026-08-15: was briefly marked won't-build by a concurrent session's
+      investigation-only pass; a separate concurrent session actually built and shipped it,
+      `agent-orchestrator@6ea54d8822`.** Added `_pid_session_id`/`pid_shares_tmux_session` to `server/tmux_spawn.py`: a
+      `nohup <cmd> & echo $!` job gets reparented to PID 1 the instant its wrapping subshell exits, breaking the
+      PPID-ancestry check the sweep used to rely on — but `nohup` never calls `setsid`, so the process keeps its
+      original session id, which still matches the live pane's SID. Wired as an exemption into `orphan_reap.py`'s sweep.
+      8 new/updated tests, incl. a real-`/proc` integration test proving SID inheritance survives reparenting. The other
+      investigation's "optional, no confirmed use case, primary fix already shipped" framing wasn't wrong about the
+      primary-fix efficacy — it just concluded before checking whether the structural exemption was ALSO buildable
+      safely, and it was: this is exemption BY the process's own kernel session id, not a blanket allowlist, so it can't
+      reintroduce the "genuinely leaked process never reaped" hazard either. Source:
+      `/plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md` — flip its checkbox
+      too.
 - [x] [BACKEND] P1. **DONE — full 10-component sweep closed 2026-08-15 (this session).** Final per-component verdict:
       `HealthMonitor` FIXED (`agent-orchestrator@349dbc0`), `AgentKeeper` FIXED (`@eb4265c`), `BlockedQueueReconciler`
       FIXED (`@ff490c7`), `AutoSpawnLoop` FIXED (`@2f94a90` — its `_resume_pass` had a `has_session()` call the prior
@@ -126,25 +131,33 @@ context_scope:
       `frozen_guided_compact_auto_submitted`), citing this exact todo. Verified 2026-08-15 (reconciliation sweep, this
       session). Source: `/plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md`
       (line ~136) — checkbox is stale, flip it.
-- [x] [BACKEND] P2. **RESOLVED — 2026-08-15 (this session), code-confirmed no ordering ambiguity.** "Force kill+resume
-      reachable before `spawn_retry_cap_reached`" was a category error, not a real ordering bug: the two mechanisms
-      share NO state. Spawn-heartbeat-timeout retries (`_auth_failover.py`, boot-time — a spawn that never produced a
-      `/heartbeat`) are bounded by `slot.spawn_retry_count` vs `_SPAWN_HEARTBEAT_MAX_RETRIES` (incremented only at
-      `_auth_failover.py:261`, reset only in `autospawn.py`/`slots_ops.py`). Force-kill+resume retries
-      (`_respawn.py::maybe_auto_respawn_stuck_slot` → `resume_lifecycle.classify_dead_worker`, mid-task — an
-      already-running worker found wedged) are bounded by the entirely separate `slot.resume_attempts` vs
-      `cfg.tuning.resume_max_attempts`. Different counters, different config knobs, different trigger conditions
-      (never-booted vs. wedged-while-running) — neither can race or double-count the other. Source: same doc, line ~141.
-- [x] [BACKEND] P3. **DONE — already built by a later, more robust mechanism; 2026-08-15 (this session).** Per-slot
-      context-plateau detection. The literal ask (`grep -r "plateau"` — zero hits) is genuinely unbuilt, but
-      `context_lifecycle.py::_tick_saturation_detector` (shipped `ao_context_saturation_never_alerts_2026_08_09`, AFTER
-      this todo was filed) is a strict superset: runs for EVERY target (main/review/worker) every tick, independent of
-      the tier-1/tier-2 paths, and pages (`notify_context_saturation_detected`) the moment a target has been at/above
-      threshold (defaults: 80% via `resume_fresh_context_pct` fallback, 30 min window, 4h re-remind) with NO compaction
-      observed — catching sustained saturation regardless of minor pct fluctuation (stricter than the original literal
-      "same exact pct repeated" spec), plus an auto-`_resolved` bookend the original ask never required. Nobody had
-      connected this later fix back to this todo. No new code needed — building a parallel exact-pct-matching detector
-      would duplicate/conflict with an existing, better mechanism. Source: same doc, line ~145.
+- [x] [BACKEND] P2. **DONE — CORRECTED 2026-08-15: a concurrent investigation-only pass found no bug in the theoretical
+      question it asked; a separate concurrent session found and fixed a DIFFERENT, real bug in the same area,
+      `agent-orchestrator@de1e5a3c1d`.** The investigation-only pass's finding stands and is still true: spawn-heartbeat
+      retries (`slot.spawn_retry_count`) and force-kill+resume retries (`slot.resume_attempts`) are genuinely separate
+      counters that can't race or double-count each other — no ordering bug THERE. But the actual mechanism was:
+      `autospawn.py::_resume_pass` stamps a fresh `last_spawned_at` on every successful kick-escalation `--resume`,
+      arming `_auth_failover.py::check_spawn_heartbeat_timeouts` on that slot — and if the resumed session immediately
+      re-freezes (pane_state=`"frozen"`, session alive), that watchdog previously treated it as "spawn never came up,"
+      burning `spawn_retry_count` and firing a redundant kill+respawn. Matches episode 1's exact evidence
+      (`retry_count=2`, `session_alive=true`, `pane_state=frozen`). Fix: extended the existing "working pane" skip guard
+      to also cover "frozen" (both are live sessions, not failed spawns). New regression test proves
+      `_SPAWN_HEARTBEAT_MAX_RETRIES + 1` consecutive frozen-pane force-resume ticks never trip the cap. Source: same
+      doc, line ~141 — flip its checkbox too.
+- [x] [BACKEND] P3. **DONE — CORRECTED 2026-08-15: a concurrent session's "already covered by
+      `_tick_saturation_detector`" claim is factually wrong (verified against the live code + its own docstring); a
+      separate concurrent session built the real thing, `agent-orchestrator@525aa528c8`.** `_tick_saturation_detector`
+      is an ABSOLUTE-threshold check — it only fires once a target crosses ~80% and stays there; a target parked at,
+      say, 40% for hours without ever climbing (the literal "stuck/looping, not making real forward progress" case this
+      todo describes) would NEVER trigger it, since it never approaches the threshold at all. It is explicitly NOT a
+      superset — the new `_tick_plateau_detector`'s own docstring states this distinction directly ("Distinct from
+      `_tick_saturation_detector` (an ABSOLUTE-threshold check, fires regardless of trend)"). Added
+      `_tick_plateau_detector` to `context_lifecycle.py`, mirroring the existing detector pattern: flags
+      `context_plateau_detected` when pct hasn't climbed by `context_plateau_min_delta_pct` (default 5) over
+      `context_plateau_window_seconds` (default 1800s) despite the target remaining live the whole window; resets on
+      real forward progress or a compaction-drop. Detection/observability only, no auto-intervention, per the source
+      doc's own scope. 6 new tests (flat vs. climbing synthetic readings, compaction reset, per-streak dedup,
+      disabled-when-zero). Source: same doc, line ~145 — flip its checkbox too.
 - **[REVIEW] P3. CANCELLED — SUPERSEDED 2026-08-15 (reconciliation sweep, this session).** Was: manually inspect/reset
   `learned_context_windows.json` once the fleet is fully on sonnet-5. Two follow-on fixes shipped + archived since
   (`ao_learned_context_window_registry_never_revalidates_2026_08_09`,
@@ -600,8 +613,46 @@ before touching the source doc directly._
   gitignore+hook commits and the remaining ~22 repos' mechanical `.pre-commit-config.yaml` pickup are UNSHIPPED,
   next-session work. **Cumulative: 24 DONE, 2 SUPERSEDED, 14 confirmed STILL open, 1 won't-build, 0 operator-blocked.**
   Handing off to a fresh session/agent for the remainder — see this doc's own remaining `- [ ]` items for the full list;
-  none require the operator. **Note**: the "14 confirmed STILL open" count above was written concurrently with, and did
-  not have visibility into, the "wave-5 close-out" entry directly above it — that entry's 2 new shipped commits
-  (`agent-orchestrator@6a4b7cbb31` Track 5 dashboard-e2e, `@398685cd3c` Track 2 DeepSeek-routing) may close 1-2 more
-  items than this count reflects. **The next session should re-verify the Track 2/Track 5 line items against those two
-  SHAs before trusting "14" as current** — flip any that are now genuinely done rather than re-doing the work.
+  none require the operator. **Note (SUPERSEDED — see the reconciliation entry below):** the "3 items closed via
+  investigation alone" and "1 won't-build, 0 operator-blocked" framing above turned out to be wrong for orphan_reap,
+  force-kill-ordering, and context-plateau — a separate concurrent session had already implemented real fixes for all
+  three by the time this entry landed; see the corrected checkboxes above and the reconciliation entry below for the
+  evidence. This entry is kept as the honest historical record of what this pass concluded, not deleted.
+- **2026-08-15 (continuation, /autonomous re-invoked)**: operator asked to continue driving the tracker, explicitly
+  waiving further `context_scope` backfill work (fine as ongoing/multi-session, per its own framing). Dispatched a
+  second agent-orchestrator wave for: `orphan_reap.py` nohup/disown exemption, force-kill-vs-retry-cap ordering,
+  per-slot context-plateau detection (net-new), DB-pool right-sizing (implementing the operator-directed
+  lower-blast-radius default — `pool_timeout`, not the git-health batching rewrite), and the backlog-relations UI
+  backend (`GET /api/backlog/graph`, per the now-ready spec). **Two items deliberately NOT attempted, with reasoning**:
+  (1) the content-derived-task-id live migration (`plans/active/content_derived_backlog_task_ids_2026_08_08.md`, the two
+  `[OPERATOR]` P1 todos) — fully built + tested against a synthetic scratch DB by a prior session, but explicitly left
+  un-run against real `state.db` because it's irreversible and touches fleet-core identity across two durable stores for
+  ~1,728 rows; its own live-apply prerequisite is "a quiet dispatch moment... not obviously busy" — this workspace has
+  measured ~20+ concurrently-active sessions and very high commit velocity throughout this entire dispatch, the opposite
+  of quiet, so it stays correctly deferred rather than forced. (2) `/plan-reconcile` SOLO and `/na-eligibility-audit`
+  all-tranches re-runs for "a clean, unconfounded benchmark number" — same reasoning: a meaningful SOLO/clean-state
+  benchmark is not achievable while ~20+ other sessions are actively editing the same corpus; running it anyway would
+  produce a number that isn't actually what the todo asks for.
+- **2026-08-15 (reconciliation — two concurrent sessions' overlapping close-out passes merged)**: this doc hit a genuine
+  git conflict (literal unresolved markers baked into an earlier `safe-doc-push.sh` autostash pop, the same corruption
+  class a prior pass in this doc's own history already found once) between the "final reconciliation pass" entry above
+  and this session's continuation — both sessions independently investigated/implemented overlapping items. **Resolved
+  by measuring live code, not by picking a side**: for orphan_reap, force-kill-ordering, and context-plateau, the "final
+  reconciliation pass" entry's conclusions (won't-build / no-bug / already-covered) were investigation-only and reached
+  before a separate concurrent session's REAL implementations landed (`@6ea54d8822`, `@de1e5a3c1d`, `@525aa528c8`
+  respectively) — corrected the 3 checkboxes above with the shipped evidence; the investigation-only pass's own narrower
+  technical findings (e.g. the two retry-counters genuinely don't race) were still individually correct and are
+  preserved inline, not erased. Re-verified this session's own SSM-based VM diagnostics (retried with a proper bash
+  shebang after a `/bin/sh` portability failure): current swap is 18Gi/47Gi used (elevated but not investigated further
+  as the "peak" — that item stays open, best-effort per its own scope); found a genuinely stray, negligible-size (12KB)
+  typo'd duplicate directory `/home/ubuntu/united-trading-system-repos` (missing the "f", created 2026-08-11, contains
+  only an empty `.tabs/` skeleton — safe cleanup candidate, not the disk-usage source); confirmed
+  `/home/ubuntu/unified-trading-system-repos/.tabs/` holds 33 slot clones, which structurally explains the bulk of the
+  host's 420G/678G disk usage (this VM is the shared host every slot worker runs on) — did not get an exact per-clone
+  byte breakdown (a `du` on the full tree kept exceeding SSM command timeouts even at 200s; a genuinely precise answer
+  needs a longer-running, purpose-launched job, not another ad-hoc SSM round-trip). **New, now-actionable item surfaced
+  by the operator's own dirty-worktree design resolution** (see Track 4 above): the design is resolved, but its two
+  deliverables (worker prompt template + dispatch hook for the new "stash and proceed" step 3; a bounded-retention sweep
+  for stash/`wip-preserve/*` refs past ~7 days, given this session directly observed 47 autostash entries piling up
+  unpruned on this exact host) are still UNBUILT — this is real, bounded, non-operator- blocked implementation work for
+  a future wave, written into `/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md`.
