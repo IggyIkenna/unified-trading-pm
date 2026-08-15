@@ -22,9 +22,11 @@ related:
     /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
+    /plans/active/issues/dp_revocation_release_never_resolves_identity_2026_08_15.md,
+    /plans/active/issues/deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15.md,
   ]
 created: 2026-08-14
-last_updated: 2026-08-14
+last_updated: 2026-08-15
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only
@@ -117,7 +119,18 @@ that plan.
       was never pushed and is superseded — do not resume pushing it, the problem it targeted is independently resolved.
 - [ ] [INFRA] P0. Make a truncated sweep loud instead of silent — if the fleet is not fully walked, the run must say so
       (count examined vs total, non-zero exit or an explicit alert) — DoD: a deliberately shortened run emits a "sweep
-      incomplete, N of M examined" signal rather than looking identical to a clean pass.
+      incomplete, N of M examined" signal rather than looking identical to a clean pass. **Code + tests WRITTEN
+      2026-08-15 (slot 15), compile-checked, NOT YET SHIPPED** — a `vm-census/exit-code-sweep-progress.json` marker
+      records `{total, classified}` before the sequential classify loop starts and on every `_checkpoint_census()` call
+      (periodic + final); the NEXT sweep reads it first and `logger.error`s "PRIOR SWEEP TRUNCATED — N/M examined" when
+      a prior pass never reached `classified == total` (the only way to surface a mid-loop Cloud-Run-SIGKILL truncation,
+      since nothing can log AFTER the kill itself). Two new regression tests in
+      `tests/unit/test_data_pipeline_monitors.py` (`test_sweep_detects_and_logs_prior_truncated_sweep`,
+      `test_sweep_clean_prior_pass_never_logs_truncation`). **Blocked on shipping** by an unrelated, pre-existing
+      basedpyright ratchet break (1261 > 1259, zero deployment-service source involved — traced to the two
+      editable-installed local deps) — filed as
+      [`deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15.md`](/plans/active/issues/deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15.md).
+      Do not redo this work — resume by fixing that blocker, then `quickmerge.sh` the two already-written files.
 - [x] [INFRA] P1. ✅ Reconcile the schedule discrepancy — `revocation_arming_2026_08_14.md`'s OPERATOR todo states the
       job runs on a `*/5` schedule, but executions are hourly (09:00Z, 10:00Z, 11:00Z, 12:00Z starts) — DoD: either the
       Cloud Scheduler cron or the plan's claim is corrected, stating which was wrong; a 30-minute run on a `*/5` cadence
@@ -208,14 +221,15 @@ the release bookend.
 
 ## Deferred work after 2026-08-15
 
-| Item                                                                            | State / why deferred                                                                                         | Blocked on                                                                 |
-| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
-| Push deployment-service commit `f13d5859` (sweep budget + `DP_SWEEP_TRUNCATED`) | **SUPERSEDED, do not resume** — the timeout it targeted is independently fixed (Todo 1 evidence, 2026-08-15) | n/a — was never in this checkout, stranded elsewhere                       |
-| Live confirmation of revocation (parent plan's `[OPERATOR]` P0)                 | **DONE 2026-08-15** — see Todo 4 evidence                                                                    | n/a                                                                        |
-| Make truncated sweep loud instead of silent (Todo 2)                            | **Not done** — real work, unblocked; lower urgency now the sweep completes in ~330s vs an 1800s budget       | nobody                                                                     |
-| Route `DP_SWEEP_TRUNCATED` to a registered alert code                           | **Not done** — needs an entry in the alerting registry SSOT another team owns                                | nobody, but coordinate                                                     |
-| Revocation release fails on every call (new, 2026-08-15)                        | **Not done** — real work, unblocked; needs a design call on the identity-space fix, filed separately         | nobody — see `dp_revocation_release_never_resolves_identity_2026_08_15.md` |
-| Prediction live-capture stall                                                   | **Not done** — diagnosed, filed separately                                                                   | its own issue doc                                                          |
+| Item                                                                            | State / why deferred                                                                                                   | Blocked on                                                                                                                |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Push deployment-service commit `f13d5859` (sweep budget + `DP_SWEEP_TRUNCATED`) | **SUPERSEDED, do not resume** — the timeout it targeted is independently fixed (Todo 1 evidence, 2026-08-15)           | n/a — was never in this checkout, stranded elsewhere                                                                      |
+| Live confirmation of revocation (parent plan's `[OPERATOR]` P0)                 | **DONE 2026-08-15** — see Todo 4 evidence                                                                              | n/a                                                                                                                       |
+| Make truncated sweep loud instead of silent (Todo 2)                            | **Code+tests WRITTEN 2026-08-15, uncommitted** — ready to ship as-is                                                   | unrelated basedpyright ratchet break, see `deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15.md` |
+| Route `DP_SWEEP_TRUNCATED` to a registered alert code                           | **Not done** — needs an entry in the alerting registry SSOT another team owns                                          | nobody, but coordinate                                                                                                    |
+| Revocation release fails on every call (new, 2026-08-15)                        | **DONE 2026-08-15** — deployment-service@bf69b2b289, see `dp_revocation_release_never_resolves_identity_2026_08_15.md` | n/a                                                                                                                       |
+| Prediction live-capture stall                                                   | **Not done** — diagnosed, filed separately                                                                             | its own issue doc                                                                                                         |
 
-**Recommended next item**: the revocation-release fix (new issue doc above). The timeout that motivated this doc is now
-resolved and confirmed live; held VMs currently can never auto-clear, which is the more urgent remaining gap.
+**Recommended next item**: fix the basedpyright ratchet blocker
+(`deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15.md`) — it blocks ALL deployment-service
+shipping, including the already-written, already-tested Todo 2 fix sitting uncommitted in this checkout.
