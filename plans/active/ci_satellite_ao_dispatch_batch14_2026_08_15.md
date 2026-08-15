@@ -187,8 +187,8 @@ source: >-
       re-implement separately, continued that plan's todos 3+4 (the 15-min grace-window state machine +
       `escalation.enqueue` wiring) directly. **Shipped**: `agent-orchestrator@452ba5a` (+ test-isolation fix
       `agent-orchestrator@39e45c8549`, both post-push ancestry-verified on `origin/live-defi-rollout`);
-      `bash     scripts/quality-gates.sh` green (3969 passed, 2 skipped). A regression-caught bug along the way: the
-      state machine's 5 new tests initially shared one hardcoded (repo, check) cooldown key, so a prior test's leftover
+      `bash scripts/quality-gates.sh` green (3969 passed, 2 skipped). A regression-caught bug along the way: the state
+      machine's 5 new tests initially shared one hardcoded (repo, check) cooldown key, so a prior test's leftover
       past-window row leaked into the next test — fixed by giving each test its own key (real, shared DB state, no
       per-test reset). This item's gate is genuinely met: a simulated breach (unit-tested) produces an escalation-queue
       entry via `escalation.enqueue()` once still-present past the 15-minute window. Remaining scope (todos 7-12 —
@@ -225,7 +225,7 @@ source: >-
       Actions Cloud Build trigger workflow found under that description on `unified-trading-library`; no active tracking
       doc exists in the corpus for it either — treated as already resolved/archived, not re-investigated further (P3, no
       live symptom found). (3) Glue-runner 228-restart count:
-      `gh api     repos/IggyIkenna/unified-trading-pm/actions/runners` and the same for `unified-trading-ci` both report
+      `gh api repos/IggyIkenna/unified-trading-pm/actions/runners` and the same for `unified-trading-ci` both report
       `total_count: 0` — zero self-hosted runners currently registered at either repo, consistent with the already-
       documented public-repo revert + dedicated-VM split
       (`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`, $0/day billing confirmed 8 consecutive days) —

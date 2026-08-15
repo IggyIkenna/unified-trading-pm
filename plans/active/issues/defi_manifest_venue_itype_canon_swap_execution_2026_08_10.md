@@ -98,11 +98,11 @@ mandatory verified pre-write snapshot).
               per-VM manifest shard). QG + quickmerge green on deployment-service (3262 passed).
 
               **To launch** (next dispatch):
-                                                                  ```bash
-                                                                  bash deployment-service/scripts/vm/launch-defi-manifest-projection-vm.sh
-                                                                  # or with explicit dates:
-                                                                  bash deployment-service/scripts/vm/launch-defi-manifest-projection-vm.sh --start-date 2020-01-01 --end-date 2026-08-10 --chunk-days 30
-                                                                  ```
+                                                                          ```bash
+                                                                          bash deployment-service/scripts/vm/launch-defi-manifest-projection-vm.sh
+                                                                          # or with explicit dates:
+                                                                          bash deployment-service/scripts/vm/launch-defi-manifest-projection-vm.sh --start-date 2020-01-01 --end-date 2026-08-10 --chunk-days 30
+                                                                          ```
               Then monitor `gs://deployment-scripts-central-element-323112/vm-logs/{vm_name}/run.log` for the swap plan-mode
               ADD/REMOVE delta output. Record the delta back in this doc. (repo: market-tick-data-service)
 
@@ -136,8 +136,8 @@ mandatory verified pre-write snapshot).
       already used elsewhere in this doc family, not a first/unreviewed destructive action.)_ On the VM:
 
       ```python
-                                                                                  python -m market_tick_data_service.scripts.defi_manifest_venue_itype_canon_swap --projection-uri gs://<audit-bucket>/<dir>/defi_proj.parquet --apply-prod --confirm-prod-write
-                                                                                  ```
+                                                                                          python -m market_tick_data_service.scripts.defi_manifest_venue_itype_canon_swap --projection-uri gs://<audit-bucket>/<dir>/defi_proj.parquet --apply-prod --confirm-prod-write
+                                                                                          ```
 
               (writes PROD). Verify: swap's own post-write verify (stale_remaining=0, canon_missing=0) AND an independent fresh
               GCS-sampled re-audit (0 legacy-spelled/uppercase-itype/chain-polluted rows remaining, 100% of their canonical

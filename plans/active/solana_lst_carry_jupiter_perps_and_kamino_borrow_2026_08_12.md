@@ -162,11 +162,11 @@ from 2020-12-18).
       not `staking_yields`:
 
       | Venue                  | Declared                                        |
-                                                          | ---------------------- | ----------------------------------------------- |
-                                                          | `MARINADE-SOLANA`      | `lst_rates` from **2021-08-01**                 |
-                                                          | `JITO-SOLANA`          | `lst_rates` from **2021-11-01**                 |
-                                                          | `SOLBLAZE-SOLANA`      | `lst_rates` from 2022-10-15                     |
-                                                          | `JITORESTAKING-SOLANA` | `staking_yields` — restaking, correctly distinct |
+                                                                  | ---------------------- | ----------------------------------------------- |
+                                                                  | `MARINADE-SOLANA`      | `lst_rates` from **2021-08-01**                 |
+                                                                  | `JITO-SOLANA`          | `lst_rates` from **2021-11-01**                 |
+                                                                  | `SOLBLAZE-SOLANA`      | `lst_rates` from 2022-10-15                     |
+                                                                  | `JITORESTAKING-SOLANA` | `staking_yields` — restaking, correctly distinct |
 
               `lst_rates_handler.py` writes **both** `lst_rates` and `staking_yields`, so the vocabulary split is deliberate and the
               registry matches the handler exactly. The split is also semantically right: `lst_rates` is the LST exchange-rate/APY
@@ -189,12 +189,12 @@ from 2020-12-18).
       Measured 2026-08-12; recorded here because § A's answer is wrong if the wrong series is used.
 
       | | `lst_rates` | `staking_yields` |
-                                                          | --- | --- | --- |
-                                                          | `instrument_type` | `lst` | `staking` |
-                                                          | Payload | `exchange_rate` (float64, **non-null**) | `apy` + `total_staked` (nullable) |
-                                                          | Source | **on-chain** — contract / `exchangeRate` / `getPooledEth` / subgraph | **reported** — `yields.llama.fi/pools`, `LIDO_APY_URL`, `ETHERFI_APY_URL` |
-                                                          | Meaning | The LST's redemption rate; **drift over time IS realised accrual** | A published forward-looking APY |
-                                                          | Venues | 14 LST issuers | 26, mostly vaults + restaking |
+                                                                  | --- | --- | --- |
+                                                                  | `instrument_type` | `lst` | `staking` |
+                                                                  | Payload | `exchange_rate` (float64, **non-null**) | `apy` + `total_staked` (nullable) |
+                                                                  | Source | **on-chain** — contract / `exchangeRate` / `getPooledEth` / subgraph | **reported** — `yields.llama.fi/pools`, `LIDO_APY_URL`, `ETHERFI_APY_URL` |
+                                                                  | Meaning | The LST's redemption rate; **drift over time IS realised accrual** | A published forward-looking APY |
+                                                                  | Venues | 14 LST issuers | 26, mostly vaults + restaking |
 
               **The axis is reported-vs-measured, not protocol-native-vs-DEX-swapped** (a hypothesis considered and rejected), and it
               is not about token mechanics either — rebasing vs price-appreciating cuts across both. For a staked-basis P&L you want

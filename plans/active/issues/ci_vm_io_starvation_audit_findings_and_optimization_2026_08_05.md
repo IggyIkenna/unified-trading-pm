@@ -569,20 +569,20 @@ traffic to count until the migration is finished. What is certain is that their 
               calling its own reusable `python-quality-gates-v2.yml`). Ready-to-run (NOT executed this session — operator
               deferred both sub-parts):
 
-                                                                                                                                                                  ```bash
-                                                                                                                                                                  gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions \
-                                                                                                                                                                    -f allowed_actions=selected
+                                                                                                                                                                          ```bash
+                                                                                                                                                                          gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions \
+                                                                                                                                                                            -f allowed_actions=selected
 
-                                                                                                                                                                  gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions/selected-actions \
-                                                                                                                                                                    -f github_owned_allowed=true \
-                                                                                                                                                                    -f verified_allowed=true \
-                                                                                                                                                                    -f 'patterns_allowed[]=astral-sh/setup-uv@*' \
-                                                                                                                                                                    -f 'patterns_allowed[]=aws-actions/configure-aws-credentials@*' \
-                                                                                                                                                                    -f 'patterns_allowed[]=google-github-actions/auth@*' \
-                                                                                                                                                                    -f 'patterns_allowed[]=google-github-actions/setup-gcloud@*' \
-                                                                                                                                                                    -f 'patterns_allowed[]=IggyIkenna/unified-trading-ci@*' \
-                                                                                                                                                                    -f 'patterns_allowed[]=IggyIkenna/unified-trading-pm@*'
-                                                                                                                                                                  ```
+                                                                                                                                                                          gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions/selected-actions \
+                                                                                                                                                                            -f github_owned_allowed=true \
+                                                                                                                                                                            -f verified_allowed=true \
+                                                                                                                                                                            -f 'patterns_allowed[]=astral-sh/setup-uv@*' \
+                                                                                                                                                                            -f 'patterns_allowed[]=aws-actions/configure-aws-credentials@*' \
+                                                                                                                                                                            -f 'patterns_allowed[]=google-github-actions/auth@*' \
+                                                                                                                                                                            -f 'patterns_allowed[]=google-github-actions/setup-gcloud@*' \
+                                                                                                                                                                            -f 'patterns_allowed[]=IggyIkenna/unified-trading-ci@*' \
+                                                                                                                                                                            -f 'patterns_allowed[]=IggyIkenna/unified-trading-pm@*'
+                                                                                                                                                                          ```
 
               `github_owned_allowed=true` covers every `actions/*` action (checkout/cache/setup-python/upload-download-artifact
               /create-github-app-token/github-script — all GitHub-owned) without needing individual patterns;

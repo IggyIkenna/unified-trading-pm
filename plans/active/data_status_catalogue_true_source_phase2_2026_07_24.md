@@ -92,10 +92,10 @@ plan is that other half.
               **1. The tempting shortcut, and why it is NOT the answer.** The natural move is to extend
               `_IDENTITY_CATALOGUE_ASSET_GROUPS` (`routes/data_status/_catalogue.py`) so prediction+sports also read
               `prod/catalog.parquet`, since cefi/defi/tradfi already do post-@62cc10f and the gap looks enormous — measured live:
-                                                  | AG | explorer shows today | `prod/catalog.parquet` | missing | object |
-                                                  | --- | --- | --- | --- | --- |
-                                                  | sports | **1,786** non-blank ids | **27,250** | 25,464 (94%) | 0.6 MB |
-                                                  | prediction | 12,921 non-blank ids (**and only 79 survive `_dedupe_latest`** — see finding 4) | **2,673,230** | ~2.66M (99.5%) | 184.5 MB |
+                                                          | AG | explorer shows today | `prod/catalog.parquet` | missing | object |
+                                                          | --- | --- | --- | --- | --- |
+                                                          | sports | **1,786** non-blank ids | **27,250** | 25,464 (94%) | 0.6 MB |
+                                                          | prediction | 12,921 non-blank ids (**and only 79 survive `_dedupe_latest`** — see finding 4) | **2,673,230** | ~2.66M (99.5%) | 184.5 MB |
               I prototyped exactly this for sports (0.6 MB, so no latency cost) and **reverted it**, because driving the shipped
               code against real GCS showed it trades correctness for correctness rather than winning:
               - the sports identity catalogue has **`venue=''`** on every row (sports keys on `league_id`, not venue) → the

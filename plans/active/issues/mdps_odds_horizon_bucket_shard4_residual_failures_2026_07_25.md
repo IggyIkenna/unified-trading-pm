@@ -148,13 +148,13 @@ stabilize. Left untracked, this manifest residual would silently persist forever
               MDPS ``.venv``, querying the COARSE per-day row (``date=<D>, venue=ODDS_API, data_type=odds_horizon_bucket,
               league_id="", timeframe=""``) for all 6 dates in the dispute. Results:
 
-                                                                      | Date       | COARSE `capture_status` | Fine-shard note |
-                                                                      | 2025-07-31 | `captured`              | clean |
-                                                                      | 2025-08-26 | `captured`              | has fine shard `attempted_failed` (`soccer_australia_aleague`, T-0, `SHARD_FILE_MISSING`) |
-                                                                      | 2025-09-04 | `captured`              | has fine shard `attempted_failed` (`soccer_australia_aleague`, T-0, `SHARD_FILE_MISSING`) |
-                                                                      | 2025-10-07 | `captured`              | clean |
-                                                                      | 2025-10-14 | `captured`              | clean |
-                                                                      | 2025-11-13 | `captured`              | clean |
+                                                                              | Date       | COARSE `capture_status` | Fine-shard note |
+                                                                              | 2025-07-31 | `captured`              | clean |
+                                                                              | 2025-08-26 | `captured`              | has fine shard `attempted_failed` (`soccer_australia_aleague`, T-0, `SHARD_FILE_MISSING`) |
+                                                                              | 2025-09-04 | `captured`              | has fine shard `attempted_failed` (`soccer_australia_aleague`, T-0, `SHARD_FILE_MISSING`) |
+                                                                              | 2025-10-07 | `captured`              | clean |
+                                                                              | 2025-10-14 | `captured`              | clean |
+                                                                              | 2025-11-13 | `captured`              | clean |
 
               **Verdict**: the COARSE row (what the reprocess script checks in its pre-flight ``Manifest pre-flight: prior
               status=...`` log line) is ``captured`` for ALL 6 dates, so all will be skipped by a future ``full``-mode re-run.

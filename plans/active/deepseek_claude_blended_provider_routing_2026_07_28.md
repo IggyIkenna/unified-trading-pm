@@ -495,13 +495,13 @@ default from an external reference.
               `central-element-323112`, matching every other secret cited above). Exact command (run on whichever host holds
               the live literal key, currently `~/.claude-accounts/deepseek-v4-pro.env`'s `ANTHROPIC_AUTH_TOKEN` value — do
               NOT paste the key into shell history; use the `-n`-into-stdin form or a temp file deleted after):
-                                                                                                              ```bash
-                                                                                                              gcloud config set project central-element-323112
-                                                                                                              echo -n "<the literal ANTHROPIC_AUTH_TOKEN value from ~/.claude-accounts/deepseek-v4-pro.env>" | \
-                                                                                                                gcloud secrets create deepseek-v4-pro-api-key \
-                                                                                                                  --data-file=- \
-                                                                                                                  --replication-policy=automatic
-                                                                                                              ```
+                                                                                                                      ```bash
+                                                                                                                      gcloud config set project central-element-323112
+                                                                                                                      echo -n "<the literal ANTHROPIC_AUTH_TOKEN value from ~/.claude-accounts/deepseek-v4-pro.env>" | \
+                                                                                                                        gcloud secrets create deepseek-v4-pro-api-key \
+                                                                                                                          --data-file=- \
+                                                                                                                          --replication-policy=automatic
+                                                                                                                      ```
               If/when the flash account (`deepseek-v4-flash.env`, provisioned on the orchestrator VM per the A/B test plan's
               todo 6, not present on this host) also needs GSM-sourcing, the matching name is **`deepseek-v4-flash-api-key`**
               (same command, swap the secret name + source the flash env file's token instead). Once created, hand the exact
@@ -576,14 +576,14 @@ default from an external reference.
       recorded here so it survives even if nobody writes the script (read-only, runs on the AO VM):
 
       ```sql
-                                                                                  -- account_id distribution over spawns/dispatches, last 24h
-                                                                                  -- DB: file:<repo>/agent-orchestrator/data/state/state.db?mode=ro   (open read-only; run as ubuntu)
-                                                                                  SELECT json_extract(details_json,'$.account_id') AS a, COUNT(*) AS n
-                                                                                  FROM activity_log
-                                                                                  WHERE ts > datetime('now','-24 hours')
-                                                                                    AND json_extract(details_json,'$.account_id') NOT IN ('')
-                                                                                  GROUP BY a ORDER BY n DESC;
-                                                                                  ```
+                                                                                          -- account_id distribution over spawns/dispatches, last 24h
+                                                                                          -- DB: file:<repo>/agent-orchestrator/data/state/state.db?mode=ro   (open read-only; run as ubuntu)
+                                                                                          SELECT json_extract(details_json,'$.account_id') AS a, COUNT(*) AS n
+                                                                                          FROM activity_log
+                                                                                          WHERE ts > datetime('now','-24 hours')
+                                                                                            AND json_extract(details_json,'$.account_id') NOT IN ('')
+                                                                                          GROUP BY a ORDER BY n DESC;
+                                                                                          ```
 
               Done when: either a small read-only readout script lands under `agent-orchestrator/scripts/orchestrator/` with a
               lifecycle marker, or the config.py comment carries the query inline so "re-measure" names its own method. Note the

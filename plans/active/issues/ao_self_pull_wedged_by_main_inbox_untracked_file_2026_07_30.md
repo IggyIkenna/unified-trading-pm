@@ -194,17 +194,17 @@ host/root-clone access (main agent's own session, or the operator).
               `server/notifications/slack.py`'s `_WEBHOOK_URL = os.environ.get("AGENT_ORCHESTRATOR_SLACK_WEBHOOK", "")`).
               The value already lives in GCP Secret Manager (project `central-element-323112`, per
               `agent-orchestrator/docs/ENV_VARS.md`) -- no new secret needs creating. Run on the planning VM:
-                                                                                                      ```bash
-                                                                                                      cd "${WORKSPACE_ROOT}/agent-orchestrator"
-                                                                                                      WEBHOOK_VAL="$(gcloud secrets versions access latest --secret=AGENT_ORCHESTRATOR_SLACK_WEBHOOK --project=central-element-323112 2>/dev/null)"
-                                                                                                      if [ -z "$WEBHOOK_VAL" ]; then
-                                                                                                        WEBHOOK_VAL="$(gcloud secrets versions access latest --secret=alerting-uts-live-alerts-slack-webhook --project=central-element-323112 2>/dev/null)"
-                                                                                                      fi
-                                                                                                      if [ -n "$WEBHOOK_VAL" ] && ! grep -q '^AGENT_ORCHESTRATOR_SLACK_WEBHOOK=' .env.local 2>/dev/null; then
-                                                                                                        printf 'AGENT_ORCHESTRATOR_SLACK_WEBHOOK=%s\n' "$WEBHOOK_VAL" >> .env.local
-                                                                                                        sudo systemctl restart orchestrator
-                                                                                                      fi
-                                                                                                      ```
+                                                                                                              ```bash
+                                                                                                              cd "${WORKSPACE_ROOT}/agent-orchestrator"
+                                                                                                              WEBHOOK_VAL="$(gcloud secrets versions access latest --secret=AGENT_ORCHESTRATOR_SLACK_WEBHOOK --project=central-element-323112 2>/dev/null)"
+                                                                                                              if [ -z "$WEBHOOK_VAL" ]; then
+                                                                                                                WEBHOOK_VAL="$(gcloud secrets versions access latest --secret=alerting-uts-live-alerts-slack-webhook --project=central-element-323112 2>/dev/null)"
+                                                                                                              fi
+                                                                                                              if [ -n "$WEBHOOK_VAL" ] && ! grep -q '^AGENT_ORCHESTRATOR_SLACK_WEBHOOK=' .env.local 2>/dev/null; then
+                                                                                                                printf 'AGENT_ORCHESTRATOR_SLACK_WEBHOOK=%s\n' "$WEBHOOK_VAL" >> .env.local
+                                                                                                                sudo systemctl restart orchestrator
+                                                                                                              fi
+                                                                                                              ```
               **Verify**: after restart, confirm `journalctl -u orchestrator --since '5 min ago' | grep -i webhook` shows
               no fresh "no webhook" lines and a real Slack message lands on the next wedge/drift trigger. Do NOT echo
               `$WEBHOOK_VAL` to any log.

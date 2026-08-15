@@ -119,22 +119,22 @@ context_scope:
       VM was launched — the manifest already showed complete coverage. Prior text (superseded, kept for history) below:
 
       **UNBLOCKED 2026-08-10 (this is the recommended follow-up pass the 2026-08-09 flag below asked for)** —
-                      the databento account-level billing-suspension gate is confirmed resolved account-wide, not just for the narrower
-                      MVP-of-MVP scope: live `DatabentoBaseClient.warmup()` → `metadata.list_datasets()` (an unscoped, account-level
-                      call) succeeded 2026-08-10, no auth/suspended error — see
-                      `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`'s Progress Log. Prior gate
-                      (superseded, kept for history): ~~BLOCKED-OPERATOR-DECISION (databento account billing-suspended 2026-08-09, see
-                      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md)~~.
-                      **`BILLING GATE LIFTED 2026-08-10`** — the databento account billing-suspension is resolved account-wide
-                      (live-reverified 2026-08-10: `metadata.list_datasets()` succeeded, 29 datasets, no auth/suspended error; real
-                      metered `GLBX.MDP3` ES.FUT and `XCBF.PITCH` VX.FUT pulls both succeeded — see
-                      `/plans/archive/2026_08/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md`). **Still blocked by a
-                      SEPARATE, unrelated reason — the databento gate lifting does NOT clear this todo**: Phase D is not literally green
-                      per the note above; do not start this until the chain-bundle follow-up
-                      (`tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4, CBOE VIX + 15 micro-contract codes + 8
-                      sector-identity codes) is resolved or the operator explicitly accepts the current evidence as sufficient. **MVP
-                      backfill readiness gate** — only after A–D green: run the tradfi MVP backfills (SPOT VMs, single Databento IP,
-                      throughput-fixed) and verify manifest-counted canonical rows for each MVP cell.
+              the databento account-level billing-suspension gate is confirmed resolved account-wide, not just for the narrower
+              MVP-of-MVP scope: live `DatabentoBaseClient.warmup()` → `metadata.list_datasets()` (an unscoped, account-level
+              call) succeeded 2026-08-10, no auth/suspended error — see
+              `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`'s Progress Log. Prior gate
+              (superseded, kept for history): ~~BLOCKED-OPERATOR-DECISION (databento account billing-suspended 2026-08-09, see
+              /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md)~~.
+              **`BILLING GATE LIFTED 2026-08-10`** — the databento account billing-suspension is resolved account-wide
+              (live-reverified 2026-08-10: `metadata.list_datasets()` succeeded, 29 datasets, no auth/suspended error; real
+              metered `GLBX.MDP3` ES.FUT and `XCBF.PITCH` VX.FUT pulls both succeeded — see
+              `/plans/archive/2026_08/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md`). **Still blocked by a
+              SEPARATE, unrelated reason — the databento gate lifting does NOT clear this todo**: Phase D is not literally green
+              per the note above; do not start this until the chain-bundle follow-up
+              (`tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4, CBOE VIX + 15 micro-contract codes + 8
+              sector-identity codes) is resolved or the operator explicitly accepts the current evidence as sufficient. **MVP
+              backfill readiness gate** — only after A–D green: run the tradfi MVP backfills (SPOT VMs, single Databento IP,
+              throughput-fixed) and verify manifest-counted canonical rows for each MVP cell.
 
 - [ ] [DATA] P1. **UNBLOCKED 2026-08-15** — the MVP backfill readiness gate above is now `[x]` done (2026-08-15,
       manifest-verified), so this todo's dependency precondition is met. NOT executed as part of that gate's own
