@@ -418,8 +418,19 @@ source: >-
       `c55faf2c "test(dp): drop hardcoded prod project id from vm-launcher test fixture"` already landed this fix after
       the source doc (2026-08-10) was filed. No code change made; nothing to restore. Source:
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
-- [ ] [CODE] P2. Track 0: Capture Binance/OKX/Bybit indexPrice/markPrice/fundingRate for equity-perps as a first-class
-      data_type Source: `plans/active/cefi_consolidated_closeout_2026_07_18.md`
+- [x] ✅ [CODE] P2. Track 0: Capture Binance/OKX/Bybit indexPrice/markPrice/fundingRate for equity-perps as a
+      first-class data_type **CLOSED — duplicate of this same batch's earlier "Capture Binance/OKX/Bybit
+      indexPrice+markPrice+ fundingRate" entry above (2026-08-15), which cites the identical underlying Phase 1b item
+      via a different source doc (`cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` vs this entry's own
+      `cefi_consolidated_closeout_2026_07_18.md` Track 0 — that doc's own header states its Track 0 is an operator-ruled
+      embed of the cryptovenue doc's Phase 1b items, sequenced ahead of/alongside the migration).** No code shipped
+      (none needed) — the existing `derivative_ticker` data_type already fully populates
+      mark_price/index_price/funding_rate for Binance/OKX/Bybit equity-perps via already-wired live WS connectors,
+      generically across each venue's whole instrument universe. Full evidence:
+      `/plans/archive/issues/cefi_equity_perp_mark_index_funding_derivative_ticker_already_covers_2026_08_15.md`
+      (unified-trading-pm@229e86f53b). Source's own checkbox also flipped in this commit — see
+      `cefi_consolidated_closeout_2026_07_18.md` Track 0. Source:
+      `plans/active/cefi_consolidated_closeout_2026_07_18.md`
 - [x] ✅ [CODE] P2. Track 0: Wire a recurring daily funding/basis scan across all crypto-venue equity-perps Source:
       `plans/active/cefi_consolidated_closeout_2026_07_18.md` — **SAME underlying work as this batch's earlier
       "Recurring daily funding/basis scan" todo above (both cite the same cryptovenue Phase 1b item via different source
@@ -577,3 +588,15 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   narrower/duplicate local-storage-root patch exists anywhere else in `tests/`. No code shipped (none needed) — checkbox
   flipped citing the existing sha. Same 1000-line hard-cap block as the two entries above prevents touching the source
   doc's own checkbox in this commit; it stays stale until the trim-under-cap follow-up lands.
+
+- **2026-08-15 (slot-26·backend_engineer)**: dispatched the "Track 0: Capture Binance/OKX/Bybit
+  indexPrice/markPrice/fundingRate for equity-perps as a first-class data_type" todo (sourced from
+  `cefi_consolidated_closeout_2026_07_18.md` Track 0). Found it is a duplicate of this same batch's earlier "Capture
+  Binance/OKX/Bybit indexPrice+markPrice+fundingRate" entry (already closed 2026-08-15, citing archived issue doc
+  `cefi_equity_perp_mark_index_funding_derivative_ticker_already_covers_2026_08_15.md`) — both cite the identical
+  underlying cryptovenue Phase 1b item, just via two different source docs (that closeout doc's own Track 0 header
+  states it is an operator-ruled embed of the cryptovenue doc's Phase 1b items). Per the AO-dispatch conflict-check
+  protocol (§ 3.4, "already-shipped elsewhere, checkbox just never flipped") this is a stale-checkbox correction, not
+  new work and not a conflict. No code shipped (none needed). **Source doc's own checkbox ALSO flipped in this commit**
+  — `cefi_consolidated_closeout_2026_07_18.md` is 693L, well under its 1000-line hard cap, so no line-cap block applies
+  here (unlike several sibling entries above).

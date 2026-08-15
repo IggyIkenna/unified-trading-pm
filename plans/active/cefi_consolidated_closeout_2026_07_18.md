@@ -148,9 +148,16 @@ context_scope:
       `/plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` (line 662): "daily from yahoo finance
       is enough" — `unified-api-contracts@844c5ee6b` + `instruments-service@1ba5da4b`. This embedded copy was never
       flipped to match; fixed now.
-- [ ] [SCRIPT] P1. **Capture Binance/OKX/Bybit `indexPrice`/`markPrice`/`fundingRate`** for the equity-perps as a
-      first-class data_type (rides the existing premiumIndex/funding endpoints). Repo: market-tick-data-service. Source:
-      Phase 1b.
+- [x] ✅ [SCRIPT] P1. **CLOSED — already-satisfied (2026-08-15).** Capture Binance/OKX/Bybit
+      `indexPrice`/`markPrice`/`fundingRate` for the equity-perps as a first-class data_type (rides the existing
+      premiumIndex/funding endpoints). The existing `derivative_ticker` data_type (already first-class, already in
+      `EXPECTED_COVERAGE` for all 3 venues) already fully populates these fields via already-wired live WS connectors,
+      generically across each venue's whole instrument universe (no symbol-type filter excludes the equity-perps) —
+      building a standalone data_type would duplicate storage for an identical-source signal, the same anti-pattern
+      `perp_funding_handler.py`'s ASTER/LIGHTER-ZKSYNC precedent documents avoiding. Full evidence + file:line
+      citations:
+      `/plans/archive/issues/cefi_equity_perp_mark_index_funding_derivative_ticker_already_covers_2026_08_15.md`
+      (unified-trading-pm@229e86f53b). Repo: market-tick-data-service. Source: Phase 1b.
 - [ ] [SCRIPT] P2. **Wire a recurring daily funding/basis scan** across all crypto-venue equity-perps (annualized
       funding + perp-vs-index basis + market-hours-vs-off-hours flag) → opportunity-sizing report. Repo: e2e-testing.
       Source: Phase 1b.
