@@ -507,9 +507,15 @@ source: >-
       contradicting the documented decision. No new issue doc filed: the gating work is already tracked as open todos in
       the same source doc; this removal should be re-picked-up once those ship. Source:
       `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md`
-- [ ] [CODE] P2. File the dead-mode-kwarg bug (execution_fills/positions/strategy_instructions/pnl_attribution all
-      silently drop a mode= path placeholder) as its own issue doc Source:
-      `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md`
+- [x] ✅ [CODE] P2. **Filed + re-verified live (confirmed real, not hypothetical).** (2026-08-15, slot-18·infra).
+      Re-read current HEAD `registry.py`: all 4 templates (`execution_fills`, `positions`, `strategy_instructions`,
+      `pnl_attribution`) still have no `{mode}` placeholder, and confirmed real LIVE callers already pass `mode=` on
+      every call (`strategy-service/strategy_service/pnl/adapters/     domain_adapter.py:50,63,76,84`;
+      `execution-service/execution_service/results/save_operations.py:790`) — the kwarg is silently dropped by
+      `str.format`, so batch/paper/live writes collide at the same object path today. Filed
+      `plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md`
+      (P1, assigned_vm: planning, [OPERATOR] migration-strategy todo + 2 gated [CODE] follow-ups) per the
+      findings-triage rule. Source: `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md`
 - [ ] [CODE] P2. Fix the stale scheduled-jobs table in agent-orchestrator-single-vm-architecture.md
       (opus/01:00-UTC-daily -> sonnet/hourly-retry) Source:
       `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md`
