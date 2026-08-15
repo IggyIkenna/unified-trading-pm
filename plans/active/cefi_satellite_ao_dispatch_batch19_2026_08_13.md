@@ -370,7 +370,18 @@ source: >-
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [ ] [CODE] P2. Fix empty instrument_id in the chain-bundle path (live_workers_streaming.py writing no manifest row)
       Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
-- [ ] [CODE] P2. Promote _ShardedState out of relaunch_backfill_vm.py into a shared helper Source:
+- [x] ✅ [CODE] P2. Promote _ShardedState out of relaunch_backfill_vm.py into a shared helper **CLOSED —
+      already-satisfied (2026-08-15, slot-17·backend_engineer).** This exact extraction already shipped
+      `deployment-service@0c38c00d` (2026-08-10) as part of the "Durable, race-free relaunch state" fix — verified live
+      on `origin/live-defi-rollout` (HEAD `d49dd57e`): `scripts/recovery/_durable_state.py`'s own module docstring
+      states it was "Extracted from `relaunch_backfill_vm.py` (2026-08-10) when that module crossed the 960-line cap ...
+      the next actuator needing state across Cloud Run Job executions should import it from here rather than re-deriving
+      the race-free pattern." The class is now public `ShardedState` (no longer the private `_ShardedState` this todo's
+      title references), `relaunch_backfill_vm.py` imports it via
+      `from ._durable_state import ShardedState, _state_bucket`. No other actuator has needed cross-execution state yet
+      (`rg ShardedState deployment-service/scripts/recovery/*.py` shows only the definition + the one re-importer), so
+      there is nothing further to promote. No code shipped by this todo (none needed) — this todo's own line was never
+      flipped after the 0c38c00d fix landed and its Progress Log's own text already documents the extraction. Source:
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [ ] [CODE] P2. Fix flaky shellcheck under host load in launch-expected-universe-v2-vm.sh Source:
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
@@ -514,6 +525,13 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   `data_pipeline_alert_storm_root_ cause_batch_2026_08_10.md` is 1001L, over its 1000-line hard cap (pre-existing,
   unrelated to this fix) — `check_line_caps.sh`/plan-hygiene pre-commit hard-blocks any commit touching it. Filed a P3
   follow-up todo above to trim it under cap first; the source checkbox stays stale until then.
+
+- **2026-08-15 (slot-17·backend_engineer)**: dispatched the "Promote _ShardedState out of relaunch_backfill_vm.py into a
+  shared helper" todo. Found it already done: `deployment-service@0c38c00d` (2026-08-10) — the SAME commit that fixed
+  the durable-state race — already extracted the class into `scripts/recovery/_durable_state.py` as a public
+  `ShardedState`, with the module docstring explicitly documenting it as the shared helper the next actuator should
+  import rather than re-derive. No other actuator has needed it yet, so there was nothing left to promote. No code
+  shipped (none needed) — checkbox flipped citing the existing sha + file:line evidence.
 
 - **2026-08-15 (slot-9·backend_engineer)**: shipped the "Widen canonical_writer_shaping int32->int64 coercion" todo —
   `market-data-processing-service@5b2701fa9f`. See the todo's own evidence line for full file/function detail. The
