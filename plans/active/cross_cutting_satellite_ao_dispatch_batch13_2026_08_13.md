@@ -563,8 +563,25 @@ source: >-
               backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
               multi-AG backfill into this single dispatch.
 
-- [ ] [CODE] P2. Verify/implement the DeFi catalogue MVP filter (MTDS reading IS catalogue as TVL-qualifying filter)
-      Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
+- [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
+      operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
+      pipeline trace confirms: (1) MTDS's `DefiCatalogReader.list_instruments()`
+      (`market_tick_data_service/engine/defi_catalog_reader.py`) reads the IS DeFi catalogue only for sentinel
+      expected-universe enumeration (freshness/audit), filtering solely on venue + active-on-date window — it never
+      reads the catalogue's `mvp` column. (2) MTDS's actual capture handlers
+      (`cli/handlers/evm_defi_handler.py`/`solana_defi_handler.py`) drive their instrument universe from static
+      per-adapter curated lists (e.g. `aave_lending.py:_filter_mvp_reserves()`'s hardcoded `mvp_tokens` set,
+      `fluid_adapter.py:_get_mvp_markets()`), with only a catalogue-FRESHNESS preflight (`assert_defi_catalog_fresh`) —
+      no per-instrument catalogue-driven filter. (3) IS's own `mvp` column for DeFi rows is a hardcoded `True` for every
+      row (`instruments-service/scripts/build_instrument_catalogue.py` `_add_mvp_column()`, `asset_group == "defi"`
+      branch) — **this is not a bug, it's the documented `defi_mvp_tag_all_2026_06_26` operator decision**, canonical
+      SSOT `/codex/02-data/mvp-scope-canonical.md` § DeFi: "MVP-tag-all today... the production catalogue is wider [than
+      UAC's `is_mvp` predicate], so `_add_mvp_column` short-circuits DeFi to all-MVP until a real per-instrument DeFi
+      screen lands" — i.e. TVL-qualifying filtering for DeFi is EXPLICITLY DEFERRED future work, not a gap this
+      1h-scoped todo should silently implement (would require designing + landing a new UAC `is_mvp` predicate for DeFi,
+      the same class of judgment call CLAUDE.md's "AO-eligible = worker-determinable outcome" rule excludes). Nothing to
+      verify-and-close as broken; the current tag-all design is intentional and already the SSOT of record. Source:
+      `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 - [ ] [CODE] P2. DeFi honest-absence residual-tail fixes: record genuine zeros post-capture, add missing subgraphs,
       catalogue monotonicity check Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 - [ ] [CODE] P2. DeFi swallow-fixes (CF-11 class) in DefiManifestRecorder pass-through, liquidations_handler.py,
