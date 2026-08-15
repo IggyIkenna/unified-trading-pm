@@ -22,10 +22,10 @@ grep-coverage: every playbook doc has a test file; every test file references ba
 
 ## Where tests live
 
-All specs under `unified-trading-system-ui/tests/playbooks/`:
+All specs under `unified-trading-system-ui/tests/e2e/playbooks/`:
 
 ```
-tests/playbooks/
+tests/e2e/playbooks/
 ├── marketing-pre-first-call.spec.ts       # pb1
 ├── research-and-documentation.spec.ts     # pb2 hub
 ├── 02a-research-im.spec.ts                # pb2a (sub-spec)
@@ -42,6 +42,14 @@ tests/playbooks/
     └── expect-click-path.ts               # walk a canonical path
 ```
 
+> **Not independently re-verified this pass (2026-08-15, plan_reconciler,
+> `plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md` Doc-drift #3):** only the directory-prefix rename
+> (`tests/playbooks/` → `tests/e2e/playbooks/`) was confirmed via `ls`. The finer structure above — the per-playbook
+> spec filenames (`02a-*`, `03a-*`, etc.) and the `helpers/` subdirectory — was NOT re-verified this pass; a live
+> `ls tests/e2e/playbooks/` shows several of these spec names absent and `seed-persona.ts` sitting flat in the directory
+> rather than under `helpers/`. Needs its own dedicated closer-read/scoping pass — out of this mechanical path-fix's
+> scope.
+
 Tests run against:
 
 - **Local tier 0** — every run (CI + dev)
@@ -54,7 +62,7 @@ Tests run against:
 ### Persona seeding helper
 
 ```ts
-// tests/playbooks/helpers/seed-persona.ts
+// tests/e2e/playbooks/helpers/seed-persona.ts
 export async function seedPersona(page, personaId: string) {
   const personas = {
     admin: {
@@ -64,15 +72,9 @@ export async function seedPersona(page, personaId: string) {
       org: { id: "odum-internal", name: "Odum Internal" },
       entitlements: ["*"],
     },
-    "prospect-im": {
-      /* ... */
-    },
-    "prospect-dart": {
-      /* ... */
-    },
-    "prospect-reg": {
-      /* ... */
-    },
+    "prospect-im": {/* ... */},
+    "prospect-dart": {/* ... */},
+    "prospect-reg": {/* ... */},
     // etc
   };
   await page.addInitScript(
@@ -88,7 +90,7 @@ export async function seedPersona(page, personaId: string) {
 ### Visibility assertion helper
 
 ```ts
-// tests/playbooks/helpers/expect-service-tile-locked.ts
+// tests/e2e/playbooks/helpers/expect-service-tile-locked.ts
 export async function expectServiceTileLocked(page, tileName: string) {
   const tile = page.getByRole("article", { name: tileName });
   await expect(tile.locator('[data-testid="lock-icon"]')).toBeVisible();
@@ -99,7 +101,7 @@ export async function expectServiceTileLocked(page, tileName: string) {
 ### Click-path walker
 
 ```ts
-// tests/playbooks/helpers/expect-click-path.ts
+// tests/e2e/playbooks/helpers/expect-click-path.ts
 export async function expectClickPath(page, steps: Array<{ click: string; expectUrl: string }>) {
   for (const step of steps) {
     await page.getByRole("link", { name: step.click }).click();
@@ -110,7 +112,7 @@ export async function expectClickPath(page, steps: Array<{ click: string; expect
 
 ## CI integration
 
-- `scripts/quality-gates.sh` includes a Playwright step for `tests/playbooks/`
+- `scripts/quality-gates.sh` includes a Playwright step for `tests/e2e/playbooks/`
 - Build fails if any playbook spec fails
 - Flaky tests are NOT tolerated — isolate with `test.fixme` and file an issue
 

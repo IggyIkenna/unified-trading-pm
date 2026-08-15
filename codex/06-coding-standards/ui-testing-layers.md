@@ -318,6 +318,14 @@ the right auth/redirect behavior?
 - `tests/smoke/routes.spec.ts` — parametrised over the route manifest
 - `tests/smoke/redirects.spec.ts` — auth + lock redirects
 
+> **Verified-current note (2026-08-15, plan_reconciler, `plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md`
+> Doc-drift #3):** this pattern is real and live in `deployment-ui` (`deployment-ui/tests/smoke/routes.spec.ts` exists,
+> confirmed via `ls`). In `unified-trading-system-ui`, neither `tests/smoke/routes.spec.ts` nor
+> `lib/registry/route-manifest.ts` exists today (confirmed via `ls`/`find`) — that repo's real L2 route coverage is a
+> set of individual `tests/smoke/<feature>.smoke.spec.ts` files (e.g. `data-status-pending-backfill.smoke.spec.ts`,
+> `paper-trading-dashboard.smoke.spec.ts`), with no central manifest-driven loop. The implementation pattern below is
+> illustrative of the target design for the Next.js app, not a description of code that exists there today.
+
 **Tooling:** Playwright `chromium` project (route smoke files live under `tests/smoke/**` and are picked up
 automatically). Headless, single worker, aggressive timeout (5s per route). See
 [Playwright Projects](#playwright-projects) below.
@@ -358,8 +366,9 @@ for (const route of ROUTES) {
 }
 ```
 
-**Coverage gate:** Every route in `app/**` MUST appear in `lib/registry/route-manifest.ts`. CI fails if a new route is
-added without a manifest entry.
+**Coverage gate (aspirational for `unified-trading-system-ui` — verified 2026-08-15, plan_reconciler:
+`lib/registry/route-manifest.ts` does not exist there today):** Every route in `app/**` MUST appear in
+`lib/registry/route-manifest.ts`. CI fails if a new route is added without a manifest entry.
 
 **Forcing a specific theme, and verifying raw Canvas 2D actually painted (established 2026-07-28,
 `unified-trading-system-ui@145bf5dd`):** `tsc`/`eslint` cannot catch a CSS custom property that resolves to nothing (a
@@ -391,7 +400,8 @@ not duplicate. The rule from that SSOT stands:
 
 > When a playbook doc changes, the matching Playwright spec MUST be updated in the same PR.
 
-**Where it lives:** `tests/playbooks/**` in `unified-trading-system-ui`.
+**Where it lives:** `tests/e2e/playbooks/**` in `unified-trading-system-ui` (path corrected 2026-08-15, plan_reconciler
+— verified via `ls`; was `tests/playbooks/**`, wrong from inception per git-log, not a later drift).
 
 **Credentials needed:** Local tier 0 always; local tier 1 when backend-dependent; staging manual (pre-Firebase).
 
@@ -575,11 +585,11 @@ gates that check _what you just touched_ still block.
 Three top-level projects. Test-file location inside `tests/` determines which project picks a spec up — no opt-in flags,
 no `--project` juggling for day-to-day runs.
 
-| Project    | Picks up                                                                   | Mode                        | Purpose                                                            |
-| ---------- | -------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------ |
-| `chromium` | `tests/smoke/**`, `tests/widgets/**`, `tests/playbooks/**`, `tests/e2e/**` | `NEXT_PUBLIC_MOCK_API=true` | Default CI PR gate. Runs every layer that doesn't need live infra. |
-| `staging`  | `tests/smoke/**`, `tests/e2e/strategies/**`                                | Live APIs                   | Post-deploy staging gate. The only project that hits real backend. |
-| `human`    | `tests/e2e/strategies/**`                                                  | Mock or staging             | Demo / manual review. Slow-motion + `demoHighlight()` visual aid.  |
+| Project    | Picks up                                                                              | Mode                        | Purpose                                                            |
+| ---------- | ------------------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------ |
+| `chromium` | `tests/smoke/**`, `tests/widgets/**`, `tests/e2e/**` (incl. `tests/e2e/playbooks/**`) | `NEXT_PUBLIC_MOCK_API=true` | Default CI PR gate. Runs every layer that doesn't need live infra. |
+| `staging`  | `tests/smoke/**`, `tests/e2e/strategies/**`                                           | Live APIs                   | Post-deploy staging gate. The only project that hits real backend. |
+| `human`    | `tests/e2e/strategies/**`                                                             | Mock or staging             | Demo / manual review. Slow-motion + `demoHighlight()` visual aid.  |
 
 **Sub-configs inside `chromium`** (not separate top-level projects):
 
@@ -799,13 +809,13 @@ This document defines **what** each layer tests and **when** it runs. The plan-l
 before a plan todo can be ticked done — lives in `plans/PLAN_FORMAT.md` § 9 (UI Verification Gate). The two documents
 compose:
 
-| Layer(s) that changed | Required regression guard location                  | Plan-tick evidence tag            |
-| --------------------- | --------------------------------------------------- | --------------------------------- |
-| L1.5 (widget)         | `tests/widgets/<widget-id>.test.tsx`                | `regression: tests/widgets/...`   |
-| L2 (route smoke)      | `tests/smoke/routes.spec.ts` or `redirects.spec.ts` | `regression: tests/smoke/...`     |
-| L3a (playbook)        | `tests/playbooks/<flow>.spec.ts`                    | `regression: tests/playbooks/...` |
-| L3b (trader workflow) | `tests/e2e/strategies/<archetype>.spec.ts`          | `regression: tests/e2e/...`       |
-| L4 (visual/a11y)      | `tests/visual/<component>.spec.ts`                  | `regression: tests/visual/...`    |
+| Layer(s) that changed | Required regression guard location                  | Plan-tick evidence tag                |
+| --------------------- | --------------------------------------------------- | ------------------------------------- |
+| L1.5 (widget)         | `tests/widgets/<widget-id>.test.tsx`                | `regression: tests/widgets/...`       |
+| L2 (route smoke)      | `tests/smoke/routes.spec.ts` or `redirects.spec.ts` | `regression: tests/smoke/...`         |
+| L3a (playbook)        | `tests/e2e/playbooks/<flow>.spec.ts`                | `regression: tests/e2e/playbooks/...` |
+| L3b (trader workflow) | `tests/e2e/strategies/<archetype>.spec.ts`          | `regression: tests/e2e/...`           |
+| L4 (visual/a11y)      | `tests/visual/<component>.spec.ts`                  | `regression: tests/visual/...`        |
 
 **The mandatory ✅ tick evidence format:**
 
