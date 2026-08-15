@@ -586,19 +586,19 @@ source: >-
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 
       **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed
-                                                  separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
-                                                  (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
-                                                  exists and is live — no code change needed — but a real corpus-wide query
-                                                  (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
-                                                  the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
-                                                  filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
-                                                  data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
-                                                  worker-determinable outcome for one ~1h dispatch. Filed
-                                                  `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
-                                                  (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
-                                                  class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
-                                                  backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
-                                                  multi-AG backfill into this single dispatch.
+                                                      separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
+                                                      (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
+                                                      exists and is live — no code change needed — but a real corpus-wide query
+                                                      (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
+                                                      the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
+                                                      filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
+                                                      data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
+                                                      worker-determinable outcome for one ~1h dispatch. Filed
+                                                      `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+                                                      (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
+                                                      class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
+                                                      backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
+                                                      multi-AG backfill into this single dispatch.
 
 - [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
       operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
@@ -743,8 +743,13 @@ source: >-
 - [ ] [CODE] P2. Generalise the cumulative-drawdown health metric from the 2 existing per-AG scripts (defi, cefi) to a
       single cross-AG metric covering tradfi/sports/prediction Source:
       `plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md`
-- [ ] [CODE] P2. Build the consolidation-reconcile script (actual shards vs materialised expected-universe, scoped
-      --force after backfill) Source: `plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md`
+- [x] ✅ [CODE] P2. Build the consolidation-reconcile script (actual shards vs materialised expected-universe, scoped
+      --force after backfill) **CLOSED — already-satisfied elsewhere (2026-08-15, slot-27·infra).** Source:
+      `plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md`. Full evidence in Progress Log below —
+      `instruments-service/scripts/enumerate_expected_universe.py` (v2) + its daily Cloud Scheduler
+      (`expected_universe_v2_scheduler.tf`) + its scoped `--force` VM launcher (`launch-expected-universe-v2-vm.sh`)
+      already satisfy every clause of §2.2's DoD; measured live (not just code-presence) via
+      `gcloud scheduler jobs list` + `gcloud run jobs executions list`.
 - [ ] [CODE] P2. Build the drilldown-correctness ep=0 reconciliation guard as a QG step + watchdog Source:
       `plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md`
 - [ ] [CODE] P2. Fix canonicalize_instruments_store_index.py's _bucket_for to resolve the prediction instruments-store
@@ -866,3 +871,49 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   across 39 source docs (no single dominant source target, matches the coordinator-doc exemption); added this doc's own
   gated finalize plan (`cross_cutting_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`), mirroring the established
   sibling-batch convention (batch1b/batch1 already do this).
+
+- **2026-08-15 (slot-27·infra)**: dispatched the "Build the consolidation-reconcile script" todo. The source plan's §2.2
+  (`instruments_foundation_phase0_cross_cutting_2026_07_24.md`, last reconciled 2026-07-28) states "No
+  `--force`/reconcile-vs-expected-universe script or mechanism found in `instruments-service/scripts/`" — before writing
+  a new script, researched whether that's still true (avoid reinventing the right existing primitive, per this craft's
+  own north-star). It is NOT still true: `instruments-service/scripts/enumerate_expected_universe.py` (v2,
+  `enumerate_v2()` — created 2026-05-07, actively maintained through today) already cross-joins the instruments-service
+  catalogue (per-instrument true genesis/lifecycle dates — the "materialised expected-universe") against a
+  freshly-downloaded manifest present-set/captured-set (`_download_manifest_sets`, streamed in bounded batches, never
+  cached across runs) for an explicit `--start-date`/`--end-date` window, and streams any
+  catalogue-expected-but-manifest-absent shard to a CSV report + (in `--apply-write` mode) a fresh
+  `expected_unattempted` per-VM manifest shard row — i.e. exactly "actual shards vs materialised expected-universe,"
+  scoped, never blind. Confirmed every §2.2 DoD clause is independently met, with LIVE measurement (not just code
+  presence) for the periodic claim:
+  - **Incremental for steady-state** — `_stream_write_v2_absent_rows` skips any row whose key is already in the
+    freshly-rebuilt `present_set` (any capture_status), so a repeat run over the same window only writes genuinely new
+    gaps.
+  - **Periodic** — `deployment-service/terraform/gcp/expected_universe_v2_scheduler.tf`: one Cloud Scheduler + Cloud Run
+    Job per asset_group, daily 01:30 UTC, `tofu apply`'d 2026-06-19. **Measured live**:
+    `gcloud scheduler jobs list --location=asia-northeast1` shows all 5
+    (`expected-universe-v2-{cefi,defi,tradfi, sports,prediction}-daily`) `ENABLED`;
+    `gcloud run jobs executions list --job=expected-universe-v2-cefi` shows the last 5 consecutive daily executions
+    (2026-08-11 through 2026-08-15) all `succeededCount=1, failedCount=0`.
+  - **Scoped `--force`/reconcile after any backfill** —
+    `deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh` is explicitly documented as "the manual/backfill
+    fallback" (vs. the Cloud Scheduler's recurring steady-state role) and literally supports
+    `bash launch-expected-universe-v2-vm.sh --force <asset_group> --apply-write` (its own usage example), with
+    `ENUM_START_DATE`/`ENUM_END_DATE` env overrides to scope the window to exactly the backfill just run — the `--force`
+    flag here bypasses the launcher's own singleton lock (a different `--force` than the enumerator script's own args),
+    not a Tardis/manifest-cap override.
+  - **Never a blind whole-corpus `--force`** — the scheduler's own default window is a genuinely-sliding 120-day
+    trailing window (`local.expected_universe_start_date`, recomputed via `timestamp()`/`timeadd()` on every
+    `tofu apply`, not a frozen literal — fixed 2026-08-03 per a cited issue doc); the launcher's own comment documents
+    chunking a large `--apply-write` by calendar year rather than one giant unscoped run (2026-07-10 OOM note).
+  - **DoD: a deleted/absent expected shard surfaces as a gap, not silently merged-around** — `present_set`/
+    `captured_set` are rebuilt from the LIVE manifest state on every single invocation (never a stale cache across
+    runs), so a shard that was previously seeded/captured and has since vanished from the manifest naturally reappears
+    in `enumerate_v2`'s output on the very next run and is written to the CSV report (+ re-seeded as
+    `expected_unattempted` in `--apply-write` mode) — this is the explicit mechanism, not an accident of the design. No
+    code shipped by this todo (none needed) — the plan's own §2.2 citation was accurate as of its 2026-07-28
+    reconciliation pass but the enumerator's `v2`/scheduler/force-launcher machinery was built out incrementally by
+    several OTHER sessions since then (visible in the file's own extensive in-code dated comments: 2026-06-19 scheduler
+    wiring, 2026-07-13 oscillation guard, 2026-08-01 DeFi OOM streaming fix, 2026-08-09 halt-safety livelock fix)
+    without this specific phase0 todo ever being cross-referenced/flipped. Source doc's own §2.2 line is NOT touched by
+    this commit (checkbox reconciliation back into source docs happens in the paired finalize plan per this batch's own
+    header convention).
