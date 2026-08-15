@@ -163,9 +163,9 @@ SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
   Progress Log; termination condition + climbing metric; inherits every safety rule).
 - **Rule-amnesia stop** — halt on `os.getenv()`/`pip install`/direct `git push`/skip-test suggestions. **No
   `python3 << EOF` for file analysis** (`re`-backtracking runaways) — use `rg`/`grep`. **CLAIM ≤ MEASUREMENT**: 0 hits ≠
-  missing (runtime-resolved — READ the consumer; uncertain → ASK); a PROXY (line count, exit 0, green test, cached
-  `origin/`) ≠ the property — measure or say you didn't → `/codex/12-agent-workflow/measurement-claims-discipline.md`.
-  **Pane deep** (`tmux capture-pane -S -50`).
+  missing (runtime-resolved — READ the consumer; uncertain → ASK); a PROXY (line count, exit 0 — a PIPE fabricates it,
+  green test, cached `origin/`) ≠ the property — measure or say you didn't →
+  `/codex/12-agent-workflow/measurement-claims-discipline.md`. **Pane deep** (`tmux capture-pane -S -50`).
 - **Async-wait / poll / background-task discipline (HARD RULE — recurring "found asleep" class)**: never report a
   backgrounded task done before its real exit; rely on the tracked-task auto-re-invoke (don't poll harness tasks); poll
   only external work on a **progress metric** (flat = STALL → diagnose); don't over-watch / no-sawtooth / don't poll
