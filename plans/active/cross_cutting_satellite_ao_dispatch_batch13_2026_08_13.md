@@ -188,8 +188,19 @@ source: >-
       governance/liquidation/mev/staking_yields/token_transfers handlers + databento_batch_jobs/
       alchemy_transfers_client/thegraph_base_client, then deleted the now-empty exclude list. Full `quality-gates.sh`
       exit 0 (sentinel-verified at HEAD). Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
-- [ ] [CODE] P2. Re-add 17 connector reconnect tests using terminating mocks (market-tick-data-service) Source:
-      `plans/active/mtds_file_size_refactor_2026_06_08.md`
+- [x] ✅ [CODE] P2. Re-add 17 connector reconnect tests using terminating mocks (market-tick-data-service) —
+      market-tick-data-service@26eef1999f (2026-08-15, slot-21·infra). No git-history evidence of a literal "def
+      test_...reconnect..." deletion survived (full non-shallow history search, zero hits) — instead cross-referenced
+      the 25 connectors that got the zero-delay-reconnect tight-loop fix (`cec16b74`) against which test files already
+      exercise the reconnect loop with a TERMINATING mock (`reconnect_base_delay_s`/ `_ws_connect_side_effect` markers):
+      9 already covered (incl. `deribit_book_ticker_ws` — the doc's own reference pattern), 16 gaps found — reconciles
+      to the doc's "17" (the deribit reference + these 16). Added one `test_stream_connect_failure_retries` per gap
+      (aster liquidations, binance-futures, bitfinex-spot, bitget-spot, bybit-futures, coinbase-cde, coinbase-spot,
+      deribit-trades, hyperliquid l2book/ticker/trades, kraken futures/spot, okx-swap, tardis-machine, upbit-book) —
+      each injects a mock `_http_session` whose `ws_connect` raises `aiohttp.ClientError` and flips `conn._closed` on
+      the 3rd attempt, mirroring `test_deribit_book_ticker_ws_coverage.py`'s existing terminating-mock pattern rather
+      than a never-closing one. QG green (`✅ ALL QUALITY GATES PASSED`, 489s, sentinel-verified); quickmerge landed on
+      LDR (post-push ancestry verified). Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
 - [x] ✅ [CODE] P2. **Diagnosed: mis-scoped for single-task AO dispatch, NOT attempted — corrected classification
       instead.** (2026-08-15, slot-31·infra) Concrete file-by-file scope survey of all 18
       `market_data_processing_service/app/adapters/*` files implementing `process_to_candles`, their 4 production caller
