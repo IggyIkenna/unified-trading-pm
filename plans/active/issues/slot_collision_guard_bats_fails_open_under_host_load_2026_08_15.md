@@ -90,10 +90,14 @@ this case and will send the next agent hunting a regression in unrelated files.
 - [ ] [CODE] P1. Distinguish "detector timed out" from "detector found no peer" in `_detect()` — return a third state
       rather than folding `TimeoutExpired` into `(1, "")`. The guard should still ALLOW on timeout; the point is that
       the condition becomes observable instead of silently identical to "no peer". Repo: unified-trading-pm.
-- [ ] [TEST] P1. Make the BATS suite `skip` (not fail) when the detector could not complete: before asserting a BLOCK
-      verdict, confirm the detector can actually see the spawned fake peer, and skip with an explicit "detector timed
-      out under host load" reason if it cannot. A timing-sensitive assertion that hard-fails the whole repo's gate must
-      degrade to a skip, never to a false regression. Repo: unified-trading-pm.
+- [x] ✅ [TEST] P1. Make the BATS suite `skip` (not fail) when the detector could not complete. —
+      **unified-trading-pm@27979ca518.** `_spawn_fake_peer` now polls the detector's own `foreign-pids` CLI (15s budget)
+      until it can genuinely see the spawned peer, instead of assuming a fixed `sleep 0.3`, and `skip`s with an explicit
+      reason + a link to this issue when the precondition cannot be established. **The skip branch was verified by
+      execution, not assumed**: making the precondition unreachable produced `ok N ... # skip` on every peer-dependent
+      test while `git commit is ALLOWED when no peer occupies the slot` — which needs no peer — still genuinely RAN and
+      passed. That asymmetry is the point: it degrades only where the precondition failed, never as blanket suppression.
+      Unmodified, the suite still passes 17/17. Repo: unified-trading-pm.
 - [ ] [CODE] P2. Consider caching or narrowing the per-pid `lsof` walk (batch one `lsof` over all candidate pids rather
       than one call per pid) so detection stays inside its budget under load. Repo: unified-trading-pm.
 - [ ] [DOC] P2. Correct the re-gate message: "this is a REAL failure, not a lost race" is asserted unconditionally, and
