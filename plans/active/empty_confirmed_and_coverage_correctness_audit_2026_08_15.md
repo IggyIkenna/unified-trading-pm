@@ -248,9 +248,18 @@ data that's actually needed. This plan gets the evidence first.
       is broader than F2 and doesn't explicitly resolve whether BYBIT is now in scope too.
 - [ ] [OPERATOR] P2. **Rule on KRAKEN-FUTURES's scope** (743,935 FUTURE-itype rows) — not in `FUTURE_BUNDLE_VENUES` at
       all today; needs an explicit decision before any bundling migration touches it.
-- [ ] [DATA] P2. Re-run `rebuild_tradfi_manifest.py` to apply the already-shipped FUTURE-canonicalization fix
+- [x] ✅ [DATA] P2. Re-run `rebuild_tradfi_manifest.py` to apply the already-shipped FUTURE-canonicalization fix
       (`unified-trading-library@74fe04fd98`, `instruments-service@de6c820956`) — no code change needed, purely
       operational.
+
+      **DONE 2026-08-15 (slot-28, backend_engineer) — same operation as
+          `plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s "Re-run rebuild_tradfi_manifest.py..." todo
+          (dispatched separately, resolved here concurrently — see that plan for full evidence).** Full-corpus rebuild
+          (`canonical-migration-tradfi-manifest-rebuild-20260815-061239`, 2020-01-01..2026-08-15, `--chunk-days 30`)
+          completed exit_code=0, 1,397,013 shards / 81 chunks. Live manifest recount confirms 0
+          `instrument_type=FUTURE` rows with populated `underlying` + blank `instrument_id` remain (checked both
+          CME-scoped and unscoped across all venues).
+
 - [ ] [DATA] P2. Fix cefi's legacy blank-instrument-id FUTURE bucket (~3,299 captured rows, BYBIT/DERIBIT) — add
       `"future"` to `_BUNDLE_GRAIN_EXCLUDED` or route it to `futures_chain` at `rebuild_cefi_manifest.py:454` (mirrors
       the tradfi fix), then re-stamp the confirmed-unique existing rows (NOT duplicates — verified this session).
