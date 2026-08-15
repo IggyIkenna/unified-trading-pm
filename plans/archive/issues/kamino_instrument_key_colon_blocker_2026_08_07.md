@@ -6,7 +6,7 @@ summary: >-
   kamino.py:199 builds its SOLANA_VAULT key with symbol '{sym_a}-{sym_b}:{address[:8]}' which embeds ':', blocking the
   build_instrument_id passthrough retrofit prescribed by the 2026-07-08 checklist (which predates the guard). Format
   change requires an operator ruling (changes instrument_key = GCS path segment; migration needed).
-status: open
+status: resolved
 asset_group: [defi]
 stage: [data]
 repos: [instruments-service, unified-api-contracts]
@@ -27,7 +27,7 @@ parent_epic: defi_master
 source: >-
   Discovered during defi_satellite_ao_dispatch_batch9_2026_08_06.md todo 1 (task defi_satellite_ao_dispatch_batch9-001,
   slot 2, 2026-08-07) — UAC colon-guard (added 2026-07-20) post-dates the 2026-07-08 retrofit checklist.
-resolved_by: ""
+resolved_by: "slot-15, 2026-08-15 — migration executed + verified against prod (see Progress Log)"
 locked_by: ""
 drift_direction: advance-code
 depends_on: []
@@ -39,6 +39,11 @@ context_scope:
     instruments-service/instruments_service/reference_data/adapters/defi/kamino.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-15** — status=resolved, archived per `/codex/11-project-management/issue-doc-lifecycle.md`'s
+> ACKED-INTO-CODE rule. Migration executed + verified against prod (see Progress Log 2026-08-15 entry) — the gap this
+> doc's own Progress Log explicitly flagged as blocking archival is now closed. The one-off migration script was deleted
+> per its own `# Delete-when:` lifecycle marker.
 
 ## Finding
 
@@ -78,13 +83,13 @@ Discovered during `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 1 (batc
 ## Todos
 
 - [x] ✅ [OPERATOR] P2. **Rule on the SOLANA_VAULT compound-symbol format for `kamino.py:199`** — **RULED 2026-08-10:
-      option (a), `-` separator.** Shipped `instruments-service@6f3fce6ddd82c84cf2550a7a774d16202c19dbfb`: the
-      f-string now produces `f"{venue_tag}:SOLANA_VAULT:{sym_a}-{sym_b}-{address[:8]}"` (last `:` before the address
-      replaced with `-`, clearing UAC's colon-guard). Existing-row migration written in the same commit —
+      option (a), `-` separator.** Shipped `instruments-service@6f3fce6ddd82c84cf2550a7a774d16202c19dbfb`: the f-string
+      now produces `f"{venue_tag}:SOLANA_VAULT:{sym_a}-{sym_b}-{address[:8]}"` (last `:` before the address replaced
+      with `-`, clearing UAC's colon-guard). Existing-row migration written in the same commit —
       `scripts/fix_kamino_stale_colon_catalog_rows_2026_08_10.py` (113 stale KAMINO SOLANA_VAULT rows identified in a
       fresh `prod/catalog.parquet` query, 0 collisions with an already-clean counterpart, mirrors the
-      `fix_morpho_stale_colon_catalog_rows_2026_08_05.py` precedent) — **written but not yet confirmed executed
-      against prod** as of this edit; re-verify execution before treating existing rows as migrated.
+      `fix_morpho_stale_colon_catalog_rows_2026_08_05.py` precedent) — **written but not yet confirmed executed against
+      prod** as of this edit; re-verify execution before treating existing rows as migrated.
 
 ## Progress Log
 
@@ -100,9 +105,9 @@ Discovered during `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 1 (batc
   SOLANA_VAULT compound symbol. 3 explicit options laid out, each with different GCS-path/manifest-migration
   implications -- doc's own text: "operator ruling required" before any implementation. Doc stays `assigned_vm: NA`.
 - **2026-08-10 (prose-findings formalization sweep)**: converted 1 prose finding into 1 formal todo (0 already
-  resolved). The options (a)/(b)/(c) ruling flagged by every prior na-eligibility-audit pass as "1 real prose-only
-  open item" had never actually been formalized as a `- [ ]` checkbox — added a `[OPERATOR] P2` todo under a new
-  `## Todos` section.
+  resolved). The options (a)/(b)/(c) ruling flagged by every prior na-eligibility-audit pass as "1 real prose-only open
+  item" had never actually been formalized as a `- [ ]` checkbox — added a `[OPERATOR] P2` todo under a new `## Todos`
+  section.
 - **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: KEEP-NA, valid — the sole todo is
   explicitly `[OPERATOR]`-tagged and self-describes as "Genuinely a judgment call, not worker-determinable" (a
   GCS-path-changing instrument-key format ruling with manifest-migration implications, 3 undismissed options). Never
@@ -110,6 +115,17 @@ Discovered during `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 1 (batc
   passes on this exact doc. Doc stays `assigned_vm: NA`.
 - **2026-08-10 (operator ruling + implementation session)**: operator ruled option (a) via a direct question. Shipped
   `instruments-service@6f3fce6ddd82c84cf2550a7a774d16202c19dbfb` — code fix + migration script for the 113 existing
-  stale-colon rows. Sole todo now `[x]`. **Not archiving yet**: the migration script's execution-against-prod status
-  is unconfirmed (no follow-up commit/log found) — re-verify the 113 rows actually got migrated before treating this
-  doc as fully closed.
+  stale-colon rows. Sole todo now `[x]`. **Not archiving yet**: the migration script's execution-against-prod status is
+  unconfirmed (no follow-up commit/log found) — re-verify the 113 rows actually got migrated before treating this doc as
+  fully closed.
+
+- **slot-15, 2026-08-15 (archival pass)**: Re-verified before archiving, per this doc's own note above. Ran
+  `scripts/fix_kamino_stale_colon_catalog_rows_2026_08_10.py --dry-run` against live `prod/catalog.parquet` — found the
+  migration had **NOT** yet been executed (113 stale rows still present, confirming the doc's caution was warranted, not
+  stale paranoia). Also found the dedup branch now fires for all 113 (was 0 in the script's 2026-08-10 docstring
+  measurement) — the shipped `kamino.py` fix has been writing clean '-'-separated rows since 2026-08-10, so every stale
+  row now has a clean counterpart. Ran `--apply`: backed up to
+  `gs://instruments-store-defi-prd-central-element-323112/prod/catalog.20260815-024307.kamino-colon-fix.bak.parquet`,
+  removed all 113 stale duplicates (78,447 → 78,334 rows). Re-ran `--dry-run` to confirm: **0 stale KAMINO SOLANA_VAULT
+  rows remain.** Deleted the one-off script per its own `# Delete-when:` marker (instruments-service, this commit).
+  Migration now genuinely complete — archiving.

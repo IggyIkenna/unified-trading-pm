@@ -101,7 +101,7 @@ over all pending draft batches) that independently spot-verified every todo belo
       ankr/mantle/maker/stakewise/swell/stader/pendle retrofitted; kamino.py:199 retained as f-string (compound symbol
       `{sym_a}-{sym_b}:{address[:8]}` carries embedded `:` that UAC builder's 2026-07-20 colon-guard hard-rejects for
       non-sports types; checklist predates the guard; blocker filed at
-      `/plans/active/issues/kamino_instrument_key_colon_blocker_2026_08_07.md`). Type-filter finding:
+      `/plans/archive/issues/kamino_instrument_key_colon_blocker_2026_08_07.md`). Type-filter finding:
       A_TOKEN/DEBT_TOKEN/YIELD_BEARING/STAKING/SPOT_ASSET/POOL NOT silently dropped — all adapters use canonical
       `InstrumentType.X` enum constants (cited: `compound_v3.py:114`, `aave_v3.py:314`, `yearn.py:133`,
       `balancer.py:142`, `aave_oracle.py:142`). `quality-gates.sh` green.
@@ -525,7 +525,7 @@ remaining items besides the over-cap-gated one above).
   as f-string: compound symbol `{sym_a}-{sym_b}:{address[:8]}` embeds `:` which UAC builder's 2026-07-20 colon-guard
   hard-rejects for non-sports types (colon-guard added after the 2026-07-08 checklist); format change requires operator
   ruling (GCS key change + manifest migration); filed
-  `/plans/active/issues/kamino_instrument_key_colon_blocker_2026_08_07.md`. Type-filter finding (cited evidence):
+  `/plans/archive/issues/kamino_instrument_key_colon_blocker_2026_08_07.md`. Type-filter finding (cited evidence):
   A_TOKEN/DEBT_TOKEN/YIELD_BEARING/STAKING/SPOT_ASSET/POOL NOT silently dropped by P0 bug — all relevant adapters
   already use canonical `InstrumentType.X` enum constants in `instrument_type not in (...)` guards
   (`compound_v3.py:114`, `aave_v3.py:314`, `yearn.py:133`, `balancer.py:142`, `aave_oracle.py:142`). `quality-gates.sh`
