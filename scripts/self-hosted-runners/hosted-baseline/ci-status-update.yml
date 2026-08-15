@@ -42,8 +42,8 @@ permissions:
 
 jobs:
   update-ci-status:
-    # CI-cost B1 + STEP 2b: the ~13k/mo ci_status writer. Goes to the LONG-LIVED glue-writer pool,
-    # NOT the JIT glue pool: at ~1 run/2.5min the JIT register/deregister round-trip would dominate
+    # CI-cost B1 + STEP 2b: the ~13k/mo ci_status writer. Runs GitHub-hosted (not the self-hosted
+    # glue pool) — comment corrected 2026-08-07, see plans/archive/issues/glue_runner_health_monitor_github_token_403_2026_08_07.md
     runs-on: ubuntu-latest
     outputs:
       skip: ${{ steps.validate.outputs.skip }}
@@ -262,8 +262,8 @@ jobs:
   # ── BUILD MESSAGE BODY (decodes optional failure excerpt) ────────────────────
   build-message:
     name: Build notification message
-    # CI-cost B1 + STEP 2b: the ~13k/mo ci_status writer. Goes to the LONG-LIVED glue-writer pool,
-    # NOT the JIT glue pool: at ~1 run/2.5min the JIT register/deregister round-trip would dominate
+    # CI-cost B1 + STEP 2b: the ~13k/mo ci_status writer. Runs GitHub-hosted (not the self-hosted
+    # glue pool) — comment corrected 2026-08-07, see plans/archive/issues/glue_runner_health_monitor_github_token_403_2026_08_07.md
     runs-on: ubuntu-latest
     needs: [update-ci-status]
     # Only build/notify on a meaningful TRANSITION (regression to FAILING, or recovery

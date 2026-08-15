@@ -5,13 +5,21 @@
 #    fix 1: a live heartbeat on .agent-claim, unblocked by operator ruling 2026-08-08).
 #
 # HERMETIC: builds a throwaway .agent-claim JSON under BATS_TEST_TMPDIR; never touches a real
-# slot's claim file. Uses REAL, short-lived tmux sessions (killed in teardown) rather than
-# mocking `tmux has-session`, so the exact-match `-t "=<name>"` target behaviour (the
-# slot-1-vs-slot-10 prefix-collision guard tmux_spawn.exact_target() exists for) is exercised
-# for real, not assumed. Mirrors tests/test_slot_git_status_dirty_count.bats's hermetic-source
+# slot's claim file. Mirrors tests/test_slot_git_status_dirty_count.bats's hermetic-source
 # pattern: source the real script with --workspace pointed at an EMPTY .tabs/ dir + --quiet, so
 # the main slot-walking loop is a no-op and never POSTs anything real, then call the function
 # under test directly.
+#
+# INJECTABLE (pm_bats_tmux_fixture_leak_wedges_shared_host_2026_08_10.md P2 todo): the
+# production script factors the tmux liveness check into its own
+# `_claim_heartbeat_session_alive()` function specifically so a test can redefine it after
+# sourcing. The common alive/dead cases below stub that function and never touch a real tmux
+# server at all — no `tmux new-session`, nothing that can spin or leak under a loaded host.
+# Only the "exact-match target" case below is a genuine integration test: it exists to prove
+# tmux's own `-t "=<name>"` exact-match behaviour (the slot-1-vs-slot-10 prefix-collision guard
+# tmux_spawn.exact_target() exists for), which a stub cannot exercise — it is tagged
+# `integration,tmux` so it stays selectable/excludable via `bats --filter-tags` even though the
+# fleet's current bats invocation runs the whole suite untagged.
 #
 # Run: bats tests/test_slot_git_status_claim_heartbeat.bats
 # Run all: bats tests/
@@ -114,9 +122,20 @@ _write_claim() {
 EOF
 }
 
+# stub_mode: "alive" | "dead" | "" (real tmux, only the exact-match integration test uses this).
+# Each invocation is a fresh `bash -c` subshell (mirrors the real per-tick reporter run), so the
+# stub redefinition has to be injected into that same subshell string, after the source and
+# before the call under test.
 _heartbeat() {
+    local stub_mode="${1:-}" stub_def=""
+    case "${stub_mode}" in
+        alive) stub_def='_claim_heartbeat_session_alive() { return 0; }' ;;
+        dead) stub_def='_claim_heartbeat_session_alive() { return 1; }' ;;
+        *) stub_def="" ;;
+    esac
     bash -c '
         source "'"${REPORTER_ABS}"'" --workspace "'"${EMPTY_WS}"'" --quiet
+        '"${stub_def}"'
         refresh_agent_claim_heartbeat 99 "'"${SLOT_DIR}"'"
     '
 }
@@ -127,13 +146,14 @@ _heartbeat() {
 }
 
 @test "claim present, tmux session alive -> mtime advances" {
-    _tmux new-session -d -s "${TMUX_SESSION}" 2>/dev/null
+    # Stubbed liveness — no real tmux server spawned (this is the injectable path the
+    # pm_bats_tmux_fixture_leak_wedges_shared_host_2026_08_10.md P2 todo asked for).
     _write_claim "${TMUX_SESSION}"
     # Force an old mtime so a later touch is unambiguously detectable.
     touch -t 202001010000 "${SLOT_DIR}.agent-claim"
     before=$(_stat_mtime_epoch "${SLOT_DIR}.agent-claim")
 
-    run _heartbeat
+    run _heartbeat "alive"
     [ "$status" -eq 0 ]
     [[ "$output" == *"[claim-heartbeat]"* ]]
     after=$(_stat_mtime_epoch "${SLOT_DIR}.agent-claim")
@@ -141,11 +161,12 @@ _heartbeat() {
 }
 
 @test "claim present, tmux session dead -> mtime untouched" {
+    # Stubbed liveness — no real tmux server spawned.
     _write_claim "no-such-session-${RANDOM}"
     touch -t 202001010000 "${SLOT_DIR}.agent-claim"
     before=$(_stat_mtime_epoch "${SLOT_DIR}.agent-claim")
 
-    run _heartbeat
+    run _heartbeat "dead"
     [ "$status" -eq 0 ]
     [[ "$output" == *"[claim-heartbeat:stale]"* ]]
     after=$(_stat_mtime_epoch "${SLOT_DIR}.agent-claim")
@@ -163,6 +184,7 @@ _heartbeat() {
     [ "${after}" -eq "${before}" ]
 }
 
+# bats test_tags=integration,tmux
 @test "exact-match target: a live SUFFIX-colliding session name does not falsely heartbeat" {
     # slot-1-vs-slot-10 style guard: a claim naming session "orch-slot-1" must not be
     # satisfied by a live session actually named "orch-slot-10" (bare -t prefix-matches;

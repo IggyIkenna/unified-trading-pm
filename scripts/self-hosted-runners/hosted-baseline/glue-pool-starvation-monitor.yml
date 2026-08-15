@@ -1,36 +1,51 @@
 name: glue-pool-starvation-monitor
 
-# The cheapest-honest-signal dead-man-switch for the self-hosted `glue` runner pool.
+# Dead-man-switch for the self-hosted `glue` runner pool — two detection modes (2026-08-08):
 #
-# Root incident (2026-07-16/17): the `glue` pool went fully dead for 16h — all 5 runners
-# crash-looping on a missing IAM grant, swallowed by a `|| true` — and NOT ONE alert fired. The
-# only visible symptom was a generic `PROMOTION LAG > 60m` warning that read exactly like routine
-# latency, so it was mis-triaged as "normal SIT latency". A naive "is the host up" check would
-# ALSO have missed it: the sibling `glue-writer` pool lives on the same host and stayed healthy
-# throughout, so host-level liveness cannot distinguish "the box is up" from "the `glue` pool
-# specifically stopped picking up jobs".
+# Mode 1 — STARVED (pool dead): a `glue`-labelled job has been `queued` longer than
+#   --threshold-min (default 20m) while ZERO glue jobs are `in_progress` anywhere in the fleet.
+#   Root incident: 2026-07-16/17, 16h pool collapse, silent — zero alerts fired.
 #
-# This workflow implements the issue doc's own design: alert when a `glue`-labelled job has been
-# `queued` longer than the threshold while ZERO `glue` jobs are `in_progress` anywhere in the repo
-# — unambiguous, and it needs no VM access.
+# Mode 2 — STALLED (pool oversubscribed): an `in_progress` workflow run has individual glue jobs
+#   still `queued` past --busy-queued-min (default 120m) behind a lone busy runner. This case is
+#   invisible to mode 1 because `in_progress_glue_count > 0` (mode 1 treats that as healthy
+#   backlog). Root incident: 2026-08-03, instruments-service run 30800087100 — 1h45m stall.
+#   Source: issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md [SCRIPT] P1.
+#
+# Multi-repo: --repos-file sweeps every repo with a glue pool (self-hosted-qg-repos.txt) so a
+#   stall in any service repo pages even if PM itself is fine.
 #
 # MUST run on a GitHub-hosted runner, never `glue` itself — see
-# scripts/self-hosted-runners/classify-glue-workflows.sh KEEP_MONITORS: a dead-man-switch that ran
-# on the pool it watches would go dark exactly when it is needed.
+# scripts/self-hosted-runners/classify-glue-workflows.sh KEEP_MONITORS.
 #
 # SSOT: codex/04-architecture/ci-alerting.md (notify-slack.yml dedup contract).
 # Source: issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md
-#         ([DEVOPS] P1 "A self-hosted pool with 0 runners listening must page on its OWN cause.")
 
 on:
-  schedule:
-    - cron: "*/15 * * * *" # every 15 min — the pool serves ~37 low-frequency movers; a starvation
-      # episode should page well inside the hour, not once a day like the AR-lag check.
+  # SCHEDULE DISABLED 2026-08-07: PM's own self-hosted `glue` pool was permanently reverted to
+  # ubuntu-latest (plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md, todo #24, DONE
+  # — PM went public 2026-08-06 and self-hosted-on-a-public-repo is a fork-PR security exposure, so
+  # ~40 self-hosted-routed workflows were flipped back and the glue-N/writer-N systemd units on the
+  # CI VM were stopped+disabled). This is the SAME root cause + SAME fix already applied to the
+  # sibling `glue-runner-health-monitor.yml` (commit 95cce3aa4, same day): with the pool retired by
+  # design, a *routine* schedule tick can only ever fire this monitor on STALE jobs that were queued
+  # with the old `[self-hosted, glue]` label set before the revert landed (frozen at dispatch time —
+  # a workflow_run's requested runner labels don't hot-swap when the workflow file later changes on
+  # the branch) — those jobs can never be claimed by anything and will falsely CRITICAL forever,
+  # exactly what happened 2026-08-07 (9 stuck jobs, 6+ hours, resolved by cancelling them — see
+  # issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md). Re-enable the
+  # schedule only if a self-hosted `glue` pool is ever deliberately re-established for this repo.
+  # schedule:
+  #   - cron: "*/15 * * * *" # every 15 min — the pool serves ~37 low-frequency movers; a starvation
+  #     # episode should page well inside the hour, not once a day like the AR-lag check.
   workflow_dispatch:
     inputs:
       threshold_min:
-        description: "Minutes a glue job may sit queued (while the pool is idle) before paging"
+        description: "Minutes a glue job may sit queued (pool idle) before paging"
         default: "20"
+      busy_queued_min:
+        description: "Minutes a glue job may sit queued behind a BUSY runner before paging"
+        default: "120"
 
 permissions:
   contents: read
@@ -43,7 +58,7 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     outputs:
       starved: ${{ steps.scan.outputs.starved }}
       report: ${{ steps.scan.outputs.report }}
@@ -52,15 +67,20 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
-      - name: Scan glue-pool queue depth
+      - name: Scan glue-pool queue depth (fleet-wide)
         id: scan
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           THRESH: ${{ github.event.inputs.threshold_min || '20' }}
+          BUSY_THRESH: ${{ github.event.inputs.busy_queued_min || '120' }}
         run: |
           set +e
           REPORT=$(python3 scripts/cicd/glue_pool_starvation_monitor.py \
-            --repo "${{ github.repository }}" --threshold-min "$THRESH" --slack)
+            --repo "${{ github.repository }}" \
+            --repos-file scripts/workflow-templates/self-hosted-qg-repos.txt \
+            --threshold-min "$THRESH" \
+            --busy-queued-min "$BUSY_THRESH" \
+            --slack)
           RC=$?
           echo "$REPORT"
           [ "$RC" -eq 1 ] && STARVED=true || STARVED=false
@@ -71,6 +91,35 @@ jobs:
             echo "__EOR__"
           } >> "$GITHUB_OUTPUT"
 
+  # ── Escalate to an agent (2026-08-12) ─────────────────────────────────────────────────
+  # Previously Slack-only — see reconcile-release-tags.yml's escalate job for the audit +
+  # rationale (same pattern). Asymmetric gap: glue-runner-health-monitor.yml (single unhealthy
+  # runner) already escalates; this pool-WIDE starvation case didn't. SSOT:
+  # codex/04-architecture/agent-orchestrator-ci-escalation-wall-types.md.
+  escalate:
+    needs: check
+    if: needs.check.outputs.starved == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch glue_pool_starvation escalation
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          REPORT: ${{ needs.check.outputs.report }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping escalation dispatch" && exit 0
+          GH_TOKEN="${GH_PAT}" gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=${{ github.event.repository.name }}" \
+            -f "client_payload[pr_number]=0" \
+            -f 'client_payload[wall_type]=glue_pool_starvation' \
+            -f "client_payload[context]=glue-pool-starvation-monitor found the self-hosted glue-runner pool starved (fleet-wide queue depth over threshold): ${REPORT}. Run: ${RUN_URL}. Diagnose via SSM on the glue-runner host(s) — check for a crash-looped runner, a stuck job holding a slot, or genuine demand exceeding pool capacity (in which case this may need an operator decision on pool sizing, not a code fix)." \
+            -f 'client_payload[model]=sonnet' \
+            >/dev/null 2>&1 && echo "escalated glue_pool_starvation to orchestrator" \
+            || echo "::warning::orchestrator escalation dispatch failed (non-fatal — Slack alert still fires)"
+
   notify:
     needs: check
     if: needs.check.outputs.starved == 'true'
@@ -80,9 +129,7 @@ jobs:
       severity: CRITICAL
       workflow_name: glue-pool-starvation-monitor
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      # Standing condition (the pool stays starved tick-to-tick until fixed) — page on the
-      # false->true transition, re-remind every hour while it persists. Distinct from
-      # promotion-lag's key so the two independent conditions never share a cooldown.
+      # Standing condition — page on false->true transition, re-remind every hour.
       dedup_key: glue-pool-starved
       cooldown_min: 60
     secrets: inherit

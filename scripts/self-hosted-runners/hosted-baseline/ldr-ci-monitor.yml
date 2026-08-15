@@ -78,6 +78,11 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add workspace-manifest.json
           git commit -m "ci: update ldr_ci_status (LDR-CI-red monitor) [skip ci]"
+          # This workflow's checkout is on main, which other workflows (ci-status-consolidator,
+          # the promote bot) write concurrently — a bare push loses the race (measured 2026-08-10:
+          # "! [rejected] HEAD -> main (fetch first)" while a promote wave was landing). Reconcile
+          # before pushing so a cache-only status write can't fail the whole monitor run.
+          git pull --rebase --autostash origin main
           git push origin HEAD
 
   notify:

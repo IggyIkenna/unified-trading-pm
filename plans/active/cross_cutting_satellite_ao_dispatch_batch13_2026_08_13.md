@@ -306,8 +306,16 @@ source: >-
       own QG is not red at LDR tip (confirmed by an earlier todo in this same batch); greeks-service's git status is
       clean (no peer WIP conflict). Added `--build-arg SETUPTOOLS_SCM_PRETEND_VERSION=$$VERSION`to the`build`step's    `docker
       build`in both`cloudbuild.yaml`files, matching the fleet pattern already used in     agent-orchestrator/deployment-service/alerting-service/features-service. QG green + sentinel-verified on both     repos; both quickmerge-landed on LDR (post-push ancestry verified). Source:    `plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md`
-- [ ] [CODE] P2. Re-run hosted-baseline.sh to resync the derived cloud-build-router.yml snapshot with the live workflow
-      Source: `plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md`
+- [x] ✅ [CODE] P2. Re-run hosted-baseline.sh to resync the derived cloud-build-router.yml snapshot with the live
+      workflow — unified-trading-pm@f7fb62f580 (2026-08-15: `hosted-baseline.sh snapshot` re-run; the `derived`
+      `cloud-build-router.yml` baseline now reflects the 2026-08-10 `build_error_detail` credential-scrub fix landed in
+      the live workflow — MANIFEST row re-stamped at current HEAD. The script resyncs the whole fleet by design, so 25
+      other drifted baselines were refreshed as a byproduct; residual `verify` warnings for
+      `glue-pool-starvation-monitor.yml` (grep false-positive matching a historical-context comment, not a real
+      `runs-on:`), `ldr-docs-gate.yml` (born self-hosted, no rehost overlay), and 3 pre-existing `history-logic-stale`
+      baselines (`ldr-to-main-promote.yml`, `staging-to-main.yml`, `reconcile-staging-versions.yml`) are unrelated
+      pre-existing conditions, unchanged by this run — out of scope for this bounded todo.) Source:
+      `plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md`
 - [x] ✅ [DATA] P1. **MOOT — already deleted, confirmed live (2026-08-13, slot 29).** This todo's premise (run a fresh
       retention check, then delete) was stale: the source doc's own 2026-08-12 docs-drift note records that
       `ml-models-store` was already deleted 2026-08-08 (operator-authorized) via the sibling plan
@@ -365,9 +373,15 @@ source: >-
       `[OPERATOR]` `breaking_scan_dir`-completeness audit landing first. Source:
       `plans/active/issues/ibkr_gateway_infra_release_tag_stall_2026_08_11.md` (updated with full diagnosis + Progress
       Log entry, same commit).
-- [ ] [CODE] P2. Make claim/heartbeat behaviour under test injectable so the common cases can be covered without a real
-      tmux server, per the doc's own P2 [SCRIPT] todo Source:
-      `plans/active/issues/pm_bats_tmux_fixture_leak_wedges_shared_host_2026_08_10.md`
+- [x] ✅ [CODE] P2. Make claim/heartbeat behaviour under test injectable so the common cases can be covered without a
+      real tmux server, per the doc's own P2 [SCRIPT] todo — unified-trading-pm@ef78ddc842 (2026-08-15, slot-12·infra).
+      Factored `refresh_agent_claim_heartbeat()`'s inline `tmux has-session` check in
+      `scripts/dev/slot-git-status-report.sh` into its own `_claim_heartbeat_session_alive()` function; the bats suite
+      now redefines that function after sourcing to cover the "alive"/"dead" cases with NO real tmux server spawned.
+      Only the exact-match-collision test still uses a real tmux session (it exists specifically to prove tmux's own
+      `-t "="` exact-match semantics) — tagged `# bats test_tags=integration,tmux` so it's selectable via
+      `bats --filter-tags` even though the fleet's current bats invocation doesn't filter. All 5 tests green locally.
+      Source: `plans/active/issues/pm_bats_tmux_fixture_leak_wedges_shared_host_2026_08_10.md`
 - [ ] [CODE] P2. Implement the schema/NaN contract in e2e-testing/scripts/validation/validate_shards_4pillar.py per the
       operator-ruled spec (wire _TICK_REQUIRED, add tick to _NAN_SCAN_COLUMNS, wire _DEFI_REQUIRED/_SPORTS_REQUIRED
       narrowly) Source: `plans/active/issues/silent_wrong_answer_audit_untracked_followups_2026_07_28.md`

@@ -22,9 +22,15 @@ name: glue-runner-health-monitor
 #          runners are online")
 
 on:
-  schedule:
-    - cron: "*/15 * * * *" # every 15 min — the fleet promoter runs every 5 min; a depleted pool
-      # should page well inside the hour, not after another multi-hour silent stall
+  # SCHEDULE DISABLED 2026-08-07: the `glue` self-hosted pool this monitor watches was permanently
+  # deregistered fleet-wide (plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md, todo
+  # #21, DONE — self-hosted runners retired for security reasons once these repos went public;
+  # nothing is ever coming back online for this pool). With the pool gone by design, "0 online"
+  # isn't a depleted-pool incident anymore, it's the permanent, correct end state — the fail-closed
+  # `min_online` check paged CRITICAL every hour, forever, on a condition that will never resolve.
+  # Re-enable the schedule only if the glue pool is ever deliberately re-established.
+  # schedule:
+  #   - cron: "*/15 * * * *"
   workflow_dispatch:
     inputs:
       min_online:
@@ -54,7 +60,21 @@ jobs:
       - name: Count online glue runners
         id: scan
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # NOT secrets.GITHUB_TOKEN: `GET /repos/{owner}/{repo}/actions/runners` requires the
+          # `administration` permission, which is NOT one of the grantable keys in a workflow's
+          # `permissions:` block for the automatic token (confirmed against GitHub's workflow-syntax
+          # docs — actions/attestations/checks/contents/deployments/discussions/id-token/issues/
+          # packages/pages/pull-requests/security-events/statuses only) — so `actions: read` can
+          # never satisfy this endpoint no matter how the block is tuned, and every run 403s
+          # (root-caused 2026-08-07: 13/13 sampled runs failed the query 100% of the time; it only
+          # LOOKED intermittent because `set +e` keeps the job green regardless of the script's exit
+          # code, and notify-slack's 60-min dedup cooldown means the same standing failure only pages
+          # once an hour). GH_PAT is the same fine-grained PAT already used to REGISTER the glue pool
+          # (setup-glue-runners.sh / refresh-gh-token.sh, which need Administration:write — a
+          # superset of the Administration:read this call needs) and the same repo's existing
+          # pattern for anything GITHUB_TOKEN structurally can't reach (ci-status-update.yml,
+          # escalate-to-orchestrator.yml).
+          GH_TOKEN: ${{ secrets.GH_PAT }}
           MIN_ONLINE: ${{ github.event.inputs.min_online || '3' }}
         run: |
           set +e

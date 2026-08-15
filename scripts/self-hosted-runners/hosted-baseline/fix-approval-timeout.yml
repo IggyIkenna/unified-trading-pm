@@ -22,7 +22,23 @@ jobs:
     outputs:
       has_alerts: ${{ steps.scan.outputs.has_alerts }}
       alert_message: ${{ steps.scan.outputs.alert_message }}
+      recovered: ${{ steps.recovery.outputs.recovered }}
     steps:
+      - name: Checkout alert-recovery helper
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: |
+            scripts/cicd/alert_recovery.py
+          sparse-checkout-cone-mode: false
+
+      - name: Restore fix-approval-timeout alert state cache
+        uses: actions/cache@v5
+        with:
+          path: .fix-approval-timeout-alert-state.json
+          key: fix-approval-timeout-alert-state-${{ github.run_id }}
+          restore-keys: |
+            fix-approval-timeout-alert-state-
+
       - name: Scan for stale breaking-fix-pending issues
         id: scan
         env:
@@ -253,6 +269,13 @@ jobs:
             echo "alert_message=" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Compute recovery transition (state-diffed)
+        id: recovery
+        run: |
+          python3 scripts/cicd/alert_recovery.py \
+            --state-file .fix-approval-timeout-alert-state.json \
+            --current "${{ steps.scan.outputs.has_alerts }}" >> "$GITHUB_OUTPUT"
+
       - name: Check out the persist-event composite action
         # CI-cost STEP 2c: `uses: ./…` resolves against the WORKSPACE, so the local composite
         # action must be on disk — this job had no checkout, hence sparse (~1s on our own runner).
@@ -298,4 +321,27 @@ jobs:
       # Stable key for outstanding issues; re-nags every 2h (matches the cron cadence).
       dedup_key: fix-approval-timeout:outstanding
       cooldown_min: 120
+    secrets: inherit
+
+  # ── RESOLVED bookend (2026-08-08) ──────────────────────────────────────────────────────
+  # This monitor previously had NO all-clear path — `notify` above only fires while
+  # has_alerts=='true', so the last outstanding breaking-fix-pending issue could clear and
+  # Slack would never say so. Mirrors branch-health.yml/cloud-build-failure-watcher.yml's
+  # state-diffed recovery pattern via the shared scripts/cicd/alert_recovery.py helper.
+  notify-resolved:
+    name: Slack — Fix Approval Timeout RESOLVED
+    needs: check-stale-fixes
+    if: always() && needs.check-stale-fixes.outputs.recovered == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        ":ballot_box_with_check: *Fix Approval Timeout RESOLVED* — no more outstanding breaking-fix-pending issues
+        (prior tick had at least one)"
+      severity: INFO
+      conclusion: success
+      recovery: true
+      workflow_name: fix-approval-timeout
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: fix-approval-timeout:resolved
+      cooldown_min: 30
     secrets: inherit

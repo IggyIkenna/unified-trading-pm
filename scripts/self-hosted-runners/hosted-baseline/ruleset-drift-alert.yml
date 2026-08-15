@@ -28,12 +28,21 @@ jobs:
     outputs:
       drift: ${{ steps.verify.outputs.drift }}
       report: ${{ steps.verify.outputs.report }}
+      recovered: ${{ steps.recovery.outputs.recovered }}
     steps:
       - uses: actions/checkout@v5
 
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
+
+      - name: Restore ruleset-drift alert state cache
+        uses: actions/cache@v5
+        with:
+          path: .ruleset-drift-alert-state.json
+          key: ruleset-drift-alert-state-${{ github.run_id }}
+          restore-keys: |
+            ruleset-drift-alert-state-
 
       - name: Verify ruleset check-name consistency
         id: verify
@@ -53,6 +62,13 @@ jobs:
             echo "$out" | grep -E '<-- CHECK|ALL RULESETS CONSISTENT' | head -30
             echo "__RPT__"
           } >> "$GITHUB_OUTPUT"
+
+      - name: Compute recovery transition (state-diffed)
+        id: recovery
+        run: |
+          python3 scripts/cicd/alert_recovery.py \
+            --state-file .ruleset-drift-alert-state.json \
+            --current "${{ steps.verify.outputs.drift }}" >> "$GITHUB_OUTPUT"
 
   notify:
     needs: check
@@ -74,4 +90,27 @@ jobs:
       # Was missing (incident 2026-07-25) — see branch-health.yml for the full incident note;
       # this is the same fleet-wide omission (fail-open dedup/ledger degradation, Slack post
       # itself was unaffected).
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+
+  # ── RESOLVED bookend (2026-08-08) ──────────────────────────────────────────────────────
+  # Previously only paged on drift; the next Monday's clean run went silent with no explicit
+  # all-clear. State-diffed via the shared alert_recovery.py helper.
+  notify-resolved:
+    name: Slack — ruleset-drift-alert RESOLVED
+    needs: check
+    if: needs.check.outputs.recovered == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        ":ballot_box_with_check: Branch-protection ruleset drift RESOLVED — required status-check contexts match the
+        check-run names workflows emit again"
+      severity: info
+      conclusion: success
+      recovery: true
+      workflow_name: ruleset-drift-alert
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: "ruleset-drift-resolved"
+      cooldown_min: 30
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
