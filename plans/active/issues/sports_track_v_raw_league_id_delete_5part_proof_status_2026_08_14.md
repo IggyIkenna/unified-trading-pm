@@ -1,7 +1,8 @@
 ---
 doc_type: issue
 title:
-  Track V raw-keyed league_id GCS delete — fresh 5-part-proof status, Part 3 now passes, execution tooling still needed
+  Track V raw-keyed league_id GCS delete — Parts 3/2026-07-22-tooling done; fresh object-level dry-run found a real
+  769-object coverage gap, full-mode delete BLOCKED pending remediation
 summary: >-
   /plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md's Track V todo (execute the
   5-part-proof-gated DELETE of old raw-keyed league_id GCS objects) cited a 2026-07-22 checklist where Part 3 (no live
@@ -18,7 +19,12 @@ summary: >-
   (`task_template.md`) and the K1/K2 sibling incident
   (`plans/archive/issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md`), §3a reversibility alone never
   supplies the five-part proof — it only waives `[OPERATOR]` once that proof independently holds. No delete was executed
-  this session.
+  that session. **Update 2026-08-15 (slot 7)**: the list->verify dry-run trio built that session was run full-range
+  (`2020-06-06..2026-08-13`, zero GCS writes) and Parts 1/2/5 do NOT cleanly pass — 769/144,276 (0.53%) candidate
+  objects fail content-verify, concentrated on `day=2025-09-18` `SOCCER_UEFA_CHAMPS_LEAGUE` -> `UCL` across >=11 venues.
+  This is a genuine data-correctness gap the trio caught as designed (not a script defect); the P3 full-mode delete is
+  now explicitly blocked on a new P1 remediation todo, not just on operator re-authorization. No delete was executed
+  this session either (dry mode only).
 status: open
 nature: issue
 asset_group: [sports]
@@ -49,7 +55,7 @@ thinking_tier: medium
 estimate_class: infra
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
-last_updated: 2026-08-14
+last_updated: 2026-08-15
 supersedes:
 superseded_by:
 depends_on: []
@@ -124,16 +130,27 @@ already caught once.
       (`if_generation_match`) conditional delete, closing the verify-then-delete race. Still needed before Parts 1/2/5
       can be re-run: no further engineering — the trio is dry-run-capable now via `list_...` -> `verify_...` ->
       `delete_...` (no `--apply-prod`).
-- [ ] [DATA] P2. Launch a DRY-RUN VM (`sports-league-id-delete` category, `launch-canonical-migration-vm.sh`, `dry` mode
-      — list+verify only, ZERO GCS writes) over the full `2020-06-06..2026-08-13` window to freshly re-verify Parts
-      1/2/5 of the 5-part proof at the object level (candidate count vs the 2026-07-22 baseline of 275,136;
-      content-verify pass rate). This step is now unblocked (launcher category shipped, see below) but was NOT launched
-      this session per operator direction (BLK-0cb22dbc, answer C, 2026-08-15) — the actual VM launch + dry-run review
-      is the next session's work.
-- [ ] [DATA] P3. ONLY after the todo above's dry-run confirms Parts 1/2/5 still hold: get explicit re-authorization
-      (this is a NEW gate, not automatic) and launch the SAME category in `full` mode
-      (`--apply-prod     --confirm-prod-write`) to execute the actual delete, per finding T's carve-out — re-query
-      `gcs_bucket_soft_delete_retention_seconds()` fresh at execution time, cite the value inline.
+- [x] [DATA] P2. ✅ Launched the DRY-RUN VM (`sports-league-id-delete` category, `launch-canonical-migration-vm.sh`,
+      `dry` mode — list+verify only, ZERO GCS writes; confirmed via the printed command in `run.log`: only `list_...`
+      and `verify_...` ran, no `delete_...` step) over the full `2020-06-06..2026-08-13` window (2,260 days) —
+      `canonical-migration-sports-league-id-delete-20260815-045149` (asia-northeast1-c, self-deleted on completion per
+      `VM_SHUTDOWN_ON_COMPLETION=true`). **Result: Parts 1/2/5 do NOT cleanly pass** — see the new P1 todo below and the
+      Progress Log for full numbers. Candidate count (144,276) does not match the 2026-07-22 baseline of 275,136 cited
+      above — that baseline was the July manifest-swap's ADD/REMOVE row count, a different metric/operation from this
+      trio's object-level delete-candidate population, not a contradiction; not reconciled further this session (out of
+      scope for the dry-run itself).
+- [ ] [DATA] P1. Root-cause + fix the `day=2025-09-18` `SOCCER_UEFA_CHAMPS_LEAGUE` -> `UCL` natural-key coverage gap the
+      dry-run's content-verify surfaced (769/144,276 objects FAIL — see Progress Log for the sample + full stats), then
+      re-run the `sports-league-id-delete` `dry` mode over at least the affected date(s) to confirm 0 FAIL before P3 can
+      proceed. The full 769-row list was NOT recovered (VM self-deleted before `league-id-work/verify_report.json` could
+      be pulled off-VM — only the 10-row stdout sample in `run.log` survives); first step of this todo is re-deriving
+      the full FAIL set (e.g. `verify_stale_raw_league_id_content_2026_08_14.py` scoped to `2025-09-18` plus a scan of
+      neighboring dates for the same pattern, since one sample day is not proof the gap is confined to it).
+- [ ] [DATA] P3. BLOCKED on the new P1 todo above (Parts 1/2/5 must show 0 FAIL, not just "last confirmed 2026-07-22").
+      ONLY after that: get explicit re-authorization (this is a NEW gate, not automatic) and launch the SAME
+      `sports-league-id-delete` category in `full` mode (`--apply-prod --confirm-prod-write`) to execute the actual
+      delete, per finding T's carve-out — re-query `gcs_bucket_soft_delete_retention_seconds()` fresh at execution time,
+      cite the value inline.
 - [x] [DOC] P2. ✅ Corrected the stale "UNBLOCKED 2026-07-28: Track C's lowercase-revert" citation in
       `/plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md`'s Track V todo (same session, same
       commit) — see that plan's Progress Log / todo annotation.
@@ -162,3 +179,37 @@ already caught once.
   2021-06-15) — ran clean, 0 candidates on both sampled days. This is NOT evidence Parts 1/2/5 hold (two arbitrary
   single days out of a 6-year/275K-object population is not a re-verification) — the real re-verification is the
   full-range VM dry-run in the P2 todo above, still open.
+- **2026-08-15 (slot 7, this session)**: Executed the operator-authorized dry-run re-verification (BLK-0cb22dbc answer
+  C). Launched `canonical-migration-sports-league-id-delete-20260815-045149` (asia-northeast1-c) in `dry` mode over the
+  full `2020-06-06..2026-08-13` window; verified via `run.log`'s own printed command that only `list_...` and
+  `verify_...` ran (no `delete_...` step, zero GCS writes) before launch was trusted. Monitored to completion via a
+  bounded log-tail poll (background-bash monitoring was unreliable in this session — got killed twice by something
+  outside this agent's control — fell back to short foreground polling loops instead; VM itself ran unaffected either
+  way).
+  - **LIST step** (104.4s, 2,260 days scanned): `candidate` (stale-raw, delete-eligible pending content-verify)
+    **144,276**; `already_canonical` (raw == canon, left alone) 142,795; `unknown` (not in `classification.json`, left
+    alone) 119,420.
+  - **VERIFY step** (2,528.2s / ~42min, content re-derives each row's real canonical target via `sport_key` ->
+    `SPORTKEY_CANON` + union-of-targets natural-key coverage check): **143,507 PASS / 769 FAIL (99.47% pass rate)**,
+    `rc=1` (non-zero is the script correctly reporting FAILs found, not a script defect — the LIST step's own `rc=0` and
+    the VERIFY step's clean PASS/FAIL tally with no exceptions/tracebacks confirm the trio ran to completion as
+    designed).
+  - All 10 stdout-sampled FAIL reasons share ONE root cause: `day=2025-09-18`, `league_id=SOCCER_UEFA_CHAMPS_LEAGUE` raw
+    rows are NOT fully covered by the `league_id=UCL` canonical target ("target ... does not fully cover the raw group's
+    rows (natural-key subset check failed)"), recurring across >=11 venues (BETFAIR_EX_UK, BETONLINEAG, BETVICTOR,
+    CORAL, DRAFTKINGS, FANDUEL, MATCHBOOK, PADDYPOWER, PINNACLE, SKYBET, +≥1 more implied by the 769 total vs. the
+    10-row sample). The VM self-deleted (`VM_SHUTDOWN_ON_COMPLETION=true`) immediately after `VERIFY DONE rc=1` —
+    confirmed gone via `gcloud compute instances describe` (`was not found`) before the full
+    `league-id-work/verify_report.json` could be pulled off-VM, so only this 10-row `run.log` sample survives; the full
+    769-row list needs a re-run (scoped, not full-range) to recover.
+  - **Verdict: Parts 1/2/5 do NOT cleanly pass as of this fresh object-level re-verification.** 769/144,276 (0.53%)
+    candidate objects have no safe canonical twin under the current mapping — a `full`-mode delete today would be a
+    real, provable data-loss event for at least the `2025-09-18` Champions-League population found here. Filed as a new
+    P1 todo above (must resolve before P3's full-mode delete can be authorized) rather than silently proceeding — this
+    is exactly the class of near-miss finding T (`sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md`) already
+    flagged as a permanent hard-stop pattern; the trio's own content-verify caught it as designed, so no delete was ever
+    at risk this session (dry mode never writes).
+  - Candidate count (144,276) vs. the 2026-07-22 baseline (275,136) cited in this doc's frontmatter/summary is a metric
+    mismatch, not a contradiction: 275,136 was the July 21/22 manifest COPY+SWAP's ADD/REMOVE row count (a different
+    operation), not this trio's object-level delete-candidate population — not reconciled further this session, flagging
+    for whoever picks up the P1 todo in case it matters for scoping.

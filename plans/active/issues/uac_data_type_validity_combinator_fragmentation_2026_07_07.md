@@ -280,6 +280,18 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Progress Log
 
+- **2026-08-15 (slot-27, data_engineering) — VERIFY-then-roll-back todo DONE, both pairs resolved WIRE-not-roll-back.**
+  `unified-api-contracts@0b4ab0e204` (`origin/live-defi-rollout`, QG green, post-push ancestry verified). Queried the
+  live prod defi availability manifest directly (column-pruned/filtered pyarrow read on `venue`+`data_type`, no
+  whole-corpus walk): `AAVE-ETHEREUM/oracle_prices` = 10,604 real `captured` rows (chain=ETHEREUM);
+  `MAKER-ETHEREUM/ lst_rates` = 2,495 real `captured` rows (chain=ETHEREUM) — both genuine, currently-producing capture
+  surfaces, not over-claims. Closed the Layer-1 gap for both (added `oracle_prices` to `aave_governance` and `lst_rates`
+  to `maker` in `PROTOCOL_CAPABILITIES`) rather than rolling back either genesis. **New finding surfaced while
+  re-running the audit post-fix** (out of this todo's scope, not fixed here):
+  `defi_actual_data_types_not_declared_valid()` now flags exactly 2 remaining pairs —
+  `ROCKETPOOL-ETHEREUM/oracle_prices` and `SOLBLAZE-SOLANA/oracle_prices` — both declared in
+  `DEFI_VENUE_DATA_TYPE_CAPABILITIES` (Layer 2) with no matching `PROTOCOL_CAPABILITIES` declaration (Layer 1); not
+  live-manifest-verified in this session — added as a new todo below rather than absorbed here.
 - **2026-08-15 (in-progress, slot-14, data_engineering) — gas_fees/alchemy_onchain todo: premise CORRECTED, fix not yet
   shipped.** The todo's own premise ("zero captured rows") is STALE — live manifest query
   (`read_availability_index(bucket=<defi market-data>, filters=[('venue','==','ALCHEMY'),('data_type','==','gas_fees')])`)
@@ -304,6 +316,22 @@ just belongs on a different layer than instrument_type does, and conflating the 
   uses (losing per-chain grain unless the enumerator separately combines with the `chain` column), or (b) change the
   writer to emit composite `ALCHEMY-<chain>` venue keys to match the declaration (larger blast radius — touches a live
   writer path). No code changed yet this session. `docs(plans):` commit for this note only, no code shipped.
+- **2026-08-15 (follow-up, slot-14) — composite `ALCHEMY-<chain>` keys CONFIRMED absent from live venue distribution;
+  direction (a) supported, fix still not shipped.** A full-bucket `venue` value_counts over the DeFi market-data bucket
+  (32 distinct venues, 2,696,907 total rows; run timed out with `EXIT: 124` after printing complete results — treating
+  the printed distribution as trustworthy since both `value_counts()` blocks terminated cleanly, but flagging the
+  timeout itself as unexplained) shows **only bare `ALCHEMY` (54,457 rows)** — no `ALCHEMY-ETHEREUM`/`ARBITRUM`/
+  `POLYGON`/`OPTIMISM`/`BASE` entries anywhere in the list. Composite keys generating zero real venue rows (not just
+  zero `gas_fees` rows) confirms they are pure phantom declarations in `DEFI_VENUE_DATA_TYPE_CAPABILITIES` — nothing
+  ever writes under them, so they cannot be the "0 captured" source the plan's original stale premise implied, and
+  option (a) (relabel the declaration to bare `ALCHEMY`) is the lower-blast-radius fix vs. (b) (repoint the live
+  writer). **Still open**: this run did not filter by `data_type`, so it doesn't confirm whether the bare-`ALCHEMY`
+  gas_fees `expected_unattempted` cells (2,504, per the entry above) are the ones actually blocking closure, or some
+  other combination — and the per-chain-grain tradeoff in option (a) is a design call, not a mechanical fix, so this
+  stays parked here rather than shipped in the next few minutes. **Next step** (unchanged in kind, now higher-
+  confidence): decide + implement option (a) — relabel `defi_venue_capabilities.py:227-231`'s gas_fees keys to bare
+  `ALCHEMY`, deciding whether per-chain genesis-date grain is dropped or preserved via a parallel `chain`-keyed
+  structure — then run `test_venue_key_parity.py` + ship. No code changed yet. `docs(plans):` commit for this note only.
 
 - **2026-08-12** — **SPARK-ETHEREUM oracle_prices capture wired (the decomposed per-pair todo), done + shipped.**
   Shipped `market-tick-data-service@845bd085` (`_spark_oracle_collection.py` + wiring) +
@@ -715,18 +743,29 @@ just belongs on a different layer than instrument_type does, and conflating the 
       first; if captured, reconcile the Layer-1↔Layer-2 venue-key naming instead of wiring new capture. Done-when:
       `gas_fees` has real `captured` rows reconciled to the declared venue key (proven, not just declared). (repos:
       market-tick-data-service, unified-api-contracts)
-- [ ] [CODE] P2. **VERIFY-then-roll-back the 2 over-claim misclassifications** (`AAVE-ETHEREUM/oracle_prices`,
-      `MAKER-ETHEREUM/lst_rates`). **⚠️ Verify against the live prod defi manifest FIRST — do NOT remove blind.**
-      `AAVE-ETHEREUM/oracle_prices` (`defi_venue_capabilities.py:230`) is claimed by this doc to be "the wrong venue
-      key", BUT `_aave_oracle_collection.py` actively writes `oracle_prices` under `venue="AAVE", chain="ETHEREUM"` via
-      `getAssetPrice` (see `emit_aave_manifest`, `_aave_oracle_collection.py:184-216`) — so it is very likely a REAL
-      capture surface and the genesis is on the RIGHT key. If the manifest shows real `captured` rows, do NOT roll back
-      — instead close the Layer-1 gap (declare `oracle_prices` valid for the AAVE oracle protocol in
-      `PROTOCOL_CAPABILITIES`). `MAKER-ETHEREUM/lst_rates` (`defi_venue_capabilities.py:252`): Maker is a CDP not an
-      LST; confirm zero `lst_rates` captured rows, then remove the `lst_rates` genesis (its real analog
-      `vault_share_price` is already declared on the same key). Done-when: each pair either has its genesis
-      corrected/removed OR is confirmed a real capture surface with the Layer-1 declaration fixed instead — with the
-      live-manifest evidence cited. (repo: unified-api-contracts)
+- [x] ✅ [CODE] P2. **VERIFY-then-roll-back the 2 over-claim misclassifications** (`AAVE-ETHEREUM/oracle_prices`,
+      `MAKER-ETHEREUM/lst_rates`) — `unified-api-contracts@0b4ab0e204` (`origin/live-defi-rollout`, post-push ancestry
+      verified). **Both pairs verified as REAL capture surfaces — neither rolled back.** Queried the live prod defi
+      availability manifest directly (column-pruned/filtered read, no whole-corpus walk): `AAVE-ETHEREUM/oracle_prices`
+      has **10,604 real `captured` rows** (chain=ETHEREUM, dates 2018-01-01..2026-08-06) — confirms this doc's own ⚠️
+      warning that the roll-back premise was wrong. `MAKER-ETHEREUM/lst_rates` has **2,495 real `captured` rows**
+      (chain=ETHEREUM, dates 2023-01-18..2026-08-13) — the doc's "Maker is a CDP, confirm zero captured rows" premise
+      was ALSO wrong (not previously flagged as suspect, unlike AAVE). Fix: added `oracle_prices` to `aave_governance`'s
+      `PROTOCOL_CAPABILITIES.data_types` and `lst_rates` to `maker`'s, closing the Layer-1 gap for both instead of
+      removing either genesis — `defi_actual_data_types_not_declared_valid()` no longer flags either pair. Updated the
+      audit-join test's control case (`test_a_genuine_undeclared_violation_is_still_caught`, previously
+      MAKER-ETHEREUM/lst_rates, now reconciled) to `ROCKETPOOL-ETHEREUM/oracle_prices` (still genuinely undeclared) +
+      added a regression test for AAVE-ETHEREUM. QG green.
+- [ ] [CODE] P2. **VERIFY-then-reconcile 2 new Layer-1/Layer-2 drift pairs** (`ROCKETPOOL-ETHEREUM/oracle_prices`,
+      `SOLBLAZE-SOLANA/oracle_prices`) — surfaced 2026-08-15 while re-running
+      `defi_actual_data_types_not_declared_valid()` post-fix for the VERIFY-then-roll-back todo above (not
+      live-manifest-verified in that session). Both are declared in `DEFI_VENUE_DATA_TYPE_CAPABILITIES`
+      (`defi_venue_capabilities.py`) with an `oracle_prices` genesis but `rocketpool`/`solblaze`'s
+      `PROTOCOL_CAPABILITIES` entries don't declare it. Same resolution pattern as the todo above: query the live prod
+      defi availability manifest for `(venue, chain, "oracle_prices")` `captured` rows FIRST — if real rows exist, close
+      the Layer-1 gap (declare `oracle_prices` valid for the protocol); if genuinely zero, roll back the genesis date.
+      Done-when: each pair either has its genesis corrected/removed OR is confirmed a real capture surface with the
+      Layer-1 declaration fixed instead — with the live-manifest evidence cited. (repo: unified-api-contracts)
 - [ ] [DATA] P2. **Prod full-history backfill of the newly-wired pairs** (gated on the wire-capture todos above
       landing). Once each pair's capture path is proven against the `-test-` bucket, run the prod full-history backfill
       so the pairs show real `captured` rows in the live prod manifest (the original monolithic todo's ultimate
