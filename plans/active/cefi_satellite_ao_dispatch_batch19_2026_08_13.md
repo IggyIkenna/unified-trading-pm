@@ -298,8 +298,20 @@ source: >-
   narrows + close-out). No code changed by this investigation; this todo's own tracked work now lives in that plan.
 - [ ] [CODE] P2. Resolve margin_type for the ~1,578 cefi liquidation instrument_ids lacking @LIN/@INV suffix via
       instruments-service reference data Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
-- [ ] [CODE] P2. Widen canonical_writer_shaping int32->int64 coercion to every contract-declared int64 column (or assert
-      dtype match at the write seam) Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
+- [x] ✅ [CODE] P2. Widen canonical_writer_shaping int32->int64 coercion to every contract-declared int64 column (or
+      assert dtype match at the write seam) — **SHIPPED market-data-processing-service@5b2701fa9f (2026-08-15,
+      slot-9·backend_engineer).** `_inject_schema_contract_columns` now accepts an optional
+      `schema_contract:     SchemaContract | None` param; when supplied, it coerces EVERY contract-declared `int64`
+      column present on the frame from int32→int64 (not just the hardcoded `trade_count`) — this closes the exact class
+      of defect `liquidation_count` hit invisibly. Both call sites now pass the already-resolved contract:
+      `canonical_writer.py`'s `lookup_mdps_contract()` call was reordered to run BEFORE the injection call (previously
+      ran after, so the contract wasn't available yet); `canonical_writer_streaming.py`'s `CandleStreamingWriteContext`
+      gained a `schema_contract: SchemaContract | None = None` field, populated at `open_candle_streaming_writer()` time
+      and threaded into `write_streaming_chunk()`'s injection call. Callers with no contract (none remain, but the param
+      is optional for API stability) fall back to the legacy `trade_count`-only coercion. New regression test
+      `test_inject_schema_contract_columns_widens_every_int64_column` (asserts `trade_count` + `liquidation_count` both
+      coerce, an unrelated non-contract int32 column is left untouched). `quality-gates.sh` green. Source:
+      `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [x] ✅ [CODE] P2. Audit UNCLASSIFIED_ADAPTER_ERROR rows (51% of trades cell, 14% of derivative_ticker) **CLOSED —
       root-caused, no live-adapter bug found (2026-08-15, slot-17·backend_engineer).** Full-repo grep of
       market-tick-data-service for every literal `UNCLASSIFIED_ADAPTER_ERROR` emitter (excluding tests) found exactly
@@ -502,3 +514,8 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   `data_pipeline_alert_storm_root_ cause_batch_2026_08_10.md` is 1001L, over its 1000-line hard cap (pre-existing,
   unrelated to this fix) — `check_line_caps.sh`/plan-hygiene pre-commit hard-blocks any commit touching it. Filed a P3
   follow-up todo above to trim it under cap first; the source checkbox stays stale until then.
+
+- **2026-08-15 (slot-9·backend_engineer)**: shipped the "Widen canonical_writer_shaping int32->int64 coercion" todo —
+  `market-data-processing-service@5b2701fa9f`. See the todo's own evidence line for full file/function detail. The
+  source doc's checkbox stays stale for the same 1000-line hard-cap reason recorded in the entry immediately above
+  (unrelated to this fix, pre-existing, needs the trim-under-cap follow-up todo first).
