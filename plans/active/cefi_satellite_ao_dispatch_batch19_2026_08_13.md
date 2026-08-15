@@ -453,8 +453,18 @@ source: >-
       `plans/active/cefi_consolidated_closeout_2026_07_18.md`
 - [ ] [CODE] P2. instrument_type casing residual: fresh live re-count against current manifest to confirm literal 100%
       UPPERCASE Source: `plans/active/cefi_consolidated_closeout_2026_07_18.md`
-- [ ] [CODE] P2. Live-query OKX/Bybit SPOT instrument endpoints for the tokenized-equity symbol set + listing dates
-      Source: `plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
+- [x] ✅ [CODE] P2. **CLOSED — already-shipped elsewhere (2026-08-15, slot-12·backend_engineer).** Live-query OKX/Bybit
+      SPOT instrument endpoints for the tokenized-equity symbol set + listing dates — this exact research already
+      COMPLETE as the source doc's own Todo 1 (2026-08-13, slot-18·data_engineering worker): OKX SPOT endpoint
+      (`GET .../api/v5/public/instruments?instType=SPOT`) confirmed 56 `X`-prefixed tokenized-equity tokens
+      (`instCategory=3`, distinct from ordinary crypto SPOT pairs) with a real per-symbol `listTime` for every one;
+      Bybit SPOT endpoint (`GET .../v5/market/instruments-info?category=spot`) confirmed 11 `xstocks`
+      (`symbolType="xstocks"`) — that endpoint has no `launchTime` field, so per-symbol dates for those were later
+      sourced from Tardis's own `availableSince` field (source doc Todo 5, also already complete). Full 56+11 symbol
+      table + venue-plumbing findings (existing Tardis CeFi pipeline already covers both venues, no new adapter needed)
+      already recorded in the source doc's own Progress Log — no new code/research needed by this batch; this batch's
+      2026-08-13 conflict-check drafted the item before the source doc's own audit-day research landed later the same
+      day. Source: `plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md` (Todo 1, already `[x] ✅`).
 - [ ] [CODE] P2. Add confirmed tokenized-equity symbols to the UAC CeFi instrument universe with
       instrument_type=SPOT_PAIR + tracks_equity link Source:
       `plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
