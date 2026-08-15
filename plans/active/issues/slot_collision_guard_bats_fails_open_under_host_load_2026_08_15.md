@@ -87,9 +87,20 @@ this case and will send the next agent hunting a regression in unrelated files.
 
 ## Todos
 
-- [ ] [CODE] P1. Distinguish "detector timed out" from "detector found no peer" in `_detect()` — return a third state
+- [x] ✅ [CODE] P1. Distinguish "detector timed out" from "detector found no peer" in `_detect()` — return a third state
       rather than folding `TimeoutExpired` into `(1, "")`. The guard should still ALLOW on timeout; the point is that
-      the condition becomes observable instead of silently identical to "no peer". Repo: unified-trading-pm.
+      the condition becomes observable instead of silently identical to "no peer". — `_detect()` now returns a
+      `_DETECT_TIMEOUT` sentinel (`-1`) specifically on `subprocess.TimeoutExpired`, kept separate from the generic
+      `(1, "")` non-timeout-failure path. The `foreign-pids` call site writes an observable
+      `SLOT_COLLISION_GUARD_DETECTOR_TIMEOUT` marker to stderr before ALLOWing, so the outcome is unchanged (fail-open,
+      by design) but now diagnosable. **Closes the residual gap the todo-2 test-side fix left**: even after
+      `_spawn_fake_peer` confirms the peer is lsof-visible, the GUARD's own fresh `_detect("foreign-pids", ...)` call
+      moments later can independently exceed its 10s budget if load is still climbing — the test-side precondition-check
+      alone was measured insufficient on this host today (re-failed after the todo-2 fix landed, same 6-test signature,
+      at load ~90-150). The 6 BLOCK-expectation tests in the pretooluse-guard suite now call a new
+      `_skip_if_detector_timed_out` helper (checks `$output` for the marker) immediately before asserting status 2, so a
+      load-induced guard-side timeout skips rather than fails. Verified: 17/17 pass standalone; syntax + ruff clean.
+      Repo: unified-trading-pm.
 - [x] ✅ [TEST] P1. Make the BATS suite `skip` (not fail) when the detector could not complete. —
       **unified-trading-pm@27979ca518.** `_spawn_fake_peer` now polls the detector's own `foreign-pids` CLI (15s budget)
       until it can genuinely see the spawned peer, instead of assuming a fixed `sleep 0.3`, and `skip`s with an explicit
@@ -98,6 +109,12 @@ this case and will send the next agent hunting a regression in unrelated files.
       test while `git commit is ALLOWED when no peer occupies the slot` — which needs no peer — still genuinely RAN and
       passed. That asymmetry is the point: it degrades only where the precondition failed, never as blanket suppression.
       Unmodified, the suite still passes 17/17. Repo: unified-trading-pm.
+- [x] ✅ [TEST] P1. `tests/test_session_start_collision_check.bats`'s `_spawn_fake_peer` had the identical
+      fixed-`sleep 0.3`-then-assert race (same `foreign_claude_pids`/`lsof` detector, same host-load exposure) — not
+      covered by the fix above, which only touched the pretooluse-guard suite. Applied the same poll-until-detected
+      pattern (bounded 5s, falls through to let the assertion fail rather than `skip`, since this file's fixture — a
+      direct hook-output warning check, not a block/allow status code — has lower false-positive-vs-false-negative
+      asymmetry risk). Verified: 10/10 pass standalone. Repo: unified-trading-pm.
 - [ ] [CODE] P2. Consider caching or narrowing the per-pid `lsof` walk (batch one `lsof` over all candidate pids rather
       than one call per pid) so detection stays inside its budget under load. Repo: unified-trading-pm.
 - [ ] [DOC] P2. Correct the re-gate message: "this is a REAL failure, not a lost race" is asserted unconditionally, and

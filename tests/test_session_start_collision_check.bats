@@ -72,9 +72,25 @@ teardown() {
 _spawn_fake_peer() {
     local cwd="$1"
     ( cd "${cwd}" && exec -a claude-bats-fake-peer sleep 20 ) &
-    _SSC_PEER_PIDS+=("$!")
-    # Give the process a moment to actually be scheduled + cwd resolvable.
-    sleep 0.3
+    local pid="$!"
+    _SSC_PEER_PIDS+=("${pid}")
+    # Poll until the detector's OWN cwd resolution (lsof on macOS -- no /proc) actually reports
+    # this peer as foreign-in-slot, instead of a fixed sleep. Under real host contention
+    # (`pgrep -f claude` matching dozens+ real processes, one `lsof -p` call per match) that
+    # resolution can take far longer than 0.3s, or fail outright for a given PID on a given
+    # pass -- the detector is deliberately fail-open on failure, so a fixed-sleep test races the
+    # same timing variance the production hook is exposed to and intermittently asserts against
+    # a peer that isn't lsof-visible yet (see slot-collision-detect.sh's foreign_claude_pids).
+    # Bounded at 5s; falls through to let the assertion fail with a clear signal rather than hang.
+    local detect_lib="${_SSC_PM_ROOT}/cursor-configs/hooks/lib/slot-collision-detect.sh"
+    local waited=0
+    while [ "${waited}" -lt 50 ]; do
+        if bash "${detect_lib}" foreign-pids "${cwd}" 2>/dev/null | grep -qx "${pid}"; then
+            return 0
+        fi
+        sleep 0.1
+        waited=$((waited + 1))
+    done
 }
 
 _run_hook() {
