@@ -405,3 +405,55 @@ launcher, the other already operates at root granularity. Redirected the P2 fix 
 (atom-format matching between `_run_preflight_availability_check`'s captured-atom construction and `_process_venue`'s
 per-instrument lookup) rather than leave a stale premise for the next investigator. No code changed — this todo's scope
 was read-only investigation of the named call site; the fix + regression test is the revised P2 todo.
+
+### 2026-08-15 — P2 atom-format-mismatch fix WRITTEN + TESTED + COMMITTED (slot 13), NOT YET PUSHED
+
+Root-caused the revised P2 todo (atom-format mismatch) directly: `venue_fetch.py::_record_venue_shard_counts` stamps a
+captured CME per-contract FUTURE/OPTION row's manifest `instrument_id` as the FULL dated canonical id
+(`databento_enrichment.py::_classify_row` →
+`build_instrument_id(venue, itype, product_root_map.get(root, root), expiry_date=..., margin_marker="LIN", quote_asset="USD")`,
+e.g. `CME:FUTURE:SP500-USD@LIN-20221216` — `SP500` is `EXCHANGE_CODE_TO_NAME["ES"]`, not the raw root) with `underlying`
+left BLANK for these rows (`is_derivative=False` → `underlying_for_manifest=""`, confirmed live in `venue_fetch.py`).
+The CME OHLCV launcher's `--instrument-ids` (`state.instrument_ids` → `venue_fetch.py::_resolve_venue_instrument_ids`,
+CME is NOT in `_VENUES_NEEDING_INSTRUMENT_PREFLIGHT` so the CLI value passes through `resolve_canonical_instrument_ids`
+unchanged) passes the ROOT PARENT-SYMBOL form (`ES.FUT`/`ES.OPT`, per `CME_ROOTS` in `launch-tradfi-bf-cme-ohlcv-1m.sh`)
+as `expected_atoms` into `_filter_data_types_by_atom_coverage`. These two shapes can never match under exact/prefix
+comparison — confirming the todo's "atom-format mismatch" hypothesis exactly, and fully explaining the repeated
+`2022-01-03` re-capture the prior entry measured.
+
+**Fix**: `market-tick-data-service@c35af0713c70b75c09815a5859430c62c5135256` (LOCAL, not yet on origin — see below) adds
+`tradfi_root_parent_symbol_atom()` / `with_root_parent_symbol_aliases()` in `_tradfi_manifest_shard.py`, reusing the
+EXISTING `unified_api_contracts.resolve_tradfi_underlying_to_root()` reverse lookup (built for exactly this
+`EXCHANGE_CODE_TO_NAME` product-name↔root-code translation) to derive the root-parent-symbol alias from a captured
+dated-derivative id. `known_dead_shard_gate.py::_apply_preflight_skip_filter` (the actual `_process_venue` consumption
+site the prior todo pointed at — venue_fetch.py:573) now expands a venue's captured atoms with these aliases before
+calling `_filter_data_types_by_atom_coverage`. **Deliberately did NOT touch `preflight.py`** — that file sits at the
+QG-enforced 900-line file-size cap with zero headroom (confirmed: a first attempt inlining the fix there failed QG at
+913 lines); the fix lives entirely in `_tradfi_manifest_shard.py` (151 lines) and `known_dead_shard_gate.py` (285
+lines), both with ample headroom. 9 new regression tests across `test_tradfi_manifest_shard.py` (unit coverage for both
+new helpers, incl. the ES→SP500 translation round-trip and the ETH identity-mapped case) and
+`test_known_dead_shard_gate.py` (end-to-end: an already-captured CME root is correctly skipped; a genuinely-partial
+root, e.g. FUTURE captured but OPTION not, is correctly still fetched — the fix must not over-skip; a wholly-uncaptured
+date is unaffected).
+
+**Verification**: `bash scripts/quality-gates.sh --no-fix` ran GREEN end-to-end (full test suite, lint, basedpyright,
+all ~110 STEP gates) on the working tree containing this exact fix — but that run was BEFORE the commit, so its sentinel
+is stale/inapplicable per the ordering rule (`RULES.md` § 2, commit-before-QG). Committed
+(`c35af0713c70b75c09815a5859430c62c5135256`, `Quickmerge: agent` trailer already present), then re-ran QG on the
+committed HEAD to get a matching sentinel — **that re-run, and two further retries, were each killed almost immediately
+by the host's `qg_host_adaptive_resource_governor` global-80%-RAM valve**
+(`plans/active/ qg_host_adaptive_resource_governor_2026_07_14.md`), which aborts the NEWEST admitted run when live host
+RAM crosses the threshold at any point; 14-15 concurrent `quality-gates.sh` processes were running host-wide across
+other slots throughout (confirmed via `ps aux`, `free -h`, `uptime` — load average 8.5-11 sustained, not a one-off
+spike). This is the governor working as designed under genuinely heavy fleet-wide concurrent load, not a defect in this
+fix — the pre-commit dirty-tree QG run's PASS is real evidence the code is correct; only the fresh-sentinel re-run needs
+a window where the host isn't saturated.
+
+**BLOCKED on**: a `quality-gates.sh --no-fix` run on commit `c35af0713` completing without being sacrificed by the RAM
+valve (host contention, not this fix, not an operator decision — cannot-be-done-yet, not a real blocker). **To resume**:
+`cd market-tick-data-service && bash scripts/quality-gates.sh --no-fix` (retry until it survives to the
+`✅ ALL QUALITY GATES PASSED` banner — check `ps aux | grep -c "[q]uality-gates"` first; a lower host-wide count means a
+better chance of admission), then
+`bash scripts/quickmerge.sh "fix(mtds): bridge CME/TradFi root-parent-symbol atom-format mismatch in preflight skip" --agent --files 'market_tick_data_service/engine/orchestrator/_tradfi_manifest_shard.py market_tick_data_service/engine/orchestrator/known_dead_shard_gate.py tests/unit/engine/test_tradfi_manifest_shard.py tests/unit/test_known_dead_shard_gate.py'`,
+verify the SHA lands on `origin/live-defi-rollout`, THEN flip the P2 checkbox above with the landed SHA. Do not redo the
+investigation or the fix — both are complete; only the ship step remains.
