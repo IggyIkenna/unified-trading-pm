@@ -111,10 +111,18 @@ positive like findings 1-3 above, but a permanent, recurring one for any catch-u
 The detector currently has no way to ask "did this VM's TOTAL asset_group/date-range coverage (not just this VM's own
 per-VM shard) actually need anything new this run?" before concluding GONE_NO_CAPTURE.
 
-- [ ] [CODE] P3. Give `exit_code_fleet_monitor`'s DP-VM-002 check a way to recognize a fully-converged catch-up shard
+- [x] ✅ [CODE] P3. Give `exit_code_fleet_monitor`'s DP-VM-002 check a way to recognize a fully-converged catch-up shard
       (e.g. cross-check `check_shard_freshness`/the consolidated manifest for the VM's asset_group+date-range rather
       than relying solely on the VM's own empty per-VM shard) so a genuinely-nothing-to-do run doesn't page CRITICAL
-      indistinguishably from a silent failure. Repo: deployment-service.
+      indistinguishably from a silent failure. Repo: deployment-service. — deployment-service@232f56c4c6: wired MDPS
+      orchestration_service.py's per-date "SKIP date=... already fresh in manifest" pre-flight marker into
+      `_gcs.py`'s existing `_HONEST_ABSENCE_RE` run.log classifier (the same mechanism every other benign
+      flat-captured case already uses), so a fully-converged shard's run.log — wall-to-wall this line — classifies
+      HONEST_ABSENCE → EXPECTED_NO_CAPTURE instead of SILENT → GONE_NO_CAPTURE. Regression test added
+      (`test_no_capture_reason_honest_absence_fully_converged_catch_up_shard`). Cheaper + safer than a live
+      cross-service manifest re-scan per terminated VM (deployment-service has no dep on MDPS/`check_shard_freshness`
+      directly, and a full-corpus manifest read per VM risks the sweep-overlap-storm class this file's own comments
+      warn about).
 
 ## Todos
 
