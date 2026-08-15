@@ -108,9 +108,12 @@ leaving it as an unscoped "run a corpus backfill" todo.
       from that row's own already-stamped `pipeline_mode` (never a cell-wide majority guess — this correctly handles the
       BINANCE-FUTURES tardis-vs-binance-direct mix cited above using each row's real write-path provenance). Applied to
       prod (`market-data-tick-cefi-prd-central-element-323112`): 8,840 rows stamped (audit's 8,841 minus 1 — see todo 3
-      below), row-count invariant preserved (29,481,508 unchanged), internal gate PASSED. Code:
-      `market-tick-data-service@f1f41552` (commit made, **push pending** — blocked on repo-wide QG red `RB-c19cd263`,
-      unrelated to this change; joined as waiter, will ship the moment the repo goes green).
+      below), row-count invariant preserved (29,481,508 unchanged), internal gate PASSED. Code: **Shipped and verified
+      landed**: `market-tick-data-service@9de9840169` on `origin/live-defi-rollout`
+      (`git rev-list --count origin/live-defi-rollout..HEAD` = 0, content independently confirmed via
+      `git show origin/live-defi-rollout:scripts/backfill_cefi_source_column.py`). Repo-blocker `RB-c19cd263` cleared
+      first; the commit SHA changed twice in-flight (local rebase during QG, then a push-time rebase onto a newer remote
+      tip) — this final SHA is the one on origin, earlier `f1f41552`/`a1cb93a6` references are stale.
 - [ ] [DATA] P1. Backfill the `source` column for the 1 named tradfi cell (`CME/ohlcv_15m`, 64 rows, repo:
       market-tick-data-service) — all 6,463 non-blank rows are `databento`; verify the 64 blank rows are also genuinely
       databento-sourced (not a different vendor silently uncaptured) before backfilling.
@@ -193,7 +196,7 @@ leaving it as an unscoped "run a corpus backfill" todo.
   streaming — only `source`/`pipeline_mode` are ever converted to pandas per batch, every other column is patched
   directly at the Arrow `RecordBatch` level and streamed straight to a `ParquetWriter`. Measured fix: peak RSS ~1.5GB
   regardless of manifest size. New unit tests for both scripts (23 total, all passing) verify the streaming boundary +
-  the original masking/derivation/idempotency logic unchanged. **Shipping status**: `market-tick-data-service@f1f41552`
+  the original masking/derivation/idempotency logic unchanged. **Shipping status**: `market-tick-data-service@9de98401`
   committed locally, push blocked on repo-wide QG red `RB-c19cd263` (2 pre-existing tradfi COMBO casing test failures,
   unrelated to this change, already tracked + waited-on by 3 other slots before this session joined as a 4th waiter) —
   will ship + update this todo's SHA the moment the repo goes green (backend-owned wait, not polled manually).
