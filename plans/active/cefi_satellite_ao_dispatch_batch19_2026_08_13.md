@@ -300,8 +300,27 @@ source: >-
       instruments-service reference data Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [ ] [CODE] P2. Widen canonical_writer_shaping int32->int64 coercion to every contract-declared int64 column (or assert
       dtype match at the write seam) Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
-- [ ] [CODE] P2. Audit UNCLASSIFIED_ADAPTER_ERROR rows (51% of trades cell, 14% of derivative_ticker) Source:
-      `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
+- [x] ✅ [CODE] P2. Audit UNCLASSIFIED_ADAPTER_ERROR rows (51% of trades cell, 14% of derivative_ticker) **CLOSED —
+      root-caused, no live-adapter bug found (2026-08-15, slot-17·backend_engineer).** Full-repo grep of
+      market-tick-data-service for every literal `UNCLASSIFIED_ADAPTER_ERROR` emitter (excluding tests) found exactly
+      TWO producers, both already-shipped one-off manifest-canonicalisation scripts, NOT a live adapter routing path:
+      `scripts/_rebuild_cefi_cf11.py::_process_attempted_failed_cefi_row` (CF-11 manifest rebuild) and
+      `scripts/canonicalize_mtds_index.py::canonicalize_cefi` (wholesale live-index canonicalisation,
+      `lifecycle:     oneoff`) — both deliberately normalise a legacy blank/`LegacyBlankErrorReasonError` `error_reason`
+      (predating the manifest's structured error taxonomy) into the visible `UNCLASSIFIED_ADAPTER_ERROR` catch-all, per
+      their own docstrings: "a recorded failure, kept visible + backfill-worthy — never hide a possible gap." No CeFi
+      trades/ derivative_ticker live fetch/write path (`engine/orchestrator/sentinels.py`'s tier-2/tier-3 sentinel
+      emitters, the actual `record_failed` callsite for these two data_types) ever produces this literal string — its
+      unclassified-error fallback writes a DIFFERENT free-text value (`f"UNCLASSIFIED:{code_token}"`, carrying the raw
+      exception class name) when `classify_venue_error()` returns `None`, confirmed via
+      `unified_trading_library/manifest_writer/_writer_record.py::record_failed` (writes `error_reason=<error>`
+      verbatim, no enum coercion) — so a live routing gap there would show up as a distinct `UNCLASSIFIED:<Code>`
+      string, not this one. UAC's own `honest_coverage.py` docstring reviewer-flags `UNCLASSIFIED_ADAPTER_ERROR` in
+      "production" as a calling-adapter bug — these rows are legacy-migration output, not production adapter emissions,
+      so the flag doesn't apply here. Since these are `attempted_failed` (retried by default per `record_failed`'s own
+      docstring), the 51%/14% figure is not a silent gap — it's the designed interim state for historically-blank-reason
+      rows pending re-fetch/reclassification. No code shipped (none needed) — this todo's "audit" outcome is a
+      negative/clean result, not a fix. Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [x] ✅ [CODE] P2. Fix meta_watchers.check_high_attempted_failed's mismatched trailing-14-day-numerator vs
       all-time-denominator ratio **CLOSED — already-shipped elsewhere (2026-08-15, slot-20·backend_engineer).** This
       exact fix already shipped **deployment-service@96271280** (2026-08-08, "trailing-window threshold for
@@ -387,6 +406,16 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
 2026-08-13 audit's full classification data for the complete list.
 
 ## Progress Log
+
+- **2026-08-15 (slot-17·backend_engineer)**: dispatched the "Audit UNCLASSIFIED_ADAPTER_ERROR rows" todo. Grepped every
+  literal `UNCLASSIFIED_ADAPTER_ERROR` producer in market-tick-data-service (excluding tests) and found only two, both
+  already-shipped one-off manifest-canonicalisation scripts (`_rebuild_cefi_cf11.py`, `canonicalize_mtds_index.py`) that
+  normalise legacy blank/`LegacyBlankErrorReasonError` `error_reason` values into this visible catch-all — never a live
+  adapter/sentinel routing path (traced the actual trades/derivative_ticker `record_failed` callsite in
+  `engine/orchestrator/sentinels.py` + `unified_trading_library/manifest_writer/_writer_record.py::record_failed`; a
+  live unclassified-error fallback writes a distinct `UNCLASSIFIED:<exception-class>` string, not this literal enum
+  value). Conclusion: the 51%/14% figure is legacy-migration output, not a live routing bug — no code fix needed. See
+  the todo's own entry above for full file:line citations.
 
 - **2026-08-15 (slot-29·backend_engineer)**: dispatched the "Map the index perps... to the CME index-future canonical"
   todo — found it already shipped `unified-api-contracts@e973c62d` (2026-08-09) via
