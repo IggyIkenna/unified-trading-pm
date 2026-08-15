@@ -194,10 +194,16 @@ for f in "${TARGETS[@]}"; do
         # cover repointing a corpus bare-filename-reference violation (no leading
         # slash) to the leading-slash canonical form in the same edit.
         RAW_DIFF_WS="$(git -C "$PM_DIR" diff --cached -- "$f" 2>/dev/null || true)"
-        REMOVED_WS_PATH="$(echo "$RAW_DIFF_WS" | grep -E '^-[^-]' | sed -E 's/^-//' \
+        # `|| true` on each grep: pipefail makes a genuinely-empty match (e.g. zero deleted lines,
+        # the exact shape the small-marker-append exception below exists to handle) fail the whole
+        # pipeline and, under `set -e`, silently abort the entire script BEFORE the marker-append
+        # exception ever runs -- caught live 2026-08-15 (a real 0-deletion marker-append commit on
+        # this file hit this exact abort). An empty match correctly yields an empty $REMOVED_WS_PATH/
+        # $ADDED_WS_PATH either way; only the premature exit was the bug.
+        REMOVED_WS_PATH="$(echo "$RAW_DIFF_WS" | { grep -E '^-[^-]' || true; } | sed -E 's/^-//' \
           | sed -E 's#/?plans/(active|archive/[0-9]{4}_[0-9]{2})/#/plans/__PATH__/#g' \
           | sed -E 's/[[:space:]]+//g' | sort)"
-        ADDED_WS_PATH="$(echo "$RAW_DIFF_WS" | grep -E '^\+[^+]' | sed -E 's/^\+//' \
+        ADDED_WS_PATH="$(echo "$RAW_DIFF_WS" | { grep -E '^\+[^+]' || true; } | sed -E 's/^\+//' \
           | sed -E 's#/?plans/(active|archive/[0-9]{4}_[0-9]{2})/#/plans/__PATH__/#g' \
           | sed -E 's/[[:space:]]+//g' | sort)"
         if [ -n "$REMOVED_WS_PATH" ] && [ "$REMOVED_WS_PATH" = "$ADDED_WS_PATH" ]; then
@@ -225,9 +231,11 @@ for f in "${TARGETS[@]}"; do
       if [ -z "$SMALL_MARKER_APPEND" ] && [ -n "$ADDED" ] && [ -n "$DELETED" ] \
         && [ "$DELETED" -gt 0 ] 2>/dev/null && [ "$ADDED" -le "$DELETED" ] 2>/dev/null; then
         RAW_DIFF="$(git -C "$PM_DIR" diff --cached -- "$f" 2>/dev/null || true)"
-        REMOVED_NORM="$(echo "$RAW_DIFF" | grep -E '^-[^-]' | sed -E 's/^-//' \
+        # Same `|| true` fix as the whitespace-only-repair block above: an empty match (e.g.
+        # ADDED=0 with DELETED>0) must not abort the script under pipefail+set -e.
+        REMOVED_NORM="$(echo "$RAW_DIFF" | { grep -E '^-[^-]' || true; } | sed -E 's/^-//' \
           | sed -E 's#/plans/(active|archive/[0-9]{4}_[0-9]{2})/#/plans/__PATH__/#g' | sort)"
-        ADDED_NORM="$(echo "$RAW_DIFF" | grep -E '^\+[^+]' | sed -E 's/^\+//' \
+        ADDED_NORM="$(echo "$RAW_DIFF" | { grep -E '^\+[^+]' || true; } | sed -E 's/^\+//' \
           | sed -E 's#/plans/(active|archive/[0-9]{4}_[0-9]{2})/#/plans/__PATH__/#g' | sort)"
         if [ -n "$REMOVED_NORM" ] && [ "$REMOVED_NORM" = "$ADDED_NORM" ]; then
           LINK_REPOINT_EDIT="1"

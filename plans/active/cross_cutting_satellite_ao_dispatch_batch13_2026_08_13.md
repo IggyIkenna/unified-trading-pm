@@ -792,6 +792,12 @@ source: >-
       CF-3/CF-4 legacy-row cleanup on instruments-store-sports-prd/market-data-tick-sports-prd, per the doc's own
       lease/snapshot/small-scale-first/verify/scale execution notes Source:
       `plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`
+      **2026-08-15 (slot-14·infra) note (checkbox not flipped — this doc is over its 1000L hard cap, blocking any
+      checkbox-touching edit)**: not (re-)attempted — already dispatched + worked at length earlier today
+      (data_engineering slot-2), which found a real correctness bug mid-run and stopped safely (no data destroyed,
+      fix now landed). Current status, remaining scope, and the actual next-actionable todos live in
+      `plans/active/issues/sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md` — read that doc, not this
+      checkbox, for the true state.
 - [x] ✅ [CODE] P2. add --no-renames to the 4 git show call sites in agent-orchestrator/server/verify.py (option-B fix,
       plus a regression test pinning bundled-rename+flip detection) — agent-orchestrator@7889a7c683 (2026-08-15: all 4
       sites fixed + pinning regression test added, QG green) Source:
