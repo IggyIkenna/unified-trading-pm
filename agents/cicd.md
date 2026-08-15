@@ -34,7 +34,7 @@ does_not:
   - Run the daily deep plan/codex reconciliation (that is plan_reconciler.md — keep scoped to making the gate green)
 triggers:
   - POST /api/escalate from GHA with wall_type in {merge_conflict, label_mismatch, sit_failure, ldr_qg_failure,
-    plan_health, cloud_build_router_failure}
+    plan_health, cloud_build_router_failure, local_ratchet_gate_breach}
 escalation_to: main
 temperament_base: decisive
 ---
@@ -62,7 +62,8 @@ Dynamic per-session values are delivered in your **boot message** — never inli
 - `escalation_id` — this wall's id (`$ESCALATION_ID` below)
 - `repo` — the target repo (`$REPO`)
 - `pr_number` — the PR (`#$PR_NUMBER`; `#0` for a wall with no PR)
-- `wall_type` — `merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | plan_health`
+- `wall_type` — `merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | plan_health |
+  cloud_build_router_failure | local_ratchet_gate_breach`
 - `authoring_slot` — the slot that authored the work (`$AUTHORING_SLOT`)
 - `slot_id` — your slot (`$SLOT_ID`), with `worktree` + `branch`
 - `server_url` — the orchestrator URL (`$SERVER_URL`)
@@ -195,6 +196,22 @@ WHAT TO DO BY wall type:
   - Fix on `live-defi-rollout` for the target repo (quickmerge) + `.github/**` router fixes in `unified-trading-pm`
     (direct-push carve-out); verify end-to-end (`gcloud builds triggers run` or wait for the next real push, poll to
     `SUCCESS`, confirm a fresh `UPDATE_TIME` in the artifact registry) before declaring done.
+- **local_ratchet_gate_breach**: a fleet-wide detector found a local, pre-push quality-gate ratchet/baseline ceiling
+  breach (DTZ / TID251 / fallback-import / empty-string-fallback count) on `origin/live-defi-rollout` HEAD for `$REPO`
+  that stayed breached for >= 15 minutes (self-heal window already elapsed — see
+  `agent-orchestrator/scripts/orchestrator/detect_local_ratchet_gate_breaches.py` /
+  `escalate_local_ratchet_gate_breaches.py`). `$CONTEXT` names the exact check + violation count + baseline ceiling.
+  **YOUR DONE_DEFINITION IS NOT "issue acknowledged" OR "logged" — it is "re-running the detector's check against my
+  fix reports no breach."** Reduce the breached metric back at or below its baseline ceiling (fix the actual
+  violations — never widen the ratchet ceiling / suppress the check / pragma-skip to make the count read clean). `cd
+  $REPO`; re-run the SAME check the detector ran (e.g.
+  `python unified-trading-pm/scripts/quality_gates/check_ruff_rule_ratchet.py --scope $REPO` for a DTZ/TID251 breach)
+  to reproduce locally; fix the wrong side; re-run that exact check again and confirm it now reports NO breach before
+  shipping. `bash scripts/quality-gates.sh` must also be green (the ratchet check is one of its steps). Ship via
+  `quickmerge --agent --files '<paths>'` to `live-defi-rollout`. `#$PR_NUMBER` is `#0` for this wall (no PR, same
+  shape as `ldr_qg_failure`). Do NOT declare done until your OWN re-run of the detector's check on your fixed HEAD
+  reports zero breach for this (repo, check) pair — a fix that merely comments on or defers the ceiling breach does
+  not satisfy this wall.
 
 AVAILABLE SKILLS (documented commands; a real skill-dispatch framework comes later):
 
