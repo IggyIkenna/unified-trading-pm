@@ -186,7 +186,7 @@ already caught once.
       from the raw source's?) before assuming the same fix applies blindly — a different root cause elsewhere in the
       6-year population is possible. Only once the full-range dry-run shows 0 FAIL is Parts 1/2/5 of the 5-part proof
       genuinely clean.
-- [ ] [DATA] P2. Fix the false-negative bug in `migrate_sports_league_id_casing_2026_07_21.py`'s
+- [x] [DATA] P2. ✅ Fix the false-negative bug in `migrate_sports_league_id_casing_2026_07_21.py`'s
       `no_clobber_all_sources_present` diagnostic (`process_unit`, `by_src`/`present` computation): it computed
       `by_src`'s per-source row hashes from `body` (the raw-source-only column schema) BEFORE the merge with `existing`,
       then compares those hashes against `rb_keys` computed AFTER the union-schema merge (`expected` / readback both
@@ -284,6 +284,22 @@ already caught once.
   test coverage in the same pass this session's actual data fix depended on felt like the wrong trade-off; verification
   for THIS session's fix relied on the independently-correct natural-key content-verify script instead (0 FAIL,
   confirmed twice).
+- **2026-08-15 (slot 10, this session)**: Picked up the P2 `no_clobber_all_sources_present` false-negative todo. Root
+  cause confirmed as described: `by_src`'s per-source hashes were computed from `body` (source-only columns, pre-merge)
+  while `rb_keys` were computed on the post-merge union schema — a byte-identical row hashes differently across a
+  mismatched column set, so the check read `False` for every source whenever the existing target carried columns the
+  source lacked (e.g. `fixture_id`/`af_fixture_id`). Extracted the check into a new
+  `_no_clobber_present(body, src_of, expected_columns, rb_keys)` helper and reindexed the source rows onto `expected`'s
+  FINAL (post-merge) column set before hashing, matching the todo's own suggested fix. Added 5 unit tests directly
+  against the extracted helper (schema-match baseline, extra-existing-columns case mirroring the real `day=2025-09-18`
+  finding, a genuine-clobber-still-caught case, a mixed-source case, and the empty-columns edge case) in
+  `tests/unit/scripts/test_migrate_sports_league_id_casing_2026_07_21.py` — `market-tick-data-service` had no prior test
+  file for this script. `quality-gates.sh` full pass (10804 passed, 0 failed) — took 6 attempts on a heavily contended
+  shared host (multiple concurrent slots' QG/quickmerge runs; 4 background QG runs and 3 background quickmerge runs were
+  externally killed mid-run before host load eased enough for a clean pass; no failure was ever due to this change,
+  tests were green every time they ran to completion). Shipped via quickmerge (foreground, after 3 backgrounded attempts
+  were also killed early) — `market-tick-data-service@ec715e509c`, verified as an ancestor of
+  `origin/live-defi-rollout`.
 
 ## Context scout
 
