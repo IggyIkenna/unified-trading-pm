@@ -280,10 +280,25 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Progress Log
 
-- **2026-08-15 (in-progress, slot-12, data_engineering) — VERIFY-then-reconcile todo (ROCKETPOOL-ETHEREUM/oracle_prices,
-  SOLBLAZE-SOLANA/oracle_prices): registries confirmed, methodology lesson found, live-manifest verification NOT yet
-  complete.** No code shipped this session. Confirmed both pairs' current registry state:
-  `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py` — `rocketpool`'s
+- **2026-08-15 (DONE, slot-14, data_engineering) — VERIFY-then-reconcile todo (ROCKETPOOL-ETHEREUM/oracle_prices,
+  SOLBLAZE-SOLANA/oracle_prices) COMPLETE, resolved roll-back for both.** `unified-api-contracts@d27d29f0c9`
+  (`origin/live-defi-rollout`, QG green, post-push ancestry verified). Picked up from slot-12's in-progress checkpoint
+  below — used the bare venue+chain-column filter form slot-12 correctly identified as the vocabulary the writer
+  actually needs verifying against (not the composite `"ROCKETPOOL-ETHEREUM"` dict-key string), via
+  `read_availability_index(bucket="market-data-tick-defi-prd-central-element-323112", filters=[("venue","==","ROCKETPOOL"), ("chain","==","ETHEREUM"),("data_type","==","oracle_prices"),("capture_status","==","captured")])`
+  (and the SOLBLAZE/SOLANA equivalent). Both returned 0 captured rows — genuinely no capture surface, not a
+  vocabulary-mismatch false-absence (unlike the ALCHEMY gas_fees case slot-12 flagged as the risk to rule out). Did not
+  need the `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` override slot-12 found necessary — the index was fresh enough at
+  query time (each query completed and printed its row count in well under the 100s/240s timeouts used, no hang on the
+  read itself; a post-print hang on process teardown/GCS-client cleanup was observed and worked around with a `timeout`
+  wrapper, not a data-correctness issue). Rolled back both genesis entries in `defi_venue_capabilities.py` (removed the
+  `oracle_prices` key from each venue's dict, kept `lst_rates`). Re-ran the audit function: 0 violations, fully
+  reconciled. Fixed the audit-join test's control case to a synthetic `monkeypatch` injection (no real drift pair left
+  to exercise it against). QG green, 6/6 tests pass, shipped via quickmerge.
+- **2026-08-15 (superseded by the entry above, slot-12, data_engineering) — VERIFY-then-reconcile todo
+  (ROCKETPOOL-ETHEREUM/oracle_prices, SOLBLAZE-SOLANA/oracle_prices): registries confirmed, methodology lesson found,
+  live-manifest verification NOT yet complete.** No code shipped this session. Confirmed both pairs' current registry
+  state: `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py` — `rocketpool`'s
   `PROTOCOL_CAPABILITIES` entry (~line 839) declares `data_types=["lst_rates", "staking_yields"]`; `solblaze`'s
   (~line 974) declares `data_types=["lst_rates"]` — **neither declares `oracle_prices`**.
   `unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py` —
@@ -822,16 +837,20 @@ just belongs on a different layer than instrument_type does, and conflating the 
       audit-join test's control case (`test_a_genuine_undeclared_violation_is_still_caught`, previously
       MAKER-ETHEREUM/lst_rates, now reconciled) to `ROCKETPOOL-ETHEREUM/oracle_prices` (still genuinely undeclared) +
       added a regression test for AAVE-ETHEREUM. QG green.
-- [ ] [CODE] P2. **VERIFY-then-reconcile 2 new Layer-1/Layer-2 drift pairs** (`ROCKETPOOL-ETHEREUM/oracle_prices`,
-      `SOLBLAZE-SOLANA/oracle_prices`) — surfaced 2026-08-15 while re-running
-      `defi_actual_data_types_not_declared_valid()` post-fix for the VERIFY-then-roll-back todo above (not
-      live-manifest-verified in that session). Both are declared in `DEFI_VENUE_DATA_TYPE_CAPABILITIES`
-      (`defi_venue_capabilities.py`) with an `oracle_prices` genesis but `rocketpool`/`solblaze`'s
-      `PROTOCOL_CAPABILITIES` entries don't declare it. Same resolution pattern as the todo above: query the live prod
-      defi availability manifest for `(venue, chain, "oracle_prices")` `captured` rows FIRST — if real rows exist, close
-      the Layer-1 gap (declare `oracle_prices` valid for the protocol); if genuinely zero, roll back the genesis date.
-      Done-when: each pair either has its genesis corrected/removed OR is confirmed a real capture surface with the
-      Layer-1 declaration fixed instead — with the live-manifest evidence cited. (repo: unified-api-contracts)
+- [x] ✅ [CODE] P2. **VERIFY-then-reconcile 2 new Layer-1/Layer-2 drift pairs** (`ROCKETPOOL-ETHEREUM/oracle_prices`,
+      `SOLBLAZE-SOLANA/oracle_prices`) — `unified-api-contracts@d27d29f0c9` (`origin/live-defi-rollout`, post-push
+      ancestry verified, QG green). Queried the live prod defi availability manifest directly via
+      `read_availability_index(bucket="market-data-tick-defi-prd-central-element-323112", filters=[("venue","==",<V>),     ("chain","==",<C>),("data_type","==","oracle_prices"),("capture_status","==","captured")])`
+      — the SEPARATE-venue+chain-column form, not the composite `"ROCKETPOOL-ETHEREUM"` dict-key string (closing the
+      methodology gap the 2026-08-15 slot-12 in-progress entry below correctly flagged as unverified). Both returned **0
+      captured rows**: `ROCKETPOOL-ETHEREUM/oracle_prices` = 0, `SOLBLAZE-SOLANA/oracle_prices` = 0 — genuinely no
+      capture surface for either. Rolled back both `DEFI_VENUE_DATA_TYPE_CAPABILITIES` genesis entries (removed the
+      `oracle_prices` key, kept `lst_rates`) rather than adding a Layer-1 declaration. Re-ran
+      `defi_actual_data_types_not_declared_valid()` post-fix: **0 violations** (fully reconciled). Updated the
+      audit-join test's control case (`test_a_genuine_undeclared_violation_is_still_caught`, previously relying on the
+      now-rolled-back ROCKETPOOL-ETHEREUM/oracle_prices pair as a real drift example) to a `monkeypatch`-injected
+      synthetic violation, since no real drift pair remains to exercise the discrimination path. 6/6 tests pass, QG
+      green. (repo: unified-api-contracts)
 - [ ] [DATA] P2. **Prod full-history backfill of the newly-wired pairs** (gated on the wire-capture todos above
       landing). Once each pair's capture path is proven against the `-test-` bucket, run the prod full-history backfill
       so the pairs show real `captured` rows in the live prod manifest (the original monolithic todo's ultimate
