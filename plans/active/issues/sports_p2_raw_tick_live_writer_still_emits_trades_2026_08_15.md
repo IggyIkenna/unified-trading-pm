@@ -121,7 +121,7 @@ rather than a dedicated VM launch, per proportionality.
       confirming 0 `trades` rows remaining on both surfaces (first attempt killed by host contention mid-CAS-retry, no
       corruption — snapshot-first ordering held, confirmed via dry-run before retrying; second attempt succeeded clean,
       exit 0). Fresh independent census via
-      `read_availability_index_safe(bucket="market-data-tick-sports-prd-central-     element-323112", filters=[("data_type","==","trades")])`
+      `read_availability_index_safe(bucket="market-data-tick-sports-prd-central- element-323112", filters=[("data_type","==","trades")])`
       (same methodology as the original 4-surface reconciliation, different code path than the swap script's own
       self-check): **0 `trades` rows in the sports manifest, period** — trivially satisfies "0 rows with `attempted_at`
       after the fix deploy time" since none remain at all.
@@ -136,7 +136,7 @@ rather than a dedicated VM launch, per proportionality.
       comments + genuinely-unrelated tradfi/Polymarket/Kalshi `"trades"` literals, zero sports hardcodes remaining. So
       this is NOT a code-fix gap — it is a **deployment gap**: per
       `/codex/04-architecture/runtime-deployment-topology.md`
-      (`market-tick-data-service (MTDH) | VM (co-located) |     always-on`), the sports live writer runs as a standalone
+      (`market-tick-data-service (MTDH) | VM (co-located) | always-on`), the sports live writer runs as a standalone
       always-on VM process (deployed via `/codex/05-infrastructure/vm-tarball-deployment.md`'s code-tarball mechanism),
       not something a `git push` to `live-defi-rollout` auto-restarts. The running process is still executing the
       pre-fix code image. **Needs an operator decision, not a worker action**: (1) no validated safe-restart procedure

@@ -315,9 +315,9 @@ source: >-
 - [x] ✅ [CODE] P2. Widen canonical_writer_shaping int32->int64 coercion to every contract-declared int64 column (or
       assert dtype match at the write seam) — **SHIPPED market-data-processing-service@5b2701fa9f (2026-08-15,
       slot-9·backend_engineer).** `_inject_schema_contract_columns` now accepts an optional
-      `schema_contract:     SchemaContract | None` param; when supplied, it coerces EVERY contract-declared `int64`
-      column present on the frame from int32→int64 (not just the hardcoded `trade_count`) — this closes the exact class
-      of defect `liquidation_count` hit invisibly. Both call sites now pass the already-resolved contract:
+      `schema_contract: SchemaContract | None` param; when supplied, it coerces EVERY contract-declared `int64` column
+      present on the frame from int32→int64 (not just the hardcoded `trade_count`) — this closes the exact class of
+      defect `liquidation_count` hit invisibly. Both call sites now pass the already-resolved contract:
       `canonical_writer.py`'s `lookup_mdps_contract()` call was reordered to run BEFORE the injection call (previously
       ran after, so the contract wasn't available yet); `canonical_writer_streaming.py`'s `CandleStreamingWriteContext`
       gained a `schema_contract: SchemaContract | None = None` field, populated at `open_candle_streaming_writer()` time
@@ -332,7 +332,7 @@ source: >-
       TWO producers, both already-shipped one-off manifest-canonicalisation scripts, NOT a live adapter routing path:
       `scripts/_rebuild_cefi_cf11.py::_process_attempted_failed_cefi_row` (CF-11 manifest rebuild) and
       `scripts/canonicalize_mtds_index.py::canonicalize_cefi` (wholesale live-index canonicalisation,
-      `lifecycle:     oneoff`) — both deliberately normalise a legacy blank/`LegacyBlankErrorReasonError` `error_reason`
+      `lifecycle: oneoff`) — both deliberately normalise a legacy blank/`LegacyBlankErrorReasonError` `error_reason`
       (predating the manifest's structured error taxonomy) into the visible `UNCLASSIFIED_ADAPTER_ERROR` catch-all, per
       their own docstrings: "a recorded failure, kept visible + backfill-worthy — never hide a possible gap." No CeFi
       trades/ derivative_ticker live fetch/write path (`engine/orchestrator/sentinels.py`'s tier-2/tier-3 sentinel
@@ -353,7 +353,7 @@ source: >-
       check_high_attempted_failed (DP-FETCH-009)") and was refined further by **deployment-service@0c38c00d**
       (2026-08-11, "windowed attempted_failed ratio"). Verified live in
       `_attempted_failed_index.py::read_attempted_failed_cells`:
-      `windowed_captured_mask = captured_mask &     within_window_mask` — `captured` now shares the SAME
+      `windowed_captured_mask = captured_mask & within_window_mask` — `captured` now shares the SAME
       `ATTEMPTED_FAILED_TRAILING_WINDOW_DAYS=14` window as `attempted_failed`, so the ratio is no longer a 14-day
       numerator over an all-time denominator. `max_attempted_at`/`stale_days` diagnostics correctly remain
       LIFETIME-scoped (a different, intentional use — "when did this last fail at all"). No code shipped by this batch
@@ -413,17 +413,17 @@ source: >-
       fixture in the ROOT `tests/conftest.py`, confirmed the ONLY `conftest.py` in the whole `tests/` tree via
       `find tests -iname conftest.py`) monkeypatches
       `unified_trading_library.cloud_interface.providers.local._default_local_storage_root` to
-      `tmp_path /     "local-storage"` for EVERY test in the suite, not just the two `sweep()` alert tests the source
-      doc's own Lesson 5 names. `git log -S"_isolate_local_storage_provider_default_root" -- tests/conftest.py` → single
-      hit, `0c38c00d` — the exact same commit the source doc cites for the "ad hoc" fix, and the fixture's own docstring
+      `tmp_path / "local-storage"` for EVERY test in the suite, not just the two `sweep()` alert tests the source doc's
+      own Lesson 5 names. `git log -S"_isolate_local_storage_provider_default_root" -- tests/conftest.py` → single hit,
+      `0c38c00d` — the exact same commit the source doc cites for the "ad hoc" fix, and the fixture's own docstring
       already states the generalisation intent verbatim ("Porting the same fixture ... closes the class for EVERY
       deployment-service feature that writes durable state, not just those actuators"), mirroring UTL's own `@8f0d6e8f`
       fixture rather than inventing a repo-local one. Confirmed no narrower/duplicate local-storage-root patch exists
-      elsewhere (`grep -rn '_isolate_local_storage_provider_default_root\|_default_local_storage_root'     tests/`
-      outside `conftest.py` → only a citing comment in `test_dp_recovery_actuators.py`, no second implementation). The
-      todo's own framing (still "ad hoc," needing a follow-up generalisation) was accurate at the moment the source
-      doc's Progress Log was written mid-session but was already resolved by session-end — simply never checked off. No
-      code shipped by this batch (none needed). Source:
+      elsewhere (`grep -rn '_isolate_local_storage_provider_default_root\|_default_local_storage_root' tests/` outside
+      `conftest.py` → only a citing comment in `test_dp_recovery_actuators.py`, no second implementation). The todo's
+      own framing (still "ad hoc," needing a follow-up generalisation) was accurate at the moment the source doc's
+      Progress Log was written mid-session but was already resolved by session-end — simply never checked off. No code
+      shipped by this batch (none needed). Source:
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [x] ✅ [CODE] P2. **STALE PREMISE — already fixed, no violation exists.** (2026-08-15, slot-22·backend_engineer) The
       named QG check (`base-service.sh`: `codex_rg "central-element-[0-9]+" tests/` → "Hardcoded prod project ID in
