@@ -258,7 +258,8 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
       = **25 total**, not 34 (see Progress Log for the discrepancy note; `uts-dev-instruments-t1-schedule`, the one
       OTHER live `uts-dev-*` match, is a different legacy scheduler not in this doc's dead-target list at all —
       excluded, its target is the one stray live job the sibling alert-coverage doc already flagged). Shipped
-      `deployment-service@38f42829`: `t1_batch_scheduler.tf` adds `t1_batch_services_dev_staging_excluded_keys =
+      `deployment-service@074bae2a` (verified landed, `ahead=0` vs `origin/live-defi-rollout`; see Progress Log for why
+      this differs from the pre-ship SHA): `t1_batch_scheduler.tf` adds `t1_batch_services_dev_staging_excluded_keys =
       keys(local.t1_batch_services_all)` (derived from the map's own keys, not hand-listed — can't go stale the way
       the schedulers themselves did) and changes the `t1_batch_services` conditional to
       `contains(["dev","staging"], var.environment)`. **Neither the dev-tier schedulers nor the trigger were ever
@@ -344,3 +345,11 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
      cross-referenced elsewhere warrants its own careful investigation, not an incidental side-effect here). staging's
      own SA entry was independently confirmed correct (`0 to change` in the same targeted plan) — this drift is
      dev-specific, likely a stray `terraform import` of prod's real SA into dev's state slot at some point.
+- **2026-08-15 (slot-7) — post-ship SHA correction**: the STANDING-ACTION todo above originally cited
+  `deployment-service@074bae2a` (the Pass-1/pre-ship commit). Quickmerge's Pass-2 reconciliation
+  (`git pull --rebase --autostash`) rewrote it to **`074bae2a63ebe00a0a5259b0fa8fe83b2bdcbea3`** because origin had
+  advanced with an unrelated promote-pipeline merge (`96917145`/`b330fc4a`) between the Pass-1 commit and the Pass-2
+  ship. Corrected the citation above to the verified post-quickmerge SHA (`ahead=0` vs `origin/live-defi-rollout`,
+  `git status --porcelain` clean). **Lesson**: a quickmerge-shipped commit's SHA is not stable until AFTER the ship
+  completes — always re-derive via `git rev-parse HEAD` post-quickmerge before citing it as evidence; never trust a
+  pre-ship commit SHA recorded earlier in the session.

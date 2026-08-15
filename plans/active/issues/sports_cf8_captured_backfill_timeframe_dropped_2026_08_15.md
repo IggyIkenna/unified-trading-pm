@@ -619,3 +619,11 @@ issue's scope); flagged as a follow-up todo below.
   exactly. No writes made. Remaining open work on this doc: the full CF-8 backfill re-attempt (blocked on a
   maintenance window) and the Cloud Scheduler bypass gap (operator-owned, INFRA P2) — both correctly untouched this
   session.
+- **data_engineering slot-2, 2026-08-15 (ship checkpoint)**: the root-cause-profiling extension to
+  `audit_sports_captured_phantom_timeframe_2026_08_16.py` cited in the P1 out-of-window todo above landed as
+  `market-tick-data-service@53bea812a2` (dry-run-only audit script, no prod write; `quality-gates.sh` green before
+  commit; post-push ancestry verified against `origin/live-defi-rollout`). Also filed and pushed
+  `unified-trading-pm@982f87d110` — a residual, reproduced `safe-doc-push.sh` gap found while archiving the
+  IS-surface doc (a caller-pre-staged `git mv` still trips the pre-fix pathspec error;
+  `safe_doc_push_extreme_stash_quarantine_drops_renamed_file_content_2026_08_15.md` P1 todo, not scoped to this
+  doc's own investigation). Every actionable item from this session's resumption list is now committed and pushed.

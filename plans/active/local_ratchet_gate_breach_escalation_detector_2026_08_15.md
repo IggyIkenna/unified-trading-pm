@@ -123,11 +123,18 @@ source: >-
       `("escalated", armed_at)` as a signal instead of calling `enqueue()` inline; `run()` defers the real
       `escalation.enqueue()` call (via new `_enqueue_escalation()`) until after its session closes. `bash
       scripts/quality-gates.sh` green (3975 passed, up from 3974). `agent-orchestrator@dd4789d305`.
-- [ ] [INFRA] P1. Ensure the dispatched worker's remediation goal is always **driving the breached metric back below its
+- [x] ✅ [INFRA] P1. Ensure the dispatched worker's remediation goal is always **driving the breached metric back below its
       baseline ceiling** (per the 2026-08-12 ruling), never just acknowledging/logging it — write or extend a
       boot-prompt/role doc the dispatched worker reads so its own `done_definition` reads "re-running the detector's
       check against my fix reports no breach," not "issue acknowledged." Done-when: the routed boot prompt states this
-      explicitly and a synthetic-dispatch test confirms the worker's task brief includes it.
+      explicitly and a synthetic-dispatch test confirms the worker's task brief includes it. —
+      `unified-trading-pm/agents/cicd.md` (this session): added `local_ratchet_gate_breach` to the wall_type set +
+      a new "WHAT TO DO BY wall type" entry stating the done_definition explicitly ("is NOT 'the escalation is
+      acknowledged/closed' — it is the specific check named in `context`, re-run against my fix, reporting the
+      metric back at-or-below its baseline ceiling"; never widen the ratchet ceiling/pragma-suppress to fake it
+      green). agent-orchestrator@899c4af8ac: synthetic-dispatch test
+      `test_local_ratchet_gate_breach_routes_to_cicd_with_remediation_goal_stated` proves both halves — routes to
+      the `cicd` prompt template, and the real role file (not the CI-only fixture stub) states the wording.
 - [ ] [INFRA] P2. Wire the detector into a scheduled systemd timer via a new
       `agent-orchestrator/scripts/install-local-ratchet-gate-breach-detector-timer.sh`, mirroring the cadence/install
       pattern of `install-ci-reconciler-timer.sh`. Cadence: no tighter than 15 minutes (matches the grace window — no
@@ -265,3 +272,23 @@ source: >-
   closes. `bash scripts/quality-gates.sh` green (3975 passed). `agent-orchestrator@dd4789d305`. Remaining open: todo
   7 (remediation-goal wording), todo 8 (systemd timer), todo 9 (Slack-ownership fact-find), todo 10 (codex doc
   update), todo 11 (happy-path regression test), todo 12 (full-fleet dry run) — not attempted this session.
+- **2026-08-15 (slot-14·infra)**: Todo 7 flipped. `local_ratchet_gate_breach` routes to the generic `cicd` prompt
+  template (confirmed via `escalation._prompt_template_for`), and `prompts.render()` only stubs session vars +
+  read-pointers — it never re-templates the role file's body (`server/prompts.py`'s own module docstring, the
+  2026-07-10 read-the-file cutover) — so the actual remediation-goal wording has to live IN
+  `unified-trading-pm/agents/cicd.md` itself, the file the routed worker actually reads at boot. Added a new
+  "WHAT TO DO BY wall type" entry for `local_ratchet_gate_breach` there stating the done_definition explicitly: NOT
+  "the escalation is acknowledged/closed" but "the specific check named in `context`, re-run against my fix, reports
+  the metric back at-or-below its baseline ceiling" — plus an explicit ban on widening the ratchet ceiling or adding
+  a suppression/pragma to fake the check green (the same floor-lowering ban this repo already applies to a coverage
+  floor). Also added `local_ratchet_gate_breach` to the frontmatter `triggers:` list and the `wall_type` enum in
+  "Your boot message provides" (both were missing it). Regression coverage:
+  `agent-orchestrator/tests/test_escalation.py::test_local_ratchet_gate_breach_routes_to_cicd_with_remediation_goal_stated`
+  — a genuine synthetic-dispatch test, not a rendered-stub check (confirmed `tests/fixtures/agents/cicd.md` is a
+  deliberately stubbed body per `conftest._fixture_agents_dir`'s own docstring, so a test against the rendered stub
+  or the CI fixture would prove nothing about the real content); the test explicitly monkeypatches
+  `config.AGENTS_DIR` back to the real sibling PM repo (the conftest's own sanctioned override pattern) and reads
+  `prompts.get("cicd")` directly, whitespace-normalized to tolerate hand-wrapped prose. `bash scripts/quality-gates.sh`
+  green in agent-orchestrator (3976 passed, 2 skipped, + dashboard 374 passed) — shipped
+  `agent-orchestrator@899c4af8ac`. Remaining open: todo 8 (systemd timer), todo 9 (Slack-ownership fact-find), todo 10
+  (codex doc update), todo 11 (happy-path regression test), todo 12 (full-fleet dry run) — not attempted this session.
