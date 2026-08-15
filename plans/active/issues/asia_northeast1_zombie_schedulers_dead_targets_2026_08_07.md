@@ -329,12 +329,24 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
       -target='google_cloud_scheduler_job.t1_batch_schedule["features-onchain"]'
       -target='google_cloud_scheduler_job.t1_batch_schedule["features-sports"]'` clears them explicitly. Repo:
       deployment-service.
-- [ ] [DIAG] P2. **NEW 2026-08-15 (slot-7)** — Investigate dev Terraform state's `google_service_account.t1_batch`
-      entry, recorded with PROD's real values (`account_id=uts-prod-batch-sa`, matching prod's live SA email/
-      unique_id exactly) instead of a genuine dev SA — likely a stray `terraform import` of prod's real SA into
-      dev's state slot. A targeted plan proposes a REPLACE (`uts-prod-batch-sa`→`uts-dev-batch-sa`); do NOT blindly
-      apply that without first confirming nothing depends on the CURRENT (prod-identity) state entry under the dev
-      slot. Repo: deployment-service.
+- [x] ✅ [DIAG] P2. **RESOLVED 2026-08-15 (slot-7)** — Investigated + fixed dev Terraform state's
+      `google_service_account.t1_batch` entry. **Confirmed the danger the todo flagged was real**: dev's entry was
+      byte-identical to prod's real SA (`unique_id=106252291607337267760`, same `email`/`id` — verified via a direct
+      `ENV=prod state show` comparison), and that SA is actively referenced by 9+ prod-tier scheduler `.tf` files
+      (`t1_batch_scheduler.tf`, `qg_snapshot_scheduler.tf`, `defi_forward_poll_scheduler.tf`, etc.) — the proposed
+      REPLACE would have issued a live GCP DELETE against prod's real, in-use SA. **Safe fix applied instead**: (1)
+      `ENV=dev tofu state rm 'google_service_account.t1_batch'` — dev-state-only bookkeeping change, zero GCP API
+      calls, prod's own state never touched (only 2 read-only `state show` calls made against it, for comparison).
+      (2) A subsequent create attempt hit a 409 — `uts-dev-batch-sa` already exists live but was never imported. (3)
+      `ENV=dev tofu import 'google_service_account.t1_batch' 'projects/central-element-323112/serviceAccounts/uts-dev-batch-sa@central-element-323112.iam.gserviceaccount.com'`
+      — attached the REAL, distinct dev SA (`unique_id=105668859597877647299`, confirmed different from prod's).
+      **Verified**: post-import targeted plan = "No changes. Your infrastructure matches the configuration." No code
+      change (pure live Terraform state operation — matches this task's own empty `repos: []`). **Adjacent finding**
+      (out of this todo's scope, filed separately): a full untargeted `ENV=dev tofu plan` surfaced 2 more
+      `_imports_reconcile.tf` defects (a dead import block + a broader prod-only-hardcoding risk affecting ~20 more
+      resources) — filed as 2 new todos in
+      `/plans/active/issues/deployment_service_t1_recon_duplicate_module_definitions_2026_08_09.md` (same file already
+      tracks related `_imports_reconcile.tf` bugs). Repo: deployment-service (no diff — state-only).
 
 ## Progress Log
 
