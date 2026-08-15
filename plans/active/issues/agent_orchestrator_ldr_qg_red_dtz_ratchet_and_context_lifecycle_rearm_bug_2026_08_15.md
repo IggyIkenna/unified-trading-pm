@@ -115,10 +115,11 @@ goes green), not a design/judgment call.
       `usage_tracker.py:584`, `usage_tracker.py:622`. Done-when:
       `python unified-trading-pm/scripts/quality_gates/check_ruff_rule_ratchet.py --workspace-root <ws> --scope agent-orchestrator`
       reports `dtz: <=8` (no `[FAIL]` line) on a fresh HEAD checkout. (repo: agent-orchestrator)
-- [ ] [BACKEND] P1. Fix the 1 new fallback-import site at `agent-orchestrator/server/codex_bridge_server.py:217` (import
-      the dependency directly + declare it in `pyproject.toml`, or add a one-line-reasoned `# noqa: fallback-import` if
-      it is genuinely a documented optional extra). Done-when: `check_no_fallback_imports.py --scope agent-orchestrator`
-      reports count `<=0`. (repo: agent-orchestrator)
+- [x] ✅ [BACKEND] P1. Fix the 1 new fallback-import site at `agent-orchestrator/server/codex_bridge_server.py:217`
+      (import the dependency directly + declare it in `pyproject.toml`, or add a one-line-reasoned
+      `# noqa: fallback-import` if it is genuinely a documented optional extra). Done-when:
+      `check_no_fallback_imports.py --scope agent-orchestrator` reports count `<=0`. (repo: agent-orchestrator) —
+      `agent-orchestrator@ed15e2c596`
 - [ ] [BACKEND] P2. Fix the 20 new/over-baseline empty-string-fallback sites (baseline 25, observed 45) — rewrite each
       `.get("key", "")` to fail fast (raise, or return `None` and let the caller decide), or add a one-line-reasoned
       `# noqa: qg-empty-fallback` for a genuinely deliberate case. Run
@@ -177,3 +178,7 @@ Open — repo-blocker declared (`kind: qg_red`) alongside this filing per `agent
   end-to-end (3960 passed, 2 skipped; dashboard tsc + vitest also green) — confirms slot-20's finding above that todos
   1/3 (DTZ/empty-string ratchets) don't block AO's own Pass-1 gate; todo 4 was indeed the sole blocker. Shipped
   `agent-orchestrator@6d00256` via quickmerge (SHA verified ancestor of `origin/live-defi-rollout`).
+- **2026-08-15 (slot-20)**: Todo 2 shipped — `agent-orchestrator@ed15e2c596` (rebased onto slot-16's todo-4 fix at
+  `6d00256`; the previously-failing test now passes; full local `bash scripts/quality-gates.sh` PASSED end-to-end,
+  `.qg_last_passed_sha` sentinel verified matching HEAD; quickmerge's own post-push ancestry check + an independent
+  `git merge-base --is-ancestor` both confirm the SHA landed on `origin/live-defi-rollout`). Checkbox flipped above.
