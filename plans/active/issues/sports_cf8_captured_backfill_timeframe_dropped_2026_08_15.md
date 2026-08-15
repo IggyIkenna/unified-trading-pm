@@ -472,6 +472,48 @@ issue's scope); flagged as a follow-up todo below.
       that's legitimate-by-design (closes this P1 todo with "no bug, working as intended, audit query needs a
       coarse/fine filter") or itself a bug. The other 4 candidate scripts remain unread. (repo:
       market-data-processing-service)
+- [x] [DATA] P1. **RESOLVED, 2026-08-15 (later pass) — ROOT CAUSE CLOSED for the bulk of both populations; the
+      whole MDPS live-dispatch/reprocess-script chase above was a MISATTRIBUTION, not a dead end with a real
+      answer elsewhere.** Confirmed `_coarse_row_key()` (`reprocess_sports_odds.py:706-720`) is used ONLY by
+      `writer.record_empty(...)` (line 988) and `writer.record_failed(...)` (line 1010) — **never**
+      `record_captured`/`writer.add()` with a captured status. So the coarse-row mechanism can only ever explain
+      blank-timeframe rows with `capture_status=empty_confirmed`/`attempted_failed`, never `captured`. Measured
+      directly against the prod MDPS canonical
+      (`market-data-tick-sports-prd-central-element-323112`, `data_type=odds_horizon_bucket`, via
+      `read_availability_index_safe` through the MTDS venv — full population, not a sample):
+        - Total blank-timeframe rows: 15,941 (959 in the 2026-08-15 session's backfill-attempt window, 14,982
+          outside it — exactly the doc's own previously-cited "14,982 MDPS-surface" figure, now root-caused
+          rather than just counted).
+        - Of the 14,982 out-of-window rows: 652 have blank `league_id` + `capture_status=empty_confirmed` — this
+          IS the legitimate `_coarse_row_key` mechanism, confirmed working as designed, no bug.
+        - The other **14,330 have a NON-blank, real `league_id` (e.g. `LA_LIGA`, `SUPERLIGA`, `SUPER_LIG`) AND
+          `capture_status=captured`** — i.e., genuine FINE per-shard rows, not coarse aggregates, that are
+          missing only `timeframe`. **14,656 of the 14,982 (98%) carry `service_name=market-tick-data-service`**,
+          not `market-data-processing-service` (only 326 are MDPS-attributed) — `written_at` clusters at
+          `2026-07-13T23:5x` (14,656 rows) and `2026-05-05T22:07` (326 rows). This is the EXACT signature of the
+          already-known, already-fixed bug — `_write_captured_rows()` in
+          `market_tick_data_service/scripts/_rebuild_sports_write.py` omitting `timeframe=` on `writer.add()`
+          (fixed at `market-tick-data-service@e0b34e77fd`, this doc's own header) — just from TWO EARLIER, PRE-FIX
+          invocations of that same targeted-backfill script (2026-07-13 and 2026-05-05), in addition to today's
+          959-row in-window occurrence. **None of MDPS's write paths (`live_workers_chain.py`,
+          `live_workers_streaming.py`, `reprocess_sports_odds.py` fine or coarse) are implicated** — the two
+          preceding P1 todos' "MDPS live-dispatch"/"5-candidate-script" chase was chasing the wrong service; MDPS
+          genuinely cannot write this row shape at all (confirmed via the `TIMEFRAME_SECONDS`/
+          `get_valid_output_timeframes` registry check), and the observed population's own `service_name` column
+          says so directly — this should have been checked before the deep MDPS code trace, not after.
+      **Residual open sub-item (small, not blocking)**: the 326 `service_name=market-data-processing-service`,
+      `written_at=2026-05-05T22:07`, non-blank-`league_id`, `captured`-status rows are NOT explained by this
+      finding (MDPS itself can't hit this write shape per the registry check) — plausible explanation is an MDPS
+      script that reuses/duplicates `_rebuild_sports_write.py`'s row-key construction (same bug class, different
+      repo, unread) or a `service_name` mislabel on a cross-repo call; low priority given the 2%-of-population
+      size, tracked as its own follow-up rather than blocking archival of this todo. **Cleanup scope for the full
+      15,941-row phantom population (959 in-window + 14,982 out-of-window, all non-destructive per this doc's own
+      `audit_sports_captured_phantom_timeframe_2026_08_16.py` sibling-check design) is now todo #2's job, unchanged
+      from before this pass** — this todo closes the ROOT-CAUSE question, not the cleanup-execution one.
+      Measurement scripts used (scratchpad, not promoted — trivial one-off `read_availability_index_safe` queries,
+      fully superseded by the `audit_sports_captured_phantom_timeframe_2026_08_16.py` script's own
+      capture_status-aware query if it's ever extended to bucket by that column; the dry-run audit script itself
+      IS already promoted and re-runnable). (repo: market-data-processing-service, market-tick-data-service)
 
 ## Progress Log
 
