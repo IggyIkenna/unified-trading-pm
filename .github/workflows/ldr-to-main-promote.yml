@@ -622,6 +622,13 @@ jobs:
   # learns it self-resolved short of checking GitHub directly. dedup_key includes the PR number(s)
   # so this is a genuine per-event post, never suppressed by an unrelated prior cooldown; short
   # cooldown_min since the key is already unique per occurrence.
+  # Message-accuracy fix (2026-08-15): the prior wording unconditionally claimed "each had posted
+  # a CRITICAL... not a code defect" for every red-and-superseded PR. Both claims were overclaims —
+  # `superseded_red_prs` is populated from `statusCheckRollup` alone (was the check red at close
+  # time), independent of whether the underlying continuous-failure streak (tracked separately,
+  # across PR supersessions, in python-quality-gates-v2.yml's debounce job) actually crossed the
+  # 30min Slack-CRITICAL threshold — most red-and-superseded PRs never do. "Not a code defect" is
+  # flatly false for the minority that DID cross 30min. Softened to what's actually known.
   notify-superseded-red:
     name: Slack — QG-failed promote PR auto-resolved via supersede
     needs: [promote-ldr-to-main]
@@ -630,9 +637,11 @@ jobs:
     with:
       message: >
         PM LDR→main auto-drain bot: closed promote PR(s) ${{ needs.promote-ldr-to-main.outputs.superseded_red_prs }} as
-        superseded by a newer LDR tip — RESOLVED, not left broken. Each had posted a CRITICAL QG-slice-failed alert on
-        this channel; the failure was a promote-cadence race (the branch was cut before a later LDR edit landed, so the
-        promote diff would have regressed main relative to current LDR) — not a code defect. The fresh promote PR (${{
+        superseded by a newer LDR tip — each was red on its own quality-gates-v2 check at close time. This is routine
+        drain-bot behaviour (most red promote-PR snapshots are an ordinary cut-before-a-later-LDR-edit race, cleared by
+        the next attempt) and NOT evidence either way of whether the underlying cause was a real, still-open regression
+        — check `python-quality-gates-v2`'s own continuous-failure-streak signal (pages separately once a failure
+        survives 30+ min across successive promote-PR supersessions) for that. The fresh promote PR (${{
         needs.promote-ldr-to-main.outputs.pr }}) carries the up-to-date content. SSOT: ldr-to-main-promote.yml.
       recovery: true
       dedup_key: ldr-main-superseded-red-pm-${{ needs.promote-ldr-to-main.outputs.superseded_red_prs }}
