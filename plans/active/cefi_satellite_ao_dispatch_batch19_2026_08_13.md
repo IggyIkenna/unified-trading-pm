@@ -135,11 +135,13 @@ source: >-
       excludes the equity-perps) — building a standalone data_type would duplicate storage for an identical-source
       signal, the same anti-pattern `perp_funding_handler.py`'s ASTER/LIGHTER-ZKSYNC precedent documents avoiding. No
       code shipped (none needed). Full evidence + file:line citations:
-      `plans/active/issues/cefi_equity_perp_mark_index_funding_derivative_ticker_already_covers_2026_08_15.md`
+      `plans/archive/issues/cefi_equity_perp_mark_index_funding_derivative_ticker_already_covers_2026_08_15.md`
       (unified-trading-pm@229e86f53b). That issue doc's own `[CODE] P3` follow-up (manifest-level verification that
-      capture is actually dispatched+landing non-null for the equity-perp symbol subset specifically) stays tracked
-      there as the one genuinely open (verify, not build) question. Source:
-      `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
+      capture is actually dispatched+landing non-null for the equity-perp symbol subset specifically) is now ALSO DONE
+      (2026-08-15, slot-9) — confirmed via a direct manifest query (144/180/123 distinct equity-perp bases captured on
+      BINANCE-FUTURES/OKX-SWAP/BYBIT respectively; no enumeration gap; the archived doc's own Progress Log carries the
+      full evidence + two venue-naming corrections vs. this todo's literal OKX-FUTURES/BYBIT-FUTURES wording). Issue doc
+      archived (both todos done). Source: `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
 - [x] ✅ [CODE] P2. Recurring daily funding/basis scan across crypto-venue equity-perps (e2e-testing, scheduled job)
       Source: `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` — **SHIPPED
       e2e-testing@d1fe3dc6aa**. `scripts/cefi/equity_perp_funding_basis_scan.py`: scans the

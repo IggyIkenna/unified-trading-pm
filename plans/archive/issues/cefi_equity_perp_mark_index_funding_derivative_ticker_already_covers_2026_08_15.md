@@ -15,7 +15,7 @@ summary: >-
 assigned_vm: planning
 created: "2026-08-15"
 author: slot-7-backend_engineer
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -46,6 +46,10 @@ locked_by:
 ---
 
 # CeFi equity-perp indexPrice/markPrice/fundingRate — existing `derivative_ticker` already covers it
+
+> **ARCHIVED 2026-08-15 (slot-9)** — both todos done: the `[OPERATOR]` decision resolved via BLOCKED Q BLK-483148f6
+> (decision A, already-satisfied), and the `[CODE]` manifest-level verification confirmed no enumeration gap (see the
+> 2026-08-15 Progress Log entry below for full evidence). No open work remains. Original body preserved below.
 
 ## What I found
 
@@ -118,18 +122,69 @@ infrastructure.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Decide: close `cefi_satellite_ao_dispatch_batch19_2026_08_13.md`'s "capture Binance/OKX/Bybit
+- [x] ✅ [OPERATOR] P2. Decide: close `cefi_satellite_ao_dispatch_batch19_2026_08_13.md`'s "capture Binance/OKX/Bybit
       indexPrice+markPrice+fundingRate" todo as already-satisfied by `derivative_ticker` (cite this doc), or direct that
       a standalone data_type be built anyway (and if so, why — the duplicate-storage tradeoff vs.
       `perp_funding_handler.py`'s ASTER/LIGHTER-ZKSYNC precedent above should be addressed explicitly). Repo:
-      unified-trading-pm (plan-doc decision only).
-- [ ] [CODE] P3. Verify (manifest-query, not blob-listing) that BINANCE-FUTURES/OKX-FUTURES/BYBIT-FUTURES
+      unified-trading-pm (plan-doc decision only). **RESOLVED 2026-08-15 — operator approved decision (A) via BLOCKED Q
+      BLK-483148f6**: closed as already-satisfied, no standalone data_type. Reflected in
+      `cefi_satellite_ao_dispatch_batch19_2026_08_13.md`'s own todo (checkbox already flipped there).
+- [x] ✅ [CODE] P3. Verify (manifest-query, not blob-listing) that BINANCE-FUTURES/OKX-FUTURES/BYBIT-FUTURES
       `derivative_ticker` capture is actually dispatched + landing non-null `mark_price`/`index_price`/`funding_rate`
       for the CeFi equity-perp instrument set (COIN/MSTR/PLTR/... + SPXUSDT/NAS100/XAUUSDT index perps) specifically,
       not just the venues' native crypto pairs. If a real gap is found (universe/enumeration excludes these symbols from
       the `derivative_ticker` shard set), fix the enumeration — do not build a new data_type. Repo:
-      market-tick-data-service.
+      market-tick-data-service. **DONE 2026-08-15 (slot-9) — VERIFIED, no code needed.** Full evidence + two venue
+      naming corrections in the Progress Log entry below.
 
 ## Progress Log
 
 - **context-scout 2026-08-15**: populated context_scope (4 entries).
+
+- **2026-08-15 (slot-9) — manifest-level verification (not blob-listing) of derivative_ticker equity-perp capture.**
+  Queried the prod cefi availability index directly (`read_availability_index_safe`, `filters=` row-group pushdown — no
+  GCS blob-listing walk) for `data_type=derivative_ticker` over the trailing 10 days, then parsed each row's
+  `instrument_id` (`<VENUE>:PERPETUAL:<BASE>-<QUOTE>@<MARGIN>`) to isolate rows whose base is in UAC
+  `CEFI_EQUITY_PERP_BASE_UNIVERSE` — a manifest-only technique (no parquet content download needed) since this
+  workspace's cefi manifest keys derivative_ticker at `(venue, data_type, instrument_type, instrument_id, day)`
+  granularity, not an aggregate per-venue row.
+
+  **Two venue-naming corrections vs. this todo's own literal wording** (both confirmed via code, not the connector
+  registry's naming alone):
+  - **"OKX-FUTURES" is the wrong OKX venue for this check.** `market_tick_data_service/live/connectors/okx_ws.py`'s own
+    module docstring (2026-07-09 venue-key bug fix) states OKX-FUTURES is OKX's genuinely distinct DATED-futures product
+    (real instIds like `BTC-USD-260710`) and is deliberately left UNREGISTERED for the live trades/derivative_ticker
+    connector — every real instId this connector handles ends in `-SWAP` (perpetual). Binance/OKX/Bybit equity perps are
+    typed `PERPETUAL` (2026-07-16 architecture ruling, this doc's own citation) and trade as `-SWAP` contracts on OKX,
+    so the venue that actually carries them is **OKX-SWAP** — matching what
+    `e2e-testing/scripts/cefi/equity_perp_funding_basis_scan.py` (this doc's own referenced precedent) already reads.
+  - **Bare "BYBIT" (not "BYBIT-FUTURES") is Bybit's canonical, EXPECTED_COVERAGE-declared venue.** UAC
+    `EXPECTED_COVERAGE_BY_ASSET_GROUP["cefi"]` and `VENUES_BY_ASSET_GROUP["cefi"]` both declare `BYBIT`, not
+    `BYBIT-FUTURES`; `CanonicalParquetReader.read_shard(venue="BYBIT-FUTURES", ...)` raises
+    `UnknownVenueAssetGroupError` (`to_canonical_venue()` only resolves `LEGACY_DEFI_VENUE_ALIASES`, not
+    `CEFI_VENUE_FOLD`).
+
+  **Manifest results (captured, non-`expected_unattempted`/`empty_confirmed`, equity-perp-base rows only, 10-day
+  window):**
+
+  | Venue             | Total derivative_ticker rows | Equity-perp-base rows | Distinct equity-perp bases CAPTURED                                       |
+  | ----------------- | ---------------------------- | --------------------- | ------------------------------------------------------------------------- |
+  | BINANCE-FUTURES   | 6,799                        | 1,592                 | **144** (AAPL/NVDA/TSLA/COIN/MSTR/PLTR/META/AMZN/SPY/SPX/XAU/XAG/QQQ/...) |
+  | OKX-SWAP          | 4,387                        | 1,303                 | **180**                                                                   |
+  | BYBIT (canonical) | 7,136                        | 1,386                 | **123**                                                                   |
+  | BYBIT-FUTURES     | 1,284                        | 126                   | **0** — see below                                                         |
+
+  **Verdict: no enumeration gap.** derivative_ticker capture on each exchange's real, canonical/working venue
+  (BINANCE-FUTURES, OKX-SWAP, BYBIT) is confirmed generically dispatched across the full instrument universe including
+  the equity-perp base set — COIN/MSTR/PLTR and the rest of `CEFI_EQUITY_PERP_BASE_UNIVERSE` are landing real `captured`
+  derivative_ticker rows on all three exchanges today, exactly as this doc's original "What I found" section claimed. No
+  new data_type, no enumeration fix needed.
+
+  **BYBIT-FUTURES's 0 equity-perp captures is NOT a new/equity-perp-specific finding — it is the ALREADY-TRACKED,
+  venue-wide (not equity-perp-specific) live-capture outage documented in
+  `/plans/active/cross_ag_live_capture_parity_2026_08_14.md` Finding C** (100% `empty_confirmed` across ALL 4
+  BYBIT-FUTURES data_types — trades/book_snapshot_5/depth_of_book_10/derivative_ticker alike — re-confirmed live by that
+  doc as of 2026-08-15, root-caused to an IS same-day-catalog-at-boot timing issue, open `[CODE] P1` fix todo there). My
+  independent manifest query corroborates that doc's numbers exactly (1,284 BYBIT-FUTURES derivative_ticker rows in the
+  10-day window, 100% empty_confirmed) and confirms the outage is not selectively excluding equity perps — it is total.
+  No duplicate issue doc filed; the fix stays owned by that plan's Finding C todo, not this one.
