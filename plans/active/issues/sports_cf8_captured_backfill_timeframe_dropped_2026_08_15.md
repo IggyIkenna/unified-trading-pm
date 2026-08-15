@@ -215,15 +215,27 @@ issue's scope); flagged as a follow-up todo below.
       meaning 100% of LA_LIGA_2's phantom rows lack a sibling (not the 92% the 200-row sample suggested). The remaining
       87 no-sibling rows spread thinly across ~20 other minor leagues (SOCCER_RUSSIA_PREMIER_LEAGUE 22,
       SOCCER_AUSTRALIA_ALEAGUE 12, SOCCER_SWITZERLAND_SUPERLEAGUE 9, ... all ≤9 each), ALL on
-      `market-data-processing-service`, none observed on IS. This 100% correlation for LA_LIGA_2 is strong (not yet
-      confirmed) evidence for the "single-horizon-bucket league" hypothesis over "a second, different bug" — a random
-      second bug would not concentrate at exactly 100% in one league. Remaining before any delete: (b) confirm the
-      single-horizon-bucket hypothesis directly against MDPS's capture config for LA_LIGA_2 (and the ~20 minor leagues)
-      rather than relying on the correlation alone, (c) exclude every no-sibling row (959, enumerated by
-      date/venue/league_id/service_name in the retry audit log) from delete scope entirely (leave those as-is). Only the
-      sibling-confirmed 13,371-row subset is safe to delete; snapshot first, verify via row-count before/after. Also
-      audit whether the same class of phantom row exists on IS from the 500-row test there — NOT YET DONE (this script
-      only audits MDPS). (repo: market-tick-data-service, unified-trading-library)
+      `market-data-processing-service`, none observed on IS. (b) is now DONE — **CONFIRMED root cause (2026-08-15,
+      direct query against the live manifest, not just correlation)**: the original hypothesis label
+      ("single-horizon-bucket league") was imprecise; the actual mechanism is TEMPORAL, not bucket-count. Queried
+      `read_availability_index_safe` directly for LA_LIGA_2 + 3 sampled minor leagues (SOCCER_RUSSIA_PREMIER_LEAGUE,
+      SOCCER_AUSTRALIA_ALEAGUE, SOCCER_SWITZERLAND_SUPERLEAGUE — 915/959, 95% of the no-sibling population): for ALL 4,
+      the (date,venue) keys carrying the phantom blank-timeframe rows have ZERO overlap with the (date,venue) keys that
+      ever carry a non-blank timeframe value for that league. LA_LIGA_2's real timeframe-labeled rows (`15m`/`1h` — a
+      DIFFERENT vocabulary than the `T-6h`-style buckets seen elsewhere) only exist from 2026-03-28 onward; its 872
+      phantom rows span 2020-06-12..2026-02-20, entirely before that. The 3 sampled minor leagues have ZERO
+      non-blank-timeframe rows at ANY date — `timeframe` has never been populated for their `odds_horizon_bucket`
+      captures. Conclusion: these rows were NOT genuinely multi-timeframe originals that lost data — their pre-existing
+      captured row already had blank `timeframe` (this predates the 2026-08-15 bug entirely), so the backfill's
+      blank-timeframe rewrite is a correct same-row_key supersession, not a duplicate. "No sibling" is therefore not a
+      warning sign here — it's expected, because there was never a second row to begin with. These 959 rows are safe to
+      LEAVE AS-IS (already excluded from delete scope below) and this exclusion is now evidence-backed, not merely
+      cautious. (c): exclude every no-sibling row (959, enumerated by date/venue/league_id/service_name in the retry
+      audit log) from delete scope entirely (leave those as-is) — no further action needed on this sub-step, the
+      confirmation above IS the justification. Only the sibling-confirmed 13,371-row subset is safe to delete; snapshot
+      first, verify via row-count before/after. Still open: audit whether the same class of phantom row exists on IS
+      from the 500-row test there — NOT YET DONE (this script only audits MDPS). (repo: market-tick-data-service,
+      unified-trading-library)
 - [ ] [DATA] P1. **NEW finding, 2026-08-15 audit**: 14,982 blank-`timeframe` `data_type=odds_horizon_bucket` rows exist
       on MDPS OUTSIDE the session's 2026-08-15T11:0x-2x UTC window (i.e. NOT created by this session's bug) — a
       population almost as large as the in-window one, previously unknown. Root-cause: are these from an earlier,
@@ -491,3 +503,29 @@ issue's scope); flagged as a follow-up todo below.
   against MDPS's actual capture/backfill config for LA_LIGA_2 (and the ~20 minor leagues) rather than relying on the
   100% correlation alone — then sub-step (c) (exclude the 959 rows from delete scope) and the still-untouched IS-side
   check (the script only audits MDPS; IS's 500-row test population has not been checked for the same phantom-row class).
+- **data_engineering slot-2, 2026-08-15 (7th checkpoint — todo #2 sub-step (b) CONFIRMED via direct query, no longer
+  just correlation)**: ran ad-hoc `read_availability_index_safe` queries (no new script — a direct interactive
+  investigation, findings transcribed here + into todo #2 above) against the live MDPS manifest for LA_LIGA_2 and 3
+  sampled minor leagues (SOCCER_RUSSIA_PREMIER_LEAGUE, SOCCER_AUSTRALIA_ALEAGUE, SOCCER_SWITZERLAND_SUPERLEAGUE —
+  covering 915/959 = 95% of the no-sibling population). For LA_LIGA_2: out-of-window rows are NOT blank — they carry
+  real `15m`/`1h` timeframe values (a different vocabulary than the `T-6h`-style buckets seen on other leagues like
+  SUPERLIGA), but ONLY from 2026-03-28 onward (458 rows); the 872 phantom rows span 2020-06-12..2026-02-20 with ZERO
+  (date,venue) overlap against the non-blank population. For the 3 sampled minor leagues: zero non-blank-timeframe rows
+  exist at ANY date — `timeframe` has literally never been populated for their `odds_horizon_bucket` rows. Revised
+  conclusion (corrects the original "single-horizon-bucket league" framing, which implied a bucket-COUNT explanation):
+  the real mechanism is TEMPORAL/coverage-based — these leagues' pre-existing captured rows for the backfill-targeted
+  historical dates already had blank `timeframe` BEFORE this session's bug ever ran, so the backfill's blank-timeframe
+  rewrite lands on the SAME row_key as the original (supersession, not duplication) — there was never a second,
+  differently-timeframed row to lose. This is a stronger, directly-measured confirmation than the earlier 100%
+  correlation observation, and it means the 959-row exclusion (todo #2c) is evidence-backed rather than merely cautious.
+  **Lesson**: "no sibling under the coarse key" in this audit script's output can mean either "data was destroyed" (the
+  risk it was designed to catch) or "there was legitimately only ever one row" (a false-positive-shaped but actually
+  benign case) — the two are indistinguishable from the sibling-check alone; only a date-range/vocabulary cross-check
+  against the SPECIFIC league's own historical population disambiguates them, as done here. Did not check the remaining
+  ~20 minor leagues individually (87-27=60 rows, ≤9 each) — the pattern is consistent enough across 4/4 checked leagues
+  (all MDPS, same service_name, same shape) that further per-league verification is diminishing-returns for a 959-row
+  population already excluded from any write regardless of root cause. **Next actionable item**: todo #2 sub-step's
+  remaining open piece — audit whether the same phantom-row class exists on IS (the 500-row test population there has
+  not been checked); then todo #2b (root-cause the 14,982 out-of-window blank-timeframe MDPS population — note
+  LA_LIGA_2's real timeframe-labeled rows only starting 2026-03-28 may be a relevant clue for that investigation too,
+  since it establishes a precedent for "no timeframe data before a certain date" on this same surface).
