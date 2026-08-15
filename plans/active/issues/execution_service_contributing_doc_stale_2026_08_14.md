@@ -91,8 +91,14 @@ execution-service-only).
 
 ## Todos
 
-- [ ] [DOC] P3. Rewrite `execution-service/CONTRIBUTING.md` end-to-end against the current `.claude/CLAUDE.md` workflow
-      (title, File Locations, quickmerge section, multi-agent section) — repo: execution-service.
+- [x] ✅ [DOC] P3. **DONE 2026-08-15 — rewrote `execution-service/CONTRIBUTING.md` end-to-end** against the current
+      `.claude/CLAUDE.md` workflow: title (`Contributing to Execution Service`), File Locations (actual
+      `execution_service/` package layout — adapters/algo_library/defi_execution/sports_execution/trade_execution/etc.,
+      plus the real per-domain test dirs), the quickmerge section (direct commit on `live-defi-rollout` via
+      `--agent --files`, no PR branch, no `gh pr` step), Branch Protection (LDR is the shared trunk; `main` is a
+      promoted projection, not the base), and Working with Multiple Agents/Sessions (per-slot-worktree model, citing
+      `/codex/05-infrastructure/per-tab-worktrees.md`, replacing the old "each session works on its own PR branch"
+      framing). Evidence: `execution-service@72fbc742da`.
 - [ ] [DOC] P3. Grep every other service repo's `CONTRIBUTING.md` for the same instruments-service-derived template
       (title mismatch / `auto/timestamp` PR-branch language / `git add -A`) and file one follow-up todo per repo found —
       repo: unified-trading-pm (this doc, or a fresh finding doc per repo).
@@ -102,3 +108,10 @@ execution-service-only).
 - **2026-08-14 (slot-20, infra)**: filed while shipping the `--isolated` quickmerge verification for
   `infra_satellite_ao_dispatch_batch16_2026_08_13.md`. Inline fix (the `git add -A` instances + banner) shipped in the
   same commit as the verification ship; the full rewrite is left as tracked follow-up, not done here.
+- **2026-08-15 (slot-15, interactive)**: picked up todo 1. Shipped the full rewrite via isolated-worktree quickmerge
+  (`--agent --files 'CONTRIBUTING.md' --isolated`); full quality-gate re-gate passed (185s, 8503 tests). Landed on
+  `live-defi-rollout` at `72fbc742da`, verified `ahead=0` against origin post-pull. Along the way found the caller-tree
+  `unified-api-contracts` dependency clone was 1 commit behind `origin/live-defi-rollout` (clean tree, no local WIP — a
+  plain staleness issue, safe `git pull --ff-only`), which had been blocking quickmerge's Stage-1 dependency validation;
+  fast-forwarded it, no conflict. Todo 2 (cross-repo grep for the same stale template) remains open and unstarted — not
+  attempted this session.
