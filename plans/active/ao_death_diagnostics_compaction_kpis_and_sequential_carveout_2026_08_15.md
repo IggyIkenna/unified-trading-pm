@@ -74,41 +74,45 @@ driving it interactively, not the AO fleet.
 
 ## What shipped this session (items 1-3)
 
-- [ ] [INFRA] P1. Consolidate `current_task`/`task_runtime_seconds` into the `tmux_session_lost` event's own
+- [x] 1. ✅ [INFRA] P1. Consolidate `current_task`/`task_runtime_seconds` into the `tmux_session_lost` event's own
       `details_json` (snapshotted BEFORE the requeue/resume mutation clears them), closing the "scattered across 3
       places" gap. `agent-orchestrator/server/tmux_pruner.py`'s slot-death loop. Done-when: a fresh `tmux_session_lost`
       row for a mid-task death shows non-null `current_task` + `task_runtime_seconds` without needing to cross-reference
-      the journal or a second event row.
-- [ ] [INFRA] P1. Add a `death_class` field (`"intentional_teardown"` vs `"unexplained"`) to the same event, computed by
-      cross-referencing a curated set of already-logged, distinctly-named "intentional teardown" activity_log events
-      (`worker_one_task_per_session_reset`, `context_wedge_recovered`, `watchdog_slot_killed`) for the same `slot_id`
-      within a 90s lookback — this is the fix for `ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`'s
-      `[INFRA] P3` todo (burst_size conflation). `burst_size` itself is left unchanged (still "how many OTHER slots died
-      this tick") — `death_class` is the per-row disambiguator a consumer filters on. **NOT exhaustive**: only covers
-      kill_session call sites confirmed to log their own distinctly-named event; a plain `reason="manual"` reclaim with
-      only a `logger.warning` line (no DB row) still reads as `"unexplained"`. `check-ao-recent-deaths.sh` updated to
-      print it. Done-when: the 2026-08-14 23:33 cluster, if re-queried, shows `death_class="intentional_teardown"` for
-      slots 12/18/20 and `"unexplained"` for slots 10/11 (matches the hand-derived Progress Log analysis).
-- [ ] [INFRA] P1. Tag every compaction-lifecycle event (`forced_precompact`, `forced_compact`,
+      the journal or a second event row. — `agent-orchestrator@c46102b9b5`, `quality-gates.sh` green (3852 passed).
+- [x] 2. ✅ [INFRA] P1. Add a `death_class` field (`"intentional_teardown"` vs `"unexplained"`) to the same event,
+      computed by cross-referencing a curated set of already-logged, distinctly-named "intentional teardown"
+      activity_log events (`worker_one_task_per_session_reset`, `context_wedge_recovered`, `watchdog_slot_killed`) for
+      the same `slot_id` within a 90s lookback — this is the fix for
+      `ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`'s `[INFRA] P3` todo (burst_size conflation). `burst_size`
+      itself is left unchanged (still "how many OTHER slots died this tick") — `death_class` is the per-row
+      disambiguator a consumer filters on. **NOT exhaustive**: only covers kill_session call sites confirmed to log
+      their own distinctly-named event; a plain `reason="manual"` reclaim with only a `logger.warning` line (no DB row)
+      still reads as `"unexplained"`. `check-ao-recent-deaths.sh` updated to print it. Done-when: the 2026-08-14 23:33
+      cluster, if re-queried, shows `death_class="intentional_teardown"` for slots 12/18/20 and `"unexplained"` for
+      slots 10/11 (matches the hand-derived Progress Log analysis). — `agent-orchestrator@c46102b9b5`.
+- [x] 3. ✅ [INFRA] P1. Tag every compaction-lifecycle event (`forced_precompact`, `forced_compact`,
       `forced_compact_ineffective`, `context_wedge_recovered`) with `craft_type` — `"plan_worker"` | `"main"` |
       `"review"` | an `agent_kind`/`lifecycle` value (`"cicd"`, `"one_shot"`, `"scheduled"`, etc.) — computed once per
       tick in `context_lifecycle.py`'s `_active_worker_slot_ids` via an `AgentRow.tmux_session` join (AgentRow has no
       direct `slot_id` FK). Purely additive — does NOT change which slots are swept into the unconditional worker
       force-compact path, only what gets logged. `_TargetState.craft_type` carries it through to every log site without
       touching any control-flow branch. Done-when: `/api/fleet-kpis`'s `compaction_by_craft_type` shows more than one
-      bucket once escalation/scheduled crafts have run compaction events post-deploy.
-- [ ] [INFRA] P1. Extend `/api/fleet-kpis` (`agent-orchestrator/server/fleet_kpis.py` + `server/routes/state.py`) with
-      `compaction` / `compaction_baseline` (current-vs-prior-24h, mirroring the existing dispatch-efficiency shape
+      bucket once escalation/scheduled crafts have run compaction events post-deploy. — `agent-orchestrator@c46102b9b5`.
+- [x] 4. ✅ [INFRA] P1. Extend `/api/fleet-kpis` (`agent-orchestrator/server/fleet_kpis.py` + `server/routes/state.py`)
+      with `compaction` / `compaction_baseline` (current-vs-prior-24h, mirroring the existing dispatch-efficiency shape
       exactly) and `compaction_by_craft_type` (the craft-type breakdown from the todo above). Scoped to current-window +
       baseline + craft-type breakdown for this pass — by-slot/by-day compaction breakdowns are NOT included (see the P3
-      follow-up below) to keep the change bounded.
-- [ ] [UI] P1. Render the new compaction KPIs on `FleetKpis.tsx` — two new tile panels (current window + baseline, same
-      `TileBox`/`Panel` pattern as the existing efficiency tiles) and a "Compaction by craft type" breakdown panel. New
-      pure mappers `compactionTiles`/`sortedByCraftType` vitest-covered in `FleetKpis.test.ts`, matching the existing
-      `kpiTiles`/`sortedByRole` test pattern.
+      follow-up below) to keep the change bounded. — `agent-orchestrator@c46102b9b5`.
+- [x] 5. ✅ [UI] P1. Render the new compaction KPIs on `FleetKpis.tsx` — two new tile panels (current window + baseline,
+      same `TileBox`/`Panel` pattern as the existing efficiency tiles) and a "Compaction by craft type" breakdown panel.
+      New pure mappers `compactionTiles`/`sortedByCraftType` vitest-covered in `FleetKpis.test.ts` (4 + 1 new tests),
+      matching the existing `kpiTiles`/`sortedByRole` test pattern. — `agent-orchestrator@c46102b9b5`,
+      `dashboard vitest` 360/360 passed, `tsc --noEmit` clean.
 
-_(Evidence + `[x]` flip for the five todos above lands in the SAME commit/turn that ships them via quickmerge — see the
-Progress Log below for the actual `agent-orchestrator@<sha>`.)_
+_(Also fixed in the same commit:
+`tests/test_context_lifecycle.py::test_active_worker_slot_ids_excludes_review_and_non_working` updated for
+`_active_worker_slot_ids`'s widened return contract, `list[int]` → `dict[int, str]` — a real, expected test-contract
+update caught by the Pass-1 QG run, not a regression.)_
 
 ## Not shipped this session — item 4's carve-out (design only)
 
@@ -167,8 +171,11 @@ Progress Log below for the actual `agent-orchestrator@<sha>`.)_
 
 ## Progress Log
 
-- **2026-08-15 (interactive session)**: doc authored; items 1-3's five todos implemented (`agent-orchestrator` —
-  `server/tmux_pruner.py`, `server/context_lifecycle.py`, `server/fleet_kpis.py`, `server/routes/state.py`,
-  `dashboard/src/{FleetKpis.tsx,FleetKpis.test.ts,types.ts}`, `scripts/orchestrator/check-ao-recent-deaths.sh`);
-  `quality-gates.sh` run in progress at time of writing — sha + `[x]` flip land in the same turn once it's green and
-  quickmerge lands. Item 4 deliberately left as a design-only todo per the rationale above.
+- **2026-08-15 (interactive session)**: doc authored; items 1-3's five todos implemented + shipped
+  (`agent-orchestrator@c46102b9b5` — `server/tmux_pruner.py`, `server/context_lifecycle.py`, `server/fleet_kpis.py`,
+  `server/routes/state.py`, `dashboard/src/{FleetKpis.tsx,FleetKpis.test.ts,types.ts}`,
+  `scripts/orchestrator/check-ao-recent-deaths.sh`, `tests/test_context_lifecycle.py`). Pass-1 `quality-gates.sh` caught
+  one real, expected test-contract update (see above) and one `ruff format` violation in `fleet_kpis.py` (fixed with a
+  scoped `ruff format` on that one file, not a tree-wide reformat) before going green (3852 passed, 6 skipped; dashboard
+  360/360 passed; `tsc --noEmit` clean). Shipped via `quickmerge --agent`, landed on `live-defi-rollout`. Item 4
+  deliberately left as a design-only todo per the rationale above — not implemented this session.
