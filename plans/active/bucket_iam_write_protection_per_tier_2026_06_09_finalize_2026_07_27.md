@@ -54,8 +54,10 @@ context_scope:
 
 # bucket_iam_write_protection_per_tier_2026_06_09 — finalize
 
-> **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todos are done (or on explicit
-> operator direction to start reconciling early). Machine-gated via `depends_on` + `gate_on_depends: true`.
+> **STATUS: `active` — dispatched (corrected 2026-08-15 by a /plan-reconcile hunter pass; this banner had gone stale).**
+> The gated plan (`bucket_iam_write_protection_per_tier_2026_06_09.md`) reached 0 open todos on 2026-08-10, so per this
+> banner's own stated trigger the plan is now dispatchable — frontmatter `status: active` was already correct, only this
+> body banner lagged.
 
 ## Todos
 

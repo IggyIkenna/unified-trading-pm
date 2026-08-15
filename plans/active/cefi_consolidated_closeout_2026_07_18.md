@@ -158,9 +158,12 @@ context_scope:
       citations:
       `/plans/archive/issues/cefi_equity_perp_mark_index_funding_derivative_ticker_already_covers_2026_08_15.md`
       (unified-trading-pm@229e86f53b). Repo: market-tick-data-service. Source: Phase 1b.
-- [ ] [SCRIPT] P2. **Wire a recurring daily funding/basis scan** across all crypto-venue equity-perps (annualized
+- [x] ✅ [SCRIPT] P2. **Wire a recurring daily funding/basis scan** across all crypto-venue equity-perps (annualized
       funding + perp-vs-index basis + market-hours-vs-off-hours flag) → opportunity-sizing report. Repo: e2e-testing.
-      Source: Phase 1b.
+      Source: Phase 1b. — **SHIPPED e2e-testing@d1fe3dc6aa** (`scripts/cefi/equity_perp_funding_basis_scan.py` + a daily
+      cron wrapper, 15 new unit tests, QG green); found + reconciled 2026-08-15 by a /plan-reconcile hunter pass — the
+      identical item was already shipped and tracked under `cefi_satellite_ao_dispatch_batch19_2026_08_13.md`'s own
+      Track-0 mirror entry citing the same commit, but this doc's own checkbox was never flipped to match.
 - [x] ✅ [DESIGN] P2. **strategy-service — decide the single-stock basis execution-venue/hedge approach** (IBKR /
       tokenized / cross-crypto-venue dispersion; off-hours = no-cash-hedge). Repo: strategy-service. Source: Phase 1b.
       **RESOLVED + APPROVED (operator, 2026-08-08)**: hedge=IBKR cash-stock borrow for all singles (decided same-day

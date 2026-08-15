@@ -468,10 +468,14 @@ context_scope:
     - **[AGENT] P2.** `SolidlyCLForkPool` historical golden-swap validation (≥20-Velodrome + ≥20-Aerodrome real on-chain
       fixtures).
   - [`plans/active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md`](/plans/active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md)
-    (status: active)
-    - **[SCRIPT] P2.** Spot-check: download 3 random days of DERIBIT options; verify `options_chain` greeks / IVs
-      populated.
-    - **[SCRIPT] P2.** Spot-check: download 1 day of BINANCE-FUTURES perps; verify funding + open_interest populated.
+    (status: active) — **STALE ENTRY, corrected 2026-08-15 (/plan-reconcile hunter pass):** this doc's `asset_group` was
+    corrected `[cefi, defi]` → `[cefi]` on 2026-07-31 (pure-cefi, not cross-AG — misfiled under this section) and both
+    spot-check items below were flipped `[x]` DONE on 2026-07-30, both predating this digest's own 2026-08-02 stamp.
+    Nothing open remains here; left listed only for citation history.
+    - ~~**[SCRIPT] P2.** Spot-check: download 3 random days of DERIBIT options; verify `options_chain` greeks / IVs
+      populated.~~ DONE 2026-07-30.
+    - ~~**[SCRIPT] P2.** Spot-check: download 1 day of BINANCE-FUTURES perps; verify funding + open_interest
+      populated.~~ DONE 2026-07-30.
   - [`plans/active/cefi_ml_directional_continuous_live_2026_06_20.md`](/plans/active/cefi_ml_directional_continuous_live_2026_06_20.md)
     (status: active)
     - **[AGENT] P0.** Continuous ML prediction signal live on real capital across OKX + Binance + Bybit for ≥7

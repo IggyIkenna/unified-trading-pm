@@ -610,28 +610,28 @@ conserved and each line names where the work went, per `check_todo_regression.sh
 
 ---
 
-## Deferred work after 2026-08-14 (supersedes the 2026-08-12 table — Phases 1-5 are now fully shipped)
+## Deferred work after 2026-08-15 (supersedes the 2026-08-14 table — Phases 0/6/7 have since substantially shipped)
 
-> The prior version of this table (written 2026-08-13, mid-Phase-4/5) had gone STALE and was actively misleading — it
-> claimed FLEET_HALT delivered as a hold marker and Phase 5 was 2-of-7, when both had since landed in full. Corrected
-> per the doc-that-misled-you hard rule rather than left to rot further.
+> **2026-08-15 correction (found by a /plan-reconcile hunter pass):** the 2026-08-14 version of this table had itself
+> gone stale — it claimed Phase 0 was "1 of 5 done" and Phases 6/7 "Not started," but the doc's own Phase 0 checklist
+> (below) shows 6 of 7 items done, Phase 6 carries its own "2026-08-14 — all 12 scenarios landed" banner, and Phase 7 is
+> 5 of 6 done. Corrected per the doc-that-misled-you hard rule.
 
-| Item                                                  | State                                                                                                                        | Blocked on |
-| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| Phase 0 — preconditions and measurement               | **1 of 5 done** — the 4 measurement todos (p95 shard duration, drain-capable/blind census, buffered-writer inventory) remain | nobody     |
-| Phase 1 — graceful-flush contract                     | **DONE** — all 10 todos                                                                                                      | —          |
-| Phase 2 — `DependentAction` + `evaluate_revocation()` | **DONE** — all 7 todos, unified-api-contracts@c206f910                                                                       | —          |
-| Phase 3 — `RETRY_BUDGETS`                             | **DONE** — all 8 todos, unified-api-contracts@c206f910 + instruments-service@1ae4b7d0 + market-tick-data-service@554adf49    | —          |
-| Phase 4 — push actuator                               | **DONE** — all 9 todos, deployment-service@e38b2a0e + @67e3b36c (FLEET_HALT pauses Cloud Scheduler jobs, not a hold marker)  | —          |
-| Phase 5 — VM poll hook + Cloud Run skip gate          | **DONE** — all 8 todos, deployment-service@67e3b36c + deployment-api@0d3f1cc + unified-trading-library@ad29bd9f              | —          |
-| Phase 6 — 12 bad-VM scenarios                         | **Not started** — now unblocked, Phases 4-5 give it something real to assert against                                         | nobody     |
-| Phase 7 — codex SSOT + archival                       | **Not started** — closes the plan                                                                                            | Phase 6    |
-| slot-4 PM checkout divergence                         | **RESOLVED 2026-08-13** — see the Phase 0 todo above                                                                         | —          |
-| `unified-trading-library` `.venv` bootstrap           | **Operator-owned** — environment setup, not on the critical path                                                             | operator   |
+| Item                                                  | State                                                                                                                       | Blocked on |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| Phase 0 — preconditions and measurement               | **6 of 7 done** — only the p95 shard duration measurement remains                                                           | nobody     |
+| Phase 1 — graceful-flush contract                     | **DONE** — all 10 todos                                                                                                     | —          |
+| Phase 2 — `DependentAction` + `evaluate_revocation()` | **DONE** — all 7 todos, unified-api-contracts@c206f910                                                                      | —          |
+| Phase 3 — `RETRY_BUDGETS`                             | **DONE** — all 8 todos, unified-api-contracts@c206f910 + instruments-service@1ae4b7d0 + market-tick-data-service@554adf49   | —          |
+| Phase 4 — push actuator                               | **DONE** — all 9 todos, deployment-service@e38b2a0e + @67e3b36c (FLEET_HALT pauses Cloud Scheduler jobs, not a hold marker) | —          |
+| Phase 5 — VM poll hook + Cloud Run skip gate          | **DONE** — all 8 todos, deployment-service@67e3b36c + deployment-api@0d3f1cc + unified-trading-library@ad29bd9f             | —          |
+| Phase 6 — 12 bad-VM scenarios                         | **DONE** — all 12 scenarios landed 2026-08-14, e2e-testing/tests/integration/revocation/                                    | —          |
+| Phase 7 — codex SSOT + archival                       | **5 of 6 done** — only "archive this plan" remains, gated on Phase 6 (now clear)                                            | —          |
+| slot-4 PM checkout divergence                         | **RESOLVED 2026-08-13** — see the Phase 0 todo above                                                                        | —          |
+| `unified-trading-library` `.venv` bootstrap           | **Operator-owned** — environment setup, not on the critical path                                                            | operator   |
 
-**Recommended NEXT item (2026-08-14): Phase 0's measurement todos, then Phase 6.** The census of drain-capable vs
-drain-blind prefixes directly determines which of Phase 6's scenarios are even reachable (a drain-blind prefix can only
-ever receive HOLD, never DRAIN) — doing it first makes the scenario set accurate instead of assumed.
+**Recommended NEXT item (2026-08-15): Phase 0's remaining p95 shard-duration measurement, then archive the plan (Phase
+7's last item).** Both remaining Phases are effectively done otherwise.
 
 ## Progress Log
 

@@ -90,10 +90,13 @@ source: >-
       (not a bare `[x]`) — re-read the source doc directly, no further action needed. No separate commit required for
       this todo since the reconciliation already landed.
 - [x] ✅ [REVIEW] P1. **Archive `deepseek_flash_ab_routing_test_2026_08_05.md` ONLY if it is genuinely at zero open
-      todos** — NOT archived: source doc has 5 open todos (2/4/12a/17b/25), all extracted to
-      `ao_satellite_ao_dispatch_batch12_2026_08_09.md`. 4 of 5 are done there (todos 1-4: `[x]`), but batch12 todo 5 (←
-      source todo 25, `backfill_task_usage.py` one-off extension) is still `- [ ]` — genuinely unfinished. Doc stays
-      `status: active` until batch12 (+finalize) closes it out. — unified-trading-pm@494c76c538
+      todos** — NOT archived as of 2026-08-10: source doc had 5 open todos (2/4/12a/17b/25), all extracted to
+      `ao_satellite_ao_dispatch_batch12_2026_08_09.md`. 4 of 5 were done there (todos 1-4: `[x]`), but batch12 todo 5 (←
+      source todo 25, `backfill_task_usage.py` one-off extension) was still `- [ ]` at that time. —
+      unified-trading-pm@494c76c538. **2026-08-15 update (/plan-reconcile hunter pass): the source doc is now confirmed
+      at `plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md`, `status: archived`, 0 open / 27 done
+      checkboxes — the archival evidently completed sometime after this 2026-08-10 check, superseded by batch12's later
+      completion. Not re-investigated further here (out of this hunter pass's scope).**
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch18_2026_08_10.md`, move to `plans/archive/2026_08/`, fix every
       corpus-wide referrer including this finalize plan's own `related:`, then re-run the active-plan inventory
