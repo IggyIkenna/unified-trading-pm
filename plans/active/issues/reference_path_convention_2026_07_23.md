@@ -141,13 +141,17 @@ estimate_calibrated_ai_days: 1.6
       cleanup below or its own pass), then fix the reference. — CLOSED (na-eligibility-audit 2026-08-03): the 3rd
       reference was repointed to the archive path without a split, `unified-trading-pm@ca9551fbc` (2026-07-29);
       confirmed live in the file today.
-- [ ] [DOC] P3. Same class of gap as the todo above, second instance (found 2026-07-25, slot-8):
-      `plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md` (exactly 1000 lines, at the hard cap) carries a
-      body-prose reference `issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md` that needs
-      repointing to `plans/archive/issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md` — same
-      `check_line_caps.sh` no-exceptions block (a same-length text swap still trips prettier's paragraph reflow into
-      1001 lines, per `terminal_status_archival_backlog_sweep_2026_07_25.md`'s slot-2 Progress Log entry). **Done
-      when**: split `sports_satellite_ao_dispatch_batch2_2026_07_24.md` under 1000L, then fix the reference.
+- [x] ✅ [DOC] P3. **CLOSED 2026-08-15 (/plan-reconcile) — premise overtaken, fixed directly instead.** Same class of
+      gap as the todo above, second instance (found 2026-07-25, slot-8): a body-prose reference in
+      `sports_satellite_ao_dispatch_batch2_2026_07_24.md` pointed at
+      `issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md`. The todo as originally worded
+      assumed the source doc would first be split under 1000L (it was exactly 1000L, blocked by `check_line_caps.sh`'s
+      no-exceptions-on-touched-files rule); instead, the doc was archived WHOLE (now
+      `plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md`, 999L), leaving the split-first premise
+      moot — `check_line_caps.sh` is scoped to `plans/active/` + `plans/epics/` only (its own header comment: "Once
+      under `plans/archive/` the doc is outside this [gate]"), so the line-cap block that stalled this todo no longer
+      applies. Fixed the reference directly in the archived copy to the leading-slash repo-root-relative form
+      (`/plans/archive/issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md`), no split needed.
 - [x] [REVIEW] P3. ✅ **DONE 2026-08-02 (slot-12)** — determination: **NOT sufficient as they stood; extended.**
       Verified by reading the actual code, not the skill's own prose: `check_reference_paths.py`'s existence check DOES
       scan every `/codex/...`/`/plans/...` reference anywhere in body text (`GOOD_REF_RE.finditer(text)` over the whole

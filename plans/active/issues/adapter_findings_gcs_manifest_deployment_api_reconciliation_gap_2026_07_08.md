@@ -19,7 +19,7 @@ summary:
   doc documents the gap; per the operator, actually closing it is staged work, not a single pass."
 status: open
 nature: notes
-asset_group: [cefi, defi, tradfi, sports, prediction]
+asset_group: [cefi, defi, tradfi, sports]
 stage: [data, meta]
 repos: [instruments-service, market-tick-data-service, deployment-api, deployment-ui, unified-trading-library]
 scope: [engineer, admin]
