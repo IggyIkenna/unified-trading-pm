@@ -586,19 +586,19 @@ source: >-
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 
       **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed
-                                                                  separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
-                                                                  (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
-                                                                  exists and is live — no code change needed — but a real corpus-wide query
-                                                                  (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
-                                                                  the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
-                                                                  filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
-                                                                  data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
-                                                                  worker-determinable outcome for one ~1h dispatch. Filed
-                                                                  `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
-                                                                  (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
-                                                                  class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
-                                                                  backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
-                                                                  multi-AG backfill into this single dispatch.
+                                                                      separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
+                                                                      (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
+                                                                      exists and is live — no code change needed — but a real corpus-wide query
+                                                                      (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
+                                                                      the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
+                                                                      filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
+                                                                      data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
+                                                                      worker-determinable outcome for one ~1h dispatch. Filed
+                                                                      `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+                                                                      (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
+                                                                      class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
+                                                                      backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
+                                                                      multi-AG backfill into this single dispatch.
 
 - [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
       operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
@@ -813,9 +813,14 @@ source: >-
       shape is decided). Source: this doc's own 2026-08-15 diagnosis, folded in per the cumulative-drawdown todo above.
 - [ ] [CODE] P2. Build the drilldown-correctness ep=0 reconciliation guard as a QG step + watchdog Source:
       `plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md`
-- [ ] [CODE] P2. Fix canonicalize_instruments_store_index.py's _bucket_for to resolve the prediction instruments-store
-      bucket (currently a dead --asset-group prediction path) Source:
-      `plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md`
+- [x] ✅ [CODE] P2. **STALE CHECKBOX — already fixed, no code change needed.** (2026-08-15, slot-5·infra) Verified live:
+      `_bucket_for()` in `instruments-service/scripts/canonicalize_instruments_store_index.py` already special-cases
+      `asset_group == "prediction"` to call `resolve_bucket_name(kind="instruments-store-prediction", asset_group=None)`
+      — the dedicated flat kind confirmed present in
+      `unified-api-contracts/unified_api_contracts/config/cloud-providers.yaml` (both gcp + aws sections). `git log`
+      shows this exact fix already landed: `instruments-service@60552cb8` ("fix(instruments-service): route prediction
+      through instruments-store-prediction kind in canonicalize _bucket_for", 2026-08-05), confirmed ancestor of
+      `origin/live-defi-rollout`. Source: `plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md`
 - [ ] [CODE] P2. Investigate the systemic schema-drift dup (16% of shards with >1 manifest row) and fix writer-side
       row-key idempotency Source: `plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md`
 - [ ] [CODE] P2. G1.run-prediction: run enumerate_expected_universe.py v2 at the cqg-bundle grain now that the IS
