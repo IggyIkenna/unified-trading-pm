@@ -586,19 +586,19 @@ source: >-
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 
       **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed
-          separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
-          (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
-          exists and is live — no code change needed — but a real corpus-wide query
-          (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
-          the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
-          filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
-          data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
-          worker-determinable outcome for one ~1h dispatch. Filed
-          `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
-          (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
-          class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
-          backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
-          multi-AG backfill into this single dispatch.
+                                  separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
+                                  (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
+                                  exists and is live — no code change needed — but a real corpus-wide query
+                                  (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
+                                  the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
+                                  filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
+                                  data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
+                                  worker-determinable outcome for one ~1h dispatch. Filed
+                                  `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+                                  (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
+                                  class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
+                                  backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
+                                  multi-AG backfill into this single dispatch.
 
 - [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
       operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
@@ -667,8 +667,19 @@ source: >-
       Source: `plans/active/data_source_provenance_enforcement_2026_07_24.md`
 - [ ] [CODE] P2. Run scripts/quality_gates/audit_source_column_distribution.py against prod post-backfill and report the
       per-cell source histogram Source: `plans/active/data_source_provenance_enforcement_2026_07_24.md`
-- [ ] [CODE] P2. Update codex + audit instructions to the universal source-provenance rule Source:
-      `plans/active/data_source_provenance_enforcement_2026_07_24.md`
+- [x] ✅ [CODE] P2. **PARTIAL — added the missing audit-instructions section; the write-path RULE itself was already
+      fully documented.** unified-trading-pm@TBD (2026-08-15, slot-23·infra). Verified the "universal rule" (write-path
+      `MissingSourceError` gate, schema-v9 `source` column, `SOURCE_PRIORITY`/`external_sources_for` semantics, QG STEP
+      5.64) is already comprehensively documented in `/codex/02-data/availability-manifest-and-data-status.md` +
+      `/codex/02-data/contracts-scope-and-layout.md`. The genuine gap:
+      `scripts/quality_gates/audit_source_column_distribution.py` (the Phase-7 post-backfill zero-blank-source audit)
+      had ZERO codex references anywhere (confirmed via `grep -rn audit_source_column_distribution codex/`). Added a
+      "Post-backfill audit" section to `/codex/02-data/availability-manifest-and-data-status.md` documenting the
+      script's usage, RED/EXEMPT classification, and sequencing (must run AFTER write-path enforcement + backfill land,
+      per the source doc's own gating text). Did **not** archive the source plan's `[CODEX] P1` item — its own text
+      explicitly gates that on "every todo above is `[x]`", and 6 P0/P1 `[DATA]`/`[QG]` todos in that doc remain open
+      (write-path, data parquets, manifest, downstream, sequencing, QG-wiring-into-MTDS/MDPS) — archival is out of this
+      bounded doc-update todo's scope. Source: `plans/active/data_source_provenance_enforcement_2026_07_24.md`
 - [ ] [CODE] P2. Flip the named stale/self-contradictory checkboxes (instruments_mtds_subset: N9c, N5r/N6r) once
       verified against current code Source: `plans/active/instruments_completion_tracker_2026_07_06.md`
 - [ ] [CODE] P2. Add cbETH as COINBASE-ETHEREUM to the DeFi LST universe (full new-venue registration) Source:
