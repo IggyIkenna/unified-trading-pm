@@ -280,6 +280,35 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Progress Log
 
+- **2026-08-15 (slot-3, data_engineering) — 2nd SPOT preemption caught + relaunched (3rd launch); root-caused + fixed a
+  real cross-VM-family monitoring bug found while diagnosing it; still not complete (multi-hour job).** Picked up after
+  the slot-30 GATED checkpoint below. Live re-check found `mtds-oracle-prices-backfill` absent from
+  `gcloud compute instances list` with `run.log` stalled at `08:46:36Z` and no `DEPLOYMENT_FAILED`/clean-shutdown entry
+  — the same SPOT-preemption signature as the first preemption, this time ~18min after the slot-30 checkpoint observed
+  it healthy. While diagnosing, `read_terminal_exit_code()` reported a misleading `exit_code=137` for a VM that (per the
+  checkpoint just below) had been confirmed healthy minutes earlier — traced to a real bug, not a transient read:
+  `deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh` (the wrapper this launcher uses) only ever writes the terminal
+  `EXIT_STATUS` GCS blob at teardown, unlike its sibling `launcher_common.sh`'s `lc_log_upload_trap_block`, which got a
+  "stamp a RUNNING sentinel first, before anything else" fix on 2026-07-13 for exactly this failure class (confirmed via
+  `gcs_describe_object`: the `EXIT_STATUS` blob's `last_modified` was `06:48:49Z` — the FIRST OOM'd attempt from the
+  entry two below — while `run.log` was actively updating through `08:4x` under the SAME reused `vm_name`). Any
+  same-named relaunch of a `vm-exec-with-gcs-tee.sh`-based VM was therefore vulnerable to a stale terminal code from an
+  earlier attempt misreading as the CURRENT run's result for its entire lifetime up to its own teardown — a real gap in
+  the exit-code-based fleet monitor's reliability for this whole wrapper family, not scoped to this one VM. **Fixed**:
+  ported the identical "RUNNING sentinel first" pattern into `vm-exec-with-gcs-tee.sh`. QG green (3471 passed, 5
+  skipped; host was under heavy multi-slot contention this session — two earlier QG attempts were killed by the
+  shared-host governor's own RAM-pressure watchdog before reaching a verdict, third attempt after load eased went green
+  in 410s) — shipped `deployment-service@599b4b81cf` (`origin/live-defi-rollout`, post-push ancestry verified).
+  Relaunched `mtds-oracle-prices-backfill` (3rd launch, identical idempotent default command) — the launcher's own
+  tarball republish step picked up the just-shipped fix automatically
+  (`tarball fresh: deployment-service @ 599b4b81cf`). Live-verified the fix end-to-end on this exact relaunch:
+  `EXIT_STATUS` blob generation changed within ~2min of boot (fresh `last_modified`, content-length 8 = `"RUNNING\n"`),
+  and `read_terminal_exit_code()` now correctly returns `None` instead of a stale `137`; `run.log` confirmed fresh
+  (`deployment_id` changed, restarted from the top of its content). **Still not complete** — same multi-hour-job shape
+  as before; the "Verify … reached a terminal state" todo below remains open for whoever picks this up next. No
+  manifest/coverage re-check performed this session (out of scope — this session's contribution was catching + fixing
+  the monitoring-reliability gap, not advancing coverage). Files:
+  `deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh`.
 - **2026-08-15 (slot-30, data_engineering) — checkpoint: VM confirmed RUNNING + genuinely progressing post-relaunch,
   still multi-hour remaining, task GATED not skipped-wrongly.** Live-verified (not trusted from a stale prior note):
   `gcloud compute instances describe mtds-oracle-prices-backfill --zone=asia-northeast1-c` = RUNNING, created
