@@ -307,7 +307,7 @@ source: >-
       clean (no peer WIP conflict). Added `--build-arg SETUPTOOLS_SCM_PRETEND_VERSION=$$VERSION`to the`build`step's    `docker
       build`in both`cloudbuild.yaml`files, matching the fleet pattern already used in     agent-orchestrator/deployment-service/alerting-service/features-service. QG green + sentinel-verified on both     repos; both quickmerge-landed on LDR (post-push ancestry verified). Source:    `plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md`
 - [x] ✅ [CODE] P2. Re-run hosted-baseline.sh to resync the derived cloud-build-router.yml snapshot with the live
-      workflow — unified-trading-pm@1b1d56284c (2026-08-15: `hosted-baseline.sh snapshot` re-run; the `derived`
+      workflow — unified-trading-pm@f7fb62f580 (2026-08-15: `hosted-baseline.sh snapshot` re-run; the `derived`
       `cloud-build-router.yml` baseline now reflects the 2026-08-10 `build_error_detail` credential-scrub fix landed in
       the live workflow — MANIFEST row re-stamped at current HEAD. The script resyncs the whole fleet by design, so 25
       other drifted baselines were refreshed as a byproduct; residual `verify` warnings for
