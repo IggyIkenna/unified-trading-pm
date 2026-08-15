@@ -207,7 +207,7 @@ Per `rb_infra_relaunch.md`'s bounds + the OOM-relaunch actuator's own design:
       suggesting this is a recurring MORPHO-rollout-specific pain point, not a one-off (note: that doc has since been
       archived — `/plans/archive/issues/mdps_vm_stale_uac_contract_propagation_2026_07_20.md` — while
       `deployment-service/scripts/vm/launch-mdps-backfill-vm.sh:173` and `.../lib/launcher_common.sh:917` still cite the
-      stale pre-archive `plans/active/issues/...` path; fixed in the same commit as this doc).
+      stale pre-archive `plans/active/issues/...` path; fixed via `deployment-service@c409887930`).
 
 ## Progress Log
 
@@ -217,6 +217,14 @@ Per `rb_infra_relaunch.md`'s bounds + the OOM-relaunch actuator's own design:
   Confirmed relaunch was warranted (non-OOM SKIPPED by the auto actuator by design, budget not exhausted, no suppression
   marker, no live duplicate, zero progress made). Relaunched via `launch-mdps-backfill-vm.sh` RESUME_* env fallback;
   first attempt hit a separate `lc_verify_tarball_freshness` auto-mode re-verify race under branch churn (filed as P2
-  below), second attempt (~90s later) succeeded — `mdps-backfill-cefi-20260815-155830` confirmed RUNNING (SPOT). Armed a
-  backgrounded T+10min PROGRESS check. Filed this issue doc with the diagnosis + the two freshness-guard follow-ups.
-  `/done` posted with `one_shot_complete: true`.
+  below), second attempt (~90s later) succeeded — `mdps-backfill-cefi-20260815-155830` confirmed RUNNING (SPOT). Filed
+  this issue doc with the diagnosis + the two freshness-guard follow-ups (`unified-trading-pm@65edd7c550`).
+- 2026-08-15 (same session, ~T+13min): Directly verified progress via the GCS SDK (the backgrounded shell monitor armed
+  earlier did not survive across tool turns and produced no output — noted for future sessions: use the harness's own
+  `run_in_background` mechanism, not a raw trailing `&`, for anything that must outlive a single Bash call).
+  `PROGRESS.json` for `mdps-backfill-cefi-20260815-155830` had advanced to `{"last_completed_date": "2022-03-05", ...}`
+  (past the original crash point, genuine forward progress) with `exit_code=None` (still running) and `run.log` showing
+  live candle-aggregation output timestamped within the same minute as the check — relaunch confirmed healthy. Fixed +
+  shipped the two stale doc-path comment references found in `deployment-service/scripts/vm/launch-mdps-backfill-vm.sh`
+  and `.../lib/launcher_common.sh` (QG green, quickmerge landed `deployment-service@c409887930`). `/done` posted with
+  `one_shot_complete: true`.
