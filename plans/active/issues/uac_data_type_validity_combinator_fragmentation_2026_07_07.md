@@ -280,6 +280,31 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Progress Log
 
+- **2026-08-15 (in-progress, slot-14, data_engineering) — gas_fees/alchemy_onchain todo: premise CORRECTED, fix not yet
+  shipped.** The todo's own premise ("zero captured rows") is STALE — live manifest query
+  (`read_availability_index(bucket=<defi market-data>, filters=[('venue','==','ALCHEMY'),('data_type','==','gas_fees')])`)
+  found **24,990 real `captured` rows** under bare `venue=ALCHEMY` (chain stored separately in the `chain` column, not
+  folded into the venue string) — full breakdown: 24,990 captured / 26,959 empty_confirmed / 2,504 expected_unattempted
+  / 4 attempted_failed. `gas_fee_handler.py:55` deliberately writes `_GAS_FEE_VENUE = "ALCHEMY"` (bare, chain-agnostic —
+  see the file's own header comment, "chain-level, not per-protocol"). This is NOT an unwired capture path; it's a
+  genuine **venue-key mismatch**: `unified-api-contracts/.../defi_venue_capabilities.py:227-231`
+  (`DEFI_VENUE_DATA_TYPE_CAPABILITIES`) declares gas_fees genesis dates under COMPOSITE keys
+  `ALCHEMY-ETHEREUM/ARBITRUM/POLYGON/OPTIMISM/BASE` — literal venue strings the writer never emits (confirmed via
+  `test_venue_key_parity.py`: every `DEFI_VENUE_DATA_TYPE_CAPABILITIES` key must be a real registered venue in
+  `ALL_DEFI_VENUES`, i.e. these are expected to appear as manifest `venue` values, not just doc labels). **NOT YET
+  CONFIRMED**: whether this composite-key declaration actually generates live phantom `expected_unattempted` cells under
+  `ALCHEMY-ETHEREUM` etc that can never be filled (would explain any "0 captured" view the plan's stale premise was
+  based on) — a bounded per-venue query for this was killed mid-run (12.9GB RSS and climbing after ~90s, per
+  `unified-trading-pm/agents/RULES.md` §1's memory-bounding guardrail; the single-venue bare-`ALCHEMY` query above WAS
+  fast/bounded, so the issue is specific to looping 5 separate `read_availability_index` calls in one process without
+  releasing between them — next attempt should query one composite venue per process invocation, or wrap in
+  `scripts/dev/run-bounded-analysis.sh`). **Next step**: confirm whether `ALCHEMY-<chain>` composite keys generate real
+  manifest rows at all (bounded, one-venue-per-call); if they do and sit stuck at `expected_unattempted`, the fix is to
+  either (a) change `DEFI_VENUE_DATA_TYPE_CAPABILITIES`'s gas_fees keys to the bare `ALCHEMY` venue the writer actually
+  uses (losing per-chain grain unless the enumerator separately combines with the `chain` column), or (b) change the
+  writer to emit composite `ALCHEMY-<chain>` venue keys to match the declaration (larger blast radius — touches a live
+  writer path). No code changed yet this session. `docs(plans):` commit for this note only, no code shipped.
+
 - **2026-08-12** — **SPARK-ETHEREUM oracle_prices capture wired (the decomposed per-pair todo), done + shipped.**
   Shipped `market-tick-data-service@845bd085` (`_spark_oracle_collection.py` + wiring) +
   `unified-api-contracts@e34b0f44` (BATCH_SPARK / SOURCE_MODE_CAPABILITY["spark"]={BATCH} / SOURCE_PRIORITY +
