@@ -181,8 +181,13 @@ source: >-
       alone. Repo: unified-trading-pm. Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md` (new
       finding, 2026-08-14 diagnosis)
-- [ ] [CODE] P2. Split the remaining MTDS >900L files + extract oversized fns/methods (market-tick-data-service) Source:
-      `plans/active/mtds_file_size_refactor_2026_06_08.md`
+- [x] ✅ [CODE] P2. Split the remaining MTDS >900L files + extract oversized fns/methods —
+      market-tick-data-service@21b2f7193a (2026-08-15, slot-30·infra). 0 files >900L already (prior wave); the real
+      remaining scope was the 10 `FUNCTION_SIZE_EXTRA_EXCLUDES` files each carrying 1-2 methods 51-101L — extracted 15
+      methods into private helper methods (all ≤50L, mechanical/behaviour-preserving) across bridge/flash_loan/
+      governance/liquidation/mev/staking_yields/token_transfers handlers + databento_batch_jobs/
+      alchemy_transfers_client/thegraph_base_client, then deleted the now-empty exclude list. Full `quality-gates.sh`
+      exit 0 (sentinel-verified at HEAD). Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
 - [ ] [CODE] P2. Re-add 17 connector reconnect tests using terminating mocks (market-tick-data-service) Source:
       `plans/active/mtds_file_size_refactor_2026_06_08.md`
 - [x] ✅ [CODE] P2. **Diagnosed: mis-scoped for single-task AO dispatch, NOT attempted — corrected classification
