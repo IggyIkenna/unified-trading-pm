@@ -232,13 +232,19 @@ source: >-
       overlap. **Source doc's own checkbox NOT flipped in this commit** — see the new follow-up todo below (the source
       doc is already over its line-cap hard gate, pre-existing, blocking any commit that touches it). Source:
       `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
-- [ ] [SCRIPT] P3. Trim `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` back under its
-      1000-line hard cap (currently 1003L, pre-existing — `check_line_caps.sh`/plan-hygiene pre-commit hard-blocks ANY
-      commit touching this file until it's under cap) so its own stale Phase-1c index-perp-mapping checkbox (line ~815,
-      already satisfied by `unified-api-contracts@e973c62d` — see this batch's todo above + its Progress Log entry) can
-      finally be flipped. Judgment call on what to archive/condense (likely candidate: fold older superseded
-      Progress-Log sections into an archived companion doc per the plan-completion-and-archival-discipline SSOT), so out
-      of scope for this batch's mechanical todo. Repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P3. Trim `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` back under its
+      1000-line hard cap (was 1003L) so its own stale Phase-1c index-perp-mapping checkbox (already satisfied by
+      `unified-api-contracts@e973c62d`) could finally be flipped. **DONE (2026-08-15, slot-9·backend_engineer) —
+      unified-trading-pm (this commit).** Folded the 6 oldest, fully-superseded Progress Log entries (2026-06-20 to
+      2026-06-24 — "CME futures + options-on-futures", "databento-first flip + full cefi/Binance MVP symmetry",
+      "corrections: granular source structure...", "Binance tradfi-perp superset...", "Phase 0 + Phase 1 shipped",
+      "data-ingestion launch sweep") into a new companion archive
+      `plans/archive/2026_08/cryptovenue_equity_perps_progress_log_archive_2026_08_15.md`, replaced with a short
+      pointer note in the active doc — none of the moved entries were cited by name/pointer elsewhere, and every
+      load-bearing fact each established was independently re-verified live by later entries still in the active
+      doc. File now 833L (target confirmed clean via `check_line_caps.sh`: no longer in the violation list). Also
+      flipped the Phase-1c "Map the index perps" checkbox in the same commit, citing its existing
+      `unified-api-contracts@e973c62d` evidence.
 - [ ] [SCRIPT] P3. Trim `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md` back under its 1000-line
       hard cap (currently 1001L, pre-existing — `check_line_caps.sh`/plan-hygiene pre-commit hard-blocks ANY commit
       touching this file until it's under cap) so its own stale `meta_watchers.check_high_attempted_failed`
