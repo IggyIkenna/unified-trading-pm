@@ -203,10 +203,14 @@ implementation todos on that check, since they're each independently reviewable 
       function of the already-computed column value (parse it, don't re-resolve independently via
       `resolve_cefi_instrument_id()`); keep the independent resolver only as a fallback for the no-column-yet case.
       Repo: market-tick-data-service (`venue_fetch.py`, `partitioned_writer.py`).
-- [ ] [UAC] P3. **Implement Gap 3's resolution (§5b)**: add the temporal `unclassified` state (manifest row predates
+- [x] ✅ [UAC] P3. **Implement Gap 3's resolution (§5b)**: add the temporal `unclassified` state (manifest row predates
       Stage 2 / lacks `instrument_id_form`) distinct from `non_canonical`; wire the Stage 3 read gate to
       pass-with-warning on `unclassified` until a backfill-complete flag promotes it to enforced-fail. Repo:
-      unified-api-contracts + market-tick-data-service (read gate).
+      unified-api-contracts + market-tick-data-service (read gate). — **SHIPPED unified-api-contracts@8203b600c0 +
+      market-tick-data-service@ecedb15f4e** (2026-08-15, slot-17·backend_engineer, via
+      `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` — see that plan's own entry for full detail). PASS-WITH-WARNING
+      only today (Stage 2's schema v10 `instrument_id_form` still open, unblocked below); the read gate promotes to
+      enforced-fail once that field ships and `_STAGE2_ID_FORM_BACKFILL_COMPLETE` flips.
 - [x] ✅ [WRITER] P2. Pass `violation_classes={STRUCTURAL}` explicitly at the 3 `canonical_path_violations` write
       callsites. — **SHIPPED as part of the same `market-tick-data-service@e49e1395` batch**: "mtds fail-hard
       write-guard fix (STRUCTURAL-only enforce + Stage-0 ID_FORM observe-log)" via the shared

@@ -250,14 +250,32 @@ issue's scope); flagged as a follow-up todo below.
       before this session started). Root cause NOT confirmed to be this same CF-8 bug — filed as its own doc rather
       than folded in here, since it's plausibly a distinct/older writer-path issue, not this doc's narrow
       `_write_captured_rows()` regression:
-      `/plans/active/issues/sports_is_odds_horizon_bucket_blank_timeframe_odds_api_dominant_2026_08_15.md`. (repo:
+      `/plans/archive/2026_08/issues/sports_is_odds_horizon_bucket_blank_timeframe_odds_api_dominant_2026_08_15.md`. (repo:
       market-tick-data-service, unified-trading-library)
-- [ ] [DATA] P1. **NEW finding, 2026-08-15 audit**: 14,982 blank-`timeframe` `data_type=odds_horizon_bucket` rows exist
+- [x] [DATA] P1. **NEW finding, 2026-08-15 audit**: 14,982 blank-`timeframe` `data_type=odds_horizon_bucket` rows exist
       on MDPS OUTSIDE the session's 2026-08-15T11:0x-2x UTC window (i.e. NOT created by this session's bug) — a
       population almost as large as the in-window one, previously unknown. Root-cause: are these from an earlier,
       unrelated blank-timeframe write path (a different bug), or a legitimate case where `timeframe` is genuinely blank
       for some `odds_horizon_bucket` rows? Do not assume same disposition as the in-window population without
-      independent investigation. (repo: market-tick-data-service)
+      independent investigation. (repo: market-tick-data-service) — ✅ **ROOT-CAUSED 2026-08-15** (extended
+      `audit_sports_captured_phantom_timeframe_2026_08_16.py`): 100% venue=ODDS_API (14,982/14,982), `written_at`
+      range [2026-05-05, 2026-07-13], overwhelmingly concentrated on 2026-07-13 (14,656 rows — one of the 5 known
+      spike dates) with a small 326-row tail on 2026-05-05. **Sibling check: 0/200 sampled rows have ANY
+      non-blank-timeframe sibling** under the coarse (date,venue,league_id,data_type,service_name) key — the OPPOSITE
+      of the in-window phantom population (which was 100% sibling-confirmed-safe). This proves the out-of-window
+      population is NOT an instance of this doc's `_write_captured_rows()` additive bug (that bug always leaves a
+      sibling; this population never does) and it predates the 3 fix commits (2026-08-15 15:07-17:21 UTC) by over a
+      month, so it cannot be that bug's output either way. Deleting these WOULD be destructive — excluded from all
+      cleanup scope, no write attempted. Shape (100% ODDS_API, zero siblings) matches
+      `/plans/archive/2026_08/issues/sports_is_odds_horizon_bucket_blank_timeframe_odds_api_dominant_2026_08_15.md`'s IS-surface
+      finding (899,508 rows, 99.8% ODDS_API, also 0/899,508 sibling-confirmed on a full-population check) almost
+      exactly — both surfaces show the same ODDS_API-specific, no-sibling, blank-`timeframe` pattern on different
+      dominant dates, pointing to a shared structural/writer-path cause independent of this session's bug rather than
+      two coincidentally-similar separate issues. Cross-referenced into that doc's todo #4. Deployment-archive +
+      Cloud Logging checks (that doc's todo #2) found no launched-job execution explaining either population — see
+      that doc for the evidence. No cleanup action taken; this todo is root-cause-only, a follow-up cleanup-scope
+      decision is a new, not-yet-filed item since it needs a genuine root cause first, not just this negative
+      evidence. (repo: market-tick-data-service)
 - [ ] [DATA] P1. Once the fix + cleanup above are done, re-attempt the full CF-8 captured-row backfill on BOTH surfaces
       (MDPS ~285K rows minus whatever the 2 already-landed groups covered correctly; IS ~458K rows) plus the bundled
       CF-3/CF-4 legacy-row cleanup (3,833 rows) — this is the ORIGINAL scope of
@@ -273,6 +291,19 @@ issue's scope); flagged as a follow-up todo below.
       wrapper to check `maintenance_status()` first), or (b) documenting the direct-execution path as "ALSO check
       `--status` before running" in the same places the scheduler pause/resume guidance already lives. Scope/design not
       decided — routing to operator/infra owner. (repo: deployment-service or unified-trading-pm docs)
+- [ ] [DATA] P2. **Root cause OPEN, migrated from the now-archived IS-surface doc's own deferral**: why does the
+      ODDS_API venue write blank-`timeframe` `odds_horizon_bucket` rows at all, structurally? RULED OUT: this doc's
+      own `_write_captured_rows()` bug (fixed `market-tick-data-service@e0b34e77fd`) and any known launched VM/Cloud
+      Run job (zero deployment-archive records and zero Cloud Logging matches for the 3 known
+      `_write_captured_rows()` callers on any of 5 spike dates — see
+      `/plans/archive/2026_08/issues/sports_is_odds_horizon_bucket_blank_timeframe_odds_api_dominant_2026_08_15.md`
+      for the full evidence trail). Cross-surface, full-scale, zero-sibling pattern confirmed on BOTH surfaces: MDPS
+      14,982 rows (100% ODDS_API, 0/200 sampled siblings), IS 899,508 rows (99.8% ODDS_API, 0/899,508 siblings on
+      the FULL population, not sampled). Needs a genuine code-path investigation (most likely the live ODDS_API
+      capture writer, since every known backfill/rewrite script is now ruled out) before any cleanup scope is
+      considered — no sibling means deleting would destroy real capture data, so do not assume these rows are safe
+      to remove without first determining whether blank `timeframe` is legitimate-by-design for this venue or itself
+      a distinct, older bug. (repo: market-tick-data-service)
 
 ## Progress Log
 
@@ -576,3 +607,15 @@ issue's scope); flagged as a follow-up todo below.
   registered under an existing `VM_PREFIX_TO_BUCKET` prefix first (never hand-roll a name — the runbook's own 2026-07-09
   incident). Either way: launch, verify STARTED + TERMINAL, confirm `>>> VERIFY PASSED` in the run.log, then flip this
   todo with the base/removed/remaining row counts + run.log path as evidence.
+- **data_engineering slot-2, 2026-08-15 (session resumption)**: Two updates. (1) **Closes the stale note directly
+  above** — its "NOT yet executed" / VM-launcher-wiring plan was carried out within the same original session: a new
+  `sports-cf8-tf-delete` category WAS added to `launch-canonical-migration-vm.sh` (`deployment-service@f827fad297`)
+  and the `--confirm-prod-write` run completed successfully on VM
+  `canonical-migration-sports-cf8-tf-delete-20260815-214633` (dry-run-verified on a sibling VM first, then live) —
+  see the P0 todo above for the full run.log path and row counts. This entry exists only so a reader scanning this
+  Progress Log's chronological tail doesn't trust a since-superseded plan over the Todos section, which was already
+  correct. (2) Root-caused the 14,982-row out-of-window P1 todo (see above): 100% venue=ODDS_API, zero-sibling
+  (0/200 sampled), predates this session's bug by over a month, shape matches the sibling IS-surface doc almost
+  exactly. No writes made. Remaining open work on this doc: the full CF-8 backfill re-attempt (blocked on a
+  maintenance window) and the Cloud Scheduler bypass gap (operator-owned, INFRA P2) — both correctly untouched this
+  session.

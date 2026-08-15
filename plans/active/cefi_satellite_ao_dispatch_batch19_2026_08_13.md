@@ -116,9 +116,27 @@ source: >-
       (`tests/unit/test_venue_fetch_cefi_manifest_canonicalization.py::TestGap2ManifestKeyFromColumnValue`,
       `tests/unit/test_partitioned_writer_cefi_column.py`). Source:
       `plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md`
-- [ ] [UAC] P3. implement Gap 3's resolution — add the temporal 'unclassified' manifest-row state and wire the Stage 3
+- [x] ✅ [UAC] P3. implement Gap 3's resolution — add the temporal 'unclassified' manifest-row state and wire the Stage 3
       read gate to pass-with-warning on it until a backfill-complete flag promotes it to enforced-fail
-      (unified-api-contracts + market-tick-data-service) Source:
+      (unified-api-contracts + market-tick-data-service) — **SHIPPED unified-api-contracts@8203b600c0 +
+      market-tick-data-service@ecedb15f4e** (2026-08-15, slot-17·backend_engineer). UAC:
+      `IdFormVerdict` widened to a 4th `"unclassified"` state; new
+      `classify_manifest_row_id_form(instrument_id_form, candidate)` in `canonical/quarantine.py` is
+      field-presence-aware (absent/empty field → `unclassified`, regardless of what the candidate's own shape would
+      classify as; a present recognized value is trusted verbatim; a malformed value falls back to a fresh
+      `classify_id_form`). MTDS: new `enforce_read_gate_id_form()` in `engine/orchestrator/symbol_rules.py` (mirrors
+      the existing Stage 0/P write-side `enforce_structural_and_observe_id_form` helper) — canonical/quarantined PASS
+      silently, unclassified PASS-WITH-WARNING (log only, never raises) while the new
+      `_STAGE2_ID_FORM_BACKFILL_COMPLETE` module flag is False (its only value today — Stage 2's schema v10
+      `instrument_id_form` field has not shipped, so every manifest row is honestly unclassified), non_canonical
+      always raises. Wired into `CanonicalParquetReader.read_from_manifest` via a new
+      `_enforce_cefi_id_form_read_gate` helper (kept the method under the 50-line cap), called only for the one
+      confirmed-captured cefi shard after `_resolve_pipeline_mode_from_manifest` — zero production behaviour change
+      today (pass-with-warning only) since Stage 2 is still open (this batch's own `[DATA] P3` schema-v10 todo).
+      Uses a call-time-deferred import to avoid a real circular import
+      (`reader.py` → `symbol_rules.py` → `engine.orchestrator` package → `market_interface` → `reader.py`), caught by
+      re-running quality gates before shipping. 6 new unit tests (UAC `tests/unit/test_quarantine.py`, MTDS
+      `tests/unit/test_symbol_rules_read_gate.py`), both gates green. Source:
       `plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md`
 - [ ] [SCRIPT] P3. Root-cause + fix mtds_chunk_loop.sh's PROGRESS.json GCS upload call - confirmed silently stopped
       firing after chunk 17 on mtds-backfill-odds-smallchunk2-20260807 while run.log's own PROGRESS: chunk=N lines kept

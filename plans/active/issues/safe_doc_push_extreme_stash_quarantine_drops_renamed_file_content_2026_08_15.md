@@ -162,14 +162,38 @@ tracked-but-missing shape.
       `git add -- "${FILES[@]}"` call itself (see corrected Recommended decision above). Isolated-worktree mode
       (`SDP_ISOLATED=1`, the AO-VM-inapplicable laptop default) does NOT reproduce — lands cleanly, per its own
       code path already handling this shape correctly.
-- [ ] [SCRIPT] P1. Fix `safe-doc-push.sh`'s shared-index `git add -- "${FILES[@]}"` step (around the retry loop,
+- [x] ✅ [SCRIPT] P1. Fix `safe-doc-push.sh`'s shared-index `git add -- "${FILES[@]}"` step (around the retry loop,
       `scripts/dev/safe-doc-push.sh`) so a named `--files` entry that is the OLD side of an already-`git mv`'d
       rename (no index entry, no disk file — NOT the "tracked but missing" shape `reassert_renames`/the deletion
       comment at line ~976 already handle) is skipped from the explicit `git add` call rather than passed to it
       verbatim, mirroring the isolated-worktree copy loop's existing deletion-propagation branch. Add a regression
       test covering this exact shape at LOW stash-pile size too (the extreme-quarantine framing was a red herring —
       don't gate the fix or its test on a large stash pile). `scripts/dev/repro-safe-doc-push-extreme-stash-rename-drop.sh`
-      (this session) is a ready-made repro harness for verifying the fix. Repo: unified-trading-pm.
+      (this session) is a ready-made repro harness for verifying the fix. Repo: unified-trading-pm. —
+      unified-trading-pm@7e03ff2f01 (slot-14, infra): implemented as a new `stage_named_files()` that stages per-file
+      and checks the INDEX directly for the missing-from-disk case (needs-staging vs already-staged vs a genuine
+      caller error) rather than a single combined `git add`, plus a companion fix re-deriving `KNOWN_RENAME_SOURCES`
+      from `FILES` directly (absent-from-disk + present-in-HEAD) instead of an already-staged `-M` diff pair, which
+      was silently empty on the isolated-worktree path — see Progress Log for full detail + regression coverage.
+- [ ] [SCRIPT] P1. **RESIDUAL GAP found 2026-08-15 (session resumption, slot-2), post-fix**: `stage_named_files()`'s
+      "already-staged, nothing to do" handling does NOT cover the case where the CALLER runs `git mv <old> <new>`
+      themselves BEFORE ever invoking `safe-doc-push.sh` (as opposed to the script staging it mid-loop, which the
+      fix above does handle). Reproduced live on a real archival (`plans/active/issues/sports_is_odds_horizon_bucket_
+      blank_timeframe_odds_api_dominant_2026_08_15.md` → `plans/archive/2026_08/issues/...`, this slot's own dirty
+      checkout, genuinely 18 pre-existing stash entries — not a synthetic repro): (1) manual `git mv` first, then
+      `safe-doc-push.sh --files '<old> <new> <other>'` → fails deterministically on attempt 1/6 with the exact
+      pre-fix `fatal: pathspec '<old>' did not match any files` error, twice in a row (not transient — 2 identical
+      consecutive failures). (2) `git reset` (unstage everything, leave working tree as-is — old path absent, new
+      path present, nothing staged) then re-run the SAME `safe-doc-push.sh` call → succeeds immediately on attempt
+      1/6, logging `-> re-staging deletion of rename source` (the `reassert_renames()` path this fix added) and
+      pushes cleanly. Both runs hit the SAME "18 entries is extreme, quarantining current dirty tree" branch, so the
+      quarantine-stash-pop cycle itself isn't what differs — something about a rename staged via `git mv` BEFORE the
+      stash/pop round-trip leaves the post-pop index in a shape `stage_named_files()`'s missing-from-disk check
+      doesn't recognize as "already staged", falling through to the old bare-`git add` failure path instead. Not
+      root-caused further this session (workaround found and used successfully: `git reset` before invoking the
+      script if you already ran `git mv` yourself). Needs the same isolated-scratch-repo reproduction discipline this
+      doc's own P1 fix used, specifically exercising `git mv` (not `rm`+`git add`) as the pre-staging step, across a
+      stash-quarantine cycle. Repo: unified-trading-pm.
 - [ ] [SCRIPT] P2. Once fixed, consider lowering the "24 entries is extreme" bar or adding a lighter-weight
       protect-and-restore path that doesn't require a full stash round-trip for the common case (few named files,
       most of the pile pre-existing and unrelated) — the current design pays the highest-risk code path exactly when
@@ -215,3 +239,27 @@ tracked-but-missing shape.
   Recommended decision section + reworded todo 2 accordingly (struck through, not deleted, for provenance); did not
   attempt the fix itself (todo 2, separate scope/todo). Left the repro script in place (`Delete-when: NA`, keep
   until todo 2 lands and is verified against it) as a ready-made regression harness for whoever picks up todo 2.
+- **2026-08-15 (slot-14, infra)**: Root-caused and fixed todo 2 WITHOUT needing the full 24+-entry stash-pile
+  reproduction (left as its own separate todo 1, not attempted here). Empirically confirmed via a real local repo
+  (not simulated) that `git add -- <path>` fatals with `pathspec '<path>' did not match any files` for a path that is
+  tracked-but-missing-from-disk ONCE its deletion is already staged in the index (the index has no entry left to
+  "add") — reproduced on the exact real-world shape this incident hit: the archival SSOT has the caller `git mv` the
+  plan BEFORE invoking `safe-doc-push.sh`, so the OLD path is already index-absent by the time the script's own
+  `git add -- "${FILES[@]}"` runs, and that ONE combined call aborted staging of every OTHER named file too on the
+  very first attempt (not just on a retry). Fixed by replacing the single combined `git add` with a new
+  `stage_named_files()` that stages per-file and, for a missing-from-disk path, checks the INDEX directly
+  (`git ls-files --error-unmatch`) rather than trusting `git add`'s exit code — distinguishing "needs staging" from
+  "already staged, nothing to do" from "never existed anywhere, a real caller error" (the last case still fails
+  loudly, naming the path). Separately found and fixed a second, related defect in the same block:
+  `KNOWN_RENAME_SOURCES` (which `reassert_renames()` uses to re-stage a rename's deletion half after a reconcile) was
+  captured via `git diff --cached --name-status -M`, which requires the rename to already be staged at that exact
+  point — true for the shared-index path, but FALSE for the isolated-worktree path (the default), whose copy loop
+  only `cp`/`rm -f`s the caller's files onto disk before the child re-execs and captures `KNOWN_RENAME_SOURCES` — so
+  it was silently EMPTY on every isolated-mode run, permanently disabling `reassert_renames()` on the very path this
+  incident's first invocation hit. Fixed by re-deriving `KNOWN_RENAME_SOURCES` from the `FILES` array directly
+  (absent-from-disk + present-in-HEAD), independent of whether anything has been staged yet. Added
+  `tests/test_safe_doc_push_extreme_quarantine_rename_survives.bats` (6 new cases, incl. one that reproduces the
+  pre-fix fatal verbatim against a real repo for direct comparison) — full `tests/test_safe_doc_push_*.bats` suite
+  (54 cases total) green, no regressions. Todo 1 (the extreme-stash-pile scratch-repo reproduction) and todo 3
+  (lowering the "24 entries is extreme" bar) are separate, unattempted P1/P2 todos above — this fix addresses the
+  content-loss mechanism directly and does not depend on reproducing the stash-pile branch specifically.
