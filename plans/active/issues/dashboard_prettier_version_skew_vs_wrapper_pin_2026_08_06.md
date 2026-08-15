@@ -79,8 +79,8 @@ context_scope:
       documented command stops disagreeing with its own commit hook.
 
 - [x] ✅ [INFRA] P3. **Bump `agent-orchestrator/dashboard/package.json`'s `"prettier": "^3.6.2"` → `"^3.9.5"`,
-      `npm     install`, confirm `format:check` clean.** Follow-up extracted from todo 1's closed decision above (per
-      the "every follow-up is a todo, never prose" rule — this was left as prose only, "out of scope for this dispatch,
+      `npm install`, confirm `format:check` clean.** Follow-up extracted from todo 1's closed decision above (per the
+      "every follow-up is a todo, never prose" rule — this was left as prose only, "out of scope for this dispatch,
       repo-scoped to unified-trading-pm only... a bounded, no-longer-judgment-call follow-up"). No remaining judgment:
       todo 1 already empirically proved byte-identical output + zero idempotency drift on every dashboard file type, so
       this is a mechanical version bump. Done when: `agent-orchestrator/dashboard`'s `format`/`format:check` scripts

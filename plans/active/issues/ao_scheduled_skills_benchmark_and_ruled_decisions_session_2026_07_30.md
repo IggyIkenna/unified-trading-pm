@@ -99,17 +99,17 @@ items.
       change against a THROWAWAY local state) and correctly stopped short — but THIS follow-up agent was explicitly
       authorized to push through and apply for real. Unknown whether it: (a) never got past the safe verification step,
       (b) wrote real state but didn't apply anything live yet, or (c) applied something. Check, in order:
-      `aws     s3 ls s3://uts-terraform-state-427895769566/ --recursive | grep -i codebuild` for a real state object; if
-      one exists, `terraform plan` against it (real backend this time) and read the plan before trusting it; check
+      `aws s3 ls s3://uts-terraform-state-427895769566/ --recursive | grep -i codebuild` for a real state object; if one
+      exists, `terraform plan` against it (real backend this time) and read the plan before trusting it; check
       `deployment-service` git log for any new commits from this agent; check the 18 CodeBuild projects' `lastModified`
       timestamps and the live IAM policy
-      (`aws iam get-role-policy --role-name     unified-trading-codebuild-role --policy-name codebuild-permissions`)
-      against what they were before this session (previously verified unchanged as of the EARLIER pass: all
-      `lastModified` 2026-07-03). Live CI for 18 repos depends on this not being half-mutated. -- CLOSED
-      (na-eligibility-audit 2026-08-01): `aws_codebuild_terraform_import_pending_2026_07_22.md`'s 2026-07-30 banner
-      confirms the backend is live but the import was deliberately never done -- only a throwaway local-state dry-run
-      ran, nothing was ever written to real S3 state, and a subsequent 2026-07-31 na-eligibility-audit verdict on that
-      same doc reconfirms KEEP-NA valid with the state-writing question fully answered.
+      (`aws iam get-role-policy --role-name unified-trading-codebuild-role --policy-name codebuild-permissions`) against
+      what they were before this session (previously verified unchanged as of the EARLIER pass: all `lastModified`
+      2026-07-03). Live CI for 18 repos depends on this not being half-mutated. -- CLOSED (na-eligibility-audit
+      2026-08-01): `aws_codebuild_terraform_import_pending_2026_07_22.md`'s 2026-07-30 banner confirms the backend is
+      live but the import was deliberately never done -- only a throwaway local-state dry-run ran, nothing was ever
+      written to real S3 state, and a subsequent 2026-07-31 na-eligibility-audit verdict on that same doc reconfirms
+      KEEP-NA valid with the state-writing question fully answered.
 - [x] [OPERATOR] P0. **Verify whether the `check_shard_freshness` fix agent's UTL changes are safe and complete.** It
       reported "UTL landed at `32308f68`. Now the MTDS gate re-run." then died on the same class of API connectivity
       failure. `32308f68` needs review: does it actually implement the opt-in-strict-matching design (never silently
@@ -153,13 +153,12 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
       `plan_reconcile_autonomous_sweep_2026_07_30.md` finding P1-A. Residual: the P3-7 dead-doctrine-refs sub-part
       remains open, separately tracked in `docs_reconcile_autonomous_sweep_2026_07_30.md`'s P1-C section; the P3-8
       target path no longer exists to verify.
-- [x] [DOC] P2. **freshness-cliff**: staggered real re-review of the 144 codex docs sharing
-      `last_reviewed:     2026-05-17` (all tip stale simultaneously 2026-08-15 — 16 days out at time of writing, so this
-      has a real deadline). Full instructions + the 4-shard partition scheme in the workflow script. -- CLOSED
-      (na-eligibility-audit 2026-08-01): direct corpus check `grep -rl 'last_reviewed: 2026-05-17' codex/` returns zero
-      matches today, and current `last_reviewed` dates across codex/ show a spread (2026-05-18/20/22/23, 2026-06-25,
-      2026-07-20/23/24/27, etc.) rather than a single bulk-stamped cohort -- the staggered re-review this item asks for
-      has already happened.
+- [x] [DOC] P2. **freshness-cliff**: staggered real re-review of the 144 codex docs sharing `last_reviewed: 2026-05-17`
+      (all tip stale simultaneously 2026-08-15 — 16 days out at time of writing, so this has a real deadline). Full
+      instructions + the 4-shard partition scheme in the workflow script. -- CLOSED (na-eligibility-audit 2026-08-01):
+      direct corpus check `grep -rl 'last_reviewed: 2026-05-17' codex/` returns zero matches today, and current
+      `last_reviewed` dates across codex/ show a spread (2026-05-18/20/22/23, 2026-06-25, 2026-07-20/23/24/27, etc.)
+      rather than a single bulk-stamped cohort -- the staggered re-review this item asks for has already happened.
 - [x] [DOC] P1. **corpus-sweeps**: unlock+archive 7 locked-done docs; resolve the 14 cross-tranche ownership conflicts;
       fix the `defi_morpho_lending_indices_never_wired_2026_07_12.md` backlog.yaml-hand-edit-vs-proper-channel gap;
       one-time near-complete-plan fold sweep; zero-checkbox sweep widened to all 9 tranches with a named owner
@@ -256,7 +255,7 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
       `agt-434d0a` (`context_scout_auditor:context_scout`) genuinely active on `orch-slot-4`, doing real work
       (investigating why 57% of the corpus needed rescouting — not stalled/looping). Both done-when conditions are now
       met: timer `active (waiting)` with a real next-trigger, AND a fresh corpus
-      `grep -rl '^context_scope:'     plans/ codex/` returns **681** (was 0 on 2026-08-02) — all 5 scheduled skills
+      `grep -rl '^context_scope:' plans/ codex/` returns **681** (was 0 on 2026-08-02) — all 5 scheduled skills
       (plan-reconciler, docs-reconciler, ag-closeout-auditor, na-eligibility-auditor, context-scout) are now confirmed
       installed + active on the orchestrator VM. Note: the "zero docs carry `context_scope`" premise in this todo's
       original text was already stale by fix time — ad-hoc/manual `/context-scout` runs on 2026-07-31/08-01 (see

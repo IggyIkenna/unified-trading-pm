@@ -137,7 +137,7 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
       NOT listed fails immediately, so no new duplicate can hide behind a shrinking count) and `_is_redirect_stub()` (an
       INTENDED pair). Verified: flags exactly the 2 genuinely-stale pairs, exempts the other 8, `ruff check` +
       `ruff format --check` clean. Confirmed green against origin after the push:
-      `no create-only archive/active     duplicate pairs at HEAD`.
+      `no create-only archive/active duplicate pairs at HEAD`.
 - [x] ✅ [REVIEW] P2. **DONE 2026-08-10 — full sweep run; 10 pairs found, each given a verdict** (table below). 2
       reconciled here by deleting the strictly-stale active copy (16 referrer repoints across 10 docs); 1 is an
       intentional redirect stub; the remaining 7 are carried on the ratchet with per-pair verdicts and the 3 follow-up
@@ -158,11 +158,11 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
       `/plans/active/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md` § "Finding 3", where the ask was tracked; the
       granted ruling is also stamped in each archived doc's banner). `plan_reconciler_findings_2026_08_06.md`
       (`locked_by: plan_reconciler — run in progress`) and `plan_reconciler_findings_tradfi_2026_08_09.md`
-      (`locked_by: plan_reconciler (agt-642862) since     2026-08-09T16:00:00Z`) each still carried their lock in the
-      ACTIVE copy while an archived copy sat at `status: resolved` — so the archival had already been performed on the
-      strength of an unlock nobody had issued. Both archived copies carried a banner asserting the `[unlock-plan]` had
-      already been granted that same day; no such grant existed until 2026-08-10, which is precisely why the locked live
-      copies survived and the pairs persisted. (Paraphrased deliberately — quoting that sentence verbatim trips
+      (`locked_by: plan_reconciler (agt-642862) since 2026-08-09T16:00:00Z`) each still carried their lock in the ACTIVE
+      copy while an archived copy sat at `status: resolved` — so the archival had already been performed on the strength
+      of an unlock nobody had issued. Both archived copies carried a banner asserting the `[unlock-plan]` had already
+      been granted that same day; no such grant existed until 2026-08-10, which is precisely why the locked live copies
+      survived and the pairs persisted. (Paraphrased deliberately — quoting that sentence verbatim trips
       `scripts/quality_gates/check_plan_operator_ruling_evidence.py`, which matches the literal phrase and cannot tell a
       quotation from an assertion. Same shape as `check_conflict_markers.sh`: with literal-string gates, describe the
       bad text, never reproduce it.) With the ruling now given: both banners corrected to cite the REAL ruling and to

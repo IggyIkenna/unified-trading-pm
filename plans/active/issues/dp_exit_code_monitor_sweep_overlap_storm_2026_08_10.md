@@ -177,19 +177,19 @@ until the next sweep) and is a stopgap, not the root fix.
       Logging output attributes any remaining timeout to a specific phase instead of only the aggregate 30s-stall count.
       Candidate (b) (fleet-size re-check) could NOT be independently re-measured this session — no live `gcloud`/GCS
       credential access from this worker's environment — so it remains open evidence-wise; the worker count reduction
-      (16) is a defensible mitigation regardless of the exact current fleet size. `deployment-service@     f9cf85a4b5`,
-      QG green. Live-verification of the NEXT few hourly executions (does the sweep now finish under 1800s, does the
+      (16) is a defensible mitigation regardless of the exact current fleet size. `deployment-service@ f9cf85a4b5`, QG
+      green. Live-verification of the NEXT few hourly executions (does the sweep now finish under 1800s, does the
       stall-timeout rate drop) is a fresh verify task, not bundled into this fix.
 
 - [x] ✅ [BACKEND] P2. **ADDED 2026-08-14 (slot 7, follow-up)** — live-verify the candidate-c mitigation
       (`deployment-service@f9cf85a4b5`: `_SWEEP_IO_MAX_WORKERS` 32→16 + jittered-backoff retry on `download_bytes`)
       actually collapses the exit-code-monitor sweep under its 1800s task-timeout: check the next 2-3 hourly Cloud Run
       executions after this fix's image deploys — confirm via
-      `gcloud run jobs executions describe     --format=value(spec.template.spec.containers[0].image)` that the
-      execution genuinely ran the post-fix digest (same ancestor-check discipline as the prior P2 verify), then read the
-      new phase-boundary INFO logs (`running-census phase took...` / `terminated-base-signals phase took...` /
+      `gcloud run jobs executions describe --format=value(spec.template.spec.containers[0].image)` that the execution
+      genuinely ran the post-fix digest (same ancestor-check discipline as the prior P2 verify), then read the new
+      phase-boundary INFO logs (`running-census phase took...` / `terminated-base-signals phase took...` /
       `classify/route/emit phase took...`) to see which phase now dominates wall-clock, plus count remaining
-      `download_bytes(...) exceeded the 30s     bounded-call timeout` warnings (retry-recovered stalls should no longer
+      `download_bytes(...) exceeded the 30s bounded-call timeout` warnings (retry-recovered stalls should no longer
       appear as terminal failures). If still timing out, candidate (b) (current live fleet size vs
       `_SWEEP_IO_MAX_WORKERS=16`) needs an actual live census count this task's environment couldn't obtain. Repo:
       deployment-service. — ✅ **Result: still timing out — candidate-c mitigation insufficient, but confirmed live +

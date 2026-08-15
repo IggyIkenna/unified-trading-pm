@@ -181,8 +181,8 @@ Operator confirmed **A** on BLK-9aed224f (2026-08-12): retire all 14 CURVE rows 
       BLK-9aed224f. The "no `dex_pool_state` twin" premise was a wrong-vocabulary false negative (CURVE state files are
       SYMBOL-named: `CURVE-ETHEREUM:POOL:USDC-CRVUSD.parquet` / `DAI-USDC-USDT.parquet`, not address-named).
       Content-verified both pools' canonical `dex_pool_state` twins on all 7 days (volume/tvl identical;
-      `fees_usd ==     `daily_supply_revenue_usd`). Applied via `retire_dex_pool_fees_legacy_captured_rows_2026_08_12.py
-      --apply`    (reversible`captured→attempted_failed`, no row/object deleted): RETIRED 14, EXCLUDED 0. Round-trip verify: 0     remaining captured `dex_pool_fees`CURVE rows. Consolidator was already PAUSED (precondition met), left as-is (the     later "Resume the consolidator" todo owns it). Snapshot`_index/snapshots/pre_dex_pool_fees_retire_*.parquet`+    `.dex_pool_fees_retire.bak`
+      `fees_usd == `daily_supply_revenue_usd`). Applied via `retire_dex_pool_fees_legacy_captured_rows_2026_08_12.py
+      --apply` (reversible`captured→attempted_failed`, no row/object deleted): RETIRED 14, EXCLUDED 0. Round-trip verify: 0 remaining captured `dex_pool_fees`CURVE rows. Consolidator was already PAUSED (precondition met), left as-is (the later "Resume the consolidator" todo owns it). Snapshot`_index/snapshots/pre_dex_pool_fees_retire_*.parquet`+ `.dex_pool_fees_retire.bak`
       written pre-write.
 - [ ] [DATA] P2. Correct the now-disproven "0 objects for its entire lifetime / phantom rows only" claim in the current
       plan's todo-7 premise + the archived `defi_dex_pool_fees_retirement_recommendation_2026_08_04.md` (the 2026-08-04

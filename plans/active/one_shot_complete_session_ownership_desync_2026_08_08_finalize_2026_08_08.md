@@ -63,11 +63,11 @@ source: >-
       cause: `tmux_pruner` now snapshots `last_tmux_session` before nulling `tmux_session` on a `reaped-stale` archive
       (heuristic `has_session()`-miss, not a genuine completion); `_done_one_off` falls back to
       `find_reaped_stale_agent_for_session` (or a caller-supplied `agent_id`, scoped to
-      `tmux_session ==     this-slot's-session OR last_tmux_session == this-slot's-session` so a stale/foreign
-      `agent_id` can't be misapplied) and corrects `exit_reason` to `lifecycle-complete` WITHOUT touching `SlotRow`
-      (avoids clobbering a slot already reassigned to unrelated work — exactly occurrence 2's failure mode). Verified
-      the 6 new `tests/test_done_one_off.py` tests exercise the EXACT repro recipe: `_seed_reaped_stale()` mirrors
-      `tmux_pruner`'s real post-archive state (`status=archived`, `tmux_session=None`, `last_tmux_session=<session>`,
+      `tmux_session == this-slot's-session OR last_tmux_session == this-slot's-session` so a stale/foreign `agent_id`
+      can't be misapplied) and corrects `exit_reason` to `lifecycle-complete` WITHOUT touching `SlotRow` (avoids
+      clobbering a slot already reassigned to unrelated work — exactly occurrence 2's failure mode). Verified the 6 new
+      `tests/test_done_one_off.py` tests exercise the EXACT repro recipe: `_seed_reaped_stale()` mirrors `tmux_pruner`'s
+      real post-archive state (`status=archived`, `tmux_session=None`, `last_tmux_session=<session>`,
       `exit_reason=reaped-stale`, using the same `kind="cefi_mtds_smoke_tester"` as the live occurrence-2 repro), then
       calls the real `_done_one_off(slot_id, one_shot_complete=True)` handler and asserts `status == "idle"` with no
       `HTTPException` raised (i.e. no 400) — plus recovery-via-`agent_id`, cross-slot `agent_id` rejection, evidence
@@ -81,8 +81,8 @@ source: >-
       remain; add the archival banner + set `status: complete`; grep the corpus for
       `one_shot_complete_session_ownership_desync_2026_08_08` and repoint every referrer; clear any lock if set. Then
       physically move the parent doc under `plans/archive/2026_08/`. **Done when**:
-      `bash     scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` is 0 hard, `check_reference_paths.py` shows
-      no NEW dangling reference above its baseline, and `regenerate_active_plan_inventory.py` reports 0 orphans for this
+      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` is 0 hard, `check_reference_paths.py` shows no
+      NEW dangling reference above its baseline, and `regenerate_active_plan_inventory.py` reports 0 orphans for this
       doc. Repo: unified-trading-pm.
 
 ## Codex SSOTs

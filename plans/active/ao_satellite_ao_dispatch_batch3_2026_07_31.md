@@ -169,8 +169,8 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
 - [x] [SCRIPT] P2. **Ship a read-only orphan-still-orphaned verifier, harden the liveness discriminator, then use the
       verifier to triage all 25 fleet-wide `refs/wip-preserve/**`refs.** In`agent-orchestrator`(alongside
       `server/worktree_clean_check/`): (1) add a read-only verifier that, for a recorded orphan sha, reports
-      `git     merge-base --is-ancestor <sha>     origin/<branch>`plus a per-touched-file blob-level`SAME-AS-ORIGIN`/
-      `DIFFERS`verdict and the`git diff origin     <sha>`line-delta SIGN (net-negative means recovering would REGRESS
+      `git merge-base --is-ancestor <sha> origin/<branch>`plus a per-touched-file blob-level`SAME-AS-ORIGIN`/
+      `DIFFERS`verdict and the`git diff origin <sha>`line-delta SIGN (net-negative means recovering would REGRESS
       origin), emitting`SUPERSEDED`/`STILL-ORPHANED`/`WOULD-REGRESS`per item, and wire it into the orphan-recording path
       so a stale orphan row self-closes; (2) make`server/worktree_clean_check/\_liveness.py`'s discriminator triangulate
       tmux-session existence AND `/api/state.worker_alive`AND a`/proc/<pid>/cwd`check instead of trusting

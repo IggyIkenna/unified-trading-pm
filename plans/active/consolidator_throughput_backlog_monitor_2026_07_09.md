@@ -163,8 +163,8 @@ context_scope:
 - [x] [BACKEND] P1. ✅ **STALE — already done piecemeal, closing 2026-08-07 (na-eligibility-audit).** Per-run
       output-production verdict endpoint (the seam deployments links to) — a lightweight lookup keyed by the agreed job
       identity → `{last_run_at, partitions_written, rows_written, expected_vs_actual, verdict}`,
-      `verdict ∈ {produced, fired_but_empty, stale_output, ok}`. The 4 concrete sub-todos directly below this one (fired-
-      but-empty detection, per-cadence stale-output budget, dynamic all-consolidator coverage-expansion, and the
+      `verdict ∈ {produced, fired_but_empty, stale_output, ok}`. The 4 concrete sub-todos directly below this one
+      (fired- but-empty detection, per-cadence stale-output budget, dynamic all-consolidator coverage-expansion, and the
       `VerdictBadge` UI surfacing) are ALL individually shipped and checked — `deployment-api@1a505c16`/`@14650f9`,
       `deployment-ui@15832cd`/`@368ea8e6` — and together they ARE this exact seam/verdict ask; the umbrella checkbox was
       simply never flipped alongside its parts.
@@ -252,7 +252,7 @@ context_scope:
 - [x] [BACKEND] P1. ✅ **Consolidator writes `_index/latest.json` every run — SHIPPED 2026-07-11.** `main()` in
       `manifest_consolidator.py` publishes the authoritative run summary each cycle (incl. no-op / failure, so
       `last_run_at` always reflects liveness):
-      `{last_run_at, verdict(produced|empty|failed), shards_changed,     rows_in/out/added, duration_ms, ...}` from the
+      `{last_run_at, verdict(produced|empty|failed), shards_changed, rows_in/out/added, duration_ms, ...}` from the
       `ConsolidationReport`. Best-effort (`_write_latest_run_summary` mirrors `_write_stall_state` — a write failure
       logs + never crashes the cycle). One shared module → a dead consolidator starts reporting the instant it's fired,
       no per-job change. — `unified-trading-library@111592eb` + 3 unit tests (`_run_verdict`, shape, swallow-error).
@@ -537,7 +537,7 @@ context_scope:
   with both REVIEW gates explicitly deferred by a dated operator decision (2026-07-10, local-dev-only until all cockpit
   plans complete).
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate.
-- **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, stale item closed — the WS-3 "seam" umbrella todo was
-  stale (its 4 concrete sub-parts are all already individually shipped, see the closed todo above). Doc otherwise stays
-  NA — the 2 remaining open items (WS-1 + WS-3 shipping gates) are both explicitly deferred by the same dated
-  2026-07-10 operator decision (local-dev-only until all cockpit plans complete).
+- **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, stale item closed — the WS-3 "seam" umbrella todo was stale
+  (its 4 concrete sub-parts are all already individually shipped, see the closed todo above). Doc otherwise stays NA —
+  the 2 remaining open items (WS-1 + WS-3 shipping gates) are both explicitly deferred by the same dated 2026-07-10
+  operator decision (local-dev-only until all cockpit plans complete).

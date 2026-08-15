@@ -166,7 +166,7 @@ already performed successfully in 2026-07-06/07-12 for the original non-covered-
       STRUCTURALLY PERMANENT for this typing script's mechanism, not a one-time cleanup gap: MATCHES' remainder is
       EXACTLY those 4 leagues, ODDS' remainder is EXACTLY those 4 leagues, PREDICTIONS' remainder is those 4 plus 11
       more
-      (`CHILE_PRIMERA_B, COPA_ARGENTINA, COPA_DO_BRASIL, JLEAGUE_CUP, KOREAN_FA_CUP, K_LEAGUE_2,     LIGA_EXPANSION_MX, NORWEGIAN_CUP, SWISS_CUP, TACA_DA_LIGA, US_OPEN_CUP`
+      (`CHILE_PRIMERA_B, COPA_ARGENTINA, COPA_DO_BRASIL, JLEAGUE_CUP, KOREAN_FA_CUP, K_LEAGUE_2, LIGA_EXPANSION_MX, NORWEGIAN_CUP, SWISS_CUP, TACA_DA_LIGA, US_OPEN_CUP`
       — cup/lower-division competitions in the same subscription-excluded countries, likely the same mechanism at a
       finer grain). Root cause: todo #1's write-gate fix (`instruments-service@1af6c92`) stops FUTURE incidental
       `captured` writes for these leagues, but each of them already carries historical `captured` rows from BEFORE that

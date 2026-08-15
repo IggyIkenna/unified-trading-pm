@@ -142,7 +142,7 @@ diverging matcher on the same problem.
       `live_pipeline_mode_for_venue` — UAC's `SPORTS_DATA_TYPE_TO_SOURCE["ODDS"]` (an IS/footystats reference-entity
       registry, `unified_api_contracts/canonical/domain/sports/league_data.py:224`) resolves to source=`footystats`,
       which has no `LIVE_FOOTYSTATS` `PipelineMode` —
-      `ValueError: No PipelineMode for source 'footystats' in mode     'live'`. Reverted to `trades` (the only
+      `ValueError: No PipelineMode for source 'footystats' in mode 'live'`. Reverted to `trades` (the only
       currently-launchable data_type for this venue) to unblock this recovery; the `trades`-vs-`ODDS` batch/live
       data_type mismatch is a real, separate cross-cutting gap — tracked as a new P1 todo below rather than blocking
       this fix on it.
@@ -182,7 +182,7 @@ diverging matcher on the same problem.
       (`unified_api_contracts/canonical/domain/sports/league_data.py:224`) resolves the source to `footystats` — an
       unrelated IS reference-entity registry entry (footystats' own pre-match odds snapshot, per that file's own
       2026-06-27 operator-decision comment) — which has no `LIVE_FOOTYSTATS` `PipelineMode`, raising
-      `ValueError: No     PipelineMode for source 'footystats' in mode 'live'`. Live and batch currently write under
+      `ValueError: No PipelineMode for source 'footystats' in mode 'live'`. Live and batch currently write under
       different shard identities for the same data, breaking the "Live = batch" shard-atom-identical contract — DoD:
       either (a) make `live_pipeline_mode_for_venue` venue-aware so `ODDS_API` + `data_type=ODDS` resolves
       source=odds_api instead of falling through to the data_type-only `SPORTS_DATA_TYPE_TO_SOURCE` lookup, or (b)

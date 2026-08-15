@@ -109,7 +109,7 @@ different tranche by `parent_epic` (`## Flagged`, following the established batc
       0% (the manifest DOES cover these cells; the derivation logic is broken). Fix: reuse
       `migration_orphan_sweep.py::classify_object()`'s non-hive-tail venue/instrument_type derivation
       (`_backfill_parser()`), then build the canonical path via
-      `unified_api_contracts.canonical_path_templates     ("tradfi")` instead of a partial string-splice. Add regression
+      `unified_api_contracts.canonical_path_templates ("tradfi")` instead of a partial string-splice. Add regression
       tests for both pre-hive and already-hive-shaped cases. This is the hard prerequisite for
       `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s own gated delete (NOT itself extracted here — its
       precondition, a fresh 100%-coverage re-run, isn't met until this fix ships; see

@@ -133,8 +133,8 @@ A silently-OOMing exit-code monitor never reaches its sentinel write (`_gcs.writ
       `uts-prod-dp-exit-code-monitor-cron` is re-ENABLED; it is currently **PAUSED** (last execution 08-11T15:40), so
       the sentinel is stale by definition of the cron not running. Verification target:
       `vm-census/exit-code-last-run.json` advances on schedule for ≥3 consecutive cycles after resume, with no
-      `"signal     9"` entries. NOTE: before resuming, confirm the pause was deliberate (likely operator action to stop
-      the 08-10 alert storm while the overlap fix lands) — do NOT resume blind. Repo: deployment-service.
+      `"signal 9"` entries. NOTE: before resuming, confirm the pause was deliberate (likely operator action to stop the
+      08-10 alert storm while the overlap fix lands) — do NOT resume blind. Repo: deployment-service.
 - [x] ✅ [SCRIPT] P2. **CONFIRMED (2026-08-14, slot 11)** — cross-checked `#data-pipeline-alerts`
       (`slack-read-channel.py data-pipeline-alerts 132`, 12,599 messages) for `DP_CRON_DID_NOT_FIRE` on
       `cron 'dp-exit-code-monitor'` / `vm-census/exit-code-last-run.json`. **Partial detection, with a real gap that

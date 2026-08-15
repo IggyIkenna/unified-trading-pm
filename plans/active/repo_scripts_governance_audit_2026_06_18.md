@@ -142,7 +142,7 @@ a verdict). Heaviest:
   # Delete-when: <concrete completion condition> | NA   # REQUIRED + PRESENT on ALL scripts; NA for permanent
   ```
 
-  (was: "`# Delete-when: <concrete completion condition>   # required for campaign/oneoff; permanent omits it`" —
+  (was: "`# Delete-when: <concrete completion condition> # required for campaign/oneoff; permanent omits it`" —
   corrected 2026-07-12, doc-reconciliation finding 71, §A2 B-queue ruling: operator correction 2026-06-22 made
   `Delete-when` mandatory-and-present on every script, `NA` for `permanent`, so the fleet stays greppable via
   `grep -rL '^# Delete-when:'`; see `/codex/06-coding-standards/script-homes.md` § "Lifecycle marker" (the enforced
@@ -163,7 +163,7 @@ a verdict). Heaviest:
       omits it — corrected 2026-07-26, `/plan-reconcile` infra shard: this line was left behind by the 2026-07-14
       verify-rerun-2 finding-97 correction that fixed Decision 5 and the Phase-0 code block above but not this todo; the
       codex SSOT `/codex/06-coding-standards/script-homes.md:97` reads
-      "`# Delete-when: <condition> | NA   # REQUIRED + PRESENT on ALL scripts`" and `:100` "**All 3 fields are MANDATORY
+      "`# Delete-when: <condition> | NA # REQUIRED + PRESENT on ALL scripts`" and `:100` "**All 3 fields are MANDATORY
       and PRESENT on every script** (operator 2026-06-22)", and `:154-155` defines the enforced check as failing on a
       missing `# Delete-when:` OR a non-`permanent` using `Delete-when: NA`); (b) `Epic:` ∈ the epic registry (reuse the
       `assigned_vm`-vs-registry `regen_vm_registry.py --check` pattern); (c) surfaces every `campaign`/`oneoff` whose

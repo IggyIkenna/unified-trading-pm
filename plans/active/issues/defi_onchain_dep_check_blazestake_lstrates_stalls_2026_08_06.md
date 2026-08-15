@@ -162,7 +162,7 @@ BLAZESTAKE still blocking — Option A still needed).
       live-verified in the 2026-08-14 diagnosis session (the running Cloud Run Job image predates the code change; MTDS
       ships to the image via `market-tick-data-service/cloudbuild.yaml`, not directly on quickmerge-land). Once
       redeployed:
-      `gcloud run jobs execute uts-prod-mtds-collect-lending-indices --region=asia-northeast1     --project=central-element-323112`
+      `gcloud run jobs execute uts-prod-mtds-collect-lending-indices --region=asia-northeast1 --project=central-element-323112`
       and confirm it completes with `records_written > 0` (not just exit_code=0 — check the manifest for real captured
       rows). If it STILL OOMs/times out, `ManifestFreshnessCache.bulk_load()` / `read_availability_index()` needs a
       genuine memory-bounded read path for a `date_range`-filtered call (the filter does not currently appear to bound

@@ -175,10 +175,10 @@ sufficient.
       fix + schedule trim as the immediate action; the in-workflow self-debounce (option (a) below) is deferred, gated
       on whether the problem recurs after these two land (observe via run history / live recheck, not built
       preemptively). - **(b) rate-limit ad-hoc verification — DONE.** Added a HARD RULE against
-      `gh workflow run       ldr-to-main-promote-fleet.yml` used just to check promotion status, in TWO places (both
-      needed — see `/codex/05-infrastructure/claude-code-settings-symlink.md` for why one alone doesn't cover both AO
-      workers and Task-tool sub-agents): `unified-trading-pm/cursor-configs/CLAUDE.md`'s
-      `## CI verification after every push` section (auto-loaded by every AO top-level worker + interactive session) and
+      `gh workflow run ldr-to-main-promote-fleet.yml` used just to check promotion status, in TWO places (both needed —
+      see `/codex/05-infrastructure/claude-code-settings-symlink.md` for why one alone doesn't cover both AO workers and
+      Task-tool sub-agents): `unified-trading-pm/cursor-configs/CLAUDE.md`'s `## CI verification after every push`
+      section (auto-loaded by every AO top-level worker + interactive session) and
       `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`'s `## Async-wait / background work` section (pasted at every
       Task/Agent-tool sub-agent spawn, which is what actually caused 3+ of today's confirmed triggers). Both point to
       `promotion_lag_monitor.py`'s live output / `gh pr list --search "chore(promote)"` as the correct check. -
@@ -188,9 +188,9 @@ sufficient.
       solves; cuts baseline trigger volume with no SLA regression (still ≤15 min worst case).
 - [x] ✅ [OPERATOR] P1 (deferred, conditional). **CHECKED 2026-08-09 (operator-directed, interactive session) — NOT
       recurred, self-debounce not needed, closing as moot.** Checked live via
-      `gh api     repos/.../actions/workflows/ldr-to-main-promote-fleet.yml/runs?status=cancelled`: 105 historical
-      cancelled runs total, but the most recent is `2026-08-07T17:19:08Z` — BEFORE the 17:42Z zombie-cancel fix (todo
-      2), not after. Zero cancelled runs since. Separately confirmed the 50 most recent runs overall (spanning
+      `gh api repos/.../actions/workflows/ldr-to-main-promote-fleet.yml/runs?status=cancelled`: 105 historical cancelled
+      runs total, but the most recent is `2026-08-07T17:19:08Z` — BEFORE the 17:42Z zombie-cancel fix (todo 2), not
+      after. Zero cancelled runs since. Separately confirmed the 50 most recent runs overall (spanning
       `2026-08-08T23:57:13Z`→`2026-08-09T08:27:18Z`, ~8.5h) are 100% `success`. ~39 hours clean on the specific
       cancelled+zero-jobs signature this todo exists to catch. **(a) in-workflow self-debounce is NOT needed** — do not
       build it absent a fresh recurrence. Note: this closes only THIS narrow "has the livelock signature recurred"
@@ -218,7 +218,7 @@ sufficient.
       failed because of a workflow file issue" — confirmed via `gh api repos/<repo>/actions/runs/<id>/jobs` returning
       `{"total_count":0}` AND via `gh api repos/<repo>/actions/workflows` showing the registered workflow `name` has
       fallen back to the raw file path (`.github/workflows/semver-agent.yml`) instead of the YAML's own
-      `name: Semver     Agent` — GitHub's own tell that its schema parser rejected the file, even though
+      `name: Semver Agent` — GitHub's own tell that its schema parser rejected the file, even though
       `python3 -c "import yaml..."` and `actionlint` both report it as clean (ruled out: no duplicate keys, no
       CRLF/hidden-char issues, indentation of the new `run: |` content visually matches). Root cause not yet found
       manually; dispatched a dedicated agent (2026-08-07 ~18:20Z) to bisect the two added hunks (concurrency group +

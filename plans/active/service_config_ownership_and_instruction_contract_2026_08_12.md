@@ -389,11 +389,11 @@ order actually fills against.
       from the cell's MVP data_types in `MVP_SCOPE`** — not by probing storage — so "has 1m candles, lacks book columns"
       is expressible as a decision-table rule. `clamp_tier()` already only ever clamps DOWN, so a new rung cannot
       silently upgrade anything. **Two cautions for the implementer.** (1) `_TIER_RANK` is integer-ranked
-      `OHLC_BAR: 1 / CANDLE_BOOK_COLS: 2 /     L2_TICK: 3`; inserting between 1 and 2 means renumbering, which touches
-      every clamp comparison and any persisted tier value — prefer widening the scale over shifting existing numbers.
-      (2) Preserve the existing fail-loud guard: a cell not in `MVP_SCOPE` raises rather than degrading, because
-      "execution must never silently fall back to OHLC for a venue/instrument_type that is not even in the capture
-      universe" — the new rung must not become a soft landing for cells that should still raise.
+      `OHLC_BAR: 1 / CANDLE_BOOK_COLS: 2 / L2_TICK: 3`; inserting between 1 and 2 means renumbering, which touches every
+      clamp comparison and any persisted tier value — prefer widening the scale over shifting existing numbers. (2)
+      Preserve the existing fail-loud guard: a cell not in `MVP_SCOPE` raises rather than degrading, because "execution
+      must never silently fall back to OHLC for a venue/instrument_type that is not even in the capture universe" — the
+      new rung must not become a soft landing for cells that should still raise.
 - [ ] [AGENT] P1. **Measure the population the new rung serves** — cells with finer candles but no book-summary columns
       — so the build is sized against real coverage rather than assumed need. This informs, but no longer gates, the
       work above.

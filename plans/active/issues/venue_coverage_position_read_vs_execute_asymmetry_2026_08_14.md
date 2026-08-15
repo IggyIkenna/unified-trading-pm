@@ -392,7 +392,7 @@ Kamino/Jupiter conflated the two.
       connectors this issue doc already certified — would either crash outright or broadcast a signature-less
       transaction guaranteed to be rejected on-chain. Fixed by rebuilding `_sign_and_send_tx` to accept a
       `solders.message.Message` (built fresh each call, signed via a one-shot
-      `Transaction(keypairs, message,     blockhash)`) or a `VersionedTransaction` (re-signed by constructing a fresh
+      `Transaction(keypairs, message, blockhash)`) or a `VersionedTransaction` (re-signed by constructing a fresh
       instance from its `.message`, since the decoded one carries no signatures) — and updated all 4 connectors' call
       sites (`kamino.py`/`marinade.py`/`orca.py`/`raydium.py`) off the legacy mutable-builder API. **The test suite that
       should have caught this never could**: `test_solana_connectors.py` installed fully synthetic `sys.modules` mocks

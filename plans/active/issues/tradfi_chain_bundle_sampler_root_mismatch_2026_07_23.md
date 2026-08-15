@@ -231,7 +231,7 @@ had the adopted values live, only the non-live `tradfi_instrument_universe.py` c
       (`TRADFI:CBOE:ohlcv_1s,ohlcv_1m --legs force,skip --require-captured --auto-day --day 2026-07-13`, launched
       2026-07-24 12:43 UTC against `mtds-code@0205eaab` — the build that added `CBOE → "VIX"` to
       `_CHAIN_UNDERLYING_FALLBACK`) found the identical symptom on BOTH force legs' raw `run.log`:
-      `DatabentoAdapter:     instrument_ids filter ['VIX'] matched nothing for venue=CBOE dataset(s)=['XCBF.PITCH'] — 2 curated symbol(s)     available (['VX', 'VX.FUT'])`
+      `DatabentoAdapter: instrument_ids filter ['VIX'] matched nothing for venue=CBOE dataset(s)=['XCBF.PITCH'] — 2 curated symbol(s) available (['VX', 'VX.FUT'])`
       → `0 records` → `SHARD_INCOMPLETE`. This is the exact same canonical-root (`VIX`) vs raw-Databento-symbol
       (`VX`/`VX.FUT`) class this doc already names — confirmed by this doc's own exhaustive diff, where `VX`/`VIX` is a
       **match** entry (both UAC files agree). The `mtds@0205eaab` fix correctly routed CBOE ohlcv_1s/1m into

@@ -157,7 +157,7 @@ was never previously flagged as at-risk for this same unsliced read.
       `read_availability_index_slim_read_oom_at_defi_scale_2026_08_01.md`'s fix for the sibling reader. Do NOT apply the
       same slimming to the full (non-`--unphantom-only`) mode — that path writes the whole DataFrame back and needs the
       full schema. Verify via `quality-gates.sh` + a re-run of the
-      `--unphantom-only --venues     BINANCE-FUTURES,KRAKEN-FUTURES` scan (or a smaller synthetic venue set) proving
+      `--unphantom-only --venues BINANCE-FUTURES,KRAKEN-FUTURES` scan (or a smaller synthetic venue set) proving
       identical output to the unsliced read.
 - [ ] [OPERATOR] P3. Reconsider whether `launcher_registry.LAUNCHER_FOR_VM_PREFIX["manifest-recon-"]` should map to
       `launch-manifest-recon-all-vm.sh` (enabling `relaunch_stalled_vm.py`/`relaunch_backfill_vm.py` auto-recovery for

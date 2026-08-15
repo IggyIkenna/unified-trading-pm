@@ -944,7 +944,7 @@ just belongs on a different layer than instrument_type does, and conflating the 
 - [x] ✅ [CODE] P2. **VERIFY-then-reconcile 2 new Layer-1/Layer-2 drift pairs** (`ROCKETPOOL-ETHEREUM/oracle_prices`,
       `SOLBLAZE-SOLANA/oracle_prices`) — `unified-api-contracts@d27d29f0c9` (`origin/live-defi-rollout`, post-push
       ancestry verified, QG green). Queried the live prod defi availability manifest directly via
-      `read_availability_index(bucket="market-data-tick-defi-prd-central-element-323112", filters=[("venue","==",<V>),     ("chain","==",<C>),("data_type","==","oracle_prices"),("capture_status","==","captured")])`
+      `read_availability_index(bucket="market-data-tick-defi-prd-central-element-323112", filters=[("venue","==",<V>), ("chain","==",<C>),("data_type","==","oracle_prices"),("capture_status","==","captured")])`
       — the SEPARATE-venue+chain-column form, not the composite `"ROCKETPOOL-ETHEREUM"` dict-key string (closing the
       methodology gap the 2026-08-15 slot-12 in-progress entry below correctly flagged as unverified). Both returned **0
       captured rows**: `ROCKETPOOL-ETHEREUM/oracle_prices` = 0, `SOLBLAZE-SOLANA/oracle_prices` = 0 — genuinely no
@@ -985,8 +985,8 @@ just belongs on a different layer than instrument_type does, and conflating the 
       while running the COMPOUND_V3 done-when: `python -m market_tick_data_service.cli.main` imports the module
       (printing 2 config lines from UTL DomainValidationService) and exits 0 running nothing, because main.py has no
       `__main__` guard. Only the console script `.venv/bin/market-tick-data-service` (or
-      `python -m     market_tick_data_service` via `__main__.py`) actually dispatches. The guard makes `-m` behave like
-      the console script — removes a recurring footgun for ad-hoc force-compute/done-when runs. (repo:
+      `python -m market_tick_data_service` via `__main__.py`) actually dispatches. The guard makes `-m` behave like the
+      console script — removes a recurring footgun for ad-hoc force-compute/done-when runs. (repo:
       market-tick-data-service)
 
 > **2026-08-06 archive-candidate audit**: The DESIGN P2 31-pair todo is marked [x] but its own evidence and the

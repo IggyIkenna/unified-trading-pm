@@ -100,8 +100,8 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
       "operator decides kind vs prefix" framing is STALE — `kind="recon"` was decided and shipped 2026-07-13/14 (see
       above: `cloud-providers.yaml` `recon` kind added, buckets provisioned,
       `batch_live_reconciliation_service/config.py:97` repoints to
-      `resolve_bucket_name(cloud=cloud_name,     kind="recon")`, live-verified). No operator input needed; remaining
-      scope is non-operator-gated multi-repo ENGINEERING work (producer-chain stand-up + Cloud Run failure alerting),
+      `resolve_bucket_name(cloud=cloud_name, kind="recon")`, live-verified). No operator input needed; remaining scope
+      is non-operator-gated multi-repo ENGINEERING work (producer-chain stand-up + Cloud Run failure alerting),
       correctly still open but not a blocker-digest question.
 - [x] ✅ [DATA] P0. Track to completion the deletions OWNED BY OTHER PLANS (checkpoint). **DONE 2026-07-31 —
       unified-trading-pm@\<see plan-flip commit\>.** Freshly re-verified all 3 sub-items (transcription-only for the
@@ -188,12 +188,12 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
       authorization, NA-corpus blocker digest round 5, id=44) and its own text states, GCP side: "already gone — nothing
       to delete... none of the 5 legacy source names (`ml-models-store`, `ml-models-store-prd`, `ml-predictions-store`,
       `ml-configs-store`, `ml-training-artifacts`, `ml-artifacts`) exist in this project any more" — cross-checked via
-      both `gcloud storage buckets list` and `gcloud asset     search-all-resources` (project-level inventory). That is
-      the SAME flat `ml-models-store` GCP bucket this todo targets. So the categorical human-only hard stop this todo
-      was waiting on is moot — the bucket is confirmed gone, executed under the sibling plan's own record, not this one.
-      Not flipping this checkbox `[x]` here myself (no independent re-verification run from this session, and this doc's
-      own convention treats the checkbox flip as a formal closeout step) — left `- [ ]` for a human/future pass to
-      reconcile formally against `bucket_fold_ml_2026_07_17.md` as the actual execution record.
+      both `gcloud storage buckets list` and `gcloud asset search-all-resources` (project-level inventory). That is the
+      SAME flat `ml-models-store` GCP bucket this todo targets. So the categorical human-only hard stop this todo was
+      waiting on is moot — the bucket is confirmed gone, executed under the sibling plan's own record, not this one. Not
+      flipping this checkbox `[x]` here myself (no independent re-verification run from this session, and this doc's own
+      convention treats the checkbox flip as a formal closeout step) — left `- [ ]` for a human/future pass to reconcile
+      formally against `bucket_fold_ml_2026_07_17.md` as the actual execution record.
 
 ## Wave 3 residuals — structural-fold closeout
 
@@ -211,7 +211,7 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
       permanent-vocab KEEP kinds); (2) all 3 real `cloud-providers.yaml` copies (deployment-service authoring, UAC
       packaged, PM mirror) are grep-clean of all 11 as yaml keys too; (3) every named consumer the todo called out was
       individually READ (not just grepped) and found already repointed:
-      `features-service/scripts/e2e/     run_pipeline_e2e.py` `_delta_one_test_bucket()` calls
+      `features-service/scripts/e2e/ run_pipeline_e2e.py` `_delta_one_test_bucket()` calls
       `_test_bucket("features", ...)` not the retired alias;
       `unified-trading-library/.../migrations/upgrade_manifest_to_v8.py` enumerates the folded `"features"`/
       `"execution-store"` kinds directly (its `_PER_AG_KINDS`/`_FLAT_KINDS_PREDICTION` tuples, not the retired
@@ -305,14 +305,14 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
       `legacy_bucket_template_literals_2026_07_16.md`'s own subtitle ("the QG blind-spot class T1.2 closed") almost
       verbatim — all 3 dated inside the 2026-07-13→07-16 fold window. Re-verified each: 1.
       **`terraform_bucket_estate_drift_resurrection_2026_07_13.md`** — already `status: resolved`
-      (`resolved_by: "2026-07-19 bucket_fold_closeout tail-item sweep — all GCP directions (a/b/c/d) + tail items        done"`).
+      (`resolved_by: "2026-07-19 bucket_fold_closeout tail-item sweep — all GCP directions (a/b/c/d) + tail items done"`).
       No change needed. 2. **`strategy_store_split_brain_2026_07_13.md`** — already `status: resolved`. No change
       needed. 3. **`legacy_bucket_template_literals_2026_07_16.md`** — **re-confirmed still-open, with a reason, not
       closed.** Its sole todo (pay down 15 baselined legacy no-env bucket-name TEMPLATE literals across
       features-onchain/calendar/store/sports + instruments-store-tradfi) is genuinely unfinished — none of the 5
       asset-group buckets has reached its own legacy-bucket decommission yet (matches the 2026-07-30
       na-eligibility-audit's independent KEEP-NA verdict). Fresh live check this session
-      (`gcloud storage buckets        describe`, all 5 flat legacy names): **all 5 already 404**
+      (`gcloud storage buckets describe`, all 5 flat legacy names): **all 5 already 404**
       (`features-onchain`/`features-calendar`/
       `features-store`/`features-sports`/`instruments-store-tradfi`-central-element-323112) — so the baselined literals
       are dead code paths (would hard-fail loud on invocation, not silently misdirect to a live bucket); this lowers the

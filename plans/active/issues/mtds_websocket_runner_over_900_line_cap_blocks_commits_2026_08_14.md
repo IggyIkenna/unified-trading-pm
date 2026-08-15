@@ -85,7 +85,7 @@ because a new filename cannot collide with a peer's in-flight edit of an existin
       self-contained addition) — DoD: `bash scripts/quality-gates.sh` exits green in market-tick-data-service, cited by
       its terminal output, not by the line count alone. ✅ market-tick-data-service@adf74dcf11 — extracted
       `_register_lazy_buffer()` out of `record_tick()`; file is 897 lines committed
-      (`git show HEAD:...websocket_runner.py     | wc -l`); `bash scripts/quality-gates.sh --no-fix` exits 0, "✅ ALL
+      (`git show HEAD:...websocket_runner.py | wc -l`); `bash scripts/quality-gates.sh --no-fix` exits 0, "✅ ALL
       QUALITY GATES PASSED", 10676 tests passed.
 - [x] [DATA] P0. Coordinate with whoever owns `market-tick-data-service@0974060a` before editing — the commit is hours
       old, the slot is shared, and the multi-agent rule is not to edit a peer's recently-pushed file blind — DoD: state

@@ -222,7 +222,7 @@ This needs a human/cross-repo design call, not a mechanical fix — three shapes
 - [ ] [DATA] P2. **New finding (2026-08-09, slot 26)**: `odds_features` feature-export parquet is entirely missing for
       the 3 dates above despite the underlying `odds_horizon_bucket` source now being correctly re-derived. Investigated
       one date (`2025-10-23`) via
-      `python -m features_service.sports.cli.main --operation compute --mode     batch --asset-group SPORTS --date 2025-10-23 --tables odds_features --skip-fetch`:
+      `python -m features_service.sports.cli.main --operation compute --mode batch --asset-group SPORTS --date 2025-10-23 --tables odds_features --skip-fetch`:
       it logged `env=dev` (unexpected — invoked with `DEPLOYMENT_ENV_SHORT=prd`/`CLOUD_PROVIDER=gcp`, needs confirming
       which bucket/manifest this env label actually resolves to) and
       `compute_pending_dates: manifest-aware prune skipped 1/1 already-fully-resolved dates ... nothing to do` — i.e.

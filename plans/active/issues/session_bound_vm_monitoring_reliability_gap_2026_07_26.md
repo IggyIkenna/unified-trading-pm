@@ -89,7 +89,7 @@ in the same way and at the same time when they're the same physical connection.
       (operator Q&A round5, infra tranche, item 78)" below,
       `session_bound_vm_monitoring_reliability_gap_2026_07_26.md`): (b) wire into the fleet-level `RelaunchPreemptedVm`
       / exit-code-fleet-monitor actuator**, not a documented-best-effort caveat. Scoping read of the actual current code
-      (`deployment-service/deployment_service/data_pipeline_monitors/{cli.py,exit_code_fleet_monitor.py,     launcher_registry.py,vm_classification.py}`,
+      (`deployment-service/deployment_service/data_pipeline_monitors/{cli.py,exit_code_fleet_monitor.py, launcher_registry.py,vm_classification.py}`,
       `deployment-service/scripts/recovery/relaunch_backfill_vm.py`) confirms the fleet-level actuator is **already
       built and already NOT session-bound**: `cli.py --mode exit-code` runs on a Cloud Scheduler cadence
       (`dp_exit_code_monitor_cron`, `*/5 * * * *`), scans the WHOLE project's RUNNING VM census via

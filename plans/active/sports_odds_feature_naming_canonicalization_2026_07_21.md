@@ -211,8 +211,8 @@ evidence. Summary of what each site currently uses:
       pipeline hitting the old 4-way mismatch is the exact landmine this plan exists to defuse). — **RESOLVED BY
       CITATION (round-9 sweep, 2026-08-09)**:
       `sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md` is `status: resolved`, archived
-      2026-07-25 (`resolved_by: strategy-service@9a7de7f8,     unified-trading-system-ui@35137c88`) — there is no longer
-      an active plan doing the "wire sports end-to-end" work to cross-reference against. The sequencing concern is
+      2026-07-25 (`resolved_by: strategy-service@9a7de7f8, unified-trading-system-ui@35137c88`) — there is no longer an
+      active plan doing the "wire sports end-to-end" work to cross-reference against. The sequencing concern is
       satisfied in substance: this doc's own consumer-migration commits (ml-service/strategy-service via
       `sports_satellite_ao_dispatch_batch2_2026_07_24.md`, 2026-07-23..07-24) landed at or before the wiring doc's
       2026-07-25 resolution, and the final residual (`ml-service@10e219f`, 2026-07-26) closed a narrow 4-file gap the

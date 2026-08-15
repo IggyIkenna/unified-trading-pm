@@ -79,11 +79,11 @@ and MVP-tagging needs.
 ## Todos
 
 - [x] ✅ [RESEARCH] P1. Live-query OKX's SPOT instruments endpoint
-      (`GET     https://www.okx.com/api/v5/public/instruments?instType=SPOT`) and Bybit's SPOT endpoint
-      (`GET     https://api.bybit.com/v5/market/instruments-info?category=spot`) for the full tokenized-equity symbol
-      set on each venue (equity-ticker heuristic match, mirroring the equity-perp query method above) — confirm OKX
-      actually has this product class before assuming it does, and get every real per-symbol `listTime`/`launchTime` for
-      both venues. Repo: instruments-service (findings → this plan's Progress Log).
+      (`GET https://www.okx.com/api/v5/public/instruments?instType=SPOT`) and Bybit's SPOT endpoint
+      (`GET https://api.bybit.com/v5/market/instruments-info?category=spot`) for the full tokenized-equity symbol set on
+      each venue (equity-ticker heuristic match, mirroring the equity-perp query method above) — confirm OKX actually
+      has this product class before assuming it does, and get every real per-symbol `listTime`/`launchTime` for both
+      venues. Repo: instruments-service (findings → this plan's Progress Log).
 - [x] ✅ [UAC] P1. Add confirmed tokenized-equity symbols to the CeFi instrument universe with
       `instrument_type=SPOT_PAIR` + a `tracks_equity=<canonical ticker>` link to the Databento real-equity twin,
       mirroring the `crypto_equity_link.tracks_equity()` pattern already shipped for equity perps

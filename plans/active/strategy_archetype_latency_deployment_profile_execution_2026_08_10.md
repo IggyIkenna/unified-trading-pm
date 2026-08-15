@@ -98,7 +98,7 @@ source: >-
       `test_derivation_is_idempotent_and_order_independent` asserts `derive_required_deployment_profiles` is both
       order-independent (forward vs reversed input lists produce an equal result) and idempotent (repeated calls on
       unchanged input produce an equal result) — both properties this todo asks for.
-      `git log -- tests/unit/     test_deployment_profile_derivation.py` confirms these two tests were added in
+      `git log -- tests/unit/ test_deployment_profile_derivation.py` confirms these two tests were added in
       `deployment-service@13223da3` (todo 3, not new here). Ran the full `bash scripts/quality-gates.sh` on current HEAD
       (`52936f60`, fresh-pulled) to confirm genuinely green today, not relying on the historical landing:
       `✅ ALL QUALITY GATES PASSED (336s)`, sentinel `.qg_last_passed_sha=52936f608b68cbf114f62e2272e12289773c7c72`. No

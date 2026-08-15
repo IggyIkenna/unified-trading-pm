@@ -167,9 +167,9 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
       (asia-northeast1) vs. the europe-west1 `client-reporting-daily-snapshot` twin — RE-ENABLE asia-northeast1, PAUSE
       europe-west1. **Already executed live this session** via `gcloud scheduler jobs resume/pause`; re-verified fresh
       just now:
-      `gcloud scheduler jobs describe uts-prod-client-reporting-daily-snapshot --location=asia-northeast1     --project=central-element-323112 --format='value(state)'`
+      `gcloud scheduler jobs describe uts-prod-client-reporting-daily-snapshot --location=asia-northeast1 --project=central-element-323112 --format='value(state)'`
       → `ENABLED`;
-      `gcloud scheduler jobs describe client-reporting-daily-snapshot --location=europe-west1     --project=central-element-323112 --format='value(state)'`
+      `gcloud scheduler jobs describe client-reporting-daily-snapshot --location=europe-west1 --project=central-element-323112 --format='value(state)'`
       → `PAUSED`. Both confirmed live-verified, DONE.
 - [x] ✅ [INFRA] P2. **STANDING-ACTION — repoint candidate (1) RULED, Terraform retirement EXECUTED 2026-08-15.**
       `uts-prod-client-reporting-hourly-update` (asia-northeast1): RETIRED — `client-reporting-hourly` (via Cloud Run
@@ -213,7 +213,7 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
       (`features-service-sports-daily`/`-daily-trigger`) is a fully separate, later-generation stack that doesn't need
       this scheduler at all. Removed the `"features-sports"` key from `t1_batch_scheduler.tf`'s `t1_batch_services_all`
       map; targeted `tofu apply` confirms destroyed; post-apply
-      `gcloud scheduler jobs     describe uts-prod-features-sports-t1-schedule` → `NOT_FOUND`. Shipped
+      `gcloud scheduler jobs describe uts-prod-features-sports-t1-schedule` → `NOT_FOUND`. Shipped
       deployment-service@7b418aabe784234e8a3dfd0e6266aac83c45b5c6.
 - [ ] [DIAG] P3. For the 34 non-repoint dead-target schedulers (dev/staging-tier `*-t1-schedule`s +
       `central-market-data-service-scheduler-trigger`): confirm with each owning service team/repo whether the

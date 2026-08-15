@@ -172,7 +172,7 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
       2026-08-12 /plan-reconcile" annotation at lines 125-128 resolving the self-contradiction (qualified "open→merge" —
       the two claims measure different spans and are not in tension once scoped).
 - [x] [DOCS] P3. ~~`deployment_registry_firestore_p3_cutover_2026_07_14.md:31` still declares
-      `model_tier:     opus-required`~~ (Contradictions #1 cross-batch note) — **CLOSED 2026-08-12, operator-directed
+      `model_tier: opus-required`~~ (Contradictions #1 cross-batch note) — **CLOSED 2026-08-12, operator-directed
       corpus-wide sweep.** `deployment_registry_firestore_p3_cutover_2026_07_14.md` was independently already fixed
       (line 31 now blank) by the time this ran. Ran the systematic sweep this todo asked for
       (`grep -rln '^model_tier: opus' plans/ | grep -v /archive/`) and found 3 more stale active instances beyond the 2
@@ -190,13 +190,12 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
       explicitly flags those as superseded by the 2026-07-27 refresh): - **market-data-processing-service (5 DELETE
       items)**: `DEPLOYMENT_GUIDE.md`, `TESTING.md`, `REFACTORING_STANDARDS_COMPLIANCE.md`, `specs/PLANS_ALIGNMENT.md`,
       `specs/README.md` — live `git ls-files | grep` in `.tabs/11/market-data-processing-service` found ZERO matches for
-      any of the 5; `ls       docs/` confirms only `TESTING_GUIDE.md`/`DEPLOYMENT_GUIDE_FEMI.md` remain (the redirect
-      targets, not the deleted stubs); no `specs/` directory exists at all. All 5 confirmed absent. -
-      **instruments-service (2 DELETE items, refreshed 13-doc registry)**: `scripts/README.md`,
-      `.github/BRANCH_PROTECTION_SETUP.md` — live `git ls-files | grep` in `.tabs/11/instruments-service` found ZERO
-      matches for either. Both confirmed absent. Unlike the 3 already-fixed items
-      (deployment-service/unified-api-contracts/execution-service, where DELETE was falsely checked while files still
-      existed on disk), MDPS and instruments-service's `[x]` DELETE checkmarks in
+      any of the 5; `ls docs/` confirms only `TESTING_GUIDE.md`/`DEPLOYMENT_GUIDE_FEMI.md` remain (the redirect targets,
+      not the deleted stubs); no `specs/` directory exists at all. All 5 confirmed absent. - **instruments-service (2
+      DELETE items, refreshed 13-doc registry)**: `scripts/README.md`, `.github/BRANCH_PROTECTION_SETUP.md` — live
+      `git ls-files | grep` in `.tabs/11/instruments-service` found ZERO matches for either. Both confirmed absent.
+      Unlike the 3 already-fixed items (deployment-service/unified-api-contracts/execution-service, where DELETE was
+      falsely checked while files still existed on disk), MDPS and instruments-service's `[x]` DELETE checkmarks in
       `codex_vs_repo_docs_ssot_audit_2026_06_01.md` are CORRECT as-is — no plan edit needed there. This closes the
       suspected-pattern investigation with a genuine negative result.
 - [x] ✅ [DOCS] P3. Fix `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`'s todo 5/6 repo-count

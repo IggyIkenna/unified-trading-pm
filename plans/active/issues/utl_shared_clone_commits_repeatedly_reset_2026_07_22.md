@@ -185,9 +185,9 @@ clean+reset-away tree are indistinguishable without checking `git log` against t
       `cascade_dep_branch()` (`scripts/quickmerge.sh:471-490` as of `8ca436599`) into a standalone repro script against
       a scratch bare-origin + clone (not the real fleet clones — isolated, disposable). The guard's ahead-check
       (`git rev-list --count origin/$branch_name..refs/heads/$branch_name`) and the subsequent
-      `git checkout -B     "$branch_name" "origin/$branch_name"` are TWO SEPARATE, non-atomic git subprocess calls with
-      no lock between them. Injected a delay between the two (simulating shared-host process-scheduling contention —
-      this fleet's host has documented recurring contention, e.g. `shared_host_home_filesystem_full_2026_07_26.md`, load
+      `git checkout -B "$branch_name" "origin/$branch_name"` are TWO SEPARATE, non-atomic git subprocess calls with no
+      lock between them. Injected a delay between the two (simulating shared-host process-scheduling contention — this
+      fleet's host has documented recurring contention, e.g. `shared_host_home_filesystem_full_2026_07_26.md`, load
       14.93 on a 30-vCPU box observed elsewhere in this same session) and, during that gap, committed a NEW commit on
       the SAME clone's checked-out branch from a concurrent shell (modeling a different concurrent agent process sharing
       the same slot's worktree filesystem — e.g. a Workflow subagent or a parallel `Agent`/`Task` call, NOT a different
@@ -274,9 +274,9 @@ single canonical clone per repo and behaves incorrectly under multi-clone (workt
       different tree than the actual invoking worktree — the identity check no longer cares about directory naming, so
       the sentinel-hijack failure mode this todo describes has no remaining trigger. Deliberately did NOT touch
       `qg-common.sh`'s existing worktree-identity guard or the shared `base-service.sh`/`base-library.sh`
-      `cd     "$PROJECT_ROOT"` / sentinel-path plumbing (the second, higher-blast-radius option) — this doc's own
-      Progress Log already flagged that direction as "redefines what QG green means fleet-wide... needs operator
-      scoping." Added two unit tests (`test_get_repo_name_uses_remote_url_not_directory_basename`,
+      `cd "$PROJECT_ROOT"` / sentinel-path plumbing (the second, higher-blast-radius option) — this doc's own Progress
+      Log already flagged that direction as "redefines what QG green means fleet-wide... needs operator scoping." Added
+      two unit tests (`test_get_repo_name_uses_remote_url_not_directory_basename`,
       `test_get_repo_name_falls_back_to_basename_without_remote`) exercising a scratch git repo under a mismatched
       directory name; full `test_pm_scripts_integration.py` suite (8 tests) + `quality-gates.sh` both green on the
       shipped commit.

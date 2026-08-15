@@ -197,7 +197,7 @@ last_updated: 2026-06-27
       `_classify.py`'s `finding_for` interpolates `f"({result.captured_before} → {result.captured_after})"` for
       DP_VM_GONE_NO_CAPTURE (never a fixed `"(0 → 0)"` string) and gates the DP_VM_PREEMPTED relaunch-note text on
       `TARDIS_GUARD_LAUNCHERS` membership
-      (`relaunch_note = f"relaunching via {relaunch_launcher} (no Tardis     dependency)"` for non-member launchers like
+      (`relaunch_note = f"relaunching via {relaunch_launcher} (no Tardis dependency)"` for non-member launchers like
       `launch-mdps-sharded-backfill.sh`); `classify_terminated_vm`'s `is_launcher_host` branch routes a registered
       launcher/cron host to `EXPECTED_NO_CAPTURE` (no page) instead of `GONE_NO_CAPTURE`; `_captured_reader.py`'s
       `make_captured_reader._read` falls through to `_probe_all` (every `market-data`/`instruments-store`/`features` ×
@@ -307,7 +307,7 @@ last_updated: 2026-06-27
 - [ ] [OPERATOR] P1. **Cross-cloud identity for the AO VM — prerequisite for the #17 timer.** The orchestrator VM has NO
       GCP identity at all: it is AWS EC2, `gcloud auth list` returns no credentialed accounts, there is no SA key or
       `GOOGLE_APPLICATION_CREDENTIALS`, and no AWS→GCP Workload Identity Federation pool is wired to it
-      (`gcloud iam     workload-identity-pools list` shows only github-actions-pool / gitlab-wlif / aws-glue-runners /
+      (`gcloud iam workload-identity-pools list` shows only github-actions-pool / gitlab-wlif / aws-glue-runners /
       github-pool). So `secretmanager.versions.access` on `SLACK_ALERTS_READER_BOT_TOKEN` is NOT a one-line grant. Until
       WIF is stood up, DO NOT install the timer — a dispatched worker would spawn, fail the skill's §0 Slack read, and
       burn a slot every cycle. Ship the code, hold the installer.
@@ -663,11 +663,10 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       work is now entirely "land `contract_size`, then re-derive". `contract_size` landed 2026-08-11 (todo above,
       instruments-service@2e59354a10 + unified-trading-library@d89467c24f + market-data-processing-service@3ff54776e0) —
       this re-derive is now the highest-value next item; nothing else blocks it. **RE-MEASURED 2026-08-11 (continuation
-      session)**: population is now 4,429 `capture_status='captured'     margin_type='inverse'` liquidations shards (up
-      from ~4,113 — expected, the population moves every wave), 64 distinct instrument_ids, dates 2020-01-03 to
-      2026-01-28 (query: DuckDB over
-      `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` filtered
-      `service_name='market-data-processing-service'`; `margin_type` column is authoritative and matches the
+      session)**: population is now 4,429 `capture_status='captured' margin_type='inverse'` liquidations shards (up from
+      ~4,113 — expected, the population moves every wave), 64 distinct instrument_ids, dates 2020-01-03 to 2026-01-28
+      (query: DuckDB over `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`
+      filtered `service_name='market-data-processing-service'`; `margin_type` column is authoritative and matches the
       `@INV`/unsuffixed-BYBIT heuristic exactly, 4,429 either way). **New finding: a large ambient VM fleet (439
       `mdps-cefi-{year}-*` instances, label `purpose=mdps-sharded-backfill`, `VM_OPERATION=backfill-cefi`, command
       `--operation process --mode batch --start-date {year}-01-01 --end-date {year}-12-31`, years 2019-2026, oldest
@@ -688,11 +687,11 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       **Re-measured before launch**: population moved 4,113 → 4,429 (2026-08-11 late) → **4,463** (2026-08-12, 64
       instrument_ids unchanged, dates 2020-01-03 to 2026-01-28) — re-measure again before quoting, it moves every
       wave. 3. **First launch attempt failed harmlessly** —
-      `bash deployment-service/scripts/vm/launch-mdps-backfill-vm.sh        --force --data-types liquidations --timeframes "1d 4h 1h 15m" --instrument-ids <64 ids> --date-concurrency 4        cefi 2020-01-01 2026-01-31 full`
+      `bash deployment-service/scripts/vm/launch-mdps-backfill-vm.sh --force --data-types liquidations --timeframes "1d 4h 1h 15m" --instrument-ids <64 ids> --date-concurrency 4 cefi 2020-01-01 2026-01-31 full`
       created VM `mdps-backfill-cefi-20260812-014240`, which self-deleted via `VM_SHUTDOWN_ON_COMPLETION=true` within 3
       minutes, `EXIT_STATUS=2`. Root cause (found via the tee'd `gs://deployment-scripts-.../vm-logs/<vm>/run.log`,
       downloaded with UTL `download_from_storage` — never a subprocess `gcloud storage`/`gsutil`): the launcher's
-      `--date-concurrency N` flag appended `--date-concurrency        N` onto the `--operation process --mode batch`
+      `--date-concurrency N` flag appended `--date-concurrency N` onto the `--operation process --mode batch`
       entrypoint's own argv, but that entrypoint's argparser has no such flag (only the legacy sub-parser reached via
       `cli/main.py`'s internal bridge does) — a hard parse error, not a no-op, so the lever was silently broken every
       time anyone used it. Zero data written or touched before the crash — safe no-op, not a near-miss on correctness.

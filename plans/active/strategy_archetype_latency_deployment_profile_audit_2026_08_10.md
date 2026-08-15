@@ -108,7 +108,7 @@ collapsing them into one number the way the archived doc did.
       real risk surface). **Done**: `unified-trading-pm@b62348bb59` — formal `## Latency Requirements` section added
       (category `Low`, archived Statistical Arb / Cross-Exchange Arb / Sports Arbitrage rows confirmed as the baseline,
       segment budgets <200ms / <300ms / <2s E2E, UI-dashboard latency monitor cited), a
-      `### Decision latency vs.     inter-leg execution gap` subsection distinguishing the stat-arb/ATOMIC sub-profile
+      `### Decision latency vs. inter-leg execution gap` subsection distinguishing the stat-arb/ATOMIC sub-profile
       (atomicity bounds the gap) from cross-exchange arb's two-legs-two-venues leg-and-hedge gap (the real risk surface;
       `max_hedge_delay_ms: 500` = abort ceiling, operating target ms-realm per the 2026-08-10 operator ruling), and the
       Low→`co_located_vm` deployment implication flagging the current `client-isolation-sla-and-runtime-profiles.md` § 6

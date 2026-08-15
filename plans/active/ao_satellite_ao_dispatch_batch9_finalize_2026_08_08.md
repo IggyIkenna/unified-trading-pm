@@ -77,7 +77,7 @@ source: >-
       `tests/test_done_empty_sha_gate.py`, nothing to do with `server/prompts.py` or one-shot/register-poll routing. The
       correct SHA for that half of the claim — already used correctly elsewhere in the SAME document's body text ("one-
       shot lifecycle roles via `@0a8ed16`") — is `0a8ed16` (confirmed:
-      `fix(prompts): plan_health-family one-shot     dispatches skip generic /boot`, 2026-08-02T21:44:39Z, touches
+      `fix(prompts): plan_health-family one-shot dispatches skip generic /boot`, 2026-08-02T21:44:39Z, touches
       `server/prompts.py`). **Fixed**: corrected the `summary:` field's citation from `@41da3e578` to `@0a8ed16`. **Done
       when**: the wrong SHA is corrected — done, see Progress Log for the commit.
 - [x] ✅ [REVIEW] P0. **Reconcile the verified todo's evidence into

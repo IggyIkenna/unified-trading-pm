@@ -331,7 +331,7 @@ source:
       mid-session; see the shared-checkout note above).** New `elif [[ "$VM_TASK" == "prediction-pipeline" ]]` branch in
       `setup-data-pipeline-vm.sh` (writes a runner script mirroring the launcher's original 3-stage per-date loop, then
       `_launch_with_tee`s it — inherits the admission-gate check + drain poll for free);
-      `launch-prediction-     pipeline-vm.sh` rewritten to drop its own bespoke tarball build (now installs from the
+      `launch-prediction- pipeline-vm.sh` rewritten to drop its own bespoke tarball build (now installs from the
       centrally-built tarballs via compound `VM_SERVICE=market_data_processing_service+features_service`, same pattern
       `launch-mdps-features-live.sh` already uses) and route through the canonical `setup-data-pipeline-vm.sh` path.
       `bash -n` clean, `shellcheck --severity=error` clean (the exact check `test_shellcheck_no_errors` runs). **Real
@@ -340,7 +340,7 @@ source:
       via the VM's own `run.log` (read through UTL's `download_from_storage` — subprocess `gsutil` is guardrail-blocked
       for ad-hoc reads too, not just committed code) that the NEW dispatch branch fired
       (`bash /home/ikennaigboaka/workspace/prediction_pipeline_loop.sh`, not the old generic-fallback's
-      `python -m     market_data_processing_service+features_service` literal-module-path bug), STAGE 1 started, and the
+      `python -m market_data_processing_service+features_service` literal-module-path bug), STAGE 1 started, and the
       real MDPS CLI connected to GCP, listed 2259 real trade files for 2026-08-01, and loaded 174,501 real prediction
       instruments before legitimately blocking on a live consolidator-merge lock (documented, expected behavior). No
       `admission HELD` — expected, nothing currently holds the prediction asset_group; proves the wiring reaches the

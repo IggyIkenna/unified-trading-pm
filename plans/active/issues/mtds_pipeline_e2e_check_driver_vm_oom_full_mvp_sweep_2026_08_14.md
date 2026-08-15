@@ -191,7 +191,7 @@ Two independent angles, not mutually exclusive:
       after `DEPLOYMENT_STARTED` — this is `pipeline_e2e_check.py`'s own documented `--wall-clock-timeout-sec` SIGALRM
       backstop (default 3600s) firing on a real sweep that legitimately runs longer, not a per-shard-failure propagation
       defect. **No code fix needed for (b)** —
-      `unified-trading-pm/cursor-configs/skills/     data-pipeline-check-mtds/SKILL.md` §1a now passes
+      `unified-trading-pm/cursor-configs/skills/ data-pipeline-check-mtds/SKILL.md` §1a now passes
       `--wall-clock-timeout-sec 14400` explicitly. **CEFI/SPORTS should be re-run with the corrected flag** (tracked as
       the [DATA] P2 re-run todo above, not here — no further code change expected for those two). (repos:
       market-tick-data-service) — unified-trading-pm@8a56e126e2:

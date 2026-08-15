@@ -327,7 +327,7 @@ investigation confirmed are both achievable with existing primitives:
       agent-orchestrator@c5e6018e710c21b92e64a26d46bd37a0148f7ea1.
 - [x] 6. ✅ [BACKEND] P1. **Add `"human"` and `"planning-human"` as deliberate, explicit buckets in
       `task_role_group()`** — `_HUMAN_ROLES` frozenset + `TASK_ROLE_GROUPS` extension. Tests:
-      `test_role_group_human_roles_map_to_themselves_     not_planning` in `tests/test_task_usage_windows.py`. Evidence:
+      `test_role_group_human_roles_map_to_themselves_ not_planning` in `tests/test_task_usage_windows.py`. Evidence:
       agent-orchestrator@c5e6018e710c21b92e64a26d46bd37a0148f7ea1.
 - [x] 7. ✅ [BACKEND] P1. **Add `human_slot_ids()` to `server/config.py`** — mirrors `review_slot_ids()` exactly
       (`HUMAN_SLOT_ID_BASE = 9000`, `DEFAULT_HUMAN_SLOTS = (9001, 9002)`), wired into all three pre-tmux-call sites
@@ -388,7 +388,7 @@ investigation confirmed are both achievable with existing primitives:
       real `model: "<synthetic>"` all-zero-usage internal bookkeeping turns Claude Code emits (8 in this session), which
       `scan_session_usage()` correctly includes (matches AO's own existing worker-capture behavior). Usage not tied to a
       claimed task (plan-authoring time) gets a stable synthetic `human-session-{slot_id}-{claude_session_id}` id rather
-      than being dropped — `SlotGitStatusRow`'s `(host,     slot_id)`-keyed pattern informed this design (a
+      than being dropped — `SlotGitStatusRow`'s `(host, slot_id)`-keyed pattern informed this design (a
       per-source-identity row) without literally reusing that table, since `TaskUsageRow`'s existing
       role_group-filterable shape was the better fit once `task_role_group()` already had the human/planning-human
       buckets from Phase 1. 6 new tests, full `quality-gates.sh` green. Evidence:

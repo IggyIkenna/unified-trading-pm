@@ -109,8 +109,8 @@ bulk backfill, then flip each gated todo's marker back to dispatchable in the sa
       owner): the Databento live WS connector should retry/backoff on a dead session instead of giving up after one
       failed reconnect, and/or a VM-level watchdog should distinguish "process alive" from "feed alive" so this class of
       failure pages instead of running silently for 2+ days.** File:
-      `market_tick_data_service/live/connectors/     databento_tradfi_ws.py` (not touched by this session — out of
-      ownership scope; diagnosed 2026-08-14 during `cross_ag_live_capture_parity_2026_08_14.md` Finding C).
+      `market_tick_data_service/live/connectors/ databento_tradfi_ws.py` (not touched by this session — out of ownership
+      scope; diagnosed 2026-08-14 during `cross_ag_live_capture_parity_2026_08_14.md` Finding C).
 - [x] ✅ [OPERATOR] P0. **Pay the outstanding Databento bill so the vendor restores account access.** **CONFIRMED
       RESOLVED 2026-08-10** — operator reported believing the block had cleared ("check live i think we found that
       databento wasnt blocked anymore"); independently live-verified rather than trusted at face value. Ran the

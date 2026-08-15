@@ -113,7 +113,7 @@ this is inference from timing + the workspace's own documented operational contr
       `2026-08-07T00:18:36Z`), correlated it to the owning plan
       (`/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s R3 relaunch chain), and registered a
       retroactive maintenance window
-      (`scheduler_maintenance ... pause --locked-by     defi_track01_per_instrument_and_canon_id_2026_07_24 --ttl-minutes 4320`,
+      (`scheduler_maintenance ... pause --locked-by defi_track01_per_instrument_and_canon_id_2026_07_24 --ttl-minutes 4320`,
       i.e. until 2026-08-10T00:20:24Z) rather than resuming — explicitly naming the deferred resume ("whoever next
       verifies `canonical-migration-defi-rebuild-20260806-223130` completed should resume the cron manually"). This
       satisfies the substance of this todo (confirm intentional + a named resume owner/mechanism) even though it wasn't

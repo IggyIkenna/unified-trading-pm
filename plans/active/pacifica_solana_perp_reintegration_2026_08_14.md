@@ -108,7 +108,7 @@ direct testing, not documentation-reading:**
 - [x] [AGENT] P0. ✅ **Real WS test, zero credentials.** Connected to `wss://ws.pacifica.fi/ws` (note: `/ws` path, not
       `/v1` as the old scaffold assumed) with no API key, no RPC tier, no partner header. Subscribed to the `trades`
       channel for `BTC` and received real live trade ticks within ~2s:
-      `{"channel":"trades","data":[{"h":252234313,"s":"BTC","a":"0.00351","p":"62759","d":"open_long",     "tc":"normal","t":1786714266923,"li":11622278699,"it":0}]}`.
+      `{"channel":"trades","data":[{"h":252234313,"s":"BTC","a":"0.00351","p":"62759","d":"open_long", "tc":"normal","t":1786714266923,"li":11622278699,"it":0}]}`.
       The 2026-07-06 assessment no longer holds — public, unauthenticated live streaming works today. §D's live
       connector can target real implementation.
 - [x] [AGENT] P1. ✅ **Real REST calls, base URL and response shapes confirmed.** `https://api.pacifica.fi/api/v1` is
@@ -211,12 +211,12 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
 - [x] [SCRIPT] P1. ✅ **Resurrected and ACTIVATED the live WS connector** — `market-tick-data-service@c87b12db60`. Full
       real rewrite (not a flag flip) mirroring `hyperliquid_ws.py`'s structure, incl. the mandatory `asyncio.sleep(0)`
       reconnect-loop fix (2026-08-05 incident — 16-26GB RSS host starvation if omitted). Subscribe message format
-      confirmed via WebFetch against `docs.pacifica.fi/api-documentation/api/websocket/subscriptions/     trades.md`
+      confirmed via WebFetch against `docs.pacifica.fi/api-documentation/api/websocket/subscriptions/ trades.md`
       (`{"method":"subscribe","params":{"source":"trades","symbol":"<COIN>"}}`, cited example, not guessed); unsubscribe
       shape is an honest, documented, inferred-not-confirmed mirror of subscribe (residual risk noted in code + tests,
       no live round-trip performed in this session). Registered under `WS_FEED_CONNECTOR_FACTORIES["PACIFICA-SOLANA"]`.
 - [x] [SCRIPT] P2. ✅ **Funding-rate capture confirmed as `derivative_ticker.funding_rate`** —
-      `market-tick-data-service@     c87b12db60`. Unchanged from the pre-cull pattern; MTDS batch adapters don't call
+      `market-tick-data-service@ c87b12db60`. Unchanged from the pre-cull pattern; MTDS batch adapters don't call
       `classify_venue_error()` (confirmed against sibling adapters — that's an instruments-service-layer convention, not
       MTDS's).
 - [x] [SCRIPT] P3. ✅ **Restored + rewrote MTDS tests** — `market-tick-data-service@c87b12db60`.
@@ -275,7 +275,7 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
       `paper_universe.py`'s generic archetype→required-config-key map + the engine's per-tick generic `venue` field read
       confirms the plan's own framing was right, once pointed at the real registration files above.
 - [x] [SCRIPT] P3. ✅ **Confirmed PnL/risk paths handle cross/isolated margin generically** —
-      `strategy-service@     14d869449f`. `risk/v2/margin_sim.py` reads `capability.margin_spec.mode` from the UAC
+      `strategy-service@ 14d869449f`. `risk/v2/margin_sim.py` reads `capability.margin_spec.mode` from the UAC
       `CollateralPolicy` registry (§B already landed Pacifica's cross+isolated policy there) — venue-agnostic, no change
       needed. The one venue-hardcoded margin-mode dict found (`CEFI_PERP_MARGIN_MODELS`) already excludes
       ASTER/DERIBIT/KRAKEN-FUTURES etc. — Pacifica's absence there is consistent with every other funding-dispersion

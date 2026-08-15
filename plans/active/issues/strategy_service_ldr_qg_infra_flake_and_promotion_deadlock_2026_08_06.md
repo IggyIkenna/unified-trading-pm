@@ -360,7 +360,7 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
       10:55Z (all slices); the 11:00Z fleet tick closed #498 (ref deleted) + opened **#499** (ref
       `promote/strategy-service/308bdfd31bbb` @ 308bdfd3, created 11:01:10Z). Resolved #499 take-LDR: merge main
       `19565cd3` → `git checkout --ours pyproject.toml` (both floors) → commit `dd11550a`
-      (`fix(promote): resolve LDR->main promote conflict ... take LDR floors unified-api-contracts>=0.96.0,     aiohttp>=3.14.3`),
+      (`fix(promote): resolve LDR->main promote conflict ... take LDR floors unified-api-contracts>=0.96.0, aiohttp>=3.14.3`),
       tree == 308bdfd3 verified, pushed to the promote ref. #499 MERGEABLE; fleet-green posted on `dd11550a` (identical
       bot signal, SIT run 31094524862 SUCCESS, desc "full-workspace-sit @ 10:45:34Z"); auto-merge ARMED (SQUASH). **v2
       PR run 31095759328 QUEUED on dd11550a — MUST COMPLETE, do NOT cancel**; on SUCCESS #499 auto-merges → verify main
@@ -416,20 +416,20 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
       `promote/unified-trading-pm/1dacca9be5e1`. Provenance: agt-e33f21.
 - [x] ✅ [CICD] P2. **CLOSED 2026-08-09 (reclassify+satellite sweep) — STALE, already fixed via a broader mechanism.**
       Live-read `unified-trading-ci/.github/workflows/python-quality-gates-v2.yml` (2026-08-09): the
-      `Cache uv package     cache` step already carries `if: inputs.self_hosted_runner_labels == '' && ...` with an
-      in-file comment dated "GATED ON GITHUB-HOSTED ONLY (2026-08-06)" that cites the exact production numbers this
-      todo's own text references (features-service 450s restore, execution-service 894s failed save, the
-      shared-`~/.cache/uv` concurrent-tar race) — i.e. the step is SKIPPED ENTIRELY on self-hosted (glue) runners, a
-      strictly stronger fix than the requested `save: false` (no restore either, not just no save) — shipped
-      `unified-trading-pm@9b39f6a05` per `issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` Part
-      3a ("FIXED — verified live, PM run 31081212407: `skipped Cache uv package cache`"). The "disk-low detection" half
-      of the operator's ruling was not separately verified but is now moot in practice — the step this todo names no
-      longer runs on self-hosted runners at all, so there is nothing left for a disk-low guard to protect against on the
-      glue-runner cache path. Original: **RULED 2026-08-09 (operator): BOTH** — `save: false` on self-hosted runners AND
-      add disk-low detection, for the ~15-min `Post Cache uv package cache` save on glue runner `glue-ip-172-31-3-59-1`
-      (performance/cost: ~30 min of runner time per v2 run, shared fleet-wide). Was `[OPERATOR]` P2 decide-between. NOT
-      a correctness blocker — the save completes (~15 min). Distinct from PR #491's real 0MB-disk failure (08-05
-      06:48Z). Provenance: agt-e33f21. Retagged to `[CICD]` — implementation, no further decision needed.
+      `Cache uv package cache` step already carries `if: inputs.self_hosted_runner_labels == '' && ...` with an in-file
+      comment dated "GATED ON GITHUB-HOSTED ONLY (2026-08-06)" that cites the exact production numbers this todo's own
+      text references (features-service 450s restore, execution-service 894s failed save, the shared-`~/.cache/uv`
+      concurrent-tar race) — i.e. the step is SKIPPED ENTIRELY on self-hosted (glue) runners, a strictly stronger fix
+      than the requested `save: false` (no restore either, not just no save) — shipped `unified-trading-pm@9b39f6a05`
+      per `issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` Part 3a ("FIXED — verified live, PM
+      run 31081212407: `skipped Cache uv package cache`"). The "disk-low detection" half of the operator's ruling was
+      not separately verified but is now moot in practice — the step this todo names no longer runs on self-hosted
+      runners at all, so there is nothing left for a disk-low guard to protect against on the glue-runner cache path.
+      Original: **RULED 2026-08-09 (operator): BOTH** — `save: false` on self-hosted runners AND add disk-low detection,
+      for the ~15-min `Post Cache uv package cache` save on glue runner `glue-ip-172-31-3-59-1` (performance/cost: ~30
+      min of runner time per v2 run, shared fleet-wide). Was `[OPERATOR]` P2 decide-between. NOT a correctness blocker —
+      the save completes (~15 min). Distinct from PR #491's real 0MB-disk failure (08-05 06:48Z). Provenance:
+      agt-e33f21. Retagged to `[CICD]` — implementation, no further decision needed.
 
 ## agt-e33f21 follow-up — glue-runner cache-save hang is SYSTEMATIC (2026-08-06 ~09:15Z)
 

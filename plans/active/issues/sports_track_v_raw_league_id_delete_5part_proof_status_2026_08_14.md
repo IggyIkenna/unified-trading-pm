@@ -124,7 +124,7 @@ already caught once.
 
 - [x] [CODE] P1. ✅ Built the candidate-list generator + content-verify report + generation-matched CAS-delete executor
       trio for the raw-keyed `league_id` GCS population — `market-tick-data-service@c3b188a1`
-      (`scripts/sports/league_id_relocation/{list_stale_raw_league_id_candidates_2026_08_14.py,     verify_stale_raw_league_id_content_2026_08_14.py, delete_stale_raw_league_id_2026_08_14.py}` +
+      (`scripts/sports/league_id_relocation/{list_stale_raw_league_id_candidates_2026_08_14.py, verify_stale_raw_league_id_content_2026_08_14.py, delete_stale_raw_league_id_2026_08_14.py}` +
       29 unit tests in
       `tests/unit/scripts/test_{list_stale_raw_league_id_candidates,verify_stale_raw_league_id_content,delete_stale_raw_league_id}_2026_08_14.py`,
       `quality-gates.sh` full pass). Mirrors the K1/K2 trio's pattern (verify existing canonical twin + delete legacy
@@ -153,18 +153,18 @@ already caught once.
       own 2026-07-21/22 migration — `last_modified` on the affected targets is 2026-07-27..07-29 (days AFTER Track V
       ran), and the current target content carries a DIFFERENT schema (`fixture_id`/`af_fixture_id`/
       `af_fixture_match_status` present, `venue`/`data_source`/`instrument_type` absent — the inverse of the raw
-      `SOCCER_UEFA_CHAMPS_LEAGUE` source's own schema) and a human-readable `sport_key` value
-      `"UEFA Champions     League"` (title-case, spaced) instead of the odds-api slug `"soccer_uefa_champs_league"` that
-      `SPORTKEY_CANON` actually maps. A later, different writer (consistent with an af_fixture/footystats
-      fixture-matching enrichment pass, timing matches the K1/K2 uppercase-casing window 2026-07-22..07-27 —
-      `scripts/sports/k1k2_casing_revert_2026_07_27/`) wrote directly to the canonical `UCL` path for this day using its
-      own vocabulary and OVERWROTE (did not merge with) Track V's originally-correct merged content — the
-      `"UEFA Champions League"` sport_key value is genuinely absent from `SPORTKEY_CANON`, so re-running Track V's own
-      migration tool against this unit correctly QUARANTINES those rows (never guesses) rather than silently
-      re-classifying them, and — separately from that quarantine — its CAS `merge_expected()` still safely folds the
-      missing raw rows in alongside the existing (differently-sourced) target content with zero loss on either side.
-      **Fix executed**: a PROD DATA write via the already-authorized, unmodified
-      `migrate_sports_league_id_casing_     2026_07_21.py --apply-prod --confirm-prod-write --unit day=2025-09-18,venue=<V>`
+      `SOCCER_UEFA_CHAMPS_LEAGUE` source's own schema) and a human-readable `sport_key` value `"UEFA Champions League"`
+      (title-case, spaced) instead of the odds-api slug `"soccer_uefa_champs_league"` that `SPORTKEY_CANON` actually
+      maps. A later, different writer (consistent with an af_fixture/footystats fixture-matching enrichment pass, timing
+      matches the K1/K2 uppercase-casing window 2026-07-22..07-27 — `scripts/sports/k1k2_casing_revert_2026_07_27/`)
+      wrote directly to the canonical `UCL` path for this day using its own vocabulary and OVERWROTE (did not merge
+      with) Track V's originally-correct merged content — the `"UEFA Champions League"` sport_key value is genuinely
+      absent from `SPORTKEY_CANON`, so re-running Track V's own migration tool against this unit correctly QUARANTINES
+      those rows (never guesses) rather than silently re-classifying them, and — separately from that quarantine — its
+      CAS `merge_expected()` still safely folds the missing raw rows in alongside the existing (differently-sourced)
+      target content with zero loss on either side. **Fix executed**: a PROD DATA write via the already-authorized,
+      unmodified
+      `migrate_sports_league_id_casing_ 2026_07_21.py --apply-prod --confirm-prod-write --unit day=2025-09-18,venue=<V>`
       for all 12 units (plan-mode previewed first, no code changes) — no repo commit, evidence is the tool's own run
       output: `verify=PASS` (content-fingerprint match) on all 12; e.g. WILLIAMHILL existing=80 + src=30 -> target=110
       (strict superset, additive CAS merge, matches the tool's proven no-clobber design already used for the
@@ -208,7 +208,7 @@ already caught once.
 - [x] [DATA] P1. ✅ **Resolved 2026-08-15 (this session)**: completed all three remaining steps the slot-22 narrowing
       left open — and found the 757-FAIL population is **already remediated**, no prod write needed this session. (1)
       Content-read 3 diverse-day `SUPER_LEAGUE` split-target sample units
-      (`day=2026-05-02/05-03/05-09,     venue=BETFAIR_EX_EU`): for every sample, both `GREEK_SUPER_LEAGUE` and
+      (`day=2026-05-02/05-03/05-09, venue=BETFAIR_EX_EU`): for every sample, both `GREEK_SUPER_LEAGUE` and
       `SWISS_SUPER_LEAGUE` targets' natural-key sets FULLY contain the raw source's per-canon row groups
       (`missing_from_target=0` in all 6 target checks across the 3 units) — confirms the content root cause is genuine
       under-coverage (never a missing/foreign target), matching slot-22's hypothesis, not a new clobber. (2) **No

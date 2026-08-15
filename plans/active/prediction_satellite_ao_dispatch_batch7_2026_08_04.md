@@ -84,7 +84,7 @@ audit ran (2026-07-31) — so no prior round could plausibly have seen it.
 ## Todos
 
 - [ ] [DATA] P3. **Check whether any real downstream consumer reads `available_at` for
-      `data_type in {trades,     book_snapshot_5}` on prediction-venue (Polymarket/Kalshi) data.** Grep
+      `data_type in {trades, book_snapshot_5}` on prediction-venue (Polymarket/Kalshi) data.** Grep
       `market-tick-data-service`, `market-data-processing-service`, `features-service`, `strategy-service`,
       `execution-service`, `deployment-api`, and `deployment-ui`/`unified-trading-system-ui` for real (non-test) call
       sites that filter or gate on `available_at` specifically for `data_type=trades` or `data_type=book_snapshot_5`

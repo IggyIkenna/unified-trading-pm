@@ -148,7 +148,7 @@ a normal ratchet into a self-reinforcing wall.
       controlling blocker.** Measured 16:00-16:35Z 2026-08-10: PR #2713 was CLOSED with `mergedAt: null`, then #2714,
       then #2715, each superseded within a tick; `origin/main..origin/live-defi-rollout` GREW 1622 → 1728 across the
       window. The bot's own log states the rule:
-      `⏭ existing promote PR … has a FAILED QG slice (doomed run) —     superseding this tick instead of waiting it out`.
+      `⏭ existing promote PR … has a FAILED QG slice (doomed run) — superseding this tick instead of waiting it out`.
       The mechanism is a rate mismatch, not a bug in any one check: `QG slice (checks)` fails in ~3.5 min, the promote
       bot ticks every ~15 min, and LDR receives roughly 4 commits per 3 min from the fleet — so every tick mints a NEW
       frozen head and restarts the whole gate from zero. **Any check that fails FAST therefore guarantees an unbounded

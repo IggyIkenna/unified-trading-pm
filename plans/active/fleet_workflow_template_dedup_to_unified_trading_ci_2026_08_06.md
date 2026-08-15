@@ -294,7 +294,7 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       remaining local callers (their only callers were `main-backmerge-to-ldr.yml`/`staging-backmerge-to-ldr.yml`/
       `semver-agent.yml`, all now thin stubs whose logic — including the `notify-slack.yml` call — moved into
       `unified-trading-ci`). Deleted and independently verified via
-      `git show origin/live-defi-rollout:     .github/workflows/notify-slack.yml` (absent) in each: agent-orchestrator,
+      `git show origin/live-defi-rollout: .github/workflows/notify-slack.yml` (absent) in each: agent-orchestrator,
       alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-ui,
       e2e-testing, execution-service, features-service, fund-administration-service, greeks-service, ibkr-gateway-infra,
       instruments-service, market-data-processing-service, market-tick-data-service, ml-service, strategy-service,
@@ -319,8 +319,8 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       `notify-slack.yml`, `staging-lock-check.yml`, and `quality-gates-v2.yml.tmpl` still process (the 2 correctly-kept
       tier-1 templates plus the 2 from the separate, earlier `shared_ci_workflow_repo_extraction_2026_08_06.md`
       migration). Shipped `unified-trading-pm@79c4a72737`, independently verified via
-      `git show origin/live-defi-rollout:     scripts/workflow-templates/main-backmerge-to-ldr.yml` (path does not
-      exist) and the header comment no longer listing the 4 it used to.
+      `git show origin/live-defi-rollout: scripts/workflow-templates/main-backmerge-to-ldr.yml` (path does not exist)
+      and the header comment no longer listing the 4 it used to.
 - [x] ✅ 8. [INFRA] P2. **Fleet-wide dangling-reference re-sweep — DONE 2026-08-08.** Ran
       `grep -rln "uses:.*unified-trading-pm/.github/"` (plus a broader path-substring sweep, not just `uses:` lines, and
       across `.yml`/`.yaml`/`.sh`/`.py`/`.md`, not just workflow files) across all 24 fleet repos + PM itself, excluding

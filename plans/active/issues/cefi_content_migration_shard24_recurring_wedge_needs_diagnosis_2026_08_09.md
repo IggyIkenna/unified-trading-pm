@@ -129,7 +129,7 @@ not `2026-01-07`.
 - [x] ✅ [SCRIPT] P2. Launch shard 24's 4th checkpoint-resumed attempt from its ACTUAL last checkpoint:
       `RESUME_START_DATE=2026-01-08 RESUME_END_DATE=2026-01-15` (day AFTER `-133746`'s `last_completed_date=2026-01-07`
       — do NOT replay 2026-01-07).
-      `RESUME_ASSET_GROUP=cefi-content-apply RESUME_SHARD_OF=1 RESUME_SHARD_INDEX=0 bash     scripts/vm/launch-canonical-migration-vm.sh cefi-content-apply 2026-01-08 2026-01-15 full`.
+      `RESUME_ASSET_GROUP=cefi-content-apply RESUME_SHARD_OF=1 RESUME_SHARD_INDEX=0 bash scripts/vm/launch-canonical-migration-vm.sh cefi-content-apply 2026-01-08 2026-01-15 full`.
       Verify STARTED <60s + ≥1 progress line/hr (per infra craft north-star — no fire-and-forget) and check back at
       T+90min for either completion, active progress past `2026-01-08`, or a repeat wedge (in which case STOP
       relaunching and treat todo 2 below as blocking). Repo: deployment-service.

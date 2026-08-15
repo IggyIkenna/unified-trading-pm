@@ -500,24 +500,23 @@ unwired since the earlier pass (`index_ratio_accrual.py` + its test) are now com
       this build changed. - **Fix**: added a new `emit_lending_leg: bool = True` parameter to both shared producers (+
       the `emit_paper_run_attribution` thin bridge) — default `True` preserves the exact pre-existing 3-row/3-factor
       shape for every caller that doesn't pass it (every archetype above). Wired
-      `emit_lending_leg = (archetype !=       CARRY_STAKED_BASIS)` at the ONE call site in
-      `paper_run_handler.py::run_paper`'s generic branch (shared by attribution + passive) and the equivalent passive
-      re-derivation loop in `batch_rerun.py` (which does not call attribution at all — pre-existing, confirmed unrelated
-      to this fix). The row is DROPPED entirely when `False` (removed from the `day_accruals`/`day_rows` list before
-      emission) — never a zero-amount row. - **Row count verified**: `carry_staked_basis`'s passive tape is now 2
-      rows/held-day (STAKING_REWARD + FUNDING_ACCRUAL, not 3) and its attribution rows are CARRY + FUNDING (+ FEES),
-      BASIS dropped — confirmed via new tests (`test_emit_lending_leg_false_drops_lending_interest_row_entirely` /
-      `_drops_basis_row_entirely`) plus a paper↔batch parity test at both producers. Every other archetype's
-      default-`True` row count is UNCHANGED (pinned by new
-      `test_emit_lending_leg_default_true_preserves_three_row_shape`/`_factor_shape` tests alongside the pre-existing
-      3-row assertions, which needed no edits since the default is unchanged). - **Big finding (not this task's to fix,
-      noted for the record):** this checkout is a SHARED working tree — mid-build, a concurrent agent's own WIP on
-      `catalog_trading.py`/`test_paper_universe.py` (`ARBITRAGE_PRICE_DISPERSION` candidate-venues fix) landed as
-      `strategy-service@05c0b2ed` while this build was in progress, and separately another concurrent agent was actively
-      editing `strategy_service/{types.py,engine/core/config_loader.py}` + several `configs/*.yaml` + their test files
-      DURING this session — confirmed those diffs are unrelated to this task and were left untouched (never staged,
-      never reverted). A first quality-gate pass (run before `05c0b2ed` landed) surfaced one transient failure in
-      `test_dex_pool_archetypes_are_drivable_and_selected`, isolated (single-test + isolated-diff reruns) to that
+      `emit_lending_leg = (archetype != CARRY_STAKED_BASIS)` at the ONE call site in `paper_run_handler.py::run_paper`'s
+      generic branch (shared by attribution + passive) and the equivalent passive re-derivation loop in `batch_rerun.py`
+      (which does not call attribution at all — pre-existing, confirmed unrelated to this fix). The row is DROPPED
+      entirely when `False` (removed from the `day_accruals`/`day_rows` list before emission) — never a zero-amount
+      row. - **Row count verified**: `carry_staked_basis`'s passive tape is now 2 rows/held-day (STAKING_REWARD +
+      FUNDING_ACCRUAL, not 3) and its attribution rows are CARRY + FUNDING (+ FEES), BASIS dropped — confirmed via new
+      tests (`test_emit_lending_leg_false_drops_lending_interest_row_entirely` / `_drops_basis_row_entirely`) plus a
+      paper↔batch parity test at both producers. Every other archetype's default-`True` row count is UNCHANGED (pinned
+      by new `test_emit_lending_leg_default_true_preserves_three_row_shape`/`_factor_shape` tests alongside the
+      pre-existing 3-row assertions, which needed no edits since the default is unchanged). - **Big finding (not this
+      task's to fix, noted for the record):** this checkout is a SHARED working tree — mid-build, a concurrent agent's
+      own WIP on `catalog_trading.py`/`test_paper_universe.py` (`ARBITRAGE_PRICE_DISPERSION` candidate-venues fix)
+      landed as `strategy-service@05c0b2ed` while this build was in progress, and separately another concurrent agent
+      was actively editing `strategy_service/{types.py,engine/core/config_loader.py}` + several `configs/*.yaml` + their
+      test files DURING this session — confirmed those diffs are unrelated to this task and were left untouched (never
+      staged, never reverted). A first quality-gate pass (run before `05c0b2ed` landed) surfaced one transient failure
+      in `test_dex_pool_archetypes_are_drivable_and_selected`, isolated (single-test + isolated-diff reruns) to that
       concurrent WIP's own in-flight state, not this change — the final fresh full-suite run (after their commit landed)
       is 100% green.
 - [x] [BACKEND] P2. `recursive_staking`'s borrow leg (`aave_borrow_index` wiring, E3) — **SHIPPED
@@ -815,8 +814,8 @@ code.
   `[CODE] P1` item at entry: Option B, the FX-noise-isolated true-native-staking-return metric). Checked against every
   accumulated round11 precedent (IAM self-service, D16 all-repos, S5.1 tiering, plan-destination-defaults-AO-dispatched,
   escalation-N=3-days, reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks now existing) —
-  none apply, and note this doc's own "Option B" (the operator-ruled true-native-staking-return metric, 2026-07-29) is
-  a different "Option B" from the round11-precedent one and is NOT retired — it is operator-ruled WHAT-to-build, still
+  none apply, and note this doc's own "Option B" (the operator-ruled true-native-staking-return metric, 2026-07-29) is a
+  different "Option B" from the round11-precedent one and is NOT retired — it is operator-ruled WHAT-to-build, still
   gated on a HOW-to-build-safely money-path review (per the standing OPERATOR GATE this whole doc is filed under,
   changes to live client NAV/PnL). Not eligible for satellite-extraction — a client-facing NAV correctness change is
   inherently a judgment/3-lens-review task, not a bare mechanical build. Doc stays `assigned_vm: NA` (KEEP-NA valid,

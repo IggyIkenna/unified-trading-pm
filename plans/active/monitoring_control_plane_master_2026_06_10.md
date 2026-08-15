@@ -304,9 +304,9 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       ErrorBoundary → whole-app white-screen → sibling tabs (Status) unreachable. Two-part durable fix: (1)
       `ServiceDetails.tsx` — `DependenciesPanel`/`DependencyDag` guard every array read (`?? []`), with a
       `ServiceDetails.test.tsx` partial-payload regression (3 cases); (2) `App.tsx` — a per-tab
-      `<ErrorBoundary     key={activeTab}>` around the TabsContent region so ANY tab's render crash is contained (tab
-      strip survives + recovers on switch) instead of nuking the app. Full smoke went 187/1 (flaky) → **188/188 green**.
-      NOTE: this smoke suite does NOT run in deployment-ui CI (neither `quality-gates-v2` nor `ui-quality-gates-v2` runs
+      `<ErrorBoundary key={activeTab}>` around the TabsContent region so ANY tab's render crash is contained (tab strip
+      survives + recovers on switch) instead of nuking the app. Full smoke went 187/1 (flaky) → **188/188 green**. NOTE:
+      this smoke suite does NOT run in deployment-ui CI (neither `quality-gates-v2` nor `ui-quality-gates-v2` runs
       `tests/smoke/`) — so it never blocked promotion; this fixes a real app-robustness bug + the flaky local test.
       **Leftover (slot 4): `tests/e2e/_diag_flow2.spec.ts` (inert `test.skip`) needs `rm` — sandbox-denied.** Repo:
       deployment-ui.
@@ -351,7 +351,7 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       (Readiness renders "Blocking Issues", not the error fallback). **(item-203 follow-up) ReadinessTab crashed on a
       partial/stale `/checklist` payload — FIXED.** The Readiness tab rendered the per-tab ErrorBoundary fallback (not
       its content) in mock mode: the in-app `MOCK_CHECKLIST` still carried the stale
-      `{overallScore, isBlocked, score,     label, detail}` shape (omitting `blocking_items`), so
+      `{overallScore, isBlocked, score, label, detail}` shape (omitting `blocking_items`), so
       `checklist.blocking_items.length` read undefined and crashed — same class as item 203's DependenciesPanel fix (the
       stateful-flows `page.route` fix is dead under `VITE_MOCK_API`, where the in-app mock wins). Two-part: (1)
       ReadinessTab guards `blocking_items`/`categories` with `?? []`; (2) `MOCK_CHECKLIST` rewritten to the

@@ -118,7 +118,7 @@ in the ROLL-UP, not the capture. That reframes the remaining work completely:
   legitimately have no `Regular Season - N` round).
 
 - [x] ✅ [DATA] P0. Rebuild the sports catalogue
-      (`build_instrument_catalogue.py --asset-group sports --since     2019-01-01`) and re-measure `round` /
+      (`build_instrument_catalogue.py --asset-group sports --since 2019-01-01`) and re-measure `round` /
       `competition_phase` there. If the catalogue jumps from 3.2% toward the raw ~50%, the rollup was simply stale and
       NO backfill is needed for that half. **Answered in two parts**: § R found the bare rebuild alone does NOT fix it
       (dead entity, `round` came out WORSE at 0.7%); R-FIXED then repointed the entity and re-ran the same rebuild,

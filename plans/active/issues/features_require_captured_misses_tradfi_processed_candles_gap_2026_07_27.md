@@ -90,7 +90,7 @@ input gap didn't change.
       gained `captured_days` (CAPTURED-only), and `_window_is_covered`/`_slide_to_covered_window` now require the TARGET
       day specifically to be in it, while window-interior days still tolerate the broader `canonical_days` set. (2)
       **Runtime dependency-checker manifest blindness** (`features_service/delta_one/app/core/dependency_checker.py`,
-      slot-2): `DependencyChecker     .check_dependencies()` does a raw GCS blob-existence probe with zero manifest
+      slot-2): `DependencyChecker .check_dependencies()` does a raw GCS blob-existence probe with zero manifest
       awareness, called with `date=start_date` (the lookback WINDOW START, not the target day) from
       `batch_handler.py::_check_dependencies` — so it hard-fails on an honest-empty day even when the coverage-check
       (once fixed) correctly tolerates it as a window-interior day. Fixed: `features-service@ecd548b8` —

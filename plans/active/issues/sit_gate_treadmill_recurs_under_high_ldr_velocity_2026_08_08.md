@@ -133,7 +133,7 @@ gone quiet or the streak has reset." Run live from an interactive session with A
       by hydrating via a single-PR GET (one extra call per ALREADY-lagging repo; falls back to the list entry so a
       hydration failure cannot regress below today's behaviour). Verified live end-to-end: the same invocation went from
       `cause unknown — 14 commit(s)` to
-      `🚧 promote PR #939 BLOCKED/CONFLICTING (15 change(s), oldest 251m). Resolve the     merge conflict or failing required check on the PR.`
+      `🚧 promote PR #939 BLOCKED/CONFLICTING (15 change(s), oldest 251m). Resolve the merge conflict or failing required check on the PR.`
       **Why its tests missed it**: all pre-existing cases hand-build the PR dict WITH `mergeable_state` set — a shape
       the production path never produces. Added a test that routes the real LIST shape through `_open_promote_pr` →
       `_promote_pr_cause` and asserts the actionable cause, so removing hydration fails a test rather than silently

@@ -88,9 +88,9 @@ source: >-
       `ao_dispatch_ignores_same_doc_operator_predecessor_todo_2026_08_08.md` has **1 open todo** — `[BACKEND] P2`
       (authoring-convention design question re `task_template.md`, line 81), intentionally open per the doc's own
       RULED/CLOSED annotations; (2) `citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md` has **2
-      open todos** — `[OPERATOR]     P2` (unpark decision, line 100) + `[REVIEW] P3` (post-unpark independent verify,
-      line 113). Both docs `status:     open`, unlocked. **Verdict**: neither is at zero open todos → **no archival from
-      this finalize**; each stays open for its operator-gated / design-question work to resolve independently. (Archive
+      open todos** — `[OPERATOR] P2` (unpark decision, line 100) + `[REVIEW] P3` (post-unpark independent verify, line
+      113). Both docs `status: open`, unlocked. **Verdict**: neither is at zero open todos → **no archival from this
+      finalize**; each stays open for its operator-gated / design-question work to resolve independently. (Archive
       remains possible later once those resolve; nothing else has independently closed them in the interim.) —
       `ao_dispatch_...` still has todo 2 (the authoring-convention design question) open by design, so it will NOT reach
       zero here; `citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md` still has todos 2/3

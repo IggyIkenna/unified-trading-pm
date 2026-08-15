@@ -64,8 +64,8 @@ source: >-
       made instead of a fresh landing, independently re-diff to confirm the claim holds. — **VERIFIED 2026-08-10 (slot
       23): batch17's done-claim HOLDS.** Re-ran `git merge-base --is-ancestor 5b30f41 origin/live-defi-rollout` on
       `market-data-processing-service` → **true**. Commit `5b30f41`
-      (`fix(mdps): throttle defi-dex-swaps checkpoint     writes to avoid GCS 429`, author slot-12) is a real fresh
-      landing, not a content-equivalence claim. Content re-confirmed independently: the proactive throttle delta
+      (`fix(mdps): throttle defi-dex-swaps checkpoint writes to avoid GCS 429`, author slot-12) is a real fresh landing,
+      not a content-equivalence claim. Content re-confirmed independently: the proactive throttle delta
       (`_CHECKPOINT_MIN_INTERVAL_SECONDS = 2.0` + always-flush-final-day `is_last_day` gate) is present in the commit
       AND still on the current LDR file `scripts/backfill_defi_dex_pool_swaps_source_correction.py:112,530` (not
       reverted by any later commit). Done-when MET.

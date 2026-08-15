@@ -116,7 +116,7 @@ operations log (all times UTC):
 
 - [x] ✅ [DATA] P1. Fix DatabentoAdapter VIX/CBOE (XCBF.PITCH) ohlcv_1m schema mapping to emit canonical `timestamp`
       instead of `ts_event` (repo: market-tick-data-service) — today's files fail
-      `Schema validation FAILED:     missing columns=['timestamp']`; prior-07-27 VIX + CME ES files carry `timestamp`. —
+      `Schema validation FAILED: missing columns=['timestamp']`; prior-07-27 VIX + CME ES files carry `timestamp`. —
       market-tick-data-service@dcd3b7c401 (restore ts_event→timestamp dual-write copy in `_COLUMN_ALIASES`; source
       `ts_event` preserved for MDPS priority-3 readers, `timestamp` copy satisfies
       `_TICK_REQUIRED_COLUMNS["ohlcv_1m"]` + pre-Phase-4 on-disk corpus; QG green)
@@ -157,9 +157,9 @@ operations log (all times UTC):
       kwarg bug (todo above) is NOT VIX-specific: it hit 6 CME futures roots too, one of them still actively failing
       live when found.** Checked every `tradfi-bf-cme-ohlcv-1m-*` VM launched today (19 total, all pre-fix, 12:07-15:07
       UTC — the 20-min fix landed at 16:56 UTC) for the same
-      `Manifest write failed... Multi-source manifest write     missing required source= kwarg` warning: **6 affected**
-      — `BTC-2021` (18 occurrences), `GC-2020` (119, still RUNNING and actively re-hitting it when found), `HG-2020`
-      (12), `MET-2025` (47), `NG-2020` (10), `SI-2020` (28). 13 others clean (the bug is per-underlying nondeterministic
+      `Manifest write failed... Multi-source manifest write missing required source= kwarg` warning: **6 affected** —
+      `BTC-2021` (18 occurrences), `GC-2020` (119, still RUNNING and actively re-hitting it when found), `HG-2020` (12),
+      `MET-2025` (47), `NG-2020` (10), `SI-2020` (28). 13 others clean (the bug is per-underlying nondeterministic
       within the same shared code path, not universal). **Action taken**: killed the still-running `GC-2020` VM
       (`gcloud compute instances delete`, stopping the waste immediately); relaunched all 6 via
       `launch-tradfi-bf-cme-ohlcv-1m.sh --only-root <ROOT> --year <YEAR>` (dry-run verified identical VM-name/date-range

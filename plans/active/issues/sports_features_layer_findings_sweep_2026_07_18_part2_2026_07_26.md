@@ -209,7 +209,7 @@ in 2019 and check whether `entity=fixtures` is written there.
       2019-01-01..20), alerting at 20min if still zero. Step 4 (catalogue rollup + competition_phase verification)
       pending the run.
 - [ ] [OPS] P0. Step 4 — after the backfill completes:
-      `build_instrument_catalogue.py --asset-group sports     --since 2019-01-01`, then verify `competition_phase` is no
+      `build_instrument_catalogue.py --asset-group sports --since 2019-01-01`, then verify `competition_phase` is no
       longer ~100% UNKNOWN and `is_promotion_relegation` is a real signal rather than a constant False. — PARTIALLY
       SUPERSEDED, left OPEN: the underlying question (is `competition_phase` still ~100% UNKNOWN?) was independently
       answered live 2026-07-21 via direct GCS/derived_features reads in
