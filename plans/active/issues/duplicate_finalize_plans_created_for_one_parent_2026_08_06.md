@@ -79,13 +79,28 @@ context_scope:
       pre-existing duplicate not involving the staged file passes clean) and the normal single-finalize-plan
       non-regression case. `bash scripts/quality-gates.sh` green (2076 passed). Evidence: unified-trading-pm@5255d0cbea.
 
-- [ ] [INFRA] P3. **Add a corpus-wide duplicate-gate detector to the hygiene sweep.** Flag any parent slug named in the
-      `depends_on` of MORE THAN ONE `gate_on_depends: true` plan. This is cheap (the sweep already parses every plan's
-      frontmatter for `_gated_slugs`), it catches the collision at rest instead of at dispatch time, and it would have
-      surfaced this pair on 2026-07-31 rather than a week later via a worker's blocked question. Report it the same way
-      the orphan count is reported — a non-zero count is review-blocking. **Done when**: `run_hygiene_sweep.sh` prints a
-      duplicate-gated-parent count (0 = clean) alongside the existing orphan count, and the check is wired into `--ci`
-      mode so a non-zero count fails the sweep the same way the orphan check does.
+- [x] ✅ [INFRA] P3. **DONE 2026-08-15 (slot-28).** Added `scripts/plan-hygiene/check_duplicate_gated_finalize_plans.py`
+      — a corpus-wide, at-rest sweep flagging any parent slug named in the `depends_on` of MORE THAN ONE
+      `gate_on_depends: true` plan (reuses the same `_gated_by()`-style keying as todo 1's creation-time guard, kept
+      self-contained rather than cross-importing `check_finalize_plan_coverage.py` across the
+      `scripts/quality_gates`/`scripts/plan-hygiene` boundary). Wired into `run_hygiene_sweep.sh`'s hard-check list
+      (`run_check "Duplicate-gated finalize plans..." hard ...`), so it's included in `--ci` mode and prints the count
+      alongside the sweep's other results, same shape as the orphan count. **Deviation from the todo's literal spec**:
+      shipped as a SHRINKING-RATCHET baseline (`duplicate_gated_finalize_plans_baseline.yaml`), not an absolute
+      zero-tolerance gate — a live corpus scan at authoring time found 6 PRE-EXISTING duplicate-gated parents (not just
+      the single 2026-07-31 pair this doc was filed against), so hard-failing unconditionally on ship would have redded
+      the fleet's `--ci` hygiene sweep on debt this change didn't create, before todo 3 has had a chance to de-race
+      them — same "a stricter gate must be one the whole fleet already passes" principle
+      `check_create_only_archive_commits.py`'s own `ALLOWED_DUPLICATE_STEMS` ratchet already encodes in this same
+      directory. The check now fails on any NEW duplicate beyond the 6-item baseline; todo 3 re-baselines to 0 once it
+      clears them. Full duplicate list surfaced (feeds todo 3 directly, no separate re-scan needed):
+      `prediction_phase_ab_residuals_2026_07_24` (3 finalize plans), `sports_closeout_track_s2_foldin_2026_07_25` (2),
+      `sports_taxonomy_p1_capture_and_contracts_2026_08_08` (3), `sports_taxonomy_p2_migration_2026_08_08` (2),
+      `tradfi_manifest_content_recovery_completion_2026_07_24` (2),
+      `venue_capability_route_axis_and_cross_ag_declarations_2026_08_14` (2) — see the baseline YAML for exact paths.
+      Unit tests: `test_check_duplicate_gated_finalize_plans.py` (6 tests: clean/empty corpus, the reconstructed
+      2026-07-31 collision shape, non-duplicate single-gate, `--strict` zero-tolerance mode, baseline-write +
+      re-baselined-clean). `bash scripts/quality-gates.sh` green (2085 passed). Evidence: unified-trading-pm@13a390fb30.
 
 - [ ] [DOC] P3. **Sweep the corpus once for other duplicate gates.** Run the detector from todo 2 over `plans/active/`
       and de-race any other parent found with >1 gated finalize plan, using the same procedure applied here: port any
