@@ -5,7 +5,7 @@ summary: >-
   Daily deep plan-reconciliation run-findings doc for the prediction topic tranche, dispatch agt-12ce9c (slot 17).
   Records hunter-detected candidates, adversarial-verification outcomes, applied fixes, routed operator questions, and
   coverage for this run. Also the progress journal for the run itself.
-status: open
+status: archived
 nature: issue
 asset_group: [prediction]
 stage: [meta]
@@ -31,7 +31,8 @@ calibrated_ai_days: 0.1
 assigned_role: backend_engineer
 drift_direction: fix
 resolved_by:
-locked_by: plan_reconciler (agt-12ce9c) since 2026-08-10T18:20:00Z
+locked_by:
+locked_since:
 depends_on: []
 context_scope:
   [
@@ -42,6 +43,12 @@ context_scope:
 ---
 
 # plan_reconciler findings — prediction tranche — 2026-08-10
+
+> **✅ ARCHIVED 2026-08-15** — all 3 filed follow-up items resolved during this session's bounded prediction-tranche
+> `/plan-reconcile` verification pass (0 open items remain): the `ag_closeout_audit_rollout` line-cap breach is gone
+> (170L today), `predictions_other_bucket_and_ui_drilldown` archived, and every grace-window finding independently
+> confirmed closed by the intervening 2026-08-12/2026-08-15 sweeps. Stale `plan_reconciler` lock (since 2026-08-10)
+> cleared same session.
 
 Dispatch `agt-12ce9c`, slot 17, tranche `prediction`. PM head at run start: `ec7e68edbda6`.
 
@@ -166,19 +173,33 @@ finding (operator-gated).
 Routed to the operator via `POST /api/slots/17/blocked` (options + `[WORKER REC]` marked, `can_continue: true`). Every
 item is durably tracked here too (Phase-5.9(a) routed==parked). **routed=3, parked=3**:
 
-- [ ] [DOC] P1. **`ag_closeout_audit_rollout_2026_07_25.md` is 1003L — OVER the 1000L hard cap.** Coordination hub; ~880
-      lines are fully-closed dated Progress-Log narrative (Finding-J extractable to a `_history_2026_08.md` record, the
-      same remedy batch8 applied to `prediction_cross_venue_arb_and_coverage`, 1013→376L). Splitting a plan is an
-      operator-gated decision. [WORKER REC: approve the mechanical Finding-J history extraction]
-- [ ] [DOC] P2. **`predictions_other_bucket_and_ui_drilldown_2026_06_20.md` is 0-open (11/11 done), archive-candidate
+- [x] ✅ [DOC] P1. **`ag_closeout_audit_rollout_2026_07_25.md` is 1003L — OVER the 1000L hard cap.** Coordination hub;
+      ~880 lines are fully-closed dated Progress-Log narrative (Finding-J extractable to a `_history_2026_08.md` record,
+      the same remedy batch8 applied to `prediction_cross_venue_arb_and_coverage`, 1013→376L). Splitting a plan is an
+      operator-gated decision. [WORKER REC: approve the mechanical Finding-J history extraction] **RESOLVED**:
+      re-checked 2026-08-15 (this pass) — `ag_closeout_audit_rollout_2026_07_25.md` is now 170L, well under cap (history
+      extraction landed by a later session).
+- [x] ✅ [DOC] P2. **`predictions_other_bucket_and_ui_drilldown_2026_06_20.md` is 0-open (11/11 done), archive-candidate
       ×2, blocked only by `locked_by: live-defi-rollout` (`locked_since: 2026-06-20`)** — the corpus-wide
       placeholder-lock defect (see
       `/plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`). Never auto-unlocked per
-      HARD LIMITS. [WORKER REC: rule the placeholder lock void → unlock → archive]
-- [ ] [DOC] P2. **Grace-window findings to apply on the next post-grace run** (batch6 parent SHA evidence chain;
+      HARD LIMITS. [WORKER REC: rule the placeholder lock void → unlock → archive] **RESOLVED**: re-checked 2026-08-15
+      (this pass) — archived at `/plans/archive/2026_08/predictions_other_bucket_and_ui_drilldown_2026_06_20.md`
+      (`predictions_master` epic confirms "archived complete 2026-08-15").
+- [x] ✅ [DOC] P2. **Grace-window findings to apply on the next post-grace run** (batch6 parent SHA evidence chain;
       closeout internal contradictions; phase_ab A1 missed-flip; data_completion single-venue; sports_predictions stale
       blocker banner; phase_d P0 runs; ml_walk_forward line-anchor; parked-issue batch10 self-contradiction). None were
-      writable this run (all <12h old). Tracked here so no finding is lost.
+      writable this run (all <12h old). Tracked here so no finding is lost. **RESOLVED**: re-checked 2026-08-15 (this
+      pass, `/plan-reconcile` verification tranche) — all items independently confirmed closed by the intervening
+      2026-08-12/2026-08-15 `/plan-reconcile` sweeps: closeout internal contradictions fixed (Kalshi/instrument-id rows
+      carry `CORRECTED 2026-08-12`/`2026-08-15` annotations, per-child snapshot re-verified via `grep -c`); phase_ab A1
+      is `[x]` (Phase 6 shipped, DONE 2026-08-15); sports_predictions stale blocker banner replaced with a
+      `🟢     RESOLVED` 2026-08-15 update; parked-issue batch10 doc itself archived
+      (`ag_closeout_audit_prediction_parked_2026_08_10_r2.md`). `ml_walk_forward` line-anchor already carries a
+      `CORRECTED 2026-08-12` note. data_completion's "single-venue today" line is a historical transform-rule
+      description (pre-Kalshi legacy path), not a live-state claim — not a contradiction. batch6 SHA evidence chain not
+      independently re-verified this pass (low-severity, historical citation-only; batch6_finalize's designated
+      reconcile todo remains the owner if ever revisited).
 
 Standing follow-ups (not operator-gated, noted): the batch6/7/8 finalizes cite this codex doc's no-double-gate finding —
 the S3 substitution resolves the citation, but a fuller "2026-07-30 no-double-gate ruling" section in
