@@ -629,3 +629,37 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   suffixed-ids-never-call-the-fallback). Both gates green. Same 1000-line hard-cap block as the sibling entries above
   prevents flipping the source doc's own checkbox in this commit — added to the existing trim-under-cap follow-up todo
   above rather than a new one.
+
+- **2026-08-15 (slot-27·backend_engineer)**: dispatched the "Track 0: Launch the CeFi Tardis backfill for the
+  equity-perp window" todo — **GATED, not shipped.** Resolved the two open questions from the source todo's Phase-2 spec
+  (`venue_launch_dates.py`/`coverage_starts.py` do NOT carry a per-symbol equity-perp listing date — that guidance is
+  stale for this specific universe): live `GET fapi.binance.com/fapi/v1/exchangeInfo` cross-referenced against UAC's
+  `CEFI_EQUITY_PERP_BASE_UNIVERSE` (145 bases parsed from the frozenset, 139 live-matched
+  `contractType= TRADIFI_PERPETUAL` today) gives earliest `onboardDate` 2025-12-11 (XAUUSDT, a commodity base in the
+  same universe — earliest genuine single-stock is TSLAUSDT 2026-01-28). Validated launch scope via `DRY_RUN=1`:
+  `VENUES="BINANCE-FUTURES" YEARS="2026" LAUNCH_GROUPS="heavy" ONLY="BINANCE-FUTURES:2026:heavy" bash deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh`
+  — catalogue-mvp-driven (no `--instrument-ids` needed; MTDS resolves the perp-gated universe from IS's `by_date`
+  snapshot per-day, so the launcher doesn't need a per-symbol list), `VM_START_DATE=2026-01-01` `VM_END_DATE=2026-08-14`
+  `data_types=trades;book_snapshot_5`. Deliberately scoped to YEARS=2026 only + `LAUNCH_GROUPS=heavy` (not light,
+  not 2025) — the Tardis single-concurrent-VM hard cap (operator 2026-07-16) means only ONE (group,data_types) bucket
+  can run at a time; `LAUNCH_GROUPS` exists specifically for this "fill one free slot now, the next slice later" pattern
+  (see the launcher's own comment at line 121-125). The ~3-week Dec-2025 XAU/XAG tail (pre-2026-01-01, commodities not
+  single-stock equities) is knowingly NOT covered by this window — negligible relative to the 8-month 2026 window and
+  cheap to add later via a `YEARS=2025 START_DATE= 2025-12-11` slice once a slot frees. **Blocked on the actual
+  `gcloud compute instances create` call**: `tardis_concurrency_guard` refused — "2 running + 1 planned = 3 > 1" (cap is
+  HARD, not negotiable by a worker; `FORCE=1` is explicitly an operator-only override per the launcher's own error text,
+  given the exact 2026-07-14 N=3 incident it exists to prevent — 37,212 false `attempted_failed` rows + coverage
+  regression). Live-identified the 2 occupants (`gcloud compute instances list` --filter matching the launcher's own
+  Tardis-consumer pattern): `mtds-backfill-cefi-extended-starknet-fullhist-1` (unrelated full-history EXTENDED-STARKNET
+  backfill, `PROGRESS.json` shows `last_completed_date=2024-11-29` as of 11:48Z today — genuinely deep in a multi-year
+  walk, not near completion) and `mtds-backfill-cefi-pipelinecheck-20260815-114758-fdd5b9` (another slot's
+  `/data-pipeline-check-mtds`-shaped smoke VM, booted ~114758, no logs yet). Neither is mine to kill and neither looks
+  close to freeing the slot on any bounded timeline I can commit to within one worker session — waiting synchronously
+  risks sitting idle for hours (against the async-wait-discipline HARD RULE), so this todo is left **unflipped** and the
+  task is being returned to the backlog with `reason_code=GATED` rather than force-launched or silently abandoned.
+  **Whoever picks this up next (possibly this same slot on a future dispatch) can run the exact validated command above
+  directly** — the equity-perp-window date-math and DRY_RUN validation above do not need to be redone, only re-check the
+  Tardis fleet is actually clear first
+  (`gcloud compute instances list --filter='name~"^(cefi|tradfi)-.*-(heavy|light)-|^cefi-queue-|^mtds-backfill- cefi-" AND status=RUNNING' --zones=asia-northeast1-c --project=central-element-323112`).
+  Follow-up (light group + the small Dec-2025 tail) should be a separate slice launched once this heavy slice is
+  running, per the same `LAUNCH_GROUPS` pattern — not folded into this same VM.
