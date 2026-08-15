@@ -304,6 +304,22 @@ just belongs on a different layer than instrument_type does, and conflating the 
   uses (losing per-chain grain unless the enumerator separately combines with the `chain` column), or (b) change the
   writer to emit composite `ALCHEMY-<chain>` venue keys to match the declaration (larger blast radius — touches a live
   writer path). No code changed yet this session. `docs(plans):` commit for this note only, no code shipped.
+- **2026-08-15 (follow-up, slot-14) — composite `ALCHEMY-<chain>` keys CONFIRMED absent from live venue distribution;
+  direction (a) supported, fix still not shipped.** A full-bucket `venue` value_counts over the DeFi market-data bucket
+  (32 distinct venues, 2,696,907 total rows; run timed out with `EXIT: 124` after printing complete results — treating
+  the printed distribution as trustworthy since both `value_counts()` blocks terminated cleanly, but flagging the
+  timeout itself as unexplained) shows **only bare `ALCHEMY` (54,457 rows)** — no `ALCHEMY-ETHEREUM`/`ARBITRUM`/
+  `POLYGON`/`OPTIMISM`/`BASE` entries anywhere in the list. Composite keys generating zero real venue rows (not just
+  zero `gas_fees` rows) confirms they are pure phantom declarations in `DEFI_VENUE_DATA_TYPE_CAPABILITIES` — nothing
+  ever writes under them, so they cannot be the "0 captured" source the plan's original stale premise implied, and
+  option (a) (relabel the declaration to bare `ALCHEMY`) is the lower-blast-radius fix vs. (b) (repoint the live
+  writer). **Still open**: this run did not filter by `data_type`, so it doesn't confirm whether the bare-`ALCHEMY`
+  gas_fees `expected_unattempted` cells (2,504, per the entry above) are the ones actually blocking closure, or some
+  other combination — and the per-chain-grain tradeoff in option (a) is a design call, not a mechanical fix, so this
+  stays parked here rather than shipped in the next few minutes. **Next step** (unchanged in kind, now higher-
+  confidence): decide + implement option (a) — relabel `defi_venue_capabilities.py:227-231`'s gas_fees keys to bare
+  `ALCHEMY`, deciding whether per-chain genesis-date grain is dropped or preserved via a parallel `chain`-keyed
+  structure — then run `test_venue_key_parity.py` + ship. No code changed yet. `docs(plans):` commit for this note only.
 
 - **2026-08-12** — **SPARK-ETHEREUM oracle_prices capture wired (the decomposed per-pair todo), done + shipped.**
   Shipped `market-tick-data-service@845bd085` (`_spark_oracle_collection.py` + wiring) +
