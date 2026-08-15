@@ -169,27 +169,24 @@ FOUR TIMES in one session, currently-live hazard regardless of whether it explai
       (stash-interleaving: two processes' `git stash push` calls interleave, and the wrong process's `git stash pop`
       pops the OTHER process's top-of-stack entry, leaving the victim's own stash unpopped and its file reverted to
       HEAD). Full verdict recorded in the Progress Log entry below.
-- [ ] [INFRA] P0 (pending the above). **If confirmed as a genuine cross-process working-tree race on the SAME `.git`
-      directory**: this is a structural hazard in the "share one clone per slot across multiple concurrent Claude Code
-      sessions" model CLAUDE.md's Multi-agent safety section already documents as an accepted operating mode ("Two
-      teammates × multiple parallel agents") — and this session directly observed it is NOT a rare edge case under
-      current fleet load (reproduced 4 times in one session; at peak, 5-7 simultaneous git-mutating processes were
-      observed in ONE `.tabs/N` checkout via `ps aux`, including `.git/index.lock` contention and `.git/FETCH_HEAD`
-      truncation to 0 bytes). Candidate mitigations to evaluate (do not implement without operator sign-off — this
-      touches `scripts/quickmerge.sh` + `scripts/dev/safe-doc-push.sh`, both HIGH-RISK shared infrastructure): (a) a
-      per-`.git`-directory lock (flock) around the pull-rebase-autostash sequence in both `quickmerge.sh` and
-      `safe-doc-push.sh`, so two concurrent sessions in the same slot never overlap that specific window; (b)
-      commit-then-reconcile ordering — stage+commit local work BEFORE fetching/rebasing rather than after, shrinking the
-      vulnerable window to near-zero (this session's own recovery — edit, immediately `git add`+commit+push with no gap
-      — suggests this is already the safer pattern and could become the documented default); (c) an explicit
-      `git stash list` sanity check immediately after every autostash pop, comparing the working tree against a pre-pull
-      snapshot hash, loud-failing if anything the operator didn't intend to touch changed; (d) consider whether the
-      sheer VOLUME of concurrent sessions sharing one `.tabs/N` slot (5-7+ observed simultaneously) is itself the
-      problem to address (a concurrency cap / queue per slot) rather than only hardening the git mechanics under
-      unbounded concurrency.
-- [ ] [DOC] P2. **Once a mitigation is decided, fold into `/codex/05-infrastructure/per-tab-worktrees.md`** alongside
-      the existing (but non-covering) autostash-pop guidance, clearly distinguishing the two failure modes:
-      mis-attribution (resolved 2026-08-02) vs. content loss (this doc).
+- [x] ✅ [INFRA] P0. **Confirmed as a genuine cross-process working-tree race on the SAME `.git` directory** (see the
+      stash-interleaving reproduction in the Progress Log below) — a structural hazard in the shared-checkout model.
+      **Operator-approved mitigation (c) — the cheapest of the 4 candidates — IMPLEMENTED and SHIPPED 2026-08-10**
+      (`unified-trading-pm@376d7bb467`, `scripts/dev/tree-wip-guard.sh`'s `wip_guard_snapshot`/`wip_guard_report`, wired
+      into both `quickmerge.sh` and `safe-doc-push.sh` right after their `--rebase --autostash` reconcile step): hashes
+      every dirty tracked file before the reconcile, re-hashes after, and LOUDLY warns (never silently) on anything
+      outside the run's own `--files` that changed or vanished — the exact "explicit `git stash list`-adjacent sanity
+      check ... loud-failing if anything the operator didn't intend to touch changed" this todo asked for. **Empirically
+      re-verified 2026-08-15 (`ci_satellite_ao_dispatch_batch14_2026_08_15.md`, slot-16)**: a minimal scratch-repo
+      reproduction of the exact stash-interleaving mechanism above (dirty a tracked file, snapshot via
+      `wip_guard_snapshot`, autostash it away leaving it at `HEAD`) confirms `wip_guard_report` correctly flags it
+      ("your uncommitted edit is GONE") rather than staying silent. Candidates (a) flock, (b) commit-before-reconcile
+      reordering, and (d) a concurrency cap remain unimplemented — not needed given (c)'s coverage; leaving them
+      unpursued rather than over-building. (repo: unified-trading-pm)
+- [x] ✅ [DOC] P2. **Folded into `/codex/05-infrastructure/per-tab-worktrees.md`** — new subsection "Content-loss
+      autostash-pop hazard — an unstaged edit silently reverts to HEAD (2026-08-07)", distinguishing this failure mode
+      (content vanishes) from the resolved mis-attribution hazard (content intact, wrong author) and documenting the
+      shipped `wip_guard_report` mitigation + recovery recipe, landed in this same commit. (repo: unified-trading-pm)
 - [ ] [INFRA] P2. **Safely audit and clear this specific checkout's (`.tabs/1/unified-trading-pm`) currently-orphaned
       `autostash` stash entries** — as of 2026-08-09 (round11 verification) `git stash list` showed 4 long-lived
       `autostash` entries plus this session's own safety-snapshot, none dropped since at least 2026-08-08. Per this

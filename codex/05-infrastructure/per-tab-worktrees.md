@@ -800,6 +800,28 @@ turning a cosmetic problem into real data loss (force-pushing a shared branch is
 correct response to a sweep that already happened: leave it, tell the operator, and let the owning agent carry on (their
 tree simply shows those files as already-committed after their next pull).
 
+### Content-loss autostash-pop hazard — an unstaged edit silently reverts to HEAD (2026-08-07)
+
+Distinct from BOTH hazards above: not a conflict, and not mis-attribution (that case's content is "intact on origin,
+just under the wrong author"). Here the content itself vanishes. A never-staged, uncommitted edit to file X can be
+silently reverted to `HEAD` (or deleted outright) by a concurrent process's `git pull --rebase --autostash` in the SAME
+`.git` directory, even when that process's own commit never touches X — reproduced 4 times live 2026-08-07
+(`autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md`) and root-caused to STASH INTERLEAVING:
+two processes' `git stash push` calls land back-to-back (`stash@{0}`=B, then C pushes on top so `stash@{0}`=C/
+`stash@{1}`=B), and B's `git stash pop` pops `stash@{0}` — C's entry, not its own — leaving B's own stash (holding X's
+content) stuck and X reverted to `HEAD` with **no error, no conflict marker, nothing in `git status`** to explain it.
+
+**Mitigation shipped 2026-08-10** (`unified-trading-pm@376d7bb467`, `scripts/dev/tree-wip-guard.sh`):
+`wip_guard_snapshot` hashes every dirty TRACKED file before the reconcile; `wip_guard_report` (called right after, in
+both `quickmerge.sh` and `safe-doc-push.sh`) re-hashes afterward and LOUDLY warns — naming the file, on stderr — for
+anything that changed or vanished and was not among the run's own `--files`. Deliberately advisory (never exits non-zero
+— a push that already landed must not be failed over a neighbouring file) — it converts a SILENT loss into a LOUD,
+recoverable one (the content survives in a stash ref until `git gc`; see the issue doc's "Recoverability findings" for
+the recovery recipe). Empirically re-verified 2026-08-15 against the exact reproduction above: the guard correctly flags
+a reverted file. This closes the source issue doc's mitigation-(c) candidate (the cheapest of 4 evaluated, chosen over a
+per-`.git` flock / commit-before-reconcile-reordering / a concurrency cap — those remain unimplemented, not needed given
+(c)'s coverage).
+
 ### Failed-commit staging hazard — a rejected hook leaves files vulnerable to a peer session's bare commit (2026-08-06)
 
 A different TRIGGER for the same underlying fact as the autostash-pop hazard above ("`git commit` takes the WHOLE index,

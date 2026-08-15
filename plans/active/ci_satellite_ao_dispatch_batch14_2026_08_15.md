@@ -140,6 +140,14 @@ source: >-
       without loss each time. No new work needed; a weaker, simpler stash-list check on top of this would be redundant.
       Source: `plans/active/issues/autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md` (its own
       checkbox reconciliation deferred to the finalize plan, since the fix predates but was never linked back to it).
+      **Reconciliation completed 2026-08-15 (slot-16, re-dispatch of this same todo)**: independently found +
+      empirically verified a SECOND, complementary function in the same file (`wip_guard_snapshot`/`wip_guard_report`,
+      shipped `unified-trading-pm@376d7bb467`) that is an even closer match to this issue doc's exact scenario (a
+      hash-based pre/post snapshot of dirty tracked files, not the chain-vs-origin comparison
+      `autostash_guard_quarantine_stale_pop` does) — reproduced the doc's own stash-interleaving mechanism in a scratch
+      repo and confirmed `wip_guard_report` catches it. Flipped the source doc's own todos 3+4 with this evidence, and
+      folded the finding into `/codex/05-infrastructure/per-tab-worktrees.md` per todo 4's ask — the deferred
+      reconciliation this note flagged is now done, landed in the same commit as this plan edit.
 
 - [x] ✅ [DEVOPS] P2. **Remove the root-owned pre-installed `@anthropic-ai/claude-code` from the self-hosted glue-runner
       image**; let the workflow's own install step run clean as the runner user instead. Source:
