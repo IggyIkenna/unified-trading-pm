@@ -199,6 +199,17 @@ steps below are required when flipping a repo off `ldr_main`:
 **Default-branch gotcha**: a `schedule:` trigger fires only from the DEFAULT branch (`main`) — landing the uncomment on
 LDR alone does NOT restart a cron; it takes effect only once promoted to `main`.
 
+**Circular-dependency gap — fixing a scheduled workflow's own YAML (found 2026-08-10,
+`ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`).** The default-branch gotcha above has a
+sharper edge when the code being fixed IS the scheduled workflow's own `run:` block: a fix lands on LDR but is invisible
+to every `schedule:`/`workflow_dispatch`-with-no-`ref`-triggered run until promoted to `main` — so if the fix's whole
+purpose is to unblock or repair the alerting/promotion pipeline itself, it stays inert for a full promote cycle: the fix
+is gated behind the very mechanism it exists to help unblock. This is not staging-specific — it applies to ANY scheduled
+or `workflow_dispatch` workflow, always, not just the staging re-entry triggers this section covers. To verify a fix on
+LDR content BEFORE it reaches `main`, dispatch it explicitly against the LDR ref:
+`gh workflow run <workflow>.yml --ref live-defi-rollout` — this is how the `ldr-docs-gate.yml` `set +e` fix (the
+incident that surfaced this gap) was confirmed correct ahead of promotion.
+
 **Verify re-entry by measurement, not by reading the diff.** The 2026-07-23 shutdown was itself confirmed stopped only
 by measuring fleet-wide run counts before/after the promote landed on `main` (a green diff on LDR was not sufficient —
 the same check run before the promote correctly still showed the crons firing). Re-entry gets the same treatment: after
