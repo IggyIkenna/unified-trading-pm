@@ -763,6 +763,24 @@ if [[ -f "$_WF_YAML_GATE" ]]; then
     fi
 fi
 
+# ── VERDICT-OUTPUT FAILURE-PATH GATE (shared; 2026-08-10 incident) ────────────
+# ONE PM-hosted checker validates THIS repo's .github/workflows/*.yml (it globs the CWD repo). A job
+# that publishes a `verdict` output another job consumes via `needs.<job>.outputs.verdict` can die
+# under GitHub Actions' inherited `-e` before ever writing that output — `set -uo pipefail` alone
+# does NOT clear it — so a RED gate looks quiet: every downstream notify/escalate job silently skips
+# (ldr-docs-gate red 10+ hours, zero Slack pages, 2026-08-10). Lives here so EVERY repo runs the
+# single script against its own workflows — no per-repo copies to maintain. SSOT:
+# plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md.
+_VERDICT_FAILPATH_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scripts/quality_gates/check_verdict_output_failure_path.py"
+if [[ -f "$_VERDICT_FAILPATH_GATE" ]]; then
+    if python3 "$_VERDICT_FAILPATH_GATE"; then
+        :
+    else
+        log_fail "Verdict-output failure-path gate: a job's verdict output consumed by another job has no guarantee it survives the producing step's failure path — see plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md"
+        exit 1
+    fi
+fi
+
 # ── [1] AUTO-FIX (prettier + ruff, 30s each) ──────────────────────────────────
 # Prettier runs FIRST on non-Python files to prevent ruff/prettier conflict in pre-commit hooks.
 # Without this, committing JSON/YAML/MD files causes "MM" status and hook stash conflicts.
