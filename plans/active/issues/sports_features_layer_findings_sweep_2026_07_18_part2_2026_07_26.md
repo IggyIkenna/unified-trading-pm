@@ -471,9 +471,9 @@ Migrating rows without fixing writers guarantees regression on the next capture.
       (2026-07-27, `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Phase 1-2)**: MDPS's
       `market-data-processing-service/scripts/reprocess_sports_odds.py` — the actual odds_horizon_bucket manifest writer
       — was stamping every FINE per-`(league_id, timeframe)` manifest row `venue=ODDS_API`. Fixed forward
-      (`market-data-processing-service@6f7422e`, fine rows now split per real `bookmaker_key`, one manifest row per
+      (`market-data-processing-service@561f177`, fine rows now split per real `bookmaker_key`, one manifest row per
       distinct bookmaker present in the underlying shard) + backfilled for existing rows
-      (`market-data-processing-service@a047b29`, VM-applied migration — see the issue doc's closing Update for the real
+      (`market-data-processing-service@5517dea`, VM-applied migration — see the issue doc's closing Update for the real
       row-count evidence). `source` stays `odds_api`'s SIBLING derived-product identity `mdps_odds_horizon_bucket`
       (investigated + confirmed correct, NOT `odds_api` — see the issue doc Phase 0/4). The COARSE per-day summary row
       deliberately keeps `venue=ODDS_API` as a documented aggregate sentinel (not a per-row conflation) — see

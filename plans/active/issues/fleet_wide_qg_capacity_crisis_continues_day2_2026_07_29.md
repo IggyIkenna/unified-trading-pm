@@ -423,7 +423,7 @@ not just noting.
   no-op" directive (this repo's 6th dispatch, well past that bar) and MDPS not yet carrying the mitigation (checked
   `scripts/quality-gates.sh` — only a separate `MDPS_PERF_TEST_TIMEOUT_SECONDS` override existed for the unrelated perf
   gate, nothing for the main pytest slice's `PYTEST_TIMEOUT`), applied the same proven pattern as
-  `unified-trading-api@71cdda0`/`features-service@c092df50`: `market-data-processing-service@8fa00db` adds
+  `unified-trading-api@71cdda0`/`features-service@c092df50`: `market-data-processing-service@42d4c1f` adds
   `PYTEST_TIMEOUT=${PYTEST_TIMEOUT:-300}` to `scripts/quality-gates.sh` (confirmed this repo sources `base-service.sh`,
   the `PYTEST_TIMEOUT`-keyed copy of the PARGS line, not `base-library.sh`'s `PYTEST_TIMEOUT_SECONDS` — right variable
   name verified before editing, not assumed from the other repos' diffs). Verified locally: full

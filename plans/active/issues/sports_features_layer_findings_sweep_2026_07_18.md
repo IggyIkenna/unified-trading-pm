@@ -722,7 +722,7 @@ read is a coverage blind spot.
       `reprocess_sports_odds.py` manifest's COARSE per-day AGGREGATE SENTINEL row (deliberate, unchanged). It is
       **invalid** as a FINE per-shard/per-row venue stand-in wherever the real bookmaker is already present in the data
       — that was a genuine, now-fixed conflation in `reprocess_sports_odds.py`'s fine manifest rows
-      (`market-data-processing-service@6f7422e` forward fix + `@a047b29` backfill migration).
+      (`market-data-processing-service@561f177` forward fix + `@a047b29` backfill migration).
 - [x] [DIAG] P1. F6 — why is the instruments-sports consolidated index persistently older than its 120s budget? —
       **clear duplicate, resolved 2026-07-30 batch8 triage**: already fully root-caused in
       `plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md` (no per-AG staleness-budget
