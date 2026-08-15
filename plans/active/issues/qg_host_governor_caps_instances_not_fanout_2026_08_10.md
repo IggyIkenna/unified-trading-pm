@@ -177,3 +177,14 @@ deliberate decision rather than changed mid-session.
   corroboration of the same root cause (a per-instance resource cost the governor doesn't model), now with evidence the
   failure mode is a moving contention threshold rather than a deterministic timeout. Retrying a 4th time immediately
   (load already favorable, no load-gate wait needed this time).
+- **2026-08-15 07:21-07:25 (slot 2, 4th attempt result — reverted to the pure-queue death pattern)**: attempt 4 (PID
+  `2183466`) tracked via the same `kill -0` background watchdog, this time did NOT break through the governor queue at
+  all — it died with the log showing only the `[qg-governor] ... queued Ns` cadence through **`queued 330s`** and
+  nothing else (no phase content, no exit code, no traceback), i.e. the same signature as attempts 1-2, not attempt 3's
+  "broke through to 5.95/6 then died" pattern. At death: `uptime` 2.26/4.12/6.89 (already trending down from the peak),
+  and `ps` showed at least 3 other concurrently-running `quality-gates.sh` instances from other slots (one, PID
+  `2363722`/`2363761`, had a `pytest` worker actively running at 60.6% CPU) — confirming real host-wide contention was
+  still the binding constraint, not a fluke. This reinforces that forward progress is NOT monotonic across retries
+  (attempt 3 reached 5.95/6, attempt 4 reached 0/6) — the moving-contention-threshold framing holds, but it moves in
+  both directions depending on which neighbours are mid-fanout at any given moment, not a steadily improving trend.
+  Retrying a 5th time immediately given the 1-min load average (2.26) is already low and trending down.
