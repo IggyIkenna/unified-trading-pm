@@ -62,11 +62,19 @@ resolved_by:
       only THEN execute (or skip) the `phoenix_ws.py` deletion — do not delete blind on the operator's ruling alone,
       since the ruling was made without this contradiction surfaced. (repos: unified-api-contracts,
       market-tick-data-service)
-- [ ] [DATA] P1. Verify the unique-gap migration (Aave 2022-03..10, marinade LST, KAMINO DEX pools —
-      `defi_migration_audit_log_2026_07_24.md` line 575-577) has actually landed (query the manifest / check the
-      migration script's completion evidence). If confirmed: execute the DELETE of the duplicate/legacy DeFi orphan
-      buckets (`market-data-tick-defi{,-prd}`, `solana-defi{,-prd}`, `evm-defi{,-prd}`, post unique-gap migration). If
-      not confirmed: do not delete — report back what's still missing. (repo: instruments-service)
+- [x] ✅ [DATA] P1. **NOT CONFIRMED — did not delete. Two independent blockers found, reported in
+      `/plans/active/issues/defi_orphan_bucket_delete_list_includes_canonical_bucket_2026_08_15.md`.** (1) The
+      unique-gap migration (Aave 2022-03..10, marinade LST, KAMINO DEX pools) has NOT landed: zero code/script evidence
+      anywhere — `_migrate_defi_classify.py`'s 9 `BucketSpec` entries cover none of the three gaps, no
+      `marinade`/`KAMINO` hits anywhere under `market-tick-data-service/.../scripts/`, no one-off backfill script
+      exists, and the source todo (`defi_migration_audit_log_2026_07_24.md` line 522-529) is still open. (2)
+      Independently, the delete list itself is stale: `market-data-tick-defi{,-prd}` — the FIRST bucket pair in the
+      dispatched list — is the PERMANENT canonical DeFi bucket today, not a legacy orphan, per the 2026-07-10..07-16
+      bucket estate cleanup already documented in
+      `/plans/active/issues/defi_migration_dedicated_bucket_architecture_retired_2026_08_14.md`. Executing the delete as
+      originally scoped would have destroyed the live canonical DeFi tick-data bucket. Filed the new issue doc with a
+      corrected re-scoped delete list + the still-needed migration todos. (repo: instruments-service — verification
+      only, no code change needed for this todo)
 - [ ] [DATA] P2. Enumerate the ~40 DeFi venues currently left as `BLOCKED-BUILD` live-poller placeholders
       (`cross_ag_live_capture_parity_2026_08_14.md` § Finding D) and produce a phased build plan (not a full 40-poller
       build in one pass — scope tranches by venue TVL/priority, identify shared connector patterns that reduce per-venue
@@ -80,3 +88,12 @@ resolved_by:
   question from the same source doc was answered "leave as-is indefinitely" (no dispatch) — recorded directly in that
   doc, not part of this plan. The phoenix contradiction (todo 1) was found during this extraction, after the operator's
   ruling — flagged rather than silently resolved either way.
+
+- **2026-08-15 (data_engineering, slot 27, task `defi_operator_ruling_ao_dispatch-e5203df5b8c2`)**: todo 2 closed — NOT
+  CONFIRMED, did not delete. Found a SECOND stale-doc contradiction of the same shape as todo 1's: the dispatched delete
+  list named `market-data-tick-defi{,-prd}` as a delete-after-migration candidate, but that bucket is now the PERMANENT
+  canonical DeFi tick-data bucket (2026-07-10..07-16 bucket estate cleanup), not a legacy orphan — already predicted by
+  `defi_migration_dedicated_bucket_architecture_retired_2026_08_14.md`'s "Recommended decision" #2, now confirmed live.
+  Separately, the Aave 2022-03..10 / marinade / KAMINO unique-gap migration this todo was gated on has no code/script
+  evidence of ever landing. Full evidence + a corrected re-scoped delete list + follow-up migration todos filed in
+  `/plans/active/issues/defi_orphan_bucket_delete_list_includes_canonical_bucket_2026_08_15.md`.
