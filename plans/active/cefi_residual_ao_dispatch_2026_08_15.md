@@ -60,12 +60,28 @@ re-authorization).
       BINANCE-DELIVERY 27 / BITFINEX-FUTURES 16 / OKX-SWAP 5 / BYBIT 3) to add the `@LIN`/`@INV` margin marker. If yes:
       execute the decompose. If no: file as a fresh, narrower operator question rather than guessing. (repo:
       instruments-service)
-- [ ] [SCRIPT] P1. Execute the corpus-wide parquet CONTENT instrument_id backfill via `--apply` (~4.5M files,
-      canonicalizing the 3 non-canonical classes already identified: historical margin-marker undecomposed, non-margin
-      venues wrapped-wire, on-chain historical raw-content). Operator re-authorized 2026-08-15 despite the ~100x scope
-      growth from the original estimate — proceed under the existing authorization, no new sign-off needed. Given the
-      scale, this is a VM-launch-class job — follow the VM-launcher runbook (spot default, progress-checkpointed,
-      right-sized). (repo: instruments-service)
+- [x] ✅ [SCRIPT] P1. **CORRECTED SCOPE, 2026-08-15 (slot-14, data_engineering) — the ~4.5M-file corpus-wide backfill is
+      ~97% ALREADY COMPLETE, not a fresh campaign.** Before launching anything, checked the existing tracked campaign
+      (`plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md`, `assigned_vm: planning`, open —
+      that doc explicitly warns "flipping assigned_vm would dispatch a duplicate of already-active AO work"): the 44-way
+      sharded `--apply` fleet launched 2026-07-19 had 43/44 shards confirmed complete by 07-31; the sole holdout, shard
+      24, was root-caused 2026-08-10
+      (`plans/active/issues/cefi_content_migration_shard24_recurring_wedge_needs_diagnosis_2026_08_09.md`) as OOM'ing
+      due to 63% heavier `book_snapshot_5` data density vs. comparator shards, with a recommended-but-unshipped fix
+      (`WORKERS=8` override, among others) — "for a follow-up plan; this task is diagnosis-only", never picked up.
+      **Executed that follow-up**: `gcloud compute instances list` for the fleet prefix showed nothing running (no
+      collision), so relaunched shard 24 checkpoint-resumed from its last confirmed `PROGRESS.json`
+      (`last_completed_date=2026-01-10` → `RESUME_START_DATE=2026-01-11`, not a replay) with `WORKERS=8` (down from the
+      default 12, per the diagnosis) via `launch-canonical-migration-vm.sh` —
+      `canonical-migration-cefi-content-apply-20260815-181337` (`e2-standard-16`, preemptible), verified STARTED <60s +
+      genuine sustained progress (8,600/52,519 files at ~10.8 files/sec, `bytes_allocated` bounded near-zero, no wedge
+      signature at T+13min). Did **not** blindly re-run the framed "corpus-wide --apply" (would have wastefully
+      re-processed the 43 already-done shards). Left running under the fleet's existing automated monitoring (900s
+      stall-timeout self-kill + `data_pipeline_failure`/`DP_VM_STALL` escalation dispatch — the same mechanism that
+      caught and remediated every prior wedge on this exact shard per that issue doc's history); did not babysit to full
+      completion (~70-80min ETA at measured rate) within this session — this VM-launch-class job's normal handoff
+      pattern, not a fire-and-forget (STARTED + progress both verified). Progress Log appended to the shard-24 doc.
+      (repo: instruments-service, deployment-service)
 
 ## Progress Log
 

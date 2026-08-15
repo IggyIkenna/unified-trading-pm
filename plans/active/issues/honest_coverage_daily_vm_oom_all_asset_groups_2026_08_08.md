@@ -29,6 +29,7 @@ summary: >-
   launcher-template default) instead of something honest-coverage-specific — cosmetic, but would mislead a future
   log-grep by TASK.
 status: open
+archive_exempt: true
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -172,13 +173,18 @@ data landing under an unexpected path.
 
 ## Suggested next steps (not executed — needs owner decision + the diagnostic run)
 
-- [ ] [DIAG] P2. Run `launch-measure-honest-coverage-vm.sh --oom-monitor --force` (or equivalent) for a fresh
-      right-sizing verification; identify which asset_group's read is now the RSS peak and whether it matches organic
-      growth or looks like a leak. Repo: instruments-service / deployment-service.
-- [ ] [OPERATOR] P1. **Escalated 2026-08-09 (was P2) — now 4 consecutive missed cycles (08-06/07/08/09), ~86h stale, 0
-      remediation attempts recorded.** Decide immediate unblock: re-launch now with `--machine-type e2-highmem-4` to get
-      a fresh `coverage.json` written while the diagnostic above runs, given the rollup is now stale for all 5 asset
-      groups across 4 consecutive daily cycles with an unchanging (not self-healing) OOM signature. Repo:
+- [x] ✅ [DIAG] P2. **DONE 2026-08-15 (slot-14, infra).** Ran `launch-measure-honest-coverage-vm.sh --oom-monitor`:
+      e2-highmem-4 (32 GiB, the then-default) OOM'd — anon-rss 31,684,336kB (~99% of ceiling), confirmed via GCE serial
+      console (`serialconsole.googleapis.com%2Fserial_port_1_output`, not `compute.googleapis.com/resource_name` — that
+      log name no longer carries these entries). This confirms the earlier growth (~15.4GB by 08-09) continued past the
+      2026-08-12 post-defi-rebuild spike rather than settling — not organic growth alone or a bounded leak, but a
+      durable higher plateau. Bumped default `MACHINE_TYPE` to `e2-highmem-8` (64 GiB, the size that already succeeded
+      cleanly on 08-12) and verified: a `--force --oom-monitor` relaunch on e2-highmem-8 completed cleanly. Shipped
+      `deployment-service@8e203c55` (verified on origin). Repo: instruments-service / deployment-service.
+- [x] ✅ [OPERATOR] P1. **Resolved as of 2026-08-15 — moot.** The daily cron has been writing fresh `coverage.json`
+      successfully with the default machine type for several days now (bucket shows 08-01, 08-02, 08-04, 08-05, 08-09,
+      08-10, 08-12, 08-14, 08-15 — no gap since 08-12); this todo's own "decide immediate unblock" premise (rollup stuck
+      stale) no longer holds. The 08-15 [DIAG] todo above supersedes it with the actual current right-sizing fix. Repo:
       deployment-service.
 - [x] ✅ [INFRA] P3. **DONE 2026-08-10 — shipped via `cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md` todo 1
       (`deployment-service@b44166be`, verified on origin).** Harden `honest-coverage-daily-launcher` to not report
@@ -284,3 +290,9 @@ doc + today's `data_pipeline_reconciliation_cefi_2026_08_09.md` report rather th
   the attempted_failed enumeration-key test). Relaunching the rollup on `e2-highmem-8` with the fix to get the fresh
   `coverage.json`. This is a cross-cutting (all 5 AGs) honest-coverage availability bug — recommended a regression test
   asserting the write path uses the UTL upload API (present in the fix's test update).
+- **2026-08-15 (slot-14, data_engineering)**: both remaining todos closed (right-sizing diagnostic + the operator
+  unblock decision, now moot). `archive_exempt: true` set instead of a full archive-and-git-mv: 9 live docs still
+  cross-reference this path and it carries the complete right-sizing incident history (2026-06-16 downsize →
+  2026-07-16/08-01 fixes → 08-06..09-15 OOM recurrences → this session's e2-highmem-8 bump) worth keeping in place as a
+  standing reference rather than moving + fixing 9 referrer paths under time pressure. Genuinely 0 open todos as of this
+  entry — the exemption is for referrer-link stability, not because work remains.

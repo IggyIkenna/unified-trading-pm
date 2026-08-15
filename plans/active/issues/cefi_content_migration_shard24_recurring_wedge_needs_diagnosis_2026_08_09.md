@@ -245,3 +245,17 @@ not `2026-01-07`.
      `gc.collect()` cadence) to release native buffers sooner.
   4. Raise the 30s `as_completed` timeout to 120s for large-file tolerance, suppressing the misleading "possible wedged
      worker" warning noise — the 900s STALL timeout is the real safety valve.
+
+## Progress Log (continued)
+
+- **2026-08-15 (slot-14, data_engineering)**: Picked up the diagnosis's recommendation #1 (never actioned since 08-10).
+  Relaunched shard 24 checkpoint-resumed from `PROGRESS.json`'s `last_completed_date=2026-01-10`
+  (`RESUME_START_DATE=2026-01-11 RESUME_END_DATE=2026-01-15`, not a replay) with `WORKERS=8` (down from the default 12)
+  via `launch-canonical-migration-vm.sh` — `canonical-migration-cefi-content-apply-20260815-181337` (`e2-standard-16`,
+  preemptible). No code changes to the migration script (recommendations #2-4 remain unshipped; the launch-time
+  `WORKERS` override alone was sufficient to act on #1 without touching the shared script other 43 already-complete
+  shards depend on). Verified STARTED <60s + genuine sustained progress at T+13min: 8,600/52,519 files, ~10.8 files/sec,
+  `bytes_allocated` bounded near-zero across every periodic release — no repeat of the wedge signature. Left running
+  under the fleet's existing 900s stall-timeout self-kill + `DP_VM_STALL` escalation monitoring rather than babysitting
+  to completion within one session. If it wedges again on `WORKERS=8`, recommendations #2-4 (explicit `del df`, tighter
+  `release_unused` cadence, 120s `as_completed` timeout) are the next things to try, in that order.
