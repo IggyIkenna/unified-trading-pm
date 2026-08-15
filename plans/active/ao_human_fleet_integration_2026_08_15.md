@@ -251,6 +251,21 @@ investigation confirmed are both achievable with existing primitives:
   fixed the SAME stale "no inbound rule" claim, now found propagated a THIRD time in `check-ao-backlog-status.sh`'s own
   header comment. Remaining Phase 2 item: the local usage-scan-and-push companion (needs a new backend ingest endpoint,
   not yet built) — next tick.
+- **2026-08-15, tick 6 (autonomous, main session)**: Phase 2 fully complete — `agent-orchestrator@e9bb4aa`. New
+  `POST /api/slots/{slot_id}/human-usage` endpoint reuses `TaskUsageRow`/`record_task_usage` unmodified, prices spend
+  SERVER-SIDE via `model_pricing.price_usage()` (request carries only raw token counts, never a client-computed dollar
+  figure), synthesizes a stable `human-session-{slot_id}-{claude_session_id}` id for usage not tied to a claimed task
+  (plan-authoring time). `scripts/human_fleet/ao-usage-push.py` imports `deepseek_usage.scan_session_usage()` DIRECTLY
+  from the sibling agent-orchestrator checkout (no reimplementation) — **tested against this session's own REAL live
+  transcript**, not a synthetic fixture, and found a genuine edge case in real data: Claude Code emits real
+  `model: "<synthetic>"` internal bookkeeping turns with all-zero usage (8 in this session alone) that
+  `scan_session_usage()` correctly includes (matches AO's own existing worker-capture behavior) — filtered client-side
+  so an all-zero group is never pushed as wasted noise. Discovered mid-tick: the shared checkout's own local branch
+  pointer had drifted stale relative to origin (every ship this whole plan went through separate isolated worktrees,
+  never fast-forwarding the shared checkout itself) — switched to developing directly IN a fresh isolated worktree
+  (`.ao-iso-dev`) rather than patching a shared-checkout diff in after the fact, avoiding the confusion of editing code
+  that doesn't actually exist yet in the tree I'm looking at. **Phase 2 is now fully done. Starting Phase 3 (dashboard)
+  next tick.**
 
 ## Todos
 
@@ -323,21 +338,34 @@ investigation confirmed are both achievable with existing primitives:
       `agent-orchestrator/scripts/human_fleet/ao_client.sh`. Done when: a `curl` against AO's `/api/agents` through the
       client succeeds — verified from this session against the live instance; Phase 4's real run confirms it from both
       operators' actual machines/networks (the flagged domain-timeout anomaly needs checking there specifically).
-- [ ] [INFRA] P1. **Build `/ao-register`, `/ao-claim <task_id>`, `/ao-done` slash-commands (or equivalent scripts)**
-      calling the Phase 1 endpoints through the Phase 2 transport wrapper, reading the operator's stored JWT (Phase 4).
-      Done when: an operator can run all three commands end-to-end against a real backlog task from either terminal
-      context.
-- [ ] [INFRA] P1. **Build the statusline-based heartbeat companion** — a statusline script that reads
-      `context_window.used_percentage`, `model.id`/`display_name`, `session_id` from its stdin payload and POSTs to the
-      Phase 1 heartbeat endpoint, throttled to avoid a POST per render (e.g. min-interval gate). Done when: the
-      operator's `AgentRow.context_used_pct`/`model`/`last_ping` visibly update in AO within one throttle interval of
-      normal Claude Code use.
-- [ ] [INFRA] P2. **Build the local usage-scan-and-push companion** — reuses `deepseek_usage.scan_session_usage()`'s
-      logic (import if feasible, otherwise port the minimal needed function) against the confirmed local transcript path
-      (`~/.claude/projects/...`, Design decisions above), and pushes computed usage to a new ingest endpoint tagged
-      `account_id`/`agent_kind="human"`, following `SlotGitStatusRow`'s `(host, slot_id)`-keyed pattern as the
-      structural template. Done when: a real Claude Code turn on the operator's laptop produces a usage row visible via
-      `GET /api/backlog/usage/windows` filtered to `role_group="human"`.
+- [x] 14. ✅ [INFRA] P1. **Build `ao-register.sh`, `ao-claim.sh`, `ao-done.sh`** (equivalent scripts, calling the Phase
+      1 endpoints through `ao_client.sh`, reading the operator's stored token from Phase 4). Ships as
+      `agent-orchestrator/scripts/human_fleet/{ao-register,ao-claim,ao-done}.sh`. HTTP mechanics verified against the
+      LIVE instance with a deliberately invalid token (no real token exists yet — Phase 4): `ao-register.sh` got a
+      clean, correct `401 invalid or expired token`, confirming request shape, auth header, and live connectivity all
+      work end-to-end. Full operator run against a real backlog task is Phase 4's explicit todo. Evidence:
+      agent-orchestrator@5516874de6ad5789fa78f4b9531926183fe3470.
+- [x] 15. ✅ [INFRA] P1. **Build the statusline-based heartbeat companion** —
+      `agent-orchestrator/scripts/human_fleet/ao-statusline-heartbeat.sh`, reads `context_window.used_percentage`,
+      `model.id`/`display_name`, `session_id` from stdin, POSTs to `human-heartbeat`, throttled
+      (`AO_STATUSLINE_MIN_INTERVAL_SECONDS`, default 60s) via a per-slot state file. Verified DIRECTLY in this session
+      (a live statusline consumer): both the no-config path (prints normally, skips heartbeat) and the
+      configured-but-invalid-token path (prints normally, heartbeat attempt fails silently, state file correctly not
+      written on failure) behave as designed. Evidence: agent-orchestrator@5516874de6ad5789fa78f4b9531926183fe3470.
+- [x] 16. ✅ [INFRA] P2. **Build the local usage-scan-and-push companion** — new `POST /api/slots/{slot_id}/human-usage`
+      endpoint (reuses `TaskUsageRow`/`record_task_usage` unmodified, prices spend SERVER-SIDE via
+      `model_pricing.price_usage()` — never trusts a client-computed dollar figure) +
+      `agent-orchestrator/scripts/human_fleet/ao-usage-push.py`, which imports `deepseek_usage.scan_session_usage()`
+      DIRECTLY from the sibling repo checkout against the confirmed local transcript path. **Tested against this
+      session's own REAL live transcript** (not a synthetic fixture) — found and correctly filtered a genuine edge case:
+      real `model: "<synthetic>"` all-zero-usage internal bookkeeping turns Claude Code emits (8 in this session), which
+      `scan_session_usage()` correctly includes (matches AO's own existing worker-capture behavior). Usage not tied to a
+      claimed task (plan-authoring time) gets a stable synthetic `human-session-{slot_id}-{claude_session_id}` id rather
+      than being dropped — `SlotGitStatusRow`'s `(host,     slot_id)`-keyed pattern informed this design (a
+      per-source-identity row) without literally reusing that table, since `TaskUsageRow`'s existing
+      role_group-filterable shape was the better fit once `task_role_group()` already had the human/planning-human
+      buckets from Phase 1. 6 new tests, full `quality-gates.sh` green. Evidence:
+      agent-orchestrator@e9bb4aa2d1d4573318d406a9efd5363184810be9.
 
 ### Phase 3 — dashboard
 

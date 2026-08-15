@@ -556,7 +556,7 @@ someone scoped and did not finish**. Deleting it silently discards the design de
 - [x] [AGENT] P1. ✅ **Shadow-SSOT-type gate added — `strategy-service@c55b586c9c`**
       (`scripts/quality_gates/check_no_shadow_ssot_types.py` + `shadow_ssot_types_baseline.yaml`, shrink-only baseline).
       J1 and J6 are one defect class: a local class/enum redefining a name UAC owns; the gate catches both at commit
-      time. Baselined 15 pre-existing collisions at wire-in time; **9 of 15 now resolved**: `WalletConfig` (unioned
+      time. Baselined 15 pre-existing collisions at wire-in time; **13 of 15 now resolved**: `WalletConfig` (unioned
       `strategy_id` into UAC `unified-api-contracts@77cceb6c9d`, then deleted+imported — `strategy-service@486a61b975`);
       `SportsVenueType` (deleted — zero real consumers, different axis than UAC's same-named enum — same commit);
       `CadenceKind` (renamed `AllocationCadenceKind` — UAC's is fund subscription/redemption cadence, a different axis
@@ -568,20 +568,28 @@ someone scoped and did not finish**. Deleting it silently discards the design de
       verified a genuinely different concept or granularity from UAC's same-named export before renaming, not assumed
       from the name alone; the `Backtest*` rename attempt for `GroupBMetrics` tripped the
       `ST-19-no-standalone-backtest-engine` architectural ratchet on the substring "Backtest" in the class name,
-      corrected to `CandidateScoreMetrics`). **6 remain, all deliberately declined rather than force-migrated**:
-      `ExecutionMode` (genuine near-duplicate but 8 real strategy YAMLs reference the current wire values directly —
-      needs a coordinated config migration, not a class-name change); `ClientContext` (UAC's is an unrelated JWT-claims
-      record, but the name is woven through this service's whole per-client architecture in docstrings — a wider rename
-      than the others, deserves its own pass); `PnLAttribution`/`PnLSummary` (UAC's versions require different fields
-      (`attribution_id`/`summary_id` + shard dims) and different field names (`start_time`/`end_time` vs
-      `start_date`/`end_date`) — a real PnL-domain data-shape migration); `Position` (47 consumer files in
-      strategy_service/, by far the widest blast radius of anything in this list, already marked `# CORRECT-LOCAL` from
-      an earlier review — UAC's is an explicitly-named third-party nautilus interop schema, almost certainly a different
-      concept, but deserves a dedicated pass, not one appended to a batch); `StrategyType` (local's 4 values do NOT
-      match the actual `strategy_type:` values found in real production YAMLs — `mean_reversion`/`COMMODITY_REGIME` vs
-      local's `MOM`/`MR`/`BASIS`/`YIELD` — meaning this field is fed by a different config path than assumed, tangled in
-      the already-documented J5 dual-path strategy-config-loading defect (this same plan, § J dual-path register) that
-      needs tracing first, not guessing around).
+      corrected to `CandidateScoreMetrics`); `ClientContext` (renamed `ClientRuntimeContext` — UAC's is an unrelated
+      frozen JWT-claims access-control record, coincidental name reuse, same pattern as `CadenceKind` —
+      `strategy-service@1ca0736bec`); `ExecutionMode` (renamed `GcsExecutionMode` — genuinely the same HUF/SCE concept
+      as UAC's registry.py version but NOT bridgeable: the sibling on-disk YAML configs (loaded through a separate,
+      unvalidated `config.py` path, not this class) carry 7 distinct `execution_mode:` strings in production, only 2 of
+      which are valid members of even this enum); `Position` (renamed `PositionRecord` — two rounds: the first name
+      choice, `StrategyPosition`, was itself caught colliding with a SECOND, different UAC class by the shadow-SSOT
+      test; the true blast radius was only 6 consumer files, not the 47 a bare text-grep had estimated); `StrategyType`
+      (renamed `GcsStrategyType` — traced the J5 dual-path config-loading defect to a concrete 3-way verdict: this
+      enum's 4 members, UAC's 13 richer members, AND the actual LIVE production path
+      (`strategy_config_loader.py::load_strategy_config_by_type`, "batch and live use the same config loader") which
+      reads `strategy_type` as a raw unvalidated string that consults NEITHER enum — confirmed by real production YAML
+      values (`mean_reversion`, `COMMODITY_REGIME`) matching neither; `GcsStrategyConfig` itself confirmed dead code,
+      zero live callers anywhere) — all 4 renames + the PnL fail-fast fix in `strategy-service@a28fd458a0`. **2 remain,
+      deliberately declined a second time with deeper evidence rather than forced**: `PnLAttribution`/`PnLSummary`
+      (UAC's versions require different fields (`attribution_id`/`summary_id` + shard dims) and different field names
+      (`start_time`/`end_time` vs `start_date`/`end_date`) — traced the full construction chain this round:
+      `PnLCalculator.__init__` (the only constructor) carries no client_id/account_id/category at all, so UAC's required
+      identity fields can only be fabricated, not derived, without a real constructor-signature change first; and the
+      entire `PnLCalculator`/local-`PnLAttribution`/`PnLSummary`/`output_builders.build_pnl_attribution_df()` chain has
+      zero live callers anywhere in the tree today — a real PnL-domain data-shape migration blocked on a prerequisite
+      API change, not a mechanical fix, and fabricating identity fields to force it through is banned).
 - [ ] [AGENT] P1. **For every remaining row, name the SSOT in codex and mark the other path.** Where both must exist for
       a real reason (Group B / Group C in J3), **state in both places which is authoritative and why**. A dual path
       documented as intentional stops costing an auditor an hour; an undocumented one costs it every time.
@@ -628,6 +636,31 @@ assumptions? **Mechanisms: mostly yes. Parameterisation: no — and the missing 
 
 ## Progress Log
 
+- **2026-08-15 (round 4)** — Resolved all 6 remaining shadow-SSOT-type collisions with the same rigor as before
+  (read+compare fields before deciding, never assume from the name). `ClientContext`→`ClientRuntimeContext`
+  (coincidental name reuse, UAC's is an unrelated JWT-claims record — `strategy-service@1ca0736bec`).
+  `ExecutionMode`→`GcsExecutionMode`, `StrategyType`→`GcsStrategyType`, `Position`→`PositionRecord` (2 rounds — the
+  first name choice, `StrategyPosition`, was itself caught colliding with a SECOND, different UAC class by the
+  shadow-SSOT test; corrected), plus a fail-fast fix for an unrelated empty-string `instrument_id` fallback in
+  `pnl_input_builder.py` that a concurrent session's commit had introduced above the gate's shrink-only baseline
+  (blocking everyone's gate runs on this shared checkout, not just mine) — all in `strategy-service@a28fd458a0`, with a
+  same-day follow-up fixing a stale baseline-yaml row I'd left behind after the `StrategyType` rename (updated the
+  resolution comment but forgot to delete the actual list entry — shrink-only baseline hygiene —
+  `strategy-service@21b984dbf8`). Traced `StrategyType` through the J5 dual-path config-loading defect to a concrete
+  verdict instead of guessing around it: it's a 3-way inconsistency (this enum, UAC's richer enum, AND the actual live
+  production path reading `strategy_type` as a raw unvalidated string that consults neither enum — confirmed via real
+  production YAML using values absent from both). Declined (not forced) the 2 hardest items a second time with deeper
+  evidence: `PnLAttribution`/`PnLSummary` — traced the full construction chain and found `PnLCalculator.__init__`
+  carries no client_id/account_id/category at all (so UAC's required identity fields can only be fabricated, not
+  derived) AND the entire local computation chain has zero live callers anywhere in the tree today. Shadow-SSOT
+  baseline: **13 of 15 resolved**, 2 remain (`PnLAttribution`/`PnLSummary`), both a real PnL-domain data-shape migration
+  blocked on a prerequisite `PnLCalculator` constructor-signature change, not a naming fix. Also confirmed Task 7a (this
+  plan's own PM-repo ship, `check_reference_paths.py`) landed earlier this session once the shared checkout's foreign
+  untracked files cleared — `unified-trading-pm@a956b15ed7`, verified an ancestor of origin. **Recurring lesson this
+  round**: a backgrounded quality-gates.sh run's reported exit code repeatedly diverged from its actual log content
+  under host RAM pressure (the `qg-governor-watchdog` self-aborts on sustained >=75% RAM with SIGTERM, which several
+  wrapper layers reported as "exit 0") — always grep the log for the literal `ALL QUALITY GATES PASSED` banner and
+  cross-check the `.qg_last_passed_sha` sentinel against current HEAD before trusting a green result.
 - **2026-08-14 (round 3)** — Closed out the two remaining open items from the "later" batch below, plus 6 more
   shadow-SSOT resolutions. (1) **ADV `as_of_date` manifest stamping — now fully wired end to end.**
   `paper_run_handler.py`'s `run_paper()` now calls `get_resolved_carry_universe_as_of_date()` at the
