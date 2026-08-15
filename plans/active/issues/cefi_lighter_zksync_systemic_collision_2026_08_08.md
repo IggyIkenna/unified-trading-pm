@@ -448,3 +448,9 @@ pair (2026-07-03 `0G`):
 
 **Recommended NEXT item**: none — the Range-2 apply sequence is complete; the only open LIGHTER-ZKSYNC item is the
 operator-owned BTC 2026-05-01 leave-both residual (no action pending).
+
+- **plan-reconcile cefi-tranche verification pass 2026-08-15**: confirmed content is unchanged/accurate — all 5 todos
+  `[x]`, "Recommended NEXT item: none" still holds. `status:` frontmatter (`open`) is technically stale (the work is
+  done) but left as-is: flipping to a terminal status trips `check_terminal_status_archived`, which forces archival —
+  out of scope for this doc-reconciliation pass given `archive_exempt: true` is set with no BRIDGE comment explaining
+  why archival was deferred. Leaving the status/archival decision to the next toucher with archival authority.
