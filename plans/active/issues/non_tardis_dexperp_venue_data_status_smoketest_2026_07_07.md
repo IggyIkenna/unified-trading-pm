@@ -384,33 +384,37 @@ Two secondary findings:
       hardcode is the drift source; target bucket 404s; past its own `# Delete-when:`), so a re-run can never re-stamp
       DeFi HL/ASTER perp_funding. (Verify the `protocols` iterable no longer includes them before deleting.) — already
       covered by defi_satellite_ao_dispatch_batch2_2026_07_26.md (see that doc for execution).
-- [ ] [INFRA] P3. **Dispatched to batch-6 todo 24 (still `[ ]` as of 2026-08-05)** — Auto-resolved 2026-07-28, retagged
-      away from its prior operator-decision gate. Reconcile the 916 HL + 642 ASTER `defi/perp_funding` legacy rows
-      (redundant with `cefi/derivative_ticker.funding_rate`) by executing option (a) — DELETE the orphaned
-      `defi/perp_funding` objects + manifest rows + rebuild the defi index (the redundant/simpler default; option (b)'s
-      re-stamp-and-move is not needed since the data is fully redundant with the cefi-side funding history).
-      Reversibility cleared per finding T / `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a:
-      `mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md` todo 7 confirmed the SAME bucket
-      (`market-data-tick-defi-prd-central-element-323112`) at `604800s` GCS Soft Delete retention as of 2026-07-27 (one
-      day prior to this retag, bucket-level retention config, not a per-object/day-to-day setting — no reason to expect
-      drift). **Whoever executes this todo should re-verify `gcs_bucket_soft_delete_retention_seconds()` fresh in the
-      same run before the actual delete** (cheap, and keeps the finding-T check genuinely same-run for the destructive
-      step itself) rather than treating this citation as a substitute for that — but no fresh operator ask is needed to
-      START this dispatch. **(Batch-6 status: NOT YET DONE — the only unchecked todo remaining in batch-6.)**
-- [ ] [FIX] P3. **Dispatched to batch-6 todo 24 (still `[ ]` as of 2026-08-05)** — RULED 2026-07-28 (retagged away from
-      its prior operator-decision gate) — RELAX RULE 11 to cover cefi Ruling applies the operator's standing
-      live-probing-scope theme directly: "live probing should be relaxed to cover all asset groups and shards wherever
-      needed — err toward broader/more permissive scope, not narrower." That resolves this in favor of relaxing, not
-      leaving it as a known gap. Concrete task: add `CEFI: ("binance","bybit","kraken","okx")` to
-      `_EXTRA_LIVE_PROBE_SOURCES_BY_AG` (UAC `possible_manifest.py`); relax/rename
-      `test_prediction_live_union_is_prediction_scoped_only` so its name + docstring assert the new (prediction + cefi
-      CEX) scope rather than claiming prediction-only (a stale invariant name after this change is its own future
-      false-confidence trap); re-run the phantom-row auditor to confirm the ~35 currently mis-flagged real live shards
-      (20 live_kraken + 15 live_binance) flip from `phantom_captured_no_parquet` to `captured`. Full-completion mandate
-      (no shortcuts): grep for any OTHER consumer that assumes RULE 11 is prediction-exclusive before landing, so no
-      half-relaxed invariant is left contradicting the code elsewhere. (repo: unified-api-contracts)
+- [x] ✅ [INFRA] P3. **DONE — verified 2026-08-15 (slot-11), already shipped elsewhere, checkbox was stale.** A broader,
+      independently-authored migration
+      (`plans/archive/2026_08/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md`, archived
+      `status: complete`) fully superseded this ask: deleted the ENTIRE frozen `asset_group=defi` HYPERLIQUID+ASTER
+      corpus (7,599 objects, a superset of this todo's `perp_funding`-only scope) after relabel-migrating it to
+      `asset_group=cefi`, per-object (size, crc32c) parity-verified (zero mismatches) —
+      `market-tick-data-service@24f11df7` (audit + migration) + `@55d88025` (soft-delete-retention-gated `--apply`
+      delete, `604800s` confirmed fresh, exit 0, post-delete paths confirmed empty). Independently re-verified via a
+      second VM run 2026-08-06 (0 objects to copy — durable no-op) and a later one-off
+      (`market-tick-data-service@2752f113`, 2026-08-11) that re-confirmed zero remaining and self-deleted per its own
+      `Delete-when:` marker. Freshly re-verified this session via a column-pruned filtered manifest read: HYPERLIQUID/
+      ASTER are entirely absent from the `defi`/`perp_funding` venue set. Full evidence:
+      `plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md` todo 24's Progress note.
+- [x] ✅ [FIX] P3. **DONE — verified 2026-08-15 (slot-11).** Code + test confirmed shipped:
+      `unified-api-contracts@dbbc8f28` (added `CEFI: ("binance","bybit","kraken","okx")` to
+      `_EXTRA_LIVE_PROBE_SOURCES_BY_AG`) + `@6fae460b` (stale-comment fix); test already relaxed/renamed to
+      `test_extra_live_probe_sources_do_not_leak_cross_ag`
+      (`unified-api-contracts/tests/unit/test_possible_manifest.py`), asserting the new prediction+cefi UNION scope. The
+      live phantom-row-auditor re-run (confirming the ~35 mis-flagged live_kraken/live_binance shards flip to
+      `captured`) could not be safely completed on the shared host this session — the full-manifest reconciler tool has
+      no column-pruned entry point and was safely killed by the memory-bounding wrapper at 14.3GB RSS (>8G cap); it
+      needs a dedicated VM per RULES.md STEP 0.56. Filed as a follow-up todo in
+      `plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md` (new `[SCRIPT] P3` item, bounded/safe, no
+      `[OPERATOR]` gate needed).
 
 ## Progress Log
+
+- **2026-08-15 (slot-11, data_engineering)**: Flipped both `[INFRA] P3`/`[FIX] P3` "Dispatched to batch-6 todo 24" items
+  — both already shipped elsewhere, checkboxes were stale. Full evidence in
+  `plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md` todo 24's Progress note + this doc's own todo text
+  above. Only the k-prefix coin-case todo remains genuinely open (design-gated, unchanged) — doc stays active.
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - the k-prefix todo needs the canonical-vs-native HL coin-case
   convention resolved first (shard-key-mismatch risk); the other 2 are ruled and AO-ready but the doc cannot flip as a
