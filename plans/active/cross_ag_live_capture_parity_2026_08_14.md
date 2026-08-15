@@ -389,3 +389,46 @@ _(append dated entries here)_
   silently re-surface a venue this doc's Finding B found was deliberately excluded for a dead REST API — added to
   context_scope so the pending `[OPERATOR]` phoenix ruling accounts for it; the other doc is outside this batch,
   reported for its own pickup.
+
+- **2026-08-15 (data_pipeline_failure escalation agt-f2b4c7, slot-4)**: root-caused the still-open Finding-C todo above
+  ("BYBIT-FUTURES live capture is confirmed still fully broken") — dispatched from a fresh `DP_CRON_DID_NOT_FIRE`
+  (DP-LIVE-004) page for the SAME VM (`mtds-live-cefi-consolidated-20260814-041422`, venue=BYBIT-FUTURES,
+  data_type=trades). Followed the todo's own DoD: SSH'd the VM, tailed `live-bybit-futures-trades.log` — zero
+  `"op":"subscribe"`/`success`/`ret_msg` lines anywhere in the whole 6,061-line log (the connector never logs subscribe
+  acks at all, confirming the todo's suspicion that the subscribe step is invisible). Traced the code path instead:
+  `read_is_universe_sync` (`live/_is_universe.py`) returns EVERY `instrument_key` from IS's `BYBIT` catalog unfiltered
+  by `instrument_type` (1,282 rows 2026-08-15 — spot+linear+inverse+options all under the one Tardis-primary `BYBIT`
+  venue token), and `LiveWebsocketRunner.run()` passes that whole unfiltered list straight to
+  `connector.connect(instrument_ids=...)` with no type filter anywhere in between. All 4 BYBIT-FUTURES connectors
+  (`bybit_ws.py`'s trades connector + `bybit_futures_book_ticker_ws.py`'s book_snapshot_5/derivative_ticker/
+  depth_of_book_10) then crammed the FULL unfiltered id list into ONE unchunked `{"op":"subscribe","args":[...]}` frame
+  to Bybit's LINEAR-only endpoint. Confirmed via web search that Bybit's v5 public-stream docs (ws/connect +
+  websocket/trade/guideline) cap the combined `args` topic-string length at **21,000 characters per request** — 1,282
+  raw topics comfortably exceeds that, and Bybit does not ack a rejected/oversized frame per-topic, so the failure is
+  100% silent (matches the log evidence exactly, and is the same failure SHAPE this connector family already hit + fixed
+  3 times before via chunking: `aster_book_liq_ws.py`, `deribit_book_ticker_ws.py`, `polymarket_clob_ws.py`/
+  `polymarket_trades_ws.py` — BYBIT-FUTURES was simply never given the same treatment). **Fix applied** (all 4
+  connectors, both files): (1) filter `instrument_ids` to PERPETUAL/FUTURE only before building any subscribe topic —
+  the only types valid on the LINEAR endpoint; (2) chunk the subscribe `args` by cumulative character length, capped
+  under Bybit's 21,000-char limit; (3) log subscribe/unsubscribe ack frames (`success`/`ret_msg`) instead of silently
+  discarding them, closing the exact observability gap that made this bug take 2 sessions to root-cause. Also fixed 2
+  pre-existing test files (`tests/unit/test_bybit_ws_connector.py`,
+  `tests/unit/test_bybit_futures_book_ticker_ws_coverage.py`) whose fixture instrument_ids used an unrealistic `:PERP:`
+  type token (real canonical shape is `:PERPETUAL:`/`:FUTURE:`, confirmed via `unified_api_contracts.InstrumentType`) —
+  under the new filter those fixtures would have been silently dropped, breaking
+  `test_subscribe_new_instruments_updates_set` and its siblings. **NOT YET SHIPPED**: 7 consecutive
+  `quality-gates.sh --no-fix` background runs were killed (never completing, mostly still queued behind the governor
+  token) across a ~50min window — cross-referenced against
+  `/plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md` and confirmed the exact matching
+  signature live on this host during the attempts (free RAM swinging 547Mi↔13Gi within under a minute, 16Gi/47Gi swap
+  used, 10-25 concurrent `quality-gates.sh` processes fleet-wide vs. the documented ≤2 rule, and a live
+  `/opt/.qg-governor-glue-shared/.benchmarks/qg-governor/` ledger with dozens of fresh `aborted.*`/`killed.*` markers
+  fleet-wide) — genuine, severe, ongoing host contention, not a defect in this fix. Per that doc's own established
+  precedent (do not keep blind-retrying once contention is confirmed stable), stopped retrying and **stashed the
+  verified-ready fix** in the `market-tick-data-service` slot-4 checkout: `git stash` entry
+  `orchestrator-slot-4-bybit_futures_dp_live_004_subscribe_fix-001` (4 files, +155/-60 lines). **Handoff for the next
+  session/slot**: `git stash pop` in `.tabs/4/market-tick-data-service` (or a calmer slot), run
+  `bash scripts/quality-gates.sh --no-fix` when host contention has eased, ship via
+  `quickmerge --agent --files '<the 4 files>'`, then flip the Finding-C todo above to done with the shipped SHA + a
+  post-fix `captured` row citation (the todo's own DoD). Did not attempt to verify via a live VM restart/redeploy this
+  session — the fix isn't shipped yet, so nothing on the running VM has changed.
