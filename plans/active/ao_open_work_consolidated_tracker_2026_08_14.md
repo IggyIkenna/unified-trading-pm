@@ -662,3 +662,27 @@ before touching the source doc directly._
   for stash/`wip-preserve/*` refs past ~7 days, given this session directly observed 47 autostash entries piling up
   unpruned on this exact host) are still UNBUILT — this is real, bounded, non-operator- blocked implementation work for
   a future wave, written into `/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md`.
+- **2026-08-15 (/pre-compact checkpoint, context ~67%)**: audit clean — both `agent-orchestrator` and
+  `unified-trading-pm` at `ahead=0`/clean tree, verified via `git rev-list --count origin/<branch>..HEAD` = 0 in both.
+  Confirmed the dirty-worktree implementation item (Track 4, `orchestrator_vm_e2e_hardening_2026_07_24.md`) is already
+  correctly tracked as its own open `- [ ] [BACKEND] P0` item with the full resolved spec in its body — no gap, no new
+  todo needed (double-checked after this exact session already caught one false "I wrote it" claim on the pane-guard
+  codex section earlier). Scratchpad has one regenerable QG debug log, not referenced anywhere, safe to lose. **Lessons
+  for the next session/tick**: (1) on this doc specifically, a "won't-build"/"already resolved"/"already covered by X"
+  verdict from ANY session's Progress Log entry is a CLAIM, not a fact — verify against live code (grep the actual
+  function/docstring) before trusting it, even your own; this session caught 3 such false verdicts from a concurrent
+  session's investigation-only pass. (2) this tracker doc has now hit literal unresolved conflict-marker corruption
+  TWICE from `safe-doc-push.sh` autostash-pop races under heavy concurrent edit load — the systemic root cause (55+
+  parked stash entries, growing) is already tracked at
+  `pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`, but that doc's own remediation doesn't yet cover
+  the "conflict markers land IN a pushed commit" failure mode specifically (only the stash-pile symptom) — worth a
+  follow-up read to confirm it's fully scoped. (3) SSM `du` against this VM's
+  `/home/ubuntu/unified-trading-system-repos/` needs a much longer timeout than 200s (still didn't finish); a genuinely
+  precise per-slot-clone disk breakdown needs a purpose-launched job, not ad-hoc SSM round-trips. (4) remote SSM shell
+  scripts MUST start with `#!/bin/bash` — the VM's default `/bin/sh` isn't bash-compatible and silently breaks on
+  parenthesized echo text. **Remaining 12 open items are unchanged from the last full report** (pure benchmark re-runs
+  blocked on this workspace never being "solo"/quiet with 20+ concurrent sessions; the deliberately-deferred
+  irreversible backlog-ID migration; a handful of best-effort P2/P3 diagnostics; the context_scope backfill, explicitly
+  ongoing/multi-session by the operator's own direction). **Recommended next item** if this session resumes: the
+  dirty-worktree implementation (Track 4 P0, spec fully written, zero design ambiguity left) — highest-value remaining
+  bounded work.
