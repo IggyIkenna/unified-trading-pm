@@ -78,7 +78,7 @@ growth) is tracked in that issue doc; until it ships, scope every invocation to 
 for AG in CEFI DEFI TRADFI SPORTS PREDICTION; do
   bash deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh \
     --service mtds --day <DAY> --asset-group "$AG" --legs force,skip --mvp-only --require-captured --auto-day \
-    --project central-element-323112
+    --wall-clock-timeout-sec 14400 --project central-element-323112
 done
 ```
 
@@ -86,6 +86,16 @@ Each launch still prints its own `vm_name=...` immediately and returns — poll 
 driver process to a fraction of the full 3126-shard surface (CEFI alone was already ~30+ shards deep and still climbing
 when the unscoped run OOM'd, so even a per-asset_group run may need further splitting by `--venue` if it still OOMs —
 check the driver RSS trend in `run.log` before assuming a smaller scope is automatically safe).
+
+**Always pass an explicit `--wall-clock-timeout-sec` well above the 3600s (1hr) CLI default** — confirmed live
+2026-08-15 (same issue doc, Progress Log): `pipeline_e2e_check.py`'s own defense-in-depth SIGALRM backstop
+(`_setup_wall_clock_timeout`, exit code 3) force-terminates the driver at the default 1hr mark regardless of whether
+it's making genuine progress, and a real `--legs force,skip --mvp-only` sweep — even scoped to ONE asset_group —
+routinely needs longer than that (each force+skip shard pair costs ~2-5 min of VM-launch-and-wait overhead; CEFI's
+~30+-shard depth alone is 1-2.5hrs). This is the same `rc=3` this issue doc's still-open SPORTS todo flagged as
+"undiagnosed" — root-caused: it is the wall-clock timeout firing mid-sweep, not a distinct crash. 14400s (4hr) is a
+safe floor for a per-asset_group MVP sweep; a genuinely unscoped full sweep needs much more (many-hour run, see §1a
+above) and is why the per-`--asset-group` split remains the recommended default regardless of this flag.
 
 Prints `vm_name=...` immediately, then returns — async (the driver VM self-deletes on completion). Poll
 `gs://deployment-scripts-central-element-323112/vm-logs/<vm_name>/{run.log,EXIT_STATUS}`, or via
