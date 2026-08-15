@@ -140,13 +140,14 @@ source: >-
       pattern of `install-ci-reconciler-timer.sh`. Cadence: no tighter than 15 minutes (matches the grace window — no
       value in ticking faster than the delay it enforces). Done-when: the timer installs cleanly in a dry run and its
       systemd unit's `OnUnitActiveSec` matches the stated cadence. — agent-orchestrator@17c6e56dc4
-- [ ] [INFRA] P2. Determine whether an existing Slack alert already covers a local ratchet/baseline ceiling breach —
+- [x] ✅ [INFRA] P2. Determine whether an existing Slack alert already covers a local ratchet/baseline ceiling breach —
       `agent-orchestrator/server/notifications/slack.py` carries TID251/ratchet-adjacent code; read it to confirm
       whether it already fires for this class, and if so, confirm the new AO-dispatch escalation path does not
       duplicate/double-page for the same breach (state which side owns dedup). This is a bounded fact-finding step, not
       a design call — if a real gap or duplication risk is found, do not silently fold a fix in here: file it as a new
       todo below or a fresh issue doc. Done-when: the finding is stated in this plan's Progress Log with file+line
-      evidence, and any real gap found has a tracked follow-up (not left as prose alone).
+      evidence, and any real gap found has a tracked follow-up (not left as prose alone). — no code change (docs-only
+      finding, see Progress Log)
 - [ ] [INFRA] P2. Update `/codex/04-architecture/agent-orchestrator-alerting.md` (or `ci-alerting.md`, per the prior
       todo's finding of which surface actually owns Slack notification for this class) to document the new
       `local_ratchet_gate_breach` wall type, the 15-minute grace window, and the AO-dispatch-is-primary /
@@ -314,3 +315,31 @@ source: >-
   `armed/waiting/escalated/cleared` all empty (no current breaches), exit 0 "OK" — the wiring is live and correct,
   not merely installed. `bash scripts/quality-gates.sh` green (3976 passed, 2 skipped, dashboard 374 passed).
   Shipped: `agent-orchestrator@17c6e56dc4`.
+
+- **2026-08-15 (slot-22·infra)**: Todo 9 flipped — no code change, a docs-only fact-finding result. The plan's own
+  premise ("`server/notifications/slack.py` carries TID251/ratchet-adjacent code") does not hold up under a direct
+  read: `grep -n -i "ratchet|TID251|baseline" agent-orchestrator/server/notifications/slack.py` returns exactly one
+  "ratchet" hit, at line 1985, inside `notify_escalation_unresolved`'s docstring — and it names
+  `na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10`, the unrelated **NA-plan-corpus-size**
+  ratchet (`check_na_corpus_ratchet.py`), not the CI code-quality ratchet (DTZ/TID251/fallback-import counts) this
+  plan is about. `grep -rn "TID251" --include="*.py" . | grep -v /tests/` across the whole `agent-orchestrator` repo
+  returns exactly one hit, `server/escalation.py:229`, a comment on THIS plan's own new detector code — not a
+  pre-existing alert. `grep -n -i "ratchet|TID251" server/ci_reconcile.py` returns zero hits. Also checked
+  `unified-trading-pm/scripts/quality_gates/check_ruff_rule_ratchet.py` itself for any Slack call and
+  `unified-trading-pm/.github/workflows/*.yml` for a ratchet/TID251-keyed workflow — zero hits (the workflow-level
+  "ratchet" hits that do exist, e.g. `codex-freshness-sweep.yml`/`digest-drift-sweep.yml`, are unrelated
+  freshness/digest ratchets). **Finding: no existing Slack alert is specific to a local ratchet/baseline-ceiling
+  breach — there is nothing for the new `local_ratchet_gate_breach` wall type to duplicate.** What WILL fire for it
+  are the generic, wall-type-agnostic escalation-lifecycle notifiers already wired to every wall type via
+  `server/escalation.py`'s own enqueue/dispatch/resolve code paths —
+  `notify_escalation_dispatched`/`notify_escalation_resolved`/`notify_escalation_unresolved`/
+  `notify_escalation_abandoned` (`server/notifications/slack.py:1527,1862,1970,1786`) — the same single code path
+  every other wall type already goes through (confirmed by reading the call sites: `escalation.py:501` calls
+  `_notify_authoring_slot`→`notify_escalation_dispatched` generically on dispatch, keyed by the `wall_type` param, no
+  per-wall-type branching). Since `local_ratchet_gate_breach` was wired straight into the existing
+  `escalation.enqueue()`/dispatch machinery (todos 1-6 above), it inherits this generic notification path "for free" —
+  there is no second, independent alert to collide with, so no duplication/double-paging risk exists and no dedup
+  ownership question arises (dedup is `escalation.py`'s own `_find_open_escalation`/`_wall_cooldown_key`, already
+  established by todo 6's finding, unchanged). **No real gap found — no follow-up todo/issue doc filed**; this
+  matches the parent issue doc's own resolution-option framing (route through existing CI-escalation infra, not a
+  bespoke alerting path) and confirms it was followed correctly.
