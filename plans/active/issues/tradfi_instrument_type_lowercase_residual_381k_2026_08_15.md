@@ -153,33 +153,33 @@ AO-eligible follow-up:
       partition path? different capture_status filter?). (repo: market-tick-data-service)
 
       **DONE 2026-08-15 (slot-14, data_engineering).** Bounded read (`columns=[instrument_type, capture_status,
-              written_at]`, no whole-corpus load, wrapped in `run-bounded-analysis.sh`) against the live
-              `market-data-tick-tradfi-prd-central-element-323112` availability_index reconfirmed the exact 381,119-row
-              population, then measured `written_at`: **100% (381,119/381,119) postdate the 2026-07-27 fix** — min
-              `written_at`=2026-08-05T01:32:02Z, max=2026-08-15T06:29:38Z (today), weekly buckets 2026-W32=42,086 /
-              2026-W33=339,033. This is unambiguously the STILL-LIVE-bypass branch, not the pre-existing-residual
-              branch — but per-instrument_type breakdown splits it into TWO DIFFERENT root causes, not one:
-              - **`combo` (339,035 rows, 89%) is NOT a bug.** Traced to `unified-trading-library@74fe04fd98`
-              (2026-08-10, "fix(canonical): exclude combo and continuous_future as bundle-grain manifest types") —
-              a DELIBERATE, evidence-based ruling (a live 473,374-row census found bundle-grain-signature rows
-              mis-typed as `FUTURE`) that removed `combo` from the canonicalizer's mapping and made it a PERMANENT
-              bundle-grain exclusion, same treatment as `futures_chain`/`options_chain`. Every write since that
-              commit landed is correctly leaving `combo` lowercase, by design — this doc's own earlier "confirmed
-              genuine case-drift" conclusion for `combo` was WRONG (see the CORRECTION note added above in "What I
-              found"); it only ruled out one alternative hypothesis (QUARANTINE_COMBO) without checking the
-              canonicalizer's actual current exclusion set. **Real, separate defect found**: UAC's
-              `CHAIN_BUNDLE_ACCEPTED_NONCANONICAL_INSTRUMENT_TYPES` (`market_data_categories.py`, committed
-              2026-07-22 — 3 weeks BEFORE the UTL ruling) still only lists `options_chain`/`futures_chain`, not
-              `combo`/`continuous_future` — a stale cross-repo registry, tracked as a new todo below.
-              - **`equity`/`etf`/`future`/`index`/`spot_pair` (42,084 rows, 11%, written since 2026-08-05) ARE a
-              genuine still-live writer bypass.** Unlike `combo`, all 5 of these tokens ARE present in
-              `_MANIFEST_ITYPE_CANONICAL["tradfi"]` (equity/etf/index/future/spot_pair all map to their real
-              `InstrumentType`) — so a write path is stamping them WITHOUT calling
-              `canonicalize_manifest_instrument_type` at all. Checked `venue_fetch.py::_record_venue_shard_counts`
-              (the main tradfi/cefi manifest-key seam) and confirmed it DOES canonicalize on both branches
-              (`tradfi_shard[0]` / `fallback_itype` via `_tms._tradfi_manifest_itype`) — so the live bypass is
-              elsewhere, not yet pinpointed; tracked as a new todo below rather than absorbed into this
-              measurement-scoped todo. `unified-trading-pm@<pending>`.
+                  written_at]`, no whole-corpus load, wrapped in `run-bounded-analysis.sh`) against the live
+                  `market-data-tick-tradfi-prd-central-element-323112` availability_index reconfirmed the exact 381,119-row
+                  population, then measured `written_at`: **100% (381,119/381,119) postdate the 2026-07-27 fix** — min
+                  `written_at`=2026-08-05T01:32:02Z, max=2026-08-15T06:29:38Z (today), weekly buckets 2026-W32=42,086 /
+                  2026-W33=339,033. This is unambiguously the STILL-LIVE-bypass branch, not the pre-existing-residual
+                  branch — but per-instrument_type breakdown splits it into TWO DIFFERENT root causes, not one:
+                  - **`combo` (339,035 rows, 89%) is NOT a bug.** Traced to `unified-trading-library@74fe04fd98`
+                  (2026-08-10, "fix(canonical): exclude combo and continuous_future as bundle-grain manifest types") —
+                  a DELIBERATE, evidence-based ruling (a live 473,374-row census found bundle-grain-signature rows
+                  mis-typed as `FUTURE`) that removed `combo` from the canonicalizer's mapping and made it a PERMANENT
+                  bundle-grain exclusion, same treatment as `futures_chain`/`options_chain`. Every write since that
+                  commit landed is correctly leaving `combo` lowercase, by design — this doc's own earlier "confirmed
+                  genuine case-drift" conclusion for `combo` was WRONG (see the CORRECTION note added above in "What I
+                  found"); it only ruled out one alternative hypothesis (QUARANTINE_COMBO) without checking the
+                  canonicalizer's actual current exclusion set. **Real, separate defect found**: UAC's
+                  `CHAIN_BUNDLE_ACCEPTED_NONCANONICAL_INSTRUMENT_TYPES` (`market_data_categories.py`, committed
+                  2026-07-22 — 3 weeks BEFORE the UTL ruling) still only lists `options_chain`/`futures_chain`, not
+                  `combo`/`continuous_future` — a stale cross-repo registry, tracked as a new todo below.
+                  - **`equity`/`etf`/`future`/`index`/`spot_pair` (42,084 rows, 11%, written since 2026-08-05) ARE a
+                  genuine still-live writer bypass.** Unlike `combo`, all 5 of these tokens ARE present in
+                  `_MANIFEST_ITYPE_CANONICAL["tradfi"]` (equity/etf/index/future/spot_pair all map to their real
+                  `InstrumentType`) — so a write path is stamping them WITHOUT calling
+                  `canonicalize_manifest_instrument_type` at all. Checked `venue_fetch.py::_record_venue_shard_counts`
+                  (the main tradfi/cefi manifest-key seam) and confirmed it DOES canonicalize on both branches
+                  (`tradfi_shard[0]` / `fallback_itype` via `_tms._tradfi_manifest_itype`) — so the live bypass is
+                  elsewhere, not yet pinpointed; tracked as a new todo below rather than absorbed into this
+                  measurement-scoped todo. `unified-trading-pm@<pending>`.
 
 - [ ] [DATA] P1. **NARROWED 2026-08-15** (was: re-stamp all 381,119 rows) — re-run the existing in-place CAS re-stamp
       mechanism (`scripts/migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py` or its 2026-07-27 successor) on
@@ -203,33 +203,34 @@ AO-eligible follow-up:
       market-data-processing-service if the trace leads there)
 
       **DONE 2026-08-15 (slot-14, data_engineering).** Root cause: `ManifestWriter.add()` (the legacy ingest seam,
-          `unified_trading_library/manifest_writer/_writer_ingest.py`) never received the BLK-f3950c25 (2026-07-27)
-          treatment the `record_captured`/`record_empty`/`record_failed` methods got — it built `AvailabilityRecord(...,
-          instrument_type=instrument_type, ...)` with the raw token, no call to `canonicalize_manifest_instrument_type`.
-          The live caller: market-tick-data-service's `engine/orchestrator/manifest_finalize.py::_write_shard_counts_to_manifest`
-          (the per-shard-count tradfi/cefi capture seam, DISTINCT from `venue_fetch.py::_record_venue_shard_counts` which
-          this doc's earlier investigation already ruled out) calls `venue_writer.add(..., instrument_type=itype_key, ...)`
-          with the raw hive-partition token for every non-bundle shard. Fixed AT THE SHARED SEAM (not the call site) so
-          every current + future `.add()` caller inherits it for free, mirroring the original BLK-f3950c25 fix's own
-          rationale: `.add()` now canonicalizes via the same `canonicalize_manifest_instrument_type(resolved_asset_group,
-          instrument_type)` call, `resolved_asset_group` already computed in-function (provided kwarg or venue self-heal —
-          the real call site never passes `asset_group=` explicitly, relying on self-heal from the tradfi venue, same as
-          `record_captured`/etc. already do). Also fixed a second-order regression this exposed: `rebuild_manifest_from_
-          canonical_paths`'s drift comparison (`_candle_shard_key_of` / `_walk_canonical_candle_shards` in
-          `_maintenance.py`) compared the now-canonicalized manifest column against the permanently-lowercase raw GCS path
-          token verbatim (previously coincidentally agreeing only because `.add()` never canonicalized) — both sides now
-          re-canonicalize via a new shared `_canonical_itype_for_shard_key` helper (asset_group self-heals from venue) so a
-          rebuild no longer resurrects the exact lowercase-residual defect class this fix just closed, and no longer
-          spuriously drifts against its own already-canonical manifest rows. Split 3 shard-key helper functions into a new
-          `_maintenance_shard_key.py` module to stay under the 900-line file-size ratchet after the fix's line growth.
-          4 new/extended unit tests added to `test_manifest_instrument_type_casing_canon.py` (`.add()` uppercases tradfi,
-          `.add()` self-heals asset_group from venue, `.add()` leaves bundle-grain lowercase, `.add()` no-ops for non-
-          tradfi/cefi). Full `quality-gates.sh` green (7078 passed). Evidence: `unified-trading-library@b0e1d06b3e`.
-          **Note for the sibling NARROWED re-stamp todo above**: this fix stops NEW lowercase rows from this bypass, but
-          the 42,084 rows already written 2026-08-05..2026-08-15 by this SAME bypass are still lowercase on disk — the
-          re-stamp todo (which explicitly gates on this one landing first) still needs to run against them.
+              `unified_trading_library/manifest_writer/_writer_ingest.py`) never received the BLK-f3950c25 (2026-07-27)
+              treatment the `record_captured`/`record_empty`/`record_failed` methods got — it built `AvailabilityRecord(...,
+              instrument_type=instrument_type, ...)` with the raw token, no call to `canonicalize_manifest_instrument_type`.
+              The live caller: market-tick-data-service's `engine/orchestrator/manifest_finalize.py::_write_shard_counts_to_manifest`
+              (the per-shard-count tradfi/cefi capture seam, DISTINCT from `venue_fetch.py::_record_venue_shard_counts` which
+              this doc's earlier investigation already ruled out) calls `venue_writer.add(..., instrument_type=itype_key, ...)`
+              with the raw hive-partition token for every non-bundle shard. Fixed AT THE SHARED SEAM (not the call site) so
+              every current + future `.add()` caller inherits it for free, mirroring the original BLK-f3950c25 fix's own
+              rationale: `.add()` now canonicalizes via the same `canonicalize_manifest_instrument_type(resolved_asset_group,
+              instrument_type)` call, `resolved_asset_group` already computed in-function (provided kwarg or venue self-heal —
+              the real call site never passes `asset_group=` explicitly, relying on self-heal from the tradfi venue, same as
+              `record_captured`/etc. already do). Also fixed a second-order regression this exposed: `rebuild_manifest_from_
+              canonical_paths`'s drift comparison (`_candle_shard_key_of` / `_walk_canonical_candle_shards` in
+              `_maintenance.py`) compared the now-canonicalized manifest column against the permanently-lowercase raw GCS path
+              token verbatim (previously coincidentally agreeing only because `.add()` never canonicalized) — both sides now
+              re-canonicalize via a new shared `_canonical_itype_for_shard_key` helper (asset_group self-heals from venue) so a
+              rebuild no longer resurrects the exact lowercase-residual defect class this fix just closed, and no longer
+              spuriously drifts against its own already-canonical manifest rows. Split 3 shard-key helper functions into a new
+              `_maintenance_shard_key.py` module to stay under the 900-line file-size ratchet after the fix's line growth.
+              4 new/extended unit tests added to `test_manifest_instrument_type_casing_canon.py` (`.add()` uppercases tradfi,
+              `.add()` self-heals asset_group from venue, `.add()` leaves bundle-grain lowercase, `.add()` no-ops for non-
+              tradfi/cefi). Full `quality-gates.sh` green (7078 passed). Evidence: `unified-trading-library@b0e1d06b3e`.
+              **Note for the sibling NARROWED re-stamp todo above**: this fix stops NEW lowercase rows from this bypass, but
+              the 42,084 rows already written 2026-08-05..2026-08-15 by this SAME bypass are still lowercase on disk — the
+              re-stamp todo (which explicitly gates on this one landing first) still needs to run against them.
 
-- [ ] [DATA] P1. **NEW 2026-08-15.** Sync UAC's `CHAIN_BUNDLE_ACCEPTED_NONCANONICAL_INSTRUMENT_TYPES`
+- [x] ✅ [DATA] P1. **NEW 2026-08-15, DONE 2026-08-15 (slot-3, data_engineering).** Sync UAC's
+      `CHAIN_BUNDLE_ACCEPTED_NONCANONICAL_INSTRUMENT_TYPES`
       (`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`) to add `combo` and
       `continuous_future` alongside the existing `options_chain`/`futures_chain` — syncing this stale (2026-07-22)
       registry to the evidence-based UTL ruling (`unified-trading-library@74fe04fd98`, 2026-08-10) that made both
@@ -239,7 +240,9 @@ AO-eligible follow-up:
       instead (the exact registry-scope judgment the 2026-08-15 CME/mbp_10 verify todo in
       `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md` flagged as its own precedent class) — this is a genuine
       cross-repo SSOT-contradiction fix, not a mechanical rename; verify against `_distinct_values.py`'s actual
-      `_ACCEPTED_EXCEPTIONS` consumption before shipping. (repo: unified-api-contracts)
+      `_ACCEPTED_EXCEPTIONS` consumption before shipping. (repo: unified-api-contracts) —
+      `unified-api-contracts@1a27415e50`, `deployment-api@c76302bdb4` (both verified on origin/live-defi-rollout). See
+      Progress Log for the cross-check result and an adjacent unrelated QG-blocking finding fixed in the same pass.
 - [ ] [DATA] P3. Separately investigate why the honest-coverage nightly rollup's `by_venue_instrument_type` enumeration
       (consumed by `/distinct-values/tradfi`) does NOT surface these lowercase spellings at all, even though they are
       present in the live availability_index the rollup is supposed to summarize — a detector gap that let this 381K-row
@@ -247,6 +250,33 @@ AO-eligible follow-up:
       `measure_honest_coverage.py` derives `by_venue_instrument_type`)
 
 ## Progress Log
+
+- **2026-08-15 (slot-3, data_engineering, "Sync UAC's CHAIN_BUNDLE_ACCEPTED_NONCANONICAL_INSTRUMENT_TYPES" todo,
+  DONE)**: `unified-api-contracts@1a27415e50` + `deployment-api@c76302bdb4` (both verified on origin/live-defi-rollout).
+  **Cross-check result** (todo's own instruction): read UTL's
+  `_manifest_instrument_type_canon.py::_BUNDLE_GRAIN_EXCLUDED` directly rather than trusting this doc's 2-item
+  description — it actually declares FIVE permanent bundle-grain tokens (`combo`, `combo_chain`, `continuous_future`,
+  `futures_chain`, `options_chain`), not the two named in the todo prose. Synced the full set (added
+  `combo`/`combo_chain`/`continuous_future`) rather than partially syncing to the two named values, since `combo_chain`
+  is part of the same authoritative permanent-exclusion ruling and leaving it out would recreate the exact
+  stale-registry gap this todo exists to close. Confirmed `CHAIN_BUNDLE_ACCEPTED_NONCANONICAL_ INSTRUMENT_TYPES` (not
+  `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE`) is the correct home — the RESIDUE set is for
+  genuinely-unresolved/quarantined values (root cause unconfirmed, e.g. `UD`), which does not describe
+  combo/combo_chain/continuous_future (their root cause is confirmed: deliberate bundle-grain architecture). Rewrote the
+  stale comment in both `market_data_categories.py` AND a second, previously-unnoticed duplicate of the same wrong claim
+  in `deployment-api/.../_distinct_values.py`'s own module docstring — updated both plus the 3 UAC unit tests + 1
+  deployment-api integration test that hard-asserted the old (`combo` excluded) behavior. **Adjacent finding fixed in
+  the same pass** (blocking, not part of this todo's scope): `unified-api-contracts`'s QG failed on an UNRELATED
+  pre-existing test, `test_strategy_defi_venues_have_reachable_execution_adaptor_no_new_ regressions` —
+  `tests/data/execution_service_venue_reachability_baseline.json` (a DIFFERENT ratchet ledger, generated earlier the
+  same day per `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`'s P0 dispatcher-wiring todo) still
+  listed `uniswap`/`uniswap_v2`/`uniswap_v3`/`uniswap_v4` as unreachable, but the test's own live measurement showed all
+  four now have a reachable execution-service connector — someone wired the dispatcher without shrinking the baseline in
+  the same change. Shrunk the baseline to `["morpho"]` (the only venue the live check still confirms unreachable) — did
+  not myself wire anything, just re-measured and synced the ledger per its own stated convention; left the `morpho` P0
+  todo in the sibling plan untouched (no collision). QG green on both repos (deployment-service host under heavy
+  multi-slot contention throughout this session — one of the two unified-api-contracts QG passes was needed because a
+  ruff-format pre-commit hook reformatted a file after the first green run, moving HEAD past the sentinel).
 
 - **2026-08-15 (slot-14, data_engineering, "Measure the written_at distribution..." todo, DONE)**: bounded live read
   (columns-projected, `run-bounded-analysis.sh`-wrapped) confirmed the exact 381,119-row population and found 100% of it
