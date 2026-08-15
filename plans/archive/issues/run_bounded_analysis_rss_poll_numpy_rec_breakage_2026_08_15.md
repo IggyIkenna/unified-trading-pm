@@ -98,12 +98,31 @@ enabled, not macOS).
 
 ## Open work (tracked todos)
 
-- [ ] [BACKEND] P3. Root-cause + fix `scripts/dev/run-bounded-analysis.sh`'s RSS-poll fallback
+- [x] ✅ [BACKEND] P3. Root-cause + fix `scripts/dev/run-bounded-analysis.sh`'s RSS-poll fallback
       (`_run_with_rss_poll_cap`) breaking `pandas.DataFrame.groupby()` with
       `ModuleNotFoundError: No module named 'numpy.rec'` on at least one real Linux host (confirmed reproducible: direct
       run works, wrapped run fails, identical venv/script). Add a regression test/repro script. (repo:
-      unified-trading-pm)
-- [ ] [DOCS] P3. Fix `run-bounded-analysis.sh`'s "systemd-run unavailable on this host (macOS / no user systemd
+      unified-trading-pm) — **2026-08-15, slot-17**: could NOT reproduce the exact `numpy.rec` failure synthetically
+      (tried a bare `groupby()` script and a `pyarrow.parquet`-then-`groupby()` script, both directly and wrapped, on
+      pandas 2.3.3/numpy 2.3.5 in this VM's venvs — both paths succeeded every time). A signal-disposition/pgrp/sid probe
+      (`os.getpgrp()`/`os.getsid()`/`signal.getsignal(SIGINT|SIGQUIT)`) also showed no difference between a direct run
+      and the `set -m`-backgrounded run in this tool-harness's own (already non-interactive) shell context — the
+      original repro happened in a genuinely interactive terminal pane, which this environment can't replicate, so the
+      exact mechanism remains unconfirmed. Given that, applied the most defensible structural fix backed by the issue's
+      own hypothesis rather than continuing an open-ended non-reproducible hunt: `_run_with_rss_poll_cap` now prefers
+      `setsid` (Linux/util-linux — gets the same PID==PGID process-group property via a syscall, no bash job-control
+      state) over `set -m` job-control backgrounding, since `set -m` mid-script is the ONE thing this fallback changes
+      relative to an unwrapped run (job-control notifications + pgrp/session reassociation semantics) and was the
+      prime suspect. `set -m` remains the fallback only when `setsid` is unavailable (macOS/BSD — matches the
+      2026-08-12 history in the script's own header comment). Added Test 5 to
+      `scripts/dev/test-run-bounded-analysis.sh` — a `pandas.DataFrame.groupby()` run through the RSS-poll fallback,
+      guarded to skip (not false-fail) when the ambient `python3` lacks pandas, exercisable against a real venv via
+      `TEST_PYTHON=/path/to/venv/python`; verified PASS against a pandas 2.3.3/numpy 2.3.5 venv on this host, plus all
+      4 pre-existing tests still pass. If this regresses again, the exact repro conditions (interactive terminal
+      pane, not a headless tool harness) are the next thing to control for.
+- [x] ✅ [DOCS] P3. Fix `run-bounded-analysis.sh`'s "systemd-run unavailable on this host (macOS / no user systemd
       instance)" message to distinguish "real Linux host, systemd --user not enabled" from "genuinely macOS, no systemd
       at all" — the current wording is misleading on Linux hosts hitting this fallback (confirmed live 2026-08-15 on a
-      real AWS Linux VM). (repo: unified-trading-pm)
+      real AWS Linux VM). (repo: unified-trading-pm) — **2026-08-15, slot-17**: message now branches on `uname -s`:
+      `"(macOS — no systemd at all)"` on Darwin, `"(no systemd --user instance enabled)"` everywhere else; verified live
+      on this Linux VM.
