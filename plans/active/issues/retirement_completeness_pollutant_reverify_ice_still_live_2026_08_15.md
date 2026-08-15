@@ -116,15 +116,73 @@ I'm filing rather than escalating past what the evidence supports.
 
 # Recommended decision / next steps
 
-- [ ] [DIAG] P1. Trace whether MTDS's live dispatch loop still emits an ICE `futures_chain`/`ohlcv_1m` fetch for any
+- [x] [DIAG] P1. Trace whether MTDS's live dispatch loop still emits an ICE `futures_chain`/`ohlcv_1m` fetch for any
       code path (scheduled backfill, on-demand cache warm, a resurrected exclude-list gap) — check today's actual
       `written_at` timestamps + object existence for the 661 `futures_chain` / 81 `ohlcv_1m` ICE manifest rows against
       the GCS objects they reference; if the objects were written today (not just re-stamped), this is live and needs
-      the source dispatch bug found and fixed. Repo: market-tick-data-service.
-- [ ] [OPERATOR] P2. If DIAG above confirms live re-fetch: run the pause-consolidator → snapshot → filter → resume
-      manifest-cleanup procedure this plan's DoD calls for, to purge the ICE-databento-non-DXY rows, the CBOE VIX-cash
-      17 stragglers, and the BARCHART 9,119 rows from the manifest (GCS delete/filter of a prod manifest — needs
-      delete-safety-protocol citation per CLAUDE.md, hence `[OPERATOR]`).
+      the source dispatch bug found and fixed. Repo: market-tick-data-service. **RESOLVED — root cause is (b), stale
+      re-registration, NOT a live re-fetch bug.** See "DIAG follow-up" in Progress Log below.
+- [ ] [OPERATOR] P2. Run the pause-consolidator → snapshot → filter → resume manifest-cleanup procedure this plan's DoD
+      calls for, to purge the ICE-databento-non-24h rows, the CBOE VIX-cash 17 stragglers, and the BARCHART 9,119 rows
+      from the manifest (GCS delete/filter of a prod manifest — needs delete-safety-protocol citation per CLAUDE.md,
+      hence `[OPERATOR]`). No live-billing urgency (DIAG above ruled out an active fetch loop), but the stale ICE
+      objects on GCS should also be deleted, not just re-purged from the manifest, or a future rebuild will re-resurrect
+      the same rows.
 - [ ] [CODE] P3. Audit the surfaces leg (catalogue API / `/data-status` / UI) for any residual
       ICE/CBOE-VIX-cash/BARCHART display — not checked this session.
 - [x] Cefi "equity-perp singles" — confirmed non-issue, no follow-up needed.
+
+## Progress Log
+
+### 2026-08-15 (slot-9) — DIAG follow-up: root cause confirmed as stale re-registration, not a live re-fetch bug
+
+**Code-path trace (static).** ICE is genuinely excluded from every live Databento dispatch surface in the current
+`market-tick-data-service` code:
+
+- `market_tick_data_service/adapters/umi_tick_provider.py::_DATABENTO_VENUES = frozenset({"CME", "NYSE", "NASDAQ", "CBOE", "ARCA", "BATS"})`
+  — **ICE is not a member.** `fetch_tick_data_for_venue` routes ICE to `_route_yahoo_tradfi` (ohlcv_24h DXY only; any
+  other data_type honest-empties per that function's own docstring) — it can never reach `_route_databento` by
+  venue-name match, regardless of what `data_types` were requested.
+- `unified_api_contracts/registry/market_data_categories.py::_VENUE_DATA_TYPE_CAPABILITIES_RAW["ICE"] = {"ohlcv_24h": "2019-01-02"}`
+  (single entry) — `get_expected_data_types_for_venue("ICE", for_batch=True)` can only ever return `["ohlcv_24h"]`. The
+  default (no explicit `--data-types`) dispatch path in `venue_fetch.py::_process_venue` never requests
+  `futures_chain`/`ohlcv_1m` for ICE.
+- (Stale, non-blocking: `unified_api_contracts/registry/venue_mapping.py::all_databento_venues` and
+  `market_tick_data_service/engine/orchestrator/venue_fetch.py::_VENUE_TO_DATA_SOURCE` both still list ICE as a
+  TradFi/databento venue — harmless today since `_DATABENTO_VENUES`/`VENUE_DATA_TYPE_CAPABILITIES` gate the actual
+  fetch, but worth narrowing in the P3 surfaces pass so `get_venues_for_asset_groups(["TRADFI"])` stops offering ICE as
+  a Databento venue at all.)
+
+**Live evidence (GCS object timestamps vs manifest `attempted_at`).** Ran a bounded, column-projected read of the tradfi
+tick-data manifest (`_index/availability_index.parquet`, filtered to venue=ICE + data_type in {futures_chain, ohlcv_1m}
+at the row-group level — not a whole-manifest load) and cross-checked the 6 freshest `captured` rows (by `attempted_at`)
+against their real backing GCS objects via `gcs_describe_object` (UTL, not `gsutil`):
+
+- All 6 freshest rows share `attempted_at`/`written_at` ≈ `2026-08-15T06:1x` (today), `pipeline_mode=batch_databento`,
+  `source=databento`, `service_name=market-tick-data-service`, `date=2026-01-31` (a historical trading day).
+- Their backing GCS objects
+  (`.../pipeline_mode=batch_databento/.../venue=ICE/instrument_type=futures_chain/ data_type=ohlcv_1m/underlying={BRENT,COCOA,COFFEE}/margin=linear/ticks.parquet`)
+  **exist and are real** — but their GCS `last_modified` is **2026-07-20** (~26 days before the manifest's
+  `attempted_at`), not today. No Databento API call happened today for these shards; only the manifest ROW was rewritten
+  today, pointing at a pre-existing object.
+
+**Root cause**: `market_tick_data_service/scripts/rebuild_tradfi_manifest.py` (a corpus-rescan/rebuild utility — "scans
+`gs://.../raw_tick_data/by_date/day=*/…` and emits one `ManifestWriter.add()` call per parquet found, tagged
+`capture_status=CAPTURED`") ran against the tradfi bucket recently (today or shortly before, judging by the
+`attempted_at` cluster) and re-discovered a set of ICE `futures_chain`/`ohlcv_1m` objects that were captured **before**
+the 2026-07-13 `expected_coverage.py` narrowing decision and were **never deleted from GCS** — the narrowing decision
+removed the forward-dispatch capability but did not clean up the historical objects it had already written. The rebuild
+script is venue-agnostic (it discovers whatever objects exist on disk, it doesn't consult
+`VENUE_DATA_TYPE_CAPABILITIES`/`EXPECTED_DATA_TYPES_BY_VENUE` to decide what's "supposed" to exist), so it faithfully
+re-registered these still-present-but-retired objects with a fresh `attempted_at` = the rebuild's own run time, which is
+exactly the "stale re-registration of pre-2026-06-25 already-captured GCS objects" hypothesis (b) from the original
+filing — confirmed, not (a).
+
+**Practical implication for the P2 `[OPERATOR]` cleanup**: purging the manifest ROWS alone is not sufficient — the
+underlying GCS objects also need deletion (per the delete-safety protocol), or the next `rebuild_tradfi_manifest.py` run
+will simply re-discover and re-stamp them again. Updated the P2 todo above accordingly. No live-billing risk: zero
+Databento API calls are being issued for ICE today under the current code.
+
+Diagnostic script used (not shipped — scratch, deleted after this session): `check_ice_manifest_objects.py`,
+column-projected row-group filter + `gcs_describe_object` cross-check, run via
+`scripts/dev/run-bounded-analysis.sh --mem-cap 4G` per the memory-bounding HARD RULE.
