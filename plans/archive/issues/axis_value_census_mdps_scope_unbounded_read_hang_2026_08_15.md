@@ -166,7 +166,7 @@ now-confirmed reader gap (point 2 above), not because `service_name` itself is a
       the duplicate to `main` on the next cycle. Worked around here by bundling a genuine typing improvement into the
       same commit to force a real diff; see
       `quickmerge_first_early_exit_missing_unpushed_commits_carveout_2026_08_15.md` for the fix-quickmerge.sh follow-up.
-- [ ] [BACKEND] P3. Separate, lower-priority follow-up (not blocking todo 2): the general reader gap confirmed in
+- [x] ✅ [BACKEND] P3. Separate, lower-priority follow-up (not blocking todo 2): the general reader gap confirmed in
       Findings above — `read_availability_index`'s pushdown `filters=` silently SKIPS (not backfill-safely excludes) a
       filter condition on any column absent from a given raw file — is real for genuinely legacy-optional columns (v6+
       `quote_asset`/`margin_type`/`combo_type`, v7 `fixture_id`/`job_id`, v8 `pipeline_mode`, v9
@@ -176,4 +176,12 @@ now-confirmed reader gap (point 2 above), not because `service_name` itself is a
       per-column default `_backfill`/`_backfill_slim` already use (e.g. `CaptureStatus.CAPTURED.value` for
       `capture_status`, `""` for most others) to a missing filter column before evaluating it, instead of `continue`-ing
       past it. Add a regression test with a synthetic legacy-schema parquet (missing one v6+ column) + a `filters=` on
-      that column, asserting rows are correctly excluded rather than passed through. (repo: unified-trading-library)
+      that column, asserting rows are correctly excluded rather than passed through. (repo: unified-trading-library) —
+      unified-trading-library@e218fa748e. Added `_LEGACY_OPTIONAL_FILTER_COLUMNS` (the 11 named v6+/v7/v8/v9 columns,
+      all default `""`) and applied it in BOTH legacy-schema fallback branches (`columns=None` path and the
+      `columns=`-narrowed path) — a missing filter column in this set now backfills to `""` before the filter is
+      evaluated instead of being skipped; hard-required base columns (date/venue/data_type/service_name) are
+      deliberately left as the existing no-op skip (never legitimately missing, so treating absence as content would be
+      wrong). 3 new regression tests: legacy-optional column missing on both the slim and full-schema paths correctly
+      excludes rows (was: silently passed through), plus one confirming the hard-required-column no-op path is
+      unchanged. Full local `quality-gates.sh` green (165s) on the committed SHA.
