@@ -280,6 +280,26 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Progress Log
 
+- **2026-08-15 (slot-30, data_engineering) — Prod full-history backfill: new launcher shipped, real OOM found+fixed,
+  real PROD VM launched, preempted once, relaunched — not yet complete (multi-hour job).** Scoped to the 5 landed EVM
+  pairs (AAVE_V3 rewards excluded — no handler; KAMINO-SOLANA excluded — see follow-up todo). No VM launcher existed for
+  `collect-oracle-prices` (the generic launcher hardcodes `--operation download`, a different CLI path than every prior
+  done-when proof used) — authored + smoke-tested `launch-mtds-oracle-prices-backfill-vm.sh` (39 real rows on a
+  `--test-run` single-day VM), shipped `deployment-service@823a36c41a`. The real full-range launch then OOM-killed
+  almost immediately (exit 137, RSS 1.17GB→14.78GB / CPU 371% in <30s on e2-standard-4, single-shot no-chunk dispatch) —
+  root cause not fully isolated (batch-date driver confirmed serial by default; no eager range-wide enumeration found on
+  a static handler read). Mitigated via a dedicated chunked `VM_TASK=oracle-prices-backfill` branch in
+  `setup-data-pipeline-vm.sh` (mirrors `cefi_coverage_chunk_loop.sh`, 60d/chunk, `[[VM_PROGRESS]]` resume checkpoints)
+  - `e2-highmem-4` default machine type, shipped `deployment-service@278328bf80`; re-smoke-tested clean (no OOM through
+    5+ real days). Launched the real PROD VM `mtds-oracle-prices-backfill` (2022-07-25→2026-08-15, 60d chunks, SPOT) —
+    verified STARTED + genuinely progressing (real per-day RPC captures written to
+    `market-data-tick-defi-prd-central-element-323112`, correct FLUID/MORPHO pre-genesis honest-absence). Session then
+    interrupted; on resume the VM was gone with no clean failure/shutdown log entry (SPOT preemption signature, not a
+    crash) after writing 540 real manifest entries on chunk 1 — relaunched the identical idempotent command. **Not yet
+    complete** — ~25 chunks is a multi-hour job; see the monitoring follow-up todo above for the next session/worker.
+    Files: `deployment-service/scripts/vm/launch-mtds-oracle-prices-backfill-vm.sh` (new), `setup-data-pipeline-vm.sh`,
+    `vm_prefix_registry.py`, `data_pipeline_monitors/launcher_registry.py`.
+
 - **2026-08-15 (DONE, slot-14, data_engineering) — VERIFY-then-reconcile todo (ROCKETPOOL-ETHEREUM/oracle_prices,
   SOLBLAZE-SOLANA/oracle_prices) COMPLETE, resolved roll-back for both.** `unified-api-contracts@d27d29f0c9`
   (`origin/live-defi-rollout`, QG green, post-push ancestry verified). Picked up from slot-12's in-progress checkpoint
@@ -889,13 +909,27 @@ just belongs on a different layer than instrument_type does, and conflating the 
       now-rolled-back ROCKETPOOL-ETHEREUM/oracle_prices pair as a real drift example) to a `monkeypatch`-injected
       synthetic violation, since no real drift pair remains to exercise the discrimination path. 6/6 tests pass, QG
       green. (repo: unified-api-contracts)
-- [ ] [DATA] P2. **Prod full-history backfill of the newly-wired pairs** (gated on the wire-capture todos above
-      landing). Once each pair's capture path is proven against the `-test-` bucket, run the prod full-history backfill
-      so the pairs show real `captured` rows in the live prod manifest (the original monolithic todo's ultimate
-      done-when). Safe- idempotent justification for the VM launch: DeFi backfills are SPOT + idempotent +
-      resumable-from-measured-progress (SSOT `/codex/05-infrastructure/spot-vms-for-backfill.md`) — re-running never
-      double-writes. Done-when: each newly- wired `(venue, data_type)` pair has real `captured` rows in the prod defi
-      availability index. (repo: market-tick-data-service)
+- [ ] [DATA] P2. **Prod full-history backfill — IN PROGRESS, launched 2026-08-15 (see Progress Log).** Scoped to the 5
+      landed EVM pairs (SPARK/COMPOUND_V3/MORPHO/RADIANT/FLUID) — AAVE_V3 rewards excluded (no handler yet);
+      ROCKETPOOL/SOLBLAZE resolved ROLL-BACK, never candidates; KAMINO-SOLANA excluded (architectural, see follow-up
+      below). VM `mtds-oracle-prices-backfill` (2022-07-25→2026-08-15, 60d chunks, e2-highmem-4, SPOT) was preempted
+      once already and relaunched (idempotent re-run, safe — `record_captured` is per-shard-idempotent); real prod rows
+      already confirmed written before the preemption. Done-when unchanged: each pair has real `captured` rows across
+      full history in the prod defi index — not yet verified complete, see the monitoring follow-up below. (repo:
+      market-tick-data-service, deployment-service)
+- [ ] [DATA] P2. **Verify `mtds-oracle-prices-backfill` reached a terminal state + confirm full-history prod coverage**
+      (follow-up). Check `gs://deployment-scripts-central-element-323112/vm-logs/mtds-oracle-prices-backfill/run.log`
+      for `loop complete`; if the VM is gone with no clean `DEPLOYMENT_FAILED`/shutdown entry, that's a SPOT preemption
+      — just relaunch the same command (idempotent, safe), the log stalling mid-run without ANY failure entry is the
+      preemption signature vs. a genuine crash (which self-deletes with the reason logged). Once complete, confirm real
+      prod `captured` rows per venue across full history (not just today). Two smaller findings from launch
+      investigation, not yet fixed: **(a) KAMINO-SOLANA/oracle_prices has no historical-backfill path** —
+      `solana_defi_handler.py::_kamino_oracle_with_date` hardcodes `target_date_str=today` (REST current-snapshot only),
+      so coverage can only accumulate forward one day at a time via the daily cron, never a backfill VM — needs an
+      operator design decision (accept forward-only-permanent vs. investigate a genuine historical read path). **(b)
+      FLUID/MORPHO pre-genesis dates issue noisy-but-harmless real RPC calls** during the shared `collect-oracle-prices`
+      call instead of a clean skip (each branch's own earliest-date gate seems to only short-circuit when that venue is
+      targeted directly) — cosmetic, wasted RPC calls only, no data-correctness impact. (repo: market-tick-data-service)
 - [ ] [CODE] P3. **Add `if __name__ == "__main__":` guard to `market_tick_data_service/cli/main.py`** — found 2026-08-12
       while running the COMPOUND_V3 done-when: `python -m market_tick_data_service.cli.main` imports the module
       (printing 2 config lines from UTL DomainValidationService) and exits 0 running nothing, because main.py has no
