@@ -330,6 +330,26 @@ in this read-only audit pass (time-bounded scope).
       time — must genuinely re-verify clean this run) before any delete. Do NOT run concurrently with an in-flight
       defi-bucket rebuild/consolidator-CAS rewrite. **Repo: unified-trading-library / market-tick-data-service** (UTL
       `gcs_delete_object`, never subprocess).
+- [ ] [DATA] P1. **NEW 2026-08-15 (slot-23) — root cause of the corpus-freshness gate, found while diagnosing the
+      sibling `[DIAG] P3` todo in `/plans/active/issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md`.**
+      The 2026-08-10/11 re-checks (slot-8/2/13/6/30) confirmed the SYMPTOM (0 current `perp_funding`/`perp_daily_ctx`
+      objects) five times running without diagnosing WHY. Root cause, confirmed via `gcloud compute instances list`:
+      (1) **the corpus-compute cron host was never actually launched** — no `cefi-perp-funding-daily-cron-*` instance
+      exists, running or terminated, despite its launcher (`deployment-service/scripts/vm/
+      launch-cefi-perp-funding-daily-cron-vm.sh`, `deployment-service@8eff211`, shipped 2026-08-06) being ready; (2)
+      **the raw-input forward-poll cron host is TERMINATED** — `cefi-fwd-daily-cron-20260809-110236` (launched
+      2026-08-09) is down, so even a running corpus-compute cron would honest-skip today (re-confirmed 2026-08-15: 0
+      raw `derivative_ticker` objects for all 6 `catalog_carry.py` venues × 2026-08-11..15, bounded `list_blobs`
+      probe). Fix: (a) `bash scripts/vm/launch-cefi-fwd-daily-cron-vm.sh` to relaunch the raw-capture host, verify it
+      fires + writes `derivative_ticker` within one cron interval; (b)
+      `bash scripts/vm/launch-cefi-perp-funding-daily-cron-vm.sh` to launch the corpus-compute host for the first
+      time, verify STARTED + a first successful fire (07:00 UTC) that either honest-skips (if raw is still catching
+      up) or writes `perp_funding`/`perp_daily_ctx`. Both launchers are singleton-locked + SCHEDULED_RECURRING —
+      idempotent, re-launch-safe (the delete-safety-gating rule's "stated safe-idempotent justification" carve-out
+      applies; no `[OPERATOR]` tag needed for the launch itself). Once both are confirmed running, re-run this doc's
+      own corpus-freshness probe (`list_blobs`, 6 venues × `perp_funding`/`perp_daily_ctx`, DeFi bucket) for a day
+      AFTER both crons have had a chance to fire — do not re-check same-day. **Repo: deployment-service** (VM launch
+      only, no code change).
 - [x] ✅ [DATA] P2 (c). **RESOLVED 2026-08-03 — investigated, no code/registry change needed; documented below.** The
       `gas_fees` venue==chain shape is NOT an open design question between the two options this todo originally posed —
       a THIRD option, already shipped, supersedes both. `gas_fee_handler.py`'s `venue=<chain-name>` reuse was fixed
@@ -485,6 +505,20 @@ doc for the full history).
   × 2026-08-08..11**. The P1 corpus-refresh todo above remains gated on its own forward-poll-cron dependency — unchanged
   since slot-6's check earlier the same day. Delete remains BLOCKED on gate (1); no code shipped, no delete executed.
   Task released `reason_code=GATED` — re-dispatch once the corpus-refresh P1 todo lands.
+
+- **slot-23 2026-08-15 (adjacent finding while working the sibling `[DIAG] P3` todo in
+  `defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md`, task
+  `defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02-002`)**: re-ran this doc's own corpus-freshness gate check
+  (bounded `list_blobs`, 6 `catalog_carry.py` venues × `perp_funding`/`perp_daily_ctx`, DeFi bucket, days
+  2026-08-11..15) — **still 0 objects, same result as slot-8/2/13/6/30's 2026-08-10/11 checks, unchanged 4-5 days
+  later.** Went one step further than those 5 prior re-checks and diagnosed WHY via
+  `gcloud compute instances list`: **no `cefi-perp-funding-daily-cron-*` instance exists at all** (the corpus-compute
+  cron shipped 2026-08-06 but was apparently never actually launched), and the separate raw-input forward-poll cron
+  host **`cefi-fwd-daily-cron-20260809-110236` is TERMINATED** (0 raw `derivative_ticker` objects confirmed for the
+  same 6-venue/5-day window — consistent with a dead capture cron, not just a quiet week). Filed a new `[DATA] P1`
+  todo above naming both launch actions concretely (both launchers are singleton-locked/SCHEDULED_RECURRING —
+  idempotent, safe to re-run). Not launched here — outside this task's own scope (a P3 diagnostic todo in a different
+  doc); flagging for whoever picks up the todo above next. No code changed.
 
 ## Session final report — 2026-08-04 (`/autonomous`, operator away ~8h from ~01:00)
 

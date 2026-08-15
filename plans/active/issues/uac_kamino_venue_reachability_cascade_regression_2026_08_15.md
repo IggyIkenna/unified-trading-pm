@@ -18,6 +18,8 @@ priority: P2
 source: "discovered while shipping cefi_satellite_ao_dispatch_batch19-0b70e8929bb9"
 resolved_by: ""
 locked_by: ""
+drift_direction: advance-code
+depends_on: []
 ---
 
 # uac_kamino_venue_reachability_cascade_regression_2026_08_15

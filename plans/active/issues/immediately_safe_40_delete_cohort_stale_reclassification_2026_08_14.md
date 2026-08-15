@@ -34,6 +34,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
+archive_exempt: true
 context_scope:
   [
     /plans/active/repo_scripts_governance_audit_2026_06_18.md,
@@ -183,13 +184,21 @@ has actually verified).
       discovery filed as its own follow-up todo below (dedupe-openapi-operation-ids.py's own Delete-when condition, now
       correctly evaluated against `lib/registry/openapi.json`, is actually met — out of THIS todo's bounded scope to act
       on unilaterally).
-- [ ] [CODE] P3. `dedupe-openapi-operation-ids.py`'s own
+- [x] ✅ [CODE] P3. `dedupe-openapi-operation-ids.py`'s own
       `Delete-when: after OpenAPI operation-id dedup verified + no duplicate ids in schema` condition was previously
       evaluated against the wrong file (the unrelated `context/api-contracts/...` reference copy, which has 7 dupes).
       Now that the genuine typegen input (`lib/registry/openapi.json`) is confirmed and already has 0 duplicate
       operationIds, re-evaluate whether this script is safe to delete — confirm there's no other regeneration path that
       still depends on it (e.g. a manual "refresh lib/registry/openapi.json from a fresh UAC pull, then dedupe" step
-      nobody has scripted yet) before `git rm`ing it. Repo: unified-trading-system-ui.
+      nobody has scripted yet) before `git rm`ing it. Repo: unified-trading-system-ui. — **KEEP, not delete** — found
+      the live regeneration path: `unified-trading-pm/scripts/openapi/generate-unified-openapi.sh`
+      (`Lifecycle: permanent`) invokes it unconditionally in its "Sync to UI repos" step, immediately after copying a
+      freshly-generated spec into `lib/registry/openapi.json` and immediately before `openapi-typescript` codegen —
+      the exact "refresh then dedupe" step the todo asked about. The script's own comment explains dupes recur
+      structurally (multiple FastAPI services share `/health`/`/readiness` operationIds); the current 0-dupe state is
+      a RESULT of this script running each regen, not evidence the guard is obsolete. Relabeled its own header from
+      `Lifecycle: oneoff` / stale `Delete-when` to `Lifecycle: permanent` / `Delete-when: NA` to match reality.
+      `unified-trading-system-ui@9f21cb5357`.
 
 ## Progress Log
 
@@ -215,3 +224,9 @@ has actually verified).
   confirmed all 29 remaining raw-h1 pages have non-standard shapes (dynamic content, icon headers, badge rows,
   `<header>` wrappers) the codemod's conservative regex correctly declines. No code change; issue-doc-only. One todo
   remains open (openapi typegen-input confirmation).
+- **2026-08-15 (slot 20 infra worker)**: Resolved the final `dedupe-openapi-operation-ids.py` todo — **KEEP, not
+  delete**. Found it's invoked from `unified-trading-pm/scripts/openapi/generate-unified-openapi.sh`'s
+  `Lifecycle: permanent` "Sync to UI repos" step on every OpenAPI regen (structural guard for services sharing
+  `/health`/`/readiness` operationIds, not a one-off migration). Relabeled the script's own stale
+  `Lifecycle: oneoff` header to `permanent` / `Delete-when: NA`. `unified-trading-system-ui@9f21cb5357`. All todos
+  in this issue doc are now resolved — ready to archive.
