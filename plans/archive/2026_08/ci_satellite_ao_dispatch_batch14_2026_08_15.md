@@ -8,7 +8,7 @@ summary: >-
   (checkbox reconciliation back into each source doc happens in the paired finalize plan). Conflict-checked against
   every existing active batch/finalize plan for this tranche (incl. batch13) via basename-citation cross-reference
   before drafting — no item here duplicates ground an existing dispatched Todos entry already claims.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]

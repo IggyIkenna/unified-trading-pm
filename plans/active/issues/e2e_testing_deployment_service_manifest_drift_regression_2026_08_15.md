@@ -23,7 +23,7 @@ tags: [cross-repo, ci-cd, quickmerge, dependency-alignment, tier-dag, e2e-testin
 related:
   [
     /plans/active/issues/self_hosted_runner_billing_migration_wave2_remaining_2026_08_15.md,
-    /plans/active/ci_satellite_ao_dispatch_batch14_2026_08_15.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch14_2026_08_15.md,
   ]
 created: "2026-08-15"
 author: slot-7

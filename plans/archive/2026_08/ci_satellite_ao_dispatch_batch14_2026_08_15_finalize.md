@@ -7,7 +7,7 @@ summary: >-
   checkbox (this was an extraction batch, so the source docs' own checkboxes are the ones that go stale), archives any
   source doc that reaches zero open todos as a result, and runs the standard 6-step archival ritual on the batch plan
   itself.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -56,19 +56,38 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P2. For every completed todo in `ci_satellite_ao_dispatch_batch14_2026_08_15.md`, reconcile the evidence
+- [x] ✅ [REVIEW] P2. For every completed todo in `ci_satellite_ao_dispatch_batch14_2026_08_15.md`, reconcile the evidence
       back into its cited `Source:` doc's own checkbox — find the matching item in the source doc and either flip it
       `[x]` with a citation to this batch's commit, or add a note pointing at the batch todo that superseded it. Do not
       trust the batch's own checkbox alone; re-verify each cited commit sha is real. Done when: every source doc touched
-      by this batch has its corresponding item's checkbox state reconciled.
-- [ ] [REVIEW] P2. For each source doc reconciled above, check whether it now has zero open todos. If so, run the
+      by this batch has its corresponding item's checkbox state reconciled. — **DONE 2026-08-15**: all 15 batch14 todos
+      were `[x]` on the batch's own page (verified, not trusted blind); re-checked each cited commit sha against origin
+      before reconciling. 10 source docs' own checkboxes flipped with citations (one item, "3 formally-retired codex
+      docs," was found already-superseded by pre-existing banners, not newly resolved — noted as such rather than
+      falsely claimed). `unified-trading-pm@e175fe684b`/`2e5c17aaae` (prior session) +
+      the checkbox-reconciliation commit this session.
+- [x] ✅ [REVIEW] P2. For each source doc reconciled above, check whether it now has zero open todos. If so, run the
       standard 6-step archival ritual on it (dated archive folder, exact-successor banner if applicable, corpus-wide
       referrer-path fixup) — do not leave a now-fully-done source doc live and un-archived. Done when: every source doc
-      left with zero open todos is archived, and `run_hygiene_sweep.sh` reports no orphan referrers to any of them.
-- [ ] [REVIEW] P2. Once `ci_satellite_ao_dispatch_batch14_2026_08_15.md` itself has zero open todos, run the standard
+      left with zero open todos is archived, and `run_hygiene_sweep.sh` reports no orphan referrers to any of them. —
+      **DONE 2026-08-15**: 6 of the 10 reconciled docs reached zero open todos
+      (`escalation_queue_sit_failure_no_pr_closed_resolution_2026_08_10.md`,
+      `tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md`,
+      `plan_alignment_npm_global_eacces_on_glue_runners_2026_08_10.md`,
+      `ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md`,
+      `release_tag_stall_utl_glue_runner_backlog_2026_08_14.md`,
+      `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`) — all `git mv`'d to
+      `plans/archive/2026_08/issues/`, `status: resolved` + `resolved_by` filled, 19 active-corpus referrers repointed
+      (codex + plan/issue docs; already-archived referrers left untouched as frozen historical state). The other 4
+      (`codex_freshness_ratchet...`, `na_corpus_ratchet...`, `plan_hygiene_ratchet_regressions...`,
+      `uac_value_only...`) still carry other, batch14-unrelated open todos and correctly stay active.
+      `unified-trading-pm@a6de8d0db4`.
+- [x] ✅ [REVIEW] P2. Once `ci_satellite_ao_dispatch_batch14_2026_08_15.md` itself has zero open todos, run the standard
       6-step archival ritual on it, then archive this finalize plan too. Done when: the batch plan and this finalize
       plan are both under `plans/archive/`, and `regenerate_active_plan_inventory.py` reports zero orphan referrers to
-      either.
+      either. — **DONE 2026-08-15**: batch14 confirmed 0 open todos, `status: complete`, `git mv`'d to
+      `plans/archive/2026_08/`; this finalize plan archived alongside it in the same commit (single-repo PM-direct
+      flip+archival — sanctioned per `commit-push-flip-rule.md`). 7 active-corpus referrers to batch14 repointed.
 
 ## Progress Log
 
