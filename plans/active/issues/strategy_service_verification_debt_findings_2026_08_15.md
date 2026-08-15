@@ -61,14 +61,22 @@ drift_direction: advance-code
 
 ## Findings → todos
 
-- [ ] [INFRA] P1. Add `deployment-service` to strategy-service's `.github/workflows/quality-gates-v2.yml` `dep_repos`
+- [x] ✅ [INFRA] P1. Add `deployment-service` to strategy-service's `.github/workflows/quality-gates-v2.yml` `dep_repos`
       list (currently `"unified-trading-library unified-api-contracts"`) so the clients.yaml coverage gate
       (`test_clients_yaml_coverage_gate.py`) stops unconditionally `pytest.skip`-ing in real CI. Today
       `_deployment_service_strategy_config_root()` in `clients_yaml_coverage.py` always resolves `None` in CI because
       the sibling checkout the reusable workflow clones never includes `deployment-service` — the test then skips
       regardless of how many archetypes are uncovered, so the gate's own hard-fail assertion logic (confirmed correct)
       never actually gets to run against real data. Repo: strategy-service. Done-when: a `quality-gates-v2` CI run's log
-      shows the clients.yaml coverage test actually EXECUTED (not skipped) — cite the run URL/ID and the log line.
+      shows the clients.yaml coverage test actually EXECUTED (not skipped) — cite the run URL/ID and the log line. —
+      strategy-service@610fa77d + unified-trading-pm (`extra-dep-repos.txt`: `strategy-service: deployment-service`,
+      re-rendered via `rollout-workflow-templates.sh`). Verified via `workflow_dispatch` run
+      https://github.com/IggyIkenna/strategy-service/actions/runs/31897443696 (SUCCESS): log shows
+      `Cloning deployment-service at live-defi-rollout HEAD` +
+      `Installing test-only sibling dep not in pyproject: ../deployment-service` +
+      ` + deployment-service==0.1.dev1+gaad3a3743`; final tally `6014 passed, 248 skipped` — the 11 distinct skip
+      reasons printed (summing to exactly 248) do NOT include `test_clients_yaml_coverage_gate.py` or its
+      `deployment-service not checked out` skip message, confirming the gate test ran for real (not skipped) and passed.
 
 - [ ] [BACKEND] P2. Add a missing-entry test case to `test_clients_yaml_coverage_gate.py` that constructs a
       clients.yaml-shaped input with one archetype's entry deliberately removed and asserts `uncovered_archetypes()`

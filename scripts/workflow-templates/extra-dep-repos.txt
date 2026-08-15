@@ -31,3 +31,15 @@
 # Unknown-cascade (base-service.sh:316-327) reds the `checks` slice with hundreds of reportAny
 # errors across every e2e-testing/scripts/*/smoke_matrix.py file (not a features-service code bug).
 features-service: e2e-testing execution-service strategy-service
+
+# strategy-service needs deployment-service cloned as a CI sibling
+# (strategy_service_verification_debt_findings_2026_08_15.md item 1):
+# `clients_yaml_coverage.py`'s `_deployment_service_strategy_config_root()` resolves
+# `Path(__file__).resolve().parents[5] / "deployment-service" / "configs" / "strategy"` by raw
+# filesystem path (not a package import), so the coverage gate test
+# (`test_clients_yaml_coverage_gate.py`) always sees the sibling missing in CI and
+# `pytest.skip`s unconditionally — the gate's own hard-fail assertion never actually runs against
+# real data. deployment-service's own path-deps (unified-trading-library, unified-api-contracts)
+# are already in strategy-service's pyproject-derived closure, so no further transitive entries
+# are needed here.
+strategy-service: deployment-service
