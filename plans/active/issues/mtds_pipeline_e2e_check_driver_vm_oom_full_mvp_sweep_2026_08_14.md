@@ -527,3 +527,27 @@ Two independent angles, not mutually exclusive:
   message), fresh-pull `market-tick-data-service`, re-run `quality-gates.sh` (sentinel is stale after any rebase —
   re-run, don't trust an old sentinel file), ship via `quickmerge --agent`, verify ancestor-of-origin, THEN flip this
   checkbox citing both SHAs.
+- **2026-08-15 (interactive session) — SCHEDULING DECISION: the recurring `cefi-mtds-smoke-tester.timer` dispatch that
+  drives this whole doc's sweep is RETIRED, not just debugged.** While investigating a live CeFi Tardis backfill VM
+  stalled behind an exhausted Tardis N=1 concurrency slot, traced the occupier to this exact chain: the systemd timer
+  (every 2h, odd hours) → `POST /api/plan-health/dispatch {"mode":"cefi_mtds_smoke"}` → AO AutoSpawn → a
+  `pipeline-e2e-check-mtds-*` driver VM (confirmed live: `pipeline-e2e-check-mtds-20260815-093348-fc5255`, running
+  continuously 3+ hours, its `mtds-backfill-cefi-pipelinecheck-*` sub-VM launches holding the shared Tardis slot the
+  whole time) — starving every other real Tardis-backed backfill in the fleet, not just this one. Operator ruling: this
+  smoke test walks the FULL MVP matrix (no `--asset_group` scope, per this doc's own "Why it matters" section) every 2
+  hours regardless of whether the prior run finished, which is disproportionate cost for a check whose value doesn't
+  need that cadence — the skill (`/data-pipeline-check-mtds`) remains fully valid as an occasional MANUAL check
+  (operator's own laptop, run when actually needed), just not as a standing 2-hourly automated dispatch. **Removed
+  live**: `systemctl --user disable --now cefi-mtds-smoke-tester.timer` + deleted both unit files from
+  `~/.config/systemd/user/` on the orchestrator VM (verified: `list-timers` shows none remain);
+  `agent-orchestrator/scripts/install-cefi-mtds-smoke-timer.sh` deleted from the repo (sole purpose was installing this
+  timer — no other caller). Updated `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` (9 timers now, not 10;
+  retirement note added there with the same evidence). **NOT deleted**: the `mode="cefi_mtds_smoke"` handler in
+  `plan_health.py`, the `agents/cefi_mtds_smoke_tester.md` role, or any of this doc's own code fixes (OOM/timeout/
+  Phase-0 bugs) — those remain correct, valuable work regardless of cadence; only the recurring trigger is gone.
+  **Effect on this doc's still-open items**: the [DATA] P2 "re-run to completion" todo and the DEFI [CODE] P1 OOM todo
+  above are UNCHANGED in validity (the underlying bugs are real and worth finishing) but are no longer time-pressured by
+  an automated job retrying every 2h against them — whoever picks them up next can do so at normal priority, not urgency
+  driven by a runaway scheduler. Full evidence + the VM-starvation investigation itself:
+  `/plans/active/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md`'s Progress
+  Log, same date.
