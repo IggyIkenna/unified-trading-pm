@@ -12,7 +12,7 @@ summary: >-
   (macOS / no user systemd instance)" — so it falls to `_run_with_rss_poll_cap`, which backgrounds the command via `set
   -m; "$@" &`). A bare interactive check (`.venv/bin/python -c "import pandas; ...; df.groupby(['a']).sum()"`) in the
   same venv, same session, succeeded immediately — ruling out a broken/corrupted numpy install.
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -24,7 +24,7 @@ created: 2026-08-15
 author: slot-29 (backend_engineer)
 source: ["mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep_2026_08_14.md, verifying the DEFI OOM fix"]
 assigned_vm: planning
-resolved_by:
+resolved_by: slot-17 (backend_engineer) 2026-08-15
 locked_by:
 locked_since:
 execution_scope: orchestrator-agent
@@ -38,6 +38,10 @@ last_updated: 2026-08-15
 parent_epic: agent_operating_framework_master
 priority: P3
 ---
+
+> **✅ RESOLVED 2026-08-15** — both todos shipped in `unified-trading-pm@<see commit>`: `_run_with_rss_poll_cap` now
+> prefers `setsid` over `set -m` job-control backgrounding (see Progress Log below for why exact repro wasn't achieved
+> synthetically), and the misleading systemd-unavailable message now distinguishes Linux from macOS.
 
 # run-bounded-analysis.sh's RSS-poll fallback breaks pandas groupby (numpy.rec ModuleNotFoundError)
 
