@@ -23,7 +23,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-24"
+last_updated: "2026-08-15" # (was: 2026-07-24 -- plan-reconcile 2026-08-15: bumped to match latest Progress Log entry, context-scout 2026-08-15)
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -92,10 +92,10 @@ plan is that other half.
           **1. The tempting shortcut, and why it is NOT the answer.** The natural move is to extend
           `_IDENTITY_CATALOGUE_ASSET_GROUPS` (`routes/data_status/_catalogue.py`) so prediction+sports also read
           `prod/catalog.parquet`, since cefi/defi/tradfi already do post-@62cc10f and the gap looks enormous — measured live:
-          | AG | explorer shows today | `prod/catalog.parquet` | missing | object |
-          | --- | --- | --- | --- | --- |
-          | sports | **1,786** non-blank ids | **27,250** | 25,464 (94%) | 0.6 MB |
-          | prediction | 12,921 non-blank ids (**and only 79 survive `_dedupe_latest`** — see finding 4) | **2,673,230** | ~2.66M (99.5%) | 184.5 MB |
+                                                              | AG | explorer shows today | `prod/catalog.parquet` | missing | object |
+                                                              | --- | --- | --- | --- | --- |
+                                                              | sports | **1,786** non-blank ids | **27,250** | 25,464 (94%) | 0.6 MB |
+                                                              | prediction | 12,921 non-blank ids (**and only 79 survive `_dedupe_latest`** — see finding 4) | **2,673,230** | ~2.66M (99.5%) | 184.5 MB |
           I prototyped exactly this for sports (0.6 MB, so no latency cost) and **reverted it**, because driving the shipped
           code against real GCS showed it trades correctness for correctness rather than winning:
           - the sports identity catalogue has **`venue=''`** on every row (sports keys on `league_id`, not venue) → the
@@ -154,3 +154,4 @@ prior design history verbatim from the parent plan's Progress Log.)_
 - **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, valid — same as 2026-07-30/2026-08-06; the sole todo
   remains self-described architecturally open-ended with the prediction /catalogue 79-row-collapse prerequisite still
   unresolved.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries), no change needed.

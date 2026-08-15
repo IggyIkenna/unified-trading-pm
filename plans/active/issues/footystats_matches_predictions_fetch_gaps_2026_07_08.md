@@ -241,7 +241,7 @@ code-fix task). A data_engineering slot with a full session budget should:
       `attempted_failed` 78→59, `phantom_captured_no_parquet_at_canonical_path` count now 0. Safe-by-construction (this
       mode can only flip phantom→captured, never the reverse). Probed the single `RuntimeError` row separately
       (date=2026-01-13, blank league_id — `--unphantom` only re-validates
-      `error_reason ==     'phantom_captured_no_parquet_at_canonical_path'`, so it wasn't touched by the above): listed
+      `error_reason == 'phantom_captured_no_parquet_at_canonical_path'`, so it wasn't touched by the above): listed
       `sports_reference/by_date/day=2026-01-13/entity=footystats_odds/` directly — 0 blobs, confirming this row is a
       genuine capture failure (no parquet anywhere for that day), correctly tagged `attempted_failed`, NOT a phantom —
       nothing to reconcile; it's eligible for the normal backfill retry cadence like any other real failure. No
@@ -433,11 +433,11 @@ code-fix task). A data_engineering slot with a full session budget should:
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
 - **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — sole open todo #4 remains genuinely
-  `BLOCKED-PREREQUISITES` on `footystats_matches_predictions_odds_pending_fetch_universe_expansion_2026_07_27.md`,
-  which is itself still `status: open` with one own open `[DIAG] P3` re-verify todo (not yet flipped) — confirms the
-  same dependency-gated verdict `ag_closeout_audit_sports_parked_2026_08_09.md` recorded for this doc today. Note for
-  the next pass: the sibling's blocking fix (image rebuild) shipped 2026-08-07 and its re-verify todo's own "done
-  when" (≥2 consecutive daily 01:30 UTC enumerator runs post-rebuild showing 0 new `pending_fetch`) looks close to
-  satisfied on elapsed calendar time alone (today is 2026-08-09, past both the 08-08 and 08-09 01:30 UTC windows) —
-  but that verification is the SIBLING doc's own todo to run and flip, not folded in here; not executed this pass
-  (out of this doc's own scope, and a live-manifest re-verify is real work, not a citation check).
+  `BLOCKED-PREREQUISITES` on `footystats_matches_predictions_odds_pending_fetch_universe_expansion_2026_07_27.md`, which
+  is itself still `status: open` with one own open `[DIAG] P3` re-verify todo (not yet flipped) — confirms the same
+  dependency-gated verdict `ag_closeout_audit_sports_parked_2026_08_09.md` recorded for this doc today. Note for the
+  next pass: the sibling's blocking fix (image rebuild) shipped 2026-08-07 and its re-verify todo's own "done when" (≥2
+  consecutive daily 01:30 UTC enumerator runs post-rebuild showing 0 new `pending_fetch`) looks close to satisfied on
+  elapsed calendar time alone (today is 2026-08-09, past both the 08-08 and 08-09 01:30 UTC windows) — but that
+  verification is the SIBLING doc's own todo to run and flip, not folded in here; not executed this pass (out of this
+  doc's own scope, and a live-manifest re-verify is real work, not a citation check).

@@ -104,6 +104,27 @@ when all three hold; PM uses its own dedicated `ldr-to-main-promote.yml`, same t
 Plus the trivial **mechanics** that are NOT "gates": content-differs (0-file diff → no-op), don't-promote-a-RED-repo
 (Tier-A `ci_status != FAILING`), the runaway-breaker, and the frozen per-SHA promote-PR head.
 
+### Checking whether YOUR change promoted — verify by CONTENT, never by SHA-ancestry
+
+**`git merge-base --is-ancestor <your-sha> origin/main` is the WRONG test and reports a false negative.** The LDR→main
+promote is a **reconciled projection**, not a merge: it rewrites history onto `main`, so your LDR commit SHA is
+generally NOT an ancestor of `main` even when your change has fully landed and deployed. The same reason makes
+`git rev-list --count origin/main..origin/live-defi-rollout` look alarming (measured 1553 on deployment-service,
+2026-08-15) while nothing is actually behind — that count includes `_backmerge` merge commits that exist only on the LDR
+side.
+
+Verify the thing you actually care about — that the CONTENT is on `main`:
+
+```bash
+git fetch -q origin main
+git cat-file -e origin/main:<path>                     # file exists on main
+git show origin/main:<path> | grep -c '<your symbol>'  # your change is IN it
+```
+
+This cost a full round of "still waiting on the `*/15` promote" on 2026-08-15 for five commits that had promoted hours
+earlier. **And landing on `main` still deploys nothing** — for a runtime claim, follow it with the deployed-image and
+execution-log check (§ deployment flow), not with the promote check alone.
+
 ### Retired / advisory-only — do NOT treat these as blocking
 
 These were the WS-L "complex pipeline" and are the exact gates that were BLOCKING promotion. They are removed or
@@ -198,6 +219,17 @@ steps below are required when flipping a repo off `ldr_main`:
 
 **Default-branch gotcha**: a `schedule:` trigger fires only from the DEFAULT branch (`main`) — landing the uncomment on
 LDR alone does NOT restart a cron; it takes effect only once promoted to `main`.
+
+**Circular-dependency gap — fixing a scheduled workflow's own YAML (found 2026-08-10,
+`ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`).** The default-branch gotcha above has a
+sharper edge when the code being fixed IS the scheduled workflow's own `run:` block: a fix lands on LDR but is invisible
+to every `schedule:`/`workflow_dispatch`-with-no-`ref`-triggered run until promoted to `main` — so if the fix's whole
+purpose is to unblock or repair the alerting/promotion pipeline itself, it stays inert for a full promote cycle: the fix
+is gated behind the very mechanism it exists to help unblock. This is not staging-specific — it applies to ANY scheduled
+or `workflow_dispatch` workflow, always, not just the staging re-entry triggers this section covers. To verify a fix on
+LDR content BEFORE it reaches `main`, dispatch it explicitly against the LDR ref:
+`gh workflow run <workflow>.yml --ref live-defi-rollout` — this is how the `ldr-docs-gate.yml` `set +e` fix (the
+incident that surfaced this gap) was confirmed correct ahead of promotion.
 
 **Verify re-entry by measurement, not by reading the diff.** The 2026-07-23 shutdown was itself confirmed stopped only
 by measuring fleet-wide run counts before/after the promote landed on `main` (a green diff on LDR was not sufficient —
@@ -418,7 +450,7 @@ they diverged.
     that is reachable but NOT an ancestor is treated the same as an unreachable one and falls through to the safe
     `origin/main..origin/live-defi-rollout` fallback range. Full incident + the fleet-wide scope audit confirming
     exactly 3 repos were affected:
-    `/plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`.
+    `/plans/archive/2026_08/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`.
 
 Every shippable unit goes through exactly two passes:
 

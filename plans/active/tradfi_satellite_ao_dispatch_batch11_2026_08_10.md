@@ -26,7 +26,7 @@ related:
     /plans/active/tradfi_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch11_2026_08_10_finalize.md,
     /plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md,
-    /plans/active/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_tradfi_parked_2026_08_10_r2.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
@@ -43,6 +43,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+archive_exempt: true # 0 open todos by design — gated behind tradfi_satellite_ao_dispatch_batch11_2026_08_10_finalize.md (depends_on + gate_on_depends: true), which still has open work; both archive together once the finalize closes.
 context_scope:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
@@ -89,7 +90,7 @@ different tranche by `parent_epic` (`## Flagged`, following the established batc
       todo above landing first (same underlying mechanism, CBOE-scoped). Repo: market-tick-data-service. Source:
       `issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` (checkbox line 229). ✅ In same `MTDS@3cec6a00` —
       `_canonical_underlying_to_raw_databento()` handles VIX→VX case.
-- [ ] [DATA] P1. **Converge existing GCS chain-bundle + manifest data onto the 2026-08-07-shipped
+- [x] ✅ [DATA] P1. **Converge existing GCS chain-bundle + manifest data onto the 2026-08-07-shipped
       `EXCHANGE_CODE_TO_NAME` registry values** — operator sign-off ALREADY RECORDED 2026-08-07 for full agent execution
       (measure → migrate → purge duplicates), "RECLASSIFY-READY" per the source doc's own 2026-08-08
       na-eligibility-audit note, un-extracted through batch8 and batch9 despite that recommendation. Two populations:
@@ -102,14 +103,20 @@ different tranche by `parent_epic` (`## Flagged`, following the established batc
       `launch-canonical-migration-vm.sh`, never interactively. Repos: market-tick-data-service, unified-api-contracts.
       Source: `issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` (checkbox line 252). Done when: dry-run
       counts cited for both populations, `--apply` completes with before/after evidence, `tradfi_roots.py` + its tests
-      converged, `quality-gates.sh` green in both repos.
+      converged, `quality-gates.sh` green in both repos. **DONE 2026-08-15 (/plan-reconcile)** — batch13
+      (`tradfi_satellite_ao_dispatch_batch13_2026_08_13.md:76-113`) already executed the identical work, DONE
+      2026-08-14: `unified-api-contracts@ebda13eb28` (tradfi_roots.py convergence),
+      `market-tick-data-service@b0e18fd33e` + `@129925df94` (migration script + CAS-race hardening). Sector-remap:
+      25,922/25,922 GCS objects renamed, 0 errors, manifest CAS verified. Micro-remap: 0 rows/objects (population was
+      genuinely empty, never captured under the old codes). `quality-gates.sh` green in both repos. See batch13 for full
+      evidence.
 - [x] [CODE] P2. **Fix `instruments-service/scripts/cleanup_legacy_twins.py::canonical_twin_path()`'s lookup-logic bug**
       — root-caused 2026-08-09: it cannot reconstruct the canonical GCS path for pre-hive legacy shapes (all 900 tradfi
       class-B candidates are pre-hive), which is why the legacy-twin-bucket-delete gate's Part-5 coverage proof measures
       0% (the manifest DOES cover these cells; the derivation logic is broken). Fix: reuse
       `migration_orphan_sweep.py::classify_object()`'s non-hive-tail venue/instrument_type derivation
       (`_backfill_parser()`), then build the canonical path via
-      `unified_api_contracts.canonical_path_templates     ("tradfi")` instead of a partial string-splice. Add regression
+      `unified_api_contracts.canonical_path_templates ("tradfi")` instead of a partial string-splice. Add regression
       tests for both pre-hive and already-hive-shaped cases. This is the hard prerequisite for
       `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s own gated delete (NOT itself extracted here — its
       precondition, a fresh 100%-coverage re-run, isn't met until this fix ships; see

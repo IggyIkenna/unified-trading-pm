@@ -461,8 +461,8 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - [`plans/archive/issues/phantom_captures_tradfi_2026_06_28.md`](/plans/archive/issues/phantom_captures_tradfi_2026_06_28.md)
     - **[CODE] P2.** Diagnose tradfi phantom root cause (ICE/FX 309 phantoms predate billing lockdown; blank data_type
       1,083 pre-v9 rows)
-  - [`plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`](/plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md)
-    — 0 open todos (closed/archived/record-only)
+  - [`plans/archive/2026_08/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`](/plans/archive/2026_08/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md)
+    (archived 2026-08-15) — 0 open todos (closed/archived/record-only)
   - [`plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md`](/plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md)
     (archived 2026-08-05, all 16 todos done)
     - **[OPERATOR] P0.** BLOCKED-OPERATOR-DECISION — coordinate a maintenance window for the prediction + tradfi

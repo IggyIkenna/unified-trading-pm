@@ -142,11 +142,11 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
       catching this citing checkbox up to reality, not a new decision.** The action this todo pointed at —
       `/plans/archive/2026_08/watchdog_kill_events_deployment_gaps_2026_08_05.md`'s `[INFRA] P2` item (systemd
       `Environment=RW_DEPLOYMENT_API_URL=.../RW_VM_NAME=...` +
-      `systemctl daemon-reload && systemctl restart     resource-watchdog`) — is confirmed `[x]` done there: "RULED
+      `systemctl daemon-reload && systemctl restart resource-watchdog`) — is confirmed `[x]` done there: "RULED
       2026-08-06 (operator): approved, AO-dispatchable to a session/worker with root on the planning VM... applied via
       SSM (slot-5, 2026-08-07): env vars added to live unit, live script updated from repo (08f6a9571),
       daemon-reload+restart applied. E2E verified: kill row `{"vm_name":"ip-172-31-5-118","killed":true}` confirmed in
-      deployment-api." That source doc is now `status:     archived`
+      deployment-api." That source doc is now `status: archived`
       (`plans/archive/2026_08/watchdog_kill_events_deployment_gaps_2026_08_05.md`). This doc's own todo explicitly said
       "do the work THERE, not twice" — the work landed there; nothing left to do here.
 - [ ] [DIAG] P2. Best-effort: root-cause today's specific 49.3G/16G-swap peak more precisely if feasible (aggregate
@@ -383,8 +383,8 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
   `assigned_vm: planning` — do the work there, not here); `[DIAG] P2` is explicitly non-gating best-effort; the fresh
   `[OPERATOR] P2` dmesg/root-access todo (added earlier this session) is still unresolved as its own text states. No
   reclassification.
-- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — re-verified the doc's
-  own citation: the kill-event dual-write todo IS already `[x]` done here (STALE-CHECKBOX FIX, round5), leaving 2
-  genuinely open items — `[DIAG] P2` (best-effort, non-gating, no bounded done-when) and `[OPERATOR] P2` (needs root
-  `dmesg`/`journalctl -k` access this identity does not have, or an operator to grant kernel-ring-buffer read access)
-  — both unresolved as of this pass, content otherwise unchanged since 2026-08-07.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — re-verified the doc's own
+  citation: the kill-event dual-write todo IS already `[x]` done here (STALE-CHECKBOX FIX, round5), leaving 2 genuinely
+  open items — `[DIAG] P2` (best-effort, non-gating, no bounded done-when) and `[OPERATOR] P2` (needs root
+  `dmesg`/`journalctl -k` access this identity does not have, or an operator to grant kernel-ring-buffer read access) —
+  both unresolved as of this pass, content otherwise unchanged since 2026-08-07.

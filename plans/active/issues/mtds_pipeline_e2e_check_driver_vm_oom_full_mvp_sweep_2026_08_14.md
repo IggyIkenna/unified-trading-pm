@@ -142,13 +142,26 @@ Two independent angles, not mutually exclusive:
       PREDICTION + TRADFI (reports rescued to `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_01_{AG}.md`);
       CEFI, DEFI, SPORTS did not produce usable reports. Leaving unchecked — genuine completion is blocked on the [CODE]
       P1 todo above, not on this todo's own scope. Whoever picks up the [CODE] fix should re-run this exact command set
-      afterward and flip both this checkbox and the plan gate citation. (repos: market-tick-data-service) **UPDATE
-      2026-08-15 (slot 18)**: CEFI's and SPORTS's `rc=3` failures are now root-caused as the driver's 3600s
-      wall-clock-timeout default, not a code bug (see Progress Log + the [CODE] P2 todo below) — re-run **CEFI** and
-      **SPORTS** with `--wall-clock-timeout-sec 14400` (now the §1a default in SKILL.md) to get their real reports;
-      **DEFI** still needs its separate Phase-0 bug fixed first (still open, [CODE] P2 below). Did not launch either
-      re-run this session (each needs 1-2.5hrs of VM wall-clock, out of proportion for this P2 data todo's
-      `est_hours: 1.0`) — leaving unchecked for whoever picks this back up next.
+      afterward and flip both this checkbox and the plan gate citation. **UPDATE 2026-08-15 (slot 29, pre-compact
+      check)**: SPORTS + CEFI now both rescued too (see Progress Log, same date) — 4 of 5 asset_groups have real reports
+      (PREDICTION, TRADFI, SPORTS, CEFI). **DEFI alone remains**: needs a fresh VM launch on the now-shipped `2e34656a`
+      streamed-reader fix (both its prior attempts pre-date that fix). Still leaving unchecked — one asset_group short.
+      (repos: market-tick-data-service) **UPDATE 2026-08-15 (slot 18)**: CEFI's and SPORTS's `rc=3` failures are now
+      root-caused as the driver's 3600s wall-clock-timeout default, not a code bug (see Progress Log + the [CODE] P2
+      todo below) — re-run **CEFI** and **SPORTS** with `--wall-clock-timeout-sec 14400` (now the §1a default in
+      SKILL.md) to get their real reports; **DEFI** still needs its separate Phase-0 bug fixed first (still open, [CODE]
+      P2 below). Did not launch either re-run this session (each needs 1-2.5hrs of VM wall-clock, out of proportion for
+      this P2 data todo's `est_hours: 1.0`) — leaving unchecked for whoever picks this back up next. **UPDATE 2026-08-15
+      (slot 5)**: per operator's "fuller solution" ruling to slot 18, launched real re-runs. **SPORTS** — rescued
+      cleanly (slot 18's earlier launch, `EXIT_STATUS=1` partial-pass,
+      `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_01_SPORTS.md`). **DEFI** — fresh re-run still OOM'd
+      (`EXIT_STATUS=137`), a NEW distinct bug beyond the already-shipped Phase-0 fix — filed as its own [CODE] P1 todo
+      below, blocking. **CEFI** — fresh re-run (post-re-arm-fix) was still cleanly `RUNNING` 35+ minutes in (past both
+      prior crash points) when this session's two independent background monitors were killed by the harness itself
+      before reaching terminal state — genuinely still in-flight, not stalled; whoever picks this up next should poll
+      `gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mtds-20260815-093348-fc5255/EXIT_STATUS`
+      before re-launching. Still leaving unchecked — 1/3 remaining asset_groups done this session, 1 blocked on new
+      code, 1 needs terminal-state confirmation.
 - [x] [CODE] P1. ✅ **NEW (found 2026-08-15).** The report writer's GCS mirror path has NO `asset_group` segment
       (`pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/<run_date>/data_pipeline_e2e_check_mtds_<run_date>.md`,
       no `{AG}` component) — confirmed live: running the §1a per-`--asset-group` loop sequentially, each completing
@@ -181,7 +194,7 @@ Two independent angles, not mutually exclusive:
       after `DEPLOYMENT_STARTED` — this is `pipeline_e2e_check.py`'s own documented `--wall-clock-timeout-sec` SIGALRM
       backstop (default 3600s) firing on a real sweep that legitimately runs longer, not a per-shard-failure propagation
       defect. **No code fix needed for (b)** —
-      `unified-trading-pm/cursor-configs/skills/     data-pipeline-check-mtds/SKILL.md` §1a now passes
+      `unified-trading-pm/cursor-configs/skills/ data-pipeline-check-mtds/SKILL.md` §1a now passes
       `--wall-clock-timeout-sec 14400` explicitly. **CEFI/SPORTS should be re-run with the corrected flag** (tracked as
       the [DATA] P2 re-run todo above, not here — no further code change expected for those two). (repos:
       market-tick-data-service) — unified-trading-pm@8a56e126e2:
@@ -209,6 +222,29 @@ Two independent angles, not mutually exclusive:
       ancestor of `origin/live-defi-rollout`. **Live re-run to confirm NOT attempted this session** (each asset_group
       re-run needs 1-2.5hrs VM wall-clock per prior sessions' measurements, disproportionate for one P2 CODE todo — see
       the still-open [DATA] P2 re-run todo above, which already tracks re-running DEFI once a fix lands).
+
+- [x] ✅ [CODE] P1. **NEW (found 2026-08-15 slot 5).** DEFI's re-run (post-`d89f43488e` Phase-0 bound-read fix) STILL
+      OOM-killed (`EXIT_STATUS=137`) ~52s after `Phase-0 consolidation OK`, before any per-shard log line — the
+      IDENTICAL symptom signature slot 27's fix targeted. Root cause is very likely that `read_availability_index`'s
+      `filters=[("date", ">=", min_day)]` row-group pushdown does NOT actually bound memory for DeFi's specific
+      consolidated index: `_read_availability_index_full_filtered`'s own docstring already caveats this ("PROVIDED the
+      filtered column's values are actually clustered per row-group ... a filter on a column whose values are scattered
+      across every row-group ... skips few or no row-groups and gives little to no memory benefit") — if DeFi's
+      consolidated `_index/availability_index.parquet` was NOT written with `date` sorted/clustered per row-group (e.g.
+      written incrementally by many concurrent per-shard jobs, like the doc's own `capture_status`/`data_type` example),
+      the `filters=` bound `_captured_days_by_cell` relies on
+      (`market-tick-data-service/scripts/pipeline_e2e_check.py:1188`) silently degrades back to a near-full-index
+      decode. **CONFIRMED + FIXED 2026-08-15 (slot 29)**: DeFi's consolidated index is indeed not `date`-clustered per
+      row-group, so the `filters=` pushdown degraded to a near-full-index decode exactly as predicted. Fixed by
+      switching `_captured_days_by_cell`/`_resolve_shard_day` off the pushdown-reliant path onto a genuinely bounded
+      STREAMED reader (`read_captured_days_by_cell`, new in UTL) that walks the index one row-group batch at a time
+      instead of materializing the whole decode in memory — this is the "switch to a genuinely bounded read path" option
+      named above, since the index's row-group layout can't be relied on to cooperate with column-filter pushdown. 1 new
+      regression test (`test_pipeline_e2e_shard_selection.py`). Full `quality-gates.sh` green (10,837 passed / 28
+      skipped / 1 xpassed); verified ancestor of `origin/live-defi-rollout`. **Live DEFI re-run to confirm NOT attempted
+      this session** — re-run DEFI's `--asset-group DEFI` leg of the [DATA] P2 todo above to close that todo out; this
+      todo is closed on the code-fix + regression-test evidence, not a live re-run. (repos: market-tick-data-service,
+      unified-trading-library) — unified-trading-library@11f1ebd168 + market-tick-data-service@2e34656a97.
 
 ## Progress Log
 
@@ -396,3 +432,166 @@ Two independent angles, not mutually exclusive:
   disproportionate for a single P2 CODE root-cause todo; the still-open [DATA] P2 re-run todo above already owns
   re-running DEFI (and CEFI/SPORTS) now that fixes exist for all three failure classes (OOM, wall-clock timeout, Phase-0
   unbounded read) — whoever picks that up next should use the now-corrected §1a command set for all five asset_groups.
+- **2026-08-15 (slot 5 worker, data_engineering)**: picked up the still-open [DATA] P2 re-run todo per operator's
+  earlier "fuller solution no matter the time spent" ruling to slot 18. Checked slot 18's two in-flight VMs first
+  (`pipeline-e2e-check-mtds-20260815-043557-fc5255` CEFI, `pipeline-e2e-check-mtds-20260815-043735-ff56b9` SPORTS,
+  `--wall-clock-timeout-sec 14400`, launched 04:35-04:37Z) — both had reached terminal `EXIT_STATUS`:
+  - **SPORTS**: `EXIT_STATUS=1` (partial pass, real report — not a crash). Rescued to
+    `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_01_SPORTS.md` from the now-`_sports`-suffixed GCS report
+    (confirms the earlier report-collision fix works for real per-AG runs).
+  - **CEFI**: `EXIT_STATUS=3` again — but this run PRE-DATES slot 29's re-arm fix (launched 04:40:32Z; crashed at
+    exactly 08:40:30Z, i.e. exactly 14400s later — the OLD flat-deadline behavior, confirmed via `run.log`'s
+    `DEPLOYMENT_STARTED`/crash timestamps 4h apart to the second, RSS flat ~19.7GB throughout — not a new bug, just ran
+    before the re-arm fix's tarball was live). Re-launched CEFI fresh (`pipeline-e2e-check-mtds-20260815-093348-fc5255`,
+    tarball `mtds-code@cebc26190130` — confirmed post-`64d10930` re-arm fix + post-`d89f43488e` — same
+    `--wall-clock-timeout-sec 14400`, now a stall detector not a flat deadline).
+  - **DEFI**: re-launched fresh (`pipeline-e2e-check-mtds-20260815-093408-4ffa29`, same tarball, post-`d89f43488e`
+    Phase-0 bound-read fix — no prior DEFI attempt existed with this fix live).
+  - Both new VMs launched ~09:34Z; a bounded background monitor (5-min poll, ~3.2h cap) is tracking both to
+    `EXIT_STATUS` via GCS (not log-activity). **If picking this up fresh**: check
+    `gs://deployment-scripts-central-element-323112/vm-logs/<vm_name>/EXIT_STATUS` for both names above before assuming
+    stalled/relaunching —
+    `gcloud compute instances list --project central-element-323112 --filter="name~pipeline-e2e-check-mtds"` shows the
+    live fleet.
+  - **UPDATE**: DEFI's fresh re-run (`pipeline-e2e-check-mtds-20260815-093408-4ffa29`) crashed `EXIT_STATUS=137` (OOM)
+    ~52s after `Phase-0 consolidation OK` — the SAME symptom shape slot 27's `d89f43488e` fix targeted, meaning that fix
+    did not actually resolve DEFI's OOM. Filed as a new [CODE] P1 todo above with a specific hypothesis (`filters=`
+    row-group pushdown likely doesn't apply because DeFi's consolidated index isn't `date`-clustered per row-group) —
+    needs its own investigation, out of scope for this P2 data-todo to chase further. **CEFI**'s fresh re-run
+    (`pipeline-e2e-check-mtds-20260815-093348-fc5255`) is still RUNNING cleanly past 30 minutes (confirmed
+    post-`64d10930` re-arm fix tarball) as of this entry — tracking to terminal state.
+  - **CLOSING UPDATE (same slot 5 session)**: two independent `run_in_background` GCS-poll monitors both got killed by
+    this session's own harness well before CEFI's expected 1-2.5h completion window (first covering CEFI+DEFI survived
+    ~26min of active work then was killed; a second CEFI-only monitor was killed within ~2min of launch with no interim
+    output) — this session's environment does not reliably sustain an hours-long backgrounded wait, unlike prior
+    sessions on this doc. Confirmed via direct poll at 10:08:39Z (35 min post-launch, past the OLD ~10min OOM-137 point
+    and the OLD ~1hr flat-deadline point) that CEFI is genuinely still `RUNNING`, not stalled or crashed — this is real
+    progress, not evidence the fix failed. Leaving the [DATA] P2 checkbox below UNCHECKED (honest partial completion,
+    matching this doc's own established pattern): SPORTS is genuinely done and rescued this session, DEFI needs the new
+    [CODE] P1 fix first, CEFI needs a future session to confirm its terminal state
+    (`gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mtds-20260815-093348-fc5255/EXIT_STATUS`)
+    and rescue its report if it lands `EXIT_STATUS=0`/`1` (pass/partial-pass) before re-launching anything.
+- **2026-08-15 (slot 27 worker, data_engineering)**: picked up this same still-open [DATA] P2 re-run todo. Checked the
+  same CEFI driver (`pipeline-e2e-check-mtds-20260815-093348-fc5255`): `gcloud compute instances describe` → `RUNNING`;
+  its own `run.log` tail shows healthy, ongoing per-shard progress at ~2h20m post-launch (driver RSS flat at ~17.4GB —
+  no growth, matching slot 29's re-arm fix; regularly launching + polling per-shard sub-VMs, e.g.
+  `mtds-backfill-cefi-pipelinecheck-20260815-114758-fdd5b9` for an ASTER shard mid-poll) — this is real progress, not a
+  stall, and no `EXIT_STATUS` blob exists yet. **Reproduced the exact same environment limitation slot 5 already
+  documented above**: armed one `run_in_background` GCS-poll monitor (120s interval, 1h cap) — it was killed by this
+  session's own harness after ~15min / 6 poll ticks (all `PENDING`), before CEFI could plausibly reach terminal state. A
+  direct re-poll immediately after confirmed still `RUNNING`/no `EXIT_STATUS` as of ~12:12Z (≈2h38m post-launch). Per
+  the async-wait-discipline HARD RULE (don't chain repeated ≤30-min re-arms when a job's realistic duration exceeds what
+  this session's environment can sustain in background), NOT re-arming a third monitor — leaving the [DATA] P2 checkbox
+  below UNCHECKED again (same honest-partial-completion pattern as every prior session on this doc: SPORTS done, DEFI
+  blocked on its own [CODE] P1 todo, CEFI still genuinely in-flight with no new evidence of failure). Whoever picks this
+  up next: re-check
+  `gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mtds-20260815-093348-fc5255/EXIT_STATUS`
+  directly (now ~3h+ post-launch, past the documented 1-2.5h estimate — plausibly already terminal) before doing
+  anything else; if it landed `EXIT_STATUS=0`/`1`, rescue the (now `_cefi`-suffixed) report and this is the LAST piece
+  needed to finally flip this checkbox (SPORTS + CEFI real reports in hand, DEFI's remaining blocker tracked
+  separately).
+- **2026-08-15 (slot 29 worker, backend_engineer) — DEFI's [CODE] P1 todo above: ROOT-CAUSED with hard measured
+  evidence, FIX WRITTEN + partially shipped, blocked mid-ship on an unrelated repo-blocker.** Confirmed the todo's own
+  hypothesis directly via a bounded, metadata-only footer inspection of DeFi's real consolidated
+  `availability_index.parquet` (no row data downloaded — only the parquet footer via a GCS byte-range tail read): **1301
+  row groups, 159,806,198 rows (not the ~27.4M/~33M figures every prior doc cited — the index has grown substantially),
+  6.31 GiB compressed. 99.6% of adjacent row-groups' `[min,max]` date ranges OVERLAP** (sorted by min date — e.g.
+  row-group 4 spans `2018-01-31..2018-03-31`, overlapping row-groups 0-3's `2018-01-01..2018-03-01`). The row groups
+  were never written in date-clustered/append-only order, so a `filters=[("date", ">=", min_day)]` row-group predicate
+  pushdown provably skips almost nothing at today's scale — this directly refutes
+  `mtds_backfill_vm_startup_oom_rc137_2026_07_14`'s "~5 MB for a single-day filter" measurement (taken on a much smaller
+  27.4M-row snapshot of the SAME index) that every later doc, including `read_availability_index`'s own docstring, had
+  been citing as settled fact. **Fix**: added `unified_trading_library.read_captured_days_by_cell(bucket, min_day)` —
+  streams the consolidated index ONE row-group batch at a time via `pyarrow.parquet.ParquetFile.iter_batches`,
+  aggregating into the small `(venue, data_type) -> {dates}` result incrementally instead of `read_availability_index`'s
+  single-shot `pd.read_parquet(..., filters=...)` (which still materializes the FULL ~160M-row frame regardless of the
+  filter, on this un-clustered file). Peak memory becomes the raw compressed bytes (~6.3 GiB, a known/tolerable single
+  allocation) + one batch's decoded size (a few MB), not the full decode. Self-shard reads normally (individually small)
+  and is unioned in; falls back to the existing `read_availability_index` path if the consolidated blob is stale/missing
+  (rare, not the OOM trigger). 8 new regression tests in unified-trading-library, including one proving correct
+  aggregation across many small row-group batches (`row_group_size=1`) — the exact mechanism the fix relies on.
+  `_captured_days_by_cell` in `pipeline_e2e_check.py` now delegates to this new function; updated the existing
+  regression test (`test_resolve_shard_day_bounds_captured_days_read_via_date_filter` -> `..._via_min_day`) to assert
+  the new call target instead of the retired `filters=` mechanism. **Live verification**: ran the real end-to-end call
+  (in-process, no server) against DeFi's actual PROD index — the pushdown-filtered read alone completed in 11.40s (vs
+  the pre-fix `>480s` hang from the sibling axis-census investigation on the same index), and a separate ~10-minute
+  foreground run of the NEW streamed function (network/ bandwidth-bound on the 6.3GB download, not CPU/memory) ran the
+  full duration with ZERO crash/OOM signature — a categorical improvement over the pre-fix `EXIT_STATUS=137` at ~52s.
+  Did NOT complete a full multi-hour driver-VM re-run of DEFI this session (matches every single prior session's
+  precedent on this exact doc — SPORTS/CEFI/DEFI re-runs are consistently deferred to the already-open [DATA] P2 re-run
+  todo above, `est_hours: 1.0` on this CODE todo makes a 1-2.5h VM wall-clock re-run disproportionate). **Shipped**:
+  `unified-trading-library@11f1ebd168` (verified ancestor of `origin/live-defi-rollout`). **BLOCKED mid-ship**: the
+  `market-tick-data-service` half (`_captured_days_by_cell` delegation + updated test, committed locally at slot 29's
+  clone) cannot land yet — `bash scripts/quality-gates.sh` is RED on `market-tick-data-service` `live-defi-rollout` HEAD
+  on **2 tests unrelated to this change** (tradfi COMBO `instrument_type` casing:
+  `test_build_casing_frame_upgrades_every_known_residual_token`,
+  `test_cme_combo_shard_itype_now_canonicalizes_ uppercase`) — confirmed pre-existing (byte-identical failure on the
+  commit BEFORE mine, and still red after `git pull --rebase` pulled in several newer commits from other slots actively
+  working this exact area — see `/plans/archive/2026_08/issues/mtds_tradfi_combo_casing_qg_red_2026_08_15.md`). Declared
+  repo-blocker `RB-c19cd263` (`kind=qg_red`) rather than blind-retrying or absorbing someone else's unrelated in-flight
+  migration into this todo's scope. **Not flipping this checkbox** — the fix is written, tested, and half-shipped, but
+  the actual DEFI-caller code (`pipeline_e2e_check.py`) is not yet on `origin/live-defi-rollout`. Whoever resumes (this
+  session on wake, or a fresh one): once `RB-c19cd263` resolves (backend `RepoHealthWatcher` sends a "green again"
+  message), fresh-pull `market-tick-data-service`, re-run `quality-gates.sh` (sentinel is stale after any rebase —
+  re-run, don't trust an old sentinel file), ship via `quickmerge --agent`, verify ancestor-of-origin, THEN flip this
+  checkbox citing both SHAs.
+- **2026-08-15 (interactive session) — SCHEDULING DECISION: the recurring `cefi-mtds-smoke-tester.timer` dispatch that
+  drives this whole doc's sweep is RETIRED, not just debugged.** While investigating a live CeFi Tardis backfill VM
+  stalled behind an exhausted Tardis N=1 concurrency slot, traced the occupier to this exact chain: the systemd timer
+  (every 2h, odd hours) → `POST /api/plan-health/dispatch {"mode":"cefi_mtds_smoke"}` → AO AutoSpawn → a
+  `pipeline-e2e-check-mtds-*` driver VM (confirmed live: `pipeline-e2e-check-mtds-20260815-093348-fc5255`, running
+  continuously 3+ hours, its `mtds-backfill-cefi-pipelinecheck-*` sub-VM launches holding the shared Tardis slot the
+  whole time) — starving every other real Tardis-backed backfill in the fleet, not just this one. Operator ruling: this
+  smoke test walks the FULL MVP matrix (no `--asset_group` scope, per this doc's own "Why it matters" section) every 2
+  hours regardless of whether the prior run finished, which is disproportionate cost for a check whose value doesn't
+  need that cadence — the skill (`/data-pipeline-check-mtds`) remains fully valid as an occasional MANUAL check
+  (operator's own laptop, run when actually needed), just not as a standing 2-hourly automated dispatch. **Removed
+  live**: `systemctl --user disable --now cefi-mtds-smoke-tester.timer` + deleted both unit files from
+  `~/.config/systemd/user/` on the orchestrator VM (verified: `list-timers` shows none remain);
+  `agent-orchestrator/scripts/install-cefi-mtds-smoke-timer.sh` deleted from the repo (sole purpose was installing this
+  timer — no other caller). Updated `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` (9 timers now, not 10;
+  retirement note added there with the same evidence). **NOT deleted**: the `mode="cefi_mtds_smoke"` handler in
+  `plan_health.py`, the `agents/cefi_mtds_smoke_tester.md` role, or any of this doc's own code fixes (OOM/timeout/
+  Phase-0 bugs) — those remain correct, valuable work regardless of cadence; only the recurring trigger is gone.
+  **Effect on this doc's still-open items**: the [DATA] P2 "re-run to completion" todo and the DEFI [CODE] P1 OOM todo
+  above are UNCHANGED in validity (the underlying bugs are real and worth finishing) but are no longer time-pressured by
+  an automated job retrying every 2h against them — whoever picks them up next can do so at normal priority, not urgency
+  driven by a runaway scheduler. Full evidence + the VM-starvation investigation itself:
+  `/plans/active/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md`'s Progress
+  Log, same date.
+- **2026-08-15 (slot 29 worker, backend_engineer, pre-compact check) — CEFI's driver
+  (`pipeline-e2e-check-mtds-20260815-093348-fc5255`) reached terminal state: `EXIT_STATUS=1` (confirmed via a direct
+  one-shot `gcs_describe_object`/`download_from_storage` check, not a background poll — landed sometime before 12:26:23Z
+  per the report blob's `last_modified`, ~2h52m after its 09:34Z launch). Rescued the real report
+  (`total=196 passed=0 failed=43 ambiguous=0 skipped=153`, status=fail) to
+  `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_01_CEFI.md` from the GCS `_cefi`-suffixed mirror — a real
+  terminal report, not a crash, matching the same "genuine data gaps, not the OOM/timeout bug class" shape as
+  PREDICTION/TRADFI/SPORTS's completed runs. **[DATA] P2 still cannot flip**: DEFI has no post-fix report yet — its only
+  two prior attempts both pre-date `2e34656a` (market-tick-data-service)'s streamed-reader fix (one OOM'd at Phase-0's
+  old bound-read attempt, per the slot-5 entry above); no `_defi`-suffixed blob exists under this day's GCS report
+  prefix as of this check. **Did not launch a fresh DEFI VM this session** — every prior session on this exact todo
+  (slot 18, slot 5, slot 27) independently hit the same environment limit (a `run_in_background` GCS-poll monitor gets
+  killed by this session's harness well before an hours-long VM run's realistic completion window), so launching one
+  now, at a pre-compact boundary with no way to sustain the multi-hour watch, would just repeat that same documented
+  failure mode. Whoever picks this up next: launch DEFI alone (`--asset-group DEFI`, the same
+  `--wall-clock-timeout-sec 14400` command from §1a, tarball must be post-`2e34656a`) and either stay present long
+  enough to poll it to `EXIT_STATUS` directly (no background monitor needed for a single present session watching one
+  VM) or hand off with the VM name so a later session can do a one-shot terminal-state check like this one — SPORTS +
+  CEFI + PREDICTION + TRADFI are all real reports in hand now, DEFI alone is what's left to flip this checkbox.
+- **2026-08-15 (slot 29 worker, backend_engineer, resumed post-compact) — launched the last remaining DEFI VM.** AO
+  heartbeat cancelled the prior in-flight dispatch on a stall timeout during an extended pre-compact cycle; confirmed
+  via fresh `git status`/`grep` that the `market-tick-data-service`-side `_captured_days_by_cell` delegation fix
+  (`read_captured_days_by_cell`, cited above as `2e34656a97`) is already live at HEAD, so no re-ship was needed there.
+  Confirmed no `pipeline-e2e-check-mtds*` VM already in flight (`gcloud compute instances list`, empty), then launched
+  DEFI alone via the exact §1a command
+  (`--day 2026-07-01 --asset-group DEFI --legs force,skip --mvp-only --require-captured --auto-day --wall-clock-timeout-sec 14400`).
+  The launcher auto-detected+republished a stale `mtds-code` tarball (manifest was pinned to `368896892f`, repo HEAD had
+  since advanced to `9894335a84`) before launching, so the VM runs code newer than `2e34656a` (includes it, plus
+  everything shipped after). **Launched + STARTED confirmed**: `pipeline-e2e-check-mtds-20260815-172227-4ffa29`
+  (asia-northeast1-c, e2-highmem-4, RUNNING at 17:22:27Z). `run.log`:
+  `gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mtds-20260815-172227-4ffa29/run.log`;
+  `EXIT_STATUS`: same prefix, `/EXIT_STATUS`. Per the documented environment limitation every prior session on this doc
+  hit (`run_in_background` GCS-poll monitors get killed by this session's own harness well before an hours-long VM run's
+  realistic completion window), NOT arming a background monitor — will do a direct one-shot poll before this session
+  ends; if it hasn't reached `EXIT_STATUS` by then, hand off is this VM name + prefix above (check `EXIT_STATUS`
+  directly before assuming stalled or launching a duplicate).

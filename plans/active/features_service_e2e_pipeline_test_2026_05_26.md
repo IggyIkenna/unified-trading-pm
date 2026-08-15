@@ -189,12 +189,12 @@ resolves the minimum window each family/feature needs and backfills exactly that
 - [x] ✅ [SCRIPT] P0. **Lookback resolver.** For the feature_groups under test, resolve the required input window from
       the SSOT: per-group `lookback_candles` in each family's `feature_definitions.yaml` + the
       `(asset_group, data_type)` set from `unified_api_contracts ... FEATURE_REQUIRED_INPUTS`. Output:
-      `{family → {data_types, min_lookback_days, candle_interval}}`. Default floor = **1 day × 1m candles** when a
-      group declares no/short lookback; max over the group's lookback otherwise. (Note the known SSOT gap: `InputReq`
-      carries no `lookback_candles`, and onchain/ volatility/sports omit it in yaml — fall back to a documented
-      per-family default + log it; unifying lookback into the SSOT stays a `features_and_ml_master` Phase 1A follow-up,
-      cross-ref the migration plan.) — features-service@8084d93b `scripts/e2e/resolve_lookback.py` + `[5.E2E/7]` QG
-      smoke; dry-run passes
+      `{family → {data_types, min_lookback_days, candle_interval}}`. Default floor = **1 day × 1m candles** when a group
+      declares no/short lookback; max over the group's lookback otherwise. (Note the known SSOT gap: `InputReq` carries
+      no `lookback_candles`, and onchain/ volatility/sports omit it in yaml — fall back to a documented per-family
+      default + log it; unifying lookback into the SSOT stays a `features_and_ml_master` Phase 1A follow-up, cross-ref
+      the migration plan.) — features-service@8084d93b `scripts/e2e/resolve_lookback.py` + `[5.E2E/7]` QG smoke; dry-run
+      passes
 - [x] ✅ [SCRIPT] P0. **Backfill knob.** The backfill driver takes `--backfill-days N` (and per-family override) so the
       agent running a calc can bump the window up for features that need more history than the resolver's floor.
       Resolver output is the default; the flag overrides. No hardcoded global window. — features-service@8084d93b
@@ -815,3 +815,4 @@ Two bare `DEFERRED` mentions, re-audited 2026-07-21:
   genuinely open items remain (Phase B MDPS top-up; the yield-stub wiring half)" — Phase B MDPS top-up was itself
   flipped `[x]` 2026-08-10 (E2E verified, commit `eb096a69b7`). Only 1 genuinely open item remains (the yield-stub
   wiring half, line 751) so `status` stays `active`, not `resolved`.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (6 entries).

@@ -167,7 +167,7 @@ the data manifest, despite the filename).
 
 **Sources**: [ui_build_warm_cache_2026_06_17.md](/plans/archive/2026_08/ui_build_warm_cache_2026_06_17.md) (UI build
 warm-cache to keep QG builds incremental) ·
-[issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md](/plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md)
+[issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md](/plans/archive/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md)
 (pytest `DEPLOYMENT_ENV` test-pollution race, reproduces even serially) ·
 [capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md](/plans/active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
 (live P1 item: CI-runner-blocked `generate-unified-openapi.sh` regen needing `.venv-workspace` on a CI runner).

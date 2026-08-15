@@ -166,7 +166,7 @@ reading. All three name their replacement, so the machine already has everything
       Baseline ratcheted DOWN 6 → 3 by removing exactly the 3 retired entries (hand-edited removal — no
       `--baseline-write`, nothing added). Gate verified green under BOTH invocation styles (standalone
       `--workspace-root .` and quality-gates.sh's parent-root form):
-      `✅ At-or-below baseline (0 new; 3 known, 3 at     baseline)`. 26 unit tests pass, including the mute-button guard
+      `✅ At-or-below baseline (0 new; 3 known, 3 at baseline)`. 26 unit tests pass, including the mute-button guard
       (retired WITHOUT a successor stays stale), a `status: current` + stray `superseded_by` case,
       list/empty-list/blank-string successors, case-insensitivity, and a non-string `status` that must neither crash nor
       exempt. **Original proposal, for the record:** Proposal: skip `status: superseded|deprecated|archived`, but ONLY

@@ -124,6 +124,16 @@ pause; apply auto-fixable classes, park every genuine judgment call as `BLOCKED-
 finding, notify the operator. **ASK > PARK** the moment the operator is reachable — same HARD rule as the two sibling
 skills (parking is for a genuinely-gone operator, not a mode flag).
 
+### Reconcile prior dated audit output FIRST, and trust mode (added 2026-08-15, operator ruling)
+
+This skill's incremental Phase 0 (verdict markers written in-place, below) already does most of what `/plan-reconcile`
+Phase -1 does for a re-run of THIS skill's own audit — a doc with an unchanged, dated marker is skipped rather than
+re-audited. Two things still apply on top of that: (1) if a scheduled run produced a standalone dated summary/output doc
+rather than only in-place markers, reconcile that doc against fresh state before starting a new pass, same reasoning as
+`/plan-reconcile` Phase -1 (full treatment there, not repeated here); (2) **trust mode** applies — a RECLASSIFY/ARCHIVE
+call with a clear `[WORKER REC]` gets applied and logged (not parked) unless it's a codex-SSOT edit or a standing
+hard-stop, same carve-outs as `/plan-reconcile`'s "Trust mode" section.
+
 ## Phase 0 — inventory + incremental diff (cheap, no agents)
 
 Run `python3 scripts/plan-hygiene/generate_na_doc_tranche_inventory.py --tranche <tranche|all> --json` — reuse this

@@ -36,7 +36,12 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: "2026-08-14"
+context_scope:
+  [
+    /plans/archive/issues/pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+  ]
 ---
 
 > **🟢 ARCHIVED 2026-08-14** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's

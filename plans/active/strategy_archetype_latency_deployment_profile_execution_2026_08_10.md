@@ -23,7 +23,7 @@ scope: [engineer]
 tags: [strategy, execution, deployment-profile, archetype, runtime-topology, derived-infra]
 related:
   [
-    /plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md,
+    /plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md,
     unified-trading-pm/configs/runtime-topology.yaml,
     /codex/04-architecture/client-isolation-sla-and-runtime-profiles.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
@@ -98,7 +98,7 @@ source: >-
       `test_derivation_is_idempotent_and_order_independent` asserts `derive_required_deployment_profiles` is both
       order-independent (forward vs reversed input lists produce an equal result) and idempotent (repeated calls on
       unchanged input produce an equal result) — both properties this todo asks for.
-      `git log -- tests/unit/     test_deployment_profile_derivation.py` confirms these two tests were added in
+      `git log -- tests/unit/ test_deployment_profile_derivation.py` confirms these two tests were added in
       `deployment-service@13223da3` (todo 3, not new here). Ran the full `bash scripts/quality-gates.sh` on current HEAD
       (`52936f60`, fresh-pulled) to confirm genuinely green today, not relying on the historical landing:
       `✅ ALL QUALITY GATES PASSED (336s)`, sentinel `.qg_last_passed_sha=52936f608b68cbf114f62e2272e12289773c7c72`. No

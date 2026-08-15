@@ -106,7 +106,13 @@ heartbeat/backlog-drain loop.
 STEP 0 — read `unified-trading-pm/agents/RULES.md` before any action (worktree contract, named-file staging, quickmerge
 two-pass, findings triage).
 
-STEP 1 — `cd $PM_REPO_PATH`.
+STEP 1 — `cd $PM_REPO_PATH`, then bring the checkout current before any Phase 0 inventory reads it:
+
+```bash
+cd $PM_REPO_PATH
+git pull --ff-only origin live-defi-rollout \
+  || echo "WARN: PM not FF-clean — proceed from current state; flag any verdict that may be reading a stale PM tree"
+```
 
 **If `$TRANCHE` is set in your boot message**, run `/na-eligibility-audit $TRANCHE` (that ONE tranche only) exactly as
 documented in `cursor-configs/skills/na-eligibility-audit/SKILL.md`, in its **Autonomous/AO-dispatched** mode: Phase 0

@@ -183,7 +183,7 @@ pass (not a delta) per this dispatch's autonomous-mode instructions. batch6 itse
 
   Original todo text: Investigate why the tradfi legacy-twin bucket-delete dry-run measures 0% canonical-twin coverage
   instead of the expected near-100% — root-cause only, no delete/apply. The 2026-07-30 dry-run of
-  `instruments-service/scripts/cleanup_legacy_twins.py --asset-group tradfi --report-uri     _index/audit/orphan_sweep_tradfi.parquet --dry-run`
+  `instruments-service/scripts/cleanup_legacy_twins.py --asset-group tradfi --report-uri _index/audit/orphan_sweep_tradfi.parquet --dry-run`
   loaded 900 class-B legacy-twin candidate rows and found 0 deletable — every single row reported reason "canonical twin
   NOT captured in manifest," reconfirmed unchanged by na-eligibility-audit passes on 2026-07-31 and 2026-08-02. A
   genuine manifest-registration gap is the leading hypothesis (per the gating doc's own Progress Log) but has never been
@@ -338,9 +338,11 @@ whichever tranche actually owns the content, not tradfi reaching in — each is 
 - **`mdps_features_deadcode_consolidation_2026_07_20.md`** — 4 remaining items (2 broken/non-runnable VM launchers, 1
   unregistered zombie-watchdog blind spot, 1 dual-entrypoint cleanup) all gate on the SAME unresolved operator
   keep/delete/design-adjudication ask; `[cefi, defi, tradfi, sports, prediction]`.
-- **`ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md`** — both remaining items
-  (verify `ml_service`'s CLI surface vs. its launcher; determine launcher-consolidation overlap) explicitly fold into
-  `mdps_features_deadcode_consolidation_2026_07_20.md`'s own still-unresolved operator decision above.
+- **`ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md`** — **RESOLVED + ARCHIVED
+  (2026-08-15)**: both items landed independently (`deployment-service@082a5eda`, `deployment-service@03b10e46`, shipped
+  2026-08-09 via `cefi_satellite_ao_dispatch_batch15_2026_08_09.md`) rather than folding into
+  `mdps_features_deadcode_consolidation_2026_07_20.md`'s gate as this bullet previously stated — doc moved to
+  `/plans/archive/2026_08/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md`.
 - **`uac_data_type_validity_combinator_fragmentation_2026_07_07.md`** — operator decision needed on 9 DeFi (protocol,
   data_type) pairs (wire real capture vs. roll back aspirational genesis dates) + 2 unexecuted rollback candidates + an
   unscoped `deployment-api` retirement follow-up; `[cefi, defi, tradfi]`, `instruments_master` epic.

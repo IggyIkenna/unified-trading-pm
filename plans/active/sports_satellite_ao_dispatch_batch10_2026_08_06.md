@@ -115,7 +115,7 @@ set (82 docs) is recorded in this run's report, which was carried in the dispatc
       (slot-13, 2026-08-10). **Image**: `uts-prod-sports-scheduler:latest` currently resolves to digest
       `sha256:6f59ec20…`, tagged with commit `309f75e8` (`gcloud artifacts docker tags list` cross-referenced against
       `gcloud run jobs describe`) — newer than the `b4a8f1ba` fix commit the prior session confirmed;
-      `git show     309f75e8:configs/sports-trigger-tiers.yaml` re-confirms `odds_t12h`/`odds_t4h`/`odds_t2h` present.
+      `git show 309f75e8:configs/sports-trigger-tiers.yaml` re-confirms `odds_t12h`/`odds_t4h`/`odds_t2h` present.
       **Code correctness**: a synthetic unit test (6 fake fixtures, one per horizon, each at its exact `fire_at`
       instant) against the live `SportsTriggerScheduler.evaluate_pre_match_triggers` returns all 8 expected events
       (`odds_t24h`, `odds_t12h`, `odds_t6h`, `odds_t4h`, `odds_t2h`, `odds_t1h`, `features_pre_match`,
@@ -128,7 +128,7 @@ set (82 docs) is recorded in this run's report, which was carried in the dispatc
       path patterns shows the near-future fixture calendar is genuinely empty — 0 parquets for `day=2026-08-10` and
       `day=2026-08-11`, only 1 for `day=2026-08-12` — even though `uts-prod-instruments-service-sports-fixtures`
       completed successfully minutes before this check (01:25:55Z→01:27:13Z). The real-params
-      `get_upcoming_fixtures(horizon_hours=48,     lookback_hours=2.0)` call (exactly what `run_once()` uses) returns 0
+      `get_upcoming_fixtures(horizon_hours=48, lookback_hours=2.0)` call (exactly what `run_once()` uses) returns 0
       fixtures right now, matching the scheduler's own `"0 pre-match"` tick logs (61/70 sampled ticks over the last 24h
       fired 0 pre-match events — a normal sports- calendar lull, not a defect: leagues have off-days). The 3 new
       triggers only entered the deployed config ~4h ago (2026-08-09T21:23:17Z), so they've had far fewer real-world

@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, iam, ssm, aws, access-denied, infra]
 related: []
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-15"
 author: slot-5 (data_engineering)
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
@@ -165,3 +165,19 @@ on shared AWS infra, not something to self-grant.
   heavy fleet-wide activity from other slots (batch dispatches, issue resolutions, plan flips) but nothing targeting
   slot-2/data_engineering, confirming (again) there is no local substitute for the blocked live-dispatch read. No new
   information on the IAM gap itself; nine days unresolved as of this entry.
+- **2026-08-15 (slot-13, backend_engineer)**: NINTH independent confirmation, from a different session/task entirely
+  (original scope: `tradfi_bf_cme_ohlcv_asia_northeast1_c_preemption_thrash-73465ef50dc1`, already shipped + archived as
+  `market-tick-data-service@65dc99a5`). Tried both sanctioned paths in response to a "send a heartbeat, continue
+  in-flight task" ask with nothing left in scope: the raw `check-ao-backlog-status.sh` script directly, then the
+  `/check-agent-orchestrator` skill wrapper — both hit the identical `AccessDeniedException` on `ssm:SendCommand`
+  against `i-0c9b283b31d6b5ca7` for `ikenna-worker`. Confirms the gap is not skill-vs-raw-script specific, and remains
+  fleet-wide across at least two concurrently-affected slots (2 and 13) and two unrelated task lineages. No new
+  information on the IAM gap itself.
+- **2026-08-15 (slot-13, backend_engineer)**: TENTH independent confirmation, same session, re-run via
+  `/check-agent-orchestrator` in response to a bare "proceed now" ask with no in-flight task otherwise open (original
+  scope already shipped/archived as `market-tick-data-service@65dc99a5`). Identical `AccessDeniedException` on
+  `ssm:SendCommand` against `i-0c9b283b31d6b5ca7` for `ikenna-worker`. Notably, this attempt first hit the tool-batching
+  hard-rule guard (12th consecutive single-call-per-turn Bash invocation); a single retry per the guard's own stated
+  recovery instruction succeeded in reaching the real AWS error — confirms the guard's retry-once behavior is real and
+  does not mask or interfere with this underlying IAM gap. No new information on the IAM gap itself; ten days unresolved
+  as of this entry.

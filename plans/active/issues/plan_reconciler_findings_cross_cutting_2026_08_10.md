@@ -26,8 +26,15 @@ calibrated_ai_days: 0.1
 assigned_role: backend_engineer
 drift_direction: fix
 resolved_by:
-locked_by: plan_reconciler (agt-33a6ec) since 2026-08-10T00:20:00Z
+locked_by: # cleared 2026-08-15 (operator ruling: dead plan_reconciler lock since 2026-08-10, AO-confirmed dispatch id
+# agt-33a6ec reaped-stale, no live claim)
 depends_on: []
+context_scope:
+  [
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /plans/active/issues/deployment_api_prod_disable_auth_true_2026_08_06.md,
+    /plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md,
+  ]
 ---
 
 # plan_reconciler findings — cross-cutting tranche — 2026-08-10
@@ -76,13 +83,25 @@ itself, an actionable finding for this run).
    720 lines (already split via a prior commit). **Not yet fixed in the 3 citing docs** — routed, see Plans not reached,
    Item N (low priority, individually stale but harmless; a future pass can batch-fix).
 3. `is_catalogue_g1_root_audit_log_2026_07_24.md` self-contradicts on G1.run-full-history ownership (one line says
-   EXTRACTED elsewhere, another says still-owned-here) — **not yet resolved**, see Plans not reached.
+   EXTRACTED elsewhere, another says still-owned-here) — **RESOLVED**: the doc's own "Deferred work — migrated to:"
+   section now reads "G1.run-full-history ... **STALE, corrected by plan_reconciler 2026-08-10** — this line said 'still
+   owned + open in this plan' but the item's own entry above shows it was EXTRACTED 2026-08-09 to
+   `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`." Live-verified 2026-08-15: the explicit "STALE,
+   corrected" annotation is present in the current file. Not a contradiction anymore.
 4. `master_data_canonicalisation_migration_catalogue_2026_06_07.md`'s "Deferred work — migrated to:" section is
-   orphaned/stale (dead line-number refs, one successor citation points at an archived doc) — **not yet resolved**, see
-   Plans not reached.
+   orphaned/stale (dead line-number refs, one successor citation points at an archived doc) — **RESOLVED**: the section
+   is now explicitly headed "**Corrected by plan_reconciler 2026-08-10 — both entries below were stale.**" with both
+   entries re-derived against live corpus state (G1.run-prediction closed via `prediction_cqg_residual_2026_07_24.md`,
+   now archived; G1.run-full-history re-traced to its real current owner,
+   `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`). Live-verified 2026-08-15: the corrected section is
+   present in the current file. Not a contradiction anymore.
 5. `live_pipeline_persistence_hot_path_decoupling_2026_06_24.md` (`status: blocked`) — the blocking condition (a dead
    compactor job) is very likely resolved per a cross-repo grep, but needs a live `gcloud run jobs executions list`
-   re-verify before flipping — **not yet resolved**, see Plans not reached.
+   re-verify before flipping — **RESOLVED**: the doc now cites "Live 2026-08-13: compactor Cloud Run Job `Ready: True`;
+   **8 consecutive SUCCEEDED daily executions** (2026-08-07 → 2026-08-13...)" — the live re-verify this contradiction
+   asked for has since been done and recorded in the target doc. Live-verified 2026-08-15: the citation is present in
+   the current file (the doc's frontmatter `status` remains `blocked` pending its own separate determinism-re-test todo,
+   per its `archive_exempt` note — that's a distinct open item, not this contradiction).
 
 ## Codex corrections applied (mechanical, evidence-cited — STEP 5.f2 carve-out)
 
@@ -148,7 +167,11 @@ was a genuine near-miss, not something to bury.
 1. `bucket_iam_write_protection_per_tier_2026_06_09.md` — 100% done (last todo closed this run),
    `locked_by: live-defi-rollout` — needs `[unlock-plan]` before the standard archival ritual can run. Its gated
    finalize plan (`bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27.md`) can dispatch once the parent
-   flips `active`.
+   flips `active`. — **ARCHIVED 2026-08-15** (Item B's pass): the `locked_by: live-defi-rollout` placeholder had already
+   been cleared by a separate 2026-08-12 ruling (`locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`),
+   bridged via an `archive_exempt: true` BRIDGE note deferring the actual `git mv` to a follow-on pass — this was that
+   follow-on pass. Moved to `plans/archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md`,
+   `status: archived`, `archive_exempt` dropped, banner added, corpus referrers (11 files) repointed to the new path.
 
 ## Refuted (dropped by verify)
 
@@ -275,23 +298,39 @@ diagnosed but did not apply. Re-verified 2026-08-10 (same day) before conversion
       `[cross-cutting]`. All 3 of its own todos are bounded/worker-determinable — AO-eligible once retagged. — **DONE**,
       reconciled from `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: `unified-trading-pm` (this batch)
       retagged the target doc's `asset_group` to `[ui]` plus the sports cross-reference note on todo 2.
-- [ ] [DOC] P2. **Item B — reword `/codex/05-infrastructure/bucket-isolation-model.md` §8/§8.5** — god-SA-removal status
-      still says "Pending" though P2.1b shipped 2026-08-08; needs the whole §8 framing reworded plus the residual
-      `storage.admin` drift reflected (multi-part, not a single substitution).
+- [x] ✅ [DOC] P2. **Item B — reword `/codex/05-infrastructure/bucket-isolation-model.md` §8/§8.5** — god-SA-removal
+      status still says "Pending" though P2.1b shipped 2026-08-08; needs the whole §8 framing reworded plus the residual
+      `storage.admin` drift reflected (multi-part, not a single substitution). — **DONE 2026-08-15**: §8 header reworded
+      off "PARTIALLY ENFORCED/unconditioned" to "god-SA `objectAdmin` REMOVED 2026-08-08 — per-tier SAs are now the
+      write path"; §8.5 rewritten to state the removal shipped 2026-08-08 via `deployment-service@f514b6a0` (evidence:
+      `plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md:311` P2.1b `[x]` DONE), cross-linking
+      `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` for the still-separately-open residual
+      `storage.admin` drift. `unified-trading-pm@<pending local commit>`.
 - [ ] [DOC] P2. **Item C — rewrite `/codex/02-data/external-data-always-available-rule.md`** — prescribes a RETIRED
       ping-file mechanism plus a stale cross-link to an archived doc; needs a multi-part rewrite.
-- [ ] [OPERATOR] P2. **Item D — rewrite `plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md`'s
+- [x] ✅ [OPERATOR] P2. **Item D — rewrite `plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md`'s
       open `[OPERATOR]` re-install todo** (line 491) — its literal instructions now hard-fail (the script it names moved
       to `systemd --user`, refuses `sudo`), and its "not-live" premises are contradicted by dated evidence elsewhere in
       the corpus (including this run). Needs a careful rewrite of the existing todo's instructions, not a quick
-      substitution — tagged `[OPERATOR]` since the underlying re-install itself already requires operator access.
-- [ ] [OPERATOR] P3. **Item E — needs a call: does `carry_staked_basis_funding_scan_experiment_2026_06_16.md`'s Drift
+      substitution — tagged `[OPERATOR]` since the underlying re-install itself already requires operator access. —
+      **DONE**, reconciled 2026-08-15: the target doc now shows all 8 timer installers converted to `systemd --user`
+      (`agent-orchestrator@c3a85c3b4`) and its `[OPERATOR] P1` "RE-INSTALL ALL TIMER UNITS on the orchestrator VM" todo
+      is `[x]` DONE 2026-08-12 (operator, via SSM). 0 open `[OPERATOR]` todos remain in the target doc — the rewrite
+      this item asked for is moot, the underlying work already shipped.
+- [x] ✅ [OPERATOR] P3. **Item E — needs a call: does `carry_staked_basis_funding_scan_experiment_2026_06_16.md`'s Drift
       creds/RPC todo duplicate the sibling MTDS-production todo?** Annotated, not flipped, this run — genuinely unclear
-      from the text alone; needs someone with both docs' full context to rule.
-- [ ] [OPERATOR] P3. **Item F — needs a call: how should `plans/epics/manifest_master.md`'s live `[AGENT]`/`[OPERATOR]`
-      checkboxes (in the epic body itself) be made visible to the plan-corpus tooling?** All corpus-wide checkbox/todo
-      tools scan `plans/active/*.md` only, never `plans/epics/*.md` — this is a distinct orphan class. Moving the items
-      to a real plan doc is a structural decision, not a mechanical fix.
+      from the text alone; needs someone with both docs' full context to rule. — **RULED 2026-08-15 (operator): NOT a
+      duplicate, keep both open** — added an explicit dependency note at both todos (the STRATEGY creds/RPC todo
+      consumes the MTDS isolated-venv-reader todo's canonical `derivative_ticker` output, rather than merging them).
+      `unified-trading-pm@<pending local commit>`.
+- [x] ✅ [OPERATOR] P3. **Item F — needs a call: how should `plans/epics/manifest_master.md`'s live
+      `[AGENT]`/`[OPERATOR]` checkboxes (in the epic body itself) be made visible to the plan-corpus tooling?** All
+      corpus-wide checkbox/todo tools scan `plans/active/*.md` only, never `plans/epics/*.md` — this is a distinct
+      orphan class. Moving the items to a real plan doc is a structural decision, not a mechanical fix. — **RULED
+      2026-08-15 (operator): extract.** Created `/plans/active/manifest_v9_residual_2026_08_15.md` (`assigned_vm: NA`,
+      `parent_epic: manifest_master`), moved all 6 open checkboxes (former epic lines 224/265/268/274/277/280) into it
+      verbatim as proper `- [ ]` `[TAG] P<n>` todos, replaced each in the epic with a non-checkbox `MOVED` pointer line.
+      `unified-trading-pm@<pending local commit>`.
 - [x] ✅ [DOC] P2. **Item G — correct stale G3/G10 status in
       `plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md`** — text still says G3/G10 are "still
       genuinely open as of 2026-07-27," but verified 2026-08-10: both were rescoped into
@@ -306,10 +345,13 @@ diagnosed but did not apply. Re-verified 2026-08-10 (same day) before conversion
       live 2026-08-14, self-resolved (the cited version pairing no longer exists at any version;
       `run-version-alignment.sh` confirms "Alignment OK"); P9.2 in the target doc flipped `[x]` with the full re-verify
       citation.
-- [ ] [OPERATOR] P2. **Item I — unlock (`[unlock-plan]`) then archive
+- [x] ✅ [OPERATOR] P2. **Item I — unlock (`[unlock-plan]`) then archive
       `plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`** — verified 2026-08-10: 100%
       done (0 open / 20 closed checkboxes), `status: open`, `locked_by: live-defi-rollout` — a genuine
-      stuck-archive-candidate, not actioned this run (prioritized the already-verified `bucket_iam` case instead).
+      stuck-archive-candidate, not actioned this run (prioritized the already-verified `bucket_iam` case instead). —
+      **DONE**, reconciled 2026-08-15: target doc verified already unlocked (`locked_by:` empty), `status: resolved`,
+      and physically archived under `plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`
+      (0 open / 20 closed checkboxes confirmed).
 - [x] ✅ [SCRIPT] P2. **Item J — fix `check_na_corpus_ratchet.py`'s `--diff-base` fenced-code-block
       checkbox-overcounting bug** — verified 2026-08-10: `_CHECKBOX_RE` (line 79) is still a bare `^\s*[-*]\s*\[ \]`
       regex with no fence-awareness, so it double-counts checkbox-shaped text inside fenced code blocks. Open since
@@ -373,3 +415,21 @@ a missing checkbox, so no new todo is added here; a future hygiene pass should c
   `_count_open_checkboxes_fence_aware()` wired into `_na_open_todos_from_text()` in
   `scripts/plan-hygiene/check_na_corpus_ratchet.py`, closing the exact fence-blindness gap this item names; commit
   confirmed ancestor of `origin/live-defi-rollout`. Checkbox flipped above with citation.
+- **2026-08-15 (dead-lock clear + remaining-items closeout, operator ruling)**: this doc's `plan_reconciler`
+  (`agt-33a6ec`) lock had been dead since 2026-08-10 — cleared per the operator's standing ruling that the reconciler
+  now auto-clears a lock once AO confirms the dispatch id is reaped-stale. Same pass closed every item this doc had left
+  open: **Items D and I** were already resolved in their target docs (re-verified, cited, flipped — no new work).
+  **Contradictions #3/#4/#5** were already corrected in their target docs by an earlier pass (re-verified, cited).
+  **Item B**: reworded `/codex/05-infrastructure/bucket-isolation-model.md` §8/§8.5 off the stale "PARTIALLY
+  ENFORCED/Pending" framing to reflect the 2026-08-08 god-SA `objectAdmin` removal (`deployment-service@f514b6a0`),
+  cross-linked to the still-separately-open `storage.admin` drift issue. **Archive candidate**: archived
+  `bucket_iam_write_protection_per_tier_2026_06_09.md` to `plans/archive/2026_08/` (the BRIDGE note's own deferred
+  follow-on pass), repointed 11 corpus referrers with a literal path to the old location. **Item E**: operator ruled NOT
+  a duplicate — added an explicit dependency note at both `carry_staked_basis_funding_scan_experiment_2026_06_16.md`
+  todos (STRATEGY consumes MTDS's output) rather than merging. **Item F**: operator ruled extract — created
+  `/plans/active/manifest_v9_residual_2026_08_15.md` (`assigned_vm: NA`, `parent_epic: manifest_master`), moved all 6
+  live epic-body checkboxes out of `plans/epics/manifest_master.md` verbatim, left `MOVED` pointer lines in the epic.
+  Item C and Item M untouched per their existing ORDINARY-WORK/no-action rulings. Every open todo in this doc is now
+  closed; 0 remaining. This doc is itself now an archive candidate — deferred to a separate pass per this corpus's
+  convention of not self-archiving in the same turn that closes out the last item (mirrors the `bucket_iam` BRIDGE
+  precedent above).

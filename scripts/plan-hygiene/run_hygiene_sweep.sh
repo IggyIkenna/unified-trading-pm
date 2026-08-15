@@ -181,6 +181,15 @@ if [ "$CI_MODE" = "--precommit" ]; then
     bash "$SCRIPT_DIR/check_todo_regression.sh" --only "${STAGED_PLANS[@]}" \
       && echo "  ✅ Todo regression (staged plans)" \
       || { echo "  ❌ A staged plan lost todos (total open+done shrank) vs origin/live-defi-rollout — restore the missing line(s), a checkbox flip never shrinks the total"; PF=$(( PF + 1 )); }
+    # Stale base (2026-08-15): the check ABOVE counts todos, so it is blind to the
+    # case measured that day — a staged edit that ADDED two todos while silently
+    # dropping a peer's corrected prose blockquote. The count grew, so todo-regression
+    # passed clean. Divergence-from-origin catches what counting cannot: if the file
+    # changed upstream since your HEAD, your full-file edit cannot contain that change
+    # and staging it overwrites with no conflict signal.
+    bash "$SCRIPT_DIR/check_plan_stale_base.sh" --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Stale base (staged plans)" \
+      || { echo "  ❌ A staged plan was edited against a stale base — 'git pull --rebase --autostash', then verify BOTH your edit and the peer's survived"; PF=$(( PF + 1 )); }
     # Evidence-backed-completion, --only-scoped (2026-08-09): sub-rule B (a `- [x]` runtime-green
     # claim with no `Evidence: cloudbuild=<id>`) previously had NO precommit-time presence, only
     # the full corpus-wide baseline mode. Root-caused after a push to live-defi-rollout (sha
@@ -416,10 +425,26 @@ run_check "No prettier emphasis-mangling"    hard "$SCRIPT_DIR/check_prettier_ma
 # emphasis-mangling check above (non-idempotent reflow of a 2nd+ paragraph nested inside a list
 # item; each reformat pass ADDS leading-space padding instead of converging). Corpus already
 # carries real debt (found while root-causing 2026-08-03), so this is a shrinking ratchet like
-# check_archive_candidates.sh below — full-corpus only, not wired into --precommit (a staged-subset
-# count would trivially pass against the corpus-wide baseline). SSOT + repro:
-# plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md
-run_check "No prettier proseWrap continuation-padding (ratchet)" hard "$SCRIPT_DIR/check_prosewrap_padding.sh"
+# check_archive_candidates.sh below. Precommit protection is separate (the `--only` staged-file
+# mode wired into the STAGED_PLANS block above); this is the full-corpus baseline/audit leg. SSOT
+# + repro: plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md
+#
+# --diff-base wiring (2026-08-15): this checker gained a `--diff-base <ref>` mode on 2026-08-11
+# (same signature-set-comparison shape as reference-paths/archive-candidates/effort-ratchet/
+# na-corpus/ag-closeout below — see check_prosewrap_padding.sh's own header) but was never
+# actually passed the shared DIFF_BASE_REF here, unlike its 5 siblings — found live while
+# root-causing a 2026-08-15 promote-PR failure streak. Wiring it in only changes behavior on a
+# "normal PR into main" CI run (DIFF_BASE_REF stays empty on promote/* heads and the
+# live-defi-rollout dispatch by the same guard above, so promote-path behavior — and the
+# 2026-08-15 failure streak specifically — is UNCHANGED by this: that streak was live, correctly-
+# measured growing corpus debt at the time (2217->2324 violating lines against baseline 2011,
+# confirmed against actual origin/live-defi-rollout tip, not a stale local snapshot), not a
+# diff-scoping bug. See prosewrap_padding_corpus_wide_1290_space_2026_08_03.md's Progress Log.
+PROSEWRAP_DIFF_ARGS=()
+if [ -n "$DIFF_BASE_REF" ]; then
+  PROSEWRAP_DIFF_ARGS=(--diff-base "$DIFF_BASE_REF")
+fi
+run_check "No prettier proseWrap continuation-padding (ratchet)" hard "$SCRIPT_DIR/check_prosewrap_padding.sh" "${PROSEWRAP_DIFF_ARGS[@]}"
 # Broken relative links (plans/active/*.md -> a doc that moved to plans/archive/... without the
 # referrer's path being updated) — the same check the --precommit fast path runs on any staged
 # plans/ change, run here too so the operator's daily sweep catches drift from commits that landed

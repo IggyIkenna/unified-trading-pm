@@ -66,14 +66,10 @@ resolved_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md,
-    /plans/archive/2026_08/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md,
     /plans/active/issues/defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md,
-    /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
-    /codex/02-data/reconciliation-finding-taxonomy.md,
-    /codex/02-data/canonical-cutover-register.md,
-    /codex/02-data/non-canonical-path-inventory.md,
+    /plans/archive/2026_08/issues/defi_eigenlayer_spot_pair_unexplained_expected_cells_2026_08_14.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 ---
 
@@ -252,8 +248,9 @@ tracking doc with real checkboxes — not duplicated here.)_
       flagged 2026-08-07 ("not yet cross-checked... needs a quick check before assuming drift vs. legitimate"). Live
       re-check (2026-08-12 honest-coverage rollup) found CHAINLINK/PYTH spot_pair cells are LEGITIMATE
       (registry-declared); `defi-canonical-naming-ssot.md`'s locked row was stale, corrected in that batch's commit.
-      EIGENLAYER's spot_pair cells are unexplained — filed as
-      `plans/active/issues/defi_eigenlayer_spot_pair_unexplained_expected_cells_2026_08_14.md` for root-cause.
+      EIGENLAYER's spot_pair cells were unexplained — filed as
+      `/plans/archive/2026_08/issues/defi_eigenlayer_spot_pair_unexplained_expected_cells_2026_08_14.md`, now
+      root-caused (stale pre-taxonomy-fix expected-universe seed) and purged (instruments-service@552c576857).
 - [x] ✅ [BACKEND] P3. **DONE — instruments-service@1e82416a (reconciled via
       `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md`).** Fix the Distinct Values panel's
       `<blank>` `instrument_type` badge to exclude `empty_confirmed` rows.** Currently over-reports ~5.35M blank rows
@@ -629,6 +626,9 @@ tracking doc with real checkboxes — not duplicated here.)_
   - **`ASTER`/`GMX`/`HYPERLIQUID`/`EXTENDED`/`LIGHTER` venues + `HYPERLIQUID` chain + `AAVEV3` bare-alias historical
     rows** — status unchanged from earlier this epic: genuinely new/unresolved work (venue registration decisions,
     `[OPERATOR]`-gated historical purge respectively), not touched this pass.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) -- this doc's own 3 todos are now all `[x]` done, so
+  narrowed from 8 broad codex/issue pointers to the 2 genuinely still-open delegated threads (`dex_pools`/`dex_swaps`
+  residual migration, the new EIGENLAYER spot_pair root-cause) + the naming/delete-safety codex SSOTs.
   - **REVISED completion sequencing — SUPERSEDED 2026-08-10, moved to a dedicated plan.** `measure_honest_coverage.py`
     fix shipped (this entry). The rebuild VM OOM'd twice since (`-163511` then `-093118`), root-caused + fixed
     (`market-tick-data-service@483eb895`), and relaunched (`-101545`) — see

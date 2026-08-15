@@ -30,8 +30,15 @@ calibrated_ai_days: 0.1
 assigned_role: backend_engineer
 drift_direction: fix
 resolved_by:
-locked_by: plan_reconciler (agt-fb0ce4) since 2026-08-10T05:19:46Z
+locked_by:
 depends_on: []
+context_scope:
+  [
+    /plans/archive/2026_08/issues/plan_reconciler_findings_ci_2026_08_09.md,
+    /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # plan_reconciler findings — ci tranche — 2026-08-10
@@ -216,36 +223,43 @@ included in its own call):
 - [ ] [DOC] P1. **`pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md` is 1004L, OVER the 1000L hard
       cap** (confirmed via `check_line_caps.sh` directly — the periodic sweep misses this doc because it globs
       `plans/active/*.md` but not `plans/active/issues/*.md`, per hunter batch 2). Needs a split (`continued4`) or an
-      explicit ruling that the sweep gap is acceptable. Part of blocked-question Q1.
-- [ ] [DOC] P1. **`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` is 998L**, 2 lines of headroom,
+      explicit ruling that the sweep gap is acceptable. Part of blocked-question Q1. **CONFIRMED WORSE as of
+      2026-08-15**: now 1013L, split still not executed — needs the same extraction pattern as other over-cap docs.
+- [x] ✅ [DOC] P1. **`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` is 998L**, 2 lines of headroom,
       already breached its cap twice before (per its own Progress Log) — blocks even a small stale-content correction
       (the "6 protected repos" fix above, see Contradictions #3) from landing safely. Needs a split/extraction pass.
-      Part of blocked-question Q1.
+      Part of blocked-question Q1. **RESOLVED**: line-cap split done via `unified-trading-pm@e3ca94b668`, doc now 824L.
 - [ ] [DOC] P1. **`github_actions_operator_gated_followups_2026_07_17.md` is exactly 1000L**, zero headroom — blocks the
       forward-pointer fix above (see Doc-drift) from landing safely. Needs a split/extraction pass. Part of
-      blocked-question Q1.
-- [ ] [DOC] P2. **`credential_ask_orphan_checker_ping_format_stale_2026_07_27.md` is `assigned_vm: planning` but its
+      blocked-question Q1. **CONFIRMED WORSE as of 2026-08-15**: now 1006L, split still not executed — needs the same
+      extraction pattern as other over-cap docs.
+- [x] ✅ [DOC] P2. **`credential_ask_orphan_checker_ping_format_stale_2026_07_27.md` is `assigned_vm: planning` but its
       sole open todo fails the dispatch-scope-eligibility bounded-outcome test** (it's an open design/naming decision —
       "consider whether an IAM-permission gap should get a distinct marker" — not a worker-checkable fact; hunter batch
       2). Needs the design question resolved (then rewrite the todo) or reclassification to `assigned_vm: NA`.
-      Blocked-question Q2.
-- [ ] [DOC] P2. **`ci_pipeline_speed_and_cost_redesign_2026_08_05.md`'s "5→3 glue" sizing rationale may be moot** now
+      Blocked-question Q2. **RESOLVED**: doc archived, resolved.
+- [x] ✅ [DOC] P2. **`ci_pipeline_speed_and_cost_redesign_2026_08_05.md`'s "5→3 glue" sizing rationale may be moot** now
       that PM carries zero self-hosted load (the fix it was sized against was reverted, see Doc-drift) — hunter batch 5
       flagged this as needing arithmetic across 2 docs, not independently re-verified this run. Blocked- question Q3.
-- [ ] [DOC] P3. **AWS Cost Explorer $ quantification item (`fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`)
-      has been "extraction-ready" since 2026-08-01 (9 days), promised for batch-7, never landed through batch-12**
-      (hunter batch 1, fresh-grepped every batch7-12/finalize doc, 0 matches). Needs extraction into the next ci-tranche
-      AO-dispatch batch. Blocked-question Q4.
-- [ ] [DOC] P3. **`plan_reconciler_findings_ci_2026_08_09.md` (yesterday's predecessor run) is still
+      **RESOLVED**: confirmed moot, dated note added at `ci_pipeline_speed_and_cost_redesign_2026_08_05.md:210` — PM's
+      `.github/workflows/quality-gates-v2.yml:72` has carried `self_hosted_runner_labels: ""` since the 2026-08-07
+      revert, zero self-hosted glue load, pool-size question no longer applies.
+- [x] ✅ [DOC] P3. **AWS Cost Explorer $ quantification item
+      (`fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`) has been "extraction-ready" since 2026-08-01 (9
+      days), promised for batch-7, never landed through batch-12** (hunter batch 1, fresh-grepped every
+      batch7-12/finalize doc, 0 matches). Needs extraction into the next ci-tranche AO-dispatch batch. Blocked-question
+      Q4. **RESOLVED**: extracted+executed, done 2026-08-14 slot 11 infra (residual IAM gap tracked separately).
+- [x] ✅ [DOC] P3. **`plan_reconciler_findings_ci_2026_08_09.md` (yesterday's predecessor run) is still
       `locked_by: plan_reconciler (agt-04cb0e) since 2026-08-09T16:22:00Z`** — only 2 commits ever landed, several
       sections left `(pending)`, consistent with the "reaped-stale mid-flight" failure mode. A dead session's lock,
       never auto-unlocked per HARD LIMITS. FYI note in blocked-question (not a ruling — the answer is unambiguous, just
-      gated on unlock authority).
-- [ ] [DOC] P3. **`pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`'s sole open todo has a definition-of-done
-      gap** (hunter batch 6): "run clean across a full fleet PR cycle" doesn't say whether the doc's own recorded 49
-      pre-existing bats failures are in-scope, or define a threshold for "a full fleet PR cycle." Needs scoping before
-      AO dispatch proceeds cleanly. Not separately escalated via blocked-question (lower stakes, bundled here for the
-      record per Phase-5.9(b) — every skip/defer gets enumerated, not just a bare count).
+      gated on unlock authority). **RESOLVED**: doc archived, lock cleared.
+- [x] ✅ [DOC] P3. **`pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`'s sole open todo has a
+      definition-of-done gap** (hunter batch 6): "run clean across a full fleet PR cycle" doesn't say whether the doc's
+      own recorded 49 pre-existing bats failures are in-scope, or define a threshold for "a full fleet PR cycle." Needs
+      scoping before AO dispatch proceeds cleanly. Not separately escalated via blocked-question (lower stakes, bundled
+      here for the record per Phase-5.9(b) — every skip/defer gets enumerated, not just a bare count). **RESOLVED**:
+      flipped via `unified-trading-pm@df0c4f15a8`.
 - [ ] [INFRA] P2. **Blocked-question answer retrieval may have a real gap.** A harness-level notification stated the
       operator had answered `BLK-6b80187a`, but the two documented retrieval channels
       (`GET /api/slots/$SLOT_ID/messages`; the `messages` array on a `/progress` POST response) both returned empty
@@ -257,7 +271,8 @@ included in its own call):
       same failure shape as the escalation-queue's own past `verify_dispatched_escalations` gap, different subsystem),
       or (b) this specific notification fired without a real backing answer (a harness artifact). Worth an operator-side
       check of the dashboard's actual delivery path for `BLK-6b80187a` specifically, and — if genuinely broken — a wider
-      audit of whether other slots' blocked-questions are in the same silently-unretrievable state.
+      audit of whether other slots' blocked-questions are in the same silently-unretrievable state. **2026-08-15**:
+      checked corpus for any resolution — none found; needs an AO-dashboard-side check, not a doc fix.
 
 ## Deferred work after 2026-08-10
 
@@ -279,6 +294,12 @@ already-drafted, already-verified correction that's just sitting blocked on doc 
 regardless of whether this specific correction ever lands. Everything else is lower urgency (no live incident, no
 fleet-wide impact).
 
+**2026-08-15 update**: Filed-2/4/5/6/7/8 above resolved (see inline evidence); Filed-1/3 splits confirmed still
+outstanding and worse (1013L / 1006L respectively); Filed-9 (blocked-question retrieval gap) still needs an
+AO-dashboard-side check. The corpus-wide `locked_by` placeholder ruling (Option B) is recorded on the master ticket,
+`/plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`, applied by a separate clearing
+pass, not this doc.
+
 ## Archive candidates (operator review)
 
 - **`ui_build_warm_cache_2026_06_17.md`** — flagged by today's `ag_closeout_audit_ci_parked_2026_08_10.md` as now
@@ -295,7 +316,8 @@ fleet-wide impact).
   itself untouched — it's <12h old (created today by the ui-tranche run), inside this run's own grace window, and not
   mine to edit; the corroboration lives here with a cross-reference instead, for a future `all` pass (or the operator
   ruling once it lands) to consolidate. **Parked, not archived** — per HARD LIMITS, `locked_by:` is never auto-unlocked
-  regardless of how confident the evidence.
+  regardless of how confident the evidence. **RESOLVED 2026-08-15**: doc archived, status complete
+  (`plans/archive/2026_08/ui_build_warm_cache_2026_06_17.md`).
 
 ## Refuted (dropped by verify)
 
@@ -325,8 +347,8 @@ Writable set (32 docs, outside 12h grace):
 - plans/active/issues/deployment_api_mtds_meta_missing_blocks_workspace_qg_step_5_83_2026_08_03.md
 - plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md
 - plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md
-- plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md
-- plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md
+- plans/archive/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md
+- plans/archive/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md
 - plans/active/issues/operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md
 - plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md
 - plans/active/issues/plan_reconciler_ci_late_findings_2026_08_06.md

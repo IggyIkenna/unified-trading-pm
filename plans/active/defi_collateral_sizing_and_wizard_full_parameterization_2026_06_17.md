@@ -245,3 +245,4 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
   same whole-doc `assigned_vm`; the P3 test-isolation flake remains too small to justify splitting the doc. No
   cheat-sheet precedent matches. `locked_by: live-defi-rollout` (since 2026-06-17, a branch-name artifact per this
   corpus's established pattern) not treated as a blocker. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).

@@ -125,8 +125,8 @@ restated here.
       0 of 34,385 `B_legacy_duplicate` rows pass the 5-part proof, per `sports_legacy_duplicate_triage_2026_07_22.md` —
       sports deletes stay blocked on that separately, independent of this tradfi/defi/pred gate). **New dispatch shape
       (no operator sign-off needed once both checks below clear):** (1) re-run
-      `cleanup_legacy_twins.py --asset-group tradfi --report-uri _index/audit/orphan_sweep_tradfi.parquet     --dry-run`
-      (or read its already-landed output if the todo above already ran it this session) and re-confirm Part 5's
+      `cleanup_legacy_twins.py --asset-group tradfi --report-uri _index/audit/orphan_sweep_tradfi.parquet --dry-run` (or
+      read its already-landed output if the todo above already ran it this session) and re-confirm Part 5's
       twin-coverage is still 100% (content-verified, not path-assumed) for the tradfi/defi/pred candidate rows; (2) run
       a FRESH, same-run `gcs_bucket_soft_delete_retention_seconds(bucket)` check against each of the three target
       buckets (`market-data-tick-tradfi-prd-central-element-323112`, `market-data-tick-defi-prd-central-element-323112`,
@@ -190,10 +190,10 @@ restated here.
       `asset_group=`/`venue=`/`instrument_type=` hive keys — venue/instrument_type are bare non-hive path segments).
       `canonical_twin_path()` only renames `category=`→`asset_group=` (never present here) and inserts
       `pipeline_mode=batch_<source>` after `day=`, producing a path missing
-      `asset_group=tradfi/venue=<V>/     instrument_type=<IT>/` entirely (confirmed via `gcs_describe_object` — the
-      derived path does not exist) instead of the real canonical shape from
+      `asset_group=tradfi/venue=<V>/ instrument_type=<IT>/` entirely (confirmed via `gcs_describe_object` — the derived
+      path does not exist) instead of the real canonical shape from
       `unified_api_contracts.canonical_path_templates("tradfi")`
-      (`raw_tick_data/by_date/day={date}/pipeline_mode=batch_{source}/asset_group=tradfi/venue={venue}/     instrument_type={instrument_type}/data_type={data_type}/<file>`).
+      (`raw_tick_data/by_date/day={date}/pipeline_mode=batch_{source}/asset_group=tradfi/venue={venue}/ instrument_type={instrument_type}/data_type={data_type}/<file>`).
       Fix: reuse the SAME non-hive-tail venue/instrument_type derivation `migration_orphan_sweep.py::classify_object()`
       step 3.5 already has (the shared `_backfill_parser()` from `backfill_orphan_class_e.py`) to derive
       `(venue, instrument_type)` for a pre-hive legacy path, then build the canonical path by formatting the matched

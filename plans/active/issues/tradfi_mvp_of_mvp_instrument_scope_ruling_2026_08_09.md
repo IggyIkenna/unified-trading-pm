@@ -123,6 +123,14 @@ That was independently live-verified the same day — direct calls to Databento'
 doc's scope list). The billing issue doc itself stays open as a standing awareness record; it no longer blocks the
 in-scope relaunch this doc authorizes.
 
+**CAVEAT (2026-08-15, /plan-reconcile)**: the "lifted" verdict above was true AS OF 2026-08-10. It has since flipped
+back — the billing doc's 2026-08-12/14/15 entries confirm the account re-suspended (`402 account_delinquent_invoice`,
+unpaid invoice) on the SAME CME/GLBX.MDP3 cells this doc calls in-scope, both on the live MTDS side and on repeated
+batch/IS-reference-data relaunch attempts through 2026-08-15. **Do not trust this section's "lifted" framing at face
+value — re-check `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`'s current
+`status:`/latest Progress Log entry before relaunching any in-scope CME cell**; it is the live source of truth for
+whether the gate is actually open.
+
 ## Known relaunch gotchas (carry forward, don't re-discover)
 
 - `wave_launcher.py`'s dedup check (`running_cell_keys`) parses live VM names for a `root` group label and never matches
@@ -162,8 +170,8 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
       dispatch candidate keys it computes internally, instead of only matching a VM-name-parsed "root group" label —
       currently causes CME launches to duplicate 3-13x per shard (measured: 167 stray VMs from one erroneous wave, per
       "Disposition of currently-running infra" above). **Confirmed AGAIN live** (instrument-scope-diff session,
-      2026-08-09): `-eth-eth-     2022-*` and `-met-met-2023-*` were each observed running as TWO separate VMs ~3h apart
-      for the identical shard — killed the newer (redundant) instance of each pair as a stopgap
+      2026-08-09): `-eth-eth- 2022-*` and `-met-met-2023-*` were each observed running as TWO separate VMs ~3h apart for
+      the identical shard — killed the newer (redundant) instance of each pair as a stopgap
       (`gcloud compute instances delete`, `asia-northeast1-c`), keeping the earlier-started original. **FIXED 2026-08-09
       (round-9 combined RECLASSIFY + satellite-extraction sweep, found already-shipped by a concurrent session)**:
       `deployment-service@bcf55c781f98f3834298252c443ed5ffa6f42a35` ("fix(tradfi): CME --only-root VMs get a plain
@@ -180,9 +188,9 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
       `status: draft`, not cited as the sole basis): the module's "Cloud Run Job + Scheduler" self-description is STALE
       — `gcloud scheduler jobs describe uts-prod-tradfi-wave-launcher-cron --location=asia-northeast1` shows
       `state: PAUSED`, `userUpdateTime: '2026-06-24T22:44:03.047172Z'`, and
-      `gcloud run jobs executions list     --job=uts-prod-tradfi-wave-launcher --region=asia-northeast1` shows the last
-      execution was `2026-06-25 00:49:53     UTC` — the Cloud Run Job has not fired in 7 weeks. The actual live
-      mechanism is the undocumented HOST cron (`_write_last_run_sentinel`'s comment is the accurate one):
+      `gcloud run jobs executions list --job=uts-prod-tradfi-wave-launcher --region=asia-northeast1` shows the last
+      execution was `2026-06-25 00:49:53 UTC` — the Cloud Run Job has not fired in 7 weeks. The actual live mechanism is
+      the undocumented HOST cron (`_write_last_run_sentinel`'s comment is the accurate one):
       `gcloud compute operations list` shows `tradfi-bf-cme-ohlcv-1m-*` VMs still being inserted TODAY (2026-08-12) on a
       ~3h-aligned cadence carrying the clean single-root naming from `deployment-service@bcf55c781` (e.g.
       `tradfi-bf-cme-ohlcv-1m-eth-2023-20260812-120648`, `...-es-2023-20260812-120631`) — since it's a host cron running

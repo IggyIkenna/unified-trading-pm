@@ -1,0 +1,130 @@
+---
+doc_type: issue
+title:
+  Slot-collision guard BATS suite fails under host load — detector times out, guard fails open, hard-fail blocks every
+  PM commit
+summary: >-
+  Measured 2026-08-15. tests/test_pretooluse_slot_collision_guard.bats passes 17/17 standalone but failed 6 tests inside
+  a quality-gates run on a host at load 48 (later 164). Mechanism is confirmed, not guessed: the guard's _detect() runs
+  the detector via subprocess.run(..., timeout=10) and catches SubprocessError — which includes TimeoutExpired —
+  returning (1, "") = "no peer", i.e. it FAILS OPEN. Under load the detector's per-pid `lsof -a -d cwd` walk exceeds
+  10s, so every "must BLOCK" test fails while every "must ALLOW" test passes — exactly the observed split. Because BATS
+  is BATS_HARD_FAIL=1 for unified-trading-pm, this blocks EVERY commit to the repo while the host is loaded, for a
+  reason unrelated to the change being shipped.
+status: open
+nature: issue
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: [quality-gates, flaky-test, host-concurrency, hooks, slot-collision]
+related:
+  [
+    /plans/active/issues/local_host_concurrent_qg_serial_rule_violated_2026_08_15.md,
+    /plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md,
+    /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md,
+  ]
+created: "2026-08-15"
+last_updated: 2026-08-15
+parent_epic: observability_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P1
+assigned_role: infra
+locked_by:
+locked_since:
+resolved_by:
+supersedes:
+superseded_by:
+source: measured while shipping the plan-hygiene stale-base guard (quickmerge re-gate, 2026-08-15)
+drift_direction: advance-code
+depends_on: []
+---
+
+# Slot-collision guard: fails open under load, and the test asserts it does not
+
+## What was measured
+
+`bats tests/test_pretooluse_slot_collision_guard.bats` **standalone: 17/17 pass.** The same suite inside a
+`quality-gates.sh` run on a loaded host: **6 failures**, all of the same kind.
+
+| Failing test                                                 | Asserts  |
+| ------------------------------------------------------------ | -------- |
+| `git commit is BLOCKED when a live peer occupies the slot`   | status 2 |
+| `quickmerge --no-isolated is BLOCKED`                        | status 2 |
+| `safe-doc-push with SDP_ISOLATED=0 is BLOCKED`               | status 2 |
+| `git -C <path> commit is still recognised`                   | status 2 |
+| `a compound command hiding the commit is still recognised`   | status 2 |
+| `the escape hatch in the ENVIRONMENT alone does NOT unblock` | status 2 |
+
+**Every "must BLOCK" test failed; every "must ALLOW" test passed.** That split is the diagnostic — it is what a detector
+that returns "no peer" produces, not what a broken parser produces.
+
+## Mechanism (confirmed, not inferred from the split alone)
+
+`cursor-configs/hooks/pretooluse-slot-collision-guard.py`:
+
+```python
+proc = subprocess.run([...], capture_output=True, text=True, timeout=10)
+except (OSError, subprocess.SubprocessError):
+    return (1, "")          # <- TimeoutExpired IS a SubprocessError; (1,"") means "no peer"
+```
+
+`subprocess.TimeoutExpired` subclasses `SubprocessError`, so a detector that takes longer than 10s is indistinguishable
+from one that ran cleanly and found nothing. The detector (`cursor-configs/hooks/lib/slot-collision-detect.sh`) resolves
+each candidate pid's cwd with `lsof -a -d cwd -p <pid> -Fn`; `lsof` is exactly the call that degrades under memory
+pressure, and the host was at load **48** during the failing run and **164** twenty minutes later.
+
+**Failing open is the right behaviour for the guard** — its own docstring says wedging a worker on every commit would be
+worse. The defect is that the TEST asserts a blocking verdict the guard is designed not to give when it cannot see.
+
+## Why it matters beyond one flake
+
+BATS is `BATS_HARD_FAIL=1` for this repo ("confirmed clean at baseline, so any failure here is a genuine regression"),
+so this converts host load into a **fleet-wide block on every unified-trading-pm commit**, attributed to whatever change
+happened to be shipping. The re-gate message says "this is a REAL failure, not a lost race", which is exactly wrong in
+this case and will send the next agent hunting a regression in unrelated files.
+
+## Todos
+
+- [x] ✅ [CODE] P1. Distinguish "detector timed out" from "detector found no peer" in `_detect()` — return a third state
+      rather than folding `TimeoutExpired` into `(1, "")`. The guard should still ALLOW on timeout; the point is that
+      the condition becomes observable instead of silently identical to "no peer". — `_detect()` now returns a
+      `_DETECT_TIMEOUT` sentinel (`-1`) specifically on `subprocess.TimeoutExpired`, kept separate from the generic
+      `(1, "")` non-timeout-failure path. The `foreign-pids` call site writes an observable
+      `SLOT_COLLISION_GUARD_DETECTOR_TIMEOUT` marker to stderr before ALLOWing, so the outcome is unchanged (fail-open,
+      by design) but now diagnosable. **Closes the residual gap the todo-2 test-side fix left**: even after
+      `_spawn_fake_peer` confirms the peer is lsof-visible, the GUARD's own fresh `_detect("foreign-pids", ...)` call
+      moments later can independently exceed its 10s budget if load is still climbing — the test-side precondition-check
+      alone was measured insufficient on this host today (re-failed after the todo-2 fix landed, same 6-test signature,
+      at load ~90-150). The 6 BLOCK-expectation tests in the pretooluse-guard suite now call a new
+      `_skip_if_detector_timed_out` helper (checks `$output` for the marker) immediately before asserting status 2, so a
+      load-induced guard-side timeout skips rather than fails. Verified: 17/17 pass standalone; syntax + ruff clean.
+      Repo: unified-trading-pm.
+- [x] ✅ [TEST] P1. Make the BATS suite `skip` (not fail) when the detector could not complete. —
+      **unified-trading-pm@27979ca518.** `_spawn_fake_peer` now polls the detector's own `foreign-pids` CLI (15s budget)
+      until it can genuinely see the spawned peer, instead of assuming a fixed `sleep 0.3`, and `skip`s with an explicit
+      reason + a link to this issue when the precondition cannot be established. **The skip branch was verified by
+      execution, not assumed**: making the precondition unreachable produced `ok N ... # skip` on every peer-dependent
+      test while `git commit is ALLOWED when no peer occupies the slot` — which needs no peer — still genuinely RAN and
+      passed. That asymmetry is the point: it degrades only where the precondition failed, never as blanket suppression.
+      Unmodified, the suite still passes 17/17. Repo: unified-trading-pm.
+- [x] ✅ [TEST] P1. `tests/test_session_start_collision_check.bats`'s `_spawn_fake_peer` had the identical
+      fixed-`sleep 0.3`-then-assert race (same `foreign_claude_pids`/`lsof` detector, same host-load exposure) — not
+      covered by the fix above, which only touched the pretooluse-guard suite. Applied the same poll-until-detected
+      pattern (bounded 5s, falls through to let the assertion fail rather than `skip`, since this file's fixture — a
+      direct hook-output warning check, not a block/allow status code — has lower false-positive-vs-false-negative
+      asymmetry risk). Verified: 10/10 pass standalone. Repo: unified-trading-pm.
+- [ ] [CODE] P2. Consider caching or narrowing the per-pid `lsof` walk (batch one `lsof` over all candidate pids rather
+      than one call per pid) so detection stays inside its budget under load. Repo: unified-trading-pm.
+- [ ] [DOC] P2. Correct the re-gate message: "this is a REAL failure, not a lost race" is asserted unconditionally, and
+      it is wrong for load-induced flakes. Point at this issue from the BATS hard-fail line. Repo: unified-trading-pm.
+
+## Evidence
+
+- Standalone run: `1..17`, all `ok`.
+- Gate run: `not ok 202/203/204/205/206/211`, then `❌ BATS: 44 file(s) — one or more tests failed (BATS_HARD_FAIL=1 …)`
+  and `[unified-trading-pm] ❌ Re-gate FAILED against the current tree — this is a REAL failure, not a lost race.`
+- `uptime` at diagnosis: `load averages: 164.28 186.07 187.87`.
+- The change being shipped when this fired touched only `scripts/plan-hygiene/`, which the failing tests do not import,
+  invoke or reference.

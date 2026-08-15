@@ -105,12 +105,44 @@ tranche's reference. When in doubt, leave it and note the cross-reference for a 
 ## Modes
 
 - **Interactive (default, operator present)**: findings that need a ruling become a structured Q&A (see Phase 4);
-  operator decisions are applied immediately.
+  operator decisions are applied immediately. **Trust mode** (below) is the default within interactive unless the
+  operator asks to go through items individually.
 - **Autonomous / AO-dispatched** (`/plan-reconcile --autonomous`, or dispatched to the AO VM with no operator on the
-  other end): NEVER pause for input. Apply the auto-fix classes; park every genuine judgment call as a
-  `BLOCKED-OPERATOR-DECISION` entry in the issue doc (Phase 5) with options + recommendation per the
-  SUB_AGENT_MANDATORY_RULES escalation format, and notify the operator. Inherits every safety rule
-  (`cursor-configs/AUTONOMOUS_AGENT_RULES.md` when under `/autonomous`).
+  other end): NEVER pause for input. Apply the auto-fix classes AND trust-mode judgment calls (below); park only the
+  narrow non-trust-mode-eligible remainder as a `BLOCKED-OPERATOR-DECISION` entry in the issue doc (Phase 5) with
+  options + recommendation per the SUB_AGENT_MANDATORY_RULES escalation format, and notify the operator. Inherits every
+  safety rule (`cursor-configs/AUTONOMOUS_AGENT_RULES.md` when under `/autonomous`).
+
+### Trust mode (2026-08-15 operator ruling) — apply `[WORKER REC]` directly instead of ask/park
+
+**Why**: every batched ruling this skill has ever asked for — the 2026-07-15 calibration's 9/9, and a further 7/7 on
+2026-08-15 — was answered with the marked recommendation. The operator's own framing: waiting for a round-trip that
+always lands on the same answer is pure latency, and for autonomous runs it's worse than latency — a judgment call that
+sits `BLOCKED-OPERATOR-DECISION` for days can hold a doc's `plan_reconciler` lock the whole time, stalling that
+tranche's reconciliation until someone happens to notice and answer it (this is exactly how 6 of 10 tranches went dark
+for 5 days on 2026-08-10 — see `plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md`, which also has the companion ruling
+that a dead lock auto-clears rather than sitting until an autonomous-run rescue).
+
+**What changes**: every item this skill's own Calibration section (below) would otherwise route to "STILL ASK / PARK" —
+because it's an authority/preference call, not a provable fact — instead gets the `[WORKER REC]` **applied directly**,
+logged with full reasoning in a dated `operator_ruling_record_<slug>_<date>.md` doc (same doc type + provenance framing
+as `operator_ruling_record_ao_round5_apply_session_2026_08_08.md`) so the decision is traceable and a `git revert` away
+from undone, and reported in the Phase 6 summary as "auto-applied under trust mode" — never silently. This applies to
+BOTH modes: interactive skips the Q&A round-trip and goes straight to a written summary the operator can review/override
+after the fact; autonomous applies instead of parking, closing the lock-holding-for-days failure mode above.
+
+**The one carve-out that stays gated regardless of trust mode**: any edit to a codex SSOT doc (`codex/**`) or
+`CLAUDE.md`. That gate exists because of blast radius (the change reaches every future agent, not just this run), not
+because the evidence is weak — trust mode is about skipping a round-trip on a call the operator would rubber-stamp
+anyway, and a codex edit is never assumed rubber-stamped no matter how many prior rulings agreed. The existing
+codex-staleness carve-out (Phase 4, STEP 5.f2: single unambiguous substitution, no new measurement, doesn't touch a
+HARD-STOP governance area) is unaffected either way — it was never gated on ask/park to begin with. Also unaffected: the
+standing hard-stops (funds isolation, kill-switch, wallet keys, `1.0.0`, the May-23 critical path) and an explicit human
+signal (`locked_by:` — unlocking is still operator-only, `[unlock-plan]` still required).
+
+**Turning it off**: an operator who wants the old ask-every-time behavior back for a specific run says so
+(`/plan-reconcile --no-trust`, or just "let's go through these one at a time" mid-session) — trust mode is a default,
+not a lock-in.
 
 ### ASK > PARK when the operator is reachable (HARD — added 2026-07-15 from a real failure)
 
@@ -158,6 +190,39 @@ test was wrong. **The test is not "does this feel like a judgment call?" — it 
 **Batching (this worked — keep it):** ≤4 questions per round, ordered P0→P1, each carrying both quotes + locations, why
 they conflict, which side is authoritative and why, and options with the recommendation marked FIRST. Recurring classes
 get ONE class-level question with per-item exceptions (the 16-row fold table was approved as a single question).
+
+## Phase -1 — reconcile this skill's own prior dated findings docs FIRST (added 2026-08-15, operator ruling)
+
+**Before any fresh sweep, always check whether this skill's own past output is still sitting there unresolved.** Every
+`/plan-reconcile` run — sharded or `all` — writes a dated `plan_reconciler_findings_<tranche>_<date>.md` (or
+`plan_reconciler_findings_all_<date>.md`) issue doc. A fresh sweep that ignores these re-discovers the same findings a
+prior run already surfaced, re-does work a later commit already finished, and leaves a stale doc for the NEXT run to
+trip over too — the corpus never actually gets cleaner, it just grows more dated findings docs. This is not optional
+housekeeping; it is the first thing this skill does, every time, before Phase 0.
+
+1. **Pull fresh state first.** `git pull --ff-only` (or `--rebase --autostash` if ahead) — other slots/sessions
+   routinely land fixes for exactly the findings you're about to re-discover. Resolve anything blocking the pull (merge
+   conflicts, dirty tree) before proceeding — see the multi-agent-safety rules in `cursor-configs/CLAUDE.md`.
+2. **Find every existing `plan_reconciler_findings_*.md` doc** (and this skill's own meta/incident docs — a lock-TTL
+   bug, a tmux-session-loss investigation, anything ABOUT the reconciler mechanism itself, not just its findings) under
+   `plans/active/issues/`. `ls`/`grep`, don't guess — there is usually more than one, at different dates, some
+   per-tranche and some `all`-scoped.
+3. **For every open item in every one of those docs**, determine current status against the now-fresh corpus: RESOLVED
+   (cite hard evidence), STILL-OPEN AUTO-FIXABLE (mechanical, evidence-backed — apply it), STILL-OPEN NEEDS-RULING
+   (route through Phase 4 / trust mode), or STILL-OPEN ORDINARY-WORK (leave it, it's real unfinished work not a
+   doc-hygiene gap). This is exactly Phase 2's done-but-unchecked sweep and Phase 3's adversarial-verification bar, just
+   applied to the PRIOR run's own output before generating any new output.
+4. **A findings doc with zero genuinely-open items left afterward gets archived** via the standard 6-step ritual — same
+   as any other fully-done issue doc (Phase 4's archival row). Leaving a fully-resolved dated findings doc sitting in
+   `plans/active/issues/` is exactly the false-progress pattern this skill exists to kill, just aimed at its own output.
+5. **Only once this pass is done** does Phase 0's fresh corpus-wide inventory begin. On a large corpus this phase alone
+   can take a while (parallel review agents, one per prior findings doc or tranche) — that's fine, it's real work, not
+   overhead to skip.
+
+This applies to sibling reconciliation skills the same way — `/na-eligibility-audit` and `/ag-closeout-audit` both
+produce their own dated per-tranche output docs (`ag_closeout_audit_<tranche>_parked_<date>.md`, na-audit tranche
+summaries) and should reconcile those against fresh state before generating new ones, for the same reason: a stale
+unretired findings doc is a stale unretired findings doc regardless of which skill wrote it.
 
 ## Phase 0 — deterministic inventory (cheap, no agents)
 

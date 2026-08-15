@@ -16,6 +16,7 @@ file a legacy `related:` entry resolves to while chasing this speed.
 
 from __future__ import annotations
 
+import subprocess
 import sys
 from pathlib import Path
 
@@ -202,3 +203,110 @@ def test_has_active_single_ag_docs_ignores_other_ag_and_multi_value(pm_dir: Path
     }
     assert checker._has_active_single_ag_docs("cefi", all_docs) is False
     assert checker._has_active_single_ag_docs("defi", all_docs) is True
+
+
+# --- --diff-base regression coverage -----------------------------------------------------
+#
+# Regression for ag_closeout_linkage_zero_baseline_recurring_collision_2026_08_14.md: at
+# baseline 0, this was a whole-corpus SCALAR ratchet -- ANY single doc landing without a
+# related:/body-mention link failed the NEXT unrelated commit's CI, not the commit that
+# actually created the gap (unified-trading-pm ships via quickmerge at high concurrent
+# velocity, so same-day multi-slot archival races routinely tripped an innocent bystander
+# commit). --diff-base fixes this by comparing the orphan SET at HEAD (worktree) against the
+# orphan SET at a base ref, flagging only a path that is newly orphaned since that ref.
+
+
+def _git(pm_dir: Path, *args: str) -> None:
+    subprocess.run(["git", "-C", str(pm_dir), *args], check=True, capture_output=True, text=True)
+
+
+def _git_commit_all(pm_dir: Path, message: str) -> str:
+    _git(pm_dir, "add", "-A")
+    _git(pm_dir, "commit", "-m", message)
+    result = subprocess.run(["git", "-C", str(pm_dir), "rev-parse", "HEAD"], check=True, capture_output=True, text=True)
+    return result.stdout.strip()
+
+
+@pytest.fixture
+def git_pm_dir(pm_dir: Path) -> Path:
+    _git(pm_dir, "init", "-q")
+    _git(pm_dir, "config", "user.email", "test@example.com")
+    _git(pm_dir, "config", "user.name", "test")
+    return pm_dir
+
+
+_CLOSEOUT_DOC = """---
+doc_type: plan
+title: AO consolidated closeout
+status: active
+asset_group: [ao]
+---
+
+# ao closeout
+body that does not mention any member doc's stem
+"""
+
+_LINKED_MEMBER_DOC = """---
+doc_type: issue
+title: batch5 finalize
+status: active
+asset_group: [ao]
+related: [/plans/active/ao_consolidated_closeout_2026_08_12.md]
+---
+
+body
+"""
+
+_UNLINKED_MEMBER_DOC = """---
+doc_type: issue
+title: batch5 finalize
+status: active
+asset_group: [ao]
+---
+
+body
+"""
+
+
+def test_diff_base_does_not_flag_a_pre_existing_orphan_from_an_earlier_commit(
+    git_pm_dir: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # The exact recurring incident: `ao_batch5_finalize` already landed orphaned in an EARLIER
+    # same-day commit (now captured in base_sha). The commit under test here never touches
+    # it -- diff-base must not blame this unrelated commit for pre-existing debt.
+    (git_pm_dir / "plans" / "active" / "ao_consolidated_closeout_2026_08_12.md").write_text(
+        _CLOSEOUT_DOC, encoding="utf-8"
+    )
+    orphan = git_pm_dir / "plans" / "active" / "issues" / "ao_batch5_finalize_2026_08_03.md"
+    orphan.write_text(_UNLINKED_MEMBER_DOC, encoding="utf-8")
+    base_sha = _git_commit_all(git_pm_dir, "base: batch5 finalize lands already-orphaned")
+
+    # This commit's own (unrelated) change -- a brand-new, properly-linked doc.
+    (git_pm_dir / "plans" / "active" / "issues" / "unrelated_finding_2026_08_14.md").write_text(
+        _LINKED_MEMBER_DOC, encoding="utf-8"
+    )
+
+    exit_code = checker._run_diff_base(base_sha, quiet=True)
+    out = capsys.readouterr().out
+    assert exit_code == 0, out
+    assert "0 NEW orphan(s)" in out
+
+
+def test_diff_base_flags_an_orphan_this_commit_itself_introduced(
+    git_pm_dir: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    (git_pm_dir / "plans" / "active" / "ao_consolidated_closeout_2026_08_12.md").write_text(
+        _CLOSEOUT_DOC, encoding="utf-8"
+    )
+    member = git_pm_dir / "plans" / "active" / "issues" / "ao_batch5_finalize_2026_08_03.md"
+    member.write_text(_LINKED_MEMBER_DOC, encoding="utf-8")
+    base_sha = _git_commit_all(git_pm_dir, "base: batch5 finalize lands linked")
+
+    # This commit's own edit: drops the related: link -- newly orphans the doc.
+    member.write_text(_UNLINKED_MEMBER_DOC, encoding="utf-8")
+
+    exit_code = checker._run_diff_base(base_sha, quiet=False)
+    out = capsys.readouterr().out
+    assert exit_code == 1, out
+    assert "1 NEW orphan(s)" in out
+    assert "ao_batch5_finalize_2026_08_03.md" in out

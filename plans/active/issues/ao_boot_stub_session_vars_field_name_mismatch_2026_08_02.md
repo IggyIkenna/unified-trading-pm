@@ -149,15 +149,32 @@ Two independent, complementary fixes — either alone helps, both together close
       text with a literal curl example populated from the real `vars` dict (worktree/branch/operator/model/
       effort/thinking/context_used_pct/account_id/slot_role/read_files), mirroring `worker.md` lines 97-112's example.
       Done when: a fresh dispatch's boot stub shows the exact field names `BootRequest` expects, with no guessing
-      required. (repo: agent-orchestrator)
+      required. (repo: agent-orchestrator) — **Re-scoping assessment (2026-08-15, per
+      `plan_reconciler_findings_ao_2026_08_10.md`'s `[BACKEND] P2` finding)**: closer to additive/low-risk — this only
+      changes the STATIC TEXT `_compose()` renders (a literal curl example), not `_compose()`'s branching/control-flow
+      logic. Caveat: it is still on the fleet-wide boot-stub path every worker's FIRST message renders from, so a
+      malformed literal example (e.g. referencing a `vars` key not always populated for every role) could break every
+      future boot. Recommend re-scoping to `assigned_vm: planning` only if paired with a done-when that live-boot-diffs
+      every plan_health-family role, not blanket NA.
 - [ ] [BACKEND] P2. Fix recommendation 2: ensure the `vars` dict passed into `render()` for slot-worker roles (wherever
       that call site lives — `server/plan_health.py`'s `mode=ag_closeout` dispatch path and any generic slot-boot spawn
       path) uses `worktree` (not `worktree_path`) as the key, and includes the role under a `slot_role` key so
       `_session_vars_block()` surfaces it. Done when: the rendered stub's vars block key names are a 1:1 match with
-      `BootRequest`'s field names for every field a slot worker needs to supply. (repo: agent-orchestrator)
+      `BootRequest`'s field names for every field a slot worker needs to supply. (repo: agent-orchestrator) —
+      **Re-scoping assessment (2026-08-15, per `plan_reconciler_findings_ao_2026_08_10.md`'s `[BACKEND] P2` finding)**:
+      closer to additive/low-risk — a narrow dict-key rename (`worktree_path`→`worktree`, add `slot_role`) at 1-2 call
+      sites, no new branching. Comparable in shape to batch9's confirmed counter-example (`agent-orchestrator@5353b6b`
+      edited `_ONE_SHOT_ESCALATION_ROLES` in this same file, `server/prompts.py`, via normal AO dispatch with no extra
+      gating). Recommend re-scoping to `assigned_vm: planning` with a done-when asserting the rendered vars-block keys
+      are a 1:1 match with `BootRequest`'s field names.
 - [ ] [BACKEND] P3. Evaluate recommendation 3 (`extra="forbid"` on `BootRequest` and sibling worker-API request models)
       — confirm no existing caller relies on extra-field tolerance before adding it; if clear, add it so a future
-      field-name typo 422s immediately instead of silently no-oping. (repo: agent-orchestrator)
+      field-name typo 422s immediately instead of silently no-oping. (repo: agent-orchestrator) — **Re-scoping
+      assessment (2026-08-15, per `plan_reconciler_findings_ao_2026_08_10.md`'s `[BACKEND] P2` finding)**: stays closer
+      to `_compose()`-adjacent control-flow/behavior-change risk — the todo's own text requires an open investigation
+      ("confirm no existing caller relies on extra-field tolerance") before deciding to add a validation constraint that
+      would newly REJECT requests other callers may depend on tolerating; a judgment call, not a bounded outcome.
+      Recommend staying NA/human-gated as currently classified.
 
 ## Progress Log
 
@@ -205,3 +222,20 @@ Two independent, complementary fixes — either alone helps, both together close
   The 2026-07-31 operator directive routing this exact live-dispatch-boot-critical-path class to local-only still
   stands, content unchanged since round11. All 3 todos remain unactioned and still touch the same fleet-wide worker-boot
   files.
+- **plan_reconciler 2026-08-10 (ao tranche)**: filed a `[P1] Confirmed, GRACE` contradiction —
+  `plan_reconciler_findings_ao_2026_08_10.md`'s Contradictions section — noting this doc's blanket "any edit to
+  `server/prompts.py` is local-only" framing looks over-broad next to batch9's confirmed counter-example (an
+  AO-dispatched worker edited `_ONE_SHOT_ESCALATION_ROLES` in this exact file via normal dispatch,
+  `agent-orchestrator@5353b6b`), and filed a durable follow-up todo to resolve the discrepancy rather than re-litigate
+  it live.
+- **2026-08-15 (operator ruling, "minor items" — reconciling `plan_reconciler_findings_ao_2026_08_10.md`'s
+  `[BACKEND] P2` follow-up todo)**: applied the worker recommendation directly — re-scoped this doc's 3 open todos
+  individually instead of leaving them blanket-NA-by-file-path. Each todo now carries a per-todo NA-vs-planning risk
+  assessment (`_compose()`-control-flow risk vs. additive/low-risk), so a future AO-eligibility pass can act without
+  re-deriving the analysis: todo 1 (STEP 2 curl-example text) and todo 2 (vars-dict key rename) assessed closer to
+  additive/low-risk; todo 3 (`extra="forbid"` on `BootRequest`) assessed as staying closer to
+  control-flow/behavior-change risk, consistent with its own text already framing it as an open investigation.
+  `assigned_vm: NA` / `execution_scope: local-only` left unchanged — this pass only annotates, it does not reclassify.
+  Still governed by the 2026-07-31 operator directive unless/until
+  `boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md` is read and the scope question it
+  raises is separately resolved (this doc's own `[BACKEND] P2` todo, unchanged).

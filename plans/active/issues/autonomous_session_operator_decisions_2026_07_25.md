@@ -508,7 +508,7 @@ classifier cannot map, and a fourth doc's shipped-and-ticked todo asserts the op
    `# Unclassified cids → attempted_failed[ClassifierConfidenceLow] (classifier contract).` — which now only bites
    KALSHI, since `classify_kalshi_to_canonical_group` still returns `None` for unmatched while the Polymarket path no
    longer does (callsite at `:409-429`).
-4. `/plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md:51-56` + its 4 shipped `[x]` todos
+4. `/plans/archive/2026_08/predictions_other_bucket_and_ui_drilldown_2026_06_20.md:51-56` + its 4 shipped `[x]` todos
    (`unified-api-contracts@306923a`): "The classifier MUST map every Polymarket `conditionId` (and Kalshi ticker) to
    SOME canonical question group … Treating `OTHER` as a known catch-all is honest absence".
 5. `/plans/archive/2026_07/prediction_cqg_residual_2026_07_24.md:69-76` (open `[DATA] P1`) rests on the opposite premise

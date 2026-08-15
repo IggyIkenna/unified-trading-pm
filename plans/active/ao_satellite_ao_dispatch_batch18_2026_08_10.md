@@ -62,8 +62,8 @@ source: >-
 
 # AO satellite AO batch 18
 
-> **`status: draft`** — pending operator approval, same convention as batch5-17: flip to `active` to dispatch.
-> **`assigned_vm: planning` / `execution_scope: orchestrator-agent`** once approved.
+> **`status: active`** — operator-approved, same convention as batch5-17. **`assigned_vm: planning` /
+> `execution_scope: orchestrator-agent`**.
 
 ## Why this plan exists
 
@@ -115,8 +115,13 @@ here (5 items already extracted this way).
       sub-items written into the source doc's Progress Log with real numbers (flash ~13.7% cheaper/task, ~7.4%
       cheaper/plan despite ~68% more turns, because its blended $/M-tokens is ~2.6x cheaper; Layer-1 reopen-rate pro
       1.6% vs flash 6.4%; Layer-2 51-item matched-plan diff sample 0 defects either pool; review-agent real coverage
-      ~1.6% of fleet completions with one concrete miss found). Verdict: KEEP FLASH. **NOT archived** — todo 25's
-      batch12 extraction is still open, per this todo's own gating condition.
+      ~1.6% of fleet completions with one concrete miss found). Verdict: KEEP FLASH. **NOT archived (as of 2026-08-10)**
+      — todo 25's batch12 extraction was still open, per this todo's own gating condition. **2026-08-15 update
+      (/plan-reconcile hunter pass): the source doc is now confirmed at
+      `plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md`, `status: archived`, 0 open / 27 done
+      checkboxes — the "NOT archived" claim above is stale as of this doc's own 2026-08-10 writing date, superseded by
+      batch12's own later completion. Not re-investigated further here (out of this hunter pass's scope); left as a
+      dated correction rather than re-editing the original evidence.**
 
 ## Codex SSOTs (read before starting)
 

@@ -222,7 +222,7 @@ pair (2026-07-03 `0G`):
       `canonical-migration-cefi-late-renames-20260810-235650` (e2-standard-16, 2026-04-18..2026-07-24, ON_DEMAND).
       EXIT_STATUS=0; `Collisions: 0 unhandled`; GCS rename stats
       `{renamed: 2043, upgraded: 10501, deleted_dup_source: 413}`; MANIFEST
-      `{before 26491048 → after 26462389,     instrument_ids_relabeled: 28024, rows_collapsed_in_dedup: 28659, honest_unresolved_rows: 5}`;
+      `{before 26491048 → after 26462389, instrument_ids_relabeled: 28024, rows_collapsed_in_dedup: 28659, honest_unresolved_rows: 5}`;
       consolidator cron `uts-prod-manifest-consolidator-market-data-cefi-cron` verified ENABLED. All shipped fixes
       firing on real data: `335c94f1` wire-superset, `a8a29c8a1` dtype-normalize.
 
@@ -448,3 +448,9 @@ pair (2026-07-03 `0G`):
 
 **Recommended NEXT item**: none — the Range-2 apply sequence is complete; the only open LIGHTER-ZKSYNC item is the
 operator-owned BTC 2026-05-01 leave-both residual (no action pending).
+
+- **plan-reconcile cefi-tranche verification pass 2026-08-15**: confirmed content is unchanged/accurate — all 5 todos
+  `[x]`, "Recommended NEXT item: none" still holds. `status:` frontmatter (`open`) is technically stale (the work is
+  done) but left as-is: flipping to a terminal status trips `check_terminal_status_archived`, which forces archival —
+  out of scope for this doc-reconciliation pass given `archive_exempt: true` is set with no BRIDGE comment explaining
+  why archival was deferred. Leaving the status/archival decision to the next toucher with archival authority.

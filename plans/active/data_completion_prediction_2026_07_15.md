@@ -465,3 +465,7 @@ range never overlaps a still-in-flight per-market-only day).
   rider items (pipeline_mode/source riders, post-walk comparison, CF-7 relabel) deliberately left open pending a closer
   per-item read — see this doc's Phase-1 classification detail in the 2026-08-10 prediction- tranche
   na-eligibility-audit run report.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries) -- recent passes closed 1 stale
+  checkbox (C0 copy-walk, superseded by E4) and re-confirmed the RECLASSIFY verdict, no new source/codex reference
+  introduced; M-1 coordinator, 3 pipeline/bucket/manifest codex SSOTs, and `rebuild_prediction_manifest.py` remain
+  accurate.

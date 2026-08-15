@@ -230,11 +230,14 @@ pairs stay honest-unresolved (reported, never guessed).
       `DERIBIT:OPTION:BTC-USD@INV-20190405-3250-C`), dated-FUTURE **9,091** decompose per-expiry (`adausd_200925` →
       `BINANCE-DELIVERY:FUTURE:ADA-USD@INV-20200926`); PERPETUAL 5,411 / SPOT_PAIR 8,405. All quote-bearing (gate's
       0-missing-quote assertion). (repo: instruments-service)
-- [ ] [SCRIPT] P2. **586 marker-less `VENUE:PERPETUAL:BASE-QUOTE` catalogue rows** (blueprint open-q #19, measured
+- [ ] [OPERATOR] P2. **586 marker-less `VENUE:PERPETUAL:BASE-QUOTE` catalogue rows** (blueprint open-q #19, measured
       2026-07-17: BITGET-FUTURES 275 / BINANCE-FUTURES 153 / COINBASE-FUTURES 107 / BINANCE-DELIVERY 27 /
       BITFINEX-FUTURES 16 / OKX-SWAP 5 / BYBIT 3 — NOT just the 16 BITFINEX rows the blueprint recorded). Deliberately
       OUT of scope of the Phase -1 fix (the gate is `0` `:PERP:`, not `0` marker-less) — rewriting them is a 586-row
-      blast radius that needs its own decision + drain. (repo: instruments-service)
+      blast radius that needs its own decision + drain. **2026-08-15 (`cefi_residual_ao_dispatch_2026_08_15.md`
+      todo 1)**: checked whether operator decision #4 above already covers this — it does not (decision #4 is the
+      general target; this item's own carve-out sentence, written in the same session, explicitly requires a separate
+      decision + drain). Blocked question filed: `BLK-96fd40c0`. Retag when answered. (repo: instruments-service)
 
 ## Phase 0a — Contract locks (design lock, before any code)
 
@@ -547,7 +550,7 @@ pairs stay honest-unresolved (reported, never guessed).
       `cefi-queue-*` + on-chain `cefi-*` VMs, both clouds), consolidate the manifest, snapshot the cefi bucket + index
       before any content-rewrite/rename cutover; re-enable writers only after apply + verify. HARD RULE: no GCS cutover
       with writers live. (repo: deployment-service) — Fresh-measured 7 live on-chain writers
-      (`cefi-{aster,hyperliquid}-     {year}-20260727-022558`, Tardis `cefi-queue-*` = 0, AWS = 0); drained
+      (`cefi-{aster,hyperliquid}- {year}-20260727-022558`, Tardis `cefi-queue-*` = 0, AWS = 0); drained
       02:36:24Z-02:37:35Z; consolidator cron paused + one manual consolidation pass run; main index snapshotted
       (`_index/backups/availability_index.pre_d4_cutover_20260727T023846Z.parquet`). **Writers re-enabled + verified
       actually capturing** (not just instance RUNNING — confirmed fresh `collect-onchain-perp-batch` processes + log
@@ -580,6 +583,11 @@ pairs stay honest-unresolved (reported, never guessed).
 
 ## Progress Log
 
+- **2026-08-15 (na-eligibility-audit follow-up, operator ruling)**: two open items ruled via AskUserQuestion. (1) The
+  586 marker-less catalogue rows — **check decision #4's exact scope first, then decompose or file a fresh question** —
+  extracted to `cefi_residual_ao_dispatch_2026_08_15.md` (`assigned_vm: planning`). (2) The ~4.5M-file corpus-wide
+  instrument_id backfill (scope grew ~100x past original estimate) — **operator proceeded as originally authorized**,
+  overriding the "pause for a fresh estimate" recommendation — same dispatch plan.
 - **2026-07-18 (slot-3, /autonomous) — CUTOVER STAGED; drain+`--apply`+content GATED on a QUIET cefi fleet (a concurrent
   pipeline-check sweep is active).** Everything reversible is done + verified; only the irreversible core remains, and
   it needs a writer-free window.

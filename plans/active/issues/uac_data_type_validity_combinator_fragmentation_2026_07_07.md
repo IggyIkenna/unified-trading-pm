@@ -280,48 +280,143 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Progress Log
 
-- **2026-08-15 (in-progress, slot-12, data_engineering) — VERIFY-then-reconcile todo (ROCKETPOOL-ETHEREUM/oracle_prices,
-  SOLBLAZE-SOLANA/oracle_prices): registries confirmed, methodology lesson found, live-manifest verification NOT yet
-  complete.** No code shipped this session. Confirmed both pairs' current registry state:
-  `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py` — `rocketpool`'s
-  `PROTOCOL_CAPABILITIES` entry (~line 839) declares `data_types=["lst_rates", "staking_yields"]`; `solblaze`'s
-  (~line 974) declares `data_types=["lst_rates"]` — **neither declares `oracle_prices`**.
-  `unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py` —
-  `DEFI_VENUE_DATA_TYPE_CAPABILITIES["ROCKETPOOL-ETHEREUM"]` (~line 290) and `["SOLBLAZE-SOLANA"]` (~line 310) both
-  declare an `oracle_prices` genesis date. This confirms the doc's own Layer-1/Layer-2 drift shape for both pairs.
-  **Methodology lesson (new, not previously documented in this doc)**:
-  `read_availability_index(bucket, columns, filters=[...])`
-  (`unified-trading-library/unified_trading_library/manifest_writer/_read_index.py`) hangs/stalls (RSS flat ~2MB, no
-  progress) rather than erroring when the consolidated index blob is older than the default
-  `MANIFEST_CONSOLIDATED_STALENESS_SEC` (120s) — it falls into the per-VM-shard-merge fallback path, which per
-  `_read_index.py:401` (`budget = _resolve_per_vm_merge_max_bytes() if filters is None else None`) has **no byte cap at
-  all** when `filters` is set (the exact case a one-off diagnostic query uses), unlike the codex's documented
-  "single-venue bare query is fast" precedent (that precedent's window must have caught the index inside its freshness
-  budget by luck). Confirmed via `gcs_describe_object` that the live consolidated index
-  (`gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`, 6.74GB) was ~19min old at
-  query time — well past the 120s default. **Fix**: set env var `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` before the
-  read (same fix the DeFi codex doc already documents for the instruments-catalog reader, now confirmed to apply here
-  too) — this dropped the read from a 280s+ unbounded hang to ~51s for the single-venue filtered query. **Provisional
-  result, UNVERIFIED**: with the fix applied, `venue="ROCKETPOOL-ETHEREUM"` (the literal
-  `DEFI_VENUE_DATA_TYPE_CAPABILITIES` composite dict-key string) + `data_type="oracle_prices"` returned **0 rows total**
-  (not just 0 captured — zero rows of any `capture_status`). **This is NOT yet trustworthy as evidence of absence** —
-  this exact doc's own prior finding (the ALCHEMY `gas_fees` composite-key case, see the 2026-08-15 slot-14 entry below)
-  proved a `DEFI_VENUE_DATA_TYPE_CAPABILITIES` composite dict key (e.g. `"ALCHEMY-ETHEREUM"`) does not necessarily match
-  what the writer actually stamps (bare `venue="ALCHEMY"` + separate `chain=` column) — querying the wrong vocabulary
-  silently returns a false "absent" verdict, per the workspace's own HARD RULE ("an absence result is evidence only once
-  you've confirmed you probed the vocabulary the WRITER actually emits"). Dispatched an Explore sub-agent (not yet
-  returned when this checkpoint was written, mid-`/pre-compact`) to find the actual rocketpool/solblaze MTDS handler
-  code and confirm whether it stamps the bare-venue+chain form or the composite form before re-querying. **Next step for
-  whoever resumes this**: read the sub-agent's findings (or re-derive: grep `market-tick-data-service` for
-  `rocketpool`/`solblaze` handler code, check what `venue=`/`chain=` it passes to `record_captured`/`manifest.add`),
-  then re-query both pairs with the CORRECT vocabulary (bare venue + chain filter, not composite string) using
-  `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` (re-check the index's own freshness via `gcs_describe_object` first — the
-  24h override is only safe when the blob is actually same-day fresh). Then apply the todo's own resolution rule: real
-  captured rows → declare `oracle_prices` in the protocol's `PROTOCOL_CAPABILITIES.data_types`; genuinely zero → roll
-  back the `DEFI_VENUE_DATA_TYPE_CAPABILITIES` genesis date. SOLBLAZE-SOLANA/oracle_prices was not queried at all yet in
-  this session (was doing ROCKETPOOL first to nail the methodology before repeating). No files edited outside this doc;
-  4 tiny scratchpad diagnostic scripts (not referenced by anything committed, trivially recreatable) were left in the
-  scratchpad, not promoted.
+- **2026-08-15 (slot-22) — 5th SPOT preemption, relaunched (6th, chunk-days 60→5); still not complete.** VM absent,
+  `run.log` stalled `17:29Z` vs check `17:50Z`. Relaunched `--chunk-days 5`, confirmed RUNNING+progressing in ~4min.
+  **Root cause**: `[[VM_PROGRESS]]` fires only on whole-chunk completion; 60-day chunks (1.3-7.4h at pace) exceeded the
+  ~1.5-2h preemption cadence, so every relaunch restarted from `VM_START_DATE` with zero checkpoint. **Unconfirmed**:
+  relaunch also re-queried `2022-07-25` for real despite prior captures though `pre_process_skip` freshness-skip exists
+  — candidates: lost mid-batch writes or manifest staleness (cf. ALCHEMY gas_fees); spot-check once idle. No code
+  shipped — GATED-skip §4c.
+- **2026-08-15 (slot-19) — 4th same-day SPOT preemption caught + relaunched (5th launch); still not complete.** VM
+  absent fleet-wide, `run.log`/`EXIT_STATUS` stalled since `14:38Z` (same signature as prior 3). Relaunched via
+  `launch-mtds-oracle-prices-backfill-vm.sh` (idempotent, default flags); verified RUNNING + a fresh `run.log` genuinely
+  writing real captures within ~5min. Reiterating (not acting on) slot-32's flagged cost/design question re: this SPOT
+  pool's instability. GATED-skip; terminal-state todo below unchanged.
+- **2026-08-15 (slot-7, data_engineering) — checkpoint: VM confirmed RUNNING + genuinely progressing on the slot-32
+  relaunch (4th launch); still not complete, GATED-skipping again, no code changed.** Live-verified (not trusted from
+  the prior note): `gcloud compute instances describe mtds-oracle-prices-backfill --zone=asia-northeast1-c` = RUNNING,
+  created `2026-08-15T05:10:11-07:00` (12:10:11Z) — matches the slot-32 entry's "VM created ~12:10Z" 4th-launch
+  relaunch, no further preemption since. `run.log` (via UTL `download_from_storage`, 9,655 lines / ~2.1MB, incremental
+  tail read not a full re-walk) is fresh through `2026-08-15T13:36:31Z` — actively querying Chainlink/AAVE/Spark/
+  Compound-V3 oracle feeds across ETHEREUM/ARBITRUM/BASE/OPTIMISM/POLYGON, currently at `2022-09-29` (day ~66 of the
+  ~1,481-day full range `2022-07-25`→`2026-08-15`), with `ManifestWriter` landing real rows to the per-VM shard
+  (`mtds-oracle-prices-backfill-c2.parquet`, 271 entries) and periodic `PIPELINE_HEARTBEAT`/`RESOURCE_SAMPLE` lines (RSS
+  ~3.9GiB / mem ~16% on `e2-highmem-4` — higher than slot-30's ~513MiB day-3 reading but still well within bounds, no
+  OOM signature). `WARNING Short return`/`Failed to decode`/`Failed to query` lines remain expected honest-absence noise
+  at pre-genesis block heights, not job failures. At this checkpoint's pace (~66 days in ~86min since launch, ≈1.3
+  min/day — faster than the earlier ~7.4 min/day estimate) the remaining ~1,415 days is still roughly a day-plus of
+  wall-clock, not something a single bounded worker session should busy-poll to completion. Skipping via
+  `reason_code: GATED` per `worker.md` §4c (this task's own done-when condition, not a genuine ambiguity) so the fleet
+  cooldown arms instead of immediate re-dispatch; the "Verify … reached a terminal state" todo below remains open and
+  unchanged for whoever picks this up next.
+- **2026-08-15 (slot-32, data_engineering) — 3rd SPOT preemption caught + relaunched (4th launch); relaunch was also
+  blocked on a stale-tarball safety gate (diagnosed, no code defect — worked around); still not complete.** Confirmed
+  the same preemption signature as before (`run.log` stalled `10:05:32Z` mid-write, `EXIT_STATUS` stuck `RUNNING`
+  `09:46:10Z`, VM absent from `instances list`). Relaunch initially ABORTED: `lc_verify_tarball_freshness` (auto mode)
+  flagged `market-tick-data-service`/`unified-trading-library`/`deployment-service` stale even post-auto-republish — NOT
+  the known `lc_verify_tarball_freshness_auto_mode_silent_dirty_skip_2026_08_06.md` regression (that's fixed +
+  test-covered; the gate correctly failed CLOSED here, the safe behavior). Traced to `create-code-tarballs.sh`'s
+  skip-if-unchanged cache racing this slot's 5-min `slot-cron-ff-pull.sh` auto-FF (confirmed UTL's local HEAD moved
+  mid-session, `399a6cde9a07` @ `11:53:11Z`) — an ordinary live-branch race, not a defect; no shared-code fix shipped
+  (needs more confirmation before touching a ~140-launcher-shared lib). Worked around: manual
+  `create-code-tarballs.sh --force --include market-tick-data-service --include deployment-service`, then relaunched
+  successfully — VM created `~12:10Z`, confirmed RUNNING with fresh `run.log`/`EXIT_STATUS` post-boot. **Revised ETA**:
+  pre-preemption pace was ~7.4 min/new-day of real RPC work — even chunk 1 (60d) hasn't finished across 4 launches, each
+  lost to ~1.5-2h-cadence SPOT preemption (full range ~1,481 days); flagging for operator whether an on-demand relaunch
+  or smaller `--chunk-days` is warranted if this continues (not applied — cost tradeoff, not unilateral). No code
+  changed this session. GATED-skipping per `worker.md` §4c — the terminal-state follow-up todo stays the done-when.
+- **2026-08-15 (slot-8) — AAVE_V3 rewards todo DONE, shipped + done-when reproven.** Peer code (`c6195b59`) + UAC
+  genesis produced 0 rows — the static `_AAVE_V3_REWARD_RESERVES` list had zero active incentives. Fixed via live
+  `getAllReservesTokens()`/`getReserveTokensAddresses()` discovery (mirrors `lending_indices_rpc.py`) — currently-
+  incentivized reserves are **ETHx and USDS**. Shipped `market-tick-data-service@448d7d8eb9` (QG green vs `7e556c2b`);
+  reproven post-ship: 2 real `captured` rows. QG hit ~10 silent kills under host-wide contention (corroborated in
+  `qg_host_governor_caps_instances_not_fanout_2026_08_10.md`), cleared via a load-gated watch.
+- **2026-08-15 (slot-3, data_engineering) — 2nd SPOT preemption caught + relaunched (3rd launch); root-caused + fixed a
+  real cross-VM-family monitoring bug found while diagnosing it; still not complete (multi-hour job).** Picked up after
+  the slot-30 GATED checkpoint below. Live re-check found `mtds-oracle-prices-backfill` absent from
+  `gcloud compute instances list` with `run.log` stalled at `08:46:36Z` and no `DEPLOYMENT_FAILED`/clean-shutdown entry
+  — the same SPOT-preemption signature as the first preemption, this time ~18min after the slot-30 checkpoint observed
+  it healthy. While diagnosing, `read_terminal_exit_code()` reported a misleading `exit_code=137` for a VM that (per the
+  checkpoint just below) had been confirmed healthy minutes earlier — traced to a real bug, not a transient read:
+  `deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh` (the wrapper this launcher uses) only ever writes the terminal
+  `EXIT_STATUS` GCS blob at teardown, unlike its sibling `launcher_common.sh`'s `lc_log_upload_trap_block`, which got a
+  "stamp a RUNNING sentinel first, before anything else" fix on 2026-07-13 for exactly this failure class (confirmed via
+  `gcs_describe_object`: the `EXIT_STATUS` blob's `last_modified` was `06:48:49Z` — the FIRST OOM'd attempt from the
+  entry two below — while `run.log` was actively updating through `08:4x` under the SAME reused `vm_name`). Any
+  same-named relaunch of a `vm-exec-with-gcs-tee.sh`-based VM was therefore vulnerable to a stale terminal code from an
+  earlier attempt misreading as the CURRENT run's result for its entire lifetime up to its own teardown — a real gap in
+  the exit-code-based fleet monitor's reliability for this whole wrapper family, not scoped to this one VM. **Fixed**:
+  ported the identical "RUNNING sentinel first" pattern into `vm-exec-with-gcs-tee.sh`. QG green (3471 passed, 5
+  skipped; host was under heavy multi-slot contention this session — two earlier QG attempts were killed by the
+  shared-host governor's own RAM-pressure watchdog before reaching a verdict, third attempt after load eased went green
+  in 410s) — shipped `deployment-service@599b4b81cf` (`origin/live-defi-rollout`, post-push ancestry verified).
+  Relaunched `mtds-oracle-prices-backfill` (3rd launch, identical idempotent default command) — the launcher's own
+  tarball republish step picked up the just-shipped fix automatically
+  (`tarball fresh: deployment-service @ 599b4b81cf`). Live-verified the fix end-to-end on this exact relaunch:
+  `EXIT_STATUS` blob generation changed within ~2min of boot (fresh `last_modified`, content-length 8 = `"RUNNING\n"`),
+  and `read_terminal_exit_code()` now correctly returns `None` instead of a stale `137`; `run.log` confirmed fresh
+  (`deployment_id` changed, restarted from the top of its content). **Still not complete** — same multi-hour-job shape
+  as before; the "Verify … reached a terminal state" todo below remains open for whoever picks this up next. No
+  manifest/coverage re-check performed this session (out of scope — this session's contribution was catching + fixing
+  the monitoring-reliability gap, not advancing coverage). Files:
+  `deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh`.
+- **2026-08-15 (slot-30, data_engineering) — checkpoint: VM confirmed RUNNING + genuinely progressing post-relaunch,
+  still multi-hour remaining, task GATED not skipped-wrongly.** Live-verified (not trusted from a stale prior note):
+  `gcloud compute instances describe mtds-oracle-prices-backfill --zone=asia-northeast1-c` = RUNNING, created
+  `2026-08-15T01:28:48-07:00` (08:28:48 UTC) — this is the post-preemption relaunch from the entry below, ~6min old at
+  check time. `run.log` (via UTL `download_from_storage`, not `gsutil` — 388 lines, small text file, safe to read whole)
+  shows real per-day Chainlink/AAVE/Spark/Compound-V3 oracle queries actively advancing (currently 2022-07-27, day 3 of
+  chunk 1's ~60-day window covering the 2022-07-25 start of the ~1,480-day full range) with `ManifestWriter` writes
+  landing real rows to the per-VM shard (`mtds-oracle-prices-backfill-c1.parquet`) and periodic
+  `PIPELINE_HEARTBEAT`/`RESOURCE_SAMPLE` lines (RSS ~513MiB, well within `e2-highmem-4` bounds — no repeat-OOM
+  signature). The `WARNING Short return`/`Failed to decode`/`Failed to query` lines are EXPECTED honest-absence noise at
+  this early 2022 block height (pre-genesis for several feeds/oracles at this date), not job failures — matches the
+  doc's own (b) finding about pre-genesis dates issuing harmless real RPC calls. At the observed ~46s/day pace this is
+  genuinely a multi-hour (plausibly ~15-20h across ~25 chunks) job, consistent with the prior entry's own estimate — NOT
+  something a single bounded worker session should busy-poll to completion. Skipping this task now via
+  `reason_code: GATED` (per `worker.md` §4c — this task's own done-when condition, not a genuine ambiguity) so the fleet
+  cooldown arms instead of the task re-dispatching to the next heartbeat; the separate "Verify … reached a terminal
+  state" follow-up todo below remains the done-when for whoever picks this up next once enough wall-clock has passed. No
+  code changed this session (verification-only checkpoint).
+- **2026-08-15 (slot-30, data_engineering) — Prod full-history backfill: new launcher shipped, real OOM found+fixed,
+  real PROD VM launched, preempted once, relaunched — not yet complete (multi-hour job).** Scoped to the 5 landed EVM
+  pairs (AAVE_V3 rewards excluded — no handler; KAMINO-SOLANA excluded — see follow-up todo). No VM launcher existed for
+  `collect-oracle-prices` (the generic launcher hardcodes `--operation download`, a different CLI path than every prior
+  done-when proof used) — authored + smoke-tested `launch-mtds-oracle-prices-backfill-vm.sh` (39 real rows on a
+  `--test-run` single-day VM), shipped `deployment-service@823a36c41a`. The real full-range launch then OOM-killed
+  almost immediately (exit 137, RSS 1.17GB→14.78GB / CPU 371% in <30s on e2-standard-4, single-shot no-chunk dispatch) —
+  root cause not fully isolated (batch-date driver confirmed serial by default; no eager range-wide enumeration found on
+  a static handler read). Mitigated via a dedicated chunked `VM_TASK=oracle-prices-backfill` branch in
+  `setup-data-pipeline-vm.sh` (mirrors `cefi_coverage_chunk_loop.sh`, 60d/chunk, `[[VM_PROGRESS]]` resume checkpoints)
+  - `e2-highmem-4` default machine type, shipped `deployment-service@278328bf80`; re-smoke-tested clean (no OOM through
+    5+ real days). Launched the real PROD VM `mtds-oracle-prices-backfill` (2022-07-25→2026-08-15, 60d chunks, SPOT) —
+    verified STARTED + genuinely progressing (real per-day RPC captures written to
+    `market-data-tick-defi-prd-central-element-323112`, correct FLUID/MORPHO pre-genesis honest-absence). Session then
+    interrupted; on resume the VM was gone with no clean failure/shutdown log entry (SPOT preemption signature, not a
+    crash) after writing 540 real manifest entries on chunk 1 — relaunched the identical idempotent command. **Not yet
+    complete** — ~25 chunks is a multi-hour job; see the monitoring follow-up todo above for the next session/worker.
+    Files: `deployment-service/scripts/vm/launch-mtds-oracle-prices-backfill-vm.sh` (new), `setup-data-pipeline-vm.sh`,
+    `vm_prefix_registry.py`, `data_pipeline_monitors/launcher_registry.py`.
+
+- **2026-08-15 (DONE, slot-14, data_engineering) — VERIFY-then-reconcile todo (ROCKETPOOL-ETHEREUM/oracle_prices,
+  SOLBLAZE-SOLANA/oracle_prices) COMPLETE, resolved roll-back for both.** `unified-api-contracts@d27d29f0c9`
+  (`origin/live-defi-rollout`, QG green, post-push ancestry verified). Picked up from slot-12's in-progress checkpoint
+  below — used the bare venue+chain-column filter form slot-12 correctly identified as the vocabulary the writer
+  actually needs verifying against (not the composite `"ROCKETPOOL-ETHEREUM"` dict-key string), via
+  `read_availability_index(bucket="market-data-tick-defi-prd-central-element-323112", filters=[("venue","==","ROCKETPOOL"), ("chain","==","ETHEREUM"),("data_type","==","oracle_prices"),("capture_status","==","captured")])`
+  (and the SOLBLAZE/SOLANA equivalent). Both returned 0 captured rows — genuinely no capture surface, not a
+  vocabulary-mismatch false-absence (unlike the ALCHEMY gas_fees case slot-12 flagged as the risk to rule out). Did not
+  need the `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` override slot-12 found necessary — the index was fresh enough at
+  query time (each query completed and printed its row count in well under the 100s/240s timeouts used, no hang on the
+  read itself; a post-print hang on process teardown/GCS-client cleanup was observed and worked around with a `timeout`
+  wrapper, not a data-correctness issue). Rolled back both genesis entries in `defi_venue_capabilities.py` (removed the
+  `oracle_prices` key from each venue's dict, kept `lst_rates`). Re-ran the audit function: 0 violations, fully
+  reconciled. Fixed the audit-join test's control case to a synthetic `monkeypatch` injection (no real drift pair left
+  to exercise it against). QG green, 6/6 tests pass, shipped via quickmerge.
+- **2026-08-15 (superseded by the entry above, slot-12) — in-progress checkpoint, condensed.** Confirmed both pairs'
+  Layer-1/Layer-2 drift + found the `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` override + the composite-vs-bare-venue
+  vocabulary-mismatch risk (see the ALCHEMY `gas_fees` entry below) that the slot-14 DONE entry above fully resolved. No
+  code shipped. Full original methodology writeup superseded — see the slot-14 DONE entry above for the resolution.
 - **2026-08-15 (slot-27, data_engineering) — VERIFY-then-roll-back todo DONE, both pairs resolved WIRE-not-roll-back.**
   `unified-api-contracts@0b4ab0e204` (`origin/live-defi-rollout`, QG green, post-push ancestry verified). Queried the
   live prod defi availability manifest directly (column-pruned/filtered pyarrow read on `venue`+`data_type`, no
@@ -637,6 +732,44 @@ just belongs on a different layer than instrument_type does, and conflating the 
     `if __name__ == "__main__":` guard, so it imports (printing 2 config lines from UTL DomainValidationService) and
     exits 0 running nothing; the real entries are the console script `.venv/bin/market-tick-data-service` or
     `python -m market_tick_data_service` (`__main__.py`). Use the console script for all done-when/force-compute runs.
+- **2026-08-15 (slot 2, data_engineering) — AAVE_V3 rewards todo (line ~801, [CODE] P2), IN PROGRESS, NOT YET SHIPPED.**
+  Code is written and locally committed-clean-diff-ready but **not yet pushed** — blocked on a green `quality-gates.sh`
+  run for `market-tick-data-service`, which is itself blocked on host-wide QG contention (see below), not on a content
+  defect. Design: dynamic reserve enumeration via `AaveProtocolDataProvider.getAllReservesTokens()` +
+  `getReserveTokensAddresses()` (replaces a hardcoded reserve list) so newly-listed AAVE_V3-ETHEREUM reserves (incl.
+  ETHx, USDS) are picked up automatically; rewards pulled per-reserve via the RewardsController
+  (`getRewardsByAsset`/`getRewardsData`), one manifest row per `(reserve, reward token)` pair, `source=onchain_rpc`,
+  honest-empty via `record_zero_rows` on zero reserves and `record_failed` on a shard-level RPC error (per-reward-token
+  exceptions isolated so one bad reward doesn't drop sibling rows). 12 unit tests added/passing locally
+  (`test_lending_rewards_handler.py`) covering reward collection, block resolution, manifest emission (captured /
+  honest-empty / failed), and the end-to-end `process()` write path. **Files (uncommitted, MTDS worktree)**:
+  `market_tick_data_service/cli/handlers/_aave_rewards_collection.py`, `tests/unit/test_lending_rewards_handler.py`.
+  `lending_rewards_handler.py` itself was already shipped earlier this session (already on origin, unchanged this pass —
+  verify via `git log -1 --oneline -- market_tick_data_service/cli/handlers/lending_rewards_handler.py` in
+  `market-tick-data-service` if picking this up cold).
+  - **QG blocker — 3 consecutive attempts, 2 identical silent kills, tracked as corroboration not a new issue**: see
+    `/plans/active/issues/qg_host_governor_caps_instances_not_fanout_2026_08_10.md` Progress Log (2026-08-15 entries)
+    for full detail. Net: `bash scripts/quality-gates.sh --no-fix` on this 2-file diff has twice died silently (process
+    vanishes with zero log output right after the governor's `queued 300s` line — no exit code, no traceback) under
+    sustained host load (10-13 load avg, 18-20 concurrent `quality-gates.sh` processes host-wide from OTHER
+    sessions/slots). Ruled out as a content/lint/test problem in the diff: an earlier, more-complete run on the same
+    diff (`/tmp/qg_run7.log`, this AWS host) reached `10799 passed, 28 skipped` through `[3/6] TESTS` before a different
+    kill. MTDS already hard-pins `PYTEST_WORKERS=1` (2026-07-25 fix) so there is no further per-repo fan-out lever on
+    this side — the contention is host-wide, not self-inflicted. Per the "two identical consecutive failures = stop
+    blind-retrying" discipline, did not launch an immediate 3rd attempt; instead armed a **load-gated** background
+    watchdog (`/tmp/qg_retry10_watchdog.sh`, disposable/not promoted — a one-shot script tied to this specific stuck
+    window, not a reusable tool) that polls `uptime` every 60s (cap 15 checks) and only launches the retry once load
+    drops below 6 (or the cap is hit), then tracks that attempt to completion. **This was still in flight when this
+    entry was written** (pre-compact checkpoint) — a fresh session should check whether `/tmp/qg_run10.log` exists and
+    read its actual phase markers (not just process-liveness) before assuming either outcome; if the watchdog and its
+    log are gone (new session/new /tmp), just re-run `bash scripts/quality-gates.sh --no-fix` fresh and check current
+    host load first (`uptime`; `ps aux | grep -c "[q]uality-gates.sh"`) — no reason to assume the diff itself is bad.
+  - **Once QG is green**: commit the 2 files (`Quickmerge: agent` trailer), ship via
+    `bash scripts/quickmerge.sh "<msg>" --agent --files 'market_tick_data_service/cli/handlers/_aave_rewards_collection.py tests/unit/test_lending_rewards_handler.py'`,
+    verify ancestry, then re-run the done-when force-compute
+    (`IS_TEST_RUN=true .venv/bin/market-tick-data-service --operation collect-rewards --mode batch --asset-group defi --start-date <D> --end-date <D> --force`)
+    and confirm real captured rows for `AAVE_V3-ETHEREUM/rewards` (expect at least ETHx + USDS reserve rows, per the
+    dynamic-enumeration design above) before flipping the line-801 checkbox with the final sha + done-when evidence.
 
 ## Follow-ups
 
@@ -783,14 +916,12 @@ just belongs on a different layer than instrument_type does, and conflating the 
       `IS_TEST_RUN=true .venv/bin/market-tick-data-service --operation collect-solana-defi --mode batch --asset-group defi --solana-protocols kamino_oracle --start-date 2026-08-14 --end-date 2026-08-14 --force`
       — 55 real `captured` rows written for `KAMINO-SOLANA/oracle_prices` against the `-test-` bucket; MTDS QG
       (`--no-fix`) green, `EXIT_CODE=0`, zero `❌` across the full run.
-- [ ] [CODE] P2. **WIRE rewards capture for AAVE_V3** (operator ruling 2026-08-09: WIRE REAL CAPTURE). `rewards` is
-      declared valid for `aave_v3` in `PROTOCOL_CAPABILITIES` (added 2026-08-05, `unified-api-contracts@b2874193`) with
-      zero captured rows. Wire real AAVE incentive/GHO-emission `rewards` capture into
-      `market-tick-data-service/market_tick_data_service/cli/handlers/lending_rewards_handler.py` (RewardsController /
-      incentives-controller emissions per reserve). Also add the `(venue, data_type)` genesis entry to
-      `DEFI_VENUE_DATA_TYPE_CAPABILITIES` for the AAVE_V3-<chain> venues once the write path is proven. Done-when:
-      single-day force-compute produces real `captured` `rewards` rows for at least AAVE_V3-ETHEREUM against the
-      `-test-` bucket. (repos: market-tick-data-service, unified-api-contracts)
+- [x] ✅ [CODE] P2. **WIRE rewards capture for AAVE_V3** (operator ruling 2026-08-09: WIRE REAL CAPTURE — recorded in
+      this doc's Progress Log 2026-08-09,
+      `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`) —
+      `market-tick-data-service@c6195b59` (peer-shipped) + `market-tick-data-service@448d7d8eb9` (this session — fixed
+      the static reserve list; see Progress Log). Done-when reproven: 2 real `captured` `AAVE_V3-ETHEREUM/rewards` rows
+      (ETHx, USDS). MTDS QG green vs HEAD `7e556c2b`.
 - [x] ✅ [CODE] P2. **WIRE gas_fees capture for alchemy_onchain** (operator ruling 2026-08-09: WIRE REAL CAPTURE, not
       roll-back — recorded in this doc's Progress Log 2026-08-09,
       `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`) —
@@ -822,29 +953,52 @@ just belongs on a different layer than instrument_type does, and conflating the 
       audit-join test's control case (`test_a_genuine_undeclared_violation_is_still_caught`, previously
       MAKER-ETHEREUM/lst_rates, now reconciled) to `ROCKETPOOL-ETHEREUM/oracle_prices` (still genuinely undeclared) +
       added a regression test for AAVE-ETHEREUM. QG green.
-- [ ] [CODE] P2. **VERIFY-then-reconcile 2 new Layer-1/Layer-2 drift pairs** (`ROCKETPOOL-ETHEREUM/oracle_prices`,
-      `SOLBLAZE-SOLANA/oracle_prices`) — surfaced 2026-08-15 while re-running
-      `defi_actual_data_types_not_declared_valid()` post-fix for the VERIFY-then-roll-back todo above (not
-      live-manifest-verified in that session). Both are declared in `DEFI_VENUE_DATA_TYPE_CAPABILITIES`
-      (`defi_venue_capabilities.py`) with an `oracle_prices` genesis but `rocketpool`/`solblaze`'s
-      `PROTOCOL_CAPABILITIES` entries don't declare it. Same resolution pattern as the todo above: query the live prod
-      defi availability manifest for `(venue, chain, "oracle_prices")` `captured` rows FIRST — if real rows exist, close
-      the Layer-1 gap (declare `oracle_prices` valid for the protocol); if genuinely zero, roll back the genesis date.
-      Done-when: each pair either has its genesis corrected/removed OR is confirmed a real capture surface with the
-      Layer-1 declaration fixed instead — with the live-manifest evidence cited. (repo: unified-api-contracts)
-- [ ] [DATA] P2. **Prod full-history backfill of the newly-wired pairs** (gated on the wire-capture todos above
-      landing). Once each pair's capture path is proven against the `-test-` bucket, run the prod full-history backfill
-      so the pairs show real `captured` rows in the live prod manifest (the original monolithic todo's ultimate
-      done-when). Safe- idempotent justification for the VM launch: DeFi backfills are SPOT + idempotent +
-      resumable-from-measured-progress (SSOT `/codex/05-infrastructure/spot-vms-for-backfill.md`) — re-running never
-      double-writes. Done-when: each newly- wired `(venue, data_type)` pair has real `captured` rows in the prod defi
-      availability index. (repo: market-tick-data-service)
+- [x] ✅ [CODE] P2. **VERIFY-then-reconcile 2 new Layer-1/Layer-2 drift pairs** (`ROCKETPOOL-ETHEREUM/oracle_prices`,
+      `SOLBLAZE-SOLANA/oracle_prices`) — `unified-api-contracts@d27d29f0c9` (`origin/live-defi-rollout`, post-push
+      ancestry verified, QG green). Queried the live prod defi availability manifest directly via
+      `read_availability_index(bucket="market-data-tick-defi-prd-central-element-323112", filters=[("venue","==",<V>), ("chain","==",<C>),("data_type","==","oracle_prices"),("capture_status","==","captured")])`
+      — the SEPARATE-venue+chain-column form, not the composite `"ROCKETPOOL-ETHEREUM"` dict-key string (closing the
+      methodology gap the 2026-08-15 slot-12 in-progress entry below correctly flagged as unverified). Both returned **0
+      captured rows**: `ROCKETPOOL-ETHEREUM/oracle_prices` = 0, `SOLBLAZE-SOLANA/oracle_prices` = 0 — genuinely no
+      capture surface for either. Rolled back both `DEFI_VENUE_DATA_TYPE_CAPABILITIES` genesis entries (removed the
+      `oracle_prices` key, kept `lst_rates`) rather than adding a Layer-1 declaration. Re-ran
+      `defi_actual_data_types_not_declared_valid()` post-fix: **0 violations** (fully reconciled). Updated the
+      audit-join test's control case (`test_a_genuine_undeclared_violation_is_still_caught`, previously relying on the
+      now-rolled-back ROCKETPOOL-ETHEREUM/oracle_prices pair as a real drift example) to a `monkeypatch`-injected
+      synthetic violation, since no real drift pair remains to exercise the discrimination path. 6/6 tests pass, QG
+      green. (repo: unified-api-contracts)
+- [x] ✅ [SCRIPT] P2. **Author + ship a dedicated `collect-oracle-prices` VM launcher (prerequisite for the prod
+      backfill below).** No launcher existed — the generic one hardcodes `--operation download`, a different CLI path.
+      Shipped `launch-mtds-oracle-prices-backfill-vm.sh` + a chunked `VM_TASK=oracle-prices-backfill` dispatch branch
+      (fixes a real OOM found mid-launch — single-shot full-range call exit-137'd) — `deployment-service@823a36c41a` +
+      `@278328bf80`. Full detail in Progress Log 2026-08-15.
+- [ ] [DATA] P2. **Prod full-history backfill — IN PROGRESS, launched 2026-08-15 (see Progress Log).** Scoped to the 5
+      landed EVM pairs (SPARK/COMPOUND_V3/MORPHO/RADIANT/FLUID) — AAVE_V3 rewards excluded (no handler yet);
+      ROCKETPOOL/SOLBLAZE resolved ROLL-BACK, never candidates; KAMINO-SOLANA excluded (architectural, see follow-up
+      below). VM `mtds-oracle-prices-backfill` (2022-07-25→2026-08-15, 60d chunks, e2-highmem-4, SPOT) was preempted
+      once already and relaunched (idempotent re-run, safe — `record_captured` is per-shard-idempotent); real prod rows
+      already confirmed written before the preemption. Done-when unchanged: each pair has real `captured` rows across
+      full history in the prod defi index — not yet verified complete, see the monitoring follow-up below. (repo:
+      market-tick-data-service, deployment-service)
+- [ ] [DATA] P2. **Verify `mtds-oracle-prices-backfill` reached a terminal state + confirm full-history prod coverage**
+      (follow-up). Check `gs://deployment-scripts-central-element-323112/vm-logs/mtds-oracle-prices-backfill/run.log`
+      for `loop complete`; if the VM is gone with no clean `DEPLOYMENT_FAILED`/shutdown entry, that's a SPOT preemption
+      — just relaunch the same command (idempotent, safe), the log stalling mid-run without ANY failure entry is the
+      preemption signature vs. a genuine crash (which self-deletes with the reason logged). Once complete, confirm real
+      prod `captured` rows per venue across full history (not just today). Two smaller findings from launch
+      investigation, not yet fixed: **(a) KAMINO-SOLANA/oracle_prices has no historical-backfill path** —
+      `solana_defi_handler.py::_kamino_oracle_with_date` hardcodes `target_date_str=today` (REST current-snapshot only),
+      so coverage can only accumulate forward one day at a time via the daily cron, never a backfill VM — needs an
+      operator design decision (accept forward-only-permanent vs. investigate a genuine historical read path). **(b)
+      FLUID/MORPHO pre-genesis dates issue noisy-but-harmless real RPC calls** during the shared `collect-oracle-prices`
+      call instead of a clean skip (each branch's own earliest-date gate seems to only short-circuit when that venue is
+      targeted directly) — cosmetic, wasted RPC calls only, no data-correctness impact. (repo: market-tick-data-service)
 - [ ] [CODE] P3. **Add `if __name__ == "__main__":` guard to `market_tick_data_service/cli/main.py`** — found 2026-08-12
       while running the COMPOUND_V3 done-when: `python -m market_tick_data_service.cli.main` imports the module
       (printing 2 config lines from UTL DomainValidationService) and exits 0 running nothing, because main.py has no
       `__main__` guard. Only the console script `.venv/bin/market-tick-data-service` (or
-      `python -m     market_tick_data_service` via `__main__.py`) actually dispatches. The guard makes `-m` behave like
-      the console script — removes a recurring footgun for ad-hoc force-compute/done-when runs. (repo:
+      `python -m market_tick_data_service` via `__main__.py`) actually dispatches. The guard makes `-m` behave like the
+      console script — removes a recurring footgun for ad-hoc force-compute/done-when runs. (repo:
       market-tick-data-service)
 
 > **2026-08-06 archive-candidate audit**: The DESIGN P2 31-pair todo is marked [x] but its own evidence and the

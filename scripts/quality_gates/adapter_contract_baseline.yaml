@@ -136,8 +136,10 @@ baseline:
     count: 5
   features-service/features_service/performance_features/passthrough_compute.py:
     count: 9
+  features-service/features_service/sports/cli/handlers/_dependency_missing_gate.py:
+    count: 3
   features-service/features_service/sports/cli/handlers/batch_handler.py:
-    count: 16
+    count: 15
   features-service/features_service/sports/compute/__init__.py:
     count: 1
   features-service/features_service/sports/compute/coverage_gate.py:

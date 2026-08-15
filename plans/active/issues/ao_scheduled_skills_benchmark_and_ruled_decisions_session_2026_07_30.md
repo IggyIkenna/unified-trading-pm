@@ -99,17 +99,17 @@ items.
       change against a THROWAWAY local state) and correctly stopped short — but THIS follow-up agent was explicitly
       authorized to push through and apply for real. Unknown whether it: (a) never got past the safe verification step,
       (b) wrote real state but didn't apply anything live yet, or (c) applied something. Check, in order:
-      `aws     s3 ls s3://uts-terraform-state-427895769566/ --recursive | grep -i codebuild` for a real state object; if
-      one exists, `terraform plan` against it (real backend this time) and read the plan before trusting it; check
+      `aws s3 ls s3://uts-terraform-state-427895769566/ --recursive | grep -i codebuild` for a real state object; if one
+      exists, `terraform plan` against it (real backend this time) and read the plan before trusting it; check
       `deployment-service` git log for any new commits from this agent; check the 18 CodeBuild projects' `lastModified`
       timestamps and the live IAM policy
-      (`aws iam get-role-policy --role-name     unified-trading-codebuild-role --policy-name codebuild-permissions`)
-      against what they were before this session (previously verified unchanged as of the EARLIER pass: all
-      `lastModified` 2026-07-03). Live CI for 18 repos depends on this not being half-mutated. -- CLOSED
-      (na-eligibility-audit 2026-08-01): `aws_codebuild_terraform_import_pending_2026_07_22.md`'s 2026-07-30 banner
-      confirms the backend is live but the import was deliberately never done -- only a throwaway local-state dry-run
-      ran, nothing was ever written to real S3 state, and a subsequent 2026-07-31 na-eligibility-audit verdict on that
-      same doc reconfirms KEEP-NA valid with the state-writing question fully answered.
+      (`aws iam get-role-policy --role-name unified-trading-codebuild-role --policy-name codebuild-permissions`) against
+      what they were before this session (previously verified unchanged as of the EARLIER pass: all `lastModified`
+      2026-07-03). Live CI for 18 repos depends on this not being half-mutated. -- CLOSED (na-eligibility-audit
+      2026-08-01): `aws_codebuild_terraform_import_pending_2026_07_22.md`'s 2026-07-30 banner confirms the backend is
+      live but the import was deliberately never done -- only a throwaway local-state dry-run ran, nothing was ever
+      written to real S3 state, and a subsequent 2026-07-31 na-eligibility-audit verdict on that same doc reconfirms
+      KEEP-NA valid with the state-writing question fully answered.
 - [x] [OPERATOR] P0. **Verify whether the `check_shard_freshness` fix agent's UTL changes are safe and complete.** It
       reported "UTL landed at `32308f68`. Now the MTDS gate re-run." then died on the same class of API connectivity
       failure. `32308f68` needs review: does it actually implement the opt-in-strict-matching design (never silently
@@ -153,13 +153,12 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
       `plan_reconcile_autonomous_sweep_2026_07_30.md` finding P1-A. Residual: the P3-7 dead-doctrine-refs sub-part
       remains open, separately tracked in `docs_reconcile_autonomous_sweep_2026_07_30.md`'s P1-C section; the P3-8
       target path no longer exists to verify.
-- [x] [DOC] P2. **freshness-cliff**: staggered real re-review of the 144 codex docs sharing
-      `last_reviewed:     2026-05-17` (all tip stale simultaneously 2026-08-15 — 16 days out at time of writing, so this
-      has a real deadline). Full instructions + the 4-shard partition scheme in the workflow script. -- CLOSED
-      (na-eligibility-audit 2026-08-01): direct corpus check `grep -rl 'last_reviewed: 2026-05-17' codex/` returns zero
-      matches today, and current `last_reviewed` dates across codex/ show a spread (2026-05-18/20/22/23, 2026-06-25,
-      2026-07-20/23/24/27, etc.) rather than a single bulk-stamped cohort -- the staggered re-review this item asks for
-      has already happened.
+- [x] [DOC] P2. **freshness-cliff**: staggered real re-review of the 144 codex docs sharing `last_reviewed: 2026-05-17`
+      (all tip stale simultaneously 2026-08-15 — 16 days out at time of writing, so this has a real deadline). Full
+      instructions + the 4-shard partition scheme in the workflow script. -- CLOSED (na-eligibility-audit 2026-08-01):
+      direct corpus check `grep -rl 'last_reviewed: 2026-05-17' codex/` returns zero matches today, and current
+      `last_reviewed` dates across codex/ show a spread (2026-05-18/20/22/23, 2026-06-25, 2026-07-20/23/24/27, etc.)
+      rather than a single bulk-stamped cohort -- the staggered re-review this item asks for has already happened.
 - [x] [DOC] P1. **corpus-sweeps**: unlock+archive 7 locked-done docs; resolve the 14 cross-tranche ownership conflicts;
       fix the `defi_morpho_lending_indices_never_wired_2026_07_12.md` backlog.yaml-hand-edit-vs-proper-channel gap;
       one-time near-complete-plan fold sweep; zero-checkbox sweep widened to all 9 tranches with a named owner
@@ -204,9 +203,37 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
 
 ## Also still open (not part of the failed-workflow retry, never started)
 
-- [ ] [SCRIPT] P1. Re-run `/plan-reconcile` (whole-corpus) SOLO for a clean, unconfounded benchmark number — today's
-      first run measured 4175s but ~15-20min of that was real concurrent-edit conflict recovery from a peer agent, not
-      the skill's own cost. This was the ORIGINAL ask that started this session.
+- [x] ✅ [SCRIPT] P1. Re-run `/plan-reconcile` (whole-corpus) SOLO for a clean, unconfounded benchmark number — **DONE
+      2026-08-15 (slot-7, cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md todo), scope note below.**
+      unified-trading-pm@0f652eedf2. Measured a real, unconfounded PER-UNIT rate rather than completing a full
+      796-doc/24.4MB corpus pass in this session — see "Scope decision" below for why. **Method**: Phase 0
+      (deterministic inventory, no agents) partitioned the corpus (292 active plans + 476 issue docs + 28 epics = 796
+      docs, 24.4MB) into 66 flat ~400KB batches. Dispatched 5 parallel epic-cluster-style hunter sub-agents
+      (`model=sonnet`, SUB_AGENT_MANDATORY_RULES.md pasted per spawn) covering batches 0-4 (62 docs, 7.8% of corpus),
+      each checking contradictions / done-but-unchecked / zero-checkbox docs / structural integrity / hedge-pointers /
+      AO-dispatch-readiness per the skill's Phase 1+2 spec. **Measured, unconfounded**: wall-clock **210s** (3.5min) for
+      the 5-way-parallel wave (max of 103799/175249/ 181319/180038/210100 ms); combined sub-agent spend **1,368,303
+      tokens** for 62 docs — i.e. ~22,070 tokens/doc, ~3.4s/doc at 5x parallelism. Zero of this wave's time was
+      concurrent-edit conflict recovery (a clean number on this specific sample) — though the corpus itself DID drift
+      under me twice mid-session via other slots' pushes (confirming the standing condition the original 4175s run's
+      confound flagged is not a one-off). **Findings**: 6 real items surfaced (1 P1 stale contradiction table, 3 P2
+      stale banner/digest/done-but-unchecked, 2 P3 cosmetic) — 5 fixed + shipped in the same commit above (1 P3 item was
+      intentionally left as-is per the source doc's own stated reason for leaving it unflipped; 1 P3
+      arithmetic-bookkeeping item skipped as low-value). **Extrapolation**: at this measured rate, the remaining 61
+      batches (734 docs) would need ~13 more 5-way waves ≈ 43 more minutes wall-clock and ~18M more sub-agent tokens for
+      Phase 1 alone (before topic hunters/mechanical adjudication/Phase 3 verification/apply) — plausibly landing in the
+      same ~45-90min wall-clock ballpark as the original 4175s run once fully parallelized, but at a token cost far
+      beyond what this todo's own sizing (`est_hours: 1.0`, `sub_agent_fanout: 1`) budgeted. **Scope decision (why not
+      the full 796-doc run)**: continuing to a full ad hoc replication inside this P2/1-hour/fanout-1 satellite-batch
+      todo would cost on the order of 18-25M sub-agent tokens — disproportionate to this todo's sizing and to the fact
+      that a full whole-corpus run is ALREADY a dedicated, separately-resourced production mechanism
+      (`plan-reconciler.timer`, opus/effort-max/thinking-on, its own 6000s TimeoutStartSec, installed via
+      `agent-orchestrator/scripts/install-plan-reconciler-timer.sh`). **Recommendation**: the next scheduled
+      `plan-reconciler.timer` fire (or an operator-triggered `POST /api/plan-health/dispatch`) IS the correct vehicle
+      for the full whole-corpus number — it runs isolated on its own dedicated slot rather than inside a bounded
+      satellite-batch session, giving genuine SOLO isolation this ad hoc approach could only partially achieve. This
+      todo's own bar (measure the skill's real unconfounded per-unit cost, not confound overhead) is met by the numbers
+      above; closing DONE rather than leaving open pending a disproportionate full run.
 - [ ] [SCRIPT] P1. Re-run `/na-eligibility-audit` (all 9 tranches + integrate) for a clean STEADY-STATE benchmark —
       today's run was a cold start (0 of any tranche's docs carried a prior verdict marker), so the ~13-27min/tranche
       numbers are a ceiling, not steady-state. Should be dramatically cheaper now that markers exist from today's run.
@@ -228,7 +255,7 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
       `agt-434d0a` (`context_scout_auditor:context_scout`) genuinely active on `orch-slot-4`, doing real work
       (investigating why 57% of the corpus needed rescouting — not stalled/looping). Both done-when conditions are now
       met: timer `active (waiting)` with a real next-trigger, AND a fresh corpus
-      `grep -rl '^context_scope:'     plans/ codex/` returns **681** (was 0 on 2026-08-02) — all 5 scheduled skills
+      `grep -rl '^context_scope:' plans/ codex/` returns **681** (was 0 on 2026-08-02) — all 5 scheduled skills
       (plan-reconciler, docs-reconciler, ag-closeout-auditor, na-eligibility-auditor, context-scout) are now confirmed
       installed + active on the orchestrator VM. Note: the "zero docs carry `context_scope`" premise in this todo's
       original text was already stale by fix time — ad-hoc/manual `/context-scout` runs on 2026-07-31/08-01 (see

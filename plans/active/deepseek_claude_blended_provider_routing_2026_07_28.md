@@ -42,6 +42,7 @@ context_scope:
   [
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/config.py,
+    agent-orchestrator/server/model_pricing.py,
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
     /codex/06-coding-standards/model-tier-selection.md,
     /codex/04-architecture/agent-orchestrator-overview.md,
@@ -415,18 +416,18 @@ default from an external reference.
       (OmniRoute no-go) — one coherent call about which providers this workspace routes to, recorded in two docs.
 
       **Why closed rather than left open**: the original done-when required proving the abstraction "via a real
-                                                                                  isolated local pilot dispatch", which needs a provisioned credential for a provider the operator has just ruled
-                                                                                  out — "for now we are going to work with claude and deepseek only" (same session). As written the todo was
-                                                                                  **unsatisfiable without reversing that ruling**, so leaving it open would put a permanently un-actionable item in
-                                                                                  front of every future audit. When a second provider IS adopted, running that pilot dispatch simply *is* the
-                                                                                  integration work — not a separate task to remember — and the operator's own estimate for that integration is "a
-                                                                                  few hours".
+          isolated local pilot dispatch", which needs a provisioned credential for a provider the operator has just ruled
+          out — "for now we are going to work with claude and deepseek only" (same session). As written the todo was
+          **unsatisfiable without reversing that ruling**, so leaving it open would put a permanently un-actionable item in
+          front of every future audit. When a second provider IS adopted, running that pilot dispatch simply *is* the
+          integration work — not a separate task to remember — and the operator's own estimate for that integration is "a
+          few hours".
 
-                                                                                  **Known, accepted risk — state it plainly rather than let the ✅ imply more than it should**: this code has never
-                                                                                  executed against a real second provider. It is tested (34 pre-existing routing tests pass unmodified, plus
-                                                                                  simulated multi-provider-failover tests) but unproven in production, and a no-op cannot regress anything today.
-                                                                                  **The first real second-provider integration must treat this as unverified code**, not as a working feature to
-                                                                                  configure. Do not re-file this as a standing todo — re-open it at that moment instead.
+          **Known, accepted risk — state it plainly rather than let the ✅ imply more than it should**: this code has never
+          executed against a real second provider. It is tested (34 pre-existing routing tests pass unmodified, plus
+          simulated multi-provider-failover tests) but unproven in production, and a no-op cannot regress anything today.
+          **The first real second-provider integration must treat this as unverified code**, not as a working feature to
+          configure. Do not re-file this as a standing todo — re-open it at that moment instead.
 
 - [x] [DATA] P2. ✅ Generalize the DeepSeek-specific health-gate ring to a per-provider map (failing free provider
       degrades to the next-priority free provider before falling back to Claude). — `agent-orchestrator@24bd611`, proven
@@ -446,9 +447,9 @@ default from an external reference.
       directly rather than waiting for the abstraction.
 
       **Explicitly NOT a permanent no**, and the reason it needs no standing todo: per the operator, integrating a
-                                                                                  further model later is **"not going to be hard, maybe a few hours of work only."** A cheap, well-understood
-                                                                                  future option does not need to sit open in the corpus being re-audited every sweep — re-open this only when
-                                                                                  there is an actual decision to add a provider. **Do not re-file this as a follow-up**: closing it is the point.
+          further model later is **"not going to be hard, maybe a few hours of work only."** A cheap, well-understood
+          future option does not need to sit open in the corpus being re-audited every sweep — re-open this only when
+          there is an actual decision to add a provider. **Do not re-file this as a follow-up**: closing it is the point.
 
 - [x] [UI] P1. ✅ Surface DeepSeek's real dollar balance on the dashboard (available-balance-only design — DeepSeek's
       API exposes no spend/usage-history endpoint). — New `DeepSeekBalancePoller` (30-min cadence) +
@@ -487,25 +488,25 @@ default from an external reference.
       exact resource name is recorded in this todo.
 
       **PREPARED 2026-08-08 (operator ruling, ao round-5 apply session item 19): "Operator will create it - needs
-                                                                  Claude to provide the exact secret name + gcloud/aws command to run."** Proposed name (matching this repo's
-                                                                  existing `{vendor}-api-key` GSM convention — see `tardis-api-key`/`databento-api-key`/`graph-api-key` in
-                                                                  `/codex/05-infrastructure/auth-setup.md`, extended with the account variant since DeepSeek now has 2 distinct
-                                                                  keys, pro + flash, per `deepseek_flash_ab_routing_test_2026_08_05.md`): **`deepseek-v4-pro-api-key`** (project
-                                                                  `central-element-323112`, matching every other secret cited above). Exact command (run on whichever host holds
-                                                                  the live literal key, currently `~/.claude-accounts/deepseek-v4-pro.env`'s `ANTHROPIC_AUTH_TOKEN` value — do
-                                                                  NOT paste the key into shell history; use the `-n`-into-stdin form or a temp file deleted after):
-                                                                  ```bash
-                                                                  gcloud config set project central-element-323112
-                                                                  echo -n "<the literal ANTHROPIC_AUTH_TOKEN value from ~/.claude-accounts/deepseek-v4-pro.env>" | \
-                                                                    gcloud secrets create deepseek-v4-pro-api-key \
-                                                                      --data-file=- \
-                                                                      --replication-policy=automatic
-                                                                  ```
-                                                                  If/when the flash account (`deepseek-v4-flash.env`, provisioned on the orchestrator VM per the A/B test plan's
-                                                                  todo 6, not present on this host) also needs GSM-sourcing, the matching name is **`deepseek-v4-flash-api-key`**
-                                                                  (same command, swap the secret name + source the flash env file's token instead). Once created, hand the exact
-                                                                  name(s) to an agent session to wire the re-sourcing (next todo) — no guessing needed, this doc already states
-                                                                  the name.
+          Claude to provide the exact secret name + gcloud/aws command to run."** Proposed name (matching this repo's
+          existing `{vendor}-api-key` GSM convention — see `tardis-api-key`/`databento-api-key`/`graph-api-key` in
+          `/codex/05-infrastructure/auth-setup.md`, extended with the account variant since DeepSeek now has 2 distinct
+          keys, pro + flash, per `deepseek_flash_ab_routing_test_2026_08_05.md`): **`deepseek-v4-pro-api-key`** (project
+          `central-element-323112`, matching every other secret cited above). Exact command (run on whichever host holds
+          the live literal key, currently `~/.claude-accounts/deepseek-v4-pro.env`'s `ANTHROPIC_AUTH_TOKEN` value — do
+          NOT paste the key into shell history; use the `-n`-into-stdin form or a temp file deleted after):
+                                                                                                                          ```bash
+                                                                                                                          gcloud config set project central-element-323112
+                                                                                                                          echo -n "<the literal ANTHROPIC_AUTH_TOKEN value from ~/.claude-accounts/deepseek-v4-pro.env>" | \
+                                                                                                                            gcloud secrets create deepseek-v4-pro-api-key \
+                                                                                                                              --data-file=- \
+                                                                                                                              --replication-policy=automatic
+                                                                                                                          ```
+          If/when the flash account (`deepseek-v4-flash.env`, provisioned on the orchestrator VM per the A/B test plan's
+          todo 6, not present on this host) also needs GSM-sourcing, the matching name is **`deepseek-v4-flash-api-key`**
+          (same command, swap the secret name + source the flash env file's token instead). Once created, hand the exact
+          name(s) to an agent session to wire the re-sourcing (next todo) — no guessing needed, this doc already states
+          the name.
 
 - [ ] [INFRA] P2. **Re-source `ANTHROPIC_AUTH_TOKEN` from the GSM secret on BOTH hosts** — this machine and the planning
       VM — so `~/.claude-accounts/deepseek-v4-pro.env` no longer contains the literal key. ~~BLOCKED on the operator
@@ -522,14 +523,14 @@ default from an external reference.
       this doc's own new `[OPERATOR] P2` balance-recurrence todo above.
 
       > **⚠️ Measurement trap recorded 2026-08-06 — do not repeat it.** This todo's earlier line "Confirmed 2026-08-04:
-                                                                                  > no `deepseek*` secret exists in GSM yet" should be re-verified before being trusted. A 2026-08-06 attempt to
-                                                                                  > re-confirm it returned an empty list that looked like proof of absence but was **permission denial**: the
-                                                                                  > session identity (`github-actions-deploy@central-element-323112`) lacks `secretmanager.secrets.list` on
-                                                                                  > `central-element-323112`, `uts-prod`, and `unified-trading-system`, and `gcloud secrets list --filter=...`
-                                                                                  > exits 0 with no rows rather than erroring visibly when filtered. **Check the identity's permission before
-                                                                                  > reading an empty secret list as absence** — same class as the journald-retention trap recorded in
-                                                                                  > `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`, where a `--since` predating
-                                                                                  > retention returned a confident zero that meant nothing.
+          > no `deepseek*` secret exists in GSM yet" should be re-verified before being trusted. A 2026-08-06 attempt to
+          > re-confirm it returned an empty list that looked like proof of absence but was **permission denial**: the
+          > session identity (`github-actions-deploy@central-element-323112`) lacks `secretmanager.secrets.list` on
+          > `central-element-323112`, `uts-prod`, and `unified-trading-system`, and `gcloud secrets list --filter=...`
+          > exits 0 with no rows rather than erroring visibly when filtered. **Check the identity's permission before
+          > reading an empty secret list as absence** — same class as the journald-retention trap recorded in
+          > `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`, where a `--since` predating
+          > retention returned a confident zero that meant nothing.
 
 - [x] [INFRA] P1. ✅ Durable per-task token usage (`TaskUsageRow`, any provider), persisted at `/done`. —
       `agent-orchestrator@b310c68`. Same-session follow-up: historical backfill script (dry-run default) +
@@ -575,20 +576,20 @@ default from an external reference.
       recorded here so it survives even if nobody writes the script (read-only, runs on the AO VM):
 
       ```sql
-                                      -- account_id distribution over spawns/dispatches, last 24h
-                                      -- DB: file:<repo>/agent-orchestrator/data/state/state.db?mode=ro   (open read-only; run as ubuntu)
-                                      SELECT json_extract(details_json,'$.account_id') AS a, COUNT(*) AS n
-                                      FROM activity_log
-                                      WHERE ts > datetime('now','-24 hours')
-                                        AND json_extract(details_json,'$.account_id') NOT IN ('')
-                                      GROUP BY a ORDER BY n DESC;
-                                      ```
+                                                                                              -- account_id distribution over spawns/dispatches, last 24h
+                                                                                              -- DB: file:<repo>/agent-orchestrator/data/state/state.db?mode=ro   (open read-only; run as ubuntu)
+                                                                                              SELECT json_extract(details_json,'$.account_id') AS a, COUNT(*) AS n
+                                                                                              FROM activity_log
+                                                                                              WHERE ts > datetime('now','-24 hours')
+                                                                                                AND json_extract(details_json,'$.account_id') NOT IN ('')
+                                                                                              GROUP BY a ORDER BY n DESC;
+                                                                                              ```
 
-                                      Done when: either a small read-only readout script lands under `agent-orchestrator/scripts/orchestrator/` with a
-                                      lifecycle marker, or the config.py comment carries the query inline so "re-measure" names its own method. Note the
-                                      measurement trap found this session: the split is only visible in `account_id` on spawn/dispatch rows — event-type
-                                      greps for `deepseek`/`free_provider` return nothing useful, so an agent probing that way concludes the A/B is
-                                      inactive when it is running normally. Repo: agent-orchestrator.
+          Done when: either a small read-only readout script lands under `agent-orchestrator/scripts/orchestrator/` with a
+          lifecycle marker, or the config.py comment carries the query inline so "re-measure" names its own method. Note the
+          measurement trap found this session: the split is only visible in `account_id` on spawn/dispatch rows — event-type
+          greps for `deepseek`/`free_provider` return nothing useful, so an agent probing that way concludes the A/B is
+          inactive when it is running normally. Repo: agent-orchestrator.
 
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
@@ -652,16 +653,27 @@ We'll calibrate everything").
 | V4-Pro cache-miss input   | $0.66    | $1.32                      |
 | V4-Pro output             | $1.98    | $3.96                      |
 
-**Non-goal (explicit):** GLM-5.2 and GLM-4.7-FlashX are pooled under ONE Coding Plan Max subscription ($160/mo, ~1,600
-prompts/5h + 8,000/wk) — not metered pay-per-token API billing. Do not register a separate metered GLM rate card unless
-the operator later decides to also run pay-per-token GLM alongside the subscription.
+**Non-goal (explicit):** GLM-5.2 and GLM-4.7-FlashX are pooled under ONE Coding Plan subscription — not metered
+pay-per-token API billing. Do not register a separate metered GLM rate card unless the operator later decides to also
+run pay-per-token GLM alongside the subscription.
+
+**Staged tier start (operator ruling, 2026-08-15):** sign up for the **Lite** tier ($18/mo, ~80 prompts/5h + 400/wk),
+not Max, to validate the whole pipeline (registration, native-endpoint routing, usage-capture proxy, dispatch gating)
+before committing to Max spend — same pattern applied to Codex/Luna below, mirroring the Claude Pro→Max staging. All
+three Coding Plan tiers (Lite/Pro/Max) ship the identical model lineup including GLM-5.2 — only the 5h/weekly prompt
+ceiling differs, so upgrading later is a Zhipu-dashboard change only: same API key, same endpoint, no code change on our
+side beyond updating the ceiling constants the UI headroom-gate todo below reads.
 
 ### Todos
 
-- [ ] [OPERATOR] P1. Complete Z.ai GLM Coding Plan Max signup and hand over the API key + confirm the exact
-      Anthropic-compatible base URL (`https://api.z.ai/api/anthropic`, per Z.ai's own Claude Code integration docs —
-      verify still current at signup time). Done when: a real key exists and is handed to an agent session for
-      registration.
+- [ ] [OPERATOR] P1. Complete Z.ai GLM Coding Plan **Lite** ($18/mo — staged start, not Max; see the ruling above)
+      signup and hand over the API key + confirm the exact Anthropic-compatible base URL
+      (`https://api.z.ai/api/anthropic`, per Z.ai's own Claude Code integration docs — verify still current at signup
+      time). Done when: a real key exists and is handed to an agent session for registration.
+- [ ] [OPERATOR] P3. Upgrade GLM Coding Plan Lite → Max once the Lite-tier pipeline validation above is complete and the
+      operator decides to scale. Done when: the Zhipu dashboard shows Max active and the UI headroom-gate todo's ceiling
+      constants (currently Lite's ~80/5h + 400/wk) are updated to Max's ~1,600/5h + 8,000/wk — same key, same endpoint,
+      no other code change expected.
 - [ ] [INFRA] P1. Register the GLM Coding Plan account end to end mirroring the DeepSeek account pattern exactly: env
       file (`ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN`, `unset CLAUDE_CODE_OAUTH_TOKEN`) + `accounts.json` entry +
       GSM secret `glm-coding-plan-api-key` (new naming-SSOT entry, `/codex/05-infrastructure/secret-manager-naming.md`
@@ -689,10 +701,12 @@ the operator later decides to also run pay-per-token GLM alongside the subscript
       of building unneeded infra. Done when: a dated comparison of captured-vs-Z.ai-dashboard usage for a real sample of
       turns is recorded, with a stated tolerance.
 - [ ] [UI] P2. Surface GLM's subscription-quota usage reusing the SAME `five_hour_pct`/`weekly_pct` fields Claude
-      already uses (GLM Coding Plan Max's 1,600/5h + 8,000/wk shape is structurally identical to Claude's tier system) —
-      GATE dispatch on it in `_pick_headroom_account()`/`select_account_for_spawn()`, not just display it. Done when: a
-      simulated-near-ceiling test shows the account excluded from selection, same proof standard as Claude's existing
-      headroom exclusion.
+      already uses (GLM Coding Plan's 5h/weekly shape is structurally identical to Claude's tier system regardless of
+      which tier is active — Lite's ~80/5h + 400/wk at signup, Max's ~1,600/5h + 8,000/wk after the later upgrade) —
+      GATE dispatch on it in `_pick_headroom_account()`/`select_account_for_spawn()`, not just display it. Read the
+      ceiling from config rather than hardcoding one tier's numbers, since the upgrade todo above will change them
+      without a code change. Done when: a simulated-near-ceiling test shows the account excluded from selection, same
+      proof standard as Claude's existing headroom exclusion.
 - [ ] [DATA] P2. Build a heuristic reconciliation pass that infers any unpublished multiplier (e.g. GLM-4.7-FlashX's
       cache-read rate, whatever the live API doesn't disclose for Grok/Gemini either — reused by the sibling Grok/Gemini
       plan) from real observed usage vs billed spend, mirroring the existing DeepSeek cache-discount verification (this
@@ -753,3 +767,17 @@ the operator later decides to also run pay-per-token GLM alongside the subscript
   (`price_usage()` against a REAL captured usage sample) is NOT satisfied — this is registry/pricing-table registration
   only, still blocked on the Coding Plan key + a real registered account for anything requiring live verification.
   Checkboxes stay unflipped.
+
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) -- added `model_pricing.py`, now the file most
+  repeatedly touched by the doc's own recent Phase-3 work (DeepSeek peak/off-peak `RateCard` entries, GLM `RateCard`
+  registration).
+
+- **2026-08-15 (later) — staged cheap-tier-first signup ruling (operator).** Same reconciliation-technique reuse as the
+  Claude 30x-boost discovery: sign up at the cheapest viable tier per provider to validate plumbing (registration,
+  routing, usage-capture, dispatch gating) before committing to top-tier spend, mirror it against Claude Pro→Max. **GLM:
+  Lite
+  ($18/mo), not Max** — all three Coding Plan tiers ship the identical model lineup (incl. GLM-5.2), only
+  the 5h/weekly prompt ceiling differs, so upgrading later needs zero code change beyond the ceiling constants. Same
+  ruling applied to the sibling Codex/Luna plan (Plus $20/mo,
+  not Pro) and noted (no tier concept applies) in the sibling Grok/Gemini plan. Todos above updated to Lite; new
+  `[OPERATOR] P3` upgrade-to-Max todo added rather than silently changing done-when criteria.

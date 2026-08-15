@@ -104,7 +104,7 @@ shipping):
       the full reconciliation-doc citation): this fix closed only the `BASEDPYRIGHT_MAX_ERRORS` ratchet-bump trap.
       `base-service.sh` carries a SEPARATE, unconditional zero-warning-policy block —
       `scripts/quality-gates-base/base-service.sh:882-885`
-      (`if [ "${WARN_COUNT:-0}" -gt 0 ]; then ... log_fail "Type     check FAILED — $WARN_COUNT warning(s) ..."; exit 1; fi`)
+      (`if [ "${WARN_COUNT:-0}" -gt 0 ]; then ... log_fail "Type check FAILED — $WARN_COUNT warning(s) ..."; exit 1; fi`)
       — untouched by the 2026-06-24 fix, so a PM `scripts/` basedpyright WARNING is still a live path to red the
       LDR→main promotion PR. Evidence: `active/issues/uv_pin_fleet_drift_2026_06_22.md:221-230` records PR #498's v2 RED
       on `QG slice (typecheck)` with ~3082 `reportAny`/`reportUnknown*` errors, observed 2026-06-27 (`last_updated`) —
@@ -147,16 +147,15 @@ shipping):
       `pyproject.toml`-native basedpyright config is ALREADY COMPLETE fleet-wide, and
       `/codex/06-coding-standards/quality-gates.md` § "pyrightconfig.json silently overrides pyproject.toml" itself
       sanctions deleting `pyrightconfig.json` as the resolution when both coexist. So
-      `if not pyright_path.exists():     continue` fires for EVERY repo before Rule 3 (or any rule) ever runs — PM
-      included, so its predicted false positive can't fire because nothing runs for anyone. Independently, even a
-      hypothetical pyproject.toml-aware rewrite would still exempt PM via the script's own pre-existing
-      `if not raw_paths: continue` gate: PM's `[tool.basedpyright]` carries zero `extraPaths` anywhere (top-level or
-      nested), so its whole Rule 1/2/3 block would never execute regardless — the proposed exemption-list /
-      exclude-covers-include fix targets a scenario that structurally cannot occur, on a config format no repo uses.
-      Writing that fix now would be speculative code with no live case to verify it against; closing as superseded
-      rather than executed as literally written. The broader, real finding — the tool is fully dormant fleet-wide, not
-      just for PM — is captured as its own follow-up todo below rather than left as a chat-only observation. (repo:
-      unified-trading-pm).
+      `if not pyright_path.exists(): continue` fires for EVERY repo before Rule 3 (or any rule) ever runs — PM included,
+      so its predicted false positive can't fire because nothing runs for anyone. Independently, even a hypothetical
+      pyproject.toml-aware rewrite would still exempt PM via the script's own pre-existing `if not raw_paths: continue`
+      gate: PM's `[tool.basedpyright]` carries zero `extraPaths` anywhere (top-level or nested), so its whole Rule 1/2/3
+      block would never execute regardless — the proposed exemption-list / exclude-covers-include fix targets a scenario
+      that structurally cannot occur, on a config format no repo uses. Writing that fix now would be speculative code
+      with no live case to verify it against; closing as superseded rather than executed as literally written. The
+      broader, real finding — the tool is fully dormant fleet-wide, not just for PM — is captured as its own follow-up
+      todo below rather than left as a chat-only observation. (repo: unified-trading-pm).
 - [x] ✅ [SCRIPT] P3. **New finding (2026-08-01, slot 11) — the whole tool is fleet-wide dead, not just a PM
       false-positive.** `check-pyrightconfig-extrapaths.py` only reads `<repo>/pyrightconfig.json`; zero of the 24
       `workspace-manifest.json` repos still have that file (all migrated to `pyproject.toml`'s `[tool.basedpyright]` —

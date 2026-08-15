@@ -171,9 +171,9 @@ source: >-
       ("Could not delete the workflow run") for all three (31164709790 `quality-gates-v2`, 31164709402 `Semver Agent`,
       31164709423 `main-backmerge-to-ldr`), all still `status=queued`, `createdAt=2026-08-07T09:09:3{0,0,1}Z` — 161h44m
       elapsed, not yet aged out by GitHub's run retention.
-      `gh run list --repo IggyIkenna/strategy-service --status     queued` still shows exactly these 3 rows fleet-wide,
-      so the done-when bar (`--status queued` empty) is NOT met yet — this is a genuine GitHub-side retention wait, not
-      a fixable defect (confirmed cosmetic-only per the source doc's own analysis: neither standing monitor scopes to
+      `gh run list --repo IggyIkenna/strategy-service --status queued` still shows exactly these 3 rows fleet-wide, so
+      the done-when bar (`--status queued` empty) is NOT met yet — this is a genuine GitHub-side retention wait, not a
+      fixable defect (confirmed cosmetic-only per the source doc's own analysis: neither standing monitor scopes to
       these workflow names/job counts). Re-attempting again before retention actually elapses would just reproduce the
       same 500/403 — no further worker action possible; the source doc's own `[OPERATOR] P3` tag (v/s support escalation
       if retention doesn't resolve it) still stands for the follow-up. This satellite todo's own bar ("re-attempt once")
@@ -199,16 +199,15 @@ source: >-
       (`83a054ec5d..origin/live-defi-rollout`): **0 violations**, confirmed on origin. LDR was still `ahead_by` main at
       check time (the wedge had only just cleared); the next `*/15` promote tick supersedes #3016 cleanly. Evidence:
       `gh pr view 2714`, `gh run view 31405420640`, `gh pr list --search "promote in:title" --state all` (PRs
-      2997-3016),
-      `python3 scripts/cicd/check_strict_quickmerge.py --range 83a054ec5d..origin/live-defi-rollout     --block` →
-      `✅ no bypassed code commits`. Issue-doc checkbox reconciliation deferred to
+      2997-3016), `python3 scripts/cicd/check_strict_quickmerge.py --range 83a054ec5d..origin/live-defi-rollout --block`
+      → `✅ no bypassed code commits`. Issue-doc checkbox reconciliation deferred to
       `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` per this batch's own header (source docs not touched
       here).
 - [x] ✅ [CODE] P2. Port the same doomed check-run supersede guard to ldr-to-main-promote-fleet.yml's per-repo path
       if/when the fleet bot shows the same wait-on-doomed-run shape Source:
       `plans/active/issues/ldr_to_main_promote_inflight_wait_blocks_doomed_run_2026_08_10.md` — ✅ **CHECKED 2026-08-14
       (slot 15, infra), no code change.**
-      `grep -n 'inflight_wait\|status!=\|not superseding\|about to pass'     .github/workflows/ldr-to-main-promote-fleet.yml`
+      `grep -n 'inflight_wait\|status!=\|not superseding\|about to pass' .github/workflows/ldr-to-main-promote-fleet.yml`
       → zero hits; the fleet workflow (195 lines) has no wait-on-non-terminal-run logic to port the guard into —
       confirms the source issue doc's own note ("no evidence of it today — fleet PRs are per-SHA fresh"). Nothing to
       port; re-check only if the fleet workflow later grows an inflight-wait-shaped block. Issue-doc reconciliation
@@ -481,3 +480,7 @@ source: >-
 None — every item drafted here already cleared the conflict-check. Items that did NOT clear (genuinely operator-gated,
 time-gated, or too-large-for-a-batch-todo) were left in their source docs and are not duplicated here; see the
 2026-08-13 audit's full classification data for the complete list.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries), still accurate.

@@ -101,7 +101,7 @@ determinism needs.
       recreated subscriptions + 2 incidental pre-existing-but-never-applied `google_project_iam_member` pubsub.publisher
       grants for the compute-default and unified-trading-sa publisher SAs, from the same module's `publisher_iam.tf`; 2
       already-live prediction subscriptions updated in-place with the new policy). Live-verified post-apply:
-      `gcloud pubsub subscriptions list --filter="name:warm-sink" --project=central-element-323112 --format="value(name)"     | wc -l`
+      `gcloud pubsub subscriptions list --filter="name:warm-sink" --project=central-element-323112 --format="value(name)" | wc -l`
       → **52**. No `-var-file` exists for this module — `-var` values were recovered from the deployed
       `live-event-log-compactor` Cloud Run job's live env/SA (warm/cold bucket = `central-element-323112-events`,
       compactor SA = `unified-trading-sa@central-element-323112.iam.gserviceaccount.com`).
@@ -117,7 +117,7 @@ determinism needs.
 - [x] ✅ [INFRA] P1. Add the missing build step for `live-event-log-compactor`
       (`deployment-service/deployment_service/jobs/live_event_log_compactor.py`) — a Dockerfile/cloudbuild.yaml step
       that actually builds and pushes its image — and push a real image. DoD:
-      `gcloud run jobs describe     live-event-log-compactor` shows `Ready: True`, no `ContainerMissing`. —
+      `gcloud run jobs describe live-event-log-compactor` shows `Ready: True`, no `ContainerMissing`. —
       deployment-service@8f0137d: pointed `compactor_image` at the shared maintenance-jobs image (same one
       uts-prod-tarball-cleanup/vm-log-archival-prd use) with an overridden container command
       (`-m deployment_service.jobs.live_event_log_compactor`), added the job to the shared cloudbuild.yaml's
@@ -130,7 +130,7 @@ determinism needs.
       (envelope-parsing fix, the real root cause — see Progress Log). Two prior executions (from before this session)
       both failed. Fixed both blockers, rebuilt the maintenance-jobs image twice (Cloud Build 490485d5, ca5ef1f5), and
       triggered `live-event-log-compactor-tx9p2`. Live-verified:
-      `gcloud run jobs     executions describe live-event-log-compactor-tx9p2` → `Completed: True, succeededCount: 1`
+      `gcloud run jobs executions describe live-event-log-compactor-tx9p2` → `Completed: True, succeededCount: 1`
       ("Execution completed successfully in 8m40.15s"). Cold output verified real and non-empty for both
       previously-working prediction shards: `live-events/cold/prediction/book_snapshot_5/date=2026-07-30/data.parquet`
       (117418 bytes, PAR1 magic at header+footer, read back with pandas: **6119 rows** of real KALSHI order-book data)
@@ -139,7 +139,7 @@ determinism needs.
       job going forward. DoD: `gcloud scheduler jobs describe live-event-log-compactor-daily` shows `state: ENABLED`,
       and the next scheduled firing produces a new entry in `executions list` after it fires. — no code change
       (verification-only todo). `gcloud scheduler jobs describe live-event-log-compactor-daily` confirms
-      `state:     ENABLED`. The literal next cron tick (`scheduleTime: '2026-08-01T02:00:01Z'`) was ~7.5h out at
+      `state: ENABLED`. The literal next cron tick (`scheduleTime: '2026-08-01T02:00:01Z'`) was ~7.5h out at
       verification time, too long to hold this session open for (async-wait discipline bans busy-waiting on a flat/slow
       external clock) — substituted `gcloud scheduler jobs run live-event-log-compactor-daily`, which invokes the job
       through the exact same Cloud Scheduler HTTP-target/OAuth path the 2 AM cron uses (not a direct

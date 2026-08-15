@@ -116,9 +116,11 @@ was **not** recoverable from those stashes, nor from 89 dangling blobs.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Add slot/clone identification to every `slot-cron-ff-pull.sh` log verdict (e.g. `slot-2/` prefix or
-      the resolved `repo_key`). Five clones per repo currently report indistinguishably into one file, which is what
+- [x] ✅ [SCRIPT] P1. Add slot/clone identification to every `slot-cron-ff-pull.sh` log verdict (e.g. `slot-2/` prefix
+      or the resolved `repo_key`). Five clones per repo currently report indistinguishably into one file, which is what
       made the misdiagnosis above possible and will do so again. This is the one genuinely open defect from this RCA.
+      **DONE 2026-08-13** — `unified-trading-pm@c89e109ea7` ("tag every slot-cron-ff-pull.sh log verdict with its clone
+      identity").
 - [ ] [OPERATOR] P2. Decide whether the `uv.lock` auto-clean should extend from "purely `version =` drift" to also cover
       `[package.metadata] requires-dist` / `provides-extras`-only churn (sibling metadata propagation, equally
       non-authoritative). Guard it on this repo's own `pyproject.toml` being clean, so an in-flight local dependency
@@ -128,8 +130,9 @@ was **not** recoverable from those stashes, nor from 89 dangling blobs.
 - [ ] [OPERATOR] P2. 43 archived repos under `archive/` and `_archived/` still carry the stale inlined
       `semver-agent.yml` as uncommitted dirt. Harmless (not ff-pulled, not in CI) but it inflates every workspace-wide
       dirty-repo count and hid the live signal. Decide: bulk-clean or leave.
-- [ ] [SCRIPT] P3. `ff-starvation-detect.sh` exits early on a detached HEAD (`[skip:detached]` in the actor). A detached
-      clone can therefore drift unboundedly with no verdict from either side. Confirm whether that is intended.
+- [x] ✅ [SCRIPT] P3. `ff-starvation-detect.sh` exits early on a detached HEAD (`[skip:detached]` in the actor). A
+      detached clone can therefore drift unboundedly with no verdict from either side. Confirm whether that is intended.
+      **DONE 2026-08-13** — `unified-trading-pm@bb75f3d5ce` ("emit DETACHED HEAD verdict from starvation detector").
 
 ## Progress Log
 

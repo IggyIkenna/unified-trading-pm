@@ -468,10 +468,14 @@ context_scope:
     - **[AGENT] P2.** `SolidlyCLForkPool` historical golden-swap validation (≥20-Velodrome + ≥20-Aerodrome real on-chain
       fixtures).
   - [`plans/active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md`](/plans/active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md)
-    (status: active)
-    - **[SCRIPT] P2.** Spot-check: download 3 random days of DERIBIT options; verify `options_chain` greeks / IVs
-      populated.
-    - **[SCRIPT] P2.** Spot-check: download 1 day of BINANCE-FUTURES perps; verify funding + open_interest populated.
+    (status: active) — **STALE ENTRY, corrected 2026-08-15 (/plan-reconcile hunter pass):** this doc's `asset_group` was
+    corrected `[cefi, defi]` → `[cefi]` on 2026-07-31 (pure-cefi, not cross-AG — misfiled under this section) and both
+    spot-check items below were flipped `[x]` DONE on 2026-07-30, both predating this digest's own 2026-08-02 stamp.
+    Nothing open remains here; left listed only for citation history.
+    - ~~**[SCRIPT] P2.** Spot-check: download 3 random days of DERIBIT options; verify `options_chain` greeks / IVs
+      populated.~~ DONE 2026-07-30.
+    - ~~**[SCRIPT] P2.** Spot-check: download 1 day of BINANCE-FUTURES perps; verify funding + open_interest
+      populated.~~ DONE 2026-07-30.
   - [`plans/active/cefi_ml_directional_continuous_live_2026_06_20.md`](/plans/active/cefi_ml_directional_continuous_live_2026_06_20.md)
     (status: active)
     - **[AGENT] P0.** Continuous ML prediction signal live on real capital across OKX + Binance + Bybit for ≥7
@@ -739,20 +743,34 @@ map these (measured via the distinct-values audit; counts approximate):
 > as the target. The row count is unchanged and preserved below; **the direction is corrected — these rows are already
 > canonical, no further fold needed.** This applies to the manifest `instrument_type` **COLUMN only**: the id
 > **segment** stays UPPER, unaffected either way.
+>
+> **⚠️ CORRECTED 2026-08-15 (fresh live re-count, `cefi_satellite_ao_dispatch_batch19_2026_08_13.md`)**: "no further
+> fold needed" was optimistic — a live re-read of `gs://market-data-tick-cefi-prd-central-element-323112`'s
+> instrument_type column (now 29,481,508 rows, up from 11.19M) found **39,286 rows** still lowercase (`perpetual` 38,083
+> / `future` 1,191 / `spot_pair` 12) — the `instructions-service@555ddf1c` fold was measured **dry-run only**; the
+> `--apply` remains drain-gated under the Track-1 cutover (still `RE-OPENED` as of 2026-08-02, see Track 1 above), so
+> these are pre-fix historical rows awaiting that backfill, not an active writer regression (the live-write path already
+> emits UPPERCASE — the residual SHRANK from the 2026-07-18 baseline of 289,700 lowercase `perpetual` rows to 38,083
+> despite the manifest nearly tripling in size over the same window). Two additional buckets surfaced by the same
+> re-count are OUT OF SCOPE for this row (tracked elsewhere, not casing issues): `futures_chain`/`options_chain`
+> (205,835 rows — a distinct non-canonical VALUE from the chain-bundle writer, tracked in
+> `/plans/active/cefi_chain_relabel_migration_options_futures_2026_08_15.md`) and `index` (3,910 rows — already the
+> "resolve from id / remap" row below, not a casing fold). Blank/`None` (310,662 rows) likewise belongs to that same row
+> below, unchanged.
 
-| dimension       | non-canonical                                     | canonical target                                   |     ~rows | action                        |
-| --------------- | ------------------------------------------------- | -------------------------------------------------- | --------: | ----------------------------- |
-| instrument_type | `PERPETUAL`/`SPOT_PAIR`/`FUTURE`/`OPTION`         | UPPERCASE ~~lowercase~~ (D1, already shipped)      |     7.58M | already-canonical — no action |
-| instrument_type | `''`/`NULL`/`spot`/`index`                        | resolve from id / remap                            |     3.23M | resolve                       |
-| instrument_id   | perp missing `@LIN`/`@INV`                        | append margin marker                               | 2,402,330 | reconstruct                   |
-| instrument_id   | raw no-colon (`SPELLUSDT`)                        | `VENUE:TYPE:BASE-QUOTE@MARGIN`                     | 1,362,316 | reconstruct                   |
-| instrument_id   | DERIBIT option (0% canonical)                     | `DERIBIT:OPTION:BASE-USD@INV-YYYYMMDD-STRIKE-C\|P` |  ~428,600 | add quote + YYYYMMDD          |
-| instrument_id   | `VENUE:PERP:RAW` (HL/LIGHTER/ASTER)               | `VENUE:PERPETUAL:BASE-QUOTE@LIN\|INV`              |   374,272 | reconstruct                   |
-| instrument_id   | DERIBIT future `BASE-DDMMMYY`                     | `DERIBIT:FUTURE:BASE-USD@INV-YYYYMMDD`             |  ~250,600 | add quote                     |
-| instrument_id   | KRAKEN raw `FI_/FF_`                              | `KRAKEN-FUTURES:FUTURE:BASE-USD@…-YYYYMMDD`        |    68,469 | reconstruct                   |
-| source          | `''`/`NULL`                                       | vendor token (`tardis`/native)                     | 3,441,207 | backfill vendor               |
-| pipeline_mode   | `NULL`                                            | `{mode}_{source}`                                  |   345,492 | backfill                      |
-| venue           | `OKX` bare (64) · `DERIBIT-COMBO`→`DERIBIT` (226) | resolve family / encode combo in id                |      ~290 | resolve/collapse              |
+| dimension       | non-canonical                                     | canonical target                                   |     ~rows | action                                       |
+| --------------- | ------------------------------------------------- | -------------------------------------------------- | --------: | -------------------------------------------- |
+| instrument_type | `perpetual`/`future`/`spot_pair`                  | UPPERCASE (D1) — residual, not yet applied         |    39,286 | backfill via drain-gated `--apply` (Track 1) |
+| instrument_type | `''`/`NULL`/`spot`/`index`                        | resolve from id / remap                            |     3.23M | resolve                                      |
+| instrument_id   | perp missing `@LIN`/`@INV`                        | append margin marker                               | 2,402,330 | reconstruct                                  |
+| instrument_id   | raw no-colon (`SPELLUSDT`)                        | `VENUE:TYPE:BASE-QUOTE@MARGIN`                     | 1,362,316 | reconstruct                                  |
+| instrument_id   | DERIBIT option (0% canonical)                     | `DERIBIT:OPTION:BASE-USD@INV-YYYYMMDD-STRIKE-C\|P` |  ~428,600 | add quote + YYYYMMDD                         |
+| instrument_id   | `VENUE:PERP:RAW` (HL/LIGHTER/ASTER)               | `VENUE:PERPETUAL:BASE-QUOTE@LIN\|INV`              |   374,272 | reconstruct                                  |
+| instrument_id   | DERIBIT future `BASE-DDMMMYY`                     | `DERIBIT:FUTURE:BASE-USD@INV-YYYYMMDD`             |  ~250,600 | add quote                                    |
+| instrument_id   | KRAKEN raw `FI_/FF_`                              | `KRAKEN-FUTURES:FUTURE:BASE-USD@…-YYYYMMDD`        |    68,469 | reconstruct                                  |
+| source          | `''`/`NULL`                                       | vendor token (`tardis`/native)                     | 3,441,207 | backfill vendor                              |
+| pipeline_mode   | `NULL`                                            | `{mode}_{source}`                                  |   345,492 | backfill                                     |
+| venue           | `OKX` bare (64) · `DERIBIT-COMBO`→`DERIBIT` (226) | resolve family / encode combo in id                |      ~290 | resolve/collapse                             |
 
 **Enumeration-restore (cross-AG, owned by the DeFi plan Track 6)**: a raw un-canonicalised distinct-values audit panel
 per asset_group (the view removed on `deployment-api@512180be`) is being restored so this worklist stays live-visible.

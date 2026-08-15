@@ -45,7 +45,12 @@ source: >-
   bare prose deferral cannot be left to evaporate with the archive per
   `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 2).
 depends_on: []
-context_scope: []
+context_scope:
+  [
+    /plans/archive/2026_08/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
+    scripts/cicd/reconcile_release_tags.py,
+  ]
 ---
 
 # Untriaged CI backlog: release-tag stall, UTL prod trigger, glue-runner restarts
@@ -88,3 +93,4 @@ count) before doing any deeper fix — do not assume any of the three is still a
 
 - **2026-08-14 (slot-20, infra)**: filed as a migration of an unowned prose deferral row while archiving its parent doc.
   No investigation performed here — see Todos for the re-verify-first approach.
+- **context-scout 2026-08-15**: populated context_scope (3 entries).

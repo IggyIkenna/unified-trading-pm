@@ -72,42 +72,69 @@ class CellStats:
         return bool(external_sources_for(self.asset_group, self.data_type))
 
 
-def _read_manifest(path: str) -> pd.DataFrame:
-    """Read the consolidated availability-index parquet (local or gs:// URI)."""
-    # pandas reads gs:// transparently when gcsfs is installed; falls back to a
-    # clear error otherwise. Read-only.
-    return pd.read_parquet(path)
+_WANTED_COLUMNS = ("category", "asset_group", "venue", "data_type", "source")
+_BATCH_SIZE = 500_000
 
 
-def _category_col(df: pd.DataFrame) -> str:
-    for col in ("category", "asset_group"):
-        if col in df.columns:
-            return col
-    msg = f"manifest has neither 'category' nor 'asset_group' column; columns={list(df.columns)}"
-    raise ValueError(msg)
+def _resolve_columns(path: str) -> tuple[list[str], str]:
+    """Schema-peek the parquet and resolve the narrow column set + category column name.
 
+    This audit only needs 5 of the manifest's ~50 columns, and some prod indices
+    (e.g. DeFi's, ~6.7GB/33M rows) are large enough that even a column-projected
+    *single-shot* read risks stalling/OOMing the shared host (see
+    ``plans/archive/2026_08/read_availability_index_slim_read_oom_at_defi_scale_2026_08_01.md``).
+    Streaming per-row-group (``_iter_manifest_batches`` below) is the actual memory
+    bound; this just resolves which columns exist up front.
+    """
+    import pyarrow.parquet as pq
 
-def collect(df: pd.DataFrame) -> list[CellStats]:
-    cat_col = _category_col(df)
-    if "source" not in df.columns:
+    schema_names = set(pq.read_schema(path).names)
+    cat_col = next((c for c in ("category", "asset_group") if c in schema_names), None)
+    if cat_col is None:
+        msg = f"manifest has neither 'category' nor 'asset_group' column; columns={sorted(schema_names)}"
+        raise ValueError(msg)
+    if "source" not in schema_names:
         msg = "manifest parquet has no 'source' column — not a v9+ manifest; cannot audit provenance."
         raise ValueError(msg)
-    venue_col = "venue" if "venue" in df.columns else None
-    dt_col = "data_type" if "data_type" in df.columns else None
-    if dt_col is None:
-        msg = f"manifest has no 'data_type' column; columns={list(df.columns)}"
+    if "data_type" not in schema_names:
+        msg = f"manifest has no 'data_type' column; columns={sorted(schema_names)}"
         raise ValueError(msg)
+    columns = [c for c in _WANTED_COLUMNS if c in schema_names]
+    return columns, cat_col
 
+
+def _iter_manifest_batches(path: str, columns: list[str]) -> Iterable[pd.DataFrame]:
+    """Stream the consolidated availability-index parquet (local or gs:// URI) in bounded batches.
+
+    Reads only ``columns`` (5 of ~50) AND row-group-streams via
+    ``ParquetFile.iter_batches`` instead of materializing the whole table —
+    peak memory stays proportional to ``_BATCH_SIZE`` rows regardless of total
+    manifest size, which single-shot ``pd.read_parquet`` (even column-projected)
+    does not guarantee on the largest prod indices.
+    """
+    import pyarrow.parquet as pq
+
+    pf = pq.ParquetFile(path)
+    for batch in pf.iter_batches(columns=columns, batch_size=_BATCH_SIZE):
+        yield batch.to_pandas()
+
+
+def collect(batches: Iterable[pd.DataFrame], cat_col: str) -> list[CellStats]:
     cells: dict[tuple[str, str, str], CellStats] = {}
-    for row in df.itertuples(index=False):
-        ag = str(getattr(row, cat_col, "") or "")
-        venue = str(getattr(row, venue_col, "") or "") if venue_col else ""
-        dt = str(getattr(row, dt_col, "") or "")
-        src = str(getattr(row, "source", "") or "")
-        key = (ag, venue, dt)
-        cell = cells.setdefault(key, CellStats(asset_group=ag, venue=venue, data_type=dt))
-        cell.total_rows += 1
-        cell.source_counts[src] += 1
+    rows_seen = 0
+    for df in batches:
+        venue_col = "venue" if "venue" in df.columns else None
+        for row in df.itertuples(index=False):
+            ag = str(getattr(row, cat_col, "") or "")
+            venue = str(getattr(row, venue_col, "") or "") if venue_col else ""
+            dt = str(getattr(row, "data_type", "") or "")
+            src = str(getattr(row, "source", "") or "")
+            key = (ag, venue, dt)
+            cell = cells.setdefault(key, CellStats(asset_group=ag, venue=venue, data_type=dt))
+            cell.total_rows += 1
+            cell.source_counts[src] += 1
+        rows_seen += len(df)
+        print(f"[audit_source_column_distribution] ...{rows_seen} rows streamed", file=sys.stderr)
     return list(cells.values())
 
 
@@ -139,8 +166,9 @@ def main(argv: Iterable[str] | None = None) -> int:
     )
     args = parser.parse_args(list(argv) if argv is not None else None)
 
-    df = _read_manifest(args.manifest_path)
-    cells = collect(df)
+    columns, cat_col = _resolve_columns(args.manifest_path)
+    batches = _iter_manifest_batches(args.manifest_path, columns)
+    cells = collect(batches, cat_col)
     red_cells, red_rows = report(cells)
 
     total_rows = sum(c.total_rows for c in cells)

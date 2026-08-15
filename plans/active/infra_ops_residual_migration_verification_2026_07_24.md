@@ -124,6 +124,7 @@ source: >-
       (`defi_consolidated_closeout_2026_07_18.md` Track 8), not a runbook regression.
 
       **CLOSED 2026-08-08 (na-eligibility-audit round7)**: the runbook itself was executed 2026-07-16 (operator-authorized) and this doc's own 2026-08-08 round5-cross-cutting-audit entry live-re-checked current cron/rule state today -- no regression beyond the separately-tracked deliberate mtds-collect pause. Flipping to match the already-gathered evidence; nothing newly run here.
+
 - [x] ✅ [INFRA] P2. **DONE — ALREADY FIXED, stale checkbox.** **DONE 2026-08-01 (satellite-batch1 reconciliation):**
       `deployment-service@c04d4562` (2026-06-15) already added the `gcloud run jobs update --image` + async `execute`
       sync step to `deploy-shared.sh` ("[3/3] Sync data-status rollup Job to the new image") — landed 3 days after this
@@ -250,7 +251,8 @@ source: >-
   post-execution for any re-run; schema_version re-stamp irreversible-`--apply` sign-off; 2 pointer-only items) are
   unchanged judgment/operator-gated work. Not a RECLASSIFY case. `assigned_vm` untouched.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, stale item closed -- flipped the
-  RESUME-runbook checkbox (executed 2026-07-16, re-verified live today per this doc's own round5-cross-cutting-
-  audit entry). Remaining open items are a genuine multi-plan audit judgment call (FULL AUDIT), an irreversible
-  `--apply` schema re-stamp explicitly deferred pending an operator-authorized quiet backfill-fleet window, and
-  a pointer-only design task not yet filed under its owning epic -- genuine mix, whole doc stays NA.
+  RESUME-runbook checkbox (executed 2026-07-16, re-verified live today per this doc's own round5-cross-cutting- audit
+  entry). Remaining open items are a genuine multi-plan audit judgment call (FULL AUDIT), an irreversible `--apply`
+  schema re-stamp explicitly deferred pending an operator-authorized quiet backfill-fleet window, and a pointer-only
+  design task not yet filed under its owning epic -- genuine mix, whole doc stays NA.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).

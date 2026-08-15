@@ -41,8 +41,8 @@ related_plans:
   - ../active/bucket_fold_features_2026_07_17.md
   - ../active/bucket_fold_ml_2026_07_17.md
   - ../active/bucket_fold_portfolio_state_2026_07_17.md
-  - ../active/bucket_iam_write_protection_per_tier_2026_06_09.md
-  - ../active/bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27.md
+  - ../archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md
+  - ../archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27.md
   - ../active/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08_finalize_2026_08_08.md
   - ../active/ci_pipeline_speed_and_cost_redesign_2026_08_05.md
   - ../active/ci_vm_exposure_remediation_2026_08_06.md
@@ -74,7 +74,7 @@ related_plans:
   - ../archive/2026_08/infra_satellite_ao_dispatch_batch9_2026_08_09.md
   - ../archive/2026_08/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md
   - ../active/lst_rate_honest_coverage_2026_07_21.md
-  - ../active/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md
+  - ../archive/2026_08/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md
   - ../active/qg_host_adaptive_resource_governor_2026_07_14.md
   - ../active/repo_scripts_governance_audit_2026_06_18.md
   - ../active/self_hosted_runner_public_repo_revert_2026_08_05.md
@@ -453,7 +453,7 @@ without the cleanup-script output attached.
       checkbox section in any commit that touches an entity registry. Symlinks propagate to all repo-mirrors. Body:
       "When you add or remove a venue / data_type / canonical-group / chain / instrument-type from any UAC
       `*_BY_ASSET_GROUP` registry or canonical lifecycle SSOT, you MUST: (a) run
-      `instruments-service/scripts/reconcile_manifest_after_entity_change.py --add|--remove --asset-group=X     --entity-type=Y --entity-key=Z`
+      `instruments-service/scripts/reconcile_manifest_after_entity_change.py --add|--remove --asset-group=X --entity-type=Y --entity-key=Z`
       (NEW script — Phase 3 below); (b) attach the script's audit-CSV output to the PR description; (c) the audit must
       show ZERO orphan rows (rows whose entity is no longer in the registry but the manifest still has captured/empty
       rows for it). Reviewers reject PRs that don't include this output."
@@ -469,7 +469,7 @@ without the cleanup-script output attached.
       writegate Phase 3.D.5 Wave 3 v2 enumerator** for the `--add` path. — IS@af302bcb QG green. --remove path fully
       implemented; --add stubs NotImplementedError (BLOCKED-ON writegate Phase 3.D.5). 2026-05-27 slot-7.
 - [ ] [HUMAN+AGENT] P1. **Retroactive audit of 90-day commit history.** Walk
-      `git log origin/live-defi-rollout --since='90 days' -p -- unified-api-contracts/.../canonical/crosscutting/     unified-api-contracts/.../canonical/domain/`;
+      `git log origin/live-defi-rollout --since='90 days' -p -- unified-api-contracts/.../canonical/crosscutting/ unified-api-contracts/.../canonical/domain/`;
       for every commit that adds/removes an entity, run the Phase 3 script in audit-only mode; collect every orphan row.
       Output: a single audit report under `unified-trading-pm/audits/entity_lifecycle/retroactive_90d_2026_05_08.csv`.
 - [ ] [HUMAN+AGENT] P1. **Retroactive bulk reconciler run for stragglers** identified by the audit above. Operator
@@ -557,7 +557,7 @@ strategy-store flat → tiered
 **status**: active · **estimate**: 3.2 cal AI-days (class: infra) **title**: Bucket fold — features 25 per-AG/kind → 5
 per-AG (features-{ag}-{env}-{pid})
 
-### [`bucket_iam_write_protection_per_tier_2026_06_09`](../active/bucket_iam_write_protection_per_tier_2026_06_09.md)
+### [`bucket_iam_write_protection_per_tier_2026_06_09`](../archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md)
 
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Bucket IAM write-protection —
 per-tier/per-domain SAs replace the project-wide god-SA (§8 implementation)
@@ -656,9 +656,9 @@ feature for CeFi instruments — strategy-side volume caps
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Bucket fold — portfolio-state 6 stores → 1
 (portfolio-state-{env}-{pid}) — LAST
 
-### [`bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27`](../active/bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27.md)
+### [`bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27`](../archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27.md)
 
-**status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
+**status**: archived · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
 
 ### [`codex_violations_ratchet_to_five_2026_06_10`](../active/codex_violations_ratchet_to_five_2026_06_10.md)
 
@@ -710,7 +710,7 @@ fix the unified-trading-system-ui mock dev-server crash under sustained Playwrig
 **status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: Infra satellite AO dispatch batch 9 —
 finalize (reconcile source-doc checkboxes + archive)
 
-### [`pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08`](../active/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md)
+### [`pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08`](../archive/2026_08/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md)
 
 **status**: active · **estimate**: 0.3 cal AI-days (class: infra) **title**: PM bats-tests-never-invoked — finalize
 (reconcile + archive)
@@ -801,9 +801,9 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
 - [ ] [INFRA] P2. **Fleet per-repo local-QG debt sweep** (**MIGRATED FROM:** `uv_lockfile_determinism_2026_06_02.md`,
       archived 2026-06-07). The bash-3.2 governor fix unmasked each repo's accumulated stage-5+ local-QG debt (codex /
       cloudbuild-schema / size-import baselines) that the crash had been hiding. Walk every repo's
-      `quality-gates.sh     --no-fix` locally and clear the surfaced debt. **Overlaps `utl_full_quality_gates_green`**
-      (the T0 QG-green effort) — coordinate the per-repo greening there; most repos already proved green on LDR
-      (2026-06-07 fleet drain), so this is the residual local-only tail.
+      `quality-gates.sh --no-fix` locally and clear the surfaced debt. **Overlaps `utl_full_quality_gates_green`** (the
+      T0 QG-green effort) — coordinate the per-repo greening there; most repos already proved green on LDR (2026-06-07
+      fleet drain), so this is the residual local-only tail.
 - [ ] [INFRA] P3. **VM-side QG-memory baseline** (**MIGRATED FROM:**
       `quality_gates_resource_contention_speedup_2026_06_02.md`, archived 2026-06-07). The per-repo QG resource
       baseline + 2× deviation guard is DONE for the 20-repo LOCAL baseline (`scripts/dev/qg_resource_baseline.json`,
@@ -824,12 +824,12 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
       `vm_launcher_startup_url_migration_2026_05_21.md` Pattern B note) — Consider moving the per-run migration script
       from unified-trading-pm to `CODE_BUCKET/scripts/` to enable a future Pattern A conversion. Low priority; Pattern B
       is correct for now. **MOOT 2026-08-03 (slot-7)** — the launcher itself was deleted as dead code (both target
-      scripts long removed; see `plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2i), so there is no
-      Pattern-B script left to convert.
+      scripts long removed; see `plans/archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2i), so
+      there is no Pattern-B script left to convert.
 - [x] ✅ [SCRIPT] P3. **VM startup `gsutil -m cp` wheel-cache step deadlocks → boot-hang (make non-blocking / drop
       `-m`).** **MIGRATED FROM:** `plans/active/issues/running_vm_fleet_status_2026_05_27.md` § C (archived 2026-06-07).
       The VM startup script's final "Caching compiled wheels to GCS" step runs
-      `gsutil -m -q cp /tmp/wheel-cache/*.whl     gs://…/wheels/…`; the snap-bundled `gsutil -m` (multiprocessing)
+      `gsutil -m -q cp /tmp/wheel-cache/*.whl gs://…/wheels/…`; the snap-bundled `gsutil -m` (multiprocessing)
       deadlocked (parent gsutil alive, defunct `[python3]` zombie workers) and the **startup script blocks on it** →
       `market_tick_data_service` never launches (observed on bybit-2024 / hyperliquid-2025 / kraken-2024 — never
       self-recovers). Also violates the workspace rule that per-object GCS ops use `gcs_copy_object` (REST), not
@@ -866,6 +866,14 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
       (`features_sports_reconcile_available_at.py` UTL storage client + resolve_bucket_name + --cloud flag). QG green
       all 3. - [x] ✅ [AGENT] P2-sub. **Fix IS coverage to ≥77%** — boosted from 74.47% to 77.03% via 39 new tests
       (understat ×19, sports_fixtures_daily_repoll ×11, urdi_reference_provider ×9) — IS@d6b8f42e.
+
+> **⚠️ 2026-08-15 (/plan-reconcile) — direction reversal in flight, pending resolution.** The 2 todos immediately below
+> ("Operator sign-off on dual-cloud parity", "GCP bucket decommission") assume AWS-primary/GCS-decommission. That's now
+> the OPPOSITE direction from `/plans/active/defi_compute_gcp_migration_2026_08_08.md`, which is ~72% executed moving
+> DeFi compute OFF AWS ONTO GCP. That plan's own still-open DOC P1 todo ("Resolve
+> `/plans/epics/infrastructure_master.md`'s stale open todos") is the one that resolves/supersedes these 2 items — don't
+> hand-edit them here until that todo lands; it hasn't executed yet as of this note.
+
 - [ ] [OPERATOR] P2. **Operator sign-off on dual-cloud parity** — after parity tests pass: operator signs off in
       handover doc confirming GCS + S3 are byte-equivalent for DeFi asset_group.
 - [ ] [AGENT] P3. **Repeat Phase 2-7 for sports/predictions/tradfi/cefi** — extend AWS migration to remaining

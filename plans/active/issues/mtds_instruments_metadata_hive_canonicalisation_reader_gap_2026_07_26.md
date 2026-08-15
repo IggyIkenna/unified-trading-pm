@@ -207,8 +207,8 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
       market-tick-data-service@d2366203.)** Evidence (all against the real
       `instruments-store-defi-prd-central-element-323112` / `market-data-tick-defi-prd-central-element-323112` buckets,
       GCP_PROJECT_ID=central-element-323112): - **Part A — reader fix works.**
-      `load_pool_metadata_for_date("kamino_lending", "SOLANA", <2026-07-24/25/26>,       ...)` returns 113 real,
-      non-`None` rows for every date tested (was `None` pre-fix for every date since 2026-07-23). Also spot-checked
+      `load_pool_metadata_for_date("kamino_lending", "SOLANA", <2026-07-24/25/26>, ...)` returns 113 real, non-`None`
+      rows for every date tested (was `None` pre-fix for every date since 2026-07-23). Also spot-checked
       `morpho`/ETHEREUM+BASE and `fluid`/ETHEREUM the same way for 2026-07-24/2026-08-01/2026-08-02: 560/330/12+ real
       rows every time, and confirmed `risk_params_from_catalogue(catalogue, ...)` (the actual downstream consumer) turns
       that catalogue into 560 and 12 non-empty risk-param rows respectively (`pool_address` populated on 100% of rows) —
@@ -216,9 +216,9 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
       production is NOT benefiting from the fix.** `read_availability_index` on the DeFi `market-data-tick-defi` bucket,
       filtered `data_type=risk_params`, `venue in [MORPHO, FLUID]` (manifest venue casing is upper, not the lowercase
       protocol slug), `date>=2026-07-20`, shows **every single date from 2026-07-20 through TODAY (2026-08-03) still
-      stamped `capture_status in {empty_confirmed,       expected_unattempted}`, `row_count=0`** — including
-      `attempted_at` timestamps as recent as `2026-08-03T01:34:37Z` (`pipeline_mode=batch_onchain_rpc`), i.e. the
-      capture job IS actively running daily, it just keeps producing zero rows even now, 8 days after the fix landed.
+      stamped `capture_status in {empty_confirmed, expected_unattempted}`, `row_count=0`** — including `attempted_at`
+      timestamps as recent as `2026-08-03T01:34:37Z` (`pipeline_mode=batch_onchain_rpc`), i.e. the capture job IS
+      actively running daily, it just keeps producing zero rows even now, 8 days after the fix landed.
       `KAMINO`/`KAMINO_LENDING` venue: **zero manifest rows found at all** since 2026-07-01 (not even a
       zero-row/catalog-unavailable stamp) — a separate gap, not this doc's regression (kamino_lending risk_params
       appears to never dispatch at all; out of this todo's scope, flagged for a future audit, not filed here to avoid

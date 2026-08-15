@@ -145,9 +145,8 @@ ratios suggest this has been the STEADY-STATE behavior, not a recent regression)
   doc for the full scoped todo; do not duplicate-dispatch from here.
 - [x] ✅ [REVIEW] P2. **DONE 2026-08-09 (main) — verified against `agent-orchestrator@884a9bfe1`.** Allowlist gate
       exactly matches scope: `_QG_SIGNAL_WALLS = frozenset({"ldr_qg_failure", "main_ci_red"})`, checked via
-      `if     wall_type not in _QG_SIGNAL_WALLS: return None` right before the generic
-      `ci_reconcile.repo_ldr_qg_conclusion` call. Regression coverage:
-      `test_poll_wall_resolution_non_qg_signal_walls_never_auto_resolve` is parametrized over
+      `if wall_type not in _QG_SIGNAL_WALLS: return None` right before the generic `ci_reconcile.repo_ldr_qg_conclusion`
+      call. Regression coverage: `test_poll_wall_resolution_non_qg_signal_walls_never_auto_resolve` is parametrized over
       `escalation.WALL_TYPES - escalation._QG_SIGNAL_WALLS` (all 7 non-QG-signal types, derived from the real set, not
       hand-listed — a future new wall type defaults to the same safe branch) plus asserts the unrelated poll is never
       even CALLED; `test_poll_wall_resolution_main_ci_red_unaffected_still_resolves_via_qg_green` confirms main_ci_red

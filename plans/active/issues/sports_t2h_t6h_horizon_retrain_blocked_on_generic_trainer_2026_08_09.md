@@ -85,7 +85,7 @@ doesn't reflect the actual production training pipeline, which is worse than rep
       `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md` (ML section) already names; fixing the trainer
       generalization there closes both. (repo: ml-service) — ml-service@4b43762: `SportsModel2ATrainer.__init__` now
       takes `model_id: str = "model_2a"`, validates against `SPORTS_MODEL_CONFIGS`, sets
-      `self.model_spec =     SPORTS_MODEL_CONFIGS[model_id]`, and resolves `self.grid_config` via new
+      `self.model_spec = SPORTS_MODEL_CONFIGS[model_id]`, and resolves `self.grid_config` via new
       `SPORTS_MODEL_ID_TO_GRID` (model_2a/2d/2e — the horizons with an actual `TrainingGridConfig`; model_2b/2c have no
       grid yet, tracked by the P1 todo below).
 - [x] ✅ [CODE] P1. Once the trainer is generalized, run the actual retrain for `model_2a`/`model_2b`/`model_2c`

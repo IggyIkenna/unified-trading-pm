@@ -142,7 +142,7 @@ diverging matcher on the same problem.
       `live_pipeline_mode_for_venue` — UAC's `SPORTS_DATA_TYPE_TO_SOURCE["ODDS"]` (an IS/footystats reference-entity
       registry, `unified_api_contracts/canonical/domain/sports/league_data.py:224`) resolves to source=`footystats`,
       which has no `LIVE_FOOTYSTATS` `PipelineMode` —
-      `ValueError: No PipelineMode for source 'footystats' in mode     'live'`. Reverted to `trades` (the only
+      `ValueError: No PipelineMode for source 'footystats' in mode 'live'`. Reverted to `trades` (the only
       currently-launchable data_type for this venue) to unblock this recovery; the `trades`-vs-`ODDS` batch/live
       data_type mismatch is a real, separate cross-cutting gap — tracked as a new P1 todo below rather than blocking
       this fix on it.
@@ -175,19 +175,29 @@ diverging matcher on the same problem.
 
 ### P1 — batch/live data_type symmetry gap (found 2026-08-14 during P0 recovery)
 
-- [ ] [DATA] P1. Resolve the `ODDS_API` venue's batch/live `data_type` mismatch — the batch adapter
+- [x] ✅ [DATA] P1. Resolve the `ODDS_API` venue's batch/live `data_type` mismatch — the batch adapter
       (`market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py:759`) writes `data_type="ODDS"`,
       but the live shard (`sports:ODDS_API:trades`) uses `data_type="trades"` because `"ODDS"` crashes
       `live_pipeline_mode_for_venue`: UAC's `SPORTS_DATA_TYPE_TO_SOURCE["ODDS"]`
       (`unified_api_contracts/canonical/domain/sports/league_data.py:224`) resolves the source to `footystats` — an
       unrelated IS reference-entity registry entry (footystats' own pre-match odds snapshot, per that file's own
       2026-06-27 operator-decision comment) — which has no `LIVE_FOOTYSTATS` `PipelineMode`, raising
-      `ValueError: No     PipelineMode for source 'footystats' in mode 'live'`. Live and batch currently write under
+      `ValueError: No PipelineMode for source 'footystats' in mode 'live'`. Live and batch currently write under
       different shard identities for the same data, breaking the "Live = batch" shard-atom-identical contract — DoD:
       either (a) make `live_pipeline_mode_for_venue` venue-aware so `ODDS_API` + `data_type=ODDS` resolves
       source=odds_api instead of falling through to the data_type-only `SPORTS_DATA_TYPE_TO_SOURCE` lookup, or (b)
       rename the live shard's `data_type` and get the batch adapter to match it — state which and cite the resolved
       shard identity used by both sides.
+
+      **CLOSED (2026-08-15, /plan-reconcile, operator interactive) — redirected to the 2 sibling plans that already
+          fully own this split.** This mismatch spans 2 distinct write surfaces, each with its own dedicated, already-shipped-or-active
+          plan: `sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` owns the raw tick GCS path surface
+          (`venue_fetch.py`'s hardcoded `trades` literal → `odds`, retiring 382K+ historical rows);
+          `sports_odds_api_data_type_casing_standardization_2026_08_15.md` owns the manifest capture-record surface
+          (`odds_api_adapter.py`'s row-dict `"data_type": "ODDS"` → lowercase `odds`, ~17K rows). Both converge on the
+          same final value (`odds`), explicitly scoped as non-overlapping in the first doc's own text — not a
+          contradiction between the two, just two different surfaces of the same rename. Closing this instance here rather
+          than duplicating tracked work in a 3rd place.
 
 ### P1 — the three providers
 
@@ -269,13 +279,15 @@ sports cell that we actually have a provider for.
   (`unified-trading-pm@4a0f0d6c0d`). Implemented the resulting fix: `LiveWebsocketRunner` now stamps the real bookmaker
   (from `tick["bookmaker_key"]`) as `venue` for fan-out ticks instead of the shard's coarse `ODDS_API` label, matching
   the batch convention (`WsInstrumentBuffer.venue` override, every manifest/GCS-path/boundary-event call site updated).
-  Quality gates green (10,676 tests). **NOT YET SHIPPED**: quickmerge blocked twice by live peer WIP in dependency repos
-  (first `unified-api-contracts`/`unified-trading-library` mid-edit <60s old, blocking the pre-flight dependency-clean
-  check) — this is the same shared-slot collision pattern hit earlier in this session, not a defect in the fix itself.
-  Uncommitted but QG-verified changes sit locally in `market-tick-data-service` (`websocket_runner.py`,
-  `_ws_window_helpers.py`, `tests/unit/test_websocket_runner.py`). **Next session**: retry `bash scripts/quickmerge.sh`
-  (same commit message as this entry describes) once `unified-trading-library`/`unified-api-contracts` are clean, then
-  rebuild the tarball + redeploy `mtds-live-sports-odds-api-trades-20260814-110648` under
-  `--shard-spec sports:ODDS_API:trades` (data_type stays `trades` — see the still-open P1 data_type-mismatch todo above;
-  do NOT switch to `odds` without re-verifying pipeline_mode resolution first) and verify captured rows now carry real
-  bookmaker `venue` values, not `ODDS_API`.
+  Quality gates green (10,676 tests). Shipped `market-tick-data-service@dc16f69811` (quickmerge succeeded once
+  `unified-api-contracts`/`unified-trading-library` cleared the live peer WIP that blocked the first two attempts — same
+  shared-slot collision pattern hit earlier in this session, not a defect in the fix itself). Rebuilt the code tarball
+  (`mtds-code@744f97c65a83`, picked up `dc16f698` as an ancestor after a peer commit landed on top mid-build), deleted
+  the old `mtds-live-sports-odds-api-trades-20260814-110648` VM (confirmed genuinely live via manifest — 1605 `captured`
+  rows, `written_at` seconds old — this was a deliberate redeploy, not a zombie-reap), and relaunched under the same
+  `--shard-spec sports:ODDS_API:trades` as `mtds-live-sports-odds-api-trades-20260815-074026`. **Verified**: per-VM
+  manifest shows 1190 `captured` rows within minutes of boot, `pipeline_mode=live_odds_api`, `source=odds_api`, spanning
+  32 real bookmaker venues (`WILLIAMHILL`, `UNIBET_UK`, `FANDUEL`, `BETFAIR_EX_UK`, `DRAFTKINGS`, etc.) — only the 5
+  original coarse subscription instrument_ids still show `venue=ODDS_API` (expected, they never receive direct ticks
+  under this fan-out connector). Live now matches the batch convention. The `trades`-vs-`odds` data_type mismatch (P1
+  todo above) remains open and unrelated to this fix.

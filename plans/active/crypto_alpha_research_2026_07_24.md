@@ -627,3 +627,7 @@ Operator gave indicative Binance RFQ widths vs screen costs (BTC/ETH ~0.5-2bp, S
 - **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms 2026-08-08 round7 verdict;
   16/22 open items map onto the doc's own operator-gated §C register (PERMANENT hard-stop, 2026-07-28), remaining 6 are
   RESEARCH refinements. 3 lower-confidence MISCLASSIFIED_LIKELY_AO_ELIGIBLE items noted, not enough to flip the doc.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (4 entries) -- recent commits were
+  pointer/reference fixes only (broken frontmatter refs, batch13 source-doc reconciliation, deferred-backlog sweep);
+  `e2e-testing/scripts/paper_trading/` (confirmed still present, incl. `RECOVERY.md`) + the parent
+  citadel-reconciliation plan + line-cap-remediation issue + strategy_master epic remain the accurate minimal set.

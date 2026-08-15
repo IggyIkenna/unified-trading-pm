@@ -109,8 +109,19 @@ def risky_reason(command: str) -> str | None:
     return None
 
 
+_DETECT_TIMEOUT = -1  # sentinel returncode: distinguishes "ran out of time" from "ran, found nothing"
+
+
 def _detect(subcmd: str, arg: str) -> tuple[int, str]:
-    """Run the shared detector. Returns (returncode, stdout); (1, "") on any failure."""
+    """Run the shared detector. Returns (returncode, stdout); (1, "") on a non-timeout failure.
+
+    TimeoutExpired is kept SEPARATE from every other failure (returncode `_DETECT_TIMEOUT`, not
+    folded into the generic (1, "")) so a caller can tell "the scan could not complete under this
+    host's current load" apart from "the scan completed and found nothing" -- see
+    plans/active/issues/slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md todo 1.
+    Both still ALLOW by design (failing open is correct for a backstop guard); the distinction is
+    for observability, not to change the verdict.
+    """
     try:
         # Fixed argv, no shell: the only interpolated values are a subcommand literal and a
         # path this process derived itself.
@@ -120,6 +131,8 @@ def _detect(subcmd: str, arg: str) -> tuple[int, str]:
             text=True,
             timeout=10,
         )
+    except subprocess.TimeoutExpired:
+        return (_DETECT_TIMEOUT, "")
     except (OSError, subprocess.SubprocessError):
         return (1, "")
     return (proc.returncode, proc.stdout.strip())
@@ -159,7 +172,15 @@ def main() -> int:
     if not slot_dir:
         return _ALLOW  # not in a .tabs/<N> slot -- no shared-checkout hazard this guard models
 
-    pids_out = _detect("foreign-pids", slot_dir)[1]
+    pids_rc, pids_out = _detect("foreign-pids", slot_dir)
+    if pids_rc == _DETECT_TIMEOUT:
+        # Observable, not silent: same ALLOW outcome as "no peer", but a greppable marker in
+        # stderr so a human (or a test) can tell this was a load-induced skip, not a clean scan.
+        sys.stderr.write(
+            "SLOT_COLLISION_GUARD_DETECTOR_TIMEOUT — peer scan did not complete within 10s "
+            "(host load); allowing by design (fail-open) rather than blocking on an unknown.\n"
+        )
+        return _ALLOW
     pids = [p for p in pids_out.split() if p.isdigit()]
     if not pids:
         return _ALLOW

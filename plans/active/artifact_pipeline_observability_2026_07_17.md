@@ -385,8 +385,8 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       originally deployed with, so "deployed via an immutable `@sha256` pin" and "deployed via a `:<sha>` tag that
       happens to still resolve to this digest" are OBSERVATIONALLY IDENTICAL from this join; claiming the stronger
       `pinned` would be unprovable, so both read as the one honest `ok` ("traceable to a commit"). `DRIFT_HAND` reuses
-      the deployer-identity signal already computed for Deploy timeline (`deployer != "Cloud     Build"`), not a
-      separate provenance check. Deployer identity already lands from `revision.creator` (shipped with Deploy timeline,
+      the deployer-identity signal already computed for Deploy timeline (`deployer != "Cloud Build"`), not a separate
+      provenance check. Deployer identity already lands from `revision.creator` (shipped with Deploy timeline,
       `72a0108`).
 
 ### Phase 2 — API contract (deployment-api)
@@ -476,8 +476,8 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       gate green (1099 tests). Original audit for reference: every filter already reads `useSearchParams()` via one
       `setParam` helper, and the module docstring states the intent ("ALL filters are URL-backed … so alert deep-links
       and shareable filtered views work"). Taken params:
-      `umbrella / cloud / status / asset_group / kind /     launched_by / region / detail` — this was the first consumer
-      of an existing-but-unused capability.
+      `umbrella / cloud / status / asset_group / kind / launched_by / region / detail` — this was the first consumer of
+      an existing-but-unused capability.
 - [x] [UI] P2. ✅ **Console deep-links — `deployment-ui@74c0a7d` (2026-07-27).** Wrote the missing Artifact Registry /
       ECR link builder (`artifactConsoleUrl(cloud, registry, repo)` in `ArtifactPipeline.tsx`, following
       `consoleUrl()`'s pure-URL-construction pattern from `DeploymentDetail.tsx`) and wired it into two places: the
@@ -485,12 +485,12 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       (parses the joined `artifact` ref, e.g. `"unified-trading-system/deployment-api"`, since that view carries no
       separate registry/repo fields — `runningArtifactConsoleUrl()`). The AR location (`asia-northeast1`) and AWS
       account (`427895769566`) were confirmed against the LIVE `unified-trading-system` AR repo via
-      `gcloud artifacts     repositories list`, not assumed. The What's running row's expanded detail also gained the
-      second half of the operator's original cross-link ask — a "View hosts on this commit in Deployments ↗" link using
-      the new `?git_commit=` filter above, so a version row now deep-links BOTH to its registry console and to exactly
-      the hosts running it. New coverage: 2 Vitest + 2 `pw:L2` cases (console-link href assertions for both GCP/AR and
-      AWS/ECR rows, plus the Deployments deep-link href). GCP Cloud Build / AWS CodeBuild build-log links were already
-      live (`row.log_url`, Pipeline tab drawer) — no new work needed there, confirmed by grep before starting. Gap that
+      `gcloud artifacts repositories list`, not assumed. The What's running row's expanded detail also gained the second
+      half of the operator's original cross-link ask — a "View hosts on this commit in Deployments ↗" link using the new
+      `?git_commit=` filter above, so a version row now deep-links BOTH to its registry console and to exactly the hosts
+      running it. New coverage: 2 Vitest + 2 `pw:L2` cases (console-link href assertions for both GCP/AR and AWS/ECR
+      rows, plus the Deployments deep-link href). GCP Cloud Build / AWS CodeBuild build-log links were already live
+      (`row.log_url`, Pipeline tab drawer) — no new work needed there, confirmed by grep before starting. Gap that
       remains open, out of this todo's scope: AWS CodeBuild's CloudWatch `deepLink` and the GCE-instance console link
       are both already covered by the pre-existing `consoleUrl()` (Deployments/DeploymentDetail pages), not this page.
 
@@ -512,7 +512,7 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       already survives as a global until `_launch_with_tee()` runs later in the same script execution — no code change
       was needed there, only the read. The actual edit is ONE additive block inside `_launch_with_tee()`, next to the
       existing `VM_NAME`/`VM_TASK` exports. All 7 binding conditions verified satisfied: (1)
-      `if [[ -n … ]]; then export     …; fi` form, placed mid-block (not the function's last statement) — safe under
+      `if [[ -n … ]]; then export …; fi` form, placed mid-block (not the function's last statement) — safe under
       `set -euo pipefail`. (2) `IMAGE_DIGEST` left untouched — only `GIT_COMMIT` is set. (3) A missing/`"unknown"` SHA
       degrades silently to no export (same absence as today) — never aborts a boot. (4) Plain `export GIT_COMMIT=`, not
       `extras`. (5) The semantics are documented inline (manifest `commit_sha` at boot, not a running-bytes
@@ -643,9 +643,10 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 
 ### Phase 4 — absorb + retire
 
-- [ ] [UI] P2. Port the manual-trigger action into the new page; remove `CloudBuildsTab` from the per-service tab bar +
-      `DeployConsole`; delete `CloudBuildsTab.tsx` (no shim). Fold `RepoCi` ImageCell fields into the new columns.
-- [ ] [BACKEND] P2. Retire the superseded narrow routes once the new service covers them; delete dead code.
+- [x] ✅ [UI] P2. **DONE 2026-08-15** — ported, `CloudBuildsTab.tsx` deleted (confirmed absent).
+      deployment-ui@b3300a71a7.
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-15** — superseded narrow routes retired, dead code deleted.
+      deployment-api@3f13e4435e.
 
 ### Phase 5 — codex + issue doc + notify
 
@@ -685,8 +686,8 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       issue doc. — DONE via `ui_satellite_ao_dispatch_batch3_2026_08_09.md`'s own todo 1 (unified-trading-pm@commit
       cited there): filed `plans/active/issues/deployment_bucket_resolution_gaps_2026_08_09.md` (confirmed on disk) —
       verified by plan_reconciler 2026-08-10, checkbox was never flipped in this source doc.
-- [ ] [BACKEND] P3. _(stretch, optional)_ "Built but never deployed" + build→deploy latency (join build digest to the
-      first revision that ran it).
+- [x] ✅ [BACKEND] P3. **DONE 2026-08-15** — "built but never deployed" + build→deploy latency join shipped.
+      deployment-api@764db37c33.
 - [x] [INFRA] P3. _(stretch, optional)_ ~~orphaned-image GC candidates (no matching build AND not running)~~ —
       **RESOLVED 2026-07-29** by `docker_artifact_registry_cleanup_policy_2026_07_24.md` Phases A-D: the 3-rule cleanup
       policy (`keep-5-recent` + `keep-deployed-digests` + `delete-older-than-3d`) was applied live (no dry-run) on
@@ -699,8 +700,8 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       `/ag-closeout-audit ui` runs, and this doc's own 2026-08-07 na-eligibility-audit marker, which counted "10 open
       items" without it). Check whether AR/ECR native vulnerability scanning is enabled and report current status —
       never itself investigated, only ever noted as remaining.
-- [ ] [INFRA] P3. _(stretch, optional)_ Deploy-churn / crash-loop signal (e.g. uts-shared-deployment-api redeployed ~14×
-      in hours; ~40% config-only) surfaced as a health condition.
+- [x] ✅ [INFRA] P3. **DONE 2026-08-15** — deploy-churn/crash-loop signal surfaced as a health condition.
+      deployment-api@ec80509550 (ancestor of `origin/live-defi-rollout`).
 
 ### Phase 7 — production-vs-local parity audit: why prod showed empty when local showed real data — NEW 2026-07-24
 

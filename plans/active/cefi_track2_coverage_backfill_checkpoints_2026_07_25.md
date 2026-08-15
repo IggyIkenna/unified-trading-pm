@@ -54,6 +54,7 @@ context_scope:
     /plans/active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md,
     deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
     instruments-service/scripts/measure_honest_coverage.py,
+    /plans/active/issues/cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md,
   ]
 ---
 
@@ -311,6 +312,10 @@ context_scope:
   only once the 8th VM measurably self-terminates at scope end — next re-verify should watch for a terminal
   `delete`/exit on the 8th VM (the 2 known stall classes — lease-race, honest-absence false-stall — are both fixed since
   `deployment-service@8095aeba`).
+
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — added
+  `issues/cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md`, the 2026-08-09 cross-reference
+  finding the doc's own newest `[INFRA] P1` todo cites.
 
 ## Reconciliation
 

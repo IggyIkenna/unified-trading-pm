@@ -302,12 +302,22 @@ tracking: `instrument_id_format_canonicalization_2026_07_08.md` +
   keeps them in sync with the instruments-service `YEARN_V3` rename). **B:** leave, accept the cross-repo divergence
   (not recommended — silent mismatch).
 
-### C4. Solana venues carry a key-vs-field mismatch (Sanctum/Solblaze/Jito/Drift + ~9 more) — `P1` — NEW
+### C4. Solana venues carry a key-vs-field mismatch (Sanctum/Solblaze/Jito/Drift + ~9 more) — `P1` — RESOLVED 2026-07-09 (3 fixed, 1 moot)
 
-- **Evidence:** `sanctum.py:121,124`, `solblaze.py:95,98`, `jito_restaking.py:141,144`, `drift.py:253,259` — field
-  doesn't match the venue key.
-- **Fix options:** **A (recommended)** align the field to the key (same one-line fix pattern used for the LST adapters).
-  **B:** batch it into the §B1 retrofit.
+- **RESOLVED 2026-07-09 (3 of 4 named sites) / moot (4th, 2026-07-16):** re-verified 2026-08-15 (slot 3,
+  `defi_satellite_ao_dispatch_batch9-017`) against live code. `sanctum.py`, `solblaze.py`, and `jito_restaking.py` each
+  carry a 2026-07-09 module-docstring note ("fixed 2026-07-09 — key/field mismatch") and their `InstrumentRecord`
+  construction sites route through the shared canonical builder; `jito_restaking.py`'s site comment (lines 148-153)
+  explicitly cites `canonical_id_builder_retrofit_checklist_2026_07_08.md todo 1` + this doc's own "C4" section by name.
+  The 4th named site, `drift.py`, no longer exists in the repo (`find instruments-service -iname drift.py` → 0 hits) —
+  DRIFT/PACIFICA were purged by operator ruling 2026-07-16, per `defi_satellite_ao_dispatch_batch2_2026_07_26.md`, so
+  its key-vs-field mismatch is moot rather than fixed.
+- **Original evidence (historical, pre-fix):** `sanctum.py:121,124`, `solblaze.py:95,98`, `jito_restaking.py:141,144`,
+  `drift.py:253,259` — field doesn't match the venue key.
+- **"~9 more adapters" sub-claim: UNVERIFIED** — this re-check confirmed only the 4 originally-named sites; the doc's
+  broader "+ ~9 more" claim was not re-audited this pass and should not be treated as confirmed either way.
+- **Fix options (for the unverified "~9 more" residual, if any are found open):** **A (recommended)** align the field to
+  the key (same one-line fix pattern used for the LST adapters). **B:** batch it into the §B1 retrofit.
 
 ### C5. MTDS restaking adapters emit divergent `:VAULT:` `RESTAKING_VAULT` keys (live, wired) — `P1` — NEW
 
@@ -661,3 +671,9 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
   in the same files) or is small enough that extracting it alone risks a false sense of coverage over this doc's much
   larger prose-only B-F sections. No clean, conflict-free extraction found this pass — reporting near-zero yield rather
   than forcing a partial extraction. Doc stays `assigned_vm: NA`.
+- **2026-08-15 (AO dispatch, `data_engineering`, slot 3, `defi_satellite_ao_dispatch_batch9-017`)**: C4's stale `NEW`
+  status marker corrected to `RESOLVED 2026-07-09 (3 fixed, 1 moot)`. Live-verified: `sanctum.py`/`solblaze.py`/
+  `jito_restaking.py` all carry the 2026-07-09 fix (module docstring + canonical-builder routing at the construction
+  site; `jito_restaking.py` cites this doc's C4 section by name); `drift.py` confirmed absent from the repo (DRIFT
+  purged 2026-07-16). The "~9 more adapters" sub-claim was left explicitly marked unverified per this todo's own
+  done-when (not silently dropped). No code changed — doc-only correction.

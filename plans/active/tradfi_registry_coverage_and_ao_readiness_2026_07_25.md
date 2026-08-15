@@ -122,13 +122,17 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
 
 ## Phase A2 — adapter / registry correctness (so the MVP cells actually fetch + classify)
 
-- [ ] [BACKEND] P1. **VERIFY: CME `mbp_10`/`trades`/`tbbo` `VENUE_DATA_TYPE_CAPABILITIES` declares billing-gated status,
-      not full-history-available** —
+- [x] ✅ [BACKEND] P1. **VERIFY: CME `mbp_10`/`trades`/`tbbo` `VENUE_DATA_TYPE_CAPABILITIES` declares billing-gated
+      status, not full-history-available** —
       `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`. Databento tradfi's billing
       entitlement is 1-month L3 + 1-year L1, so `mbp_10`/`trades`/`tbbo` lookback/entitlement-guard rejections are
       billing-gated by design, not a bug. Gate: `VENUE_DATA_TYPE_CAPABILITIES` confirmed to declare mbp_10/trades/tbbo
       as billing-gated (declared possible, not chased to full L3 history) — a pure verify, no code change. (repos:
-      market-tick-data-service, unified-api-contracts)
+      market-tick-data-service, unified-api-contracts) **DONE 2026-08-15 (/plan-reconcile)** — verified with live code
+      quoted in `plans/active/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md:7-9`:
+      `VENUE_DATA_TYPE_CAPABILITIES["CME"]` correctly excludes mbp_10/trades/tbbo entirely (only ohlcv_1s/ohlcv_1m
+      declared), confirming no false "full-history-available" claim exists; that same verification surfaced a SEPARATE
+      `expected_coverage.py` drift, tracked in that doc, not blocking this todo's own done-when.
 - **[DESIGN] P2.** Whether an `ohlcv_15m/24h` aggregation writer ships to feed `vix_features` (currently unfed) is a
   SEPARATE, still-open design decision — tracked in its own doc's `[DESIGN] P2` item
   (`tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`), not resolved by the verify todo
@@ -221,7 +225,7 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
       views) — `data_status_page_ux_and_canonicalisation_2026_07_16.md`; deployment-api legacy venue-lookup gap
       (`deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md`, RESOLVED — verify tradfi). Gate:
       the "Upcoming expiries" widget + catalogue view render canonical ids for a live sample row (no raw
-      `E3AN6     C7960`-style output), and the venue-lookup gap fix is confirmed to hold for tradfi.
+      `E3AN6 C7960`-style output), and the venue-lookup gap fix is confirmed to hold for tradfi.
 - [ ] [REVIEW] P1. **Run the already-shipped distinct-values/axis-value census for tradfi and verify 0 non-canonical** —
       deployment-api `GET /distinct-values/{asset_group}` + `GET /axis-value-census`
       (`deployment-api/deployment_api/routes/data_status/_distinct_values.py` + `_axis_census.py`; tracked corpus-wide
@@ -255,19 +259,19 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
       non-zero count). (repo: instruments-service)
 
       **ATTEMPTED 2026-07-30 — NOT completed, aborted for shared-host safety.** Ran the exact command live
-                                                                              (`GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python
-                                                                              scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run`, `instruments-service`). The
-                                                                              manifest load (`merge_canonical_with_outstanding_shards` over the 5,894,011-row `market-data-tick-tradfi-prd`
-                                                                              `_index` + its outstanding `_index/per_vm/` shards — tradfi has an extensive VM-launch history) drove the process
-                                                                              to ~13GB RSS with growing swap (5.9Gi to 9.3Gi on a 15Gi-total shared host, other sessions concurrently active)
-                                                                              and zero log progress past "Loading manifest" for 6+ minutes — flat progress reads as a stall, not
-                                                                              slow-but-working, per the async-wait-discipline SSOT. Killed it (`kill -9`) before risking an OOM crash or
-                                                                              thrashing badly enough to hurt other concurrent work on the shared host, rather than waiting indefinitely. This is
-                                                                              the same heavy-compute-on-shared-host class the infra codex gates to a dedicated VM — tradfi's corpus size makes
-                                                                              this a genuinely heavier operation than the ruling's "the dry-run is runnable now" framing assumed. Cross-filed in
-                                                                              `data_completion_tradfi_2026_07_15.md`'s `⑫ FOLLOW` todo. **Recommended next step**: re-run on a dedicated VM (or
-                                                                              scope down via `--start-date`/`--end-date`/`--venues` to shrink the per-VM-shard merge) rather than the shared
-                                                                              host. No `--apply` was ever reached; nothing was mutated.
+          (`GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python
+          scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run`, `instruments-service`). The
+          manifest load (`merge_canonical_with_outstanding_shards` over the 5,894,011-row `market-data-tick-tradfi-prd`
+          `_index` + its outstanding `_index/per_vm/` shards — tradfi has an extensive VM-launch history) drove the process
+          to ~13GB RSS with growing swap (5.9Gi to 9.3Gi on a 15Gi-total shared host, other sessions concurrently active)
+          and zero log progress past "Loading manifest" for 6+ minutes — flat progress reads as a stall, not
+          slow-but-working, per the async-wait-discipline SSOT. Killed it (`kill -9`) before risking an OOM crash or
+          thrashing badly enough to hurt other concurrent work on the shared host, rather than waiting indefinitely. This is
+          the same heavy-compute-on-shared-host class the infra codex gates to a dedicated VM — tradfi's corpus size makes
+          this a genuinely heavier operation than the ruling's "the dry-run is runnable now" framing assumed. Cross-filed in
+          `data_completion_tradfi_2026_07_15.md`'s `⑫ FOLLOW` todo. **Recommended next step**: re-run on a dedicated VM (or
+          scope down via `--start-date`/`--end-date`/`--venues` to shrink the per-VM-shard merge) rather than the shared
+          host. No `--apply` was ever reached; nothing was mutated.
 
 - [ ] [BACKEND] P2. **NEW 2026-07-25 (plan-reconcile) — track the KRX name-column "STILL OPEN" work as a real todo, not
       just prose behind a checked box.** The KRX name-column code (4/4 read surfaces) shipped 2026-07-20 —

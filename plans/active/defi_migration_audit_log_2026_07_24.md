@@ -660,9 +660,9 @@ the related ship-hygiene item.)
       (lines 102-136): a **WORKTREE-IDENTITY GUARD** shipped 2026-07-24
       (`qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md`, a related but distinct
       sibling-worktree incident) now hard-fails (`exit 1`) the instant `PROJECT_ROOT` disagrees with
-      `git rev-parse     --show-toplevel` for the invoking cwd — exactly the PROJECT_ROOT/rootdir mis-resolution class
-      this finding's "Owner" note names as the suspected cause. `base-service.sh:61` `cd "$PROJECT_ROOT"` runs pytest
-      from that now-guarded cwd, so pytest's own upward rootdir search would find the REPO's own `pyproject.toml`
+      `git rev-parse --show-toplevel` for the invoking cwd — exactly the PROJECT_ROOT/rootdir mis-resolution class this
+      finding's "Owner" note names as the suspected cause. `base-service.sh:61` `cd "$PROJECT_ROOT"` runs pytest from
+      that now-guarded cwd, so pytest's own upward rootdir search would find the REPO's own `pyproject.toml`
       (`testpaths=["tests"]`) first, not PM's — the silent "collected 6 items, exits 0" hollow-pass this finding
       describes can no longer happen unnoticed; a mismatch now aborts the gate loudly instead. **Could not live-repro
       this session**: `uv run pytest --collect-only` in this slot's `instruments-service` stalled past a 90s bound (no
@@ -819,6 +819,9 @@ speed-note (both deferred optimisations, non-blocking).
 
 ## Progress Log
 
+- **2026-08-15 (na-eligibility-audit follow-up, operator ruling)**: the "DELETE duplicate/legacy DeFi orphan buckets"
+  todo — **verify the unique-gap migration landed first, then execute** — extracted to
+  `defi_operator_ruling_ao_dispatch_2026_08_15.md` (`assigned_vm: planning`).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added dex_swaps_handler.py/canonical_write.py,
   the real handler + writer touched by the open P1 bucket-redirect todo.
@@ -873,3 +876,4 @@ speed-note (both deferred optimisations, non-blocking).
   C (instruments-store-defi `_index` v9 write, currently 0% v9, an operational apply-gate), Era-B legacy retirement
   (gated on cefi+tradfi G4 apply complete), and the delete-after-migration bucket purges (explicit operator-sign-off
   owner: vm-defi). Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).

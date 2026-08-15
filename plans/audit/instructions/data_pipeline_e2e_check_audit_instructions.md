@@ -84,10 +84,10 @@ Codex SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md`, `/codex/05-infra
       `IS_TEST_RUN=true` routes both the freshness read and the write to the same `-test-` bucket, this is a complete,
       self-contained proof — no PROD pre-check required for IS.
 
-- [ ] (d) **Force-leg proved real refetch for every MVP shard (MTDS).** For every MVP
-      `(asset_group, venue,     data_type)` cell (Sports enumerated per `league_id`, never collapsed): the force-leg VM
-      reached `EXIT_STATUS=SUCCESS` with a real sampled `instrument_id` (never hardcoded), the `-test-` bucket parquet
-      was (re)written, and the manifest row shows `captured`.
+- [ ] (d) **Force-leg proved real refetch for every MVP shard (MTDS).** For every MVP `(asset_group, venue, data_type)`
+      cell (Sports enumerated per `league_id`, never collapsed): the force-leg VM reached `EXIT_STATUS=SUCCESS` with a
+      real sampled `instrument_id` (never hardcoded), the `-test-` bucket parquet was (re)written, and the manifest row
+      shows `captured`.
 
 - [ ] (e) **Skip-leg proved genuine (prod-captured) for every MVP shard (MTDS) — labeled, not assumed.** MTDS's
       freshness read is PROD-driven (`_resolve_freshness_bucket()` ignores `IS_TEST_RUN`), so a skip-leg only proves
@@ -106,7 +106,7 @@ Codex SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md`, `/codex/05-infra
       (force/skip/live) of every shard in the report; confirm no launcher call omitted it.
 
 - [ ] (h) **Neither script is wired into its service's `quality-gates.sh`.** Grep:
-      `rg "pipeline_e2e_check" instruments-service/scripts/quality-gates.sh     market-tick-data-service/scripts/quality-gates.sh`
+      `rg "pipeline_e2e_check" instruments-service/scripts/quality-gates.sh market-tick-data-service/scripts/quality-gates.sh`
       — 0 hits in both. This check does real I/O + real VM spend + multi-minute-plus runtime by design; it stays a
       standalone, on-demand skill.
 

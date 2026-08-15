@@ -107,10 +107,38 @@ tmux workers despite the server process being healthy.
       dispatch) has a dedup/collision check against already-running VMs for the same shard — if not, consider whether
       one is worth adding given this is the second fleet-wide duplicate-VM billing-waste incident this week (different
       launcher family each time).
-- [ ] [DATA] P3. Confirm the killed duplicate VMs' partial/redundant writes didn't leave any non-idempotent side-effects
-      (expected: none, since DXY capture is a pure overwrite-safe write, but not independently re-verified after the
-      kill).
+- [x] ✅ [DATA] P3. Confirm the killed duplicate VMs' partial/redundant writes didn't leave any non-idempotent
+      side-effects (expected: none, since DXY capture is a pure overwrite-safe write, but not independently re-verified
+      after the kill). **DONE 2026-08-15 (slot-16)** — see Progress Log entry below: no corruption/non-idempotent side
+      effect, but a real manifest-hygiene byproduct (stale `attempted_failed` noise rows) DOES exist and is tracked in
+      the new todo below.
+- [ ] [DATA] P2. **NEW 2026-08-15.** Purge/reclassify stale `attempted_failed` rows in `market-data-tick-tradfi`'s
+      `availability_index` for `(venue, data_type)` ∈ {(ICE, ohlcv_24h), (CBOE, ohlcv_24h), (FX, ohlcv_24h)} where a
+      `captured` row ALREADY exists for the same date (duplicate-VM-race artifacts — see Progress Log below for the
+      measured overlap: 100% of CBOE's, ~99.5% of FX's, ~97.6% of ICE's `attempted_failed` dates already have a captured
+      row). The small residual (`FX`: 10 dates, `ICE`: 37 dates) with NO captured counterpart are calendar
+      weekends/holidays where no trading occurred — those should reclassify to `empty_confirmed`, not be purged as
+      duplicates. Mirror the Surface A-D / `WithinBoundsTradfiSourceZero` dry-run→review→`--apply` playbook (measure
+      first, confirm the "duplicate artifact" theory with a live count, snapshot backup before any CAS write).
+      Soft-delete retention on `market-data-tick-tradfi-prd-central-element-323112` already confirmed 604800s (7 days)
+      elsewhere this session — reversibility gate passes. Done when: dry-run counts cited per cell, `--apply` completes
+      with before/after evidence, self-verify shows 0 remaining same-date captured+attempted_failed duplicate pairs for
+      the 3 cells.
 
 ## Progress Log
 
+- **2026-08-15 (slot-16, P0 MVP-backfill-readiness-gate verification pass,
+  `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`)**: while verifying real manifest coverage per tradfi MVP cell,
+  measured a large `attempted_failed` fraction for all 3 Yahoo-daily MVP cells (CBOE 38.9%, FX 26.5%, ICE 75.3% of total
+  rows). Root-caused this to the SAME duplicate-VM class this doc already tracks, not a real data gap: a
+  captured-vs-attempted_failed DATE-OVERLAP check shows **CBOE: 0/1521 attempted_failed dates lack a captured row (100%
+  overlap — pure duplicate-artifact noise); FX: 10/1379 lack one (99.3% overlap); ICE: 37/1531 lack one (97.6%
+  overlap)**, and the FX/ICE residual dates are calendar weekends/holidays (no real data expected), not genuine gaps.
+  All 3 cells' `captured` rows run through yesterday/today (CBOE max=2026-08-11, FX max=2026-08-14, ICE max=2026-08-14)
+  — real, current, materially-complete coverage exists for every one of them. Confirms this todo's own expectation (no
+  corruption, idempotent overwrite-safe writes) but surfaces the actual byproduct precisely: thousands of stale
+  `attempted_failed` rows sitting alongside a genuine `captured` row for the same date, presumably written by the LOSING
+  side of a duplicate-VM race hitting Yahoo Finance concurrently for the same day (plausible rate-limit/error response).
+  New cleanup todo filed above. Full manifest-count evidence for all 6 tradfi MVP cells (not just these 3) is in
+  `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s own Progress Log.
 - **context-scout 2026-08-14**: populated context_scope (4 entries).

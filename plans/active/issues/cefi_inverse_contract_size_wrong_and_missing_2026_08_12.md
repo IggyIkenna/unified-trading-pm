@@ -252,7 +252,7 @@ days.
       closed.
 - [ ] [DATA] P3. NEW, SEPARATE, narrow finding surfaced mid-4th-re-derive (2026-08-14, unrelated to contract_size/
       margin_type):
-      `No SchemaContract registered for asset_group='cefi' instrument_type='<SYMBOL>' data_type='liq_agg_15s'     venue='BINANCE-FUTURES'`
+      `No SchemaContract registered for asset_group='cefi' instrument_type='<SYMBOL>' data_type='liq_agg_15s' venue='BINANCE-FUTURES'`
       — 8 distinct symbols (AVAX/LTC/ATOM/BTC/UNI/DOGE/ADA/ETHUSDT), ~16 total occurrences, 2021-01-31..2021-02-08 only.
       Root cause NOT yet confirmed but strongly suspected: the raw
       `venue=BINANCE-FUTURES/.../data_type=liquidations/ticks.parquet` BUNDLE file (multiple instruments per file, not

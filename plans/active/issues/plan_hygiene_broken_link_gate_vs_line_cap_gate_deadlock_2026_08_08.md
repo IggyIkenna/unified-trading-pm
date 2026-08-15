@@ -128,8 +128,8 @@ force it through or damage another agent's active doc.
       — a sneaky same-line prose addition alongside the path fix, and a file newly crossing the cap in the same commit,
       both still correctly fail `HARD`. **Deliberately NOT done in this same pass: completing the deferred archival of
       `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`.** That doc's own
-      `archive_exempt:     true` banner (set 2026-08-09) names this exact fix as the unblocking condition, but
-      completing the archival for real also requires a corpus-wide referrer-path fixup across **11 active-corpus files**
+      `archive_exempt: true` banner (set 2026-08-09) names this exact fix as the unblocking condition, but completing
+      the archival for real also requires a corpus-wide referrer-path fixup across **11 active-corpus files**
       (`cross_cutting_consolidated_closeout_2026_07_25.md` — the one that triggered this deadlock — plus
       `ao_satellite_ao_dispatch_batch12_2026_08_09.md`, `ag_closeout_audit_cross_cutting_parked_2026_08_07.md`,
       `ag_closeout_audit_cross_cutting_parked_2026_08_08.md`,

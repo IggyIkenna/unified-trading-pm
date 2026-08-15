@@ -24,7 +24,7 @@ related:
   ]
 created: 2026-07-26
 author: unknown
-last_updated: 2026-08-13
+last_updated: 2026-08-15
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -185,19 +185,19 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       needs its own bound.
 
       **RESOLVED 2026-08-02 (slot 10)**: `deployment-api@34a596b`. Took the documented alternative to raising the
-                                                                      ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
-                                                                      means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
-                                                                      accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
-                                                                      `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
-                                                                      `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
-                                                                      `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
-                                                                      observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
-                                                                      `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
-                                                                      AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
-                                                                      isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
-                                                                      isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
-                                                                      "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
-                                                                      records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
+          ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
+          means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
+          accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
+          `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
+          `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
+          `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
+          observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
+          `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
+          AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
+          isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
+          isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
+          "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
+          records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
 
 - [x] ✅ [INFRA] P3. The `data-status-rollup-worker` `GcsEventSink` (the
       `log_event(SERVICE_PROCESSED/SERVICE_FAILED, ...)` calls in `run_rollup`) has not written a new dated prefix under
@@ -218,6 +218,8 @@ worth closing the same way (isolate + surface the real error) rather than leavin
 
 ## Progress Log
 
+- **backend_engineer (slot-3) 2026-08-15**: shipped the maintenance-window dead-lock fix (`deployment-api@0bb3694c80` —
+  see the CODE todo's own note); split the live 24h confirmation to a new P2 follow-up. Full QG green, on origin.
 - **data_engineering (slot-10) 2026-08-02T21:45Z**: closed todo 2 (the instruments-service MemoryError + MDPS
   dual-timeout regression). `deployment-api@34a596b` — documented both as accepted structural gaps in
   `data_status_rollup_worker.py`'s ceiling-config comment (alongside the existing MTDS gap) and added 2 regression tests
@@ -688,6 +690,25 @@ worth closing the same way (isolate + surface the real error) rather than leavin
   (comment-only root-cause documentation + `test_onchain_dual_timeout_does_not_block_next_service` regression test).
   Full QG green, verified on origin.
 
+- **2026-08-15 (this session, closing out this doc's own remaining consistency gap)**: independently reached the same P0
+  root cause and Terraform fix as the slot-11/slot-12 entries above before discovering they'd already shipped and
+  live-verified it (confirmed via `TaskOutput` that this session's own competing one-off remediation attempt hadn't
+  fired yet, and stopped it to avoid a collision — see the earlier entry above). Found one genuine gap the
+  Terraform-only fix left behind: `unified_trading_library/manifest_writer/_staleness_budget.py`'s
+  `AG_CONSOLIDATOR_INFLIGHT_HORIZON_SEC["defi"]` was still 4200s while the shipped Terraform `lock_ttl_seconds` was now
+  9000s — violating this module's own documented invariant (reader horizon must stay >= lock TTL). Authored the fix
+  (4200->9000, matching the deployed Terraform value rather than an independently-derived number) — by the time QG
+  passed and it was ready to ship, discovered another live session sharing this slot had already landed the identical
+  fix (`unified-trading-library@624b2cf6`, same before/after values), so nothing needed shipping there. Also fixed +
+  shipped the separate `deployment-api` cockpit-only mirror of the staleness budget (`_AG_STALENESS_BUDGET_SEC["defi"]`
+  3600->7200, `deployment-api@f6c1d70166`) — this one was genuinely untouched by any peer session. Corrected this doc's
+  own now-stale "4200s" claim in the P2 MDPS entry above to point at the current 9000s value. Note for whoever reads
+  this doc's history: full `quality-gates.sh` runs on this shared host were extremely unreliable this session (3
+  consecutive RAM-pressure governor kills, then one run where the full 7092-test suite completed but hit one
+  confirmed-transient unrelated failure in an unrelated fd-hygiene stress test that passed cleanly in isolation) — the
+  host was running 5+ concurrent Claude Code sessions across other `.tabs` slots the whole time. If QG looks flaky again
+  soon, check host-wide process count/free RAM before assuming a code regression.
+
 ## Follow-ups
 
 - [x] ✅ [DATA] P1. **NEW (2026-08-14), split out of the P0 below**: `MANIFEST_CONSOLIDATION_STALLED` is emitted
@@ -712,7 +733,7 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       `manifest_consolidator_lock_ttl_seconds["market-data-defi"]` 4200→9000,
       `manifest_consolidator_stall_alert_cycles["market-data-defi"]` 90→195, see the terraform file's own 2026-08-14
       comment for the measured-duration rationale) and IS live
-      (`gcloud run jobs describe     uts-prod-manifest-consolidator-market-data-defi --region asia-northeast1` confirms
+      (`gcloud run jobs describe uts-prod-manifest-consolidator-market-data-defi --region asia-northeast1` confirms
       `timeoutSeconds=7200` deployed). Live-verified from Cloud Logging, not doc checkboxes — TWO consecutive full
       incremental merge cycles completed cleanly post-fix: `lock_acquired` 11:06:18Z →
       `duckdb_merge_done rows_out=159337175` 12:03:24Z (3422s), then `lock_acquired` 12:13:42Z →
@@ -733,7 +754,7 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       correctly — `gcloud logging read` around a lock-reclaim (01:22:42) showed the merge DID find changed shards and
       DID start a real duckdb merge (`phase=duckdb_merge_start ... chunks=105 date_range=2018-01-01..2026-08-13` against
       a 159,036,875-row canonical), but that merge never completes: the job's own `timeoutSeconds=3600`
-      (`gcloud run     jobs describe`) kills the task attempt before the ~70min+ real merge duration finishes, orphaning
+      (`gcloud run jobs describe`) kills the task attempt before the ~70min+ real merge duration finishes, orphaning
       `_index/consolidator.lock`, which then sits until the 4200s lock TTL passes and the next cron tick reclaims it and
       repeats the identical doomed attempt — an infinite retry loop, not a silent skip. **This is NOT the same incident
       as the archived `/plans/archive/issues/defi_manifest_consolidator_stale_lock_silent_stall_2026_08_05.md`** (that
@@ -753,39 +774,39 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       Progress Log for the live run's outcome once it completes. Blocks the P2 below.
 
       **TEMPORARILY CLEARED 2026-08-14T06:20:36Z (slot-21), RECURRED — see the REOPENED note above and the newest
-                      Progress Log entries; do not treat this sub-section as the current status.** The peer's
-                      `defi-manifest-force-consolidate-20260814-031954` VM
-                          referenced above never actually ran `consolidate()` — it self-deleted ~2min after boot on an unrelated
-                          bootstrap bug (`VM_SERVICE=unified_trading_library` wasn't a recognised `SERVICE_TARBALLS` key, so the setup
-                          script fell through to installing all 19 repo tarballs, which then failed `uv pip install -e` on unsatisfiable
-                          cross-repo pins). Continuing from where that VM died (the launcher itself is a genuinely reusable asset now —
-                          fixed forward through 3 further bugs rather than hand-rolling a new one-off each time), fixed in sequence, each
-                          confirmed live before moving to the next: (1) `VM_SERVICE=deployment_service` (a recognised key whose tarball
-                          set already covers everything the consolidator CLI needs) — `deployment-service@42c003fbff`; (2)
-                          `setup-data-pipeline-vm.sh` had no `VM_TASK` dispatch branch for `defi-manifest-force-consolidate` at all (the
-                          script hard-refuses an unrecognised `VM_TASK` even with `VM_BACKFILL_CMD` present, by design) — added it to
-                          the existing generic one-off-script branch — `deployment-service@2dd149a321`; (3) the launcher's own
-                          bucket-name construction interpolated `DEPLOYMENT_ENV=prod` directly, producing the NONEXISTENT
-                          `market-data-tick-defi-prod-...` (bucket names use the 3-char tag `prd`, not the long form) — caught before
-                          the VM did any real work, deleted within seconds — `deployment-service@a32eff50b8`; (4) the consolidator ran
-                          for real (~8min) and hit a genuine DISK-based `max_temp_directory_size` OOM at 76.1GiB on the 100GB boot disk
-                          (NOT the `memory_limit` pragma — 16GB held fine the whole run) — bumped `BOOT_DISK_GB` 100→500 —
-                          `deployment-service@2ffc79af57`. The 5th launch (`defi-manifest-force-consolidate-20260814-052225`) completed
-                          cleanly in ~54min: `manifest-consolidator bucket=market-data-tick-defi-prd-central-element-323112 success=True
-                          shards=16 rows_in=159412020 rows_out=159218124 dedup_dropped=193896 latency_ms=3284266.8 error=-`, wrote a
-                          fresh 6.35GB `_index/availability_index.parquet` (confirmed via `gcs_describe_object`:
-                          `last_modified=2026-08-14T06:20:44Z`, `size=6353478442`), VM self-deleted on completion. **Live-verified the
-                          underlying stall itself cleared**, not just the one force-run: the very next incremental cron cycle
-                          (06:20:44Z, `gcloud logging read`) ran `success=True ... pruned_shards=15` with NO `SILENT STALL` CRITICAL
-                          log — confirms the incremental path is healthy again against the freshly-rebuilt canonical, not just this one
-                          force-rebuild succeeding in isolation. Each of the 4 fixes above shipped through the full Pass-1 QG →
-                          quickmerge → verify-on-origin loop before the next relaunch — none were combined into one speculative commit.
-                          The P0's own earlier root-cause entry (execution-timeout-vs-merge-duration mismatch on the Cloud Run job)
-                          explains WHY the stall recurred but is a separate, still-open concern for the STANDING Cloud Run job's own
-                          `timeoutSeconds=3600` — this VM-based one-off bypassed that ceiling entirely (no Cloud Run timeout applies to
-                          a GCE VM), so today's incident is closed, but nothing here changes the Cloud Run job's own timeout ceiling for
-                          a FUTURE recurrence at an even larger corpus size; that's worth a dedicated follow-up if the corpus keeps
-                          growing, not assumed fixed by this entry.
+          Progress Log entries; do not treat this sub-section as the current status.** The peer's
+          `defi-manifest-force-consolidate-20260814-031954` VM
+          referenced above never actually ran `consolidate()` — it self-deleted ~2min after boot on an unrelated
+          bootstrap bug (`VM_SERVICE=unified_trading_library` wasn't a recognised `SERVICE_TARBALLS` key, so the setup
+          script fell through to installing all 19 repo tarballs, which then failed `uv pip install -e` on unsatisfiable
+          cross-repo pins). Continuing from where that VM died (the launcher itself is a genuinely reusable asset now —
+          fixed forward through 3 further bugs rather than hand-rolling a new one-off each time), fixed in sequence, each
+          confirmed live before moving to the next: (1) `VM_SERVICE=deployment_service` (a recognised key whose tarball
+          set already covers everything the consolidator CLI needs) — `deployment-service@42c003fbff`; (2)
+          `setup-data-pipeline-vm.sh` had no `VM_TASK` dispatch branch for `defi-manifest-force-consolidate` at all (the
+          script hard-refuses an unrecognised `VM_TASK` even with `VM_BACKFILL_CMD` present, by design) — added it to
+          the existing generic one-off-script branch — `deployment-service@2dd149a321`; (3) the launcher's own
+          bucket-name construction interpolated `DEPLOYMENT_ENV=prod` directly, producing the NONEXISTENT
+          `market-data-tick-defi-prod-...` (bucket names use the 3-char tag `prd`, not the long form) — caught before
+          the VM did any real work, deleted within seconds — `deployment-service@a32eff50b8`; (4) the consolidator ran
+          for real (~8min) and hit a genuine DISK-based `max_temp_directory_size` OOM at 76.1GiB on the 100GB boot disk
+          (NOT the `memory_limit` pragma — 16GB held fine the whole run) — bumped `BOOT_DISK_GB` 100→500 —
+          `deployment-service@2ffc79af57`. The 5th launch (`defi-manifest-force-consolidate-20260814-052225`) completed
+          cleanly in ~54min: `manifest-consolidator bucket=market-data-tick-defi-prd-central-element-323112 success=True
+          shards=16 rows_in=159412020 rows_out=159218124 dedup_dropped=193896 latency_ms=3284266.8 error=-`, wrote a
+          fresh 6.35GB `_index/availability_index.parquet` (confirmed via `gcs_describe_object`:
+          `last_modified=2026-08-14T06:20:44Z`, `size=6353478442`), VM self-deleted on completion. **Live-verified the
+          underlying stall itself cleared**, not just the one force-run: the very next incremental cron cycle
+          (06:20:44Z, `gcloud logging read`) ran `success=True ... pruned_shards=15` with NO `SILENT STALL` CRITICAL
+          log — confirms the incremental path is healthy again against the freshly-rebuilt canonical, not just this one
+          force-rebuild succeeding in isolation. Each of the 4 fixes above shipped through the full Pass-1 QG →
+          quickmerge → verify-on-origin loop before the next relaunch — none were combined into one speculative commit.
+          The P0's own earlier root-cause entry (execution-timeout-vs-merge-duration mismatch on the Cloud Run job)
+          explains WHY the stall recurred but is a separate, still-open concern for the STANDING Cloud Run job's own
+          `timeoutSeconds=3600` — this VM-based one-off bypassed that ceiling entirely (no Cloud Run timeout applies to
+          a GCE VM), so today's incident is closed, but nothing here changes the Cloud Run job's own timeout ceiling for
+          a FUTURE recurrence at an even larger corpus size; that's worth a dedicated follow-up if the corpus keeps
+          growing, not assumed fixed by this entry.
 
 - [x] ✅ [DATA] P1. **NEW (2026-08-13)**: root-cause + fix the `TypeError: '<' not supported between NoneType and str` /
       `AttributeError: Can only use .str accessor with string values!` errors now failing 7 of 14 `_DEFAULT_SERVICES`
@@ -798,7 +819,7 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       when it started (Cloud Logging history between 2026-07-26 and 2026-08-13) and which manifest column's values
       changed shape. **ROOT-CAUSED + FIXED 2026-08-13 (slot 2)**: `deployment-api@31e1affb65`. Both error classes traced
       to the SAME two lines in `breakdowns_domain.py` `_build_single_feature_group_entry` — L441
-      `fg_df["timeframe"]     .str.len()` raises `AttributeError` on an all-null float64 `timeframe` column
+      `fg_df["timeframe"] .str.len()` raises `AttributeError` on an all-null float64 `timeframe` column
       (features-sports/calendar + strategy-service via the `feature_group` guard L879); L444
       `sorted(fg_df["timeframe"].unique())` raises `TypeError` over a mixed `None`+`str` column
       (features-delta-one/volatility/multi-timeframe/cross-instrument). Reproduced live against prod buckets (all 7
@@ -829,18 +850,20 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       any additional rollup-worker-side change. **MDPS's own portion CLOSED 2026-08-14 (slot-11) — the requested
       measurement now exists and rules out a per-service override rather than leaving it unsized.** Two live-measured
       facts: (1) this bucket's in-flight-wait horizon (`AG_CONSOLIDATOR_INFLIGHT_HORIZON_SEC["defi"]` in
-      `unified_trading_library/manifest_writer/_staleness_budget.py`) is **4200s** —
-      `_wait_for_in_flight_cycle_then_reread` polls for a lock release for up to 4200s once it detects a live merge; (2)
-      the now-healthy consolidator's own cycles run **~3400-3450s (~57min)** back-to-back with only a ~10min free gap
-      (the two consecutive cycles measured in the P0's own 13:30Z entry above). MDPS's 420s per-service budget is
-      ~1/10th of one merge cycle, so unless the sequential 14-service sweep happens to land inside that ~10min free
-      window, the read is GUARANTEED to still be polling when its own 420s wall-clock backstop fires — no override value
-      that also respects the shared-sequential-sweep-budget ceiling (the same constraint that capped
-      instruments-service's own override) can close that gap; only a multi-thousand-second override could, and that
-      reintroduces the exact "starves every service queued after it" risk this file already rejected once for MDPS
-      itself. **Resolution: accepted as a structural gap** (same honest-failure treatment as the original MTDS gap and
-      the since-fixed instruments-service memory gap, not a silent placeholder) — `deployment-api@fcd0de0` records this
-      in `data_status_rollup_worker.py`'s comment block; the existing
+      `unified_trading_library/manifest_writer/_staleness_budget.py`) was 4200s at the time of this analysis — **now
+      9000s, bumped `unified-trading-library@624b2cf6` to stay in lockstep with the shipped Terraform `lock_ttl_seconds`
+      (also 9000, see the P0 above); the qualitative conclusion below is unaffected (a longer wait still can't beat the
+      lock's ~85-90% hold rate)** — `_wait_for_in_flight_cycle_then_reread` polls for a lock release for up to that
+      horizon once it detects a live merge; (2) the now-healthy consolidator's own cycles run **~3400-3450s (~57min)**
+      back-to-back with only a ~10min free gap (the two consecutive cycles measured in the P0's own 13:30Z entry above).
+      MDPS's 420s per-service budget is ~1/10th of one merge cycle, so unless the sequential 14-service sweep happens to
+      land inside that ~10min free window, the read is GUARANTEED to still be polling when its own 420s wall-clock
+      backstop fires — no override value that also respects the shared-sequential-sweep-budget ceiling (the same
+      constraint that capped instruments-service's own override) can close that gap; only a multi-thousand-second
+      override could, and that reintroduces the exact "starves every service queued after it" risk this file already
+      rejected once for MDPS itself. **Resolution: accepted as a structural gap** (same honest-failure treatment as the
+      original MTDS gap and the since-fixed instruments-service memory gap, not a silent placeholder) —
+      `deployment-api@fcd0de0` records this in `data_status_rollup_worker.py`'s comment block; the existing
       `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` regression test (added 2026-08-02) already
       asserts the property that matters (loud, isolated failure), so no new test was needed. A real fix (MDPS tolerating
       a stale-but-bounded read, or its read moving off the shared sequential-sweep budget) is a genuine architecture
@@ -853,9 +876,9 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       assumed resolved by the MDPS P0/P2 work above. Repo: deployment-api. **ROOT-CAUSED 2026-08-14 (slot-12) —
       CORRECTING the "does NOT share MDPS's root cause" premise above: it does, via a hidden cross-bucket path the prior
       session's check missed.** `sports.py::_UPSTREAM_SERVICE_MAP` maps
-      `"features-onchain-service" ->     "market-tick-data-service"`, and every `_REFERENCE_DRIVEN_SERVICES` member
-      (onchain included) runs `venue_resolution.py::_maybe_reference_expected_dates` -> `_get_reference_expected_dates`
-      -> `_read_upstream_venue_dates` once per category during BOTH its manifest AND coverage build
+      `"features-onchain-service" -> "market-tick-data-service"`, and every `_REFERENCE_DRIVEN_SERVICES` member (onchain
+      included) runs `venue_resolution.py::_maybe_reference_expected_dates` -> `_get_reference_expected_dates` ->
+      `_read_upstream_venue_dates` once per category during BOTH its manifest AND coverage build
       (`_build_venue_breakdown` is shared by `manifest_category_builder.py` and `coverage.py` via
       `venue_resolution_dual_scope.py`) — exactly matching the live pattern: BOTH steps time out together every
       occurrence (`gcloud logging read`, 24h window: 2026-08-13T22:22:58Z, 2026-08-14T03:44:03Z, 07:47:00Z, 10:27:15Z —
@@ -876,8 +899,63 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       root-caused yet" hypothesis, + a regression test — `test_onchain_dual_timeout_does_not_block_next_service` —
       asserting the dual manifest/coverage timeout stays loud/isolated and doesn't block the next queued service). Full
       QG green, verified on origin (`git merge-base --is-ancestor` confirmed).
-- [ ] [DATA] P3. Live-verify ml-service's full.json.gz actually refreshes on a real */20 uts-prod-data-status-rollup
-      cron cycle post-fix (deployment-api@aaa0d1d)
+- [x] ✅ [DATA] P3. Live-verify ml-service's full.json.gz actually refreshes on a real */20 uts-prod-data-status-rollup
+      cron cycle post-fix (deployment-api@aaa0d1d). **VERIFIED 2026-08-15 (slot-24) — NEGATIVE RESULT, and the
+      "post-fix" premise itself does not hold.** Live `gcs_describe_object()` against
+      `gs://central-element-323112-data-status-rollups/ml-service/full.json.gz` returns `None` (still fully absent,
+      unchanged since every prior check in this doc) at 2026-08-15T14:00Z; `coverage.json.gz` — previously the ONE
+      artifact that always succeeded for ml-service — is now itself stale at 2+ days
+      (`last_modified: 2026-08-13T10:48:58Z`), a regression from this doc's original 2026-07-26 baseline. Root-caused
+      via `gcloud logging read` on `uts-prod-data-status-rollup-svc` across 3 consecutive maintenance-window cycles
+      (08:20-14:00Z, runs `fcbdc1c7...`/`a03fe57d...`/`d0392c1c1...`): **the sweep reliably OOM-kills the whole 32Gi
+      container at/around service #4 (`features-delta-one-service`) every cycle**, well before it ever reaches
+      ml-service at position #12 of 14 in `_DEFAULT_SERVICES`. Timeline for the `d0392c1c1a...` run (started 12:20:00Z):
+      instruments-service (#1) succeeds silently (no error logged — `SERVICE_PROCESSED` only reaches the `GcsEventSink`,
+      never Cloud Logging); market-tick-data-service (#2) hits its accepted 420s timeout at 12:35:06Z;
+      market-data-processing-service (#3) hits its accepted 420s timeout at 12:42:06Z; then at 12:45:12Z — only ~3min
+      into features-delta-one-service (#4) — `Memory limit of 32768 MiB exceeded with 32779 MiB used` kills the whole
+      container. **New, previously-undocumented compounding mechanism**: the maintenance-window lock (`ttl=150min`) is
+      TTL-bound, not liveness-checked — a container OOM-kill never runs the lock's release path, so every subsequent
+      `*/20min` cron tick for the REMAINING ~125 of the 150 minutes gets SKIPPED
+      (`data-status rollup SKIPPED — a prior run is still in flight`) waiting on a lock held by an already-dead run,
+      instead of a fresh attempt starting promptly. Net effect: services #4-14 (11 of 14, including ml-service,
+      strategy-service, execution-service) get essentially ZERO chance to run on almost any cycle, and the effective
+      rollup cadence for them is closer to once per ~150min dead-lock window than the intended `*/20min`. This is a
+      genuinely NEW finding (the 2026-08-14 Progress Log entry called the delta-one OOM connection "not yet PROVEN" —
+      this session's live 3-cycle trace proves it, and additionally identifies the TTL dead-lock amplification, which
+      was not previously identified at all). Filed as a new P1 CODE todo below rather than fixed here (a genuine
+      architecture call — shorten the TTL, add liveness-based early release, or split the 14-service sweep into two
+      smaller sequential Cloud Run invocations — out of scope for this live-verify todo). No code shipped for this todo
+      itself (a live-verification task, not a code change) — evidence trail is the `gcloud logging read` queries +
+      `gcs_describe_object()` calls above, run interactively this session.
+- [x] ✅ [CODE] P1. **NEW (2026-08-15), split out of the P3 live-verify above.** Fix the maintenance-window dead-lock
+      amplification on `uts-prod-data-status-rollup`: a container OOM-kill mid-sweep never releases the lock, so it sits
+      held (by an already-dead run) for the FULL `ttl=150min` before a fresh attempt can even start — during which every
+      `*/20min` cron tick is silently SKIPPED. Live-traced 2026-08-15 (see the P3 entry above): 3 consecutive cycles
+      (08:20-14:00Z) each OOM-killed at/around service #4 (`features-delta-one-service`), then sat dead-locked for ~125
+      of every 150 minutes, starving services #4-14 (incl. ml-service) of almost every cron cycle. Candidate fixes (pick
+      one, don't blind-guess): (a) a liveness heartbeat on the maintenance-window holder (e.g. touch a GCS/Firestore
+      marker every N services processed; a watcher that sees no heartbeat for >2x the per-service budget force-releases
+      the lock), (b) split `_DEFAULT_SERVICES` into 2 sequential Cloud Run Job invocations of ~7 services each so a
+      mid-sweep OOM only dead-locks its own half, (c) lower the maintenance- window TTL to something closer to the
+      REALISTIC sweep duration (measure it) so a dead run's lock expires faster even without a liveness mechanism. Repo:
+      deployment-api (`data_status_rollup_worker.py` + `deployment_api/routes/data_status/_rollup.py`'s
+      maintenance-window acquire/release, per this doc's own `context_scope`). Done when: a live 24h Cloud Logging trace
+      shows every one of the 14 services gets processed (success OR a genuine per-service failure) at least once every
+      ~40min (2 cron cycles), never silently skipped because of a stale dead-man's lock.
+
+      **FIXED 2026-08-15 (slot-3)**: `deployment-api@0bb3694c80`. Combined (a)+(c) — pure (c) can't work alone (a
+      genuinely long full sweep, ~116min worst case, would expire its own still-live lock); pure (a) alone leaves the
+      dead-lock window at 150min. `run_rollup()` takes a new `on_service_done` hook (per-service, best-effort);
+      `_rollup.py` wires it to re-`acquire_maintenance_window(...)` with the same `locked_by` (same-locked_by
+      reacquisition, no new UTL code). `_ROLLUP_LOCK_TTL_MINUTES` 150 -> 40, matching this todo's own done-when
+      target. 4 new/updated tests in `test_rollup_worker.py` + `test_data_status_beta_rollup_and_cli_config.py`. Full
+      QG green, verified on origin. **Not done**: the live 24h Cloud Logging confirmation — split to a P2 follow-up.
+
+- [ ] [DATA] P2. **NEW (2026-08-15), follow-up to the dead-lock fix above.** Once `deployment-api@0bb3694c80` reaches
+      live `uts-prod-data-status-rollup-svc`, live-verify its own done-when: a 24h Cloud Logging trace showing every one
+      of the 14 `_DEFAULT_SERVICES` processed (success OR genuine failure) at least once every ~40min, never silently
+      skipped on a stale dead-man's lock. Repo: deployment-api. Done when: the trace confirms the cadence.
 - [x] ✅ [DATA] P1. Once
       `/plans/archive/2026_08/issues/uts_prod_data_status_rollup_svc_container_startup_failure_blocks_deploy_2026_08_10.md`
       is resolved and `deployment-api@f1b80de071` actually reaches the live rollup service, re-trigger the
@@ -919,7 +997,3 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       was working. Deploy blocker doc
       `/plans/archive/2026_08/issues/uts_prod_data_status_rollup_svc_container_startup_failure_blocks_deploy_2026_08_10.md`
       is still open — the -00399 SIGABRT may be a recurrence or a new regression.
-
-> **2026-08-06 archive-candidate audit**: CODE todo's own resolution text says 'Live confirmation (full.json.gz actually
-> refreshing on the next real */20 cron cycle) is a follow-up verification step, not blocking the fix landing' - a
-> deferred verification never turned into its own todo and not shown done in any later Progress Log entry

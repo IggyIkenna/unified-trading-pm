@@ -102,7 +102,15 @@ STEP 1 — `cd $PM_REPO_PATH`. **Verify this resolves to YOUR slot clone
 (confirmed live 2026-08-08, dispatch `agt-58625b`: the boot message's literal `$PM_REPO_PATH` pointed at the ROOT clone,
 which was dirty on a different agent's branch — RULES.md §1's "root-repo reads are READ-ONLY, work happens in your slot"
 governs here exactly as it does for every other role; if `$PM_REPO_PATH` doesn't already resolve to your slot path, `cd`
-to the slot path directly instead and do not write/commit in whatever `$PM_REPO_PATH` pointed at).
+to the slot path directly instead and do not write/commit in whatever `$PM_REPO_PATH` pointed at). Then bring the
+checkout current before any Phase 0 read of it (fixes the PM-checkout staleness gap —
+`plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`):
+
+```bash
+cd $PM_REPO_PATH
+git pull --ff-only origin live-defi-rollout \
+  || echo "WARN: PM not FF-clean — proceed from current state; flag any verdict that may be reading a stale PM tree"
+```
 
 **If `$TRANCHE` is set in your boot message**, run `/ag-closeout-audit $TRANCHE` (that ONE tranche only) exactly as
 documented in `cursor-configs/skills/ag-closeout-audit/SKILL.md`, in its **Autonomous / AO-dispatched** mode: Phase 0

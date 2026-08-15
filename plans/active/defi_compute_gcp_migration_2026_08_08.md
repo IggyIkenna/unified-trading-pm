@@ -63,16 +63,9 @@ context_scope:
   [
     /codex/04-architecture/cloud-agnostic-migration.md,
     /codex/11-project-management/dual-cloud-cost-ops-playbook.md,
-    /codex/04-architecture/seamless-cloud-switch.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /codex/02-data/manifest-migration-coordination.md,
-    /codex/05-infrastructure/dual-cloud-image-builds.md,
-    /codex/04-architecture/promote-workflow-architecture.md,
-    deployment-service/configs/cloud-run/execution-service.yaml,
-    deployment-service/configs/cloud-run/features-service.yaml,
-    deployment-service/configs/cloud-run/strategy-service.yaml,
-    deployment-service/configs/clusters/defi.yaml,
-    unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py,
+    /plans/epics/infrastructure_master.md,
+    deployment-service/configs/aws/,
   ]
 source:
   [
@@ -230,12 +223,12 @@ them).
       `asia-northeast1`), and check `deployment-api`'s own service registry/database for a record of these 3 if one
       exists. Done-when: a definitive "does not exist yet, deploying fresh" or "exists as `<name>` in `<region>`,
       already at revision `<rev>`" statement. **FINDING (2026-08-08, slot-12)**:
-      `gcloud run services list     --platform=managed --project=central-element-323112` (all-regions listing, 22
-      services returned) — zero services named `execution-service`, `features-service`, or `strategy-service`.
-      Per-region explicit check across `asia-northeast1`, `us-central1`, `europe-west1/2/4`, `asia-south1`, `asia-east1`
-      — all returned zero hits. deployment-api's `CLOUD_RUN_SERVICE` census (`routes/_cloud_run_services.py`) reads GCP
-      live state directly via the Admin API (no separate local DB); same underlying source, same result. **Conclusion:
-      does not exist yet, deploying fresh** — all 3 services are absent from GCP Cloud Run in project
+      `gcloud run services list --platform=managed --project=central-element-323112` (all-regions listing, 22 services
+      returned) — zero services named `execution-service`, `features-service`, or `strategy-service`. Per-region
+      explicit check across `asia-northeast1`, `us-central1`, `europe-west1/2/4`, `asia-south1`, `asia-east1` — all
+      returned zero hits. deployment-api's `CLOUD_RUN_SERVICE` census (`routes/_cloud_run_services.py`) reads GCP live
+      state directly via the Admin API (no separate local DB); same underlying source, same result. **Conclusion: does
+      not exist yet, deploying fresh** — all 3 services are absent from GCP Cloud Run in project
       `central-element-323112` across all fleet regions. — unified-trading-pm@(see commit)
 
 - [x] ✅ [INFRA] P1. **Write `deployment-service/scripts/cloud-run/deploy.sh`** — the script `execution-service.yaml`
@@ -272,7 +265,7 @@ them).
       **Health-API-only deploy** — the streaming feature-compute processor isn't active yet (`data_freshness`
       `stale:true`), so "genuinely doing the work" is scoped to what's actually deployed (health/readiness serving
       cleanly), not full feature computation — that gap is pre-existing from todo 5, not introduced here. Scaled AWS:
-      `aws ecs update-service --cluster uts-defi-prod --service uts-features-service-prod --desired-count 0     --region ap-northeast-1`
+      `aws ecs update-service --cluster uts-defi-prod --service uts-features-service-prod --desired-count 0 --region ap-northeast-1`
       → confirmed `desiredCount=0, runningCount=0, status=ACTIVE` (polled 6× over 2 min, stable, no rollback). GCP
       confirmed still healthy post-cutover: `/health` → 200, zero new errors. AWS `uts-features-service-prod` kept (not
       deleted) per plan's rollback-window design — deletion is the later cluster-teardown todo, gated on a multi-day
@@ -290,28 +283,28 @@ them).
       the manifest, not a producer of it.
 
       The REAL GCP-side equivalent of the AWS `uts-prod-manifest-consolidator-*` Batch definitions already exists,
-                                                      confirmed live: **19 `uts-prod-manifest-consolidator-{kind}-{asset_group}` Cloud Run JOBS**
-                                                      (`gcloud run jobs list --region=asia-northeast1`, e.g. `-market-data-defi`, `-instruments-cefi`,
-                                                      `-features-sports`, `-execution`, `-strategy`, `-ml-training-artifacts`), each with its own ENABLED Cloud
-                                                      Scheduler cron (`gcloud scheduler jobs list`, cadence `*/1` or hourly per the cadence-cost-audit tiering) —
-                                                      running the **identical entrypoint** the AWS side runs: sample-verified
-                                                      `uts-prod-manifest-consolidator-market-data-defi`'s container args =
-                                                      `-m unified_trading_library.manifest_consolidator --bucket market-data-tick-defi-prd-central-element-323112`,
-                                                      matching `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s own description of GCP as the CANONICAL
-                                                      runtime for this exact module (AWS Batch Fargate is the secondary/dormant runtime for the SAME
-                                                      `python -m unified_trading_library.manifest_consolidator --bucket {X} --once` entrypoint). GCP's job count (19)
-                                                      being lower than AWS's 26 job definitions is expected, not a coverage gap — the SSOT documents the Wave-3
-                                                      bucket folds collapsed GCP's per-kind×per-AG target set (features/execution/ml/strategy folded to fewer,
-                                                      broader buckets) while AWS's Group B definitions were never re-folded since going dormant, so AWS's 26 describe
-                                                      a MORE GRANULAR (pre-fold) partition of the SAME underlying buckets GCP already consolidates, not additional
-                                                      uncovered scope.
+          confirmed live: **19 `uts-prod-manifest-consolidator-{kind}-{asset_group}` Cloud Run JOBS**
+          (`gcloud run jobs list --region=asia-northeast1`, e.g. `-market-data-defi`, `-instruments-cefi`,
+          `-features-sports`, `-execution`, `-strategy`, `-ml-training-artifacts`), each with its own ENABLED Cloud
+          Scheduler cron (`gcloud scheduler jobs list`, cadence `*/1` or hourly per the cadence-cost-audit tiering) —
+          running the **identical entrypoint** the AWS side runs: sample-verified
+          `uts-prod-manifest-consolidator-market-data-defi`'s container args =
+          `-m unified_trading_library.manifest_consolidator --bucket market-data-tick-defi-prd-central-element-323112`,
+          matching `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s own description of GCP as the CANONICAL
+          runtime for this exact module (AWS Batch Fargate is the secondary/dormant runtime for the SAME
+          `python -m unified_trading_library.manifest_consolidator --bucket {X} --once` entrypoint). GCP's job count (19)
+          being lower than AWS's 26 job definitions is expected, not a coverage gap — the SSOT documents the Wave-3
+          bucket folds collapsed GCP's per-kind×per-AG target set (features/execution/ml/strategy folded to fewer,
+          broader buckets) while AWS's Group B definitions were never re-folded since going dormant, so AWS's 26 describe
+          a MORE GRANULAR (pre-fold) partition of the SAME underlying buckets GCP already consolidates, not additional
+          uncovered scope.
 
-                                                      **Ruling: yes, GCP-side already covers this job — safe to delete the 26 AWS Batch job definitions + job queue**
-                                                      (next todo). Not verified against the live AWS Batch API this session (`ikenna-worker` IAM user lacks
-                                                      `batch:DescribeJobDefinitions`, and self-granting wasn't warranted for a read this codex doc already answers
-                                                      authoritatively) — the 26-definition Group A(10)+Group B(16) composition and dormant status are already
-                                                      established facts in `manifest-consolidator-ssot.md`'s own Terraform-apply history, not re-derived here.
-                                                      Repo: unified-trading-pm (doc-only finding).
+          **Ruling: yes, GCP-side already covers this job — safe to delete the 26 AWS Batch job definitions + job queue**
+          (next todo). Not verified against the live AWS Batch API this session (`ikenna-worker` IAM user lacks
+          `batch:DescribeJobDefinitions`, and self-granting wasn't warranted for a read this codex doc already answers
+          authoritatively) — the 26-definition Group A(10)+Group B(16) composition and dormant status are already
+          established facts in `manifest-consolidator-ssot.md`'s own Terraform-apply history, not re-derived here.
+          Repo: unified-trading-pm (doc-only finding).
 
 - [x] ✅ [INFRA] P2. **Act on the previous todo's finding** — either delete the 26 AWS Batch job definitions + the
       `uts-prod-manifest-consolidator` job queue + the 26 disabled EventBridge rules (if confirmed redundant), or
@@ -420,7 +413,7 @@ them).
 
 - [ ] [INFRA] P2. **Re-measure `ap-northeast-1` AWS cost after full cutover + decommission** (same Cost Explorer +
       per-service methodology used to scope this plan: `SERVICE`/`USAGE_TYPE` group-by, filtered to
-      `REGION=ap-     northeast-1`) and confirm the realized saving against the ~$250/month target stated in this plan's
+      `REGION=ap- northeast-1`) and confirm the realized saving against the ~$250/month target stated in this plan's
       summary. Done-when: a real before/after monthly figure is recorded here (Progress Log), not just an assumption
       that deleting the ECS services achieved it.
 
@@ -538,3 +531,6 @@ them).
     `gcloud run services add-iam-policy-binding features-service --member=allUsers --role=roles/run.invoker`
     (asia-northeast1, central-element-323112) → re-verified anonymous `/health` 200 + `/readiness` 200, matching
     execution-service/strategy-service posture. No repo code changed. Next: todo 13 is actionable from ~08-13/14.
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) -- narrowed from 12 to the doc's now-remaining scope
+  (3 codex docs + the infrastructure_master epic + the AWS-side cluster configs for the pending teardown/todos 13-14),
+  dropping the already-deployed GCP Cloud Run yaml configs and bucket_naming.py now that all 3 services are live.

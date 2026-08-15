@@ -31,6 +31,24 @@ work depends on. When present, READ every listed path before starting work — i
 corpus and is maintained specifically so you don't have to re-derive it. SSOTs:
 `/codex/11-project-management/doc-frontmatter-schema.md`, `/cursor-configs/skills/context-scout/SKILL.md`.
 
+## 0b. Before you compact or end a session — name the full goalposts, not just the next step
+
+Applies whenever you (main/review, self-compacting or backend-force-injected) run `/pre-compact`, AND whenever you
+(worker, escalation, plan_health-family) write a Progress Log entry before a session boundary — one-task-per-session
+means your NEXT self never reads this conversation; it only reads the plan file (see "Conversational context-resume is
+an explicit NON-GOAL", `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`). A resumption note that
+only names the last-touched item strands everything else in the chain — the next agent (worker OR operator) has no way
+to know a bigger scope exists unless it's written down.
+
+**Trigger**: your plan (or the issue doc you're working from) has a `depends_on`, `parent_epic`, a split-sibling plan,
+or a referenced `plans/active/issues/*.md` — i.e. this work is one piece of a larger initiative, not the whole thing.
+
+**Do**: the `/pre-compact` skill's **Step 8b — "Name the goalposts, not just the next step"** is the canonical spec for
+this (read it there, not restated here) — state the umbrella goal, list every document in the chain, enumerate every
+open item across all of them deduplicated with actionable-now/blocked-on-X/operator-owned tags, name the final closing
+action if one exists. Write it into the plan's Progress Log (not chat) — that's the only place a fresh worker, main, or
+review session will ever read it. SSOT: `/cursor-configs/skills/pre-compact/SKILL.md` § Step 8b.
+
 ---
 
 ## 1. Your worktree — read from root, operate only in your slot

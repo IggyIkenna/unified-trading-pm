@@ -227,7 +227,7 @@ cannot find it — the fix has to be sought in the two dependency repos.
       — does this change the root cause?** `0aeb925f..bf69b2b289` is NOT `.py`-empty like `bf69b2b289..HEAD` is — it's
       exactly the revocation-release identity fix from `dp_revocation_release_never_resolves_identity_2026_08_15.md`
       (`meta_watchers.py` + `cli.py` + test file). Checked directly:
-      `basedpyright deployment_service/data_pipeline_monitors/meta_watchers.py     deployment_service/data_pipeline_monitors/cli.py`
+      `basedpyright deployment_service/data_pipeline_monitors/meta_watchers.py deployment_service/data_pipeline_monitors/cli.py`
       → 6 errors, **all** in `cli.py:399-411` (pre-existing `CloudSchedulerClient`/`reportAny` typing, nowhere near the
       diff's touched lines 639/699), **zero** in `meta_watchers.py`. The revocation-release fix is basedpyright-clean —
       it is not the source of the 1259→1261 gap. **Exact live-verified count at `0aeb925f` — not recoverable, noted as a
@@ -239,6 +239,21 @@ cannot find it — the fix has to be sought in the two dependency repos.
       `prune`, confirmed clean via `git worktree list`). A trustworthy re-measurement would need a fully isolated venv
       provision at `0aeb925f`, out of scope for this todo's DoD (which only required cache-hit-vs-genuine + corrected
       baseline commit, both now answered).
+
+**2026-08-15 (agt-d1be49, slot 18) — this now ALSO blocks a live DP-MANIFEST-001 root-cause fix.** Hit this same
+`1261 > 1259` failure shipping `deployment-service/scripts/recovery/relaunch_consolidator.py` +
+`data_pipeline_monitors/escalation.py` (the CONSOLIDATOR_DOWN actuator built the wrong Cloud Run job name —
+`manifest-consolidator-{ag}` vs the real `uts-prod-manifest-consolidator-{kind}-{ag}` — every real relaunch 404'd since
+inception). `git fetch origin live-defi-rollout` on `unified-api-contracts`/`unified-trading-library` showed ZERO
+incoming commits (already current); `deployment-api` had 2 incoming (a consolidator staleness-budget bump + a Docker
+digest pin, `3a5d3cc..f6c1d70`) — pulled it, re-ran `basedpyright deployment_service/` with a fresh
+`BASEDPYRIGHT_CACHE_DIR` → still `1261 errors, 0 warnings, 0 notes`, unchanged. One more negative data point against a
+findable single culprit commit. **Not escalating a duplicate — the operator-decision todo above already covers this**;
+noting it here so the decision's cost (a P0 truncated-sweep fix AND this P1 alerting-actuator fix both sitting
+unshippable) is visible. My own escalation's underlying incident is already resolved LIVE (manual
+`relaunch_consolidator.py --asset-group tradfi --service-kind instruments` invocation confirmed the Cloud Run execution
+SUCCEEDED, tradfi consolidator heartbeat should refresh next sweep) — only the code fix (so the NEXT CONSOLIDATOR_DOWN
+finding auto-recovers instead of re-escalating) is blocked on this ratchet.
 
 ## Evidence
 

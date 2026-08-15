@@ -393,10 +393,14 @@ ready-to-run without that fix.
 
 ## Deferred work after 2026-07-24 (slot 4 session end)
 
-| Item                                                                                        | State / why deferred                                                                                                                                                               | Blocked on                                                                                                                                    |
-| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `[DATA] P2` — remediate the 85 contaminated `day=2026-04-14` shards                         | **Not done, not attempted against PROD.** Recovery model itself was wrong (see above) until slot 11's mechanism finding landed mid-session — needs a rewrite, not just an unblock. | Real work — pick up with the corrected 3-step remediation above once someone has capacity.                                                    |
-| `[DIAG] P1` — find the exact caller that fed `get_instruments()` output into `_write_venue` | **Not done**, but the MECHANISM is now fully understood (slot 11) — only the specific calling job/script is still unidentified.                                                    | Real work — trace `ApiFootballReferenceDataAdapter.get_instruments()` callers workspace-wide (named as the concrete next action in the todo). |
+> **BOTH ITEMS BELOW NOW RESOLVED — table left for history, corrected 2026-08-15 (`/plan-reconcile`).** This table was
+> cited (stale) by `plan_reconciler_findings_sports_2026_08_10.md`'s archive-candidate entry #4 as "DEFERRED=2" — both
+> were closed well before 2026-08-10, just never cross-checked against this table at the time.
+
+| Item                                                                                        | State / why deferred                                                                                                                                                                                                                                                                                                                                                                                                    | Blocked on                                     |
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `[DATA] P2` — remediate the 85 contaminated `day=2026-04-14` shards                         | **RESOLVED 2026-07-25** (`instruments-service@a9f42320`, DATA P2 todo above — all 36 target canonical shards fixed) + 2026-08-09 operator ruling on the remaining 35 unregistered leagues (LEAVE UNMAPPED). See the `[x]` todos above.                                                                                                                                                                                  | Closed.                                        |
+| `[DIAG] P1` — find the exact caller that fed `get_instruments()` output into `_write_venue` | **RESOLVED BY STRUCTURAL FIX, not literal caller ID** — mechanism fully traced (slot 11), closed structurally by `instruments-service@b3cb6f8c`'s `_assert_not_cross_domain_contamination()` guard (CODE P1 todo above), which makes this class of mix-up impossible regardless of the historical caller; the exact CLI invocation stays unrecoverable (no audit logging on this bucket) but is no longer load-bearing. | Closed (done-when met via the structural fix). |
 
 **Recommended next item**: the DIAG P1 caller-trace (cheap, bounded, unblocks nothing else urgent) or the DATA P2 step-1
 canonical-folder verification (also cheap — a manifest/GCS check, no write) are both good next picks; the actual
@@ -540,3 +544,10 @@ leagues structurally unmapped, pending an operator decision) stands as-is.
   rather than force either side of that tension; the full archival ritual (status flip + banner + `git mv` + referrer
   sweep, as its own commit) is correctly-scoped follow-up work for the normal archive-candidates sweep
   (`/archive-candidates-audit`), not this todo.
+- **plan-reconcile fix 2026-08-15**: this doc's own "Deferred work after 2026-07-24" table still listed both items as
+  "Not done" 20 days after both were actually resolved (DATA P2 remediation shipped 2026-07-25 + 2026-08-09 operator
+  ruling; DIAG P1 closed structurally 2026-07-24/25). Corrected the table with citations. Also corrected
+  `plan_reconciler_findings_sports_2026_08_10.md`'s archive-candidate entry #4, which cited this stale table as
+  "DEFERRED=2" — all 6 todos here are genuinely `[x]`, 0 open; the doc is a real archive candidate once its
+  `status: open`→`resolved` flip lands (deliberately deferred to a separate archival-ritual commit per the 2026-08-09
+  entry above, not blocked by any open work).

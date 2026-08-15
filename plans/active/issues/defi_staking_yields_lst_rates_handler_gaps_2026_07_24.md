@@ -236,7 +236,7 @@ issue doc. No functional code changed; `quality-gates.sh` run scoped to these tw
 ## 6. Residual / open follow-up work
 
 - [x] ✅ [SERVICE] P2. Add a `"staking-yields"` entry to
-      `deployment-service/terraform/gcp/     defi_collection_scheduler.tf`'s `defi_collect_operations` map (schedule
+      `deployment-service/terraform/gcp/ defi_collection_scheduler.tf`'s `defi_collect_operations` map (schedule
       ~`50 1 * * *`, between `eigenlayer-rewards` 01:45 and `evm-defi` 01:55; CPU/memory tier ≈ `eigenlayer-rewards`'s,
       since both are light single-region public-API/RPC fetches) so `collect-staking-yields` actually runs. This is a
       real Cloud Run Job + Cloud Scheduler provisioning change against production — out of scope for this filing pass;

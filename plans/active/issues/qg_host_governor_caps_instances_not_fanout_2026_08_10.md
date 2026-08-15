@@ -138,3 +138,75 @@ deliberate decision rather than changed mid-session.
   no traceback" signature than the CPU-thrash hypothesis above (both may be contributing factors under the same root
   umbrella of "the instance cap doesn't model real resource cost"). Operator noted it's worth checking whether other
   slots hit the same kill pattern in the same window — not verified in this pass.
+- **2026-08-15 06:26-06:32 (slot 2, third corroborating downstream symptom, same AWS host)**: while shipping the AAVE_V3
+  rewards-capture task (`uac_data_type_validity_combinator_fragmentation_2026_07_07.md` item, repo
+  `market-tick-data-service`), a `bash scripts/quality-gates.sh --no-fix` run (PID `3857681`) was correctly tracked via
+  a `run_in_background` blocking `kill -0` watchdog loop. It queued behind the host-wide governor for the expected
+  `[qg-governor] ... queued Ns` cadence through 300s, then the PID vanished with no further log output whatsoever — no
+  phase markers past the queue lines, no exit code, no traceback — matching the exact "silent external kill" signature
+  from the 2026-08-14 slot-15 entry above. At the moment of death: `uptime` showed load average 11.73/12.74/14.22,
+  `ps aux | grep -c quality-gates.sh` = 20 concurrent instances host-wide, `free -h` showed 20Gi "available" (so a
+  point-in-time snapshot looked clear, same false-negative pattern already noted above). Ruled out as a
+  content/lint/test failure in the diff itself: an earlier, more complete run on the same 2-file diff
+  (`/tmp/qg_run7.log`) had already reached `10799 passed, 28 skipped` through `[3/6] TESTS`. Treating this as further
+  corroboration of the existing root cause, not a new issue; not actioned per the same deliberately-not-hot-patched
+  blast-radius reasoning. Retrying.
+- **2026-08-15 06:32-06:39 (slot 2, retry of the entry above, IDENTICAL failure)**: the retry (PID `14840`, same
+  `--no-fix` invocation, same repo) reproduced the exact same signature — queued behind the host-wide governor through
+  `queued 300s` (final governor line), then the PID vanished with zero further log output, no exit code, no traceback.
+  Host state at time of death: load average 11.02/11.15/12.84, 19 concurrent `quality-gates.sh` processes host-wide. Per
+  the workspace's "two identical consecutive failures = stop blind-retrying" rule, did NOT launch a third immediate
+  attempt. Instead armed a single `run_in_background` watchdog (`/tmp/qg_retry10_watchdog.sh`) that polls `uptime` every
+  60s (cap 15 checks / 15min) and only launches the next attempt once load drops below 6 (or the cap is hit), then
+  tracks that attempt to completion the same way. This is a load-gated retry, not a blind one — the condition being
+  waited on (host contention) is external and measurable, not a coin-flip re-run.
+- **2026-08-15 06:54-07:16 (slot 2, load-gated retry result — partial success, then a fourth silent kill much deeper
+  into the gate)**: the load-gated watchdog's cap-fallback fired at 06:54:40 (load never dropped below 6 in its 15-check
+  window) and launched attempt 3 (PID `1069852`) anyway. This attempt broke clean through the governor queue (unlike the
+  two prior identical `queued 300s` deaths) and ran real content for over 20 minutes, progressing through TESTS (pytest
+  visibly at 82-91%, all passing bar 2 skips) and on into the `[5.x/6]` DATA-PIPELINE SELF-MONITORING / ratchet checks,
+  reaching **5.95/6** (792 log lines, last write 07:16:18) — by far the deepest any attempt has reached. It then died
+  the same way as the first two: PID vanished, log stopped mid-stream with **no exit code, no traceback, no phase-6
+  banner**, right after a `5.95 PASS:` line. At death: `uptime` 5.26/7.42/9.15 (host load had already eased from the
+  peak), `free -h` showed 20Gi "available" (same clean-snapshot-hides-the-spike pattern already noted above). Checked
+  `dmesg`/`journalctl` for an OOM/cgroup-eviction signature around 07:16:18 — no kernel OOM lines found (dmesg
+  unreadable without privilege; journalctl had only unrelated substring hits) — inconclusive, does not rule out the
+  memory-pressure hypothesis from the 2026-08-14 operator entry above. **Reframing**: this is not a fixed "dies at 300s"
+  signature — the kill point is not a fixed offset, and forward progress is real and increasing each retry
+  (governor-queue-only → governor-queue-only → 91% through tests and past 5.95/6 checks). Treating this as continued
+  corroboration of the same root cause (a per-instance resource cost the governor doesn't model), now with evidence the
+  failure mode is a moving contention threshold rather than a deterministic timeout. Retrying a 4th time immediately
+  (load already favorable, no load-gate wait needed this time).
+- **2026-08-15 07:21-07:25 (slot 2, 4th attempt result — reverted to the pure-queue death pattern)**: attempt 4 (PID
+  `2183466`) tracked via the same `kill -0` background watchdog, this time did NOT break through the governor queue at
+  all — it died with the log showing only the `[qg-governor] ... queued Ns` cadence through **`queued 330s`** and
+  nothing else (no phase content, no exit code, no traceback), i.e. the same signature as attempts 1-2, not attempt 3's
+  "broke through to 5.95/6 then died" pattern. At death: `uptime` 2.26/4.12/6.89 (already trending down from the peak),
+  and `ps` showed at least 3 other concurrently-running `quality-gates.sh` instances from other slots (one, PID
+  `2363722`/`2363761`, had a `pytest` worker actively running at 60.6% CPU) — confirming real host-wide contention was
+  still the binding constraint, not a fluke. This reinforces that forward progress is NOT monotonic across retries
+  (attempt 3 reached 5.95/6, attempt 4 reached 0/6) — the moving-contention-threshold framing holds, but it moves in
+  both directions depending on which neighbours are mid-fanout at any given moment, not a steadily improving trend.
+  Retrying a 5th time immediately given the 1-min load average (2.26) is already low and trending down.
+- **2026-08-15 08:57-09:11 (slot 8, further corroboration — worsening storm, ~10 attempts, one clean SIGTERM
+  captured)**: picked up the same AAVE_V3 rewards-capture task from slot-2's checkpoint (fixed a genuine reserve-
+  discovery bug in the code itself — separate from this issue). Hit the identical signature repeatedly while shipping:
+  `market-tick-data-service --no-fix` attempts died silently (no exit code, no traceback) across ~10 consecutive
+  launches over ~15 minutes, while host-wide `ps aux | grep -c quality-gates.sh` climbed from 10 → 13 → 16 → 19 → 21
+  concurrent instances and `uptime` load stayed pinned at 10-15. One attempt DID capture the governor's own kill marker
+  cleanly (`❌ [quality-gates] received SIGTERM — wrote kill marker .../.benchmarks/qg-governor/killed.<pid>`)
+  confirming the SIGTERM is external, not a script crash. `free -h` fluctuated wildly between attempts (865Mi available
+  at one low point, up to 20Gi a few checks later) — same clean-snapshot-hides-the-spike unreliability already noted
+  above; not a stable OOM signal on its own. **New observation, not previously logged**: two of my own lightweight
+  `run_in_background` watchdog scripts (trivial `sleep`-poll loops doing near-zero CPU/memory work, meant to gate the
+  next QG launch on load easing) were themselves reported `killed` by the harness after ~90-180s despite doing nothing
+  but sleeping — this doesn't fit the CPU-thrash/OOM hypothesis (a near-idle process is an unlikely eviction target) and
+  may point at a THIRD contributing mechanism (pane/session-liveness pressure under the same host-wide load) rather than
+  confirm the two already documented; flagging as an open question, not a new root-cause claim. **Self-correction worth
+  recording**: one observed "failure" during this session was NOT a governor kill at all — a stale `cd` from an
+  unrelated dirty-file check earlier in the session left the shell's cwd pointed at `features-service-clean-check`, so
+  one QG invocation silently validated the wrong repo (surfaced its own pre-existing red `STEP 5.5 broad-except` gate,
+  unrelated to this task) before erroring — worth noting as a distinct human/agent-error failure mode that can
+  masquerade as this issue's signature if the log isn't checked for which repo actually ran. Not actioned (same
+  deliberately-not-hot-patched blast-radius reasoning); backing off from immediate retries given every relaunch appears
+  to add to an already-severe fleet-wide storm (21 concurrent instances at last check) rather than help it clear.

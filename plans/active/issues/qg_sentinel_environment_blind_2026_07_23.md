@@ -47,7 +47,7 @@ context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
     /plans/active/issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md,
-    /plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md,
+    /plans/archive/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md,
     unified-trading-pm/scripts/quickmerge.sh,
     unified-trading-pm/scripts/quality-gates-base/base-service.sh,
   ]
@@ -177,7 +177,7 @@ guessed/placeholder environment values, cost is not a blocker (this is code + CI
       § Resolution. **DEFERRED — still open**: `deployment-api` and `strategy-service` (not verified this pass), and the
       two `market-tick-data-service` cases, which are demonstrably NOT fixed — they were still failing intermittently as
       late as 2026-07-24 per
-      [/plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md](/plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md)
+      [/plans/archive/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md](/plans/archive/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md)
       (5 consecutive quickmerge re-gate hits, `1/1 worker` serial). **Sequencing ruled 2026-07-26** (resolved
       `autonomous_session_operator_decisions_2026_07_25.md` entry #29, option A): hold the MTDS half specifically until
       that doc's own next step (instrument quickmerge's cascade/pull step, diffing `os.environ` before/after

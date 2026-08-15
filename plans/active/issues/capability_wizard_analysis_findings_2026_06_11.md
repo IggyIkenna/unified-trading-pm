@@ -729,7 +729,7 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
       `plans/archive/2026_06/engine_findings_remediation_2026_06_15.md` shipped the owner decision + consolidation:
       canonical netting home = UTL `unified_trading_library/risk/net_delta.py` (strategy-service still owns the
       position/risk orchestration that calls it) —
-      `UTL@b819cd1c + execution-service@b7c63335 +     strategy-service@bdac6595`. No longer BLOCKED-OPERATOR-DECISION.
+      `UTL@b819cd1c + execution-service@b7c63335 + strategy-service@bdac6595`. No longer BLOCKED-OPERATOR-DECISION.
 - [x] ✅ [LOGIC] P1. **F27 — carry-staked-basis venue-id CASE MISMATCH** (`deribit`≠`DERIBIT`) blocks emission.
       LOGIC-FREEZE. Target: strategy-service. — **DONE strategy-service@dac939d6.** FREEZE STATUS: verified lifted —
       `epics/strategy_master.md` no longer carries any freeze/no-changes-to-engine language (checked directly, zero

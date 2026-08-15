@@ -144,17 +144,17 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       −861 legitimate spelling-dedup).
 
       **tradfi v9-column apply DEFERRED until the running DBEQ/CBOE per-date backfills
-                                                                                                                                                                                                                                                                      finish** (avoid clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
-                                                                                                                                                                                                                                                                      `_index/snapshots/pre_is_v9_{ag}_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:
-                                                                                                                                                                                                                                                                      UTL@f8ec9096 `_stamp_producer_source` stamps `source_string_for(pipeline_mode)` on blank batch producer rows
-                                                                                                                                                                                                                                                                      (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 + unified-trading-library@f8ec9096
+          finish** (avoid clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
+          `_index/snapshots/pre_is_v9_{ag}_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:
+          UTL@f8ec9096 `_stamp_producer_source` stamps `source_string_for(pipeline_mode)` on blank batch producer rows
+          (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 + unified-trading-library@f8ec9096
 
 - [ ] [SCRIPT] P3. **`canonicalize_instruments_store_index.py` can't resolve the prediction bucket** — `_bucket_for`
       calls `resolve_bucket_name(kind="instruments-store", asset_group="prediction")` which raises `BucketNamingError`
       (prediction uses the flat `instruments-store-prediction` kind, no per-AG key). Harmless today (prediction `_index`
       is already canonical — 500 rows, 0 blank, 0 dup → nothing to canonicalize), but the `--asset-group prediction`
       choice is a dead path. Fix `_bucket_for` to route prediction →
-      `kind="instruments-store-prediction",     asset_group=None` if prediction ever needs re-canonicalisation.
+      `kind="instruments-store-prediction", asset_group=None` if prediction ever needs re-canonicalisation.
       **NICE-TO-HAVE** (provenance: 2026-06-18 instruments-store audit). — instruments-service
 
 ## Folded-in (I-2 consolidation 2026-06-26)
@@ -173,10 +173,10 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
 - [ ] [DATA] P1. **C-source RIDER (CF-4)** — re-consolidate the `source` column into the instruments `_index`
       (multi-source `FIXTURES` = 2 rows); folds the `data_source_provenance` instruments-side re-consolidation (no
       separate walk). (MIGRATED FROM: same.)
-- **[CODE] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** C-reasons
-      (CF-5) — instruments writers emit typed `EmptyConfirmedReason` (non-sports AGs); fetch-failure →
-      `attempted_failed` not `empty_confirmed` (CF-11 swallow sweep). See the batch doc for the full scoped todo;
-      do not duplicate-dispatch from here. (MIGRATED FROM: same.)
+- **[CODE] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** C-reasons (CF-5) —
+  instruments writers emit typed `EmptyConfirmedReason` (non-sports AGs); fetch-failure → `attempted_failed` not
+  `empty_confirmed` (CF-11 swallow sweep). See the batch doc for the full scoped todo; do not duplicate-dispatch from
+  here. (MIGRATED FROM: same.)
 - [ ] [DATA] P0. **E3** — confirm instruments writer drained; snapshot each `_index`. (MIGRATED FROM: same.)
 - [ ] [DATA] P0. **E4** — dry-VM → timing → optimise → run (small: 30k/20k/493 rows; no fire-and-forget). (MIGRATED
       FROM: same.)
@@ -210,13 +210,12 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       `weather.py:179/285/376/459/518`) are documented fail-open patterns for per-shard failure isolation — the
       architecture's SSOT rule (`/codex/04-architecture/shard-level-failure-isolation.md`). `:7673` was already
       confirmed NOT a bug (safe fallback). Repo: instruments-service. (MIGRATED FROM: same.)
-- **[REVIEW] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Residual
-      bar-edge fallback-to-open — the source doc's own text below claims a fix was committed locally (SHA does not
-      resolve to a real commit in this checkout — unverified, do not cite it further) and blocked from quickmerge
-      by a pre-existing IS QG failure (`test_sports_fixture_stamps_canonical_instrument_id`, repo-blocker
-      RB-d3bb9020); the batch doc's todo re-verifies from scratch rather than trusting that claim. See the batch
-      doc for the full scoped todo; do not duplicate-dispatch from here. Repo:
-      instruments-service. (MIGRATED FROM: same.)
+- **[REVIEW] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Residual bar-edge
+  fallback-to-open — the source doc's own text below claims a fix was committed locally (SHA does not resolve to a real
+  commit in this checkout — unverified, do not cite it further) and blocked from quickmerge by a pre-existing IS QG
+  failure (`test_sports_fixture_stamps_canonical_instrument_id`, repo-blocker RB-d3bb9020); the batch doc's todo
+  re-verifies from scratch rather than trusting that claim. See the batch doc for the full scoped todo; do not
+  duplicate-dispatch from here. Repo: instruments-service. (MIGRATED FROM: same.)
 - [x] ✅ [MTDS] P2. **De-duplicate the IS venue universe** — make the cefi/tradfi/prediction fetch path read UAC
       `VENUES_BY_ASSET_GROUP` instead of hardcoded mirrors. **SHIPPED by `instrument_universe_registry_consolidation`
       Phase 1 — `instruments-service@4da6fe8`** (verified live 2026-06-30): `_CEFI_VENUES`/`_TRADFI_VENUES` DELETED from
@@ -227,11 +226,10 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       KEPT** — defi is operator-decided EXEMPT from set-equality (registry-consolidation Decision D / A6), with a UAC
       drift-guard (`VENUES_BY_ASSET_GROUP[defi] == get_venues_for_asset_groups(["DEFI"])`). The stale
       `orchestrator.py:1028` line ref no longer holds those mirrors. (MIGRATED FROM: same.)
-- **[CODE] P3. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** MTDS
-      prefix-map mirror → read UAC `VENUE_PREFIX_TO_PROTOCOL` directly (swap the hand-mirror in
-      `_instruments_metadata.py` for the UAC import) + fix the stale UI comment naming the deleted
-      `CANONICAL_VENUE_TO_ADAPTER`. See the batch doc for the full scoped todo; do not duplicate-dispatch from
-      here. Repo: market-tick-data-service (+ UI comment).
+- **[CODE] P3. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** MTDS prefix-map
+  mirror → read UAC `VENUE_PREFIX_TO_PROTOCOL` directly (swap the hand-mirror in `_instruments_metadata.py` for the UAC
+  import) + fix the stale UI comment naming the deleted `CANONICAL_VENUE_TO_ADAPTER`. See the batch doc for the full
+  scoped todo; do not duplicate-dispatch from here. Repo: market-tick-data-service (+ UI comment).
 - [x] ✅ [MTDS] P2. **Replace `os.environ["DEPLOYMENT_ENV"]="test"` runtime mutation** (`orchestrator.py:8033-8041`,
       `sports_dependency.py:90-98`) with an explicit `env=` param to `resolve_bucket_name` (thread-safety). DONE via
       orchestrator split (`instruments-service@cb51c98a0`). The old `orchestrator.py:8033-8041` block was removed;
@@ -271,9 +269,9 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       (MIGRATED FROM: same.) — instruments-service@cb51c98a0: split into `engine/orchestrator/` package (22 focused
       modules + thin `__init__`).
 - **[SCRIPT] P3. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Script-tier
-      cloud-agnostic sweep — ~60 scripts' direct `google.cloud`/`boto3` imports, ~30 inline legacy bucket literals,
-      and the hardcoded `/tmp/` in `enumerate_expected_universe.py`. See the batch doc for the full scoped todo;
-      do not duplicate-dispatch from here. Repo: instruments-service. (MIGRATED FROM: same.)
+  cloud-agnostic sweep — ~60 scripts' direct `google.cloud`/`boto3` imports, ~30 inline legacy bucket literals, and the
+  hardcoded `/tmp/` in `enumerate_expected_universe.py`. See the batch doc for the full scoped todo; do not
+  duplicate-dispatch from here. Repo: instruments-service. (MIGRATED FROM: same.)
 - [x] ✅ [PLAN] P3. **Delete the orphaned static-snapshot catalogue path** — ALREADY DELETED (verified 2026-08-05, slot
       11). `reference_data/catalogue/catalogue_builder.py` not found anywhere in the IS tree; `CatalogueBuilder` and
       `refresh_catalogue` have zero grep hits in the current `engine/orchestrator/` package. The live path is

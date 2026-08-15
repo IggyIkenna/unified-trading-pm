@@ -174,8 +174,8 @@ same CLI path would hit the identical wall.
       mechanical fix, and P3/non-blocking per this doc's own priority. Left open for whoever picks up the design call.
 - [x] ✅ [CODE] P2. Add a SPORTS branch to `cloud_feature_provider.py`'s feature dispatcher (mirroring
       `_query_defi_features`'s non-instrument-id pattern) that reads
-      `sports_features/by_date/day={D}/     feature_group={G}/` by fixture/league instead of by `instrument_ids`. This
-      is the real blocker for the CLV retrain (and any other sports target). (repo: ml-service) — **DONE 2026-07-26**
+      `sports_features/by_date/day={D}/ feature_group={G}/` by fixture/league instead of by `instrument_ids`. This is
+      the real blocker for the CLV retrain (and any other sports target). (repo: ml-service) — **DONE 2026-07-26**
       (slot-6, `data_engineering`): `ml-service@7cccb236`. On closer inspection a SPORTS branch already existed in
       `query_features()` (since 2026-05-01) but was UNREACHABLE — the asset-group dispatch derived from
       `_get_asset_group(instrument_ids[0])` always falls back to `"CEFI"` when `instrument_ids` is empty (the correct
@@ -249,7 +249,8 @@ same CLI path would hit the identical wall.
   the wiring ships. Citation-only, no reclassification.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
-- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — reconfirmed `sports_taxonomy_p3_consumers_2026_08_08.md`
-  is still `status: active` / `assigned_vm: planning` with its own open `[CODE] P0` todo ("Wire ml-service `--family`
-  to actually scope SPORTS training", explicitly citing the operator ruling) — the implementing plan is genuinely
-  in-flight, not stalled. No change: this doc's sole open todo stays resolved-by-citation to that plan's finalize.
+- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — reconfirmed
+  `sports_taxonomy_p3_consumers_2026_08_08.md` is still `status: active` / `assigned_vm: planning` with its own open
+  `[CODE] P0` todo ("Wire ml-service `--family` to actually scope SPORTS training", explicitly citing the operator
+  ruling) — the implementing plan is genuinely in-flight, not stalled. No change: this doc's sole open todo stays
+  resolved-by-citation to that plan's finalize.

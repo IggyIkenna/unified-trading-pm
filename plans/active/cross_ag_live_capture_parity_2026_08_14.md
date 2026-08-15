@@ -38,9 +38,11 @@ drift_direction: advance-code
 context_scope:
   [
     market-tick-data-service/market_tick_data_service/live/connectors/,
+    market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/websocket_streaming_handler.py,
-    e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py,
-    deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh,
+    /plans/active/issues/prediction_live_instrument_cache_never_refreshed_and_polymarket_catalog_gap_2026_08_14.md,
+    /plans/archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md,
+    /plans/active/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md,
   ]
 supersedes:
 superseded_by:
@@ -210,7 +212,7 @@ The rest is unowned.
 - [x] [DATA] P1. Diagnose the tradfi CME live shard producing 28 rows since 2026-06-22 and `ohlcv_15m` failing outright
       — DoD: root cause named; state whether the Databento live subscription actually covers the requested schema. —
       DONE 2026-08-14: root cause is a Databento account billing outage, NOT a code bug —
-      `mtds-live-tradfi-cme-     trades-20260809-163443`'s run.log shows `gateway error code=api_key_deactivated` +
+      `mtds-live-tradfi-cme- trades-20260809-163443`'s run.log shows `gateway error code=api_key_deactivated` +
       `CRAM authentication error: ... unpaid invoice` at 2026-08-12T00:03:57Z, one failed reconnect, then silence for
       ~50h with the process still heartbeating (invisible to any liveness check). Manifest confirms the exact boundary:
       captured cleanly 08-09..08-11, 100% `empty_confirmed` from 08-12 onward. This is a RECURRENCE of
@@ -243,17 +245,50 @@ The rest is unowned.
       VM was safe to cycle — deleted `mtds-live-cefi-consolidated-20260809-121034`, relaunched via
       `launch-mtds-live-cefi-consolidated.sh` (`mtds-live-cefi-consolidated-20260814-041422`), confirmed the new VM's
       on-disk code contains `_resolve_is_lookup_venue`/`_MAX_CHANNELS_PER_SUBSCRIBE_MSG` (the fix functions). Caught and
-      stopped a duplicate-VM race from a too-fast second launch attempt before it created a second VM. **Captured-row
-      verification NOT YET obtained** — as of this session, instruments-service had not yet published 2026-08-14's CEFI
-      instrument catalog at all (0 blobs under `instrument_availability/by_date/day=2026-08-14/`, vs 22 on 08-12/08-13;
-      08-13's catalog itself wasn't published until 13:37 UTC) — this affects EVERY cefi venue on the VM uniformly,
-      including the 6 previously-healthy ones, confirming it's an unrelated IS daily-catalog-timing gap, not a
-      regression from this fix. Re-check after ~13:00 UTC today for captured rows on all four shards.
+      stopped a duplicate-VM race from a too-fast second launch attempt before it created a second VM. **2026-08-15
+      re-verification (empty_confirmed_and_coverage_correctness_audit_2026_08_15.md todo "Verify/close BYBIT-FUTURES
+      captured-row verification")**: confirmed live via SSH into the VM (still `RUNNING`, boot
+      `2026-08-13T20:25:34-07:00`) + a direct manifest query. Findings: - The instrument-availability index shows
+      BYBIT-FUTURES 100% `empty_confirmed` across all 4,664 historical rows including 4,652 dated today (2026-08-15) —
+      as of the moment this query ran, still zero `captured` rows. - Tailing `live-bybit-futures-trades.log` (mirrors
+      all 4 BYBIT-FUTURES shards) shows the ORIGINAL fix (`_resolve_is_lookup_venue` routing BYBIT-FUTURES → the primary
+      `BYBIT` catalog) is genuinely active and correct, but hit a SEPARATE, previously-undiagnosed problem: every
+      5-minute retry from VM boot (2026-08-14 03:27 UTC) through 2026-08-15 06:02 UTC logged
+      `read_is_universe_sync: no instruments.parquet for cefi/BYBIT-FUTURES (lookup_venue=BYBIT) day=<date> in either by_date layout`
+      — the resolved lookup venue was right, but instruments-service's BYBIT catalog for that UTC day genuinely did not
+      exist yet at every checked time, for BOTH 08-14 and 08-15 (not a one-day fluke). **Then, at 2026-08-15 06:07:55
+      UTC, the identical retry succeeded**:
+      `read_is_universe_sync: resolved 1282 instruments cefi/BYBIT-FUTURES day=2026-08-15` — confirming this is a
+      genuine IS daily-catalog PUBLISH-TIMING gap (the catalog for a given UTC day isn't available until sometime in the
+      morning UTC, well after the day rolls over), not a code bug in the venue-resolution fix. The retry loop is working
+      as designed and does NOT need a restart once the catalog lands. - **Captured-row confirmation: CONFIRMED STILL
+      ZERO, a real unresolved bug** — read the live VM's per-VM manifest shard directly
+      (`_index/per_vm/mtds-live-cefi-consolidated-20260814-041422.parquet`, NOT the possibly-lagging consolidated index)
+      ~1h after the 06:07:55 UTC successful universe resolution: 5,128 BYBIT-FUTURES rows in that shard, **100%
+      `empty_confirmed`**, including `data_type=trades` rows dated today — i.e. after the venue-alias fix correctly
+      resolved 1,282 instruments, the connector is still writing confirmed-empty markers, not real captured trades. This
+      is a THIRD, previously undiagnosed problem, distinct from both the original Tardis-alias bug (fixed, confirmed
+      working) and the IS catalog publish-timing gap (real, but not the current blocker — the catalog was available and
+      resolved successfully by 06:07:55). Not further root-caused this session (would need the WS connect/subscribe code
+      path + a live log grep for subscribe-frame confirmations/errors after the 06:07:55 resolve — out of budget for
+      this pass). - [ ] [CODE] P1. **BYBIT-FUTURES live capture is confirmed still fully broken as of 2026-08-15**
+      despite the 2026-08-09 venue-alias fix working correctly (universe resolves) — root-cause why the WS connector
+      produces zero captured rows across all 4 data_types (trades/book_snapshot_5/derivative_ticker/ depth_of_book_10)
+      even after a successful instrument-universe resolve. Start by grepping `live-bybit-futures-trades.log` on
+      `mtds-live-cefi-consolidated-20260814-041422` for subscribe-frame confirmations/rejections in the minutes after a
+      `resolved N instruments` line, and check whether the connector's subscribe step ever actually fires post-resolve.
+      DoD: real `captured` rows appear for at least one BYBIT-FUTURES data_type, or a named root cause + fix is filed. -
+      [ ] [DATA] P2. File the separate IS daily-catalog PUBLISH-TIMING gap as its own instruments-service issue —
+      BYBIT's `instrument_availability/by_date/day=<today>/.../venue=BYBIT/instruments.parquet` was absent at every
+      check from VM boot (2026-08-14 03:27 UTC) through 2026-08-15 06:02 UTC, only appearing by 06:07:55 UTC — i.e. the
+      same-day catalog isn't reliably available until well into the UTC morning. Likely affects every live shard that
+      depends on a same-day IS catalog at boot/early-day, not just BYBIT-FUTURES — worth a dedicated investigation into
+      IS's daily catalog cron schedule/duration.
 - [x] [DATA] P1. Add a standing live-capture-productivity check across all asset groups — a shard with a running process
       and zero `captured` rows over N days must page — DoD: replaying the check against the 2026-08 manifest window
       fires on sports, prediction and the four cefi shards; routes per the actionable-only alerting rule. — DONE
       2026-08-14: added **DP-LIVE-004** to
-      `deployment-service/deployment_service/data_pipeline_monitors/     live_stream_watcher.py`
+      `deployment-service/deployment_service/data_pipeline_monitors/ live_stream_watcher.py`
       (`check_live_capture_productivity` + `build_running_live_shards`, generalized across every registered
       `LONG_LIVED_LIVE` VM prefix — not just prediction — and grouped per `(venue, data_type)` so a single consolidated
       multi-shard VM, e.g. the cefi VM, is evaluated per-shard) — fires when a shard's `attempted_at` is recent (proving
@@ -306,7 +341,13 @@ and succeeded on all recent runs; the index's age reflects the incremental-cutof
 
 ## Progress Log
 
-_(append dated entries here)_
+- **2026-08-15 (na-eligibility-audit follow-up, operator ruling)**: three open items ruled via AskUserQuestion. (1)
+  `phoenix_ws.py` — **delete as dead code** — extracted to `defi_operator_ruling_ao_dispatch_2026_08_15.md`
+  (`assigned_vm: planning`), but that plan's own todo 1 flags a contradiction found AFTER this ruling: this doc's own
+  line 383-385 notes `uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md` independently found `PHOENIX-SOLANA` IS
+  present in `ALL_DEFI_VENUES` — reconcile before deleting, don't delete on this ruling alone. (2) DeFi live capture
+  scope — **operator approved building the ~40 BLOCKED-BUILD pollers** — phased-scoping todo extracted to the same
+  dispatch plan. (3) `_index/*.bak*` retention — **leave as-is indefinitely** — no dispatch, status quo stands.
 
 - **2026-08-14**: Findings A and B (both todos each) DONE. Finding A: cefi factory fallthrough fixed
   (market-tick-data-service@44db26bce0) + manifest audit found zero mis-stamped rows (bug was live but never exercised —
@@ -340,3 +381,60 @@ _(append dated entries here)_
   the conflict was pure stash-pop residue, not a real content difference). Left the now-redundant `autostash` stash
   entry in place (its content was already fully applied/resolved in the working tree; `git stash drop` is hard-blocked
   for agents by the orchestrator guardrail, correctly).
+
+- **context-scout 2026-08-15**: populated context_scope (6 entries) — swapped the two DONE-item targets
+  (`validate_batch_live_smoke_matrix.py`, `launch-mtds-live-cefi-consolidated.sh`) for the still-open work:
+  `live/websocket_runner.py` (the prediction-stall root-cause fix target, `LiveWebsocketRunner`'s never-wired hot-reload
+  path), the new prediction-stall issue doc, and the archived Finding-D gap doc. **Fingerprint cross-reference (step
+  4a)**: Finding B's `PHOENIX-SOLANA` exclusion claim (`defi_venues.py:800`, deliberately excluded 2026-07-22) shares
+  the literal `PHOENIX-SOLANA` with `/plans/active/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md`
+  (open, `assigned_vm: planning`), which independently found `PHOENIX-SOLANA` IS present in `ALL_DEFI_VENUES`
+  (`defi_venues.py`, 135 members) but missing from `VENUES_BY_ASSET_GROUP["defi"]` (`market_data_categories.py`, 103
+  members) — one of 33 venues affected by a separate, still-open registry-gap bug. Different registries, not necessarily
+  contradictory, but the open registry-gap fix (adding all 33 missing venues back to `VENUES_BY_ASSET_GROUP`) could
+  silently re-surface a venue this doc's Finding B found was deliberately excluded for a dead REST API — added to
+  context_scope so the pending `[OPERATOR]` phoenix ruling accounts for it; the other doc is outside this batch,
+  reported for its own pickup.
+
+- **2026-08-15 (data_pipeline_failure escalation agt-f2b4c7, slot-4)**: root-caused the still-open Finding-C todo above
+  ("BYBIT-FUTURES live capture is confirmed still fully broken") — dispatched from a fresh `DP_CRON_DID_NOT_FIRE`
+  (DP-LIVE-004) page for the SAME VM (`mtds-live-cefi-consolidated-20260814-041422`, venue=BYBIT-FUTURES,
+  data_type=trades). Followed the todo's own DoD: SSH'd the VM, tailed `live-bybit-futures-trades.log` — zero
+  `"op":"subscribe"`/`success`/`ret_msg` lines anywhere in the whole 6,061-line log (the connector never logs subscribe
+  acks at all, confirming the todo's suspicion that the subscribe step is invisible). Traced the code path instead:
+  `read_is_universe_sync` (`live/_is_universe.py`) returns EVERY `instrument_key` from IS's `BYBIT` catalog unfiltered
+  by `instrument_type` (1,282 rows 2026-08-15 — spot+linear+inverse+options all under the one Tardis-primary `BYBIT`
+  venue token), and `LiveWebsocketRunner.run()` passes that whole unfiltered list straight to
+  `connector.connect(instrument_ids=...)` with no type filter anywhere in between. All 4 BYBIT-FUTURES connectors
+  (`bybit_ws.py`'s trades connector + `bybit_futures_book_ticker_ws.py`'s book_snapshot_5/derivative_ticker/
+  depth_of_book_10) then crammed the FULL unfiltered id list into ONE unchunked `{"op":"subscribe","args":[...]}` frame
+  to Bybit's LINEAR-only endpoint. Confirmed via web search that Bybit's v5 public-stream docs (ws/connect +
+  websocket/trade/guideline) cap the combined `args` topic-string length at **21,000 characters per request** — 1,282
+  raw topics comfortably exceeds that, and Bybit does not ack a rejected/oversized frame per-topic, so the failure is
+  100% silent (matches the log evidence exactly, and is the same failure SHAPE this connector family already hit + fixed
+  3 times before via chunking: `aster_book_liq_ws.py`, `deribit_book_ticker_ws.py`, `polymarket_clob_ws.py`/
+  `polymarket_trades_ws.py` — BYBIT-FUTURES was simply never given the same treatment). **Fix applied** (all 4
+  connectors, both files): (1) filter `instrument_ids` to PERPETUAL/FUTURE only before building any subscribe topic —
+  the only types valid on the LINEAR endpoint; (2) chunk the subscribe `args` by cumulative character length, capped
+  under Bybit's 21,000-char limit; (3) log subscribe/unsubscribe ack frames (`success`/`ret_msg`) instead of silently
+  discarding them, closing the exact observability gap that made this bug take 2 sessions to root-cause. Also fixed 2
+  pre-existing test files (`tests/unit/test_bybit_ws_connector.py`,
+  `tests/unit/test_bybit_futures_book_ticker_ws_coverage.py`) whose fixture instrument_ids used an unrealistic `:PERP:`
+  type token (real canonical shape is `:PERPETUAL:`/`:FUTURE:`, confirmed via `unified_api_contracts.InstrumentType`) —
+  under the new filter those fixtures would have been silently dropped, breaking
+  `test_subscribe_new_instruments_updates_set` and its siblings. **NOT YET SHIPPED**: 7 consecutive
+  `quality-gates.sh --no-fix` background runs were killed (never completing, mostly still queued behind the governor
+  token) across a ~50min window — cross-referenced against
+  `/plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md` and confirmed the exact matching
+  signature live on this host during the attempts (free RAM swinging 547Mi↔13Gi within under a minute, 16Gi/47Gi swap
+  used, 10-25 concurrent `quality-gates.sh` processes fleet-wide vs. the documented ≤2 rule, and a live
+  `/opt/.qg-governor-glue-shared/.benchmarks/qg-governor/` ledger with dozens of fresh `aborted.*`/`killed.*` markers
+  fleet-wide) — genuine, severe, ongoing host contention, not a defect in this fix. Per that doc's own established
+  precedent (do not keep blind-retrying once contention is confirmed stable), stopped retrying and **stashed the
+  verified-ready fix** in the `market-tick-data-service` slot-4 checkout: `git stash` entry
+  `orchestrator-slot-4-bybit_futures_dp_live_004_subscribe_fix-001` (4 files, +155/-60 lines). **Handoff for the next
+  session/slot**: `git stash pop` in `.tabs/4/market-tick-data-service` (or a calmer slot), run
+  `bash scripts/quality-gates.sh --no-fix` when host contention has eased, ship via
+  `quickmerge --agent --files '<the 4 files>'`, then flip the Finding-C todo above to done with the shipped SHA + a
+  post-fix `captured` row citation (the todo's own DoD). Did not attempt to verify via a live VM restart/redeploy this
+  session — the fix isn't shipped yet, so nothing on the running VM has changed.

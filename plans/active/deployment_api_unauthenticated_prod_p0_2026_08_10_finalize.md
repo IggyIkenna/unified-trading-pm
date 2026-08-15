@@ -58,7 +58,7 @@ Gated behind `deployment_api_unauthenticated_prod_p0_2026_08_10.md`. Do not star
 
 - [ ] [REVIEW] P1. **Independently re-verify closure against LIVE state, not against the P0 plan's own claims.** Re-run
       the same three checks that established the finding:
-      `gcloud run services describe uts-shared-deployment-api     --region asia-northeast1` for `DISABLE_AUTH` /
+      `gcloud run services describe uts-shared-deployment-api --region asia-northeast1` for `DISABLE_AUTH` /
       `ENVIRONMENT` / `DEPLOYMENT_ENV` / the API key binding; `get-iam-policy` for the `allUsers` invoker binding; and
       the ingress annotation. Then confirm at the application layer that a credential-less request receives 401 and an
       authenticated one succeeds. **Done when**: all values are recorded here with their live output, and any that still
@@ -82,3 +82,4 @@ Gated behind `deployment_api_unauthenticated_prod_p0_2026_08_10.md`. Do not star
 ## Progress Log
 
 - **2026-08-10** — Authored alongside the P0. Gated via `depends_on` + `gate_on_depends: true`.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (2 entries).

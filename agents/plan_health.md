@@ -81,6 +81,8 @@ STEP 1 — build the same bounded inputs the workflow builds (deterministic, no 
 
 ```bash
 cd $PM_REPO_PATH
+git pull --ff-only origin live-defi-rollout \
+  || echo "WARN: PM not FF-clean — proceed from current state; flag any check that may be reading a stale PM tree"
 bash scripts/plan-hygiene/build_health_digest.sh plan_health_digest.md
 bash scripts/plan-hygiene/extract_plan_skeleton.sh plan_skeleton.md
 ```

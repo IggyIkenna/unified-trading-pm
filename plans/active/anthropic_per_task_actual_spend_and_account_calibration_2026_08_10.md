@@ -351,10 +351,9 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       differ.
 - [x] ✅ [BACKEND] P1. **Every multiplier carries its valuation date and rate set — agent-orchestrator@c40d847ac6.**
       `MeasuredValue` stores `valuation_date` and the report prints
-      `MULTIPLIER 190x (LOWER BOUND — rates as of     <date>)`. The date IS the rate-set identifier by construction,
-      since `rates_for` is a pure function of it. Two windows valued under different rate sets cannot be silently
-      compared because the only window that could mix them — one straddling 2026-08-31 — is refused outright, with a
-      test.
+      `MULTIPLIER 190x (LOWER BOUND — rates as of <date>)`. The date IS the rate-set identifier by construction, since
+      `rates_for` is a pure function of it. Two windows valued under different rate sets cannot be silently compared
+      because the only window that could mix them — one straddling 2026-08-31 — is refused outright, with a test.
 - [ ] [BACKEND] P1. **Correct the cost denominator to subscription PLUS extra-usage spend — overage was paid, contrary
       to the first reading.** `overage_status='rejected'` + `overage_disabled_reason='out_of_credits'` means overage is
       currently REFUSED because the credit pool is exhausted, not that none was used: the laptop account's live `/usage`

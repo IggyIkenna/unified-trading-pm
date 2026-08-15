@@ -204,7 +204,7 @@ not just noting.
       matches** — confirmed twice, once windowed to the 14-15Z hours and once for the ENTIRE day 2026-07-30 (also zero).
       Read the actual full kernel-log content for the 14:00-16:00Z window directly (not just grep counts): every single
       entry in that 2-hour span is a routine, ~5-minutes-apart
-      `cgroup: fork rejected by pids controller in     /system.slice/<audit-stale-gate-references|process-category-sampler|audit-false-done>.service`
+      `cgroup: fork rejected by pids controller in /system.slice/<audit-stale-gate-references|process-category-sampler|audit-false-done>.service`
       — a PID-limit rejection on three specific MONITORING/audit systemd services, not memory pressure, and not touching
       any AO worker/tmux cgroup. Also checked `/var/log/syslog.1` for `systemd-oomd`/`memory.pressure` activity in the
       same window — zero matches there too. **Verdict: the kernel OOM-killer was NOT invoked during the 2026-07-30
@@ -214,7 +214,7 @@ not just noting.
       it for real) — the mass `tmux_session_lost` cluster's real cause is NOT a kernel OOM kill and needs a fresh,
       differently-scoped investigation (new todo below); do not re-open this exact question, it is answered. **Method
       note for future root-access sessions on this host**:
-      `aws ssm send-command --instance-ids     i-0c9b283b31d6b5ca7 --document-name AWS-RunShellScript --parameters 'commands=["<cmd>"]'`
+      `aws ssm send-command --instance-ids i-0c9b283b31d6b5ca7 --document-name AWS-RunShellScript --parameters 'commands=["<cmd>"]'`
       then `aws ssm get-command-invocation --command-id <id> --instance-id i-0c9b283b31d6b5ca7` — no interactive
       session, no operator grant needed, works today with the credentials already in this workspace.
 - [x] ✅ [DEVOPS] P3. **NEW 2026-08-08 — find the REAL cause of the 2026-07-30 14:54-15:01Z mass `tmux_session_lost`
@@ -259,8 +259,8 @@ not just noting.
       value-identical (both sides set 600s), confirming there is nothing left to ship — rebasing `030c8b95` forward
       would only reintroduce a stale comment. Verified: `PYRIGHT_TIMEOUT=${PYRIGHT_TIMEOUT:-600}` present at
       `features-service/scripts/quality-gates.sh:46` on `origin/live-defi-rollout` HEAD (`3384ea29`);
-      `git merge-base     --is-ancestor 7c86a6b1 origin/live-defi-rollout` → true. No commit needed; local scratch
-      branch `_stranded_pyright_fix` used for the rebase attempt was discarded (never pushed).
+      `git merge-base --is-ancestor 7c86a6b1 origin/live-defi-rollout` → true. No commit needed; local scratch branch
+      `_stranded_pyright_fix` used for the rebase attempt was discarded (never pushed).
 - [x] ✅ [SCRIPT] P2. **New, opened by the `main-backmerge-to-ldr` pipefail+`-e` root-cause fix below.** The template
       SSOT (`unified-trading-pm@598aefd8`) and 2 repos' live copies (`features-service@ccd01cb8`,
       `agent-orchestrator@d43bbde`) are fixed, but `detect_template_drift.py --workflows` shows this template has 28
@@ -268,12 +268,12 @@ not just noting.
       OLD copy carries the SAME latent bug (silently dies, zero output, whenever the oldest commit in a
       `live-defi-rollout..main` range lacks a `Promoted-From-LDR:` trailer — not rare, any non-squash-promote commit mix
       triggers it). Run the fleet-wide rollout
-      (`bash scripts/workflow-templates/rollout-workflow-templates.sh     --template main-backmerge-to-ldr.yml`, no
-      `--repo` filter) + a quickmerge per touched repo, once host capacity allows (this session deliberately scoped to
-      only the 2 repos actively observed broken, to avoid piling more QG load onto the same contended box this doc
-      tracks). Done when: `detect_template_drift.py --workflows` shows 0 copies still carrying the pre-fix content for
-      this template. **DONE 2026-07-31 (slot 4, cicd)** — a dry-run against the actual auto-rollout target set (not the
-      todo's assumed ~25) found only 5 repos genuinely still on pre-fix content (`system-integration-tests@2d35879`,
+      (`bash scripts/workflow-templates/rollout-workflow-templates.sh --template main-backmerge-to-ldr.yml`, no `--repo`
+      filter) + a quickmerge per touched repo, once host capacity allows (this session deliberately scoped to only the 2
+      repos actively observed broken, to avoid piling more QG load onto the same contended box this doc tracks). Done
+      when: `detect_template_drift.py --workflows` shows 0 copies still carrying the pre-fix content for this template.
+      **DONE 2026-07-31 (slot 4, cicd)** — a dry-run against the actual auto-rollout target set (not the todo's assumed
+      ~25) found only 5 repos genuinely still on pre-fix content (`system-integration-tests@2d35879`,
       `trading-agent-service@6de84ab`, `unified-trading-system-ui@4a298786`, `deployment-ui@6f9961c`,
       `e2e-testing@5ef69c5` — the other 19 baselined/tracked repos already matched the current SSOT, apparently from an
       earlier unrelated full-template sync). PM itself is excluded from the automated rollout by design
@@ -423,7 +423,7 @@ not just noting.
   no-op" directive (this repo's 6th dispatch, well past that bar) and MDPS not yet carrying the mitigation (checked
   `scripts/quality-gates.sh` — only a separate `MDPS_PERF_TEST_TIMEOUT_SECONDS` override existed for the unrelated perf
   gate, nothing for the main pytest slice's `PYTEST_TIMEOUT`), applied the same proven pattern as
-  `unified-trading-api@71cdda0`/`features-service@c092df50`: `market-data-processing-service@8fa00db` adds
+  `unified-trading-api@71cdda0`/`features-service@c092df50`: `market-data-processing-service@42d4c1f` adds
   `PYTEST_TIMEOUT=${PYTEST_TIMEOUT:-300}` to `scripts/quality-gates.sh` (confirmed this repo sources `base-service.sh`,
   the `PYTEST_TIMEOUT`-keyed copy of the PARGS line, not `base-library.sh`'s `PYTEST_TIMEOUT_SECONDS` — right variable
   name verified before editing, not assumed from the other repos' diffs). Verified locally: full

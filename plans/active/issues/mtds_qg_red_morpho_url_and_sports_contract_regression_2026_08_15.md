@@ -24,7 +24,12 @@ priority: P1
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-context_scope: []
+context_scope:
+  [
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_constants.py,
+    instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py,
+  ]
 ---
 
 # market-tick-data-service QG RED — two unrelated pre-existing findings
@@ -77,10 +82,27 @@ caused by my diff) via `git log -1 -- <file>` on each flagged file, both showing
 - [ ] [CODE] P1. Route `market_tick_data_service/cli/handlers/_oracle_prices_constants.py:556`'s `_MORPHO_BLUE_API_URL`
       literal through `get_evm_protocol_rest_url("morpho")` from `unified_api_contracts.registry` instead of the bare
       `https://blue-api.morpho.org/graphql` string. Repo: market-tick-data-service.
-- [ ] [CODE] P1. Restore the 5 missing tracked contract-call patterns (classify_venue_error, ADAPTER_FETCH_FAILED,
-      record_captured, record_empty, record_failed) in
-      `instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py` that
-      `4844b6286b21c645a81cb05b43801da4bca03ff3`'s api_football fixture-existence refactor dropped below the
-      `adapter_contract_baseline.yaml` floor of 19 — or, if the drop is a legitimate intentional consolidation,
-      regenerate the baseline per the QG script's own instructions (`--regenerate-baseline`, never to mask a real
-      regression). Repo: instruments-service.
+- [x] ✅ [CODE] P1. **RESOLVED — verified live 2026-08-15.** Re-ran the actual scanner
+      (`python3 unified-trading-pm/scripts/quality_gates/check_adapter_contract_regression.py --workspace-root <ws>`)
+      against the current checkout: `OK — 363 baselined file(s) at or above minimum` (no violations). Root cause was a
+      legitimate cohesion-module split, not a real drop: `4844b6286b`'s refactor extracted the fixture-existence
+      cross-check into a new sibling file, `sports_reference_fixture_existence_gate.py` (308 lines, confirmed real
+      `record_empty(...)` calls at lines 147/257/273/294 — not a stub), to keep `sports_reference_core.py` under its
+      900-line cap (895→1004 before the split, 775 after). The baseline was correctly regenerated same-day
+      (`unified-trading-pm@438838ae72`, "bump adapter-contract baseline for sports_reference_core.py cohesion-module
+      split", landed 2026-08-15 02:23:11+0100, confirmed on `origin/live-defi-rollout`): `sports_reference_core.py`
+      floor 19→14 + new entry `sports_reference_fixture_existence_gate.py` floor 6 (14+6=20 ≥ original 19 — call count
+      went UP, not down). This is the SAME commit already cited in
+      `sports_honest_coverage_gap_closure_2026_08_14.md:215`'s "FIXED, shipped, tested" claim — that claim was accurate;
+      no correction needed there. This doc's todo-1 (hardcoded morpho URL, `_oracle_prices_constants.py:556`) is
+      UNRELATED to this todo and still genuinely open (re-verified: literal `https://blue-api.morpho.org/graphql` still
+      present, not yet routed through `get_evm_protocol_rest_url("morpho")`) — MTDS `quality-gates.sh` is still red on
+      that finding alone, separate decision, not part of this todo's scope.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (3 entries).
+- **2026-08-15 (P1 re-investigation)**: confirmed the adapter-contract-regression finding is resolved (baseline bump
+  already shipped + verified via live scanner re-run); flipped that todo. The morpho-URL todo remains open and unrelated
+  — `sports_honest_coverage_gap_closure_2026_08_14.md`'s "shipped, tested" claim was about the sports fix only and is
+  confirmed accurate.

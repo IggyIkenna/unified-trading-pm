@@ -88,7 +88,7 @@ Codex SSOT: `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`
 - [ ] (h) **Fetch-failure → `attempted_failed`, never `empty_confirmed` — PER-ADAPTER swallow audit (codified
       2026-06-01)**: every instruments-service reference-data adapter doing external I/O (vendor REST/SDK, RPC,
       subgraph) must route a fetch error to `record_failed` (`attempted_failed`), NOT swallow it
-      (`except: … return     []/None`) into a `record_empty` (`empty_confirmed`) — a swallowed timeout/auth/RPC error
+      (`except: … return []/None`) into a `record_empty` (`empty_confirmed`) — a swallowed timeout/auth/RPC error
       mislabeled as honest-empty pollutes the IS manifest, which then propagates wrong `expected_unattempted`/skip
       decisions downstream (MTDS reads the IS manifest). Grep:
       `rg -U "except\b[^\n]*:\s*\n(\s*[^\n]*\n)?\s*return (\[\]|None|\{\}|pd\.DataFrame\(\))" instruments-service/ --include="*.py" -g '!*test*'`

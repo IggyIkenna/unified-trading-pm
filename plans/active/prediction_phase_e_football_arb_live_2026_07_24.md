@@ -105,12 +105,16 @@ context_scope:
 
 ### E1 — Thread the fixture id onto BOTH prediction venues (Leg 1)
 
-- [ ] [BACKEND] P1. **Verified end-to-end fixture link on Polymarket + Kalshi soccer** — confirm A4/B produced a
+- [x] ✅ [BACKEND] P1. **Verified end-to-end fixture link on Polymarket + Kalshi soccer** — confirm A4/B produced a
       resolved `af_fixture_id` (or `build_fixture_id` string) on Polymarket soccer markets, and BUILT the same for
       Kalshi (which has none today). Keep the prediction canonical naming; the fixture id is an ADDITIVE attribute.
       Acceptance: a Polymarket market and a Kalshi market for the same real fixture resolve to the SAME `af_fixture_id`,
       and both resolve to the same odds-tick `af_fixture_id`. (repos: instruments-service, market-tick-data-service,
-      unified-api-contracts)
+      unified-api-contracts) — **CLOSED (2026-08-15, /plan-reconcile, operator interactive)**: this todo's "has none
+      today" framing was stale — E2 (below) shipped Kalshi soccer team resolution feeding the shared
+      `PredictionFixtureResolver` (`instruments-service@ec8633ac` + `unified-api-contracts@e7ed754e`, 82.6%→~100% on 92
+      live fixtures), satisfying the fixture-link acceptance criteria this todo describes. Closing citing E2's shipment
+      rather than duplicating it as separately-open.
 
 ### E2 — Close the team-name matching gap to ~0% (Leg 2)
 
@@ -149,9 +153,9 @@ context_scope:
       `/codex/04-architecture/cross-venue-prediction-arb-detection.md`. (repos: features-service)
 - [x] ✅ [BACKEND] P2. **Venue-derivation for prediction/sports `instrument_id`s in execution-service — BOTH sites FIXED
       (2026-07-18).** The naive `split(":")[0]` returned the TYPE/SPORT for TYPE-first ids. (1) ✅
-      `validation/instrument_format.py::get_venue_from_instrument_id` `execution-service@e3707472` (latent, no prod
+      `validation/instrument_format.py::get_venue_from_instrument_id` `execution-service@ccd6883b` (latent, no prod
       caller). (2) ✅ the production-critical sibling `utils/instruction_type.py::extract_venue`
-      `execution-service@730fcd1c0` — it had the identical bug but is HEAVILY USED (~40 call sites: matching engines,
+      `execution-service@8fc542e0d` — it had the identical bug but is HEAVILY USED (~40 call sites: matching engines,
       preflight_gate, `infer_instruction_type`, `get_asset_group_from_instrument_id`) and HARD-CRASHED
       (`UnknownVenueError`) on a type-first id. Both use the SAME additive robust-parse via UAC `VENUE_CATEGORY_MAP`
       (venue-first byte-unchanged for cefi/defi/tradfi; type-first → `parts[1]`); QG-green, tests cover both. (repos:

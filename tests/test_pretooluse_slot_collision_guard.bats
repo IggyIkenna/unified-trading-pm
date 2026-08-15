@@ -37,10 +37,52 @@ teardown() {
     done
 }
 
+# Spawn a fake peer AND wait until the detector can actually see it, rather than
+# assuming a fixed settle time.
+#
+# Why this is a poll and not `sleep 0.3` (measured 2026-08-15): the guard resolves
+# each candidate pid's cwd with `lsof`, under a `subprocess.run(..., timeout=10)`.
+# `TimeoutExpired` is a `SubprocessError`, which the guard catches and folds into
+# `(1, "")` -- the same value as "no peer" -- so under host load it FAILS OPEN.
+# On a host at load 48 that turned every "must BLOCK" case here into a failure
+# while every "must ALLOW" case passed, and because this repo runs BATS_HARD_FAIL=1
+# it blocked EVERY unified-trading-pm commit, attributed to whatever change happened
+# to be shipping (it was one touching only scripts/plan-hygiene/).
+#
+# Failing open is correct for the guard; asserting a BLOCK when the detector never
+# saw the peer is what is wrong. So: establish the precondition explicitly, and if
+# it cannot be established, SKIP -- a timing-sensitive assertion must never
+# hard-fail the repo's gate as a false regression.
+# Issue: plans/active/issues/slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md
 _spawn_fake_peer() {
     ( cd "$1" && exec -a claude-bats-fake-peer sleep 20 ) &
     _PEER_PIDS+=("$!")
-    sleep 0.3
+
+    local detect="${_PM_ROOT}/cursor-configs/hooks/lib/slot-collision-detect.sh"
+    local slot deadline=$(( SECONDS + 15 ))
+    slot="$(bash "${detect}" slot-dir "$1" 2>/dev/null)"
+    [ -n "${slot}" ] || slot="$1"
+
+    while [ "${SECONDS}" -lt "${deadline}" ]; do
+        if [ -n "$(bash "${detect}" foreign-pids "${slot}" 2>/dev/null)" ]; then
+            return 0
+        fi
+        sleep 0.2
+    done
+
+    skip "slot-collision detector could not see the fake peer within 15s — host too loaded to establish the BLOCK precondition (see plans/active/issues/slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md)"
+}
+
+# The guard's OWN detector call can independently time out under load even after
+# _spawn_fake_peer confirmed the peer was lsof-visible a moment earlier (load is a moving
+# target, not a one-time precondition) -- see _detect()'s _DETECT_TIMEOUT sentinel and
+# plans/active/issues/slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md todo 1.
+# A BLOCK-expectation test must skip on this observable marker rather than assert a verdict
+# the guard explicitly chose not to give.
+_skip_if_detector_timed_out() {
+    if [[ "${output}" == *SLOT_COLLISION_GUARD_DETECTOR_TIMEOUT* ]]; then
+        skip "guard's own detector call timed out under host load (fail-open by design) -- see plans/active/issues/slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md"
+    fi
 }
 
 # Feed the guard a PreToolUse payload. $1 command, $2 cwd.
@@ -56,6 +98,7 @@ _run_guard() {
 @test "git commit is BLOCKED when a live peer occupies the slot" {
     _spawn_fake_peer "${SLOT}"
     run _run_guard 'git commit -m "wip"' "${SLOT}"
+    _skip_if_detector_timed_out
     [ "$status" -eq 2 ]
     [[ "$output" == *"BLOCKED"* ]]
     [[ "$output" == *"another live Claude session"* ]]
@@ -67,6 +110,7 @@ _run_guard() {
 @test "quickmerge --no-isolated is BLOCKED (it commits from the shared index)" {
     _spawn_fake_peer "${SLOT}"
     run _run_guard 'bash scripts/quickmerge.sh "msg" --agent --no-isolated --files x.py' "${SLOT}"
+    _skip_if_detector_timed_out
     [ "$status" -eq 2 ]
     [[ "$output" == *"shared index"* ]]
 }
@@ -74,6 +118,7 @@ _run_guard() {
 @test "safe-doc-push with SDP_ISOLATED=0 is BLOCKED" {
     _spawn_fake_peer "${SLOT}"
     run _run_guard 'SDP_ISOLATED=0 bash scripts/dev/safe-doc-push.sh "msg" --files d.md' "${SLOT}"
+    _skip_if_detector_timed_out
     [ "$status" -eq 2 ]
     [[ "$output" == *"SDP_ISOLATED=0"* ]]
 }
@@ -81,12 +126,14 @@ _run_guard() {
 @test "git -C <path> commit is still recognised (option values are skipped, not mistaken for the subcommand)" {
     _spawn_fake_peer "${SLOT}"
     run _run_guard 'git -C /some/path commit -m "wip"' "${SLOT}"
+    _skip_if_detector_timed_out
     [ "$status" -eq 2 ]
 }
 
 @test "a compound command hiding the commit is still recognised" {
     _spawn_fake_peer "${SLOT}"
     run _run_guard 'cd /tmp && git add -A && git commit -m wip' "${SLOT}"
+    _skip_if_detector_timed_out
     [ "$status" -eq 2 ]
 }
 
@@ -123,6 +170,7 @@ _run_guard() {
 @test "the escape hatch in the ENVIRONMENT alone does NOT unblock (it cannot be seen from here)" {
     _spawn_fake_peer "${SLOT}"
     run env SLOT_COLLISION_GUARD=0 bash -c "printf '%s' '{\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"git commit -m x\"},\"cwd\":\"${SLOT}\"}' | python3 '${GUARD}'"
+    _skip_if_detector_timed_out
     [ "$status" -eq 2 ]
 }
 

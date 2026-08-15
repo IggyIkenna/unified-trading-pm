@@ -202,7 +202,7 @@ execution of the paired legs, once the decision to enter (or exit) is made, is n
 § 6. The current `topology_requirements` rows for `CARRY_BASIS_PERP` and `CARRY_STAKED_BASIS` (execution `isolated`,
 strategy `shared OK`, co-location `no`, min SLA `standard`) are a **discrepancy** the paired deployment-profile
 derivation todo resolves
-([`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)
+([`/plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)
 todo 8): `Low` latency requires execution + strategy co-located on the same VM at min SLA `premium`, matching the
 `MARKET_MAKING_CONTINUOUS` row. The basis/staking-basis archetypes join market-making and arbitrage-structural as
 `co_located_vm` families.
@@ -245,9 +245,9 @@ gap**, not the decision latency:
 The two single-sided archetypes in this family — `YIELD_ROTATION_LENDING` and `YIELD_STAKING_SIMPLE` — have no paired
 legs, so the inter-leg gap concept does not apply. These inherit the **Medium** category from the archived doc's closest
 analogs (Funding Rate Harvest / Yield Optimization rows) per the audit plan's
-[rubric table](/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md). Decision latency alone
-governs; the P3 population todo for `vol-trading.md` / `event-driven.md` / `portfolio.md` will apply the same derivation
-pattern and state the reasoning explicitly in each doc.
+[rubric table](/plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md). Decision
+latency alone governs; the P3 population todo for `vol-trading.md` / `event-driven.md` / `portfolio.md` will apply the
+same derivation pattern and state the reasoning explicitly in each doc.
 
 ## UI dashboard (shared)
 

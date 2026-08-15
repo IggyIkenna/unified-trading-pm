@@ -224,3 +224,4 @@ is done. Do not start manually before then.
   gated on that row's resolution. This should end the 7-round redispatch loop: once the operator rules via the durable
   row, `regen_backlog_from_plan.py` materializes a real `--ruling` task instead of a worker having to rediscover the
   same state each cycle.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (4 entries).

@@ -139,15 +139,14 @@ without knowing what it is). No further action was taken on `deployment-api` —
       `## live-defi-rollout...origin/live-defi-rollout` (no longer behind). `find deployment-api -iname mtds_meta.py`
       now finds `./deployment_api/services/data_status/mtds_meta.py` — confirms hypothesis (a): pure host-local checkout
       staleness, not a genuine upstream rename. No baseline change was needed. Verified via a fresh full
-      `bash scripts/quality-gates.sh` run from `execution-service`:
-      `[5.83/6] ADAPTER CONTRACT-CALL REGRESSION     RATCHET` now reads
-      `[check_adapter_contract_regression] OK — 328 baselined file(s) at or above minimum.`, exit code 0. The deferred
-      `execution-service` fix (`execution_service/trade_execution/adapters/ibkr_tradfi.py::close()`) then shipped clean
-      via quickmerge — `execution-service@4485e0bd`.
+      `bash scripts/quality-gates.sh` run from `execution-service`: `[5.83/6] ADAPTER CONTRACT-CALL REGRESSION RATCHET`
+      now reads `[check_adapter_contract_regression] OK — 328 baselined file(s) at or above minimum.`, exit code 0. The
+      deferred `execution-service` fix (`execution_service/trade_execution/adapters/ibkr_tradfi.py::close()`) then
+      shipped clean via quickmerge — `execution-service@d75c99a0`.
 - [x] ✅ 2. [INFRA] P2. N/A — `mtds_meta.py` was never actually renamed/removed upstream (see todo 1); this conditional
       baseline-regeneration step does not apply.
 - [ ] 3. [INFRA] P3. Consider whether STEP 5.83 should validate against a canonical/fresh state (e.g.
-      `git show     origin/<branch>:<path>` for sibling repos) rather than each shipping repo's local, possibly-stale
+      `git show origin/<branch>:<path>` for sibling repos) rather than each shipping repo's local, possibly-stale
       sibling checkouts on a shared multi-tenant host — so one host's checkout drift doesn't block shipping from every
       OTHER repo on that same host. Cross-reference
       `/plans/archive/2026_07/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md`
@@ -178,7 +177,7 @@ without knowing what it is). No further action was taken on `deployment-api` —
 - **2026-08-03 (resolved)** — Retried shipping the deferred `execution-service` fix. `deployment-api`'s local checkout
   had caught up to `origin/live-defi-rollout` (the dead WIP file was gone, `mtds_meta.py` present) — todo 1 done, no
   baseline regeneration needed (todo 2 N/A). Full `quality-gates.sh` from `execution-service` passed clean (exit 0, STEP
-  5.83 `OK`) and `quickmerge.sh --agent` shipped `execution-service@4485e0bd`. Blocking scope of this issue is closed;
+  5.83 `OK`) and `quickmerge.sh --agent` shipped `execution-service@d75c99a0`. Blocking scope of this issue is closed;
   leaving `status: open` only for the still-outstanding, non-blocking todo 3 design-hardening suggestion.
 
 ## na-eligibility-audit verdict
@@ -209,7 +208,7 @@ no stated decision, not a bounded outcome a worker can execute. No RECLASSIFY, n
 
 **na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:45b026ac7efc1ece]: KEEP-NA,
 valid — The doc's actual blocking scope (todo 1, deployment-api checkout staleness) was fully resolved same-day
-2026-08-03, verified via a clean quality-gates.sh re-run and a shipped quickmerge (execution-service@4485e0bd); todo 2
+2026-08-03, verified via a clean quality-gates.sh re-run and a shipped quickmerge (execution-service@d75c99a0); todo 2
 is N/A (no baseline regen was needed since mtds_meta.py was never actually renamed upstream). status: open is
 deliberately retained only for the non-blocking todo 3. The sole remaining open item is explicitly phrased 'Consider
 whether STEP 5.83 should validate against a canonical/fresh state... rather than each shipping repo's local,

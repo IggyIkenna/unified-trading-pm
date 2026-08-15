@@ -19,7 +19,7 @@ entries:
   - repo: execution-service
     file: tests/defi_execution/unit/test_recursive_loop_orchestrator.py
     kind: skip
-    line: 249
+    line: 264
     status: pending_removal
     successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
     snippet:

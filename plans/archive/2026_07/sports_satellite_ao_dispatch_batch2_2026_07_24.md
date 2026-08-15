@@ -48,17 +48,17 @@ related:
     /plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,
-    /plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
+    /plans/archive/2026_08/sports_odds_feature_naming_canonicalization_2026_07_21.md,
     /plans/active/data_completion_sports_2026_07_24.md,
     /plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md,
-    /plans/active/sports_prelaunch_cf5_verify_residual_2026_07_24.md,
+    /plans/archive/2026_08/sports_prelaunch_cf5_verify_residual_2026_07_24.md,
     /plans/active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md,
     /plans/active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md,
     /plans/archive/issues/sports_legacy_duplicate_triage_2026_07_22.md,
-    /plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md,
+    /plans/archive/2026_08/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md,
     /plans/active/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md,
     /plans/archive/issues/sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md,
-    /plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
+    /plans/archive/2026_08/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
     /plans/archive/issues/mdt_legacy_canonical_row_gap_2026_07_16.md,
     /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
   ]
@@ -88,7 +88,7 @@ source: >-
   sports_closeout_batch1_ao_ready_2026_07_24.md pattern for the master closeout plan.
 context_scope:
   [
-    /plans/active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md,
@@ -396,7 +396,8 @@ context_scope:
       `ODDS_COLUMNS`-registry PIT horizon-gating (`apply_horizon_gate()` only walks a fixed list, no prefix match) — see
       the new `[DATA] P2` todo below. **Separate finding filed, NOT part of this todo's scope**:
       `compute_odds_batch()`'s dead-code `bookmaker_home_cols` path silently overwrites `best_odds_*` with a mean
-      instead of the correct max — see `issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md`.
+      instead of the correct max — see
+      `/plans/archive/issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md`.
 - [x] ✅ [DATA] P2. **PIT horizon-gating gap for the new `odds_decimal_<outcome>_<venue>` columns** (found while
       shipping the todo above): `feature_expectations.py`'s `ODDS_COLUMNS` registry drives PIT horizon-gating
       (`apply_horizon_gate()`), which only walks a fixed column list — the new dynamic per-venue columns aren't in it
@@ -709,7 +710,7 @@ context_scope:
       `kickoff_utc`/`commence_time` (naming varies by corpus generation, same fallback as `_derive_match_midnight_us`)
       is a second independent signal. 5 new tests (years-stale-bm_time, fresh-scrape-not-dropped,
       partial-drop-still-processes, years-past-kickoff, genuine-near-term-kickoff-not- dropped) — 67/67 pass.
-      `quality-gates.sh --no-fix` fresh green (75s, sentinel not cached). market-data-processing-service@aa6e8ac.
+      `quality-gates.sh --no-fix` fresh green (75s, sentinel not cached). market-data-processing-service@57825cb.
 
 ### From `issues/sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md`
 

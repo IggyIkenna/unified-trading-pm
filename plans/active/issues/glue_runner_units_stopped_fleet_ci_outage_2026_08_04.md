@@ -126,19 +126,18 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       explain the outage — `Restart=always` only stands down on a deliberate `systemctl stop`/equivalent. Checked every
       channel that could have issued it, all NEGATIVE: (1) SSH — `last -F` shows no login within 2 weeks of the
       incident; (2) SSM Run Command — `aws ssm list-commands` shows one command that day, ~9h before the incident, none
-      in-window (success or failed); (3) SSM Session Manager (interactive) —
-      `aws ssm describe-sessions --state     History` shows zero sessions that day; (4) host crontab / `/etc/cron.d` —
-      no job resembling a targeted stop; (5) the `github-glue-slot-refresh-*` timers (a DIFFERENT, unrelated mechanism —
-      periodic `git pull` of the runner's repo mirror, `Type=oneshot`/`Restart=no`, no stop capability) fired ~1min
-      AFTER the incident window, ruled out on both mechanism and timing; (6) `systemd-oomd` — confirmed `inactive` on
-      this host; (7) kernel OOM / memory pressure — zero `oom`/`killed process` lines in `journalctl -k`/`dmesg` for the
-      window, and `sar -r` shows the host at 15-18% memory used at the time (comfortable, not under pressure). No
-      `auditd` was installed, so the actual `systemctl stop` invocation's calling UID/process could not be attributed
-      after the fact — that IS the real, fixable gap. **Installed `auditd` + `audispd-plugins` on the planning VM via
-      SSM** with a watch rule on `/usr/bin/systemctl` execution (`-w /usr/bin/systemctl -p x -k systemctl_exec`),
-      verified `active` + rule loaded (`auditctl -l`). This does not explain THIS incident, but any recurrence is now
-      attributable via `ausearch -k     systemctl_exec`. Leaving this specific incident's trigger formally unknown
-      rather than guessing.
+      in-window (success or failed); (3) SSM Session Manager (interactive) — `aws ssm describe-sessions --state History`
+      shows zero sessions that day; (4) host crontab / `/etc/cron.d` — no job resembling a targeted stop; (5) the
+      `github-glue-slot-refresh-*` timers (a DIFFERENT, unrelated mechanism — periodic `git pull` of the runner's repo
+      mirror, `Type=oneshot`/`Restart=no`, no stop capability) fired ~1min AFTER the incident window, ruled out on both
+      mechanism and timing; (6) `systemd-oomd` — confirmed `inactive` on this host; (7) kernel OOM / memory pressure —
+      zero `oom`/`killed process` lines in `journalctl -k`/`dmesg` for the window, and `sar -r` shows the host at 15-18%
+      memory used at the time (comfortable, not under pressure). No `auditd` was installed, so the actual
+      `systemctl stop` invocation's calling UID/process could not be attributed after the fact — that IS the real,
+      fixable gap. **Installed `auditd` + `audispd-plugins` on the planning VM via SSM** with a watch rule on
+      `/usr/bin/systemctl` execution (`-w /usr/bin/systemctl -p x -k systemctl_exec`), verified `active` + rule loaded
+      (`auditctl -l`). This does not explain THIS incident, but any recurrence is now attributable via
+      `ausearch -k systemctl_exec`. Leaving this specific incident's trigger formally unknown rather than guessing.
 - [ ] [INFRA] P2. **Close the monitoring gap.** The glue-runner-crash-loop-watchdog only flags units actively
       crash-looping (repeated restarts), so a runner sitting cleanly `inactive`/stopped (Restart=always suppressed by an
       explicit stop) evades detection — exactly this incident. Extend the watchdog (or add a sibling check) to alert
@@ -177,17 +176,17 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
 - [x] ✅ [INFRA] P1. **RESOLVED 2026-08-05 (same session, later).** `writer-1/2/3` on the SAME planning VM
       (`ip-172-31-3-59`, instance `i-042a6332509482556`, unified-trading-pm's own writer pool) — root cause was a
       **diagnostic miss, not a genuinely unfixable hang**: my earlier "root cause NOT found" checks
-      (`systemctl status     actions.runner.*`, `journalctl -u actions.runner.*`) matched ZERO units, because these
-      runners are NOT self-registered `actions.runner.*` services — they're custom systemd TEMPLATE units,
+      (`systemctl status actions.runner.*`, `journalctl -u actions.runner.*`) matched ZERO units, because these runners
+      are NOT self-registered `actions.runner.*` services — they're custom systemd TEMPLATE units,
       `github-glue-runner@writer-N.service` (unified-trading-pm) and `github-glue-runner-ao@writer-1.service`
       (agent-orchestrator, a SEPARATE registration + a SEPARATE `/opt/github-glue-runners-ao/` directory tree on the
       same host — do not confuse the two pools). Every earlier "restart"/"check" against the wrong unit name silently
       no-op'd. With the real names: `systemctl status`/`journalctl -u github-glue-runner@writer-N.service` showed two
       DIFFERENT genuine failure shapes, not one — (a) agent-orchestrator's `writer-1` had never actually been restarted
       this incident at all (`Active: since Aug 04 09:43`) and was looping
-      `TaskCanceledException`/`SocketException(125)     Operation canceled` on stale TLS reads against the Actions
-      broker (`pipelinesghubeus3.actions.githubusercontent.com`) — a long-lived HTTP/2 connection that died without the
-      client detecting it, a known self-hosted-runner failure class; (b) unified-trading-pm's `writer-1/2/3`, already
+      `TaskCanceledException`/`SocketException(125) Operation canceled` on stale TLS reads against the Actions broker
+      (`pipelinesghubeus3.actions.githubusercontent.com`) — a long-lived HTTP/2 connection that died without the client
+      detecting it, a known self-hosted-runner failure class; (b) unified-trading-pm's `writer-1/2/3`, already
       `systemctl restart`-ed earlier this session via the correct unit name, were genuinely stuck silently at init
       (`_diag` log frozen at exactly 4 startup lines for 30+ min despite the process actively consuming CPU) — DNS,
       disk, and `curl https://api.github.com` all confirmed healthy, ruling out host-level network/infra causes.
@@ -222,7 +221,7 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       the SPECIFIC symptom this escalation was dispatched for: main's copy of unified-api-contracts'
       `.github/workflows/quality-gates-v2.yml` was stale, still requiring
       `self_hosted_runner_labels: ["self-hosted","glue"]`, even though
-      `unified-trading-pm/scripts/workflow-templates/     self-hosted-qg-repos.txt` removed unified-api-contracts on
+      `unified-trading-pm/scripts/workflow-templates/ self-hosted-qg-repos.txt` removed unified-api-contracts on
       2026-08-05 (public repo, GitHub-hosted is unmetered) and `live-defi-rollout`'s copy already carries the correct
       `ubuntu-latest` default — main just never got that specific promotion. Re-rolled main's copy directly (commit
       `5acc9859`, `.github/**`-only carve-out) — confirmed GREEN afterward (run `31069093947`, all legs on
@@ -280,9 +279,9 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       independently confirmed via `journalctl` to be clean `Result=success` exits with zero actual failures — `glue-3`/
       `glue-5` even self-"recovered" ~6 minutes later purely from poll-timing luck, the exact false-alert-then-bookend
       flap this fix eliminates structurally rather than by chance. **Fix**: gate `is_crash_looping()` on
-      `Result !=     success` (systemd's verdict on the unit's last completed run) in addition to the existing checks —
-      the original 2026-07-28 GCP_PROJECT-missing incident this watchdog was built for exited non-zero every time, so
-      real crash-loop detection is unaffected. **Deployed live** to `i-042a6332509482556` (`/usr/local/sbin/`, plus the
+      `Result != success` (systemd's verdict on the unit's last completed run) in addition to the existing checks — the
+      original 2026-07-28 GCP_PROJECT-missing incident this watchdog was built for exited non-zero every time, so real
+      crash-loop detection is unaffected. **Deployed live** to `i-042a6332509482556` (`/usr/local/sbin/`, plus the
       `/opt/github-glue-runners/repo/` and `/opt/glue-deploy/unified-trading-pm/` mirrors — all three previously
       divergent, now matching one hash) and verified via a manual trigger (`0/17 crash-looping`, empty `alerted-units`
       state file) BEFORE the repo commit — host QG capacity was critical at diagnosis time (load avg ~168, ~60MB free

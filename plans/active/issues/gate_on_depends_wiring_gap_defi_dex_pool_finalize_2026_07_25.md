@@ -338,9 +338,9 @@ distinct plan pair.
       separate slot dispatches) that `GET /api/backlog/<finalize-task>/blockers` reports `"ready (no blockers)"` while
       the real upstream tasks are still non-`done` in the live backlog. Repo: agent-orchestrator. **Done when**: root
       cause identified (e.g. wiring only running once at ingestion vs. every regen tick, or a
-      `gated_plans`/`file_to_ids` ordering race), fixed, and a regression test proves a `gate_on_depends:     true`
-      plan's tasks carry the upstream ids in `prereqs.completed_tasks` immediately after a regen tick that ingests both
-      plans together (the same-tick-ingestion shape, not just the already-covered empty-upstream cases).
+      `gated_plans`/`file_to_ids` ordering race), fixed, and a regression test proves a `gate_on_depends: true` plan's
+      tasks carry the upstream ids in `prereqs.completed_tasks` immediately after a regen tick that ingests both plans
+      together (the same-tick-ingestion shape, not just the already-covered empty-upstream cases).
 - [x] [BACKEND] P2. **Add a standing dispatch-time re-check** as a second line of defense: even without the root-cause
       fix, `pick_next_task()` (or the `/blockers` endpoint) should independently verify a `gate_on_depends: true` task's
       cited upstream plan file's own on-disk `- [ ]`/`- [x]` checkbox count before dispatching it, refusing dispatch
@@ -357,13 +357,13 @@ distinct plan pair.
       parent plan_ref while the finalize plan's own tasks exist normally — so `_wire_gate_on_depends_prereqs` has
       nothing to attach as an unmet prerequisite and the gate reads satisfied by omission. Both repro cases share a
       candidate trigger already flagged in the Progress Log: the parent's one remaining open todo has a `**bold**`
-      phrase immediately after the `P<n>.` tag (`- [ ] [DATA] P3. **Prove force +     skip...**`) — worth checking
-      whether `regen_backlog_from_plan.py`'s todo-derivation regex mishandles a bold span directly after the priority
-      tag, causing that specific todo to never derive into a backlog row at all. Repo: agent-orchestrator. **Done
-      when**: root cause identified and fixed, and a regression test reproduces one of the two recorded repro shapes (a
-      parent plan whose sole remaining open todo has `**bold**` immediately after its `P<n>.` tag) and confirms the todo
-      now derives a backlog row + the downstream `gate_on_depends` finalize task correctly reports the unmet
-      prerequisite instead of `"ready (no blockers)"`.
+      phrase immediately after the `P<n>.` tag (`- [ ] [DATA] P3. **Prove force + skip...**`) — worth checking whether
+      `regen_backlog_from_plan.py`'s todo-derivation regex mishandles a bold span directly after the priority tag,
+      causing that specific todo to never derive into a backlog row at all. Repo: agent-orchestrator. **Done when**:
+      root cause identified and fixed, and a regression test reproduces one of the two recorded repro shapes (a parent
+      plan whose sole remaining open todo has `**bold**` immediately after its `P<n>.` tag) and confirms the todo now
+      derives a backlog row + the downstream `gate_on_depends` finalize task correctly reports the unmet prerequisite
+      instead of `"ready (no blockers)"`.
 
 ## 2026-07-30 todo 2 shipped (slot 9) — on-disk defense-in-depth check
 

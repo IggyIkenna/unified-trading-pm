@@ -151,8 +151,8 @@ precondition-satisfied but not yet executed to completion. Per `/codex/15-runboo
       deployment-service)
 - [ ] [INFRA] P3. Investigate the observed ~70min gap between the DeFi consolidator's `consolidator.lock` going stale
       (`_LOCK_TTL_SECONDS=300s`) and it actually being reclaimed, despite
-      `uts-prod-manifest-consolidator-market-     data-defi` Cloud Run executions completing "successfully" every
-      ~60-70s throughout that window — either a reclaim-race in `_is_fully_empty_confirmed_leaf`-adjacent lock logic
+      `uts-prod-manifest-consolidator-market- data-defi` Cloud Run executions completing "successfully" every ~60-70s
+      throughout that window — either a reclaim-race in `_is_fully_empty_confirmed_leaf`-adjacent lock logic
       (`manifest_consolidator.py`'s `_is_lock_fresh`/`_acquire_lock`) or the "successful" executions aren't actually
       attempting the defi bucket per cycle. Self-resolved before full diagnosis this session; only 1 occurrence observed
       so far — investigate if it recurs. (repo: unified-trading-library)

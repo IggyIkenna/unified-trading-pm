@@ -54,3 +54,25 @@ workspace-manifest.json
 # valid to invalid JSON — the exact same "author-verified-green tree gets silently mutated after
 # staging" class as the manifest bug above, just for a different file family.
 cursor-configs/*.code-workspace
+
+# plans/*.md hit the SAME "author-verified-green tree gets silently mutated after staging" class
+# as the two entries above, for prose instead of JSON: prettier's markdown printer has a
+# non-idempotent reflow bug for a 2nd+ paragraph nested inside a list item (each pass ADDS leading-
+# space padding to continuation lines instead of converging — root-caused
+# plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md, 2026-08-03).
+# check_prosewrap_padding.sh (shrinking ratchet) was shipped to detect it, but detection-only could
+# not keep pace with the corpus's commit velocity — direct proof gathered 2026-08-15
+# (unified-trading-pm@c6639f0fe1 quality_gate_resolution dispatch, PR #3198's 529min-red wall): a
+# same-commit fix that reduced 3 files' violation counts (46->6, 20->?, 12->?) was net INCREASED by
+# this SAME commit's own prettier-autostage hook run (20->36, 12->81) — the hook was actively
+# corrupting the exact lines the fix had just repaired, in the same commit, before the push. This
+# is not concurrent-agent churn (that was the prior working theory across 10+ CI-wall dispatches,
+# plans/active/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md)
+# — it reproduces solo, deterministically, every time prettier touches a staged plan doc with a
+# nested-list continuation paragraph. Confirmed `proseWrap: preserve` (tested via a scoped
+# .prettierrc override, reverted) does NOT prevent it — the bug is in prettier's list-item
+# indentation normalization, not the proseWrap reflow specifically, so a proseWrap-only fix cannot
+# help. Excluding plans/ from prettier entirely (this entry) is the only proven remedy for this bug
+# class in this repo (see the two entries above). No functional/rendered-output loss: plan docs are
+# operator/agent-authored prose, not consumer-facing formatted output.
+plans/**/*.md

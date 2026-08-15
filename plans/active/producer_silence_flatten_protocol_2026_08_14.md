@@ -20,6 +20,7 @@ tags: [live-trading, safety, flattening, deleverage, staleness, risk, reconcilia
 related:
   [
     /plans/active/issues/live_path_has_no_stale_producer_revocation_2026_08_14.md,
+    /codex/04-architecture/exposure-reduction-unification.md,
     /codex/04-architecture/dependency-health-policy.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
     /codex/04-architecture/kill-switch-circuit-breaker.md,
@@ -151,6 +152,43 @@ measurement that justified the number.
       in this plan inherits from this decision.
 - [ ] [TEST] P0. A restart-does-not-flatten test: bounce strategy-service for a normal restart duration and assert no
       flatten is triggered. This is the regression guard for the operator's standing instruction.
+
+### Phase 5a — consolidate the four exposure-reduction implementations
+
+> **Design SSOT: `/codex/04-architecture/exposure-reduction-unification.md`** (written 2026-08-15). Close-all, flatten
+> and margin-deleverage are one operation at three points on one axis; the todos below are that doc's
+> migrate-then-delete order, which is gated so nothing is deleted before its replacement is live. Read it before
+> starting any of them — the reasoning for each step lives there, not here.
+
+- [ ] [CODE] P0. Generalise the flatten contract into `ReductionMandate` + `ReductionTrigger` (margin / producer-silence
+      / drawdown-close-all / liquidation-imminent / operator), so all three behaviours differ by CONSTRUCTION rather
+      than by code path. Deletes nothing. Repo: unified-api-contracts.
+- [ ] [CODE] P0. Expand `algo_library/deleverage_executor.py` to accept a mandate, keeping `handle_margin_event()` as a
+      thin adapter over the same core. Its asset-group action table (`repay_debt`/`top_up_collateral`/`close_risky_leg`/
+      `unwind_to_mm`/`cap_bound_block`) is the asset and is retained verbatim — the module's defect is its intake, not
+      its tactics. Repo: execution-service.
+- [ ] [CODE] P0. Give it a real caller and a `margin-events` subscriber. Until this lands, steps above have only moved
+      inert code around: `handle()` has had no caller, no subscriber and no order path since it was written. Repo:
+      execution-service.
+- [ ] [CODE] P0. Publish `ExposureSnapshot` from PBMS over the UTL event bus (NOT an HTTP call from execution-service —
+      that both violates the no-service↔service-dependency rule and fails in exactly the situation the mandate exists
+      for). Repo: strategy-service.
+- [ ] [CODE] P0. Enable `PBMSPositionPublisher` (defaults `enabled=False`) so execution fills reach PBMS for
+      reconciliation. **No PBMS deployment work is needed** — CORRECTED 2026-08-15: PBMS is mounted inside
+      strategy-service (`strategy_service/api/main.py:182`, `app.mount("/position", …)`) and ships with it. An earlier
+      version of this todo asked the operator to "deploy PBMS", from a probe that searched Cloud Run for a service by
+      NAME and never read the consumer. The real constraint is that PBMS is CO-LOCATED with the producer whose silence
+      triggers this protocol — one process, one failure — which is why the snapshot must be pre-published rather than
+      fetched. Repo: execution-service.
+- [ ] [CODE] P1. Repurpose `UnifiedPositionTracker` as the no-snapshot fallback AND surface its divergence from the
+      snapshot as a reconciliation signal — two independent derivations of the same quantity disagreeing is information,
+      and it is discarded today. Not deleted. Repo: execution-service.
+- [ ] [CODE] P1. Migrate the two `close_all` concrete scripts to emit mandates, THEN delete `close_all/_template.py`'s
+      `ClosePosition`/`CloseAllPlan` — superseded by `ExposureLeg`/`ReductionMandate`, and not before. Repo:
+      strategy-service.
+- [ ] [CODE] P1. Replace the duplicated flatten vocabularies with the UAC enum — `_FLATTEN_SIDES`
+      (unified-trading-library `ledger/materialize.py`) and `_FLAT_SIDES` (strategy-service `benchmark_fills.py`) — THEN
+      delete both frozensets. Repos: unified-trading-library, strategy-service.
 
 ### Phase 5 — do not let it go inert
 

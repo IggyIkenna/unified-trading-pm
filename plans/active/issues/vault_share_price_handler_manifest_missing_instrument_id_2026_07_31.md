@@ -120,11 +120,31 @@ for this exact multi-instrument-per-group shape.
   row) — that observation is still outstanding since it only affects rows written going forward; leaving `status: open`
   until someone confirms a live post-fix manifest row.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+- **2026-08-15 (slot-19, data_engineering craft)**: read the live-merged availability manifest
+  (`market-data-tick-defi-prd-central-element-323112`) for `data_type=vault_share_price`, `date>2026-08-04`, filtered to
+  MAKER/YEARN_V3/ETHENA/FRAX/MORPHO_VAULTS. 4/5 venues confirmed: every `capture_status=captured` row carries a
+  non-null, well-formed `instrument_id` (e.g. MAKER 2026-08-14 → `maker-ethereum:yield_bearing:sdai`), proving
+  `market-tick-data-service@b0909a5e`'s fix landed correctly. MORPHO_VAULTS returned zero rows in the entire post-08-04
+  window (a second, wider history query for MORPHO_VAULTS alone was memory-capped/killed — the `venue=` predicate
+  doesn't row-group-prune the ~27M-row DeFi index the way a `date` predicate does; not retried with a larger cap per the
+  shared-host memory-bounding rule). Filed the MORPHO_VAULTS zero-capture gap as a new Follow-up todo above — it is a
+  distinct issue from this doc's instrument_id fix, not a fix-verification failure. Status stays `open` (not all 5
+  venues confirmed); flip to resolved once MORPHO_VAULTS's gap is diagnosed and either fixed or found to be an
+  intentional pause.
 
 ## Follow-ups
 
-- [ ] [DATA] P3. Confirm a live post-fix vault_share_price manifest row carries a non-null instrument_id (observe the
-      next natural cron capture after market-tick-data-service@b0909a5e).
+- [x] ✅ [DATA] P3. Confirm a live post-fix vault_share_price manifest row carries a non-null instrument_id (observe the
+      next natural cron capture after market-tick-data-service@b0909a5e). — 4/5 venues confirmed 2026-08-15 (slot-19):
+      MAKER (26 rows, 26 non-null incl. `maker-ethereum:yield_bearing:sdai` captured 2026-08-14), YEARN_V3 (45 rows, 45
+      non-null across all 3 vaults), ETHENA (15 rows, 15 non-null), FRAX (15 rows, 15 non-null) — all post-08-04
+      `capture_status=captured` rows carry a well-formed lowercased `instrument_id`. MORPHO_VAULTS has ZERO
+      vault_share_price manifest rows of any kind after 2026-08-04 — not a fix-verification failure, a separate capture
+      gap (see new follow-up below).
+- [ ] [DATA] P3. **MORPHO_VAULTS vault_share_price has captured zero manifest rows since 2026-08-04** — diagnose whether
+      the cron/handler is failing silently for this venue specifically (permission error, catalogue lookup gap, RPC
+      failure) or the venue was deliberately paused; the other 4 vault_share_price venues (MAKER/YEARN_V3/ ETHENA/FRAX)
+      are all capturing normally in the same window. (repo: market-tick-data-service)
 
 > **2026-08-06 archive-candidate audit**: Fix shipped at b0909a5e but Progress Log explicitly leaves status open:
 > 'Verification of the next NATURAL fresh capture ... is still outstanding' — live post-fix manifest-row confirmation

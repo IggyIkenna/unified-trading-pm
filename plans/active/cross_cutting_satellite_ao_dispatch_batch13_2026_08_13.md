@@ -58,6 +58,7 @@ context_scope:
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch13_2026_08_13_finalize.md,
   ]
 source: >-
   Drafted by the 2026-08-13 /na-eligibility-audit + /ag-closeout-audit full-corpus sweep (interactive session). status:
@@ -87,88 +88,25 @@ source: >-
       code sites + a bounded live read of `prod/catalog.parquet`; recorded in both the source issue doc and
       `tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`'s todo 1) Source:
       `plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md`
-- [x] ✅ [CODE] P2. **Diagnose how strategy-service's LDR HEAD went gate-red — NOT actually gate-red today; root cause
-      isolated to a mis-triaged host-contention timing trip.** (2026-08-14, slot-27·infra) Clean-checkout re-run: fresh
-      `git fetch`+`ff-only` to `origin/live-defi-rollout` (HEAD==origin, zero working-tree diff), then
-      `bash scripts/quality-gates.sh --no-fix` in strategy-service → **`✅ ALL QUALITY GATES PASSED (112s)`, sentinel
-      written at current HEAD `8f1aefc07c17`** — the reported failure does NOT reproduce. `git log -S`/`git blame` on
-      the 4 flagged checks + their introducing code: strategy-service sets `CODEX_MAX_VIOLATIONS=4` (stable since
-      2026-06-11, unchanged since) in its own `scripts/quality-gates.sh`; `base-service.sh`'s shared `$V` counter
-      (`_max_v=${CODEX_MAX_VIOLATIONS:-0}`, ~L2416-2426) treats a violation count `<= _max_v` as `log_warn` ("within
-      tolerance"), NOT a failure — but the underlying `log_fail()` calls for each individual STEP still print in ❌-red
-      regardless of whether the run ultimately warns or fails. All 4 flagged checks (BaseModel: registry_router.py
-      2026-04-21, operational_mode_router.py 2026-05-10 — check itself dates to 2026-03-09; STEP 5.37:
-      analog_execution_gate.py kelly_boost 2026-05-30 — check dates to 2026-05-01; asyncio.run()-in-loop:
-      live_routing.py 2026-08-10 — check dates to 2026-03-09; imports-inside-function: catalog_engine_coverage.py
-      2026-08-14 — AST check dates to 2026-05-11) landed AFTER their respective checks already existed, but land at
-      exactly the tolerance ceiling (V=4, `CODEX_MAX_VIOLATIONS=4`) — i.e. sanctioned ratchet headroom, not silent drift
-      or a check that tightened afterward. One flagged STEP 5.37 site (`catalog_carry.py`'s
-      `_, liquidation_threshold = resolve_ltv_mode(...)`) is a check REGEX false-positive: it matches the
-      `liquidation_threshold\s*=` alternation on the tuple-unpack VARIABLE NAME, not an inline literal — the line is
-      actually a call to the canonical resolver, the opposite of a violation (flagged for whoever picks up todo below).
-      The actual 2026-08-10 exit-1 that blocked the one-line `cloudbuild.yaml` commit was almost certainly the
-      independent, tolerance-exempt `<300s` duration hard-gate alone (`base-service.sh` ~L4471-4474, unconditional
-      `exit 1`, outside the `$V`/`CODEX_MAX_VIOLATIONS` system) tripping under host contention (12s measured governor
-      queue-wait that day) — `quickmerge.sh` itself documents this exact incident by date (STAGE 3 re-gate, ~L2445-2470:
-      "measured 2026-08-10, 602s billable against a 600s cap under 11 concurrent quickmerges, with every content check
-      passing... Telling an agent to go fix content that was never broken") and shipped a same-day CPU-vs-wall billing
-      rework specifically to stop this false-failure class. **New finding not covered by an existing todo**:
-      `quickmerge.sh`'s own contention-vs-content disambiguation guard (`_qm_other_fail`, ~L2463-2464) that exists
-      BECAUSE of the 2026-08-10 incident is itself incomplete — it greps the re-gate log for any ❌/FAILED/ERROR line
-      other than the duration message to decide "genuine content failure", but doesn't know some of those ❌ lines come
-      from `CODEX_MAX_VIOLATIONS`-tolerated checks that the underlying script only WARNs on — so a run that is, in
-      substance, ALSO just a duration-budget trip can still get misclassified as "a REAL failure" (exactly what the
-      source issue doc's quoted evidence shows). Filed as a new todo below rather than fixed inline (out of this
-      diagnosis todo's scope). Net: the 4 other todos below (move BaseModel/resolve STEP 5.37/fix or re-baseline the
-      duration budget/fix the stale pointer) are still legitimate cleanup, but the BLOCKING premise — "every commit is
-      blocked, HEAD is red" — is not currently true; a same-day re-run before attempting a real commit will very likely
-      land it. Source:
+- [x] ✅ [CODE] P2. Diagnose strategy-service LDR gate-red (not actually red; host-contention mis-triage) — full
+      evidence extracted verbatim (2026-08-15) to
+      `plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch13_history_2026_08_15.md`. Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
-- [x] ✅ [CODE] P2. **Recorded justified exemptions (not a move) — 9 real classes, not 11.** The gate's own filtered
-      check (excluding `# CORRECT-LOCAL`-annotated lines, which the raw `git grep -l` count in the source issue didn't
-      account for) currently flags exactly 9 classes across 4 files: `api/registry_router.py` (4),
-      `api/operational_mode_router.py` (2), `api/restriction_profile_router.py` (1), `signal_broadcast/transport.py`
-      (2). All 9 are FastAPI request/response wire-shape DTOs bound to specific endpoints (admin registry envelopes,
-      operational-mode transition body/reply, a restriction-profile HTTP envelope wrapping a UAC `RestrictionProfile`,
-      and signal-broadcast ack/emission wire shapes) — not domain data contracts other services consume; two of the four
-      files already self-documented this as a deliberate follow-up in their own module docstrings. Annotated each class
-      with the repo's established `# CORRECT-LOCAL` exemption convention (already used in 8 other strategy-service
-      files: `client_config.py`, `config_loader.py`, `reconciliation_routes.py`, `sports_position_tracker.py`,
-      `position/models.py`, `position_interface/routing.py`, `risk/api/main.py`, `risk/models.py` — none of those needed
-      touching, already exempt). Verified: QG-equivalent regex clean post-fix; full `quality-gates.sh --no-fix` green
-      (`✅ ALL QUALITY GATES PASSED`, 31s) — strategy-service@621858344d (2026-08-14, slot-10·infra). Source:
+- [x] ✅ [CODE] P2. Recorded justified `# CORRECT-LOCAL` exemptions (9 real classes) — strategy-service@621858344d
+      (2026-08-14). Full evidence extracted verbatim (2026-08-15) to
+      `plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch13_history_2026_08_15.md`. Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
-- [x] ✅ [CODE] P2. Resolved the STEP 5.37 inline HF/LTV/margin thresholds — unified-api-contracts@31b4ad958e +
-      strategy-service@ac5cab7edb (2026-08-14, slot-29·infra). Added `MarginModel.REG_T` +
-      `reg_t_initial_margin_long_pct`/`short_pct` fields to UAC `LIQUIDATION_PARAMS_REGISTRY` (50%/150%);
-      `greek_model.py._reg_t` now reads those instead of inlining `Decimal("0.5")`/`Decimal("1.5")`. **Correction to the
-      2026-08-14 diagnosis note**: `analog_execution_gate.py`'s `kelly_boost=Decimal("1.2")` hit was NOT genuine —
-      re-verified live: it's a Kelly-criterion position-sizing multiplier on the analog execution gate, unrelated to
-      margin/liquidation (confirmed via its own docstring: "Multiplier applied when all analogs were clean"), not a
-      threshold sourced from any venue's margin model — same regex-false-positive class as `catalog_carry.py`'s
-      `liquidation_threshold` var-name hits. Both false positives annotated `# CORRECT-LOCAL` (not migrated to UAC,
-      which would be semantically wrong for a strategy-tuning constant). `strategy-service/scripts/quality-gates.sh`
-      `CODEX_MAX_VIOLATIONS` ratcheted 4 -> 3 (STEP 5.37 class cleared); full QG green on both repos
-      (unified-api-contracts 352s, strategy-service 141s, sentinel-verified). Source:
+- [x] ✅ [CODE] P2. Resolved STEP 5.37 inline HF/LTV/margin thresholds — unified-api-contracts@31b4ad958e +
+      strategy-service@ac5cab7edb (2026-08-14). Full evidence extracted verbatim (2026-08-15) to
+      `plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch13_history_2026_08_15.md`. Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
-- [x] ✅ [CODE] P2. **RESOLVED — already fixed by the 2026-08-10 CPU-vs-wall billing rework, no code change needed.**
-      strategy-service@ac5cab7edb (2026-08-14, slot-27·infra). Re-verified under genuine contention (not just the 112s
-      clean-host figure from the diagnosis todo above): 2 fresh `bash scripts/quality-gates.sh --no-fix` runs on the
-      current LDR-tip HEAD, both under real host load — run 1: 134s wall (`time` real 2m14.415s), exit 0; run 2: 44s
-      governor queue-wait (excluded from billable per base-service.sh's CPU-vs-wall rework) +
-      `✅ ALL QUALITY GATES PASSED (152s)` billable work. Both comfortably under the 300s `MAX_DURATION` cap, including
-      one run with real governor contention (30-44s queue-wait) — the exact contention scenario that produced the
-      original 326s+12s=338s failure on 2026-08-10. Confirms the diagnosis todo's hypothesis: the billing rework already
-      resolved this before this todo was ever picked up; no `MAX_DURATION` re-baseline or suite optimization is
-      warranted. Source:
+- [x] ✅ [CODE] P2. RESOLVED — already fixed by the 2026-08-10 CPU-vs-wall billing rework, no code change needed
+      (strategy-service@ac5cab7edb, 2026-08-14). Full evidence extracted verbatim (2026-08-15) to
+      `plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch13_history_2026_08_15.md`. Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
-- [x] ✅ [CODE] P2. Fix the gate's stale SCHEMA_CONTRACTS_AUDIT.md pointer message (and grep the fleet for the same
-      template) — unified-trading-pm@144a18fed5 (2026-08-14). Repointed `plans/active/SCHEMA_CONTRACTS_AUDIT.md` →
-      `plans/archive/SCHEMA_CONTRACTS_AUDIT.md` in the shared gate template (`base-service.sh`, `base-library.sh` —
-      strategy-service and every other service source these, so the fix propagates fleet-wide with no per-repo
-      duplication) plus 4 `.cursor/rules/*.mdc` and 2 `codex/*` docs carrying the same stale pointer. Fleet grep found
-      no other verbatim copy of the gate check outside this repo (the UI repo's separate `context/` doc mirror was left
-      untouched — out of this plan's repo scope). Source:
+- [x] ✅ [CODE] P2. Fixed the gate's stale SCHEMA_CONTRACTS_AUDIT.md pointer fleet-wide — unified-trading-pm@144a18fed5
+      (2026-08-14). Full evidence extracted verbatim (2026-08-15) to
+      `plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch13_history_2026_08_15.md`. Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
 - [ ] [CODE] P3. Make `quickmerge.sh`'s STAGE 3 re-gate contention-vs-content guard (`_qm_other_fail`, ~L2463-2464) also
       exclude ❌ lines produced by `CODEX_MAX_VIOLATIONS`-tolerated checks — currently it only excludes the
@@ -225,7 +163,7 @@ source: >-
       ancestry verified `f70f29c8f` on origin; quickmerge's own diff-check false-flagged "push landed but change did
       not" for this now-gitignored path — a known false-positive class since a deleted+gitignored file has no
       before/after diff to compare; confirmed the real land via
-      `git cat-file -e     origin/live-defi-rollout:openapi/ui-reference-data.json` → absent, as intended).
+      `git cat-file -e origin/live-defi-rollout:openapi/ui-reference-data.json` → absent, as intended).
       `openapi/capability-manifest.json` is NOT safe to untrack as-is:
       `agent-orchestrator/server/mcp/manifest_loader.py` hard-requires it be a **committed** file in this repo's sibling
       clone (`_MANIFEST_REL`, `manifest_path()`; raises `ManifestUnavailableError` with no regen fallback if absent) —
@@ -292,12 +230,40 @@ source: >-
       Source: `plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`
 - [ ] [INFRA] P3. wire an automated deploy/sync for glue-runner-crash-loop-watchdog.sh so a repo fix reaches the host
       Source: `plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`
-- [ ] [BACKEND] P2. document the circular-dependency gap (scheduled workflow runs from default branch) in ci-cd-flow.md
-      Source: `plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`
-- [ ] [BACKEND] P2. sweep the fleet for the same 'set -uo pipefail' + RC=$? -e trap via the given rg command Source:
+- [x] ✅ [BACKEND] P2. document the circular-dependency gap (scheduled workflow runs from default branch) in
+      ci-cd-flow.md — unified-trading-pm@83a3227b7d (2026-08-15, slot-19·backend). Added a paragraph to
+      `/codex/08-workflows/ci-cd-flow.md`'s "Staging re-entry procedure" section, immediately after the existing
+      "Default-branch gotcha" line: documents that fixing a scheduled/`workflow_dispatch` workflow's OWN `run:` block is
+      inert on every scheduled trigger until the fix promotes LDR→main (a circular dependency when the fix's purpose is
+      to unblock the alerting/promotion pipeline itself — the exact shape the source incident hit), and cites the
+      `gh workflow run <wf>.yml --ref live-defi-rollout` escape hatch used to verify the `ldr-docs-gate.yml` `set +e`
+      fix ahead of promotion. Source:
       `plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`
-- [ ] [BACKEND] P2. add a meta-assertion that any job publishing a notify-consumed verdict output emits it on the
-      failure path too Source:
+- [x] ✅ [BACKEND] P2. **Fleet swept — zero unfixed instances of the trap; only hit is the already-fixed source site.**
+      (2026-08-15, slot-15·backend) Ran the cited command
+      (`rg -n 'set -uo pipefail' -A 4 .github/workflows/ | rg -B1 'RC=\$\?'`) against every repo's `.github/workflows/`
+      in the fleet checkout (28 repos incl. unified-trading-pm; excluded only the `*.stale-pre-history-rewrite-*`
+      snapshot dirs and `scratch/`, neither of which carries live workflows). Single hit:
+      `unified-trading-pm/.github/workflows/ldr-docs-gate.yml` lines 104-105 — these are the comment lines of the
+      `set +e` fix this same issue doc's todo 1 already shipped 2026-08-10, not a live occurrence (the actual capture on
+      line 115-116 already has `set +e` before it). Broadened the check beyond the literal 4-line window to catch
+      variant spacing/ordering: grepped every repo's workflows for any `RC=$?`-shaped capture
+      (`rg -n 'RC=\$\?' .github/workflows/`) and manually inspected the preceding shell state for each of the 7
+      additional PM hits found this way (`promote-fleet-startup-failure-monitor.yml`, `sit-gate-stuck-detector.yml`,
+      `glue-pool-starvation-monitor.yml`, `stale-build-watcher.yml`, `glue-runner-health-monitor.yml`,
+      `branch-health.yml`, `reconcile-release-tags.yml`) — every one already has an explicit `set +e` immediately before
+      its output-capturing `$(...)` call, so none carries the inherited-`-e` trap. No repo outside `unified-trading-pm`
+      has any `.github/workflows/` file matching either pattern at all. No code change needed. Source:
+      `plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`
+- [x] ✅ [BACKEND] P2. Added `check_verdict_output_failure_path.py`, wired into `base-service.sh` (fleet-wide, every
+      repo's own `.github/workflows`) — unified-trading-pm@cb1a09203b (2026-08-15, slot-11·backend). Flags any job whose
+      job-level `outputs:` maps a key literally named `verdict` to a step output, when that output is consumed elsewhere
+      in the same file via `needs.<job>.outputs.verdict`, unless the producing step (or a sibling `if: always()` step)
+      guarantees the write survives a failing checker command (`set +e`, a `trap ... EXIT` handler, or a dedicated
+      always-step). Verified both directions: PASSES clean on the current fleet (59 PM workflows + every sibling repo's
+      own workflows, incl. `ldr-docs-gate.yml`'s already-shipped `set +e` fix), and a synthetic reproduction of the
+      original unguarded-inline shape is correctly flagged. `bash quality-gates.sh --no-fix` green, sentinel-verified at
+      HEAD; quickmerge landed on LDR (post-push ancestry verified). Source:
       `plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`
 - [x] ✅ [CODE] P2. Pass --build-arg
       SETUPTOOLS_SCM_PRETEND_VERSION=$$VERSION in strategy-service and greeks-service
@@ -305,7 +271,7 @@ source: >-
       greeks-service@d4b796dfd5 (2026-08-15, slot-12·infra). Both prior blockers were already clear: strategy-service's
       own QG is not red at LDR tip (confirmed by an earlier todo in this same batch); greeks-service's git status is
       clean (no peer WIP conflict). Added `--build-arg SETUPTOOLS_SCM_PRETEND_VERSION=$$VERSION`to the`build`step's    `docker
-      build`in both`cloudbuild.yaml`files, matching the fleet pattern already used in     agent-orchestrator/deployment-service/alerting-service/features-service. QG green + sentinel-verified on both     repos; both quickmerge-landed on LDR (post-push ancestry verified). Source:    `plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md`
+      build`in both`cloudbuild.yaml`files, matching the fleet pattern already used in agent-orchestrator/deployment-service/alerting-service/features-service. QG green + sentinel-verified on both repos; both quickmerge-landed on LDR (post-push ancestry verified). Source: `plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md`
 - [x] ✅ [CODE] P2. Re-run hosted-baseline.sh to resync the derived cloud-build-router.yml snapshot with the live
       workflow — unified-trading-pm@f7fb62f580 (2026-08-15: `hosted-baseline.sh snapshot` re-run; the `derived`
       `cloud-build-router.yml` baseline now reflects the 2026-08-10 `build_error_detail` credential-scrub fix landed in
@@ -316,19 +282,11 @@ source: >-
       baselines (`ldr-to-main-promote.yml`, `staging-to-main.yml`, `reconcile-staging-versions.yml`) are unrelated
       pre-existing conditions, unchanged by this run — out of scope for this bounded todo.) Source:
       `plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md`
-- [x] ✅ [DATA] P1. **MOOT — already deleted, confirmed live (2026-08-13, slot 29).** This todo's premise (run a fresh
-      retention check, then delete) was stale: the source doc's own 2026-08-12 docs-drift note records that
-      `ml-models-store` was already deleted 2026-08-08 (operator-authorized) via the sibling plan
-      `bucket_fold_ml_2026_07_17.md`'s "Delete sources" todo — this batch's extraction just hadn't picked that up. Fresh
-      live re-verification this session (not just trusting the note):
-      `gcloud asset search-all-resources     --scope=projects/central-element-323112 --query="name:ml-" --asset-types="storage.googleapis.com/Bucket"`
-      returns only `ml-store-test-central-element-323112` and `ml-store-prd-central-element-323112` (the folded
-      canonical buckets) — zero hits for `ml-models-store`, confirming the flat legacy bucket is gone. Dead
-      TF/yaml-reference half also re-confirmed clean: fresh
-      `grep -rn "ml-models-store\b" deployment-service/terraform deployment-service/configs deployment-api     unified-api-contracts`
-      across all 4 repos returns only comments/docstrings describing the already-executed fold (`outputs.tf`,
-      `_core.py`, a test docstring, `_ml_training_contract.py`) — no live resource declarations or resolver calls. No
-      retention check or delete action was needed or taken. Source:
+- [x] ✅ [DATA] P1. **MOOT — already deleted, confirmed live (2026-08-13, slot 29).** `ml-models-store` was already
+      deleted 2026-08-08 (operator-authorized, via `bucket_fold_ml_2026_07_17.md`) — this batch's extraction hadn't
+      picked that up. Fresh re-verification: `gcloud asset search-all-resources` finds zero `ml-models-store` hits (only
+      the folded `ml-store-{test,prd}-*` buckets remain); a fleet grep across 4 repos finds only dead
+      comments/docstrings, no live TF/resolver references. No retention check or delete action was needed. Source:
       `plans/active/bucket_estate_consolidation_closeout_2026_07_24.md`
 - [x] ✅ [CODE] P2. **CONFIRMED: NO — never cited in any actual promotion/sizing decision; nothing to flag.**
       (2026-08-15, slot-29·infra) Four independent, converging lines of evidence: (1) **The promote workflow's frozen
@@ -470,98 +428,428 @@ source: >-
       DUPLICATE, closed 2026-08-14** — landed `deployment-service@67e3b36c` + `deployment-api@0d3f1cc` +
       `unified-trading-library@ad29bd9f` (all 8 todos). Source:
       `plans/active/alert_driven_dependency_revocation_2026_08_12.md`.
-- [ ] [CODE] P2. Remove BLRS Stage 4's _write_agent_report() write path once superseded Source:
+- [x] ✅ [CODE] P2. **NOT ATTEMPTED — premise unmet: the superseding job doesn't exist yet.** (2026-08-15,
+      slot-21·infra) Confirmed live: `_write_agent_report()` is still present and called from `run_stage4()` in
+      `batch_live_reconciliation_service/stages/stage4_agent_analysis.py` (writes `agent_report_{date}.md` to GCS, still
+      read by nothing downstream — module docstring's dispatch/Slack claims remain stale, per this same source doc's
+      §0). The source design doc's own §4 explicit decision gates this removal on "once the new [trading-analyst] job
+      ships" — confirmed the job has NOT been built: no `agents/trading_analyst.md` role file, no `trading_analyst` mode
+      in `plan_health.py`, no `install-trading-analyst-timer.sh`, zero fleet-wide matches for
+      `trading_analyst`/`trading-analyst` outside this design doc itself. The source doc's own sibling todos ("Build the
+      `trading-analyst` skill", "Wire the scheduling mechanics from §1") are still unchecked, confirming this directly.
+      Per CLAUDE.md's "AO-eligible = outcome DETERMINABLE by the worker alone" rule + the doc's own explicit build-order
+      (§4: this removal is a §5 follow-up gated on the new job shipping, NOT bundled into the job's own build), did not
+      remove the write path — doing so now would delete Stage 4's only output before any replacement exists,
+      contradicting the documented decision. No new issue doc filed: the gating work is already tracked as open todos in
+      the same source doc; this removal should be re-picked-up once those ship. Source:
       `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md`
-- [ ] [CODE] P2. File the dead-mode-kwarg bug (execution_fills/positions/strategy_instructions/pnl_attribution all
-      silently drop a mode= path placeholder) as its own issue doc Source:
+- [x] ✅ [CODE] P2. **Filed + re-verified live (confirmed real, not hypothetical).** (2026-08-15, slot-18·infra).
+      Re-read current HEAD `registry.py`: all 4 templates (`execution_fills`, `positions`, `strategy_instructions`,
+      `pnl_attribution`) still have no `{mode}` placeholder, and confirmed real LIVE callers already pass `mode=` on
+      every call (`strategy-service/strategy_service/pnl/adapters/ domain_adapter.py:50,63,76,84`;
+      `execution-service/execution_service/results/save_operations.py:790`) — the kwarg is silently dropped by
+      `str.format`, so batch/paper/live writes collide at the same object path today. Filed
+      `plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md`
+      (P1, assigned_vm: planning, [OPERATOR] migration-strategy todo + 2 gated [CODE] follow-ups) per the
+      findings-triage rule. Source: `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md`
+- [x] ✅ [CODE] P2. **NOT ATTEMPTED — already fixed by a prior session; premise unmet.** (2026-08-15, slot-16·infra)
+      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md:159`'s `plan_reconciler` row already reads
+      `sonnet` + "every-2h even-hour fire ... retry-until-capacity" — the opus/01:00-UTC-daily and hourly-retry
+      staleness this todo targets was corrected 2026-08-09 (`unified-trading-pm@879b8e9907` fixed opus/schedule;
+      `unified-trading-pm@717a17bdfa` fixed the hourly-retry phrasing that first fix had carried forward stale), per
+      `plans/active/issues/plan_reconciler_findings_2026_08_08.md:212-220`. Verified live against current HEAD — the
+      row's own inline note cites both corrections by date and SHA. No further edit needed. Source:
       `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md`
-- [ ] [CODE] P2. Fix the stale scheduled-jobs table in agent-orchestrator-single-vm-architecture.md
-      (opus/01:00-UTC-daily -> sonnet/hourly-retry) Source:
-      `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md`
-- [ ] [CODE] P2. Launch the now-unblocked EXTENDED-STARKNET instrument-catalogue + perp backfill
-      (candles/funding/orderbook/trades) Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
-- [ ] [CODE] P2. Step 2 IS-store backfill for Kraken/LIGHTER/PACIFICA/EXTENDED/BITGET gap-days so MTDS<->IS subsets
-      close both ways Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
+- [x] ✅ [CODE] P2. **Step 2 IS-store backfill — premise mostly STALE, real gap found + closed.** (2026-08-15,
+      slot-18·infra). Ran `scripts/verify_instrument_manifest_coverage.py` (reads the IS reference-data catalogue
+      manifest, 2019-03-30..2026-08-14) against all 5 named venues: KRAKEN-SPOT, KRAKEN-FUTURES, BITGET-SPOT,
+      BITGET-FUTURES, LIGHTER-ZKSYNC, EXTENDED-STARKNET were already fully covered (only the current day missing —
+      normal daily-job lag, self-heals) — the "Kraken ~6yr" gap this todo's title cites was already closed by the time
+      this ran (likely folded into the already-`[x]` Step 1 per-AG backfill dated 2026-07-06). PACIFICA-SOLANA had a
+      genuine 27-day gap (2026-07-19..2026-08-14). Backfilled it directly (bounded single-venue/27-day run, not
+      corpus-scale — ran via `run-bounded-analysis.sh` wrapper per the memory-bounding rule):
+      `uv run instruments-service --operation instruments --mode batch --asset-group CEFI --venues PACIFICA-SOLANA --start-date 2026-07-19 --end-date 2026-08-14 --force`
+      — wrote 74 records/day × 27 dates, `Batch complete: 27 results collected`. Re-verified: `missing_dates=0` for
+      PACIFICA-SOLANA over the full 2019-03-30..2026-08-14 range. No code changes required (data-op only); no commit to
+      ship. Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
+- [x] ✅ [CODE] P2. **Launched — real 62,645-cell gap confirmed + closing; candles/orderbook already 100% (no action
+      needed).** (2026-08-15, slot-4·infra) Live manifest read (bounded, column-projected
+      `read_availability_index(columns=[...])`) found `ohlcv_1m` (candles) and `book_snapshot_5` (orderbook) already
+      have ZERO `expected_unattempted` cells — the original todo's premise that all 4 sub-types needed a backfill was
+      stale; only `derivative_ticker` (funding/ticker, 37,961 cells) and `trades` (24,684 cells) had a real gap,
+      spanning 2024-10-01→2026-08-15 across 267 instruments, including 5,147+5,179 cells in the last 30 days alone
+      (still actively growing). Root cause: the daily forward-poll launcher
+      (`deployment-service/scripts/vm/launch-cefi-onchain-forward-poll.sh`) hardcodes EXTENDED-STARKNET's instrument
+      list to `BTC;ETH;SOL` — but the live IS catalogue (`instruments-store-cefi-prd/prod/catalog.parquet`) has **200
+      mvp=True perpetuals** for this venue, so only 3/200 were ever attempted daily; `derivative_ticker` was also
+      missing from that launcher's per-venue data_types list entirely. **Fix path traced + verified live before
+      shipping** (an initial launcher edit using the `--onchain-perp-symbols ALL` catalogue-driven sentinel was REVERTED
+      after confirming `VM_TASK=cefi-onchain-forward-poll` has no dedicated branch in `setup-data-pipeline-vm.sh` and
+      falls through to the generic `--operation download` path, which does NOT route onchain-perp venues through
+      `OnchainPerpBatchHandler`/the `ALL` sentinel at all — shipping that edit would have been a silent no-op or
+      regression). Instead launched the historical backfill via the ALREADY-CORRECT `launch-mtds-backfill-vm.sh`
+      (`VM_TASK=mtds-backfill`, which DOES auto-detect onchain-perp venues via `ONCHAIN_PERP_VENUE_CHAIN` and route to
+      `collect-onchain-perp-batch --onchain-perp-symbols ALL`):
+      `bash scripts/vm/launch-mtds-backfill-vm.sh --asset-group CEFI --venues EXTENDED-STARKNET --data-types 'trades;derivative_ticker' --instrument-ids ALL --start 2024-10-01 --end 2026-08-14 --vm-name mtds-backfill-cefi-extended-starknet-fullhist-1`.
+      VM `mtds-backfill-cefi-extended-starknet-fullhist-1` (asia-northeast1-c, e2-highmem-4, SPOT) confirmed RUNNING at
+      T+3min (heartbeat blob live) and T+~4min run.log showed REAL progress:
+      `OnchainPerpBatch: catalogue-driven universe for EXTENDED-STARKNET on 2024-10-02 = 76 symbols` (catalogue-driven,
+      not the old 3-symbol hardcode) + `ManifestWriter: per-VM shard updated (202 total entries, 151 new...)` —
+      day-chunked (5-day chunks, auto-selected for the recent-history tail), SPOT-preemption resumable, self-healing per
+      the standard launcher contract; no further manual monitoring required this session. **Follow-up filed** (NOT fixed
+      here — shared daily-cron script, 4-venue blast radius, needs its own verification): new todo below + in the source
+      doc's banner for fixing `launch-cefi-onchain-forward-poll.sh`'s EXTENDED-STARKNET (and likely
+      LIGHTER-ZKSYNC/HYPERLIQUID/ASTER, same hardcoded-list pattern) instrument scoping so the gap doesn't re-accumulate
+      once this one-time backfill converges. Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
+- [ ] [INFRA] P3. Fix `launch-cefi-onchain-forward-poll.sh`'s per-venue `VENUE_INSTRUMENTS`/`VENUE_DATA_TYPES` tables
+      (EXTENDED-STARKNET hardcoded to `BTC;ETH;SOL` vs. the live IS catalogue's 200 mvp perpetuals; `derivative_ticker`
+      missing from its data_types) so the daily forward-poll doesn't keep re-accumulating the gap the
+      `mtds-backfill-cefi-extended-starknet-fullhist-1` VM (2026-08-15) is closing. Requires re-pointing this venue's
+      `VM_TASK` at the `mtds-backfill`-style onchain-perp-batch routing (the only VM_TASK branch in
+      `setup-data-pipeline-vm.sh` that actually threads `--data-types`/catalogue-driven `ALL` symbols through for
+      onchain-perp venues — the plain `--operation download` path the forward-poll launcher currently uses does not) —
+      audit whether LIGHTER-ZKSYNC/HYPERLIQUID/ASTER share the same narrow-instrument-list gap before touching the
+      shared script, since it's a daily-cron launcher for all 4 venues. Repo: deployment-service. Source: this doc's own
+      2026-08-15 diagnosis, folded in per the EXTENDED-STARKNET todo above.
 - [ ] [CODE] P2. Step 3 cross-data_type completeness capture per venue_data_types.yaml Source:
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
-- [ ] [CODE] P2. Verify/implement the DeFi catalogue MVP filter (MTDS reading IS catalogue as TVL-qualifying filter)
-      Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
-- [ ] [CODE] P2. DeFi honest-absence residual-tail fixes: record genuine zeros post-capture, add missing subgraphs,
-      catalogue monotonicity check Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
-- [ ] [CODE] P2. DeFi swallow-fixes (CF-11 class) in DefiManifestRecorder pass-through, liquidations_handler.py,
-      polymarket_adapter Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
-- [ ] [CODE] P2. Restore the dex_swaps_handler.py adapter-contract QG-5.70 baseline Source:
+
+      **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed separately.**
+                                                              Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism (`load_venue_data_types()` →
+                                                              `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already exists and is live — no code change needed
+                                                              — but a real corpus-wide query (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete
+                                                              within a 120s budget, the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md`
+                                                              already filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades` data_type
+                                                              per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a worker-determinable
+                                                              outcome for one ~1h dispatch. Filed `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+                                                              (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read class → run
+                                                              one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded backfill todos) rather
+                                                              than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended multi-AG backfill into this dispatch.
+
+- [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
+      operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
+      pipeline trace confirms: (1) MTDS's `DefiCatalogReader.list_instruments()`
+      (`market_tick_data_service/engine/defi_catalog_reader.py`) reads the IS DeFi catalogue only for sentinel
+      expected-universe enumeration (freshness/audit), filtering solely on venue + active-on-date window — it never
+      reads the catalogue's `mvp` column. (2) MTDS's actual capture handlers
+      (`cli/handlers/evm_defi_handler.py`/`solana_defi_handler.py`) drive their instrument universe from static
+      per-adapter curated lists (e.g. `aave_lending.py:_filter_mvp_reserves()`'s hardcoded `mvp_tokens` set,
+      `fluid_adapter.py:_get_mvp_markets()`), with only a catalogue-FRESHNESS preflight (`assert_defi_catalog_fresh`) —
+      no per-instrument catalogue-driven filter. (3) IS's own `mvp` column for DeFi rows is a hardcoded `True` for every
+      row (`instruments-service/scripts/build_instrument_catalogue.py` `_add_mvp_column()`, `asset_group == "defi"`
+      branch) — **this is not a bug, it's the documented `defi_mvp_tag_all_2026_06_26` operator decision**, canonical
+      SSOT `/codex/02-data/mvp-scope-canonical.md` § DeFi: "MVP-tag-all today... the production catalogue is wider [than
+      UAC's `is_mvp` predicate], so `_add_mvp_column` short-circuits DeFi to all-MVP until a real per-instrument DeFi
+      screen lands" — i.e. TVL-qualifying filtering for DeFi is EXPLICITLY DEFERRED future work, not a gap this
+      1h-scoped todo should silently implement (would require designing + landing a new UAC `is_mvp` predicate for DeFi,
+      the same class of judgment call CLAUDE.md's "AO-eligible = worker-determinable outcome" rule excludes). Nothing to
+      verify-and-close as broken; the current tag-all design is intentional and already the SSOT of record. Source:
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
-- [ ] [CODE] P2. Flip data-pipeline-alerts.registry.yaml modes verbose->active as each escalation tier is confirmed
-      wired Source: `plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md`
-- [ ] [CODE] P2. (stretch) Persist full launch-spec CLI args into DeploymentRegistryEntry for exact-replay relaunch
-      Source: `plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md`
-- [ ] [CODE] P2. Wire the generalised extra='forbid'-style source-required checker into MTDS + MDPS quality-gates.sh
-      Source: `plans/active/data_source_provenance_enforcement_2026_07_24.md`
-- [ ] [CODE] P2. Run scripts/quality_gates/audit_source_column_distribution.py against prod post-backfill and report the
-      per-cell source histogram Source: `plans/active/data_source_provenance_enforcement_2026_07_24.md`
-- [ ] [CODE] P2. Update codex + audit instructions to the universal source-provenance rule Source:
+- [x] ✅ [CODE] P2. **All 3 sub-items verified: 2 already shipped by prior work, 1 residual gap closed here.**
+      (2026-08-15, slot-16·infra) Live code verification of each named sub-item: (1) **record genuine zeros
+      post-capture** — already comprehensively wired: `_dex_pools_subgraph.py`/`_dex_swaps_queries.py` call
+      `DefiManifestRecorder.record_zero_rows` (launch-date-aware `SOURCE_RETURNED_ZERO`-with-`FetchEvidence`) and
+      `record_catalogue_residual_empty` (`EXPECTED_NOT_ENOUGH_TVL`) in both dex handlers — the "FOUNDATION SHIPPED"
+      state the source doc records. (2) **add missing subgraphs for TRADER_JOE_V2/UNISWAP_V4/ORCA/KAMINO/
+      VELODROME_V2/RAYDIUM** — confirmed live in `dex_pools_handler.py`'s `_DEFAULT_PROTOCOLS` +
+      `_dex_pools_subgraph.py`'s `fallbacks` cascade: `velodrome_v2`/`trader_joe_v2` both route via the shared
+      `messari_basic` entry (`mtds_defi_dex_zero_capture_protocols_2026_07_14`), `uniswap_v4` has its own adapter +
+      cascade entry, `kamino`/`orca`/`raydium` are live Solana AMM collectors in `solana_defi_amm.py` — all 6 named
+      venues already covered, nothing to add. (3) **catalogue monotonicity check** — the monotonic->=-prev ASSERTION was
+      already answered per this doc's own 2026-07-03 cross-ref (`evaluate_monotonic_guard` gates every daily promote);
+      the residual CSV-distribution-report half was genuinely missing — added `instruments-service@0c057aad`
+      (`scripts/report_defi_catalogue_distribution_2026_08_15.py`, read-only single- object bounded read, no corpus
+      walk), run live against the prod DeFi catalogue: 78,447 rows / 134 distinct (venue,chain,data_type) groups,
+      `available_from` 1970-01-01→2026-08-14, `available_to` 2021-01-01→2026-08-13 (11,758 still-active), monthly
+      growth-over-time confirmed monotonically cumulative. **Also fixed a genuine pre-existing QG-red found while
+      shipping** (unrelated to this todo, blocked the commit under the green-tree rule): 4 tests in
+      `tests/unit/scripts/test_enumerate_expected_universe_v2.py` still asserted the pre-
+      `tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md`-fix lowercase `"combo"` instrument_type where the
+      shipped fix (`_canonical_writer_instrument_type`, "Fixed 2026-08-03" docstring) now correctly canonicalizes to
+      uppercase `"COMBO"` — updated the 4 stale assertions (+docstrings) to match, fixed inline as a hotfix —
+      `instruments-service@80d357bb`; `test_enumerate_expected_universe_v2.py` 240/240 pass; full `quality-gates.sh`
+      green, sentinel-verified at HEAD `80d357bb`; both commits quickmerge-landed on LDR (post- push ancestry verified).
+      Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
+- [x] ✅ [CODE] P2. DeFi swallow-fixes (CF-11) — market-tick-data-service@c6b9113b7f (2026-08-15, slot-20·infra); 3
+      sites fail loud now; QG green. Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
+- [x] ✅ [CODE] P2. **STALE PREMISE — no regression exists; adapter-contract baseline already met, nothing to restore.**
+      (2026-08-15, slot-22·infra) The QG check this todo names is STEP 5.83 (`no_adapter_contract_regression.sh` →
+      `check_adapter_contract_regression.py`, run under the MTDS `quality-gates.sh`
+      `[5.70/6] IS-MTDS CONTRACT INTEGRITY` section header — the todo's "QG-5.70" citation is that section label, not
+      PM's separate STEP-5.70 `pipeline_mode=` check). `adapter_contract_baseline.yaml` requires `dex_swaps_handler.py`
+      ≥4 contract calls (`classify_venue_error`/`ADAPTER_FETCH_FAILED`/`record_captured`/
+      `record_empty`/`record_failed`/etc.); a fresh count of the live file finds exactly 4 (3× `record_captured` + 1×
+      `record_failed`), and a live run of `check_adapter_contract_regression.py --workspace-root .` exits 0 ("362
+      baselined file(s) at or above minimum") with no violation for this file. Git history shows the file has shipped
+      15+ commits since this todo was filed 2026-06-21 (retry/backoff, catalogue-preflight, progress checkpointing,
+      empty-shard routing fixes), any of which could have restored the count — regardless of when, the file is at parity
+      with its baseline today. No code change made; nothing to restore. Source:
+      `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
+- [x] ✅ [CODE] P2. (stretch) Persist full launch-spec CLI args into DeploymentRegistryEntry for exact-replay relaunch —
+      deployment-service@14a7fc5ee9 (2026-08-15, slot-9·infra). `vm-exec-with-gcs-tee.sh` now JSON-encodes the exact
+      workload command it invokes (`"$@"`) and passes it to `heartbeat_cli.py` via a new `--launch-args` flag; the CLI
+      threads it through `HeartbeatEntry.metadata["launch_args"]` into `DeploymentRegistryEntry.extras["launch_args"]`
+      (round-tripped through the heartbeat/complete cycle, not just register), using the field's existing free-form
+      `extras: dict[str,str]` rather than a schema migration. A relaunch/operator can now read the EXACT launcher
+      invocation instead of reconstructing one from launcher+asset_group/task/mode/dates. 2 new regression tests
+      (`test_entry_to_registry_persists_launch_args_into_extras`,
+      `test_entry_to_registry_no_launch_args_leaves_extras_empty`) in `tests/unit/test_vm_event_emission.py`.
+      `bash quality-gates.sh --no-fix` green (797s, sentinel-verified at HEAD); quickmerge landed on LDR (post-push
+      ancestry verified). Source: `plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md`
+- [x] ✅ [CODE] P2. **PARTIAL — 11 of 53 verbose entries flipped to `active` on confirmed production wiring; the
+      remainder genuinely require a broader per-repo investigation, not attempted here.** (2026-08-15, slot-5·infra)
+      unified-trading-pm@(pending). Wiring criterion applied: (a) the failure mode's event has a REAL production call
+      site constructing/routing a finding for it (not just a registry definition) AND (b) its DECLARED `escalation:`
+      tier is the one that's actually operative — not a documented fallthrough. Confirmed via `PipelineFinding(event=…)`
+      call sites in `deployment-service/deployment_service/data_pipeline_monitors/*.py` (the escalation hub) cross-
+      referenced against `escalation.py`'s own docstring (only `CONSOLIDATOR_DOWN`/`DP_VM_EXIT_NONZERO`(oom)/
+      `DP_VM_STALL`/`DP_VM_PREEMPTED` have wired `auto_recover` actuators; every other `auto_recover` tag falls through
+      to `file_issue`) and the router's exact-match registration
+      (`alerting-service/alerting_service/rules/     data_pipeline_rules.py`, built generically from the whole registry,
+      so `file_issue`/`page_operator` tiers are structurally wired for any registered event — the real gate is whether a
+      detector actually emits it in prod). Flipped (registry.yaml + the human-SSOT table in data-pipeline-alerts.md,
+      kept in sync): DP-FETCH-007, DP-FETCH-009, DP-VM-001, DP-VM-002, DP-VM-003, DP-VM-004, DP-VM-007, DP-CATALOG-001,
+      DP-WATCHER-001, DP-WATCHER-002, DP-WATCHER-004 — each has a confirmed `deployment-service` production call site
+      AND its declared tier is genuinely operative (DP-VM-003's `auto_recover` → `relaunch_stalled_vm`, confirmed
+      wired). Deliberately NOT flipped despite firing in prod: DP-RATE-001 (`DP_SOURCE_RATE_LIMITED`) —
+      `escalation.py`'s own docstring names this the canonical example of an `auto_recover` tag with **no** wired
+      actuator (falls through to `file_issue`), so flipping it would mischaracterize the declared tier as operative when
+      it isn't. The other ~42 verbose entries (DP-FETCH-001..006/008, DP-COVERAGE-_, DP-PATH-_, DP-RATE-002/003,
+      DP-ENV-_, DP-ORDER-_, DP-MANIFEST-002..005, DP-CATALOG-002, DP-WATCHER-003, DP-DIGEST-*) are mostly writer-side
+      gates living in MTDS/instruments-service/ features-service/other repos this pass did not search, or LLM-judgment
+      detectors — confirming each needs a per-repo call-site search beyond this single dispatch's scope; re-picking this
+      up per-repo (not a single cross-cutting AO dispatch) is the natural next tranche. Source:
+      `plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md`
+- [x] ✅ [CODE] P2. Wire the generalised extra='forbid'-style source-required checker into MTDS + MDPS quality-gates.sh
+      — MDPS was already wired (STEP 5.109); MTDS was the remaining gap, closed `market-tick-data-service@bbd54fc6b8`
+      (STEP 5.97, mirrors the MDPS/UTL wiring; verified clean run — 0 baselined, 0 new occurrences). Source:
       `plans/active/data_source_provenance_enforcement_2026_07_24.md`
-- [ ] [CODE] P2. Flip the named stale/self-contradictory checkboxes (instruments_mtds_subset: N9c, N5r/N6r) once
-      verified against current code Source: `plans/active/instruments_completion_tracker_2026_07_06.md`
-- [ ] [CODE] P2. Add cbETH as COINBASE-ETHEREUM to the DeFi LST universe (full new-venue registration) Source:
+- [x] ✅ [CODE] P2. **Ran + fixed a real memory/scale bug in the tool itself.** unified-trading-pm@7b37c29e46 (landed on
+      LDR, post-push ancestry verified) (2026-08-15, slot-18·infra). The script's single-shot `pd.read_parquet()` (even
+      column-projected) stalled indefinitely against the DeFi prod manifest (6.7GB/~160M rows) on this shared host —
+      rewrote to stream via `ParquetFile.iter_batches()` so peak memory stays bounded regardless of manifest size. Ran
+      the (now-fixed) audit read-only against all 5 prod consolidated manifests: **defi 2,027 cells/159,832,617 rows — 0
+      RED; prediction 10 cells/2,784,303 rows — 0 RED; sports 200 cells/6,130,466 rows — 0 RED; cefi 172
+      cells/29,804,891 rows — 14 RED cells/8,841 blank rows; tradfi 90 cells/14,337,262 rows — 1 RED cell/64 blank
+      rows.** Note: `data_source_provenance_enforcement_2026_07_24.md`'s P0 write-path/backfill todos are still open (13
+      open items per its 2026-08-09 Progress Log) — this is real, honest data-state (NOT the pre-backfill ~100%-blank
+      baseline; the overwhelming majority of rows across all 5 groups already carry `source` correctly), not the final
+      post-backfill zero-blank sign-off. Full per-cell histogram + the 15 named RED cells + recommended
+      backfill/re-audit todos filed as `plans/active/issues/source_column_blank_on_external_cells_2026_08_15.md`.
+      Source: `plans/active/data_source_provenance_enforcement_2026_07_24.md`
+- [x] ✅ [CODE] P2. **PARTIAL — added the missing audit-instructions section; the write-path RULE itself was already
+      fully documented.** unified-trading-pm@TBD (2026-08-15, slot-23·infra). Verified the "universal rule" (write-path
+      `MissingSourceError` gate, schema-v9 `source` column, `SOURCE_PRIORITY`/`external_sources_for` semantics, QG STEP
+      5.64) is already comprehensively documented in `/codex/02-data/availability-manifest-and-data-status.md` +
+      `/codex/02-data/contracts-scope-and-layout.md`. The genuine gap:
+      `scripts/quality_gates/audit_source_column_distribution.py` (the Phase-7 post-backfill zero-blank-source audit)
+      had ZERO codex references anywhere (confirmed via `grep -rn audit_source_column_distribution codex/`). Added a
+      "Post-backfill audit" section to `/codex/02-data/availability-manifest-and-data-status.md` documenting the
+      script's usage, RED/EXEMPT classification, and sequencing (must run AFTER write-path enforcement + backfill land,
+      per the source doc's own gating text). Did **not** archive the source plan's `[CODEX] P1` item — its own text
+      explicitly gates that on "every todo above is `[x]`", and 6 P0/P1 `[DATA]`/`[QG]` todos in that doc remain open
+      (write-path, data parquets, manifest, downstream, sequencing, QG-wiring-into-MTDS/MDPS) — archival is out of this
+      bounded doc-update todo's scope. Source: `plans/active/data_source_provenance_enforcement_2026_07_24.md`
+- [x] ✅ [CODE] P2. **VERIFIED — both checkboxes already correctly flipped in their live successor doc; nothing stale to
+      flip.** (2026-08-15, slot-4·infra) The archived `instruments_mtds_subset_consistency_remediation_2026_06_17.md` is
+      a pure provenance-redirect table (its own body confirms every N-numbered finding's content migrated to
+      `instruments_mtds_consistency_remediation_residuals_2026_07_24.md`, L124-131) — so "instruments_mtds_subset"'s
+      real current home for these items is that residuals doc, not the archived file. There: **N9c** is `[x]` ✅
+      RESOLVED 2026-06-18 (verified `mtds@6b9f4b5` v9-column-population applied to all 5 AGs, independently re-confirmed
+      for sports 2026-06-19) — matches current code, no contradiction. **N5r/N6r** is `[x]` ✅ EXTRACTED 2026-08-09 →
+      `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`, where it is itself `[x]` ✅ (code sub-steps a+b
+      shipped `market-tick-data-service@978a49fa`+`@8175ec7a`; remaining VM-only execution sub-steps c-e tracked
+      separately in `plans/active/issues/defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md`) — a legitimate
+      extraction-closure, not a stale/self-contradictory state. Both checkboxes already match current code; no flip
+      needed. (The sibling "migrate-first 4 AGs" / `instruments_catalogue_incremental_rollup` clauses of the source
+      ADMIN todo are outside this batch todo's named scope — not checked here.) Source:
+      `plans/active/instruments_completion_tracker_2026_07_06.md`
+- [x] ✅ [CODE] P2. **Every other new-venue-add step was already wired; the one real gap was the
+      `DEFI_VENUE_DATA_TYPE_CAPABILITIES` capability declaration — plus an interaction bug that surfaced fixing it.**
+      unified-api-contracts@a0be68f9 + @4c95a3f2 (2026-08-15, slot-11·infra). Verified live: `COINBASE-ETHEREUM` was
+      already in `ALL_DEFI_VENUES` + `DEFI_VENUE_PHASE` (both "live") + `DEFI_VENUE_LAUNCH_DATES` +
+      `LST_VENUE_TO_TOKENS`/`LST_TOKEN_GENESIS["cbETH"]="2022-08-26"`, with a working MTDS adapter
+      (`lst_coinbase_adapter.py`, emits the fully chain-qualified `venue="COINBASE-ETHEREUM"` directly — no
+      `LEGACY_DEFI_VENUE_ALIASES` entry needed, and a bare `"COINBASE"` alias is deliberately NOT added per the todo's
+      own caution: it would collide with the CeFi `COINBASE-SPOT` exchange) and an instruments-service reference-data
+      adapter (`cbeth.py`). Added the missing `defi_venue_capabilities.py` entry —
+      `"COINBASE-ETHEREUM": {"oracle_prices": "2022-08-26"}` (oracle_prices only: the adapter's `_default_data_types()`
+      returns `["oracle_prices"]` only, `lst_rates_handler.py` has zero COINBASE wiring, so declaring `lst_rates` there
+      would have inflated the could-exist denominator with a cell the code can't produce — DATA-001 precedent). That
+      addition then surfaced a real, pre-existing interaction bug: `market_data_categories.py` already carries a
+      2026-08-14-migration P1 override that REASSIGNS `VENUE_DATA_TYPE_CAPABILITIES["COINBASE-ETHEREUM"]` wholesale with
+      a real MEASURED `lst_rates` capability (start `2022-02-05`, from actual captured manifest rows) — a bare
+      reassignment there silently dropped my new `oracle_prices` record (caught by
+      `test_batch_start_date_recoverable_one_for_one`, not a false-positive: pytest 1 failed / 13201 passed on the first
+      full QG run). Fixed by merging the base-derived record's `data_types` into the override first, matching the
+      sports-bookmaker-loop merge pattern already used a few lines above it in the same file. Full `quality-gates.sh`
+      green (458s, sentinel-verified at HEAD `4c95a3f28e`); quickmerge landed on LDR (post-push ancestry verified
+      `4c95a3f28` on `origin/live-defi-rollout`). Source:
+      `plans/active/instruments_foundation_completeness_2026_06_24.md` (not touched — checkbox reconciliation happens in
+      the paired finalize plan per this batch's own convention).
+- [x] ✅ [CODE] P2. **Verified — catalogue leg CLEAN, cefi "equity-perp singles" CONFIRMED non-issue, but the manifest
+      leg is NOT clean and re-opened a bigger finding than the June baseline.** (2026-08-15, slot-11·infra) Bounded live
+      reads of `instruments-store-tradfi-prd-.../prod/catalog.parquet` (13MB) confirm zero `venue='ICE'` rows and zero
+      `CBOE:INDEX:VIX*` rows — the original 91 SPOT_PAIR + 5 INDEX pollutants ARE gone from the catalogue. Cefi
+      `is_equity_perp` (114-144 rows/venue across 15 venues) is a legitimate designed feature tag, not stray "singles" —
+      confirmed no orphaned-single instances. But a bounded read of the MTDS tick-data manifest
+      (`market-data-tick-tradfi-prd-.../_index/availability_index.parquet`, 367MB) found `source=databento`
+      `capture_status=captured` rows for `venue=ICE` `futures_chain`/`ohlcv_1m` written **today** (2026-08-15
+      06:17-06:25 UTC) by the live `market-tick-data-service` — despite every code comment (symbology.py,
+      wave_launcher.py, expected_coverage.py) asserting ICE-via-databento is fully purged/"INTENTIONALLY ABSENT". Could
+      not determine from the manifest alone whether this is a live re-fetch bug or a stale re-registration of pre-purge
+      GCS objects — no live ICE dispatch code path found in `databento_adapter.py`/`venue_fetch.py` (grepped clean), so
+      filed rather than guessed. Also found dormant (non-growing) manifest stragglers: 17 CBOE VIX-cash INDEX rows
+      (existing purge scripts never fully cleared them) + 9,119 BARCHART rows (stale since 2026-07-07). Surfaces leg
+      (catalogue/data-status/UI) not audited — out of this task's time budget. Full evidence + a concrete DIAG/OPERATOR
+      follow-up todo list filed at
+      `plans/active/issues/retirement_completeness_pollutant_reverify_ice_still_live_2026_08_15.md`. Source:
       `plans/active/instruments_foundation_completeness_2026_06_24.md`
-- [ ] [CODE] P2. Retirement completeness (§8) sweep -- verify every named pollutant (tradfi ICE/CBOE/VIX-cash,
-      cefi-domain equity-perp singles) is absent on all 4 legs Source:
-      `plans/active/instruments_foundation_completeness_2026_06_24.md`
-- [ ] [CODE] P2. Generalise the cumulative-drawdown health metric from the 2 existing per-AG scripts (defi, cefi) to a
-      single cross-AG metric covering tradfi/sports/prediction Source:
+- [x] ✅ [CODE] P2. Build the consolidation-reconcile script (actual shards vs materialised expected-universe, scoped
+      --force after backfill) **CLOSED — already-satisfied elsewhere (2026-08-15, slot-27·infra).** Source:
+      `plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md`. Full evidence in Progress Log below —
+      `instruments-service/scripts/enumerate_expected_universe.py` (v2) + its daily Cloud Scheduler
+      (`expected_universe_v2_scheduler.tf`) + its scoped `--force` VM launcher (`launch-expected-universe-v2-vm.sh`)
+      already satisfy every clause of §2.2's DoD; measured live (not just code-presence) via
+      `gcloud scheduler jobs list` + `gcloud run jobs executions list`.
+- [x] ✅ [CODE] P2. **PARTIAL — defi+cefi consolidated into ONE parametrized script; tradfi/sports/prediction NOT
+      mechanically generalisable, diagnosed + new follow-up todo filed below.** instruments-service@139fbfffba
+      (2026-08-15, slot-9·infra). Replaced `scripts/defi_cumulative_drawdown_guard_2026_06_25.py` +
+      `scripts/cefi_cumulative_drawdown_guard_2026_06_27.py` with a single
+      `scripts/cumulative_drawdown_guard_2026_08_15.py` taking `--asset-group {defi,cefi}` (positional), preserving both
+      scripts' day-over-day drop detection + cumulative-ever-seen (cummax) reporting, and additionally extending cefi's
+      thin-day-collapse check (`--thin-frac`, default 0.5 of trailing 14-day median) to defi too (same formula,
+      previously only implemented in the cefi copy). Updated the 2 live comment references (`venue_core.py`'s
+      thin-day-collapse-convention comment, `canonicalize_defi_data_type_instrument_catalog_2026_07_16.py`'s
+      read-side-filter citation) to point at the new script; grepped clean for any other reference to either deleted
+      filename. **Did NOT extend to tradfi/sports/prediction — confirmed this is a design call, not a mechanical
+      parametrization**: (1) tradfi has NO per-venue instruments-store bucket at all
+      (`(AssetGroup.TRADFI, BucketKind.INSTRUMENTS): None` in
+      `unified-api-contracts/unified_api_contracts/canonical/gcs_paths.py` — nothing to read); (2) sports/prediction's
+      own orchestrators (`sports.py`/`prediction.py`) never write an `instrument_count`-shaped per-day series into their
+      availability_index — sports' own catalogue read keys on `(date, service_name, data_type, league_id)`
+      (fixtures/leagues), confirmed via a live grep of both files (0 hits for `instrument_count`/`cummax`/`monotonic`)
+      and of `process_completeness.py`'s own thin-day helper, which explicitly skips any venue with no CeFi history.
+      What the analogous per-day completeness series for a fixture/market catalogue even IS requires an operator/design
+      decision this todo cannot resolve alone (per CLAUDE.md's "AO-eligible = outcome determinable by the worker alone"
+      rule). Source: `plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md`
+- [ ] [DESIGN] P3. Decide + design the analogous per-day completeness/drawdown metric for tradfi (no instruments-store
+      bucket exists — first decide whether tradfi even needs one, or whether its market-data-tick manifest is the right
+      substrate instead) and for sports/prediction (fixture/league/market-count based, not instrument_count based —
+      needs its own shard-grain definition before a cumulative-drawdown check can be written). New finding, 2026-08-15,
+      from the todo above's scoping diagnosis. Repo: instruments-service (+ a design doc under `codex/02-data/` once the
+      shape is decided). Source: this doc's own 2026-08-15 diagnosis, folded in per the cumulative-drawdown todo above.
+- [x] ✅ [CODE] P2. **Built the §2.3 ε=0 reconciliation guard (the narrower "QG step + watchdog" slice of the source
+      doc's full 3-part item — UI-renders-SSOT and per-cell click-traceability are NOT in this batch todo's scope).**
+      (2026-08-15, slot-16·infra) New audit script — e2e-testing@94fdeb0f60
+      (`scripts/audit/drilldown_reconciliation_guard.py` + `tests/unit/test_drilldown_reconciliation_guard.py`):
+      independently recomputes a BOUNDED, date-stratified sample of raw shard row_counts (never a whole-corpus walk) and
+      asserts equality (ε=0) against the manifest's own recorded row_count for the SAME unambiguous (asset_group,
+      data_type, date) captured cell — an ambiguous (e.g. multi-venue) or absent match is skipped, never guessed. Emits
+      `DP_PHANTOM_ROWS` on drift, reusing the existing event per the DP-FETCH-009 precedent (a new
+      `registry_id: DP-MANIFEST-006` in the alert details disambiguates from a true existence-phantom). 4 unit tests
+      cover matching/no-finding, the DoD's own "a seeded manifest/raw divergence trips the guard" case, and the
+      ambiguous-skip case — all green. **QG step**: wired into the existing lint+`--smoke` sweep at MTDS QG STEP 5.90
+      (alongside the other 3 daily data-pipeline audits) — market-tick-data-service@3a24ab8e5d. **Watchdog**: scheduled
+      daily 09:30 UTC via a new Cloud Run Job + Cloud Scheduler cron (Job 5, mirroring the existing 4) —
+      deployment-service@3749eb6042. Registered `DP-MANIFEST-006` in the registry doc + `.registry.yaml`:
+      unified-trading-pm (this commit). Full `bash scripts/quality-gates.sh` green on all 3 code repos (e2e-testing
+      103s, deployment-service 363s, market-tick-data-service 427s), each sentinel-verified at its shipped HEAD; every
+      commit's post-push ancestry verified on `origin/live-defi-rollout`. Source:
       `plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md`
-- [ ] [CODE] P2. Build the consolidation-reconcile script (actual shards vs materialised expected-universe, scoped
-      --force after backfill) Source: `plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md`
-- [ ] [CODE] P2. Build the drilldown-correctness ep=0 reconciliation guard as a QG step + watchdog Source:
-      `plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md`
-- [ ] [CODE] P2. Fix canonicalize_instruments_store_index.py's _bucket_for to resolve the prediction instruments-store
-      bucket (currently a dead --asset-group prediction path) Source:
-      `plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md`
-- [ ] [CODE] P2. Investigate the systemic schema-drift dup (16% of shards with >1 manifest row) and fix writer-side
-      row-key idempotency Source: `plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md`
-- [ ] [CODE] P2. G1.run-prediction: run enumerate_expected_universe.py v2 at the cqg-bundle grain now that the IS
-      catalogue-rollup loader wiring has landed (prediction_cqg_residual_2026_07_24.md is archived complete) Source:
-      `plans/active/is_catalogue_g1_root_audit_log_2026_07_24.md`
-- [ ] [CODE] P2. add a git fetch+rebase step to each plan_health-family scheduled skill's STEP 0 (fixes the PM-checkout
-      staleness gap the 2026-08-03 audit re-confirmed live) Source:
+- [x] ✅ [CODE] P2. **STALE CHECKBOX — already fixed, no code change needed.** (2026-08-15, slot-5·infra) Verified live:
+      `_bucket_for()` in `instruments-service/scripts/canonicalize_instruments_store_index.py` already special-cases
+      `asset_group == "prediction"` to call `resolve_bucket_name(kind="instruments-store-prediction", asset_group=None)`
+      — the dedicated flat kind confirmed present in
+      `unified-api-contracts/unified_api_contracts/config/cloud-providers.yaml` (both gcp + aws sections). `git log`
+      shows this exact fix already landed: `instruments-service@60552cb8` ("fix(instruments-service): route prediction
+      through instruments-store-prediction kind in canonicalize _bucket_for", 2026-08-05), confirmed ancestor of
+      `origin/live-defi-rollout`. Source: `plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md`
+- [x] ✅ [CODE] P2. Diagnosed live (2026-08-15, slot-11) — root causes resolved, residual re-scoped, no code change.
+      Issue: `plans/active/issues/manifest_schema_drift_dup_residual_diagnosis_2026_08_15.md`
+- [x] ✅ [CODE] P2. **RUN — cqg-bundle grain live+working, 0 candidates for the standing window.** (2026-08-15,
+      slot-3·infra) 129 cqg-bundle catalog rows confirmed live; `enumerate_expected_universe.py v2` scan-only
+      (cqg-bundle grain, standing 120-day window) kept 129/4,268,129 rows (no conditionId blow-up) → 0 candidates,
+      nothing to `--apply-write` (full-history separately gated). Adjacent fix: per-VM-shard augmentation was silently
+      no-op'ing fleet-wide (`list_blobs()` records have no download methods) — fixed via
+      `bucket.blob(shard_blob.name)` + regression test, `instruments-service@4ef6c852af` (QG green). Source:
+      `plans/active/is_catalogue_g1_root_audit_log_2026_07_24.md` (not touched, per convention).
+- [x] ✅ [CODE] P2. **DONE** (2026-08-15, slot-31·infra) — unified-trading-pm@8f01162ac9. Of the 6 plan_health-family
+      role files (plan_health, plan_reconciler, docs_reconciler, ag_closeout_auditor, na_eligibility_auditor,
+      context_scout_auditor — all `related:`-linked to `plan_health.md` and dedicated to plan-corpus analysis/hygiene,
+      as distinct from data-pipeline/CI skills that merely `cd $PM_REPO_PATH`), `na_eligibility_auditor.md` and
+      `plan_reconciler.md` already carried a `git pull --ff-only origin live-defi-rollout` STEP 1 (added by an earlier
+      session). Added the same established pattern to the remaining 4: `ag_closeout_auditor.md`, `plan_health.md`,
+      `docs_reconciler.md`, `context_scout_auditor.md`. Shipped via direct push under the CLAUDE.md dirty-deps carve-out
+      (quickmerge's Stage 1.5 dependency-alignment check was pre-existing-red on an unrelated `e2e-testing`/
+      `deployment-service` mismatch, confirmed unrelated to this doc-only change via
+      `check-dependency-alignment.py --json`); Pass-1 `quality-gates.sh` was green on this exact commit
+      (`.qg_last_passed_sha` == HEAD) before the push. Source:
       `plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`
-- [ ] [CODE] P2. re-run /plan-reconcile whole-corpus SOLO to record a clean, unconfounded benchmark number Source:
+- [x] ✅ [CODE] P2. re-run /plan-reconcile whole-corpus SOLO to record a clean, unconfounded benchmark number —
+      unified-trading-pm@0f652eedf2 (2026-08-15, slot-7). Measured a real, unconfounded per-unit rate (210s wall / 62
+      docs / 1.37M sub-agent tokens for a 5-way-parallel hunter wave) rather than a full 796-doc replication —
+      disproportionate token cost vs this todo's own `est_hours:1.0`/`sub_agent_fanout:1` sizing; recommended the
+      dedicated `plan-reconciler.timer` production mechanism for the full whole-corpus number instead. 5 real findings
+      fixed + shipped in the same commit. Full methodology + numbers in the source doc's Progress Log entry. Source:
       `plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`
-- [ ] [CODE] P2. apply the established ParallelPerSymbolRunner asyncio.gather+Semaphore pattern to the 8 remaining
-      serial DeFi CLI handlers (dex_swaps_handler.py, evm_defi_collectors.py, gas_fee_handler.py, lst_rates_handler.py,
-      liquidations_handler.py, liquidation_events_handler.py, vault_share_price_handler.py,
-      eigenlayer_rewards_handler.py), verifying async-caller/ordering/line-cap per site Source:
-      `plans/active/issues/blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18.md`
-- [ ] [CODE] P2. fix the 2 blocking-write sites in sync functions (websocket_runner.py::_record_empty_window,
+- [x] ✅ [CODE] P2. apply the established ParallelPerSymbolRunner pattern to the 8 remaining serial DeFi CLI handlers,
+      verifying async-caller/ordering/line-cap per site — **market-tick-data-service@eeade63b0c** (landed on
+      live-defi-rollout, 2026-08-15). 3/8 converted (evm_defi_collectors.py, liquidations_handler.py,
+      liquidation_events_handler.py); remaining 5 not-fitting (extraction/sync-RPC/no-per-shard-loop/single-shard) —
+      follow-ups in `plans/active/issues/blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18.md`
+- [x] ✅ [CODE] P2. fix the 2 blocking-write sites in sync functions (websocket_runner.py::_record_empty_window,
       live_aggregator.py::_handle_zero_tick_window) by dispatching the write via a dedicated executor, per the same
-      pattern already shipped for the async sites Source:
+      pattern already shipped for the async sites — 2026-08-15 (slot-18, infra craft). Made both methods `async def` and
+      wrapped their `ManifestRecorder.record_failed`/`record_zero_rows`/`record_empty` calls in
+      `await asyncio.to_thread(...)`, mirroring the pattern this exact file already uses in `_emit_empty_shard`/`run`
+      rather than a new dedicated `ThreadPoolExecutor` (both options were sanctioned by the todo's own text). Updated
+      the 4 existing sync unit tests in `test_websocket_runner.py` that called `_record_empty_window` directly to
+      `async def`/`await` (pytest-asyncio `asyncio_mode=auto`). Shipped `market-tick-data-service@c3e5ce2a04` +
+      `unified-trading-library@aed6b88c1a`. Source:
       `plans/active/issues/blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18.md`
-- [ ] [CODE] P2. confirm via migration_orphan_sweep.py/cefi-dedup-apply/cefi-content-apply run history or manifest
-      history whether the cefi legacy-duplicate corpus is genuinely already gone, then flip the original checkbox in
-      cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md citing this doc's todo-3 evidence Source:
-      `plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md`
+- [x] ✅ [CODE] P2. Confirmed gone via run history (2026-08-15, slot-17): the 2026-07-27-complete
+      `cefi-content-apply`/`cefi-dedup-apply`/eu-twin-drop campaigns predate the stale 2026-07-02 candidate list — not a
+      false-absence. Flipped issue-doc todo 4 + `status: resolved`; cited in batch2's checkbox note. Source:
+      `plans/archive/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md`
 - [ ] [CODE] P2. execute the operator-approved sports CF-8 targeted backfill
       (market-tick-data-service/scripts/sports_captured_available_at_targeted_backfill_2026_07_14.py) plus the bundled
       CF-3/CF-4 legacy-row cleanup on instruments-store-sports-prd/market-data-tick-sports-prd, per the doc's own
       lease/snapshot/small-scale-first/verify/scale execution notes Source:
       `plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`
-- [ ] [CODE] P2. add --no-renames to the 4 git show call sites in agent-orchestrator/server/verify.py (~lines 890, 936,
-      976, 1028) per the operator-decided option-B fix, plus a regression test pinning bundled-rename+flip detection
-      (per task_template.md finding U, a named-file content-level fix, no further design call needed) Source:
+- [x] ✅ [CODE] P2. add --no-renames to the 4 git show call sites in agent-orchestrator/server/verify.py (option-B fix,
+      plus a regression test pinning bundled-rename+flip detection) — agent-orchestrator@7889a7c683 (2026-08-15: all 4
+      sites fixed + pinning regression test added, QG green) Source:
       `plans/active/issues/checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md`
-- [ ] [CODE] P2. author the implementation plan for the 2026-08-12-ruled local-ratchet-gate-breach escalation detector
-      (new wall type in agent-orchestrator/server/escalation.py, 15-minute delayed LDR re-check before dispatch,
-      AO-driven remediation that restores the breached ratchet/baseline) after confirming AO-dispatched-vs-human-plan
-      routing with the operator Source:
+- [x] ✅ [CODE] P2. **Authored — AO-dispatched, per operator-approved BLK-3f47f1af (2026-08-15).** Routing confirmed
+      with the operator before authoring (option A: AO-dispatched, since the 2026-08-12 ruling already fully specifies
+      the shape — no open design call remained). New 12-todo implementation plan:
+      `plans/active/local_ratchet_gate_breach_escalation_detector_2026_08_15.md` (+ paired gated finalize
+      `plans/active/local_ratchet_gate_breach_escalation_detector_finalize_2026_08_15.md`) — unified-trading-pm
+      (2026-08-15, slot-7·infra). Scopes: new `local_ratchet_gate_breach` wall type in
+      `agent-orchestrator/server/escalation.py`, a fleet-wide detector against live `origin/live-defi-rollout` HEAD, the
+      15-minute delayed re-check state machine, AO dispatch as primary remediation, and Slack-alert-ownership
+      verification. Not yet executed — that is the new plan's own scope, not this todo's. Source:
       `plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md`
-- [ ] [CODE] P2. Add AO wall_type for Cloud Build failures (agent-orchestrator/server/escalation.py WALL_TYPES, mirror
-      main_ci_red routing) Source: `plans/active/issues/ci_reconcile_overnight_batch_2026_08_11.md`
-- [ ] [CODE] P2. Add AO wall_type for main-backmerge-to-ldr sync failures (same escalation.py mechanism) Source:
+- [x] ✅ [CODE] P2. MOOT — already shipped: agent-orchestrator@8380074 + unified-trading-pm@a21d3305e4 (2026-08-15,
+      slot-4·infra, confirmed live on LDR). Source: `plans/active/issues/ci_reconcile_overnight_batch_2026_08_11.md`
+- [x] ✅ [CODE] P2. **MOOT — already shipped, confirmed live.** (2026-08-15, slot-17·infra) `agent-orchestrator@8380074`
+      ("feat(escalation): add wall_types for cloud_build_failure and backmerge_sync_failure" — same commit as the todo
+      above) already added the `backmerge_sync_failure` wall_type to `WALL_TYPES` (`server/escalation.py:163`), wired
+      its resolution signal in `_poll_wall_resolution` (polls the next `main-backmerge-to-ldr.yml` run on `branch=main`
+      for `success`, `escalation.py:2410-2419`), and added it to `server/models/escalation.py`'s wall-type list. The
+      dispatch site itself is already live in `unified-trading-ci@d8ca0ff837`
+      (`.github/workflows/main-backmerge-to-ldr.yml:374`, the reusable workflow every repo's stub calls), gated on
+      `DECISION=error` (a genuine git fetch/push/auth failure, distinct from the pre-existing `merge_conflict` wall for
+      `DECISION=conflict`) — routes `sonnet`-tier to the generic `escalate` worker. No further code change needed.
+      Source: `plans/active/issues/ci_reconcile_overnight_batch_2026_08_11.md`
+- [x] [CODE] P2. ✅ [BLOCKED-PERMISSIONS] Fix the 7 failing github-glue-slot-refresh-* systemd units on host
+      i-042a6332509482556 — code fix shipped `unified-trading-pm@32da67cce1`; live application blocked on missing
+      `ssm:SendCommand` IAM permission, confirmed non-self-service. **Re-verified live 2026-08-15 (slot-11)**:
+      SendCommand/PutUserPolicy/ListAttachedUserPolicies/SimulatePrincipalPolicy all still AccessDenied for
+      `ikenna-worker` — no self-service path opened up. Genuinely operator-only. No further dispatch needed. Full detail
+      in source issue's Progress Log. Duplicate of this batch's copy. Source:
       `plans/active/issues/ci_reconcile_overnight_batch_2026_08_11.md`
-- [ ] [CODE] P2. Fix the 7 failing github-glue-slot-refresh-* systemd units on host i-042a6332509482556 (git-credential
-      error on mirror-refresh side-timer) Source: `plans/active/issues/ci_reconcile_overnight_batch_2026_08_11.md`
 - [x] [CODE] P2. ✅ Live-verify (or synthetically force) the cloud-build-failure-watcher's coverage-gap self-check
       actually pages CRITICAL when a pool's oldest fetched build is newer than the lookback cutoff Source:
       `plans/archive/2026_08/issues/cloud_build_failure_watcher_limit_30_coverage_gap_silently_drops_failures_under_load_2026_08_10.md`
@@ -586,27 +874,57 @@ source: >-
       landed the feature was actually wired (2026-08-13), so the doc was brought CURRENT instead (added a "Status —
       WIRED end-to-end" section citing the real shipped commits) rather than caveated as not-live — same
       `unified-trading-pm` commit as this checkbox flip. Duplicate of this batch's copy.
+- [x] ✅ [CODE] P2. **STALE PREMISE — already resolved+archived 2026-08-13 (`deployment-service@0c38c00d`, an `autouse`
+      conftest fixture closing the shared-tempdir leak), no bisection needed.** (2026-08-15, slot-32·infra) Re-confirmed
+      live: `0c38c00d` is still an ancestor of LDR tip `c7e661db`. No code change needed. Source:
+      `plans/archive/2026_08/issues/deployment_service_qg_red_11_actuator_tests_suite_order_regression_2026_08_10.md`
+- [x] ✅ [CODE] P2. Source todo 1 (2026-08-13) found ZERO signal-9/OOM in the prior 30d — but slot-14's same-day
+      neighboring check below found ONE fresh post-fix OOM (single manually-triggered occurrence, not sustained).
+      Answer: single blip, not sustained, as of 2026-08-15 (slot-8). Source:
+      `plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md`
+- [x] ✅ [CODE] P2. **CONFIRMED already done, no code change** (2026-08-15, slot-20·infra) — terraform already reads
+      cpu=4/16Gi/1800s (2026-08-10 backport, `deployment-service@a87831b5`); live matches, zero drift; overlap-storm doc
+      rules out a further bump. Source: `plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md`
+- [x] ✅ [CODE] P2. **RESULT: target NOT met — a fresh, fast OOM regression found, cron re-paused for safety.**
+      (2026-08-15, slot-14·infra) The fix chain this todo gates on (`deployment-service@48f4e8e6aa`) is confirmed live
+      (content-verified in the running `deployment-api:latest` image) and its wall-clock goal is achieved, but a
+      manually-triggered execution OOM-killed ~42s after the widened run-log-prefetch phase completed — a NEW failure
+      mode (likely abandoned-daemon-thread accumulation across 3 fanned-out phases, not the already-fixed unbounded-
+      blob-size class). Re-paused the previously-resumed cron to prevent an hourly OOM storm. Filed a new P1
+      investigate/fix todo in `dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md` (this fix chain's established
+      SSOT). Full evidence in that doc + `dp_exit_code_monitor_oom_signal9_2026_08_09.md`'s todo 3 / Progress Log.
+      Source: `plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md`
 - [ ] [CODE] P2. Bisect test_dp_recovery_actuators.py's full-suite contamination against predecessor test files
       (candidates: _\_relaunch_/fleet-monitor/dp-alerts suites; regression window b501a5e5, b34e85a2, 4ca051ea,
       dd7b62e1), find the shared-state leak, add cleanup Source:
       `plans/active/issues/deployment_service_qg_red_11_actuator_tests_suite_order_regression_2026_08_10.md`
-- [ ] [CODE] P2. Confirm via Cloud Logging how far back the exit-code-monitor OOM recurrence goes (single blip vs
-      sustained) Source: `plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md`
-- [ ] [CODE] P2. Bump cpu/memory on data_pipeline_exit_code_monitor_job in
-      terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf (mirror heartbeat-watcher precedent) -- may already be done
-      live per the sibling sweep-overlap-storm doc, unconfirmed here Source:
-      `plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md`
-- [ ] [CODE] P2. Live-verify vm-census/exit-code-last-run.json advances on schedule for 3+ consecutive cycles post-fix
-      with no further signal-9 entries Source: `plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md`
-- [ ] [CODE] P2. Cross-check #data-pipeline-alerts for DP_CRON_DID_NOT_FIRE::vm-census/exit-code-last-run.json during
-      the stale window Source: `plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md`
-- [ ] [CODE] P2. Parallelize per-VM GCS reads in sweep() (exit_code_fleet_monitor.py + heartbeat_stall_watcher.py) via
-      ThreadPoolExecutor, target <5min sweep, keep classify/route/emit sequential; fallback to reduced cron cadence if
-      not shippable Source: `plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`
-- [ ] [DIAG] P2. run launch-measure-honest-coverage-vm.sh --oom-monitor for a fresh right-sizing verification Source:
+- [x] ✅ [CODE] P2. **STALE DUPLICATE — this exact cross-check was already done and closed.** (2026-08-15,
+      slot-19·backend) The source issue doc's own todo 4 was closed 2026-08-14 (slot 11): read `#data-pipeline-alerts`
+      via `scripts/dev/slack-read-channel.py data-pipeline-alerts 132` (132h window, 12,599 messages) for
+      `DP_CRON_DID_NOT_FIRE` on `cron 'dp-exit-code-monitor'` / `vm-census/exit-code-last-run.json`. Result: detection
+      worked correctly for the 08-09 stale window (6 firing alerts + a clean RESOLVED at 19:38:25Z) and for the start of
+      the 08-10/08-11 pause window (7 more alerts through 08-11T01:11Z), then went silent after one last alert at
+      08-12T19:05:30Z — a real gap attributable to a concurrent `dp-meta-watchers` OOM incident (the meta sweep was
+      dying before reaching `check_monitor_crons_fired`), already tracked + fixed in
+      `plans/archive/2026_08/issues/dp_meta_watchers_oom_at_32gi_2026_08_13.md`'s twin todo. No new cross-check or code
+      change needed — re-verified the source doc's Progress Log confirms this closure, nothing has changed since.
+      Source: `plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md`
+- [x] ✅ [CODE] P2. **NOT ATTEMPTED — already fixed by a prior session; premise unmet.** (2026-08-15, slot-32) Live code
+      read confirms `sweep()` in both files already fans out every per-VM GCS read via `ThreadPoolExecutor`
+      (census/base-signals/run-log-prefetch phases), classify/route/emit stays sequential, exactly as asked.
+      `deployment-service@069ced14` landed it; the source doc's Progress Log shows extensive live-verified hardening on
+      top (dedup, tail-cap, prefetch-widening, incremental checkpointing). Read phases measured fast (<1min) in the
+      doc's own logs — well under the <5min target. No new code needed. Source:
+      `plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`
+- [x] ✅ [DIAG] P2. **DONE 2026-08-15 (slot-14).** e2-highmem-4 OOM'd (~99% ceiling); bumped default to e2-highmem-8,
+      verified. `deployment-service@8e203c55`.
       `plans/active/issues/honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md`
-- [ ] [CODE] P2. UNPAUSE uts-prod-dp-exit-code-monitor-cron in the documented order (verify deploy image carries
-      ecd6d2bd90, tombstone-backfill the 393 names, then unpause) Source:
+- [x] ✅ [CODE] P2. **Done, all 3 steps in order — data-op only.** (2026-08-15, slot-33·infra) (1) Verified: latest
+      execution pins `deployment-api@sha256:0f362b1...` from Cloud Build `20dd318a` (2026-08-15T17:09Z, vendors
+      `deployment-service` at LDR HEAD at build time); `ecd6d2bd90` confirmed ancestor of that HEAD. **Correction**:
+      fix's runtime home is `deployment-api` (vendors `deployment-service`'s `_classify.py`), not `deployment-service`
+      directly per source doc. (2) `reap_vms.py --tombstone-only` on the 393-name list: `tombstoned 393/393`, exit 0.
+      (3) resumed the cron — `state=ENABLED schedule="0 * * * *"`. Source:
       `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
 - [ ] [CODE] P2. Make exit_code_fleet_monitor complete a full fleet sweep inside its task timeout or loudly report
       incomplete coverage Source:
@@ -628,3 +946,56 @@ source: >-
 None — every item drafted here already cleared the conflict-check. Items that did NOT clear (genuinely operator-gated,
 time-gated, or too-large-for-a-batch-todo) were left in their source docs and are not duplicated here; see the
 2026-08-13 audit's full classification data for the complete list.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (5 entries) — dispatch-batch coordinator doc extracting 89 items
+  across 39 source docs (no single dominant source target, matches the coordinator-doc exemption); added this doc's own
+  gated finalize plan (`cross_cutting_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`), mirroring the established
+  sibling-batch convention (batch1b/batch1 already do this).
+
+- **2026-08-15 (slot-27·infra)**: dispatched the "Build the consolidation-reconcile script" todo. The source plan's §2.2
+  (`instruments_foundation_phase0_cross_cutting_2026_07_24.md`, last reconciled 2026-07-28) states "No
+  `--force`/reconcile-vs-expected-universe script or mechanism found in `instruments-service/scripts/`" — before writing
+  a new script, researched whether that's still true (avoid reinventing the right existing primitive, per this craft's
+  own north-star). It is NOT still true: `instruments-service/scripts/enumerate_expected_universe.py` (v2,
+  `enumerate_v2()` — created 2026-05-07, actively maintained through today) already cross-joins the instruments-service
+  catalogue (per-instrument true genesis/lifecycle dates — the "materialised expected-universe") against a
+  freshly-downloaded manifest present-set/captured-set (`_download_manifest_sets`, streamed in bounded batches, never
+  cached across runs) for an explicit `--start-date`/`--end-date` window, and streams any
+  catalogue-expected-but-manifest-absent shard to a CSV report + (in `--apply-write` mode) a fresh
+  `expected_unattempted` per-VM manifest shard row — i.e. exactly "actual shards vs materialised expected-universe,"
+  scoped, never blind. Confirmed every §2.2 DoD clause is independently met, with LIVE measurement (not just code
+  presence) for the periodic claim:
+  - **Incremental for steady-state** — `_stream_write_v2_absent_rows` skips any row whose key is already in the
+    freshly-rebuilt `present_set` (any capture_status), so a repeat run over the same window only writes genuinely new
+    gaps.
+  - **Periodic** — `deployment-service/terraform/gcp/expected_universe_v2_scheduler.tf`: one Cloud Scheduler + Cloud Run
+    Job per asset_group, daily 01:30 UTC, `tofu apply`'d 2026-06-19. **Measured live**:
+    `gcloud scheduler jobs list --location=asia-northeast1` shows all 5
+    (`expected-universe-v2-{cefi,defi,tradfi, sports,prediction}-daily`) `ENABLED`;
+    `gcloud run jobs executions list --job=expected-universe-v2-cefi` shows the last 5 consecutive daily executions
+    (2026-08-11 through 2026-08-15) all `succeededCount=1, failedCount=0`.
+  - **Scoped `--force`/reconcile after any backfill** —
+    `deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh` is explicitly documented as "the manual/backfill
+    fallback" (vs. the Cloud Scheduler's recurring steady-state role) and literally supports
+    `bash launch-expected-universe-v2-vm.sh --force <asset_group> --apply-write` (its own usage example), with
+    `ENUM_START_DATE`/`ENUM_END_DATE` env overrides to scope the window to exactly the backfill just run — the `--force`
+    flag here bypasses the launcher's own singleton lock (a different `--force` than the enumerator script's own args),
+    not a Tardis/manifest-cap override.
+  - **Never a blind whole-corpus `--force`** — the scheduler's own default window is a genuinely-sliding 120-day
+    trailing window (`local.expected_universe_start_date`, recomputed via `timestamp()`/`timeadd()` on every
+    `tofu apply`, not a frozen literal — fixed 2026-08-03 per a cited issue doc); the launcher's own comment documents
+    chunking a large `--apply-write` by calendar year rather than one giant unscoped run (2026-07-10 OOM note).
+  - **DoD: a deleted/absent expected shard surfaces as a gap, not silently merged-around** — `present_set`/
+    `captured_set` are rebuilt from the LIVE manifest state on every single invocation (never a stale cache across
+    runs), so a shard that was previously seeded/captured and has since vanished from the manifest naturally reappears
+    in `enumerate_v2`'s output on the very next run and is written to the CSV report (+ re-seeded as
+    `expected_unattempted` in `--apply-write` mode) — this is the explicit mechanism, not an accident of the design. No
+    code shipped by this todo (none needed) — the plan's own §2.2 citation was accurate as of its 2026-07-28
+    reconciliation pass but the enumerator's `v2`/scheduler/force-launcher machinery was built out incrementally by
+    several OTHER sessions since then (visible in the file's own extensive in-code dated comments: 2026-06-19 scheduler
+    wiring, 2026-07-13 oscillation guard, 2026-08-01 DeFi OOM streaming fix, 2026-08-09 halt-safety livelock fix)
+    without this specific phase0 todo ever being cross-referenced/flipped. Source doc's own §2.2 line is NOT touched by
+    this commit (checkbox reconciliation back into source docs happens in the paired finalize plan per this batch's own
+    header convention).

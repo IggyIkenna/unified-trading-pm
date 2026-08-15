@@ -48,11 +48,11 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
-    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /codex/02-data/sports-2020-06-data-floor.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py,
+    /plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md,
   ]
 ---
 
@@ -947,3 +947,9 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
   (1.5M/day quota bump vs. accept the account-tier downgrade), no new information this pass. Whole-doc RECLASSIFY not
   warranted: 1 of the now-2 open items is upstream-outage-blocked, the other is an operator spend call — neither is a
   bounded, worker-determinable AO-dispatch outcome today. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) -- swapped out
+  `plan_line_cap_remediation_2026_07_23.md` (backward-looking split-provenance only, not tied to either remaining open
+  item) for `sports_all_vendor_honest_coverage_convergence_2026_08_07.md` (this doc's own 2026-08-09 round-9 entry cites
+  it directly as the live tracker for the Transfermarkt `BLOCKED-UPSTREAM-OUTAGE` status, one of the doc's only 2
+  remaining open items); kept the data-floor/honest-coverage/vm-launcher codex SSOTs + `honest_coverage.py` + the M-1
+  parent, all still accurate.

@@ -32,6 +32,13 @@ resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md,
+    /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
+    /codex/06-coding-standards/integration-testing-layers.md,
+    strategy-service/strategy_service/position/models.py,
+  ]
 ---
 
 # Venue coverage — read vs execute asymmetry
@@ -216,7 +223,43 @@ Kamino/Jupiter conflated the two.
 - [ ] [AGENT] P0. **Build DeFi position adapters for the carve-out path first** — Lido, Marinade, Kamino, Jupiter. These
       are not "more venues"; they are the reconciliation side of the two archetypes we are shipping real. Build the code
       fully (operator: _"we don't need credentials to fully build the code, not just stubs"_) — credentials gate RUNNING
-      an adapter, not writing one.
+      an adapter, not writing one. **Status 2026-08-15**: Lido — done (READ SIDE section below, `wstETH` via the generic
+      reader). Marinade — done this session, `strategy-service@926be71046`: added `"SOLANA"` chain addresses (mSOL,
+      jitoSOL) to UAC's `LST_TOKEN_ADDRESS_BY_CHAIN` (previously EVM-only despite `LST_VENUE_TO_TOKENS` already
+      declaring `MARINADE: ("mSOL",)`/`JITO: ("jitoSOL",)` — the venue→symbol map existed, the address table for that
+      chain didn't) and taught `factory.py`'s generic-first fallback to check both chains, tagging the resulting
+      `TokenSpec` `chain="SOLANA"` so `GenericTokenBalanceAdapter` picks the SPL read path, not `eth_call`. Jupiter —
+      **determined NOT to need a position adapter**, not silently dropped: read `carry-staked-basis.md`'s actual usage
+      (`spot_venue: JUPITER # USDC->native swap venue`) — Jupiter is a one-time USDC→SOL swap router for the archetype,
+      structurally unlike Uniswap's OWN adapter here (which reads LP positions — Uniswap pools genuinely hold state you
+      have a position in; Jupiter aggregates across OTHER protocols' pools and holds none of its own). After the swap,
+      the resulting SOL/LST sits in the wallet, covered by whichever venue's own adapter (or the generic reader) reads
+      that token — there is no persistent "Jupiter position" to reconcile against, the same category-of-thing the UAC
+      registry's own docstring warns about for non-token contracts. Kamino — **still open**: needs a bespoke lending-
+      position (Obligation account) reader, not the generic balance shape; see the new residue todo below — could not
+      verify a real per-wallet position/obligation REST endpoint in reasonable time (Kamino's own API structure under
+      `/kamino-market/` wasn't cleanly documented publicly; the TS SDK's `getObligationByWallet()` has no discovered
+      Python-callable REST equivalent) and hand-decoding the on-chain Obligation account layout from memory was judged
+      the same class of risk as the Solblaze/Jito Restaking instruction-byte guessing already declined elsewhere in this
+      doc. an adapter, not writing one. **Status 2026-08-15**: Lido — done (READ SIDE section below, `wstETH` via the
+      generic reader). Marinade — done this session, `strategy-service@926be71046`: added `"SOLANA"` chain addresses
+      (mSOL, jitoSOL) to UAC's `LST_TOKEN_ADDRESS_BY_CHAIN` (previously EVM-only despite `LST_VENUE_TO_TOKENS` already
+      declaring `MARINADE: ("mSOL",)`/`JITO: ("jitoSOL",)` — the venue→symbol map existed, the address table for that
+      chain didn't) and taught `factory.py`'s generic-first fallback to check both chains, tagging the resulting
+      `TokenSpec` `chain="SOLANA"` so `GenericTokenBalanceAdapter` picks the SPL read path, not `eth_call`. Jupiter —
+      **determined NOT to need a position adapter**, not silently dropped: read `carry-staked-basis.md`'s actual usage
+      (`spot_venue: JUPITER # USDC->native swap venue`) — Jupiter is a one-time USDC→SOL swap router for the archetype,
+      structurally unlike Uniswap's OWN adapter here (which reads LP positions — Uniswap pools genuinely hold state you
+      have a position in; Jupiter aggregates across OTHER protocols' pools and holds none of its own). After the swap,
+      the resulting SOL/LST sits in the wallet, covered by whichever venue's own adapter (or the generic reader) reads
+      that token — there is no persistent "Jupiter position" to reconcile against, the same category-of-thing the UAC
+      registry's own docstring warns about for non-token contracts. Kamino — **still open**: needs a bespoke lending-
+      position (Obligation account) reader, not the generic balance shape; see the new residue todo below — could not
+      verify a real per-wallet position/obligation REST endpoint in reasonable time (Kamino's own API structure under
+      `/kamino-market/` wasn't cleanly documented publicly; the TS SDK's `getObligationByWallet()` has no discovered
+      Python-callable REST equivalent) and hand-decoding the on-chain Obligation account layout from memory was judged
+      the same class of risk as the Solblaze/Jito Restaking instruction-byte guessing already declined elsewhere in this
+      doc.
 - [x] [AGENT] P0. ✅ **Generic-first, bespoke-by-exception — operator ruling 2026-08-14, and it applies to BOTH
       services** (recorded here, in `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md` — conversational
       ruling, no separate codex doc exists for it). strategy-service half **SHIPPED**: `strategy-service@4dbbd98e1d`.
@@ -341,34 +384,100 @@ Kamino/Jupiter conflated the two.
       never called by anything in production at all (three disagreeing dispatchers, none reaching most connectors), plus
       two narrower gaps (`kamino.py` has no borrow/repay method; no connector implements Jito's actual jitoSOL
       liquid-staking product). Follow-up work tracked as new todos below.
-- [ ] [AGENT] P0. **Wire a real dispatcher that reaches the connectors execution-service already has.** Root cause of
-      the reachability finding above: `DeFiAdapter` (the only dispatcher wired into `live_execution_handler.py`)
-      hardcodes `uniswap_connector=None, lido_connector=None` and never passes `jupiter_connector` at
-      `_build_defi_adapter` (`cli/handlers/live_execution_handler.py:474-497`) despite those connectors having real
-      write paths since `execution-service@2b92d6ac69`; `V2InstructionRouter` has complete `InstructionActionV2`
-      coverage but zero production callers; `RecursiveLoopOrchestrator` (the driver the recursive-carry archetypes name)
-      never calls the protocol connectors and its real-execution branch (`_execute_open_iter`/`_execute_close_iter`/
-      `_submit_flash_loan`) is dead code returning `(None, 0, zero_position)` when given a real `w3_client`. Fix in
-      priority order: (1) pass the real Uniswap/Lido/Jupiter connectors into `_build_defi_adapter` instead of `None`,
-      (2) either wire `V2InstructionRouter` into a real call site or delete it as aspirational dead code (do not leave a
-      syntactically-complete-looking router nobody calls — it reads as coverage that doesn't exist), (3) replace
-      `RecursiveLoopOrchestrator`'s placeholder-address ABI encoding + dead real-execution branch with calls into the
-      real `aave.py`/`kamino.py` connectors the same way `perp_hedge_consumer.py` calls `place_order()` for real.
-- [ ] [AGENT] P1. **Add `borrow`/`repay` to `kamino.py`.** Currently only `supply`/`withdraw` exist (lines 203-211);
-      `carry-recursive-staked.md`'s `jito-kamino-sol-prod` cell needs the borrow leg to execute its recursive loop at
-      all. Independent of the dispatcher-wiring gap above — this is a missing method, not just an unreached one.
-- [ ] [AGENT] P1. **Build a real Jito jitoSOL liquid-staking connector.** `jito_restaking.py` implements a different
-      product (VRT restaking, per its own docstring) — there is no connector for the liquid-staking stake pool that
-      `carry-staked-basis.md`/`carry-recursive-staked.md`'s `JITO` venue actually needs. This is a new module, following
-      the same generic-first `_evm_generic.py`-equivalent-for-Solana pattern the other SPL connectors use (see the
-      Solblaze/Jito Restaking todo below for why hand-rolling Anchor instruction bytes needs an SDK dependency first).
+- [x] [AGENT] P0. ✅ **SHIPPED 2026-08-15 — `execution-service@37bfaeed0b`.** Wired a real dispatcher that reaches the
+      connectors execution-service already has, in the priority order this todo specified: (1) `_build_defi_adapter`
+      (`cli/handlers/live_execution_handler.py`) now constructs real
+      `UniswapConnector`/`LidoConnector`/`JupiterConnector` instead of `None` — Jupiter needed a NEW credential axis
+      (`solana_wallet_secret` config field + `get_solana_rpc_for_mode`), resolved non-fatally so a missing Solana secret
+      degrades only Jupiter, never the EVM connectors. (2) `V2InstructionRouter` **deleted** as confirmed dead code
+      (`v2/router.py`, `v2/handlers.py`, their test file) — a repo-wide audit found zero production callers and every
+      one of the 14 `ACTION_HANDLER_REGISTRY` handlers was a stateless note-attacher (`LpMintHandler` et al. literally
+      wrote `notes="route via UniswapConnector.mint_position"` without calling it); the real ATOMIC path already goes
+      through a separate mechanism (`atomic_instruction_router.py`), never through this router. (3)
+      `RecursiveLoopOrchestrator`'s `_execute_open_iter`/`_execute_close_iter` now call the real
+      `AAVEConnector.supply()`/`.borrow()`/`.repay()`/`.withdraw()` (+ `UniswapConnector.swap_exact_input()` for a
+      cross-asset loop leg) instead of returning `(None, 0, zero_position)`; `open()`/`unwind()` became async as a
+      result (real awaited connector calls) — updated the one real caller (`recursive_loop_runner.py`) and all test call
+      sites. Only `LendingProtocol.AAVE_V3` is wired (Spark/Morpho Blue/Compound V3 still report NOT-WIRED rather than
+      misapplying Aave's ABI to a different pool). The FLASH driver's `_submit_flash_loan` stays a stub — genuine
+      blocker, no deployed `RecursiveLeverageReceiver.sol` to target (Phase 4 pending), not a wiring gap. **Found and
+      fixed along the way (severity above the assigned task)**: the ENTIRE Solana connector signing path was broken —
+      `solana_base.py`'s `_sign_and_send_tx` imported `solana.transaction.Transaction`, a class removed from solana-py
+      entirely as of the `solana==0.36` pin this repo runs (confirmed: `ModuleNotFoundError` on any live, non-paper
+      send); separately, the `else` branch sent a decoded `VersionedTransaction` **unsigned**
+      (`VersionedTransaction.from_bytes()` only deserializes, never signs, and solders types have no `.sign()` mutator).
+      Together this meant every live send on Marinade/Kamino/Jupiter/Orca/Raydium — 5 of the "tier-1 live-capable"
+      connectors this issue doc already certified — would either crash outright or broadcast a signature-less
+      transaction guaranteed to be rejected on-chain. Fixed by rebuilding `_sign_and_send_tx` to accept a
+      `solders.message.Message` (built fresh each call, signed via a one-shot
+      `Transaction(keypairs, message, blockhash)`) or a `VersionedTransaction` (re-signed by constructing a fresh
+      instance from its `.message`, since the decoded one carries no signatures) — and updated all 4 connectors' call
+      sites (`kamino.py`/`marinade.py`/`orca.py`/`raydium.py`) off the legacy mutable-builder API. **The test suite that
+      should have caught this never could**: `test_solana_connectors.py` installed fully synthetic `sys.modules` mocks
+      for `solana`/`solders` (real installed dependencies, per pyproject.toml) with a docstring claiming they "are NOT
+      installed in the test venv" — false — so every test ran against a hand-written fake SDK that matched the OLD,
+      broken API shape rather than the real one; rebuilt the mocks as real classes (not bare `MagicMock()`, which breaks
+      `isinstance()`) mirroring solders' actual one-shot constructors, added 2 new regression tests that assert on the
+      RE-SIGNED bytes specifically (proving re-signing happened, not just that some bytes were sent) — the same class of
+      gap this whole issue doc exists to close, found one layer deeper. Also found and fixed: `kamino.py`'s
+      `KAMINO_PROGRAM_ID` constant failed to even parse (`Pubkey.from_string` raised "String is the wrong size" —
+      confirmed independently via a direct `getAccountInfo` RPC call returning "Invalid param: WrongSize") — corrected
+      from a cited source (Kamino's own `klend-sdk`, cross-verified live on mainnet as an executable program).
+      **Evidence**: `bash scripts/quality-gates.sh` green (8475+ tests passed, file/method-size caps met by extracting
+      `recursive_loop_actions.py` and a `_resolve_evm_defi_secrets` helper), `ahead=0` verified against origin, content
+      spot-checked via `git show origin/live-defi-rollout:<path>`.
+- [x] [AGENT] P1. ✅ **SHIPPED 2026-08-15 — `execution-service@37bfaeed0b`.** Added `borrow()`/`repay()` to `kamino.py`.
+      Deliberately did NOT hand-roll a raw instruction discriminator the way `supply()`/`withdraw()` already do (see the
+      caveat added to those methods' docstrings: their `0x01`/`0x02` bytes have no citation anywhere in this module's
+      history, unlike every address constant elsewhere in this repo — flagged as new residue below, not fixed here).
+      Instead, found and used Kamino's real, public Transactions API (`POST api.kamino.finance/ktx/klend/{borrow,repay}`
+      — verified live 2026-08-15, returns a ready-to-sign transaction), the same "call the real build-tx API, don't
+      guess instruction bytes" pattern already shipped in `bridge.py`'s `SocketBridgeConnector` and this module's own
+      `JupiterConnector.execute_swap()`. Added `KaminoBorrowParams.market_address: str` (UAC — required, not defaulted,
+      since a wrong market silently misroutes a real loan) — see the UAC todo below.
+- [x] [AGENT] P1. ✅ **SHIPPED 2026-08-15 — `execution-service@37bfaeed0b`.** Built a real Jito jitoSOL liquid-staking
+      connector (`protocols/jito.py`), distinct from `jito_restaking.py`'s VRT restaking product. Verified live
+      2026-08-15: jitoSOL mint, stake pool address, and the shared SPL Stake Pool program ID (cross-checked against
+      `jito-foundation/jito-omnidocs` + a direct `getAccountInfo` RPC call). `get_balance()` is real (SPL read) and
+      `get_price()`/`get_exchange_rate()` are real too — Jito publishes a public stats API
+      (`kobe.mainnet.jito.network/api/v1/jitosol_sol_ratio`, verified live) rather than the hardcoded static rate the
+      sibling Solblaze connector uses. `stake()`/`unstake()` stay simulation-only (`supports_live=False`) — same
+      standard already applied to Solblaze/Jito Restaking: the SPL Stake Pool `DepositSol`/`WithdrawSol` instructions
+      are not ABI-dispatched, need a fixed account list only the `spl-stake-pool` SDK (not a dependency here) builds
+      correctly, and hand-rolling was judged too risky for staked SOL. **Found while building this**: reads are gated on
+      `rpc_url`/`wallet_address` presence, NOT `self.is_live` — the sibling Solblaze connector gates its own real SPL
+      balance read on `self.is_live`, which is unreachable since `supports_live=False` makes the fail-closed guard in
+      `BaseConnector.__init__` refuse `is_live=True` construction outright, making that "real" read dead code. Flagged
+      as new residue below (Solblaze/Jito Restaking), not fixed there — smaller, separate scope from what this todo
+      asked for.
 - [ ] [AGENT] P2. **Wire real write paths for Solblaze and Jito Restaking** — the last 2 of the 18 originally-scoped
       tier-2 modules, execution-service@2b92d6ac69 gave both real SPL balance reads but left writes simulation-only
       (documented, not silently closed): their stake-pool programs are Anchor-based with a fixed account list, not a
       named-function ABI, and neither the `spl-stake-pool` nor `jito-restaking` SDK is a dependency of this repo —
       hand-rolling the instruction bytes from memory was judged too risky to guess. Add the SDK dependency (or find the
       raw instruction-encoding spec) and wire `deposit()`/`withdraw()` the same way the other 16 modules were done this
-      session.
+      session. **Adjacent finding 2026-08-15 (while building `jito.py`)**: both connectors' real SPL `get_balance()`
+      read is dead code — gated on `self.is_live`, which is unreachable since `supports_live=False` makes the
+      fail-closed `SimulationOnlyConnectorError` guard refuse `is_live=True` construction before that branch could ever
+      run. Fix alongside the write path: gate the read on `rpc_url`/`wallet_address` config presence instead (the
+      pattern `jito.py` uses), not on `self.is_live`.
+- [ ] [AGENT] P2. **Kamino's `supply()`/`withdraw()` discriminators (`0x01`/`0x02`) have no citation** — found
+      2026-08-15 while adding `borrow()`/`repay()` alongside them. Every address constant elsewhere in this repo carries
+      a `# DERIVED from <source>` comment; these two do not, and git history shows no citation was ever recorded.
+      `borrow()`/`repay()` avoided the same risk by calling Kamino's real Transactions API
+      (`POST api.kamino.finance/ktx/klend/{borrow,repay}`) instead of hand-rolling — recommend migrating `supply()`/
+      `withdraw()` to the same API (`/ktx/klend/{deposit,withdraw}`, confirmed to exist in the same OpenAPI spec) and
+      deleting the uncited discriminator bytes, rather than trying to verify them after the fact. Not fixed inline:
+      these two methods are already shipped/tested tier-1 (execution-service@2b92d6ac69) and rewriting a live
+      money-moving path is a larger, separate change than the borrow/repay addition that found it.
+- [ ] [AGENT] P2. **`AAVEConnector.get_user_account_data()` returns hardcoded placeholder values, not a real read** —
+      found 2026-08-15 while wiring `RecursiveLoopOrchestrator` to real AAVE calls. Unlike `supply()`/`borrow()`/
+      `repay()`/`withdraw()` (which correctly branch on `is_live` and call the real `_Web3LiveExecutor`),
+      `get_user_account_data()` always returns `total_collateral_eth=Decimal("10")`, `total_debt_eth=Decimal("5")`
+      regardless of `is_live` — no live/sim branch exists at all. Consequence: the writes `RecursiveLoopOrchestrator`
+      now issues are genuinely real, but its HF-gate abort check and post-iteration position readback are best-effort
+      until this method reads a real `Pool.getUserAccountData()` view call. Not fixed inline — separate, larger scope
+      than the P0 dispatcher-wiring todo that found it (that todo was about writes, this is a read).
 - [ ] [OPERATOR] P2. **Disclosure decision on out-of-mandate adapters.** `betfair`, `ibkr` and `polymarket` are working
       credentialed integrations for sports betting, retail brokerage and prediction markets — nothing to do with a DeFi
       mandate. They are inert unless a venue is configured, so shipping them costs nothing operationally. Purely a
@@ -379,15 +488,35 @@ Kamino/Jupiter conflated the two.
       not per-venue). Operator decision 2026-08-15 (recorded here, in this same doc — conversational decision, no
       separate codex doc exists for it): the three-way distinction is genuinely needed, not narrowed away — see the new
       AGENT todo directly below.
-- [ ] [AGENT] P1. **Build a per-venue, per-mode (batch/live/paper) position-reading capability axis in
-      strategy-service.** New scaffolding, not a SIT-invariant task — resolves the operator decision directly above.
-      `position_interface/factory.py::get_position_adapter()` today has exactly one boolean per venue; this needs a real
-      data structure (a registry, or fields on the existing adapter/factory shape) that answers, per venue, whether
-      batch/live/paper position reading is each independently supported — the shape `VENUE_DATA_TYPE_CAPABILITIES`'s
-      `DataTypeAvailability` (batch_start_date + live) uses on the MTDS side is a reasonable model to adapt, not
-      necessarily to copy verbatim (strategy-service's axis is adapter-capability, not data-type-capability). Once this
-      lands, SIT invariant 2 ("every MTDS venue has a strategy-service position reader on batch, live AND paper")
-      becomes implementable as designed — currently it is not, since there is nothing to check.
+- [x] [AGENT] P1. ✅ **SHIPPED 2026-08-15 — `strategy-service@926be71046`.** Built the per-venue, per-mode
+      (batch/live/paper) position-reading capability axis: `position_interface/capabilities.py`, a new
+      `PositionReadModeAvailability` dataclass (three-state `"none"|"wired"|"deployed"` per axis, modeled on — not
+      copied from — UAC's `VenueCapabilityRecord`/`DataTypeAvailability`, since "the code exists" and "it's a real,
+      verified read path" are different properties, the exact lesson the execution-side P0 dispatcher-wiring todo above
+      already relearned) plus `position_read_mode_availability(venue)`, exported from `position_interface/__init__.py`.
+      **Measured, not assumed**: every venue `get_position_adapter()` resolves today reads via a real live API/RPC call
+      — `live` is genuinely `"deployed"` for all 19 explicitly-declared venues plus every registry-driven
+      generic-token-balance venue (checked both the EVM and SOLANA chain buckets). Neither BATCH (a historical
+      position-snapshot read) nor a genuine per-venue PAPER read path exists anywhere in `position_interface/` today —
+      `AccountQueryClient.mock_mode` is a SERVICE-LEVEL bypass returning the same deterministic fixture data for any
+      venue, not a per-venue adapter capability, so it does not count as `"deployed"` paper support here. This is an
+      honest, measured `batch="none"`/`paper="none"` for every venue, not a narrowed-away check — SIT invariant 2
+      ("every MTDS venue has a strategy-service position reader on batch, live AND paper") now has a real axis to check
+      against; wiring that invariant as a ratchet baseline (matching invariants 1+3's pattern) is a separate,
+      not-yet-done todo — building it would today produce a near-total-gap baseline on the batch/paper axes, which is
+      accurate, not a bug.
+- [ ] [AGENT] P2. **Wire SIT invariant 2 as a ratchet baseline**, matching invariants 1+3's pattern
+      (`unified-api-contracts@056d5eea2d`'s `tests/test_mtds_venue_coverage_cascade_invariant.py` +
+      `system-integration-tests@da65ae1324`'s `run_cross_repo_invariants.sh` entries). Add
+      `tests/test_strategy_position_read_mode_cascade_invariant.py` (in `unified-api-contracts`, per the same
+      cd-into-`$UAC` convention the other two invariants use) asserting against `position_read_mode_availability()`
+      (`strategy-service@926be71046`, this doc's capability-axis todo above), plus a
+      `tests/data/strategy_position_read_mode_baseline.json` ratchet fixture and the matching
+      `run_pytest_invariant "venue-coverage cascade — MTDS⟹strategy position-read (cross-repo invariant)" ...` entry in
+      `run_cross_repo_invariants.sh`. **Expected baseline is a near-total gap on batch/paper for every venue — that is
+      correct, not a bug** (measured 2026-08-15: `live` is `"deployed"` everywhere, `batch`/`paper` are `"none"`
+      everywhere); the invariant's value is catching a future REGRESSION (e.g. a venue silently losing its live read
+      path), not flagging today's known gap as new work — same ratchet semantics as invariant 1's 109→82-venue backlog.
 
 ## What sharing strategy-service actually conveys (measured 2026-08-14)
 
@@ -430,20 +559,52 @@ correct and is now verified at the ABC rather than inferred.
 
 ## Deferred work after 2026-08-14
 
-| Item                                                                | Kind                 | Blocked on                                                                                                                                                                                                                                                                                                                                                                                  |
-| ------------------------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Measure what the generic token-balance reader closes of the ~27 gap | **Partly done**      | closes the LST-shaped share (Lido et al.); Kamino/Jupiter's non-balance-shaped positions still unmeasured                                                                                                                                                                                                                                                                                   |
-| Build generic reader + bespoke exceptions (both services)           | **Done**             | `_evm_generic.py` (execution-service) + `generic_token_balance.py` (strategy-service), this session                                                                                                                                                                                                                                                                                         |
-| Lido / Marinade / Kamino / Jupiter position adapters                | **Partly done**      | Lido's wstETH balance is coverable via the new generic reader (not yet wired as a named adapter); Marinade/Kamino/Jupiter still need their own read logic                                                                                                                                                                                                                                   |
-| 3 directional SIT invariants                                        | **2 of 3 shipped**   | invariant 1 (batch⟹live) + invariant 3 (strategy⟹execution reachability) SHIPPED 2026-08-15 as ratchet baselines — `unified-api-contracts@056d5eea2d` + `system-integration-tests@da65ae1324`; invariant 2 blocked on new strategy-service scaffolding (operator-resolved todo above)                                                                                                       |
-| Per-venue instruction-ACTION coverage audit                         | **Done**             | session 3 — found a deeper "module reachability" gap than the scoped question; see section above + 3 new todos                                                                                                                                                                                                                                                                              |
-| B6 — a consumer per governing section                               | **Operator-owned**   | a design call on which consumer owns each section; an agent already investigated 4 and correctly declined to force one                                                                                                                                                                                                                                                                      |
-| Disclosure call on betfair / ibkr / polymarket adapters             | **Operator-owned**   | out-of-mandate venues; inert unless configured, so cost-free to ship                                                                                                                                                                                                                                                                                                                        |
-| Review of the other session's 7 shipped tasks                       | **Done, indirectly** | its `execution-service@9946ba5a3` (the live-mode guard) landed at origin mid-session here and was reconciled via `git pull --rebase --autostash` — verified by reading the merged blob back; one real defect caught in reconciliation (its `aster.py` opt-in declared `supports_live=True` WITHOUT fixing the underlying silent-success bug, which this session's `aster.py` fix addresses) |
-| Artifact pass (reconciliation + venue/instruction registry)         | Not done             | the chunks being verified landed, AND the corrected tier numbers above                                                                                                                                                                                                                                                                                                                      |
-| Live-mode guard base mechanism (`supports_live` + fail-closed)      | **Done, shipped**    | execution-service@9946ba5a3 (base mechanism) + execution-service@2b92d6ac69 (Solana declaration + extension to all 18 modules)                                                                                                                                                                                                                                                              |
-| Unify the 3 duplicated connector classes                            | **Done, shipped**    | execution-service@2b92d6ac69                                                                                                                                                                                                                                                                                                                                                                |
-| Wire real writes for 16 of the 18 tier-2 modules                    | **Done, shipped**    | execution-service@2b92d6ac69; Solblaze/Jito Restaking stay simulation-only pending the SPL SDK dependency                                                                                                                                                                                                                                                                                   |
+| Item                                                                                    | Kind                 | Blocked on                                                                                                                                                                                                                                                                                                                                                                                  |
+| --------------------------------------------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Measure what the generic token-balance reader closes of the ~27 gap                     | **Partly done**      | closes the LST-shaped share (Lido et al.); Kamino/Jupiter's non-balance-shaped positions still unmeasured                                                                                                                                                                                                                                                                                   |
+| Build generic reader + bespoke exceptions (both services)                               | **Done**             | `_evm_generic.py` (execution-service) + `generic_token_balance.py` (strategy-service), this session                                                                                                                                                                                                                                                                                         |
+| Lido / Marinade / Kamino / Jupiter position adapters                                    | **3 of 4 done**      | Lido (generic reader) + Marinade (`strategy-service@926be71046`, SOLANA-chain address added) done; Jupiter determined NOT to need one (swap-only venue, no persistent position — see the updated todo above); Kamino still open (needs a bespoke Obligation-account reader, no verified per-wallet API found)                                                                               |
+| 3 directional SIT invariants                                                            | **2 of 3 shipped**   | invariant 1 (batch⟹live) + invariant 3 (strategy⟹execution reachability) SHIPPED 2026-08-15 as ratchet baselines — `unified-api-contracts@056d5eea2d` + `system-integration-tests@da65ae1324`; invariant 2 UNBLOCKED 2026-08-15 (`strategy-service@926be71046` built the capability axis it needed) but not yet wired as its own ratchet baseline — separate todo                           |
+| P0 dispatcher-wiring (Uniswap/Lido/Jupiter live + V2Router + RecursiveLoopOrchestrator) | **Done, shipped**    | `execution-service@37bfaeed0b`, 2026-08-15 — see the flipped todo above for the full scope + the Solana signing-bug finding it surfaced                                                                                                                                                                                                                                                     |
+| Kamino borrow/repay + Jito jitoSOL connector                                            | **Done, shipped**    | `execution-service@37bfaeed0b`, 2026-08-15 — both via real vendor APIs, not hand-rolled instruction bytes                                                                                                                                                                                                                                                                                   |
+| strategy-service batch/live/paper capability axis                                       | **Done, shipped**    | `strategy-service@926be71046`, 2026-08-15                                                                                                                                                                                                                                                                                                                                                   |
+| Solana SDK signing path (systemic bug, 5 connectors)                                    | **Done, shipped**    | `execution-service@37bfaeed0b`, 2026-08-15 — found while wiring Jupiter into live dispatch; not a scoped todo, a discovered blocker on the way to one (see the flipped P0 dispatcher-wiring todo above)                                                                                                                                                                                     |
+| Corrupted `KAMINO_PROGRAM_ID` constant                                                  | **Done, shipped**    | `execution-service@37bfaeed0b`, 2026-08-15 — same discovery pass as the signing-path fix                                                                                                                                                                                                                                                                                                    |
+| Kamino `supply()`/`withdraw()` uncited discriminator                                    | **New residue**      | flagged 2026-08-15 (new P2 todo above) — recommend migrating to the same real Transactions API `borrow()`/`repay()` now use                                                                                                                                                                                                                                                                 |
+| `AAVEConnector.get_user_account_data()` hardcoded placeholder data                      | **New residue**      | flagged 2026-08-15 (new P2 todo above) — the writes `RecursiveLoopOrchestrator` issues are real; the HF-gate read is not yet                                                                                                                                                                                                                                                                |
+| Solblaze/Jito Restaking `get_balance()` dead-code trap                                  | **New residue**      | flagged 2026-08-15, folded into the existing P2 "wire real write paths" todo above                                                                                                                                                                                                                                                                                                          |
+| Kamino bespoke lending-position adapter                                                 | **Blocked, residue** | no verified per-wallet Obligation-read REST endpoint found in reasonable research time; hand-decoding the on-chain account layout from memory judged too risky, same standard as Solblaze/Jito Restaking's write-path decision                                                                                                                                                              |
+| Per-venue instruction-ACTION coverage audit                                             | **Done**             | session 3 — found a deeper "module reachability" gap than the scoped question; see section above + 3 new todos                                                                                                                                                                                                                                                                              |
+| B6 — a consumer per governing section                                                   | **Operator-owned**   | a design call on which consumer owns each section; an agent already investigated 4 and correctly declined to force one                                                                                                                                                                                                                                                                      |
+| Disclosure call on betfair / ibkr / polymarket adapters                                 | **Operator-owned**   | out-of-mandate venues; inert unless configured, so cost-free to ship                                                                                                                                                                                                                                                                                                                        |
+| Review of the other session's 7 shipped tasks                                           | **Done, indirectly** | its `execution-service@9946ba5a3` (the live-mode guard) landed at origin mid-session here and was reconciled via `git pull --rebase --autostash` — verified by reading the merged blob back; one real defect caught in reconciliation (its `aster.py` opt-in declared `supports_live=True` WITHOUT fixing the underlying silent-success bug, which this session's `aster.py` fix addresses) |
+| Artifact pass (reconciliation + venue/instruction registry)                             | Not done             | the chunks being verified landed, AND the corrected tier numbers above                                                                                                                                                                                                                                                                                                                      |
+| Live-mode guard base mechanism (`supports_live` + fail-closed)                          | **Done, shipped**    | execution-service@9946ba5a3 (base mechanism) + execution-service@2b92d6ac69 (Solana declaration + extension to all 18 modules)                                                                                                                                                                                                                                                              |
+| Unify the 3 duplicated connector classes                                                | **Done, shipped**    | execution-service@2b92d6ac69                                                                                                                                                                                                                                                                                                                                                                |
+| Wire real writes for 16 of the 18 tier-2 modules                                        | **Done, shipped**    | execution-service@2b92d6ac69; Solblaze/Jito Restaking stay simulation-only pending the SPL SDK dependency                                                                                                                                                                                                                                                                                   |
+| Item                                                                                    | Kind                 | Blocked on                                                                                                                                                                                                                                                                                                                                                                                  |
+| -------------------------------------------------------------------                     | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Measure what the generic token-balance reader closes of the ~27 gap                     | **Partly done**      | closes the LST-shaped share (Lido et al.); Kamino/Jupiter's non-balance-shaped positions still unmeasured                                                                                                                                                                                                                                                                                   |
+| Build generic reader + bespoke exceptions (both services)                               | **Done**             | `_evm_generic.py` (execution-service) + `generic_token_balance.py` (strategy-service), this session                                                                                                                                                                                                                                                                                         |
+| Lido / Marinade / Kamino / Jupiter position adapters                                    | **3 of 4 done**      | Lido (generic reader) + Marinade (`strategy-service@926be71046`, SOLANA-chain address added) done; Jupiter determined NOT to need one (swap-only venue, no persistent position — see the updated todo above); Kamino still open (needs a bespoke Obligation-account reader, no verified per-wallet API found)                                                                               |
+| 3 directional SIT invariants                                                            | **2 of 3 shipped**   | invariant 1 (batch⟹live) + invariant 3 (strategy⟹execution reachability) SHIPPED 2026-08-15 as ratchet baselines — `unified-api-contracts@056d5eea2d` + `system-integration-tests@da65ae1324`; invariant 2 UNBLOCKED 2026-08-15 (`strategy-service@926be71046` built the capability axis it needed) but not yet wired as its own ratchet baseline — separate todo                           |
+| P0 dispatcher-wiring (Uniswap/Lido/Jupiter live + V2Router + RecursiveLoopOrchestrator) | **Done, shipped**    | `execution-service@37bfaeed0b`, 2026-08-15 — see the flipped todo above for the full scope + the Solana signing-bug finding it surfaced                                                                                                                                                                                                                                                     |
+| Kamino borrow/repay + Jito jitoSOL connector                                            | **Done, shipped**    | `execution-service@37bfaeed0b`, 2026-08-15 — both via real vendor APIs, not hand-rolled instruction bytes                                                                                                                                                                                                                                                                                   |
+| strategy-service batch/live/paper capability axis                                       | **Done, shipped**    | `strategy-service@926be71046`, 2026-08-15                                                                                                                                                                                                                                                                                                                                                   |
+| Solana SDK signing path (systemic bug, 5 connectors)                                    | **Done, shipped**    | `execution-service@37bfaeed0b`, 2026-08-15 — found while wiring Jupiter into live dispatch; not a scoped todo, a discovered blocker on the way to one (see the flipped P0 dispatcher-wiring todo above)                                                                                                                                                                                     |
+| Corrupted `KAMINO_PROGRAM_ID` constant                                                  | **Done, shipped**    | `execution-service@37bfaeed0b`, 2026-08-15 — same discovery pass as the signing-path fix                                                                                                                                                                                                                                                                                                    |
+| Kamino `supply()`/`withdraw()` uncited discriminator                                    | **New residue**      | flagged 2026-08-15 (new P2 todo above) — recommend migrating to the same real Transactions API `borrow()`/`repay()` now use                                                                                                                                                                                                                                                                 |
+| `AAVEConnector.get_user_account_data()` hardcoded placeholder data                      | **New residue**      | flagged 2026-08-15 (new P2 todo above) — the writes `RecursiveLoopOrchestrator` issues are real; the HF-gate read is not yet                                                                                                                                                                                                                                                                |
+| Solblaze/Jito Restaking `get_balance()` dead-code trap                                  | **New residue**      | flagged 2026-08-15, folded into the existing P2 "wire real write paths" todo above                                                                                                                                                                                                                                                                                                          |
+| Kamino bespoke lending-position adapter                                                 | **Blocked, residue** | no verified per-wallet Obligation-read REST endpoint found in reasonable research time; hand-decoding the on-chain account layout from memory judged too risky, same standard as Solblaze/Jito Restaking's write-path decision                                                                                                                                                              |
+| Per-venue instruction-ACTION coverage audit                                             | **Done**             | session 3 — found a deeper "module reachability" gap than the scoped question; see section above + 3 new todos                                                                                                                                                                                                                                                                              |
+| B6 — a consumer per governing section                                                   | **Operator-owned**   | a design call on which consumer owns each section; an agent already investigated 4 and correctly declined to force one                                                                                                                                                                                                                                                                      |
+| Disclosure call on betfair / ibkr / polymarket adapters                                 | **Operator-owned**   | out-of-mandate venues; inert unless configured, so cost-free to ship                                                                                                                                                                                                                                                                                                                        |
+| Review of the other session's 7 shipped tasks                                           | **Done, indirectly** | its `execution-service@9946ba5a3` (the live-mode guard) landed at origin mid-session here and was reconciled via `git pull --rebase --autostash` — verified by reading the merged blob back; one real defect caught in reconciliation (its `aster.py` opt-in declared `supports_live=True` WITHOUT fixing the underlying silent-success bug, which this session's `aster.py` fix addresses) |
+| Artifact pass (reconciliation + venue/instruction registry)                             | Not done             | the chunks being verified landed, AND the corrected tier numbers above                                                                                                                                                                                                                                                                                                                      |
+| Live-mode guard base mechanism (`supports_live` + fail-closed)                          | **Done, shipped**    | execution-service@9946ba5a3 (base mechanism) + execution-service@2b92d6ac69 (Solana declaration + extension to all 18 modules)                                                                                                                                                                                                                                                              |
+| Unify the 3 duplicated connector classes                                                | **Done, shipped**    | execution-service@2b92d6ac69                                                                                                                                                                                                                                                                                                                                                                |
+| Wire real writes for 16 of the 18 tier-2 modules                                        | **Done, shipped**    | execution-service@2b92d6ac69; Solblaze/Jito Restaking stay simulation-only pending the SPL SDK dependency                                                                                                                                                                                                                                                                                   |
 
 **Update 2026-08-14 (later same day): the tier-2 live-mode guard AND the peer-session review are both done — see
 `execution-service@2b92d6ac69` and `execution-service@9946ba5a3` above.** The remaining recommended next items, in
@@ -629,3 +790,65 @@ silently re-open:
   a blind retry ADDS a stash entry and makes it fire sooner. Untracked files do not appear in
   `git stash show --name-only` — they live in the third parent, `stash@{N}^3`. The instinctive re-run would have
   compounded it.
+
+## Lessons — 2026-08-15 (session 5 — P0 dispatcher wiring, Kamino/Jito connectors, batch/live/paper axis)
+
+- **"Tier-1 live-capable" was measured at the connector layer and never checked at the transport layer, and the gap was
+  total, not partial.** Five Solana connectors (Marinade/Kamino/Jupiter/Orca/Raydium) each had a real write path
+  (`is_live` branches, real `send_transaction()` calls) — genuinely true, and what the earlier "16 of 18 now tier-1"
+  measurement checked. But the SHARED base method every one of them calls to actually broadcast,
+  `solana_base.py::_sign_and_send_tx`, imported a class removed from the pinned SDK version entirely. Every prior
+  "measured, not assumed" pass in this doc measured the connector; nobody had called `send_transaction()` end-to-end
+  against the real installed SDK. A connector's own write-path logic being correct is necessary, not sufficient — the
+  shared plumbing underneath it needs the same scrutiny, and "shared" means "checked once, trusted everywhere" is
+  exactly backwards.
+- **The test suite that should have caught this was actively hiding it.** `test_solana_connectors.py` faked
+  `sys.modules["solana"]`/`["solders"]` with a docstring claiming they "are NOT installed in the test venv" — a claim
+  that was simply false (`pip show solana` → 0.36.11, a real pyproject.toml dependency) and had apparently been false
+  for long enough that nobody re-checked it. The fake module matched the OLD, broken API shape, so every test using it
+  passed by construction, regardless of whether the real code worked. A mock's contract with reality needs re-verifying
+  periodically, not assumed permanent from whenever it was written — especially when its own docstring is making an
+  empirical claim ("not installed") that a single `pip show` would falsify in one command.
+- **A `MagicMock()` passed where `isinstance()` matters silently takes the wrong branch, and the test still passes.**
+  The original `test_send_transaction_live` used a generic `MagicMock()` for what should have been a
+  `VersionedTransaction`, with a comment noting the real isinstance check "is hard to mock" — so it fell through to the
+  generic `else` branch instead, which happened to still return a plausible-looking result. The test's assertions never
+  distinguished "the real signing path ran" from "some other path ran and coincidentally produced similar output" — the
+  new regression tests fix this by making the mock's `__bytes__` return different, checkable values for the
+  signed-vs-unsigned case specifically, so a future regression can't hide behind a generically-succeeding assertion.
+- **A hardcoded on-chain address can fail to even parse, and nothing before this session had constructed it.**
+  `KAMINO_PROGRAM_ID` had been sitting as a `Pubkey.from_string()` call that raises `ValueError` unconditionally —
+  meaning `kamino.py` could never have been imported successfully in this venv, at any point since that line was
+  written. A `git log` shows it long-predates this session. The reason nobody caught it: zero dedicated tests existed
+  for `KaminoConnector` before this session (confirmed via `find tests -iname "*kamino*"` returning nothing), so nothing
+  ever imported the module directly. Module-level constants that are computed (not literal strings) at import time need
+  at least one test that imports the module, or a typo in them is invisible until something downstream happens to
+  exercise that exact code path.
+- **A real, official Transactions API existed for the exact operation being hand-rolled, and finding it took one
+  WebFetch, not a Python SDK dependency.** Kamino publishes `POST /ktx/klend/{deposit,withdraw,borrow,repay}` — a
+  ready-to-sign-transaction API, the exact "call the real build-tx API instead of guessing instruction bytes" pattern
+  already established for `bridge.py`/`jupiter.py` this repo. The existing `supply()`/`withdraw()` methods, built before
+  this was found, used uncited raw discriminator bytes instead — not fabricated maliciously, but also never checked
+  against an alternative. Before accepting "hand-rolling is necessary, no SDK available" as the final answer for a
+  protocol interaction, checking whether the protocol's own API can build the transaction is worth the ~2 minutes it
+  costs, even when a sibling connector already committed to the harder path.
+- **"Category error" from the UAC registry's own docstring generalizes past tokens.** That doc warns against putting a
+  non-token contract address in a token-address registry (a wrong category of thing, not a wrong value). The same
+  reasoning applied to "does Jupiter need a position adapter": Jupiter is a swap router, not a position-holding venue,
+  for the specific archetype role it plays here — building a position reader for it would have been building code for a
+  concept that structurally doesn't exist at that venue, not a missing feature. Reading the archetype doc's actual field
+  name (`spot_venue: JUPITER # USDC->native swap venue`) settled this in one grep; assuming "every venue in the table
+  needs a position adapter" without checking what role it plays would not have.
+- **Host-wide resource contention produced multiple genuine-looking QG failures that were not code regressions**, and
+  the workspace's own tooling said so explicitly once hit: a wall-time performance test (`< 5s` budget) failed 3 times
+  under quickmerge's internal re-gate while 15-25 concurrent `quality-gates.sh` processes from other sessions competed
+  for host RAM, and passed cleanly every time it was run in isolation. `quickmerge`'s own output named this directly
+  ("HOST CONTENTION, not your change. Do NOT go looking for a content bug") — worth trusting on the first read rather
+  than re-diagnosing from scratch, though verifying independently (isolated run, reading the test's literal threshold)
+  cost little and removed any doubt. Separately, `unified-api-contracts`' own QG got killed by the governor's
+  RAM-pressure watchdog twice (after 30-60 minute queues each time) before a third attempt, timed after process count
+  visibly dropped, finally completed — waiting for a quieter moment mattered more than retrying immediately each time.
+
+## Context scout
+
+- **context-scout 2026-08-15**: populated context_scope (4 entries).

@@ -60,7 +60,7 @@ source: >-
 context_scope:
   [
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
-    /plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
+    /plans/archive/2026_08/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
     deployment-api/deployment_api/routes/data_status/_catalogue.py,
     instruments-service/scripts/measure_honest_coverage.py,
   ]
@@ -92,8 +92,8 @@ context_scope:
       correctly once the CQG cluster rows exist again (output
       `gs://central-element-323112-honest-coverage/{date}/coverage.json`); verify the daily scheduler actually fires
       (`measure_honest_coverage.py` header says `last_executed: NEVER`; the Cloud Scheduler `honest-coverage-daily`
-      create was pending — `gcloud scheduler jobs describe honest-coverage-daily     --location=asia-northeast1`).
-      (repos: instruments-service, deployment-service)
+      create was pending — `gcloud scheduler jobs describe honest-coverage-daily --location=asia-northeast1`). (repos:
+      instruments-service, deployment-service)
 - [x] ✅ [BACKEND] P1. **DONE 2026-08-07 — pointer target closed.** The sole remaining open item in
       `predictions_other_bucket_and_ui_drilldown_2026_06_20.md`'s P0 section (the pw:L2 VERIFY gate) is now done — 5/5
       playwright tests passing (`tests/smoke/prediction_v9_breakdown.spec.ts`), see that doc's Progress Log for full

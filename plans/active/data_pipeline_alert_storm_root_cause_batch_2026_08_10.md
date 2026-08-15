@@ -73,7 +73,7 @@ source: >-
   Interactive session 2026-08-10, operator-pasted #data-pipeline-alerts dump, traced to root cause across 6 repos.
   Operator decisions recorded inline: chain fix = "both, sequenced"; packaging = one batch plan + existing-doc
   enhancements; dispatch = all human/local.
-last_updated: 2026-06-27
+last_updated: 2026-08-15 # (was: 2026-06-27 -- plan-reconcile 2026-08-15: stale copy-paste value predated the doc's own 2026-08-10 creation date; bumped to match latest Progress Log entry)
 ---
 
 # Data-pipeline alert-storm root-cause batch (2026-08-10)
@@ -187,11 +187,23 @@ last_updated: 2026-06-27
       `/plans/archive/2026_08/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md`
       that the fix had landed at `features-service@305d897a` — that sha never existed (`git cat-file -t` → not a valid
       object); 692ce76b is the real one.
-- [ ] [SCRIPT] P1. Alert-accuracy quartet (deployment-service): interpolate or drop the fixed-template `"(0 → 0)"`;
-      extend the captured-reader probe fallback to the bucket-resolves-but-blob-absent case (+ `instruments-store` /
-      `features` kind buckets); make the "relaunching through the Tardis/launcher concurrency guard" text conditional on
-      the VM's ACTUAL launcher binding (`mdps-*` binds `launch-mdps-sharded-backfill.sh`, which has ZERO Tardis
-      references); exempt cron/launcher HOST VMs from the capture-based `GONE_NO_CAPTURE` population.
+- [x] ✅ [SCRIPT] P1. **SHIPPED — deployment-service@0c38c00d (same commit as todo 1's durable relaunch state, titled
+      literally "alert-accuracy quartet" in its own subject line).** Alert-accuracy quartet (deployment-service):
+      interpolate or drop the fixed-template `"(0 → 0)"`; extend the captured-reader probe fallback to the
+      bucket-resolves-but-blob-absent case (+ `instruments-store` / `features` kind buckets); make the "relaunching
+      through the Tardis/launcher concurrency guard" text conditional on the VM's ACTUAL launcher binding (`mdps-*`
+      binds `launch-mdps-sharded-backfill.sh`, which has ZERO Tardis references); exempt cron/launcher HOST VMs from the
+      capture-based `GONE_NO_CAPTURE` population. Verified live in `origin/live-defi-rollout` (2026-08-15):
+      `_classify.py`'s `finding_for` interpolates `f"({result.captured_before} → {result.captured_after})"` for
+      DP_VM_GONE_NO_CAPTURE (never a fixed `"(0 → 0)"` string) and gates the DP_VM_PREEMPTED relaunch-note text on
+      `TARDIS_GUARD_LAUNCHERS` membership
+      (`relaunch_note = f"relaunching via {relaunch_launcher} (no Tardis dependency)"` for non-member launchers like
+      `launch-mdps-sharded-backfill.sh`); `classify_terminated_vm`'s `is_launcher_host` branch routes a registered
+      launcher/cron host to `EXPECTED_NO_CAPTURE` (no page) instead of `GONE_NO_CAPTURE`; `_captured_reader.py`'s
+      `make_captured_reader._read` falls through to `_probe_all` (every `market-data`/`instruments-store`/`features` ×
+      asset_group bucket, plus the flat `features-sports` key) whenever the primary bucket resolves but the blob isn't
+      there, not just when bucket resolution itself fails. This todo's own checkbox was the only piece of the commit
+      left unflipped — todo 1 above already cited the same sha for the relaunch-state half of that commit.
 - [x] ✅ [SCRIPT] P2. Make `/data-pipeline-alerts-reconcile` AO-schedulable — **already shipped upstream by a peer while
       this session worked** (agent-orchestrator slot-18): the `data_pipeline_alerts_reconciler` AgentKind, the
       `plan_health` mode + prompt-template mapping, and `install-data-pipeline-alerts-reconciler-timer.sh` were all on
@@ -215,9 +227,21 @@ last_updated: 2026-06-27
       see the cross-cloud WIF todo below; ship the code, hold the installer. Superseded original text: it has no timer
       and no server module today, which is why this storm sat unattended. Includes confirming AO's SA has
       `secretmanager.versions.access` on `SLACK_ALERTS_READER_BOT_TOKEN`.
-- [ ] [DATA] P1. Determine which layer wrote the cefi `attempted_failed` rows (MTDS fetch vs MDPS derivation) and
-      whether the 2026-08-02 ruling is inflating them. Read-only analysis; the operator's hypothesis (a 200-with-zero-
-      rows is legitimately `empty_confirmed`) is the thing under test.
+- [x] ✅ [DATA] P1. **CLOSED 2026-08-15 (slot-16) — hypothesis TESTED AND REJECTED, no code fix needed.** Determine
+      which layer wrote the cefi `attempted_failed` rows (MTDS fetch vs MDPS derivation) and whether the 2026-08-02
+      ruling is inflating them. Read-only; operator's hypothesis (a 200-with-zero-rows is legitimately
+      `empty_confirmed`) was the thing under test. **Layer split** (live manifest query, cols-pushdown, 1,064,950 total
+      cefi `attempted_failed`): dominant reason `VENUE_FETCH_FAILED` (218,038, 20.5%, 100% MTDS) is genuine vendor
+      errors, unrelated to zero-rows. `NO_RAW_TICK_DATA_FOR_SHARD` (6,630, 0.6%, matches this hypothesis) is 100% MDPS.
+      No dated "2026-08-02" doc found; the matching ruling in code is dated 2026-07-27 (`batch_workers.py`). **Verdict:
+      NOT inflating — matches a settled precedent**, re-verified for TradFi in
+      `/plans/active/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` (5+ re-checks through
+      2026-08-10). MDPS makes no live vendor call, so it has no `FetchEvidence` for the `SOURCE_RETURNED_ZERO` gate
+      `record_empty` requires — `record_failed` is the deliberate interim. Cefi cross-reference confirms it: MTDS's own
+      row for a sampled shard reads `expected_unattempted`; MDPS's row for the identical key reads `attempted_failed` —
+      two layers honestly reporting one cell, not double-counting. `empty_confirmed` needs the live call that produces a
+      200; MDPS never makes one. No code shipped — the TradFi doc already tracks the one open thread (the unbuilt
+      certified-absence-vs-real-gap split), asset-group-generic, will cover cefi once built.
 
 ### New findings surfaced by the 2026-08-10 fan-out (none existed before this session)
 
@@ -283,7 +307,7 @@ last_updated: 2026-06-27
 - [ ] [OPERATOR] P1. **Cross-cloud identity for the AO VM — prerequisite for the #17 timer.** The orchestrator VM has NO
       GCP identity at all: it is AWS EC2, `gcloud auth list` returns no credentialed accounts, there is no SA key or
       `GOOGLE_APPLICATION_CREDENTIALS`, and no AWS→GCP Workload Identity Federation pool is wired to it
-      (`gcloud iam     workload-identity-pools list` shows only github-actions-pool / gitlab-wlif / aws-glue-runners /
+      (`gcloud iam workload-identity-pools list` shows only github-actions-pool / gitlab-wlif / aws-glue-runners /
       github-pool). So `secretmanager.versions.access` on `SLACK_ALERTS_READER_BOT_TOKEN` is NOT a one-line grant. Until
       WIF is stood up, DO NOT install the timer — a dispatched worker would spawn, fail the skill's §0 Slack read, and
       burn a slot every cycle. Ship the code, hold the installer.
@@ -515,6 +539,23 @@ attempted_failed cells accruing), and its diagnosis just reversed, so nobody sho
   `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s recommendation that the escalation dispatch path
   needs an open-issue-doc dedup check. `AUTHORING_SLOT=dp-fleet-monitor` (not a numbered slot) — no ping sent, per the
   role's own skip rule. Read-only: no GCS write, no manifest change, no code shipped; PM plan-doc edit only.
+- **2026-08-15 (slot-7·backend_engineer, cefi_satellite_ao_dispatch_batch19 dispatch) — flipped the "Alert-accuracy
+  quartet" todo's checkbox; already-shipped, no code change needed.** Dispatched to implement this todo via
+  `cefi_satellite_ao_dispatch_batch19_2026_08_13.md`'s own extraction of it. Grepped `deployment-service` before writing
+  anything and found `deployment-service@0c38c00d` (2026-08-11, subject line literally "alert-accuracy quartet") already
+  shipped all four pieces in the SAME commit as this doc's todo 1 (durable relaunch state) — verified live on
+  `origin/live-defi-rollout` after a fresh pull, not just from the commit message: (1) `_classify.py` `finding_for`'s
+  DP_VM_GONE_NO_CAPTURE summary interpolates `f"({result.captured_before} → {result.captured_after})"` — the `"(0 → 0)"`
+  figure was always dynamic, never a fixed template string (confirms this doc's own Lesson 3); (2)
+  `_captured_reader.py`'s `make_captured_reader._read` falls through to `_probe_all` (every `market-data` /
+  `instruments-store` / `features` × asset_group bucket, plus the flat `features-sports` key) on a
+  bucket-resolves-but-blob-absent miss, not only on an unresolvable bucket; (3) the DP_VM_PREEMPTED relaunch-note text
+  is gated on `TARDIS_GUARD_LAUNCHERS` membership — a non-member launcher (e.g. `launch-mdps-sharded-backfill.sh`) gets
+  `"relaunching via {launcher} (no Tardis dependency)"` instead of the Tardis-guard phrase; (4)
+  `classify_terminated_vm`'s `is_launcher_host` branch routes a registered launcher/cron host straight to
+  `EXPECTED_NO_CAPTURE`, exempting it from `GONE_NO_CAPTURE`. Flipped this todo's checkbox citing the sha; also flipped
+  the corresponding extraction todo in `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` in the same commit (per the
+  shared conflict-check protocol §3.4, "already-shipped elsewhere, checkbox just never flipped").
 
 ## Liquidations re-drive — operator decision recorded 2026-08-11
 
@@ -622,11 +663,10 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       work is now entirely "land `contract_size`, then re-derive". `contract_size` landed 2026-08-11 (todo above,
       instruments-service@2e59354a10 + unified-trading-library@d89467c24f + market-data-processing-service@3ff54776e0) —
       this re-derive is now the highest-value next item; nothing else blocks it. **RE-MEASURED 2026-08-11 (continuation
-      session)**: population is now 4,429 `capture_status='captured'     margin_type='inverse'` liquidations shards (up
-      from ~4,113 — expected, the population moves every wave), 64 distinct instrument_ids, dates 2020-01-03 to
-      2026-01-28 (query: DuckDB over
-      `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` filtered
-      `service_name='market-data-processing-service'`; `margin_type` column is authoritative and matches the
+      session)**: population is now 4,429 `capture_status='captured' margin_type='inverse'` liquidations shards (up from
+      ~4,113 — expected, the population moves every wave), 64 distinct instrument_ids, dates 2020-01-03 to 2026-01-28
+      (query: DuckDB over `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`
+      filtered `service_name='market-data-processing-service'`; `margin_type` column is authoritative and matches the
       `@INV`/unsuffixed-BYBIT heuristic exactly, 4,429 either way). **New finding: a large ambient VM fleet (439
       `mdps-cefi-{year}-*` instances, label `purpose=mdps-sharded-backfill`, `VM_OPERATION=backfill-cefi`, command
       `--operation process --mode batch --start-date {year}-01-01 --end-date {year}-12-31`, years 2019-2026, oldest
@@ -647,11 +687,11 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       **Re-measured before launch**: population moved 4,113 → 4,429 (2026-08-11 late) → **4,463** (2026-08-12, 64
       instrument_ids unchanged, dates 2020-01-03 to 2026-01-28) — re-measure again before quoting, it moves every
       wave. 3. **First launch attempt failed harmlessly** —
-      `bash deployment-service/scripts/vm/launch-mdps-backfill-vm.sh        --force --data-types liquidations --timeframes "1d 4h 1h 15m" --instrument-ids <64 ids> --date-concurrency 4        cefi 2020-01-01 2026-01-31 full`
+      `bash deployment-service/scripts/vm/launch-mdps-backfill-vm.sh --force --data-types liquidations --timeframes "1d 4h 1h 15m" --instrument-ids <64 ids> --date-concurrency 4 cefi 2020-01-01 2026-01-31 full`
       created VM `mdps-backfill-cefi-20260812-014240`, which self-deleted via `VM_SHUTDOWN_ON_COMPLETION=true` within 3
       minutes, `EXIT_STATUS=2`. Root cause (found via the tee'd `gs://deployment-scripts-.../vm-logs/<vm>/run.log`,
       downloaded with UTL `download_from_storage` — never a subprocess `gcloud storage`/`gsutil`): the launcher's
-      `--date-concurrency N` flag appended `--date-concurrency        N` onto the `--operation process --mode batch`
+      `--date-concurrency N` flag appended `--date-concurrency N` onto the `--operation process --mode batch`
       entrypoint's own argv, but that entrypoint's argparser has no such flag (only the legacy sub-parser reached via
       `cli/main.py`'s internal bridge does) — a hard parse error, not a no-op, so the lever was silently broken every
       time anyone used it. Zero data written or touched before the crash — safe no-op, not a near-miss on correctness.

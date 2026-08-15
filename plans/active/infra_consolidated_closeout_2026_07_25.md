@@ -555,3 +555,4 @@ not data-pipeline).
   `session_bound_vm_monitoring_ reliability_gap_2026_07_26.md` and `infra_plan_reconcile_parked_decisions_2026_07_26.md`
   confirmed already registered above (2026-07-27 entry) with proper `[text](path)` links, not bare filenames — no edit
   needed there.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).

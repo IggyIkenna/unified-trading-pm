@@ -68,7 +68,7 @@ related:
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
     /plans/active/bucket_estate_consolidation_closeout_2026_07_24.md,
-    /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
+    /plans/archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md,
     /plans/archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
     /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
     /plans/archive/issues/silent_wrong_answer_bucket_resolution_class_2026_07_20.md,
@@ -644,8 +644,9 @@ substring match both `generate_ag_closeout_audit_candidates.py` and `check_ag_cl
 batch)
 
 - **ao**:
-  [`checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md`](/plans/active/issues/checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md)
-  (evidence: `ag_closeout_audit_cross_cutting_parked_2026_08_01.md` finding 2),
+  [`checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md`](/plans/archive/2026_08/issues/checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md)
+  (RESOLVED 2026-08-15, `agent-orchestrator@7889a7c` — evidence: `ag_closeout_audit_cross_cutting_parked_2026_08_01.md`
+  finding 2),
   [`ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md`](/plans/active/issues/ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md),
   [`context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`](/plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md)
   (dual-tagged `[ao, cross-cutting]`, orthogonality mistag),
@@ -660,8 +661,8 @@ batch)
   [`image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md`](/plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md),
   [`mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md`](/plans/archive/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md)
   (archived 2026-08-14, resolved),
-  [`promote_ref_orphaned_on_manual_pr_close_2026_08_06.md`](/plans/active/issues/promote_ref_orphaned_on_manual_pr_close_2026_08_06.md),
-  [`provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`](/plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md),
+  [`promote_ref_orphaned_on_manual_pr_close_2026_08_06.md`](/plans/archive/2026_08/issues/promote_ref_orphaned_on_manual_pr_close_2026_08_06.md),
+  [`provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`](/plans/archive/2026_08/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md),
   [`workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md`](/plans/active/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md)
   — evidence: `ag_closeout_audit_cross_cutting_parked_2026_08_07.md` findings 1/5/6, `…_2026_08_08.md` for the rest.
 - **infrastructure**:
@@ -732,3 +733,8 @@ batch)
   [cross_cutting_consolidated_closeout_history_2026_08_09.md](/plans/archive/2026_08/cross_cutting_consolidated_closeout_history_2026_08_09.md).
   Each forked Track's header stays in place as a short pointer stub (mirroring how Track 24 was already extracted
   2026-07-26) so existing cross-references by Track number stay valid. See the "Split notice" section above.
+
+- **context-scout 2026-08-15**: populated context_scope (6 entries) — no content change since 2026-08-09; existing set
+  (ag-closeout-audit SKILL.md + the master canonicalisation-migration plan + 4 codex SSOTs spanning
+  data-pipeline-correctness/manifest/pipeline-mode/honest-coverage) already covers this hub doc's Reachability-map-wide
+  themes across Tracks 1-13, 16-17, 23-24; still accurate.

@@ -303,6 +303,22 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
 - [ ] [INFRA] P2. Consider whether AO needs its own periodic self-check that the fleet's actual live server pid matches
       the isolated socket (not just per-slot `has-session`) — the split-brain here persisted ~3h because nothing was
       cross-checking "is the CURRENT server on the path we think it's on."
+- [ ] [INVESTIGATE] P2. Root-cause slots 10 & 11's genuine mid-task SIGTERM at 2026-08-14 23:33:47-48Z (part of the
+      5-slot cluster investigated below) — no OOM (`cgroup oom_kill=0` both), no elevated host load/RAM/swap at
+      detection, no `concurrent_recent_spawns` storm, `tmux_server_alive=True` for both (rules out this doc's confirmed
+      kill-server signature, which requires `alive=False`), and no explanatory exception/traceback in
+      `orchestrator.service`'s journal within the surrounding ±2min. Affected tasks:
+      `dp_exit_code_monitor_sweep_overlap_storm-4944c6c02138` (slot 11, marked resume-pending) and the `cicd` craft
+      `ldr_qg_failure deployment-api#617` (slot 10, 2288s runtime, reaped-stale, requeued fresh). Still open — same
+      "pane vanished before the pruner's next tick" class this doc already tracks generally, not confirmed as a new
+      distinct mechanism.
+- [ ] [INFRA] P3. `check-ao-recent-deaths.sh`'s `burst_size` (and the doc's own "burst = server-wide crash" heuristic)
+      conflates ordinary same-tick `one_task_per_session` recycles (`kill_session reason="manual"`, logged right after a
+      normal `slot_done`/`slot_done_verified`) with genuine crash/kill losses — both land as `tmux_session_lost` rows
+      and both count toward `burst_size`. The 2026-08-14 23:33:47-48Z "5-slot burst" (below) was actually 3 benign
+      recycles + 2 genuine losses; the raw diagnostic made it look like one homogeneous event. Consider
+      cross-referencing each burst member against a preceding `reason="manual"` `SESSION-TEARDOWN` log line (or the
+      `slot_done` event) within the same ~60s window before classifying it as "genuine."
 
 ## Progress Log
 
@@ -606,3 +622,39 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   victory on a readback still applies. Not flipping `status`/archiving; that decision stays with whoever is tracking the
   still-open closure question above.
 - **context-scout 2026-08-14**: populated context_scope (5 entries).
+- **2026-08-15 (interactive session, independent check, prompted by an operator-pasted activity-feed review)**: live SSM
+  investigation of the 2026-08-14 23:33:47-48Z 5-slot `tmux_session_lost` cluster (slots 1, 10, 11, 12, 18,
+  `burst_size=5`, all `status=143`/SIGTERM, all `tmux_server_alive=True`). **Not a homogeneous burst** — full
+  diagnostics below.
+  - **Benign (3/5, NOT a bug)**: slot 12's death is a clean `one_task_per_session` recycle — `orchestrator.service`
+    journal shows `WARNING SESSION-TEARDOWN kill_session session=orch-slot-12 reason=manual` at 23:33:09, co-timestamped
+    in `activity_log` with `slot_done` → `slot_done_verified` → `worker_one_task_per_session_reset` for slot 12 at the
+    same second. Slot 18 shows the identical `reason=manual` signature at 23:32:30 and respawned cleanly with a fresh
+    task dispatch by 23:34:05-20 (`autospawn_succeeded` → `task_dispatched` → `slot_boot`). Slot 20 (same
+    `reason=manual` pattern at 23:32:00, NOT actually part of the 5-slot cluster — respawned independently before it)
+    confirms the pattern is the ordinary respawn-between-tasks path, not a crash; the pruner's own tick just lags the
+    actual (benign) kill by up to ~30-40s, which is why 12/18's `tmux_session_lost` rows land in the same detection tick
+    as the two genuine losses below and inflate `burst_size` to 5.
+  - **Genuine (2/5, root cause NOT found)**: slot 11 — journal:
+    `tmux_pruner: slot 11 session 'orch-slot-11' GONE mid-task ... resume_decision=resume pane_death={pane_dead_status: 143, ...} — reaped-stale candidate: the worker's tmux session died without a /done`;
+    task `dp_exit_code_monitor_sweep_overlap_storm-4944c6c02138` (session `3ef5f645-f101-4456-b2f8-47b66ce3ed88`),
+    marked resume-pending, dirty repo `deployment-service`. Slot 10 — journal:
+    `REAPED-STALE agt-c42410 (role=custom kind=cicd label='cicd:ldr_qg_failure deployment-api#617') — tmux session 'orch-slot-10' gone without a clean /done after 2288s of runtime`;
+    a corresponding task-scoped (`slot_id=None`) `tmux_session_lost` row also fired at 23:33:48.124602Z naming the same
+    task, confirming which in-flight task each craft loss corresponds to. Neither shows the OOM (`cgroup oom_kill=0`),
+    host-load/RAM/swap elevation, spawn-storm (`concurrent_recent_spawns=0`), or `tmux_server_alive=False` kill-server
+    signature this doc already confirmed as root cause elsewhere — so this is NOT evidence of that bug recurring.
+    Widened `orchestrator.service` journal search (23:30-23:36Z, grepped for error/exception/traceback/kill/sigterm)
+    found no exception or crash trace bracketing either death; the nearest anomalies were unrelated and non-fatal — a
+    caught `sqlite3.IntegrityError: UNIQUE constraint failed: batching_turns.message_id` in `BatchingStatsPoller` at
+    23:32:59 (different subsystem, "continuing"), and an Anthropic API `429` for account `sub-a-ikenna` at 23:33:52-53
+    (AFTER the deaths, unrelated poller). Root cause for slots 10/11 specifically stays unidentified — filed as a todo
+    above rather than closed.
+  - **Separately surfaced, not this doc's scope**: account `sub-a-ikenna` was observed with
+    `rate_limited_until: 2026-08-19T13:59:59Z` / `overage_disabled_reason: out_of_credits` on an unrelated slot-1 death
+    earlier the same evening (22:59:33Z) — flagging for operator awareness in case that account is still expected to
+    carry fleet spawn capacity through that window; not investigated further here.
+  - **Tooling gap noted**: `check-ao-recent-deaths.sh`'s diagnostic payload (and this doc's own "`burst_size`>1 =
+    server-wide crash" heuristic) has no way to tell a `reason="manual"` recycle-teardown apart from a genuine
+    crash/kill without a separate journal/`slot_done` cross-reference, done by hand this session — todo filed above to
+    close that gap in the tool itself.

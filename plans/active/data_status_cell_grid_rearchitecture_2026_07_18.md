@@ -22,7 +22,7 @@ related:
     /plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md,
   ]
 created: 2026-07-18
-last_updated: 2026-07-18
+last_updated: 2026-08-08 # (was: 2026-07-18 -- plan-reconcile 2026-08-15: bumped to match latest Progress Log entry, 2026-08-08 Todo 1 completion)
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -49,7 +49,7 @@ context_scope:
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md,
-    /plans/archive/2026_07/mtds_data_status_page_parity_2026_07_21.md,
+    deployment-api/deployment_api/services/data_status_service.py,
     deployment-api/deployment_api/services/data_status/live_build_guard.py,
   ]
 ---
@@ -181,3 +181,7 @@ real fix is to never load the whole manifest per request.
   todo 2 is still an unresolved DESIGN GATE (bound vs stream vs precompute) every later todo depends on; a genuine
   architecture choice among 3 directions with different Cloud-Run-memory/single-walk-discipline implications, not a
   cheat-sheet-matched default.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) -- swapped in `data_status_service.py` (confirmed by
+  the 2026-08-08 Progress Log entry as the actual `_read_index_cached`/`_build_manifest_category` rearchitecture
+  target), dropped `mtds_data_status_page_parity_2026_07_21.md` (the doc's own text explicitly disclaims it as a
+  different, non-memory root cause that "does not belong to this plan").

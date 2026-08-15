@@ -45,7 +45,7 @@ related:
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /plans/active/issues/plan_reconciler_findings_ci_2026_08_10.md,
     /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
-    /plans/active/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_tradfi_parked_2026_08_10_r2.md,
     /plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md,
     /plans/archive/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
@@ -198,17 +198,24 @@ run, i.e. ≥18h, and per this investigation, ≥3 days by 2026-08-12).
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Rule which option (A/B/C) above applies for closing the plan_reconciler dead-run lock gap, or a
-      different approach. If A or B: also rule on the staleness threshold and which repo/service owns the AO↔PM-repo
-      correlation sweep.
-- [ ] [INFRA] P3. Once ruled: fix the likely-stale "blocks synchronously for that tranche's FULL worker run" claim in
-      `agent-orchestrator/scripts/install-plan-reconciler-timer.sh`'s header comment (finding 4) — either re-confirm it
-      against a live measurement first, or correct it to describe the actual "spawn receipt, not completion" behavior
-      the codex SSOT already documents, so a future reader doesn't inherit the same wrong mental model this
-      investigation had to disprove from code.
+- [x] [OPERATOR] P2. ✅ **Ruled 2026-08-15 (operator via /plan-reconcile session): Option A** — once AO confirms a
+      dispatch id is reaped-stale, the lock auto-clears without a human step. (Staleness threshold + which repo/service
+      owns the AO↔PM-repo correlation sweep are implementation details of the follow-up todo below, not re-opened here.)
+- [ ] [BACKEND] P1. Implement Option A auto-clear: wire the plan_reconciler lock-clear into AO's reaped-stale detection
+      path (see agent-orchestrator's dispatch-status model) so a PM-repo doc lock auto-releases once AO confirms the
+      dispatch that set it is reaped-stale — ruled 2026-08-15, see this doc's Progress Log.
+- [x] [INFRA] P3. ✅ **Fixed 2026-08-15** — `agent-orchestrator/scripts/install-plan-reconciler-timer.sh`'s header
+      comment claim that the dispatch POST "blocks synchronously for that tranche's FULL worker run" (finding 4) is
+      confirmed wrong: no completion-polling exists in `plan_health.dispatch()`/`autospawn._do_spawn()`. Rewrote the
+      comment to the "spawn receipt, not completion" framing matching
+      `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md`.
 - [ ] [INFRA] P3. Once ruled: audit why 2 of the 4 dead 2026-08-09 docs (`…_defi_…`, `…_cefi_…`) stamped a bare
       `locked_by: plan_reconciler` with no `(agt-xxxxxx) since <ts>` suffix (finding 6) — a genuine dead-session
       correlation needs the dispatch id + timestamp on every run's lock-stamping step, not just most of them.
+      **Confirmed-recurring, not hypothetical**: independently reproduced live this session (2026-08-15) in the
+      sports-tranche doc (`plan_reconciler_findings_sports_2026_08_10.md`), which also carried the bare
+      `locked_by: plan_reconciler` / `locked_since: "2026-08-10"` format with no dispatch id before it was cleared —
+      this is the same hygiene gap recurring in a THIRD dated doc, not a one-off from the original 2 defi/cefi cases.
 
 ## Progress Log
 
@@ -224,3 +231,22 @@ run, i.e. ≥18h, and per this investigation, ≥3 days by 2026-08-12).
   matching the precedent already set (and still open) in the sibling
   `locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md` doc. The 4 named 2026-08-09 docs themselves are
   explicitly out of scope for this doc (a separate session owns their unlock/archive per operator instruction).
+
+- **2026-08-15 — Operator ruling + cross-reference finding (this session, /plan-reconcile follow-up)**: Operator ruled
+  **Option A** on todo 1 — once AO confirms a dispatch id is reaped-stale, the corresponding PM-repo
+  `locked_by: plan_reconciler` lock auto-clears without a human step. Implementation (wiring the lock-clear into AO's
+  reaped-stale detection path) is real engineering work in `agent-orchestrator`, NOT done in this pass — tracked as a
+  new `[BACKEND] P1` follow-up todo above. Also fixed the stale "blocks synchronously for the FULL worker run" claim in
+  `install-plan-reconciler-timer.sh`'s header comment (todo 2) to match the confirmed "spawn receipt, not completion"
+  behavior.
+
+  **Cross-reference finding — why this ruling matters beyond the 4 originally-named docs**: a grep across all
+  `plan_reconciler_findings_*_2026_08_10.md` tranche docs this session found **6 of 10 tranches** stuck on a dead
+  `locked_by: plan_reconciler` lock from 2026-08-10 — not just the subset originally suspected. Confirmed dead-locked as
+  of session start: `ao`, `ci`, `cross_cutting`, `infra`, `prediction`, `sports`. All 6 have now been cleared this
+  session (2026-08-15) by parallel agents working each tranche doc individually (a manual per-doc operator-approved
+  unlock each time — exactly the "only resolution path that exists today" this doc's finding 5 already named). This is
+  direct, current evidence for why the Option-A ruling matters: this specific gap was blocking **6 tranches' daily
+  reconciliation for 5 days** (2026-08-10 through 2026-08-15), not a hypothetical edge case affecting a handful of docs.
+  Once the `[BACKEND] P1` follow-up lands, this class of incident should self-heal instead of requiring a human to
+  notice and unlock each tranche doc individually.

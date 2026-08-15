@@ -129,7 +129,7 @@ For `perp_trades` (CSV format, ~5K rows/page):
 dedicated backfill CLIs) **Entry points**:
 
 - Batch:
-  `python -m market_tick_data_service.scripts.backfill_drift_v2_historical \     --markets SOL-PERP --start 2024-06-01 --end 2026-06-01 --data-types funding,trades`
+  `python -m market_tick_data_service.scripts.backfill_drift_v2_historical \ --markets SOL-PERP --start 2024-06-01 --end 2026-06-01 --data-types funding,trades`
 - Live: same script with `--live --continuous --interval-seconds 3600 --data-types funding` (per CLAUDE.md "Live = batch
   (CRITICAL)" hard rule — same handler, same GCS partition path, same schema)
 

@@ -46,6 +46,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope: [/codex/04-architecture/client-funds-isolation.md, /codex/04-architecture/defi-execution-overview.md]
 source: >-
   Interactive session 2026-08-11. Operator decisions: defer the code carve-out past the October delivery; send the
   strategy-service repository in full once its code lands; standardise the support period at 30 days; and rescope this
@@ -775,7 +776,7 @@ strategy config before either ruling was written.
       view as a documented instance-config default. **Then sweep for the same category error elsewhere** — any venue
       omitted for an edge reason rather than a capability reason.
 - [ ] [AGENT] P0. **Stop using `ShareClass` to encode venue margin currency.**
-      `("hyperliquid", "HYPERLIQUID",     ShareClass.USDC)` and `"KRAKEN takes USDC + USDT, USDC wins"` conflate a fund
+      `("hyperliquid", "HYPERLIQUID", ShareClass.USDC)` and `"KRAKEN takes USDC + USDT, USDC wins"` conflate a fund
       property with a venue property, which makes an ETH share class structurally unable to trade a USDC-margined venue.
       Split the two: venue margin currency comes from the collateral registry; share class stays a fund attribute.
 - [ ] [AGENT] P0. **Build the funding-route feasibility graph per `(client_id, strategy_id)`.** Routes: direct · convert

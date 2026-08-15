@@ -118,7 +118,7 @@ the VM-scale run:
       `MarketCategory` member — any CLI invocation of this service that omits `--asset-group` explicitly crashes at
       `ServiceRuntime.from_env_and_args` (`StartupValidationError: Invalid CLI --asset-group='ALL'`) before any handler
       runs. Confirmed live 2026-08-09: dead-on-arrival for 5 `sports-ensemble-train` VM launches until
-      `--asset-group     SPORTS` was added explicitly. Every existing production launcher happens to always pass a real
+      `--asset-group SPORTS` was added explicitly. Every existing production launcher happens to always pass a real
       value, so this was latent; harden it (e.g. drop the `"ALL"` default, or validate/translate it before it reaches
       `ServiceRuntime`) so the next new operation added to this CLI doesn't hit the same trap. (repo: ml-service) —
       ml-service@23006b4

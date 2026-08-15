@@ -188,24 +188,24 @@ same silent-mid-session-archival pattern regardless of which of the two already-
 - [x] ✅ [BACKEND] P3. Investigate why `GET /api/agents?include_finished=true` omitted `agt-a14109` (only the direct
       by-id `GET /api/agents/agt-a14109` surfaced it) — confirm whether this is an intentional time-window/status-enum
       gap or a real bug in that endpoint's filter, since the two precedent docs' own diagnostic recipe
-      (`GET     /api/agents`) would have silently reported "zero active/stale AgentRow rows" here too, same
-      false-negative shape the 2026-07-26 doc already flagged once. (repo: agent-orchestrator) — **Investigated via full
-      call-chain code read (`server/routes/agents.py::list_agents` → `server/state_store/agents.py::list_agents`); NOT
-      reproducible as a filter/status-enum bug in the current code.** With `include_finished=true` and no explicit
-      `status`, the SQL applies NO status filter at all
-      (`elif not include_finished: stmt = stmt.where(...notin_(archived,     finished))` — the exclusion is skipped
-      entirely once `include_finished=True`), so an archived row is included by construction; confirmed the dashboard's
-      own caller (`dashboard/src/App.tsx` → `api.ts::listAgents`) passes `{ include_finished: true }` with no `limit`,
-      matching the no-narrowing case. One real (but narrower) issue found along the way, worth flagging even though it
-      doesn't explain a full omission: the query's `ORDER BY role,     agent_id` is NOT recency-ordered, so any caller
-      that DOES pass a `limit` for "recent past runs" (a reasonable reading of the endpoint's own docstring) gets an
-      alphabetically-arbitrary slice, not the most-recent rows — a genuinely recent archived row could be silently
-      absent from a limited page while older-but-alphabetically-earlier rows fill it. Not fixed here (no evidence the
-      reporting session's own query used a `limit` — fixing an ordering bug that may not be the actual cause would be a
-      speculative change to fleet-critical query code); noting for whoever next touches `list_agents`' ordering. The
-      specific `agt-a14109` omission is most plausibly a transient artifact of that investigation session (unknown exact
-      query mechanics, no live DB access to reproduce) rather than a standing code defect — closing as
-      investigated/non-reproducible rather than leaving open indefinitely.
+      (`GET /api/agents`) would have silently reported "zero active/stale AgentRow rows" here too, same false-negative
+      shape the 2026-07-26 doc already flagged once. (repo: agent-orchestrator) — **Investigated via full call-chain
+      code read (`server/routes/agents.py::list_agents` → `server/state_store/agents.py::list_agents`); NOT reproducible
+      as a filter/status-enum bug in the current code.** With `include_finished=true` and no explicit `status`, the SQL
+      applies NO status filter at all (`elif not include_finished: stmt = stmt.where(...notin_(archived, finished))` —
+      the exclusion is skipped entirely once `include_finished=True`), so an archived row is included by construction;
+      confirmed the dashboard's own caller (`dashboard/src/App.tsx` → `api.ts::listAgents`) passes
+      `{ include_finished: true }` with no `limit`, matching the no-narrowing case. One real (but narrower) issue found
+      along the way, worth flagging even though it doesn't explain a full omission: the query's
+      `ORDER BY role, agent_id` is NOT recency-ordered, so any caller that DOES pass a `limit` for "recent past runs" (a
+      reasonable reading of the endpoint's own docstring) gets an alphabetically-arbitrary slice, not the most-recent
+      rows — a genuinely recent archived row could be silently absent from a limited page while
+      older-but-alphabetically-earlier rows fill it. Not fixed here (no evidence the reporting session's own query used
+      a `limit` — fixing an ordering bug that may not be the actual cause would be a speculative change to
+      fleet-critical query code); noting for whoever next touches `list_agents`' ordering. The specific `agt-a14109`
+      omission is most plausibly a transient artifact of that investigation session (unknown exact query mechanics, no
+      live DB access to reproduce) rather than a standing code defect — closing as investigated/non-reproducible rather
+      than leaving open indefinitely.
 - [ ] [BACKEND] P3. Once the reap-vs-done distinction above lands, consider whether `one_shot_complete` should
       special-case an already-`exit_reason: "lifecycle-complete"` (or the new `"reaped-stale"`) row for a session whose
       OWN `claude_session_id`/`tmux_session` matches the caller — i.e. treat "the row is already archived AND it is

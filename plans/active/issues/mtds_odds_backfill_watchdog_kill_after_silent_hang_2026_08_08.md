@@ -526,3 +526,22 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   (or `py-spy` after a quick `pip install`) and actually capture the hang state live. This resolves the ACCESS gap only
   — the timing constraint (must be caught mid-tick, before the watchdog acts) is unchanged, and the underlying
   silent-hang mechanism itself is still unconfirmed.
+
+- **2026-08-15 — a DIFFERENT failure signature found on `mtds-backfill-odds-1`, do not conflate with the silent-hang
+  above.** This VM ran the corrected code (post `market-tick-data-service@a4a20fc7`, the ODDS_API source/venue fix) and
+  made genuine, monotonic chunk progress (chunk 1→18/425, real `[[VM_PROGRESS]]`/`PROGRESS:` markers, correct
+  skip-logic) for ~3 hours before vanishing (`status=failed`, `exit_code=125`, `reap_reason=vm_not_running`,
+  `started_at=2026-08-15T03:42:07Z`, `completed_at=2026-08-15T06:40:04Z`). **This is NOT the silent-hang signature**
+  (that one is characterized by TOTAL log silence for 16-21 min before a watchdog kill) — this VM's log shows continuous
+  `RESOURCE_SAMPLE`/`PIPELINE_HEARTBEAT` lines right up to 06:17:02, then stops (a ~23min gap before the 06:40:04 reap
+  timestamp). The last ~2.5 minutes of live samples show a rapid, monotonic RSS climb during a single chunk's
+  single-league processing (chunk 18, league=EPL): `rss=984MiB(mem=7.6%)` → `6897MiB(37.8%)` → `16225MiB(58.6%)` →
+  `20302MiB(70.0%)` → `23223MiB(77.6%)`, heading straight at the `mem_crit=85.0%` watchdog threshold, within ~2.5
+  minutes (06:14:40→06:16:57). **Not yet root-caused** — could be a genuine OOM kill/VM-instability from this specific
+  chunk's processing, or a coincidental SPOT preemption during a normal (if unusually memory-hungry) chunk; the ~23min
+  silent gap before the reap timestamp is itself unexplained (consistent with either an OOM-triggered hang before final
+  kill, or a delayed reap-detection cycle). **Action taken**: VM relaunched (SPOT preemption/failure recovery is
+  standard convention here — resumes from measured progress via the existing skip-logic, chunk 18 onward). **Not
+  investigated further this session** — if this pattern recurs on the relaunch (rapid RSS growth in a similar
+  chunk/league), it's worth escalating as a genuine memory-leak candidate in the corrected pipeline, distinct from this
+  doc's original silent-hang mechanism.

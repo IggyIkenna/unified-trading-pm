@@ -118,40 +118,46 @@ context_scope:
 
 ### A1 — Capture path honest + live (fold: capture-incident remediation)
 
-- [ ] [BACKEND] P0. **Finish the prediction capture-incident remediation** — harden the capture path (consolidator utf8
-      typing, backfill the 07-01→07-06 missed window) and confirm the KALSHI/POLYMARKET-PERP adapters no longer hit the
-      wrong Kalshi host (the fake-PERPETUAL cefi contamination). `prediction_capture_incident_remediation_2026_07_06.md`
-      (9 open, but 7 of those are `[DESCOPED-NOT-MVP 2026-07-14]` parked pending the perps prod-access operator ruling —
-      only Phase 6's 2 items are genuinely dispatchable). **Reconciled 2026-07-30
-      (`prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todos 2+3, via the batch1 finalize plan) — NOT a clean
-      close, still open.** Batch1 closed 2 items in that doc: todo 2 quantified + root-caused the "fake-PERPETUAL
-      contamination" question (the `KXMVE*` event family IS captured correctly; the REAL bug is 79% of Kalshi volume
-      also landing in `canonical_question_group=OTHER` due to a one-line write-time bug at
-      `instruments-service/instruments_service/engine/orchestrator/prediction.py:95` — filed as that doc's new Phase 6,
-      NOT implemented) and todo 3 shipped the Phase 5 write-time `*-PERP` guardrail (`instruments-service@a4137022`, now
-      flipped there). Phase 6's CQG-bucketing fix + its backfill-assessment follow-up are the only genuinely open work
-      remaining; this checkbox stays open until Phase 6 ships. (repos: market-tick-data-service,
-      unified-trading-library, deployment-service) **na-eligibility-audit 2026-08-03 (blocker-currency check): Phase 6's
-      CODE fix has now SHIPPED** — `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 1 (`status: active`,
-      `assigned_vm: planning`) landed it `instruments-service@e0f7aaad` (2026-07-30, verified: 3/3
-      `test_prediction_canonical_group_shard.py -k kalshi` pass at HEAD) and that same todo confirms Phase 6's checkbox
-      in the source doc (`prediction_capture_incident_remediation_2026_07_06.md`) is flipped too. This checkbox stays
-      open here nonetheless — the remaining scope is exactly Phase 6's OWN backfill-assessment follow-up, which that
-      source doc labels **"operator/architect call, not a mechanical todo"** (assess whether the historical
-      `OTHER`-bucketed Kalshi rows are worth a backfill/reclassify pass, per the data-pipeline-correctness "fix in FULL"
-      bar vs. practical cost) — a genuine judgment call, not something a worker can close alone. `assigned_vm`
-      untouched. **RULED 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — YES, backfill/reclassify the
-      historical `OTHER`-bucketed Kalshi rows, AND delete the bad classifications from both GCS objects and the
-      manifest** (not an in-place relabel — the mis-bucketed rows get removed/replaced, matching the
-      data-pipeline-correctness "fix in FULL" bar). Actual execution tracked in
-      `prediction_capture_incident_remediation_2026_07_06.md` Phase 6 (the doc that structurally owns this
-      backfill-assessment item) — see that doc for the real todo. **na-eligibility-audit 2026-08-10: citation gap
-      closed** — that Phase 6 item has since been independently extracted, verbatim, into
+- [x] ✅ [BACKEND] P0. **DONE 2026-08-15 (plan_reconciler) — Phase 6 fully shipped.** Finish the prediction
+      capture-incident remediation — harden the capture path (consolidator utf8 typing, backfill the 07-01→07-06 missed
+      window) and confirm the KALSHI/POLYMARKET-PERP adapters no longer hit the wrong Kalshi host (the fake-PERPETUAL
+      cefi contamination). `prediction_capture_incident_remediation_2026_07_06.md` (9 open, but 7 of those are
+      `[DESCOPED-NOT-MVP 2026-07-14]` parked pending the perps prod-access operator ruling — only Phase 6's 2 items are
+      genuinely dispatchable). **Reconciled 2026-07-30 (`prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todos
+      2+3, via the batch1 finalize plan) — NOT a clean close, still open.** Batch1 closed 2 items in that doc: todo 2
+      quantified + root-caused the "fake-PERPETUAL contamination" question (the `KXMVE*` event family IS captured
+      correctly; the REAL bug is 79% of Kalshi volume also landing in `canonical_question_group=OTHER` due to a one-line
+      write-time bug at `instruments-service/instruments_service/engine/orchestrator/prediction.py:95` — filed as that
+      doc's new Phase 6, NOT implemented) and todo 3 shipped the Phase 5 write-time `*-PERP` guardrail
+      (`instruments-service@a4137022`, now flipped there). Phase 6's CQG-bucketing fix + its backfill-assessment
+      follow-up are the only genuinely open work remaining; this checkbox stays open until Phase 6 ships. (repos:
+      market-tick-data-service, unified-trading-library, deployment-service) **na-eligibility-audit 2026-08-03
+      (blocker-currency check): Phase 6's CODE fix has now SHIPPED** —
+      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 1 (`status: active`, `assigned_vm: planning`) landed
+      it `instruments-service@e0f7aaad` (2026-07-30, verified: 3/3 `test_prediction_canonical_group_shard.py -k kalshi`
+      pass at HEAD) and that same todo confirms Phase 6's checkbox in the source doc
+      (`prediction_capture_incident_remediation_2026_07_06.md`) is flipped too. This checkbox stays open here
+      nonetheless — the remaining scope is exactly Phase 6's OWN backfill-assessment follow-up, which that source doc
+      labels **"operator/architect call, not a mechanical todo"** (assess whether the historical `OTHER`-bucketed Kalshi
+      rows are worth a backfill/reclassify pass, per the data-pipeline-correctness "fix in FULL" bar vs. practical cost)
+      — a genuine judgment call, not something a worker can close alone. `assigned_vm` untouched. **RULED 2026-08-07
+      (operator, via consolidated NA-blocker-digest audit) — YES, backfill/reclassify the historical `OTHER`-bucketed
+      Kalshi rows, AND delete the bad classifications from both GCS objects and the manifest** (not an in-place relabel
+      — the mis-bucketed rows get removed/replaced, matching the data-pipeline-correctness "fix in FULL" bar). Actual
+      execution tracked in `prediction_capture_incident_remediation_2026_07_06.md` Phase 6 (the doc that structurally
+      owns this backfill-assessment item) — see that doc for the real todo. **na-eligibility-audit 2026-08-10: citation
+      gap closed** — that Phase 6 item has since been independently extracted, verbatim, into
       [`prediction_satellite_ao_dispatch_batch10_2026_08_09.md`](/plans/archive/2026_08/prediction_satellite_ao_dispatch_batch10_2026_08_09.md)
-      (`assigned_vm: planning`, `status: active`, Source cites `prediction_capture_incident_remediation_2026_07_06.md`
-      Phase 6's second checkbox verbatim) — batch10 is the live dispatch surface for the backfill; this A1 checkbox is a
-      pointer with no independent work of its own and stays open until batch10 lands and its finalize plan reconciles
-      both source docs.
+      (Source cites `prediction_capture_incident_remediation_2026_07_06.md` Phase 6's second checkbox verbatim) —
+      batch10 landed and its finalize plan reconciled both source docs; both batch10 docs are now archived complete
+      (2026-08-10). **Landing verified 2026-08-15 (plan_reconciler)**: `instruments-service@d4e5c23d` ("add Kalshi
+      historical OTHER-bucket CQG reclassify script") is a confirmed ancestor of `origin/live-defi-rollout`. The
+      commonly-cited `instruments-service@e0f7aaad` ("fix(prediction): extract bare Kalshi ticker before CQG
+      classification") is NOT itself an ancestor — it lives only on
+      `origin/wip-preserve/slot-5-instruments-service- diverged-20260805T111826Z` (the same rebase-drift class the
+      batch6 parent-SHA finding documents elsewhere in this corpus) — but its content landed verbatim under the rebased
+      SHA `instruments-service@94f3ee11` (identical commit message, confirmed ancestor of `origin/live-defi-rollout`).
+      This checkbox stays closed on that corrected citation.
 - [x] ✅ [BACKEND] P0. **DONE 2026-07-30 (reconciling `prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo 1).**
       Kill the dead Kalshi `trading-api.kalshi.com` host reintroduced into the smoke matrix + add the regression check
       that the elections-subdomain plan Phase 4 never added; fix the `raw_tick_data/by_date/` drift.
@@ -288,15 +294,15 @@ context_scope:
       features-service)
 
       **2026-07-26 fold-in** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #12, option A):
-                                                                                                                                                                                                                                                                              `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
-                                                                                                                                                                                                                                                                              **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
-                                                                                                                                                                                                                                                                              `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
-                                                                                                                                                                                                                                                                              2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
-                                                                                                                                                                                                                                                                              either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
-                                                                                                                                                                                                                                                                              launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
-                                                                                                                                                                                                                                                                              operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
-                                                                                                                                                                                                                                                                              availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
-                                                                                                                                                                                                                                                                              see its own Progress Log.
+          `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
+          **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
+          `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
+          2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
+          either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
+          launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
+          operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
+          availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
+          see its own Progress Log.
 
 ### A4 — Fixture-attribute WRITERS (Phase E depends on this landing before the Phase-D re-backfill)
 
@@ -451,7 +457,7 @@ context_scope:
       same 100% bar; DeFi is the sole exception (genuinely mixed per-instrument_type, tracked separately in
       `defi_consolidated_closeout_2026_07_18.md`). **Narrowed 2026-07-25
       (`prediction_satellite_ao_dispatch_batch2_2026_07_25.md` todo 2) to the case-insensitive standard the RULED C2a
-      ruling actually mandates** (`/codex/02-data/reconciliation-     finding-taxonomy.md` §5.1 — UPPERCASE target,
+      ruling actually mandates** (`/codex/02-data/reconciliation- finding-taxonomy.md` §5.1 — UPPERCASE target,
       `migration_pending`, compared case-INSENSITIVELY, no casing finding during the migration window) — **still open,
       see 2026-07-27 Progress Log entry**: a fresh read found 176 genuinely-malformed (non-casing) rows, not 0.
 - [ ] [DIAG] P2. **NEW 2026-07-27 — prediction manifest blank/null `instrument_type` rows are ACTIVELY GROWING, not
@@ -462,7 +468,7 @@ context_scope:
       population is dead historical residue, not active, while the blank population is evidence of an ONGOING writer
       defect still stamping blank `instrument_type` on ~10 prediction rows/day. **Done when**: the writer/cron path
       responsible for the blank stamps is identified by name (file:line) with a live-vs-historical verdict — candidates
-      include the per-CID writer path near `engine/orchestrator/manifest_finalize.     _finalize_prediction_bundles`
+      include the per-CID writer path near `engine/orchestrator/manifest_finalize. _finalize_prediction_bundles`
       (already known from the tick-18 finding above to mis-stamp `instrument_type` on bundle rows, though that finding
       was lowercase `"prediction"`, not blank) or a different live/per-CID path — and either a fix ships and is verified
       against the next day's count, or the ~10/day gap is recorded as accepted with a stated reason. Repo:
@@ -587,9 +593,9 @@ context_scope:
   `(repos: market-tick-data-service)`, but its primary named action lives in a repo that annotation never named:
   `e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py:552` — re-verified 2026-07-26 that the dead host
   is still literally in the current tree at that exact line, and that the linked issue doc
-  (`/plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`) lists `e2e-testing` first in its own
-  `repos:`. A worker dispatched on the todo's own annotation would have searched MTDS and found nothing. Repo list
-  corrected to name both legs (`e2e-testing` for the smoke matrix, `market-tick-data-service` for the
+  (`/plans/archive/2026_08/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`) lists `e2e-testing` first in
+  its own `repos:`. A worker dispatched on the todo's own annotation would have searched MTDS and found nothing. Repo
+  list corrected to name both legs (`e2e-testing` for the smoke matrix, `market-tick-data-service` for the
   `raw_tick_data/by_date/` drift). The plan's frontmatter `repos:` already included `e2e-testing` — the gap was
   per-todo, which is the level AO dispatch actually reads.
 - **2026-07-27T15:28:46Z (slot-4, `prediction_satellite_ao_dispatch_batch2_2026_07_25.md` todo 2) — fresh

@@ -818,10 +818,9 @@ instruments in one `instruments.parquet` with `available_from/to`).
       cases), `quality-gates.sh` green. **Full scope, not just the code fix (self-audit 2026-07-23 — these 3 were
       originally missing)**: (a) **migration for ALREADY-WRITTEN data — CHECKED 2026-07-23, CLEAN: zero production
       shards corrupted, because zero were ever written.** `uts-prod-mtds-collect-solana-defi-cron` is `PAUSED`
-      (confirmed via
-      `gcloud scheduler jobs describe uts-prod-mtds-collect-solana-defi-cron     --location=asia-northeast1`, part of
-      the already-tracked, deliberate 4-collector pause since 2026-06-08 — Track 8 above) and a systematic GCS sample
-      (every 3 days, 2026-06-05 through 2026-07-23, both ORCA and RAYDIUM, correctly-derived
+      (confirmed via `gcloud scheduler jobs describe uts-prod-mtds-collect-solana-defi-cron --location=asia-northeast1`,
+      part of the already-tracked, deliberate 4-collector pause since 2026-06-08 — Track 8 above) and a systematic GCS
+      sample (every 3 days, 2026-06-05 through 2026-07-23, both ORCA and RAYDIUM, correctly-derived
       `pipeline_mode=batch_onchain_subgraph`) found ZERO `data_type=dex_pool_state` objects for either venue in that
       entire window — the collector has not produced a single canonical-shape shard since before the pause began, so
       there is nothing to re-split. **The pre-resume gate on "Resume the paused DeFi crons" (Track 8) for
@@ -863,8 +862,8 @@ instruments in one `instruments.parquet` with `available_from/to`).
       pools sharing a token pair can never collide on it), correcting the plan's "same gap in a MORE severe form"
       framing — the real gap here is READABILITY (opaque address-named files instead of human-readable symbols), not
       correctness. **Cron status, re-verified live**:
-      `gcloud scheduler jobs describe     uts-prod-mtds-collect-dex-pools-cron --location=asia-northeast1` →
-      `state: PAUSED` (still registered in `market_tick_data_service/cli/main.py:554` +
+      `gcloud scheduler jobs describe uts-prod-mtds-collect-dex-pools-cron --location=asia-northeast1` → `state: PAUSED`
+      (still registered in `market_tick_data_service/cli/main.py:554` +
       `deployment-service/terraform/gcp/defi_collection_scheduler.tf`, not retired). **Explicit resolution (this is the
       "explicit retire decision" the plan's own phrasing allows for): no code fix required before this cron is safe to
       resume, on collision grounds** — nothing to migrate, nothing to discriminate. An optional, separate, low-priority
@@ -970,3 +969,4 @@ against). Moved verbatim, nothing summarized, to
   `assigned_vm: NA`. This was a byproduct of the scheduled ag-closeout-audit's Phase-0 iterative-drain re-check, not a
   dedicated infra investigation — see `issues/ag_closeout_audit_defi_parked_2026_08_10.md` for the full audit-cycle
   report this finding is part of.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (6 entries).

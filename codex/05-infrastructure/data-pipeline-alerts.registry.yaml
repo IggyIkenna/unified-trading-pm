@@ -89,7 +89,7 @@ failure_modes:
       detector: post_run_manifest_scan,
       kind: scriptable,
       escalation: page_operator,
-      status: verbose,
+      status: active,
       fires: "VM run ended >=X% empty_confirmed (RED-ALERT shape)",
     }
   - {
@@ -111,7 +111,7 @@ failure_modes:
       detector: check_high_attempted_failed,
       kind: scriptable,
       escalation: page_operator,
-      status: verbose,
+      status: active,
       fires:
         "attempted_failed cell high: abs>=500 or (count>=min AND ratio>=10%) -- ATTEMPTED_FAILED-ratio variant, distinct
         from DP-FETCH-007's empty_confirmed-ratio detector (same event name, both DP_RUN_MOSTLY_EMPTY)",
@@ -243,7 +243,7 @@ failure_modes:
       detector: exit_code_fleet_monitor,
       kind: scriptable,
       escalation: page_operator,
-      status: verbose,
+      status: active,
       fires: "run.log exit_code != 0 (incl 137 OOM), survives self-delete",
     }
   - {
@@ -254,7 +254,7 @@ failure_modes:
       detector: exit_code_fleet_monitor,
       kind: scriptable,
       escalation: page_operator,
-      status: verbose,
+      status: active,
       fires: "VM drained but captured did not climb",
     }
   - {
@@ -265,7 +265,7 @@ failure_modes:
       detector: heartbeat_watcher,
       kind: scriptable,
       escalation: auto_recover,
-      status: verbose,
+      status: active,
       fires: "no heartbeat/progress > N min",
     }
   - {
@@ -276,7 +276,7 @@ failure_modes:
       detector: heartbeat_watcher,
       kind: scriptable,
       escalation: file_issue,
-      status: verbose,
+      status: active,
       fires: "blocking GCS read on async loop, no logs > N min",
     }
   - {
@@ -309,7 +309,7 @@ failure_modes:
       detector: stale_cloud_run_image_alert,
       kind: scriptable,
       escalation: file_issue,
-      status: verbose,
+      status: active,
       fires: "Cloud Run job running an image older than the latest Artifact Registry build for its service",
     }
   - {
@@ -519,6 +519,19 @@ failure_modes:
       fires: "4-pillar shard validation fails",
     }
   - {
+      id: DP-MANIFEST-006,
+      category: MANIFEST,
+      severity: CRITICAL,
+      event: DP_PHANTOM_ROWS,
+      detector: drilldown_reconciliation_guard,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires:
+        "sampled raw shard row_count != manifest's own recorded row_count for the same captured cell (epsilon=0
+        drilldown-correctness drift)",
+    }
+  - {
       id: DP-CATALOG-001,
       category: CATALOG,
       severity: CRITICAL,
@@ -526,7 +539,7 @@ failure_modes:
       detector: catalogue_freshness_watcher,
       kind: scriptable,
       escalation: page_operator,
-      status: verbose,
+      status: active,
       fires: "instrument catalogue for an AG not refreshed in 24h",
     }
   - {
@@ -550,7 +563,7 @@ failure_modes:
       detector: watchdog_liveness_probe,
       kind: scriptable,
       escalation: page_operator,
-      status: verbose,
+      status: active,
       fires: "zombie-VM watchdog itself down (meta)",
     }
   - {
@@ -561,7 +574,7 @@ failure_modes:
       detector: cron_alive_probe,
       kind: scriptable,
       escalation: page_operator,
-      status: verbose,
+      status: active,
       fires: "scheduled audit/consolidator/digest cron missed",
     }
   - {
@@ -584,7 +597,7 @@ failure_modes:
       detector: check_consolidator_scheduler_paused,
       kind: scriptable,
       escalation: page_operator,
-      status: verbose,
+      status: active,
       fires:
         "non--legacy- manifest-consolidator Cloud Scheduler job is PAUSED with no live maintenance window covering it
         (accidental pause, not a sanctioned backfill pause) — previously misassigned DP-WATCHER-003's id, colliding with

@@ -26,8 +26,14 @@ estimate_calibrated_ai_days: 0.1
 assigned_role: backend_engineer
 drift_direction: fix
 resolved_by:
-locked_by: plan_reconciler (agt-716973) since 2026-08-10T05:24:47Z
+locked_by:
 depends_on: []
+context_scope:
+  [
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
+    /plans/epics/infrastructure_master.md,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 ---
 
 # plan_reconciler findings — infra tranche — 2026-08-10
@@ -160,12 +166,13 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
       recount confirmed 18 todos; fixed 6 off-by-one/two references: parent doc "todo 14"→15 (×2, codex SSOTs), "Todo
       15"→17 (×2, body + codex SSOT); finalize doc "todos 14-15"→"todos 15 and 17" + "todo 15"→16. —
       unified-trading-pm@d6118cac0e
-- [ ] [DOCS] P3. `ci_pipeline_speed_and_cost_redesign_2026_08_05.md`'s "beaten by 10-50x" headline directly contradicted
-      by its own next sentence (~7.5min average pre-PR latency from promotion-cron cadence, not captured by the
-      "open→merge" metric) — Contradictions #6. Needs a judgment call: add a new todo tracking the cron-cadence
-      bottleneck, or explicitly scope it out of the plan's "done" bar. Not this run's call to make unilaterally.
+- [x] ✅ [DOCS] P3. `ci_pipeline_speed_and_cost_redesign_2026_08_05.md`'s "beaten by 10-50x" headline directly
+      contradicted by its own next sentence (~7.5min average pre-PR latency from promotion-cron cadence, not captured by
+      the "open→merge" metric) — Contradictions #6. **RESOLVED 2026-08-15**: the target doc now carries a "CORRECTED
+      2026-08-12 /plan-reconcile" annotation at lines 125-128 resolving the self-contradiction (qualified "open→merge" —
+      the two claims measure different spans and are not in tension once scoped).
 - [x] [DOCS] P3. ~~`deployment_registry_firestore_p3_cutover_2026_07_14.md:31` still declares
-      `model_tier:     opus-required`~~ (Contradictions #1 cross-batch note) — **CLOSED 2026-08-12, operator-directed
+      `model_tier: opus-required`~~ (Contradictions #1 cross-batch note) — **CLOSED 2026-08-12, operator-directed
       corpus-wide sweep.** `deployment_registry_firestore_p3_cutover_2026_07_14.md` was independently already fixed
       (line 31 now blank) by the time this ran. Ran the systematic sweep this todo asked for
       (`grep -rln '^model_tier: opus' plans/ | grep -v /archive/`) and found 3 more stale active instances beyond the 2
@@ -183,13 +190,12 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
       explicitly flags those as superseded by the 2026-07-27 refresh): - **market-data-processing-service (5 DELETE
       items)**: `DEPLOYMENT_GUIDE.md`, `TESTING.md`, `REFACTORING_STANDARDS_COMPLIANCE.md`, `specs/PLANS_ALIGNMENT.md`,
       `specs/README.md` — live `git ls-files | grep` in `.tabs/11/market-data-processing-service` found ZERO matches for
-      any of the 5; `ls       docs/` confirms only `TESTING_GUIDE.md`/`DEPLOYMENT_GUIDE_FEMI.md` remain (the redirect
-      targets, not the deleted stubs); no `specs/` directory exists at all. All 5 confirmed absent. -
-      **instruments-service (2 DELETE items, refreshed 13-doc registry)**: `scripts/README.md`,
-      `.github/BRANCH_PROTECTION_SETUP.md` — live `git ls-files | grep` in `.tabs/11/instruments-service` found ZERO
-      matches for either. Both confirmed absent. Unlike the 3 already-fixed items
-      (deployment-service/unified-api-contracts/execution-service, where DELETE was falsely checked while files still
-      existed on disk), MDPS and instruments-service's `[x]` DELETE checkmarks in
+      any of the 5; `ls docs/` confirms only `TESTING_GUIDE.md`/`DEPLOYMENT_GUIDE_FEMI.md` remain (the redirect targets,
+      not the deleted stubs); no `specs/` directory exists at all. All 5 confirmed absent. - **instruments-service (2
+      DELETE items, refreshed 13-doc registry)**: `scripts/README.md`, `.github/BRANCH_PROTECTION_SETUP.md` — live
+      `git ls-files | grep` in `.tabs/11/instruments-service` found ZERO matches for either. Both confirmed absent.
+      Unlike the 3 already-fixed items (deployment-service/unified-api-contracts/execution-service, where DELETE was
+      falsely checked while files still existed on disk), MDPS and instruments-service's `[x]` DELETE checkmarks in
       `codex_vs_repo_docs_ssot_audit_2026_06_01.md` are CORRECT as-is — no plan edit needed there. This closes the
       suspected-pattern investigation with a genuine negative result.
 - [x] ✅ [DOCS] P3. Fix `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`'s todo 5/6 repo-count
@@ -210,10 +216,11 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
       revive `ci_consolidated_closeout`.** Un-archived `ci_consolidated_closeout_2026_07_25.md` from
       `plans/archive/2026_07/` → `plans/active/`, both plans registered under it in `related:`.
       `unified-trading-pm@<pending-sha>`.
-- [ ] [DOCS] P3. `/codex/05-infrastructure/vm-launcher-runbook.md` doesn't document the live, reproduced freshness-gap
-      race from `vm_launcher_setup_script_freshness_gap_2026_07_31.md` despite CLAUDE.md pointing engineers there for
-      "full gotchas + measured incidents." Exceeds the mechanical-codex-staleness carve-out (a new addition, not a
-      substitution) — needs an editorial decision on scope/placement before applying.
+- [x] ✅ [DOCS] P3. `/codex/05-infrastructure/vm-launcher-runbook.md` doesn't document the live, reproduced
+      freshness-gap race from `vm_launcher_setup_script_freshness_gap_2026_07_31.md` despite CLAUDE.md pointing
+      engineers there for "full gotchas + measured incidents." **RESOLVED 2026-08-15 (operator ruling, see
+      `operator_ruling_record_plan_reconcile_session_2026_08_15.md` item 7)**: added a narrow "Known Issues" bullet to
+      the runbook citing the incident doc and its resolution state.
 - [x] ✅ [DOCS] P3. `prod_terraform_drift_backlog_reconcile_2026_07_24.md:177`'s "finding W" citation (downgrading an
       `[OPERATOR]` tag) doesn't resolve inside its named target codex doc (`orchestrator-cloud-identity-self-service.md`
       has no lettered-finding scheme) — the cited RULE is real and correct, only the locator is dangling. Fix the

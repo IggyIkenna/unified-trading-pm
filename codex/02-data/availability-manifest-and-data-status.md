@@ -713,7 +713,7 @@ class AvailabilityRecord:
   `ODDS_API` deliberately, as long as that's documented as a sentinel and not conflated with a fine-grained claim.
   MDPS's `reprocess_sports_odds.py` `odds_horizon_bucket` manifest got this wrong at the FINE grain until 2026-07-27
   (stamped `venue=ODDS_API` on every per-`(league_id, timeframe)` row despite the underlying shard already carrying a
-  real per-row `bookmaker_key`) — fixed forward (`market-data-processing-service@6f7422e`) + backfilled (`@a047b29`);
+  real per-row `bookmaker_key`) — fixed forward (`market-data-processing-service@561f177`) + backfilled (`@a047b29`);
   see `plans/active/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Phases 0-3 for the full investigation and
   the coarse-vs-fine distinction this rule now codifies.
 - **No `data_source` column for non-TradFi rows.** Track what the data IS (transfers, injuries, odds), not where it came
@@ -2251,6 +2251,27 @@ from `unified-trading-pm/scripts/quality_gates/`) to statically enforce that eve
 inside the UTL source tree carries a `source=` kwarg. Callsites that forward `source` via `**kwargs` carry the
 `# QG-allow: tradfi-source-not-applicable` inline marker. The baseline YAML (`tradfi_source_explicit_baseline.yaml`) is
 empty — all UTL source callsites are already clean.
+
+### Post-backfill audit — `audit_source_column_distribution.py`
+
+QG STEP 5.64 + `MissingSourceError` only enforce the write path (new rows can't land blank). Confirming the **existing**
+prod corpus is actually zero-blank is a separate, read-only data-state check — data-state, not a code constant, per the
+manifest-v8 lesson (the constant said 8 while 0% of rows were v8):
+
+```bash
+# per-cell source histogram, read-only:
+python unified-trading-pm/scripts/quality_gates/audit_source_column_distribution.py --manifest-path <local-path-or-gs-uri>
+# fail (exit 1) if any external-vendor cell has a blank source:
+python unified-trading-pm/scripts/quality_gates/audit_source_column_distribution.py --manifest-path <p> --strict
+```
+
+Reads a consolidated availability-index parquet, groups rows by `(category, venue, data_type)`, and reports the per-cell
+`source` histogram. A cell is flagged **RED** when it has a UAC `SOURCE_PRIORITY` entry with ≥1 **external** source
+(`external_sources_for(...)` non-empty) yet carries rows with a blank `source`; computed/service-only and unregistered
+cells are **EXEMPT** (`COMPUTED_SOURCES`). **Sequencing**: run only after the write-path enforcement + per-asset-group
+`source` backfill land — running it earlier will (correctly) report ~100% blank, the pre-enforcement baseline, not a
+failure of the tool. SSOT for the backfill sequencing itself:
+`/plans/active/data_source_provenance_enforcement_2026_07_24.md`.
 
 ---
 

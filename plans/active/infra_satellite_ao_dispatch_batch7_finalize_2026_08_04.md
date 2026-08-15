@@ -117,3 +117,4 @@ skill's no-double-gate mechanism).
 - **2026-08-10 (infra, slot 15)** — Todo 3: Archived `infra_satellite_ao_dispatch_batch7_2026_08_04.md` to
   `plans/archive/2026_08/`. All three batch7 todos were already `[x]` done (since 2026-08-08). Updated 7 corpus
   referrers with new archive paths; `regenerate_active_plan_inventory.py` confirmed clean (0 orphans).
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (2 entries).

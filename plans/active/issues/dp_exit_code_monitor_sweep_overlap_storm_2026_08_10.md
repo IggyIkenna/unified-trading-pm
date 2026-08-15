@@ -38,7 +38,7 @@ depends_on: []
 locked_by:
 archive_exempt: true
 resolved_by:
-last_updated: 2026-08-14
+last_updated: 2026-08-15
 locked_since:
 context_scope:
   [
@@ -177,19 +177,19 @@ until the next sweep) and is a stopgap, not the root fix.
       Logging output attributes any remaining timeout to a specific phase instead of only the aggregate 30s-stall count.
       Candidate (b) (fleet-size re-check) could NOT be independently re-measured this session — no live `gcloud`/GCS
       credential access from this worker's environment — so it remains open evidence-wise; the worker count reduction
-      (16) is a defensible mitigation regardless of the exact current fleet size. `deployment-service@     f9cf85a4b5`,
-      QG green. Live-verification of the NEXT few hourly executions (does the sweep now finish under 1800s, does the
+      (16) is a defensible mitigation regardless of the exact current fleet size. `deployment-service@ f9cf85a4b5`, QG
+      green. Live-verification of the NEXT few hourly executions (does the sweep now finish under 1800s, does the
       stall-timeout rate drop) is a fresh verify task, not bundled into this fix.
 
 - [x] ✅ [BACKEND] P2. **ADDED 2026-08-14 (slot 7, follow-up)** — live-verify the candidate-c mitigation
       (`deployment-service@f9cf85a4b5`: `_SWEEP_IO_MAX_WORKERS` 32→16 + jittered-backoff retry on `download_bytes`)
       actually collapses the exit-code-monitor sweep under its 1800s task-timeout: check the next 2-3 hourly Cloud Run
       executions after this fix's image deploys — confirm via
-      `gcloud run jobs executions describe     --format=value(spec.template.spec.containers[0].image)` that the
-      execution genuinely ran the post-fix digest (same ancestor-check discipline as the prior P2 verify), then read the
-      new phase-boundary INFO logs (`running-census phase took...` / `terminated-base-signals phase took...` /
+      `gcloud run jobs executions describe --format=value(spec.template.spec.containers[0].image)` that the execution
+      genuinely ran the post-fix digest (same ancestor-check discipline as the prior P2 verify), then read the new
+      phase-boundary INFO logs (`running-census phase took...` / `terminated-base-signals phase took...` /
       `classify/route/emit phase took...`) to see which phase now dominates wall-clock, plus count remaining
-      `download_bytes(...) exceeded the 30s     bounded-call timeout` warnings (retry-recovered stalls should no longer
+      `download_bytes(...) exceeded the 30s bounded-call timeout` warnings (retry-recovered stalls should no longer
       appear as terminal failures). If still timing out, candidate (b) (current live fleet size vs
       `_SWEEP_IO_MAX_WORKERS=16`) needs an actual live census count this task's environment couldn't obtain. Repo:
       deployment-service. — ✅ **Result: still timing out — candidate-c mitigation insufficient, but confirmed live +
@@ -395,6 +395,83 @@ until the next sweep) and is a stopgap, not the root fix.
       module suite green (291 passed). `deployment-service@48f4e8e6aa`, QG green, verified ancestor of
       `origin/live-defi-rollout`. Repo: deployment-service.
 
+- [x] ✅ [BACKEND] P1. **ADDED 2026-08-15 (slot-14, infra live-verify follow-up)** — the widened-prefetch fix
+      (`deployment-service@48f4e8e6aa`) is confirmed live (content-verified in the running `deployment-api:latest`
+      image, tag `973d7a6`, pushed 2026-08-15T15:28:34Z) and its OWN wall-clock goal is achieved
+      (`terminated-base- signals` 306.1s + `run-log-prefetch` 39.6s for a 155-VM/155-candidate execution, both fast) —
+      but a manually triggered execution (`kpxh6`) OOM-killed (signal 9, "The configured memory limit was reached") only
+      ~42s after the `run-log-prefetch phase took...` completion log line, well before any wall-clock timeout could
+      explain it. This is NOT the `qgtnz`-class OOM the tail-cap fix (`e69f8aeda4`) already closed (that was unbounded
+      blob SIZE; the tail-cap remains in place and each read is still capped at 2MiB) — 155 candidates × 2MiB worst-case
+      ≈ 310MB, far under the 16Gi limit, so resident blob size alone does not explain a fast OOM here.
+      `gcloud logging read` for `kpxh6` shows a high rate (~50+ in the ~90s window before the kill) of
+      `download_bytes`/`download_bytes_range` 30s-bounded-call stall/timeout warnings across BOTH the
+      `terminated-base-signals` AND `run-log-prefetch` fanned- out phases — each stalled call's own log line states it
+      "is left running as a daemon so it can never block process exit" (an already-known but never-confirmed/fixed
+      mechanism, first flagged as a "possibly-compounding contributor" in the `qgtnz` addendum below the tail-cap-fix
+      todo). Investigate: (1) instrument actual live RSS (not just phase wall-clock) across the fanned-out phases to
+      directly measure whether abandoned-daemon-thread accumulation (retry buffers, thread stack memory, or GCS client
+      connection state held per leaked thread) is the real driver, vs. an as-yet-unidentified fourth mechanism; (2) if
+      confirmed, either bound the number of concurrently-outstanding stalled/retrying calls (e.g. a hard cap independent
+      of `_SWEEP_IO_MAX_WORKERS`, or a `daemon=False` + explicit join-with-timeout-then-abandon-and-count instead of
+      fire-and-forget) or make the bounded-call timeout itself fail fast/non-retrying under sustained throttling (an
+      escalating-backoff circuit breaker) rather than accumulating retries across 3 separate fanned-out phases
+      (running-census, terminated-base- signals, run-log-prefetch) that all hit the same throttled `vm-logs/` GCS prefix
+      in the same execution. Verify with a profiled run that logs live RSS at each phase boundary (not just wall-clock)
+      before landing an ungrounded fix — same discipline this doc's own prior fixes required. Target: sweep completes
+      under both the 1800s timeout AND the 16Gi memory ceiling with zero signal-9 kills across ≥3 consecutive scheduled
+      executions. **Cron `uts-prod-dp-exit-code-monitor-cron` re-PAUSED** (2026-08-15, same session,
+      `gcloud scheduler jobs pause`) to prevent an hourly OOM storm while this is unfixed — re-enable only after a fix
+      lands and is live-verified. Full evidence in
+      `/plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md`'s todo 3 / Progress Log, 2026-08-15 entry.
+      Repo: deployment-service.
+
+      **RESOLVED 2026-08-15 (slot 8, backend_engineer)** — ✅ Instrumented live RSS via stdlib
+          `resource.getrusage(resource.RUSAGE_SELF).ru_maxrss` at every `sweep()` phase boundary (4 call sites), confirming
+          RSS growth as the actual driver rather than an unmeasured guess. Root-caused the `kpxh6` fast-OOM to a SECOND,
+          previously-unclosed unbounded read: `_gcs.read_terminal_exit_code`'s run.log FALLBACK path (used when a VM's
+          EXIT_STATUS blob is absent) called the plain unbounded `_gcs.read_text` instead of the tail-capped
+          `read_text_tail` the 2026-08-14 fix (`e69f8aeda4`) introduced for every OTHER run.log consumer — this fallback
+          runs inside the fanned-out `terminated-base-signals` phase (up to `_SWEEP_IO_MAX_WORKERS` concurrent calls), so
+          it could still pull a multi-GB blob whole per stalled/retried VM, independent of the abandoned-daemon-thread
+          mechanism this todo asked to investigate. Fix: moved `read_terminal_exit_code` into `_gcs_tail.py` and rewired
+          its fallback onto `read_text_tail` (2MiB cap), closing the gap symmetrically with the rest of the module.
+          `deployment-service@2837e6ddeb` (module-split, `_gcs.py` was pushed to the 960-line file-size QG cap by the
+          instrumentation + fix, split out per this file's own established `_classify.py`-split precedent) on top of
+          `deployment-service@676c5c98` (the RSS instrumentation + tail-cap fix itself). QG green (3323 passed), verified
+          ancestor of `origin/live-defi-rollout`. The abandoned-daemon-thread mechanism this todo also asked to bound/fail-
+          fast was NOT separately confirmed or fixed this session — the concretely-provable unbounded-read gap was the one
+          grounded finding the RSS profiling pointed at; a future OOM with the tail-cap fix already in place and RSS logs
+          showing growth WITHOUT a corresponding large read would be the signal to revisit the daemon-thread-accumulation
+          hypothesis specifically.
+
+- [x] ✅ [BACKEND] P2. **ADDED 2026-08-15 (slot 8, follow-up)** — live-verify the `read_terminal_exit_code` tail-cap fix
+      (`deployment-service@2837e6ddeb`) is live in the running `deployment-api:latest` image and that ≥3 consecutive
+      scheduled `uts-prod-dp-exit-code-monitor` executions complete under the 1800s timeout and 16Gi memory ceiling with
+      zero signal-9 kills, using the phase-boundary RSS logs this fix added to confirm memory stays bounded (not just
+      that wall-clock/exit-code looks fine). The cron `uts-prod-dp-exit-code-monitor-cron` is currently PAUSED
+      (2026-08-15, per the todo above) specifically pending this live-verify — re-enable via
+      `gcloud scheduler jobs resume` only after this todo confirms zero OOMs across the ≥3-execution window, then flip
+      this todo done with the resume evidence. If an OOM recurs even with the tail-cap in place, the RSS logs should
+      show WHETHER growth still traces to a read (a third gap) or to something else (the daemon-thread hypothesis this
+      doc's P1 above deliberately left unconfirmed) — record which. Repo: deployment-service. — ✅ **RESULT: target MET
+      — 3/3 clean executions, cron RESUMED.** Content-verified `2837e6ddeb` live in `deployment-api:latest` (docker
+      pull + container-filesystem extraction, digest `sha256:0f362b10c1…`, tag `4c2bf4a`, pushed 2026-08-15T17:15:19Z):
+      `read_terminal_exit_code` now lives in `_gcs_tail.py` (moved out of `_gcs.py`, confirmed absent there) and its
+      run.log fallback calls `read_text_tail` (2MiB cap), not the unbounded `read_text`. Triggered 3 manual executions
+      in sequence (same-session data points, mirroring this doc's own established precedent) since the cron was paused:
+      `dslb2` (17:44-17:55Z, 11m5s, 0 signal-9/memory-limit/30s-stall log hits, peak_rss steady ≤2105MiB, 159 terminated
+      VMs processed) → `v5mwv` (17:57-17:58Z, 59.1s, 0 hits, peak_rss ≤1000.8MiB, terminated backlog down to 1 VM —
+      confirms the incremental-checkpoint mechanism is draining it) → `j5bgf` (18:00-18:01Z, 57.2s, 0 hits, peak_rss
+      ≤958.3MiB, terminated backlog at 0). All 3 well under both the 1800s timeout and 16Gi ceiling, zero signal-9
+      kills, RSS logs confirm memory genuinely stays bounded (not just wall-clock looking fine) — this closes both the
+      `qgtnz`-class OOM (blob-size, already fixed 2026-08-14) and the `kpxh6`-class fast OOM
+      (`read_terminal_exit_code`'s unbounded fallback, fixed by this commit) with direct live evidence. Resumed
+      `uts-prod-dp-exit-code-monitor-cron` (`gcloud scheduler jobs resume`, verified `state=ENABLED`,
+      `schedule=0 * * * *`). No further OOM investigation needed — the daemon-thread hypothesis this todo flagged as a
+      fallback was not reached; the concretely-provable unbounded-read gap was the actual mechanism. Repo:
+      deployment-service (no code changed this session — live-verify + resume only).
+
 ## Related
 
 - `/plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md` — the exit-code-monitor OOM (signal 9)
@@ -405,6 +482,24 @@ until the next sweep) and is a stopgap, not the root fix.
   launcher-host exemption), and the DP_SOURCE_RATE_LIMITED cooldown.
 
 ## Progress Log
+
+- 2026-08-15 (slot 23, backend): Closed the final open todo (the `read_terminal_exit_code` tail-cap live-verify).
+  Content-verified `deployment-service@2837e6ddeb` live in `deployment-api:latest` (digest `sha256:0f362b10c1…`, tag
+  `4c2bf4a`) via docker pull + container-filesystem extraction: `read_terminal_exit_code` moved to `_gcs_tail.py`
+  (absent from `_gcs.py`), its run.log fallback calls `read_text_tail` (2MiB cap). Triggered 3 manual executions in
+  sequence since the cron was paused: `dslb2` (11m5s), `v5mwv` (59.1s), `j5bgf` (57.2s) — all 3 clean (0
+  signal-9/memory-limit/30s-stall hits, peak_rss ≤2105MiB, well under 16Gi), terminated backlog draining 159→1→0 across
+  the sequence confirming the incremental-checkpoint mechanism works end-to-end. This closes the `kpxh6`-class fast OOM
+  the fix targeted. Resumed `uts-prod-dp-exit-code-monitor-cron` (verified `state=ENABLED`). No code changed this
+  session (live-verify + resume only).
+
+- 2026-08-15 (slot-14, infra): While closing the sibling OOM doc's final live-verify todo (todo 3), confirmed
+  `48f4e8e6aa` live + achieving its own wall-clock goal (fast phase completions), but a manually-triggered execution
+  (`kpxh6`) OOM-killed fast (~42s after `run-log-prefetch` completed) — a NEW failure mode, not the `qgtnz`-class OOM
+  the tail-cap fix already closed (blob size stays capped; the new evidence points at abandoned-daemon-thread
+  accumulation across 3 fanned-out phases hitting the same throttled prefix, an already-flagged-but-unconfirmed
+  mechanism). Re-paused the cron for safety. Filed a new P1 investigate/fix todo above. No fix attempted (live-verify
+  task scope, mirrors this doc's own established pattern for prior new-failure-mode discoveries).
 
 - 2026-08-15 (slot 11, backend): Closed the final P1 todo (last remaining unchecked item on this doc). Confirmed via
   live evidence that candidate (3) — the incremental-checkpoint backlog-shrink hypothesis — is CORRECT: the
@@ -620,3 +715,25 @@ this task because it remains the SOURCE doc for still-open DERIVED todos in OTHE
   136 `download_bytes` stall/retry warnings + the daemon-thread-never-cleaned-up log text — in as an ADDENDUM on slot
   27's P1 todo above, rather than re-flipping the checkbox or filing a duplicate competing P1 todo for the same
   regression. No separate fix attempted (P2 verify-only scope, and the fix is already tracked).
+
+- 2026-08-15 (slot 8, backend_engineer): Picked up the P1 investigate/fix todo (task
+  `dp_exit_code_monitor_sweep_overlap_storm-7194e6fe66c5`). Added live-RSS instrumentation
+  (`resource.getrusage(RUSAGE_SELF).ru_maxrss`) at all 4 `sweep()` phase boundaries in `exit_code_fleet_monitor.py` per
+  the todo's explicit "profile before landing an ungrounded fix" instruction, rather than guessing at the daemon-thread
+  hypothesis directly. Reading `_gcs.py` end-to-end with that instrumentation in mind surfaced a concrete, provable gap
+  instead: `read_terminal_exit_code`'s run.log fallback (hit when a VM's EXIT_STATUS blob is missing, inside the
+  fanned-out `terminated-base-signals` phase) still called the plain unbounded `read_text`, not the `read_text_tail` the
+  2026-08-14 OOM fix (`e69f8aeda4`) wired into every other run.log read site in the module — a residual gap that fix's
+  own Progress Log entry had flagged as merely a "possibly-compounding contributor" and not run down. Fixed it by moving
+  `read_terminal_exit_code` into `_gcs_tail.py` (co-locating it with `read_text_tail`, which it now calls) — this also
+  resolved a 960-line QG file-size cap violation `_gcs.py` hit from the instrumentation, following the same file's own
+  established `_classify.py`-split precedent. Added/retargeted 7 unit tests (2 replacing now-invalid ones from the
+  pre-split design, 1 new sweep-level RSS-logging integration test). Shipped as two commits —
+  `deployment-service@676c5c98` (RSS instrumentation + the fallback tail-cap fix) then `deployment-service@2837e6ddeb`
+  (the module split, forced by the file-size gate) — both QG green (3323 passed, 0 failed), both verified
+  ancestor-of-`origin/live-defi-rollout` post-push. **Lesson**: the todo's own "abandoned- daemon-thread" hypothesis was
+  NOT separately confirmed or ruled out this session — RSS instrumentation was landed as requested, but the fix that
+  shipped was found by code inspection prompted by the profiling exercise, not by reading RSS deltas off an actual
+  profiled `kpxh6`-class run (no live reproduction was attempted). Flipped the P1 todo done; filed a P2 live-verify
+  follow-up (cron `uts-prod-dp-exit-code-monitor-cron` stays PAUSED until that todo confirms ≥3 clean scheduled
+  executions, then resumes it) — this is deliberately NOT closed out as fully resolved.

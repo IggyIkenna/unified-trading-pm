@@ -111,7 +111,7 @@ documented as the correct mechanism in `task_template.md` and still not exempted
       `safe-doc-push.sh` before its own recent hardening, or a raw push — could be sitting unnoticed). Not urgent; a
       hygiene sweep item. — Done via `ao_satellite_ao_dispatch_batch15_2026_08_09.md` todo 3:
       `unified-trading-pm@4eb3f143ac` (corpus-wide
-      `grep -rnE '^\- \*\*\[[A-Z]+\] P[0-9]+\. (CANCELLED|SUPERSEDED)'     plans/ codex/` found exactly 3 pre-existing
+      `grep -rnE '^\- \*\*\[[A-Z]+\] P[0-9]+\. (CANCELLED|SUPERSEDED)' plans/ codex/` found exactly 3 pre-existing
       matches, all `CANCELLED` (no bare-`SUPERSEDED` instances):
       `plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md:90` (active plan),
       `plans/archive/2026_07/data_pipeline_check_mdps_features_history_2026_07_24.md:947` (archived),

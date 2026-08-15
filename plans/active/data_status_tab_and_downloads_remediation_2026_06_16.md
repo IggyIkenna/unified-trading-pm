@@ -145,7 +145,7 @@ context_scope:
       uppercased venue) — NOT guessed: the live writer stamps `venue=""` for sports (provider → data_type per
       `writers.py:115`), `venue=POLYMARKET` for prediction. The deployment-service + deployment-api copies are SYMLINKS
       to this one PM file (no separate quickmerge needed). Verified
-      `reference_genesis(sports,"")`/`(prediction,     "POLYMARKET")` + every real venue now resolve non-None /
+      `reference_genesis(sports,"")`/`(prediction, "POLYMARKET")` + every real venue now resolve non-None /
       `is_reference_venue_day_in_scope == True` (negative control stays out_of_scope). PM PR #382 (v2-gated auto-merge).
       No `kalshi` IS rows live yet → KALSHI added when it lands.
 - [x] ✅ [DESIGN] P1. **instruments-service manifest carries `instrument_type` (per-type counts)** (audit §K) —
@@ -183,9 +183,11 @@ context_scope:
       still need a backend `limit` bump to be client-pageable — follow-on if wanted. **2026-08-14: fresh full `pw:L2`
       re-run exits 0 — 450/450 passed** (same evidence as the two items above). — deployment-ui `[UI]` | pw:L2 ✓ |
       regression: `tests/unit/components/DataStatusTab.refetch_dedupe_pagination.test.tsx`
-- [ ] [UI] P3. **Rollup-difference clarity** (audit §F, by-design): optional small UI note/tooltip explaining IS is a
-      per-venue/day reference bundle (no data_type axis) vs MTDS's 5-axis market-data shards — so the structurally
-      different drilldown reads as intentional, not broken. — deployment-ui
+- [x] ✅ [UI] P3. **DONE, verified 2026-08-15 (/plan-reconcile).** **Rollup-difference clarity** (audit §F, by-design):
+      optional small UI note/tooltip explaining IS is a per-venue/day reference bundle (no data_type axis) vs MTDS's
+      5-axis market-data shards — so the structurally different drilldown reads as intentional, not broken. —
+      deployment-ui@8033b83651 ("explain IS's by-design rollup difference vs MTDS's 5-axis shards"), ancestor of
+      `origin/live-defi-rollout`.
 
 ## Phase F (TIER 1 cleanup) — Operator live-board data-status display bugs (2026-06-17)
 
@@ -235,16 +237,17 @@ context_scope:
       data_type grain (e.g. raw`ohlcv_1m` from Yahoo/Kalshi), which is informative-by-design, not the IS-view bug —
       tracked separately below.
 
-- [ ] [DATA] P2. **Verify the market-tick-view (`is_expected`) out-of-scope for YAHOO_FINANCE / KALSHI is
-      correct-by-design vs a registry gap** (deployment-api `breakdowns_core` market-data path; UAC
-      `registry/expected_coverage.py`). On the `market-tick-data-service` view (NOT the IS view),
-      `YAHOO_FINANCE ohlcv_1m` + `KALSHI ohlcv_1m` resolve `out_of_scope=True` because `is_expected(...)==False` for
-      those RAW fine-grained data_types AND `is_processed_data_type==False`. For Yahoo (daily/coarse provider, no
-      historical 1m) + Kalshi this is almost certainly **correct/informative** (the source genuinely doesn't supply that
-      granularity). Confirm per-venue which raw data_types each source ACTUALLY provides; if a data_type that IS
-      provided is wrongly out-of-scope, add it to `EXPECTED_COVERAGE_BY_ASSET_GROUP[ag][venue]`; otherwise leave
-      out-of-scope (it correctly signals "this source doesn't provide this data_type"). Provenance: operator "I still
-      see out of scope … prediction and tradfi" 2026-06-17; the IS-view cefi out-of-scope is the separate ✅ item above.
+- [x] ✅ [DATA] P2. **DONE, verified correct-by-design 2026-08-15 (/plan-reconcile), live code read.** Verify the
+      market-tick-view (`is_expected`) out-of-scope for YAHOO_FINANCE / KALSHI is correct-by-design vs a registry gap
+      (deployment-api `breakdowns_core` market-data path; UAC `registry/expected_coverage.py`). Confirmed via direct
+      read of `unified-api-contracts/unified_api_contracts/registry/expected_coverage.py`: **YAHOO_FINANCE was removed
+      as a venue entirely 2026-07-15** ("source-as-venue modeling error" — Yahoo is now a SOURCE, its rows land under
+      real venues DXY→ICE / KRW-USD→FX with `source=yahoo`; the original out-of-scope venue token no longer exists,
+      making the question moot rather than a gap). **KALSHI's `EXPECTED_COVERAGE_BY_ASSET_GROUP["prediction"]["KALSHI"]`
+      = `["trades", "book_snapshot_5"]`** — `ohlcv_1m` is deliberately absent (Kalshi doesn't provide 1m-granularity
+      OHLCV), so its out-of-scope classification is correct-by-design, not a registry gap. No registry change needed.
+      Provenance: operator "I still see out of scope … prediction and tradfi" 2026-06-17; the IS-view cefi out-of-scope
+      is the separate ✅ item above.
 
 - [x] ✅ [CODE] P1. **DeFi venue breakdown duplicates bare PROTOCOL alongside PROTOCOL-CHAIN** — FIXED
       deployment-api@`67972d8`. Root cause: `_filter_to_canonical_defi_venues` used
@@ -273,7 +276,7 @@ context_scope:
 
 - [x] ✅ [CONFIG] P1. **Extend `CEFI_BASE_ASSET_UNIVERSE`** (audit §G) — DONE unified-api-contracts@f4f7f8e (operator
       2026-06-16 "add the rest"): added `EIGEN` (EigenLayer rewards dust) +
-      `AAVE, ALGO, AXS, CHZ, COMP, DASH, ENJ, EOS,     FIL, GALA, ICP, MANA, SAND, THETA, XLM, ZEC` to the frozenset
+      `AAVE, ALGO, AXS, CHZ, COMP, DASH, ENJ, EOS, FIL, GALA, ICP, MANA, SAND, THETA, XLM, ZEC` to the frozenset
       (~28→~45); regression test `tests/test_cefi_universe_coverage.py`; QG green. All three adapters
       (tardis/hyperliquid/aster) import it. — unified-api-contracts
 - [x] [DATA] P1. ✅ **DONE — EIGEN + added bases already re-captured (verified 2026-07-18).** Read the live cefi
@@ -335,16 +338,16 @@ the canon plan; track there, not as duplicate todos:
       refreshes, ZERO `SERVICE_FAILED` for it in 40m. The SHARED services (features-calendar/ml-service) remain
       honest-empty BY DESIGN (routing them through the DeFi reader = garbage; real cross-asset coverage = a dedicated
       SHARED path, tracked in `instruments_mtds_subset_consistency_remediation_2026_06_17.md`). — deployment-api
-- [ ] [CODE] P3. **Per-service coverage `BucketNamingError`s surfaced by the rollup isolation fix (follow-up)** — after
-      the isolation fix (deployment-api@b014ae9) the rollup sweep no longer crashes, but it now logs `SERVICE_FAILED`
-      for cross-asset/edge services whose coverage build mis-resolves a bucket: (1) `features-calendar-service` /
-      `ml-service` (SHARED pseudo-key → now honest-skipped to empty by the defi.py guard — they show no coverage until a
-      `(service,'shared')` override or kind-only resolve is added); (2) `features-cross-instrument-service` →
-      `resolve_bucket_name` called with `asset_group=None` for a per-AG kind ("asset_group= is required"). These are
-      PRE-EXISTING (were masked because the sweep crashed on `'shared'` first) and are now CONTAINED (rollup stays
-      green, beta blobs write) — but those services' coverage is degraded. Root-fix each service's coverage bucket
-      resolution (override / kind-only / correct cat enumeration) so their data-status panels are accurate. —
-      deployment-api
+- [x] ✅ [CODE] P3. **DONE-BUT-UNCHECKED, flipped 2026-08-15 (/plan-reconcile).** Per-service coverage
+      `BucketNamingError`s surfaced by the rollup isolation fix (follow-up) — after the isolation fix
+      (deployment-api@b014ae9) the rollup sweep no longer crashes, but it logged `SERVICE_FAILED` for two cross-asset/
+      edge services: (1) `features-calendar-service`/`ml-service` (SHARED pseudo-key) and (2)
+      `features-cross-instrument-service` (per-AG/prediction-kind resolution). (2) is root-fixed —
+      deployment-api@c1aab6e (see the ✅ item above, `[CODE] P2` at APPLY-GATE), verified prod cron 200 + coverage
+      refreshing, zero `SERVICE_FAILED` for it in 40m. (1) was a deliberate choice, not left broken: the SHARED services
+      stay honest-empty BY DESIGN (per the ✅ item above's own note), tracked separately in
+      `instruments_mtds_subset_consistency_remediation_2026_06_17.md` rather than needing a root-fix here. Both shas
+      confirmed ancestors of `origin/live-defi-rollout`. — deployment-api
 - [x] ✅ [DATA] P0. **APPLY GATE sign-off — cefi, tradfi, prediction: DONE, eyeballed by Ikenna (operator ruling
       2026-08-07, recorded here in `data_status_tab_and_downloads_remediation_2026_06_16.md`; corroborated in
       `/plans/active/ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md`).** Projected captured/attempted/empty/
@@ -460,3 +463,4 @@ owner; the item stays blocked until this plan's own APPLY-GATE + TIER-2 v9 migra
   correctly blocked pending a fresh `pw:L2` full-suite green (the cited nav-regression blocker doc is resolved but no
   re-run has happened since); the DeFi sub-bucket phantom-row audit + the defi/sports APPLY-GATE sign-off stay correctly
   HOLD per today's own operator ruling above (Ikenna's canonicalisation work not yet landed).
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries), no change needed.

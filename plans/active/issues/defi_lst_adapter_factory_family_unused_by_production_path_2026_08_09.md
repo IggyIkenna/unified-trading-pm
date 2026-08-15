@@ -118,11 +118,11 @@ only). This is the same audit methodology, one layer down: `market_interface/fac
 - [x] ✅ [SCRIPT] P1. Register `CoinbaseCbEthAdapter` in `market_interface/factory.py`'s `VENUE_REGISTRY` under
       `"coinbase_cbeth"` (the bare `"coinbase"` key is already taken by the CEFI spot `CoinbaseAdapter`) + add it to the
       `.adapters.defi` import block. Repo: market-tick-data-service. Done when:
-      `get_adapter("coinbase_cbeth",     chain="ethereum")` resolves to a `CoinbaseCbEthAdapter` instance; a regression
-      test pins it. — market-tick-data-service (this session, slot-30, un-shipped at file time — see plan Progress Log
-      for the SHA). `test_defi_coinbase_cbeth` (`TestGetAdapter`) + `test_registry_has_coinbase_cbeth`
-      (`TestVenueRegistry`) added to `tests/market_interface/unit/test_factory_and_venue_registry.py`; full local suite
-      green except 2 confirmed pre-existing unrelated failures (`test_bucket_resolution_uses_category_tradfi`,
+      `get_adapter("coinbase_cbeth", chain="ethereum")` resolves to a `CoinbaseCbEthAdapter` instance; a regression test
+      pins it. — market-tick-data-service (this session, slot-30, un-shipped at file time — see plan Progress Log for
+      the SHA). `test_defi_coinbase_cbeth` (`TestGetAdapter`) + `test_registry_has_coinbase_cbeth` (`TestVenueRegistry`)
+      added to `tests/market_interface/unit/test_factory_and_venue_registry.py`; full local suite green except 2
+      confirmed pre-existing unrelated failures (`test_bucket_resolution_uses_category_tradfi`,
       `TestKalshiMarket::test_market_validates_against_ac_schema` — reproduced identically on a clean stash of this
       diff).
 - [ ] [OPERATOR] P2. Decide the fate of the RenzoAdapter/PufferAdapter/RocketPoolAdapter/SolblazeAdapter/LidoAdapter/
@@ -142,6 +142,6 @@ only). This is the same audit methodology, one layer down: `market_interface/fac
   disposition for a finding that's neither cleanly "unwired" nor cleanly "not built."
 - **round9-reclassify-satellite-sweep 2026-08-09** (defi tranche): KEEP-NA, valid — the sole open item is explicitly an
   `[OPERATOR]` (a) delete vs (b) wire-a-real-consumer decision, and the doc's own "Why this doesn't fit the todo's
-  original... binary" section states plainly this is a design call `task_template.md`'s dispatch-scope-eligibility
-  rule reserves for a human, not something a worker can determine from the code alone. No RECLASSIFY or
-  satellite-extraction applies — there is only the one item, and it is not bounded. Doc stays `assigned_vm: NA`.
+  original... binary" section states plainly this is a design call `task_template.md`'s dispatch-scope-eligibility rule
+  reserves for a human, not something a worker can determine from the code alone. No RECLASSIFY or satellite-extraction
+  applies — there is only the one item, and it is not bounded. Doc stays `assigned_vm: NA`.

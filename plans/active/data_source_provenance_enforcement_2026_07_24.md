@@ -135,13 +135,13 @@ context_scope:
       source-blind by construction. `market-tick-data-service@63ce1e05`, verified ancestor of
       `origin/live-defi-rollout`.
 
-- [ ] [QG] P1. **(checker DONE, wiring REMAINING)** Checker generalised —
-      `check_tradfi_source_explicit_at_record_captured.py` now flags only when a callsite's resolved
-      `(category, data_type)` (literal or module-constant) is multi-source per `source_required()` AND `source=` is
-      absent; covers `record_captured` + `add`; degrades to no-op if UAC absent (PM@5bba69651, slot ref). Verified
-      catches defi/tradfi multi-source-blank, skips single-source (auto-stamp). **REMAINING: wire into MTDS + MDPS
-      `quality-gates.sh` — blocked until the checker reaches LDR (can't wire a clean repo to a PM script not yet
-      promoted).** **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS
+- [x] ✅ [QG] P1. Checker generalised — `check_tradfi_source_explicit_at_record_captured.py` now flags only when a
+      callsite's resolved `(category, data_type)` (literal or module-constant) is multi-source per `source_required()`
+      AND `source=` is absent; covers `record_captured` + `add`; degrades to no-op if UAC absent (PM@5bba69651, slot
+      ref). Verified catches defi/tradfi multi-source-blank, skips single-source (auto-stamp). **Wiring complete
+      2026-08-15**: MDPS already wired (STEP 5.109); MTDS closed the remaining gap —
+      `market-tick-data-service@bbd54fc6b8` (STEP 5.97, slot-19·infra), verified clean run (0 baselined, 0 new
+      occurrences). **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS
       consolidation ruling.)**
 
 - [x] ✅ [MTDS] P1. **RESOLVED-MOOT via `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md` todo 5.** A12a — all
@@ -179,7 +179,13 @@ context_scope:
 - [ ] [DATA] P0. **Write-path** — universal gate live (`source` blank OR not-in-`SOURCE_PRIORITY` → raise) for every
       asset group; every MTDS/MDPS writer (cefi/defi/sports/prediction/tradfi) stamps `source`; QG STEP 5.64
       generalised + green. **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per
-      MTDS consolidation ruling.)**
+      MTDS consolidation ruling.)** **Note (2026-08-15, slot-11): fold in a 1-row manual manifest patch** —
+      `cefi/HYPERLIQUID/trades`, `date=2026-06-29`, `instrument_id=HYPERLIQUID:PERPETUAL:IP-USD@LIN`, both `source` and
+      `pipeline_mode` blank, `capture_status=empty_confirmed`. Confirmed purely historical (no live write path today can
+      reproduce it — both `onchain_perp_batch_handler.py` and `live/manifest_recorder.py` require `pipeline_mode`
+      unconditionally on every write, verified since the batch handler's first commit). Not worth a standalone script;
+      patch this one row whenever this todo is next worked. See
+      `/plans/archive/issues/hyperliquid_trades_blank_pipeline_mode_write_path_gap_2026_08_15.md`.
 
 - [ ] [DATA] P0. **Data parquets** — `source` column populated on every ingested cell across all five asset groups, read
       from ACTUAL prod rows (data-state, not the constant): **zero blank `source`**. Sports migrated path→column. MDPS

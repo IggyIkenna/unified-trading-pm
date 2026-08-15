@@ -72,10 +72,10 @@ context_scope:
 - [ ] [REVIEW] P1. **Reconcile `sports_consolidated_native_ao_extract_2026_07_25.md`'s 26 now-done todos back into
       `sports_consolidated_closeout_2026_07_19.md`'s own corresponding checkboxes.** For each of the 26 todos: flip the
       identically-worded (or closely-paraphrased) checkbox at the cited
-      `sports_consolidated_closeout_2026_07_19.md:     <line>` location, citing the extract plan's shipped commit(s) —
+      `sports_consolidated_closeout_2026_07_19.md: <line>` location, citing the extract plan's shipped commit(s) —
       verify the actual shipped commit exists before citing it (`git log`, not the extract plan's own claim alone).
       **First check whether the parent file is still over the line-cap**
-      (`bash scripts/plan-hygiene/check_line_caps.sh     plans/active/sports_consolidated_closeout_2026_07_19.md`) — if
+      (`bash scripts/plan-hygiene/check_line_caps.sh plans/active/sports_consolidated_closeout_2026_07_19.md`) — if
       still HARD-blocked, do NOT force the edit; record which checkboxes are ready to flip and note the commit is
       deferred until the cap decision lands (do not silently skip this reconciliation — file it as a tracked follow-up
       if blocked). For the 4 todos that were scoped DOWN from the source todo's literal text (venue vocabulary re-stamp

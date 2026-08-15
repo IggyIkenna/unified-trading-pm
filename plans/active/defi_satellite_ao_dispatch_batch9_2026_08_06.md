@@ -92,7 +92,7 @@ over all pending draft batches) that independently spot-verified every todo belo
 - [x] ✅ [DATA] P2. **Retrofit the 8 remaining ad hoc `instrument_key` f-string sites** (`ankr.py:86`, `mantle.py:86`,
       `maker.py:101`, `stakewise.py:90`, `swell.py:86`, `stader.py:85` [all `:LST:`], `kamino.py:199`
       [`:SOLANA_VAULT:`], `pendle.py:274` [`:YIELD_BEARING:`]) to route through
-      `build_instrument_id(...,     passthrough=True)` per the already-shipped todo-2 pattern (16 sites, byte-identical
+      `build_instrument_id(..., passthrough=True)` per the already-shipped todo-2 pattern (16 sites, byte-identical
       output), and confirm whether A_TOKEN/DEBT_TOKEN/YIELD_BEARING/STAKING/SPOT_ASSET/POOL are also silently dropped by
       the already-fixed P0 type-filter-empty bug. Repo: instruments-service. Source:
       `canonical_id_builder_retrofit_checklist_2026_07_08.md`. Done when: all 8 sites verified byte-identical
@@ -137,7 +137,7 @@ over all pending draft batches) that independently spot-verified every todo belo
       `market-tick-data-service@eb380b71b` (`blob.download_as_bytes(timeout=900)` streaming in `_purge_manifest_rows`,
       replacing `_download_index_chunked` range-request that hung 47 min on dispatch #6's VM) is QG-green on
       `live-defi-rollout`. Command:
-      `MACHINE_TYPE=e2-highmem-8 bash scripts/vm/launch-canonical-migration-vm.sh     defi-gas-fees-legacy-purge <date> <date> full`
+      `MACHINE_TYPE=e2-highmem-8 bash scripts/vm/launch-canonical-migration-vm.sh defi-gas-fees-legacy-purge <date> <date> full`
       in deployment-service (SPOT per backfill HARD RULE — script is CAS-idempotent so preemption restart is safe).
       Pre-flight: (a) re-verify 0 GCS objects for all 10 TARGET_VENUES (fresh check); (b) confirm zombie watchdog
       `20260807-075242` RUNNING (90-min idle threshold). Launch discipline: STARTED<60s + >=1 progress/hr + terminal
@@ -248,8 +248,8 @@ over all pending draft batches) that independently spot-verified every todo belo
       day-partition count is cited showing coverage materially closer to (or at) the full genesis-to-today span, or any
       residual gap is confirmed as honest per-token-genesis absence rather than a stalled process. — **VERIFIED COMPLETE
       2026-08-09 (slot-2)**: fresh
-      `gsutil ls -d gs://features-defi-prd-central-element-323112/onchain/by_date/*/     feature_group=lst_yields/`
-      count = **1,815 day-partitions**, spanning `day=2021-08-17`..`day=2026-08-05` contiguously — an EXACT match to
+      `gsutil ls -d gs://features-defi-prd-central-element-323112/onchain/by_date/*/ feature_group=lst_yields/` count =
+      **1,815 day-partitions**, spanning `day=2021-08-17`..`day=2026-08-05` contiguously — an EXACT match to
       `(2026-08-05 - 2021-08-17).days + 1 = 1815` with zero gaps. The resume ran to full completion; coverage is AT the
       full genesis-to-today target as of its launch date, not just "closer".
 - [x] ✅ [DATA] P1. **Verify the 2026-07-28 DeFi MDPS candle-backfill fleet's terminal outcome**
@@ -326,36 +326,45 @@ over all pending draft batches) that independently spot-verified every todo belo
       Done when: `defi_prediction_instrument_seeds.py` no longer contains an AAVE_V3 `rewards` seed,
       `defi_venue_capabilities.py` no longer declares `rewards` for any of the 10 AAVE_V3 chains, and
       `unified-api-contracts`' `quality-gates.sh` stays green after the removal.
-- [ ] [DATA] P3. **Read the live-merged manifest for vault_share_price captures dated after 2026-08-04** across
+- [x] ✅ [DATA] P3. **Read the live-merged manifest for vault_share_price captures dated after 2026-08-04** across
       MAKER/YEARN_V3/ETHENA/FRAX/MORPHO_VAULTS and confirm at least one row per venue now carries a non-null
       `instrument_id` matching its written GCS object's own `instrument_id` column value (post the
       `market-tick-data-service@b0909a5e` fix); if confirmed, flip the issue doc's status to resolved/archived. Repo:
       market-tick-data-service. Source: `vault_share_price_handler_manifest_missing_instrument_id_2026_07_31.md`. Done
       when: a fresh non-null-`instrument_id` manifest row is confirmed for every one of the 5 venues (or the doc is
-      updated naming which venue(s) still lack a natural post-fix capture).
-- [ ] [DIAG] P3. **Dead-code disposition of `e2e-testing/scripts/defi/copy_research_perp_ctx_to_canonical.py`** —
+      updated naming which venue(s) still lack a natural post-fix capture). — unified-trading-pm@ (this commit). 4/5
+      venues confirmed non-null `instrument_id` (MAKER/YEARN_V3/ETHENA/FRAX); MORPHO_VAULTS named as lacking any
+      post-08-04 capture (separate gap, filed as a new follow-up todo in the issue doc). Doc stays `open` per the
+      alternate done-when condition.
+- [x] ✅ [DIAG] P3. **Dead-code disposition of `e2e-testing/scripts/defi/copy_research_perp_ctx_to_canonical.py`** —
       narrowed by conflict-check from the source doc's original broader "investigate if data was lost" framing, which is
       already answered (preserved): `defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md` fact #3 +
       `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s corroborating manifest-backfill evidence confirm the
       HYPERLIQUID perp_daily_ctx/perp_mark_price data this script was meant to preserve was migrated into the shared
       canonical bucket by a different script. Both of this script's hardcoded buckets
-      (`LEGACY_BUCKET     ='perp-funding-central-element-323112'`,
+      (`LEGACY_BUCKET ='perp-funding-central-element-323112'`,
       `CANONICAL_BUCKET='perp-funding-prd-central-element-323112'`) are now confirmed deleted, so the script cannot run
       either way — delete it (its own stated Delete-when condition is satisfied in spirit: superseded by the
       shared-bucket migration) or update its lifecycle marker to record the supersession. Repo: e2e-testing. Source:
       `data_completion_defi_2026_07_15.md` (re-scoped; cite `defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`
       fact #3 as the preserved-data evidence). Done when: the script is either deleted or its lifecycle marker is
       updated to state the bucket-migration supersession, and `data_completion_defi_2026_07_15.md`'s corresponding item
-      is closed by citation.
-- [ ] [DOC] P3. **Correct a stale status marker**: `instruments_docs_audit_outstanding_items_2026_07_08.md`'s C4 section
-      still reads `NEW`, but 3 of its 4 named Solana-adapter sites (Sanctum/Solblaze/Jito-Restaking) were fixed
+      is closed by citation. **DONE 2026-08-15 (slot 24, data_engineering)** — live-verified via
+      `get_storage_client().bucket(<name>).exists()`: both `perp-funding-central-element-323112` (LEGACY) and
+      `perp-funding-prd-central-element-323112` (CANONICAL) are 404/deleted; script deleted — `e2e-testing@f0978fa469`.
+      `data_completion_defi_2026_07_15.md`'s 2026-07-14 flagged finding closed by citation (new Progress Log entry, same
+      date).
+- [x] ✅ [DOC] P3. **Correct a stale status marker**: `instruments_docs_audit_outstanding_items_2026_07_08.md`'s C4
+      section still reads `NEW`, but 3 of its 4 named Solana-adapter sites (Sanctum/Solblaze/Jito-Restaking) were fixed
       2026-07-09 (the shipped code's own comments cite this exact issue doc's C4 section: `sanctum.py:4-5,158-159`,
       `solblaze.py:4-5,107-108`, `jito_restaking.py:8-9,148-153`), and the 4th (`drift.py`) is moot — the file no longer
       exists (DRIFT/PACIFICA purged by operator ruling 2026-07-16, per
       `defi_satellite_ao_dispatch_batch2_2026_07_26.md`). Repo: unified-trading-pm. Source:
       `instruments_docs_audit_outstanding_items_2026_07_08.md`. Done when: the C4 section's status reads `RESOLVED` with
       the 3-fixed/1-moot evidence cited, and the "~9 more adapters" sub-claim is either given fresh file:line evidence
-      or explicitly marked unverified (do not silently drop it).
+      or explicitly marked unverified (do not silently drop it). — **unified-trading-pm@(this commit)**. C4 re-verified
+      live (`sanctum.py`/`solblaze.py`/`jito_restaking.py` fix comments confirmed, `drift.py` confirmed absent) and
+      flipped to `RESOLVED 2026-07-09 (3 fixed, 1 moot)`; "~9 more adapters" left explicitly unverified.
 
 ## Deferred — conflict-parked, needs an operator ruling (2)
 
@@ -660,3 +669,7 @@ remaining items besides the over-cap-gated one above).
   class-attribute binding + direct unit tests), already tracked as the source doc's P3 `[SCRIPT]` dead-code-deletion
   todo. No code shipped this dispatch (audit-only closure; classification + writer fix already at
   `market-tick-data-service@2f7d7840` on origin/LDR).
+
+## Context scout
+
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (4 entries).

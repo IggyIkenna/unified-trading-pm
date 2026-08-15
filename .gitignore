@@ -229,3 +229,18 @@ harsh_orchestrator/backlog.yaml
 
 # Parked-WIP recovery notice left by tree-wip-guard.sh — per-checkout, never committed
 .parked-wip
+
+# Generated CI/CD workflow catalog (scripts/generate-workflow-catalog.py) — re-derived from the
+# live .github/workflows/*.yml every run, exactly the same "regen-authoritative, never
+# hand-committed" shape as backlog.yaml above. Was mistakenly tracked (untracked here
+# 2026-08-15 after it kept showing up as a dirty-worktree /done rejection across independent
+# slot clones — every regen looked like uncommitted work because it WAS uncommitted generated
+# output sitting on top of a tracked file). `git rm --cached` in the same commit as this entry;
+# still generated locally by anyone who runs the script, just never diffed against git again.
+docs/repo-management/CICD-WORKFLOW-CATALOG.md
+
+# Ad-hoc Slack-channel-read diagnostic dumps (e.g. via scripts/dev/slack-read-channel.py,
+# redirected to a file at the command line — no single script hardcodes this name, hence the
+# wildcard) — same dirty-worktree /done-rejection class as the catalog above. Never real
+# tracked content, just whatever window an operator/agent happened to pull.
+slack-ci-failures-*.json

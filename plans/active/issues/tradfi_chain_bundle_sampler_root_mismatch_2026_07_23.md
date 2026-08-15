@@ -231,7 +231,7 @@ had the adopted values live, only the non-live `tradfi_instrument_universe.py` c
       (`TRADFI:CBOE:ohlcv_1s,ohlcv_1m --legs force,skip --require-captured --auto-day --day 2026-07-13`, launched
       2026-07-24 12:43 UTC against `mtds-code@0205eaab` — the build that added `CBOE → "VIX"` to
       `_CHAIN_UNDERLYING_FALLBACK`) found the identical symptom on BOTH force legs' raw `run.log`:
-      `DatabentoAdapter:     instrument_ids filter ['VIX'] matched nothing for venue=CBOE dataset(s)=['XCBF.PITCH'] — 2 curated symbol(s)     available (['VX', 'VX.FUT'])`
+      `DatabentoAdapter: instrument_ids filter ['VIX'] matched nothing for venue=CBOE dataset(s)=['XCBF.PITCH'] — 2 curated symbol(s) available (['VX', 'VX.FUT'])`
       → `0 records` → `SHARD_INCOMPLETE`. This is the exact same canonical-root (`VIX`) vs raw-Databento-symbol
       (`VX`/`VX.FUT`) class this doc already names — confirmed by this doc's own exhaustive diff, where `VX`/`VIX` is a
       **match** entry (both UAC files agree). The `mtds@0205eaab` fix correctly routed CBOE ohlcv_1s/1m into
@@ -292,6 +292,28 @@ had the adopted values live, only the non-live `tradfi_instrument_universe.py` c
       `canonicalize_raw_tradfi_id`/`EXCHANGE_CODE_TO_NAME` gets a real reverse path for this class of code, or
       `derive_canonical_id_for_row`'s caller is confirmed to no longer need it (e.g. superseded by the raw-symbol
       chain-bundle migration itself) — then the skip marker is removed and the test re-asserted green.
+
+- [ ] [DATA] P2. **NEW 2026-08-15 (found while verifying the P0 MVP backfill readiness gate,
+      `tradfi_phase_d_terminal_gate_2026_07_24.md`).** `batch11`'s claimed fix (`MTDS@3cec6a00`,
+      "`_canonical_underlying_to_raw_databento()` shipped in `pipeline_e2e_check.py` — covers CME (standard + MICRO-
+      prefix → M-prefixed raw) and CBOE VIX→VX") is genuinely shipped code but is **DEAD CODE — never called from
+      anywhere in the repo** (verified: `grep -rn "_canonical_underlying_to_raw_databento" --include="*.py" .` returns
+      only its own definition + internal cache references, zero call sites). `sample_live_instrument()`'s bundled-chain
+      branch (`scripts/pipeline_e2e_check.py:1407-1426`) still samples the manifest's canonical `underlying` verbatim
+      (only filtering out garbage values via `is_recognized_tradfi_underlying`, the 2026-07-23 TICKS fix) and passes it
+      straight through as `instrument_id_or_root` — the reverse-translation function this doc's §4 called for is simply
+      never invoked, so the checker's force-leg for a TRADFI bundled-chain shard (CME is bundled-chain for EVERY
+      data_type per `_is_bundled_chain_shard`'s TRADFI venue-level ruling, not just literal
+      `futures_chain`/`options_chain`) will still hit the exact `instrument_ids filter ['SP500'] matched nothing`
+      failure this doc documents. **NOT currently blocking real MVP backfills**: verified separately that the production
+      backfill launcher (`deployment-service/scripts/vm/launch-tradfi-bf-cme-ohlcv-1m.sh`'s `CME_ROOTS` array) resolves
+      raw Databento symbols (`ES.FUT`, `MES.FUT`, `6A.FUT`, ...) directly from its own hardcoded table — it never calls
+      `sample_live_instrument()` or this dead function, so this gap only affects the Phase-D SMOKE-TEST CHECKER's own
+      force-leg verification of bundled-chain shards, not the real backfill/write path. Done when:
+      `_canonical_underlying_to_raw_databento()` is actually called from `sample_live_instrument()`'s bundled-chain
+      branch (TRADFI-scoped, mirroring the existing `is_recognized_tradfi_underlying` guard's scoping) before the
+      sampled value is returned as `instrument_id_or_root`, with a regression test proving a CME/CBOE chain-bundle
+      force-leg now resolves a raw code instead of a canonical name.
 
 ## Exhaustive `EXCHANGE_CODE_TO_NAME` diff (2026-07-26)
 
@@ -503,3 +525,13 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
   promoted "RECLASSIFY-READY" by the 08-08 pass but correctly gated at the DOC level by todos 1+3, extraction into a
   satellite AO-dispatch batch recommended but not this skill's mechanism; todo 3 OPERATOR_QUESTION on the reverse
   root-token derivation ruling). `assigned_vm` unchanged.
+- **2026-08-15 (slot-16, P0 MVP-backfill-readiness-gate verification pass,
+  `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`)**: while verifying the terminal gate's premise
+  ("chain-bundle-sampler blocker is code-resolved via batch11"), measured live that `batch11`'s `MTDS@3cec6a00` fix is
+  dead code — see the new todo 4 above for full detail. This REFINES (does not fully resolve) todo 1's
+  `DEPENDENCY_BLOCKED` status: the reverse-translation LOOKUP function now exists, but the wiring that would make it
+  fire does not. Separately confirmed this gap is checker-only — the real MVP backfill launchers (`deployment-service`'s
+  `launch-tradfi-bf-*.sh` scripts) resolve raw Databento symbols independently and are unaffected, so this did NOT block
+  completing the MVP backfill-readiness gate itself (see that plan's own Progress Log for the full manifest count
+  evidence). `assigned_vm` unchanged — todo 4 is a bounded, worker-determinable mechanical fix (wire an existing tested
+  function into an existing call site + add a regression test), AO-eligible on its own next dispatch.

@@ -71,7 +71,16 @@ code_refs:
     DECOMMISSION]**: these 10 legacy flat crons are active but targeted for pause + Terraform removal once per-AG L3
     single-walk reaches C-GREEN for every asset_group. Do NOT delete ahead of that gate — they are the fallback read
     path for any service still referencing flat bucket names.
-- ONE Cloud Scheduler cron per job → 20 crons, all `*/1 * * * * (UTC)`, all ENABLED (10 env-tiered + 10 legacy flat).
+- ONE Cloud Scheduler cron per job → 20 crons, all ENABLED (10 env-tiered + 10 legacy flat). **NOT uniformly `*/1`**
+  (corrected 2026-08-15 — the blanket claim here previously misled a live-debugging session into diagnosing a
+  working-as-designed hourly job as "stalled"): `manifest_consolidator_schedule` in the Terraform
+  (`manifest_consolidator_scheduler.tf` ~line 279) overrides 12 categories to `0 * * * *` (hourly) —
+  `instruments-{cefi,tradfi,defi,prediction}`, `market-data-cefi`, `features-{cefi,defi,tradfi,calendar}`, `strategy`,
+  `execution`, `ml-training-artifacts`. Every OTHER category (incl. `market-data-{tradfi,defi,prediction,sports}`) keeps
+  the `lookup(...)` fallback default of `*/1`. **Before diagnosing a category as stale/stalled, check its actual
+  schedule**
+  (`gcloud scheduler jobs describe uts-prod-manifest-consolidator-<category>-cron --location=asia-northeast1`) — an
+  hourly job reads "52 minutes since last run" as completely healthy, not broken.
 - Image: `market-tick-data-service:latest` (UTL installed as dep).
 - Entrypoint: `python -m unified_trading_library.manifest_consolidator --bucket {X} --once`.
 - Service accounts: scheduler invoker = `t1_batch_sa`; container runtime = `unified_trading_sa` (storage.objectAdmin on

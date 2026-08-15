@@ -102,7 +102,7 @@ mechanism, currently and repeatedly failing.
       (`gcloud run jobs executions list --job=understat-eu-typing-sweep --region=asia-northeast1`, 30-row history) shows
       the job ran successfully 2026-07-13→07-28 (38s-118s per run, rising) then failed EVERY day 2026-07-29→08-12 (15
       consecutive failures, not 3 as first filed) with
-      `Task ... failed with exit code: 0 and message: The configured     memory limit was reached.` — a clean regression
+      `Task ... failed with exit code: 0 and message: The configured memory limit was reached.` — a clean regression
       boundary, not "always broken." Measured live via a footer-only `pyarrow.parquet.ParquetFile` read (cheap — decodes
       metadata, not row groups, so this measurement itself can't OOM): the sports `_index/availability_index.parquet` is
       17,200,956 rows / 42 columns / 210,619,070 bytes on disk as of 2026-08-12 (vs. this job's own terraform sizing
@@ -124,7 +124,7 @@ mechanism, currently and repeatedly failing.
       slim 6-column candidate pre-check found 40 real candidates today (not zero), so it falls through to the KEPT
       "full-schema" read exactly as before — and that unfiltered 42-column/17.2M-row read still exceeds 16Gi. The
       shipped code's OWN warning log says why:
-      `read_availability_index_safe(...) called with columns= but no     filters= — columns= alone does NOT bound memory on a large unfiltered index ... only filters= row-group pushdown     actually bounds peak memory`
+      `read_availability_index_safe(...) called with columns= but no filters= — columns= alone does NOT bound memory on a large unfiltered index ... only filters= row-group pushdown actually bounds peak memory`
       — i.e. the fix only ever helped the zero-candidate case, which isn't today's case and won't reliably be every day.
       The real fix still needed: bound the full-schema read itself to the ~40 candidate rows (via `filters=` row-group
       pushdown on `league_id`/`date`, not just `columns=`) rather than reading the entire unfiltered index — the
@@ -139,7 +139,7 @@ mechanism, currently and repeatedly failing.
       are scattered across every row-group (written by many concurrent per-shard jobs), so a filter on them can't skip
       row-groups — only `date` is chronologically clustered. Changed the full-schema fallback from bare
       `pd.read_parquet` to
-      `unified_trading_library.read_availability_index(bucket, filters=[("date", ">=", date_min), ("date", "<=",     date_max)])`
+      `unified_trading_library.read_availability_index(bucket, filters=[("date", ">=", date_min), ("date", "<=", date_max)])`
       using the slim pre-check's OWN candidate dates as the bound — this routes through
       `_read_availability_index_full_filtered` (the function whose docstring the earlier adjacent-finding fix already
       corrected). Live-measured result: this filtered read decoded **64,001 of 17,200,956 rows** (~109MB of pandas

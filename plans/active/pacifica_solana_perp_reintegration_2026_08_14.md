@@ -47,6 +47,14 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /plans/active/solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /codex/04-architecture/solana-defi-coverage.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-funding-dispersion.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+  ]
 source: >-
   Split out of /plans/active/solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md 2026-08-14. That plan's
   Track 2 (Pacifica) had every gate resolved via real API testing (live WS streamed trades with zero credentials, REST
@@ -100,7 +108,7 @@ direct testing, not documentation-reading:**
 - [x] [AGENT] P0. ✅ **Real WS test, zero credentials.** Connected to `wss://ws.pacifica.fi/ws` (note: `/ws` path, not
       `/v1` as the old scaffold assumed) with no API key, no RPC tier, no partner header. Subscribed to the `trades`
       channel for `BTC` and received real live trade ticks within ~2s:
-      `{"channel":"trades","data":[{"h":252234313,"s":"BTC","a":"0.00351","p":"62759","d":"open_long",     "tc":"normal","t":1786714266923,"li":11622278699,"it":0}]}`.
+      `{"channel":"trades","data":[{"h":252234313,"s":"BTC","a":"0.00351","p":"62759","d":"open_long", "tc":"normal","t":1786714266923,"li":11622278699,"it":0}]}`.
       The 2026-07-06 assessment no longer holds — public, unauthenticated live streaming works today. §D's live
       connector can target real implementation.
 - [x] [AGENT] P1. ✅ **Real REST calls, base URL and response shapes confirmed.** `https://api.pacifica.fi/api/v1` is
@@ -181,7 +189,10 @@ direct testing, not documentation-reading:**
       `PACIFICA-SOLANA:PERPETUAL:`, backfill matching manifest rows (none currently exist for this venue's raw-tick
       data), and route the whole thing through `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`'s proof gate
       before touching any object (a rename is a write+delete pair, not a pure read — the reconciliation pass above
-      deliberately did not attempt it).
+      deliberately did not attempt it). Discovery/classification tooling already exists and is promoted —
+      `market-tick-data-service/scripts/reconcile_pacifica_quarantine_2026_08_15.py`
+      (`market-tick-data-service@8e69accead`) — **re-run it fresh before migrating**, do not trust its 2026-08-15 output
+      as still current.
 - [ ] [OPERATOR] P3. **New follow-up (surfaced 2026-08-15)**: decide whether to provision a Pacifica
       `wallet_private_key` (base58 Ed25519 Solana keypair — main wallet or a delegated Pacifica "API Agent Key") via
       Secret Manager and flip `execution_service.defi_execution.protocols.pacifica.PacificaConnector.supports_live` to
@@ -200,12 +211,12 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
 - [x] [SCRIPT] P1. ✅ **Resurrected and ACTIVATED the live WS connector** — `market-tick-data-service@c87b12db60`. Full
       real rewrite (not a flag flip) mirroring `hyperliquid_ws.py`'s structure, incl. the mandatory `asyncio.sleep(0)`
       reconnect-loop fix (2026-08-05 incident — 16-26GB RSS host starvation if omitted). Subscribe message format
-      confirmed via WebFetch against `docs.pacifica.fi/api-documentation/api/websocket/subscriptions/     trades.md`
+      confirmed via WebFetch against `docs.pacifica.fi/api-documentation/api/websocket/subscriptions/ trades.md`
       (`{"method":"subscribe","params":{"source":"trades","symbol":"<COIN>"}}`, cited example, not guessed); unsubscribe
       shape is an honest, documented, inferred-not-confirmed mirror of subscribe (residual risk noted in code + tests,
       no live round-trip performed in this session). Registered under `WS_FEED_CONNECTOR_FACTORIES["PACIFICA-SOLANA"]`.
 - [x] [SCRIPT] P2. ✅ **Funding-rate capture confirmed as `derivative_ticker.funding_rate`** —
-      `market-tick-data-service@     c87b12db60`. Unchanged from the pre-cull pattern; MTDS batch adapters don't call
+      `market-tick-data-service@ c87b12db60`. Unchanged from the pre-cull pattern; MTDS batch adapters don't call
       `classify_venue_error()` (confirmed against sibling adapters — that's an instruments-service-layer convention, not
       MTDS's).
 - [x] [SCRIPT] P3. ✅ **Restored + rewrote MTDS tests** — `market-tick-data-service@c87b12db60`.
@@ -264,7 +275,7 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
       `paper_universe.py`'s generic archetype→required-config-key map + the engine's per-tick generic `venue` field read
       confirms the plan's own framing was right, once pointed at the real registration files above.
 - [x] [SCRIPT] P3. ✅ **Confirmed PnL/risk paths handle cross/isolated margin generically** —
-      `strategy-service@     14d869449f`. `risk/v2/margin_sim.py` reads `capability.margin_spec.mode` from the UAC
+      `strategy-service@ 14d869449f`. `risk/v2/margin_sim.py` reads `capability.margin_spec.mode` from the UAC
       `CollateralPolicy` registry (§B already landed Pacifica's cross+isolated policy there) — venue-agnostic, no change
       needed. The one venue-hardcoded margin-mode dict found (`CEFI_PERP_MARGIN_MODELS`) already excludes
       ASTER/DERIBIT/KRAKEN-FUTURES etc. — Pacifica's absence there is consistent with every other funding-dispersion
@@ -288,6 +299,11 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
 
 ## Progress Log
 
+- **2026-08-15 (na-eligibility-audit follow-up, operator ruling)**: two open items ruled via AskUserQuestion. (1) The
+  787-object GCS rename+backfill migration — **re-run discovery fresh, then migrate** — extracted to
+  `pacifica_solana_ao_dispatch_2026_08_15.md` (`assigned_vm: planning`). (2) The `wallet_private_key` provisioning to
+  flip `supports_live` — **deferred, needs explicit human sign-off** — stays here, not dispatched; this is a
+  live-capital/wallet-key action, exactly CLAUDE.md's human-only class.
 - **2026-08-15 (post-completion follow-up — both remaining open items addressed as far as safely possible)** — Operator
   asked to ship the "3 things worth knowing" fixes after a `/pre-compact` checkpoint. Item 3 (sub-agent corrections) was
   already resolved during the original build. The two genuinely open items:
@@ -414,3 +430,4 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
   per explicit operator choice over AO-dispatch, despite the work being technically AO-eligible now (every gate closed)
   — this session's value came from the operator catching things (untested premise, schema gap, StandX settlement risk)
   that a background worker executing todos alone wouldn't have surfaced.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries).

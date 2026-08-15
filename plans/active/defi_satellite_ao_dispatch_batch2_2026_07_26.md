@@ -249,8 +249,8 @@ context_scope:
       **Confirmed**: `catalog.py` exports `build_carry_basis_perp_inv` as a plain (non-underscore) name — no underscore
       alias existed for it (unlike the other two builders), so the test's import line was changed from
       `_build_carry_recursive_staked as _build_carry_recursive_borrow_perp_hedged` to
-      `build_carry_basis_perp_inv as     _build_carry_recursive_borrow_perp_hedged`. Directly verified the real catalog:
-      10 rows, all correctly slot-labeled `CARRY_BASIS_PERP_INV@...` (was silently `CARRY_RECURSIVE_STAKED@...` before).
+      `build_carry_basis_perp_inv as _build_carry_recursive_borrow_perp_hedged`. Directly verified the real catalog: 10
+      rows, all correctly slot-labeled `CARRY_BASIS_PERP_INV@...` (was silently `CARRY_RECURSIVE_STAKED@...` before).
       The `>=5` row-count assertion needed no change (10>=5). 40/40 tests pass (`pytest -m "not requires_credentials"`);
       full `quality-gates.sh --no-fix` green (126s, sentinel written). Shipped `strategy-service@628a0a32`.
 - [x] ✅ [DESIGN] P3. **DONE 2026-07-26 (slot 4) — NO-GO.** Evaluate wiring the existing
@@ -801,3 +801,4 @@ source issue doc directly as the successor reference.
   batch1-finalize ref, kept the umbrella/finalize/skill/naming-SSOT/batch1-precedent set (code-free coordinator doc, no
   single source-code target).
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).

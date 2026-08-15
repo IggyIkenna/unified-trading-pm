@@ -34,7 +34,7 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
     /plans/archive/2026_07/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md,
     /plans/active/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md,
-    /plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md,
+    /plans/archive/2026_08/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md,
     /codex/04-architecture/ci-alerting.md,
   ]
 created: "2026-08-05"
@@ -237,7 +237,7 @@ Run service and alerting on drift beyond some threshold — that's the real rema
 - [ ] [OPERATOR] P2. Populate the GSM secret with the #ci-failures Slack incoming webhook URL and verify end-to-end
       Slack delivery. The webhook URL is stored in GitHub Actions secret `SLACK_CI_WEBHOOK_URL` (write-only/unreadable
       by agents — a genuine credential ask, not an IAM gap). Command to populate the secret:
-      `printf "<#ci-failures-webhook-url>" | gcloud secrets versions add cloud-monitoring-slack-ci-failures-webhook     --data-file=- --project=central-element-323112`
+      `printf "<#ci-failures-webhook-url>" | gcloud secrets versions add cloud-monitoring-slack-ci-failures-webhook --data-file=- --project=central-element-323112`
       — then verify e2e by triggering a canary rollback on a UAT Cloud Run service and confirming the Slack message
       arrives in #ci-failures.
 

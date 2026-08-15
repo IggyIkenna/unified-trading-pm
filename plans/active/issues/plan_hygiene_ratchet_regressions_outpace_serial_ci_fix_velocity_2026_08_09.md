@@ -121,30 +121,30 @@ words: "this branch is churning faster than one CI worker can chase serially").
       File the decision as its own `[OPERATOR]`-tagged todo once picked up; don't fold it into the P2 above.
 
       **PARTIALLY ADDRESSED 2026-08-09 (slot-28, backend_engineer, unified-trading-pm@8bc27fe8f) — via
-                                                                                                              `codex_doc_freshness_regression_ambient_staleness_drift_2026_08_09.md` (now archived), a sibling finding of the
-                                                                                                              same symptom filed independently before this doc's todo was written.** The "diffing against any git ref cannot
-                                                                                                              express wall-clock drift" claim above is correct for git-ref diff-scoping (`--diff-base <ref>`, the pattern the
-                                                                                                              P2 todo above uses) but does NOT apply to the different mechanism actually shipped: the ratchet now diffs the
-                                                                                                              current violating PATH SET against a persisted baseline SNAPSHOT (`codex_doc_freshness_baseline.yaml`'s
-                                                                                                              `baseline_files:`, previously written but never consulted) — a stored point-in-time list, not a git ref — which
-                                                                                                              DOES express "did wall-clock decay make THIS SPECIFIC doc newly-stale since the last snapshot", the exact
-                                                                                                              question the claim above says can't be asked. This resolves the concrete symptom both docs independently
-                                                                                                              reported (chaotic multi-session re-baselining on an unbisectable count, 25→26→27 same day) — a session hitting
-                                                                                                              the gate now sees the exact NEW doc(s) named, not a vague delta, and a doc already known-stale at baseline time
-                                                                                                              drifting further stale no longer counts as a fresh regression. It does NOT resolve the broader policy question
-                                                                                                              this todo raises (should a genuinely brand-new stale doc, with zero commits touching it, still be allowed to
-                                                                                                              block an unrelated PR at all, vs. moving to a periodic/batched sweep) — that residual call is still open and
-                                                                                                              still needs the `[OPERATOR]`-tagged decision this todo asks for; do not treat this note as closing it.
+          `codex_doc_freshness_regression_ambient_staleness_drift_2026_08_09.md` (now archived), a sibling finding of the
+          same symptom filed independently before this doc's todo was written.** The "diffing against any git ref cannot
+          express wall-clock drift" claim above is correct for git-ref diff-scoping (`--diff-base <ref>`, the pattern the
+          P2 todo above uses) but does NOT apply to the different mechanism actually shipped: the ratchet now diffs the
+          current violating PATH SET against a persisted baseline SNAPSHOT (`codex_doc_freshness_baseline.yaml`'s
+          `baseline_files:`, previously written but never consulted) — a stored point-in-time list, not a git ref — which
+          DOES express "did wall-clock decay make THIS SPECIFIC doc newly-stale since the last snapshot", the exact
+          question the claim above says can't be asked. This resolves the concrete symptom both docs independently
+          reported (chaotic multi-session re-baselining on an unbisectable count, 25→26→27 same day) — a session hitting
+          the gate now sees the exact NEW doc(s) named, not a vague delta, and a doc already known-stale at baseline time
+          drifting further stale no longer counts as a fresh regression. It does NOT resolve the broader policy question
+          this todo raises (should a genuinely brand-new stale doc, with zero commits touching it, still be allowed to
+          block an unrelated PR at all, vs. moving to a periodic/batched sweep) — that residual call is still open and
+          still needs the `[OPERATOR]`-tagged decision this todo asks for; do not treat this note as closing it.
 
-                                                                                          **DONE 2026-08-09 (backend_engineer, slot 4)** — per this todo's own instruction ("File the decision as its own
-                                                                                          `[OPERATOR]`-tagged todo once picked up; don't fold it into the P2 above"), filed the residual policy decision as
-                                                                                          the `[OPERATOR]` todo directly below. Confirmed via a fresh read of `check_codex_doc_freshness.py` that the
-                                                                                          slot-28 partial fix is real and live (per-file baseline-snapshot diffing, not a git-ref diff) and that the check
-                                                                                          is still wired as a hard, unconditional post-gate in `quality-gates.sh` (`CODEX_FRESHNESS_CHECKER`, line ~639,
-                                                                                          runs on every `unified-trading-pm` commit regardless of whether that commit touches any codex path) — i.e. the
-                                                                                          symptom fix landed but the underlying per-commit-enforcement policy is unchanged, exactly as the partial-addressed
-                                                                                          note says. No code change needed for this todo itself (the todo's own text scopes it as "not a unilateral backend
-                                                                                          change"); closing this checkbox on the OPERATOR todo being filed, not on the policy question being resolved.
+          **DONE 2026-08-09 (backend_engineer, slot 4)** — per this todo's own instruction ("File the decision as its own
+          `[OPERATOR]`-tagged todo once picked up; don't fold it into the P2 above"), filed the residual policy decision as
+          the `[OPERATOR]` todo directly below. Confirmed via a fresh read of `check_codex_doc_freshness.py` that the
+          slot-28 partial fix is real and live (per-file baseline-snapshot diffing, not a git-ref diff) and that the check
+          is still wired as a hard, unconditional post-gate in `quality-gates.sh` (`CODEX_FRESHNESS_CHECKER`, line ~639,
+          runs on every `unified-trading-pm` commit regardless of whether that commit touches any codex path) — i.e. the
+          symptom fix landed but the underlying per-commit-enforcement policy is unchanged, exactly as the partial-addressed
+          note says. No code change needed for this todo itself (the todo's own text scopes it as "not a unilateral backend
+          change"); closing this checkbox on the OPERATOR todo being filed, not on the policy question being resolved.
 
 - [ ] [OPERATOR] P3. **Decide: should `check_codex_doc_freshness.py` keep hard-blocking every `unified-trading-pm`
       commit via `quality-gates.sh`'s post-gates (current, unconditional — `CODEX_FRESHNESS_CHECKER` at line ~639 of
@@ -170,44 +170,44 @@ words: "this branch is churning faster than one CI worker can chase serially").
       todo with the result.
 
       **RECURRED LIVE 2026-08-12** — `unified-trading-pm@c0b7d7a3` (tip of `live-defi-rollout`, an ordinary
-              `docs(plans):` checkbox-flip commit that touched none of the 6 flagged docs) hard-failed `quality-gates-v2`
-              (`ci-failures` 01:30/01:48/02:34 alerts) on exactly this mechanism: `codex_doc_freshness_baseline.yaml` was at
-              `violation_count: 0` from its last write, and 6 unrelated codex docs (`data-catalogue-schema.md`,
-              `capital-flow-model.md`, `instrument-lifecycle-cache-delta-hot-reload.md`, `ui-architecture.md`,
-              `ui-dependency-matrix.md`, `ui-functionality-requirements.md`) all crossed 90d since their shared
-              `last_reviewed=2026-05-13` stamp within the same window, blocking the whole branch's gate with zero commits to
-              bisect — confirmed no agent shipped without QG/safe-doc-push (every landing commit is a `docs(plans):`/
-              `docs(issues):` safe-doc-push commit, plus the sanctioned `main-backmerge-to-ldr` direct-push carve-out).
-              Unblocked via the checker's own sanctioned remedy (`--baseline-write`, same action slot-28 took for the identical
-              symptom on 2026-08-09) — this is a repeat occurrence, not a new failure mode, and reinforces this todo's own
-              argument for Option B: a doc going stale on the calendar, with no commit touching it, blocked an arbitrary
-              unrelated commit for ~64 minutes (01:30 first alert → this fix) fleet-wide. Does not resolve the [OPERATOR]
-              decision — logging as evidence for it.
+          `docs(plans):` checkbox-flip commit that touched none of the 6 flagged docs) hard-failed `quality-gates-v2`
+          (`ci-failures` 01:30/01:48/02:34 alerts) on exactly this mechanism: `codex_doc_freshness_baseline.yaml` was at
+          `violation_count: 0` from its last write, and 6 unrelated codex docs (`data-catalogue-schema.md`,
+          `capital-flow-model.md`, `instrument-lifecycle-cache-delta-hot-reload.md`, `ui-architecture.md`,
+          `ui-dependency-matrix.md`, `ui-functionality-requirements.md`) all crossed 90d since their shared
+          `last_reviewed=2026-05-13` stamp within the same window, blocking the whole branch's gate with zero commits to
+          bisect — confirmed no agent shipped without QG/safe-doc-push (every landing commit is a `docs(plans):`/
+          `docs(issues):` safe-doc-push commit, plus the sanctioned `main-backmerge-to-ldr` direct-push carve-out).
+          Unblocked via the checker's own sanctioned remedy (`--baseline-write`, same action slot-28 took for the identical
+          symptom on 2026-08-09) — this is a repeat occurrence, not a new failure mode, and reinforces this todo's own
+          argument for Option B: a doc going stale on the calendar, with no commit touching it, blocked an arbitrary
+          unrelated commit for ~64 minutes (01:30 first alert → this fix) fleet-wide. Does not resolve the [OPERATOR]
+          decision — logging as evidence for it.
 
-              **CORRECTION 2026-08-12 (same incident, real root cause was different from the note above)** — the
-              `--baseline-write` re-baseline (`unified-trading-pm@8cb96a6c63`) did NOT actually fix the gate: it was run
-              with `--workspace-root .` (repo root), while `quality-gates.sh` always invokes the checker with
-              `--workspace-root "$WORKSPACE_ROOT"` = the PARENT of the repo (line 96). `_write_baseline`/`_new_violations`
-              computed each doc's stored/compared path relative to the RAW `--workspace-root` argument, so the two
-              invocations produced different strings for the same doc (`codex/02-data/...` vs.
-              `unified-trading-pm/codex/02-data/...`) — 0 real content difference, 100% string mismatch, gate stayed red
-              (confirmed live: re-dispatched `quality-gates-v2` on `9b3466568f` still failed identically). A concurrent
-              session independently hit the same collision from the other direction (re-baselined using the
-              parent-dir/prefixed convention, landing on `origin` mid-fix and conflicting with this session's stash). Real
-              fix (`unified-trading-pm@9343990a17`): `_write_baseline`/`_new_violations` now anchor to
-              `_pm_root_or_legacy(workspace_root)` (the same content-resolved PM-root helper `_iter_codex_md` already uses
-              to FIND docs) instead of the raw argument, so the baseline is genuinely invocation-independent — verified
-              `--workspace-root .` and `--workspace-root <parent>` now produce byte-identical relative paths against the
-              same tree. Confirmed green via a fresh `quality-gates-v2` dispatch on `9343990a17` (`codex-doc-freshness`
-              check passed; only an unrelated `check_ag_closeout_linkage` orphan was left, fixed separately). This is a
-              DIFFERENT bug class from the wall-clock-drift one this todo tracks — filing it here only because it was
-              discovered debugging the same live incident; the ambient-staleness gate-blocking question above is still
-              unresolved and this fix doesn't touch it.
+          **CORRECTION 2026-08-12 (same incident, real root cause was different from the note above)** — the
+          `--baseline-write` re-baseline (`unified-trading-pm@8cb96a6c63`) did NOT actually fix the gate: it was run
+          with `--workspace-root .` (repo root), while `quality-gates.sh` always invokes the checker with
+          `--workspace-root "$WORKSPACE_ROOT"` = the PARENT of the repo (line 96). `_write_baseline`/`_new_violations`
+          computed each doc's stored/compared path relative to the RAW `--workspace-root` argument, so the two
+          invocations produced different strings for the same doc (`codex/02-data/...` vs.
+          `unified-trading-pm/codex/02-data/...`) — 0 real content difference, 100% string mismatch, gate stayed red
+          (confirmed live: re-dispatched `quality-gates-v2` on `9b3466568f` still failed identically). A concurrent
+          session independently hit the same collision from the other direction (re-baselined using the
+          parent-dir/prefixed convention, landing on `origin` mid-fix and conflicting with this session's stash). Real
+          fix (`unified-trading-pm@9343990a17`): `_write_baseline`/`_new_violations` now anchor to
+          `_pm_root_or_legacy(workspace_root)` (the same content-resolved PM-root helper `_iter_codex_md` already uses
+          to FIND docs) instead of the raw argument, so the baseline is genuinely invocation-independent — verified
+          `--workspace-root .` and `--workspace-root <parent>` now produce byte-identical relative paths against the
+          same tree. Confirmed green via a fresh `quality-gates-v2` dispatch on `9343990a17` (`codex-doc-freshness`
+          check passed; only an unrelated `check_ag_closeout_linkage` orphan was left, fixed separately). This is a
+          DIFFERENT bug class from the wall-clock-drift one this todo tracks — filing it here only because it was
+          discovered debugging the same live incident; the ambient-staleness gate-blocking question above is still
+          unresolved and this fix doesn't touch it.
 
 - [ ] [OPERATOR] P1. **Decide how to break the `assigned_vm:NA corpus size` / LDR→main promote deadlock** — as of the
       2026-08-10 slot-3 dispatch below, `origin/main` for `unified-trading-pm` is 1121 commits behind LDR and NO promote
       PR has merged since 2026-08-09T09:19:49Z (#2671) — 39+ consecutive `Option-B auto-drain` PRs closed unmerged over
-      20+ hours, every one blocked by exactly this one check (`check_na_corpus_ratchet.py --diff-base     origin/main`).
+      20+ hours, every one blocked by exactly this one check (`check_na_corpus_ratchet.py --diff-base origin/main`).
       This is a genuine chicken-and-egg deadlock, not ambient churn to wait out: the check compares current NA-doc/todo
       counts against `origin/main`, but `origin/main` cannot advance until a promote PR passes this SAME check — so
       every hour the promotion stays stalled, MORE legitimate multi-session NA-doc growth accumulates into the "new vs.
@@ -279,6 +279,29 @@ words: "this branch is churning faster than one CI worker can chase serially").
 
 ## Progress log
 
+- 2026-08-15 19:35Z (ci_reconciler, slot 20): Fresh corroboration, 6 days after this doc's last entry — the pattern is
+  still fully live, and I found a new wrinkle in the ALREADY-shipped `--diff-base` fix for `check_prosewrap_padding.sh`
+  (closed as todo item above, `unified-trading-pm@e89d4931e5`). PM's `quality-gates-v2` on `live-defi-rollout` push had
+  failed 3 consecutive runs (16:05/17:06/18:05Z) on this exact check. I ran `fix_prosewrap_padding.py` against the
+  FULL-BASELINE mode's flagged set (83 files, 2193 lines, content-preserving) — the wrong target, as it turned out: the
+  actual CI gate invokes `check_prosewrap_padding.sh --diff-base origin/main` via `run_hygiene_sweep.sh`, not the
+  no-args full-corpus mode I ran manually. My full-corpus fix got raced out entirely before landing (branch-drift
+  retries → pre-existing `check_line_caps`/`check_reference_paths` hard-fails on 7 of the 83 unrelated staged files →
+  final `PRECOMMIT_WORKING_TREE_CONFLICT` block); a peer session's own fix (`d71059effe`, "corpus sweep 1639->340")
+  landed on origin during my attempt and had ALREADY regressed to 1979 full-baseline violations within ~15-20 min of
+  landing, from other agents' concurrent commits. Re-checked the ACTUAL diff-base gate directly
+  (`--diff-base origin/main`): **1611 NEW violating lines vs origin/main** — not a small, chaseable set. Root cause:
+  `origin/main` for this repo is itself badly lagged behind `live-defi-rollout` (confirmed via `branch-health` Slack
+  alerts this session — 19+ commits, 728m+ old, promote PR state "matched none of the known causes"), so nearly every
+  LDR commit since main's last sync shows up as "new" in the diff — the SAME chicken-and-egg shape already named in this
+  doc's own open P1 `[OPERATOR]` todo for `assigned_vm:NA corpus size`, just recurring on `prosewrap_padding` too: a
+  diff-scoped ratchet compared against a STALE, non-advancing `origin/main` doesn't actually solve the race, it just
+  relabels "corpus debt" as "new since main" at whatever size main's lag has grown to. Declined a further fix attempt
+  for the same reason this doc's own precedent gives repeatedly — this is operator-level (why is main not advancing)
+  territory now, not a one-shot CI-wall fix. My locally-fixed-but-unshipped working tree was safely discarded (it was
+  entirely my own uncommitted WIP, already superseded). No code shipped by this entry. Recommend whoever picks up the
+  open P1 `[OPERATOR]` todo treat `check_prosewrap_padding --diff-base` as a second confirmed victim of the same
+  stale-main-baseline deadlock, not a separate issue.
 - 2026-08-09 (main agt-22de53): Filed after answering BLK-bcb0be57 "B" (hand off) — worker had already tried 3
   fix-and-retrigger cycles across 4 different regressions with zero convergence. Not attempting a structural fix myself
   this tick; filing for a dedicated pass since the right answer (debounce vs. batch vs. move-to-periodic) needs design
@@ -783,3 +806,151 @@ words: "this branch is churning faster than one CI worker can chase serially").
   not attempting bulk reclassification — the corpus is within its own baseline mode, the diff-base-vs-main is the
   main-behind-LDR deadlock). `AUTHORING_SLOT=ci` (not a numbered slot) — no slot-ping applicable per this role's
   skip-rule. Completing via `/done`.
+- 2026-08-15 (ci_reconciler, slot 4, `/ci-reconcile` scheduled sweep, `quality-gates-v2` red on `unified-trading-pm`
+  live-defi-rollout shas `b5cf22be`/`1e2eb11b`, "Plan hygiene hard gate" -> `check_prosewrap_padding.sh`): 19th
+  recurrence of this exact class against THIS specific check (last chased 2026-08-10, 4649->4197). Corpus was at 3904 >
+  baseline 3655 at first read. `check_prosewrap_padding.sh` is NOT one of the 4 checks this lineage's P2 todo migrated
+  to `--diff-base` (reference-paths/archive-candidates/effort-ratchet/na-corpus) — and per `run_hygiene_sweep.sh`'s own
+  `DIFF_BASE_REF` guard, a push straight to `live-defi-rollout` gets NO diff-base regardless of check (by design, "is
+  this whole branch healthy" is meant as an absolute measure) — so this check has no escape from the full-corpus race on
+  the exact trigger (LDR push) that fires most often. Chased 3 waves serially (`8a6dabdd71` 8 files -> baseline 2762,
+  lost 4 of those 8 to a same-checkout concurrent-push collision mid-ship — re-shipped as `177bfd6603`; ambient fleet
+  growth of ~190-225 lines/wave ate most of each wave's gain by the time the NEXT wave landed — `80d72d5ecc` 5 more
+  files -> baseline 2617, landed to find corpus already back to 2806; final wave `<pending sha, see below>` 5 more files
+  -> baseline 2507). Net: 3904->2507 (36% reduction) across 18 files repaired this session, all content-preserving
+  (`git diff -w` verified empty every wave), all confirmed under the 1000-line hard cap before staging. Per this
+  lineage's own established precedent (17x-reaffirmed "hand off, don't serially chase forever"): stopping after 3 waves
+  rather than continuing indefinitely — the corpus is genuinely a moving target at current fleet commit velocity,
+  matching every prior recurrence in this doc. Structural fix this specific check still needs (not attempted here, per
+  this skill's "careful surgery on a script every commit depends on, dispatch as its own scoped task" guidance): since
+  whole-branch runs are intentionally excluded from `--diff-base` fleet-wide, the candidate fix is different from the
+  other 4 checks' pattern — e.g. widen the baseline+buffer to tolerate one polling-interval's worth of measured ambient
+  growth (mirroring class (l)'s lookback-vs-cadence lesson), or move this specific check to a periodic/batched sweep the
+  way `check_codex_doc_freshness.py` is flagged for above (a policy call, not a unilateral backend change).
+  `AUTHORING_SLOT=ci` (not a numbered slot) — no slot-ping applicable per this role's skip-rule.
+- 2026-08-15 (cicd agt-a64f86, slot 20, dispatched for `ldr_qg_failure` on `unified-trading-pm`, `PR_NUMBER=0`, run
+  `31871370820` / re-triggered `31873678936`): same escalation lineage, same check (`check_prosewrap_padding`). Live
+  corpus had already moved past the prior session's 2507 baseline snapshot — measured 3904 on pickup (baseline moved
+  twice more mid-fix from other concurrent waves: 3655→2507→2448 over the course of this dispatch). Repaired in 2
+  content-preserving passes (`git diff -w` verified empty both times): first pass targeted the files this escalation's
+  own named commit (`1e2eb11b10`) touched, second pass (after a `git pull` picked up 25 more concurrent commits,
+  including a 3rd wave of independent fixes from other agents that already covered 2 of my originally-picked files —
+  kept their version via `git checkout --ours` on stash-pop conflict rather than duplicating) targeted the
+  highest-violation-count remaining files for margin. Dropped 1 file
+  (`prediction_satellite_ao_dispatch_batch6_2026_07_29.md`) from the final batch — pre-existing 1001L > 1000L hard
+  line-cap, unrelated to this fix and not introduced by it (line count unchanged, 238 insertions/238 deletions), but the
+  precommit `--only` gate has no grandfather for pre-existing debt per this doc's own already-documented finding above.
+  Landed `unified-trading-pm@880f444770` (fast-forward push, no race), verified ancestor-of-origin, then re-dispatched
+  `quality-gates-v2` (run `31875695139`) and watched it to a genuine `success` conclusion on that exact SHA — confirming
+  the fix is durable at a real CI checkpoint, not just a local snapshot. Corpus stood at 2039/2448 (409-line margin)
+  right after this push; re-checked ~15 min later and margin had already eroded to 2432/2448 (16 lines) from further
+  ambient growth — confirms the race is still live and fast, but the actual CI verification above is what matters for
+  this dispatch's mandate (get the wall green, not hold it green forever). No open repo-blockers to fast-path.
+  Reinforces this doc's own structural-fix recommendation (widen baseline+buffer or move to periodic sweep) — this is
+  now the 2nd multi-wave chase on this exact check inside a week; the margin-erosion-in-15-minutes data point above is
+  fresh evidence for whichever operator/main decision picks up the structural fix. `AUTHORING_SLOT=ldr-ci-monitor`
+  sentinel — no slot-ping applicable per this role's skip-rule.
+- 2026-08-15 (cicd agt-1ae036, slot 22, dispatched for `ldr_main_qg_failure` on `unified-trading-pm` promote PR #3136,
+  head `0db5d47e`): by pickup the PR was already CLOSED (auto-superseded) and its named blocker (`prosewrap`) already
+  self-resolved on LDR (`9e88771cf1`, verified locally 2433<=2448) — same snapshot-vs-live-tip race this doc tracks
+  repeatedly. A fresh local full sweep on current HEAD surfaced 2 OTHER hard failures a next promote attempt would hit:
+  `check_reference_paths.py --diff-base origin/main` (3 genuine dangling refs to 2 docs archived from
+  `plans/active/issues/` to `plans/archive/2026_08/issues/` but still cited by their old path) and
+  `check_na_corpus_ratchet.py --diff-base origin/main` (74 new NA-population docs / 578 new open todos vs `origin/main`
+  — the already-tracked P1 `[OPERATOR]` chicken-and-egg deadlock above, audit-scale, not touched). Fixed + shipped the
+  small genuine defect (`unified-trading-pm@3d6f37d633`, verified ancestor-of-origin); declined the na-corpus one per
+  this doc's own established precedent. No open repo-blockers. `AUTHORING_SLOT=ldr-to-main-promote` sentinel — no
+  slot-ping applicable per this role's skip-rule.
+- 2026-08-15 (`ci_reconciler` agt-f0dda8, slot 8, scheduled `/ci-reconcile` sweep — the sole red repo in the fleet-wide
+  sweep was `unified-trading-pm`, `quality-gates-v2` on push `6f79b0be`, prosewrap padding 2668>2448): by the time a fix
+  was ready, a CONCURRENT peer session had already landed its own prosewrap repair (baseline 2448->2011) — dropped my
+  duplicate change (`git checkout HEAD --` over a stash-apply conflict, left the stash in place per the no-`stash drop`
+  guardrail) rather than double-fixing. Re-measured ~15 min later: corpus had grown to 2738/2011 (a 727-line jump), a
+  fresh promote PR (#3146) was already red on the same check, and AO had already auto-filed a `promote_qg_failure`
+  escalation (`agt-4d722f`) for it — i.e. the fleet's own machinery was already chasing this exact recurrence in real
+  time. Declined a 3rd hand-repair attempt given this doc's own precedent (4-consecutive- regression hand-off) and the
+  demonstrated race (my own fix superseded within ~20 min, then re-broken by 727 more lines within another ~15). Fresh
+  evidence for whichever operator/main pass picks up the two still-open `[OPERATOR]` todos above — the 2026-08-15
+  measurements (220-line jump in 74 min at 10:06Z, then 727-line jump in ~15 min at 10:30Z) show the erosion rate itself
+  accelerating, not just recurring. Separately root-caused + shipped an UNRELATED genuine `quality-gates-v2` red found
+  in the same sweep: `execution-service` push `37bfaeed` (real feat commit wiring live DeFi dispatch) landed an
+  untracked `@pytest.mark.skip` (`check_xfail_skip_tracked.py`, class (b) genuine regression, not this doc's race) —
+  fixed + shipped `execution-service@fb41ecea` + `unified-trading-pm@e419b0c0a2` (new tracking doc
+  `plans/active/issues/exec_tenderly_2026_08_15.md`), both verified ancestor-of-origin. `AUTHORING_SLOT=ci_reconciler`
+  sentinel — no slot-ping applicable per this role's skip-rule.
+- 2026-08-15 (`cicd` agt-c9328e, slot 31, `ldr_qg_failure` escalation for the SAME `unified-trading-pm` push `6f79b0be`
+  this doc's `ci_reconciler` entry above also chased): unaware of that concurrent entry until after landing my own fix
+  (dispatch context predates it). Hit conflicts/regressions across 7 rebases before converging — prosewrap-padding
+  (2011->2484 at dispatch time; repaired, re-derived the fix fresh against upstream content twice after real conflicts,
+  baseline ended at 1639 after a peer's own independent 175-file wave landed mid-session), then
+  `assigned_vm:NA corpus size` (409+20->432+20) and `AG-closeout linkage` (1 new orphan from a concurrent archival) both
+  went red from the same churn before push — fixed all three, verified 0 hard failures locally
+  (`GITHUB_REF_NAME=live-defi-rollout run_hygiene_sweep.sh --ci --no-regen`), pushed + verified ancestor-of-origin
+  (`unified-trading-pm@5b0635e472`). Re-triggered `quality-gates-v2` to confirm: it failed again within ~7 minutes of
+  push on TWO fresh regressions (prosewrap-padding again, plus a new `Create-only archival guard` duplicate-pair
+  violation) from commits that landed after my push completed. Declined to chase further, per this doc's own precedent
+  (4-consecutive-regression hand-off) and the `ci_reconciler` entry immediately above hitting the identical wall the
+  same day — my assigned commit's regression is genuinely fixed and on origin; the fresh failures are a new instance for
+  a new escalation, not a regression of this fix. `AUTHORING_SLOT=ldr-ci-monitor` sentinel — no slot-ping applicable per
+  this role's skip-rule.
+- 2026-08-15 (`cicd` agt-c9328e, **slot 30** — a SECOND, independent dispatch of the identical escalation id/context
+  (same `ldr-ci-monitor` detection, same push `6f79b0be`) landed on a different slot than the entry immediately above;
+  discovered the duplication only after already landing fixes, via this doc's own record). Chased prosewrap-padding
+  through 14 stash/pull/rebase cycles against the same high-churn corpus (baseline moved 2011->1639 over the session
+  from peers' concurrent waves; my own live count ranged 2372 at pickup down to 1679 at last measurement). Landed TWO
+  content-preserving commits (`git diff -w` verified empty both times, every file confirmed under the 1000-line hard cap
+  before staging): `unified-trading-pm@df40239f38` (239-file wave, survived one genuine merge conflict on
+  `orchestrator_vm_e2e_hardening_2026_07_24.md` resolved by keeping upstream content + re-applying the padding fixer)
+  and `unified-trading-pm@25409a3188` (4-file SHA-reference correction `safe-doc-push.sh` itself surfaced mid-run). Both
+  verified `merge-base --is-ancestor` of origin post-push. Hit `safe-doc-push.sh`'s documented "3 consecutive index.lock
+  failures" sustained-foreign-write wall twice on later waves (push-governor queue times up to 214s, matching this doc's
+  fleet-commit-velocity thesis); attempted the script's own clone-to-scratchpad escape hatch for a 4th wave but the
+  copied working-tree content didn't reduce to an empty `git diff -w` in the fresh clone (unexplained — abandoned that
+  wave rather than risk a non-whitespace push) and discarded the scratch clone. On discovering the slot-31 entry above
+  (same escalation id, already declined-to-chase-further with its own verified `5b0635e472`), stopped rather than
+  duplicate a third hand-off — matches this doc's own precedent independent of the duplicate- dispatch discovery.
+  Recommend the orchestrator-side dedup fix (same `ldr-ci-monitor` detection should not spawn two live `agt-c9328e`
+  workers on two slots) as a distinct, smaller finding worth its own follow-up; not filed as a separate issue here to
+  avoid further doc churn on an already-hot file. `AUTHORING_SLOT=ldr-ci-monitor` sentinel — no slot-ping applicable per
+  this role's skip-rule.
+- 2026-08-15T15:3x Z (`ci_reconciler` agt-f37a79, slot 20, hourly sweep): independently re-confirmed the SAME wall is
+  still live and has gotten materially worse since the two same-day entries above. Live measurements this dispatch:
+  `check_prosewrap_padding.sh --diff-base origin/main` reports **752 NEW violating line(s)** (vs the no-args full-corpus
+  count of 1774 > baseline 1639); `origin/main` is **343 commits behind** `origin/live-defi-rollout` (`ahead_by`) while
+  `live-defi-rollout` is only 12 ahead of `main`-only content; the last **content** promote PR that actually merged
+  (`chore(promote): LDR → main`, as opposed to the continuous automated `chore(manifest):`/release-tag direct pushes
+  that keep landing on `main` from a different, unrelated path) was **#3129 at 2026-08-15T06:34:54Z — 9 hours before
+  this dispatch**. Every `chore(promote)` PR opened since (#3140-#3168, sampled from `#ci-failures`) was auto-closed by
+  the LDR→main drain bot as "superseded by a newer LDR tip," never merged — confirming the diff-base comparison against
+  `origin/main` is comparing against a ref that has been effectively frozen for genuine content for 9h, which inflates
+  every diff-scoped ratchet's "NEW violation" count far beyond what any single commit actually introduced (the same
+  chicken-and-egg shape the open `[OPERATOR] P1` todo above already names for `na-corpus`, now reconfirmed live for
+  `prosewrap` too, and by extension likely every other diff-base-scoped check in this doc). **AO's escalation queue is
+  actively engaged, not idle**: `GET /api/escalations/active` shows `agt-0ddb8c` (`ldr_qg_failure`, slot 11, 6 attempts,
+  dispatched 15:16:20Z, still open) and a fresh `agt-96c2ea` (`promote_qg_failure`, PR #3169, queued 15:29:57Z) — both
+  chasing this exact wall in real time as this entry is written, so the "AO isn't working it" framing does not apply
+  here; the problem is convergence, not coverage. Declined to attempt another serial fix-and-retrigger cycle myself
+  (would be a 3rd same-day chase on top of the two above, already independently reaching "hand off"); declined to touch
+  `--update-baseline` (banned per this doc's own header). Raised a live `blocked` to main flagging the accelerating
+  trend and the now-9h-stale `origin/main` diff-base problem specifically, since the existing `[OPERATOR] P1` todo (open
+  since 2026-08-09) has not yet been actioned and the situation is measurably compounding, not just recurring. No
+  code/doc fix shipped this entry beyond this confirmation. `AUTHORING_SLOT=ci_reconciler` sentinel — no slot-ping
+  applicable per this role's skip-rule.
+- 2026-08-15 (`cicd` agt-f4b815, slot 18, escalation for `unified-trading-pm` PR #3180 `ldr_main_qg_failure`):
+  independently diagnosed and repaired the identical wall before discovering a concurrent session (slot-23,
+  `agt-c63efe`) had already landed the same fix (`unified-trading-pm@86106aa859` — same root cause, same tool
+  (`fix_prosewrap_padding.py`), same 6-file over-line-cap exclusion set, baseline left untouched at 340, corpus
+  converged to 337). Restored my own now-redundant local edits to HEAD rather than duplicate-ship (2 genuine merge
+  conflicts hit and resolved along the way, both verified whitespace-only via `diff -Bw`, zero content lost). On
+  re-verifying `origin/live-defi-rollout` HEAD immediately after, the corpus had ALREADY regrown to **1974 violating
+  lines** (baseline 340) — slot-23's 337 was overtaken back to near-original-debt levels within minutes, the same
+  outpaces-serial-fix dynamic this doc tracks, now reconfirmed for the 340-baseline generation of this exact ratchet.
+  `GET /api/escalations/active` at this point showed 3 concurrent `unified-trading-pm` promote-wall escalations open
+  simultaneously (PR #3180 — mine, now superseded; #3197 slot 22; #3198 slot 15), consistent with the duplicate-dispatch
+  pattern a peer entry above already flagged as a smaller follow-up finding. Declined a further same-day-class chase per
+  this doc's own established precedent (main's 2026-08-09 "hand off" ruling, reaffirmed by the `ci_reconciler` entry
+  immediately above); declined `--update-baseline` (banned per this doc's own header — also independently confirmed at
+  the tooling level: both `check_prosewrap_padding.sh --update-baseline` and `check_line_caps.sh --update-baseline`
+  hard-refuse to persist a value higher than what's already on disk, so raising either requires hand-editing around a
+  deliberate safety clamp, not just a documented convention). No further action taken this dispatch; PR #3180 is moot
+  (superseded). `AUTHORING_SLOT=ldr-to-main-promote` sentinel — no slot-ping applicable per this role's skip-rule.

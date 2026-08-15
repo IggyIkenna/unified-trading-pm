@@ -37,7 +37,7 @@ related:
     /plans/archive/2026_07/sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
     /plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md,
     /plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,
-    /plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
+    /plans/archive/2026_08/sports_odds_feature_naming_canonicalization_2026_07_21.md,
     /plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md,
     /plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md,
     /plans/archive/2026_08/sports_legacy_fixtures_path_migration_2026_07_24.md,
@@ -397,8 +397,8 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       completed fixtures (regulation / ET-only / ET+PEN cases; NEVER collapse pen-shootout score into a single field).
       Spot-check on real GCS rows for a completed matchweek across the Top-5 EU leagues. **[VERIFY][UI]** the
       deployment-ui schema modal renders both entity schemas — this touches a UI repo, so any tick requires `pw:L2 ✓`
-      (`npx playwright test     --project=chromium tests/smoke/`) + a cited regression spec per CLAUDE.md UI
-      playwright-gate HARD RULE; on a fleet VM with no dev server, keep `[BLOCKED-PLAYWRIGHT]`.
+      (`npx playwright test --project=chromium tests/smoke/`) + a cited regression spec per CLAUDE.md UI playwright-gate
+      HARD RULE; on a fleet VM with no dev server, keep `[BLOCKED-PLAYWRIGHT]`.
       <!-- BLOCKED-UPSTREAM evidence (2026-06-24 slot-23): GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures. Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09, LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy). Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes; writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main. Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them. Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. -->
       (FOLDED IN from sports_fixtures_schema_split_completion_2026_06_20, 2026-07-15, plan-reconcile §6 operator ruling)
       **MERGED here 2026-07-24** (plan-hygiene line-cap remediation, `plan_line_cap_remediation_2026_07_23.md` decision
@@ -412,7 +412,7 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 - [x] [CODE] P0. ✅⏪ **K1 — emit UPPER at the LIVE writer SHIPPED + VERIFIED (2026-07-22) — SUPERSEDED 2026-07-23, MUST
       BE REVERTED.** (was: fix `_build_sports_shard_path` (`venue_fetch.py:871-900`) + the sentinel row-key builders per
       the dual-accept pre-step ordering this todo specified). The dual-accept pre-step shipped first as designed
-      (`market-data-processing-service@fa4281d2`), then the atomic writer flip (`market-tick-data-service@2536b91c`, 7
+      (`market-data-processing-service@7c8454d4`), then the atomic writer flip (`market-tick-data-service@2536b91c`, 7
       call sites). **This session's casing reconciliation (see Canonical target above) decided sports data_type is
       LOWER-case for ALL types, no UPPER exception — this todo's UPPER writer flip is now the WRONG direction and is
       tracked for revert in the new todo below, not extended.** Kept here (not deleted) as the historical record of what
@@ -488,7 +488,7 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       "watch."** **Done when**: either value reappears in a FUTURE dated read (re-open then, trace
       `written_at`/`service_name` on the specific row before treating as live), or this is struck as confirmed-dead
       after one more clean read on a later date.
-- [x] [CODE] P0. ✅ **NEW — fixed via `batch1_ao_ready` todo 3** — `market-data-processing-service@51502c3` +
+- [x] [CODE] P0. ✅ **NEW — fixed via `batch1_ao_ready` todo 3** — `market-data-processing-service@c9b7f4a` +
       `instruments-service@f46e553e` (verified via `git log`); every non-sports asset_group verified byte-identical.
       **Not independently verified**: the literal done-when (Distinct Values panel on fresh LIVE writes) needs a
       post-fix write to land. Pre-existing finding surfaced (not caused by this fix):
@@ -575,7 +575,7 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       (`unified-api-contracts@82db8f8f` + `market-tick-data-service@f6ea0010`, 2026-07-26): T2.9 (MDT schema-contract
       drift) fixed, T2.10 (47,253 phantom `api_football×trades` rows) verified 0 remaining via the 2026-07-23 CAS-safe
       wipe. Post-phase codex audit (T6.7) separately closed in
-      `plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md`. Found via `/ag-closeout-audit     sports`
+      `plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md`. Found via `/ag-closeout-audit sports`
       2026-07-27 — this checkbox was stale (real work done, never flipped here).
 - [ ] [CODE] P2. Eliminate (or document) the legacy bare `entity=fixtures/` (no `pipeline_mode=`) write path still
       active today alongside the canonical split writer (5-league subset).
@@ -583,7 +583,7 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       `sports_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md`, "agreed" — the sole-surviving-copy carve-out that
       forced this to `[OPERATOR]` on 2026-08-02 is resolved: the 764 pre-floor cells / 1,528 physical objects were
       WIPED, not preserved, via
-      `deployment-service/scripts/wipe_pre_floor_sports_2026_07_21.py --root-prefix     sports_reference_v2/by_date --apply`
+      `deployment-service/scripts/wipe_pre_floor_sports_2026_07_21.py --root-prefix sports_reference_v2/by_date --apply`
       — `{'DELETED': 1528, 'ERROR': 0}`, verified 0 pre-floor day dirs remain). **Remaining scope, still needs the
       original reader-check before proceeding**: 16 post-floor day dirs (2024-12-24..2026-04-20) remain in
       `sports_reference_v2/by_date/` — snapshot-then-cull THESE once confirmed no reader consumes the path (the original
@@ -627,7 +627,7 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       `plans/active/sports_consolidated_native_ao_extract_2026_07_25.md:209-222` (Track E). Source issue archived:
       `/plans/archive/issues/sports_t0_t1_dependency_gate_never_wired_2026_07_15.md`. ~~Wire the T0/T1 dependency gate
       for real: make every real caller of the pre-flight pass `date=`. Currently the pre-flight only fires
-      `if date is     not None` and no caller passes it, so the fail-loud boundary is unreachable. **Done when**: a
+      `if date is not None` and no caller passes it, so the fail-loud boundary is unreachable. **Done when**: a
       T0-before-T1 ordering violation actually raises in a test (not just "the code path exists but is never hit").~~
 
 ## Track O — ODDS-LEAK: post-kickoff contamination + the B2 dead-zone · P1
@@ -688,7 +688,7 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       (`market-tick-data-service@3401c0ab`, "fix fixture_id=NULL propagation in the odds_api backfill path" —
       `_build_fixture_rows()` never emitted a `fixture_id` key, forcing `""` and collapsing shards to league-level; the
       commit adds `"fixture_id": str(af_fixture_id) if af_fixture_id is not None else ""`). Found via
-      `/ag-closeout-audit     sports` 2026-07-27 — same mechanism as this todo's SFI/HT-odds pit-gate observation. Not
+      `/ag-closeout-audit sports` 2026-07-27 — same mechanism as this todo's SFI/HT-odds pit-gate observation. Not
       independently re-verified against a fresh live capture; flag for a light spot-check if this exact symptom (blank
       fixture_id collapsing odds rows) is ever seen again post-2026-07-24.
 
@@ -742,10 +742,14 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       the ONLY remaining blocker is that this safety tooling doesn't exist yet (harder than the league_id migration's
       pure scheduling gate — nothing to schedule until this is built). Detail: see the issue doc's own §7 (re-triaged
       2026-07-23).
-- [ ] [DESIGN] P2. **NEW 2026-07-23 (decision 13) — implement RAISE-on-all-NaT for `AvailableAtStampingError`
+- [x] ✅ [DESIGN] P2. **NEW 2026-07-23 (decision 13) — implement RAISE-on-all-NaT for `AvailableAtStampingError`
       (operator-ruled), not skip-with-record.** Fail loud at the shard that can't be stamped — catches a CF-8-class
       regression the moment it starts instead of accumulating a silent ~40-50% fill-rate gap for weeks. Wire this into
-      the same code path CF-8's fix touches (Track H's CF-8 todo below) so both land together.
+      the same code path CF-8's fix touches (Track H's CF-8 todo below) so both land together. — **DONE (plan-reconcile
+      2026-08-15)**: `market-tick-data-service@84ee34f2` — removed `AvailableAtStampingError` from
+      `_stamp_sports_shard_available_at`'s except clause (only `KeyError` remains caught). Two named tests
+      (venue-failure-on-all-NaT integration + direct `pytest.raises(AvailableAtStampingError)` unit), QG green (9972
+      passed). Shipped + cited via `sports_consolidated_native_ao_extract_2026_07_25.md:346-350`.
 - [ ] [CODE] P1. **NEW 2026-07-23 (decision 11) — schedule + run the CF-8 available_at maintenance window.** Fix is
       built + unit-tested, never run in production; CF-8 stays ~40-50% `available_at` fill until it does. Lift operator
       stop `BLK-d9137d48` and clear the still-false backlog parking-gate condition

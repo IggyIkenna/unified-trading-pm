@@ -314,8 +314,8 @@ real bookmaker venues (BOVADA/PINNACLE/LADBROKES_UK/…), i.e. the fully consuma
       Macarthur FC ko 2026-01-01T08:00Z). Their `bm_minutes_to_kickoff` clusters at **~1144.5-1146.4 / ~1264.5-1266.4**
       (12-18) and **~964.7-967 / ~1204.7-1206.7** (12-31) — all squarely inside the **615-minute dead zone (765-1380
       min) between `TIER1_HORIZONS`' T-12h window `[675,765]` and T-24h window `[1380,1500]`**
-      (`bucket_assignment_     adapter.py` `TIER1_HORIZONS`/`_HORIZON_CAPS` — 8 narrow accept-windows totaling ~235 of
-      the 1440 pre-match minutes, by design). Control date 2025-12-20 (working, 83.6% raw-bucketable) has **114 distinct
+      (`bucket_assignment_ adapter.py` `TIER1_HORIZONS`/`_HORIZON_CAPS` — 8 narrow accept-windows totaling ~235 of the
+      1440 pre-match minutes, by design). Control date 2025-12-20 (working, 83.6% raw-bucketable) has **114 distinct
       `fetch_utc` values** spread across the day vs these 2 dates' single noon snapshot — with many more
       snapshots-per-fixture, far more land inside SOME target's narrow cap by chance. So the "REAL BUG" framing holds
       exactly as originally measured: real, valid pre-match odds WERE captured for those A-League fixtures, but the
@@ -325,7 +325,7 @@ real bookmaker venues (BOVADA/PINNACLE/LADBROKES_UK/…), i.e. the fully consuma
       buckets (`market-data-tick-sports-prd-...` `odds_horizon_bucket` data_type, and `features-sports-prd-...`) for
       `A_LEAGUE`/`SOCCER_AUSTRALIA_ALEAGUE` on all 3 dates — **no row of ANY capture_status exists** (not `captured`,
       not `attempted_failed`, not `empty_confirmed`); the shard is simply unregistered.
-      `scripts/reprocess_sports_     odds.py` only writes `attempted_failed` to the manifest `if not dry_run:` (script
+      `scripts/reprocess_sports_ odds.py` only writes `attempted_failed` to the manifest `if not dry_run:` (script
       L958/L980) and its own docstring's usage example (L40) is a `--dry-run` invocation — so the `attempted_failed`
       state quoted in this doc's §B2 repro log was very likely a **dry-run diagnostic that was never persisted**, not a
       live manifest row. There is therefore currently nothing live to relabel for EITHER date — see the P2 item below.
@@ -571,12 +571,12 @@ a credential ask.
 
 - [x] ✅ [CODE] P1. **DONE 2026-07-31 — was ALREADY DONE, since 2026-04-11.** This finding's own "no `/v4/historical`
       support anywhere in the codebase" claim was WRONG even when written (2026-07-18) —
-      `git log -S     "historical/sports"` on
+      `git log -S "historical/sports"` on
       `market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py` shows the historical-endpoint
       calls (`_discover_fixtures` + `_run_league_fetch_loop`, both hitting `/v4/historical/sports/{sport}/odds`) landed
       in commit `76c920ba` (2026-04-11), 3+ months before this finding — and it's wired into production via
       `market_tick_data_service/adapters/umi_tick_provider.py:658` (`download_batch(date=date, data_types=data_types)`),
-      not orphaned code. `sports_satellite_ao_dispatch_batch8_     2026_07_30.md`'s own triage repeated the same wrong
+      not orphaned code. `sports_satellite_ao_dispatch_batch8_ 2026_07_30.md`'s own triage repeated the same wrong
       "confirmed still absent... 2026-07-30" claim — a grep that somehow missed this file, propagated forward rather
       than caught. **Cost-per-snapshot, genuinely not previously measured (only formula-derived:
       `_CREDITS_PER_CALL = 60` = "10 × 3 markets × 2 implicit regions") — now EMPIRICALLY measured**: one real
@@ -619,9 +619,9 @@ a credential ask.
         deployment-service). Source: this DIAG's residual finding, 2026-08-04. **Already extracted — see
         `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s `[CONFIG] P2` todo (line ~85, `assigned_vm: planning`,
         still `- [ ]` open there too as of 2026-08-09) — not duplicating here.** Round-9 sweep flag (2026-08-09), for
-        whoever picks up batch10's copy: `sports_satellite_ao_dispatch_batch11_2026_08_09.md`'s Deferred section
-        found this todo's "relaunch the sports-scheduler VM" premise may be stale — 3 independent, more current active
-        docs (`sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`,
+        whoever picks up batch10's copy: `sports_satellite_ao_dispatch_batch11_2026_08_09.md`'s Deferred section found
+        this todo's "relaunch the sports-scheduler VM" premise may be stale — 3 independent, more current active docs
+        (`sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`,
         `sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`,
         `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`) establish `sports-scheduler` actually
         runs as the Cloud Run Job `uts-prod-sports-scheduler` via `uts-prod-sports-scheduler-cron` (`*/5 * * * *`), not
@@ -722,7 +722,7 @@ read is a coverage blind spot.
       `reprocess_sports_odds.py` manifest's COARSE per-day AGGREGATE SENTINEL row (deliberate, unchanged). It is
       **invalid** as a FINE per-shard/per-row venue stand-in wherever the real bookmaker is already present in the data
       — that was a genuine, now-fixed conflation in `reprocess_sports_odds.py`'s fine manifest rows
-      (`market-data-processing-service@6f7422e` forward fix + `@a047b29` backfill migration).
+      (`market-data-processing-service@561f177` forward fix + `@a047b29` backfill migration).
 - [x] [DIAG] P1. F6 — why is the instruments-sports consolidated index persistently older than its 120s budget? —
       **clear duplicate, resolved 2026-07-30 batch8 triage**: already fully root-caused in
       `plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md` (no per-AG staleness-budget
@@ -797,10 +797,10 @@ have moved; use the section index above to locate it.
   reclassification, citation-only.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
 - **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA-STALE, valid — verdict unchanged from 2026-08-08, added
-  inline citations at both open todos (§E `[CONFIG] P2` line ~611, §E `[MODEL] P2` line ~627) rather than only here.
-  New this pass: `sports_satellite_ao_dispatch_batch11_2026_08_09.md`'s Deferred section (dated yesterday/today)
-  flagged the `[CONFIG] P2` item's "relaunch the sports-scheduler VM" premise may be stale (real mechanism is the
-  Cloud Run Job `uts-prod-sports-scheduler`, not a VM script) and conflicts with an active OOM investigation
+  inline citations at both open todos (§E `[CONFIG] P2` line ~611, §E `[MODEL] P2` line ~627) rather than only here. New
+  this pass: `sports_satellite_ao_dispatch_batch11_2026_08_09.md`'s Deferred section (dated yesterday/today) flagged the
+  `[CONFIG] P2` item's "relaunch the sports-scheduler VM" premise may be stale (real mechanism is the Cloud Run Job
+  `uts-prod-sports-scheduler`, not a VM script) and conflicts with an active OOM investigation
   (`sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`) — flagged inline at the todo itself for whoever
   executes batch10's copy; not re-extracted here (already `assigned_vm: planning` there, still open). `[MODEL] P2`
   reconfirmed still tracked and active in `sports_taxonomy_p3_consumers_2026_08_08.md`. Doc stays `assigned_vm: NA`.

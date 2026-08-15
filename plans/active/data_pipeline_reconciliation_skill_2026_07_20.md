@@ -436,19 +436,10 @@ failures + synthesis re-ran). GCS access: object listing works; project-wide `st
 (against the worker recommendation, with the fix-writers-first prerequisite recorded) · D3 = fold → repoint → delete.
 Phase D (todos 20-25) added to apply them.
 
-**Resumable workflow handles** — a prior session exited mid-flight and killed two background workflows; their run IDs
-are recorded here so a restarted session resumes instead of re-running. Resume with
-`Workflow({scriptPath, resumeFromRunId})`; completed agents replay from cache.
-
-| Run ID            | Script (scratchpad) | Covers                                                                                         |
-| ----------------- | ------------------- | ---------------------------------------------------------------------------------------------- |
-| `wf_69948fdb-535` | `dpr-phase-a.js`    | Phase A — last outstanding agent is P1-10 (write-guard contract + bucket-resolution authority) |
-| `wf_10a81bb8-42e` | `dpr-phase-c.js`    | Phase C — 5 per-AG reconciliation runs + the skill acceptance review                           |
-| `wf_5023c524-684` | `dpr-phase-d.js`    | Phase D — todos 20 / 22 / 23 (D1 corrections, D2 banner, MTDS writer-fix scoping)              |
-
-Scratchpad root:
-`/tmp/claude-1000/-home-ubuntu-unified-trading-system-repos/5697ef0c-2b5a-43bf-8008-6202d06ded45/scratchpad/`.
-**Scratchpad is not durable** — if the scripts are gone, the plan's todo text is sufficient to re-author them.
+**Resumable workflow handles (2026-07-20, now MOOT)** — 3 `resumeFromRunId` handles (`wf_69948fdb-535`/`dpr-phase-a.js`
+Phase A, `wf_10a81bb8-42e`/`dpr-phase-c.js` Phase C, `wf_5023c524-684`/`dpr-phase-d.js` Phase D) were recorded here for
+a restarted session to resume from cache; all 3 phases have since completed (see the FINAL REPORT below) and the
+scratchpad root they pointed at is long gone — kept as a one-line historical note only, not a live resume path.
 
 **Ordering constraint discovered:** todo 21 (remove the C2a refusal from `SKILL.md` + the taxonomy) must run **after**
 Phase C's acceptance review, because that review also edits `SKILL.md`. Editing it while five agents are mid-read makes
@@ -563,7 +554,7 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
       this batch).
 - [x] 36. ✅ [SCRIPT] P1. **Wire the `--layer {raw-tick,candles}` flag + §3h into `SKILL.md`** (default `raw-tick`,
       orthogonal to `--asset-group`): add the `## Layers` note + the §0 flag line, the
-      `### 3h. MDPS candle-layer     reconciliation` subsection (candle shard atom, GCS-object-driven inversion,
+      `### 3h. MDPS candle-layer reconciliation` subsection (candle shard atom, GCS-object-driven inversion,
       oracle-exempt Option-A template, S4-UNAVAILABLE, migration_pending suppression, genuine defects), the SSOT-table
       row, the `(asset_group × layer)` §6 loop, and the "Extending to a new LAYER" note. — `unified-trading-pm` (this
       batch).
@@ -600,7 +591,7 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
 - [x] 41. ✅ [DATA] P1. **Ran the MDPS candle audit per-AG against the Option-A target** —
       `/data-pipeline-reconciliation --asset-group <ag> --layer candles`, sequenced defi → prediction → cefi → tradfi. 4
       reports (+ JSON siblings) at
-      `plans/audit/results/data_pipeline_reconciliation_candles_{defi,prediction,cefi,     tradfi}_2026_07_25.md` (the
+      `plans/audit/results/data_pipeline_reconciliation_candles_{defi,prediction,cefi, tradfi}_2026_07_25.md` (the
       pre-existing same-named 2026-07-23 docs were NOT this skill — they were the candle-path migration's own P8
       verification via the migration script's dry-run classifier; this is the first real run of the reconciliation skill
       itself against the candle layer, re-pointed at the UAC oracle per todo 39). Confirmed (a) driven off GCS objects +
@@ -669,7 +660,7 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
       `/codex/11-project-management/plan-priority-tier-and-dispatch-ordering.md` — small-scale hygiene, not
       backfill-critical, matches the P2 precedent of the two sibling census docs). Full per-AG results recorded in
       `reference-cefi.md` H7-refinement + H8, `reference-tradfi.md` H7, `reference-sports.md` H11,
-      `reference-     prediction.md` H6 — `unified-trading-pm@a2a84b66c` (docs) + this commit (results + new issue doc).
+      `reference- prediction.md` H6 — `unified-trading-pm@a2a84b66c` (docs) + this commit (results + new issue doc).
       AGs, not just a "mechanism exists" claim.
 - [x] 46. ✅ [INFRA] P2. **Diagnosed + fixed a stale local venv, not a code bug** — `deployment_api.routes`/`.services`
       failed to import (pinned `fastapi==0.136.3`/`starlette==1.1.0` installed, lacking `iter_route_contexts` that

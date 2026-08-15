@@ -71,12 +71,11 @@ source: >-
 
 # AO satellite AO batch 9
 
-> **`status: draft`** — pending operator approval, same convention as every prior batch (`gate_on_depends` on the
-> finalize twin already machine-holds dispatch of the finalize plan; this batch itself still needs the explicit operator
-> flip to `active` before its own todo enters the backlog, per the established batch5-8 precedent).
-> **`assigned_vm: planning` / `execution_scope: orchestrator-agent`** — the `ao` tranche's 2026-07-17 "local execution
-> only" ruling was lifted 2026-08-08 (see batch5/6/7/8's own Progress Logs for the citation trail); AO-dispatchable once
-> approved, same as every other tranche in this series.
+> **`status: active`** — operator-approved, same convention as every prior batch (`gate_on_depends` on the finalize twin
+> already machine-holds dispatch of the finalize plan). **`assigned_vm: planning` /
+> `execution_scope: orchestrator-agent`** — the `ao` tranche's 2026-07-17 "local execution only" ruling was lifted
+> 2026-08-08 (see batch5/6/7/8's own Progress Logs for the citation trail); AO-dispatchable, same as every other tranche
+> in this series.
 
 ## Why this plan exists
 

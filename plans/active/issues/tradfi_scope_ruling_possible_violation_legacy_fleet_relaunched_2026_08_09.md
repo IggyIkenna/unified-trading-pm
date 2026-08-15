@@ -154,13 +154,14 @@ this cron is paused or fixed, the singleton lock may never naturally clear.
 
 - [x] ✅ [INFRA] P1. **`BLOCKED-OPERATOR-DECISION`: pause or fix the `wave_launcher.py` cron on `planning`** — STOPGAP
       (option 1) confirmed LIVE 2026-08-09 ~13:06Z:
-      `gcloud scheduler jobs describe uts-prod-tradfi-wave-launcher-cron     --location=asia-northeast1` reads
+      `gcloud scheduler jobs describe uts-prod-tradfi-wave-launcher-cron --location=asia-northeast1` reads
       `state: PAUSED` (job at `deployment-service/terraform/gcp/wave_launcher_scheduler.tf`). No audit-log entry was
-      retrievable to attribute who/when paused it, and the follow-up code fix (option 2 — patch cell-selection to
-      consult the scope-ruling table) is still NOT shipped, so this is the reversible stopgap only, not the durable fix
-      — if anyone re-enables the job before option 2 lands, the exact same violation reproduces. Leaving option 2 as a
-      still-open follow-up (not re-added as a new checkbox here since it duplicates this item's own text — track it via
-      re-opening this line if the job is ever re-enabled without the code fix).
+      retrievable to attribute who/when paused it. The follow-up code fix (option 2 — patch cell-selection to consult
+      the scope-ruling table) was NOT shipped at the time this item was written, so this was the reversible stopgap
+      only, not the durable fix. **UPDATE (2026-08-15, /plan-reconcile)**: option 2 has since shipped —
+      `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md:191-198` shows `deploy@48f55e934b`, `_cme_root_universe()` now
+      consults the `MVP_SCOPE` SSOT instead of parsing the launcher script's hardcoded `CME_ROOTS`. The durable fix is
+      in place; re-enabling the cron no longer reproduces this violation.
 - [ ] [OPERATOR] P2. **CORRECTED 2026-08-12 (/plan-reconcile): retagged `[INFRA]` → `[OPERATOR]`** — this doc's own
       Progress Log repeatedly states the kill/no-kill call "is not mine to make" and is a "scope/cost-tradeoff judgment
       call, not a technical one" (see the 13:07Z and 12:47Z entries below), which is exactly the `[OPERATOR]` bar (a

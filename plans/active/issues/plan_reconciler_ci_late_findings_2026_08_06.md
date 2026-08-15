@@ -19,7 +19,7 @@ related:
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
-    /plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md,
+    /plans/archive/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md,
     /plans/active/ci_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_08/mtds_retry_safe_default_audit_2026_07_14.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch9_2026_08_09.md,
@@ -106,9 +106,9 @@ failure (75 orphans vs 69 baseline).
       Codex-SSOTs inline, Phase-6 body) — repointed from the stale `plans/active/issues/...` path to
       `/plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md`, verified with
       `check_reference_paths.py --only`. Via `ci_satellite_ao_dispatch_batch9_2026_08_09.md` todo 1 —
-      unified-trading-pm@a52672b6d (verified ancestor of `origin/live-defi-rollout` via
-      `git merge-base     --is-ancestor`, 2026-08-09; batch9's own progress-log cited a bogus, non-resolving SHA
-      `89925f0c6` for this todo — corrected there in the same pass).
+      unified-trading-pm@a52672b6d (verified ancestor of `origin/live-defi-rollout` via `git merge-base --is-ancestor`,
+      2026-08-09; batch9's own progress-log cited a bogus, non-resolving SHA `89925f0c6` for this todo — corrected there
+      in the same pass).
 
 ---
 
@@ -116,11 +116,11 @@ failure (75 orphans vs 69 baseline).
 
 - [x] [DOC] P2. ✅ — Updated `plans/epics/infrastructure_master.md:595-597` index entry for
       `mtds_retry_safe_default_audit_2026_07_14` from `status: active` to
-      `status: complete (archived 2026-08-06 — 5/5 todos done; fleet-wide STEP 5.104 lint in base-service.sh is the     durable pin)`,
+      `status: complete (archived 2026-08-06 — 5/5 todos done; fleet-wide STEP 5.104 lint in base-service.sh is the durable pin)`,
       matching the sibling `cicd_mvp_ldr_to_main_pipeline_2026_06_30` entry's established format (L536). Epic stays
       under its 2000-line hard cap. Via `ci_satellite_ao_dispatch_batch9_2026_08_09.md` todo 2 —
-      unified-trading-pm@930f7393e (verified ancestor of `origin/live-defi-rollout` via
-      `git merge-base     --is-ancestor`, 2026-08-09).
+      unified-trading-pm@930f7393e (verified ancestor of `origin/live-defi-rollout` via `git merge-base --is-ancestor`,
+      2026-08-09).
 - [x] [DOC] P2. ✅ **Moot — target doc never existed in git history.** `ag_closeout_audit_ci_parked_2026_08_06.md` —
       confirmed via `git log --all --diff-filter=A` (this doc's own 2026-08-09 Progress Log entry, slot-22): the corpus
       only ever had `_2026_08_07`/`_08`/`_09` daily-rotating snapshots. Nothing to convert.
@@ -132,12 +132,10 @@ failure (75 orphans vs 69 baseline).
 
 ## P3 — Cosmetic / cross-reference fixes
 
-- [ ] [DOC] P3. DEFERRED (low-value, archived-doc cosmetic) — **`ci_satellite_ao_dispatch_batch1_2026_07_26.md:859`** —
-      D1 row hands checker-registration to "the finalize plan's todo 2", but the finalize plan carries it as todo 1
-      (`batch1_finalize` L72, L119-120: "D1 is discharged by todo 1 above"). Fix: "todo 2" → "todo 1". Re-verified
-      2026-08-09: both `batch1` and `batch1_finalize` are now ARCHIVED (`plans/archive/2026_08/`) — editing an archived
-      doc for an internal off-by-one text reference is not worth a dedicated pass; left open but not extracted this
-      round.
+- [x] [DOC] P3. ✅ **Fixed 2026-08-15** — `ci_satellite_ao_dispatch_batch1_2026_07_26.md:866` D1 row said checker-
+      registration "moved to the finalize plan's todo 2"; the finalize plan actually discharges it via todo 1
+      (`batch1_finalize` L72, L119-120: "D1 is discharged by todo 1 above"). Corrected "todo 2" → "todo 1" in the
+      archived doc directly (pure text fix, no content-judgment involved).
 - [ ] [DOC] P3. NOT AO-ELIGIBLE (judgment call) —
       **`mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md`** — title + frontmatter summary assert
       xdist-worker-leak mechanism; body (L239-241, L121-126) records mechanism was never confirmed and reproduces under

@@ -1656,7 +1656,7 @@ this shared base file) flips bats failures to `exit 1`. PM is the only repo curr
 own suite clean (0 failures) post-fixture-fix. Any other repo can opt in the same way once its own suite is confirmed
 clean.
 
-SSOT: `/plans/active/issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`.
+SSOT: `/plans/archive/2026_08/issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`.
 
 ### `PYTEST_UNIT_DIR` override (Phase 8, 2026-05-15)
 

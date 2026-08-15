@@ -46,6 +46,7 @@ resolved_by:
 locked_by:
 locked_since:
 context_scope:
+  [.github/workflows/workspace-quickmerge-validation.yml, scripts/quality_gates/check_defi_address_citations.py]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -109,3 +110,13 @@ more than the ambiguous-finding time budget for a single sweep.
 - 2026-08-15 (ci_reconciler, slot 21): Filed after two identical failures (scheduled + manual re-trigger), confirmed via
   3 independent methods that current content is clean, root mechanism not isolated within this sweep's time budget. No
   code changed — this doc is the tracked follow-up per findings-triage (ambiguous, not fixable this pass).
+- **context-scout 2026-08-15**: populated context_scope (2 entries).
+- 2026-08-15 19:07:50Z (ci_reconciler, slot 20): Independent 2026-08-15 sweep re-triggered
+  `workspace-quickmerge-validation.yml` (run `31903044862`) to test whether an unrelated fix (the same run's
+  `ModuleNotFoundError: No module named 'pydantic'` retry-storm) was masking this as a transient flake — it recurred
+  IDENTICALLY (same 3 lines, same count), a third occurrence with the same signature. Independently re-confirmed local
+  `main` branch content via `gh api repos/IggyIkenna/unified-api-contracts/contents/...?ref=main` is correctly cited at
+  lines 28/30/33 (not 28/33/42 — the flagged line numbers don't even match the real file's address positions), and
+  `_line_is_uncited()`'s same-line `comment_idx`/`DERIVED_MARKER` logic in `check_defi_address_citations.py` is correct
+  for this content shape. Did not re-chase the clone-time mechanism beyond this — same effort/ambiguity call as
+  slot-21's original triage still holds. No code changed by this entry.

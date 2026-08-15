@@ -64,7 +64,7 @@ source: >-
       claim trusted): built a fresh sandboxed bare-repo + 2-clone rig, replayed the exact collision shape (clone A
       stages an archival `git mv doc.md archive/doc.md`; clone B concurrently commits+pushes a CONTENT edit to the
       rename source `doc.md`, forcing clone A's `safe-doc-push.sh` into the
-      `merge-pull can't fast-forward ->     rebase+autostash` path). Against the CURRENT (patched, `f76a03a99`) script:
+      `merge-pull can't fast-forward -> rebase+autostash` path). Against the CURRENT (patched, `f76a03a99`) script:
       `reassert_renames()` fired ("re-staging deletion of rename source"), and the resulting commit's
       `git ls-tree -r HEAD` showed the doc at exactly ONE path (`archive/doc.md`), correctly rename-detected
       (`git show -M HEAD` prints a clean `rename from`/`rename to`), content correctly carrying BOTH the rename and

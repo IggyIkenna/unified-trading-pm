@@ -207,26 +207,27 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       exact bottleneck that caused the 07-27 crisis) argues for less caution, but PM's own `self_hosted_runner_labels`
       fix (above) means PM's glue pool now ALSO carries PM's own 4,763-runs/month CI load that previously ran on
       `ubuntu-latest` — a new source of real utilization the original proposal didn't anticipate. Landed in between:
-      **PM 5→3 glue** (not the proposal's 2-3 low end, to leave headroom for the new self-hosted load), **AO 2→1 glue**
-      (unchanged from the proposal — AO's workload didn't change this session). Executed via `systemctl stop`+`disable`
-      on the specific excess instances (`github-glue-runner@glue-{4,5}.service`, `github-glue-runner-ao@glue-2.service`)
-      — checked every instance's live `ActiveState` first (all confirmed idle, zero risk of interrupting an in-flight
-      job) before stopping any of them. **Verified the remaining pool still works**: dispatched a real PM
-      `quality-gates-v2` run post-reduction — `QG slice (tests)` succeeded cleanly on the reduced 3-runner pool;
-      `QG slice (checks)` failed, but on a genuine pre-existing content issue (`qg_red_reason: "qg"`, a real
-      typecheck/lint failure, unrelated to checkout/infra — confirmed by reading the actual failure log, not assumed)
-      that correctly triggered the existing Slack CRITICAL alert — the alerting pipeline itself working as designed, not
-      a symptom of the reduction. Not a "steady-state" measurement (that needs real multi-day load data this session
-      can't produce) — a single verified-working dispatch immediately after the cut, which is the minimum bar for
-      "didn't break anything," not the rightsizing plan's own longer-window todo.
+      **PM 5→3 glue** (not the proposal's 2-3 low end, to leave headroom for the new self-hosted load) — **MOOT as of
+      2026-08-07** — PM's `self_hosted_runner_labels` reverted to empty, zero self-hosted glue usage; pool-size question
+      no longer applies. **AO 2→1 glue** (unchanged from the proposal — AO's workload didn't change this session).
+      Executed via `systemctl stop`+`disable` on the specific excess instances (`github-glue-runner@glue-{4,5}.service`,
+      `github-glue-runner-ao@glue-2.service`) — checked every instance's live `ActiveState` first (all confirmed idle,
+      zero risk of interrupting an in-flight job) before stopping any of them. **Verified the remaining pool still
+      works**: dispatched a real PM `quality-gates-v2` run post-reduction — `QG slice (tests)` succeeded cleanly on the
+      reduced 3-runner pool; `QG slice (checks)` failed, but on a genuine pre-existing content issue
+      (`qg_red_reason: "qg"`, a real typecheck/lint failure, unrelated to checkout/infra — confirmed by reading the
+      actual failure log, not assumed) that correctly triggered the existing Slack CRITICAL alert — the alerting
+      pipeline itself working as designed, not a symptom of the reduction. Not a "steady-state" measurement (that needs
+      real multi-day load data this session can't produce) — a single verified-working dispatch immediately after the
+      cut, which is the minimum bar for "didn't break anything," not the rightsizing plan's own longer-window todo.
 - [x] ✅ [INFRA] P2. **Re-evaluate + re-add `unified-trading-library` and `e2e-testing` to self-hosted — SHIPPED
       2026-08-05.** Live host check at re-add time: load average 4.08/4.92/6.24 (vs. the 90+ that caused both prior
       reverts) and 18% swap (vs. 87%) — healthy headroom, not just "should be fine" hope. Allowlist updated
       (`unified-trading-pm@dc3ab95d7`), rolled out via
-      `rollout-workflow-templates.sh --repo <name> --template     quality-gates-v2.yml` (pre-flight action-pin check
-      passed cleanly), shipped per-repo: `unified-trading-library@9f309cb0`, `e2e-testing@ccda667`. Both
-      watched-not-guaranteed — this is the 2nd/3rd cycle for each repo, so if the same starvation/SIGALRM signature
-      recurs, revert per the same precedented per-repo playbook (not a new investigation).
+      `rollout-workflow-templates.sh --repo <name> --template quality-gates-v2.yml` (pre-flight action-pin check passed
+      cleanly), shipped per-repo: `unified-trading-library@9f309cb0`, `e2e-testing@ccda667`. Both watched-not-guaranteed
+      — this is the 2nd/3rd cycle for each repo, so if the same starvation/SIGALRM signature recurs, revert per the same
+      precedented per-repo playbook (not a new investigation).
 - [x] ✅ [INFRA] P2. **Check whether `glue-runner-crash-loop-watchdog.sh` actually paged — CONFIRMED IT DIDN'T, FOUND
       AND FIXED THE ROOT CAUSE, 2026-08-05.** `unified-trading-pm@6d1ae8463`, deployed live to
       `/usr/local/sbin/glue-runner-crash-loop-watchdog.sh` (MD5-verified). Confirmed on the live host: the
@@ -295,10 +296,10 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       venv-write cost too (currently ~200-500 MB written fresh per run even though `~/.cache/uv` itself is already
       persistent/warm — 9s not 2m07s). **Recommendation**: Option C, reusing the EXISTING `refresh-slot-repo.sh`/timer
       pattern rather than building a parallel mechanism — (1) convert `${RUNNER_BASE}/repo` from `--depth 1` to a full
-      clone (one-time, then `pull     --ff-only` keeps it current same as today), (2) extend the refresh timer's
+      clone (one-time, then `pull --ff-only` keeps it current same as today), (2) extend the refresh timer's
       scope/labels so it also serves the glue pool (today it's writer-pool-only by convention, not by hard restriction),
       (3) replace `actions/checkout@v4` in `python-quality-gates-v2.yml` with a custom step:
-      `cp -al ${RUNNER_BASE}/repo _work/<run-id>/<repo> && git fetch origin && git checkout --force <sha> && git clean     -fdx`,
+      `cp -al ${RUNNER_BASE}/repo _work/<run-id>/<repo> && git fetch origin && git checkout --force <sha> && git clean -fdx`,
       with an explicit fallback to plain `actions/checkout@v4` if the mirror is missing/stale/dirty (checked via the
       existing `repo.refreshed-at` stamp) — so a mirror problem degrades to today's behavior, never blocks a job.
       **Still true**: this touches every job on the shared runner across ~24+ repos via the shared workflow template —
@@ -364,3 +365,4 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
     go, directly targeting the sole remaining open todo (the fast-checkout no-op mystery). Kept the ci-cd-flow codex
     SSOT + the capacity-crisis source doc unchanged. (A stray context-scout marker from 2026-08-05 sits above under
     "Codex SSOTs" — written before this doc had a Progress Log section; left as historical record, not relocated.)
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate.

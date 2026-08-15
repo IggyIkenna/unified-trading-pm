@@ -2,7 +2,7 @@
 doc_type: codex-ssot
 title: agent-orchestrator — scheduled-job dispatch mechanism
 summary: >-
-  SSOT for the AO scheduled-job dispatch layer: the 10 systemd timers, the plan_health modes they POST, the status model
+  SSOT for the AO scheduled-job dispatch layer: the 9 systemd timers, the plan_health modes they POST, the status model
   (dispatched/queued/no_capacity/quarantined/timeout/error), which statuses page, the capacity queue
   (ScheduledJobQueueRow), the 503-classification allowlist (BENIGN_503_RE), and the HARD RULE that a git pull does NOT
   reinstall a live timer unit.
@@ -37,7 +37,6 @@ code_refs:
   - agent-orchestrator/scripts/install-context-scout-timer.sh
   - agent-orchestrator/scripts/install-escalation-queue-reconciler-timer.sh
   - agent-orchestrator/scripts/install-cefi-reconciliation-timer.sh
-  - agent-orchestrator/scripts/install-cefi-mtds-smoke-timer.sh
   - agent-orchestrator/scripts/install-ci-reconciler-timer.sh
   - agent-orchestrator/scripts/install-data-pipeline-alerts-reconciler-timer.sh
   - agent-orchestrator/scripts/scheduled_job_already_ran.py
@@ -58,7 +57,7 @@ live `AgentRow` to show real-time run status. A row labelled `dispatched` is a S
 
 ---
 
-## The 10 timers
+## The 9 timers
 
 Each installer (`scripts/install-<name>-timer.sh`) creates a systemd **`--user`** `.service` + `.timer` pair under
 `~/.config/systemd/user/` and copies `scripts/scheduled_job_already_ran.py` to `~/.local/bin/`. The already-ran guard
@@ -75,9 +74,23 @@ row) prevents duplicate work in the same window (the same DAY for every job exce
 | `context-scout.service`                   | `context_scout`                  | `context_scout_auditor`           | No                                          | hourly                     | 5950 s          | 6000 s                  |
 | `escalation-queue-reconciler.service`     | `escalation_reconcile`           | `escalation_queue_reconciler`     | No                                          | every 3 h                  | 5950 s          | 6000 s                  |
 | `cefi-reconciliation-auditor.service`     | `cefi_reconciliation`            | `cefi_reconciliation_auditor`     | No                                          | every 2 h (even hours)     | 5950 s          | 6000 s                  |
-| `cefi-mtds-smoke-tester.service`          | `cefi_mtds_smoke`                | `cefi_mtds_smoke_tester`          | No                                          | every 2 h (odd hours)      | 5950 s          | 6000 s                  |
 | `ci-reconciler.service`                   | `ci_reconcile`                   | `ci_reconciler`                   | No                                          | every 15 min, hourly guard | 5950 s          | 6000 s                  |
 | `data-pipeline-alerts-reconciler.service` | `data_pipeline_alerts_reconcile` | `data_pipeline_alerts_reconciler` | No                                          | every 60 min, 6h guard     | 5950 s          | 6000 s                  |
+
+**RETIRED 2026-08-15 — `cefi-mtds-smoke-tester.service` (mode `cefi_mtds_smoke`, job_name `cefi_mtds_smoke_tester`,
+every 2h odd hours).** Operator decision: the underlying `/data-pipeline-check-mtds` sweep it dispatched has no
+`--asset_group` scoping (it walks the FULL MVP matrix — every asset_group, not just CeFi — per
+`mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep_2026_08_14.md`), so firing it every 2 hours repeatedly consumed
+real VM spend and the shared Tardis N=1 concurrency slot (confirmed live 2026-08-15: a `pipeline-e2e-check-mtds-*`
+driver VM launched by this dispatch chain ran continuously for 3+ hours, its per-shard
+`mtds-backfill-cefi- pipelinecheck-*` sub-VM launches starving every other real Tardis-backed backfill in the fleet).
+Deemed disproportionate to the check's value at this cadence — the skill remains fully usable as a manual, occasional,
+operator-run check (no code removed from `/data-pipeline-check-mtds` itself). Removed live 2026-08-15:
+`systemctl --user disable --now cefi-mtds-smoke-tester.timer` + deleted both unit files from `~/.config/systemd/user/`
+on the orchestrator VM; `agent-orchestrator/scripts/install-cefi-mtds-smoke-timer.sh` deleted from the repo (its sole
+purpose was installing this timer). The `mode="cefi_mtds_smoke"` dispatch handler in `plan_health.py` and the
+`agents/cefi_mtds_smoke_tester.md` role are left intact (unused without a timer, but not deleted — no code/test cleanup
+was in scope for this decision).
 
 **`ci-reconciler` is the one job whose already-ran guard runs `--window hour`, not the default `--window day`** (added
 2026-08-10). Its timer fires every 15 minutes and the guard admits at most ONE successful run per clock hour, so the job

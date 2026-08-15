@@ -113,7 +113,7 @@ parent issue doc's Progress Log for the exact VM names / evidence.
       (the runner derives its date windows from `SportsModelSpec`, not the CLI `--start-date`/`--end-date` — those may
       be unused by this operation entirely, worth confirming while here). Use the SAME command shape already proven
       against the April window
-      (`--feature-family sports --operation compute     --feature-group odds_targets --start-date <start> --end-date <end>`)
+      (`--feature-family sports --operation compute --feature-group odds_targets --start-date <start> --end-date <end>`)
       — chunk by season/year if the full range in one invocation is impractical. Spot-check a handful of resulting
       dates' `feature_group=odds_targets/` objects + non-null `odds_clv_home` counts before declaring done — do not
       trust the job's own exit code alone (per this doc's own evidence that a narrow, already-run backfill can look

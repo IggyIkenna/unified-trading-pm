@@ -126,13 +126,129 @@ source:
       **deployment-service@cf5e041e7** (guard, AST-based not grep) + **@79864746c** (xfail removed once wired) +
       **@375835a9a** (same guard now covers `release()`). The whole mechanism sat wired-but-unreachable through six
       green phases; a grep-level guard is what makes that unrepeatable. Repo: deployment-service.
-- [ ] [OPERATOR] P0. **Confirm it live after wiring**: the monitor runs as the `uts-prod-dp-exit-code-monitor` Cloud Run
-      Job on an hourly `0 * * * *` schedule (CORRECTED 2026-08-14 — this todo said `*/5`; the live
-      `uts-prod-dp-exit-code-monitor-cron` is `0 * * * *`, ENABLED, measured via `gcloud scheduler jobs list`, and
-      executions start on the hour), so verify (a) the job's deployed image contains the wiring commit
-      (`gcloud run jobs describe`), (b) an execution actually invoked revocation (log a `DP-REVOCATION-*` line), and (c)
-      a marker appears in `vm-census/admission-hold/` for a real condition. A green Cloud Build is NOT this —
-      `Evidence: cloudbuild=<id>` plus an execution log line is. Repo: deployment-service.
+- [x] ✅ [OPERATOR] P0. **Confirm it live after wiring** — CONFIRMED 2026-08-15. All three conditions met on
+      `uts-prod-dp-exit-code-monitor` (hourly `0 * * * *`; the `*/5` in the original todo was corrected 2026-08-14). (a)
+      The arming commits' CONTENT is on `origin/main` and in the live image — note SHA-ancestry is the WRONG test here,
+      the LDR→main promote is a projection that rewrites SHAs, so `git merge-base --is-ancestor` reports "not promoted"
+      for work that has fully landed; verify by content (`git cat-file -e origin/main:<path>`). (b) + (c) together in
+      one measured line, 2026-08-15 07:20:58 UTC:
+      `revocation deps_drain delivered for mdps-defi-2022-20260815-050859 -> ['vm-logs/…/DRAIN_REQUESTED.json', 'vm-census/admission-hold/….json'] (DP-VM-002)`
+      — both markers written, and `deps_hold delivered for mdps-defi-` (DP-VM-001) shows prefix-family targeting working
+      too. **30 distinct VMs received a delivery in 12h.** The mechanism is live and acting. Repo: deployment-service.
+- [ ] [CODE] P0. **Register the 7 emitted-but-unregistered DP ids, or the revocation layer stays blind to them.**
+      Measured 2026-08-15: `DP-LIVE-001/002/003/004`, `DP-VM-012`, `DP-WATCHER-005/006` are emitted by monitor source
+      but appear in NEITHER closed set (`data-pipeline-alerts.registry.yaml`'s 54 ids, nor `AlertCode`), so
+      `evaluate_revocation()` raises `UnknownAlertIdentityError` and `_apply_revocation` logs
+      `revocation: <id> did not evaluate` and returns `{}`. **127 such rejections in 6h** on `uts-prod-dp-meta-watchers`
+      alone (DP-WATCHER-006 ×68, DP-LIVE-004 ×34, DP-LIVE-001 ×15, DP-LIVE-003 ×10). This is NOT the whole mechanism
+      failing — the registered ids (DP-VM-001/002) deliver correctly; it is a per-id registration gap. **The DP-LIVE
+      family is the live-trading signal**, including `missing_live_producer_watcher` (DP-LIVE-003), which is the closest
+      existing thing to the producer-silence trigger in `/plans/active/producer_silence_flatten_protocol_2026_08_14.md`
+      — so this gap will silently swallow that plan's trigger too unless closed first. Each id needs a deliberate
+      `DependentAction` (registering at `NONE` is safe and explicit; anything stronger on a LIVE code is a risk
+      decision). Repo: unified-api-contracts + unified-trading-pm (registry).
+- [ ] [CODE] P1. **Make an unregistered identity fail loudly at CI time, not silently at runtime.** The gap above
+      survived because a `WARNING` in a Cloud Run job's logs is invisible until someone greps for it. Add a check that
+      every `registry_id=` literal passed to `emit_finding()` resolves in `evaluate_revocation()`'s closed set — an AST
+      sweep over the monitor source, in the same family as the anti-inertness guards. A code emitting into a policy
+      layer that cannot key it is the same class of defect as a component with no caller. Repo: deployment-service.
+
+> **CORRECTION 2026-08-15 (peer session, re-measured) — the "two layers deep" framing for DP-MANIFEST-001 was wrong,
+> withdrawn.** DP-MANIFEST-001 is one of the 54 already-registered ids — identity was never its problem, and this
+> session's self-scoped targeting (above) closes the rest. **What does NOT generalize, and is still bleeding**: identity
+> resolution (`escalation.py:749 evaluate_revocation(...)`) is STRICTLY UPSTREAM of target resolution
+> (`escalation.py:766 targets_for_finding(...)`) — an unresolvable identity raises at 749 and returns `{}` via the
+> `logger.warning` at 751, so self-scoped/any targeting fix downstream can never reach an id that fails here. Latest
+> measurement (2h window, `uts-prod-dp-meta-watchers`): **`DP-LIVE-004` ×38, `DP-WATCHER-006` ×13, `DP-LIVE-001` ×3,
+> `DP-LIVE-003` ×2 — 56 rejections dropped on the floor** (supersedes the "127 in 6h" figure two todos up — same gap,
+> later/narrower measurement window).
+>
+> **Ready to paste** (unified-api-contracts, `canonical/crosscutting/dependency_revocation.py`, immediately after the
+> `DP-WATCHER-004` entry in `DP_FAILURE_MODE_ACTIONS`) — written and runtime-verified by the peer session, all seven
+> resolve via `evaluate_revocation("DP-LIVE-001")` etc. (UAC resolves from source in the service venvs, so verification
+> is immediate, no rebuild needed):
+>
+> ```python
+>     "DP-WATCHER-005": _p(
+>         _HOLD, _AGENT_URGENT,
+>         "An OOM-killed consolidator IS CONSOLIDATOR_DOWN — same condition as DP-WATCHER-004 "
+>         "reached by a different route, so it takes the same dependent action.",
+>     ),
+>     "DP-WATCHER-006": _p(
+>         _NONE, _AGENT_URGENT,
+>         "Generic per-execution Cloud Run Job failure, fired across the WHOLE job registry. A "
+>         "single blanket action here would apply identically to unrelated job families, which is "
+>         "why it is NONE rather than a guessed HOLD: the right policy is per-job and does not "
+>         "exist yet. Registered deliberately so the identity RESOLVES — an unregistered id raises "
+>         "and is swallowed as a log line, which is strictly worse than an explicit no-op.",
+>     ),
+>     "DP-VM-012": _p(
+>         _HOLD, _AGENT_URGENT,
+>         "A Cloud Run Service whose terminal_condition entered CONDITION_FAILED is not serving. "
+>         "Hold dependents rather than launch them against a service that cannot answer.",
+>     ),
+>     "DP-LIVE-001": _p(
+>         _HOLD, _AGENT_URGENT,
+>         "A live stream blindspot means expected live shards are not arriving at all. Same shape "
+>         "as DP-WATCHER-002 (never even attempted): downstream would read the absence as honest.",
+>     ),
+>     "DP-LIVE-002": _p(
+>         _DRAIN, _AGENT_URGENT,
+>         "Manifest says captured, GCS is empty — the manifest asserts data that does not exist, "
+>         "so a dependent reads a hole believing it is real. This is DP-FETCH-001's condition "
+>         "(absence unproven) on the live path, and takes its action: drain dependents before "
+>         "they consume it.",
+>     ),
+>     "DP-LIVE-003": _p(
+>         _HOLD, _AGENT_URGENT,
+>         "A registered LONG_LIVED_LIVE producer prefix with ZERO running instances — nothing is "
+>         "producing. The condition that hid a 5-week CME capture gap (deleted 2026-06-30, found "
+>         "2026-08-09). Hold dependents rather than feed them a stream with no source.",
+>     ),
+>     "DP-LIVE-004": _p(
+>         _NONE, _AGENT_URGENT,
+>         "Shard alive but zero recent captures — a productivity gap, not a correctness one: "
+>         "nothing false is written, so no dependent is misled (DP-WATCHER-003's reasoning). Left "
+>         "at NONE also because its blast radius is unmeasured — it fired 34 times in 6h, and "
+>         "arming a hold at that rate is an operator ruling, not an author's default.",
+>     ),
+> ```
+>
+> Actions are by strict analogy to already-ruled ids, never invented (e.g. `DP-LIVE-002` takes `DP-FETCH-001`'s DRAIN
+> because it is the same "manifest asserts data that isn't in GCS" condition on the live path). **The two `_NONE`s are
+> deliberate — do not "fix" them without an operator ruling**: `DP-WATCHER-006` fires across the whole job registry (a
+> blanket action would hit unrelated families — the right policy is per-job and doesn't exist yet); `DP-LIVE-004` fires
+> at a rate (38×/2h) where arming a hold is a risk decision, not an author's default. Registering either at `NONE` still
+> fixes the bug on its own: the identity RESOLVES instead of raising and being swallowed.
+>
+> **The guard above (todo 150) — spec, from the peer session, build alongside**: AST-walk
+> `deployment_service/data_pipeline_monitors/**.py`, collect every keyword argument named `registry_id` whose value is a
+> string constant (17 today), parametrise a test per id, assert each `evaluate_revocation()`s without raising. AST, not
+> grep — `rg 'DP-LIVE-003'` matches docstrings that NAME an id without emitting it. Include a `len(ids) >= 10`
+> guard-the-guard assertion, or a renamed keyword makes the whole test suite pass vacuously (zero collected ids, zero
+> failures).
+>
+> **This session's extension is a SECOND, independent arm, not a modification of the above** — the AST walk above can
+> only ever see a `registry_id=` keyword argument; an emitter that bypasses `route_finding()` entirely (like
+> `assert_consolidator_healthy`'s bare `log_event()` was, before this session's fix) has no such literal to extract, so
+> the walk structurally cannot catch that failure mode. Build the second arm alongside the first, not gated on it
+> landing first — it does not depend on the peer's guard existing.
+>
+> **Batching guidance (peer session, measured)**: the shared host's QG governor's per-repo sub-cap is NOT FIFO — a
+> 42-minute wait was measured overtaken by runs aged 1:42 and 5:01, so every extra gate cycle is a fresh lottery, not a
+> queue position. Finish every edit across BOTH repos (unified-api-contracts + deployment-service) first, gate ONCE over
+> the whole batch, then make per-unit commits from that green tree — not gate-commit-gate-commit, which under current
+> contention costs 4 waits instead of 1.
+>
+> **Shared-checkout note, and how this session's OWN plan edits were actually lost to it today**: slot 4's UAC and PM
+> checkouts both currently hold other sessions' WIP. This session's local uncommitted edits to THIS plan file (a
+> cron-host finding + a prediction-pipeline-vm.sh verification writeup, both re-applied above/below after being silently
+> overwritten by an incoming `git pull` while staged-but-uncommitted — recovered from this session's own conversation
+> context, not lost, but a real live instance of exactly the "stale local content" trap named earlier in this log)
+> confirms: scope `--files` by name, never `git add -A`, and run `scripts/plan-hygiene/check_plan_stale_base.sh` before
+> committing any plan — it is live in precommit now and catches the silent-revert case plain todo-counting misses. (If
+> `test_pretooluse_slot_collision_guard.bats` fails under BATS, that is the fixed-as-of-`27979ca518` load flake, not a
+> new break.)
 
 > **📏 COVERAGE NUMBERS CORRECTED 2026-08-14 — I got this wrong twice, both times by counting the wrong thing.** First I
 > reported "179/184 covered" by counting launchers that SOURCE `launcher_common.sh`; that lib only MENTIONS the wrapper
@@ -164,14 +280,92 @@ source:
       Recover: restore the blob and re-run quickmerge on a quiet host, or use the sanctioned `IGNORE_TIMEOUT=true` since
       the content is already verified green.
 
-- [ ] [CODE] P1. **Admission-gate coverage is 173/186 launchers — the real gap is the 8 AWS-path launchers** (measured
-      2026-08-14). Only launchers routing through `setup-data-pipeline-vm.sh` → `vm-exec-with-gcs-tee.sh` get the
-      admission check and the heartbeat drain poll; the 158 that use `launcher_common.sh`'s `lc_` helper get the
-      LIGHTWEIGHT observability snippet, which deliberately omits the tarball+venv+heartbeat-daemon install and
-      therefore has neither gate. The two sets overlap, so the honest statement is: the canonical path is gated, the
-      lightweight path is not, and a per-launcher census is needed to say which real VMs are uncovered. Either add the
-      admission check to the `lc_` helper (it needs no venv — it can curl the marker) or document the lightweight path
-      as deliberately ungated. Repo: deployment-service.
+> **OPERATOR DECISION 2026-08-15 — migrate the lightweight `lc_`-helper launchers onto `vm-exec-with-gcs-tee.sh`**,
+> rather than duplicating an admission check into the lightweight path or accepting it as permanently ungated. Removes
+> the second, ungated launch path entirely instead of growing a parallel gate implementation for it.
+
+> **CENSUS CORRECTED 2026-08-15 — the "158" figure was wrong, methodology error.** Grepping for any launcher that
+> `source`s `launcher_common.sh` (162 hits) or contains the substring `lc_` (171 hits) counts launchers using ANY of its
+> 20 shared `lc_*` helpers (singleton locks, tarball-pin writes, gcloud-create wrappers — used by canonical-path
+> launchers too), not specifically the lightweight-observability opt-out. The actual signal is a launcher calling
+> `lc_log_upload_trap_block`/`lc_log_upload_continuous_block` — the SSOT function whose own docstring names it "the
+> lightweight equivalent for launchers that inline their own startup script" instead of routing through
+> `vm-exec-with-gcs-tee.sh`. `grep -l 'lc_log_upload_trap_block\|lc_log_upload_continuous_block' launch-*.sh` → **12**,
+> not 158. Of those 12, read in full (headers + one level of delegation):
+>
+> - **1 genuine migration candidate**: `launch-prediction-pipeline-vm.sh` — a real multi-stage MDPS→features backfill
+>   that inlines its own startup script. This is the launcher the admission gate's threat model ("download into a
+>   manifest that never updates") actually describes.
+> - **2 false positives — wrapper scripts whose real data work is already gated**:
+>   `launch-expected-universe-v2- historical-backfill-vm.sh` and `launch-features-sports-parallel-backfill-vm.sh` (also
+>   independently DEPRECATED, superseded by `launch-features-vm.sh`, "will be archived") only use the lightweight
+>   snippet for their OWN orchestrator-process observability — the actual per-chunk data downloads happen on CHILD VMs
+>   launched via `launch-expected-universe-v2-vm.sh` / `launch-features-vm.sh`, both confirmed
+>   (`grep -l setup-data-pipeline-vm.sh`) to already route through the canonical gated path. Migrating the wrapper would
+>   gate nothing new.
+> - **2 not data-capture launchers at all** — the admission-gate concept doesn't apply: `launch-planning-vm.sh` (the
+>   orchestrator/dashboard infra host) and `launch-pipeline-e2e-check-driver-vm.sh` (an orchestration driver that itself
+>   downloads nothing; the VMs it launches go through their own already-gated launchers).
+> - **5 long-lived cron-HOST VMs, a different risk shape**: `launch-cefi-fwd-daily-cron-vm.sh`,
+>   `launch-cefi-onchain-fwd-daily-cron-vm.sh`, `launch-cefi-perp-funding-daily-cron-vm.sh`,
+>   `launch-tradfi-fwd-daily-cron-vm.sh`, `launch-funding-ensemble-daily-cron-host.sh`. These are ALWAYS-ON VMs that
+>   fire a daily job in-place, not one-shot VMs launched fresh into a manifest snapshot — the marker-hold admission
+>   model (block launch, not block an already-running host's next tick) may not fit this shape at all. Needs an operator
+>   call, not a mechanical migration.
+> - **2 validation harnesses**, lower urgency: `launch-aave-lending-rate-validation-vm.sh`,
+>   `launch-amm-golden-fixture-validation-vm.sh` — read + compute a validation report rather than repeatedly
+>   re-downloading into a stale manifest.
+>
+> Net: the real, currently-actionable migration scope is **one launcher** (`launch-prediction-pipeline-vm.sh`), not 158
+> — no plan-split needed. The cron-host question is a separate, smaller operator decision, tracked as its own todo below
+> rather than bundled into "migrate everything."
+
+- [ ] [CODE] P1. **Migrate `launch-prediction-pipeline-vm.sh` onto `vm-exec-with-gcs-tee.sh`.** The one genuine
+      lightweight-launcher migration candidate found by the corrected census above — a real multi-stage backfill (MDPS
+      tick→OHLCV, features-cross-instrument, features-delta-one) inlining its own startup script instead of the
+      canonical gated path. Needs its workload invocation adapted to the tarball-based CLI entrypoint model
+      `setup-data-pipeline-vm.sh` expects, then a real VM launch verified end-to-end (boot, admission-gate check,
+      workload completion) per the VM-launcher runbook's no-fire-and-forget rule — not a blind find/replace. Repo:
+      deployment-service. **2026-08-15 — CODE WRITTEN + LIVE-VERIFIED, NOT YET SHIPPED (uncommitted local diff — held
+      deliberately this session, re-typed here after the working copy was silently overwritten by an incoming pull
+      mid-session; see the shared-checkout note above).** New `elif [[ "$VM_TASK" == "prediction-pipeline" ]]` branch in
+      `setup-data-pipeline-vm.sh` (writes a runner script mirroring the launcher's original 3-stage per-date loop, then
+      `_launch_with_tee`s it — inherits the admission-gate check + drain poll for free);
+      `launch-prediction- pipeline-vm.sh` rewritten to drop its own bespoke tarball build (now installs from the
+      centrally-built tarballs via compound `VM_SERVICE=market_data_processing_service+features_service`, same pattern
+      `launch-mdps-features-live.sh` already uses) and route through the canonical `setup-data-pipeline-vm.sh` path.
+      `bash -n` clean, `shellcheck --severity=error` clean (the exact check `test_shellcheck_no_errors` runs). **Real
+      1-day smoke VM launched and verified** (`prediction-pipeline-smoke-test`, 2026-08-01 range): confirmed via
+      `gcloud compute instances describe --format=json(metadata)` that VM_TASK/VM_SERVICE/dates landed correctly, and
+      via the VM's own `run.log` (read through UTL's `download_from_storage` — subprocess `gsutil` is guardrail-blocked
+      for ad-hoc reads too, not just committed code) that the NEW dispatch branch fired
+      (`bash /home/ikennaigboaka/workspace/prediction_pipeline_loop.sh`, not the old generic-fallback's
+      `python -m market_data_processing_service+features_service` literal-module-path bug), STAGE 1 started, and the
+      real MDPS CLI connected to GCP, listed 2259 real trade files for 2026-08-01, and loaded 174,501 real prediction
+      instruments before legitimately blocking on a live consolidator-merge lock (documented, expected behavior). No
+      `admission HELD` — expected, nothing currently holds the prediction asset_group; proves the wiring reaches the
+      gate, not that the gate blocks (needs a live hold to observe, out of scope for a smoke test). **Real trap hit and
+      fixed along the way**: a `run.log` read right after re-launching returned the PRIOR failed attempt's content
+      byte-for-byte (same-looking `deployment_id`, made it look like nothing had changed) — the GCS blob PERSISTS from a
+      prior run until the new run's `heartbeat_daemon.py` uploader overwrites it, so an early read after relaunch can
+      silently return stale evidence; always cross-check `deployment_id`/instance `creationTimestamp` before trusting
+      log content as "this run's". **Remaining before shipping**: run the full `quality-gates.sh` (deferred this
+      session, not yet run on these 2 files — batch it with the UAC/guard work above per the peer's QG-sweep guidance),
+      quickmerge, then flip this checkbox with the real commit sha.
+- [x] ✅ [OPERATOR] P2. **Marker-hold admission model applies to long-lived cron-HOST VMs — VERIFIED ALREADY SATISFIED,
+      no code change needed.** Traced all 5 cron-HOST launchers' (`launch-cefi-fwd-daily-cron-vm.sh` + 4 siblings)
+      actual daily trigger: none run the data work in-place on the host. Each cron.d entry `bash`-invokes a SEPARATE
+      child launcher fresh every day (`cefi-fwd-daily-cron` → `launch-cefi-forward-poll.sh`;
+      `cefi-onchain-fwd-daily-cron` → `launch-cefi-onchain-forward-poll.sh`; `cefi-perp-funding-daily-cron` →
+      `launch-features-vm.sh`; `tradfi-fwd-daily-cron` → `launch-tradfi-forward-poll.sh`;
+      `funding-ensemble-daily-cron-host` → `launch-funding-ensemble-paper-cron-vm.sh`), and every one of those 5 child
+      launchers already sets `startup-script-url=gs://.../setup-data-pipeline-vm.sh` (confirmed via
+      `grep -l setup-data-pipeline-vm.sh` on each) — the SAME canonical path whose shared `vm-exec-with-gcs-tee.sh`
+      wrapper runs the admission check unconditionally for every `VM_TASK` branch (by design: "wired into the shared
+      wrapper... so a new launcher cannot forget to opt in", `revocation_admission_cli.py`'s own docstring). The
+      cron-HOST VM itself correctly uses the lightweight snippet (it does no data work, just idles + fires cron — the
+      earlier census's read on it was right); the actual work each day is already admission-gated, one layer down. Repo:
+      unified-trading-pm (decision, this entry) — no deployment-service change needed.
 - [x] ✅ [CODE] P1. **`DP-CATALOG-001` (catalogue-stale) now stamps `upstream_entity`.** —
       **deployment-service@2cc79b2a7c.** `meta_watchers.check_catalogue_freshness` now sets
       `details["upstream_entity"] = "instrument-catalog"`, the registered UAC entity type
@@ -180,33 +374,46 @@ source:
       `dependency_revocation.py`), so this closes a real dormant path: `route_finding()` was already reached, the policy
       already said HOLD, only the target resolution was empty. Test updated (`test_catalogue_stale_emits_critical` now
       asserts the stamped field). Repo: deployment-service.
-- [ ] [CODE] P0. **`DP-MANIFEST-001` — the operator's own named "money-burn" scenario — cannot actuate at all, and the
-      gap is deeper than a missing field.** Found 2026-08-14 correcting the todo above: `meta_watchers` has no
-      `check_consolidator_liveness` function (that name never existed under that spelling). The codex table's actual
-      DP-MANIFEST-001 emitter is `assert_consolidator_healthy` in **`unified-trading-library`**
-      (`unified_trading_library/monitors/consolidator_liveness.py`), which calls UTL's bare `log_event()` — confirmed by
-      reading it: `log_event` writes to the event-log spine (GCS/PubSub), NOT a `PipelineFinding`, and never reaches
-      deployment-service's `escalation.route_finding()`. Confirmed via
-      `grep -rn 'registry_id="DP-MANIFEST-001"' deployment_service/` → zero hits outside tests: this alert has **no
-      production `route_finding()` call site at all**, so it cannot be armed by anything this plan already shipped — it
-      never gets as far as `targets_for_finding()`. **Second, independent problem**: even a wired emitter would resolve
-      zero fan-out targets, because `"manifest-consolidator"` is not a registered `upstream_entity_type` in
-      `unified_api_contracts.instruments_preflight_dag` at all — the only 5 registered values are `fixtures` / `teams` /
-      `instrument-catalog` / `canonical_question_group_registry` / `instruments`
-      (`grep -n upstream_entity_type= instruments_preflight_dag.py`). `DP-WATCHER-004` (accidental scheduler pause, same
-      `_HOLD` policy, comment: "same dependent action" as DP-MANIFEST-001) DOES reach `route_finding()` today
-      (`meta_watchers._emit` call site in `consolidator_scheduler_watcher.py`) but hits the identical second problem —
-      stamping `upstream_entity` on it would be a no-op until the entity is registered. The closest thing that DOES
-      reach `route_finding()` with a real target-resolvable shape is `consolidator_oom_watcher.check_consolidator_oom`
-      (registry_id `DP-WATCHER-005`, OOM-only variant, details carry `asset_group` not `vm_name`/`upstream_entity` —
-      same dormancy). **This is a design decision, not a mechanical stamp**: either (a) add `manifest-consolidator` as a
-      real `upstream_entity_type` with a `PreflightRequirement` per asset_group in UAC (cross-repo, changes the
-      admission-gate semantics, needs an operator call on whether "manifest freshness" is a preflight requirement the
-      same way `fixtures`/`teams` are), or (b) give deployment-service its own non-OOM-gated
-      consolidator-heartbeat-staleness watcher that emits a real `PipelineFinding(registry_id="DP-MANIFEST-001")`
-      through `route_finding()`, mirroring `check_catalogue_freshness`'s shape, and use `vm_name`/family-style
-      resolution (bucket → asset_group → prefix family, no entity graph needed) instead of the entity-fan-out path.
-      Repo: unified-trading-library (read), deployment-service (fix), unified-api-contracts (if option a).
+
+> **OPERATOR DECISION 2026-08-15 — `DP-MANIFEST-001`/`DP-WATCHER-004` resolve SELF-SCOPED, no UAC entity-graph
+> registration.** Verified topology first: each manifest-consolidator instance maps 1:1 to one
+> `(asset_group, market-data|instruments)` pair (`_BUCKET_PREFIX_TO_SCHEDULER_KEY_KIND` × `_KNOWN_ASSET_GROUPS` in
+> `consolidator_liveness.py`) — it is not a fleet-wide shared surface the way `dependent_asset_groups()`'s own docstring
+> speculatively describes. A stale consolidator only ever needs to hold its OWN asset_group's launches, the same shape
+> as a dead VM holding its own family. Registering `"manifest-consolidator"` as an `upstream_entity_type` in UAC's
+> `instruments_preflight_dag.py` was rejected: cross-repo, and it would stretch that graph's meaning (which today means
+> "this admission-gate check requires entity X fresh") to cover something that isn't a per-preflight-trigger dependency
+> at all. **Wiring reuses UTL's existing reader** — `consolidator_liveness.py`'s per-bucket stale/paused-reason logic
+> (`REASON_SCHEDULER_PAUSED` / `REASON_HEARTBEAT_STALE`) is already built and tested; deployment-service's sweep calls
+> it and wraps the result into a `PipelineFinding`, rather than re-deriving staleness from scratch a second time.
+> deployment-service already depends on UTL everywhere, so this is the normal dependency direction, not a new one.
+
+- [x] ✅ [CODE] P0. **Wire `DP-MANIFEST-001` into `route_finding()` by reusing UTL's consolidator-liveness reader.** —
+      **deployment-service@e766285059.** New `consolidator_heartbeat_watcher.py` calls
+      `ConsolidatorLivenessMonitor.check()` (the read-only per-bucket probe, NOT `.check_and_emit()` — avoids
+      double-emitting through UTL's own `log_event()` channel) for both `market_data_bucket`/`instruments_store_bucket`
+      per asset_group, and emits `PipelineFinding(registry_id="DP-MANIFEST-001", ...)` through
+      `meta_watchers.emit_finding` (the PUBLIC alias — `_emit` directly would have tripped basedpyright
+      `reportPrivateUsage` and pushed the ratchet from 1259→1260, caught by running `--lint` separately while the shared
+      host's memory pressure blocked `--test`). **One deviation from the plan as written**: `tier=AUTO_RECOVER`, not
+      `PAGE_OPERATOR` — matches the codex table's own "auto-recover (re-merge) then page" and reuses the SAME
+      `_recover_consolidator` actuator `consolidator_oom_watcher` already wires (no `details["oom"]` here, so the
+      relaunch stays same-tier). Mirrors `check_catalogue_freshness`'s consecutive-miss gate. Wired into `cli.py`'s
+      sweep. Tests: 4 new (`test_consolidator_heartbeat_*`). Repo: deployment-service.
+- [x] ✅ [CODE] P0. **Add self-scoped `asset_group`-only target resolution to `targets_for_finding()`.** —
+      **deployment-service@e766285059.** New `elif` branch in `targets_for_finding()` (admission-scoped actions only —
+      DEPS_DRAIN excluded, matches the operator's target-granularity ruling since asset_group-only has no VM to drain):
+      resolves via `prefix_families_for([asset_group.value])` when no `vm_name`/`upstream_entity` is given.
+      `consolidator_scheduler_watcher.check_consolidator_scheduler_paused` now stamps `details["asset_group"]` via a
+      reverse-lookup against `meta_targets.consolidator_scheduler_job`/`consolidator_instruments_scheduler_job` (name
+      construction, not string-parsing — can't drift from the real naming convention), closing DP-WATCHER-004 too. **A
+      second, adjacent bug found while wiring this**: `escalation._apply_revocation()` never threaded `asset_group`
+      through to `targets_for_finding()` AT ALL — meaning the already-shipped DP-CATALOG-001 fix
+      (`deployment-service@2cc79b2a7c`) was fanning out FLEET-WIDE (`asset_group=None` → every dependent asset_group)
+      instead of scoped to the specific AG whose catalogue was actually found stale. Fixed in the same commit:
+      extracts + safely converts `details["asset_group"]` (degrades to `None` on an unrecognised value, never raises).
+      Tests: 2 new for the threading fix, 2 for the self-scoped path, 1 for the fan-out-vs-self-unit precedence. Repo:
+      deployment-service.
 
 ## Progress Log
 
@@ -272,3 +479,168 @@ tested, and collectively inert: the revocation actuator (no caller), the depende
 health prober (no injected probe). Each passed review because each layer was genuinely finished. The cheap defence is an
 anti-inertness guard per layer — assert the thing has a non-test caller — and it belongs with the component, not in a
 checklist.
+
+### 2026-08-15 — two traps worth not re-learning
+
+**Prettier reformats conflict markers into valid markdown, defeating a naive grep.** A stash-pop conflict in this file
+left a seven-angle-bracket "Stashed changes" marker, which prettier rewrote into a markdown blockquote by putting a
+space between every bracket. An anchored grep for the raw marker then reported **zero markers** on a file that plainly
+had them, and I relayed that "0 markers" result as fact. The repo's own `scripts/plan-hygiene/check_conflict_markers.sh`
+catches it because it normalises whitespace first. Use it; do not hand-roll the check. Downstream cost of the false
+negative: the resolution kept BOTH the flipped and unflipped copies of one todo, so the plan briefly claimed the AWS
+gate was simultaneously landed and not landed.
+
+**The stale-local-content trap is real, and `check_todo_regression.sh` is what catches it.** This slot's copy of this
+plan was ~16h stale. A peer session had, in the meantime, both FIXED the catalogue-stale `upstream_entity` gap and filed
+a far deeper P0 todo tracing `DP-MANIFEST-001` to `assert_consolidator_healthy` in unified-trading-library (it calls
+bare `log_event()`, never reaches `route_finding()`, so that alert has no production call site at all — and
+`"manifest-consolidator"` is not even a registered `upstream_entity_type`). Editing the stale copy and pushing would
+have silently reverted both, with **no conflict signal** — exactly what CLAUDE.md's "full-file staging overwrites, not
+merges" warns about. The todo-regression check flagged `origin=9 current=8` and stopped it. Two rules earned here:
+`git diff origin/<branch> -- <path>` BEFORE pushing an edited plan, and treat a todo-count drop as a real loss until
+proven otherwise.
+
+**Corollary on inheriting a dead session's WIP.** The 16h-stale local edit was correctly inheritable by the liveness
+rule, and inheriting it would still have been wrong — because "not actively held" is not the same as "still accurate".
+Verify an inherited finding against the CURRENT origin before committing it: two of that note's three specifics had
+already been overtaken.
+
+### 2026-08-15 — resumption prompt (Step 8b): name the full goalposts, not just the next todo
+
+Per `/cursor-configs/skills/pre-compact/SKILL.md` § Step 8b (added this session — a standing requirement now, not a
+one-off, and mirrored generically into `agents/RULES.md` § 0b so it reaches worker/escalation/plan_health-family
+sessions too, not just this main/review session). Umbrella goal: the alert-driven-revocation mechanism fully armed —
+every emitted DP identity registered, every target resolvable, the guard that keeps it that way in place, and both plans
+in this chain closed and archived. Governing documents:
+
+- `/plans/active/revocation_arming_2026_08_14.md` — this plan, the active child
+- `/plans/active/alert_driven_dependency_revocation_2026_08_12.md` — the parent; cannot archive until this child closes
+- `/plans/active/issues/alert_driven_revocation_policy_gaps_2026_08_14.md` — tracks 2 of the items below; same
+  underlying work as the parent plan's copies, don't do it twice
+
+Open items across the chain, deduplicated, in priority order:
+
+1. **[CODE] P0 — actionable now.** Register the 7 emitted-but-unregistered DP ids (`DP-WATCHER-005/006`, `DP-VM-012`,
+   `DP-LIVE-001/002/003/004`) into `unified-api-contracts/canonical/crosscutting/dependency_revocation.py`'s
+   `DP_FAILURE_MODE_ACTIONS`, after the `DP-WATCHER-004` entry. Ready-to-paste text was produced and verified this
+   session (not repeated here — regenerate against current `evaluate_revocation()` behavior if this entry has aged).
+   Don't touch the two deliberate `_NONE`s (`DP-WATCHER-006`, `DP-LIVE-004`) without a fresh operator ruling.
+2. **[CODE] P1 — actionable now.** Build the two-arm `test_registry_id_closed_set.py` guard in `deployment-service`: arm
+   1 AST-walks `data_pipeline_monitors/**.py` for every `registry_id=` literal and asserts each resolves via
+   `evaluate_revocation()` (`len(ids) >= 10` guard-the-guard); arm 2 catches emitters that bypass `route_finding()`
+   entirely, which arm 1 structurally can't see.
+3. **[CODE] P1 — actionable now, code already written.** Ship the `launch-prediction-pipeline-vm.sh` migration onto the
+   canonical `setup-data-pipeline-vm.sh` admission-gated path. Code is written and live-verified (real smoke VM boot
+   confirmed the new `VM_TASK=prediction-pipeline` dispatch branch, the admission-gate wiring, and real MDPS work
+   against prod GCS data) but sits as an **uncommitted local diff** in this slot's `deployment-service` checkout
+   (`scripts/vm/setup-data-pipeline-vm.sh`, `scripts/vm/launch-prediction-pipeline-vm.sh`) — verify it's still there
+   before assuming it needs redoing. Just needs the gate run + quickmerge + this checkbox flipped with the real sha.
+4. **[SCRIPT] P0 — blocked-on-infra.** p95/max shard-duration measurement needs a slot with the runtime env wired or a
+   VM-side run, not fixable from a bare dev checkout. Leave open and say so if still blocked.
+5. **[CODE] P2 — actionable now, needs a design call.** FLEET_HALT/MaintenanceWindow double-page risk: either route
+   `_pause_schedulers` through `scheduler_maintenance.pause_for_maintenance()` (needs a `bucket`/`surface`/
+   `ttl_minutes` design decision) or confirm via a live sweep it never double-pages and close as a non-issue.
+6. **[CODE] P2 — operator-owned.** Does DP-WATCHER-001/002 need a FLEET_HALT mapping, or is the deadman poster's
+   independence from the revocation layer the intended design? Ask; do not decide unilaterally.
+7. **[DOC] P3 — actionable now, read-only.** Re-confirm the DP-MANIFEST-001/DP-CATALOG-001 HOLD-vs-DRAIN policy still
+   holds against the original "money-burn" framing.
+8. **[REVIEW] P0 — the final closing action.** Once every item above (and everything already open in the parent plan) is
+   done and unlocked, archive `alert_driven_dependency_revocation_2026_08_12.md` per the standard archival ritual, then
+   close this plan too.
+
+**Batching guidance**: gate once across `unified-api-contracts` + `deployment-service` before any commit — the shared QG
+governor measured NOT FIFO (a 42-minute wait was overtaken by younger runs); every extra gate cycle is a fresh lottery,
+not a queue position. Ship code via `quickmerge.sh --agent --files '<paths>'`, docs via `safe-doc-push.sh`. Flip this
+checkbox in the same turn as any ship.
+
+### 2026-08-15 (later) — items 1-3 and 5-7 done or code-complete; ship blocked on a 30+ min QG queue
+
+**Item 1 — the 7 DP ids, done.** All seven pasted into `DP_FAILURE_MODE_ACTIONS` in
+`unified-api-contracts/canonical/crosscutting/dependency_revocation.py`, right after `DP-WATCHER-004`. Verified live via
+UAC's own `.venv`: `evaluate_revocation()` resolves all seven without raising, matching the intended action exactly
+(`DP-WATCHER-005`→HOLD, `DP-WATCHER-006`→NONE, `DP-VM-012`→HOLD, `DP-LIVE-001`→HOLD, `DP-LIVE-002`→DRAIN,
+`DP-LIVE-003`→HOLD, `DP-LIVE-004`→NONE). **A second required fix, not in the original todo text**: UAC's own
+`test_dependency_revocation.py` carries a `_DP_REGISTRY_IDS` frozenset transcribed from
+`codex/05-infrastructure/data-pipeline-alerts.registry.yaml`, asserted
+`set(DP_FAILURE_MODE_ACTIONS) == _DP_REGISTRY_IDS` — adding the 7 ids without updating this literal fails that test.
+Added the 7 to the frozenset, with a comment flagging that registry.yaml itself is now the STALE side (also discovered:
+`DP-VM-012` is separately already registered in `alerting/rules.py`'s `_dp_rule()` table — a THIRD, independent registry
+— confirming registry.yaml, not the code, is what's out of sync). Did not touch registry.yaml or alerting/rules.py this
+session — that is real, separate, cross-registry reconciliation work, tracked as a new todo below rather than silently
+expanded into.
+
+**Item 2 — the two-arm guard, done, `deployment-service/tests/unit/test_registry_id_closed_set.py`.** Arm 1 matches the
+peer's spec exactly (AST-walk, string-constant `registry_id=` literals, `len(ids) >= 10` guard-the-guard) — 18 literal
+ids collected and parametrized (not 17: `DP-WATCHER-006` uses a module-level `Final` constant reference at its call
+site, not a literal, so arm 1 correctly can't see it — out of scope by its own stated spec). Arm 2 is this session's own
+design: any module in `data_pipeline_monitors/` with a REAL (AST-verified, not docstring-mentioned) call to
+`log_event()` must also reach `route_finding()`/`emit_finding()` somewhere in the same file — "reach" covers both
+calling it and DEFINING it (`escalation.py`'s own case). Verified non-vacuous against 3 known legitimate exceptions
+already in the codebase (FLEET_HALT announcement, the DP-RESOLVED bookend, the DP-VM-005 auto-kill announcement) and a
+synthesized failing case. 21 tests, all green standalone.
+
+**Item 3 — prediction-pipeline-vm.sh migration — still code-complete from the prior session, verified intact again
+(`bash -n` clean both files, dispatch branch present).**
+
+**A new item found and fixed while implementing item 5 (FLEET_HALT double-page) — a real, separate pre-existing gap**:
+`RevocationActuator.release()` never resumes the schedulers `_pause_schedulers` paused — only Phase-4/5's generic
+marker-clearing runs. A FLEET_HALT-paused cron stays paused until someone resumes it by hand. Not fixed here (changes
+actual pause/resume behavior, needs its own dedicated pass with tests) — added as a new P2 todo below.
+
+**Item 5 — FLEET_HALT double-page, CODE-COMPLETE, not yet shippable as originally scoped.** Operator chose "route
+through `pause_for_maintenance()`" (surface scoped per-target, `locked_by="revocation-actuator"`, `ttl_minutes=1440`
+matching the 24h actuation budget window). Implementing it hit a REAL, measured import cycle: this module sits BELOW
+`escalation.py` (which imports it); `consolidator_scheduler_watcher.consolidator_job_to_bucket()` — the function that
+resolves a job name to its owning bucket, needed to register the window in the right place — sits behind
+`meta_targets.py` → `meta_watchers.py` → `escalation.py` → back to this module. Attempted the direct import first; it
+raised `ImportError: cannot import name 'EscalationTier' from partially initialized module`, confirmed not a typo.
+Duplicating the resolution logic locally was considered and rejected: `meta_targets.scheduler_env_prefix()` carries a
+real historical bug fix baked into it (a raw-vs-short environment-word conflation that 404'd against the live Scheduler
+API until fixed 2026-07-27) — a hand-copied duplicate risks silently reintroducing exactly that class of bug, and I have
+no live GCS credentials in this checkout to test the acquire/pause round-trip end-to-end anyway. **Resolved via
+dependency injection, matching this exact module's own established pattern** (`pauser`/`visibility` are already injected
+optional callables): `RevocationActuator.__init__` gained
+`consolidator_bucket_resolver: Callable[[], Mapping[str, str]] | None = None`. `None` (every current production call
+site) is a verified no-op — FLEET_HALT pauses exactly as it did before this session, no regression.
+`_register_maintenance_windows()` groups jobs by bucket (one window object per bucket, not additive — acquiring an
+unrelated live window in the same bucket for a DIFFERENT `locked_by` raises `MaintenanceWindowActiveError`, caught and
+logged, never blocking the real pause). 3 new tests (no-resolver-is-a-no-op, resolver-groups-and-acquires-correctly,
+acquisition-failure-never-blocks-the-pause) — 28/28 green in `test_revocation_actuator.py`. **What's NOT done**:
+actually wiring the real resolver in at a production call site (`escalation.py:775` or `meta_watchers.py:195`) — both
+sit inside the same cycle, so the wiring itself needs either untangling `meta_targets.py`'s (unrelated, for 3 other
+functions) import of `meta_watchers.py`, or a narrower cycle-safe accessor. New P2 todo below; the class is ready for
+either fix to just pass the argument.
+
+**Item 6 — DP-WATCHER-001/002, CLOSED, doc-only.** Operator confirmed reading (b) — the same conclusion the parent
+plan's own 2026-08-14 entry already reached independently. Closed the issue-doc's duplicate copy (finding 4) with a
+cross-reference rather than re-deciding it.
+
+**Item 7 — HOLD-vs-DRAIN re-confirmation, CLOSED, doc-only.** Same duplication shape as item 6: the parent plan's
+2026-08-14 Phase-6 reconciliation entry already answered this against the exact money-burn framing. Closed the
+issue-doc's copy (finding 3) with a cross-reference and a 2026-08-15 freshness check (nothing shipped since touches
+either policy assignment).
+
+**Item 4 (p95 measurement) — re-attempted, still BLOCKED-CREDENTIALS, unchanged.** `state_bucket()` still resolves to
+`''` in this slot. Left open.
+
+**Two new follow-up todos, both P2, both real, neither silently absorbed into this pass:**
+
+- [ ] [CODE] P2. Wire `consolidator_bucket_resolver=consolidator_scheduler_watcher.consolidator_job_to_bucket` into
+      `RevocationActuator`'s production construction site(s) (`escalation.py:775`, `meta_watchers.py:195`). Blocked on
+      breaking the import cycle first — either extract `meta_targets.py`'s 3 `FreshnessTarget`-building functions
+      (`catalogue_targets`/`high_attempted_failed_targets`/`cron_targets`, the ONLY things in that file needing
+      `meta_watchers`) to a separate module, or find another cycle-safe path. Repo: deployment-service.
+- [ ] [CODE] P2. `RevocationActuator.release()` never resumes a FLEET_HALT's paused schedulers — only the generic
+      marker-clearing runs. A halt that opens has no code path that closes the actual pause; someone must resume it by
+      hand. Needs its own pass (this is pause/resume behavior, not a nicety) with real tests. Repo: deployment-service.
+
+**Live peer-contention note, worth carrying forward**: mid-session, `ps aux` surfaced a peer process (started ~30 min
+before this session's own UAC gate run) already quickmerging a SPLIT of `dependency_revocation.py` into
+`_dependency_revocation_types.py` + `_dependency_revocation_policies.py` (file-size-ratchet driven, unrelated to this
+session's content addition) — the exact file this session's item 1 edited. Checked `origin/live-defi-rollout` before
+proceeding: the split had NOT landed. This session's own UAC `quality-gates.sh` run then queued 1770s+ (29.5+ min) at
+`[qg-governor] unified-api-contracts sub-cap 1` — very plausibly the SAME peer holding that repo's single gate slot.
+Deliberately did not force/dispatch around the queue (measured elsewhere in this plan: ad-hoc dispatches into a
+contended slot cost a 2h+ livelock). If the split lands before this session's own quickmerge, the 7-id addition will
+need to be re-applied against whichever new file hosts `DP_FAILURE_MODE_ACTIONS`, verified via
+`git diff origin/<branch> -- <path>` before pushing, per the stale-local-content rule — not blind-retried.

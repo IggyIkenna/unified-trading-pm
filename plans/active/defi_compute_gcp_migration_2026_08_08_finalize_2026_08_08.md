@@ -113,3 +113,5 @@ source: >-
 - **2026-08-08**: Drafted alongside `defi_compute_gcp_migration_2026_08_08.md` when that plan was flipped from
   `assigned_vm: NA` to `planning` per operator directive. `status: active` immediately (not `draft`) — machine-held from
   actually dispatching via `depends_on` + `gate_on_depends: true` until the parent plan's 18 todos are done.
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries), still accurate — a code-free finalize gate, the set
+  is the gated parent plan + the 6-step archival ritual's codex/format SSOTs.

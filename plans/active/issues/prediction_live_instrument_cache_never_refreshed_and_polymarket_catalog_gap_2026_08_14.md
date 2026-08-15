@@ -97,6 +97,24 @@ and is flagged, not diagnosed further, here.
       producing after 2026-08-05 while the KALSHI writer (same service, same day-range) kept working — DoD: a named
       cause (scheduler paused for this one venue, an upstream Polymarket API change, a silent per-venue exception) and
       either a fix or, if operator-gated, a retag. Owner: instruments-service (not this session's ownership scope).
+      **2026-08-15 re-verification (empty_confirmed_and_coverage_correctness_audit_2026_08_15.md todo "Verify prediction
+      Polymarket catalog-gap vs SOURCE_RETURNED_ZERO absorption")**: re-measured live via
+      `get_storage_client().list_blobs()` against `instruments-store-pred-prd-central-element-323112` —
+      08-03/08-05/08-08 all have 62-63 POLYMARKET blobs, **08-10/08-13/08-14/08-15 all have exactly 0** (KALSHI stayed
+      healthy every date, 43→50 growing). So the actual break point is between 08-08 and 08-10, not immediately after
+      08-05 as this doc's title states — retitle/update once root-caused. Separately confirmed Polymarket's Gamma API
+      itself is NOT the cause: a live unauthenticated `GET gamma-api.polymarket.com/markets?closed=false&active=true`
+      today returned HTTP 200 with normal market payloads (full field set present, no schema drift) — so this is NOT an
+      upstream API outage or a Gamma schema-drift silently emptying `PolymarketGammaMarket.model_validate()` (which
+      would be a genuine SOURCE_RETURNED_ZERO-absorption bug, the same class just fixed for cefi Deribit/Hyperliquid and
+      the 5 defi oracle collectors — see this audit plan's completed todos). Checked for a Cloud Scheduler job or GH
+      Actions workflow driving this catalogue build (`gcloud scheduler jobs list`, grep of `.github/workflows/*.yml` for
+      `schedule:` + prediction/catalog) — found neither, so the trigger mechanism lives outside this repo's visible
+      config (Cloud Run job / VM cron / agent-orchestrator dispatch) and needs whoever owns that trigger to check
+      whether the POLYMARKET leg of the job is still being invoked at all. Zero blobs (not a thin/partial catalogue) is
+      more consistent with the job never running for this venue since 08-10 than with an in-code SOURCE_RETURNED_ZERO
+      absorption bug — but this is not fully proven without reading the job's own run logs, which this session did not
+      have access to.
 - [ ] [CODE] P2. Diagnose why zero of 319,820 Polymarket rows were ever `captured` even during the 08-03..08-05 window
       when the catalog WAS fresh — is this the same fallthrough class as Finding A on the parity plan, or a distinct
       connector bug? Owner: `market_tick_data_service/live/connectors/**` (a different worker's ownership on

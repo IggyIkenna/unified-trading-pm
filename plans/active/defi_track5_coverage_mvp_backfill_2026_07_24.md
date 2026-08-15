@@ -215,3 +215,4 @@ the parent plan's Track 7 culled-venue ruling.
   real progress; other MVP data_types already complete (dex_pool_state 08-05, lending_indices 07-30, lst_rates 07-26,
   oracle_prices 08-03), dex_pool_swaps mid-flight (`mtds-dex-swaps-backfill`, 63k+ rows/shard). Todo 1's
   backfill-to-100% not yet reached — checkbox stays `[ ]` (genuine remaining work, not orphaned).
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).

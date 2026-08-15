@@ -51,8 +51,8 @@ parameterised by `--feature-family`. Subtree-merged with full per-repo history p
 predecessor repos are archived; new code lands in `features-service` only.
 
 This consolidation is a pre-requisite for
-[`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md) — the
-live-pipeline topology assumes a single Docker image deployed in two flavors (asset-scoped colocated with MDPS;
+[`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
+— the live-pipeline topology assumes a single Docker image deployed in two flavors (asset-scoped colocated with MDPS;
 cross-cutting standalone). Maintaining that topology against 8 separate image build + deploy pipelines is operationally
 infeasible against the 2026-05-23 cutover.
 
@@ -356,9 +356,9 @@ Doubles dep resolution + version drift; ONE flat list in `features-service/pypro
 `from features_service.<X> import ...`. | | Duplicate `LookaheadBiasError` / `BaseCalculator` per family | Use UTL lifts
 (Phase 5). Per-family inlines deleted in same commit as the UTL lift. | | Manual `/health` route in any family | Use the
 top-level aggregator. Family declares `_data_freshness` callback only. | | Family code that branches on
-`--mode batch                    | live` for logic | Live = batch. Mode switching is at the I/O seam (BroadcastSink vs
-ManifestWriter). | | New family without `feature_family` UAC enum + registry entry | Add to `FeatureFamily` +
-`FEATURE_GROUP_TO_FAMILY` first; sub-package is downstream of the schema. |
+`--mode batch | live` for logic | Live = batch. Mode switching is at the I/O seam (BroadcastSink vs ManifestWriter). | |
+New family without `feature_family` UAC enum + registry entry | Add to `FeatureFamily` + `FEATURE_GROUP_TO_FAMILY`
+first; sub-package is downstream of the schema. |
 
 ## Cross-references
 

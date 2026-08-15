@@ -58,7 +58,11 @@ context_scope:
       both, do not assume batch 3's wording matches the source doc's exact todo verbatim). Re-check for 0 remaining open
       todos in the source doc after flipping (unlikely — the 7 implementation-shaped items stay deferred per batch 1's
       precedent); do not archive the source doc unless it genuinely reaches 0. Done when: the source doc's corresponding
-      checkboxes are flipped with verified evidence.
+      checkboxes are flipped with verified evidence. **Conflict-check**:
+      `ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md` todo 4 (still open) also reconciles/touches this same
+      source doc's checkboxes for batch 1's work — coordinate or sequence if both finalize plans are ever worked
+      concurrently to avoid a same-file dispatch collision (independently flagged twice: this doc's own authoring pass,
+      and `plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md` Todos item 3, 2026-08-15).
 - [ ] [DOC] P3. Archive `ui_satellite_ao_dispatch_batch3_2026_08_09.md` via the standard 6-step ritual once todo 1 is
       done: archive banner → codex-alignment check → fix every corpus referrer → clear `locked_by` (confirm already
       empty). Done when: the plan is moved to `plans/archive/2026_08/`, every referrer resolves to the new path, and

@@ -125,7 +125,7 @@ is the open question below.
       now-confirmed-DELETED dedicated `perp-funding-{project}` bucket via a bare
       `pipeline_mode=batch_hyperliquid/asset_group=defi/...` shape; HYPERLIQUID was reclassified DeFi→CeFi 2026-07-06,
       so the LIVE write path (matching `perp_funding`'s own current write) is the CeFi partition path —
-      `build_cefi_partition_path(venue="HYPERLIQUID", instrument_type=InstrumentType.PERPETUAL,     data_type="perp_daily_ctx", day=..., pipeline_mode=...)`
+      `build_cefi_partition_path(venue="HYPERLIQUID", instrument_type=InstrumentType.PERPETUAL, data_type="perp_daily_ctx", day=..., pipeline_mode=...)`
       via `_write_hyperliquid_perp_funding_rows`'s own sharding pattern — written to
       `get_write_bucket_name("market_data", "cefi")`, registered through
       `DefiManifestRecorder(..., asset_group="cefi")`, exactly mirroring how `perp_funding` rows are produced today. (3)

@@ -35,6 +35,12 @@ execution_scope: local-only
 priority: P3
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/06-coding-standards/tool-call-batching.md,
+    /plans/archive/2026_08/issues/ao_kick_escalation_rate_limit_blind_force_kill_2026_08_14.md,
+    /plans/active/ao_consolidated_closeout_2026_08_12.md,
+  ]
 ---
 
 # agents/main.md's poll loop teaches sequential, non-batched turns

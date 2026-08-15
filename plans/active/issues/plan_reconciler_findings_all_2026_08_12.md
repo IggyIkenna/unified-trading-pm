@@ -90,9 +90,11 @@ idempotency guard silently no-ops re-park attempts (observed 4x/26x redundant re
       host cron). Both cite live evidence from different dates — reconcile which is current before relying on either.
       Part 2 (whether `deployment-service@bcf55c781`'s fix was actually redeployed to the Cloud Run Job image) is
       unaddressed by either doc — track separately.
-- [ ] [REVIEW] P2. `plans/active/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md` — a doc's 2026-08-08
-      Progress Log promises imminent archival of an all-`[x]`, unlocked doc still sitting in `plans/active/issues/` as
-      of this run — check current state and archive if still eligible.
+- [x] ✅ [REVIEW] P2. `plans/active/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md` — a doc's
+      2026-08-08 Progress Log promises imminent archival of an all-`[x]`, unlocked doc still sitting in
+      `plans/active/issues/` as of this run — check current state and archive if still eligible. **DONE (verified
+      2026-08-15, plan-reconcile cefi-tranche pass)**: already archived at
+      `plans/archive/2026_08/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md`.
 
 ## Section 2 — zero-checkbox docs (need conversion to tracked todos, or archival)
 
@@ -108,8 +110,10 @@ idempotency guard silently no-ops re-park attempts (observed 4x/26x redundant re
 - [ ] [OPERATOR] P2. `plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md` —
       decide the resolution path for the local-quality-gate-breach escalation coverage gap (fleet-wide detector +
       escalation wall type, vs accept as a known gap).
-- [ ] [DATA] P2. `plans/archive/issues/dp_vm_002_mdps_cefi_2021_silent_zero_false_positive_2026_08_11.md` — re-launch
-      the `mdps-cefi-2021-*` sharded backfill (resume from checkpoint, prior run killed mid-2021-01-04).
+- [x] ✅ [DATA] P2. `plans/archive/issues/dp_vm_002_mdps_cefi_2021_silent_zero_false_positive_2026_08_11.md` — re-launch
+      the `mdps-cefi-2021-*` sharded backfill (resume from checkpoint, prior run killed mid-2021-01-04). **DONE
+      (verified 2026-08-15, plan-reconcile cefi-tranche pass)**: source doc's own todo already flipped `[x]` 2026-08-12
+      (`/plan-reconcile, Section 2 zero-checkbox conversion`), `status: resolved`.
 - [ ] [OPERATOR] P3. `plans/active/issues/tradfi_smoke_290d_window_data_gap_2026_08_11.md` — decide tradfi 290-day
       honest-coverage strategy (3 options stated in doc, recommendation: accept INSUFFICIENT until tracked backfill
       lands).
@@ -173,25 +177,32 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       predates a later operator ruling, no cross-ref
 - [ ] [REVIEW] P3. (P3) plans/active/issues/live_pipeline_persistence_hot_path_decoupling_2026_06_24.md:13-16 — fragile
       YAML status split across scalar+comment lines
-- [ ] [REVIEW] P3. (P2) plans/active/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md:526-531 — see
-      Section 1 item on this doc
+- [x] ✅ [REVIEW] P3. (P2) plans/active/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md:526-531 — see
+      Section 1 item on this doc. **DONE (verified 2026-08-15)**: same fix as Section 1 — doc already archived.
 - [ ] [REVIEW] P3. (P3)
       plans/active/issues/cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md:3-5 —
       title staleness
 - [ ] [REVIEW] P3. (P3) plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md:30 — stale cross-ref
-- [ ] [REVIEW] P3. (P2)
+- [x] ✅ [REVIEW] P3. (P2)
       plans/active/issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md —
-      round5/round7/batch10 disagree on operator-gated status
+      round5/round7/batch10 disagree on operator-gated status. **DONE**: doc's own Progress Log already carries a "RULED
+      2026-08-12 (/plan-reconcile, operator interactive)" entry resolving this in favor of round5; confirmed 2026-08-15
+      — sole remaining open item is the unrelated `[DATA] P2` marker-format migration todo.
 - [ ] [REVIEW] P3. (P2) plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md — stale
       aggregated-sources digest entry
-- [ ] [REVIEW] P3. (P2) plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md — stale
-      `depends_on` gate pointing at a now-completed blocker
+- [x] ✅ [REVIEW] P3. (P2) plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md — stale
+      `depends_on` gate pointing at a now-completed blocker. **DONE (verified 2026-08-15, plan-reconcile cefi-tranche
+      pass)**: confirmed BOTH gating blockers (`cefi_lighter_zksync_systemic_collision_2026_08_08.md`,
+      `cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md`) are now resolved — logged a fresh Progress Log entry
+      on the doc itself pointing the next dispatch at the verify+archive sequence (not flipped here: running
+      `verify_cefi_canonical_4surface_2026_07_20.py` for hard evidence is out of scope for a doc-reconciliation pass).
 - [ ] [REVIEW] P3. (P2) plans/active/issues/mdps_multi_instrument_bundle_write_race_hypothesis_2026_08_09.md:4-5 — title
       still frames a hypothesis the doc's own body refuted
 - [ ] [REVIEW] P3. (P2) plans/active/issues/okx_futures_instid_marker_convention_mismatch_2026_07_30.md:166 — tag/prose
       mismatch ([DATA] P1 vs "tagging [OPERATOR] until decided")
-- [ ] [REVIEW] P3. (P3) plans/active/issues/upbit_cefi_data_gap_may_2026_2026_08_04.md:1-34 — missing required `status:`
-      frontmatter key
+- [x] ✅ [REVIEW] P3. (P3) plans/active/issues/upbit_cefi_data_gap_may_2026_2026_08_04.md:1-34 — missing required
+      `status:` frontmatter key. **DONE (verified 2026-08-15)**: frontmatter already carries `status: open` — stale
+      finding, already fixed by an earlier pass or never actually missing at the time of this check.
 - [ ] [REVIEW] P3. (P2) plans/active/issues/elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md — duplicate
       SLA-reissue decision tracked in two docs with different owners/priorities
 - [ ] [REVIEW] P3. (P3) plans/active/issues/elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md — frontmatter
@@ -208,8 +219,11 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       frontmatter/body status self-contradiction
 - [ ] [REVIEW] P3. (P2) plans/archive/2026_08/issues/plan_reconciler_findings_2026_08_07.md:73-75 — falsely attributes a
       shipped-commit citation to a different, unshipped todo
-- [ ] [REVIEW] P3. (P3) plans/active/github_actions_operator_gated_followups_2026_07_17.md:244 — "still unfixed"
-      present-tense claim contradicted by its own SSOT doc (3-of-4 fixes shipped)
+- [x] ✅ [REVIEW] P3. (P3) plans/active/github_actions_operator_gated_followups_2026_07_17.md:244 — "still unfixed"
+      present-tense claim contradicted by its own SSOT doc (3-of-4 fixes shipped). **VERIFIED RESOLVED 2026-08-15**: the
+      doc's own D3 row already carries a `CORRECTED 2026-08-12 (/plan-reconcile)` annotation stating
+      `digest-drift-sweep` is 3-of-4 fixed, only the `update-dependency-version.yml` cascade item remains open — the fix
+      landed same-day as the original finding, just after this compact log entry was compiled. No further action.
 - [ ] [REVIEW] P3. (P2) plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md:16 —
       frontmatter status:active vs all-todos-done body
 - [ ] [REVIEW] P3. (P3) plans/active/blocked_question_card_context_rendering_2026_08_10.md:29 — frontmatter last_updated
@@ -231,20 +245,34 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       Deferred-work table lists 2 items as unresolved that later Todos/Progress-Log entries close
 - [ ] [REVIEW] P3. (P3) plans/active/codex_violations_ratchet_to_five_2026_06_10.md:26 — stale
       `locked_by: live-defi-rollout` despite a documented operator unlock over a month prior
-- [ ] [REVIEW] P3. (P3) plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md:17 — "2nd" vs
-      "3rd" consecutive-VM count mismatch within the same doc
+- [x] ✅ [REVIEW] P3. (P3) plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md:17 — "2nd"
+      vs "3rd" consecutive-VM count mismatch within the same doc. **DONE**: doc's own summary already carries an inline
+      "CORRECTED 2026-08-12 /plan-reconcile: was 'second', contradicted this doc's own 'Pattern analysis' section below"
+      annotation — already fixed.
 - [ ] [REVIEW] P3. (P2) plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md:444 —
       disagrees with a sibling doc on whether the corpus-wide `locked_by: live-defi-rollout` placeholder is benign or a
-      bug
-- [ ] [REVIEW] P3. (P3) plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md:422 — stale
-      "needs todo 9's update" Codex-SSOTs line, todo 9 already done
+      bug. **CHECKED 2026-08-15**: still genuinely open — this doc's own text treats the lock as gating archival
+      specifically (citing `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`), while other corpus
+      docs (e.g. `deepseek_claude_blended_provider_routing_2026_07_28.md`) treat the identical lock signature as a known
+      placeholder-data bug. Genuine unresolved corpus-wide disagreement, not something this bounded pass can settle —
+      out of scope, left open.
+- [x] ✅ [REVIEW] P3. (P3) plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md:422 — stale
+      "needs todo 9's update" Codex-SSOTs line, todo 9 already done. **VERIFIED RESOLVED 2026-08-15**: the doc's own
+      Codex SSOTs section already carries a `CORRECTED 2026-08-12 (/plan-reconcile)` annotation stating todo 9's update
+      applied 2026-08-08 — fixed same-day as the original finding. No further action.
 - [ ] [REVIEW] P3. (P2) plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md —
       `locked_by: live-defi-rollout` placeholder-lock corpus-wide bug instance
 - [ ] [REVIEW] P3. (P3) plans/active/repo_scripts_governance_audit_2026_06_18.md — same placeholder-lock bug instance
-- [ ] [REVIEW] P3. (P2) plans/active/ci_pipeline_speed_and_cost_redesign_2026_08_05.md — headline "beaten by 10-50x"
-      contradicted by its own admitted ~7.5min pre-PR latency
-- [ ] [REVIEW] P3. (P2) plans/active/issues/tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md — audit entry
-      says "both open todos" but only 1 is actually unchecked
+- [x] ✅ [REVIEW] P3. (P2) plans/active/ci_pipeline_speed_and_cost_redesign_2026_08_05.md — headline "beaten by 10-50x"
+      contradicted by its own admitted ~7.5min pre-PR latency. **VERIFIED RESOLVED 2026-08-15**: the todo already
+      carries a `CORRECTED 2026-08-12 (/plan-reconcile)` annotation qualifying "open→merge" vs the ~7.5min pre-PR
+      promotion-cron latency as two different, non-conflicting spans — fixed same-day as the original finding. No
+      further action.
+- [x] ✅ [REVIEW] P3. (P2) plans/active/issues/tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md — audit entry
+      says "both open todos" but only 1 is actually unchecked. **VERIFIED RESOLVED 2026-08-15**: the doc's own
+      na-eligibility-audit Progress Log entry already carries a `CORRECTED 2026-08-12 (/plan-reconcile)` annotation
+      pinpointing the exact commit/timing (`unified-trading-pm@b53eade639` flipped todo 1 before the audit entry was
+      written) — fixed same-day as the original finding. No further action.
 - [ ] [REVIEW] P3. (P2)
       plans/active/issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md:116-118 —
       "DEFAULT-RULED" label presents an undecided design call as settled
@@ -261,8 +289,10 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       last_updated stale
 - [ ] [REVIEW] P3. (P2) plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md —
       "RESUME-runbook readiness" section stale since 2026-07-14, runbook was actually executed 2026-07-16
-- [ ] [REVIEW] P3. (P2) plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md:384-391 — 2 docs describe what
-      looks like the same EXTENDED-STARKNET backfill without cross-referencing
+- [x] ✅ [REVIEW] P3. (P2) plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md:384-391 — 2 docs describe
+      what looks like the same EXTENDED-STARKNET backfill without cross-referencing. **MOOT (verified 2026-08-15)**: doc
+      now has 0 open todos (all 38 `[x]`) — `archive_exempt: true` bridge (2026-08-12 placeholder-clearing), archival
+      deferred to a separate follow-on pass per that ruling's explicit scope; not archived here.
 - [ ] [REVIEW] P3. (P3) plans/active/data_completion_to_100_all_ag_2026_06_21.md:61-66 — self-removal-instruction banner
       still present after its own stated removal condition
 - [ ] [REVIEW] P3. (P3) plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md:27-28 —
@@ -337,12 +367,14 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       definition-of-done, inherently unbounded scope for an AO-dispatched todo
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/data_pipeline_check_mdps_features_2026_07_20.md — P0 todo has only a
       prose gate condition, no depends_on/gate_on_depends enforcement — risk of dispatch into a known-blocked wall
-- [ ] [DOC] P3. (codex-drift) plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md — uncertain whether codex
-      §4 correction (vs the shipped §8 fix) landed
+- [ ] [DOC] P3. (codex-drift) plans/archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md — uncertain
+      whether codex §4 correction (vs the shipped §8 fix) landed
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/defi_compute_gcp_migration_2026_08_08.md — destructive AWS ECS-cluster
       delete todo, no `[OPERATOR]` tag
-- [ ] [REVIEW] P3. (ao-readiness) plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md —
-      VM-launch todo tagged `[INFRA]` not `[OPERATOR]`
+- [x] ✅ [REVIEW] P3. (ao-readiness) plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md —
+      VM-launch todo tagged `[INFRA]` not `[OPERATOR]`. **DONE**: doc's own open todo already carries an explicit
+      self-justification note ("No `[OPERATOR]` tag needed (self-justified, per this doc's own na-eligibility-audit
+      round7 RECLASSIFY ruling above)") — verified 2026-08-15, tag is correct as-is.
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md — live
       production manifest rewrite on a twice-regressed sports surface, no `[OPERATOR]` tag
 - [ ] [REVIEW] P3. (ao-readiness)
@@ -372,16 +404,25 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       risk)
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md — see
       Section 2 (zero-checkbox)
-- [ ] [REVIEW] P3. (ao-readiness) plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md — VM-launch todo, no
-      `[OPERATOR]` tag, no inline idempotency statement
+- [x] ✅ [REVIEW] P3. (ao-readiness) plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md — VM-launch todo,
+      no `[OPERATOR]` tag, no inline idempotency statement. **MOOT (verified 2026-08-15)**: doc has 0 open todos (all
+      `[x]`) — no VM-launch todo remains to carry a tag.
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/solana_dex_pool_swaps_indexer_2026_08_08.md — low severity
-- [ ] [DOC] P3. (codex-drift) plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md — no evidence the Phase-2
-      codex correction on filename-stem contract ever shipped
+- [x] ✅ [DOC] P3. (codex-drift) plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md — no evidence the Phase-2
+      codex correction on filename-stem contract ever shipped. **DONE**: doc's own banner already shows
+      "RESOLVED-BY-REFERENCE 2026-07-29 (retag) — corrected 2026-08-12 (/plan-reconcile)" plus a 2026-08-12-dated
+      correction of stale leftover boilerplate on its sole todo; 0 open todos remain — verified 2026-08-15.
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/issues/tradfi_live_shard_atom_unknown_writer_2026_08_09.md — see Section
       1
-- [ ] [OPERATOR] P2. plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md — a sibling `sudo`
+- [x] ✅ [OPERATOR] P2. plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md — a sibling `sudo`
       instruction issue already fixed this run; the doc's claim that the codex SSOT was updated to remove the sudo HARD
-      RULE should be re-verified against live CLAUDE.md
+      RULE should be re-verified against live CLAUDE.md. **VERIFIED 2026-08-15**: the codex SSOT
+      (`/codex/04-architecture/agent-orchestrator-scheduled-jobs.md`) IS current ("NO sudo"). But CLAUDE.md's own § "AO
+      scheduled jobs" one-liner is now STALE (still says "re-run `sudo bash scripts/install-<job>-timer.sh`") — a real,
+      separate, evidence-backed finding NOT caught by the original re-verification ask. Per this skill's own
+      CLAUDE.md-edit blast-radius carve-out (gated regardless of trust mode), NOT auto-applied — tracked as a new
+      `- [ ] [DOCS] P3` todo directly in `ao_scheduled_job_reserve_and_staggering_2026_08_04.md` for an operator-gated
+      fix. `unified-trading-pm` (doc-only, this session).
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md — low severity
 - [ ] [DOC] P3. (codex-drift) plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md —
       codex-alignment fix claimed complete, partially true per a sibling doc — low severity, historical

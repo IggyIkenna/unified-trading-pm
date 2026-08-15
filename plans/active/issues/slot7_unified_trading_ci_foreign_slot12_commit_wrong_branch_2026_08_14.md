@@ -41,6 +41,8 @@ supersedes:
 superseded_by:
 resolved_by: ""
 last_updated: 2026-08-14
+context_scope:
+  [/codex/05-infrastructure/per-tab-worktrees.md, /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md]
 ---
 
 # slot-7's unified-trading-ci checkout: foreign slot-12 commit on the wrong branch
