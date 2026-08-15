@@ -65,6 +65,23 @@
 # show up as ADDED>0/DELETED>0 with no bearing on either exception's shape). Strictly safer than
 # the link-repoint exception: content is byte-identical, not merely a bounded path substitution.
 #
+# A FIFTH DOCUMENTED EXCEPTION (operator ruling 2026-08-15, BLK-a2710376, cross_cutting satellite
+# batch 13 dispatch): a staged diff to an already-over-cap doc confined to a SINGLE contiguous hunk
+# (one `@@` block) that replaces exactly ONE pre-existing todo's checkbox line with exactly ONE new
+# checkbox line (a real `- [ ]` -> `- [x]` flip, plus its evidence text) is allowed through. Root
+# problem this closes: a real checkbox flip always shows as delete-old-line(s)+add-new-line(s) in
+# git diff, so it can never satisfy the marker-append exception (DELETED=0) or the link-repoint
+# exception (content must be path-token-identical on every changed line) -- meaning NO checkbox
+# could ever be flipped again on a doc once it crossed the hard cap, a previously-undiscovered
+# deadlock of the same shape as the 2026-08-08 link-repoint deadlock, but for the checkbox-flip
+# case specifically (only surfaced once a live doc first crossed 1000L while still carrying open
+# todos, 2026-08-15). Narrowly scoped so it does NOT reopen the 2026-08-02 anti-sneak-in-new-work
+# loophole (that ruling targeted the UNSCOPED marker-append exception adding arbitrary new checkbox
+# lines anywhere in the file): (a) the diff must be exactly ONE hunk -- confined to one todo block,
+# never scattered edits across the file -- and (b) exactly one checkbox line is removed and exactly
+# one checkbox line is added within that hunk (a genuine 1-for-1 flip, never a net add/remove of
+# todo count). A second, unrelated todo edited in the same commit needs its own separate commit.
+#
 # ONE DOCUMENTED EXCEPTION (operator ruling 2026-07-30): a doc with ZERO OPEN TODOS archives via
 # the normal 6-step ritual regardless of how far over its cap it is. The cap exists to stop a LIVE
 # plan growing into an unreadable hub; it has no purpose on a finished doc that is on its way OUT
@@ -166,6 +183,7 @@ for f in "${TARGETS[@]}"; do
     SMALL_MARKER_APPEND=""
     LINK_REPOINT_EDIT=""
     WHITESPACE_ONLY_REPAIR=""
+    SINGLE_TODO_FLIP=""
     if [ -n "$SCOPED" ]; then
       # Whitespace-only-repair exception (operator ruling 2026-08-15,
       # BLK-d942f2f7, unified-trading-pm promote_qg_failure PR #3197): a staged diff to an
@@ -241,6 +259,27 @@ for f in "${TARGETS[@]}"; do
           LINK_REPOINT_EDIT="1"
         fi
       fi
+      # Single-todo-checkbox-flip exception (see policy comment above, operator ruling 2026-08-15,
+      # BLK-a2710376): only when neither exception above already fired, the file was already over
+      # cap BEFORE this commit too (mirrors the marker-append PRE_COMMIT_LINES guard -- a doc newly
+      # crossing the cap via this same commit is a real regression, not covered), the diff is
+      # exactly one hunk, and exactly one checkbox line is removed and exactly one is added within
+      # it.
+      if [ -z "$SMALL_MARKER_APPEND" ] && [ -z "$LINK_REPOINT_EDIT" ] && [ -n "$ADDED" ] && [ -n "$DELETED" ]; then
+        PRE_COMMIT_LINES_FLIP=$(( lines - ADDED + DELETED ))
+        if [ "$PRE_COMMIT_LINES_FLIP" -ge "$PLAN_HARD_CAP" ]; then
+          RAW_DIFF_FLIP="$(git -C "$PM_DIR" diff --cached -- "$f" 2>/dev/null || true)"
+          HUNK_COUNT="$(echo "$RAW_DIFF_FLIP" | { grep -cE '^@@ ' || true; })"
+          HUNK_COUNT="${HUNK_COUNT:-0}"
+          REMOVED_CHECKBOXES="$(echo "$RAW_DIFF_FLIP" | { grep -cE '^-\s*-\s*\[.\]' || true; })"
+          REMOVED_CHECKBOXES="${REMOVED_CHECKBOXES:-0}"
+          ADDED_CHECKBOXES="$(echo "$RAW_DIFF_FLIP" | { grep -cE '^\+\s*-\s*\[.\]' || true; })"
+          ADDED_CHECKBOXES="${ADDED_CHECKBOXES:-0}"
+          if [ "$HUNK_COUNT" = "1" ] && [ "$REMOVED_CHECKBOXES" = "1" ] && [ "$ADDED_CHECKBOXES" = "1" ]; then
+            SINGLE_TODO_FLIP="1"
+          fi
+        fi
+      fi
     fi
     if [ -n "$WHITESPACE_ONLY_REPAIR" ]; then
       echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — whitespace-only repair, \`git diff -w\` empty, operator ruling 2026-08-15)"
@@ -248,6 +287,8 @@ for f in "${TARGETS[@]}"; do
       echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — small non-checkbox marker append only, operator ruling 2026-08-02)"
     elif [ -n "$LINK_REPOINT_EDIT" ]; then
       echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — bounded same-line link-repoint edit only, operator ruling 2026-08-09)"
+    elif [ -n "$SINGLE_TODO_FLIP" ]; then
+      echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — single-todo checkbox flip, one hunk, operator ruling 2026-08-15 BLK-a2710376)"
     else
       echo "  HARD    $name  ${lines}L  todos=${todos}"
       HARD_FAILURES=$(( HARD_FAILURES + 1 ))

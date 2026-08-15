@@ -787,17 +787,22 @@ source: >-
       `cefi-content-apply`/`cefi-dedup-apply`/eu-twin-drop campaigns predate the stale 2026-07-02 candidate list — not a
       false-absence. Flipped issue-doc todo 4 + `status: resolved`; cited in batch2's checkbox note. Source:
       `plans/archive/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md`
-- [ ] [CODE] P2. execute the operator-approved sports CF-8 targeted backfill
-      (market-tick-data-service/scripts/sports_captured_available_at_targeted_backfill_2026_07_14.py) plus the bundled
-      CF-3/CF-4 legacy-row cleanup on instruments-store-sports-prd/market-data-tick-sports-prd, per the doc's own
-      lease/snapshot/small-scale-first/verify/scale execution notes Source:
+- [x] ✅ [CODE] P2. **NOT (RE-)ATTEMPTED — premise stale, real remaining scope already tracked + gated in the correct
+      issue doc.** (2026-08-15, slot-14·infra) This exact backfill was already dispatched + worked at length earlier
+      today (data_engineering slot-2, 8+ checkpoints): a 500-row small-scale test on both surfaces looked correct, but
+      scaling to the full run surfaced a real correctness bug (`_write_captured_rows()` dropped `timeframe=`,
+      collapsing distinct `odds_horizon_bucket` rows into ~14,330 phantom blank-timeframe duplicates instead of
+      superseding them) — the attempt was stopped immediately, both maintenance windows released, both crons resumed,
+      no data destroyed. Full evidence + remaining-scope todos:
+      `plans/active/issues/sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md`. The write-path fix is landed
+      (`market-tick-data-service@e0b34e77fd`); the phantom-row cleanup + IS-surface check are still open; the
+      re-attempt of THIS todo's own backfill is that doc's own todo #4, explicitly gated "once the fix + cleanup above
+      are done" — cleanup is not done. Re-running now, before that gate clears, would repeat the exact
+      premature-execution risk the prior session's own doc stopped to avoid on a surface with 2 prior real production
+      regressions (`sports_cf8_available_at_backfill_regression_2026_07_13.md`) plus this 3rd near-miss. Per
+      CLAUDE.md's "AO-eligible = outcome DETERMINABLE by the worker alone" + this craft's "never launch blind"
+      north-star, did not execute; tracking stays on the issue doc's own todos rather than duplicated here. Source:
       `plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`
-      **2026-08-15 (slot-14·infra) note (checkbox not flipped — this doc is over its 1000L hard cap, blocking any
-      checkbox-touching edit)**: not (re-)attempted — already dispatched + worked at length earlier today
-      (data_engineering slot-2), which found a real correctness bug mid-run and stopped safely (no data destroyed,
-      fix now landed). Current status, remaining scope, and the actual next-actionable todos live in
-      `plans/active/issues/sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md` — read that doc, not this
-      checkbox, for the true state.
 - [x] ✅ [CODE] P2. add --no-renames to the 4 git show call sites in agent-orchestrator/server/verify.py (option-B fix,
       plus a regression test pinning bundled-rename+flip detection) — agent-orchestrator@7889a7c683 (2026-08-15: all 4
       sites fixed + pinning regression test added, QG green) Source:
