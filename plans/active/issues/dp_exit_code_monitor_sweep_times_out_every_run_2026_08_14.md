@@ -105,11 +105,16 @@ that plan.
 
 ## Todos
 
-- [ ] [INFRA] P0. Stop the sweep hitting the 1800s task timeout — the run.log fetch is best-effort snippet enrichment
-      (`if snippet: finding.details["run_log_tail"] = ...`) yet costs up to 30s per VM, so bound it fleet-wide (a total
-      enrichment budget, skip-on-first-timeout, or drop the fetch for `gone_no_capture` where the log is usually the
-      thing that is missing) — DoD: an execution of `uts-prod-dp-exit-code-monitor` completes without a
-      `Terminating task` line, cited by its execution log.
+- [x] [INFRA] P0. ✅ Stop the sweep hitting the 1800s task timeout — resolved via a different implementation path than
+      the abandoned local commit below (5 commits landed 2026-08-13T18:07Z→2026-08-14T20:38Z: parallelize per-VM GCS
+      reads, dedup redundant run.log downloads, mitigate GCS throttling, prefetch+checkpoint incrementally, cap run.log
+      reads to a bounded tail). **Evidence** (measured 2026-08-15, live): deploy `cloudbuild=b60b2180` (SUCCESS,
+      completed 2026-08-14T22:52:48Z) is the first image carrying `e69f8aed`. Executions before it still failed (`fwgt2`
+      21:00Z, `jd9zn` 22:00Z — both `failedCount=1`, hit-or-near the 1800s cap); executions after it succeeded and got
+      dramatically faster: `r5m7h` (23:00Z) completed in 329.8s citing "classify/route/emit phase took 238.9s; total
+      sweep 329.8s (16 running, 56 terminated)" with zero `Terminating task` lines; `9wgqf` (00:00Z, 2026-08-15)
+      succeeded in ~86s. deployment-service commit `f13d5859` (the commit this issue was originally blocked on landing)
+      was never pushed and is superseded — do not resume pushing it, the problem it targeted is independently resolved.
 - [ ] [INFRA] P0. Make a truncated sweep loud instead of silent — if the fleet is not fully walked, the run must say so
       (count examined vs total, non-zero exit or an explicit alert) — DoD: a deliberately shortened run emits a "sweep
       incomplete, N of M examined" signal rather than looking identical to a clean pass.
@@ -117,10 +122,14 @@ that plan.
       job runs on a `*/5` schedule, but executions are hourly (09:00Z, 10:00Z, 11:00Z, 12:00Z starts) — DoD: either the
       Cloud Scheduler cron or the plan's claim is corrected, stating which was wrong; a 30-minute run on a `*/5` cadence
       would also overlap itself, which is worth checking for while there.
-- [ ] [INFRA] P1. Re-run the live confirmation once build `4a6adee9` (or its successor carrying `@79864746` +
-      `@375835a9`) has deployed — DoD: a `DP-REVOCATION-*` line in an execution log plus a marker under
-      `vm-census/admission-hold/`, per the parent plan's OPERATOR todo; this issue's (a) and (b) results were pure
-      deploy lag and should be re-measured, not carried forward.
+- [x] [INFRA] P1. ✅ Re-run the live confirmation once build `4a6adee9` (or its successor carrying `@79864746` +
+      `@375835a9`) has deployed — **Evidence** (measured 2026-08-15, live): confirmed via `r5m7h`/`9wgqf` execution logs
+      — real actuation firing, e.g.
+      `revocation deps_hold delivered for tradfi-bf-cme-ohlcv-1m- -> ['vm-census/admission-hold/tradfi-bf-cme-ohlcv-1m-.json'] (DP-VM-001)`
+      and a `deps_drain` delivery with a `DRAIN_REQUESTED.json` marker (DP-VM-002). The arming commits are live and
+      actuating. **New defect found in the same pass** (not this issue's scope): the release half of the bookend fails
+      on every call — filed separately as
+      [`dp_revocation_release_never_resolves_identity_2026_08_15.md`](/plans/active/issues/dp_revocation_release_never_resolves_identity_2026_08_15.md).
 
 ## Progress Log
 
@@ -131,11 +140,11 @@ that plan.
 `/plans/active/revocation_arming_2026_08_14.md` — **unified-trading-pm@951a53725d**, verified on origin. At hourly
 cadence a 20-minute budgeted sweep also cannot overlap itself, which the `*/5` reading would have implied.
 
-**Both P0 code todos are WRITTEN, GATE-GREEN and COMMITTED LOCALLY — but NOT PUSHED.** Commit
-`deployment-service@f13d5859` carries the classify-phase budget (`_CLASSIFY_PHASE_BUDGET_SECONDS = 1200`), the
-`DP_SWEEP_TRUNCATED` error, and `tests/unit/test_exit_code_sweep_budget.py` (3 tests, all passing).
-`bash scripts/quality-gates.sh --no-fix` = **✅ ALL QUALITY GATES PASSED (321s), 0 failures** on exactly that tree. The
-checkboxes above stay `- [ ]` deliberately: nothing is on origin, so ticking them would be a false-progress claim.
+**Both P0 code todos are WRITTEN, GATE-GREEN and COMMITTED LOCALLY — but NOT PUSHED.** Commit deployment-service commit
+`f13d5859` carries the classify-phase budget (`_CLASSIFY_PHASE_BUDGET_SECONDS = 1200`), the `DP_SWEEP_TRUNCATED` error,
+and `tests/unit/test_exit_code_sweep_budget.py` (3 tests, all passing). `bash scripts/quality-gates.sh --no-fix` = **✅
+ALL QUALITY GATES PASSED (321s), 0 failures** on exactly that tree. The checkboxes above stay `- [ ]` deliberately:
+nothing is on origin, so ticking them would be a false-progress claim.
 
 **Why it is not pushed — blocked on another owner, not on the change.** Three distinct gates fired in sequence, each a
 real result rather than a flake:
@@ -183,16 +192,30 @@ consolidator's TTL.**
   fresh_, not _find the old script_. Deliberately not promoted: throwaway harnesses against a shape that no longer
   exists.
 
-## Deferred work after 2026-08-14
+### 2026-08-15 — live re-confirmation (slot 15)
 
-| Item                                                                     | State / why deferred                                                                                | Blocked on                                                                               |
-| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Push `deployment-service@f13d5859` (sweep budget + `DP_SWEEP_TRUNCATED`) | **Cannot be done yet** — code complete, gates green, committed locally, `ahead=1`                   | Peers' uncommitted edits in `unified-api-contracts` + `unified-trading-library` clearing |
-| Live confirmation of revocation (parent plan's `[OPERATOR]` P0)          | **Cannot be done yet** — deployed image predates the arming commits (build 07:34Z vs arming 11:40Z) | Cloud Build `4a6adee9` or successor deploying                                            |
-| Sweep throughput fix (tail-range reads / parallelise the classify loop)  | **Not done** — real work, unblocked; the budget makes truncation honest, not rare                   | nobody                                                                                   |
-| Route `DP_SWEEP_TRUNCATED` to a registered alert code                    | **Not done** — needs an entry in the alerting registry SSOT another team owns                       | nobody, but coordinate                                                                   |
-| Prediction live-capture stall                                            | **Not done** — diagnosed, filed separately                                                          | its own issue doc                                                                        |
+Re-ran the live confirmation this doc's Todo 4 called for. **Todo 1 (P0 timeout) and Todo 4 (P1 live confirmation) both
+CONFIRMED RESOLVED** with direct measurement (see their checkboxes above for full evidence) — the timeout fix landed via
+a different, independent implementation path (5 commits ending `e69f8aed`, deployed as `cloudbuild=b60b2180` at
+2026-08-14T22:52:48Z) than the abandoned `f13d5859` commit this doc originally tracked; that commit was never in this
+checkout and should not be resumed. Revocation actuation is live and firing correctly (real `admission-hold` markers).
+While verifying actuation, found a NEW, distinct defect: the release half of the bookend fails on every call
+(`evaluate_revocation()` given a bare event string it doesn't recognize, because the alert-key tracking never retained
+the `registry_id` the deliver path used) — filed as its own issue,
+[`dp_revocation_release_never_resolves_identity_2026_08_15.md`](/plans/active/issues/dp_revocation_release_never_resolves_identity_2026_08_15.md),
+since fixing it needs a design call on where the identity is threaded from and this doc's own scope is the timeout, not
+the release bookend.
 
-**Recommended next item**: the throughput fix. The budget stops the job failing every hour, but until per-VM cost drops
-the sweep will truncate every tick and revocation coverage stays partial — and it will now say so out loud, which will
-look like a new problem if nobody expects it.
+## Deferred work after 2026-08-15
+
+| Item                                                                            | State / why deferred                                                                                         | Blocked on                                                                 |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| Push deployment-service commit `f13d5859` (sweep budget + `DP_SWEEP_TRUNCATED`) | **SUPERSEDED, do not resume** — the timeout it targeted is independently fixed (Todo 1 evidence, 2026-08-15) | n/a — was never in this checkout, stranded elsewhere                       |
+| Live confirmation of revocation (parent plan's `[OPERATOR]` P0)                 | **DONE 2026-08-15** — see Todo 4 evidence                                                                    | n/a                                                                        |
+| Make truncated sweep loud instead of silent (Todo 2)                            | **Not done** — real work, unblocked; lower urgency now the sweep completes in ~330s vs an 1800s budget       | nobody                                                                     |
+| Route `DP_SWEEP_TRUNCATED` to a registered alert code                           | **Not done** — needs an entry in the alerting registry SSOT another team owns                                | nobody, but coordinate                                                     |
+| Revocation release fails on every call (new, 2026-08-15)                        | **Not done** — real work, unblocked; needs a design call on the identity-space fix, filed separately         | nobody — see `dp_revocation_release_never_resolves_identity_2026_08_15.md` |
+| Prediction live-capture stall                                                   | **Not done** — diagnosed, filed separately                                                                   | its own issue doc                                                          |
+
+**Recommended next item**: the revocation-release fix (new issue doc above). The timeout that motivated this doc is now
+resolved and confirmed live; held VMs currently can never auto-clear, which is the more urgent remaining gap.
