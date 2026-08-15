@@ -549,19 +549,19 @@ source: >-
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 
       **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed
-              separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
-              (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
-              exists and is live — no code change needed — but a real corpus-wide query
-              (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
-              the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
-              filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
-              data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
-              worker-determinable outcome for one ~1h dispatch. Filed
-              `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
-              (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
-              class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
-              backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
-              multi-AG backfill into this single dispatch.
+                  separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
+                  (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
+                  exists and is live — no code change needed — but a real corpus-wide query
+                  (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
+                  the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
+                  filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
+                  data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
+                  worker-determinable outcome for one ~1h dispatch. Filed
+                  `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+                  (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
+                  class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
+                  backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
+                  multi-AG backfill into this single dispatch.
 
 - [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
       operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
@@ -586,7 +586,18 @@ source: >-
       catalogue monotonicity check Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 - [ ] [CODE] P2. DeFi swallow-fixes (CF-11 class) in DefiManifestRecorder pass-through, liquidations_handler.py,
       polymarket_adapter Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
-- [ ] [CODE] P2. Restore the dex_swaps_handler.py adapter-contract QG-5.70 baseline Source:
+- [x] ✅ [CODE] P2. **STALE PREMISE — no regression exists; adapter-contract baseline already met, nothing to restore.**
+      (2026-08-15, slot-22·infra) The QG check this todo names is STEP 5.83 (`no_adapter_contract_regression.sh` →
+      `check_adapter_contract_regression.py`, run under the MTDS `quality-gates.sh`
+      `[5.70/6] IS-MTDS CONTRACT INTEGRITY` section header — the todo's "QG-5.70" citation is that section label, not
+      PM's separate STEP-5.70 `pipeline_mode=` check). `adapter_contract_baseline.yaml` requires `dex_swaps_handler.py`
+      ≥4 contract calls (`classify_venue_error`/`ADAPTER_FETCH_FAILED`/`record_captured`/
+      `record_empty`/`record_failed`/etc.); a fresh count of the live file finds exactly 4 (3× `record_captured` + 1×
+      `record_failed`), and a live run of `check_adapter_contract_regression.py --workspace-root .` exits 0 ("362
+      baselined file(s) at or above minimum") with no violation for this file. Git history shows the file has shipped
+      15+ commits since this todo was filed 2026-06-21 (retry/backoff, catalogue-preflight, progress checkpointing,
+      empty-shard routing fixes), any of which could have restored the count — regardless of when, the file is at parity
+      with its baseline today. No code change made; nothing to restore. Source:
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 - [ ] [CODE] P2. Flip data-pipeline-alerts.registry.yaml modes verbose->active as each escalation tier is confirmed
       wired Source: `plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md`
