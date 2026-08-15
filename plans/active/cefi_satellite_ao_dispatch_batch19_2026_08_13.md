@@ -368,8 +368,16 @@ source: >-
       from this batch unless manifest-canonical or migration-related. The underlying item remains open in its own source
       doc, untouched by this batch/commit. Source:
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
-- [ ] [CODE] P2. Fix empty instrument_id in the chain-bundle path (live_workers_streaming.py writing no manifest row)
-      Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
+- [x] ✅ [CODE] P2. Fix empty instrument_id in the chain-bundle path (live_workers_streaming.py writing no manifest row)
+      Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md` —
+      **market-data-processing-service@ef9e38b9a4.** `_record_streaming_empty_timeframe`'s early-return gated the
+      manifest write on BOTH `bucket_name` AND `instrument_id`; the eager chain path (`live_workers_chain.py`'s
+      `_process_all_timeframes`) never gated on `instrument_id`, only on the resolved manifest bucket, and
+      `_resolve_empty_failed_shard_tuple("")` degrades gracefully (`venue` falls back to `input_venue` or `"UNKNOWN"`).
+      Dropped the `instrument_id` half of the guard to match that convention, so the shard is no longer silently absent
+      from the manifest (WARNING-only). Updated the stale regression test asserting the old no-write behavior + added a
+      fully-degenerate (`instrument_id=""`, `input_venue=None`) case. QG green (2435 passed, 2 skipped,
+      sentinel=970122bafe921968d21c31dd6c5ead618a231e9b).
 - [x] ✅ [CODE] P2. Promote _ShardedState out of relaunch_backfill_vm.py into a shared helper **CLOSED —
       already-satisfied (2026-08-15, slot-17·backend_engineer).** This exact extraction already shipped
       `deployment-service@0c38c00d` (2026-08-10) as part of the "Durable, race-free relaunch state" fix — verified live
