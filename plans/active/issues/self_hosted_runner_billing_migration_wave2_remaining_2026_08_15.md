@@ -69,7 +69,7 @@ depends_on: []
 
 - [ ] [SCRIPT] P1. Ship market-data-processing-service's prepared workflow change
       (`.github/workflows/quality-gates-v2.yml` + `notify-slack.yml`, already rolled out locally, uncommitted) via
-      `bash scripts/quickmerge.sh "ci: route quality-gates-v2 to self-hosted glue runner (private-repo billing migration)"     --agent --files '.github/workflows/quality-gates-v2.yml .github/workflows/notify-slack.yml'`.
+      `bash scripts/quickmerge.sh "ci: route quality-gates-v2 to self-hosted glue runner (private-repo billing migration)" --agent --files '.github/workflows/quality-gates-v2.yml .github/workflows/notify-slack.yml'`.
       Was next in the ship queue; blocked by todo 2 below (pre-flight dependency check on unified-api-contracts). Repo:
       market-data-processing-service.
 - [ ] [OPERATOR] P1. instruments-service's and market-data-processing-service's quickmerge pre-flight audit BLOCKS on
@@ -84,7 +84,7 @@ depends_on: []
       `self_hosted_runner_labels: ""` (empty) in its `.github/workflows/quality-gates-v2.yml` despite being one of the 4
       repos in the "second batch" this session ran `rollout-workflow-templates.sh --repo unified-trading-library`
       against. Re-run the rollout
-      (`cd unified-trading-pm && bash scripts/workflow-templates/rollout-workflow-templates.sh     --repo unified-trading-library`),
+      (`cd unified-trading-pm && bash scripts/workflow-templates/rollout-workflow-templates.sh --repo unified-trading-library`),
       verify the label actually lands this time, then ship via quickmerge (same pattern as the others). Repo:
       unified-trading-library.
 - [ ] [SCRIPT] P1. Ship deployment-service's prepared workflow change (same pattern as todo 1). Note: repo also has an
@@ -97,7 +97,7 @@ depends_on: []
 - [ ] [SCRIPT] P2. Verify a live self-hosted CI run actually passes for each of the 7 repos post-ship — trigger or wait
       for a real `quality-gates-v2` run and confirm it claims a runner on `ci-escalation-runner-vm-1` (not
       `ubuntu-latest`) and goes green, not just that the YAML routes there.
-      `gh run list --repo IggyIkenna/<repo>     --workflow quality-gates-v2.yml --limit 3` then inspect the run's job
+      `gh run list --repo IggyIkenna/<repo> --workflow quality-gates-v2.yml --limit 3` then inspect the run's job
       runner. Repo: all 7.
 - [ ] [DOC] P2. Update `/codex/07-security/self-hosted-runner-security-posture.md` — the "Current self-hosted repo set"
       table (line ~60-67, last re-derived 2026-08-09) names only the original 7 always-on repos (`agent-orchestrator` ·

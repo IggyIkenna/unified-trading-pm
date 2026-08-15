@@ -230,3 +230,14 @@ Mechanical, bounded remediation — not a design/judgment call:
   rather than reactively repairing it) — that tooling is shared fleet-wide, and a change to it is exactly the kind of
   cross-cutting, SSOT-level call CLAUDE.md reserves for an explicit operator decision, not a mid-poll-tick patch. Left
   as an explicit open todo below rather than actioned.
+
+- **ci_reconciler 2026-08-15 (agt-4873d4, slot 8) — repair pass, gate was blocking ALL `unified-trading-pm` CI
+  (push-to-LDR and every promote-PR) at the time of this run.** Live corpus count was **2120 violating lines vs baseline
+  1639** (481 excess) — root-caused via `/ci-reconcile`'s § 1(g) whole-corpus-scalar-ratchet classification, matching
+  this doc's own predicted regrowth pattern exactly. Ran `fix_prosewrap_padding.py` over the full live-flagged list (80
+  files) in one pass; `git diff -w` confirmed zero semantic change (whitespace-only); re-ran the gate: **0 violating
+  lines**. Ran `--update-baseline` (1639 → 0). **Not flipping the todo checkboxes below** — per this doc's own logged
+  history, hand-repair has a measured one-commit half-life and the count will very likely climb again on ordinary
+  unrelated `plans/active/*.md` edits; leaving both mechanical todos open matches how prior repair passes in this log
+  were recorded. The P2 `[OPERATOR]` source-level-fix todo is unaffected by this pass (still open, still needs an
+  operator direction).
