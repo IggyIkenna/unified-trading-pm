@@ -354,15 +354,17 @@ over all pending draft batches) that independently spot-verified every todo belo
       `perp-funding-prd-central-element-323112` (CANONICAL) are 404/deleted; script deleted — `e2e-testing@f0978fa469`.
       `data_completion_defi_2026_07_15.md`'s 2026-07-14 flagged finding closed by citation (new Progress Log entry, same
       date).
-- [ ] [DOC] P3. **Correct a stale status marker**: `instruments_docs_audit_outstanding_items_2026_07_08.md`'s C4 section
-      still reads `NEW`, but 3 of its 4 named Solana-adapter sites (Sanctum/Solblaze/Jito-Restaking) were fixed
+- [x] ✅ [DOC] P3. **Correct a stale status marker**: `instruments_docs_audit_outstanding_items_2026_07_08.md`'s C4
+      section still reads `NEW`, but 3 of its 4 named Solana-adapter sites (Sanctum/Solblaze/Jito-Restaking) were fixed
       2026-07-09 (the shipped code's own comments cite this exact issue doc's C4 section: `sanctum.py:4-5,158-159`,
       `solblaze.py:4-5,107-108`, `jito_restaking.py:8-9,148-153`), and the 4th (`drift.py`) is moot — the file no longer
       exists (DRIFT/PACIFICA purged by operator ruling 2026-07-16, per
       `defi_satellite_ao_dispatch_batch2_2026_07_26.md`). Repo: unified-trading-pm. Source:
       `instruments_docs_audit_outstanding_items_2026_07_08.md`. Done when: the C4 section's status reads `RESOLVED` with
       the 3-fixed/1-moot evidence cited, and the "~9 more adapters" sub-claim is either given fresh file:line evidence
-      or explicitly marked unverified (do not silently drop it).
+      or explicitly marked unverified (do not silently drop it). — **unified-trading-pm@(this commit)**. C4 re-verified
+      live (`sanctum.py`/`solblaze.py`/`jito_restaking.py` fix comments confirmed, `drift.py` confirmed absent) and
+      flipped to `RESOLVED 2026-07-09 (3 fixed, 1 moot)`; "~9 more adapters" left explicitly unverified.
 
 ## Deferred — conflict-parked, needs an operator ruling (2)
 
