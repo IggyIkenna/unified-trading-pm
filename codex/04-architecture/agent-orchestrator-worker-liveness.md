@@ -726,7 +726,7 @@ still only 8 showing `pane=working`.
 retry-cap check ahead of the pane diagnosis (or that adds a new early-return between "timeout elapsed" and "diagnose
 pane") silently reopens this exact false-page class — it will not show up as a test failure unless the test specifically
 asserts on ordering, since both branches remain individually correct in isolation; the bug is only in their sequence.
-Source: `plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md`.
+Source: `plans/archive/2026_08/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md`.
 
 ---
 

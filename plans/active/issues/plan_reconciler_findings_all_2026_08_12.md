@@ -414,7 +414,7 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       correction of stale leftover boilerplate on its sole todo; 0 open todos remain — verified 2026-08-15.
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/issues/tradfi_live_shard_atom_unknown_writer_2026_08_09.md — see Section
       1
-- [x] ✅ [OPERATOR] P2. plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md — a sibling `sudo`
+- [x] ✅ [OPERATOR] P2. plans/archive/2026_08/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md — a sibling `sudo`
       instruction issue already fixed this run; the doc's claim that the codex SSOT was updated to remove the sudo HARD
       RULE should be re-verified against live CLAUDE.md. **VERIFIED 2026-08-15**: the codex SSOT
       (`/codex/04-architecture/agent-orchestrator-scheduled-jobs.md`) IS current ("NO sudo"). But CLAUDE.md's own § "AO

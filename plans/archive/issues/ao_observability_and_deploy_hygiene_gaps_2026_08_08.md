@@ -27,7 +27,7 @@ tags: [agent-orchestrator, observability, activity-log, deploy, self-pull, false
 related:
   [
     /plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md,
-    /plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md,
+    /plans/archive/2026_08/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
     ao_consolidated_closeout_2026_07_25,

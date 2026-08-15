@@ -230,7 +230,7 @@ Operator/judgment-gated, not mine to decide:
   `storage.admin` drift reflected) — doesn't qualify for the f2 mechanical carve-out.
 - Item C. `/codex/02-data/external-data-always-available-rule.md` — prescribes a RETIRED ping-file mechanism plus a
   stale cross-link to an archived doc. Multi-part rewrite, not a single substitution.
-- Item D. `plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md` — open `[OPERATOR]` re-install
+- Item D. `plans/archive/2026_08/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md` — open `[OPERATOR]` re-install
   todo whose literal instructions now hard-fail (the script it names moved to `systemd --user`, refuses `sudo`), and
   whose "not-live" premises are contradicted by dated evidence elsewhere in the corpus, including this run. Needs a
   careful rewrite, not a quick substitution.
@@ -308,7 +308,7 @@ diagnosed but did not apply. Re-verified 2026-08-10 (same day) before conversion
       `storage.admin` drift. `unified-trading-pm@<pending local commit>`.
 - [ ] [DOC] P2. **Item C — rewrite `/codex/02-data/external-data-always-available-rule.md`** — prescribes a RETIRED
       ping-file mechanism plus a stale cross-link to an archived doc; needs a multi-part rewrite.
-- [x] ✅ [OPERATOR] P2. **Item D — rewrite `plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md`'s
+- [x] ✅ [OPERATOR] P2. **Item D — rewrite `plans/archive/2026_08/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md`'s
       open `[OPERATOR]` re-install todo** (line 491) — its literal instructions now hard-fail (the script it names moved
       to `systemd --user`, refuses `sudo`), and its "not-live" premises are contradicted by dated evidence elsewhere in
       the corpus (including this run). Needs a careful rewrite of the existing todo's instructions, not a quick

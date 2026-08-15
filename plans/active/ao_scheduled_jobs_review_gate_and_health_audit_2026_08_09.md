@@ -20,7 +20,7 @@ tags: [ao, scheduled-jobs, plan_reconciler, review-gate, escalation, sharding, a
 related:
   [
     /plans/archive/2026_08/issues/plan_reconciler_findings_2026_08_08.md,
-    /plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md,
+    /plans/archive/2026_08/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-09"
@@ -49,7 +49,7 @@ context_scope:
     agent-orchestrator/server/regen_backlog_from_plan.py,
     agent-orchestrator/scripts/scheduled_job_already_ran.py,
     /plans/archive/2026_08/issues/plan_reconciler_findings_2026_08_08.md,
-    /plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md,
+    /plans/archive/2026_08/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md,
   ]
 ---
 
