@@ -397,3 +397,23 @@ issue's scope); flagged as a follow-up todo below.
   the ship script's own "post-push ancestry verified" line or `git log`, never assume the pre-quickmerge local sha
   survives. **Next actionable item**: todo #2 (P0, phantom blank-timeframe row cleanup on MDPS, ~26,982 lower-bound) is
   now unblocked — pick it up next.
+- **data_engineering slot-2, 2026-08-15 (3rd pre-compact checkpoint — audit script quickmerge fix + resubmit)**:
+  quickmerge task `b3l0jzbxk` (shipping the new dry-run audit script for todo #2) FAILED — root-caused via
+  `.venv/bin/python .cursor/scripts/check-import-patterns.py --verbose`: the script's own
+  `from unified_trading_library.manifest_writer import read_availability_index_safe` is a banned deep import (checker
+  requires the top-level re-export). Confirmed `read_availability_index_safe` IS re-exported at the top level
+  (`unified_trading_library/__init__.py:1012`), fixed the import, verified clean with the checker scoped to just this
+  file, and re-shipped via
+  `bash scripts/quickmerge.sh ... --files 'scripts/audit_sports_captured_phantom_timeframe_2026_08_16.py'` (task
+  `bze6dwost`) — as of this checkpoint it has progressed cleanly past pre-flight/lint into the pytest suite (~10%+, no
+  failures), not stalled. Also re-synced PM twice this window (both times genuinely behind via
+  `rev-list --left-right --count`, both clean `--ff-only` fast-forwards, `749f578c53→2b1721e9dc`, 8 unrelated
+  plan-reconcile/archival commits from other sessions — confirmed none touch this doc). Scratchpad audit:
+  `phantom_timeframe_audit_2026_08_16.log` (3.7KB, new this window) is a local dry-run capture, superseded by the
+  committed script + this doc's own findings — deliberately not promoted, safe to lose. No secrets found.
+  `mtds_tradfi_combo_casing_qg_red_2026_08_15.md` (the earlier repo-wide QG-red blocker referenced in this doc's own
+  history) is now `status: archived` — confirms it self-resolved, unrelated to this window's failure (which was a
+  genuine bug in this doc's own script, not a shared-repo condition). **Next session/window**: verify `bze6dwost` landed
+  (`git rev-list --count origin/live-defi-rollout..HEAD` = 0 for the audit script commit — rely on the harness
+  completion notification, don't poll), then run the FULL-population sibling check (not the 200-row sample) to finalize
+  todo #2's exclusion scope.
