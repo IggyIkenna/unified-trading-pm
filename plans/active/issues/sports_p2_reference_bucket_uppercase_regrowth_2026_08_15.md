@@ -125,3 +125,11 @@ confirm the writer stopped.
   `census_sports_19token_lowercase_scope_2026_08_14.py` can honestly confirm 0 new uppercase rows. None of that is
   verifiable synchronously in one agent turn. Releasing P1 back to the queue (`GATED`, ~180 min) rather than restamping
   now.
+- 2026-08-15 (slot-32, data_engineering): Re-checked live-deploy status — `b872799efa` is CONFIRMED still not on `main`
+  (`git merge-base --is-ancestor` false against a freshly-fetched `origin/main`). The LDR→main promote pipeline is
+  actively running (a promote batch landed ~12:01-12:06Z, `main` advanced from 1261→1183 commits behind LDR) but hasn't
+  reached this commit's position in the backlog yet — genuinely still gated, not a stall. No Cloud Run service named
+  `instruments-service` exists (it runs as scheduled Cloud Run Jobs, e.g.
+  `uts-prod-instruments-service-sports-fixtures`, image tag `:latest`); deploy-liveness for the actual fix therefore
+  requires promote→image-build-gate→a fresh job execution, none of which has happened yet. GATED-skipping again (~150
+  min) — no restamp attempted.
