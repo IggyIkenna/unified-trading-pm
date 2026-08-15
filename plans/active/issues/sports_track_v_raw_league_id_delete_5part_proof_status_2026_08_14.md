@@ -121,9 +121,41 @@ already caught once.
       (`if_generation_match`) conditional delete, closing the verify-then-delete race. Still needed before Parts 1/2/5
       can be re-run: no further engineering — the trio is dry-run-capable now via `list_...` -> `verify_...` ->
       `delete_...` (no `--apply-prod`).
-- [ ] [DATA] P2. Once the trio is built and dry-run validated, launch the on-demand delete VM (mirroring
-      `canonical-migration-sports-k1k2-upper-del-20260728-152424`) and execute per finding T's carve-out — re-query
+- [ ] [DATA] P2. Launch a DRY-RUN VM (`sports-league-id-delete` category, `launch-canonical-migration-vm.sh`, `dry` mode
+      — list+verify only, ZERO GCS writes) over the full `2020-06-06..2026-08-13` window to freshly re-verify Parts
+      1/2/5 of the 5-part proof at the object level (candidate count vs the 2026-07-22 baseline of 275,136;
+      content-verify pass rate). This step is now unblocked (launcher category shipped, see below) but was NOT launched
+      this session per operator direction (BLK-0cb22dbc, answer C, 2026-08-15) — the actual VM launch + dry-run review
+      is the next session's work.
+- [ ] [DATA] P3. ONLY after the todo above's dry-run confirms Parts 1/2/5 still hold: get explicit re-authorization
+      (this is a NEW gate, not automatic) and launch the SAME category in `full` mode
+      (`--apply-prod     --confirm-prod-write`) to execute the actual delete, per finding T's carve-out — re-query
       `gcs_bucket_soft_delete_retention_seconds()` fresh at execution time, cite the value inline.
 - [x] [DOC] P2. ✅ Corrected the stale "UNBLOCKED 2026-07-28: Track C's lowercase-revert" citation in
       `sports_satellite_ao_dispatch_batch13_2026_08_13.md`'s Track V todo (same session, same commit) — see that plan's
       Progress Log / todo annotation.
+- [x] [CODE] P2. ✅ Added the `sports-league-id-delete` launcher category to `deployment-service`'s
+      `scripts/vm/launch-canonical-migration-vm.sh` (5 call sites: usage string, dispatch case block,
+      `MIGRATION_EXTRA_ARGS` suppression, asset-group tag, `STALL_PROGRESS_REGEX`), mirroring
+      `sports-k1k2-uppercase-delete`'s structure but as a 3-step chain (list -> verify -> delete, gated on each step's
+      clean exit) since this population is not 1:1. `dry` mode runs list+verify ONLY (no GCS writes) — this is the mode
+      authorized for the next-session re-verification above; `full` mode additionally chains the delete step but stays
+      unauthorized until the new P3 gate above is explicitly cleared — `deployment-service@1c7cd3ca`.
+
+## Progress Log
+
+- **2026-08-15 (this session)**: Dispatched todo 2 ("launch the on-demand delete VM ... execute per finding T's
+  carve-out"). Before touching the shared, multi-category `launch-canonical-migration-vm.sh` or executing a
+  275,136-object prod delete, filed `BLK-0cb22dbc` flagging that (a) this todo's own citation of §3a soft-delete
+  retention as sufficient authorization is the exact reasoning shape the K1/K2 sibling incident already flagged as a
+  confirmed near-miss, and (b) Parts 1/2/5 of the 5-part proof have not been re-verified at the object level since
+  2026-07-22. Operator answered **C**: do NOT launch the delete VM this session; re-verify Parts 1/2/5 via the
+  list->verify dry-run trio (no GCS writes) first, and leave the `--apply-prod` launch for a follow-up
+  explicitly-authorized task. Added the launcher category (code-only, reversible, shipped this session) so the dry-run
+  re-verification is one command away next session — did NOT launch the VM itself. Split the original P2 todo into two:
+  a P2 dry-run-only re-verification and a NEW P3 `[OPERATOR]`-gated full-run todo, so the delete step requires a fresh,
+  explicit go-ahead rather than inheriting the original todo's stale authorization. Sanity-checked the trio's
+  `list_stale_raw_league_id_candidates_2026_08_14.py` script locally (bounded, `.venv`, single-day scope, 2026-08-13 and
+  2021-06-15) — ran clean, 0 candidates on both sampled days. This is NOT evidence Parts 1/2/5 hold (two arbitrary
+  single days out of a 6-year/275K-object population is not a re-verification) — the real re-verification is the
+  full-range VM dry-run in the P2 todo above, still open.
