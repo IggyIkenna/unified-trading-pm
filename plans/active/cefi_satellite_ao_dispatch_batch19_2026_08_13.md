@@ -184,9 +184,24 @@ source: >-
       after batch11's fix landed. Source: `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
 - [ ] [CODE] P2. Deprecate + remove all Barchart code (Phase 5, cross-repo delete-deprecated-code) Source:
       `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
-- [ ] [CODE] P2. Map the index perps (SPXUSDT/NAS100/SPYUSDT/XAUUSDT) to the CME index-future canonical with
-      contract_multiplier (Phase 1c, unified-api-contracts) Source:
+- [x] ✅ [CODE] P2. Map the index perps (SPXUSDT/NAS100/SPYUSDT/XAUUSDT) to the CME index-future canonical with
+      contract_multiplier (Phase 1c, unified-api-contracts) **CLOSED — already-satisfied (2026-08-15,
+      slot-29·backend_engineer).** This exact mapping already shipped **unified-api-contracts@e973c62d** (2026-08-09,
+      via `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 2, prior to this batch's drafting) —
+      `index_commodity_perp_hedge_link.py` maps SPY→ES ($50/pt), QQQ→NQ ($20/pt), XAU→GC (100oz), with
+      `EXCLUDED_INDEX_COMMODITY_PERP_BASES` documenting SPX (confirmed a meme coin, not S&P500) and NAS100 (no such
+      Binance symbol) as evidenced negative results rather than silent omissions. No code shipped by this batch (none
+      needed) — this batch's audit pulled the same Phase 1c line from a sibling source doc without catching the batch11
+      overlap. **Source doc's own checkbox NOT flipped in this commit** — see the new follow-up todo below (the source
+      doc is already over its line-cap hard gate, pre-existing, blocking any commit that touches it). Source:
       `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
+- [ ] [SCRIPT] P3. Trim `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` back under its
+      1000-line hard cap (currently 1003L, pre-existing — `check_line_caps.sh`/plan-hygiene pre-commit hard-blocks ANY
+      commit touching this file until it's under cap) so its own stale Phase-1c index-perp-mapping checkbox (line ~815,
+      already satisfied by `unified-api-contracts@e973c62d` — see this batch's todo above + its Progress Log entry) can
+      finally be flipped. Judgment call on what to archive/condense (likely candidate: fold older superseded
+      Progress-Log sections into an archived companion doc per the plan-completion-and-archival-discipline SSOT), so out
+      of scope for this batch's mechanical todo. Repo: unified-trading-pm.
 - [ ] [CODE] P2. Codex SSOT updates for crypto-venue equity-perp sourcing + equity-basis arb archetype Source:
       `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
 - [ ] [CODE] P2. Alert-accuracy quartet fix (deployment-service: interpolate/drop fixed '(0 → 0)' template, extend
@@ -277,5 +292,18 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
 2026-08-13 audit's full classification data for the complete list.
 
 ## Progress Log
+
+- **2026-08-15 (slot-29·backend_engineer)**: dispatched the "Map the index perps... to the CME index-future canonical"
+  todo — found it already shipped `unified-api-contracts@e973c62d` (2026-08-09) via
+  `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 2, sourced from the SAME underlying Phase 1c item via a
+  different citing doc (`cefi_consolidated_closeout_2026_07_18.md` Track 0 vs this batch's
+  `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`). This batch's 2026-08-13 conflict-check (§3 of
+  `ao-dispatch-batch-naming-and-conflict-check.md`) did not catch the overlap because it checked the tranche's
+  consolidated-closeout doc's own Track content, not the underlying Phase-1c-source doc's later 2026-08-09 Progress Log
+  entries recording the same work done under a sibling batch. This doc's own checkbox flipped per protocol §3.4
+  "already-shipped elsewhere, checkbox just never flipped" — stale-checkbox correction, not new work, no conflict. The
+  source doc's mirror checkbox could NOT be flipped in the same commit: that file is already 1003L, over its 1000-line
+  hard cap (pre-existing, unrelated to this fix) — `check_line_caps.sh`/plan-hygiene pre-commit hard-blocks any commit
+  touching it. Filed a P3 follow-up todo above to trim it under cap first; the source checkbox stays stale until then.
 
 - **context-scout 2026-08-15**: refreshed context_scope (4 entries), still accurate.
