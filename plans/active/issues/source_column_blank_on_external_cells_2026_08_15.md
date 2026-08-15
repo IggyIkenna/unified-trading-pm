@@ -203,3 +203,16 @@ leaving it as an unscoped "run a corpus backfill" todo.
   staging this file's referrer-path fix, the plan-hygiene commit-SHA-evidence gate caught the same stale `f1f41552`
   citation slot-8 has now independently corrected above to the landed `9de9840169` — no further action needed here,
   content already superseded by their more complete correction.
+- **2026-08-15 (slot-32, data_engineering, 2nd dispatch)**: Re-dispatched todo 4 (flip the P0 checkbox). Re-ran
+  `scripts/quality_gates/audit_source_column_distribution.py --strict` live against both prod manifests (not trusted
+  from the log above — measured fresh): **tradfi = 0 RED cells / 0 blank rows (clean, confirmed)**; **cefi = still 1 RED
+  cell** — `cefi/HYPERLIQUID/trades rows=343061 {<blank>=1, hyperliquid=290404, tardis=52656}`, the same historical row
+  documented in the archived `hyperliquid_trades_blank_pipeline_mode_write_path_gap_2026_08_15.md` (both `source` AND
+  `pipeline_mode` blank — undeliverable by any backfill, no live write path reproduces it). That archived doc's own
+  recommended decision explicitly deferred the 1-row manual patch to whenever
+  `data_source_provenance_enforcement_2026_07_24.md`'s **Write-path P0** todo (not this Data-parquets P0 todo) is next
+  worked — and since the value can't be derived (unlike the 14-cell backfill, there is no `pipeline_mode` to read it
+  from), patching it here would mean guessing a `source` value on a prod manifest row, which is out of scope for a todo
+  whose job is only to flip a checkbox. **Precondition ("zero-blank on cefi + tradfi") is therefore still not met — todo
+  4 stays `- [ ]`, correctly unflipped.** GATED-skipping again; this is now blocked on the Write-path P0 todo's deferred
+  1-row patch, not on the (now-complete) P1 backfills.
