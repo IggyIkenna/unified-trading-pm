@@ -167,7 +167,7 @@ Operator confirmed **A** on BLK-9aed224f (2026-08-12): retire all 14 CURVE rows 
       `attempted_failed` (7 BALANCER + 14 CURVE). Script renamed `*_balancer_*` to coexist with the CURVE-scoped sibling
       (same original filename collided add/add with slot 32's todo-2 script). Consolidator paused pre-write / resumed
       after. See Progress Log 2026-08-12 (slot 20, todo-1) entry. **Reconciled 2026-08-12 (slot 18, data_engineering)
-      against the corrective result — see `/plans/active/issues/dex_pool_fees_inverted_flip_write_race_2026_08_12.md`.**
+      against the corrective result — see `/plans/archive/issues/dex_pool_fees_inverted_flip_write_race_2026_08_12.md`.**
       The concurrent-write race between this todo's slot and the plan-todo-7 slot produced a transient inverted index
       state (~17:12–17:14:52Z); this todo's task
       (`dex_pool_fees_phantom_premise_false_real_mid_may_objects-1119d9d2c3d8`) is now `status=done` + `orphan: true`
