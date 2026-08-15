@@ -10,7 +10,7 @@ summary: >-
   from), and this is the pre-existing "CF-3 population" class the DeFi/TradFi precedent scripts already document as
   unfixable by a source backfill. This is a genuine, real write-path gap, out of scope for the source backfill task that
   found it.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -52,6 +52,13 @@ source: >-
 ---
 
 # HYPERLIQUID/trades live writer produces a blank-pipeline_mode row
+
+> **🟢 ARCHIVED 2026-08-15 — RESOLVED (purely historical, no code fix needed).** Traced both current HYPERLIQUID/trades
+> manifest-write paths (`onchain_perp_batch_handler.py` batch, `live/manifest_recorder.py` live) — both require
+> `pipeline_mode` unconditionally on every write, verified since the batch handler's first commit (2026-06-21). No live
+> code path today can reproduce this row. 1-row manual patch reminder folded into
+> `/plans/active/data_source_provenance_enforcement_2026_07_24.md`'s Write-path P0 todo. Archived by slot-11
+> data_engineering.
 
 ## What I found
 
@@ -100,14 +107,34 @@ one-row manual manifest patch is not worth a dedicated script — fold the fix i
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Determine whether
+- [x] ✅ [SCRIPT] P2. Determine whether
       `market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py` (or its shared
       `empty_confirmed`/honest-absence write path) has a live code path that can still stamp
       `capture_status=empty_confirmed` with a blank `pipeline_mode` for `trades`. If live: fix it (stamp `pipeline_mode`
       unconditionally on every manifest write, matching the universal-provenance wire-up other venues already got). If
       purely historical: note so here and fold the 1-row manual fix into
       `data_source_provenance_enforcement_2026_07_24.md`'s Write-path P0 todo rather than a standalone script. Repo:
-      market-tick-data-service.
+      market-tick-data-service. — **DONE 2026-08-15 (slot-11·data_engineering). PURELY HISTORICAL — no live code path
+      today can produce this.** `hyperliquid_adapter.py` itself never writes the manifest (its `fetch_trades` just
+      returns rows/`[]`); the actual `empty_confirmed` write path for HYPERLIQUID/trades is
+      `market_tick_data_service/cli/handlers/onchain_perp_batch_handler.py` (batch) and
+      `market_tick_data_service/live/manifest_recorder.py` (live). Traced both: `onchain_perp_batch_handler.py`'s
+      `_record_zero_shard`/`_record_empty`/`_record_captured`/`_record_failed` all take `pipeline_mode: PipelineMode` as
+      a mandatory (non-`Optional`) keyword, populated unconditionally from the `_VENUE_PIPELINE_MODE[venue]` dict
+      (`HYPERLIQUID` → `PipelineMode.BATCH_HYPERLIQUID`) — verified this was true from the handler's very first commit
+      (`1e4dfb21`, 2026-06-21, "feat(cefi): add OnchainPerpBatchHandler"), not a later fix — there is no branch that
+      calls `manifest.record_empty(...)` without a `pipeline_mode`. `live/manifest_recorder.py` independently documents
+      `pipeline_mode` as "a REQUIRED per-call keyword on every write" for every one of its
+      `record_captured`/`record_empty`/`record_failed` methods, deriving `source` FROM `pipeline_mode` via
+      `source_string_for()` — the reverse of blank, structurally cannot skip it. No other write path exists for
+      HYPERLIQUID trades (grepped `market_tick_data_service/scripts/` + `cli/` for other HYPERLIQUID manifest writers —
+      only `onchain_perp_batch_handler.py` writes cefi on-chain-perp manifest rows; the live WS trades connector
+      `live/connectors/hyperliquid_ws.py` only parses ticks, it doesn't write the manifest itself, that's the generic
+      live runner → `manifest_recorder.py`). Conclusion: the blank-`pipeline_mode` row for
+      `HYPERLIQUID:PERPETUAL:IP-USD@LIN` on 2026-06-29 predates both current write paths (or was produced by a
+      since-removed legacy writer) — it is a closed, non-reproducible historical artifact, not an active gap. No code
+      change needed. Folded the 1-row manual fix into `data_source_provenance_enforcement_2026_07_24.md`'s Write-path P0
+      todo (see that plan's note, added same session).
 
 ## Progress Log
 
@@ -115,3 +142,11 @@ one-row manual manifest patch is not worth a dedicated script — fold the fix i
   the identical single row, ruling out the initial "live writer keeps reintroducing it" hypothesis (see "What I found").
   No code changed — root-cause narrowed to blank `pipeline_mode`, not blank `source`; out of scope for the
   source-backfill task that surfaced it.
+- **2026-08-15 (slot-11·data_engineering)**: Worked the P2 todo (now `[x]`). Traced both live write paths for
+  HYPERLIQUID/trades (`onchain_perp_batch_handler.py` batch + `live/manifest_recorder.py` live) and confirmed
+  `pipeline_mode` is a mandatory, unconditionally-populated keyword on every manifest-write branch in both — including
+  as of the batch handler's very first commit (2026-06-21), predating the row's own 2026-06-29 target date. No live code
+  path can reproduce a blank-`pipeline_mode` `empty_confirmed` row for this venue/data_type today — verdict: purely
+  historical, no code fix needed. Folded the 1-row manual-patch reminder into
+  `data_source_provenance_enforcement_2026_07_24.md`'s Write-path P0 todo. Doc-only change (no code repo touched);
+  shipped via `safe-doc-push.sh`.

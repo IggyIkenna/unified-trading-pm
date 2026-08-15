@@ -126,7 +126,7 @@ leaving it as an unscoped "run a corpus backfill" todo.
       pre-existing "CF-3 population" class the DeFi/TradFi precedent scripts already document — un-derivable by any
       source backfill by construction, NOT a residual of the 14-cell population this todo scoped (that population is now
       100% clean — confirmed 0 target rows on a follow-up re-apply). Filed separately, out of this todo's scope:
-      `/plans/active/issues/hyperliquid_trades_blank_pipeline_mode_write_path_gap_2026_08_15.md`. **Because of this,
+      `/plans/archive/issues/hyperliquid_trades_blank_pipeline_mode_write_path_gap_2026_08_15.md`. **Because of this,
       cefi is not literally "0 RED cells" under the audit script's own broader definition** — todo 4 below stays
       unflipped until that separate write-path gap is resolved (or excluded from the audit's RED criterion on principled
       grounds — not decided here).
@@ -196,7 +196,12 @@ leaving it as an unscoped "run a corpus backfill" todo.
   streaming — only `source`/`pipeline_mode` are ever converted to pandas per batch, every other column is patched
   directly at the Arrow `RecordBatch` level and streamed straight to a `ParquetWriter`. Measured fix: peak RSS ~1.5GB
   regardless of manifest size. New unit tests for both scripts (23 total, all passing) verify the streaming boundary +
-  the original masking/derivation/idempotency logic unchanged. **Shipping status**: `market-tick-data-service@9de98401`
-  committed locally, push blocked on repo-wide QG red `RB-c19cd263` (2 pre-existing tradfi COMBO casing test failures,
-  unrelated to this change, already tracked + waited-on by 3 other slots before this session joined as a 4th waiter) —
-  will ship + update this todo's SHA the moment the repo goes green (backend-owned wait, not polled manually).
+  the original masking/derivation/idempotency logic unchanged. **Shipping status**: landed as
+  `market-tick-data-service@9de9840169` once `RB-c19cd263` cleared (2 pre-existing tradfi COMBO casing test failures,
+  unrelated to this change) — verified ancestor of `origin/live-defi-rollout`.
+- **2026-08-15 (slot-11·data_engineering)**: Worked the separately-filed HYPERLIQUID/trades write-path gap (todo 3's
+  cross-reference) — resolved as purely historical, no code fix needed; archived that issue doc (see
+  `/plans/archive/issues/hyperliquid_trades_blank_pipeline_mode_write_path_gap_2026_08_15.md`). Separately, while
+  staging this file's referrer-path fix, the plan-hygiene commit-SHA-evidence gate caught the same stale `f1f41552`
+  citation slot-8 has now independently corrected above to the landed `9de9840169` — no further action needed here,
+  content already superseded by their more complete correction.
