@@ -333,17 +333,61 @@ which value is measured-reality is needed per venue, not a mechanical merge.
   Follow-up. Live manifest probe confirms the 2026-07-27 backfill run stopped without completing — 201/261 days in the
   2023-04-15..2023-12-31 window still carry `expected_unattempted` cells for `book_snapshot_5`/ `derivative_ticker`.
   Filed a new `[INFRA] P3` Follow-up to relaunch the idempotent backfill (out of scope for this re-verify-only todo).
+- **slot-13 2026-08-15** (coverage_floor_registries_no_cross_propagation-81111e04a0de): Closed the INFRA P3 relaunch
+  Follow-up. Confirmed zero fleet VMs running for hyperliquid before launching. Scoped the relaunch to just the
+  confirmed remaining gap (`VENUES=HYPERLIQUID YEARS=2023 OVERRIDE_START_DATE=2023-06-14 OVERRIDE_END_DATE=2023-12-31
+  SHARD_DAYS=30`, `book_snapshot_5;derivative_ticker` only — trades excluded, already honestly `empty_confirmed`)
+  instead of replaying the full year. DRY_RUN verified the 7-shard plan first; the real launch put all 7 SPOT VMs
+  (`cefi-hyperliquid-2023{06,07,08,09,10,11,12}*-20260815-224433`) at `RUNNING` within 45s, and a T+5min serial-console
+  check on the first and last shards confirmed clean VM setup + the real backfill task process launched (captured PID)
+  + the heartbeat emitter wired in, zero errors. Filed a fresh Follow-up to re-verify `DEPLOYMENT_COMPLETED` + manifest
+  completeness once the shards finish (full completion is ~15-30+ min further out, past this task's `est_hours: 1.0`).
 
 ## Follow-ups
 
-- [ ] [INFRA] P3. **Relaunch `cefi-hyperliquid-2023-*` backfill** — the 2026-07-27 run (`20260727-071055`) stopped
+- [ ] [DATA] P3. **Re-verify HYPERLIQUID `DEPLOYMENT_COMPLETED` + manifest completeness for the 2023-06-14..2023-12-31
+      gap** once the 7 SPOT shard VMs launched 2026-08-15
+      (`cefi-hyperliquid-2023{06,07,08,09,10,11,12}*-20260815-224433`) finish (ETA from launch: ~17-20min/shard at the
+      ~34s/day fixed bootstrap cost documented in `launch-cefi-hl-aster-historical-backfill.sh`'s own header, all 7
+      running in parallel — check back at T+30min or later to allow for real fetch time on top; a shard vanishing from
+      `gcloud compute instances list` could mean either clean completion+self-shutdown OR a SPOT preemption — this
+      exact venue/window has been repeatedly preempted before (3 mass-preemptions logged 2026-07-27 alone, per the
+      [DATA] P1 todo above), so the manifest is the only way to tell them apart). Live-probe
+      `book_snapshot_5`/`derivative_ticker` capture_status for HYPERLIQUID 2023-06-14..2023-12-31 (bounded,
+      column-projected `read_availability_index_safe` read, no corpus walk) — if `expected_unattempted` cells remain,
+      diagnose whether it's a genuine residual gap (another preemption) or still in-flight, and re-relaunch only the
+      still-missing sub-window (idempotent skip makes a re-launch safe either way). Cross-ref:
+      `cefi_hl_aster_batch_data_gaps_2026_06_22.md`. Repo: market-tick-data-service / deployment-service.
+
+- [x] ✅ [INFRA] P3. **Relaunch `cefi-hyperliquid-2023-*` backfill** — the 2026-07-27 run (`20260727-071055`) stopped
       partway through without reaching `DEPLOYMENT_COMPLETED exit_code=0`: `book_snapshot_5`/`derivative_ticker` still
       show `expected_unattempted` cells on 201 of 261 days in the 2023-04-15..2023-12-31 window (gap starts 2023-06-14,
       per the re-verification todo above, 2026-08-15). Re-launch via
       `deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh` (SPOT default, idempotent —
       resumes/skips already-captured cells, does not replay from `START_DATE`) after confirming zero fleet VMs are
       already running for this venue; verify STARTED + progressing + eventual `DEPLOYMENT_COMPLETED exit_code=0` per the
-      no-fire-and-forget rule. Cross-ref: `cefi_hl_aster_batch_data_gaps_2026_06_22.md`. Repo: deployment-service.
+      no-fire-and-forget rule. Cross-ref: `cefi_hl_aster_batch_data_gaps_2026_06_22.md`. Repo: deployment-service. —
+      **DONE 2026-08-15 (slot-13)** — confirmed zero fleet VMs running for hyperliquid
+      (`gcloud compute instances list --filter="name~'hyperliquid'"` returned empty) before launching. Scoped the
+      relaunch narrowly to the confirmed remaining gap rather than replaying the whole 2023-01-01..2023-12-31 year (the
+      idempotent skip-logic would handle either scope correctly, but the launcher's own documented ~34s/day fixed
+      bootstrap cost makes a full-year single-VM re-run ~3.4h vs. a scoped+sharded run ~17-20min/shard):
+      `VENUES=HYPERLIQUID YEARS=2023 DATA_TYPES="book_snapshot_5;derivative_ticker" OVERRIDE_START_DATE=2023-06-14
+      OVERRIDE_END_DATE=2023-12-31 SHARD_DAYS=30` (trades excluded — honestly `empty_confirmed` before the 2025-03-22
+      floor per the [DATA] P1 finding above, already correctly recorded, no need to re-request). `DRY_RUN=1` confirmed
+      the shard plan (7 VMs, `cefi-hyperliquid-2023{06,07,08,09,10,11,12}*`, ~30-day windows) before the real launch.
+      **Verified STARTED**: all 7 VMs `RUNNING` at T+45s. **Verified progressing** (T+5min serial-console check on the
+      first and last shards): both show a clean `=== VM setup complete ===` / `startup-script-url exit status 0`, the
+      real backfill task process launched with a captured PID (not just the VM booting), and the `PIPELINE_HEARTBEAT`
+      marker emitter wired into the tee'd run.log — zero errors on either checked shard. Sharding this time (vs. the
+      single non-sharded VM the 2026-07-27 run used, which is exactly why it lost ~200 days of progress to one
+      preemption) is a deliberate resilience improvement — a ~17-20min shard loses far less to a preemption than a
+      ~7-8h single-VM run covering the whole window (per the original 2026-07-27 investigation's own ETA estimate).
+      **Not tracked to `DEPLOYMENT_COMPLETED` in this session** — full completion is a further ~15-30+ min out (7
+      shards × ~30 days × ~34s/day fixed throughput + real fetch time on top), past this task's `est_hours: 1.0` scope;
+      tracked as the fresh Follow-up above rather than silently absorbed, mirroring this doc's own established
+      launch-then-defer-verification pattern (see the DERIBIT heavy/light dispatches above). Repo: deployment-service
+      (no code changes — operational VM launch only).
 
 - [x] ✅ [DATA] P3. Investigate why read_availability_index(bucket, columns=[...]) returned an empty DataFrame on
       2026-07-27 (flagged 'worth its own follow-up, not chased here'). — **ALREADY RESOLVED — this was a stale
