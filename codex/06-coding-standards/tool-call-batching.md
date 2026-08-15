@@ -91,29 +91,44 @@ A role doc, runbook, or skill that walks an agent through a numbered one-command
 the anti-pattern, and undermines this rule wherever it is loaded. Prefer "run these together" phrasing, and reserve
 numbered sequential steps for genuinely ordered work.
 
-## A written rule alone already failed once — the hooks that enforce it (2026-08-11 to 2026-08-14)
+## A written rule alone already failed once — the hooks that enforce it (2026-08-11 to 2026-08-15)
 
 This doc's own baseline measurement (below) is what a WRITTEN rule alone produced: `SUB_AGENT_MANDATORY_RULES.md`
 carried a batching directive from ~2026-08-05, and five days later a controlled re-measurement still found 57.3% of ALL
 calls sitting in collapsible chains. Restating the rule a third time was not going to fix it — the fix was moving
-enforcement to the moment the behavior happens, not to session-start context competing with everything else:
+enforcement to the moment the behavior happens, not to session-start context competing with everything else. A single
+hook, `cursor-configs/hooks/batching-nudge.py`, now owns BOTH halves — registered as both a `PostToolUse` nudge and a
+`PreToolUse` block for the same matcher (`Bash|Read|Grep|Glob|Edit`), sharing one per-session state file so the two
+halves can never disagree about what counts as a chain:
 
-- **`PostToolUse` nudge** (`cursor-configs/hooks/batching-nudge.py`) — fires in-loop on the 2nd+ consecutive
-  round-tripped same-tool call (calls inside one message are correctly distinguished from a real round-trip by latency,
-  not tool identity — see that hook's own docstring for why a naive same-tool counter punishes CORRECT batching). Fires
-  earlier and harder on repeated same-file `Edit` calls specifically, since a later edit almost never depends on an
-  earlier edit's own `tool_result`.
-- **`PreToolUse` hard block** (`cursor-configs/hooks/block-same-file-edit-spam.py`, 2026-08-14) — the one case measured
-  confident enough to actually DENY rather than nudge: the 5th+ consecutive round-tripped `Edit` call on the SAME file.
-  `replace_all: true` and `Write` are always exempt/valid escape hatches, so this can never wedge an agent — it can only
-  be escaped WITH the batched fix, never by retrying the identical pattern. Every other tool stays nudge-only; a real
-  block needs a much higher false-positive bar than an advisory (see that hook's own module docstring for the full
-  reasoning on why Bash/Read/Grep chains are NOT safe to hard-block the same way).
-- Measured after both hooks + a lowered nudge threshold: laptop multi-tool-turn% 6.4%→7.6% and AO 6.3%→9.8% within ~2.5h
-  of shipping (2026-08-14, small early sample — direction real, magnitude not yet proof of a durable shift). Fleet-wide
-  propagation is automatic: both hooks live in the git-tracked, per-slot-symlinked `cursor-configs/hooks/` dir (see
-  `/codex/05-infrastructure/claude-code-settings-symlink.md`), and Claude Code watches `settings.json` live — no session
-  restart needed to pick up either a logic change or a brand-new hook entry.
+- **`PostToolUse` nudge** — fires in-loop on the 2nd+ consecutive round-tripped same-tool call (`FIRST_NUDGE_AT`, then
+  every 5th; calls inside one message are correctly distinguished from a real round-trip by latency, not tool identity —
+  see the hook's own docstring for why a naive same-tool counter punishes CORRECT batching). Fires earlier on repeated
+  same-file `Edit` calls specifically (`SAME_FILE_NUDGE_AT`), since a later edit almost never depends on an earlier
+  edit's own `tool_result`.
+- **`PreToolUse` hard block (2026-08-15, operator escalation — "I don't like that it's advisory... it should be
+  hard").** A nudge that was already ignored once escalates to an actual `permissionDecision: "deny"` at `HARD_BLOCK_AT`
+  (currently 3 — right after the first nudge, not several calls later), for the SAME chain the nudge already tracks — no
+  longer scoped to same-file `Edit` only, every chainable tool can now be denied. The false-positive risk this exists to
+  avoid (a genuinely sequential, result-dependent chain has no way to prove that to a stateless hook, and a permanent
+  wall would deadlock exactly the legitimate work this doc's own "Do NOT batch these" section protects) is handled with
+  a **one-retry grace escape hatch**: the call that gets denied may be retried once immediately and will be let through,
+  at the cost of one extra round-trip per checkpoint — never an unrecoverable stop. A chain that keeps needing grace
+  passes gets re-checkpointed every `HARD_BLOCK_RENUDGE_EVERY` calls thereafter, same escalation shape as the nudge's
+  own `RENUDGE_EVERY`. Same-file `Edit` chains use their own, stricter thresholds (`SAME_FILE_HARD_BLOCK_AT`) and are
+  evaluated as the SOLE block signal when a file path resolves — never alongside the general same-tool check, since
+  every `Edit` is also a same-tool "Edit" call and checking both independently would double-deny the same event (a real
+  bug caught in self-review before this shipped; regression-tested in
+  `unified-trading-pm/tests/test_batching_nudge.py`).
+- A caller/payload that omits `hook_event_name` entirely defaults to the original nudge-only contract — it can never
+  silently start denying calls it can't positively identify as `PreToolUse`.
+- Fleet-wide propagation is automatic: the hook lives in the git-tracked, per-slot-symlinked `cursor-configs/hooks/` dir
+  (see `/codex/05-infrastructure/claude-code-settings-symlink.md`), and Claude Code watches `settings.json` live — no
+  session restart needed to pick up a logic change or a new hook entry.
+- Pre-block-escalation measurement (nudge-only, both hooks' predecessor thresholds): laptop multi-tool-turn% 6.4%→7.6%
+  and AO 6.3%→9.8% within ~2.5h of shipping (2026-08-14, small early sample). Re-measure after the hard block has had
+  comparable runtime — a denial that forces an actual behavior change (batch, don't just get reminded) should move this
+  further than the nudge alone did.
 
 ## Authoring-time: reduce the calls a task NEEDS, not just how it makes them
 
