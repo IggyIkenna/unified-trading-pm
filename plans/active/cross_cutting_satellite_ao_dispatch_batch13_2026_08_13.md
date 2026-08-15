@@ -492,7 +492,20 @@ source: >-
       DUPLICATE, closed 2026-08-14** — landed `deployment-service@67e3b36c` + `deployment-api@0d3f1cc` +
       `unified-trading-library@ad29bd9f` (all 8 todos). Source:
       `plans/active/alert_driven_dependency_revocation_2026_08_12.md`.
-- [ ] [CODE] P2. Remove BLRS Stage 4's _write_agent_report() write path once superseded Source:
+- [x] ✅ [CODE] P2. **NOT ATTEMPTED — premise unmet: the superseding job doesn't exist yet.** (2026-08-15,
+      slot-21·infra) Confirmed live: `_write_agent_report()` is still present and called from `run_stage4()` in
+      `batch_live_reconciliation_service/stages/stage4_agent_analysis.py` (writes `agent_report_{date}.md` to GCS, still
+      read by nothing downstream — module docstring's dispatch/Slack claims remain stale, per this same source doc's
+      §0). The source design doc's own §4 explicit decision gates this removal on "once the new [trading-analyst] job
+      ships" — confirmed the job has NOT been built: no `agents/trading_analyst.md` role file, no `trading_analyst` mode
+      in `plan_health.py`, no `install-trading-analyst-timer.sh`, zero fleet-wide matches for
+      `trading_analyst`/`trading-analyst` outside this design doc itself. The source doc's own sibling todos ("Build the
+      `trading-analyst` skill", "Wire the scheduling mechanics from §1") are still unchecked, confirming this directly.
+      Per CLAUDE.md's "AO-eligible = outcome DETERMINABLE by the worker alone" rule + the doc's own explicit build-order
+      (§4: this removal is a §5 follow-up gated on the new job shipping, NOT bundled into the job's own build), did not
+      remove the write path — doing so now would delete Stage 4's only output before any replacement exists,
+      contradicting the documented decision. No new issue doc filed: the gating work is already tracked as open todos in
+      the same source doc; this removal should be re-picked-up once those ship. Source:
       `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md`
 - [ ] [CODE] P2. File the dead-mode-kwarg bug (execution_fills/positions/strategy_instructions/pnl_attribution all
       silently drop a mode= path placeholder) as its own issue doc Source:
