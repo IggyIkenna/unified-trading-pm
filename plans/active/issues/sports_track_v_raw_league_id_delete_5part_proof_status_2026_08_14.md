@@ -106,13 +106,21 @@ already caught once.
 
 ## Recommended decision
 
-- [ ] [CODE] P1. Build the candidate-list generator + content-verify report + generation-matched CAS-delete executor
-      trio for the raw-keyed `league_id` GCS population (mirror
-      `scripts/sports/k1k2_casing_revert_2026_07_27/{migrate_sports_casing_revert_2026_07_27.py, generate_casing_revert_manifest_report_2026_07_27.py, manifest_swap_casing_revert_2026_07_27.py}`'s
-      pattern, direction: verify existing canonical twin + delete legacy raw-keyed source, never copy) — repo:
-      market-tick-data-service. Re-run Parts 1/2/5 of the 5-part proof fresh against the live candidate population (do
-      not reuse the 2026-07-22 counts). Part 3 is already fresh-verified clean per this doc — no need to re-check unless
-      the candidate-list generation surfaces contradicting evidence.
+- [x] [CODE] P1. ✅ Built the candidate-list generator + content-verify report + generation-matched CAS-delete executor
+      trio for the raw-keyed `league_id` GCS population — `market-tick-data-service@c3b188a1`
+      (`scripts/sports/league_id_relocation/{list_stale_raw_league_id_candidates_2026_08_14.py,     verify_stale_raw_league_id_content_2026_08_14.py, delete_stale_raw_league_id_2026_08_14.py}` +
+      29 unit tests in
+      `tests/unit/scripts/test_{list_stale_raw_league_id_candidates,verify_stale_raw_league_id_content,delete_stale_raw_league_id}_2026_08_14.py`,
+      `quality-gates.sh` full pass). Mirrors the K1/K2 trio's pattern (verify existing canonical twin + delete legacy
+      raw-keyed source, never copy), generalized for this population's non-1:1 shape: candidate listing is path-only
+      (`classification.json`-driven, raw != canon and not "unknown"), but content-verify re-derives each row's REAL
+      canonical target from `sport_key` -> `SPORTKEY_CANON` (not `classification.json`'s coarser per-raw label) since a
+      raw league_id's rows can split across >=2 canonical targets — union-of-targets natural-key coverage must be
+      complete before a row group is trusted. Delete executor re-verifies fresh (source + all recorded targets
+      re-described/re-read, not reused from the verify-report) immediately before a generation-matched
+      (`if_generation_match`) conditional delete, closing the verify-then-delete race. Still needed before Parts 1/2/5
+      can be re-run: no further engineering — the trio is dry-run-capable now via `list_...` -> `verify_...` ->
+      `delete_...` (no `--apply-prod`).
 - [ ] [DATA] P2. Once the trio is built and dry-run validated, launch the on-demand delete VM (mirroring
       `canonical-migration-sports-k1k2-upper-del-20260728-152424`) and execute per finding T's carve-out — re-query
       `gcs_bucket_soft_delete_retention_seconds()` fresh at execution time, cite the value inline.
