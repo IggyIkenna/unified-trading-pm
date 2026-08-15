@@ -752,51 +752,51 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       `market-tick-data-service@8b353ef2`).
 
       **FINAL UPDATE this session — run6 reached 690s, still alive, still legitimately queued** (log progressed cleanly
-                                          30s→690s in 30s increments, no death marker, no admission yet — last observed state before this session ended).
-                                          690s is now well over **double** the ~300s mark that killed all 4 priors, with zero sign of a periodic reaper
-                                          firing at any multiple of 300s (no death at 600s either, which a "reaper tolerating one missed cycle" theory would
-                                          have predicted). This is the strongest evidence yet toward possibility (a) above — the 4 prior deaths were tied to
-                                          something specific about those launch contexts/sessions, not a structural timeout in the governor's pre-admission
-                                          wait loop itself. Next session: check `bticjctmt`'s final outcome first (via the harness's automatic task
-                                          notification, do not manually re-poll) — if it completed clean and green, ship `market-tick-data-service@8b353ef2`
-                                          immediately via quickmerge and treat this investigation as closed/deprioritized (downgrade to "rare and
-                                          unreproduced, no fix needed" rather than continuing to chase root cause); if it eventually died, record the exact
-                                          death time here (still worth checking against 300s multiples, though 690s already argues against a clean periodic
-                                          cause).
+                                                  30s→690s in 30s increments, no death marker, no admission yet — last observed state before this session ended).
+                                                  690s is now well over **double** the ~300s mark that killed all 4 priors, with zero sign of a periodic reaper
+                                                  firing at any multiple of 300s (no death at 600s either, which a "reaper tolerating one missed cycle" theory would
+                                                  have predicted). This is the strongest evidence yet toward possibility (a) above — the 4 prior deaths were tied to
+                                                  something specific about those launch contexts/sessions, not a structural timeout in the governor's pre-admission
+                                                  wait loop itself. Next session: check `bticjctmt`'s final outcome first (via the harness's automatic task
+                                                  notification, do not manually re-poll) — if it completed clean and green, ship `market-tick-data-service@8b353ef2`
+                                                  immediately via quickmerge and treat this investigation as closed/deprioritized (downgrade to "rare and
+                                                  unreproduced, no fix needed" rather than continuing to chase root cause); if it eventually died, record the exact
+                                                  death time here (still worth checking against 300s multiples, though 690s already argues against a clean periodic
+                                                  cause).
 
-                                      **SECOND FINAL UPDATE (later same continuation) — run6 reached 960s, still alive, still zero deaths at ANY 300s
-                                          multiple** (600s, 900s both passed clean). This is now over **3x** the ~300s mark that killed all 4 priors,
-                                          which all but rules out a periodic reaper as the cause of those 4 deaths. The open question has now shifted:
-                                          16 minutes queued with no admission is itself notable — check on eventual completion whether this reflects
-                                          genuine host saturation (sub-cap 1 / host-wide cap 6, other slots' concurrent QG runs holding tokens) rather
-                                          than anything wrong with run6 itself; if so this is a capacity/fairness observation, not a death-cause one.
-                                          Next session: same guidance as above — check `bticjctmt`'s terminal outcome via the harness notification
-                                          (don't re-poll manually); if clean, ship immediately and close this investigation as closed/deprioritized; if
-                                          it eventually dies, record the death time (now very unlikely to land on a 300s multiple given 960s clean).
+                                              **SECOND FINAL UPDATE (later same continuation) — run6 reached 960s, still alive, still zero deaths at ANY 300s
+                                                  multiple** (600s, 900s both passed clean). This is now over **3x** the ~300s mark that killed all 4 priors,
+                                                  which all but rules out a periodic reaper as the cause of those 4 deaths. The open question has now shifted:
+                                                  16 minutes queued with no admission is itself notable — check on eventual completion whether this reflects
+                                                  genuine host saturation (sub-cap 1 / host-wide cap 6, other slots' concurrent QG runs holding tokens) rather
+                                                  than anything wrong with run6 itself; if so this is a capacity/fairness observation, not a death-cause one.
+                                                  Next session: same guidance as above — check `bticjctmt`'s terminal outcome via the harness notification
+                                                  (don't re-poll manually); if clean, ship immediately and close this investigation as closed/deprioritized; if
+                                                  it eventually dies, record the death time (now very unlikely to land on a 300s multiple given 960s clean).
 
-                                      **THIRD FINAL UPDATE (later same continuation) — capacity/fairness question RESOLVED: run6's 1170s+ wait is
-                                      genuine legitimate contention, NOT a bug.** Direct host inspection (`fuser` on the governor's flock slot
-                                      files under `.benchmarks/qg-governor-total/`) shows: global host-wide slots 2-6 are completely UNUSED
-                                      (only slot.1 has any holder) — ruling out host-wide-cap saturation as the bottleneck. The real bottleneck
-                                      is mtds's own repo sub-cap of **1** — its single repo-slot.1 is held by an entirely separate slot-19 QG
-                                      run (PID 3014181, elapsed ~22.5min, mid-pytest), and `ps` shows at least 4 MORE concurrent
-                                      `quality-gates.sh --no-fix` processes for mtds queued behind it from slots 29 (=run6/mine), 33, 18, and
-                                      one more unattributed — all serialized 1-at-a-time by the sub-cap. Checked slots 19/33/18's actual mtds
-                                      HEAD commits: all three are on completely unrelated, independent fixes (a provenance-checker wire-up, a
-                                      sports manifest fix, a docstring trim) — **this is ordinary fleet parallelism colliding with a repo cap
-                                      of 1, not duplicate/wasted effort and not a stuck/leaked token.** Each run appears to take ~20+ minutes,
-                                      so a queue of 4-5 ahead of run6 fully explains 1170s+ elapsed with zero deaths and zero admission. This
-                                      closes the capacity/fairness question definitively: **not a bug, genuine queue depth.** It does NOT
-                                      explain the original 4/4 deaths at ~300s from prior segments — those remain unexplained and now look even
-                                      more clearly session/launch-context-specific rather than tied to this queue-wait mechanism (confirmed
-                                      earlier by code read: `qg_governor_acquire_total_instance` is a plain `while true; sleep 1` loop with
-                                      zero internal timeout/self-kill logic, so nothing in the governor itself would ever kill a queued waiter).
-                                      **New follow-up worth a future look (not urgent, not blocking)**: whether mtds's repo sub-cap of 1 is
-                                      too restrictive given how many slots routinely work this repo concurrently — a possible future governor
-                                      tuning question, distinct from this investigation. Next session: unchanged guidance — check `bticjctmt`'s
-                                      terminal outcome via the harness notification; if clean, ship immediately; the death-cause question for
-                                      the original 4 is now the ONLY open thread and is low-priority (unreproduced for 1170s+, i.e. ~4x the
-                                      original threshold).
+                                              **THIRD FINAL UPDATE (later same continuation) — capacity/fairness question RESOLVED: run6's 1170s+ wait is
+                                              genuine legitimate contention, NOT a bug.** Direct host inspection (`fuser` on the governor's flock slot
+                                              files under `.benchmarks/qg-governor-total/`) shows: global host-wide slots 2-6 are completely UNUSED
+                                              (only slot.1 has any holder) — ruling out host-wide-cap saturation as the bottleneck. The real bottleneck
+                                              is mtds's own repo sub-cap of **1** — its single repo-slot.1 is held by an entirely separate slot-19 QG
+                                              run (PID 3014181, elapsed ~22.5min, mid-pytest), and `ps` shows at least 4 MORE concurrent
+                                              `quality-gates.sh --no-fix` processes for mtds queued behind it from slots 29 (=run6/mine), 33, 18, and
+                                              one more unattributed — all serialized 1-at-a-time by the sub-cap. Checked slots 19/33/18's actual mtds
+                                              HEAD commits: all three are on completely unrelated, independent fixes (a provenance-checker wire-up, a
+                                              sports manifest fix, a docstring trim) — **this is ordinary fleet parallelism colliding with a repo cap
+                                              of 1, not duplicate/wasted effort and not a stuck/leaked token.** Each run appears to take ~20+ minutes,
+                                              so a queue of 4-5 ahead of run6 fully explains 1170s+ elapsed with zero deaths and zero admission. This
+                                              closes the capacity/fairness question definitively: **not a bug, genuine queue depth.** It does NOT
+                                              explain the original 4/4 deaths at ~300s from prior segments — those remain unexplained and now look even
+                                              more clearly session/launch-context-specific rather than tied to this queue-wait mechanism (confirmed
+                                              earlier by code read: `qg_governor_acquire_total_instance` is a plain `while true; sleep 1` loop with
+                                              zero internal timeout/self-kill logic, so nothing in the governor itself would ever kill a queued waiter).
+                                              **New follow-up worth a future look (not urgent, not blocking)**: whether mtds's repo sub-cap of 1 is
+                                              too restrictive given how many slots routinely work this repo concurrently — a possible future governor
+                                              tuning question, distinct from this investigation. Next session: unchanged guidance — check `bticjctmt`'s
+                                              terminal outcome via the harness notification; if clean, ship immediately; the death-cause question for
+                                              the original 4 is now the ONLY open thread and is low-priority (unreproduced for 1170s+, i.e. ~4x the
+                                              original threshold).
 
 ## Measured runtime drift — RESOLVED 2026-07-22 (plan-reconcile follow-up)
 
@@ -926,24 +926,12 @@ there: the governor gates **RAM/CPU admission, not disk**, so it must not be cit
   human-driven...") governs the whole remaining scope; the other 8 open items are either explicitly
   DEFERRED-with-stated-reactivation-condition or real unimplemented-but-well-specified engineering follow-ons under the
   same human-driven ruling, not defaulted-and-never-assessed work.
-- **na-eligibility-audit 2026-08-03** (tranche `ci`, autonomous, `agt-4acc10`): **CONFIRMS KEEP-NA, valid — unchanged**
-  (9/9 open items re-verified). 8 items (baseline-schema consolidation, cpu_weight unpinned re-measure, baseline-
-  freshness loop, FIFO/aging, Slack alerting, small-host sizing, PYRIGHT_TIMEOUT default raise, pytest-xdist worker-
-  death fix) re-confirmed under the standing 2026-07-14 operator ruling — citation verified real and still governing;
-  none duplicated into any active `assigned_vm: planning` sibling (checked `ao_open_issues_consolidated_close_out`,
-  `cross_cutting_satellite_ao_dispatch_batch1b`, `orchestrator_vm_e2e_hardening`,
-  `sports_consolidated_native_ao_extract` — all incidental context mentions, not systemic fixes). Item 9 (line 684,
-  "FORKED 2026-08-03") is the redirect to `qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (also re-
-  confirmed KEEP-NA this same run, 5 items, no double-count with this doc's other 8) — correctly open until that fork
-  ships and closes it back here. No RECLASSIFY, no ARCHIVE.
-- **na-eligibility-audit 2026-08-04** (tranche `ci`, autonomous): **CONFIRMS KEEP-NA, valid — real content churn since
-  last pass, verdict unchanged.** Since the 2026-08-03 marker: the `[OPERATOR]` P3 `BLK-7eedce54` item was investigated
-  and closed 2026-08-04 (ticket was already answered 2026-08-02, no action needed); the FORKED P1 item's destination
-  (`qg_governor_glue_runner_ledger_coordination_2026_08_03.md`) is now `status: complete`, archived, fully shipped and
-  soaked (~73min, 0 OOM, 11 repos) — its own closure note migrated its 2 genuine follow-ons into this doc's tracked
-  todos, not orphaned. All 9 open items re-verified as correctly self-triaged (deferred-with-condition or open design
-  question) under the standing 2026-07-14 operator ruling; none duplicated into any active `assigned_vm: planning`
-  sibling. No RECLASSIFY, no ARCHIVE.
+- **na-eligibility-audit 2026-08-03** (`agt-4acc10`): CONFIRMS KEEP-NA, valid — 9/9 open items re-verified under the
+  standing 2026-07-14 ruling, none duplicated elsewhere. Item 9 forked to
+  `qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (also KEEP-NA, 5 items), open until that fork ships.
+- **na-eligibility-audit 2026-08-04**: CONFIRMS KEEP-NA, valid. The forked doc above shipped (`status: complete`,
+  archived, ~73min soak, 0 OOM, 11 repos) and migrated its 2 follow-ons back into this doc's todos. Remaining 9 items
+  re-verified as correctly self-triaged under the standing ruling. No RECLASSIFY, no ARCHIVE.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — LOCAL/operator-driven banner, human-tracked design questions
@@ -998,3 +986,8 @@ that contention window." No retry11 launched. Full detail in the consuming issue
 on option 1 vs option 2. Contention readings since, same session chain: 12→9→14 concurrent `quality-gates.sh` (cap 6) —
 oscillating, not clearing; MTDS resynced to `ahead=2 behind=0` each time (routine promote/backmerge drift only, no
 conflicts). No retry11-14 launched; scratchpad audit: nothing at risk each check.
+
+**Progress Log 2026-08-15 (slot-25, post-compaction) — 10th silent death confirmed (retry11, PID `3872768`)**: identical
+signature (STAGE 0→2 clean, queue `30s`→`360s`, zero terminal marker; `mtds_quickmerge_retry11.log`/`b7smu8yr2.output`/
+`b188ui3vl.output`). MTDS `ahead=2 behind=5`, commits `85d593bc`/`31995524` intact. Still `BLOCKED-OPERATOR-DECISION`;
+no retry12 per retry discipline.
