@@ -1416,10 +1416,29 @@ if [ -f "pyproject.toml" ]; then
 fi
 
 # ── EARLY EXIT: nothing to commit (skip when --no-pr) ─────────────────────────────────────────────
+# Carve-out (fixed 2026-08-15, quickmerge_first_early_exit_missing_unpushed_commits_carveout_2026_08_15.md):
+# working-tree-vs-origin/main content match is NOT sufficient to exit fast — a clean tree can still
+# carry committed-but-unpushed work ahead of origin/live-defi-rollout (e.g. a revert/dedup fix whose
+# end-state content converges back to origin/main while LDR's tip still differs). Mirrors the same
+# _UNPUSHED carve-out the later STAGE 0.4 check (~line 2265) already applies.
+_qm_early_exit_nothing_to_commit() {
+  # Returns 0 (fast-exit is safe) only when: clean tree AND content matches origin/main AND no
+  # commits ahead of origin/live-defi-rollout. Returns 1 (must proceed) otherwise.
+  [ -z "$(git status --porcelain)" ] || return 1
+  git diff origin/main --quiet 2>/dev/null || return 1
+  local _unpushed
+  _unpushed=$(git rev-list --count origin/live-defi-rollout..HEAD 2>/dev/null || echo 0)
+  [ "${_unpushed:-0}" = "0" ]
+}
+
 git fetch origin main --quiet 2>/dev/null || true
-if [ "$NO_PR" != "true" ] && [ -z "$(git status --porcelain)" ] && git diff origin/main --quiet 2>/dev/null; then
-  echo "[$REPO_NAME] Nothing to commit — exiting fast"
-  exit 0
+if [ "$NO_PR" != "true" ]; then
+  if _qm_early_exit_nothing_to_commit; then
+    echo "[$REPO_NAME] Nothing to commit — exiting fast"
+    exit 0
+  elif [ -z "$(git status --porcelain)" ] && git diff origin/main --quiet 2>/dev/null; then
+    echo "[$REPO_NAME] clean tree matches origin/main but has unpushed commit(s) ahead of origin/live-defi-rollout — not exiting fast"
+  fi
 fi
 
 # ============================================================================
