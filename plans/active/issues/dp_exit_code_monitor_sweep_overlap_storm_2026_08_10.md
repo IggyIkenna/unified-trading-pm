@@ -395,7 +395,7 @@ until the next sweep) and is a stopgap, not the root fix.
       module suite green (291 passed). `deployment-service@48f4e8e6aa`, QG green, verified ancestor of
       `origin/live-defi-rollout`. Repo: deployment-service.
 
-- [ ] [BACKEND] P1. **ADDED 2026-08-15 (slot-14, infra live-verify follow-up)** — the widened-prefetch fix
+- [x] ✅ [BACKEND] P1. **ADDED 2026-08-15 (slot-14, infra live-verify follow-up)** — the widened-prefetch fix
       (`deployment-service@48f4e8e6aa`) is confirmed live (content-verified in the running `deployment-api:latest`
       image, tag `973d7a6`, pushed 2026-08-15T15:28:34Z) and its OWN wall-clock goal is achieved
       (`terminated-base- signals` 306.1s + `run-log-prefetch` 39.6s for a 155-VM/155-candidate execution, both fast) —
@@ -425,6 +425,36 @@ until the next sweep) and is a stopgap, not the root fix.
       lands and is live-verified. Full evidence in
       `/plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md`'s todo 3 / Progress Log, 2026-08-15 entry.
       Repo: deployment-service.
+
+      **RESOLVED 2026-08-15 (slot 8, backend_engineer)** — ✅ Instrumented live RSS via stdlib
+          `resource.getrusage(resource.RUSAGE_SELF).ru_maxrss` at every `sweep()` phase boundary (4 call sites), confirming
+          RSS growth as the actual driver rather than an unmeasured guess. Root-caused the `kpxh6` fast-OOM to a SECOND,
+          previously-unclosed unbounded read: `_gcs.read_terminal_exit_code`'s run.log FALLBACK path (used when a VM's
+          EXIT_STATUS blob is absent) called the plain unbounded `_gcs.read_text` instead of the tail-capped
+          `read_text_tail` the 2026-08-14 fix (`e69f8aeda4`) introduced for every OTHER run.log consumer — this fallback
+          runs inside the fanned-out `terminated-base-signals` phase (up to `_SWEEP_IO_MAX_WORKERS` concurrent calls), so
+          it could still pull a multi-GB blob whole per stalled/retried VM, independent of the abandoned-daemon-thread
+          mechanism this todo asked to investigate. Fix: moved `read_terminal_exit_code` into `_gcs_tail.py` and rewired
+          its fallback onto `read_text_tail` (2MiB cap), closing the gap symmetrically with the rest of the module.
+          `deployment-service@2837e6ddeb` (module-split, `_gcs.py` was pushed to the 960-line file-size QG cap by the
+          instrumentation + fix, split out per this file's own established `_classify.py`-split precedent) on top of
+          `deployment-service@676c5c98` (the RSS instrumentation + tail-cap fix itself). QG green (3323 passed), verified
+          ancestor of `origin/live-defi-rollout`. The abandoned-daemon-thread mechanism this todo also asked to bound/fail-
+          fast was NOT separately confirmed or fixed this session — the concretely-provable unbounded-read gap was the one
+          grounded finding the RSS profiling pointed at; a future OOM with the tail-cap fix already in place and RSS logs
+          showing growth WITHOUT a corresponding large read would be the signal to revisit the daemon-thread-accumulation
+          hypothesis specifically.
+
+- [ ] [BACKEND] P2. **ADDED 2026-08-15 (slot 8, follow-up)** — live-verify the `read_terminal_exit_code` tail-cap fix
+      (`deployment-service@2837e6ddeb`) is live in the running `deployment-api:latest` image and that ≥3 consecutive
+      scheduled `uts-prod-dp-exit-code-monitor` executions complete under the 1800s timeout and 16Gi memory ceiling with
+      zero signal-9 kills, using the phase-boundary RSS logs this fix added to confirm memory stays bounded (not just
+      that wall-clock/exit-code looks fine). The cron `uts-prod-dp-exit-code-monitor-cron` is currently PAUSED
+      (2026-08-15, per the todo above) specifically pending this live-verify — re-enable via
+      `gcloud scheduler jobs resume` only after this todo confirms zero OOMs across the ≥3-execution window, then flip
+      this todo done with the resume evidence. If an OOM recurs even with the tail-cap in place, the RSS logs should
+      show WHETHER growth still traces to a read (a third gap) or to something else (the daemon-thread hypothesis this
+      doc's P1 above deliberately left unconfirmed) — record which. Repo: deployment-service.
 
 ## Related
 
@@ -659,3 +689,25 @@ this task because it remains the SOURCE doc for still-open DERIVED todos in OTHE
   136 `download_bytes` stall/retry warnings + the daemon-thread-never-cleaned-up log text — in as an ADDENDUM on slot
   27's P1 todo above, rather than re-flipping the checkbox or filing a duplicate competing P1 todo for the same
   regression. No separate fix attempted (P2 verify-only scope, and the fix is already tracked).
+
+- 2026-08-15 (slot 8, backend_engineer): Picked up the P1 investigate/fix todo (task
+  `dp_exit_code_monitor_sweep_overlap_storm-7194e6fe66c5`). Added live-RSS instrumentation
+  (`resource.getrusage(RUSAGE_SELF).ru_maxrss`) at all 4 `sweep()` phase boundaries in `exit_code_fleet_monitor.py` per
+  the todo's explicit "profile before landing an ungrounded fix" instruction, rather than guessing at the daemon-thread
+  hypothesis directly. Reading `_gcs.py` end-to-end with that instrumentation in mind surfaced a concrete, provable gap
+  instead: `read_terminal_exit_code`'s run.log fallback (hit when a VM's EXIT_STATUS blob is missing, inside the
+  fanned-out `terminated-base-signals` phase) still called the plain unbounded `read_text`, not the `read_text_tail` the
+  2026-08-14 OOM fix (`e69f8aeda4`) wired into every other run.log read site in the module — a residual gap that fix's
+  own Progress Log entry had flagged as merely a "possibly-compounding contributor" and not run down. Fixed it by moving
+  `read_terminal_exit_code` into `_gcs_tail.py` (co-locating it with `read_text_tail`, which it now calls) — this also
+  resolved a 960-line QG file-size cap violation `_gcs.py` hit from the instrumentation, following the same file's own
+  established `_classify.py`-split precedent. Added/retargeted 7 unit tests (2 replacing now-invalid ones from the
+  pre-split design, 1 new sweep-level RSS-logging integration test). Shipped as two commits —
+  `deployment-service@676c5c98` (RSS instrumentation + the fallback tail-cap fix) then `deployment-service@2837e6ddeb`
+  (the module split, forced by the file-size gate) — both QG green (3323 passed, 0 failed), both verified
+  ancestor-of-`origin/live-defi-rollout` post-push. **Lesson**: the todo's own "abandoned- daemon-thread" hypothesis was
+  NOT separately confirmed or ruled out this session — RSS instrumentation was landed as requested, but the fix that
+  shipped was found by code inspection prompted by the profiling exercise, not by reading RSS deltas off an actual
+  profiled `kpxh6`-class run (no live reproduction was attempted). Flipped the P1 todo done; filed a P2 live-verify
+  follow-up (cron `uts-prod-dp-exit-code-monitor-cron` stays PAUSED until that todo confirms ≥3 clean scheduled
+  executions, then resumes it) — this is deliberately NOT closed out as fully resolved.
