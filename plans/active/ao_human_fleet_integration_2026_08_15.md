@@ -237,6 +237,20 @@ investigation confirmed are both achievable with existing primitives:
   hostname, not a blanket network failure here. Design decision updated in-place (no operator ruling needed — this is
   new information within the same documented intent "reach AO's API from a laptop," not a scope change). Design updated:
   Phase 2 tooling targets the domain name (correct, cert-verified) as primary.
+- **2026-08-15, tick 5 (autonomous, main session)**: Phase 2 (part 1) built and shipped — `agent-orchestrator@5516874`.
+  `ao_client.sh` + `ao-register.sh`/`ao-claim.sh`/`ao-done.sh` + `ao-statusline-heartbeat.sh`. **Correction to tick 4's
+  finding**: retested the domain-timeout anomaly ~15min later while testing these scripts (5 consecutive attempts) — it
+  did NOT reproduce, all 5 succeeded in ~0.7s each with the correct `401`. The earlier reproducible timeout (5+ attempts
+  including `--resolve` pinning) was real at the time but is NOT a persistent structural block — most likely transient
+  (DNS propagation / connection-pool / an ephemeral network blip on this session's own path). Updated the framing from
+  "reproducible anomaly" to "seen once, since cleared" — still worth a real check from the operators' own networks
+  during Phase 4, just not something to design defensively around. HTTP mechanics verified end-to-end against the LIVE
+  instance using a deliberately invalid token (no real token exists yet): clean `401 invalid or expired token` responses
+  confirm request shape, auth header, and connectivity all work correctly; the statusline script's no-config and
+  configured-but-invalid-token paths were both verified directly in this session (a live statusline consumer). Also
+  fixed the SAME stale "no inbound rule" claim, now found propagated a THIRD time in `check-ao-backlog-status.sh`'s own
+  header comment. Remaining Phase 2 item: the local usage-scan-and-push companion (needs a new backend ingest endpoint,
+  not yet built) — next tick.
 
 ## Todos
 
