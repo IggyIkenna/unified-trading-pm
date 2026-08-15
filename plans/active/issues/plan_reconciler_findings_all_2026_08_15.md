@@ -127,13 +127,16 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
       breaking a cross-repo adapter-contract QG gate (5 missing tracked contract-call patterns below baseline). NOT
       auto-fixable — needs a worker decision (restore patterns vs regenerate baseline) + correct the "shipped, tested"
       framing in the first doc.
-- [ ] [DOCS] P1. **CLAIM≤MEASUREMENT violation — 2 docs falsely claim archival ritual completed.**
+- [x] [DOCS] P1. **CLAIM≤MEASUREMENT violation — 2 docs falsely claim archival ritual completed.**
       `sports_odds_feature_naming_canonicalization_2026_07_21.md` and
       `sports_odds_feature_naming_four_way_mismatch_2026_07_21.md` both have na-eligibility-audit entries claiming "ran
       the 6-step archival ritual... status:resolved... archived" — FALSE on both: frontmatter still active/open, files
       still physically in `plans/active/`, no archive copy exists. Underlying engineering work IS genuinely done (all
       todos `[x]` with real commit citations). Fix: either finish actual archival (flip + `git mv` both) or correct the
-      false claims.
+      false claims. — **APPLIED 2026-08-15**: finished the actual archival for both — status flipped
+      (`complete`/`resolved`), banner added, `git mv`'d to `plans/archive/2026_08/` (+ `issues/` for the four-way-
+      mismatch doc), `archive_exempt` dropped, and all real active-corpus referrers (frontmatter `related:` links +
+      markdown links) fixed to the new paths.
 - [ ] [CODE] P1. **Done-but-unchecked, 4 items in one doc.**
       `plans/active/artifact_pipeline_observability_2026_07_17.md` — 4 of 7 cross-referenced items from batch4 are
       done-but-unchecked with hard evidence: `:646-647` port manual-trigger action/retire CloudBuildsTab
@@ -147,11 +150,11 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
       root-fix (already root-fixed, deployment-api@c1aab6e/@b014ae9). Root cause:
       `ui_satellite_ao_dispatch_batch4_2026_08_13_finalize.md`'s reconciliation todo hasn't run yet (machine-gated
       mechanism exists, just not executed).
-- [ ] [DOCS] P1. **Predictions_master epic missing batch11.** `plans/epics/predictions_master.md` `related_plans:`
+- [x] [DOCS] P1. **Predictions_master epic missing batch11.** `plans/epics/predictions_master.md` `related_plans:`
       (lines 35-51) and "Assigned active plans" section (says "16 active plans", actual 18) both omit
       `prediction_satellite_ao_dispatch_batch11_2026_08_13.md` + its finalize (both declare
       `parent_epic: predictions_master`, created before the epic's own last_updated). Auto-fixable: add 2 entries,
-      correct 16→18.
+      correct 16→18. — **APPLIED 2026-08-15**: added both entries to `related_plans:` and the P2 body section, 16→18.
 - [x] ✅ [CODE] P1. **cefi_enumeration_audit doc — 2 issues.**
       `cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md`: (a) frontmatter
       self-contradiction `assigned_vm: planning` + `execution_scope: local-only` (schema requires `orchestrator-agent`
@@ -170,10 +173,12 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
       one), rewrote the todo to reflect the corpus-wide 2026-08-12 clearing and point at running the archival ritual
       instead of an operator unlock-ask; did not flip any other todo in this `sequential:true` doc.
       `unified-trading-pm@f6d90162b4`.
-- [ ] [DOCS] P1. **Predictions consolidated closeout per-child open-todo snapshot 20 days stale.**
+- [x] [DOCS] P1. **Predictions consolidated closeout per-child open-todo snapshot 20 days stale.**
       `prediction_consolidated_closeout_2026_07_18.md`: phase_ab says 13 open (actual 6), phase_c says 4 (actual 2),
       phase_d says 6 (actual 5), capture_incident_remediation says 9 (actual 7). Not dispatch-blocking (real gate is
-      `depends_on`) but misleads readers. Re-run counts, update both citation points (snapshot table + digest).
+      `depends_on`) but misleads readers. Re-run counts, update both citation points (snapshot table + digest). —
+      **APPLIED 2026-08-15**: re-counted fresh (`grep -c`), same figures confirmed still accurate; updated both citation
+      points (snapshot table + digest index).
 - [x] ✅ [TERRAFORM] P1. **tradfi_master epic stale active-plans list.** `plans/epics/tradfi_master.md:817-888` lists
       batch6+finalize as "status: active" but they're archived; list stops at batch8, missing batch9-batch12 entirely
       (epic's own frontmatter `related_plans` cites batch12, `ag_closeout_audit_tradfi_parked_2026_08_10.md` confirms
@@ -207,13 +212,14 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
 - [x] ✅ [DOCS] P2. `tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md` action item1 has a
       stale "option 2 still NOT shipped" note but `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md:191-198` shows it
       DONE (deploy@48f55e934b). Auto-fixable. **DONE 2026-08-15.** `unified-trading-pm@f6d90162b4`.
-- [ ] [CODE] P2. `sports_consolidated_closeout_2026_07_19.md:745` Track H RAISE-on-all-NaT todo still `[ ]`, but
+- [x] [CODE] P2. `sports_consolidated_closeout_2026_07_19.md:745` Track H RAISE-on-all-NaT todo still `[ ]`, but
       identical work shipped per `sports_consolidated_native_ao_extract_2026_07_25.md:346-350`
-      (market-tick-data-service@84ee34f2, 2 named tests, QG green). Flip citing that sha.
-- [ ] [DOCS] P2. `sports_satellite_ao_dispatch_batch11_2026_08_09_finalize.md:64-69` todo2 still `[ ]` but target
+      (market-tick-data-service@84ee34f2, 2 named tests, QG green). Flip citing that sha. — **APPLIED 2026-08-15**:
+      re-verified the citation, flipped.
+- [x] [DOCS] P2. `sports_satellite_ao_dispatch_batch11_2026_08_09_finalize.md:64-69` todo2 still `[ ]` but target
       (canonicalization doc's parity-test todo) is `[x]` with features-service@36fb7b88, independently corroborated
       (10/10 tests passing). Flip citing evidence (entangled with the P1 archival-claim finding above — fix both
-      together).
+      together). — **APPLIED 2026-08-15**: flipped alongside the P1 archival fix above.
 - [ ] [DOCS] P2. `bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27.md` sole todo not flipped even
       though the source plan was already archived 2026-08-15 (this session's own batch3). Flip citing the archive
       commit, then archive this finalize doc too (no lock on it).
