@@ -403,7 +403,12 @@ source: >-
       doc's Progress Log was written mid-session but was already resolved by session-end — simply never checked off. No
       code shipped by this batch (none needed). Source:
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
-- [ ] [CODE] P2. Fix the pre-existing hardcoded-prod-project-ID QG violation in test_vm_launcher_scripts.py Source:
+- [x] ✅ [CODE] P2. **STALE PREMISE — already fixed, no violation exists.** (2026-08-15, slot-22·backend_engineer) The
+      named QG check (`base-service.sh`: `codex_rg "central-element-[0-9]+" tests/` → "Hardcoded prod project ID in
+      tests") runs clean in deployment-service today: a live re-run of the exact check regex against `tests/` finds zero
+      matches. `git log -- tests/unit/test_vm_launcher_scripts.py` shows
+      `c55faf2c "test(dp): drop hardcoded prod project id from vm-launcher test fixture"` already landed this fix after
+      the source doc (2026-08-10) was filed. No code change made; nothing to restore. Source:
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [ ] [CODE] P2. Track 0: Capture Binance/OKX/Bybit indexPrice/markPrice/fundingRate for equity-perps as a first-class
       data_type Source: `plans/active/cefi_consolidated_closeout_2026_07_18.md`
