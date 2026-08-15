@@ -18,14 +18,14 @@ parent_epic: manifest_master
 source:
   [
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
-    /plans/active/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md,
+    /plans/archive/2026_08/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md,
   ]
 ---
 
 # Extracted — R5 smoke ledger (2026-06-11)
 
 > **Extracted verbatim 2026-08-05 → this file** (line-cap remediation pass 3,
-> `/plans/active/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md` todo P3) — the full R5 smoke
+> `/plans/archive/2026_08/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md` todo P3) — the full R5 smoke
 > ledger (BLOCKED shards table, GREEN per-AG table, cross-cutting findings, promotion-to-main snapshot, and all 7
 > remediation todos) from the master migration catalogue coordinator. Every R5-fix todo is `[x]` done; the one-time
 > probe data (2026-06-11) is stale history; the Gate-State Board now reads G4 all-green across all 5 AGs. The live

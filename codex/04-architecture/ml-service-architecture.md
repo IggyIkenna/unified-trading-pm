@@ -41,8 +41,8 @@ code_refs:
 # ml-service architecture
 
 > **✅ STATUS: STABLE** — consolidation complete 2026-05-20 (Phases 1-9 of
-> [`ml_repo_consolidation_2026_05_19`](../../plans/archive/2026_05/ml_repo_consolidation_2026_05_19.md)). `ml-service` is the
-> canonical repo; both source repos (`ml-training-service`, `ml-inference-service`) are archived.
+> [`ml_repo_consolidation_2026_05_19`](../../plans/archive/2026_05/ml_repo_consolidation_2026_05_19.md)). `ml-service`
+> is the canonical repo; both source repos (`ml-training-service`, `ml-inference-service`) are archived.
 
 ## TL;DR
 
@@ -140,10 +140,19 @@ flat-deps rule unchanged workspace-wide; ml-service carries training deps it doe
 
 ## Launcher + Cloud Build
 
-- ONE launcher: `launch-ml-vm.sh` parameterised by `--operation` + `--asset-group`. Predecessors
-  (`launch-ml-training-vm.sh`, `launch-ml-inference-vm.sh`) deleted.
+- **TWO live launchers, not one** (verified 2026-08-15,
+  `/plans/archive/issues/launch_ml_training_vm_codex_claims_deleted_but_live_2026_08_15.md` — the 2026-05-20
+  consolidation described below was never fully executed for this script; `launch-ml-training-vm.sh` was NOT deleted):
+  - `launch-ml-vm.sh` — general `--operation`-parameterised launcher (`train|infer|evaluate|grid-search|pipeline`),
+    invokes `python -m ml_service`. VM prefix `ml-`. No programmatic caller found (manual/CLI use).
+  - `launch-ml-training-vm.sh` — train-only, invokes `python -m ml_service.training`. VM prefix `ml-train-`. This is the
+    launcher `deployment-api`'s `POST /api/ml/experiment/launch` route
+    (`deployment-api/deployment_api/routes/ml_experiment_launch.py`, `_LAUNCHER_FILENAME`) actually fires — it was fixed
+    2026-08-09 (`deployment-service@082a5eda`) to point at the real post-consolidation `ml_service.training` module, not
+    left over as dead code. `launch-ml-inference-vm.sh` is confirmed gone (not found on disk).
 - Cloud Build refresh-tarballs: single `ml-service` entry (was 2).
-- `VM_PREFIX_TO_BUCKET` updated to drop `ml-training-` / `ml-inference-` prefixes, add `ml-` prefix.
+- `VM_PREFIX_TO_BUCKET` registers only the `ml-` prefix (`launch-ml-vm.sh`); `launch-ml-training-vm.sh`'s `ml-train-` VM
+  names are covered by prefix-match against `ml-` and carry no separate registry entry.
 - DART UI service-list: single `ml-service` entry with 2 health sub-paths.
 
 ## Model registry + cross-surface coupling
@@ -164,12 +173,14 @@ migration used.
 
 ## Migration history
 
-- 2026-05-19: plan filed ([`ml_repo_consolidation_2026_05_19`](../../plans/archive/2026_05/ml_repo_consolidation_2026_05_19.md))
-  — 10-phase shape per features-service precedent.
+- 2026-05-19: plan filed
+  ([`ml_repo_consolidation_2026_05_19`](../../plans/archive/2026_05/ml_repo_consolidation_2026_05_19.md)) — 10-phase
+  shape per features-service precedent.
 - 2026-05-20: Phases 1-9 complete — ml-service repo live; source repos archived pending `gh repo archive` operator
   action (Phase 7 step 3). All downstream registries updated: deployment-service catalog, shard_builder, dependencies,
-  manifest_reader, topology nodes, cli, seed_mock_data. Launcher: `launch-ml-vm.sh` unified. VM prefix: `ml-` (was
-  `ml-train-`). All 3 parity gates GREEN (gate-1 boot, gate-2 QG, gate-3 functional).
+  manifest_reader, topology nodes, cli, seed_mock_data. Launcher: `launch-ml-vm.sh` added, VM prefix `ml-` registered —
+  but `launch-ml-training-vm.sh` / its `ml-train-` prefix were never actually retired (see § "Launcher + Cloud Build"
+  above, corrected 2026-08-15). All 3 parity gates GREEN (gate-1 boot, gate-2 QG, gate-3 functional).
 - Source repo path mappings:
   - `ml-training-service/` (path `ml_training_service/`) → `ml-service/ml_service/training/`
   - `ml-inference-service/` (path `ml_inference_service/`) → `ml-service/ml_service/inference/`

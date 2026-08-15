@@ -183,26 +183,113 @@ left it unfixed here pending the root-cause trace below, to avoid shipping a cha
   registry says is out of scope, without going through the same `classify_venue_error()` contract every other adapter
   path uses, is a latent honest-absence/classification-integrity gap that could recur for other venues/data_types.
 
+## UPDATE 2026-08-15 (agt-bb295c, data_pipeline_failure escalation, slot-14) — root cause found, one bug fixed + shipped, one genuine scope decision remains
+
+**This escalation re-fired on the SAME 1584-row population agt-9b0feb diagnosed** (identical counts: 1584/15249,
+10.4%, NYSE=1164/NASDAQ=420, attempted_at 2026-08-15T13:12-14:29Z) — agt-9b0feb was a one-shot worker that
+investigated but did not fix, so the still-`attempted_failed` cells re-triggered DP-FETCH-009 on the next scan.
+
+**Correction to the leading hypothesis above: this is NOT a capability-gate bypass driving fresh Databento fetches.**
+Direct GCS verification (`unified_trading_library.cloud_interface.get_storage_client().list_blobs(...)`, live prod
+bucket `market-data-tick-tradfi-prd-central-element-323112`) found **134 real, pre-existing raw tbbo parquet files**
+for NYSE+NASDAQ on 2024-07-01 alone (e.g.
+`raw_tick_data/by_date/day=2024-07-01/pipeline_mode=batch_databento/asset_group=tradfi/venue=NASDAQ/instrument_type=equity/data_type=tbbo/NASDAQ:EQUITY:ABNB-USD.parquet`,
+2099 real quote rows, `source=databento`) — a genuine historical capture, not a live bypass fetch (agt-9b0feb's own
+manual GCS probe that found "no files" used the wrong casing, `instrument_type=EQUITY` vs the real lowercase
+`instrument_type=equity` — a false negative, not evidence of absence). The manifest's own `service_name` column
+(never checked by agt-9b0feb — a cheap, decisive check) confirms the actual writer:
+**100% of the 1584 rows have `service_name=market-data-processing-service`** — this is MDPS's own downstream candle-
+DERIVATION layer (reading MTDS's already-captured raw ticks), not a fetch-side bypass of `venue_fetch.py` at all.
+
+**Root cause #1 (FOUND + FIXED + SHIPPED, `market-data-processing-service@c5e0d68bcf`):** MDPS's shared
+`BaseCandleAdapter._get_local_timestamp_column()` (`app/adapters/base_adapter.py`) picks the local-timestamp column by
+**presence alone** (`ts_init` → `local_timestamp` → `ts_event` → `timestamp`, first COLUMN THAT EXISTS wins). This
+real tbbo capture has `ts_init` and `ts_event` present as columns but **100% null** — Databento's TBBO record type
+for these equities apparently never populated them at write time — while `timestamp` (priority 4, "last resort")
+carries valid, correctly-scaled microsecond-epoch data for every row. The old code always picked the unusable
+`ts_init`, producing an all-NaT `processing_dt` in `_convert_to_processing_dt` — no warning fires because the
+"dropped_out_of_bounds" counter only counts values that were newly invalidated by conversion, not inputs that were
+already null. `TradfiTbboAdapter.process_to_candles`'s `tick_data["processing_dt"].dt.date.value_counts().idxmax()`
+then crashes with a generic `ValueError: attempt to get argmax of an empty sequence` on an empty (all-NaN-excluded)
+Series. This is a plain `ValueError` (not a typed `UpstreamTimestampBiasError`/`MalformedTickFieldError`), so
+`_process_instrument_file`'s outer broad except in `live_workers.py` — which has no typed-error tier, unlike the
+sibling per-timeframe loop in `live_workers_chain.py` — routes it to the generic
+`_record_unclassified_failed_for_all_timeframes` → `error_reason=UNCLASSIFIED_ADAPTER_ERROR`. **Reproduced live**
+against the real GCS object both before (crash) and after (succeeds, returns a real `CandleOutput`) the fix. The fix
+is a minimal validity check (`col in df.columns and df[col].notna().any()`) — strictly additive, cannot regress any
+caller whose priority-1 column already has data (only changes behavior for the previously-always-broken
+present-but-null case), and is used by ~10 other adapters (trades, book_snapshot, liquidations, options_chain,
+futures_chain, derivative, etc.) so it also closes this exact failure mode for any of them that hits the same shape.
+`quality-gates.sh` green; shipped via quickmerge, `git merge-base --is-ancestor` verified on
+`origin/live-defi-rollout`.
+
+**Root cause #2 (FOUND, NOT FIXED — genuine operator-gated scope decision, do not guess):** fixing #1 let processing
+reach the WRITE step, which immediately hit a second, distinct, pre-existing gap: `No SchemaContract registered for
+asset_group='tradfi' instrument_type='EQUITY' data_type='tbbo_1m' venue='NASDAQ'. Add a contract to
+unified_api_contracts.internal.schemas.contracts.CONTRACT_REGISTRY...` — reproduced on every one of the 134 real
+files when I re-ran the exact narrow scope (`MDPS_DATA_TYPES=tbbo MDPS_VENUES='NYSE NASDAQ' ... --operation process
+--mode batch --start-date 2024-07-01 --end-date 2024-07-02 --force`) to try to flip the cells to `captured`. A grep
+of `unified_api_contracts/internal/schemas/contracts.py`'s `CONTRACT_REGISTRY` + `VENUE_CONTRACT_OVERRIDES` finds
+**zero** `tbbo`-prefixed entries for ANY venue or instrument_type — tbbo candle-derivation output was never
+schema-registered anywhere, not just for equities. Combined with the archived operator ruling already cited above
+("Equity/ETF tick-level trades+tbbo — NOT needed for TradFi MVP"), this reads as an incomplete/never-finished MDPS
+capability, not a regression — `TradfiTbboAdapter` exists and (after fix #1) runs correctly, but its output was never
+wired to a write-time contract. **This is a genuine design/scope decision, not a mechanical bug** — I have NOT
+invented a schema (that requires deciding the actual column set/dtypes for a tbbo-derived candle, real design
+review, and cross-repo coordination with `unified-api-contracts`), and have NOT registered `("tradfi","tbbo")` in
+`KNOWN_DEAD_CELLS` (deployment-service) either, because `is_known_dead()`'s own safety contract only suppresses
+while `attempted_failed` activity stays at-or-before `narrowed_at` — registering it WITHOUT an accompanying capability
+change would just be a hollow band-aid that re-breaks on the next narrow-scope backfill (exactly what happened here:
+agt-9b0feb's session already saw this population once, uncorrected, and it re-paged).
+
+**Recommended decision (posted to `/blocked` for the main agent / operator; recorded here regardless of a live
+answer):**
+- **Option A (recommended)** — gate MDPS's `data_type` scan against the SAME `VENUE_DATA_TYPE_CAPABILITIES` registry
+  `venue_fetch.py` already uses on the fetch side, so MDPS naturally skips (`expected_unattempted`) a data_type the
+  registry says is out of scope for a venue, instead of attempting real historical data with no output contract.
+  Matches the ALREADY-DECIDED operator MVP-scope ruling with no new scope expansion; smaller, safer, single-repo
+  change. Needs a real review of where to hook it in `orchestration_service.py`'s scan path without adding a new
+  failure mode for OTHER data_types.
+- **Option B** — design + register the missing `tbbo_1m`/etc. `SchemaContract` (any timeframe MDPS derives) for
+  `instrument_type=EQUITY`, completing equity tbbo candle-derivation end-to-end. Only appropriate if the operator
+  affirmatively wants this now, reversing the archived MVP-scope ruling — a real feature-completion decision, not a
+  hot-fix.
+- Until one ships, `("tradfi","tbbo")` will keep re-paging DP-FETCH-009 roughly every 30 min (the event's registered
+  re-nag cooldown) whenever the detector re-scans — this is a KNOWN, EXPLAINED residual (not a silent gap), tracked
+  here.
+
 ## Open work (tracked todos)
 
-- [ ] [SCRIPT] P1. Identify the exact code path (script/CLI/handler) that issued the 1584 tbbo/NYSE+NASDAQ Databento
+- [x] [SCRIPT] P1. Identify the exact code path (script/CLI/handler) that issued the 1584 tbbo/NYSE+NASDAQ Databento
       fetch attempts on 2026-08-15 13:12-14:29 UTC for shard dates 2024-07-01/07-02 — check GCP Cloud Run/VM launch
       history + any interactive/manual invocation in that window, and grep `market-tick-data-service` +
       `deployment-service` for any tbbo/equity backfill entrypoint that does NOT route through
       `venue_fetch.py`'s `get_expected_data_types_for_venue` capability gate. (repos: market-tick-data-service,
-      deployment-service)
-- [ ] [SCRIPT] P1. Once the call site is found, route it through `classify_venue_error()` per the standard
+      deployment-service) — ✅ CORRECTED (agt-bb295c, 2026-08-15): not a fetch-side bypass at all. The 134+ real raw
+      tbbo files are a pre-existing historical capture; the 1584 manifest rows are written by MDPS's own downstream
+      candle-derivation (`service_name=market-data-processing-service`, confirmed via direct manifest read), which
+      does not consult `venue_fetch.py`'s gate because it never fetches — it only reads MTDS's already-written
+      parquet. See UPDATE above.
+- [x] [SCRIPT] P1. Once the call site is found, route it through `classify_venue_error()` per the standard
       `record_failed` contract instead of a generic except-Exception fallback, and confirm it either honors
       `VENUE_DATA_TYPE_CAPABILITIES` (blocking tbbo for NYSE/NASDAQ, matching current MVP scope) or — if the operator
       has decided equity tbbo IS now in scope — file the corresponding registry + capability update as its own
       tracked change (not silently expanded via a bypass path). (repos: market-tick-data-service, unified-api-contracts)
+      — ✅ SUPERSEDED (agt-bb295c, 2026-08-15): `classify_venue_error()` is fetch-side and not on this code path at
+      all (see correction above). The REAL cause was a plain adapter bug (`_get_local_timestamp_column` presence-only
+      selection) — fixed + shipped `market-data-processing-service@c5e0d68bcf`. The capability-honoring half of this
+      todo is now Option A in the UPDATE's recommended decision, still open pending operator input.
 - [ ] [SCRIPT] P2. Fix the `classify_venue_error(venue, code)` provider-vs-market-venue key mismatch for TradFi
       Databento venues: either alias `VENUE_ERRORS_TRADFI["databento"]`'s DATABENTO_* + generic HTTP-code entries
       under every Databento-backed tradfi market venue key, or change `sentinels.py`'s Tier-2/Tier-3 call sites to
       pass the actual data-provider key (`"databento"`) when the failure originated from a Databento adapter (needs a
       provider tag threaded through `failed_shards`/`failed_per_dt_by_venue`, since sentinels.py doesn't currently
-      know which provider handled a given failed shard). (repos: unified-api-contracts, market-tick-data-service)
-- [ ] [DESIGN] P2. Once the above is resolved, decide whether `("tradfi", "tbbo")` needs a `KNOWN_DEAD_CELLS`
-      registry entry — only if the disposition is "structurally out of scope, expected to keep failing" (mirroring
-      `("tradfi", "mbp_10")`); NOT if the bypass gets fixed and tbbo simply stops being attempted. (repos:
-      deployment-service)
+      know which provider handled a given failed shard). (repos: unified-api-contracts, market-tick-data-service) —
+      still valid/open, unrelated to the MDPS finding above; not attempted by agt-bb295c (out of this escalation's
+      root cause).
+- [ ] [DESIGN] P2. [OPERATOR] Decide the disposition per the "Recommended decision" in the UPDATE above (Option A:
+      gate MDPS's tbbo scan by `VENUE_DATA_TYPE_CAPABILITIES` — recommended; or Option B: design + register the
+      missing `tbbo_1m` `SchemaContract` for EQUITY). Only THEN register `("tradfi","tbbo")` in `KNOWN_DEAD_CELLS`
+      if Option A ships (mirrors `("tradfi","mbp_10")`) — registering it without a capability change first would be a
+      hollow band-aid per `is_known_dead()`'s own re-arm-on-new-activity safety contract. (repos: deployment-service,
+      market-data-processing-service, unified-api-contracts)

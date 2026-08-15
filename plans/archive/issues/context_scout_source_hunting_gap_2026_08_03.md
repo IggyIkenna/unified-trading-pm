@@ -36,7 +36,7 @@ tags: [context-scope, context-scout, plan-hygiene, tooling, agent-context-cost, 
 related:
   [
     /plans/archive/issues/tradfi_mdps_es_mes_backfill_fleet_consolidator_staleness_failures_2026_07_31.md,
-    /plans/active/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md,
+    /plans/archive/2026_08/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
   ]
 created: 2026-08-03

@@ -150,23 +150,44 @@ not `2026-01-07`.
       (investigation) / instruments-service or the venue capture pipeline (repair, TBD once inspected). —
       **investigation complete 2026-08-15 (slot-12, infra), see Progress Log; repair split into the new todo below
       pending a delete-safety-cited action.**
-- [ ] [DATA] P2. **Repair the corrupted `XRP_USDC-30JAN26-2D3-P.parquet` object** (path above) once its combo-vs-legit
-      classification is settled: cross-check against `deribit_combo_perpetual_partition_move_2026_07_21.md`'s combo
-      GCS-driven census (the shape regex `-(FS|CS|PS|STRD|STD|IRON|BOX)-` used there does NOT match this filename — no
-      infix token — so it is either a residual combo-shape variant that escaped that migration's 2026-08-12 `--apply`,
-      or a different, non-combo corruption; the corrupted footer prevents reading the content column to tell which).
-      If confirmed combo-shape (leg tokens `2D3`/`30JAN26` match catalogue rows
-      `DERIBIT:COMBO:XRP_USDC-CS-30JAN26-2D3_2D6` and `DERIBIT-COMBO:COMBO:...-RR-27MAR26-2D3_2D4` — see Progress Log):
-      delete the corrupted object per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a (single-object,
-      soft-delete-retention-checked delete; do not batch) and let the combo migration's normal capture/backfill path
-      supply the correct data if it's genuinely missing from the `instrument_type=combo` partition. If NOT combo-shape
-      (a standalone corrupted capture with no catalogue analog): delete + re-fetch via
-      `market_tick_data_service.cli.main --operation download --day 2026-01-15 --force` scoped to this shard/venue,
-      after confirming the correct `instrument_type` via the live catalogue (do NOT assume `perpetual` — the raw
-      filename form itself, unlike its ~1MB canonical-form siblings in the same directory, suggests it predates/escaped
-      migration). Repo: market-tick-data-service (delete/re-fetch) + cross-reference
-      `plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md` (closed but directly relevant combo
-      census methodology).
+- [x] ✅ [DATA] P2. **Repair the corrupted `XRP_USDC-30JAN26-2D3-P.parquet` object** (path above) — classification
+      settled, root cause found + fixed, delete confirmed already-executed. See Progress Log for full evidence.
+      **NOT combo-shape** (confirmed by regex, not eyeballing: neither the migration doc's combo regex
+      `-(FS|CS|PS|STRD|STD|IRON|BOX)-` nor the classifier's own `is_deribit_combo_symbol_shape` matches this
+      filename). It is a genuine standalone Deribit **decimal-strike OPTION**: `2D3` is Deribit's `D`-decimal-separator
+      strike notation (`2D3` = strike 2.3, matching XRP's price range) used for XRP/SOL/DOGE-style options, expiry
+      30JAN26, right=Put. Root-caused why it was captured under `instrument_type=perpetual` instead: MTDS's
+      `TardisAdapter._OPTION_SYMBOL_RE` required a pure-digit strike (`-\d+-[CP]$`) — `2D3` isn't `\d+`, so this
+      symbol matched neither the option regex, the dated-future regex, nor the combo-shape check, and fell through to
+      the venue-level PERPETUAL default (the exact failure shape as this file's other documented classifier gaps).
+      **Fixed**: `market-tick-data-service@06c07089` widens the regex to `-\d+(?:D\d+)?-[CP]$` (strictly a superset
+      of the old form — safe for every other venue, mirrors the reasoning of this file's other regex-widening
+      commits), with a new regression test file
+      (`tests/unit/test_deribit_decimal_strike_option_classification.py`). QG green, quickmerge-verified on origin.
+      **Delete**: the corrupted object was found **already absent** when this session went to execute the §3a
+      delete — confirmed via a direct `list_blobs` re-listing of the exact GCS prefix, which returned only the same
+      3 sibling objects (byte-identical sizes to the earlier investigation's report) the corrupted file was
+      originally found alongside; someone/something already deleted it between the 2026-08-15 investigation and
+      this session, with no corresponding Progress Log entry (a small commit-push-flip discipline gap, same shape as
+      a prior gap noted in `deribit_combo_perpetual_partition_move_2026_07_21.md`'s Progress Log). No delete action
+      was needed or taken this session.
+      **Re-fetch — NOT done, split into the new todo below.** An ad hoc CLI invocation from this interactive slot
+      session (`market_tick_data_service.cli.main --operation download`) did not cleanly resolve to the prod
+      environment (`ServiceRuntime` logged `env=dev` even with `DEPLOYMENT_ENV=prod` set) and did not honor `--day`
+      as expected (defaulted to "yesterday") within a short session — flagging rather than guessing further per this
+      craft's `does_not: guess at an ambiguous fix`. Re-fetch needs a session with the actual mechanism confirmed
+      (likely via a VM launcher setting `DEPLOYMENT_ENV` the way `launch-mtds-backfill-vm.sh` does, not an
+      interactive ad hoc invocation).
+      Repo: market-tick-data-service (fix + delete-verify).
+- [ ] [DATA] P3. **Re-fetch `XRP_USDC-30JAN26-2D3-P` (Deribit option, expiry 2026-01-30, strike 2.3, Put) for day
+      2026-01-15**, now that `mtds@06c07089` correctly classifies it `instrument_type=option` instead of `perpetual`.
+      The object is confirmed already-deleted (see todo above) so this is a pure re-capture, not a delete-then-fetch.
+      First confirm the correct env-resolution mechanism for a single-symbol/single-day CLI download from this
+      interactive-session class (the prior session's `DEPLOYMENT_ENV=prod` env-var override did not take effect —
+      diagnose why before retrying, e.g. check whether `UnifiedCloudConfig` reads env from VM metadata only, not a
+      process env var, in which case this needs to run via a launcher-set VM instead). Verify post-fetch: the new
+      object lands at `.../instrument_type=option/data_type=trades/DERIBIT:OPTION:XRP_USDC-30JAN26-2D3-P.parquet` (or
+      the canonical option id form), parquet footer valid, row count non-zero. Repo: market-tick-data-service.
 
 ## Progress Log
 
@@ -327,3 +348,54 @@ not `2026-01-07`.
   blind re-fetch under `instrument_type=perpetual` (which would just recreate a wrong classification if this is
   confirmed combo-shaped) — split into the new `[DATA] P2` todo above rather than executing a guess this session. No
   GCS object was written, moved, or deleted this session — every check was a read.
+- **2026-08-15 (slot-15, data_engineering)**: Settled the combo-vs-legit classification and root-caused the
+  misclassification. **Not combo-shaped**: verified programmatically that `XRP_USDC-30JAN26-2D3-P` matches neither
+  the migration doc's combo census regex (`-(FS|CS|PS|STRD|STD|IRON|BOX)-`) nor the classifier's own
+  `is_deribit_combo_symbol_shape` (needs a type-code second dash-segment; this symbol's second segment is
+  `30JAN26`, a date token). **It is a genuine standalone Deribit decimal-strike OPTION**: read
+  `tardis_symbol_parsing.py`'s `_DERIBIT_OPTION_SYMBOL_RE`, whose own comment documents Deribit's `d`-separator
+  sub-dollar-strike notation (`1d7`=1.7, `0d05`=0.05, "accounts for ~74k of 283k option symbols" per a 2026-05-04
+  live check) — `2D3` decodes the same way (strike=2.3, plausible for XRP's price range around Jan 2026), with
+  trailing `-P` = Put and `30JAN26` = a valid expiry date token. **Root cause of the misclassification**: the
+  classifier used at write time, `TardisAdapter._OPTION_SYMBOL_RE` (`tardis_adapter.py`, a DIFFERENT, simpler regex
+  than the one above), required a pure-digit strike (`-\d+-[CP]$`) — `2D3` is not `\d+` (contains a letter), so this
+  symbol matched neither the option regex, the dated-future regex, nor the combo-shape check, and fell through
+  `_classify_row_instrument_type`'s unconditional final line to `InstrumentType.PERPETUAL` — the identical failure
+  shape this file's `deribit_combo_perpetual_partition_move_2026_07_21.md` §3 and this same adapter file's own
+  inline comments already document for OKX dated-futures, Bitget month-code futures, and bare-DERIBIT combos.
+  Confirmed no catalogue row exists for the exact `raw_symbol` (consistent with a decimal-strike option — the
+  catalogue's raw-symbol column may use a different case/notation not probed this session), so the classification
+  rests on the regex/domain match, not a catalogue hit; noted as a residual uncertainty, not treated as
+  disqualifying (the corrupted footer would prevent confirming via content either way).
+
+  **Fixed**: `market-tick-data-service@06c07089` widens `_OPTION_SYMBOL_RE` to `-\d+(?:D\d+)?-[CP]$` — a strict
+  superset of the old pure-digit form (adds, never removes, matches), so safe for every other venue by the same
+  reasoning this file's other regex-widening commits already use. New regression test file
+  `tests/unit/test_deribit_decimal_strike_option_classification.py` locks the fix (decimal-strike Put/Call classify
+  OPTION; integer-strike options, perpetuals, dated futures, and bare-DERIBIT combo shapes are all unaffected).
+  `quality-gates.sh` full run green; `quickmerge --agent` landed, SHA verified an ancestor of
+  `origin/live-defi-rollout` via `git merge-base --is-ancestor`.
+
+  **Delete step — found already done, not executed this session.** Went to execute the §3a single-object delete
+  (fresh `gcs_bucket_soft_delete_retention_seconds` check + `gcs_conditional_delete`, via
+  `unified_trading_library.cloud_interface`, no subprocess `gcloud`/`gsutil`) and `gcs_describe_object` returned
+  `None` — the object was already gone. Re-verified via a direct `list_blobs` on the exact GCS prefix
+  (`gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=2026-01-15/.../venue=DERIBIT/
+  instrument_type=perpetual/data_type=trades/`): 3 objects, byte-identical sizes to the 2026-08-15 investigation's
+  report (`DERIBIT:PERPETUAL:BTC-USD@INV.parquet`=1,174,053B, `...ETH-USD@INV.parquet`=1,023,601B,
+  `ticks.parquet`=1,173,742B) — confirms the correct bucket/prefix was checked, and the corrupted object is
+  genuinely gone, not a bucket-resolution miss on my part. No corresponding Progress Log entry anywhere in this
+  doc's history records who/what deleted it — a small commit-push-flip discipline gap, the same shape flagged in
+  `deribit_combo_perpetual_partition_move_2026_07_21.md`'s 2026-08-11 Progress Log entry.
+
+  **Re-fetch — attempted, not completed, split into a new P3 todo.** Tried
+  `market_tick_data_service.cli.main --operation download --mode batch --asset-group cefi --venues DERIBIT
+  --day 2026-01-15 --data-types trades --instrument-ids XRP_USDC-30JAN26-2D3-P --dry-run` from this interactive
+  slot session with `DEPLOYMENT_ENV=prod` set. Two anomalies: (1) `ServiceRuntime` logged `env=dev` regardless of
+  the env var (env resolution did not respond the way `launch-mtds-backfill-vm.sh`'s own `DEPLOYMENT_ENV` metadata
+  mechanism implies it should from a VM); (2) the run logged "no explicit dates provided — defaulting to
+  yesterday=2026-08-14" despite `--day 2026-01-15` being passed. Did not push further or attempt a real (non-dry-run)
+  fetch against an unconfirmed environment — flagging per this craft's `does_not: guess at an ambiguous fix` rather
+  than risk a write against the wrong bucket or an uncontrolled Tardis API call. Filed as a new `[DATA] P3` todo
+  rather than a blocked question, since it's a bounded, worker-determinable follow-up (diagnose the env-resolution
+  path, then re-fetch), not a judgment call.
