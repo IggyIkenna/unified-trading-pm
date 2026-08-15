@@ -151,7 +151,45 @@ End with a short, plain report:
   reference, a destroyed credential, a tool with no home). If nothing was at risk, say that plainly; do not manufacture
   drama.
 - **What is deliberately NOT saved** and why (regenerable artefacts).
-- **Where to resume**, in one line.
+- **Where to resume**, in one line — but see Step 8b: a single line naming the LAST-touched item is not enough when the
+  session is inside a multi-session initiative.
+
+## Step 8b — Name the goalposts, not just the next step
+
+**The failure mode this step exists for**: "where to resume" answers "what did I just do", not "what am I actually
+building toward". A resuming session picks up the one named item, finishes it, and stops — because nothing told it there
+were seven siblings still open across two other documents. The initiative silently stalls at whatever item happened to
+be last-touched before the context ran out, and it takes an operator noticing to restart it days later.
+
+**Trigger**: the current work belongs to a plan that has a `depends_on`/`parent_epic`, has a sibling plan split out of
+it (a "split from X because it hit its line cap" note either direction), or is referenced by an `issues/` doc that
+tracks findings against it. If none of those apply — a genuinely standalone task — Step 8's one-liner is enough; skip
+this step and say so.
+
+**When it triggers, produce a SEPARATE, clearly-delimited block** (not folded into the Step 8 bullet list) containing a
+complete, self-contained resumption prompt for the next session:
+
+1. **State the umbrella goal** in one sentence — not "finish the last todo" but the actual end state (e.g. "the
+   alert-driven revocation mechanism fully armed, every emitted identity registered, every plan in the chain archived").
+2. **List every plan/issue-doc path still open under that goal** — walk `depends_on`, `parent_epic`, and any doc that
+   names this plan in its own `related:`/`context_scope:`, not just the one file you were editing. Grep for the
+   initiative's distinguishing terms across `plans/active/` if the chain isn't fully explicit in frontmatter — a plan
+   that references its child only in prose, not in `depends_on`, is still part of the chain.
+3. **Enumerate every open todo across that whole set, deduplicated** — the same finding often gets tracked in both a
+   plan and an issue doc; say so once, not twice. For each: its tag/priority, one line of what it needs, and its state —
+   **actionable now** / **blocked on X** (name X: credentials, a VM, an operator decision) / **operator-owned** (do not
+   start). An item you already scoped-but-didn't-implement this session (ready-to-paste code, a written design) gets its
+   detail included here, not just a pointer back to the plan — the next session should not have to re-open five files to
+   reconstruct what "the guard, second arm" means.
+4. **Name the final closing action** if the chain has one (archive the parent plan once every child + its own todos are
+   done and unlocked) — this is usually the LAST line item and is easy to lose sight of across many sessions.
+5. **State sequencing/batching guidance if it matters** (e.g. "gate once across both repos before any commit, not
+   per-item — the shared host's QG governor is not FIFO, re-gating costs more than batching saves").
+
+This block is written so it can be **pasted verbatim as the opening message of the next session** — it is a prompt, not
+a status report. Write it in second person imperative ("Register the 7 ids... build the guard... then archive"), not
+past tense ("I registered..."). A session that starts cold with only this block should be able to drive the WHOLE
+remaining initiative to done without re-deriving anything already settled.
 
 ---
 
@@ -163,6 +201,8 @@ End with a short, plain report:
 - **`git add -A` under time pressure.** You will commit another slot's WIP.
 - **Stopping at "committed".** Unpushed is unsaved — other slots and VMs cannot see it.
 - **Calling a tool "one-off" to avoid the work of giving it a home.** If a todo needs it, it is not one-off.
+- **"Where to resume" naming only the last-touched item.** In a multi-plan initiative this reads as done when six
+  siblings are still open across two other documents — see Step 8b.
 
 ## Provenance
 
