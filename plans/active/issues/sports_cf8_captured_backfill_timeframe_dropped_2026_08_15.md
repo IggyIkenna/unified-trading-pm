@@ -514,6 +514,36 @@ issue's scope); flagged as a follow-up todo below.
       fully superseded by the `audit_sports_captured_phantom_timeframe_2026_08_16.py` script's own
       capture_status-aware query if it's ever extended to bucket by that column; the dry-run audit script itself
       IS already promoted and re-runnable). (repo: market-data-processing-service, market-tick-data-service)
+- [ ] [DATA] P1. **CORRECTION to the entry immediately above, same pass, 2026-08-15 — its specific mechanism claim
+      is FALSIFIED, reopening this todo.** The `_write_captured_rows()`-residue theory is directly contradicted by
+      evidence already in THIS doc (line ~263 above): a full sibling check on this exact 14,982-row out-of-window
+      population found **0/200 sampled rows have ANY non-blank-timeframe sibling** under the coarse
+      (date,venue,league_id,data_type,service_name) key. `_write_captured_rows()`'s bug is additive by
+      construction (per this doc's own header: "does not supersede the row... creates a NEW, additional phantom
+      row... alongside the still-unfixed originals") — it ALWAYS leaves a sibling with the original real
+      `timeframe`. Zero siblings found is the opposite signature and had already ruled this mechanism out before
+      the entry above was written; that ruling-out was missed because this pass worked from a stale
+      conversation-summary that did not carry the sibling-check result forward, and the entry above was written
+      from `service_name`+`written_at` correlation alone without re-deriving or re-checking that a sibling check
+      applies — a measurement-discipline gap (correlation ≠ the same proof standard already met elsewhere in this
+      doc). **What survives, corrected**: the entry above's negative results on MDPS's OWN write paths remain
+      valid and unaffected by this correction — `get_valid_output_timeframes` filtering `"horizon"` out of both
+      `live_workers_chain.py` and `live_workers_streaming.py` (confirmed via direct UAC registry query, ruling out
+      MDPS's live-dispatch chain entirely), and `reprocess_sports_odds.py`'s fine-row path always writing a real
+      `horizon_name`-derived `timeframe` (ruling out that specific writer) — both hold regardless of this
+      correction. The `service_name=market-tick-data-service` (14,656/14,982, 98%) attribution also still holds as
+      a measured fact — it narrows the writer to MTDS, not MDPS — but the SPECIFIC MTDS mechanism is back to
+      unknown: NOT `_write_captured_rows()` (sibling-check-falsified, this entry) and NOT
+      `manifest_finalize.py::_write_shard_counts_to_manifest` (already falsified by the P3 entry above — that
+      function is gated `data_type=="odds"` and cannot write `odds_horizon_bucket` at all, and this population is
+      100% `odds_horizon_bucket` by the audit query's own construction). **This todo is therefore back to
+      genuinely open**, narrowed to: some MTDS write path, not yet identified, that calls
+      `ManifestWriter.add()`/`record_captured` for `data_type=odds_horizon_bucket` with a real `league_id` but no
+      `timeframe`, active on 2026-05-05 and 2026-07-13 specifically. Not yet searched this pass: MTDS's own
+      `odds_horizon_bucket`-touching scripts beyond the two already-ruled-out ones (`_rebuild_sports_write.py`,
+      `manifest_finalize.py`) — a repo-wide grep for `odds_horizon_bucket` writers under
+      `market-tick-data-service/` (not yet run) is the precise next step, not another MDPS-side read. (repo:
+      market-tick-data-service)
 
 ## Progress Log
 
