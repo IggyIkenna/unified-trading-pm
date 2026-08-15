@@ -83,17 +83,26 @@ source: >-
       -when: run against the current live-defi-rollout fleet HEAD produces a JSON breach/no-breach verdict per (repo,
       check) with zero false positives on a repo already known green. — agent-orchestrator@ce84b67 (on origin — see
       Progress Log for the irregular ship path)
-- [ ] [INFRA] P1. Implement the 15-minute delayed re-check state machine: on first detecting a breach for a (repo,
+- [x] ✅ [INFRA] P1. Implement the 15-minute delayed re-check state machine: on first detecting a breach for a (repo,
       check) pair, record a `first_seen_at` marker via the existing `register_cooldown`/`get_cooldown` state-store
       primitives (`agent-orchestrator/server/state_store.py`), keyed the same shape as `_wall_cooldown_key` — do NOT
       escalate yet. A later detector tick re-checking the SAME pair >= 15 minutes after `first_seen_at`: if resolved,
       clear the marker and do nothing (the observed self-heal pattern from `e72feb7c`); if still breached, proceed to
       the next todo. Done-when: a unit test proves a breach detected then resolved within 15 minutes never calls
-      `escalation.enqueue()`, and one still-breached after 15 minutes does.
-- [ ] [INFRA] P1. Wire the still-breached path to
+      `escalation.enqueue()`, and one still-breached after 15 minutes does. — agent-orchestrator@452ba5a (+
+      test-isolation fix agent-orchestrator@39e45c8549, ancestry-verified): new script
+      `scripts/orchestrator/escalate_local_ratchet_gate_breaches.py`, key shape
+      `local_ratchet_gate_breach:{repo}:{check}` (distinct from `_wall_cooldown_key`, which is post-escalation).
+      `bash scripts/quality-gates.sh` green (3969 passed).
+- [x] ✅ [INFRA] P1. Wire the still-breached path to
       `escalation.enqueue(wall_type="local_ratchet_gate_breach", pr_number=0, repo=<repo>, context=<check name + violation count + baseline ceiling>, authoring_slot="detector", ...)`.
       Done-when: a forced-breach integration test shows exactly one escalation enqueued per (repo, check) breach, not
-      duplicated across detector ticks.
+      duplicated across detector ticks. — same commits as above. "Not duplicated across detector ticks" is satisfied at
+      the ESCALATION level, not by suppressing repeat `enqueue()` calls: this state machine re-fires `enqueue()` on
+      every tick once past the window (same intentional design as `promote_qg_failure`'s streak re-fire), and
+      `escalation.enqueue()`'s own `_find_open_escalation`/`_wall_cooldown_key` dedup (verified by reading
+      `server/escalation.py` directly) collapses those re-fires onto the single open escalation row — see this plan's
+      Progress Log for the full reasoning and why todo 6 needed no new code.
 - [ ] [INFRA] P2. Confirm the new wall type is NOT added to `_QG_SIGNAL_WALLS` (`server/escalation.py`) — it has no
       GitHub Actions run to poll, same reasoning already documented for `data_pipeline_failure` — and route it through
       the generic `escalate`/cicd worker boot prompt (same as `main_ci_red`/`harness_lint`) unless this todo's own
@@ -206,7 +215,21 @@ source: >-
   agent-orchestrator's Pass-1 `quality-gates.sh` is still RED on `origin/live-defi-rollout` HEAD (pre-existing
   `test_context_lifecycle.py:: test_tier1_guidance_does_not_rearm_once_a_force_has_fired` failure, unrelated to this
   diff — same repo-blocker `RB-2549326a` already open above, joined as an additional waiter). Committed locally, NOT
-  pushed: `agent-orchestrator@17f1de8`. Todos 3+4 (and the todo-5/6 findings) are NOT checked off yet — "code shipped"
+  pushed: `agent-orchestrator@452ba5a`. Todos 3+4 (and the todo-5/6 findings) are NOT checked off yet — "code shipped"
   isn't true until this lands on origin post-unblock. Remaining open: todo 7 (remediation-goal wording in the routed
   boot prompt), todo 8 (systemd timer install), todo 9 (Slack-alert-ownership fact-find), todo 10 (codex doc update),
   todo 12 (full-fleet dry run) — not attempted this session.
+- **2026-08-15 (slot-16·infra) — unblocked + shipped**: re-ran `bash scripts/quality-gates.sh` on `agent-orchestrator`
+  and the pre-existing `test_context_lifecycle.py` failure was GONE (fixed by another slot in the interim) — 3968
+  passed, 1 failed, but the 1 failure was a genuine bug in MY OWN new tests, not the pre-existing one: all 4 new tests
+  shared one hardcoded `(repo, check)` cooldown-store key, so a prior test's leftover past-window row leaked into the
+  next test and made it escalate immediately instead of exercising the intended transition. Fixed by giving each test
+  its own key. Re-ran QG clean (3969 passed). Shipped via quickmerge: `agent-orchestrator@452ba5a` (todos 3+4) +
+  `agent-orchestrator@39e45c8549` (the test-isolation fix), both post-push ancestry-verified on
+  `origin/live-defi-rollout`. Flipped todos 3+4 to done. Also flipped `ci_satellite_ao_dispatch_batch14_2026_08_15.md`'s
+  duplicate item to done citing the same commits, per this plan's own note above. **Side note**: while shipping the
+  plan-doc edits, an earlier turn's accidental `quickmerge` invocation from the wrong cwd (`unified-trading-pm` instead
+  of `agent-orchestrator`) triggered its dirty-tree quarantine safety net, surfacing a stash with edits to 4 unrelated
+  plan docs attributed to `slot-16` from earlier in this session — verified byte-for-byte already landed on HEAD (via
+  `ab33befa91` and a plan-hygiene commit), so nothing was lost; the redundant stash entry was left parked (guardrail
+  blocks `git stash drop` for autonomous workers) rather than force-cleaned.

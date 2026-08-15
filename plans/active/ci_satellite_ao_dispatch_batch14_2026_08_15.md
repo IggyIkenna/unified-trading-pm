@@ -166,22 +166,25 @@ source: >-
       `plans/active/issues/e2e_testing_deployment_service_manifest_drift_regression_2026_08_15.md`
       (`unified-trading-pm@a7069d64e6`). Pass-1 `quality-gates.sh` ran green on the code commit before pushing.
 
-- [ ] [DEVOPS] P1. **Implement the local-ratchet-gate-breach escalation coverage design** ruled 2026-08-12: route a
+- [x] ✅ [DEVOPS] P1. **Implement the local-ratchet-gate-breach escalation coverage design** ruled 2026-08-12: route a
       local, pre-push `quality-gates.sh` ratchet-gate breach (e.g. TID251) through the existing AO escalation infra with
       a 15-minute grace window before it pages, AO-driven remediation on timeout. Source:
       `plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md`. Gate: a simulated
       local ratchet breach (not observed via a GitHub Actions run conclusion) produces an escalation-queue entry within
-      the 15-minute grace window if unresolved. **DUPLICATE — 2026-08-15 (slot-16·infra) finding**: this exact scope is
+      the 15-minute grace window if unresolved. **DUPLICATE — 2026-08-15 (slot-16·infra) finding**: this exact scope was
       already covered by a dedicated, more-detailed implementation plan authored the same day —
       `/plans/active/local_ratchet_gate_breach_escalation_detector_2026_08_15.md` (`assigned_vm: planning`,
       `sequential: true`) — which this batch's own frontmatter conflict-check should have caught but didn't. Rather than
-      re-implement separately, continued that plan's next real todos (3+4: the 15-min grace-window state machine +
-      escalation.enqueue wiring) directly — see that plan's own Progress Log for the technical detail. Result: this
-      item's gate is genuinely met once that code lands (`agent-orchestrator@17f1de8`, committed locally, blocked from
-      shipping by the same pre-existing `agent-orchestrator` QG-red repo-blocker `RB-2549326a` documented there). NOT
-      flipping this checkbox to done yet — the code isn't on origin. Whichever session resumes once the repo-blocker
-      clears should ship `17f1de8`, then flip BOTH this checkbox and the dedicated plan's todos 3+4, citing the same
-      commit.
+      re-implement separately, continued that plan's todos 3+4 (the 15-min grace-window state machine +
+      `escalation.enqueue` wiring) directly. **Shipped**: `agent-orchestrator@452ba5a` (+ test-isolation fix
+      `agent-orchestrator@39e45c8549`, both post-push ancestry-verified on `origin/live-defi-rollout`);
+      `bash     scripts/quality-gates.sh` green (3969 passed, 2 skipped). A regression-caught bug along the way: the
+      state machine's 5 new tests initially shared one hardcoded (repo, check) cooldown key, so a prior test's leftover
+      past-window row leaked into the next test — fixed by giving each test its own key (real, shared DB state, no
+      per-test reset). This item's gate is genuinely met: a simulated breach (unit-tested) produces an escalation-queue
+      entry via `escalation.enqueue()` once still-present past the 15-minute window. Remaining scope (todos 7-12 —
+      remediation-goal wording, systemd timer install, Slack-ownership fact-find, codex doc update, full-fleet dry run)
+      tracked in the dedicated plan, not this batch — see that plan's own Progress Log.
 
 - [ ] [DEVOPS] P1. **Add a reserved-slot / exemption carve-out for CI-escalation dispatch on `unified-trading-pm`** from
       AO's one-worker-per-repo collision guard, so red-CI escalations on this repo don't sit un-dispatched up to 45
