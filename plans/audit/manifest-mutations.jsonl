@@ -2258,3 +2258,5 @@
 {"timestamp": "2026-08-15T00:35:03Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "instruments-service=0.102.1 (branch=main, bump=minor)", "commit_sha": "a7c20db46dffd3cece7033309fa9545d4f0d414e"}
 {"timestamp": "2026-08-15T00:36:14Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "ml-service=0.58.13 (branch=main, run=31854068035)", "commit_sha": "ba8f74e69acc799a189933a9cd02921638d6e0fe"}
 {"timestamp": "2026-08-15T00:36:17Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "ml-service=0.58.13 (branch=main, bump=patch)", "commit_sha": "ba8f74e69acc799a189933a9cd02921638d6e0fe"}
+{"timestamp": "2026-08-15T00:37:31Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "unified-api-contracts=0.125.3 (branch=main, run=31854145363)", "commit_sha": "a6de2a5b3b577242521c06d11db89749fca7916f"}
+{"timestamp": "2026-08-15T00:37:35Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "unified-api-contracts=0.125.3 (branch=main, bump=patch)", "commit_sha": "a6de2a5b3b577242521c06d11db89749fca7916f"}
