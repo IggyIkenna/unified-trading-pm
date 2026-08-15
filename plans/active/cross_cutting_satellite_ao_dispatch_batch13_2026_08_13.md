@@ -586,19 +586,19 @@ source: >-
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 
       **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed
-                                  separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
-                                  (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
-                                  exists and is live — no code change needed — but a real corpus-wide query
-                                  (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
-                                  the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
-                                  filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
-                                  data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
-                                  worker-determinable outcome for one ~1h dispatch. Filed
-                                  `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
-                                  (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
-                                  class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
-                                  backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
-                                  multi-AG backfill into this single dispatch.
+                                      separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
+                                      (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
+                                      exists and is live — no code change needed — but a real corpus-wide query
+                                      (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
+                                      the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
+                                      filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
+                                      data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
+                                      worker-determinable outcome for one ~1h dispatch. Filed
+                                      `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+                                      (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
+                                      class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
+                                      backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
+                                      multi-AG backfill into this single dispatch.
 
 - [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
       operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
@@ -694,8 +694,29 @@ source: >-
       needed. (The sibling "migrate-first 4 AGs" / `instruments_catalogue_incremental_rollup` clauses of the source
       ADMIN todo are outside this batch todo's named scope — not checked here.) Source:
       `plans/active/instruments_completion_tracker_2026_07_06.md`
-- [ ] [CODE] P2. Add cbETH as COINBASE-ETHEREUM to the DeFi LST universe (full new-venue registration) Source:
-      `plans/active/instruments_foundation_completeness_2026_06_24.md`
+- [x] ✅ [CODE] P2. **Every other new-venue-add step was already wired; the one real gap was the
+      `DEFI_VENUE_DATA_TYPE_CAPABILITIES` capability declaration — plus an interaction bug that surfaced fixing it.**
+      unified-api-contracts@a0be68f9 + @4c95a3f2 (2026-08-15, slot-11·infra). Verified live: `COINBASE-ETHEREUM` was
+      already in `ALL_DEFI_VENUES` + `DEFI_VENUE_PHASE` (both "live") + `DEFI_VENUE_LAUNCH_DATES` +
+      `LST_VENUE_TO_TOKENS`/`LST_TOKEN_GENESIS["cbETH"]="2022-08-26"`, with a working MTDS adapter
+      (`lst_coinbase_adapter.py`, emits the fully chain-qualified `venue="COINBASE-ETHEREUM"` directly — no
+      `LEGACY_DEFI_VENUE_ALIASES` entry needed, and a bare `"COINBASE"` alias is deliberately NOT added per the todo's
+      own caution: it would collide with the CeFi `COINBASE-SPOT` exchange) and an instruments-service reference-data
+      adapter (`cbeth.py`). Added the missing `defi_venue_capabilities.py` entry —
+      `"COINBASE-ETHEREUM": {"oracle_prices": "2022-08-26"}` (oracle_prices only: the adapter's `_default_data_types()`
+      returns `["oracle_prices"]` only, `lst_rates_handler.py` has zero COINBASE wiring, so declaring `lst_rates` there
+      would have inflated the could-exist denominator with a cell the code can't produce — DATA-001 precedent). That
+      addition then surfaced a real, pre-existing interaction bug: `market_data_categories.py` already carries a
+      2026-08-14-migration P1 override that REASSIGNS `VENUE_DATA_TYPE_CAPABILITIES["COINBASE-ETHEREUM"]` wholesale with
+      a real MEASURED `lst_rates` capability (start `2022-02-05`, from actual captured manifest rows) — a bare
+      reassignment there silently dropped my new `oracle_prices` record (caught by
+      `test_batch_start_date_recoverable_one_for_one`, not a false-positive: pytest 1 failed / 13201 passed on the first
+      full QG run). Fixed by merging the base-derived record's `data_types` into the override first, matching the
+      sports-bookmaker-loop merge pattern already used a few lines above it in the same file. Full `quality-gates.sh`
+      green (458s, sentinel-verified at HEAD `4c95a3f28e`); quickmerge landed on LDR (post-push ancestry verified
+      `4c95a3f28` on `origin/live-defi-rollout`). Source:
+      `plans/active/instruments_foundation_completeness_2026_06_24.md` (not touched — checkbox reconciliation happens in
+      the paired finalize plan per this batch's own convention).
 - [ ] [CODE] P2. Retirement completeness (§8) sweep -- verify every named pollutant (tradfi ICE/CBOE/VIX-cash,
       cefi-domain equity-perp singles) is absent on all 4 legs Source:
       `plans/active/instruments_foundation_completeness_2026_06_24.md`
