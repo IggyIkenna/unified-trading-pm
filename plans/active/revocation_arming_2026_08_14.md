@@ -153,6 +153,103 @@ source:
       sweep over the monitor source, in the same family as the anti-inertness guards. A code emitting into a policy
       layer that cannot key it is the same class of defect as a component with no caller. Repo: deployment-service.
 
+> **CORRECTION 2026-08-15 (peer session, re-measured) — the "two layers deep" framing for DP-MANIFEST-001 was wrong,
+> withdrawn.** DP-MANIFEST-001 is one of the 54 already-registered ids — identity was never its problem, and this
+> session's self-scoped targeting (above) closes the rest. **What does NOT generalize, and is still bleeding**: identity
+> resolution (`escalation.py:749 evaluate_revocation(...)`) is STRICTLY UPSTREAM of target resolution
+> (`escalation.py:766 targets_for_finding(...)`) — an unresolvable identity raises at 749 and returns `{}` via the
+> `logger.warning` at 751, so self-scoped/any targeting fix downstream can never reach an id that fails here. Latest
+> measurement (2h window, `uts-prod-dp-meta-watchers`): **`DP-LIVE-004` ×38, `DP-WATCHER-006` ×13, `DP-LIVE-001` ×3,
+> `DP-LIVE-003` ×2 — 56 rejections dropped on the floor** (supersedes the "127 in 6h" figure two todos up — same gap,
+> later/narrower measurement window).
+>
+> **Ready to paste** (unified-api-contracts, `canonical/crosscutting/dependency_revocation.py`, immediately after the
+> `DP-WATCHER-004` entry in `DP_FAILURE_MODE_ACTIONS`) — written and runtime-verified by the peer session, all seven
+> resolve via `evaluate_revocation("DP-LIVE-001")` etc. (UAC resolves from source in the service venvs, so verification
+> is immediate, no rebuild needed):
+>
+> ```python
+>     "DP-WATCHER-005": _p(
+>         _HOLD, _AGENT_URGENT,
+>         "An OOM-killed consolidator IS CONSOLIDATOR_DOWN — same condition as DP-WATCHER-004 "
+>         "reached by a different route, so it takes the same dependent action.",
+>     ),
+>     "DP-WATCHER-006": _p(
+>         _NONE, _AGENT_URGENT,
+>         "Generic per-execution Cloud Run Job failure, fired across the WHOLE job registry. A "
+>         "single blanket action here would apply identically to unrelated job families, which is "
+>         "why it is NONE rather than a guessed HOLD: the right policy is per-job and does not "
+>         "exist yet. Registered deliberately so the identity RESOLVES — an unregistered id raises "
+>         "and is swallowed as a log line, which is strictly worse than an explicit no-op.",
+>     ),
+>     "DP-VM-012": _p(
+>         _HOLD, _AGENT_URGENT,
+>         "A Cloud Run Service whose terminal_condition entered CONDITION_FAILED is not serving. "
+>         "Hold dependents rather than launch them against a service that cannot answer.",
+>     ),
+>     "DP-LIVE-001": _p(
+>         _HOLD, _AGENT_URGENT,
+>         "A live stream blindspot means expected live shards are not arriving at all. Same shape "
+>         "as DP-WATCHER-002 (never even attempted): downstream would read the absence as honest.",
+>     ),
+>     "DP-LIVE-002": _p(
+>         _DRAIN, _AGENT_URGENT,
+>         "Manifest says captured, GCS is empty — the manifest asserts data that does not exist, "
+>         "so a dependent reads a hole believing it is real. This is DP-FETCH-001's condition "
+>         "(absence unproven) on the live path, and takes its action: drain dependents before "
+>         "they consume it.",
+>     ),
+>     "DP-LIVE-003": _p(
+>         _HOLD, _AGENT_URGENT,
+>         "A registered LONG_LIVED_LIVE producer prefix with ZERO running instances — nothing is "
+>         "producing. The condition that hid a 5-week CME capture gap (deleted 2026-06-30, found "
+>         "2026-08-09). Hold dependents rather than feed them a stream with no source.",
+>     ),
+>     "DP-LIVE-004": _p(
+>         _NONE, _AGENT_URGENT,
+>         "Shard alive but zero recent captures — a productivity gap, not a correctness one: "
+>         "nothing false is written, so no dependent is misled (DP-WATCHER-003's reasoning). Left "
+>         "at NONE also because its blast radius is unmeasured — it fired 34 times in 6h, and "
+>         "arming a hold at that rate is an operator ruling, not an author's default.",
+>     ),
+> ```
+>
+> Actions are by strict analogy to already-ruled ids, never invented (e.g. `DP-LIVE-002` takes `DP-FETCH-001`'s DRAIN
+> because it is the same "manifest asserts data that isn't in GCS" condition on the live path). **The two `_NONE`s are
+> deliberate — do not "fix" them without an operator ruling**: `DP-WATCHER-006` fires across the whole job registry (a
+> blanket action would hit unrelated families — the right policy is per-job and doesn't exist yet); `DP-LIVE-004` fires
+> at a rate (38×/2h) where arming a hold is a risk decision, not an author's default. Registering either at `NONE` still
+> fixes the bug on its own: the identity RESOLVES instead of raising and being swallowed.
+>
+> **The guard above (todo 150) — spec, from the peer session, build alongside**: AST-walk
+> `deployment_service/data_pipeline_monitors/**.py`, collect every keyword argument named `registry_id` whose value is a
+> string constant (17 today), parametrise a test per id, assert each `evaluate_revocation()`s without raising. AST, not
+> grep — `rg 'DP-LIVE-003'` matches docstrings that NAME an id without emitting it. Include a `len(ids) >= 10`
+> guard-the-guard assertion, or a renamed keyword makes the whole test suite pass vacuously (zero collected ids, zero
+> failures).
+>
+> **This session's extension is a SECOND, independent arm, not a modification of the above** — the AST walk above can
+> only ever see a `registry_id=` keyword argument; an emitter that bypasses `route_finding()` entirely (like
+> `assert_consolidator_healthy`'s bare `log_event()` was, before this session's fix) has no such literal to extract, so
+> the walk structurally cannot catch that failure mode. Build the second arm alongside the first, not gated on it
+> landing first — it does not depend on the peer's guard existing.
+>
+> **Batching guidance (peer session, measured)**: the shared host's QG governor's per-repo sub-cap is NOT FIFO — a
+> 42-minute wait was measured overtaken by runs aged 1:42 and 5:01, so every extra gate cycle is a fresh lottery, not a
+> queue position. Finish every edit across BOTH repos (unified-api-contracts + deployment-service) first, gate ONCE over
+> the whole batch, then make per-unit commits from that green tree — not gate-commit-gate-commit, which under current
+> contention costs 4 waits instead of 1.
+>
+> **Shared-checkout note, and how this session's OWN plan edits were actually lost to it today**: slot 4's UAC and PM
+> checkouts both currently hold other sessions' WIP. This session's local uncommitted edits to THIS plan file (a
+> cron-host finding + a prediction-pipeline-vm.sh verification writeup, both re-applied above/below after being silently
+> overwritten by an incoming `git pull` while staged-but-uncommitted — recovered from this session's own conversation
+> context, not lost, but a real live instance of exactly the "stale local content" trap named earlier in this log)
+> confirms: scope `--files` by name, never `git add -A`, and run `scripts/plan-hygiene/check_plan_stale_base.sh` before
+> committing any plan — it is live in precommit now and catches the silent-revert case plain todo-counting misses. (If
+> `test_pretooluse_slot_collision_guard.bats` fails under BATS, that is the fixed-as-of-`27979ca518` load flake, not a
+> new break.)
+
 > **📏 COVERAGE NUMBERS CORRECTED 2026-08-14 — I got this wrong twice, both times by counting the wrong thing.** First I
 > reported "179/184 covered" by counting launchers that SOURCE `launcher_common.sh`; that lib only MENTIONS the wrapper
 > in comments. Then "148/184 gated, 158 ungated" by counting `lc_` helper USERS — but those sets overlap, so the two
@@ -229,13 +326,46 @@ source:
       canonical gated path. Needs its workload invocation adapted to the tarball-based CLI entrypoint model
       `setup-data-pipeline-vm.sh` expects, then a real VM launch verified end-to-end (boot, admission-gate check,
       workload completion) per the VM-launcher runbook's no-fire-and-forget rule — not a blind find/replace. Repo:
-      deployment-service.
-- [ ] [OPERATOR] P2. **Decide whether the marker-hold admission model applies to long-lived cron-HOST VMs at all.** 5
-      launchers (`launch-cefi-fwd-daily-cron-vm.sh` + 4 siblings, listed above) are always-on hosts firing a daily job
-      in-place, not one-shot VMs launched into a manifest snapshot — holding a FUTURE launch doesn't obviously apply to
-      a host that's already running. If the model doesn't fit, document that explicitly (mirrors
-      `launch-data-pipeline-fleet-monitor.sh`'s "must NEVER be gated" carve-out) rather than leaving it read as an
-      accidental gap. Repo: unified-trading-pm (decision) + deployment-service (whichever fix it implies).
+      deployment-service. **2026-08-15 — CODE WRITTEN + LIVE-VERIFIED, NOT YET SHIPPED (uncommitted local diff — held
+      deliberately this session, re-typed here after the working copy was silently overwritten by an incoming pull
+      mid-session; see the shared-checkout note above).** New `elif [[ "$VM_TASK" == "prediction-pipeline" ]]` branch in
+      `setup-data-pipeline-vm.sh` (writes a runner script mirroring the launcher's original 3-stage per-date loop, then
+      `_launch_with_tee`s it — inherits the admission-gate check + drain poll for free);
+      `launch-prediction-     pipeline-vm.sh` rewritten to drop its own bespoke tarball build (now installs from the
+      centrally-built tarballs via compound `VM_SERVICE=market_data_processing_service+features_service`, same pattern
+      `launch-mdps-features-live.sh` already uses) and route through the canonical `setup-data-pipeline-vm.sh` path.
+      `bash -n` clean, `shellcheck --severity=error` clean (the exact check `test_shellcheck_no_errors` runs). **Real
+      1-day smoke VM launched and verified** (`prediction-pipeline-smoke-test`, 2026-08-01 range): confirmed via
+      `gcloud compute instances describe --format=json(metadata)` that VM_TASK/VM_SERVICE/dates landed correctly, and
+      via the VM's own `run.log` (read through UTL's `download_from_storage` — subprocess `gsutil` is guardrail-blocked
+      for ad-hoc reads too, not just committed code) that the NEW dispatch branch fired
+      (`bash /home/ikennaigboaka/workspace/prediction_pipeline_loop.sh`, not the old generic-fallback's
+      `python -m     market_data_processing_service+features_service` literal-module-path bug), STAGE 1 started, and the
+      real MDPS CLI connected to GCP, listed 2259 real trade files for 2026-08-01, and loaded 174,501 real prediction
+      instruments before legitimately blocking on a live consolidator-merge lock (documented, expected behavior). No
+      `admission HELD` — expected, nothing currently holds the prediction asset_group; proves the wiring reaches the
+      gate, not that the gate blocks (needs a live hold to observe, out of scope for a smoke test). **Real trap hit and
+      fixed along the way**: a `run.log` read right after re-launching returned the PRIOR failed attempt's content
+      byte-for-byte (same-looking `deployment_id`, made it look like nothing had changed) — the GCS blob PERSISTS from a
+      prior run until the new run's `heartbeat_daemon.py` uploader overwrites it, so an early read after relaunch can
+      silently return stale evidence; always cross-check `deployment_id`/instance `creationTimestamp` before trusting
+      log content as "this run's". **Remaining before shipping**: run the full `quality-gates.sh` (deferred this
+      session, not yet run on these 2 files — batch it with the UAC/guard work above per the peer's QG-sweep guidance),
+      quickmerge, then flip this checkbox with the real commit sha.
+- [x] ✅ [OPERATOR] P2. **Marker-hold admission model applies to long-lived cron-HOST VMs — VERIFIED ALREADY SATISFIED,
+      no code change needed.** Traced all 5 cron-HOST launchers' (`launch-cefi-fwd-daily-cron-vm.sh` + 4 siblings)
+      actual daily trigger: none run the data work in-place on the host. Each cron.d entry `bash`-invokes a SEPARATE
+      child launcher fresh every day (`cefi-fwd-daily-cron` → `launch-cefi-forward-poll.sh`;
+      `cefi-onchain-fwd-daily-cron` → `launch-cefi-onchain-forward-poll.sh`; `cefi-perp-funding-daily-cron` →
+      `launch-features-vm.sh`; `tradfi-fwd-daily-cron` → `launch-tradfi-forward-poll.sh`;
+      `funding-ensemble-daily-cron-host` → `launch-funding-ensemble-paper-cron-vm.sh`), and every one of those 5 child
+      launchers already sets `startup-script-url=gs://.../setup-data-pipeline-vm.sh` (confirmed via
+      `grep -l setup-data-pipeline-vm.sh` on each) — the SAME canonical path whose shared `vm-exec-with-gcs-tee.sh`
+      wrapper runs the admission check unconditionally for every `VM_TASK` branch (by design: "wired into the shared
+      wrapper... so a new launcher cannot forget to opt in", `revocation_admission_cli.py`'s own docstring). The
+      cron-HOST VM itself correctly uses the lightweight snippet (it does no data work, just idles + fires cron — the
+      earlier census's read on it was right); the actual work each day is already admission-gated, one layer down. Repo:
+      unified-trading-pm (decision, this entry) — no deployment-service change needed.
 - [x] ✅ [CODE] P1. **`DP-CATALOG-001` (catalogue-stale) now stamps `upstream_entity`.** —
       **deployment-service@2cc79b2a7c.** `meta_watchers.check_catalogue_freshness` now sets
       `details["upstream_entity"] = "instrument-catalog"`, the registered UAC entity type
