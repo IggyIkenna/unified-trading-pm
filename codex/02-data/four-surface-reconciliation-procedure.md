@@ -55,6 +55,7 @@ last_reviewed: 2026-07-20
 code_refs:
   [
     unified-api-contracts/unified_api_contracts/canonical/partition_paths.py,
+    unified-api-contracts/unified_api_contracts/canonical/_partition_path_canonicality.py,
     unified-api-contracts/unified_api_contracts/canonical/domain/sports/gcs_paths.py,
     unified-api-contracts/unified_api_contracts/registry/possible_manifest.py,
     unified-trading-library/unified_trading_library/manifest_writer/_rows.py,
@@ -230,10 +231,14 @@ named. It never rises above `unknown` confidence and never carries a delete sugg
 
 ## 4. The machine oracle — canonical is decided by UAC, never by a downstream rule
 
-**HARD RULE.** Whether a path is canonical is decided by **`canonical_path_violations()`** in
-`unified-api-contracts/unified_api_contracts/canonical/partition_paths.py`. It is the deliberate **inverse of the
-`build_*_partition_path` builders**. A reconciler, skill, script, or doc that re-implements the rule downstream is
-review-blocking — that re-implementation is exactly the drift class the function exists to kill.
+**HARD RULE.** Whether a path is canonical is decided by **`canonical_path_violations()`**, importable from
+`unified-api-contracts/unified_api_contracts/canonical/partition_paths.py` (re-exported there) but actually IMPLEMENTED
+in `unified_api_contracts/canonical/_partition_path_canonicality.py` (split out `unified-api-contracts@da76afe1` to stay
+under the 900-line codex file-size ceiling — verified live 2026-08-15, this doc's every `partition_paths.py:NNN` clause
+citation below predates that split and no longer resolves in that file; the same clause numbers/logic are intact, just
+in the new file — line numbers not re-derived here as they are not load-bearing to the procedure itself). It is the
+deliberate **inverse of the `build_*_partition_path` builders**. A reconciler, skill, script, or doc that re-implements
+the rule downstream is review-blocking — that re-implementation is exactly the drift class the function exists to kill.
 
 > **⚠️ Filename id-form checking now covers `{tradfi, cefi, defi}` by default — a PRE-2026-07-20 CAVEAT, not the current
 > behavior.** Before `unified-api-contracts@d40c5d7d` (2026-07-20, refined `@1cd27478` 2026-07-23), the oracle dropped
