@@ -167,13 +167,37 @@ has actually verified).
       `components/shared/spinner.tsx` (the Spinner impl itself) and the codemod-excluded `archive/` dir — its own
       `Delete-when: ...no Loader2 remain` gate is now met. QG green (109s, all 6 stages).
       `unified-trading-system-ui@58b332e852`.
-- [ ] [CODE] P3. Confirm which openapi json file actually feeds `openapi-typescript` (likely
-      `lib/registry/openapi.json`, already duplicate-free) vs. the 7-duplicate
-      `context/api-contracts/openapi/unified-trading-system.openapi.json`; if the latter is a genuine typegen input, run
-      `dedupe-openapi-operation-ids.py` against it before deleting it. Repo: unified-trading-system-ui.
+- [x] ✅ [CODE] P3. **CONFIRMED 2026-08-15 — no code change needed.** `lib/registry/openapi.json` IS the genuine typegen
+      input for the local dev path: `package.json:45`'s `generate:types` script runs
+      `openapi-typescript lib/registry/openapi.json -o lib/types/api-generated.ts` verbatim; it's already duplicate-free
+      (501 ops, 0 dupes, verified by direct parse). `context/api-contracts/openapi/unified-trading-system.openapi.json`
+      is NOT a typegen input for either mechanism: (1) the automated `.github/workflows/uic-openapi-sync.yml` fetches a
+      FRESH spec directly from the `unified-api-contracts` repo (`find _uac -name "*.openapi.json"`) and writes straight
+      to `lib/types/api-generated.ts` — it never reads either committed copy in the success path; its only reference to
+      the `context/api-contracts/...` path is a stale fallback under a `_reference/versa-execution-analytics-ui/` prefix
+      that is never checked out by this workflow, so that branch is dead template boilerplate, not a live code path; (2)
+      `context/CONTEXT_GUIDE.md` documents `context/api-contracts/` as a separate "external/normalised data schemas"
+      reference folder for engineer/agent onboarding, not a build input. So the todo's own conditional ("if the latter
+      is a genuine typegen input, run dedupe... before deleting it") does not apply — no dedupe run, no delete of the
+      context copy (it's live-documented reference content, not proven dead). Repo: unified-trading-system-ui. New
+      discovery filed as its own follow-up todo below (dedupe-openapi-operation-ids.py's own Delete-when condition, now
+      correctly evaluated against `lib/registry/openapi.json`, is actually met — out of THIS todo's bounded scope to act
+      on unilaterally).
+- [ ] [CODE] P3. `dedupe-openapi-operation-ids.py`'s own
+      `Delete-when: after OpenAPI operation-id dedup verified + no     duplicate ids in schema` condition was previously
+      evaluated against the wrong file (the unrelated `context/api-contracts/...` reference copy, which has 7 dupes).
+      Now that the genuine typegen input (`lib/registry/openapi.json`) is confirmed and already has 0 duplicate
+      operationIds, re-evaluate whether this script is safe to delete — confirm there's no other regeneration path that
+      still depends on it (e.g. a manual "refresh lib/registry/openapi.json from a fresh UAC pull, then dedupe" step
+      nobody has scripted yet) before `git rm`ing it. Repo: unified-trading-system-ui.
 
 ## Progress Log
 
+- **2026-08-15 (slot-7 backend_engineer)**: Resolved the openapi typegen-input todo — confirmed
+  `lib/registry/openapi.json` is the genuine input (`package.json:45`, already 0 dupes), `context/api-contracts/...` is
+  a separate CONTEXT_GUIDE.md reference artifact never consumed by either typegen mechanism (CI fetches fresh from UAC
+  directly). No code change; a new follow-up todo captures the now-clarified `dedupe-openapi-operation-ids.py`
+  Delete-when status.
 - **2026-08-14 (slot 15)**: Filed during `infra_satellite_ao_dispatch_batch16_2026_08_13.md`'s Delete-execution todo.
   Executed the 4 genuinely-dead UI splitters + the MTDS pointer fix; deferred the 5 items above with evidence.
 - **2026-08-15 (slot 30)**: Ran the deferred GCS orphan-sweep todo. `deployment-service@a981eb4cd5` deletes the 4
