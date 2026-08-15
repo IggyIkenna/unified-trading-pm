@@ -257,21 +257,22 @@ issue's scope); flagged as a follow-up todo below.
   `2 failed, 10823 passed, 28 skipped, 1 xpassed` — both failures are
   `test_build_casing_frame_upgrades_every_known_residual_token` and
   `test_cme_combo_shard_itype_now_canonicalizes_uppercase`, i.e. the SAME two tests already filed as
-  `/plans/active/issues/mtds_tradfi_combo_casing_qg_red_2026_08_15.md` (P1, repo-blocker, filed by slot-29, unrelated
-  in-flight tradfi COMBO casing migration). Confirmed as a THIRD independent data point (a separate Pass-2 quickmerge
-  attempt earlier this session, and now this Pass-N re-gate, both hit byte-identical failures) — the condition is
-  stable, not flapping, and it is NOT caused by this session's shipped sports/CF-8 diagnostic scripts (unrelated files).
-  Per that issue doc's own "likely self-resolves" expectation: it has NOT yet resolved — `behind` drift climbed from ~9
-  to 21 across this session's checks (many more commits landed on `live-defi-rollout` in the interim) and the same 2
-  tests are still red, so self-resolution is taking longer than that doc anticipated. This session's
-  `market-tick-data- service` commit (`908cfecf43f90d32ba3dbcd4dcb62ca2b7a7cb09`) remains genuinely NOT-LANDED — now
-  blocked on `mtds_tradfi_combo_casing_qg_red_2026_08_15.md` clearing (someone else's fix), not on qg-host-governor
-  queue admission (that part cleared). Not attempting to fix the tradfi casing bug myself — out of this task's scope and
-  already owned. `/done` for `task_id=cf_manifest_audit_first_full_rollup_findings-d1fc625d0914` has NOT been called:
-  the standing instruction conditions it on landing, and landing is now blocked on a separate, already-tracked P1
-  repo-blocker with no ETA. Next session/window: re-check `mtds_tradfi_combo_casing_qg_red_2026_08_15.md`'s `status:` —
-  once it flips to resolved (or the 2 named tests pass independently), retry the quickmerge; if still open after a long
-  gap, consider escalating that issue's priority rather than continuing to poll here.
+  `/plans/archive/2026_08/issues/mtds_tradfi_combo_casing_qg_red_2026_08_15.md` (P1, repo-blocker, filed by slot-29,
+  unrelated in-flight tradfi COMBO casing migration). Confirmed as a THIRD independent data point (a separate Pass-2
+  quickmerge attempt earlier this session, and now this Pass-N re-gate, both hit byte-identical failures) — the
+  condition is stable, not flapping, and it is NOT caused by this session's shipped sports/CF-8 diagnostic scripts
+  (unrelated files). Per that issue doc's own "likely self-resolves" expectation: it has NOT yet resolved — `behind`
+  drift climbed from ~9 to 21 across this session's checks (many more commits landed on `live-defi-rollout` in the
+  interim) and the same 2 tests are still red, so self-resolution is taking longer than that doc anticipated. This
+  session's `market-tick-data- service` commit (`908cfecf43f90d32ba3dbcd4dcb62ca2b7a7cb09`) remains genuinely NOT-LANDED
+  — now blocked on `mtds_tradfi_combo_casing_qg_red_2026_08_15.md` clearing (someone else's fix), not on
+  qg-host-governor queue admission (that part cleared). Not attempting to fix the tradfi casing bug myself — out of this
+  task's scope and already owned. `/done` for `task_id=cf_manifest_audit_first_full_rollup_findings-d1fc625d0914` has
+  NOT been called: the standing instruction conditions it on landing, and landing is now blocked on a separate,
+  already-tracked P1 repo-blocker with no ETA. Next session/window: re-check
+  `mtds_tradfi_combo_casing_qg_red_2026_08_15.md`'s `status:` — once it flips to resolved (or the 2 named tests pass
+  independently), retry the quickmerge; if still open after a long gap, consider escalating that issue's priority rather
+  than continuing to poll here.
 - **data_engineering slot-2, 2026-08-15 (pre-compact checkpoint, still blocked — watchdog #6 armed)**: re-confirmed
   directly (not from stale cache) that `mtds_tradfi_combo_casing_qg_red_2026_08_15.md` is still `status: open` and the
   market-tick-data-service commit (`908cfecf43f90d32ba3dbcd4dcb62ca2b7a7cb09`) is still NOT-LANDED; drift has climbed to
@@ -307,3 +308,14 @@ issue's scope); flagged as a follow-up todo below.
   task's scope and already owned by slot-29. `/done` still NOT called — still conditioned on MTDS landing. Next
   session/window: same as above — re-check the blocker's `status:` before relaunching another watchdog; if still open
   after a much longer gap, escalating THAT issue's priority (not this one) is the right lever, not further polling here.
+- **backend_engineer slot-3, 2026-08-15**: the blocker HAS CLEARED. Picked up
+  `/plans/archive/2026_08/issues/mtds_tradfi_combo_casing_qg_red_2026_08_15.md` as a dispatched task; both named tests
+  (`test_build_casing_frame_upgrades_every_known_residual_token`,
+  `test_cme_combo_shard_itype_now_canonicalizes_uppercase` — the latter renamed/superseded by
+  `test_cme_combo_shard_itype_stays_lowercase_bundle_grain` per a 2026-08-11 operator ruling) pass on current
+  `live-defi-rollout` HEAD with zero code changes needed; `bash scripts/quality-gates.sh` ran full green on
+  `market-tick-data-service` (sentinel matches HEAD `24afa00b8a6d0a3dc1931efd3440dba30cef8c93`). Issue doc flipped to
+  `status: archived` + `git mv`'d to `plans/archive/2026_08/issues/`. Whoever resumes this watchdog can retry landing
+  `market-tick-data-service` commit `908cfecf43f90d32ba3dbcd4dcb62ca2b7a7cb09` immediately — no further wait needed on
+  this specific blocker (a fresh `live-defi-rollout` pull may still surface unrelated drift; that's ordinary trunk
+  churn, not this blocker recurring).

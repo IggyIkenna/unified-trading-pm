@@ -14,7 +14,7 @@ summary: >-
   combo ..." / "update ... itype casing tests"), strongly suggesting another slot's in-flight, multi-commit tradfi COMBO
   casing migration is mid-flight and the tree is transiently red between commits, not a settled bug -- but as of this
   doc's filing time the 2 tests are still red on the latest pulled tip.
-status: open
+status: archived
 nature: notes
 asset_group: [tradfi]
 stage: [data]
@@ -26,7 +26,9 @@ created: 2026-08-15
 author: slot-29 (backend_engineer)
 source: ["mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep_2026_08_14.md, shipping the [CODE] P1 fix"]
 assigned_vm: planning
-resolved_by:
+supersedes:
+superseded_by:
+resolved_by: slot-3 (backend_engineer), 2026-08-15 — confirmed self-resolved, no code change needed
 locked_by:
 locked_since:
 execution_scope: orchestrator-agent
@@ -42,6 +44,11 @@ priority: P1
 ---
 
 # market-tick-data-service QG red: tradfi COMBO instrument_type casing mismatch
+
+> **✅ ARCHIVED 2026-08-15** — both tests confirmed passing on current `live-defi-rollout` HEAD with zero code changes
+> from this task; self-resolved by another slot's in-flight tradfi COMBO casing migration (see "Resolution" below for
+> the exact commits + design outcome). `bash scripts/quality-gates.sh` full green on `market-tick-data-service`. No
+> further action needed. Successor: none — a point-in-time QG-red finding, not a standing contract.
 
 ## What I found
 
@@ -85,8 +92,26 @@ updated to expect the new uppercase UTL canon — implying the PRODUCER side has
 
 ## Open work (tracked todos)
 
-- [ ] [BACKEND] P1. Root-cause + fix `test_build_casing_frame_upgrades_every_known_residual_token` (changed_count 6 vs
-      expected 7 — the `('FX', 'spot')` row's casing upgrade isn't being counted) and
+- [x] ✅ [BACKEND] P1. Root-cause + fix `test_build_casing_frame_upgrades_every_known_residual_token` (changed_count 6
+      vs expected 7 — the `('FX', 'spot')` row's casing upgrade isn't being counted) and
       `test_cme_combo_shard_itype_now_canonicalizes_uppercase` (CME combo shard's `instrument_type` stays lowercase
       `"combo"` instead of being canonicalized to `"COMBO"` before `shard_key` is built). Verify
-      `bash scripts/quality-gates.sh` fully green afterward. (repo: market-tick-data-service)
+      `bash scripts/quality-gates.sh` fully green afterward. (repo: market-tick-data-service) — self-resolved by another
+      slot's in-flight tradfi COMBO migration before this todo was picked up; no code change needed here.
+
+## Resolution (2026-08-15)
+
+Both tests now pass on current `live-defi-rollout` HEAD with zero code changes from this task:
+
+1. `test_build_casing_frame_upgrades_every_known_residual_token` — PASSES (changed_count now correctly 7).
+2. `test_cme_combo_shard_itype_now_canonicalizes_uppercase` — this exact test no longer exists; the in-flight migration
+   (commit `6fa0dd9d` et al.) resolved the design the OPPOSITE direction from what this issue doc's "Recommended
+   decision" guessed: per a 2026-08-11 operator ruling (see the class docstring +
+   `test_cme_combo_shard_itype_stays_lowercase_bundle_grain` in
+   `tests/unit/test_venue_fetch_cefi_manifest_canonicalization.py`), bare `combo` is a bundle-grain wrapper axis, not a
+   real per-contract `InstrumentType.COMBO` — it now DELIBERATELY stays lowercase, and the test asserting uppercase
+   canonicalization was replaced with one asserting it stays lowercase.
+
+`bash scripts/quality-gates.sh` run full green on `market-tick-data-service` (sentinel `.qg_last_passed_sha` matches
+HEAD `24afa00b8a6d0a3dc1931efd3440dba30cef8c93`). No commit needed in `market-tick-data-service` — this doc flip is the
+only change.

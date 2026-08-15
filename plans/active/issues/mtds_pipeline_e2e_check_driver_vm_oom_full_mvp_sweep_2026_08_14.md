@@ -519,7 +519,7 @@ Two independent angles, not mutually exclusive:
   `test_build_casing_frame_upgrades_every_known_residual_token`,
   `test_cme_combo_shard_itype_now_canonicalizes_ uppercase`) — confirmed pre-existing (byte-identical failure on the
   commit BEFORE mine, and still red after `git pull --rebase` pulled in several newer commits from other slots actively
-  working this exact area — see `/plans/active/issues/mtds_tradfi_combo_casing_qg_red_2026_08_15.md`). Declared
+  working this exact area — see `/plans/archive/2026_08/issues/mtds_tradfi_combo_casing_qg_red_2026_08_15.md`). Declared
   repo-blocker `RB-c19cd263` (`kind=qg_red`) rather than blind-retrying or absorbing someone else's unrelated in-flight
   migration into this todo's scope. **Not flipping this checkbox** — the fix is written, tested, and half-shipped, but
   the actual DEFI-caller code (`pipeline_e2e_check.py`) is not yet on `origin/live-defi-rollout`. Whoever resumes (this
