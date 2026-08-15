@@ -245,16 +245,13 @@ source: >-
       doc. File now 833L (target confirmed clean via `check_line_caps.sh`: no longer in the violation list). Also
       flipped the Phase-1c "Map the index perps" checkbox in the same commit, citing its existing
       `unified-api-contracts@e973c62d` evidence.
-- [ ] [SCRIPT] P3. Trim `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md` back under its 1000-line
-      hard cap (currently 1001L, pre-existing — `check_line_caps.sh`/plan-hygiene pre-commit hard-blocks ANY commit
-      touching this file until it's under cap) so its own stale `meta_watchers.check_high_attempted_failed`
-      windowed-ratio checkbox (line ~303, already satisfied by `deployment-service@96271280`/`@0c38c00d` — see this
-      batch's todo above + its Progress Log entry) AND its stale "Resolve margin_type for the ~1,578 cefi liquidation
-      instrument_ids" checkbox (line ~289, already satisfied by `unified-trading-library@8142cab5ad` +
-      `market-data-processing-service@6422150034` — see this batch's own todo above) can finally be flipped. Judgment
-      call on what to archive/condense (likely candidate: fold the many near-duplicate `(cefi, book_snapshot_5)`
-      STATIC-BACKLOG repeat-dispatch Progress Log entries into a condensed summary, per the
-      plan-completion-and-archival-discipline SSOT), so out of scope for this batch's mechanical todo. Repo:
+- [x] ✅ [SCRIPT] P3. Trim `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md` back under its
+      1000-line hard cap — **DONE 2026-08-15 (slot-5·backend_engineer).** Folded the 4 near-duplicate
+      `(cefi, book_snapshot_5)` STATIC-BACKLOG repeat-dispatch Progress Log entries (2026-08-10/13/14, ~80 lines) into
+      one condensed entry preserving every distinct fact (dates, slots, numbers, the still-open duplicate-dispatch
+      finding) — 1001L → 938L. Its own `meta_watchers.check_high_attempted_failed` checkbox and the "Resolve
+      margin_type" checkbox were already `[x]` in the file (satisfied by prior commits per their own Progress Log
+      entries) — no further flips needed there; this todo's premise about them was itself stale. Repo:
       unified-trading-pm.
 - [x] ✅ [CODE] P2. Codex SSOT updates for crypto-venue equity-perp sourcing + equity-basis arb archetype Source:
       `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` — **SHIPPED unified-trading-pm (this
