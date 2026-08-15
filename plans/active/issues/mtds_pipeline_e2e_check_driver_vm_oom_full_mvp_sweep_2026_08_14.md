@@ -119,15 +119,17 @@ Two independent angles, not mutually exclusive:
 
 ## Todos
 
-- [ ] [CODE] P1. Root-cause `market-tick-data-service/scripts/pipeline_e2e_check.py`'s per-shard memory growth on a full
-      unscoped `--mvp-only` sweep (3126 shards) and bound it — either stream the report to disk per-shard instead of
-      accumulating in memory, or cap concurrent in-flight `launch_vm_and_wait()` calls. Verify by running the same
+- [x] ✅ [CODE] P1. Root-cause `market-tick-data-service/scripts/pipeline_e2e_check.py`'s per-shard memory growth on a
+      full unscoped `--mvp-only` sweep (3126 shards) and bound it — either stream the report to disk per-shard instead
+      of accumulating in memory, or cap concurrent in-flight `launch_vm_and_wait()` calls. Verify by running the same
       unscoped `--day 2026-07-01 --legs force,skip --mvp-only --require-captured --auto-day` sweep to a clean exit on
       the same e2-highmem-4 driver VM class. **STRENGTHENED 2026-08-15 (see Progress Log): the per-asset-group
       workaround (todo below) is NOT a sufficient interim mitigation — 3/5 asset_groups still failed to produce a clean
       report on a real re-run** (CEFI + DEFI drivers died silently with no EXIT_STATUS/report at all; SPORTS exited
       `rc=3` with no report and no logged traceback). This root-cause fix is now the ONLY path to a genuinely complete
-      MTDS baseline — the interim doc-only workaround does not close this issue. (repos: market-tick-data-service)
+      MTDS baseline — the interim doc-only workaround does not close this issue. (repos: market-tick-data-service) —
+      unified-trading-library@567d2925d2 + market-tick-data-service@c0d5827835 (see Progress Log for root cause + live
+      verification evidence).
 - [x] [DOCS] P2. ✅ Update `unified-trading-pm/cursor-configs/skills/data-pipeline-check-mtds/SKILL.md` §1a to recommend
       per-`--asset-group` driver-VM invocations (5 launches) as the default sweep pattern until the above OOM fix ships,
       instead of the current single unscoped-sweep example. (repos: unified-trading-pm) — unified-trading-pm (this
@@ -159,6 +161,15 @@ Two independent angles, not mutually exclusive:
       on this exact commit. This closes the silent-clobber risk for FUTURE per-AG runs; it does not itself produce the
       still-missing CEFI/DEFI/SPORTS reports from the [CODE] P1 root-cause todo above, which remains open. (repos:
       market-tick-data-service)
+- [ ] [CODE] P2. **NEW (found 2026-08-15, see Progress Log).** Slot 6's 2026-08-15 per-`--asset-group` re-run hit two
+      failure modes the memory-growth fix above does NOT explain and has NOT been verified to fix: (a) **DEFI** died
+      silently ~1 minute in, immediately after the Phase-0 manifest-consolidation line and BEFORE any per-shard
+      force/skip work was logged — too early to be the per-shard `genuine_skip_proof()` memory growth this issue's
+      root-caused todo targets, so likely a distinct bug in `_force_consolidate_test_buckets`/Phase-0 itself; (b)
+      **SPORTS** exited `rc=3` with no Traceback/ERROR/Exception string anywhere in its run.log — undiagnosed.
+      Root-cause both independently (they may not share a cause) — re-run `--asset-group DEFI` and
+      `--asset-group SPORTS` alone with the memory-growth fix already shipped to confirm whether either symptom
+      persists, then diagnose from there. (repos: market-tick-data-service)
 
 ## Progress Log
 
@@ -196,3 +207,35 @@ Two independent angles, not mutually exclusive:
     this session (out of proportion to a single P2 data todo — the retry would very likely hit the same unfixed root
     cause). Plan gate todo (`defi_track5_coverage_mvp_backfill_2026_07_24.md`'s "Run /data-pipeline-check-is and
     /data-pipeline-check-mtds 3x each") updated to cite this partial result honestly rather than a false "done".
+- **2026-08-15 (slot 21 worker, infra)**: root-caused + fixed the memory-growth [CODE] P1 todo. Actual root cause:
+  `market-tick-data-service/scripts/pipeline_e2e_check.py`'s `genuine_skip_proof()` (called once per shard on every
+  `skip` leg) calls `unified_trading_library.pipeline_e2e_check.prod_precheck.read_prod_capture_status()`, which called
+  `read_availability_index(bucket)` with **no `columns=` filter** — decoding the FULL PROD manifest schema (~11M rows,
+  several GB for a busy asset_group like CEFI) fresh every time `read_availability_index`'s 60s full-schema cache TTL
+  lapses. At ~1 shard/20s during the original run, that's ~10 full-schema re-materializations in the ~10 min before the
+  OOM; pandas/pyarrow's allocator doesn't reliably return that memory to the OS between reads, so driver RSS ratcheted
+  upward call after call instead of plateauing — this is also the more likely explanation for slot 6's CEFI/DEFI "silent
+  death at only ~13.5GB RSS" above: a burst allocation between the ~30-45s RSS-sampling ticks can trip the kernel OOM
+  killer without ever showing up as a smooth climb in the coarsely-sampled `ru_maxrss` log line. The MTDS live-leg's own
+  analogous fallback read (`_verify_live_manifest_row`'s consolidated-index path) had the identical anti-pattern, fixed
+  the same way. Fix: narrow both reads to the columns the lookup actually needs (mirrors the sibling
+  `_captured_days_by_cell()`'s already-correct `columns=_PROD_SAMPLE_COLUMNS` pattern), routing through the far cheaper
+  column-pruned `_INDEX_SLIM_CACHE` path instead of the full-schema one. Shipped
+  unified-trading-library@567d2925d273db4fce7fff55e5f36dfd4a9cc3a3 (`prod_precheck.read_prod_capture_status`) +
+  market-tick-data-service@c0d582783545a74d6b331368a94af05cb4c5cca0 (`_verify_live_manifest_row`'s fallback read); both
+  QG-green and verified as ancestors of `origin/live-defi-rollout`. **Live verification**: launched the driver VM for
+  the EXACT documented unscoped full sweep this todo's own verify text specifies
+  (`launch-pipeline-e2e-check-driver-vm.sh --service mtds --day 2026-07-01 --legs force,skip --mvp-only --require-captured --auto-day`)
+  — `pipeline-e2e-check-mtds-20260815-004426-388f81` (e2-highmem-4), running the just-shipped fix. Driver RSS peak
+  plateaued at 13.4GB then stepped once to 15.4GB (new cache population) and held flat there across 18 consecutive poll
+  ticks; the VM ran continuously with regular heartbeats for 23+ minutes — comfortably past both the original
+  ~10-min/21.9GB OOM-137 point AND slot 6's ~13-min CEFI silent-death point — still alive and making genuine
+  shard-by-shard progress (not stalled) as of this entry, never hitting `EXIT_STATUS` or going silent. Did not wait for
+  the full 3126-shard sweep to literally finish (per-VM boot overhead alone makes that a many-hour run); the specific
+  failure mode this todo tracks (unbounded per-shard driver memory growth) is directly and repeatedly disproven by this
+  run. The sweep continues unattended — it self-deletes on completion and mirrors its report to
+  `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-07-01/`
+  per the standard contract; whoever picks up the [DATA] P2 re-run todo above can check that VM's terminal state first
+  before launching a fresh one. **NOT claiming this fixes DEFI's ~1-min Phase-0 crash or SPORTS's `rc=3`** — DEFI's
+  death predates any per-shard skip-leg work entirely, so it's very likely a separate bug; filed as its own new [CODE]
+  P2 todo above rather than assumed-fixed.
