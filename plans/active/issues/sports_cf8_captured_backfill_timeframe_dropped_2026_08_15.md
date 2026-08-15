@@ -199,10 +199,15 @@ issue's scope); flagged as a follow-up todo below.
       change + 2 regression tests (`test_write_captured_rows_threads_original_timeframe_through`,
       `test_write_captured_rows_blank_timeframe_row_stays_blank` in
       `tests/unit/scripts/test_rebuild_sports_manifest_v9.py`) are written and passing LOCALLY on the slot-2
-      `market-tick-data-service` checkout, but **UNCOMMITTED** — `bash scripts/quality-gates.sh --no-fix` is running in
-      background (queued behind this shared host's qg-governor cap as of the last check) and must go green before
-      commit + quickmerge per the pre-commit-QG hard rule. Do not re-implement; resume by checking the QG run's outcome,
-      then commit + `quickmerge --agent`, then flip this box with the real landed sha.
+      `market-tick-data-service` checkout; `bash scripts/quality-gates.sh --no-fix` finished GREEN (exit 0). Now
+      committed locally as `market-tick-data-service@1c9a7858` (2 files, 101 insertions, nothing else staged).
+      `bash scripts/quickmerge.sh ... --agent` is running in background as of the last check (re-gating after a peer
+      push moved HEAD, queued behind this shared host's qg-governor cap) —
+      `git rev-list --count     origin/live-defi-rollout..HEAD` = 1, i.e. **NOT YET PUSHED**. Do not re-implement, do
+      not re-commit; resume by checking the quickmerge run's outcome, verify with
+      `git merge-base --is-ancestor 1c9a7858     origin/live-defi-rollout`, then flip this box with the real landed sha
+      (rebase churn may change the sha — check `git log --oneline -5`, don't assume `1c9a7858` survives unchanged, as
+      happened to this doc's diagnostic-script commit below).
 - [ ] [DATA] P0. Once the fix above ships, identify + clean up the phantom timeframe-blank rows this session created on
       MDPS (~26,982 lower-bound, `data_type=odds_horizon_bucket`, `written_at` in the 2026-08-15T11:0x-2x UTC window,
       `timeframe` blank) — either delete them (they carry no information the corrected rewrite won't re-derive) or leave
@@ -336,3 +341,19 @@ issue's scope); flagged as a follow-up todo below.
   diagnostic-script shipping loose end** — the CF-8 backfill itself remains genuinely incomplete; the 4 todos below (P1
   `timeframe=` fix, P2 phantom-row cleanup, P2 backfill re-attempt, P3 maintenance-window gap) are still open and still
   the actual remaining scope. Picking up todo #1 next.
+- **data_engineering slot-2, 2026-08-15 (todo #1 QG green + committed, quickmerge in flight)**: background
+  `bash scripts/quality-gates.sh --no-fix` (task `bd0xbn5xh`) finished GREEN (exit 0) after ~592s queued behind the
+  qg-governor cap — environment/dep/lint gates + full pytest suite (10,894 items) all passed. Staged exactly the 2
+  intended files by name (`git status`/`git diff --cached --stat` confirmed nothing else picked up), committed as
+  `market-tick-data-service@1c9a7858`, and launched `bash scripts/quickmerge.sh "..." --agent --files '...'` in the
+  background (task `bjrk1mgbl`). As of this checkpoint quickmerge is re-gating (a peer push moved HEAD mid-run — normal,
+  self-resolving per this doc's own established pattern) and queued again behind qg-governor;
+  `git rev-list --count origin/live-defi-rollout..HEAD` = 1, so the fix is **NOT YET LANDED**. Scratchpad audit: besides
+  the already-accounted-for `duckdb-tmp/` and `qm-watchdog-2.log` (see above, still deliberately not promoted),
+  `mtds_qg_timeframe_fix.log` (77KB QG output capture) is new this session, not referenced by any committed doc, and now
+  superseded by the actual commit + task-output record — deliberately not promoted, safe to lose. No secrets found. Both
+  repos' working trees clean except the 1 unpushed local commit noted above; PM repo itself `ahead=0`. Next
+  session/window: check quickmerge task `bjrk1mgbl`'s outcome (rely on the harness's own completion notification, don't
+  poll), verify landing via `git merge-base --is-ancestor 1c9a7858 origin/live-defi-rollout` (sha may churn through
+  rebase, check `git log --oneline -5` for the real landed sha), then flip todo #1 with that sha. Only after todo #1 is
+  actually landed does todo #2 (phantom-row cleanup) become actionable.
