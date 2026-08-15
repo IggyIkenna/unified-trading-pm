@@ -974,7 +974,14 @@ source: >-
       (745s), `unified-trading-library@8764696aef` (event constant), `deployment-service@1b7d1d3587` (bounded
       sweep + finding routing). Source:
       `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
-- [ ] [CODE] P2. Set the exit-code-monitor Cloud Run job's concurrency to 1 to stop */5 executions overlapping Source:
+- [x] ✅ [CODE] P2. **Cloud Run Jobs have no native cross-execution concurrency cap** (confirmed:
+      `google_cloud_run_v2_job`'s terraform schema exposes only per-execution `parallelism`/`task_count`) — added a GCS
+      CAS lease (`exit_code_lease.py`, create-if-absent + 35-min staleness takeover) that only one
+      `uts-prod-dp-exit-code-monitor` execution can hold at a time; skipped a losing execution exits 0 without
+      consulting the relaunch budget. deployment-service@2855b17833 (2026-08-15, slot-18·infra). Merged live with a
+      concurrent peer fix (todo above, `deadline_monotonic`/`coverage_sink`/`sweep_incomplete`) landed on the same file
+      in the interim — both preserved. `bash scripts/quality-gates.sh` green (445s, sentinel-verified at HEAD
+      `2855b178`); quickmerge landed on LDR (post-push ancestry verified). Source:
       `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
 - [x] ✅ [CODE] P2. **Diagnosed via audit logs — spot-preemption wave RULED OUT (0 overlap wedged/preempted); found +
       fixed an unbounded `gcloud compute instances delete` in all 3 self-delete paths (only 16/~398 delete calls ever
