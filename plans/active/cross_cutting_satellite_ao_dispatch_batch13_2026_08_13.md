@@ -916,9 +916,7 @@ source: >-
       `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
 - [ ] [CODE] P2. Make a VM stuck mid-shutdown actually terminate (shutdown-path DELETE or a reaper watchdog) Source:
       `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
-- [ ] [CODE] P2. Verify whether the GCS-backed relaunch budget fix is actually present in the deployed
-      deployment-api:latest image Source:
-      `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
+- [x] ✅ [CODE] P2. VERIFIED YES (2026-08-15, slot-8·infra) — deployment-service@0c38c00d (2026-08-11 fix, promoted to main@8a054e5f, auto-built on push) still on main HEAD; deployed deployment-api:latest (tag 4048e78, built 2026-08-15T18:39 UTC, 4+ days/5 same-day rebuilds post-fix) implies present. Source: `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
 - [x] ✅ [CODE] P2. **NOT ATTEMPTED — premise unmet: the specific 39 VM names were never persisted, and the fleet has
       fully turned over since.** (2026-08-15, slot-22·infra) The source doc's remediation sessions saved name lists for
       every VM it acted ON (`reaped_vms_2026_08_11.txt`, `reaped_duplicate_year_shards_2026_08_11.txt`), but the 39
