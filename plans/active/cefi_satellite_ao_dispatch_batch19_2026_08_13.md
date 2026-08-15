@@ -154,8 +154,26 @@ source: >-
       green.
 - [ ] [CODE] P2. Backfill the 3 KRX stocks via guardrailed Yahoo (Phase 5, deployment-service +
       market-tick-data-service) Source: `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
-- [ ] [CODE] P2. Databento L-floor boundary PRECISION probe + update LEVEL_MAX_LOOKBACK_DAYS (Phase 5,
-      unified-api-contracts) Source: `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
+- [x] ✅ [CODE] P2. Databento L-floor boundary PRECISION probe + update LEVEL_MAX_LOOKBACK_DAYS (Phase 5,
+      unified-api-contracts) **CLOSED — already-satisfied (2026-08-15).** This exact probe already shipped
+      **unified-api-contracts@92a418e5** (2026-08-09, `sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 4, prior
+      to this batch's drafting): `metadata.get_cost` binary search on GLBX.MDP3/ES.c.0 (cross-checked DBEQ.BASIC/AAPL
+      for L1) measured the exact free/metered boundary per level — L1 (trades/tbbo/mbp-1/bbo) 367d free/368d metered, L2
+      (mbp-10) 33d free/34d metered, L3 (mbo) 33d free/34d metered, L0 (ohlcv/definition/statistics/status) no rolling
+      metered boundary at all (bound only by GLBX.MDP3's real 2010-06-06 inception, 5908d). `LEVEL_MAX_LOOKBACK_DAYS` /
+      `earliest_allowed_start` / `assert_lookback_allowed` in `databento_subscription_allowlist.py` already carry these
+      exact measured values (verified live in repo, not stale). QG test coverage already matches the "one day past the
+      boundary rejected, one day inside allowed" spec:
+      `tests/unit/test_databento_subscription_allowlist.py::TestLookbackFloorBoundaries` asserts
+      `test_l1_within_367d_passes`/`test_l1_at_368d_raises`, `test_l2_within_33d_passes`/`test_l2_at_34d_raises`,
+      `test_l3_within_33d_passes`/`test_l3_at_34d_raises`, plus L0 within/at-boundary/beyond-window cases. The manifest
+      enumerator's floor-clip already consumes the same values transitively —
+      `instruments-service/scripts/enumerate_expected_universe.py:1878` and
+      `correct_tradfi_universe_floor_clip_and_vix_index.py:103` both `import earliest_allowed_start` from this module
+      rather than hardcoding a lookback constant, so they automatically picked up the 2026-08-09 measured values with no
+      separate change needed. No code shipped by this batch (none needed) — this todo's source line
+      (`cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Phase 5) simply never had its own checkbox flipped
+      after batch11's fix landed. Source: `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
 - [ ] [CODE] P2. Deprecate + remove all Barchart code (Phase 5, cross-repo delete-deprecated-code) Source:
       `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
 - [ ] [CODE] P2. Map the index perps (SPXUSDT/NAS100/SPYUSDT/XAUUSDT) to the CME index-future canonical with
