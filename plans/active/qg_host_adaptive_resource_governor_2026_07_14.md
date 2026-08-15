@@ -649,6 +649,34 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 
+### 2026-08-15 — TWO silent deaths of a queued (pre-admission) `quality-gates.sh` run, kernel OOM-killer NOT found (slot 29)
+
+- **Measured, not inferred**: launched `bash scripts/quality-gates.sh --no-fix` (mtds) via `nohup ... & disown`,
+  captured the real PID, verified liveness via `kill -0 <PID>` directly (not `pgrep -f`, which false-positives across
+  the ~15 other slots running the identical command concurrently — masked an earlier death in this same session). Two
+  independent runs died silently while STILL inside the governor's pre-admission `queued Ns` wait loop — log showed only
+  repeating `[qg-governor] ... queued Ns` lines, no admission/pytest-start marker ever appeared, then the process was
+  simply gone from `ps`, no terminal marker of any kind (not even a shell "Killed" line). Run 2 (PID `1564976`):
+  confirmed ALIVE at `queued 150s` (15:17:31Z), confirmed GONE at `queued 300s`/15:20:31Z by a PID-specific watchdog.
+- **Kernel OOM-killer checked, NOT found**: `sudo dmesg -T | grep -i 'killed process\|out of memory'` and
+  `journalctl -k --since "-30 min" | grep -i oom` both empty at the time of death. Caveat: sudo permission failures are
+  silently swallowed by `2>/dev/null` in that check, so this is suggestive, not conclusive. Host memory did not look
+  pressured either: `free -h` showed 22 GiB available, swap at 5.4 GiB (not maxed).
+- **Open hypothesis, NOT confirmed**: Phase 3's per-repo cgroup cap (`QG_MEM_CAP = 1.2 × baseline_peak`, `PM@a6b5e24a5`
+  above) was noted in this same plan as "currently 0/off" when it shipped. If it's since been enabled and wraps the
+  whole process tree from launch (not just from admission), a lightweight queue-wait loop sharing a cgroup with
+  something that pushed the aggregate over cap could die as collateral — cgroup-scoped kills don't always surface in
+  `dmesg` depending on cgroup v1/v2 config, which would explain the silence. **Not verified this session** — check
+  current `QG_MEM_CAP` state (`qg-host-governor.sh --status`) and whether it applies pre- or post-admission before
+  trusting this.
+- **Reusable diagnostic**: wrap the launch so a killed child logs its OWN exit code instead of vanishing —
+  `setsid bash -c 'bash scripts/quality-gates.sh --no-fix > "$LOG" 2>&1; echo "EXIT=$? at $(date +%T)" >> "$LOG"' < /dev/null &`
+  — the `setsid`-detached wrapper shell survives even if the inner command is SIGKILLed, and appends the real exit code
+  (137 = SIGKILL) to the log, turning "vanished without a trace" into "confirmed signal + code." A third run launched
+  this way was in progress at the time of this entry.
+- Filed as evidence for the runtime abort-monitor/observability follow-up (todo 258 above), not a new todo on its own —
+  no fix implied by evidence alone. (slot 29, `mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep-f433c955099b`)
+
 ## Deferred / open decisions
 
 - Canonical-cost source (Phase 0): `max(local,vm)` vs a fresh single canonical measurement — decide at Phase 0.
