@@ -399,6 +399,34 @@ issue's scope); flagged as a follow-up todo below.
       unread body (`live_workers_chain.py:542-569+`) or in the canonical-writer call it eventually makes); (iii)
       read that unread body next. Do not assume confirmed without doing (i)-(iii). (repo:
       market-data-processing-service)
+- [ ] [DATA] P1. **NEW, 2026-08-16, follow-up (c) — items (i)-(iii) from the todo above, now read**:
+      `TIMEFRAME_SECONDS`/`BASE_GRANULARITY_BY_DATA_TYPE` import from `unified_api_contracts.registry`
+      (`base_adapter.py:22`) — not readable from this checkout's shell (`unified_api_contracts` not on the bare
+      `python3` path; needs the repo's `.venv`, not yet run). `get_base_granularity()`
+      (`base_adapter.py:155-161`): priority is a `base_granularity` class attribute (confirmed
+      `SportsBucketAssignmentAdapter` does NOT define one — zero grep hits) > `BASE_GRANULARITY_BY_DATA_TYPE.get(
+      self.data_type, "15s")`. So if `"odds_horizon_bucket"` is an unregistered key there, `base_secs` resolves via
+      the recognized `"15s"` fallback (a real, non-zero `TIMEFRAME_SECONDS` entry), NOT via the same
+      defaults-to-0 hole as `"horizon"` itself. That means `get_valid_output_timeframes(["horizon"])`'s check
+      `TIMEFRAME_SECONDS.get("horizon", 0) >= base_secs` very likely evaluates `0 >= 15` = **False**, filtering
+      `"horizon"` out of `valid_tfs` entirely — `sorted_tfs` would be empty and `_process_all_timeframes`
+      (`live_workers_chain.py:356`) returns early with **zero candles written**, not a blank-timeframe row. **This
+      contradicts the observed non-empty blank-timeframe population** — so `live_workers_chain.py`'s batch/chain
+      path is likely NOT the one producing these rows; the true production entry point for
+      `odds_horizon_bucket` is probably `live_workers_streaming.py` (checked this pass — its
+      `_streaming_write_per_tf`/`_record_streaming_empty_timeframe` also thread a `timeframe`/`tf` parameter
+      straight through to `record_captured`/`record_empty_for_shard`/`record_failed_for_shard`, never re-deriving
+      it from `candles_df`, so the same open question applies there too). **Ruled out this pass**: the
+      `live_workers_streaming.py:756` comment ("this is the actual root cause of
+      mdps_sports_odds_horizon_bucket_candle_write_targets_prod_bucket_2026_08_02.md") is a DIFFERENT, already-fixed
+      bug (wrong write-bucket resolution, not a timeframe field) — read in full and confirmed unrelated to this
+      todo. **Precise next step, still open**: run inside the MDPS `.venv` to actually read
+      `TIMEFRAME_SECONDS`/`BASE_GRANULARITY_BY_DATA_TYPE`'s real values for `"horizon"`/`"odds_horizon_bucket"` (the
+      one fact this pass could not directly measure), which resolves whether `get_valid_output_timeframes` filters
+      `"horizon"` out (contradicts observed data — wrong mechanism) or passes it through (right track — then trace
+      one level further into `_streaming_write_per_tf`'s eventual `record_captured`/writer call to find where the
+      string actually goes blank). Do not assume confirmed without running this. (repo:
+      market-data-processing-service)
 
 ## Progress Log
 
