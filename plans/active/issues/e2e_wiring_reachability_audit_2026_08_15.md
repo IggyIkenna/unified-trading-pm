@@ -247,13 +247,28 @@ new scope, not a wiring bug in what already exists.
       position-opening belongs to strategy-service's `CarryRecursiveStakedEngine`, so the right fix may be wiring
       `recursive_loop_runner.py`'s bridge onto that event flow rather than hand-passing credentials at `api/app.py:321`.
       Resolve as a LOCAL/operator-scoped design todo before dispatching an AO fix.
-- [ ] [AGENT] P1. **Add a reachability gate.** A check that fails when a connector/handler/router in a covered-venue
-      list has no production caller. This defect class has recurred at least eight times now (2 more found this session:
-      `RecursiveLoopOrchestrator`'s app.py gap, `QuoteMaintainer`); a detector is worth more than eight fixes.
+- [x] [AGENT] P1. ✅ **Add a reachability gate.** — `unified-trading-pm@0428f5ee1f` (new
+      `scripts/quality_gates/check_reachability_gate.py`, wired into `quality-gates.sh`'s post-gates sweep). Census
+      mode (a directory of classes subclassing a common base — measured 26/33 execution-service DeFi protocol
+      connectors unreachable) and registry mode (an explicit `dict[key, type]` registry — `strategy-service`'s
+      `STRATEGY_CLOSE_ALL_REGISTRY`, 2/2 unreachable, matches FINDING 1's close-all gap). Registry-mode targets that
+      turn out to be dynamic-dispatch (`market-tick-data-service`'s `VENUE_REGISTRY`, `strategy-service`'s
+      `ARCHETYPE_ENGINE_REGISTRY`) are detected and reported informationally rather than falsely per-entry-baselined —
+      a naive "is `ClassName(...)` ever called by literal name" check scores ~100% false-unreachable for a
+      correctly-used dynamic registry, since the whole point of a registry is to avoid one named call site per entry.
+      Shrinking-ratchet baseline is a NAME SET, not a count (unlike `check_pytest_unit_dir_coverage.py`'s), so
+      swapping one gap for a different one still fails. `features-service`'s per-domain `*_REGISTRY` family is the
+      natural next batch of registry-mode targets — noted in-code, not added speculatively (unmeasured).
 - [ ] [AGENT] P1. **SIT invariant 2 needs a mode axis first** (operator ruling 2026-08-15: build the axis, do not weaken
       the invariant). `position_interface/` has one boolean per venue and no batch/live/paper distinction anywhere in
       adapter resolution. Design pass required before the invariant is expressible. Invariants 1+3 already landed
-      (`system-integration-tests@da65ae1`); invariant 4 (UAC↔execution address drift) is unstarted.
+      (`system-integration-tests@da65ae1`); invariant 3 was itself found deficient on review 2026-08-15 (compared
+      venue names not instruction actions, never checked `supports_live`) and rewritten
+      (`unified-api-contracts@e9201d80`). Invariant 4 (UAC↔execution LST address drift) is also landed
+      (`unified-api-contracts@e9201d80`, `system-integration-tests@c30e412851`) — narrowed mid-session to just
+      `mSOL`/SOLANA after Chunk A's address migration landed concurrently for all 6 ETHEREUM addresses
+      (`execution-service@d981725c2`). Invariant 2 (this todo) remains the only one still blocked on the mode-axis
+      design pass.
 - [ ] [AGENT] P1. **Build the 4 bespoke position readers** — Morpho health factor, Pendle maturity, Symbiotic + Karak
       withdrawal queues. A bare token balance MISREPRESENTS these rather than merely missing them.
 - [x] [AGENT] P1. ✅ **Migrate execution-service protocol modules onto the UAC LST address SSOT** —
@@ -265,8 +280,15 @@ new scope, not a wiring bug in what already exists.
       stays a local literal, correctly — the UAC SSOT deliberately excludes it (no venue declaration resolves it yet,
       per that module's own docstring). Dict indexing (not the `Optional`-returning `lst_token_address()` helper) so a
       missing key fails loudly at import time rather than silently typing as `str | None`.
-- [ ] [AGENT] P2. **Fix `check_pytest_unit_dir_coverage.py`** — it exists to catch test dirs missing from
-      `PYTEST_UNIT_DIR` and passed while 24 tests across 4 files sat uncollected.
+- [x] [AGENT] P2. ✅ **Fix `check_pytest_unit_dir_coverage.py`** — `unified-trading-pm@0428f5ee1f`. Root cause: v1
+      only scanned `tests/<family>/unit/` shapes (the MTDS bug shape) and structurally could not see PM's own
+      `scripts/plan-hygiene/` co-located `test_*.py` files — a different shape entirely, never in scope. v2 scans for
+      any dir holding a `test_*.py` file, with an exclusion list for genuinely-separate test tiers
+      (integration/e2e/smoke/etc. — measured: an unscoped scan flagged ~60 false positives across the fleet before
+      that exclusion) and PM's `codex/` template dir (`test-templates/test_event_logging.py` is copy-paste boilerplate,
+      never collected in place). Baseline recalibrated against the real fleet (6 repos have confirmed genuine
+      pre-existing gaps) via a hand-edit of the baseline (not `--update-baseline`, which clamps DOWN-only by design —
+      this was a deliberate, reviewed re-measurement after the detection-logic change, not a silent widening).
 - [ ] [OPERATOR] P2. **Cited `LST_TOKEN_GENESIS` date for Kelp/rsETH and ether.fi/eETH** — both have cited addresses but
       no venue declaration. That map drives coverage denominators, so an invented date corrupts them silently.
 - [ ] [AGENT] P2. **Correct client-facing disclosure artifacts still citing the pre-reachability "~16 genuinely live"
