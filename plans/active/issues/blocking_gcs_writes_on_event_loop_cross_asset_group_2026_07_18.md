@@ -123,28 +123,59 @@ the call is still awaited (ordering preserved), and check the file's line/functi
 
 ## Todos
 
-- [ ] [INFRA] P2. **Add concurrency (`asyncio.gather` + `Semaphore`) to the REMAINING DeFi CLI handlers** — per "Open —
-      in priority order" item 1. **SCOPE NARROWED 2026-07-31 (corpus-wide ownership-conflict sweep, resolving the
-      "GENUINE overlap" `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` recorded against this doc).**
-      Re-verified against live code today, not inferred: - ✅ **Already shipped elsewhere — do NOT redo.**
-      `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s `[SCRIPT] P1` landed `mtds@ff1b5d51` (2026-07-26) covering (i)
-      `solana_defi_handler.py` + `dex_pools_handler.py` fan-out via UTL `ParallelPerSymbolRunner`, and (ii) **all of
-      item 2's blocking-write fix** — every blocking parquet- serialize + `upload_bytes` now routes through the
-      dedicated `_defi_upload_executor.py` `ThreadPoolExecutor` (file confirmed present today), which is exactly the "do
-      item 2 FIRST" precondition this todo stated. - ✅ **Also already shipped:** the `_adapter.py` BatchPayload-level
-      loop is no longer unconditionally serial — UTL now has `_drive_concurrent` (`asyncio.Semaphore`) selected by
-      `--batch-date-concurrency` (default 1 = serial, `_adapter.py:169-191`). Remaining question there is a
-      _tuning/enablement_ call, not missing code. - 🔴 **STILL OPEN and owned HERE (the genuinely-uncovered residual)**:
-      `ParallelPerSymbolRunner` is adopted in exactly two handlers (grep-verified today: `solana_defi_handler.py`,
-      `dex_pools_handler.py`). The nested `for protocol: for chain: await ...` loops remain serial in
-      `dex_swaps_handler.py`, `evm_defi_collectors.py`, `gas_fee_handler.py`, `lst_rates_handler.py`,
-      `liquidations_handler.py`, `liquidation_events_handler.py`, `vault_share_price_handler.py`,
-      `eigenlayer_rewards_handler.py`. **This doc is the more complete/authoritative side for that residual** (batch2
-      only ever claimed the two-handler subset), so ownership stays here. - **Done when**: each handler above either
-      fans out through `ParallelPerSymbolRunner` with the existing `defi_max_concurrent_fetches` knob and a sequential
-      manifest-write/heartbeat apply pass afterward (preserving `record_captured` grain + shard-level isolation, the
-      pattern `mtds@ff1b5d51` established), or carries an in-code note saying why it must stay serial. Re-check
-      `dex_swaps_handler.py`'s 900-line cap first — the note below still applies.
+- [ ] [INFRA] P2. **PARTIAL, CODE COMMITTED BUT NOT YET SHIPPED — 3 of 8 residual handlers converted (committed
+      market-tick-data-service@9a21fe0c, NOT pushed); the other 5 do NOT match the assumed
+      `for protocol: for chain: await ...` shape, corrected diagnosis below.** (2026-08-15, slot-15·infra). Re-verified
+      each of the 8 named handlers' actual structure (not inferred from the title alone, per this todo's own "per-site
+      verification, NOT a mass edit" instruction): - ✅ **Converted to `ParallelPerSymbolRunner` fan-out** (bounded by
+      `defi_max_inflight_tasks`, manifest-write ordering preserved — `evm_defi_collectors.py`'s split
+      build-tasks/apply-results phase mirrors `mtds@ff1b5d51`; `liquidations_handler.py` and
+      `liquidation_events_handler.py` fan out their existing per-shard closures directly since those already do their
+      own manifest-write + never raise): `evm_defi_collectors.py`, `liquidations_handler.py`,
+      `liquidation_events_handler.py`. - 🔴 **`dex_swaps_handler.py`** — DOES have the matching nested-loop shape
+      (`_collect_all_protocols`), but the file sits at 886/900 lines — converting in place doesn't fit. Needs the SAME
+      stage-module extraction `dex_pools_handler.py` used (`_dex_pools_subgraph.py`) before the fan-out can land; not
+      attempted here (a distinct, larger refactor, not a mechanical port). New todo below. - 🔴 **`gas_fee_handler.py`**
+      — `_collect_evm_chains`/`_collect_one_evm_chain_with_freshness` are plain `def` (SYNC, called without `await` from
+      `process()`), not an async loop. There is no coroutine set to `gather` — applying "the established pattern" here
+      requires first async-ifying the chain-collection path, which is a separate design call, not this todo's scope. New
+      todo below. - 🔴 **`vault_share_price_handler.py`** — same shape as gas_fee:
+      `_collect_vault_rows`/`_collect_chain_vault_rows` are plain `def` (SYNC, called without `await`), driven by
+      synchronous Alchemy/web3 RPC calls. No async loop to convert. New todo below. - 🔴 **`lst_rates_handler.py`** —
+      has NO `for protocol: for chain:` loop at all; EVM LST rates are fetched via a single multicall-style
+      `_collect_evm_lst_rows(web3, evm_lst_addresses, ...)` call per date, not a per-shard loop. The todo's premise
+      doesn't apply to this handler's actual structure. New todo below (re-verify whether any different fan-out axis —
+      e.g. per-address — is worth adding, or close as not-applicable). - 🔴 **`eigenlayer_rewards_handler.py`** — single
+      (EIGENLAYER, ETHEREUM) shard per day (confirmed via its own preflight, which records exactly one shard on
+      catalog-stale). There is nothing to parallelize — closing this one as **not-applicable** rather than carrying it
+      forward as an open item (see new todo below, which just records the verdict). - **Verification standard met for
+      the 3 done handlers**: async caller confirmed (`process()`/module-level `_process_protocols` are already
+      `async def`), ordering preserved (manifest writes still apply per-shard, in original shard order where the
+      split-phase pattern was used), file/function line caps re-checked post-edit (`evm_defi_collectors.py` 705L,
+      `liquidations_handler.py` 818L, `liquidation_events_handler.py` 502L — all under the 900L cap).
+      `bash scripts/quality-gates.sh --no-fix` returned `ALL QUALITY GATES PASSED` on this exact diff pre-rebase
+      (2026-08-15); a POST-rebase re-run to mint a HEAD-matching sentinel for `9a21fe0c` has NOT yet completed — 20+
+      consecutive attempts (background + `setsid`+`nohup`+`disown`-detached) were killed by the shared host before
+      finishing (one got to 75% through pytest, one got into the TESTS stage a second time, zero content/assertion
+      failures in any partial run). This is a shipping-infra blocker, not a code-correctness question — see the new
+      issue doc filed below. **NOT flipping this checkbox until the code is actually pushed** (this doc's own
+      convention: a `- [x]` claims a shipped, verified state).
+- [ ] [INFRA] P3. Extract `dex_swaps_handler.py`'s protocol×chain collection loop (`_collect_all_protocols`) into a
+      dedicated stage module (mirroring `dex_pools_handler.py` → `_dex_pools_subgraph.py`) to free line-cap headroom,
+      then convert it to the `ParallelPerSymbolRunner` fan-out pattern `mtds@ff1b5d51`/this doc's 2026-08-15 fix
+      established. Repo: market-tick-data-service. Source: this doc's 2026-08-15 per-handler diagnosis above.
+- [ ] [INFRA] P3. Async-ify `gas_fee_handler.py`'s EVM chain-collection path (`_collect_evm_chains` →
+      `_collect_one_evm_chain_with_freshness`, currently plain `def` called without `await`) OR carry an explicit
+      in-code note saying why it must stay sync/serial, before any concurrency fan-out can apply. Repo:
+      market-tick-data-service. Source: this doc's 2026-08-15 per-handler diagnosis above.
+- [ ] [INFRA] P3. Async-ify `vault_share_price_handler.py`'s vault-collection path (`_collect_vault_rows` →
+      `_collect_chain_vault_rows`, currently plain `def` called without `await`, driven by sync Alchemy/web3 RPC calls)
+      OR carry an explicit in-code note saying why it must stay sync/serial, before any concurrency fan-out can apply.
+      Repo: market-tick-data-service. Source: this doc's 2026-08-15 per-handler diagnosis above.
+- [ ] [INFRA] P3. Re-assess `lst_rates_handler.py`: confirm whether ANY per-shard fan-out axis exists (e.g. per LST
+      address within the single multicall-style EVM fetch, or across the EVM/Solana split) worth parallelizing, or close
+      this handler out of "the 8 residual DeFi handlers" scope as not-applicable — it has no `for protocol: for chain:`
+      loop to convert. Repo: market-tick-data-service. Source: this doc's 2026-08-15 per-handler diagnosis above.
 - [ ] [INFRA] P3. **Fix the 2 blocking-write sites in SYNC functions** — per "Open — in priority order" item 3:
       `live/websocket_runner.py::_record_empty_window` and
       `unified_trading_library/streaming/live_aggregator.py::_handle_zero_tick_window` perform the same blocking
@@ -186,3 +217,21 @@ the call is still awaited (ordering preserved), and check the file's line/functi
 - **na-eligibility-audit 2026-08-07 (cross-cutting tranche)**: KEEP-NA, valid — reaffirmed, unchanged. Both open todos
   (item-1 concurrency fan-out for 8 residual DeFi handlers, item-3 the 2 sync-function blocking-write sites) still need
   per-site correctness judgment (verify async caller, ordering, line-cap), not a mechanical mass edit.
+- **cross_cutting_satellite_ao_dispatch_batch13 2026-08-15 (slot-15·infra)**: item-1 code done, NOT yet shipped.
+  Converted `evm_defi_collectors.py`, `liquidations_handler.py`, `liquidation_events_handler.py` to the
+  `ParallelPerSymbolRunner` fan-out pattern (matches this doc's "Verification standard for this issue" section: async
+  caller confirmed, ordering preserved, line caps re-checked). The other 5 named handlers do NOT match the assumed
+  nested-loop shape — 4 new P3 todos filed above with the corrected per-handler diagnosis (2 are sync-not-async, 1 has
+  no protocol×chain loop at all, 1 is single-shard with nothing to parallelize, 1 needs a stage-module extraction
+  first). Committed locally `market-tick-data-service@9a21fe0c` (pre-rebase diff got a full `ALL QUALITY GATES PASSED`,
+  2042s) but NOT pushed — 20+ consecutive `quality-gates.sh` re-runs against the rebased/ruff-formatted HEAD (needed to
+  mint a matching `--agent` sentinel) were killed by the shared host over ~4h, including fully-`setsid`+`nohup`+
+  `disown`-detached attempts per an operator-directed diagnostic (ruled out `resource-watchdog.sh`'s RAM/CPU/swap checks
+  specifically — they exempt anything <30s old, and several kills were both near-instant AND happened at healthy
+  measured host RAM/load). Filed `plans/active/issues/mtds_qg_background_task_near_instant_kill_2026_08_15.md` with the
+  full evidence trail — this item stays open, blocked on that infra issue, not on remaining code work. **Next session**:
+  check that issue doc's own resolution first; if QG can complete, `cd market-tick-data-service && git log --oneline -1`
+  should show `9a21fe0c` already checked out — just re-run `quality-gates.sh --no-fix`, then
+  `quickmerge --agent --files market_tick_data_service/cli/handlers/evm_defi_collectors.py market_tick_data_service/cli/handlers/liquidations_handler.py market_tick_data_service/cli/handlers/liquidation_events_handler.py`,
+  then flip this todo to `[x]` + the `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` todo with the shipped
+  SHA.
