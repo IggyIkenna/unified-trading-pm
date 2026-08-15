@@ -465,13 +465,28 @@ source: >-
       already recorded in the source doc's own Progress Log — no new code/research needed by this batch; this batch's
       2026-08-13 conflict-check drafted the item before the source doc's own audit-day research landed later the same
       day. Source: `plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md` (Todo 1, already `[x] ✅`).
-- [ ] [CODE] P2. Add confirmed tokenized-equity symbols to the UAC CeFi instrument universe with
-      instrument_type=SPOT_PAIR + tracks_equity link Source:
-      `plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
-- [ ] [CODE] P2. Add confirmed symbols to the CeFi MVP scope rule (mirror CEFI_EQUITY_PERP_BASE_UNIVERSE pattern)
+- [x] ✅ [CODE] P2. **CLOSED — already-shipped elsewhere (2026-08-15, slot-8·backend_engineer), stale-checkbox
+      correction per the AO-dispatch conflict-check protocol §3.4.** Add confirmed tokenized-equity symbols to the UAC
+      CeFi instrument universe with instrument_type=SPOT_PAIR + tracks_equity link. The source doc's own identical Todo
+      2 was verified DONE by slot-6 on 2026-08-13 — **`unified-api-contracts@7e9a5b5d1`** ("feat(uac): register
+      OKX/Bybit tokenized-equity SPOT_PAIR symbols + tracks_equity links", confirmed ancestor of
+      `origin/live-defi-rollout`): added `MCD` to `CEFI_EQUITY_PERP_BASE_UNIVERSE` and 41 new `tracks_equity` links in
+      `CRYPTO_EQUITY_PERP_TO_REAL_EQUITY`. Source doc's own checkbox is already `[x]` there. No code shipped by this
+      batch (none needed). Source: `plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
+- [x] ✅ [CODE] P2. **CLOSED — already-shipped elsewhere (2026-08-15, slot-8·backend_engineer), stale-checkbox
+      correction per the AO-dispatch conflict-check protocol §3.4.** Add confirmed symbols to the CeFi MVP scope rule
+      (mirror CEFI_EQUITY_PERP_BASE_UNIVERSE pattern). The source doc's own identical Todo 3 was verified DONE by
+      slot-29 on 2026-08-13 — **`unified-api-contracts@bfad33b58`** (confirmed ancestor of `origin/live-defi-rollout`):
+      new `CEFI_TOKENIZED_EQUITY_BASE_UNIVERSE` (67 raw venue bases) unioned into `CeFiMvpRule.base_ccys`, with a
+      perp-gate-exempt carve-out for the no-perp-leg SPOT_PAIR cells. No code shipped by this batch (none needed).
       Source: `plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
-- [ ] [CODE] P2. Register an InstrumentRecord per confirmed symbol dated to its real historical listing date Source:
-      `plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
+- [x] ✅ [CODE] P2. **CLOSED — already-shipped elsewhere (2026-08-15, slot-8·backend_engineer), stale-checkbox
+      correction per the AO-dispatch conflict-check protocol §3.4.** Register an InstrumentRecord per confirmed symbol
+      dated to its real historical listing date. The source doc's own identical Todo 5 was verified DONE by slot-7 on
+      2026-08-13 — no code change was needed (the Tardis adapter's existing full-universe enumeration already emits a
+      `SPOT_PAIR` record per symbol dated to its real `availableSince`); a regression guard shipped —
+      **`instruments-service@4eca07bac4`** (confirmed ancestor of `origin/live-defi-rollout`). No code shipped by this
+      batch (none needed). Source: `plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
 - [ ] [CODE] P2. Launch the CeFi Tardis/venue-native backfill for the tokenized-equity SPOT window Source:
       `plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`
 - [x] ✅ [CODE] P2. Grep prior mdps-cefi-_/mdps-tradfi-_/mdps-defi-* run.log archives (or manifest attempted_failed
@@ -500,6 +515,17 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
 2026-08-13 audit's full classification data for the complete list.
 
 ## Progress Log
+
+- **2026-08-15 (slot-8·backend_engineer)**: dispatched the "Add confirmed tokenized-equity symbols to the UAC CeFi
+  instrument universe with instrument_type=SPOT_PAIR + tracks_equity link" todo — found the source doc
+  (`cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md`) had ALL FIVE of its own code/research todos already
+  done (Todos 1-5, completed 2026-08-13 by slots 6/7/18/29) while this batch's mirrored copies of those same 4 items
+  (research, universe registration, MVP-scope rule, InstrumentRecord registration — Todo 6/launch and Todo 7/docs were
+  correctly excluded, neither mirrored here nor claimed done) sat unflipped. Verified all 3 cited commits
+  (`unified-api-contracts@7e9a5b5d1`, `unified-api-contracts@bfad33b58`, `instruments-service@4eca07bac4`) are real
+  ancestors of `origin/live-defi-rollout` via `git merge-base --is-ancestor` before flipping. Per the AO-dispatch
+  conflict-check protocol §3.4 ("already-shipped elsewhere, checkbox just never flipped"), flipped all 4 as
+  stale-checkbox corrections, not new work — no code shipped by this todo (none needed).
 
 - **2026-08-15 (slot-17·backend_engineer)**: dispatched the "Audit UNCLASSIFIED_ADAPTER_ERROR rows" todo. Grepped every
   literal `UNCLASSIFIED_ADAPTER_ERROR` producer in market-tick-data-service (excluding tests) and found only two, both
