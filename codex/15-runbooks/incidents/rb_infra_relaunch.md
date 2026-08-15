@@ -3,8 +3,8 @@ doc_type: codex-runbook
 title: RB-INFRA-RELAUNCH — Registry-driven VM relaunch (escalate-to-orchestrator)
 summary:
   Runbook for a planning-VM worker spawned by an escalate-to-orchestrator repository_dispatch (action=relaunch_vm) to
-  relaunch a failed/stalled/OOM'd data VM — read DeploymentsRegistry + resolve_launcher_for_vm, re-run the launcher,
-  verify STARTED@T+60s / PROGRESS@T+10min; bounded ≤2 relaunches/(vm-prefix,day) then page.
+  relaunch a failed/stalled/OOM'd data VM — read its LAUNCH_PARAMS.json/PROGRESS.json + resolve_launcher_for_vm, re-run
+  the launcher, verify STARTED@T+60s / PROGRESS@T+10min; OOM bounded ≤2/(vm-prefix,day), preemption ≤48/day, then page.
 status: current
 nature: process
 asset_group: [meta]
@@ -47,7 +47,7 @@ launchers into the monitor image). **You** have the full env, so you do the rela
 | `action`            | `relaunch_vm`                                                                         |
 | `vm_name`           | the failed VM's name (its prefix → launcher)                                          |
 | `relaunch_launcher` | the `deployment-service/scripts/vm/launch-*.sh` to re-run (may be empty → resolve it) |
-| `deployment_id`     | the `DeploymentsRegistry` row id (carries asset_group/task/mode/dates)                |
+| `deployment_id`     | a deployment-tracking id (carries asset_group/task/mode/dates) — see step 1's note    |
 | `asset_group`       | `cefi`/`defi`/`tradfi`/`sports`/`prediction`                                          |
 
 The `context` field repeats this in prose; **prefer the structured fields**.
@@ -72,12 +72,13 @@ The `context` field repeats this in prose; **prefer the structured fields**.
 3. **Check for a supervising wrapper before relaunching.** Some VM families are already driven by a self-managed retry
    wrapper — grep `deployment-service/scripts/vm/` for a `*-historical-*` or loop-style caller of the resolved launcher
    (e.g. `launch-expected-universe-v2-historical-backfill-vm.sh` wraps `launch-expected-universe-v2-vm.sh`). If one
-   exists, check `DeploymentsRegistry` for recent same-prefix launches: an actively-cycling wrapper is already retrying
-   the same window sequentially (respecting its own singleton lock) on its own known-retriable exit codes. A manual
-   out-of-band relaunch in that case races the wrapper and risks a duplicate concurrent run — do NOT relaunch; confirm
-   the wrapper is still converging and stand down instead. Mirrors the "if it re-fails the SAME way twice, STOP" pattern
-   below — easy to skip past under dispatch pressure, so check this explicitly, not just when a relaunch fails.
-   Root-cause example: `/plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md`.
+   exists, check the live VM fleet (`gcloud compute instances list`) for recent same-prefix launches: an
+   actively-cycling wrapper is already retrying the same window sequentially (respecting its own singleton lock) on its
+   own known-retriable exit codes. A manual out-of-band relaunch in that case races the wrapper and risks a duplicate
+   concurrent run — do NOT relaunch; confirm the wrapper is still converging and stand down instead. Mirrors the "if it
+   re-fails the SAME way twice, STOP" pattern below — easy to skip past under dispatch pressure, so check this
+   explicitly, not just when a relaunch fails. Root-cause example:
+   `/plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md`.
 4. **Re-run the launcher** from `deployment-service/scripts/vm/<relaunch_launcher>` with the registry's tags
    (`VM_ASSET_GROUP=<asset_group>`, the task/mode/date metadata the launcher expects). The launcher streams durable GCS
    logs + registers a deployment heartbeat, so the relaunch is **never fire-and-forget**.
