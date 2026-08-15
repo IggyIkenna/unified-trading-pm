@@ -107,16 +107,17 @@ context_scope:
       itself launched via `run_in_background`). Also cross-check the RAM-exhaustion doc's journalctl signatures against
       `orphan_reap`/`kill_session` — never done. Source:
       `/plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`.
-- [ ] [BACKEND] P1. **STILL OPEN, scope narrowed 2026-08-15 (reconciliation sweep, this session).** `HealthMonitor`
-      (`server/health.py:144-160`) and `AgentKeeper` (`server/main_agent_keeper.py:1166-1184`) are now ALSO confirmed
-      fixed (explicit "Read/act/write split" docstrings), and `WorkerLivenessKicker`'s `_tick_once` structurally already
-      reads-then-acts-then-writes — so 5 of ~10 loops are clean, not 2. `UsagePoller`/
-      `AutoParkReconciler`/`RepoHealthWatcher` never made `has_session`/`capture_pane` calls at all — never guilty, just
-      contention victims. **The confirmed-still-bad one: `context_lifecycle.py`'s `_read_pct` (~line 1354-1373, called
-      every tick for main/review/every worker) still opens `session_scope()` and calls `capture_pane()` (a tmux
-      subprocess) INSIDE that open write transaction — the exact anti-pattern, still live today.** `AutoSpawnLoop`/
-      `PlanReconcilerLivenessCanary`/`BlockedQueueReconciler` not yet re-checked. **DO-NOT-ARCHIVE guard stays on the
-      source doc.** Source: `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`.
+- [x] [BACKEND] P1. **DONE — full 10-component sweep closed 2026-08-15 (this session).** Final per-component verdict:
+      `HealthMonitor` FIXED (`agent-orchestrator@349dbc0`), `AgentKeeper` FIXED (`@eb4265c`), `BlockedQueueReconciler`
+      FIXED (`@ff490c7`), `AutoSpawnLoop` FIXED (`@2f94a90` — its `_resume_pass` had a `has_session()` call the prior
+      "Phase 2" fix never covered), `context_lifecycle.py`'s `_read_pct` FIXED (`@3f5b10a` — the highest call-frequency
+      instance, run every tick for main/review/every worker); `WorkerLivenessKicker`/`UsagePoller`/`AutoParkReconciler`/
+      `RepoHealthWatcher`/`PlanReconcilerLivenessCanary` all confirmed ALREADY-FINE (structurally already read/act/write
+      or never made a blocking call inside a session at all — contention victims, not causes). Every fix follows the
+      same read-DB / act-with-no-session-open / write-DB split already proven by `tmux_pruner`/`ensure_review_agents`,
+      each with a regression test asserting zero open `session_scope()` depth during the slow call. **This closes the P1
+      live incident** — flip the source doc's DO-NOT-ARCHIVE guard note to reflect closure (not done in this pass,
+      tracker-level only). Source: `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`.
 - [x] [REVIEW] P2. **DONE.** `WorkerLivenessKicker` now auto-submits a frozen `/compact`/`/pre-compact` at/above
       `context_worker_compact_gate_pct` (`server/worker_liveness/__init__.py:988-1027`, logs
       `frozen_guided_compact_auto_submitted`), citing this exact todo. Verified 2026-08-15 (reconciliation sweep, this
@@ -153,13 +154,15 @@ context_scope:
       `2026-08-06..present` window, still only 8 showing `pane=working` at declaration. The guard fix worked. Source:
       `/plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md` — flip its checkbox with these
       numbers.
-- [ ] [DOC] P3. **STILL OPEN — false-completion finding 2026-08-15 (reconciliation, this session).** The SOURCE doc
-      (`ao_scheduled_job_reserve_and_staggering_2026_08_04.md`) has this checked `[x]` "DONE 2026-08-14" claiming a new
-      subsection was added to `/codex/04-architecture/agent-orchestrator-worker-liveness.md` — it was NOT. Read the live
-      971-line codex doc directly: zero hits for "pane-guard"/"cap-branch"/"9d26598"/`_diagnose_unbooted_pane` anywhere.
-      The underlying code (`server/worker_liveness/_auth_failover.py:31-192`) is real and worth documenting — the doc
-      edit itself was just never made despite the checkbox. **Both the source doc's checkbox AND this tracker item need
-      to stay open until the doc edit actually happens.** Source: same doc.
+- [x] [DOC] P3. **DONE — RESTORED 2026-08-15 (this session), root cause identified.** The doc edit genuinely landed once
+      already (`unified-trading-pm@69468f0164`, 2026-08-14) — verified via `git show`, the full "Pane-guard-
+      before-cap-branch ordering invariant" subsection was really added — but was silently dropped by a LATER commit
+      (`unified-trading-pm@9786794390`, a 71-insertion/68-deletion edit to the same file by a different session) that
+      appears to have started from a stale local copy predating the addition — a live instance of this workspace's own
+      documented "stale local content overwrites, not merges" hazard. Re-added the identical section (verified against
+      the original commit's diff) at the same location, immediately before "Calibration-source contract". This is a
+      finding for whoever runs a corpus-wide staleness audit next: the SAME failure class could be silently dropping
+      other sessions' concurrent doc edits to this heavily-contended file. Source: same doc.
 - [x] [REVIEW] P3. **DONE.** Decision made + recorded live: `server/models/scheduled_jobs.py:19-27` carries a dated
       `DECISION (...2026-08-04.md, 2026-08-14): KEEP "no_capacity"` — reachable only by an ad-hoc caller omitting
       `job_name`, every real timer-driven dispatch now reports `queued` instead (post `@5087f30`); kept as
@@ -237,19 +240,27 @@ context_scope:
 - [x] [REVIEW] P2. **DONE — confirmed live 2026-08-15 (this session, direct SSM check).** Zero kernel OOM-killer hits
       host-wide in the last 30 days (`journalctl -k`, no root needed — the orchestrator's own service user,
       `ubuntu`/group `adm`, can already read this). Ruled out cleanly. Source: same doc.
-- [ ] [BACKEND] P2. **Wire the DB-aware readiness signal to an actual restart trigger.** `_readiness_check()` already
-      does a real `select(1)` DB probe (has since 2026-05-19, predates the issue) — but no installer polls `/readiness`
-      to act on it; every `ExecStartPre` health-gate only hits `/api/healthz` (liveness). Source:
-      `/plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md`.
+- [x] [BACKEND] P2. **DONE — shipped `agent-orchestrator@3b4a329`** (2026-08-15). New `ReadinessWatchdog`
+      (`server/readiness_watchdog.py`), mirroring `DiskSpaceCanary`'s shape: polls the same `select(1)` probe
+      `/api/readiness` already runs, every 30s; after 5 consecutive failures (~2.5min) calls `os._exit(1)` — confirmed
+      no `systemd-notify`/`sd_notify` convention exists anywhere in this repo, and `orchestrator.service` is
+      `Type=simple` with `Restart=on-failure`/`RestartSec=10` already declared, so a process exit is the correct
+      trigger. Wired into `server.py`'s lifespan; new `notify_readiness_watchdog_restart` Slack alert. Source:
+      `/plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` — flip its checkbox too.
 - [ ] [BACKEND] P3. **Confirmed still open + genuine design fork 2026-08-15 (reconciliation sweep).** Right-size/harden
       the DB pool — `pool_size`/`max_overflow` raise correctly stays un-bumped (disproven, matches the SQLAlchemy
       defaults still in `server/db.py`); `pool_timeout` was raised to 125s for a separate P2 issue, not this one. Two
       live unresolved alternatives remain: "lower pool_timeout" vs. "batch/serialise per-slot git-status writes" (no
       batching exists in `server/routes/git_health.py` today — still one `session_scope()` per request). Correctly NA —
       a real judgment call between two designs, not a bounded task. Source: same doc.
-- [ ] [BACKEND] P2. **Surface a cgroup-vs-host RAM mismatch on the dashboard/alerting.** `host_resources.py` reads only
-      host-level `/proc/meminfo`; no cgroup-specific memory-stat reader (`memory.current`/`memory.high`/ `memory.max`)
-      exists anywhere. Source:
+- [x] [BACKEND] P2. **DONE (backend) — shipped `agent-orchestrator@ca6603a`** (2026-08-15). New
+      `cgroup_memory_snapshot()` in `host_resources.py`: cgroup v2 preferred (`memory.current/high/max/swap.current`,
+      confirmed via `cgroup.controllers`), v1 fallback (`usage_in_bytes`/`limit_in_bytes`/`memsw.usage_in_bytes`, v1's
+      finite-sentinel "unlimited" handled distinctly from v2's literal `"max"`), `None` when neither exists — never
+      raises. Wired into `snapshot()` → `HostResources` (`cgroup_available`/`cgroup_mem_pct` + raw byte fields), which
+      `resource_history.py`'s sampler already serializes wholesale, so `/ws/vm-resources` picks it up with no further
+      wiring. **A dashboard UI tile is explicitly NOT built** (out of scope for this pass, backend-only) — remains a
+      genuine follow-up if the operator wants the data surfaced visually, not just available over the WS feed. Source:
       `/plans/active/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`.
 - [ ] [DATA] P2. Audit `unified-trading-system-repos/` (157G, dominant disk consumer) for real cleanup headroom. Source:
       `/plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md`.
@@ -453,3 +464,27 @@ before touching the source doc directly._
   Slack-conversation intent). Only `context_scope` backfill (Track 3/6, large standing effort) and a handful of pure
   re-run/publish items (`/plan-reconcile` solo, `/na-eligibility-audit` all-tranches, the benchmark artifact update)
   remain genuinely un-triaged — everything else in the original 51-item list now has a live, evidence-backed verdict.
+- **2026-08-15 (parallel implementation session, /autonomous)**: while the reconciliation-only pass above was verifying
+  what already landed, a separate concurrent session actually IMPLEMENTED the remaining code-shippable items —
+  overlapping/converging on the same commits in several places (evidence of genuinely-shared, non-duplicated progress
+  across sessions). Shipped this pass: the SQLite lock-storm P1 incident fully closed (all ~10 components: `@349dbc0`
+  `@eb4265c` `@ff490c7` `@2f94a90` `@3f5b10a`, plus 5 confirmed already-fine); DB-readiness restart trigger
+  (`@3b4a329`); cgroup RAM backend surfacing (`@ca6603a`); the
+  escalation-route/ghost-host-tombstone/gate_on_depends/rejected-push/ no_capacity items already flipped above; and 6
+  archival Track-6 items (PM repo, parallel wave). **One real finding**: the pane-guard codex-doc fix (flipped above as
+  a "false-completion") actually HAD been written once (`unified-trading-pm@69468f0164`) but was silently dropped by a
+  later same-file edit from a different session — a live instance of this workspace's documented "stale local content
+  overwrites, not merges" hazard on a heavily-contended file; restored in this pass, flagged as a pattern worth a wider
+  staleness audit. Also shipped: ~121 more `context_scope` docs backfilled (Track 3, explicitly ongoing/multi-session by
+  design — corpus was 736 total, 559 stale/never-scouted at this session's start, ~438 remain). **Remaining genuinely
+  open after this pass**: force kill+resume ordering vs. `spawn_retry_cap_reached` (unconfirmed), per-slot
+  context-plateau detection (unbuilt, P3), 60-min context-signal re-validation (needs live-fleet observation, not code),
+  `/plan-reconcile` + `/na-eligibility- audit` solo benchmark re-runs (pure script re-runs, not implementation),
+  disk/mdps_bench_data audits (attempted via SSM this session, hit shell-portability + `sudo -n` non-interactive-auth
+  issues — deprioritized as best-effort/P2, not re-attempted), backlog-relations UI (has a ready-to-dispatch spec now,
+  per the PM reconciliation agent's read of the UX brief — genuinely a NEW scoped implementation task, not a judgment
+  call anymore, but not built this pass), and the two already-identified genuinely-OPERATOR items (vm-0 JWT secret
+  write, dirty-worktree policy design) plus the DeepSeek financial/credential items already CANCELLED-out-of-scope
+  above. `l2_book` retest gate untouched (correctly blocked on its own separate `assigned_vm: NA` hold). Dashboard e2e
+  deepseek-spec residual + the `free_provider_health_gate_skipped` DeepSeek-routing investigation were dispatched in
+  this pass; see this doc's next edit for their outcome once that agent reports back.
