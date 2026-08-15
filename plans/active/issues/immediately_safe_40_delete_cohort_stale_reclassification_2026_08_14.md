@@ -138,9 +138,26 @@ has actually verified).
       class (`Lifecycle: permanent`, invoked via `--aggregate`/`--aggregate-only`, same dedup-by-instrument_key +
       GCS-upload logic) — confirmed no live caller of `aggregate_instruments.py` remained (grep: only self-refs + plan
       docs). `git rm`'d. `deployment-service@b47a372e`.
-- [ ] [CODE] P3. Re-run `codemods/migrate_page_headers.py` against the ~20 still-unmigrated `app/**/page.tsx` files (or
-      confirm they're intentionally excluded, e.g. non-standard header shape) before re-evaluating its `Delete-when`
-      gate. Repo: unified-trading-system-ui.
+- [x] ✅ [CODE] P3. Re-run `codemods/migrate_page_headers.py` against the ~20 still-unmigrated `app/**/page.tsx` files
+      (or confirm they're intentionally excluded, e.g. non-standard header shape) before re-evaluating its `Delete-when`
+      gate. Repo: unified-trading-system-ui. — **Confirmed intentionally excluded, no code change.** Re-ran the codemod
+      (`python3 scripts/codemods/migrate_page_headers.py`) against the full `app/(platform)/**`, `app/(ops)/**`,
+      `app/health/**` glob (217 candidate files, up from the 20 named at the 2026-08-14 audit — more legacy headers
+      accrued since): `migrated=0 skipped=217`. Spot-checked all 29 files currently carrying a bare `<h1 className=...>`
+      with no `PageHeader` import; every one has a header shape outside the codemod's 3 conservative regexes
+      (`BLOCK_RE`/`ALT_BLOCK_RE`/`SPACE_Y1_RE`, each requiring a `<div>`-wrapped h1+p pair with plain-text-only
+      content): dynamic `{expr}` interpolation inside the h1 or p (`workspace/page.tsx`, `strategy/families/page.tsx`,
+      `paper-trading/page.tsx`, `execution/[executionId]/page.tsx`, `admin/requests/page.tsx`, others), an icon element
+      inside the h1 (`dart/terminal/page.tsx`, `dart/terminal/manual/page.tsx`,
+      `dart/terminal/manual/[instructionId]/page.tsx`, `admin/github/page.tsx`), a sibling `<Badge>` instead of a `<p>`
+      description (`admin/strategy-universe/page.tsx`, `signals/dashboard/page.tsx`, `strategy-catalogue/page.tsx`,
+      `strategy/catalog/page.tsx` + its `[strategyId]` variant, `admin/strategy-lifecycle-editor/page.tsx`), or a
+      `<header>` wrapper / stacked h1+h2 layout instead of the expected `<div>` wrapper
+      (`admin/questionnaires/page.tsx`, `admin/strategy-evaluations/page.tsx`). None of the 29 is the plain-text h1+p
+      legacy block the codemod targets — the `Delete-when: ...no legacy headers remain` condition as literally worded
+      can't be satisfied by re-running this script again, since every remaining raw h1 is a distinct bespoke pattern
+      (icon header, badge row, dynamic title/description) that would need hand-written per-file `PageHeader` migrations,
+      not this automated tool. No files touched; `git status` clean.
 - [x] ✅ [CODE] P3. Replace the 3 remaining direct `Loader2` + `animate-spin` usages under `app/(ops)/admin/` with
       `<Spinner />` before re-evaluating `codemods/replace-loader2-spinner.py`'s `Delete-when` gate. Repo:
       unified-trading-system-ui. — **Ran the codemod against the whole tree** (not just the 3 named files — 5 more files
@@ -170,3 +187,7 @@ has actually verified).
   green, shipped `unified-trading-system-ui@58b332e852`. Two todos remain open (page-header codemod re-run, openapi
   typegen-input confirmation).
 - **context-scout 2026-08-15**: populated context_scope (4 entries).
+- **2026-08-15 (slot 26)**: Resolved the page-header codemod todo — re-ran `migrate_page_headers.py` (0/217 migrated),
+  confirmed all 29 remaining raw-h1 pages have non-standard shapes (dynamic content, icon headers, badge rows,
+  `<header>` wrappers) the codemod's conservative regex correctly declines. No code change; issue-doc-only. One todo
+  remains open (openapi typegen-input confirmation).
