@@ -58,17 +58,26 @@ rows):
   historical DATES being re-attempted on a RECENT `attempted_at` — this is a live fetch/enumeration job re-touching old
   date ranges, not a one-time backfill replaying old writes.
 
-**Root cause NOT yet pinned** (bounded investigation this session, ruled OUT rather than confirmed): grepped + read the
-two most obvious instruments-service sports write sites —
-`instruments_service/engine/orchestrator/process_zero_records.py` and `.../process_fetch.py` — both already route their
-`record_captured`/`record_empty` calls' `data_type` through `canonical_sports_is_data_type(...)`, so neither is the
-source. The parent plan's own 2026-08-14 correction note admits its 8-site classification of manifest-boundary call
-sites was not fully exhaustive ("not yet traced to the same rigor this session":
-`sports_reference_fixtures_write.py::_ENTITY_DT_BY_SHORT`'s full consumer set, `_ENRICHMENT_ENTITY_VENUES`'s full
-consumer set). Candidate untranslated sites, not yet individually confirmed or ruled out:
-`instruments_service/engine/orchestrator/process_preflight.py` (sites other than the 592-598 one already covered),
-`process_enrichment.py`, `transfermarkt.py` (both the reference_data/adapters copy and the orchestrator copy), and
-`instruments_service/engine/orchestrator/__init__.py`.
+**Root cause CONFIRMED (2026-08-15, slot-10)** — a full sweep of every `record_captured`/`record_empty`/`record_failed`/
+`record_captured_from_counts` call site's `data_type=` argument in
+`instruments-service/instruments_service/engine/ orchestrator/` (not just the two previously-checked files) found 4
+untranslated sites, matching all 9 regrown tokens:
+
+1. `sports_reference_core.py::_emit_empty_gap_for_league` — the `EXPECTED_NO_PROVIDER_COVERAGE` early-return branch used
+   the raw uppercase `data_type` param; `_dt_lower` was computed AFTER that branch's `return`, so it never reached it
+   (accounts for INJURIES/STANDINGS/TEAMS/FIXTURE_STATS/FIXTURE_LINEUPS/PLAYER_STATS/FIXTURE_EVENTS — 7,930 of 8,078
+   rows, mostly `empty_confirmed`).
+2. `process_preflight.py::_enrichment_only_fast_path` — the per-fixture-entity `record_empty` loop (freshness-preflight
+   fast path, a second code path onto the same 4 per-fixture entities as #1) used
+   `pf_entity.replace("API_FOOTBALL_", "").upper()` directly, uncanonicalised.
+3. `sports_fixtures.py::_write_fixtures_per_league` — the FIXTURES_OUTCOMES honest-absence gate (2026-08-14 writer fix,
+   itself dated the same day the regrowth window starts) emitted the raw `_orch.FIXTURES_OUTCOMES` constant; this is the
+   ONLY manifest touchpoint for FIXTURES_OUTCOMES (12 rows).
+4. `process_enrichment.py::_run_sports_enrichment` — the blanket `record_captured_from_counts` fallback for entities not
+   in `_self_manifested` used `entity_name.upper()` directly (covers any residual entity not self-manifesting, incl. the
+   PLAYER_VALUES path — 6 rows).
+
+Fixed in `instruments-service@b872799efa` — all 4 now route through `canonical_sports_is_data_type(...) or <original>`.
 
 ## Why it matters
 
@@ -88,9 +97,12 @@ confirm the writer stopped.
 
 ## Todos
 
-- [ ] [DATA] P0. Grep every sports `record_captured`/`record_empty`/`record_failed` call site in
+- [x] ✅ [DATA] P0. Grep every sports `record_captured`/`record_empty`/`record_failed` call site in
       `instruments-service/instruments_service/engine/orchestrator/` for a `data_type=` argument not routed through
-      `canonical_sports_is_data_type(...)`; fix the untranslated site(s); ship + QG green.
+      `canonical_sports_is_data_type(...)`; fix the untranslated site(s); ship + QG green. —
+      instruments-service@b872799efa. 4 untranslated sites found + fixed (see "What I found" above); QG green
+      (`.qg_last_passed_sha=b872799efaa861280460f5930b0792416f75aa14`); landed on live-defi-rollout, verified ancestor
+      of origin.
 - [ ] [DATA] P1. Re-stamp the 8,078 residual uppercase reference-bucket rows (manifest-only relabel) once the writer fix
       is confirmed live; re-run `census_sports_19token_lowercase_scope_2026_08_14.py` (or its successor) filtered on
       `attempted_at` after the fix deploy time to confirm 0 new uppercase rows.
