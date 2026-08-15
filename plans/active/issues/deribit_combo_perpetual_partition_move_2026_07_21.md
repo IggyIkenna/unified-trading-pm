@@ -529,10 +529,49 @@ backlog remains an unretried capture gap (normal backfill re-attempt, not a code
       `--apply` (slot 16) moved 1,719 DERIBIT combo objects `perpetual`→`combo` and deleted the old GCS objects, but did
       NOT delete the old manifest rows (step 6 of §5 deletes the GCS object, not the manifest row — same gap as the
       original `04d48b3c` script). The manifest now carries phantom `perpetual`/`future` rows pointing at deleted GCS
-      objects. Repo: market-tick-data-service (or the reconciliation audit, which will flag these as phantom rows).
+      objects. **Code shipped 2026-08-15**: `market-tick-data-service@88e927c5` added `--sweep-stale-rows`
+      (`--dry-run`/`--apply`) to `scripts/deribit_combo_perpetual_partition_move_2026_08_03.py`. **Execution blocked**:
+      the dry-run cannot complete on the local slot host — see the new P2 todo below. Do not flip this checkbox until
+      a dry-run has actually produced a confirmed-phantom row count and (if non-zero) `--apply` has run against prod.
+- [ ] [DATA] P2. **Run the `--sweep-stale-rows` dry-run (then `--apply`) on a VM, not a local slot host.** Three
+      consecutive local attempts (2026-08-15, slot 24) all died `EXIT_CODE=137` at the identical point — immediately
+      after `"Catalogue DERIBIT COMBO symbols loaded: 70782"`, before the manifest merge itself prints anything: (1)
+      original pre-fix attempt, (2) same script post-column-pruning-fix (`88e927c5`, `columns=[...]` narrows the
+      `merge_canonical_with_outstanding_shards` read to 7 fields) still killed at the same point, (3) the column-pruned
+      version launched as a fully detached `nohup setsid ... & disown` process (PID outside the harness's tracked-task
+      lifecycle, watched via `Monitor` to rule out a harness-imposed timeout) — still killed at the same point. This
+      rules out both the column-pruning fix and harness-task-timeout as the cause; free memory was 24Gi (no OOM
+      evidence surfaced, though dmesg is unavailable in this sandbox). `merge_canonical_with_outstanding_shards`
+      (`unified_trading_library/manifest_writer/_read_index.py`) is an **unbounded full-corpus manifest merge with no
+      date/venue/instrument_type filter** — `columns` is the only narrowing lever it exposes, confirmed via
+      `inspect.signature()`. This matches CLAUDE.md's own VM-launcher HARD RULE: "heavy I/O (full-corpus GCS walks,
+      manifest rewrites, bulk renames) NEVER runs on the operator's local machine, always a VM in-region." Read
+      `/codex/05-infrastructure/vm-launcher-runbook.md` first, launch a VM per its registry (`VM_PREFIX_TO_BUCKET`),
+      run `.venv/bin/python3 scripts/deribit_combo_perpetual_partition_move_2026_08_03.py --sweep-stale-rows --dry-run`
+      there, and if the confirmed-phantom count is non-zero, `--apply` there too (with `--dry-run` output captured as
+      evidence). Alternative if a VM is undesirable for a one-shot sweep: add a date/venue-bounding parameter to
+      `merge_canonical_with_outstanding_shards` itself (cross-repo UTL change — judged out of scope for this task).
+      Once the sweep genuinely executes, flip the P3 todo above with the row count + evidence.
 
 ## Progress Log
 
+- **2026-08-15** (slot 24, data_engineering, task `deribit_combo_perpetual_partition_move-3c27da745321`) — Shipped
+  `--sweep-stale-rows` (`--dry-run`/`--apply`) on `market-tick-data-service@88e927c5`, column-pruning the
+  `merge_canonical_with_outstanding_shards` read to 7 fields for the identification pass (full ahead/behind + ancestry
+  verified via quickmerge, `0`/`0`, clean tree). Attempted to actually run the dry-run to get a real candidate-row
+  count (required by CLAUDE.md's "actual completion, not smoke-test green" rule) and hit a wall: three consecutive
+  `EXIT_CODE=137` kills, all at the identical point (`"Catalogue DERIBIT COMBO symbols loaded: 70782"`, before the
+  manifest merge prints anything) — pre-fix, post-column-pruning-fix, and post-column-pruning-fix-run-fully-detached
+  (`nohup setsid ... & disown`, watched via `Monitor` specifically to rule out a harness-task-timeout). All three died
+  identically, ruling out both the column-pruning fix and harness-detachment as fixes. Root cause:
+  `merge_canonical_with_outstanding_shards` is an unbounded full-corpus manifest merge (confirmed via
+  `inspect.signature()` — `columns` is the only narrowing param; no date/venue/instrument_type filter exists), and
+  CLAUDE.md's VM-launcher rule already says this class of work never runs on a local slot host. Filed a new `[DATA]
+  P2` todo above to run it on a VM instead. Left the P3 sweep checkbox unflipped — code is shipped and verified
+  landed, but no dry-run has ever actually completed, so the candidate-row count for the 1,719 objects remains
+  unknown; flipping the checkbox now would be exactly the smoke-test-green shortcut CLAUDE.md prohibits. No GCS
+  object or manifest row was read, written, or deleted this session (every attempt died before the merge call
+  returned); no prod state was touched.
 - **2026-08-12** (slot 16, data_engineering, task `deribit_combo_perpetual_partition_move-74ce5c3b03c5`) — Executed the
   operator-approved `[DATA] P2` `--apply` to completion. GCS-driven re-census found **1,719** objects (not 15,119 — the
   manifest census is blind since the Surface C v2 dedup bug), all `perpetual`/0 `future`. Fixed three script defects
