@@ -107,7 +107,8 @@ mis-treating a doc that coincidentally has a real reason to be locked under that
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Rule which option (A/B/C) above applies, or a different fix.
+- [x] ✅ [OPERATOR] P1. Rule which option (A/B/C) above applies, or a different fix. **RESOLVED**: Operator ruled Option
+      B (one-time corpus-wide clear) 2026-08-15, /plan-reconcile session.
 - [ ] [SCRIPT] P2. Once ruled: if Option B, write a small one-off script (`scripts/plans/` + `# Lifecycle: oneoff` +
       `# Delete-when:` marker per script-homes.md) that clears `locked_by`/`locked_since` on exactly the docs where
       `locked_by == "live-defi-rollout"` (verify each doc individually — do not blind-regex the whole corpus in one

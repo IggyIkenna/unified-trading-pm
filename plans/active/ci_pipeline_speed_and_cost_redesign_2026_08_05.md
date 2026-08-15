@@ -207,18 +207,19 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       exact bottleneck that caused the 07-27 crisis) argues for less caution, but PM's own `self_hosted_runner_labels`
       fix (above) means PM's glue pool now ALSO carries PM's own 4,763-runs/month CI load that previously ran on
       `ubuntu-latest` — a new source of real utilization the original proposal didn't anticipate. Landed in between:
-      **PM 5→3 glue** (not the proposal's 2-3 low end, to leave headroom for the new self-hosted load), **AO 2→1 glue**
-      (unchanged from the proposal — AO's workload didn't change this session). Executed via `systemctl stop`+`disable`
-      on the specific excess instances (`github-glue-runner@glue-{4,5}.service`, `github-glue-runner-ao@glue-2.service`)
-      — checked every instance's live `ActiveState` first (all confirmed idle, zero risk of interrupting an in-flight
-      job) before stopping any of them. **Verified the remaining pool still works**: dispatched a real PM
-      `quality-gates-v2` run post-reduction — `QG slice (tests)` succeeded cleanly on the reduced 3-runner pool;
-      `QG slice (checks)` failed, but on a genuine pre-existing content issue (`qg_red_reason: "qg"`, a real
-      typecheck/lint failure, unrelated to checkout/infra — confirmed by reading the actual failure log, not assumed)
-      that correctly triggered the existing Slack CRITICAL alert — the alerting pipeline itself working as designed, not
-      a symptom of the reduction. Not a "steady-state" measurement (that needs real multi-day load data this session
-      can't produce) — a single verified-working dispatch immediately after the cut, which is the minimum bar for
-      "didn't break anything," not the rightsizing plan's own longer-window todo.
+      **PM 5→3 glue** (not the proposal's 2-3 low end, to leave headroom for the new self-hosted load) — **MOOT as of
+      2026-08-07** — PM's `self_hosted_runner_labels` reverted to empty, zero self-hosted glue usage; pool-size question
+      no longer applies. **AO 2→1 glue** (unchanged from the proposal — AO's workload didn't change this session).
+      Executed via `systemctl stop`+`disable` on the specific excess instances (`github-glue-runner@glue-{4,5}.service`,
+      `github-glue-runner-ao@glue-2.service`) — checked every instance's live `ActiveState` first (all confirmed idle,
+      zero risk of interrupting an in-flight job) before stopping any of them. **Verified the remaining pool still
+      works**: dispatched a real PM `quality-gates-v2` run post-reduction — `QG slice (tests)` succeeded cleanly on the
+      reduced 3-runner pool; `QG slice (checks)` failed, but on a genuine pre-existing content issue
+      (`qg_red_reason: "qg"`, a real typecheck/lint failure, unrelated to checkout/infra — confirmed by reading the
+      actual failure log, not assumed) that correctly triggered the existing Slack CRITICAL alert — the alerting
+      pipeline itself working as designed, not a symptom of the reduction. Not a "steady-state" measurement (that needs
+      real multi-day load data this session can't produce) — a single verified-working dispatch immediately after the
+      cut, which is the minimum bar for "didn't break anything," not the rightsizing plan's own longer-window todo.
 - [x] ✅ [INFRA] P2. **Re-evaluate + re-add `unified-trading-library` and `e2e-testing` to self-hosted — SHIPPED
       2026-08-05.** Live host check at re-add time: load average 4.08/4.92/6.24 (vs. the 90+ that caused both prior
       reverts) and 18% swap (vs. 87%) — healthy headroom, not just "should be fine" hope. Allowlist updated
