@@ -202,8 +202,17 @@ source: >-
       finally be flipped. Judgment call on what to archive/condense (likely candidate: fold older superseded
       Progress-Log sections into an archived companion doc per the plan-completion-and-archival-discipline SSOT), so out
       of scope for this batch's mechanical todo. Repo: unified-trading-pm.
-- [ ] [CODE] P2. Codex SSOT updates for crypto-venue equity-perp sourcing + equity-basis arb archetype Source:
-      `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
+- [x] ✅ [CODE] P2. Codex SSOT updates for crypto-venue equity-perp sourcing + equity-basis arb archetype Source:
+      `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` — **SHIPPED unified-trading-pm (this
+      commit).** `/codex/02-data/tradfi-databento-sourcing-ssot.md`: new subsection documenting DBEQ.BASIC's missing
+      dividends/corporate-actions schema + the yfinance dividend-yield workaround used by the equity-basis NET-basis
+      backtest. `/codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md`: new "Crypto-venue equity-perp basis
+      variant" section (sourcing via `tracks_equity`, the operator-approved IBKR hedge decision, backtest evidence
+      pointer, what's still open in Phase 4/1e — explicitly distinguished from the separate still-open INDEX-perp
+      cash-and-carry idea). `/codex/09-strategy/architecture-v2/category-instrument-coverage.md`: new CARRY_BASIS_PERP
+      coverage-matrix row for the CeFi×TradFi cross-category pairing. The archetype DESIGN itself (dispersion +
+      overnight-gap legs, Phase 4) and the IBKR adapter (Phase 1e) remain open in the source plan — this todo covers
+      documentation of what's already decided/shipped, not new design.
 - [ ] [CODE] P2. Alert-accuracy quartet fix (deployment-service: interpolate/drop fixed '(0 → 0)' template, extend
       captured-reader probe fallback, conditional Tardis-guard text, exempt cron/launcher host VMs from GONE_NO_CAPTURE)
       Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
@@ -307,3 +316,8 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   touching it. Filed a P3 follow-up todo above to trim it under cap first; the source checkbox stays stale until then.
 
 - **context-scout 2026-08-15**: refreshed context_scope (4 entries), still accurate.
+
+- **2026-08-15 (slot-10·backend_engineer)**: shipped the "Codex SSOT updates for crypto-venue equity-perp sourcing +
+  equity-basis arb archetype" todo — 3 codex docs updated (`tradfi-databento-sourcing-ssot.md` dividends-gap subsection,
+  `carry-basis-perp.md` new equity-perp basis variant section, `category-instrument-coverage.md` new coverage row),
+  checkbox flipped in the same commit. See the todo's own evidence line for full detail.

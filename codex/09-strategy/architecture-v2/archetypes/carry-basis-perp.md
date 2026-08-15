@@ -21,6 +21,9 @@ related:
     /codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
     /codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md,
     ../../../04-architecture/drift-v2-data-sources.md,
+    /codex/02-data/cefi-capture-universe.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md,
   ]
 created: 2026-04-17
 authoritative_for: [CARRY_BASIS_PERP archetype specification]
@@ -228,6 +231,47 @@ The Solana basis instance of this archetype runs:
 Capital efficiency note: Drift + Orca are NOT same-venue cross-margin netting (different programs). LEADER_HEDGE applies
 — sequential, not atomic. Solana same-block atomicity (sub-second) is the saving grace vs cross-chain sequential
 execution.
+
+## Crypto-venue equity-perp basis variant (equity-basis arb) — added 2026-08-15
+
+> Source: `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Phase 1b/4 (operator ruling
+> 2026-07-25, "done first"). Documents the OPPORTUNITY + what's already decided; the full archetype design (dispersion +
+> overnight-gap legs) is a still-open `[DESIGN]` P2 todo in that plan's Phase 4, not yet built — this section is not a
+> claim that a new StrategyArchetype enum member exists. Structurally this is `CARRY_BASIS_PERP` (long spot + short
+> perp, delta-neutral, funding capture) with a **crypto-venue single-stock perp** as the short leg and its **real-equity
+> twin** as the long/hedge leg — no new archetype needed, per the README's "no category prefixes" rule.
+
+**What it does.** Short a crypto-venue single-stock perpetual (Binance/OKX/Bybit — e.g. `NVDAUSDT`, `AAPLX`) + long the
+real equity on a TradFi venue, capturing the perp's funding rate while staying basis-neutral against the real stock.
+24/7-vs-market-hours overnight-gap exposure is a known, not-yet-modeled risk (the perp trades 24/7, the equity hedge
+does not) — tracked as the "overnight gap" sub-item of the still-open Phase 4 design todo.
+
+**Universe + sourcing.** The short leg's universe is the UAC `CEFI_EQUITY_PERP_BASE_UNIVERSE` allow-list
+(`registry/cefi_instrument_universe.py`); each base is typed `PERPETUAL` (not a distinct `EQUITY_PERP` type, per the
+2026-07-16 ruling) and tagged `is_equity_perp=True` at catalogue roll-up. The long leg's real-equity twin is discovered
+via the `tracks_equity` catalogue tag → the Databento `DBEQ.BASIC` canonical equity instrument (`crypto_equity_link.py`
+`tracks_equity`; `""` for pre-IPO standalones like SPCX, which have no basis leg — dispersion-only across crypto
+venues). Full sourcing detail: [`cefi-capture-universe.md`](../../../02-data/cefi-capture-universe.md) § "Exception —
+TradFi-linked perps".
+
+**Hedge venue — RESOLVED (operator, 2026-08-08).** The long/hedge leg uses **IBKR cash-stock borrow** for all
+single-name pairs (decided same-day 2026-06-20 in the source plan's Phase 1d NET-basis backtest; the 2026-08-08 ruling
+approved building it). The IBKR adapter itself is a separate, still-open `[BACKEND]` P0 todo (source plan Phase 1e) —
+not shipped by this doc.
+
+**Backtest evidence.** A dividend-adjusted NET-basis backtest across 12 pairs (NVDA/MSFT/CRCL/INTC/GOOGL/AMD/TSLA/AMZN/
+META/HOOD/AAPL/BABA, ~11-12mo regime window) confirms every pair remains NET-positive/TRADEABLE once dividend yield is
+priced in (dividends sourced via yfinance, not Databento — see
+[`tradfi-databento-sourcing-ssot.md`](../../../02-data/tradfi-databento-sourcing-ssot.md) § "DBEQ.BASIC has no dividends
+/ corporate-actions schema"). Full per-pair table + methodology: source plan Progress Log, "2026-08-09 — NET-basis
+backtest re-run with dividend yield priced in" — numbers are not duplicated here to avoid a second copy rotting
+independently of the live backtest script (`e2e-testing/scripts/cefi/net_basis_scan.py`).
+
+**Not yet covered by this variant** (tracked as the source plan's still-open Phase 4 `[DESIGN]` todo, not this doc):
+cross-crypto-venue dispersion sizing, the 24/7-vs-market-hours overnight-gap model, and the full `LegController`/config
+wiring for this specific venue pairing. **Distinct from** the separate, also still-open "INDEX-perp cash-and-carry" idea
+(short Binance `SPXUSDT`/`NAS100`-style index perp + long CME `ES`/`NQ` future, Phase 1c) — that pairs a crypto
+index-perp against a TradFi _future_, not a real equity spot, and is not this variant.
 
 ## See also
 

@@ -116,6 +116,21 @@ contracts (if ever wanted) would need a separate dataset.
 - Re-adding any of these requires an explicit ICE / OPRA subscription + adding the dataset to
   `ALLOWED_DATABENTO_DATASETS`.
 
+### DBEQ.BASIC has no dividends / corporate-actions schema (equity-basis arb dividend yield sourced from yfinance instead)
+
+Confirmed by grepping every Databento adapter in `market-tick-data-service` and `instruments-service` for "dividend" —
+zero hits. Databento's US-equities dataset (`DBEQ.BASIC`) exposes price/trade schemas only; it carries no dividends or
+corporate-actions schema at any tier we subscribe to — a genuine, permanent dataset gap, not a subscription-tier upsell.
+Consumers needing dividend yield (e.g. the crypto-venue equity-perp basis-arb NET-basis calculation — see
+[`carry-basis-perp.md`](../09-strategy/architecture-v2/archetypes/carry-basis-perp.md) § "Crypto-venue equity-perp basis
+variant") source it from **yfinance** instead: trailing-12mo dividend sum ÷ last close, computed directly from
+`Ticker.dividends` raw history — NOT the `info["dividendYield"]` field, which has a documented stale/pre-split bug (e.g.
+it read 0.45% for NVDA vs. the raw-history-derived 0.125%). This mirrors the established yfinance precedent already used
+elsewhere for non-Databento TradFi data (`market-tick-data-service`'s `yahoo_finance_adapter.py`, `features-service`'s
+`yfinance_earnings_adapter.py`). Polygon's corporate-actions adapter would close this gap but needs a separate
+`polygon-api-key` secret + a cross-repo import from `features-service` — not adopted for this one consumer. Do not add a
+Databento dividends fetch path; there is no such schema to fetch.
+
 ### KRX + ICE + FX are YAHOO FINANCE, not Databento, and NOT operator-blocked (operator correction 2026-06-27)
 
 Three venues are sourced from **Yahoo Finance**, gated by no subscription and blocked by no operator (UAC@5480f5d5,
