@@ -56,7 +56,7 @@ drift_direction: advance-code
 
 ## Findings → todos
 
-- [ ] [REVIEW] P2. Sweep `plans/archive/*_2026_03_*.plan.md` (~160 docs) for further false-"done" claims following the
+- [x] [REVIEW] P2. Sweep `plans/archive/*_2026_03_*.plan.md` (~160 docs) for further false-"done" claims following the
       exact pattern already confirmed TWICE: `plans/archive/recon_rebalancing_order_recovery_2026_03_10.plan.md`
       (2026-03-10) and `plans/archive/defi_transfers_and_gas_fees_2026_03_27.plan.md` (2026-03-27) both claim a
       `PortfolioRebalancer`/`DeFiVaultRebalancer` implementation that never existed anywhere in the codebase
@@ -67,6 +67,38 @@ drift_direction: advance-code
       Progress Log entry) lists every doc checked, the specific deliverable(s) spot-checked per doc, and either confirms
       no further false-done claims exist in the cluster or lists each new one found (class/file name claimed + confirmed
       absent); once done, run the standard archival ritual on this doc's own checkbox reconciliation in the same commit.
+      ✅ DONE 2026-08-15 — full 178-doc corpus swept (see Progress Log for method + coverage). 3 new candidate
+      false-done instances found (2 caveated, pending verification — filed as follow-up todos below); everything else
+      checked out clean or was a legitimate rename/relocation.
+
+- [ ] [REVIEW] P2. Correct the false-done claim in
+      `plans/archive/sports_integration_06_strategy_execution_gcs_migration_2026_03_25.plan.md` (id
+      `p2-ml-strategy-wiring`) — claims `MLSportsStrategy` (`strategy_service/engine/strategies/sports/ml_sports_strategy.py`)
+      exists and reads ml-inference output; confirmed absent workspace-wide
+      (`grep -rlP 'class MLSportsStrategy\b' --include='*.py'` and `find . -iname ml_sports_strategy.py` both 0 hits).
+      The actual sports strategies directory (`strategy-service/strategy_service/engine/strategies/v2/`) contains
+      `sports_arb_dutching.py`/`sports_value_betting.py` instead — not a rename, a different (non-ML) strategy set was
+      built. Repo: unified-trading-pm. Done-when: annotate the archived doc's entry
+      (`REVERTED/CORRECTED by review 2026-08-15 — class never implemented`) and note in this doc's Progress Log whether
+      an ML-probability-based sports strategy is still-needed-and-missing (file a fresh AO-eligible build todo) or
+      superseded by the existing rule-based strategies (no further action).
+
+- [ ] [REVIEW] P3. Verify + correct the claim in `plans/archive/contract_completeness_checker_2026_03_10.plan.md` (id
+      `write-check-uic-completeness`) that `unified-internal-contracts/scripts/check_uic_completeness.py` was created
+      (commit `94411e6` cited) — the `unified-internal-contracts` repo/dir is absent from the current workspace
+      entirely, and `find . -name check_uic_completeness.py` returns 0 hits. Lower confidence than the item above:
+      `codex/10-audit/_archive/unified-internal-contracts.yaml` suggests the repo was later formally retired, which
+      could legitimately explain the absence (deleted-on-retirement, not fabricated) rather than a genuine false-done.
+      Repo: unified-trading-pm. Done-when: confirm via git history (a non-shallow clone or `gh api` commit lookup for
+      `94411e6`) whether the script genuinely existed pre-retirement; annotate the archived doc accordingly either way
+      (confirmed-built-then-retired vs. confirmed-fabricated).
+
+- [ ] [REVIEW] P3. Verify + correct the claim in `plans/archive/operational_config_migration_2026_03_11.plan.md` (id
+      `update-code-references`) citing `catalogue_updater.py` in instruments-service plus commits
+      `c12c35e`/`824e723`/`07e1044`/`3a41740`/`3ba90bf` — no `catalogue_updater.py` (or an obvious rename) found
+      anywhere in the workspace. Repo: unified-trading-pm. Done-when: check the cited commits against instruments-service's
+      full git history (shallow clone was inconclusive) to confirm whether the path was renamed/deleted post-hoc
+      (legitimate) or the claim was fabricated (genuine false-done); annotate the archived doc accordingly.
 
 - [ ] [OPERATOR] P3. Name the specific document/session referred to as "Chunks 1/2 and Phase B full code review" (an
       unreviewed prior deliverable named in the original audit request). An exhaustive search — AND-grep for all three
@@ -88,3 +120,27 @@ drift_direction: advance-code
   bypassing `quality-gates.sh`. Both are already resolved/historical; no new todo filed for that sub-finding. Companion
   docs from the same audit: `execution_service_verification_debt_findings_2026_08_15.md`,
   `strategy_service_verification_debt_findings_2026_08_15.md`.
+
+- **2026-08-15 (full sweep)**: Ran the full ~178-doc `plans/archive/*_2026_03_*.plan.md` sweep (via a delegated
+  research agent for the mechanical extraction/verification pass; results re-read and reconciled here). **Method**: (1)
+  `grep -l "status: done"` across all 178 docs → 79 docs actually carry `status: done` stream entries (the other ~99
+  have none of this shape, so carry no falsifiable "implemented X" claim); (2) extracted all 340 `status: done` entries
+  from those 79 docs; (3) regex-mined every entry for `class X` mentions, `Create|Add|Implement <PascalCaseName>`
+  patterns, and `*.py` file-path tokens (13 class candidates + 236 file-path tokens ≈ 249 distinct named artifacts); (4)
+  existence-checked every one workspace-wide (`grep -rP 'class <Name>\b' --include='*.py'` / `find … -iname <path>`,
+  excluding `.venv` and the plan files themselves); (5) manually triaged every MISSING result against its doc's full
+  context to separate genuine creation-claims from delete-lists / "port FROM this archived file" references (several
+  sports-integration docs had MISSING hits that were actually delete-list or port-source references, correctly
+  excluded).
+  **Result**: 3 new candidate false-done instances found (1 high-confidence — `MLSportsStrategy`, filed as a P2
+  follow-up above; 2 lower-confidence/caveated — `check_uic_completeness.py` and `catalogue_updater.py`, both
+  plausibly explained by later repo retirement/rename that a shallow clone's git history can't disambiguate, filed as
+  P3 follow-ups pending git-history verification). Everything else spot-checked (13 class candidates fully resolved,
+  incl. `PnLResidualEmitter`, `BestExecutionEvent`, and 13 PBMS/strategy-service cross-venue-aggregation classes — all
+  present, some legitimately relocated to `strategy-service/strategy_service/position/core/`) came back clean.
+  **Coverage caveat (stated honestly, not closed as 100%)**: the 249-artifact regex-mining pass covered the full
+  corpus, not a sample — but it only catches claims phrased with a matchable class/file-path token. A "done" claim
+  written as pure prose with no code-span (e.g. "wired the aggregator into the pipeline") would not have been caught by
+  this pass and was not separately hunted per-doc. This closes the falsifiable-artifact-pattern sweep the todo asked
+  for; a residual risk of prose-only false-done claims remains un-swept, noted here rather than silently claimed clean.
+  This doc stays `active` (not archived) — 3 new open follow-up todos above, plus the pre-existing OPERATOR todo.
