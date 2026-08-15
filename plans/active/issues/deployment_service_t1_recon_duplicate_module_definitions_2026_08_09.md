@@ -66,6 +66,8 @@ context_scope:
     deployment-service/terraform/gcp/t1_recon_instruments_jobs.tf,
     deployment-service/terraform/gcp/_imports_reconcile.tf,
     deployment-service/terraform/gcp/t1_batch_scheduler.tf,
+    /plans/active/issues/deployment_service_prod_terraform_drift_2026_08_07.md,
+    /plans/active/issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md,
   ]
 ---
 
@@ -159,3 +161,10 @@ because:
   unrelated to that doc's meta-watchers finding — this doc tracks a different defect discovered as a side effect of
   applying that one. Not fixed — needs an explicit operator call on canonical-definition choice before any state
   surgery, per the findings-triage rule for ambiguous ownership calls.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries) — added the immediate trigger doc
+  (`/plans/active/issues/deployment_service_prod_terraform_drift_2026_08_07.md`) plus a fingerprint match found via a
+  corpus grep for `instruments_cefi_t1_recon_job`: `/plans/active/issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md`
+  independently lists this exact module as an "INTENDED" labels-only update (with its own commit provenance,
+  `deployment-service@4dd8d53`), predating this doc's duplicate-module finding — genuine additional context for whoever
+  rules on the canonical-definition choice.

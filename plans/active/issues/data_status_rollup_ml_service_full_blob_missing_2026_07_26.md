@@ -44,9 +44,9 @@ depends_on: []
 context_scope:
   [
     deployment-api/deployment_api/scripts/data_status_rollup_worker.py,
-    /plans/active/data_status_cell_grid_rearchitecture_2026_07_18.md,
-    /codex/02-data/honest-absence-downstream-handling.md,
     deployment-api/tests/unit/test_rollup_worker.py,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf,
   ]
 ---
 
@@ -923,3 +923,10 @@ worth closing the same way (isolate + surface the real error) rather than leavin
 > **2026-08-06 archive-candidate audit**: CODE todo's own resolution text says 'Live confirmation (full.json.gz actually
 > refreshing on the next real */20 cron cycle) is a follow-up verification step, not blocking the fix landing' - a
 > deferred verification never turned into its own todo and not shown done in any later Progress Log entry
+
+- **context-scout 2026-08-15**: re-scouted after this doc's major growth (live P0 consolidator-stall incident, now
+  resolved) — refreshed context_scope (4 entries): dropped the MTDS-specific cell-grid-rearchitecture plan (a sibling,
+  explicitly out-of-scope gap per this doc's own summary) and added `manifest_consolidator_scheduler.tf` (the actual
+  root-cause fix location for the 2026-08-14 SILENT STALL P0 that dominated this doc's recent history), kept the rollup
+  worker script + its regression tests + the honest-absence codex SSOT. Sole remaining open item is the P3 live-verify
+  todo (ml-service `full.json.gz` refresh on a real cron cycle).

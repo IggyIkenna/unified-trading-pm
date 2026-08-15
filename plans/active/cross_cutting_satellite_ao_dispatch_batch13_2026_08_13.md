@@ -426,3 +426,10 @@ source: >-
 None — every item drafted here already cleared the conflict-check. Items that did NOT clear (genuinely operator-gated,
 time-gated, or too-large-for-a-batch-todo) were left in their source docs and are not duplicated here; see the
 2026-08-13 audit's full classification data for the complete list.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) -- dispatch-batch coordinator doc (89
+  heterogeneous per-todo items across 39 source docs, no single dominant source target); the parent closeout doc, the
+  na-eligibility-audit/ag-closeout-audit skills that produced this batch, and the batch-naming/conflict-check codex SSOT
+  are the minimal correct set.

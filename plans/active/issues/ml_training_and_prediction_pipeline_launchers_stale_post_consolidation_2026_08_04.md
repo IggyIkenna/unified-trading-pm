@@ -51,6 +51,7 @@ context_scope:
     /codex/05-infrastructure/vm-launcher-runbook.md,
     deployment-service/scripts/vm/launch-ml-training-vm.sh,
     deployment-service/scripts/vm/launch-prediction-pipeline-vm.sh,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 supersedes:
 superseded_by:
@@ -195,3 +196,6 @@ the sibling doc's own decision thread — todo 1 needed no A/B/C fold-in at all 
   archived (finalize todo 2's own 6-step ritual) — repointed this doc's own todo-3 referrer-list citations for both to
   `/plans/archive/2026_08/`. Remaining open count on todo 3 unchanged (still 1 — the other 5 of 7 listed referrers are
   still active paths, not this doc's own archival to run).
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) — added
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, the SSOT the sole remaining todo (todo 3,
+  the 6-step archival ritual) directly names; kept the 4 pre-existing entries.

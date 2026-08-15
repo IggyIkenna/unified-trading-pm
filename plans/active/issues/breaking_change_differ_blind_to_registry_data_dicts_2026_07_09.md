@@ -55,10 +55,11 @@ depends_on: []
 last_updated: 2026-07-31
 context_scope:
   [
-    /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
-    scripts/cicd/detect_breaking_change.py,
+    scripts/repo-management/pin_branch_protection_rulesets.py,
+    unified-api-contracts/.github/workflows/image-build-gate.yml,
+    instruments-service/.github/workflows/consumer-qg-check.yml,
     /codex/08-workflows/ci-cd-flow.md,
-    unified-api-contracts/unified_api_contracts/registry/venue_constants.py,
+    scripts/cicd/detect_breaking_change.py,
     /plans/archive/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md,
   ]
 ---
@@ -298,3 +299,8 @@ KEEP-NA audit passes (parked as Deferred E8) was itself RESOLVED 2026-08-08 via 
 consumer QG gate') and closed [x]; a NEW [SCRIPT] P2 mechanical-implementation todo was created directly beneath it the
 same day -- that is the doc's real current sole open item, not the old DESIGN question (I am not re-litigating the
 ruling, which is settled; I am assessing the new implementation todo it spawned).
+
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — swapped the now-absorbed original-fix pointers
+  (satellite-dispatch batch2, `venue_constants.py`) for the sole remaining open item's real targets:
+  `scripts/repo-management/pin_branch_protection_rulesets.py` and the shipped `consumer-qg-gate`/`consumer-qg-check`
+  workflows (unified-api-contracts@ae2f4ce4c5, instruments-service@054a67ba04, 2026-08-14).

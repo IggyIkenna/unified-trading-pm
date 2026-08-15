@@ -35,10 +35,9 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md,
-    /codex/09-strategy/architecture-v2/cross-cutting/archetype-param-schema-inventory.md,
-    strategy-service/strategy_service/engine/strategies/v2/param_schema.py,
     /codex/09-strategy/architecture-v2/capability-wizard.md,
-    strategy-service/strategy_service/portfolio_allocator/archetypes_rank.py,
+    strategy-service/strategy_service/engine/core/strategy_config_loader.py,
+    strategy-service/tests/unit/engine/strategies/v2/test_batch_harness.py,
   ]
 ---
 
@@ -243,3 +242,7 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
   same whole-doc `assigned_vm`; the P3 test-isolation flake remains too small to justify splitting the doc. No
   cheat-sheet precedent matches. `locked_by: live-defi-rollout` (since 2026-06-17, a branch-name artifact per this
   corpus's established pattern) not treated as a blocker. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) -- dropped archetypes_rank.py/param_schema.py (the
+  dual-deposit calibration + param-schema-foundation todos they served are both done); swapped in
+  strategy_config_loader.py (the food-chain wiring target) and test_batch_harness.py (the P3 test-isolation flake) --
+  the 2 real remaining code todos.

@@ -69,7 +69,7 @@ context_scope:
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/data_completion_sports_2026_07_24.md,
+    /plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04.md,
     instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py,
     deployment-service/scripts/vm/launch-api-football-backfill-vm.sh,
   ]
@@ -838,3 +838,6 @@ into the same fix — carried forward here so it isn't lost with the archive:
     — so all 61 have transitioned to `captured`/`empty_confirmed`.
   - **No explicit re-attempt needed.** Batch9 todo (`sports_satellite_ao_dispatch_batch9_2026_08_04.md` item) flipped
     same-turn.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — swapped `data_completion_sports_2026_07_24.md`
+  for `sports_satellite_ao_dispatch_batch9_2026_08_04.md`, the confirmed owner (per this doc's own round-9 sweep) of 4
+  of the 7 remaining open items (§J/§L/§N/§O).

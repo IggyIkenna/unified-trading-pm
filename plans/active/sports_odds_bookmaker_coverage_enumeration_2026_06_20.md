@@ -279,3 +279,6 @@ SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_USA_MLS, SUPE
   same 2 genuine either/or design forks remain (extend `EXPECTED_BOOKMAKER_MARKET_SETS` vs. a `tier_3_global` tier;
   restore deleted regression tests vs. accept current coverage), plus the standing `locked_by: live-defi-rollout` +
   do-not-archive-without-ruling banner. No evidence-based tiebreaker exists. No flip.
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) — unchanged; the same 2 either/or design forks
+  remain open and the existing list (honest-absence codex, the cluster-validation source file, the merged league_id
+  tracking issue, the closeout, the regression-test-discrepancy audit) still covers them.

@@ -51,8 +51,8 @@ source:
 context_scope:
   [
     /codex/02-data/availability-manifest-and-data-status.md,
-    market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
-    market-tick-data-service/market_tick_data_service/engine/orchestrator/_tradfi_manifest_shard.py,
+    market-tick-data-service/market_tick_data_service/scripts/rebuild_tradfi_manifest.py,
+    unified-trading-library/unified_trading_library/canonical/_manifest_instrument_type_canon.py,
   ]
 ---
 
@@ -276,3 +276,10 @@ Not urgent (static, not actively growing) but real and unaddressed.
   **Follow-up**: re-run `rebuild_tradfi_manifest.py` in MTDS to regenerate the manifest. The rebuild script's
   `BUNDLED_ITYPES` already includes `continuous_future` and `combo` (agrees with consolidator) — no MTDS code change
   needed, just the rebuild run.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: re-scouted; swapped `venue_fetch.py`/`_tradfi_manifest_shard.py` (the original,
+  now-ruled-out hypothesis) for `rebuild_tradfi_manifest.py` (confirmed root cause + the tool the open P3 todo needs
+  re-run) and `_manifest_instrument_type_canon.py` (the shipped canonicalizer fix) — matches the doc's actual
+  investigation outcome (3 entries).

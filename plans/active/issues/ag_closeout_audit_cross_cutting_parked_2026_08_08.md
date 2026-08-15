@@ -78,6 +78,7 @@ context_scope:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md,
+    /plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md,
   ]
 ---
 
@@ -332,3 +333,6 @@ ledger.
   question flagged "unruled since 2026-07-31" was actually ruled 2026-08-06 (option A) — re-verified against the target
   doc's own todo, now `[CODE] P2`, tag already corrected there. Flipped `[x]` and retagged `[DOCS]` here; no further
   action needed on this doc's side, implementation tracked at the target.
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) -- added
+  `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, the plan the doc's own 2026-08-10 banner names as now
+  actually dispatching its remaining findings.

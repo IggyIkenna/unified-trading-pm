@@ -561,3 +561,4 @@ dates, so no wasted duplicate work from the relaunch.
 - **context-scout 2026-08-06**: re-scouted; the `mtds_chunk_had_failure_blind_to_partial_payload_loss_2026_08_03.md`
   entry had since been archived (now under `plans/archive/2026_08/`) — repointed to its new path, all other 5 entries
   re-verified unchanged (6 entries total).
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (6 entries), unchanged.

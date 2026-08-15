@@ -154,3 +154,5 @@ prior design history verbatim from the parent plan's Progress Log.)_
 - **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, valid — same as 2026-07-30/2026-08-06; the sole todo
   remains self-described architecturally open-ended with the prediction /catalogue 79-row-collapse prerequisite still
   unresolved.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (6 entries) -- unchanged; sole todo remains
+  the architecturally-open-ended P3 gated on the prediction /catalogue 79-row-collapse prerequisite.

@@ -53,9 +53,10 @@ source: >-
   let's pick these all up and use answers to unlock more on the 1.3k tasks sitting outside AO").
 context_scope:
   [
-    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
-    /scripts/plan-hygiene/check_na_corpus_ratchet.py,
-    /plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
+    /plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md,
+    /plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md,
+    /plans/active/data_completion_defi_2026_07_15.md,
+    /plans/active/issues/context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md,
   ]
 ---
 
@@ -266,3 +267,9 @@ different task than writing the ruling:
   found all 6 resolved. Remaining open todos are 2 permanent operator hard-stops (live-trading go-ahead;
   fork-PR-approval GitHub UI click with no API path), 1 bounded-but-gated-by-the-whole-doc-rule DIAG item, and 1
   editorial line-cap trim needing human judgment -- whole doc stays NA.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) — the prior 3 entries (na-eligibility-audit
+  SKILL.md, `check_na_corpus_ratchet.py`, the tradfi canonicalization doc) were all tied to todo 1 (the
+  reclassification pass), which is now DONE; the DIAG item (CME `instrument_id` format) also shipped 2026-08-14.
+  Re-pointed the list at the 3 docs actually carrying this doc's 3 still-open items: the live-trading go-ahead plan,
+  the fork-PR-approval issue doc, and the DOCS line-cap-trim pair (`data_completion_defi_2026_07_15.md` +
+  `context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md`, both named together in that todo's own text).

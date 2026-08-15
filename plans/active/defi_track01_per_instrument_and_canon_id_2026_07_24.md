@@ -970,3 +970,4 @@ against). Moved verbatim, nothing summarized, to
   `assigned_vm: NA`. This was a byproduct of the scheduled ag-closeout-audit's Phase-0 iterative-drain re-check, not a
   dedicated infra investigation — see `issues/ag_closeout_audit_defi_parked_2026_08_10.md` for the full audit-cycle
   report this finding is part of.
+- **context-scout 2026-08-15**: re-verified context_scope (6 entries) -- all 6 still resolve; unchanged.

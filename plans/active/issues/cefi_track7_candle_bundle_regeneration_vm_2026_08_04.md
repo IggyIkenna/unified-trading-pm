@@ -306,3 +306,5 @@ relaunch todo added above for once it reaches a terminal state.
   (reproduced on the known-good 2023-06-01) — not a real gap. No Tardis re-download needed. Appended a SCOPE CORRECTION
   note to the P2 relaunch todo so its next execution widens from 6 to 8 days instead of carrying the false exclusion
   forward.
+
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate.

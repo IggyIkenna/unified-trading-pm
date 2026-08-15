@@ -69,8 +69,8 @@ drift_direction: advance-code
 context_scope:
   [
     /codex/04-architecture/promote-workflow-architecture.md,
-    /plans/archive/2026_08/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md,
-    /plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md,
+    /plans/archive/2026_08/sports_group_c_execution_backtest_harness_2026_07_21.md,
+    /plans/archive/2026_08/sports_group_c_execution_backtest_harness_2026_07_21_finalize_2026_08_08.md,
     deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
   ]
 ---
@@ -412,3 +412,7 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
   `status: resolved` (slot 3, 2026-07-21) and archived under `plans/archive/issues/`. This does NOT flip Todo 5's
   checkbox (that plan owns its own verdict); it records that the gates named in Todo 5's own done-when are now
   satisfied. The operator hard-stop on Todo 6 (live-capital trading) is unchanged and remains gated.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) — Todo 2/3's prerequisite docs (both already
+  resolved/archived) swapped for the Group-C execution-alpha harness pair, since the 2026-08-11 entry above confirms
+  Todo 5 (the next actionable item) is now unblocked on exactly those; kept the promote-workflow codex SSOT (Todo 5
+  runs that CLI chain) and the data-pipeline-vm launcher script.

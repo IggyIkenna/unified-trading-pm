@@ -733,3 +733,4 @@ data-status, honest-coverage) still tracked on the parent, and the full aggregat
   (discharged/archived, struck inline) with 2 independently-owned legs: `tradfi_backfill_oom_remediation_2026_06_24.md`
   (now `assigned_vm: planning`, actively AO-dispatched) and `consolidator_throughput_backlog_monitor_2026_07_09.md`
   (`status: active` with its own open todos) -- both cited inline in the checkbox's own note. `assigned_vm` unchanged.
+- **context-scout 2026-08-15**: re-verified context_scope (6 entries), unchanged.

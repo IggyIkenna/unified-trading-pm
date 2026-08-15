@@ -63,6 +63,7 @@ source: "cicd-role escalation agt-bde7b9 (WALL_TYPE=ldr_qg_failure, REPO=unified
 context_scope:
   [
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md,
+    /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md,
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
     /codex/06-coding-standards/quality-gates.md,
     unified-trading-api/scripts/quality-gates.sh,
@@ -981,4 +982,7 @@ read of this doc's 28+ cicd-escalation Progress Log entries (spanning lines 152-
 repos: list have in fact already been individually assessed one way or another via separate organic escalations:
 unified-trading-api/features-service/deployment-service/execution-service/market-data-processing-service all received
 the identical PYTEST_TIMEOUT=300 mitigation; instruments-service/ml-service/alerting-service were each explicitly
-checked against the 'sustained non-self-clearing red' bar and found NOT to qualify (self-clea...
+checked against the 'sustained non-self-clearing red' bar and found NOT to qualify (self-clea
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) — added `continued2` (this doc's own
+  successor since 08-03), silently missing despite the prior 08-09 marker....

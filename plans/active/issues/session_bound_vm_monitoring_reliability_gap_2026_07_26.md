@@ -187,3 +187,4 @@ in the same way and at the same time when they're the same physical connection.
   the Compute Operations API `preemption_op_checker` fallback rather than the in-guest blob) is warranted. Cross-ref:
   `/plans/archive/issues/af_backfill_preemption_auto_recovery_not_firing_2026_08_04.md`.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (5 entries), unchanged.

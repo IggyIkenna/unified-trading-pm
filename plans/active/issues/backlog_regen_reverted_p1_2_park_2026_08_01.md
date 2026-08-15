@@ -58,6 +58,7 @@ context_scope:
     /plans/archive/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md,
     agent-orchestrator/server/regen_backlog_from_plan.py,
     agents/RULES.md,
+    /plans/active/issues/cefi_binance_futures_aster_okx_futures_paper_gate_backfill_incomplete_2026_08_08.md,
   ]
 ---
 
@@ -198,3 +199,8 @@ parked-but-not-actually-999 drift) is NOT duplicated by the sibling and remains 
   undecided), matching every prior pass and batch6's independent same-day classification. New 2026-08-09 evidence
   (cross-referenced in this doc, not reclassifying) shows the bug class now spans both the hand-edit AND
   sanctioned-API-park mechanisms — widening the eventual fix's scope, not narrowing today's classification.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — added
+  `cefi_binance_futures_aster_okx_futures_paper_gate_backfill_incomplete_2026_08_08.md`, the fresh evidence the
+  2026-08-09 Progress Log entry cross-referenced (same `already_in_progress: true`/`dispatch_reason: "resume"` bypass
+  pattern, but via the sanctioned API-park path rather than this doc's hand-edit case) — directly relevant to whoever
+  eventually scopes the sole open item (the standing park-drift hygiene assertion).

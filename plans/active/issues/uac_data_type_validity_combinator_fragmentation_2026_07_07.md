@@ -54,11 +54,11 @@ locked_since:
 context_scope:
   [
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
-    unified-api-contracts/unified_api_contracts/internal/schemas/_defi_v2_contracts.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/onchain_perp_batch_handler.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py,
+    unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/lending_rewards_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/gas_fee_handler.py,
     /codex/02-data/defi-canonical-naming-ssot.md,
-    /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
   ]
 ---
 
@@ -525,6 +525,9 @@ just belongs on a different layer than instrument_type does, and conflating the 
     `if __name__ == "__main__":` guard, so it imports (printing 2 config lines from UTL DomainValidationService) and
     exits 0 running nothing; the real entries are the console script `.venv/bin/market-tick-data-service` or
     `python -m market_tick_data_service` (`__main__.py`). Use the console script for all done-when/force-compute runs.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — swapped in the still-open oracle-wiring targets
+  (`defi_venue_capabilities.py`, `oracle_prices_handler.py`, `lending_rewards_handler.py`, `gas_fee_handler.py`),
+  dropped the now-DONE finding-4/finding-6 file pointers.
 
 ## Follow-ups
 

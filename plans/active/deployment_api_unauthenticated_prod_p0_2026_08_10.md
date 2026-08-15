@@ -51,8 +51,10 @@ depends_on: []
 context_scope:
   [
     /plans/active/issues/deployment_api_prod_disable_auth_true_2026_08_06.md,
-    /codex/05-infrastructure/bucket-isolation-model.md,
-    /codex/06-coding-standards/config-reloader-pattern.md,
+    /plans/active/deployment_api_unauthenticated_prod_p0_2026_08_10_finalize.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+    deployment-api/deployment_api/auth.py,
   ]
 source: >-
   Operator ruling 2026-08-10 (interactive session, slot 1): escalate the 4 open fix-steps in
@@ -610,3 +612,7 @@ are unaffected.
   Deliberately did NOT deliberately break prod `DISABLE_AUTH` to fire a live alert (operator-gated per this plan's own
   established rule) — the alert-on-violation path is proven at the unit level instead; filed the live-fire test as its
   own `[OPERATOR]` P3 follow-up.
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) — dropped `bucket-isolation-model.md` (not cited
+  anywhere in this doc's own body, an apparent mismatch from an earlier pass) in favor of the 2 codex SSOTs this doc's
+  own "Codex SSOTs" section actually cites (`autonomous-recovery-matrix.md`, `orchestrator-cloud-identity-self-service.md`),
+  the gated finalize companion, and the fixed guard file (`deployment-api/deployment_api/auth.py`).

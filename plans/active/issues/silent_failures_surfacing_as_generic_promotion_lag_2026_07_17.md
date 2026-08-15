@@ -46,7 +46,7 @@ context_scope:
     /plans/archive/issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md,
     scripts/self-hosted-runners/glue-runner-run.sh,
     scripts/quality_gates/check_no_swallowed_credential_fetch.py,
-    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    scripts/cicd/detect_breaking_change.py,
   ]
 supersedes:
 superseded_by:
@@ -229,3 +229,7 @@ the doc's own root-cause section (an apostrophe inside a `${VAR:-...}` default w
 assignment) mandates a `--selfcheck` whole-script validation mode plus a one-unit-at-a-time canary rollout before any
 retry -- exactly the 'multi-file/multi-day rewrite of live-dispatch-critical-path machinery' caution class, not a
 small/low-risk change despite being bundled into one todo.
+
+**context-scout 2026-08-15**: refreshed context_scope (6 entries — swapped the archived
+`ci_satellite_ao_dispatch_batch1_2026_07_26.md` pointer for `scripts/cicd/detect_breaking_change.py`, the source target
+of the still-open Python-only-detection todo).

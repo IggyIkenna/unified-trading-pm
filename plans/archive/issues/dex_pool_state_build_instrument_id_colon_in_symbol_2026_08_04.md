@@ -124,3 +124,5 @@ details preserved), while other pools in the same shard succeed normally.
 
 - **context-scout 2026-08-06**: populated context_scope (4 entries). No "## Progress Log" section existed in this doc;
   appended as a new final section instead.
+- **context-scout 2026-08-15**: re-verified context_scope (4 entries) — all four still directly cited by the doc's own
+  body; no change needed.

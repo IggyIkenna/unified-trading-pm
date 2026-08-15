@@ -32,6 +32,13 @@ drift_direction: fix
 resolved_by:
 locked_by: plan_reconciler (agt-c7578b) since 2026-08-10T05:18:32Z
 depends_on: []
+context_scope:
+  [
+    unified-trading-pm/cursor-configs/skills/plan-reconcile/SKILL.md,
+    unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
+  ]
 ---
 
 # plan_reconciler findings — ao tranche — 2026-08-10
@@ -430,3 +437,5 @@ budget.
   asked question is resolved"; STEP 8 preamble: "do NOT exit while questions are open"; point 3's explicit wait-loop
   instructions) — followed the freshly-re-read SSOT over the paraphrase. Poll cycle will repeat (re-launch on timeout)
   until an answer arrives or all 4 are otherwise resolved, per STEP 8 point 4's actual condition.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries).

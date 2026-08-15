@@ -392,3 +392,4 @@ one hunter this run. The 262 grace-protected docs were correctly excluded per th
   `dex_pools`/`dex_swaps` cadence question — stay on the current daily-only capture (daily `dex_swaps` cron; `dex_pools`
   and both 5-min forward-fill jobs stay paused) rather than resuming 5-min polling, until Track 1-3 land. Flipped the P1
   todo done on that basis.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (4 entries), unchanged.

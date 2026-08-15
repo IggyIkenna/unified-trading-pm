@@ -162,3 +162,4 @@ even if nobody revisits it.
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since
   round11. Both open items remain genuine build-vs-extend dispatcher-design forks (matching heuristic, state-storage
   choice) per the 2026-08-03 marker's original analysis, still not mechanically specified.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.

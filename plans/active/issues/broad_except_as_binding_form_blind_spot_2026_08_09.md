@@ -42,7 +42,13 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 sequential: false
 locked_by:
-context_scope: [/QUALITY_GATE_BYPASS_AUDIT.md, scripts/quality-gates-base/base-service.sh, scripts/quality-gates.sh]
+context_scope:
+  [
+    scripts/quality_gates/check_broad_except.py,
+    scripts/quality_gates/broad_except_baseline.yaml,
+    scripts/quality-gates-base/base-service.sh,
+    /QUALITY_GATE_BYPASS_AUDIT.md,
+  ]
 resolved_by:
 source: >-
   Discovered 2026-08-09 (slot-24) as a drive-by while fixing the 21 literal `except Exception:` occurrences
@@ -182,3 +188,6 @@ Two independent tracks:
   is out of scope for an except-narrowing todo). Worth flagging as a general pattern for todo 3's remaining ~50 sites
   across 29 files: narrowing `except Exception as X:` to include `ImportError` can trip STEP 5.94 the same way — check
   both ratchets after each file, not just STEP 5.5.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) — swapped the generic `quality-gates.sh` entry
+  point for the actual shipped fix files (`scripts/quality_gates/check_broad_except.py` + its ratchet baseline
+  `broad_except_baseline.yaml`); all 3 todos are now `[x]`.

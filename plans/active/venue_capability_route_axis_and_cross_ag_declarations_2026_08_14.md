@@ -39,11 +39,10 @@ context_scope:
   [
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
     unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py,
-    unified-api-contracts/unified_api_contracts/registry/_odds_api_maps.py,
-    unified-api-contracts/unified_api_contracts/registry/sports_bookmaker_league_coverage.py,
     unified-api-contracts/unified_api_contracts/internal/unity_child_books.py,
     /codex/02-venues/unity-integration.md,
     e2e-testing/docs/sports/LIVE_ODDS_PROVIDERS.md,
+    unified-api-contracts/tests/unit/test_venue_source_adapter_parity.py,
   ]
 depends_on:
 supersedes:
@@ -532,3 +531,9 @@ re-running its own existing refresh script (see below), not a registry rename.
    match every other registry's region-suffixed convention. **Region is an ASSUMPTION (UK), not a measurement** — no
    source records which region the recorded `accuracy`/`is_exchange` numbers were actually measured against; flagged
    inline in the code, not silently resolved.
+
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — dropped `_odds_api_maps.py` and
+  `sports_bookmaker_league_coverage.py` (only load-bearing for the now-closed P1 bookmaker-spelling todos), added
+  `tests/unit/test_venue_source_adapter_parity.py` (named explicitly in the still-open P2 "extend the UAC parity gate"
+  todo). Kept `market_data_categories.py`/`venue_adapter_keys.py`/`unity_child_books.py`/`unity-integration.md`/
+  `LIVE_ODDS_PROVIDERS.md` — all directly load-bearing for the remaining P2 Unity/arb-book/routing/drift-guard todos.

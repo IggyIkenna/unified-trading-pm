@@ -328,3 +328,8 @@ out with GitHub's run retention; re-attempt the purge after that.
       once GitHub's retention has aged them out (or via support if they persist). Purely cosmetic — they pollute
       `gh run list --status queued` but provably cannot trip either standing monitor (see above). Done-when:
       `--status queued` is empty fleet-wide.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries), unchanged — still accurate for the sole
+  remaining `[OPERATOR] P3` cosmetic-cleanup todo.

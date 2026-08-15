@@ -34,8 +34,8 @@ context_scope:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     market-data-processing-service/scripts/reprocess_sports_odds.py,
     market-tick-data-service/scripts/sports/league_id_relocation/census_footystats_orphan_content_2026_07_25.py,
-    market-data-processing-service/market_data_processing_service/app/core/orchestration_scanner.py,
     deployment-service/scripts/rebuild_sports_manifest.py,
+    /plans/active/sports_track_h_denominator_gated_2026_07_28.md,
   ]
 parent_epic: sports_master
 assigned_vm: NA
@@ -870,3 +870,6 @@ offered to the queue once these are the only real blockers.
   (today). That same ledger separately flags this doc's own untracked residual (the human-gated final delete of ~256,954
   old non-canonical objects) for a future dedicated delete-safety pass, not a batch todo — a new finding, not a reason
   to flip. No flip, no extraction (would duplicate the tracked prereqs pair).
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — swapped `orchestration_scanner.py` (tangential,
+  resolved constraint) for `sports_track_h_denominator_gated_2026_07_28.md`, the confirmed current tracking home (per
+  this doc's own round11 sweep) for the sole remaining open todo.

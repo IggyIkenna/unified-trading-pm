@@ -28,6 +28,12 @@ drift_direction: fix
 resolved_by:
 locked_by: plan_reconciler (agt-33a6ec) since 2026-08-10T00:20:00Z
 depends_on: []
+context_scope:
+  [
+    unified-trading-pm/cursor-configs/skills/plan-reconcile/SKILL.md,
+    unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh,
+    unified-trading-pm/scripts/plans/populate_epic_bodies_2026_05_21.py,
+  ]
 ---
 
 # plan_reconciler findings — cross-cutting tranche — 2026-08-10
@@ -373,3 +379,4 @@ a missing checkbox, so no new todo is added here; a future hygiene pass should c
   `_count_open_checkboxes_fence_aware()` wired into `_na_open_todos_from_text()` in
   `scripts/plan-hygiene/check_na_corpus_ratchet.py`, closing the exact fence-blindness gap this item names; commit
   confirmed ancestor of `origin/live-defi-rollout`. Checkbox flipped above with citation.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries).

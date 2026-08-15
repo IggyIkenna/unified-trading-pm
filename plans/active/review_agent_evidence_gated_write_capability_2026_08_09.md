@@ -202,3 +202,4 @@ local sandbox first:
   citation ('operator direction 2026-08-09, local/human track, not AO-dispatched') on a doc adding new write capability
   to the review role — a role ~30 live agents boot from continuously. Never re-litigate hard rule applies directly;
   round9 (same day as authoring) already reached this verdict.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries).

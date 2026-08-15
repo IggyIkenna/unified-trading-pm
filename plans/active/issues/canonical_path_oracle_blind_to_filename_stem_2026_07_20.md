@@ -404,3 +404,6 @@ own tests pass (178 passed across the four canonical-path test modules).
   incident record tracking a cross-repo data-correctness fix; the sibling design doc's 3 implementation todos are still
   in-flight, and this doc is referenced by multiple codex SSOTs + skill files. Archival is correct once the sibling
   doc's implementation todos land and the codex references stabilize — not before.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (6 entries), unchanged — all §7 todos are `[x]`;
+  the sibling design doc's 3 implementation todos (Gap 1-3) remain the live follow-on work, not tracked in this
+  now-closed doc.

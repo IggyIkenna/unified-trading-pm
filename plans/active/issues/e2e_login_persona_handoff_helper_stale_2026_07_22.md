@@ -228,3 +228,4 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
   this doc must remain active so that verification can land (and then archive) once that fix ships. The finalize plan
   (`plans/archive/2026_08/e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md`) is archived with
   the decision recorded.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate.

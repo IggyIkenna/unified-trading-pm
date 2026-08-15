@@ -34,7 +34,12 @@ estimate_calibrated_ai_days:
 locked_by:
 locked_since:
 context_scope:
-  [/codex/02-data/honest-coverage-model.md, /plans/active/empty_confirmed_and_coverage_correctness_audit_2026_08_15.md]
+  [
+    /codex/02-data/honest-coverage-model.md,
+    /plans/active/empty_confirmed_and_coverage_correctness_audit_2026_08_15.md,
+    /plans/active/cross_ag_live_capture_parity_2026_08_14.md,
+    market-tick-data-service/market_tick_data_service/live/manifest_recorder.py,
+  ]
 supersedes:
 superseded_by:
 resolved_by:
@@ -100,3 +105,7 @@ benign baseline, not part of it.
 - **2026-08-15 (interactive session, slot 3)**: Filed as a reference doc per operator instruction ("agreed make one
   human/NA not vm:planning"), preserving the session's breakdown so it survives context compaction. No mutation, no
   further action owned by this doc — follow-ups tracked in the sibling audit plan.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) -- added `cross_ag_live_capture_parity`
+  (the doc's own "Distinct from the acute live-capture bug" section explicitly contrasts this doc's benign baseline
+  against that acute regression, so a future reader should have both) and `manifest_recorder.py` (`_resolve_row_key()`,
+  named directly in the "Grain" section as the source of this doc's grain definition).

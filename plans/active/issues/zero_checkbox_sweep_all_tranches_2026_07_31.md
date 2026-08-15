@@ -222,3 +222,4 @@ them as a finding; the population definition is deliberately left unchanged.
   cadence item, owned by that scheduled skill, not AO dispatch (archiving/dispatching it is exactly what orphaned this
   class twice before, per this doc's own history).
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries), unchanged.

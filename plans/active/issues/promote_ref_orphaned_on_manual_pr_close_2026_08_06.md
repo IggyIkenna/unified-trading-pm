@@ -32,7 +32,11 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
-context_scope: [/plans/active/cross_cutting_consolidated_closeout_2026_07_25.md]
+context_scope:
+  [
+    /plans/archive/2026_08/issues/promote_ref_orphaned_on_manual_pr_close_2026_08_06.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+  ]
 ---
 
 # Redirect stub
@@ -65,3 +69,5 @@ over-cap carve-out at all.
   hard cap" citation (summary + body) — live-verified `cross_cutting_consolidated_closeout_2026_07_25.md` is 733 lines.
   Text-only correction per Item N's scope (`plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`);
   did not execute the Follow-up repoint+delete action itself (separately tracked above, now unblocked).
+- **context-scout 2026-08-15**: populated/refreshed context_scope (2 entries) — added the archived original doc (full
+  content + resolution evidence) alongside the referrer plan.

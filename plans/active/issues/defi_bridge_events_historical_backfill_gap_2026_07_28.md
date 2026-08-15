@@ -195,3 +195,4 @@ to _also_ unblock the bridge_events historical backfill, and so nobody re-invest
   `archive_exempt: true` (the sanctioned flip-then-mv two-commit pattern documented in
   `scripts/plan-hygiene/check_archive_candidates.sh`) so this commit doesn't trip the archive-candidates pre-commit
   gate. The follow-on pass should drop `archive_exempt` and `git mv` this doc to `plans/archive/[issues/]`.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.

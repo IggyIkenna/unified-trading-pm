@@ -78,6 +78,7 @@ supersedes:
 superseded_by:
 context_scope:
   [
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
@@ -239,3 +240,6 @@ smoke-green foundation gate would be premature).
   genuinely open on direct read (Track 14's DeFi-handlers-zero-concurrency refactor, Track 19's residual forks, Track
   20's data-status items). Persists until its Tracks close, per its own "Close-out criterion" per Track. Doc stays
   `assigned_vm: NA`.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) -- added the parent
+  `cross_cutting_consolidated_closeout_2026_07_25.md` this doc was forked from, alongside the 3 codex data-pipeline
+  SSOTs a worker needs before touching any of Tracks 14/18-22.

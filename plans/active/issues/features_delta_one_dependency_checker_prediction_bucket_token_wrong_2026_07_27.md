@@ -267,6 +267,7 @@ four now route through the one helper.
   is actually leftover install corruption.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.
 
 ## Follow-ups
 

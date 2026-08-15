@@ -51,11 +51,9 @@ superseded_by:
 context_scope:
   [
     agent-orchestrator/server/regen_backlog_from_plan.py,
-    agents/RULES.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /plans/archive/issues/blocked_marker_continuation_line_not_scanned_2026_07_26.md,
+    agents/RULES.md,
     /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
-    /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
   ]
 ---
 
@@ -303,3 +301,9 @@ same-corpus dependencies). Instead:
   the residual mechanical fix (either extending `_NON_DISPATCHABLE_RE` with a narrower same-corpus-dependency-aware
   marker, or building the per-todo same-file `prereqs` mechanism the 2026-07-30 slot-6 entry recommended) remains a
   genuine `agent-orchestrator` design question, not something this audit's own scope authorizes deciding unilaterally.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) — the 2026-08-14 audit closed both prior open
+  items and left a single new one (build the same-corpus-dependency prereqs mechanism), so trimmed the two
+  now-superseded per-occurrence examples (`blocked_marker_continuation_line_not_scanned_2026_07_26.md`, the already-fixed
+  sibling bug; `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`, the closed case-(a) retag example) and kept the
+  source file to modify + the dispatch-eligibility SSOT + RULES.md's prereqs recipe + the dominant real-world example
+  (`sports_closeout_track_s2_foldin_2026_07_25.md`, 5 of 6 audited occurrences).

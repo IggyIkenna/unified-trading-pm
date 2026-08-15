@@ -310,3 +310,4 @@ restarting the service and from shipping the fix (routes via BACKEND worker + qu
   Consider batching/serialising...") with no stated preference among the surviving options; per this same sweep's own
   established "Consider" = judgment-call-not-mandate reading (applied consistently to sibling docs in this tranche),
   this stays a genuine design fork, not a bounded mandate. No new bounded item found.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (5 entries), unchanged.

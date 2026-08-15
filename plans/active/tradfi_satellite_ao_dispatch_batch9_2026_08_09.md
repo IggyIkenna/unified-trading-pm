@@ -45,6 +45,7 @@ context_scope:
   [
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
     /plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
+    /plans/archive/2026_08/issues/mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     features-service/features_service/delta_one/app/core/candle_resampler.py,
@@ -158,3 +159,8 @@ is deliberately thin; reported honestly rather than padded.
   `issues/mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md` (2 candidate fixes + `[OPERATOR]`
   decision todo) rather than absorb an unplanned architecture-judgment call. Todo 2 left `- [ ]`, annotated in place
   with the finding. No code shipped this session (nothing was safe to ship without the decision).
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — added
+  `plans/archive/2026_08/issues/mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md`, the doc's
+  own 2026-08-14 "Full detail + evidence" pointer for todo 2's real current state (this doc's in-body citations to it
+  are missing the `archive/2026_08/` prefix — now stale since archival; flagged, not rewritten, per this skill's scope
+  boundary).

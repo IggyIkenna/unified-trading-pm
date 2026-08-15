@@ -41,7 +41,8 @@ context_scope:
     agent-orchestrator/server/accounts.py,
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/model_pricing.py,
-    agent-orchestrator/server/deepseek_balance.py,
+    agent-orchestrator/server/gemini_headroom.py,
+    agent-orchestrator/server/grok_balance.py,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
   ]
 ---
@@ -249,3 +250,8 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
     "Done when" bar** — every one requires a REAL Grok/Gemini completion, balance fetch, or live throttle proof, all
     structurally impossible without credentials. Checkboxes below stay unflipped on purpose. Todo 143 (tool-use
     translation smoke test) is NOT addressed at all this session — LiteLLM itself was only configured, never run.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries) — swapped `deepseek_balance.py` (the
+  pattern-to-mirror) for the two real deliverables that now mirror it (`grok_balance.py`, `gemini_headroom.py`), since
+  both exist on disk today and `select_account_for_spawn()` (confirmed live in `autospawn.py`) is the dispatch loop
+  `gemini_headroom.py` still needs wiring into.

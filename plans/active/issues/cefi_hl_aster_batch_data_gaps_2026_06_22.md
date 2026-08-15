@@ -957,3 +957,5 @@ bad-request, needs a look). Failing instruments are IN-UNIVERSE (e.g. `KRAKEN-FU
   `archive_exempt: true` (the sanctioned flip-then-mv two-commit pattern documented in
   `scripts/plan-hygiene/check_archive_candidates.sh`) so this commit doesn't trip the archive-candidates pre-commit
   gate. The follow-on pass should drop `archive_exempt` and `git mv` this doc to `plans/archive/[issues/]`.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate -- the only content
+  change since the 2026-08-05 marker is the 2026-08-12 `locked_by` bridging note (administrative).

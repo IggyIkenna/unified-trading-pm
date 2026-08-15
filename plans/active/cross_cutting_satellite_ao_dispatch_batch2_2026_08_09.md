@@ -73,6 +73,7 @@ context_scope:
     /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 source: >-
   Satellite-batch-extraction sweep 2026-08-09 (8 parallel classification agents over the cross-cutting tranche's 27
@@ -945,3 +946,6 @@ drift_direction: advance-code
   verification is recorded in the Progress Log above (slots 2+15). Checkbox flipped with final evidence citations.
   **Remaining work on this plan: 0 open todos.** The CME COMBO malformed-symbol item (line 557) is still `[ ]` — but
   that's a separate plan todo, not part of this G1 item. This was the last open item in the batch.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) -- added
+  `gcs-and-manifest-delete-safety-protocol.md` (already cited in this doc's own "## Codex SSOTs" section; load-bearing
+  for the multiple GCS-delete todos in this batch).

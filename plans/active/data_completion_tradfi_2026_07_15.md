@@ -958,3 +958,8 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
   Lifted the BLOCKED-OPERATOR-DECISION citations on items 4/5 (consistency notes) and 6/9 (the catalogue-scheduler +
   `--source databento` replacement-path todos themselves) — see each item's own `UNBLOCKED 2026-08-10` note. None of
   these are flipped `[x]` — the gate-b re-feed is now dispatchable, not yet actually run. Doc stays NA.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate -- considered adding
+  `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md` (repeatedly cited 2026-08-09/10 as the
+  gate-b blocker for items 4/5/6/9, now resolved) but left it out to stay within the 6-entry target; all 6 existing
+  entries, incl. `canonical-cutover-register.md` (still directly cited in-body at line 131), remain independently
+  load-bearing.

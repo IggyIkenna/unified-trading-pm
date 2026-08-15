@@ -69,6 +69,7 @@ context_scope:
   [
     /plans/archive/2026_08/self_hosted_runner_public_repo_revert_2026_08_05.md,
     /plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md,
+    unified-trading-ci/.github/workflows/image-build-validate.yml,
   ]
 ---
 
@@ -197,3 +198,6 @@ na-eligibility-audit confirmations (2026-08-08, 2026-08-09). Corroborating cross
 plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md's own todo 10 independently raises the
 SAME 'should we build a standing visibility-change alert' question and was itself independently classified 'genuine...
 design/priority call, not a bounded spec...
+
+- **context-scout 2026-08-15**: refreshed context_scope (3 entries — added
+  `unified-trading-ci/.github/workflows/image-build-validate.yml`, the actual file the P0 fix touched).

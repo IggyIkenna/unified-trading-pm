@@ -126,6 +126,7 @@ context_scope:
   filed as batch5 candidate. **Deferral (b)** — POLYMARKET re-enum + `book_snapshot_5` backfill: gate cleared; re-tagged
   off `[OPERATOR]` 2026-07-28; **promoted to ready `[DATA]` candidate** — batch5 or standalone plan, AO-dispatchable, no
   remaining gates. Batch4 Deferred entry updated.
+- **context-scout 2026-08-15**: re-verified context_scope (4 entries), unchanged.
 
 ## Deferred work — migrated to:
 

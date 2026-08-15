@@ -337,6 +337,7 @@ the diagnostic script itself (kept for lifecycle-marker traceability, delete-whe
   `tradfi`/IBKR currently mis-stamps `batch_fred` — out of this P2's scope, needs its own rule-11 cross-AG
   verification).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (5 entries), unchanged.
 
 ## Follow-ups
 

@@ -75,3 +75,4 @@ context_scope:
   parent plan's todos are done, so the extra `draft` gate was redundant (flagged by `check_finalize_plan_coverage.py`'s
   "finalize plan stuck at draft" ratchet). Per task_template.md §4 / ag-closeout-audit SKILL.md's 2026-07-30 fix: a
   gated finalize plan should be `active` from authorship.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (2 entries).

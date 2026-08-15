@@ -48,7 +48,8 @@ context_scope:
     agent-orchestrator/dashboard/tests/e2e/deepseek-wallet-reconciliation.spec.ts,
     agent-orchestrator/dashboard/tests/e2e/fixtures/seed_e2e_state.py,
     agent-orchestrator/server/deepseek_usage.py,
-    /codex/06-coding-standards/ui-testing-layers.md,
+    /plans/active/issues/e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md,
+    /plans/active/ao_satellite_ao_dispatch_batch8_2026_08_08.md,
   ]
 ---
 
@@ -129,3 +130,20 @@ mechanical fix, which is why this is filed rather than patched.
   after the `[REVIEW]` investigation and would become concurrently dispatchable the moment this doc goes AO-live, and
   the investigation can still terminate in a genuine semantics call the investigation alone can't resolve. Explicit
   dated operator consideration-and-decline, not re-litigated.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — **fingerprint match found** (step 4a):
+  `/plans/active/issues/e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md` independently records
+  the IDENTICAL literal evidence this doc's own summary quotes (`avg_turns_per_task` hand-seeded `25.0` vs
+  live-computed `9.0` — that doc's own Progress Log even tabulates "Post-tick values for all 7 columns:
+  avg_turns_per_task=9.0 (was 25.0)"), and that doc already root-causes it: the e2e backend's `DeepSeekUsagePoller`
+  DOES tick at boot (contradicting the failing spec's own docstring assumption that it doesn't) and `_sweep_account`
+  unconditionally overwrites the hand-seeded blob with live `_compute_task_window_stats` results from an unrelated
+  pre-existing `TaskUsageRow` fixture. This directly bears on this doc's own open `[REVIEW]` investigation todo (case
+  (a) fixture-drift vs (b) real regression) — added to context_scope so the investigator reads it first instead of
+  re-deriving the same root-cause trail from scratch. **Second finding, same grep**: `ao_satellite_ao_dispatch_batch8_
+  2026_08_08.md` (`status: active`) carries an ALREADY-DISPATCHED combined todo naming both the poller doc's
+  `_sweep_account` mechanism AND explicitly `deepseek-wallet-reconciliation.spec.ts`'s failure ("same shared `chromium`
+  project, DeepSeek-usage-adjacent") under one investigation, with a "done when" bar requiring a written verdict "in
+  both source docs' Progress Logs" — i.e. an active AO-dispatched plan may already be covering this doc's own open
+  `[REVIEW]` todo. Swapped into context_scope in place of the more general `ui-testing-layers.md` (still reachable via
+  this doc's own `related:`) given its direct operational relevance; flagging the possible todo-duplication for
+  `/plan-reconcile` to judge — not resolved here (out of this skill's scope).

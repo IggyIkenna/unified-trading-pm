@@ -45,9 +45,10 @@ depends_on: []
 context_scope:
   [
     /plans/active/ui_consolidated_closeout_2026_07_30.md,
-    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/active/artifact_pipeline_observability_2026_07_17.md,
+    /plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md,
+    /plans/active/ui_satellite_ao_dispatch_batch3_finalize_2026_08_09.md,
+    /deployment-api/deployment_api/services/artifact_pipeline/service.py,
   ]
 source: >-
   Drafted by the 2026-08-13 /na-eligibility-audit + /ag-closeout-audit full-corpus sweep (interactive session). status:
@@ -210,3 +211,7 @@ source: >-
 None — every item drafted here already cleared the conflict-check. Items that did NOT clear (genuinely operator-gated,
 time-gated, or too-large-for-a-batch-todo) were left in their source docs and are not duplicated here; see the
 2026-08-13 audit's full classification data for the complete list.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries).

@@ -95,3 +95,7 @@ expected-universe re-seed/purge for EIGENLAYER to reach genuine zero non-canonic
 - [ ] [DATA] P3. Once root-caused: either purge the stale `spot_pair` expected-cells for EIGENLAYER (if confirmed stale)
       or add an explicit registry justification comment (if confirmed intentional) — mirrors the CHAINLINK/PYTH
       documentation pattern in `defi-canonical-naming-ssot.md`.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries).

@@ -526,3 +526,5 @@ is the single place to scan them all in one pass.
   `archive_exempt: true`, standing reference surface by operator ruling
   (`autonomous_session_operator_decisions_ 2026_07_25.md` entry #10); 0 open todos is expected/by design here, not a
   reclassification signal.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (6 entries) -- unchanged; still a standing
+  tracking/index surface (0 open todos by design), no source path applies.

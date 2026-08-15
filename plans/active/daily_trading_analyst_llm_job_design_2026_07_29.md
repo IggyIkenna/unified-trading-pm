@@ -364,3 +364,4 @@ job's per-category input adapters for the reconciliation-derived categories, per
   content anywhere in the corpus; item 6's actual open question (the escalation-N day-count + default `assigned_vm` for
   filed docs) shows no evidence of an operator ruling in this doc or its Progress Log. Treating item 6 as still
   genuinely open rather than assuming the cited ruling applies here — flagging the mismatch rather than guessing.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate.

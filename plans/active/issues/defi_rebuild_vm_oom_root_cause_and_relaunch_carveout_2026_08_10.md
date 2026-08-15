@@ -62,7 +62,9 @@ context_scope:
     /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
     /plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md,
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
-    /codex/05-infrastructure/vm-tarball-deployment.md,
+    market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py,
+    unified-trading-library/unified_trading_library/manifest_writer/_writer_io.py,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 ---
 
@@ -320,3 +322,9 @@ consolidated manifest is genuinely FRESH right now — live read of `market-data
 DeFi's `AG_STALENESS_BUDGET_SEC["defi"]=3600s` override (`unified_trading_library/manifest_writer/_staleness_budget.py`)
 — only 2 outstanding per-VM shards (no backlog pileup), consistent with a healthy, actively-cycling consolidator, not a
 paused/stale one. Full todo verdict recorded on the dispatching plan's checkbox.
+
+**context-scout 2026-08-15**: populated/refreshed context_scope (6 entries) — swapped the deployment-verification-
+methodology citation for the two actual root-cause source files (`rebuild_defi_manifest.py`'s `covered_keys`
+accumulation bug, UTL `_writer_io.py`'s per-VM-shard flush cost) plus the newly-codified
+`vm-launcher-runbook.md` § "Concurrent VMs Sharing a GCS Bucket" HARD RULE this doc's own investigation produced — all
+three named directly in the doc's own body.

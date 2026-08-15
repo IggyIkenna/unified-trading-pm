@@ -46,7 +46,7 @@ drift_direction: advance-code
 archive_exempt: true # 2026-08-10 slot 22: 0 open todos after DEFERRED-CROSS-DEP flip; archival deferred to /archive-candidates-audit (marquee plan, 33 done todos, complex referrer graph)
 context_scope:
   [
-    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch10_2026_08_09.md,
     /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
@@ -893,6 +893,10 @@ to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tar
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged — both remaining open items
   (batch4-tracked DEFERRED-CROSS-DEP row-proof; the now-closed depth-retention design question) still map to the same
   set.
+- **context-scout 2026-08-15**: repointed context_scope's batch4 entry to the archived
+  `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` — this doc's own 2026-08-09 round11 entry flagged batch4 as
+  stale (the sole open item was promoted+extracted into batch10, which has since landed and archived); batch4 is no
+  longer the current owner. 5 entries, all confirmed on disk.
 
 ## Deferred work — migrated to:
 

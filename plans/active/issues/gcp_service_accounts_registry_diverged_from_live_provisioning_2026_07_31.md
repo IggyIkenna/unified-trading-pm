@@ -154,3 +154,5 @@ Two directions are both plausible and this is an architecture decision, not a bo
   related docs to rule out KEEP-NA-STALE-DUPLICATE — none absorb this doc's scope (see this run's chat-level report for
   detail).
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (5 entries), unchanged — all 5 confirmed to still
+  resolve on disk.

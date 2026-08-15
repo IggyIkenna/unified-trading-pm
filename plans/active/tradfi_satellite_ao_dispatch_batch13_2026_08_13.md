@@ -325,3 +325,7 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   only affects commands after it in the same `&&` chain, so a label echoed without its own `cd` silently repeats the
   PREVIOUS repo's output under the wrong heading. Hit this twice this session (once in the original audit, once again in
   this checkpoint) — each repo's status check needs its own explicit `cd <repo> &&` prefix, every time, no exceptions.
+
+- **context-scout 2026-08-15**: re-verified context_scope (4 entries, unchanged) — all resolve; extraction-batch
+  coordinator doc pointing at 14 named source docs (each todo already cites its own `Source:`), no single additional
+  codex/source target dominates enough to add.

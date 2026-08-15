@@ -163,3 +163,6 @@ precondition-satisfied but not yet executed to completion. Per `/codex/15-runboo
   relaunch twice, root-caused attempt 2's OOM, shipped the worker-count fix. Filed this doc per the findings-closure
   hard rule since the underlying relaunch is not yet complete and both failure signatures are worth tracking separately
   from the source doc's original (already-resolved) stale-fallback concern.
+- **context-scout 2026-08-15**: populated context_scope (4 entries) — the fixed launcher, the zombie watchdog that
+  reaped attempt 1, the fold script whose worker default was mismatched, and the RB-INFRA-RELAUNCH runbook governing
+  the `≤2/(vm-prefix,day)` bound this doc's own relaunch attempts respected.

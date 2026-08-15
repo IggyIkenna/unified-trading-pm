@@ -113,3 +113,4 @@ source: >-
 - **2026-08-08**: Drafted alongside `defi_compute_gcp_migration_2026_08_08.md` when that plan was flipped from
   `assigned_vm: NA` to `planning` per operator directive. `status: active` immediately (not `draft`) — machine-held from
   actually dispatching via `depends_on` + `gate_on_depends: true` until the parent plan's 18 todos are done.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.

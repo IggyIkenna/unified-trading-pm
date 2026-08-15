@@ -85,3 +85,4 @@ source: >-
 - **2026-08-08**: Drafted alongside the parent doc's `na-eligibility-audit round7 RECLASSIFY` flip from
   `assigned_vm: NA` to `planning`. `status: active` immediately (not `draft`) — machine-held from actually dispatching
   via `depends_on` + `gate_on_depends: true` until the parent doc's 4 remaining todos are done.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries).

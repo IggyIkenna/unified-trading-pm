@@ -55,10 +55,10 @@ context_scope:
   [
     /plans/active/issues/cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md,
     /codex/02-data/honest-coverage-model.md,
-    market-tick-data-service/market_interface/adapters/tradfi/tardis_bulk_download.py,
-    market-tick-data-service/market_interface/adapters/tradfi/tardis_adapter.py,
-    market-tick-data-service/cefi_futures_chain_symbology.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_bulk_download.py,
+    unified-api-contracts/unified_api_contracts/registry/data_type_capability.py,
     market-tick-data-service/configs/venue_data_types.yaml,
+    deployment-service/scripts/vm/tardis-concurrency-guard.sh,
   ]
 ---
 
@@ -239,3 +239,12 @@ Fix at the root per the data-pipeline-correctness HARD RULE — no deadline defe
     state, since it's a pure code/config change touching unified-api-contracts/market-tick-data-service with no
     external-API dependency. Releasing via
     `/skip-current-task {"reason_code": "GATED", "estimated_unblock_minutes": 480}`.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries). The prior list (never marked by a prior
+  context-scout pass) had 3 dead source paths -- `market-tick-data-service/market_interface/adapters/tradfi/
+  tardis_bulk_download.py`, `.../tardis_adapter.py`, and `market-tick-data-service/cefi_futures_chain_symbology.py`
+  were all missing the `market_tick_data_service/` package-dir prefix and did not resolve on disk. Corrected
+  `tardis_bulk_download.py`'s path, dropped `tardis_adapter.py` and `cefi_futures_chain_symbology.py` (both
+  corroborating detail already resolved as non-issues per this doc's own "Symbology check" paragraph, lower
+  forward-relevance), and added `unified_api_contracts/registry/data_type_capability.py` (todo 2's actual fix target --
+  named directly in the doc's own "Registry-drift finding" section) and `tardis-concurrency-guard.sh` (todo 1's gating
+  mechanism, the CANONICAL check cited in 6 consecutive Progress Log dispatches).

@@ -149,3 +149,4 @@ just the ones in `infra_satellite_ao_dispatch_batch1_2026_07_26.md`.
   claim: `next.config.mjs` `serverExternalPackages` + `dev:mock` `NODE_OPTIONS` heap cap). Todos 1 (Firebase Admin
   credential/emulator decision) and 3 (re-run gated on both) remain genuinely open — this doc stays `status: open`, NOT
   an archival candidate.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (6 entries), unchanged.

@@ -380,3 +380,5 @@ re-gate, a 'PYTEST_WORKERS=1 is a structural guarantee' claim directly falsified
 confirmed single-worker serial execution), and a leading-but-unconfirmed 'quickmerge cascade-step' theory (correlated
 with, not proven by, several cross-referenced sibling-session data points). Outcome is not determinable by a worker
 alone -- this is investigative, not bounded/deterministic work.
+
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (5 entries), unchanged.

@@ -75,3 +75,9 @@ context_scope:
 
 - /plans/active/task_template.md §4 — finalize-plan-coverage rule
 - /codex/12-agent-workflow/plan-completion-and-archival-discipline.md — the 6-step archival ritual
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (2 entries) — `*_finalize` gate doc, genuinely code-free (both
+  todos are checkbox-reconciliations against 2 named source docs, plus the archival step itself); the gating parent
+  batch plus the archival-discipline codex doc are the minimal set, matching the batch10-finalize precedent.

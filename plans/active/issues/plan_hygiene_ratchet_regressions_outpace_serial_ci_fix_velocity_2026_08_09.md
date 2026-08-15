@@ -783,3 +783,4 @@ words: "this branch is churning faster than one CI worker can chase serially").
   not attempting bulk reclassification — the corpus is within its own baseline mode, the diff-base-vs-main is the
   main-behind-LDR deadlock). `AUTHORING_SLOT=ci` (not a numbered slot) — no slot-ping applicable per this role's
   skip-rule. Completing via `/done`.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (2 entries), unchanged.

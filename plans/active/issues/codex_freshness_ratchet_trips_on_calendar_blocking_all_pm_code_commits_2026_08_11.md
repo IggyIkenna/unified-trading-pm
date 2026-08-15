@@ -43,8 +43,8 @@ locked_since:
 context_scope:
   [
     scripts/quality_gates/check_codex_doc_freshness.py,
-    /codex/05-infrastructure/live-deployment-monitoring.md,
-    /codex/05-infrastructure/strategy-vm-launcher-shape.md,
+    scripts/quality_gates/codex_doc_freshness_baseline.yaml,
+    /codex/06-coding-standards/ratchet-correctness-vs-hygiene.md,
   ]
 ---
 
@@ -217,3 +217,18 @@ delimiter that was never missing.
       actually blocks a commit either way — this is purely about the diagnostic pointing the next person at the right
       fix on the first read instead of a false "you're missing the frontmatter block entirely" lead. Repo:
       unified-trading-pm.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (3 entries) — this doc had none before. Dropped the two
+  now-DONE re-reviewed docs (`live-deployment-monitoring.md`, `strategy-vm-launcher-shape.md` — both todos closed) in
+  favor of what the 2 still-open todos actually depend on: the checker script itself (P3's parse-error bug) and
+  `/codex/06-coding-standards/ratchet-correctness-vs-hygiene.md`, a confirmed-existing codex SSOT this doc never cited —
+  `authoritative_for: [correctness-ratchet vs hygiene-ratchet classification, ...]`, and its own line 76 names
+  `check_codex_doc_freshness.py`'s `stale` reason directly, citing a "post-2026-08-12 warn-with-digest split." **Flagging
+  for follow-up (out of this skill's scope to fix directly)**: that codex doc + its cited precedent
+  `/plans/archive/2026_08/issues/qg_ratchets_block_unrelated_ships_2026_08_12.md` (`status: resolved`,
+  `resolved_by: unified-trading-pm@9498b9f3a5`) strongly suggest this doc's own open `[DEVOPS] P2` todo ("decide whether
+  a calendar-triggered ratchet should be able to block commits at all") has ALREADY been decided and shipped elsewhere —
+  the stale-reason split already exists in code per the codex doc's own claim. Not verified/flipped here (judging
+  todo-correctness is `/plan-reconcile`'s job, not this skill's) — surfaced for that audit.

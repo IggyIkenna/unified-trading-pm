@@ -51,6 +51,7 @@ context_scope:
     /codex/04-architecture/client-isolation-sla-and-runtime-profiles.md,
     codex/09-strategy/architecture-v2/families/,
     /codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md,
+    /codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md,
   ]
 supersedes:
 superseded_by:
@@ -359,3 +360,7 @@ collapsing them into one number the way the archived doc did.
   standard, covered by premium. The 2 single-sided carry exceptions (`YIELD_ROTATION_LENDING`, `YIELD_STAKING_SIMPLE`) →
   `Medium`/`distributed`. VOL edge-case override (`VOL_MARKET_MAKING`, `VOL_0DTE_GAMMA_SCALPING`) deferred with a stated
   default (`distributed`) so it cannot block the rollout.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) -- added
+  `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`, the decision artifact this audit's own todos build and the
+  paired execution plan implements against.

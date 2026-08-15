@@ -871,3 +871,5 @@ valid — Large, actively-evolving CI-VM cost/I/O audit (2026-08-05 original, in
 live AWS/SSM/CloudWatch evidence (VM downsized to m8i.2xlarge, EBS bumped, public-repo migration completed, uv cache
 gated off, 6 plan-hygiene ratchets fixed, job-minutes re-measured -32.4%). 8 items remain open. Each falls into one of:
 (a) explicit operator-deferred security decision (item 2, [OPERATOR]-tagged, 2026-08-08 ruling 'leave... blocked...
+
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate.

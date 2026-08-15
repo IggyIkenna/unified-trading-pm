@@ -49,7 +49,8 @@ context_scope:
   [
     /plans/archive/2026_08/issues/macro_micro_econ_data_capture_audit_2026_06_05.md,
     /plans/archive/issues/fred_backfill_early_date_indefinite_stall_2026_07_30.md,
-    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    market-tick-data-service/market_tick_data_service/adapters/_umi_fred.py,
+    deployment-service/scripts/vm/launch-tradfi-bf-fred.sh,
   ]
 ---
 
@@ -91,3 +92,9 @@ completion" in any live sense.
       current prod, and either launch/resume the backfill toward the 1962-1970 floor or correct whatever doc claims
       "self-sufficient to completion" if that claim is simply wrong. Follow
       `/codex/05-infrastructure/vm-launcher-runbook.md` if a VM launch is the right next step.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) — swapped the generic Databento sourcing
+  SSOT (FRED is not Databento-sourced) for `_umi_fred.py` (Finding 1's forward-capture adapter target) and the FRED VM
+  launcher script (Finding 2's backfill target).

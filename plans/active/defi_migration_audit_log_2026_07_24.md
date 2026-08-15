@@ -863,3 +863,4 @@ speed-note (both deferred optimisations, non-blocking).
   C (instruments-store-defi `_index` v9 write, currently 0% v9, an operational apply-gate), Era-B legacy retirement
   (gated on cefi+tradfi G4 apply complete), and the delete-after-migration bucket purges (explicit operator-sign-off
   owner: vm-defi). Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.

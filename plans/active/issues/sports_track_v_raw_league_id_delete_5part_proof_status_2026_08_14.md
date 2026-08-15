@@ -53,6 +53,13 @@ depends_on: []
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_since:
+context_scope:
+  [
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/archive/issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md,
+    market-tick-data-service/scripts/sports/league_id_relocation,
+    /plans/active/sports_satellite_ao_dispatch_batch13_2026_08_13.md,
+  ]
 ---
 
 ## What I found
@@ -127,3 +134,7 @@ already caught once.
 - [x] [DOC] P2. ✅ Corrected the stale "UNBLOCKED 2026-07-28: Track C's lowercase-revert" citation in
       `sports_satellite_ao_dispatch_batch13_2026_08_13.md`'s Track V todo (same session, same commit) — see that plan's
       Progress Log / todo annotation.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (4 entries).

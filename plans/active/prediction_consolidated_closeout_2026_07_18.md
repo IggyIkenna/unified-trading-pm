@@ -787,3 +787,5 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   (`archive_exempt: true` coordination hub; 4 Phase A-E children still open under their own docs, plus its own 0-todo
   status is by design, not a moot/ARCHIVE candidate — `archive_exempt: true` is the correct standing marker). Doc stays
   NA.
+
+- **context-scout 2026-08-15**: re-verified context_scope (4 entries), unchanged.

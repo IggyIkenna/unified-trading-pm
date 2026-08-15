@@ -358,3 +358,4 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
   soft/low-value internal benchmark re-run asks (`/plan-reconcile` solo re-run, `/na-eligibility-audit` steady-state
   re-run), a PM-checkout-staleness follow-up gated on reading one scheduled skill's STEP 0, and a benchmark-artifact
   update gated on the other two landing first — none independently worker-executable as a bounded outcome.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.

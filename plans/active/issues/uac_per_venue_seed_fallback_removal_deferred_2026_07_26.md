@@ -159,3 +159,4 @@ dangling inside a closed plan todo.
   this wiring todo or only the removal). The standing contested-revert + never-re-litigate rule governs here, not a
   fresh criteria re-derivation — a third independent signal suggesting the work is bounded does not override it. Not
   re-flipped; the operator still needs to rule on the reversion's scope. No reclassification.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (6 entries), unchanged.

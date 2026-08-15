@@ -49,7 +49,13 @@ resolved_by:
 last_updated: 2026-08-14
 locked_since:
 context_scope:
-  [/plans/active/defi_migration_audit_log_2026_07_24.md, /codex/05-infrastructure/bucket-isolation-model.md]
+  [
+    /plans/active/defi_migration_audit_log_2026_07_24.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    deployment-service/configs/cloud-providers.yaml,
+    unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py,
+    /plans/active/defi_satellite_ao_dispatch_batch13_2026_08_13_finalize.md,
+  ]
 source: >-
   defi_satellite_ao_dispatch_batch13_2026_08_13.md's "[SCRIPT] P2. Redirect the 4 DeFi live handlers..." todo (Source:
   plans/active/defi_migration_audit_log_2026_07_24.md).
@@ -144,3 +150,10 @@ provisioning SSOT.
    as moot or rewrites them against the single-bucket model. Left as `assigned_vm: NA` here rather than resolved, since
    striking a still-open P1 todo needs the doc owner's confirmation, not a unilateral edit from an unrelated dispatch.
 3. No GCS/bucket state change is proposed or required by this issue doc itself — purely a doc-accuracy finding.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (5 entries) — added the actual evidence files this finding
+  rests on (`cloud-providers.yaml`, the bucket-kind SSOT config; `bucket_naming.py`, the `tick-data`/`market-data` alias
+  resolver) plus the finalize doc named in this doc's own "Recommended decision" section as the mechanism that closes
+  out the REDIRECT todo — the codex+plan-only pair previously on file did not cover either.

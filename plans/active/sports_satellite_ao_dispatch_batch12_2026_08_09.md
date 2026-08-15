@@ -61,10 +61,9 @@ context_scope:
   [
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
+    /plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md,
     market-tick-data-service/scripts/sports/reconcile_player_stats_missing_gcs_manifest_2026_08_05.py,
-    features-service/features_service/sports/calculators/odds_columns.py,
-    deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
   ]
 ---
 
@@ -487,3 +486,12 @@ confirmed-missing via independent post-write dry-runs, flip todo 1's checkbox wi
   dispatch-anomaly investigation first. Caveat: 56-VM `mdps-sports` backfill in-flight on the same bucket (2026-08-10);
   historical-estate gaps are real, but re-run the census post-convergence. Todo 4 flipped; result written into the
   source doc's E8 section (`/plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`).
+
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) — todos 1/2/4 are all `[x]` done (the reconcile
+  script and canonical-migration launcher were their targets, now historical); swapped `odds_columns.py` (todo 2, done
+  as a pure re-run) and the delete-safety-protocol + launcher script (todo 4, done) for
+  `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` (todo 3's own source doc) and
+  `sports_all_vendor_honest_coverage_convergence_2026_08_07.md` (the in-flight backfill todo 3 must cross-check before
+  investigating) — the only remaining open todo (3) is a pure investigation with no code target, so its 2 named source
+  docs are now the highest-value entries. Kept the 2 process codex docs and the reconcile script (still the doc's
+  single largest source of evidence/lessons).

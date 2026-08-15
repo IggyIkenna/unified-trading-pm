@@ -85,3 +85,4 @@ lean) without losing any rule, and rerun the checker to confirm `ok`.
   remains, well under the hard cap).
 - **na-corpus-hygiene 2026-08-09**: RECLASSIFY — `assigned_vm: NA → planning`. Purely mechanical condense-and-verify
   task with a stated done-when (checker reports `ok`, not `WARN`) — no design/judgment call, no `locked_by`.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (2 entries), unchanged.

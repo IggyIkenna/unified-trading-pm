@@ -50,7 +50,11 @@ archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi
 locked_by:
 locked_since:
 context_scope:
-  [/plans/active/tradfi_consolidated_closeout_2026_07_18.md, /codex/02-data/tradfi-databento-sourcing-ssot.md]
+  [
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md,
+  ]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -321,3 +325,5 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
   `features-service/.../corporate_actions_handler.py` lines 77-78 live). Sole remaining open item (`wave_launcher.py`
   production-deployment-mechanism confirmation) is GENUINE_WORK, not promoted — matches this doc's established pattern
   of staying NA as an SSOT ruling doc, extract rather than self-dispatch. `assigned_vm` unchanged.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries) — added the Databento billing-suspension
+  issue doc, extensively discussed in this doc's own "Relationship to the Databento billing-suspension issue" section.

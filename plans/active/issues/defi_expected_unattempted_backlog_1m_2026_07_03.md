@@ -471,3 +471,6 @@ above are otherwise fully reproducible via the shipped CLI.
   finalize plan's `gate_on_depends` condition genuinely satisfied. Proceeding to the finalize plan's `[REVIEW]`
   re-verification + `[DOC]` archival todos in the same session.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate — doc has 0 open todos
+  (all resolved as of the 2026-08-08 finalize-plan pass); the 5 entries remain the right anchor for the SSOT ruling +
+  code evidence.

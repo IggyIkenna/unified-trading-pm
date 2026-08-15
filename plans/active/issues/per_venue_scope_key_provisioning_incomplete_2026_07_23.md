@@ -45,6 +45,7 @@ context_scope:
     /codex/05-infrastructure/secret-manager-naming.md,
     /plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md,
     execution-service/execution_service/trade_execution/base_adapter.py,
+    unified-trading-library/unified_trading_library/startup_validation.py,
   ]
 drift_direction: advance-code
 depends_on: []
@@ -251,3 +252,6 @@ All three are real design/priority calls, not something determinable from code o
   human/operator-gated** (Bybit key creation `[HUMAN P1]`, OKX/Hyperliquid scope-separation design `[BACKEND P2]` gated
   on an unresolved design call, Upbit/Kraken/Bitfinex/Bitget provisioning `[HUMAN P3]`) — unchanged by this Aster
   shipment.
+- **context-scout 2026-08-15**: re-scouted; added `unified-trading-library/unified_trading_library/startup_validation.py`
+  (the MTDS key-reload preflight with no unscoped-Bybit-key fallback, the freshest open `[SCRIPT] P2` todo, found
+  2026-08-14), now 4 entries.

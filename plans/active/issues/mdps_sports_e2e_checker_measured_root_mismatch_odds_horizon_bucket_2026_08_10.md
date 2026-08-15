@@ -275,3 +275,5 @@ re-litigating an already-fixed bug because the checker's own pass/fail bit never
     timeframe scoping is fixed (separate issue). Report at
     `plans/audit/results/data_pipeline_e2e_check_mdps_2026_04_14.md` shows correct enumeration (total=4, 15m/1h only)
     and correct root path — the two checker defects this issue doc was filed for are both resolved.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (2 entries), unchanged.

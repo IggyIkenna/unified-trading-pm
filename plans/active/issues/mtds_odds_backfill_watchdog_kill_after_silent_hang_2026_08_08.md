@@ -54,7 +54,8 @@ context_scope:
     deployment-service/scripts/vm/vm_zombie_watchdog.py,
     deployment-service/deployment_service/vm_prefix_registry.py,
     deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh,
-    market-tick-data-service/scripts/setup-data-pipeline-vm.sh,
+    deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
+    /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md,
   ]
 ---
 
@@ -526,3 +527,8 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   (or `py-spy` after a quick `pip install`) and actually capture the hang state live. This resolves the ACCESS gap only
   — the timing constraint (must be caught mid-tick, before the watchdog acts) is unchanged, and the underlying
   silent-hang mechanism itself is still unconfirmed.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) — corrected a broken path
+  (`market-tick-data-service/scripts/setup-data-pipeline-vm.sh` → the real
+  `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`) and added the cross-referenced OOM-baseline sibling doc
+  (`mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`).

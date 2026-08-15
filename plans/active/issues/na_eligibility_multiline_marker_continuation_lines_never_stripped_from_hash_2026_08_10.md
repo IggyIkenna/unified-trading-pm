@@ -73,7 +73,11 @@ supersedes:
 superseded_by:
 depends_on: []
 context_scope:
-  [/cursor-configs/skills/na-eligibility-audit/SKILL.md, scripts/plan-hygiene/generate_na_doc_tranche_inventory.py]
+  [
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
+    tests/unit/test_generate_na_doc_tranche_inventory.py,
+  ]
 ---
 
 # na-eligibility-audit's body_content_hash never strips a multi-line marker's own continuation lines
@@ -183,3 +187,4 @@ perfectly uniform in the docs this pass touched.
   hash-computation helper; empirically verified via a minimal repro importing the real function (not a
   reimplementation). Not fixed this pass — shared script, concurrent sibling-tranche audits (observed: slot 29 running
   the `prediction` tranche concurrently) were actively invoking it during this session.
+- **context-scout 2026-08-15**: populated context_scope (3 entries).

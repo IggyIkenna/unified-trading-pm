@@ -50,6 +50,7 @@ context_scope:
     /plans/archive/issues/code_tarball_refresh_job_silently_failing_since_2026_07_30_2026_08_01.md,
     deployment-service/scripts/vm/setup-cefi-live-consolidated-vm.sh,
     market-tick-data-service/market_tick_data_service/live/connectors/aster_book_liq_ws.py,
+    market-tick-data-service/market_tick_data_service/live/_ws_window_helpers.py,
   ]
 depends_on: []
 ---
@@ -387,3 +388,6 @@ for visibility per the data-pipeline-correctness HARD RULE, not to be conflated 
 > **2026-08-06 archive-candidate audit**: Doc's own entries flag two unfixed bugs as 'worth a P3 note but not
 > investigated further here' — prose-only deferrals never turned into tracked `- [ ]` todos (all incident todos
 > themselves are done, but these two would evaporate on archival).
+
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — added `_ws_window_helpers.py`, the 2026-08-10
+  Follow-ups' second shipped fix target.

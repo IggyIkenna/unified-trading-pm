@@ -54,6 +54,8 @@ context_scope:
     /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
     instruments-service/scripts/build_instrument_catalogue.py,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md,
+    deployment-service/deployment_service/data_pipeline_monitors/scheduler_maintenance.py,
   ]
 ---
 
@@ -241,3 +243,4 @@ precedent). The purge was executed WITHOUT the resume step for this reason — s
   active, `assigned_vm: planning`) -- a 3-way convergence confirmed with
   `instruments_completion_tracker_2026_07_06.md`'s own "EXTRACTED 2026-08-09" note. Todo 2 sequenced behind todo 1; todo
   5 (standing-health-check design question) is GENUINE_WORK, not yet a committed task. `assigned_vm` unchanged.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries).

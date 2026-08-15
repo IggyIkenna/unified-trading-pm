@@ -53,6 +53,7 @@ resolved_by:
 locked_by:
 context_scope:
   [
+    /plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
     market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/_onchain_perp_batch_symbols.py,
     unified-api-contracts/unified_api_contracts/registry/possible_manifest.py,
@@ -556,3 +557,6 @@ Two secondary findings:
   here would open a second dispatch path), and the HYPERLIQUID k-prefix item is still a genuine coin-case-convention
   design call, untouched by any round11 precedent. No satellite-extraction candidate found. Doc stays `assigned_vm: NA`
   (KEEP-NA valid, round11).
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries) — added
+  `defi_satellite_ao_dispatch_batch6_2026_07_30.md`, the doc's own citation as the live dispatch target for 2 of the 3
+  remaining open todos ("Dispatched to batch-6 todo 24").

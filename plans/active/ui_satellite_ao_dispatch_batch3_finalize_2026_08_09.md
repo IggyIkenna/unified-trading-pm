@@ -65,3 +65,5 @@ context_scope:
       this finalize doc archives alongside it in the same commit.
 
 ## Progress Log
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (2 entries).

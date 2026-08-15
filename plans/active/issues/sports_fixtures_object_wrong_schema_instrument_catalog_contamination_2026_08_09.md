@@ -45,8 +45,11 @@ depends_on: []
 context_scope:
   [
     /plans/active/issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md,
+    /plans/active/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md,
+    instruments-service/instruments_service/engine/orchestrator/sink.py,
+    instruments-service/instruments_service/engine/orchestrator/writers.py,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/sports-gcs-path-ssot.md,
-    /codex/05-infrastructure/gcs-object-operations.md,
   ]
 ---
 
@@ -793,3 +796,8 @@ transcript available in that session's Progress Log entry on
   two time points); once terminal, fold the final report's `contamination_codes`-positive rows (expected: the 0 already
   observed, plus whatever the un-scanned 2025-05-10→2026-08-16 range surfaces) into the count and flip the todo-3
   checkbox.
+
+**context-scout 2026-08-15**: refreshed context_scope (6 entries) — added
+`sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` (the confirmed root-cause donor, same burst-write incident)
+and the actual write-path files (`sink.py`/`writers.py`) this doc's own root-cause section names; dropped
+`gcs-object-operations.md` (not body-cited).

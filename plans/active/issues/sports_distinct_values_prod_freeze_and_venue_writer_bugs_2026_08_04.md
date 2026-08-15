@@ -96,6 +96,7 @@ context_scope:
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
     market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
     market-data-processing-service/market_data_processing_service/app/core/live_workers.py,
+    /plans/active/sports_satellite_ao_dispatch_batch10_2026_08_06.md,
   ]
 ---
 
@@ -435,3 +436,7 @@ that doesn't block or affect anything here; pick it up whenever, no urgency.
     reaching empty"). No code change; read-only verification. **Evidence**: coverage.json
     `generated_at 2026-08-04T13:16:32Z` + live endpoint
     `non_canonical_count {venues: 2, instrument_types: 1, data_types: 2, chains: 1}`.
+
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries — added
+  `/plans/active/sports_satellite_ao_dispatch_batch10_2026_08_06.md`, the plan this doc's sole surviving open todo
+  (`LC_TARBALL_FRESHNESS=enforce`) is already extracted into).

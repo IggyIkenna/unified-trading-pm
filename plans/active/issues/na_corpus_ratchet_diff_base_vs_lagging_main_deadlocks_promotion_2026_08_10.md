@@ -48,6 +48,7 @@ context_scope:
     unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh,
     unified-trading-pm/scripts/plan-hygiene/check_na_corpus_ratchet.py,
     unified-trading-pm/scripts/plan-hygiene/na_corpus_baseline.yaml,
+    unified-trading-pm/scripts/checkers/check_ui_api_flow_coverage.py,
   ]
 ---
 
@@ -226,3 +227,4 @@ a normal ratchet into a self-reinforcing wall.
   guard unit cases (LDR-wfd→baseline, promote→baseline, feature-PR→diff-scope, push-main→diff-scope) + sweep
   `--ci --no-regen` under LDR env sim EXIT 0 (Hard failures 0). Shipped via quickmerge:
   `scripts/plan-hygiene/run_hygiene_sweep.sh`.
+- **context-scout 2026-08-15**: populated context_scope (4 entries).

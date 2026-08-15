@@ -154,3 +154,4 @@ Not adjudicated here (genuine judgment call on scope, not auto-resolved):
   deletion into `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` todo 4 (`status: draft`, verbatim source
   citation), gated for reconciliation via `batch10_finalize`. Not independently reclassified — would create a duplicate
   AO-dispatch surface. Doc stays NA pending batch10's operator-approved dispatch + execution.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (3 entries), unchanged.

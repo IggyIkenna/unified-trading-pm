@@ -806,6 +806,7 @@ Two bare `DEFERRED` mentions, re-audited 2026-07-21:
   the `usdc_idle_yield_apy_bps` disposition question (leave-as-0-floor is standing) but the actual wiring half stays
   gated on a not-yet-shipped upstream feature (`venue_funding_yield`), so that item is not yet actionable either.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (6 entries) — all 6 still resolve.
 - **review reconciliation 2026-08-09 (slot 22)**: flipped the 2 "Open Track-1 todos" checkboxes whose work landed via
   `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md` (Phase A staked-basis e2e — DONE ops-only; DEFERRED-fan-out
   MDPS 1h/BITGET-SPOT audit — audit complete, backfill dispatched-but-blocked upstream), updated the corresponding

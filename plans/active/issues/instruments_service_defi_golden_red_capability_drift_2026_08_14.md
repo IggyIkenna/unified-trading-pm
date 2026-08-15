@@ -55,7 +55,7 @@ context_scope:
     instruments-service/scripts/regenerate_expected_universe_golden.py,
     instruments-service/tests/unit/scripts/test_expected_universe_golden.py,
     instruments-service/tests/unit/scripts/goldens/expected_universe/defi.json,
-    unified-api-contracts/unified_api_contracts/registry/(capability registries),
+    unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py,
   ]
 ---
 
@@ -146,3 +146,6 @@ full unscoped output.
   census-script commit stays local-only (`instruments-service@3fbcf108`, ahead=1) until this clears — the actual
   valuable output of that work (the 15.9M-row census numbers + risk analysis) is already durably shipped separately via
   `unified-trading-pm@974700fc98`, so nothing load-bearing is at risk from the script itself waiting.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries — resolved the hedged `(capability registries)`
+  placeholder to the real path, `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py`,
+  where the cited `aave_v3` `_ProtocolCapability` entry actually lives).

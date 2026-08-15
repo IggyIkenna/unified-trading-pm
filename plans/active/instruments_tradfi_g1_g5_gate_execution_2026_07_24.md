@@ -59,7 +59,7 @@ context_scope:
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
     /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
-    /plans/archive/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md,
+    /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
     instruments-service/scripts/build_instrument_catalogue.py,
     deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh,
   ]
@@ -725,3 +725,6 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
   `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` (status: active) as the live dispatch vehicle -- matching this
   doc's own citation exactly. Todo 4 (residual catalogue-leg purge) stays OPERATOR_QUESTION, not bundled into the
   already-granted 4-leg go-ahead. `assigned_vm` unchanged.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) -- swapped the closed zero-capture issue doc (its
+  citing todo is `[x]` done) for `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`, the current unblocking
+  authority cited by the 2 still-open P0/P1 ES_OPT todos.

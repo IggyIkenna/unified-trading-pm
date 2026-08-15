@@ -66,11 +66,10 @@ assigned_vm: planning
 depends_on: []
 context_scope:
   [
-    unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
     unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py,
     unified-api-contracts/unified_api_contracts/registry/venue_mapping.py,
     unified-api-contracts/scripts/check_coverage_floor_registry_drift.py,
-    /plans/archive/2026_08/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md,
+    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
   ]
 ---
 
@@ -329,6 +328,11 @@ which value is measured-reality is needed per venue, not a mechanical merge.
   (`/plans/archive/issues/read_availability_index_slim_path_silent_empty_return_2026_07_27.md`, root-caused + fixed
   2026-08-03). Verified live: the fix (`unified-trading-library@0db19a72` + `@3b72245a`) and both regression tests are
   still present in current code. No new code needed.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) — the sole remaining open item is entirely about
+  the Hyperliquid backfill VM (a completion-status re-check), so dropped `_read_index.py` (its own Follow-up is now
+  resolved) and the DERIBIT-focused `coverage_floor_new_backfill_gaps_found_2026_07_27.md` in favor of
+  `cefi_hl_aster_batch_data_gaps_2026_06_22.md` (the live parent doc tracking the exact fleet the open item asks to
+  re-check), alongside the 3 core registry-mechanism files this doc's whole title is about.
 
 ## Follow-ups
 

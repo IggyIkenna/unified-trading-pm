@@ -215,3 +215,5 @@ deliberately retained only for the non-blocking todo 3. The sole remaining open 
 whether STEP 5.83 should validate against a canonical/fresh state... rather than each shipping repo's local,
 possibly-stale sibling checkouts' -- an undecided architecture tradeoff (per-run network/git-show cost vs. accepting
 host-checkout staleness) with no decision made and no stated done-when.
+
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate.

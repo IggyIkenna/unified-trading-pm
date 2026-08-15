@@ -50,10 +50,7 @@ context_scope:
   [
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/four-surface-reconciliation-procedure.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
-    /codex/05-infrastructure/gcs-object-operations.md,
-    /codex/05-infrastructure/vm-launcher-runbook.md,
-    market-tick-data-service/scripts/sports/restamp_sports_bookmaker_venue_2026_07_27.py,
+    /codex/02-data/sports-data-types-catalog.md,
   ]
 source: ["sports venue/data-type audit, 2026-08-08 interactive session — 27 operator rulings"]
 locked_by:
@@ -995,3 +992,6 @@ than proceeding.
   VERIFY PASSED 0 remaining. `market-tick-data-service@7b1e6e87` + `deployment-service@b4aef3e1`, VM
   `canonical-migration-sport-residue-blank-venue-purge`, exit rc=0, self-deleted. **This closes every open todo in the
   plan except the `league=`/`league_id=` path-duplication sweep** (still `[ ]`, extent census not yet done).
+- **context-scout 2026-08-15**: refreshed context_scope (3 entries) -- trimmed 6->3 (doc at line-cap): dropped the
+  now-stale single-script citation and the generic vm-launcher-runbook entry, swapped in
+  `sports-data-types-catalog.md` (the SSOT this same session's own operator-reversal cites for the freshest P0 todo).

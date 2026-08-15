@@ -67,6 +67,7 @@ context_scope:
   [
     /codex/02-data/honest-coverage-model.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/05-infrastructure/gcs-object-operations.md,
     deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh,
     instruments-service/scripts/measure_honest_coverage.py,
     deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py,
@@ -284,3 +285,5 @@ doc + today's `data_pipeline_reconciliation_cefi_2026_08_09.md` report rather th
   the attempted_failed enumeration-key test). Relaunching the rollup on `e2-highmem-8` with the fix to get the fresh
   `coverage.json`. This is a cross-cutting (all 5 AGs) honest-coverage availability bug — recommended a regression test
   asserting the write path uses the UTL upload API (present in the fix's test update).
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries — added `/codex/05-infrastructure/gcs-object-operations.md`,
+  the SSOT for the 2026-08-12 UTL blob-write-API mismatch bug this doc's newest Progress Log entries diagnosed).

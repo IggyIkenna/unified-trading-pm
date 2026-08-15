@@ -977,6 +977,8 @@ at 39th — draining, not empty); consolidator `uts-prod-manifest-consolidator-m
 `slot-cron-ff-pull.sh`) — intentionally NOT touched; 40 parked stashes foreign. No chat-only findings; no new lessons.
 ⚠️ Plan now ~993/1000 — next tick MUST condense 35th-38th-era journal entries (recurring cap-pressure rule).
 
+**context-scout 2026-08-15**: populated/refreshed context_scope (5 entries).
+
 ## Deferred work after 2026-08-10
 
 | Item                                                         | State / why deferred                                                                                                                                                                                                                                                                                                                                                          | Blocked-on                                                                                                              |

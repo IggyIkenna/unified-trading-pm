@@ -301,3 +301,4 @@ captured rows). The ~29-day stall is broken; live capture resumed same-day as la
   `ag_closeout_audit_rollout`) are inside the 12h grace window and cannot be re-pointed to `plans/archive/` yet.
   `archive_exempt: true` set to keep the resolved incident record in `plans/active/issues/` until a future `all` pass
   (or post-grace run) can archive it with a clean referrer sweep.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (4 entries), unchanged.

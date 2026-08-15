@@ -584,3 +584,4 @@ landed before re-starting the investigation from scratch.
   tally (cefi+sports KEEP-NA, 2026-07-30 defi RECLASSIFY reverted). Sole open item (todo 6, batched-incremental
   record_cells() refactor) stays KEEP-NA under the bounded-outcome bar per its own correctness-sensitive framing; awaits
   the operator's explicit boundedness ruling.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.

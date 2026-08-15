@@ -41,7 +41,12 @@ source: >-
   Needed a small, real, safe content change to ship through the isolated path and this doc's `git add -A` instances were
   the first thing that surfaced — worth its own todo rather than a full silent rewrite mid-task.
 depends_on: []
-context_scope: [execution-service/CONTRIBUTING.md, /codex/12-agent-workflow/commit-push-flip-rule.md]
+context_scope:
+  [
+    execution-service/CONTRIBUTING.md,
+    /codex/12-agent-workflow/commit-push-flip-rule.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+  ]
 ---
 
 # execution-service's CONTRIBUTING.md never got adapted from instruments-service
@@ -98,3 +103,5 @@ execution-service-only).
 - **2026-08-14 (slot-20, infra)**: filed while shipping the `--isolated` quickmerge verification for
   `infra_satellite_ao_dispatch_batch16_2026_08_13.md`. Inline fix (the `git add -A` instances + banner) shipped in the
   same commit as the verification ship; the full rewrite is left as tracked follow-up, not done here.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries).

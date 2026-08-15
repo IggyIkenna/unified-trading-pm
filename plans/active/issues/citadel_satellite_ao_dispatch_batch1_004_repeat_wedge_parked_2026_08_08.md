@@ -50,6 +50,8 @@ context_scope:
     agent-orchestrator/server/routes/slots_worker.py,
     agent-orchestrator/server/routes/slots_ops.py,
     agent-orchestrator/server/auto_park.py,
+    /plans/archive/2026_08/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md,
+    /plans/active/issues/solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md,
   ]
 ---
 
@@ -216,3 +218,8 @@ that the failure mode on this task isn't limited to the exact `forced_compact`->
   priority-tier amplification, same root cause now fixed). That doc's own Progress Log already independently reached the
   same conclusion (slot 33: "the wedge looks environment/timing-triggered"). Its todo 1 can be flipped citing this
   cross-check as evidence if desired; not doing so here — this session's scope is this doc's todo only.
+
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries, was 3) — added the root-cause fix doc
+  (`review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md`, informs the still-open OPERATOR unpark decision) and
+  the sibling wedge doc (`solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md`) the 2026-08-10
+  four-dimension cross-check analysis is built against.

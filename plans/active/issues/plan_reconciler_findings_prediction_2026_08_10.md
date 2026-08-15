@@ -33,6 +33,12 @@ drift_direction: fix
 resolved_by:
 locked_by: plan_reconciler (agt-12ce9c) since 2026-08-10T18:20:00Z
 depends_on: []
+context_scope:
+  [
+    unified-trading-pm/cursor-configs/skills/plan-reconcile/SKILL.md,
+    unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+  ]
 ---
 
 # plan_reconciler findings — prediction tranche — 2026-08-10
@@ -281,3 +287,4 @@ chain is the most important to apply next run (its finalize's reconcile todo 1 i
   `archive_exempt: true` + justification.
 - **2026-08-10 ~20:00 UTC** — Filing the 3 operator-gated findings + updating this doc. Then STEP 7 result POST + STEP 8
   `/done`.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries).

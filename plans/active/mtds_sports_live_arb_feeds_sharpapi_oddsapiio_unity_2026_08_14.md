@@ -38,11 +38,9 @@ context_scope:
   [
     market-tick-data-service/market_tick_data_service/live/connectors/,
     market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
-    market-tick-data-service/market_tick_data_service/live/manifest_recorder.py,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/fixture_id_resolver.py,
     e2e-testing/scripts/sports/live_arb_scanner.py,
     e2e-testing/scripts/sports/LIVE_PUBSUB_README.md,
-    e2e-testing/docs/sports/LIVE_ODDS_PROVIDERS.md,
     unified-api-contracts/unified_api_contracts/internal/unity_child_books.py,
   ]
 depends_on: [venue_capability_route_axis_and_cross_ag_declarations_2026_08_14]
@@ -279,3 +277,5 @@ sports cell that we actually have a provider for.
   `--shard-spec sports:ODDS_API:trades` (data_type stays `trades` — see the still-open P1 data_type-mismatch todo above;
   do NOT switch to `odds` without re-verifying pipeline_mode resolution first) and verify captured rows now carry real
   bookmaker `venue` values, not `ODDS_API`.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) -- trimmed from 8 to the entries actually named in
+  this doc's own body text (dropped `manifest_recorder.py` and `LIVE_ODDS_PROVIDERS.md`, neither cited in prose).

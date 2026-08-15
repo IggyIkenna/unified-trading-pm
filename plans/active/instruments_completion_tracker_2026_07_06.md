@@ -721,3 +721,4 @@ content post-line-cap-split.
   than being itself executable, and several open items remain genuine judgment work (Stage-3 Layer-1 re-measure
   methodology, the systemic unregistered-handler audit's widen-scope addendum) -- consistent with the 2026-08-03
   verdict.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.

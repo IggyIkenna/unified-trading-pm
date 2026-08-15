@@ -364,3 +364,4 @@ generator addition; scoping the 2 flagged `CITE_RE`-hardening batch-era candidat
   `/plans/archive/2026_08/issues/ag_closeout_all_vs_sharded_mutual_blindness_2026_08_10.md`.
 
   No code shipped (read-only diagnostic). Plan flip only — unified-trading-pm@<this-commit>.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries).

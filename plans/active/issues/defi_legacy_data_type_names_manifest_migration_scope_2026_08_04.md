@@ -72,10 +72,10 @@ context_scope:
   [
     /codex/02-data/defi-canonical-naming-ssot.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
     market-tick-data-service/scripts/fold_legacy_dex_pools_swaps_rate_indices_2026_08_04.py,
-    deployment-service/scripts/vm/launch-backfill-defi-legacy-datatype-fold-vm.sh,
+    /plans/active/issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md,
+    /plans/active/issues/defi_legacy_fold_relaunch_vm_infra_flakiness_and_oom_2026_08_15.md,
   ]
 ---
 
@@ -238,3 +238,10 @@ context_scope:
   re-registered `dex_pools` rows is the short-term fix; the durable fix belongs with the POOL-recurrence root-cause
   tracking. Not executing either here (bounded task scope: pool/rate_indices/dex_pool_fees retirement + rollup + panel
   check).
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — dropped the R5 precedent doc (already fully
+  quoted inline in this doc's own "Why NOT executed" section, so not needed as a separate open) and the raw launcher
+  script path; added `defi_pool_uppercase_recurrence_after_fold_2026_08_11.md` (cited by name in the 2026-08-12 finding
+  above as sharing the identical append-only-rebuild recurrence mechanism the still-open `dex_swaps` migration must
+  survive) and `defi_legacy_fold_relaunch_vm_infra_flakiness_and_oom_2026_08_15.md` (tracks the current live state of
+  actually re-running the fold tool via its launcher — 2 failed relaunch attempts, worker-count fix shipped, re-run
+  still pending).

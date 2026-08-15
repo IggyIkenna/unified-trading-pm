@@ -173,3 +173,4 @@ not the dispatch-tooling gap). Suggested next steps:
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since
   round11. Sole open item ([BACKEND] P3, whether to build a park-id-change alerting surface at all) remains an
   undecided open question with no stated done-when.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (3 entries), still accurate.

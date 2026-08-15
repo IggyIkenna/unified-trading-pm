@@ -60,11 +60,11 @@ locked_by:
 depends_on: []
 context_scope:
   [
+    /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
+    agent-orchestrator/server/plan_health.py,
+    agent-orchestrator/server/worker_liveness/_auth_failover.py,
     agent-orchestrator/server/health.py,
-    agent-orchestrator/server/worker_liveness_watchdog.py,
-    agent-orchestrator/server/config.py,
     agent-orchestrator/scripts/github.slice,
-    agent-orchestrator/scripts/install-ag-closeout-auditor-timer.sh,
     /plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md,
   ]
 ---
@@ -992,3 +992,8 @@ gates promotion to `main`, not the fix's correctness.
     verify. Keeping the checkbox open just re-dispatches workers to re-derive the same conclusion.
 - **2026-08-14 (bookkeeping pass, PM-repo-only)** — `[DOC] P3` codex-note todo flipped; see its own entry above for
   detail. No agent-orchestrator code touched. (unified-trading-pm@da7553117e)
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries) — pointed at the 2 files the remaining
+  open P3 todos actually target (`plan_health.py` for the `no_capacity`/`ScheduledJobStatus` decision,
+  `worker_liveness/_auth_failover.py` for the pane-guard re-measurement) and added the newly-shipped codex home
+  `agent-orchestrator-scheduled-jobs.md`; dropped `config.py`/`install-ag-closeout-auditor-timer.sh` (not cited by
+  either remaining todo).

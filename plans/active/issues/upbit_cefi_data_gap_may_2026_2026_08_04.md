@@ -200,3 +200,4 @@ and complementary: slot-15 identified the transition trigger (SPOT preemption), 
   correct value per `assigned_vm` (`planning` = the orchestrator VM executes it; `NA` = not dispatched). NO todo text,
   marker, or priority was altered — the exclusion markers were re-read and are correct and deliberate, not stale. Flip
   back to `planning` if and when the gate opens and the work becomes worker-determinable.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (4 entries), unchanged.

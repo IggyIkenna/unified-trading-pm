@@ -218,3 +218,4 @@ shared-plan-file contention class that already produced
   - **`archive_exempt: true`**: all 3 todos now closed but this issue was created AND resolved today (2026-08-10) — keep
     active through the next plan-reconcile cycle so the operator can review the concurrent-same-file scan findings and
     the `sequential: true` fix across 12 plans before archival.
+- **context-scout 2026-08-15**: refreshed context_scope (3 entries).

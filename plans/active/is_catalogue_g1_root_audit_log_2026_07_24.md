@@ -434,3 +434,4 @@ that AG's G1 (IS catalogue + UAC) is GREEN** — the audit's ⑧ enforces this.
   record; every open todo is gated (G1.run on the IS backfill + UAC accuracy + v9; G1.run-prediction on another plan's
   loader wiring; G1.run-full-history explicitly deferred pending the operator's already-approved-but-not-yet-executed
   dedicated VM-launch pass) -- consistent with 2026-08-02/08-06 verdicts.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate.

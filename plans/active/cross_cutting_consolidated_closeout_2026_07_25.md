@@ -723,6 +723,9 @@ batch)
 > [`cross_cutting_consolidated_closeout_history_2026_08_09.md`](/plans/archive/2026_08/cross_cutting_consolidated_closeout_history_2026_08_09.md)
 > (2026-08-09 line-cap trim) — verbatim, nothing summarized or dropped. New entries append here going forward.
 
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries) -- the ag-closeout-audit skill, the
+  master canonicalisation coordinator plan, and 4 codex data-pipeline SSOTs remain the accurate minimal set for this
+  pure Track-index/pointer hub.
 - **2026-08-09** — Line-cap trim (dispatched via
   `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md` todo 2; parent had grown to 1007
   lines, over the 1000L hard cap). Forked Tracks 14/18-22 (still-open, observability/ self-monitoring-themed) verbatim

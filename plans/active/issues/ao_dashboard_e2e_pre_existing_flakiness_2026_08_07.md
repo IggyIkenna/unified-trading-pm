@@ -48,6 +48,7 @@ locked_by:
 locked_since:
 context_scope:
   [
+    /plans/active/ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md,
     agent-orchestrator/dashboard/tests/e2e/deepseek-per-turn-metrics.spec.ts,
     agent-orchestrator/dashboard/tests/e2e/deepseek-wallet-reconciliation.spec.ts,
     agent-orchestrator/dashboard/tests/e2e/worker-chat.spec.ts,
@@ -294,3 +295,7 @@ shipped independently or these findings would still be sitting entirely undocume
     (date 2026-08-11, subject as quoted) and `git merge-base --is-ancestor` against `origin/live-defi-rollout`. This
     postdates both this doc's filing (2026-08-07) and the finalize plan's authoring (2026-08-08), so it was never in
     scope for either doc's original todo lists — noted here for whoever runs the actual reconciliation next.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries) — added the active finalize plan
+  (`ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md`), which the 2026-08-10 na-eligibility-audit marker
+  identified as now directly performing this doc's own checkbox reconciliation.

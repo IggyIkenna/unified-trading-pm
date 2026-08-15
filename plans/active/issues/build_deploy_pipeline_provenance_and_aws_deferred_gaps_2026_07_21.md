@@ -221,3 +221,6 @@ phrased as 'confirm whether the cicd-events ledger should carry build_id; low pr
 call, not a bounded deterministic task, and the doc itself notes 'verify before acting.' Independently re-confirmed
 KEEP-NA across 7+ prior audit rounds (2026-07-30 through 2026-08-09, spanning multiple different dispatch IDs) and again
 by ci_satellite_ao_dispatch_batch7_2026_08_09.md same-day: '0 extractable.
+
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (5 entries), unchanged — sole open item (#3,
+  cicd-events ledger `build_id`) unchanged since the 2026-08-09 marker.

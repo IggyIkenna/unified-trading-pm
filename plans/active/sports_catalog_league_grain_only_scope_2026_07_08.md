@@ -50,10 +50,11 @@ superseded_by:
 source: SUB_AGENT_MANDATORY_RULES dispatch (slot-3 this session) — "reference catalog is bare" investigation task
 context_scope:
   [
+    /plans/active/sports_taxonomy_p3_consumers_2026_08_08.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-coverage-model.md,
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
     instruments-service/scripts/build_instrument_catalogue.py,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 ---
 
@@ -222,3 +223,8 @@ honest-coverage denominator math, not a same-file fix.
   `sports_taxonomy_p3_consumers_2026_08_08.md`, independently re-confirmed today by
   `sports_satellite_ao_dispatch_batch11_2026_08_09.md` ("all 4 open todos resolved by a dated..."). Checkboxes flip via
   that plan's finalize sibling. No flip here.
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) — added
+  `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md` (the confirmed real owner of all 4 open todos per the
+  2026-08-08 operator-ruling banner + round7/round11 audits above); also corrects a marker/frontmatter mismatch (the
+  2026-08-03 marker claimed 5 entries but frontmatter carried only 4 — `SPORTS_INSTRUMENTS.md` was never actually
+  present in the list).

@@ -92,6 +92,7 @@ context_scope:
     market-tick-data-service/market_tick_data_service/live/connectors/okx_futures_ws.py,
     market-tick-data-service/market_tick_data_service/live/connectors/okx_ws.py,
     instruments-service/instruments_service/reference_data/adapters/cefi/tardis/parsing.py,
+    market-tick-data-service/tests/unit/test_okx_futures_live_batch_id_parity.py,
   ]
 ---
 
@@ -228,3 +229,6 @@ reasoning above.
 ## Progress Log (context-scout)
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries) — added
+  `tests/unit/test_okx_futures_live_batch_id_parity.py`, the file the sole remaining `[OPERATOR] P1` todo explicitly
+  names for updating.

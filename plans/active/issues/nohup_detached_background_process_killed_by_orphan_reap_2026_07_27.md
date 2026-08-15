@@ -216,3 +216,4 @@ Recovery: resumed again (idempotent via `--report`) + immediately began sending 
   use case'). Item 2 (cross-check the archived RAM-exhaustion doc's incidents against orphan_reap journalctl signatures)
   is a real but low-materiality (P3) root-cause re-attribution judgment call; 3 prior audits (08-02, 08-06,
   round11-08-09) kept this NA consistently. No new facts found this pass.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (5 entries), unchanged.

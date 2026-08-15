@@ -898,3 +898,4 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
 - **context-scout 2026-08-07**: re-verified context_scope (5 entries) -- all 5 still resolve; unchanged after the
   2026-08-06 mechanical referrer-path fix (batch5-finalize path updated to its archived location).
+- **context-scout 2026-08-15**: re-verified context_scope (5 entries) -- all 5 still resolve; unchanged.

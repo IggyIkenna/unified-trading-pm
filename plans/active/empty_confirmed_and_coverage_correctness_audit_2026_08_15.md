@@ -40,12 +40,11 @@ locked_since:
 context_scope:
   [
     /codex/02-data/honest-coverage-model.md,
-    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    instruments-service/scripts/measure_honest_coverage.py,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py,
-    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
-    plans/active/cross_ag_live_capture_parity_2026_08_14.md,
-    plans/active/issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md,
+    instruments-service/scripts/measure_honest_coverage.py,
+    /plans/active/cross_ag_live_capture_parity_2026_08_14.md,
+    /plans/active/issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md,
+    /plans/active/issues/prediction_live_instrument_cache_never_refreshed_and_polymarket_catalog_gap_2026_08_14.md,
   ]
 supersedes:
 superseded_by:
@@ -175,3 +174,8 @@ data that's actually needed. This plan gets the evidence first.
   `tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md` (FUTURE-vs-bundle-grain, tradfi side already tracked) and
   `prediction_live_instrument_cache_never_refreshed_and_polymarket_catalog_gap_2026_08_14.md` (live-capture-side
   prediction bugs, possibly connected to the batch-backfill growth-spike question).
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries) — trimmed from the author's original 7
+  (dropped `gcs-and-manifest-delete-safety-protocol.md`, which this doc's own intro explicitly defers to whichever
+  Phase-N plan performs mutations, and `market_data_categories.py`, single-todo relevance) and added the
+  `prediction_live_instrument_cache...` issue doc, named "read in full first" in this doc's own June-2026-spike todo but
+  missing from the original list.

@@ -49,6 +49,7 @@ context_scope:
     strategy-service/strategy_service/config_reloaders.py,
     /codex/04-architecture/live-strategy-config-hot-reload.md,
     /codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md,
+    /plans/archive/2026_08/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md,
   ]
 ---
 
@@ -94,3 +95,6 @@ Left unruled, the codex SSOT keeps contradicting the shipped code on a live-trad
 - **2026-08-14 (slot-20, review, `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13_finalize.md` todo 2)**: split
   off from `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` at archival time so this genuine unresolved
   judgment call stays a tracked todo instead of evaporating as prose in the archived parent.
+- **context-scout 2026-08-15**: populated context_scope (4 entries — added the parent doc
+  `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` this doc was split from, showing the sibling
+  strategies-domain guard's resolved shape).

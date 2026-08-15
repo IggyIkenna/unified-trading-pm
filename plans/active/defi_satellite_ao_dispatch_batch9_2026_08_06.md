@@ -660,3 +660,4 @@ remaining items besides the over-cap-gated one above).
   class-attribute binding + direct unit tests), already tracked as the source doc's P3 `[SCRIPT]` dead-code-deletion
   todo. No code shipped this dispatch (audit-only closure; classification + writer fix already at
   `market-tick-data-service@2f7d7840` on origin/LDR).
+- **context-scout 2026-08-15**: re-verified context_scope (4 entries) -- all 4 still resolve; unchanged.

@@ -190,3 +190,5 @@ DATA, git-log-first diagnostic runbook for future recurrences): a standing condi
 one-off task -- and it is demonstrably still live and correct: the 2026-08-06 Progress Log entry documents a DIFFERENT
 (tradfi-tranche) auditor actually following this exact step during a real recurrence of the underlying
 stale-drift-vs-active-migration pattern, and correctly used the doc's own prescribed carve-out.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries), unchanged.

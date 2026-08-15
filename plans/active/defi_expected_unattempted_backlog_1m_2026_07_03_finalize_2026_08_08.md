@@ -44,8 +44,7 @@ context_scope:
   [
     /plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
-    unified-api-contracts/unified_api_contracts/registry/possible_manifest.py,
+    /codex/12-agent-workflow/operator-gated-blocked-row-lifecycle.md,
   ]
 ---
 
@@ -224,3 +223,7 @@ is done. Do not start manually before then.
   gated on that row's resolution. This should end the 7-round redispatch loop: once the operator rules via the durable
   row, `regen_backlog_from_plan.py` materializes a real `--ruling` task instead of a worker having to rediscover the
   same state each cycle.
+- **context-scout 2026-08-15**: refreshed context_scope (3 entries) -- dropped the 2 UAC registry source files (their
+  REVIEW todo is done; remaining work is unlock-then-archive only) and added
+  `operator-gated-blocked-row-lifecycle.md`, the mechanism the open `[OPERATOR]` todo depends on and this doc's own
+  Progress Log already cites by name.

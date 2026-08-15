@@ -52,8 +52,8 @@ context_scope:
     /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,
     /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
-    /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md,
     unified-trading-library/unified_trading_library/cf_manifest_audit.py,
+    market-tick-data-service/scripts/sports_captured_available_at_targeted_backfill_2026_07_14.py,
   ]
 ---
 
@@ -359,3 +359,9 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
   script/lease/verification sequence a background-research pass just confirmed. Not executed this session — this is a
   live production manifest rewrite on a twice-regressed surface; recommend a dedicated, actively-watched session, not
   unattended dispatch.
+
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — swapped
+  `/plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` (its supported finding, the tradfi
+  Era-B adjudication, already shipped as a checker exception) for
+  `market-tick-data-service/scripts/sports_captured_available_at_targeted_backfill_2026_07_14.py` (the exact script the
+  now-OPERATOR-APPROVED P3 todo says to run — the doc's sole remaining substantive work).

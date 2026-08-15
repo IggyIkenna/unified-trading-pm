@@ -47,6 +47,7 @@ context_scope:
   [
     /plans/active/sports_satellite_ao_dispatch_batch10_2026_08_06.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/sports_taxonomy_p2_migration_2026_08_08_finalize.md,
   ]
 ---
 
@@ -101,3 +102,8 @@ context_scope:
 > `context_scope` above; all three citations already agree. Evidence:
 > `ls /codex/12-agent-workflow/plan-completion-and-archival-discipline.md` → file present (21468 bytes). No path
 > correction needed.
+
+- **context-scout 2026-08-15**: refreshed context_scope (3 entries) — added
+  `sports_taxonomy_p2_migration_2026_08_08_finalize.md`, the doc todo 3's own 2026-08-12 correction (above) says must be
+  read before flipping/archiving `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md` (it found the
+  source doc's "RESOLVED 2026-08-05" claim was a false all-clear produced by exclusion sets).

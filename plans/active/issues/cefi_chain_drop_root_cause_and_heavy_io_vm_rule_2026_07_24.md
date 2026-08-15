@@ -749,3 +749,9 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
   still-present LIGHTER-ZKSYNC wire-form population. No work done on the todo itself. Skipping (`reason_code=GATED`,
   `estimated_unblock_minutes=180`). **Next dispatch**: re-check the LIGHTER-ZKSYNC issue's todo 3 (BROAD-comparison
   fix) + todo 2 (Range-2 apply) checkbox state — once both are `[x]`, run the verify → clean-PASS → archive sequence.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate -- the intervening
+  Progress Log entries (blocker-status tracking) reference the two gating issue docs via this doc's own `depends_on`
+  frontmatter, not context_scope, matching the 2026-08-09 marker's established reasoning. Note for a future
+  `/plan-reconcile` pass (out of this skill's scope): `depends_on` still names
+  `cefi_lighter_zksync_systemic_collision_2026_08_08`, but that doc's own Progress Log now shows all 5 of its todos
+  closed (2026-08-11) — the dependency may already be resolved.

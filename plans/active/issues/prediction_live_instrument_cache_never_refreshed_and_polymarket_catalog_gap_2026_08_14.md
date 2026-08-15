@@ -47,6 +47,8 @@ context_scope:
     market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/websocket_streaming_handler.py,
     market-tick-data-service/market_tick_data_service/live/_instrument_cache_consumer.py,
+    /plans/active/cross_ag_live_capture_parity_2026_08_14.md,
+    /codex/05-infrastructure/live-pipeline-architecture.md,
   ]
 depends_on: []
 locked_by:
@@ -111,3 +113,4 @@ and is flagged, not diagnosed further, here.
   run silent — `live_stream_watcher.build_prediction_live_shards()` resolving the wrong GCS bucket kind and silently
   returning zero shards every sweep) was fixed directly in this session, not filed here — see
   `deployment-service@<pending commit>` and the parity plan's Progress Log.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries).

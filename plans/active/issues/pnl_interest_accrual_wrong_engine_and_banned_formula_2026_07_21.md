@@ -821,3 +821,4 @@ code.
   changes to live client NAV/PnL). Not eligible for satellite-extraction — a client-facing NAV correctness change is
   inherently a judgment/3-lens-review task, not a bare mechanical build. Doc stays `assigned_vm: NA` (KEEP-NA valid,
   round11).
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (6 entries), unchanged.

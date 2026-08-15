@@ -50,6 +50,8 @@ context_scope:
     deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py,
     deployment-service/deployment_service/data_pipeline_monitors/escalation.py,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/dependency_revocation.py,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/active/issues/dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md,
   ]
 ---
 
@@ -166,3 +168,8 @@ Option 1 is the structural fix; option 2 is a stopgap that only covers the 3 eve
   `deployment-service/deployment_service/data_pipeline_monitors/escalation.py:749` (deliver, contrasting identity
   source), `unified-api-contracts/unified_api_contracts/canonical/crosscutting/dependency_revocation.py:304`
   (`evaluate_revocation` — the function both paths call, one successfully).
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (5 entries). No "## Progress Log" section existed in this doc;
+  appended as a new section instead.

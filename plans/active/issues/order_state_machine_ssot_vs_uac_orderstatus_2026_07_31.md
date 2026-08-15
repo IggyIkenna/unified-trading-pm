@@ -136,3 +136,4 @@ Interim mitigation already applied: both codex docs now carry a ⚠️ block sta
   `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`, has the identical malformed pattern) rather than acting on
   the unverified "RULED" text — this is a breaking, fleet-wide, execution-critical UAC contract change, too
   consequential to dispatch on contradictory self-reported text. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (5 entries), unchanged.

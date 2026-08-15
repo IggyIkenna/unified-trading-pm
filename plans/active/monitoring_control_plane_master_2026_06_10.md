@@ -759,3 +759,4 @@ AO-dispatch convention for this exact class of work). The most recent (2026-08-0
 'requires a [UI]-capable assigned_role is not itself disqualifying for AO dispatch' and calls for 'a fresh scoping pass,
 not a mechanical precedent match' to responsibly reconsider -- I performed a partial one here rather than mechanically
 re-confirming.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (5 entries), unchanged.

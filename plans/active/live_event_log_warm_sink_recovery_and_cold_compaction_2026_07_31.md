@@ -318,3 +318,4 @@ determinism needs.
   `[SCRIPT] P3` doc-cleanup todo stays open too, since it's explicitly gated on every todo above being done, which isn't
   true yet.
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries), unchanged.

@@ -37,6 +37,7 @@ context_scope:
   [
     market-tick-data-service/market_tick_data_service/scripts/migrate_tradfi_underlying_display_names_2026_08.py,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md,
   ]
 ---
 
@@ -66,3 +67,8 @@ would be destroyed with no real content-equivalence proof.
 - [ ] [OPERATOR] P2. Once hardened, re-run the dry-run for a fresh count (the corpus may have drifted slightly since
       2026-08-12), then decide whether to launch `full` mode — this remains a real prod-bucket delete, gated per
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries) — added the canonical-path migration
+  design doc this doc's own "What's blocked" text cites by name.

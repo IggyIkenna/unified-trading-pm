@@ -33,7 +33,9 @@ resolved_by:
 source: interactive session, operator asked for a health check across sports enrichment sources (2026-08-12)
 context_scope:
   [
-    instruments-service/instruments_service/reference_data/adapters/sports/adapters/understat.py,
+    instruments-service/scripts/type_understat_eu_no_provider_coverage.py,
+    unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
+    deployment-service/terraform/gcp/understat_eu_typing_scheduler.tf,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 ---
@@ -369,3 +371,7 @@ mechanism, currently and repeatedly failing.
   `git show origin/main:<path>` content diff instead. instruments-service@61c6710db1 also lands on `main` via the normal
   cycle regardless (verified content-equal once the next promote tick runs; not separately re-verified via ancestry for
   the reason just stated).
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) — corrected the original entry
+  (`reference_data/adapters/sports/adapters/understat.py`, never actually the fixed file) to the script this doc's own
+  evidence trail names throughout, `scripts/type_understat_eu_no_provider_coverage.py`, plus the manifest-read helper
+  (`_read_index.py`) and the Cloud Run Job's terraform sizing config, both directly implicated in the fix.

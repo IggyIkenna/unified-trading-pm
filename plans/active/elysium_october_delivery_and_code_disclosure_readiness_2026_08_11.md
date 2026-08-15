@@ -32,6 +32,7 @@ related:
     /plans/active/issues/check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12.md,
   ]
 created: 2026-08-11
+context_scope: [/plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md]
 parent_epic: client_isolation_and_governance_master
 assigned_vm: NA
 execution_scope: local-only
@@ -996,3 +997,4 @@ a corrected claim. Current: deep dive `778c86ca-b08a-465b-af70-557bb84b25df` · 
   client's own strategy config**, and a test-only funding reader. Separately found and fixed: the codex move left **four
   stale duplicate copies** of client documents live on origin, because `safe-doc-push` commits named files from an
   isolated worktree and therefore never saw the deletions.
+- **context-scout 2026-08-15**: populated context_scope (1 entry, kept minimal — doc sits at the 1000-line hard cap).

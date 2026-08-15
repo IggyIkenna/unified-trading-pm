@@ -81,3 +81,4 @@ Machine-held (`gate_on_depends: true`) until every todo in
 
 - **2026-08-08 (na-eligibility-audit round7 RECLASSIFY sweep)**: finalize plan authored alongside the RECLASSIFY flip of
   the source issue doc, per `task_template.md`'s finalize-plan-coverage rule.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate.

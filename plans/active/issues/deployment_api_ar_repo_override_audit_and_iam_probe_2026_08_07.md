@@ -113,3 +113,5 @@ context_scope:
   `_get_ar_repo_name()` source (`deployment-api/deployment_api/routes/builds.py`), the remaining P3's cited capability-
   probe analog (`alerting-service/alerting_service/notifiers/pagerduty.py`), and its cited same-root-shape sibling issue
   doc.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate — both todos are done,
+  entries remain valid historical/audit-trail citations.

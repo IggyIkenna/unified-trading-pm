@@ -44,7 +44,6 @@ context_scope:
     /plans/epics/defi_master.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
     strategy-service/scripts/phase_d_gate.py,
-    execution-service/execution_service/matching_engine/solidly_fork.py,
   ]
 ---
 
@@ -161,3 +160,5 @@ fixtures are real on-chain `Swap` events, not synthetic.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- added solidly_fork.py for the open P2 golden-swap
   todo, dropped a less-central archived plan ref.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **context-scout 2026-08-15**: refreshed context_scope (3 entries) -- dropped solidly_fork.py (its P2 golden-swap todo
+  is done); the sole remaining open todo is the phase_d_gate.py re-run, already covered by the other 3 entries.

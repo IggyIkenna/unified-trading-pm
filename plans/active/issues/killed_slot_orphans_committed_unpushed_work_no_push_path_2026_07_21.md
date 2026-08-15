@@ -272,3 +272,4 @@ review(slot1)'s behalf per the async-wait/stuck-recovery watchdog guidance.
   diverged sub-case by the 2026-08-03/08-04 recurrence evidence, still judgment-gated by 2 cited prior data-loss
   near-misses in the code's own comments. Checked against the full round7-10 precedent set — none apply
   (live-dispatch-critical-path git/state machinery, not a defaulted or credential-gated item).
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (5 entries), unchanged.

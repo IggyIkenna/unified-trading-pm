@@ -237,3 +237,4 @@ sweep here.
   leaving it wide open for the whole tarball-freshness-check duration beforehand. Does not touch the P3 follow-up todo's
   scope (the 136-launcher `lc_gcloud_create` migration) — `lc_gcloud_create` itself would need SPOT/disk-type support
   added before a SPOT launcher like this one could migrate to it.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries), unchanged.

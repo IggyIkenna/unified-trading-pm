@@ -490,3 +490,4 @@ flagged to the operator directly in-session, fixed immediately per the small+cle
   `unified-trading-pm` during this session's window due to that contention — the working logic survives in a scratchpad
   copy and needs reconciling back into the real tool file once the checkout settles (tracked as a todo, not silently
   dropped).
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries) — all 5 still resolve.

@@ -28,7 +28,12 @@ source: >-
 resolved_by:
 locked_by:
 locked_since:
-context_scope: [/plans/active/sports_consolidated_closeout_2026_07_19.md]
+context_scope:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/sports_taxonomy_p2_migration_2026_08_08.md,
+    unified-trading-library/unified_trading_library/manifest_consolidator.py,
+  ]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -67,3 +72,10 @@ carry the same wrong stamp.
 - [ ] [DIAG] P2. Trace which renamed venue(s) (`BETFAIR_SB_UK`/`BETFAIR_EX_EU`/`BETFAIR_EX_UK`, and MATCHBOOK/
       PINNACLE's current `trades`-equivalent) absorbed the pre-clobber snapshot's rows, then re-run the attempted_at
       dry-run join against the correct current keys. (repos: market-tick-data-service)
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (3 entries) — added `sports_taxonomy_p2_migration_2026_08_08.md`
+  (confirmed: covers the BETFAIR venue-taxonomy split this doc's own recommendation hedges on) and
+  `unified-trading-library/unified_trading_library/manifest_consolidator.py` (the `_duckdb_merge_payload` this doc's own
+  text cites).

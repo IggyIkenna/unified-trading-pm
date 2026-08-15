@@ -183,3 +183,7 @@ the fix inline. Does not block anything currently (the originating incident is r
       vs human plan, per the standing hard rule, before authoring) — scope: new escalation wall type in
       `server/escalation.py`, a 15-minute delayed re-check against LDR before dispatch, AO-driven remediation that
       restores the breached ratchet/baseline below its ceiling, existing Slack alert left as visibility-only.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (4 entries).

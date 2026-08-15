@@ -51,10 +51,9 @@ superseded_by:
 resolved_by: ""
 context_scope:
   [
-    /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
     market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py,
-    deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
   ]
 ---
 
@@ -180,3 +179,6 @@ this is inference from timing + the workspace's own documented operational contr
   lock defense, `CONSOLIDATOR_DOWN` genuinely cleared). Closed the alert-clearing half; the rebuild-completion half was
   never this doc's to track and is correctly owned by `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s R3
   item. 1 todo remains open (todo 3, operator/design-gated Slack-routing question) — doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: refreshed context_scope (3 entries) — todos 1-2 are done, sole remaining item is the
+  Slack-routing design question, so retargeted at the alerts codex + consolidator SSOT; dropped the launcher script
+  (background on the now-resolved original incident, not load-bearing for the remaining item).

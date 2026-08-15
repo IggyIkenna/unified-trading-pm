@@ -853,3 +853,4 @@ tarball once; always check the launcher's own freshness warning output, and if s
   evidence-backed close only, not a full re-read) — next incremental run re-verifies fresh since content changed today.
 - **2026-08-08 (doc-hygiene)**: Corrected Phase 5 #1's table row — cited doc's credential item is the-odds-api.com
   (sports, cleared 2026-08-03/07), not Tardis; this item's real OOM blocker was fixed 2026-07-26. In-place, still 998L.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries), unchanged.

@@ -46,6 +46,7 @@ context_scope:
   [
     unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh,
     unified-trading-pm/cursor-configs/skills/plan-reconcile/SKILL.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 drift_direction: advance-code
 depends_on: []
@@ -444,3 +445,5 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
   to track the remaining lower-severity backlog per the "no silent caps" rule — the raw 46-batch hunter output (~236
   total findings across categories) existed only in an ephemeral session scratchpad and would have been lost without
   this doc.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries).

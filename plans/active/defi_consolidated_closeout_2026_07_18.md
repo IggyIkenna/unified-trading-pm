@@ -979,3 +979,4 @@ live 2026-07-26 by `/plan-reconcile defi`: the real figure is **2** — `…aggr
   converted from checkbox to a prose pointer, matching this doc's own established C0f-item precedent; (2) the async
   fan-out/executor-offload item — flipped `[x]` DONE citing `defi_track5_coverage_mvp_backfill_2026_07_24.md`'s already
   -shipped twin (`mtds@ff1b5d51`, `mtds@4cf0ea3d`). 12 open todos remain (grep-verified). Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate.

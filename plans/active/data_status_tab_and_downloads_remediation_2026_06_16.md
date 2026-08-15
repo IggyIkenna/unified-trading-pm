@@ -460,3 +460,6 @@ owner; the item stays blocked until this plan's own APPLY-GATE + TIER-2 v9 migra
   correctly blocked pending a fresh `pw:L2` full-suite green (the cited nav-regression blocker doc is resolved but no
   re-run has happened since); the DeFi sub-bucket phantom-row audit + the defi/sports APPLY-GATE sign-off stay correctly
   HOLD per today's own operator ruling above (Ikenna's canonicalisation work not yet landed).
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (6 entries) -- unchanged; `DataStatusTab.tsx`
+  + `reference_scope.py` remain the live source targets for the still-open UI/backend todos (the 2026-08-14 `pw:L2`
+  re-runs and `capability_tab.spec.ts` fix did not introduce a new reference target).

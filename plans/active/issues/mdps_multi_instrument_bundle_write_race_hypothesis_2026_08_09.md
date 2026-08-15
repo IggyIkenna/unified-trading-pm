@@ -50,11 +50,9 @@ source: >-
   infra_health_audit_findings_fix_2026_08_07.md's related recheck todo.
 context_scope:
   [
+    market-data-processing-service/market_data_processing_service/app/core/live_workers_streaming.py,
     market-data-processing-service/market_data_processing_service/app/core/candle_write_mixin.py,
-    market-data-processing-service/market_data_processing_service/app/core/batch_workers.py,
-    market-data-processing-service/market_data_processing_service/app/core/live_workers.py,
-    market-data-processing-service/market_data_processing_service/app/core/live_workers_chain.py,
-    market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py,
+    market-data-processing-service/market_data_processing_service/app/core/orchestration_scanner.py,
     /plans/active/issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md,
     /plans/active/issues/mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md,
   ]
@@ -211,3 +209,12 @@ read-merge-write instead of overwrite) as a new P1 todo here.
   - Declining via `reason_code: "GATED"` + `park_now: true` — same external gate as slot-25/slot-5 (per-day relaunch not
     yet run); re-check once the relaunch's post-completion audit posts. No code change to market-data-processing-service
     (gate not met; implementing a fix now would be speculative).
+
+## Progress Log
+
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries, down from 7) — dropped `batch_workers.py`,
+  `live_workers.py`, `live_workers_chain.py`, and `canonical_writer.py` (all scoped to the cross-write-race hypothesis
+  the 2026-08-10 entry above REFUTED — BTC/ETH already get distinct output paths); added `live_workers_streaming.py`
+  (the doc's own corrected fix target — the streaming symbol-accumulation/eager-fallback path) and
+  `orchestration_scanner.py` (the file whose `_blob_matches_data_type_partition`/`_build_candle_output_path` evidence
+  is what refuted the original hypothesis). Kept `candle_write_mixin.py` and both sibling issue docs.

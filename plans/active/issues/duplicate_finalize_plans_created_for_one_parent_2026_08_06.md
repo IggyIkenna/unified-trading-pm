@@ -131,3 +131,4 @@ just picking a winner by filename.
   directly once all 3 todos clear.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate.

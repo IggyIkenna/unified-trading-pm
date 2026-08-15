@@ -44,6 +44,8 @@ context_scope:
     agent-orchestrator/server/routes/slots_worker.py,
     agent-orchestrator/server/routes/slots_ops.py,
     agent-orchestrator/server/auto_park.py,
+    /plans/archive/2026_08/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md,
+    /plans/archive/2026_07/ao_dispatch_cooldown_and_park_2026_07_20.md,
   ]
 ---
 
@@ -150,3 +152,6 @@ tier=1/priority=20 pool and got re-picked by the very next free slot).
   via the fleet-wide TmuxPruner crash-loop, durably parked. 4 open todos -- todo 1's named prerequisite
   (`review_slot1_tmuxpruner...`'s root-cause todo) is now done, unblocking investigation; todo 3 is an explicit
   `[OPERATOR]` unpark decision with no ruling yet; todo 4 depends on todo 3. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries — added the archived
+  `review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md` (todo 1's named prerequisite doc) and
+  `ao_dispatch_cooldown_and_park_2026_07_20.md` (the precedent todo 2's auto-park design cites)).

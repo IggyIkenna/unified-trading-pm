@@ -41,7 +41,11 @@ execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
 context_scope:
-  [instruments-service/scripts/cleanup_legacy_twins.py, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md]
+  [
+    instruments-service/scripts/cleanup_legacy_twins.py,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md,
+  ]
 ---
 
 # tradfi legacy-twin delete candidates: 0/900 already absent, unexplained
@@ -120,3 +124,8 @@ protocol asks to be investigated before being waved off.
       already-vanished pattern BEFORE trusting a future dry-run's twin-coverage number for them — a stale report
       reporting "still there" when the objects are already gone would silently under-count, and one reporting "gone"
       when they're still there would silently over-count; this session only checked tradfi.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries) — added the gated signoff plan this doc's
+  investigation is executing against and recommends flipping.

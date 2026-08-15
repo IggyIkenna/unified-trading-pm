@@ -39,6 +39,7 @@ source: >-
 context_scope:
   [
     /plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
+    /plans/active/issues/defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/task_template.md,
   ]
@@ -111,3 +112,6 @@ last_updated: "2026-08-11"
   `launch-defi-manifest-projection-vm.sh` yet. No archival performed; both todos left open; skipping GATED — VM launch
   - execution is out of this archival todo's own scope (this finalize plan carries no `repos:`, doc-only) and belongs to
     the issue doc's own SCRIPT todo.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) — added the live blocking issue doc
+  (`defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md`) that every 2026-08-11/12 verification pass above cites
+  as the actual archival precondition.

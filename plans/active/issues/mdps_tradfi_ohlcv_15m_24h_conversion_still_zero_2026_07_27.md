@@ -71,11 +71,11 @@ locked_by:
 context_scope:
   [
     /codex/02-data/honest-absence-downstream-handling.md,
-    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/active/data_completion_tradfi_2026_07_15.md,
     market-data-processing-service/market_data_processing_service/app/core/canonical_writer_shaping.py,
     market-data-processing-service/market_data_processing_service/app/adapters/tradfi/ohlcv_passthrough.py,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+    market-data-processing-service/market_data_processing_service/app/core/live_workers_streaming.py,
   ]
 depends_on: []
 # 2026-07-30 (slot-7, main ruling on BLK-c2d17da7/BLK-7abe9c2b): the "re-run
@@ -609,6 +609,11 @@ this mechanism, not just the P2 fix.
   corroborated by real metered pulls same day). All 5 entries above predate that resolution (last dispatch was slot-2
   earlier that same day). If the NASDAQ/NYSE ohlcv_15m gap is still present, it is no longer the billing gate — re-check
   `tradfi_databento_account_billing_suspended_2026_08_09.md`'s current state directly before citing it as blocking.
+
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — dropped the now-archived
+  `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` (its own work is fully landed, no longer the doc's active
+  thread) and added `live_workers_streaming.py` — the `_streaming_filter_slice` mechanism explicitly named as the
+  same-class caller-scoping investigation the still-open OPTION-half P3 todo needs.
 
 # Codex SSOTs
 

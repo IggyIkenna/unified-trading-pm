@@ -38,6 +38,15 @@ superseded_by:
 source: operator question 2026-08-14 — measured while arming /plans/active/revocation_arming_2026_08_14.md
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/producer_silence_flatten_protocol_2026_08_14.md,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/dependency/health_policy.py,
+    alerting-service/alerting_service/dependency_health_prober.py,
+    execution-service/execution_service/validation/freshness_gate.py,
+    execution-service/execution_service/engine/kill_switch_bus_bridge.py,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
+  ]
 ---
 
 # Live path has no stale-producer detection
@@ -216,3 +225,13 @@ none of them appear as todos in that plan.
   freshness SLA before allowing order submission".
 - `health_aggregator.py` module docstring: "per-ClientWorker heartbeat rollup... Consumed by
   `strategy_service/api/main.py`'s health endpoint" — intra-service, not cross-service.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (6 entries) — the resolving plan
+  (`producer_silence_flatten_protocol_2026_08_14.md`, not yet in `related:`) plus the source files central to this
+  doc's two still-open threads (dependency-health three-level inertness: `health_policy.py`,
+  `dependency_health_prober.py`; the launcher-gate guardrail question: `launcher_common.sh`) and the two named
+  mechanisms the doc's own analysis compares against (`freshness_gate.py`, `kill_switch_bus_bridge.py`). No prior
+  `context_scope` existed (doc created 2026-08-14). Also created this `## Progress Log` section, which the doc
+  genuinely had none of before.

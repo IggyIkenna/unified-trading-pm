@@ -276,3 +276,4 @@ sizing — the operator's core question — is **not a parameter anywhere**; it 
   was decided and shipped 2026-08-09. Updated D4's text accordingly; item stays open and correctly `BLOCKED-CREDENTIALS`
   — the real remaining blocker is the Tenderly-fork + PoolMatcher-fixtures validation environment, unaffected by the
   design shipping.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate.

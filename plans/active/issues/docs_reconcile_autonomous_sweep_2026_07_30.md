@@ -401,3 +401,5 @@ blocked from its documented ship path whenever any unrelated repo in the workspa
   rule outright) remains an explicit human decision on a rule whose backing script no longer exists; the other 3 of the
   original 4 P1-C rows were independently resolved/moot by 2026-08-08, correctly narrowing this item without a whole-doc
   flip. No new bounded content on independent re-read.
+- **context-scout 2026-08-15**: re-verified context_scope (4 entries) — all four still directly cited by the doc's own
+  body; no change needed.

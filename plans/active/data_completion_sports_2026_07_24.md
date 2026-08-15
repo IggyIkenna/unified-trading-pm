@@ -947,3 +947,4 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
   (1.5M/day quota bump vs. accept the account-tier downgrade), no new information this pass. Whole-doc RECLASSIFY not
   warranted: 1 of the now-2 open items is upstream-outage-blocked, the other is an operator spend call — neither is a
   bounded, worker-determinable AO-dispatch outcome today. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate.

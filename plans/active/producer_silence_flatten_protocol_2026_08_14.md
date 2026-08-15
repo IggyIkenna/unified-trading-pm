@@ -42,6 +42,7 @@ locked_by:
 locked_since:
 context_scope:
   [
+    /plans/active/issues/live_path_has_no_stale_producer_revocation_2026_08_14.md,
     execution-service/execution_service/algo_library/deleverage_executor.py,
     execution-service/execution_service/validation/freshness_gate.py,
     execution-service/execution_service/engine/kill_switch_bus_bridge.py,
@@ -158,3 +159,8 @@ measurement that justified the number.
       decision component has a non-test caller. Three separate systems in this estate were individually complete,
       individually tested, and collectively inert; this plan adds several more components to that surface. Repo:
       execution-service.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries) -- added the originating incident/issue
+  doc (`live_path_has_no_stale_producer_revocation_2026_08_14.md`) alongside the 5 pre-cited source paths.

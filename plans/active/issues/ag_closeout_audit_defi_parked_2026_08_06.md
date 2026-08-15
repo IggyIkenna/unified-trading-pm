@@ -68,9 +68,8 @@ resolved_by:
 depends_on: []
 context_scope:
   [
-    /plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md,
-    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
@@ -226,3 +225,7 @@ OOM (rc=137) on a dedicated VM, not the original shared-host kill mystery; no ac
   (tradfi) per the doc's own stated primary-owner note, but that does not block AO-dispatch — it is still a bounded,
   worker-executable edit, just not one `defi`'s own audit process would perform unilaterally mid-run.
   `unified-trading-pm@<pending — see session push>`.
+- **context-scout 2026-08-15**: refreshed context_scope (3 entries) -- rebuilt around the doc's now-sole open todo (a
+  stale-claim fix in `tradfi_consolidated_closeout_2026_07_18.md`, its actual edit target, now added); dropped the
+  `mtds_pipeline_check_...` orphan (fully resolved+archived) and the `batch10` draft (superseded, no longer covers any
+  open item here).

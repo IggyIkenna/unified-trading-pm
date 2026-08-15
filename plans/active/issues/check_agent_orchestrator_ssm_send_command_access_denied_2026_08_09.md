@@ -37,6 +37,8 @@ context_scope:
   [
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh,
+    agent-orchestrator/scripts/orchestrator/query-ao-state-db-readonly.sh,
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
   ]
 source: >-
   Discovered 2026-08-09 (slot-5, data_engineering) while checking whether new work was queued for this slot after the
@@ -165,3 +167,7 @@ on shared AWS infra, not something to self-grant.
   heavy fleet-wide activity from other slots (batch dispatches, issue resolutions, plan flips) but nothing targeting
   slot-2/data_engineering, confirming (again) there is no local substitute for the blocked live-dispatch read. No new
   information on the IAM gap itself; nine days unresolved as of this entry.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries, was 2) — added the sibling script
+  `query-ao-state-db-readonly.sh` (hits the identical AccessDenied wall per the 2026-08-09 slot-18 entry) and
+  `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` (the self-service AWS identity doc a later
+  entry confirms does NOT cover this gap — `sts assume-role` to `uts-orchestrator-epic-role` was also denied).

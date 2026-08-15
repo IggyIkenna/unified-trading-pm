@@ -949,3 +949,5 @@ needs an explicit next relaunch round, and none is currently dispatched.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate -- the round-5/6
   relaunch log entries and the OOM-fix commit are operational narrative on the already-scoped launcher/migration script,
   not new dependencies.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate -- no new Progress Log
+  content since the 2026-08-09 marker names a fresh code/doc target.

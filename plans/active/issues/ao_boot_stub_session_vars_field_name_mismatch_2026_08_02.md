@@ -205,3 +205,4 @@ Two independent, complementary fixes — either alone helps, both together close
   The 2026-07-31 operator directive routing this exact live-dispatch-boot-critical-path class to local-only still
   stands, content unchanged since round11. All 3 todos remain unactioned and still touch the same fleet-wide worker-boot
   files.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate.

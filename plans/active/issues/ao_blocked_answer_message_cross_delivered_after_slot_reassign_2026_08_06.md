@@ -142,3 +142,4 @@ zero-extraction.
   item ((a)-or-(b) design choice for orphaned `BlockedRow` disposition at reassign time, P3, no stated done-when).
   round11 (2026-08-09) already confirmed this is a genuine judgment call, not a mechanical follow-on despite todo 1's
   landing. No new facts found this pass.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate.

@@ -41,7 +41,8 @@ locked_by:
 last_updated: 2026-08-13
 context_scope:
   [
-    market-tick-data-service/market_tick_data_service/live/connectors/websocket_streaming_handler.py,
+    /plans/archive/2026_08/issues/fleet_data_acquisition_health_2026_06_21.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/websocket_streaming_handler.py,
     market-tick-data-service/market_tick_data_service/live/connectors/polymarket_ws.py,
     market-tick-data-service/market_tick_data_service/live/connectors/polymarket_clob_ws.py,
     market-tick-data-service/market_tick_data_service/live/connectors/jito_defi_ws.py,
@@ -95,3 +96,9 @@ documented decision going silently unimplemented, and a new venue integration th
       only once every registration is confirmed canonical. **Done when**: every venue key in the registry is UPPERCASE,
       a live shard-spec dispatch for each affected venue is confirmed working, and a follow-up removes the now-redundant
       lowercase/uppercase fallback branches.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) — corrected a broken path
+  (`websocket_streaming_handler.py` lives under `cli/handlers/`, not `live/connectors/`) and added the archived doc
+  carrying the original 2026-07-10 operator ruling this issue tracks the non-execution of.

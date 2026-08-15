@@ -515,3 +515,4 @@ bans. Fleet VMs (setup-token env files) are unaffected.
   FM2/FM3/FM8, already covered/cited in this same doc) and no implementation of the "committed- able but unverified WIP"
   chain this item specifically describes. Still genuinely open, unbuilt design work — 4th consecutive audit pass
   reaching the same conclusion, now with an actual second look performed, not just deferred.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (4 entries), unchanged.

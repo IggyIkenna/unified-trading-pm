@@ -49,6 +49,7 @@ context_scope:
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
     /codex/02-data/honest-coverage-model.md,
+    features-service/features_service/sports/arb/runner.py,
   ]
 source: ["sports venue/data-type audit, 2026-08-08 interactive session — 27 operator rulings"]
 locked_by:
@@ -130,3 +131,6 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
 
 - **2026-08-08** — Authored. Coverage gap measured against the live prod manifest. C3 disposition recorded as an
   ALREADY-RULED item (2026-07-21 floor ruling) rather than a fresh operator decision — the source todo is stale.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) -- added
+  `features-service/features_service/sports/arb/runner.py` (P3's already-shipped `--date`/`--start-date`/`--end-date`
+  historical-backfill CLI, the tool the arbitrage-series backfill todo will run against).

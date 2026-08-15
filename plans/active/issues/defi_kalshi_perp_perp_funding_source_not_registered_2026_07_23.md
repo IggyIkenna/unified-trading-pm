@@ -193,6 +193,9 @@ concrete, currently-failing symptom; the classification question is the census a
   already-dispatched `assigned_vm: planning` todo, not a fresh RECLASSIFY signal. No satellite-extraction candidate
   (flipping this doc's `assigned_vm` would open a second dispatch path for the identical fix, exactly the risk the
   doc's own text warns against). Doc stays `assigned_vm: NA` (KEEP-NA-STALE-DUPLICATE, round11).
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate — the sole open `[DATA]
+  P1` re-emit todo (and its duplicate in `defi_satellite_ao_dispatch_batch2_2026_07_26.md`, already in the list) remain
+  the doc's whole remaining scope.
 
 ## Follow-ups
 

@@ -54,7 +54,7 @@ context_scope:
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
     unified-api-contracts/unified_api_contracts/registry/defi_venues.py,
     market-tick-data-service/market_tick_data_service/engine/orchestrator/__init__.py,
-    market-tick-data-service/market_tick_data_service/reader.py,
+    instruments-service/instruments_service/engine/orchestrator/process_write.py,
     /codex/04-architecture/shard-level-failure-isolation.md,
   ]
 ---
@@ -183,3 +183,10 @@ this checkout unrelated to this change —
       try/except that logs + continues rather than aborting the batch. Once isolated, the 4 `.get(venue, "cefi")`
       defaults touched in this session's Progress Log can follow the `reader.py` precedent and become typed raises.
       (repos: market-tick-data-service, instruments-service)
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) — swapped `reader.py` (cited for the
+  already-closed defense-in-depth fix) for `process_write.py` (the target of the sole remaining open todo,
+  per-venue exception isolation in instruments-service's write loop). This doc had no dedicated "## Progress Log"
+  section, so one is created here per the skill's create-if-none rule.

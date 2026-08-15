@@ -346,3 +346,6 @@ context_scope:
   reached 0 open todos and archived via the standard 6-step ritual to
   `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch9_2026_08_09.md` (finalize twin archived alongside).
   Updated this doc's one path-shaped referrer link (above, round11 sweep entry) to the new archive location.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (6 entries) -- unchanged; the 2 remaining
+  open items (registry-mode flip, stretch launch-spec-persist) are the same genuinely-gated items the 2026-08-09 sweep
+  left in place.

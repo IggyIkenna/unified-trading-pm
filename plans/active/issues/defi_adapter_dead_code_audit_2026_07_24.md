@@ -70,11 +70,9 @@ last_reviewed:
 context_scope:
   [
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
-    /plans/archive/issues/defi_base_adapter_success_key_ignored_by_failure_accounting_2026_07_27.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/live/governance_params_event_poller.py,
-    instruments-service/instruments_service/reference_data/adapters/defi/jupiter.py,
-    instruments-service/instruments_service/reference_data/factory.py,
-    market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain/helius_solana.py,
+    /plans/archive/issues/defi_base_adapter_success_key_ignored_by_failure_accounting_2026_07_27.md,
+    /plans/archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md,
   ]
 ---
 
@@ -599,3 +597,7 @@ files.
   `thegraph_ws_adapter.py` had no determinable single-venue target and the operator ruled DELETE (see that plan's "Scope
   corrections" + "Open questions"). Also refreshed `/codex/04-architecture/solana-defi-coverage.md` (JUPITER MTDS line +
   `spot_trades` → `dex_pool_swaps`).
+- **context-scout 2026-08-15**: re-scouted; refreshed context_scope (4 entries) — items 1 (Jupiter) and 3 (wire-in) are
+  now done, so dropped `jupiter.py`/`factory.py` and added the plan that shipped both
+  (`defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md`); kept the governance-params poller file
+  (the sole still-open item) and the base-adapter cross-cutting finding doc.

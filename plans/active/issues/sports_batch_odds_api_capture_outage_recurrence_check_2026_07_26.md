@@ -71,6 +71,7 @@ context_scope:
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/tick_data_handler.py,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md,
   ]
 supersedes:
 superseded_by:
@@ -497,3 +498,7 @@ in `sports_all_vendor_honest_coverage_convergence_2026_08_07.md` by a separate o
 exact todo again before that doc reports convergence into the target range would just repeat this same re-verification
 with no new information. Leaving checkbox unchecked; recommend the next dispatch of this todo be gated on that doc's
 convergence, not on a fixed cadence.
+
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries — added
+  `/plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md`, the doc this doc's sole open todo
+  is explicitly `BLOCKED-ON:`).

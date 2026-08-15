@@ -175,3 +175,4 @@ documented as the correct mechanism in `task_template.md` and still not exempted
   redirect pointers, now carry the actual `unified-trading-pm@d01cd9ad41` / `unified-trading-pm@4eb3f143ac` evidence
   plus the finalize plan's own independent re-verification. The 3rd item (Finding-J cross-file fix) is untouched — still
   genuinely NA.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (3 entries), unchanged.

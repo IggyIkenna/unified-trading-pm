@@ -24,6 +24,15 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md,
+    /plans/active/issues/mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md,
+    instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py,
+    instruments-service/scripts/enumerate_expected_universe.py,
+    instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py,
+    /codex/02-data/honest-coverage-model.md,
+  ]
 ---
 
 # Sports honest-coverage gap closure — 2026-08-14
@@ -227,3 +236,7 @@ the time the VMs above finish; re-pull before quoting)
 - Coverage % (captured+empty_confirmed)/total says nothing about whether the CONTENT of a captured row is complete — the
   OpenMeteo forecast-column gap was 100% invisible to every coverage number checked this session; it only surfaced from
   reading actual log lines.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (6 entries).

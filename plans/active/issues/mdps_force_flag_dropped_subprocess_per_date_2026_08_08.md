@@ -44,6 +44,7 @@ context_scope:
     market-data-processing-service/market_data_processing_service/cli/handlers/process_handler.py,
     market-data-processing-service/market_data_processing_service/cli/main.py,
     /plans/active/issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md,
+    /plans/active/issues/mdps_multi_instrument_bundle_write_race_hypothesis_2026_08_09.md,
   ]
 ---
 
@@ -211,3 +212,8 @@ correctly scoped per-day (see the Track-7 doc's Relaunch todo), once fully done.
   `mdps-backfill-cefi-20260808-095136` still `RUNNING` (`gcloud compute instances describe` status=RUNNING, zone
   `asia-northeast1-c`, created 2026-08-08T08:57Z). Terminal state NOT reached — todo 2 remains gated on it. Releasing
   back to the queue with `reason_code: GATED` per worker.md § 4c; not busy-waiting on a week-scale external condition.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) — added
+  `mdps_multi_instrument_bundle_write_race_hypothesis_2026_08_09.md` on a confirmed evidence-fingerprint match: both
+  docs independently cite the identical GCS mtime `2026-08-03T01:59:07Z` for the same stale BYBIT futures_chain
+  `BTC-29DEC23` bundle object — strong evidence of the same underlying incident thread (that doc already cited this
+  one; this was the missing reverse link).

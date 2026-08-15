@@ -34,6 +34,13 @@ locked_by:
 source: [prediction_satellite_ao_dispatch_batch4_2026_07_26.md todo 4b-iii, this session's completion]
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
+  ]
 ---
 
 # prediction_satellite_ao_dispatch_batch4 — archival prerequisite
@@ -93,3 +100,4 @@ Run `/ag-closeout-audit prediction` (or an equivalent manual pass) scoped to thi
 
 - 2026-08-14 (slot 18, data_engineering): filed after verifying + closing batch4's last open todo (4b-iii). See that
   plan's own Progress Log for the 4b-iii completion evidence.
+- **context-scout 2026-08-15**: populated context_scope (4 entries).

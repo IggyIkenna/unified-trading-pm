@@ -658,3 +658,5 @@ Two genuine hits in this plan:
   the FLEET-WIDE v9-column populate, the silent-worker watchdog, `paper_engine.py` foreign-repo dependency, the
   dirty-tree-gated PREDICTION tarball rebuild) — genuinely credential/dependency/design- gated, confirming the finalize
   plan's own expectation ("unlikely" to reach 0). Doc does NOT archive; stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (5 entries), unchanged -- still the right minimal
+  set across this doc's many topics.

@@ -220,3 +220,4 @@ choice (human-executed, not AO-dispatched).
   the sole open item is the same work item verbatim as `ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s own todo 1
   (itself confirmed KEEP-NA this same sweep, above). Citation well-established across 4 prior audits; no new facts
   found.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries) -- still accurate.

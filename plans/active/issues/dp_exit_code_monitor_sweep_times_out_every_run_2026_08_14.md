@@ -43,6 +43,7 @@ context_scope:
     deployment-service/deployment_service/data_pipeline_monitors/_gcs.py,
     deployment-service/deployment_service/data_pipeline_monitors/escalation.py,
     /plans/active/revocation_arming_2026_08_14.md,
+    /plans/active/issues/deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15.md,
   ]
 resolved_by:
 supersedes:
@@ -218,6 +219,8 @@ the `registry_id` the deliver path used) — filed as its own issue,
 [`dp_revocation_release_never_resolves_identity_2026_08_15.md`](/plans/active/issues/dp_revocation_release_never_resolves_identity_2026_08_15.md),
 since fixing it needs a design call on where the identity is threaded from and this doc's own scope is the timeout, not
 the release bookend.
+- **context-scout 2026-08-15**: populated context_scope (5 entries) — added the basedpyright-ratchet blocker issue doc
+  this doc's own "Recommended next item" names as the actionable next step.
 
 ## Deferred work after 2026-08-15
 

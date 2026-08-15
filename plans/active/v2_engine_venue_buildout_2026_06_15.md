@@ -692,6 +692,9 @@ blocked-model-variant MM engines + 2 sta...
   (operator constraint), or an unbuilt ML model-variant (genuine ML-training judgment call) -- no cheat-sheet precedent
   applies.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-15**: re-verified context_scope (6 entries, unchanged) — the only commit since the last scout
+  (`8baf3b7bf8`, 2026-08-12) cleared a stale `locked_by: live-defi-rollout` placeholder in frontmatter, no substantive
+  content change; all 6 entries still resolve and remain the correct minimal set.
 
 ## Follow-ups discovered during Phase D / template wave (2026-06-15)
 

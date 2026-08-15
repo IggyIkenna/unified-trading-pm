@@ -176,3 +176,4 @@ is fixed. Unblocks the benchmark to report 0 throughput (honest absence), but do
   (6C), `CME:FUTURE:EUR-USD@LIN-20200113` (6E), `CME:FUTURE:JPY-USD@LIN-20200113` (6J). Todo 1's format text updated
   above with this confirmation. Todo 1 itself stays open (the actual `_resolve_spot_perp` code change + mapping-table
   implementation is separate, unblocked, in-scope work) and todo 2 stays sequenced behind it.
+- **context-scout 2026-08-15**: re-verified context_scope (4 entries), unchanged.

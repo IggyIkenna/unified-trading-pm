@@ -162,3 +162,5 @@ would detect this failure mode regardless of root cause.
 
 **Evidence quality**: Code-path analysis only — no production log/DB access. Operator should verify account-id
 clustering hypothesis against production DB.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries), unchanged.

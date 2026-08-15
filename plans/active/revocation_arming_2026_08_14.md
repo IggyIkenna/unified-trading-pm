@@ -37,6 +37,7 @@ locked_by:
 locked_since:
 context_scope:
   [
+    /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
     deployment-service/deployment_service/data_pipeline_monitors/escalation.py,
     deployment-service/deployment_service/data_pipeline_monitors/revocation_actuator.py,
     deployment-service/deployment_service/data_pipeline_monitors/revocation_targets.py,
@@ -272,3 +273,5 @@ tested, and collectively inert: the revocation actuator (no caller), the depende
 health prober (no injected probe). Each passed review because each layer was genuinely finished. The cheap defence is an
 anti-inertness guard per layer — assert the thing has a non-test caller — and it belongs with the component, not in a
 checklist.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries).

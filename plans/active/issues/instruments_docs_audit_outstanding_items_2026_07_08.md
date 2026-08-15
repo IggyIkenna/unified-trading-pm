@@ -661,3 +661,4 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
   in the same files) or is small enough that extracting it alone risks a false sense of coverage over this doc's much
   larger prose-only B-F sections. No clean, conflict-free extraction found this pass — reporting near-zero yield rather
   than forcing a partial extraction. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (4 entries), unchanged.

@@ -66,14 +66,11 @@ resolved_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md,
-    /plans/archive/2026_08/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    deployment-api/deployment_api/routes/data_status/_distinct_values.py,
     /plans/active/issues/defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md,
-    /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
     /codex/02-data/reconciliation-finding-taxonomy.md,
     /codex/02-data/canonical-cutover-register.md,
-    /codex/02-data/non-canonical-path-inventory.md,
-    /codex/02-data/defi-canonical-naming-ssot.md,
   ]
 ---
 
@@ -645,3 +642,8 @@ tracking doc with real checkboxes — not duplicated here.)_
   2026-08-10 Progress Log), flagged there for root-cause triage, unresolved. A depends-on-a-still-open-prerequisite
   citation is KEEP-NA per this audit's own rule — since not every todo is bounded, the whole doc stays NA (todos 2/3 are
   individually small and plausibly bounded, but the whole-doc bar requires all three).
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries, pruned from 8) -- dropped 2 now-archived/resolved
+  issue-doc pointers and the broader non-canonical-path-inventory.md; swapped in the actual panel source file
+  (`_distinct_values.py`, the P3 blank-badge-fix todo's real target) alongside `defi-canonical-naming-ssot.md` (the P3
+  spot_pair cross-check todo) and the still-live `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`
+  residual tracker.

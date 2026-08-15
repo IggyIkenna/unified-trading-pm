@@ -61,6 +61,7 @@ context_scope:
     /plans/archive/issues/defi_dex_pool_fees_retirement_recommendation_2026_08_04.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    market-tick-data-service/scripts/one_offs/,
   ]
 ---
 
@@ -222,3 +223,4 @@ Operator confirmed **A** on BLK-9aed224f (2026-08-12): retire all 14 CURVE rows 
   showed 14 CURVE still `captured` after my upload (the two scripts rewrite the same blob non-atomically), but a fresh
   DuckDB verify confirms the terminal state is **21 `attempted_failed`** (7 BALANCER + 14 CURVE) — the full
   operator-confirmed disposition. Consolidator resumed (ENABLED). Ship: `market-tick-data-service@ad0db52396`.
+- **context-scout 2026-08-15**: populated context_scope (5 entries).

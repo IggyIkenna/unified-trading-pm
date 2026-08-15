@@ -265,3 +265,4 @@ exposed to this class before the veto shipped.
   was independently RESOLVED 2026-08-08 (round5 note above; routine deployment-api build cadence picked up the fix), so
   the only open checkbox is item 3 (`[SCRIPT] P3`, time-gated serial-console capture, non-blocking). All other items
   `[x]`; no further action pending.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate.

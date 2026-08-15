@@ -695,3 +695,6 @@ for a `batch2` on the next pass and rehome then.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- swapped in the doc's own flagship examples
   (features-service `registry.py`, instruments-service `engine/orchestrator/`) since prior scope was codex/plan-only;
   dropped README.md + batch2 (batch2 no longer covers the remaining items per the na-eligibility-audit note above).
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries) -- quality-gates.md +
+  `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (cross-references the still-open deployment-api 5→0 stretch + Phase
+  3 schema-provenance items) + the two flagship split examples remain the accurate minimal set.

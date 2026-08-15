@@ -697,3 +697,5 @@ context_scope:
   "HELD per operator", explicit "operator/architect call, not a mechanical todo" backfill assessments, an accept-vs-fix
   writer-defect judgment branch, item 7 gated on item 2 within this same doc) — a mixed doc, not RECLASSIFY-eligible.
   Doc stays NA.
+
+- **context-scout 2026-08-15**: re-verified context_scope (5 entries), unchanged.

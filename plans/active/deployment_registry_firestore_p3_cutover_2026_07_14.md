@@ -253,6 +253,7 @@ QG-green per repo.
   4-item GO/NO-GO checklist stays correctly in force; all 4 remaining todos are the gated, sequential,
   irreversible-delete cutover steps this doc's own banner blocks pending that checklist. DEPENDENCY_BLOCKED (root: unmet
   GO/NO-GO checklist, itself gated on a Firestore reaper migration + fleet soak).
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries) — all 5 still resolve.
 
 ## Codex SSOTs
 

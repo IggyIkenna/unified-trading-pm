@@ -52,6 +52,7 @@ context_scope:
     /scripts/plan-hygiene/check_prosewrap_padding.sh,
     /scripts/plan-hygiene/prosewrap_padding_baseline.yaml,
     /scripts/plan-hygiene/run_hygiene_sweep.sh,
+    /scripts/plan-hygiene/fix_prosewrap_padding.py,
   ]
 ---
 
@@ -189,3 +190,6 @@ Mechanical, bounded remediation — not a design/judgment call:
   dedent gave "the formatter a fixed point": it does not, and the measurement above disproves it. The only durable fix
   is the one this doc already recommends — author the annotation as a top-level blockquote so there is no nested
   continuation for the printer to re-indent.
+
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) — added `fix_prosewrap_padding.py` (the
+  2026-08-10 automation script todo 1 now points to for the batch repair).

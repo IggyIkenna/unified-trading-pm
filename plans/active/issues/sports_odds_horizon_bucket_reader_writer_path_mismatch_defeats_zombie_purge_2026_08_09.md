@@ -60,6 +60,8 @@ context_scope:
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
     market-data-processing-service/scripts/reprocess_sports_odds.py,
     features-service/features_service/sports/data/gcs_reader.py,
+    features-service/features_service/sports/cli/main.py,
+    /plans/archive/2026_07/sports_legacy_bucket_cutover_history_2026_07_24.md,
   ]
 depends_on: []
 ---
@@ -264,3 +266,7 @@ This needs a human/cross-repo design call, not a mechanical fix — three shapes
   ignoring it or forcing an uninvestigated fix into a third script/manifest layer. Flipping
   `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s zombie-tick checkbox now — its literal parts (a) purge and (b)
   verify_ml_readiness scope are genuinely complete; the residual is tracked as its own todo, not glossed over.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — added `features_service/sports/cli/main.py`
+  (target for the still-open `odds_features` missing-output investigation) and
+  `sports_legacy_bucket_cutover_history_2026_07_24.md` (the located "bucket-cutover lane" owner for the open option-C
+  follow-up).

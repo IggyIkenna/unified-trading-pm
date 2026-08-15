@@ -650,3 +650,5 @@ inline pin in place rather than adding a second, redundant `override-dependencie
   trimmed to the 4 standing-audit tooling paths (`qg-common.sh`'s ignore list, the workspace floor/manifest files, and
   the dependency-management codex SSOT) the sole remaining open todo — the inherently-unbounded "walk the remaining deps
   one-by-one" sweep — actually depends on.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate — sole open todo remains
+  the inherently-unbounded "walk the remaining deps one-by-one" audit, which depends on the same 4 tooling paths.

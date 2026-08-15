@@ -107,3 +107,4 @@ verification dispatch happened to run on `main` and surfaced it. Did not investi
   the archival deadlock this doc's `archive_exempt: true` cites is resolved; text-only correction per Item N's scope
   (`plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md`) — did not re-verify the deadlock doc's
   other conditions or unset `archive_exempt` here (left to that doc's own operator-decision-gated resolution path).
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (3 entries), unchanged.

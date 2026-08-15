@@ -61,6 +61,7 @@ context_scope:
     unified-api-contracts/unified_api_contracts/canonical/domain/sports/provider_league_ids.py,
     deployment-service/deployment_service/sports_latency_observation.py,
     unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
+    instruments-service/instruments_service/triggers/sports_fixtures_daily_repoll.py,
   ]
 ---
 
@@ -720,3 +721,6 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
   (~5 days from now). Releasing via `/skip-current-task {"reason_code": "GATED", "estimated_unblock_minutes": 180}` (cap
   per RULES.md § 4c). Reiterating the standing park recommendation — the concrete unblock date (~Aug 17) from the
   slot-17 check still holds.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries) — added
+  `instruments-service/instruments_service/triggers/sports_fixtures_daily_repoll.py`, the `FIXTURES_SCHEDULE` writer the
+  2026-08-10 check found is the correct live data_type to query (the legacy `FIXTURES` type is frozen since ~2026-07-24).

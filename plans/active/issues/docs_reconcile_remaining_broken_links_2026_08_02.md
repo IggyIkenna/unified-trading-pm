@@ -535,3 +535,5 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   `unified-trading-pm@d307287cf3`. Broken-link/collision/summary-quality/doctrine-consistency hunters not re-run
   corpus-wide this pass (all confirmed clean within the last 4 days by the 2026-08-08/09/10 dispatches; scoped to the
   touched-file set per the established "skip a redundant full fan-out" precedent from 2026-08-08's 4th dispatch).
+- **context-scout 2026-08-15**: re-verified context_scope (5 entries) — all five still directly cited by the doc's own
+  body; no change needed.

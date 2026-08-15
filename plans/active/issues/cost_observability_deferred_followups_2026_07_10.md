@@ -48,10 +48,7 @@ depends_on: []
 context_scope:
   [
     /codex/05-infrastructure/billing-cost-observability.md,
-    deployment-api/deployment_api/routes/costs.py,
-    deployment-ui/src/pages/CostObservability.tsx,
-    /plans/archive/2026_07/cost_observability_ui_2026_07_08.md,
-    deployment-api/deployment_api/services/cost_observability,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
   ]
 ---
 
@@ -163,3 +160,9 @@ context_scope:
   checkboxes with a shipped-sha citation once batch2's todo lands; not pre-flipped here without that evidence. The
   business-context enrichment item (item 1) remains correctly NOT-BOUNDED per the 2026-08-08 scoping finding (176
   launcher scripts, ~9 through the shared choke point) — no change. Doc stays NA as a whole.
+- **context-scout 2026-08-15**: refreshed context_scope (2 entries) — all UI/backend P3 enhancements are now shipped
+  (their `costs.py`/`CostObservability.tsx`/service-dir citations no longer serve any open work); the sole remaining
+  open item is VM-launcher asset_group label-injection, so re-pointed at
+  `deployment-service/scripts/vm/lib/launcher_common.sh` (the shared choke point named in the 2026-08-08 scoping
+  finding — confirmed via grep: it carries the `labels=`/`asset_group`/`asset-group` tag-injection logic and is sourced
+  by 162/187 VM launcher scripts).

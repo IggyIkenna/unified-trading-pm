@@ -497,3 +497,5 @@ action once the operator completes their own /pre-compact checkpoint -- not a pa
 full doc (492 lines) end to end. This exact structural reasoning was established by this same skill's own 2026-08-03
 audit pass, which explicitly identified the divergence-analysis-tool item as 'individually
 bounded/deterministic-shaped...
+
+- **context-scout 2026-08-15**: re-verified context_scope (6 entries), unchanged.

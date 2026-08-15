@@ -996,3 +996,4 @@ M6/M7/T+1/M8.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries) -- content already correct (marker undercounted at
   "2"); all 6 paths confirmed on disk, unchanged.
+- **context-scout 2026-08-15**: re-verified context_scope (6 entries), unchanged.

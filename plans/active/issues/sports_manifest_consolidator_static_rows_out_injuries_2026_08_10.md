@@ -60,9 +60,11 @@ source:
   INJURIES census reads were byte-identical despite confirmed live VM progress.
 context_scope:
   [
-    unified_trading_library/manifest_writer,
+    /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
+    instruments-service/instruments_service/engine/orchestrator/process_preflight.py,
+    instruments-service/instruments_service/engine/orchestrator/sports.py,
+    deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf,
     instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py,
-    plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
   ]
 ---
 
@@ -244,3 +246,7 @@ correct; the fix is config (mirror defi's 3600s timeout + 4200s TTL). Filed as P
   — the lock worked as designed; the fix is config. Evidence via Cloud Logging (executions `6tx26`/`xzc5v`/`86ghl`,
   `Terminating task … timeout of 1800` + `clearing stale lock age>2400s` events) + live job env
   (`CONSOLIDATOR_LOCK_TTL_SECONDS=2400`, timeoutSeconds=1800).
+
+**context-scout 2026-08-15**: refreshed context_scope (5 entries) — replaced the unclear
+`unified_trading_library/manifest_writer` path with the actual root-cause files this doc's own investigation names
+(`process_preflight.py`/`sports.py`) and the deployment-service terraform target of the sole open P3.1 todo.

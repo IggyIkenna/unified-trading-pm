@@ -72,6 +72,7 @@ context_scope:
     /codex/02-data/availability-manifest-and-data-status.md,
     /plans/active/issues/blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md,
     plans/audit/results/cf_manifest_audit_2026_06_01.py,
+    /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
   ]
 ---
 
@@ -605,3 +606,6 @@ context_scope:
     more days (~6.9 days total). Run.log 140,286 lines, actively growing. Done-when (VM exit 0, manifest rows written)
     unmet. Did NOT flip checkbox, did NOT launch a duplicate. Declining via `/skip-current-task` `reason_code=GATED` —
     ETA ~5.5 days.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — added
+  `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md` (the SSOT for the recurring SPOT-VM
+  preemption/recovery pattern that now dominates this doc's most recent Progress Log activity).

@@ -64,7 +64,7 @@ sequential: false
 drift_direction: advance-code
 context_scope:
   [
-    /plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md,
+    /plans/active/issues/prediction_batch4_deferred_migration_and_archival_2026_08_14.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/reconciliation-census-and-compute-tiers.md,
     /codex/02-data/canonical-cutover-register.md,
@@ -996,3 +996,4 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. Archival (incl. migrating the Deferred sections
   — a judgment-call audit, out of this dispatched todo's scope) is tracked as its own follow-up:
   `/plans/active/issues/prediction_batch4_deferred_migration_and_archival_2026_08_14.md`.
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) -- swapped in the archival follow-up doc.

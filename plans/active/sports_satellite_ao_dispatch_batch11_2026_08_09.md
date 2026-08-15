@@ -57,9 +57,10 @@ sequential: false
 drift_direction: advance-code
 context_scope:
   [
+    /plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09_finalize.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    market-tick-data-service/market_interface/adapters/sports/odds_api_adapter.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py,
     unified-api-contracts/unified_api_contracts/internal/domain/features_sports/_features_venue_referee_player_odds.py,
   ]
 ---
@@ -217,3 +218,11 @@ outcome) or **stays behind** (judgment call, operator-gated, dependency-blocked,
   matches a known naming-migration deliverable, not just `plans/active/`. Not filing a separate issue doc for this —
   one-off methodology note, not a recurring pattern (batch2/5/10 finalize docs were already correctly cross-referenced
   elsewhere in this same doc's Conflict-gated sections). — unified-trading-pm (this commit)
+
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) — added this doc's own finalize sibling
+  (`sports_satellite_ao_dispatch_batch11_2026_08_09_finalize.md`, previously uncited despite both todos now being done
+  and the finalize sibling being the actual next step). **Fixed a dead pointer**: the existing `odds_api_adapter.py`
+  entry was missing the `market_tick_data_service/` package-directory segment (`market-tick-data-service/market_interface/...`
+  does not resolve on disk; the real path is `market-tick-data-service/market_tick_data_service/market_interface/...`,
+  matching this doc's own todo-1 evidence citation two sections above). The same shortened/wrong form also appears in
+  this doc's own todo-1 body text (line ~128) — left as-is, body content is out of this skill's scope to edit.

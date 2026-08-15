@@ -68,12 +68,10 @@ resolved_by:
 depends_on: []
 context_scope:
   [
-    /plans/archive/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md,
-    /plans/archive/2026_08/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md,
-    features-service/scripts/run_cefi_perp_funding_corpus.py,
-    strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py,
-    instruments-service/scripts/migration_orphan_sweep.py,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py,
+    features-service/scripts/run_cefi_perp_funding_corpus.py,
+    /plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md,
   ]
 ---
 
@@ -687,3 +685,10 @@ reality (GMX purge banner; the P2(b) "safe to delete" assumption) — both caugh
 
 - **P1 corpus recompute**: historical window landed (confirmed 08-09); blocked on the NEW 08-06+ forward-poll cron gap
   (`[INFRA] P1`), filed in `/plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md`).
+
+- **context-scout 2026-08-15**: first-ever context-scout pass on this doc (context_scope existed but had never carried
+  a dated marker). Refreshed context_scope (4 entries), retargeted at the sole open todo (physical GCS duplicate
+  cleanup, step 3 of the 2026-08-04 ruling): dropped the now-fixed splitter script
+  (`migration_orphan_sweep.py`) and the two `related:`-only sibling docs, added
+  `cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md` — confirmed via this doc's own "Deferred after
+  2026-08-09" section as the actual current blocker on the corpus-freshness gate this todo's delete is waiting on.

@@ -46,6 +46,7 @@ superseded_by:
 context_scope:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
@@ -388,3 +389,8 @@ identical primary-owner precedent batch6/7/8 established for the same docs:
   snapshot backup; post-purge from the live manifest (gen 1786401070022279). **Memory note**: this host (30GB, 16 cores,
   12GB swap in use, 8 other claude sessions) cannot hold 2 copies of the 42-column 11.2M-row manifest in pandas; pyarrow
   succeeded with careful `del`+`gc.collect()` between stages.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) -- fingerprint cross-reference added
+  `/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`, the doc whose own 2026-08-09 root-cause
+  entry diagnosed the exact `canonical_twin_path()` pre-hive-shape bug this batch's own todo 3 shipped a fix for
+  (`is@bbcc6395`, `_pre_hive_parser()`) -- same finding, both docs in this scouting batch.

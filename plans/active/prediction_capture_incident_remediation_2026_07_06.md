@@ -539,3 +539,5 @@ orchestrator-dispatched).
   read of that batch before touching this doc — no duplicate extraction created. Whole-doc flip stays blocked (7 items
   still genuinely parked). No reclassification here; flagging for whoever next reconciles this doc's own Phase 6
   checkbox once batch10 lands.
+
+- **context-scout 2026-08-15**: re-verified context_scope (5 entries), unchanged.

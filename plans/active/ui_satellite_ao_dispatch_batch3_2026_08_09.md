@@ -56,6 +56,7 @@ context_scope:
     /plans/active/artifact_pipeline_observability_2026_07_17.md,
     /plans/active/ui_satellite_ao_dispatch_batch1_2026_08_06.md,
     /codex/05-infrastructure/vm-tarball-deployment.md,
+    /plans/archive/issues/deployment_service_qg_red_qg_snapshot_launcher_live_vm_flake_2026_07_27.md,
   ]
 source: >-
   round11 RECLASSIFY + satellite-batch-extraction sweep 2026-08-09 (cross-cutting + ui tranches, largest 2 of 10) —
@@ -123,3 +124,6 @@ drift_direction: advance-docs
   spot-check) but no HARD verification of whether the claimed misattribution was corrected before archival. Source doc
   (`artifact_pipeline_observability_2026_07_17.md`) is grace-blocked this run — cannot flip its corresponding checkbox.
   Full findings: `plans/active/issues/plan_reconciler_findings_ui_2026_08_11.md`.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) — added todo 3's edit target
+  (`/plans/archive/issues/deployment_service_qg_red_qg_snapshot_launcher_live_vm_flake_2026_07_27.md`; this doc's own
+  todo 3 prose cites it without the `archive/` prefix — stale since archival, flagged not rewritten).

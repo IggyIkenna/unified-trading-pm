@@ -822,3 +822,6 @@ duplicating a new issue doc. Skipping via `reason_code: GATED` per this doc's es
   (status:draft-upstream non-derivation, markdown-bold/indented-sub-bullet derivation-regex edge cases) still under
   active investigation via ongoing recurrence notes (most recently 2026-08-09) — genuinely not yet bounded to a single
   fix, consistent with every prior pass on this doc.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (5 entries), unchanged — all 5 confirmed to still
+  resolve on disk (double-checked the two `gate_on_depends_noop_on_*_2026_07_21.md` archive-path entries directly,
+  since this doc's own `related:` list cites the same two docs and both are correctly archive-pathed already).

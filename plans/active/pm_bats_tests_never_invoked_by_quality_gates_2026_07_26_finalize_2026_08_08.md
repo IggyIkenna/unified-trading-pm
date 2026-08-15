@@ -145,3 +145,5 @@ superseded_by:
   actionlint transitional pattern, and the per-repo `BATS_HARD_FAIL=1` opt-in (PM only, post clean-baseline re-measure)
   — matches the shipped code exactly, no invented behavior. `grep -in bats /codex/06-coding-standards/quality-gates.md`
   was 0 hits before this edit, confirming the gap was real.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries).

@@ -853,3 +853,6 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
   fixes are all shipped) for the execution-service adapters dir, since the sole remaining open item (F46,
   BLOCKED-CREDENTIALS) is the binance/bybit/okx `place_order` scaffolds there.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (5 entries), unchanged — sole open item (F46,
+  BLOCKED-CREDENTIALS) unchanged since the 2026-08-05 marker; the 2026-08-12 edit was only the corpus-wide
+  `locked_by` placeholder clear.

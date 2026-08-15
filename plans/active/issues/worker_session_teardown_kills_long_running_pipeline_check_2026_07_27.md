@@ -529,3 +529,4 @@ tracked here rather than silently claimed complete.
   `mdps-e2e-shared-host-teardown-fixed` closure condition. Worth surfacing to whoever roots-causes this: prefer
   foreground execution over backgrounding for any check expected to finish within the timeout budget, until the
   underlying watchdog/RAM-exhaustion mechanism is fixed.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries), unchanged.

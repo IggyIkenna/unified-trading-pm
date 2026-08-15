@@ -146,3 +146,5 @@ Marked `assigned_vm: NA` — this is a design decision, not a worker-determinabl
   24h (max attempted_at 2026-08-11, 2d old) and zero `"schema contract violated"` rows since 2026-07-31 — the re-fire is
   100% dedup-inertia (the `_resolve_pm_path`-returns-None path), not a data regression. Worker sessions keep being
   burned until the Option A [CODE] P2 todo lands.
+- **context-scout 2026-08-15**: re-verified context_scope (5 entries) — all five still directly cited by the doc's own
+  body; no change needed.

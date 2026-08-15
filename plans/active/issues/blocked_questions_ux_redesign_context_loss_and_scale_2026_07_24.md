@@ -42,9 +42,9 @@ depends_on: []
 context_scope:
   [
     /plans/epics/escalation_and_disaster_recovery_master.md,
-    /plans/archive/issues/dispatch_sequential_gate_fix_2026_07_24.md,
-    agent-orchestrator/server/transcript_log.py,
     agent-orchestrator/server/orm.py,
+    agent-orchestrator/server/transcript_log.py,
+    agent-orchestrator/dashboard/src/layout.tsx,
     /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,
     /plans/archive/2026_08/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md,
   ]
@@ -278,3 +278,6 @@ exists" section together before scoping the workstream.
   the history this correction owes: two `ui_developer` workers were dispatched onto the `[UI] P2` todo (slot-11 and
   slot-27, both 2026-08-08), each declined it as GATED on the backend dependency, and neither caught that the repo was
   wrong.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — swapped the historical dispatch-sequential-gate
+  reference for the confirmed real UI source (`agent-orchestrator/dashboard/src/layout.tsx`, `BlockedCard`), the file
+  the 2026-08-10 repo-correction entry names as the actual render location; all 4 build todos are now `[x]`.

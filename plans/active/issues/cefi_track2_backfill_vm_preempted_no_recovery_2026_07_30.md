@@ -986,3 +986,4 @@ produced reports) — see the plan diff in the same commit as this issue doc.
   Gate remains unmet — VM mid-run, no terminal exit. Declining `-003` via `reason_code: "GATED"` (no `park_now`, per
   slot-3's 13:36Z rationale — periodic re-verify beats a park that risks the silent-stall class) per the established
   mechanism (slot-13's finding, 2026-08-02).
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate.

@@ -54,6 +54,8 @@ context_scope:
   [
     scripts/plan-hygiene/check_prosewrap_padding.sh,
     plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md,
+    plans/archive/issues/prosewrap_padding_precommit_gate_blocks_already_affected_files_2026_08_09.md,
+    plans/active/issues/prosewrap_padding_corpus_wide_1290_space_2026_08_03.md,
   ]
 ---
 
@@ -116,3 +118,5 @@ plausibly hit the same wall silently and either gave up or routed around it some
   bug. Filed as its own issue rather than folded into the sibling prosewrap docs, since the root cause here is unrelated
   to prettier's own reflow bug — it's a bug in the _detector_ meant to tolerate that reflow bug, not the reflow bug
   itself.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) — added the precommit-gate doc this
+  bug's `--only` mode was added by, and the corpus-wide sibling issue.

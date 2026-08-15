@@ -52,7 +52,7 @@ context_scope:
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/tmux_pruner.py,
     /plans/archive/issues/ao_review_agent_spawn_db_lock_under_load_2026_07_26.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md,
   ]
 ---
 
@@ -449,6 +449,9 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
   (`orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md`, `ao_scheduled_job_reserve_and_staggering_2026_08_04.md`)
   touching the same live contention surface — a diagnosis-under-real-load question, not a scoped code change with a
   stated done-when.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) — swapped the generic single-VM
+  architecture codex pointer for `orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md`, the sibling doc the
+  2026-08-10 na-eligibility-audit marker named as touching the same live contention surface.
 
 ## Follow-ups
 

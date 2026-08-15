@@ -954,3 +954,4 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
   batch1b dispatch, and `colocated_feature_pipeline_in_memory_handoff_2026_06_21.md`'s item 1.5b) are all cross-doc
   reconciliation/staleness verdicts against OTHER docs' live state — this doc's own nature (judgment-based archival
   reconciliation, not bounded build work), consistent with the standing verdict.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries), unchanged.

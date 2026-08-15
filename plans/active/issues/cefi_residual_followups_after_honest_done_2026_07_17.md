@@ -67,9 +67,9 @@ source: CeFi completion program /autonomous close-out (slot-3, 2026-07-17) — a
 resolved_by:
 context_scope:
   [
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
     /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
-    /codex/02-data/per-asset-group-bucket-layouts.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     market-tick-data-service/market_tick_data_service/engine/cefi_catalog_reader.py,
     deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh,
@@ -769,3 +769,7 @@ pairs stay honest-unresolved (reported, never guessed).
 - **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — full 759-line read, 6 open items
   confirmed, each requiring a real scoping/design decision before it's worker-determinable. 1 small item (VM-launcher
   FORCE default) flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE by a prior pass and reaffirmed here, not claimed on its own.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — swapped
+  `/codex/02-data/per-asset-group-bucket-layouts.md` (its cited codex↔plan contradiction already resolved, per this
+  doc's own Phase 0a merge note) for `/plans/active/cefi_consolidated_closeout_2026_07_18.md` (the doc the 2026-08-12
+  correction banner names as reversing the stale "accepted 50.79%" framing in this doc's own summary).

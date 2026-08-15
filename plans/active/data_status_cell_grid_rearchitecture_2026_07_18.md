@@ -181,3 +181,5 @@ real fix is to never load the whole manifest per request.
   todo 2 is still an unresolved DESIGN GATE (bound vs stream vs precompute) every later todo depends on; a genuine
   architecture choice among 3 directions with different Cloud-Run-memory/single-walk-discipline implications, not a
   cheat-sheet-matched default.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (6 entries) -- unchanged; todo 2 (bound vs
+  stream vs precompute) remains the unresolved design gate every later todo depends on.

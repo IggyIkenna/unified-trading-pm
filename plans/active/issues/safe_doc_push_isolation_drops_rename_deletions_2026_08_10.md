@@ -55,6 +55,7 @@ context_scope:
     /scripts/dev/safe-doc-push.sh,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/archive/issues/safe_doc_push_isolation_rewrites_slot_commit_identity_2026_08_10.md,
+    scripts/plan-hygiene/check_create_only_archive_commits.py,
   ]
 source: >-
   Found during the 2026-08-10 autonomous ag-closeout close-out (slot 1) while verifying commit `8ac88720e6` against
@@ -244,6 +245,9 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
   NOT this change's fault: PM's bats suite has ~37-60 failing tests on macOS (`sed -i` BSD-vs-GNU and similar) that pass
   on the Linux AO VM where they were authored; they are non-blocking for the gate but make "is my change green?"
   genuinely hard to read from the log.
+- **context-scout 2026-08-15**: populated context_scope (4 entries) — added
+  `scripts/plan-hygiene/check_create_only_archive_commits.py` (the mechanical duplicate-detector script the sole
+  remaining open todo needs to update `ALLOWED_DUPLICATE_STEMS` in).
 
 ## Full sweep — 10 duplicate pairs on origin, with a verdict each (closes todo 5)
 

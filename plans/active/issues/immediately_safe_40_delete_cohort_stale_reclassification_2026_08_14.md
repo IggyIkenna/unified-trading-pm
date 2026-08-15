@@ -34,6 +34,15 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/infra_satellite_ao_dispatch_batch16_2026_08_13.md,
+    /plans/active/repo_scripts_governance_audit_2026_06_18.md,
+    /codex/06-coding-standards/script-homes.md,
+    instruments-service/scripts/build_instrument_catalogue.py,
+    deployment-service/scripts/aggregate_instruments.py,
+    unified-trading-system-ui/scripts/codemods,
+  ]
 ---
 
 # "immediately-safe ~40" DELETE cohort — 5 of 9 named items reclassified NOT-safe
@@ -144,3 +153,4 @@ has actually verified).
 - **2026-08-15 (slot 30)**: Ran the deferred GCS orphan-sweep todo. `deployment-service@a981eb4cd5` deletes the 4
   bucket-migration scripts (orphan-sweep=0 confirmed both clouds); `aggregate_instruments.py` stays — no live
   replacement CLI operation confirmed in instruments-service. New follow-up todo added to resolve that gap.
+- **context-scout 2026-08-15**: populated context_scope (6 entries) — first scout pass on this doc.

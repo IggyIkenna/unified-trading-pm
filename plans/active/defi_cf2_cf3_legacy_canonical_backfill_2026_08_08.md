@@ -128,3 +128,4 @@ todos/plans or a documented reason it still can't be scoped.
   requires a judgment call sequenced after 1-4 land real numbers, so the whole doc doesn't clear the RECLASSIFY bar yet.
   Corroborated same-day by `defi_satellite_ao_dispatch_batch11_2026_08_09.md`'s fresh extraction pass, which examined
   this doc and found zero extractable items. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate.

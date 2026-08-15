@@ -544,3 +544,5 @@ test (the doc qualifies for RECLASSIFY only when its ENTIRE remaining scope clea
 doc's OWN history documents two real, concrete 'follow-up regression' cascades from this exact investigation area within
 the same 48 hours -- both times a GitHub Actions ~21,000-char run-block cap silently broke the fleet-wide semver-agent
 pipeline (zero-jobs parse failure across ~21 repos), first via the origin...
+
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (5 entries), unchanged.

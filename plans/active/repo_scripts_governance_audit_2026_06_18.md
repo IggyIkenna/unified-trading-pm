@@ -47,6 +47,8 @@ context_scope:
     /codex/06-coding-standards/quality-gates.md,
     scripts/quality-gates-base/base-service.sh,
     plans/audit/results/repo_scripts_characterization_2026_06_18.md,
+    scripts/cicd/check_strict_quickmerge.py,
+    /plans/active/issues/immediately_safe_40_delete_cohort_stale_reclassification_2026_08_14.md,
   ]
 ---
 
@@ -452,3 +454,7 @@ narrowest literal precondition passed.
   the gated items to blind dispatch. The standing recommendation is unchanged and still un-actioned: a targeted split of
   just the bounded items into a future infra batch — `/ag-closeout-audit`'s Phase-3 job, not an `assigned_vm` flip.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — added `check_strict_quickmerge.py` (the D16
+  carve-scope enforcement code, central to Phase 3's now-superseded-then-reconfirmed scope) and the
+  `immediately_safe_40_delete_cohort_stale_reclassification_2026_08_14.md` issue doc (struck 2 of the
+  "immediately-safe" delete cohort as live CI tooling, not dead).

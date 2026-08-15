@@ -82,11 +82,11 @@ source: >-
   never-cited). Phase 1 Workflow (6 agents) classified all 6 `exclude_cross_cutting`; 2 fixed directly, 4 parked here.
 context_scope:
   [
-    /plans/archive/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md,
     /plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md,
     /plans/active/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md,
     /plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md,
   ]
 ---
 
@@ -299,3 +299,7 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
   open findings (1/2/3/5) are all cross-tranche `asset_group` retag handoffs to `ui`/`infrastructure`/`ci`, explicitly
   scoped "owning-tranche fix, leave to X tranche's own audit" -- not this tranche's write by construction.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) -- swapped
+  `deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md` (its retag todo is now MOOT, doc already
+  archived) for `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, the plan now actually dispatching this
+  doc's remaining findings.

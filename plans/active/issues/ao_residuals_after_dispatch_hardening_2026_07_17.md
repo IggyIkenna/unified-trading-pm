@@ -50,6 +50,7 @@ resolved_by:
 depends_on:
 context_scope:
   [
+    agent-orchestrator/docs/BACKLOG_RELATIONS_UX_BRIEF.md,
     /plans/epics/escalation_and_disaster_recovery_master.md,
     /plans/archive/2026_07/escalation_pipeline_mvp_2026_06_25.md,
     /plans/archive/issues/backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md,
@@ -252,3 +253,7 @@ source:
   session's scope. This is a recommendation + spec extraction only. The todo's checkbox stays `- [ ]` since the actual
   UI/endpoint work remains undone; only the "is this still blocked" verdict changed, from blocked-upstream-design to
   ready-to-dispatch.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries) — added
+  `agent-orchestrator/docs/BACKLOG_RELATIONS_UX_BRIEF.md`, now central to the re-decided UI todo's extracted spec.
+  Note: the 2026-08-03/2026-08-07 markers claimed "6 entries" while the live frontmatter carried only 5 — corrected
+  count, no items were actually missing (this addition is the genuine 6th).

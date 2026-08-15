@@ -37,6 +37,7 @@ context_scope:
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
+    market-tick-data-service/market_tick_data_service/scripts/migrate_defi_full_v9_canonical.py,
   ]
 ---
 

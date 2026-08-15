@@ -40,11 +40,10 @@ depends_on: []
 context_scope:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
-    /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md,
-    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
-    /plans/archive/issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md,
     /plans/epics/tradfi_master.md,
+    /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md,
+    /plans/active/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md,
+    /plans/active/issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md,
   ]
 ---
 
@@ -510,3 +509,7 @@ every day narrows or closes it permanently.
   independently dispatchable, same reasoning as 08-08. This exact gap is now ALSO independently tracked as its own
   `[OPERATOR] P1` todo in `ag_closeout_audit_tradfi_parked_2026_08_10.md` (Finding 5, filed today) -- cross-referencing,
   not duplicating. `assigned_vm` unchanged.
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) — swapped 3 docs tied to already-closed decision
+  items for `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` (the literal item-5 flip target, still draft/NA
+  per the 08-10 entry above) and `ag_closeout_audit_tradfi_parked_2026_08_10.md` (fresh cross-tracking of the same gap);
+  kept the item-10 TIME-CRITICAL target doc.

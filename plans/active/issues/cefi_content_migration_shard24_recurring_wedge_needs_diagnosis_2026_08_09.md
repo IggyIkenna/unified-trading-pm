@@ -53,6 +53,7 @@ context_scope:
     /plans/archive/2026_08/issues/cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
+    market-tick-data-service/scripts/migrate_cefi_content_instrument_id_catalogue_2026_07_17.py,
   ]
 resolved_by:
 source: >-
@@ -245,3 +246,7 @@ not `2026-01-07`.
      `gc.collect()` cadence) to release native buffers sooner.
   4. Raise the 30s `as_completed` timeout to 120s for large-file tolerance, suppressing the misleading "possible wedged
      worker" warning noise — the 900s STALL timeout is the real safety valve.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) -- added
+  `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py`, the migration script whose stall-detection logic and
+  book_snapshot_5 volume profile the Finding 1-3 root-cause diagnosis (slot-17, 2026-08-10) is directly about; the prior
+  list had zero source-code paths despite the doc's own diagnosis section reading the script in full.

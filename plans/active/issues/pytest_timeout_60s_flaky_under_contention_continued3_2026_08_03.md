@@ -67,10 +67,10 @@ context_scope:
   [
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md,
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md,
+    /plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md,
     /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
     /codex/06-coding-standards/quality-gates.md,
     instruments-service/scripts/quality-gates.sh,
-    features-service/scripts/quality-gates.sh,
   ]
 ---
 
@@ -558,3 +558,7 @@ per qg-host-governor.sh) is itself direct evidence recurrence continued PAST the
   ratchet class). Zero `Timeout (>150s)` / pytest-timeout recurrence anywhere. Window NOT yet closed (day ~7 of ~14,
   closes ~2026-08-20); releasing via skip-current-task with `reason_code: "GATED"`, `estimated_unblock_minutes: 180` per
   the founding doc's slot-32 precedent.
+
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — restored the founding doc
+  (`pytest_timeout_60s_flaky_under_contention_2026_07_29.md`, explicitly cited in this doc's own body as required
+  reading) in place of the less-central `features-service/scripts/quality-gates.sh` entry.

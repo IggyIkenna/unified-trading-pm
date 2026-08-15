@@ -37,6 +37,7 @@ context_scope:
     /plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md,
     unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py,
     instruments-service/instruments_service/reference_data/adapters/defi/kamino.py,
+    instruments-service/scripts/fix_kamino_stale_colon_catalog_rows_2026_08_10.py,
   ]
 ---
 

@@ -41,6 +41,7 @@ context_scope:
     market-tick-data-service/market_tick_data_service/cli/handlers/websocket_streaming_handler.py,
     e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py,
     deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh,
+    /plans/active/issues/prediction_live_instrument_cache_never_refreshed_and_polymarket_catalog_gap_2026_08_14.md,
   ]
 supersedes:
 superseded_by:
@@ -340,3 +341,7 @@ _(append dated entries here)_
   the conflict was pure stash-pop residue, not a real content difference). Left the now-redundant `autostash` stash
   entry in place (its content was already fully applied/resolved in the working tree; `git stash drop` is hard-blocked
   for agents by the orchestrator guardrail, correctly).
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) -- added the new prediction
+  instrument-cache/Polymarket-catalog issue doc (the still-open Finding C prediction-stall root-cause tracker) alongside
+  the 4 connector/handler/validator/launcher source paths already covering Findings A/B/C's cefi legs.

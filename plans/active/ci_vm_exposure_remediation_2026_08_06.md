@@ -49,8 +49,7 @@ context_scope:
     /plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md,
     scripts/self-hosted-runners/github-glue-runner.slice,
     scripts/self-hosted-runners/setup-glue-runners.sh,
-    agent-orchestrator/scripts/resource-history-sampler.service,
-    agent-orchestrator/scripts/install-resource-history-sampler.sh,
+    scripts/quality-gates-base/qg-host-governor.sh,
   ]
 ---
 
@@ -156,6 +155,11 @@ operator instruction), verified via AWS SSM — no smoke-test-only claims.
 - **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries) — the predecessor io-starvation audit
   issue doc naming these 3 exposure items, the cgroup slice + runner setup script todo 3's investigation targets, and
   the resource-history sampler service + installer todo 2 shipped a fix into.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) — todos 1-2 (swap, resource-history parity) are now
+  DONE, so dropped the 2 entries targeting that shipped work (`resource-history-sampler.service`,
+  `install-resource-history-sampler.sh`) and added `scripts/quality-gates-base/qg-host-governor.sh` — the mechanism
+  todo 3 (the sole remaining open item) recommends wrapping. Kept the source issue doc + the cgroup slice/runner-setup
+  script.
 
 ## Codex SSOTs
 

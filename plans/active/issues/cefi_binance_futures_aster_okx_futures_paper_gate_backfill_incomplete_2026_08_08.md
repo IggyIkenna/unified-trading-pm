@@ -51,9 +51,12 @@ superseded_by:
 resolved_by:
 context_scope:
   [
-    /plans/archive/2026_08/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md,
     /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
+    /plans/active/issues/backlog_regen_reverted_p1_2_park_2026_08_01.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    market-tick-data-service/scripts/restamp_cefi_onchain_perp_venue_chain_2026_07_21.py,
     /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/archive/2026_08/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md,
   ]
 ---
 
@@ -444,3 +447,9 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
   durable park. No new cross-reference filed — `backlog_regen_reverted_p1_2_park_2026_08_01.md` already tracks this
   exact bug class (now 18 touches post-park: slot 19 park -> slots 29, 20, 4, 9, 31, 16, 13, 32, 5, 27, 2, 28, 17, 15,
   25, 18, 6 all bypassing the park). No code/report changes; this Progress Log entry is the only change this turn.
+
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — doc grew substantially since the 2026-08-09
+  marker (18+ Progress Log entries: the DP-FETCH-009 diagnosis, a new `[OPERATOR] P1` manifest-purge todo, and 18
+  documented AO park-bypass bounces). Added the standing SSOT for that bug class
+  (`backlog_regen_reverted_p1_2_park_2026_08_01.md`, cited ~15x), the delete-safety protocol, and the exact
+  safe-pattern script (`restamp_cefi_onchain_perp_venue_chain_2026_07_21.py`) the new OPERATOR todo must follow.

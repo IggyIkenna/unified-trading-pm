@@ -70,10 +70,10 @@ context_scope:
   [
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md,
-    market-tick-data-service/scripts/pipeline_e2e_check.py,
     unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py,
     unified-api-contracts/unified_api_contracts/registry/tradfi_symbology.py,
-    /plans/epics/infrastructure_master.md,
+    unified-api-contracts/unified_api_contracts/canonical/domain/derivatives/tradfi_roots.py,
+    market-tick-data-service/market_tick_data_service/scripts/rewrite_tradfi_chain_bundle_content_id_2026_07_25.py,
   ]
 ---
 
@@ -503,3 +503,7 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
   promoted "RECLASSIFY-READY" by the 08-08 pass but correctly gated at the DOC level by todos 1+3, extraction into a
   satellite AO-dispatch batch recommended but not this skill's mechanism; todo 3 OPERATOR_QUESTION on the reverse
   root-token derivation ruling). `assigned_vm` unchanged.
+- **context-scout 2026-08-15**: re-scouted; swapped `pipeline_e2e_check.py` (original sampler, largely fixed) and
+  `/plans/epics/infrastructure_master.md` (generic parent-epic umbrella) for `tradfi_roots.py` (todo 2's 3rd-copy
+  migration target) and `rewrite_tradfi_chain_bundle_content_id_2026_07_25.py` (todo 3's currently-broken code) —
+  better matches the 3 remaining open todos' actual substance (6 entries).

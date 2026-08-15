@@ -28,6 +28,13 @@ drift_direction: fix
 resolved_by:
 locked_by: plan_reconciler (agt-716973) since 2026-08-10T05:24:47Z
 depends_on: []
+context_scope:
+  [
+    unified-trading-pm/cursor-configs/skills/plan-reconcile/SKILL.md,
+    unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh,
+    unified-trading-pm/scripts/plan-hygiene/check_reference_paths.py,
+    /plans/active/issues/plan_reconciler_findings_ci_2026_08_10.md,
+  ]
 ---
 
 # plan_reconciler findings — infra tranche — 2026-08-10
@@ -387,3 +394,8 @@ referrer docs' commit ages first and complete the 6-step ritual if clear.
   (`status: active`, `last_updated: 2026-08-10`, added both plans to `related:`), replaced archival banner with revival
   note. Findings doc Deferred-work table updated — both operator-owned rows now Done. PM repo clean, committing +
   pushing this turn.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) — cross-referenced
+  `plan_reconciler_findings_ci_2026_08_10.md` (fingerprint match: both docs independently found + fixed the identical
+  stale `staging-lock-check.yml`/`staging-backmerge-to-ldr.yml` codex claim in `ci-cd-flow.md` this same run, per this
+  doc's own "Codex corrections applied" section item 1).

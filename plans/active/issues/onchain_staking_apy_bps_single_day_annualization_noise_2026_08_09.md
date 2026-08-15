@@ -51,8 +51,10 @@ source: >-
   staked-basis e2e dry-run + IS_TEST_RUN=true run + read-back assertion).
 context_scope:
   [
-    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md,
     features-service/features_service/onchain/engine/lst_features.py,
+    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py,
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch12_2026_08_09.md,
   ]
 ---
 
@@ -145,3 +147,9 @@ within normal LST peg noise) compounds to -18% to -35% "APY".
   correctly. Found + fixed one orphaned gap: the "Why this matters" section's "Consumer impact not verified" bullet
   still read as an open question after batch12 had already answered it — updated to state the verified RAW finding with
   the same file:line citations, so no stale "still looks open" text remains.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) — retargeted onto the remaining
+  `[DESIGN] P1` fix: added the raw consumer (`staked_basis.py`, cited by file:line in this doc's own "Why this matters"
+  section) and the strategy archetype codex SSOT (already in this doc's own `related:` frontmatter but not previously
+  in context_scope); dropped `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md` (where this was found, now less
+  relevant than where the fix must land) in favor of `defi_satellite_ao_dispatch_batch12_2026_08_09.md` (the DIAG
+  evidence with the exact consumer file:line citations).

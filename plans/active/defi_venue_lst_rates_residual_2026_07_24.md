@@ -56,6 +56,7 @@ context_scope:
   [
     /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
     /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
+    /plans/active/issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md,
     unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py,
   ]
 ---
@@ -235,3 +236,6 @@ read-only scoping finding.
   ritual (banner + git mv + fixing ~19 corpus referrers) in the same pass — genuinely done, intentional terminal state,
   but that referrer sweep deserves its own dedicated plan-hygiene pass, not a rushed side-step of an already-large
   gate-unblocking session.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) — added
+  `issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md`, the confirmed owner of this doc's redirected
+  remaining scope (2026-08-11 operator no-op close).

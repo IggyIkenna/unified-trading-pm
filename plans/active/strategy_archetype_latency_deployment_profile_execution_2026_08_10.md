@@ -48,10 +48,10 @@ locked_since:
 context_scope:
   [
     unified-trading-pm/configs/runtime-topology.yaml,
-    strategy-service/strategy_service/portfolio_allocator/archetypes.py,
-    strategy-service/strategy_service/engine/strategies/v2/archetype_slots_common.py,
-    deployment-service/deployment_service/runtime_topology_validator.py,
-    deployment-service/deployment_service/dependencies.py,
+    unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py,
+    deployment-service/deployment_service/deployment_profile_derivation.py,
+    /codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md,
+    /plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md,
   ]
 supersedes:
 superseded_by:
@@ -316,3 +316,12 @@ source: >-
   `/plans/archive/2026_08/issues/ao_backlog_regen_missing_self_declared_not_ao_eligible_guard_2026_08_14.md`. A future
   regen tick should stop dispatching this plan's residual-gaps todo; if it recurs after this fix lands, that's a fresh
   guard-gap, not this same root cause.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) -- corrected 3 stale author-time-guess
+  entries (`strategy-service/.../archetypes.py`, `archetype_slots_common.py`,
+  `deployment-service/.../runtime_topology_validator.py`, `dependencies.py` -- none of which this doc's own Progress
+  Log ever names as where real work landed) to the actual shipped files: UAC's `internal/architecture_v2/enums.py`
+  (the real `ARCHETYPE_TO_DEPLOYMENT_PROFILE` registry, todo 1) and
+  `deployment-service/deployment_service/deployment_profile_derivation.py` (the central derivation engine
+  built/extended across todos 3/4/9, mentioned 12x in this doc's own text vs 0x for the dropped files) -- plus
+  `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` (the decision artifact this plan implements against) and the
+  upstream audit plan this plan's own `depends_on`+`gate_on_depends` is gated on.

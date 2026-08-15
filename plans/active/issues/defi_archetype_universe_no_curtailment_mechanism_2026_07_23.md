@@ -38,12 +38,10 @@ source: agent-discovered (per-archetype DeFi universe mapping audit, 2026-07-23)
 depends_on: []
 context_scope:
   [
-    /codex/04-architecture/tier-and-import-architecture.md,
-    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/recursive_staked.py,
-    execution-service/execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_predicate.py,
-    strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py,
     /plans/archive/issues/mvp_scope_resolver_code_read_2026_07_24.md,
+    strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py,
+    /codex/04-architecture/tier-and-import-architecture.md,
   ]
 ---
 
@@ -883,3 +881,6 @@ roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tic
   design calls (dispatch-scope-eligibility rule: "figure out how X should look" is a human decision, not a checkable
   worker todo), not blocked by any infra/credential/process precedent this round settled. No satellite-extraction
   candidate found. Doc stays `assigned_vm: NA` (KEEP-NA valid, round11). Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: re-scouted; refreshed context_scope (4 entries) — the RecursiveLoopOrchestrator item was
+  flipped done 2026-08-12 (see above), so this doc's sole remaining open item is the MVP_SCOPE catalog-identity
+  precondition; dropped the now-resolved item's 2 source files, kept/retargeted the rest at the MVP_SCOPE work.

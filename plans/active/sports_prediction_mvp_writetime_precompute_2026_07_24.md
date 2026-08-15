@@ -54,6 +54,7 @@ superseded_by:
 context_scope:
   [
     /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
     unified-trading-library/unified_trading_library/manifest_writer/_rows.py,
     unified-trading-library/unified_trading_library/manifest_writer/_writer_captured.py,
     deployment-api/deployment_api/routes/data_status/_catalogue.py,
@@ -176,3 +177,7 @@ of 2026-07-22, the last tick that touched it.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — re-confirms 2026-08-02; the sole todo remains an explicit
   scope-risk STOP (a MANIFEST_SCHEMA_VERSION 9→10 bump on UTL's shared `AvailabilityRecord` needing a full-fleet
   redeploy plus unverified manifest-consolidator schema-evolution behaviour), not bounded single-service work.
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) — added
+  `/codex/05-infrastructure/manifest-consolidator-ssot.md`, the doc this plan's own "Why this STOPS here" section names
+  as the "loud-fails on stale index" risk to re-verify against before bumping `MANIFEST_SCHEMA_VERSION` (previously
+  cited only in the Codex SSOTs section below, not in context_scope).

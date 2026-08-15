@@ -105,6 +105,7 @@ context_scope:
     scripts/workflow-templates/rollout-workflow-templates.sh,
     /plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md,
     /plans/active/issues/workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md,
+    scripts/cicd/ldr_to_main_fleet_promote.sh,
   ]
 ---
 
@@ -279,3 +280,5 @@ context_scope:
   origin). NOTE: the batch doc's cited `8a7b1860a0` was a mis-citation (that SHA is an unrelated pm_root QG test-fix);
   the actual template-lint commit is `92ab939583` — corrected in the flipped checkbox above. Doc stays open —
   `[DEVOPS] P2` (investigate promote-PR non-supersession) remains genuinely open-ended.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) — added `ldr_to_main_fleet_promote.sh`
+  as the source-code target for the sole remaining open todo (investigate the promote-PR non-supersession gap).

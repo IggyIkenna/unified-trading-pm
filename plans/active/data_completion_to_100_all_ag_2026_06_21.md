@@ -881,3 +881,4 @@ disposition (re-audited 2026-07-21):
   against this specific checkbox. 13 open todos remain.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate -- the BYBIT
   futures_chain delete execution + CF2/CF3 dispatch (2026-08-08) resolved checkboxes, no new source/codex reference.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate.

@@ -50,6 +50,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/tradfi_satellite_ao_dispatch_batch12_2026_08_10.md,
+    /plans/active/issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -81,3 +82,5 @@ context_scope:
 ## Progress Log
 
 - **2026-08-10 (ag_closeout_auditor, slot 22, dispatch agt-a19d1f)**: created alongside batch12, same run.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) — added the reconciliation target source doc
+  (`issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md`, named directly in todo 1).

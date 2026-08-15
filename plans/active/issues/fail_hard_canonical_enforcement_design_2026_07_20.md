@@ -33,9 +33,10 @@ locked_since:
 context_scope:
   [
     /codex/04-architecture/shard-level-failure-isolation.md,
-    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_cefi_shards.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/partitioned_writer.py,
     unified-api-contracts/unified_api_contracts/canonical/quarantine.py,
   ]
 resolved_by:
@@ -258,3 +259,6 @@ implementation todos on that check, since they're each independently reviewable 
   proposed resolutions to all three §5 gaps (§5b), closed the `[DESIGN] P1` todo, split implementation into 3 new
   bounded todos. Not implemented — design only. Recommend a quick operator/engineering sanity check on §5b before the
   implementation todos ship, given this governs a live production correctness gate for options-chain/derivative data.
+- **context-scout 2026-08-15**: re-scouted; refreshed context_scope (6 entries) — swapped the general
+  `cefi_consolidated_closeout_2026_07_18.md` umbrella-plan citation (still available via `related:`) for
+  `venue_fetch.py`/`partitioned_writer.py`, the two files the still-open Gap 2 implementation todo names explicitly.

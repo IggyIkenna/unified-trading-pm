@@ -328,3 +328,6 @@ items:
   laden); the DeFi evidence-fidelity item's 2026-07-28 re-scoping (25+ non-uniform call sites, a per-fetch-family
   return-signature widen, NOT a bounded 1-hour change) still holds on a fresh read — no new evidence changes any of the
   three verdicts.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate -- both remaining open
+  todos (tradfi attempted_failed retry, DeFi evidence-fidelity) are covered by the existing `wave_launcher.py`/
+  `governance_adapter.py` source paths.

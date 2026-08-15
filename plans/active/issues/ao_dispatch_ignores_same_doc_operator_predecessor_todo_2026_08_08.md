@@ -46,7 +46,12 @@ locked_by:
 resolved_by:
 last_updated: 2026-08-08
 locked_since:
-context_scope: [agent-orchestrator/server/routes/backlog.py, agent-orchestrator/server/dispatch.py]
+context_scope:
+  [
+    agent-orchestrator/server/routes/backlog.py,
+    agent-orchestrator/server/dispatch.py,
+    /plans/active/task_template.md,
+  ]
 ---
 
 # AO dispatch ignores a same-doc [OPERATOR]-predecessor todo when dispatching a dependent [INFRA] todo
@@ -119,3 +124,6 @@ Live, directly-observed during routine blocked-queue sweeps:
   `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`'s Progress Log for the full ruling +
   `unified-trading-pm@d765b4cfb1`. Flipped this doc's `[OPERATOR]` todo accordingly. The live `unpark` API call itself
   is left as a standing follow-up (no AO dashboard/API access from this session) — noted inline on the todo.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries) — added `plans/active/task_template.md`,
+  the sole remaining open todo's own proposed edit target (an explicit `depends_on`/todo-ordering authoring
+  convention).

@@ -961,3 +961,5 @@ The batch9 `/ag-closeout-audit sports` run that generated this todo (2026-08-04,
 pre-closure state — a same-day race between the closing commit and the audit's classification pass, not a genuine gap.
 Checkbox flipped citing the existing evidence; no new GCS deletes performed this session (redoing a completed
 five-part-proof delete against already-deleted/already-not-found objects would be pure waste, not a safety concern).
+
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (5 entries), unchanged.

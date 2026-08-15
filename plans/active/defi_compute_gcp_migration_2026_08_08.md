@@ -61,18 +61,11 @@ sequential: true # operator directive 2026-08-08: flip to AO dispatch. Several t
 # of forgoing parallelism on the doc-update todos.
 context_scope:
   [
+    /plans/active/defi_compute_gcp_migration_2026_08_08_finalize_2026_08_08.md,
     /codex/04-architecture/cloud-agnostic-migration.md,
     /codex/11-project-management/dual-cloud-cost-ops-playbook.md,
-    /codex/04-architecture/seamless-cloud-switch.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /codex/02-data/manifest-migration-coordination.md,
-    /codex/05-infrastructure/dual-cloud-image-builds.md,
-    /codex/04-architecture/promote-workflow-architecture.md,
-    deployment-service/configs/cloud-run/execution-service.yaml,
-    deployment-service/configs/cloud-run/features-service.yaml,
-    deployment-service/configs/cloud-run/strategy-service.yaml,
-    deployment-service/configs/clusters/defi.yaml,
-    unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py,
+    /plans/epics/infrastructure_master.md,
   ]
 source:
   [
@@ -538,3 +531,6 @@ them).
     `gcloud run services add-iam-policy-binding features-service --member=allUsers --role=roles/run.invoker`
     (asia-northeast1, central-element-323112) → re-verified anonymous `/health` 200 + `/readiness` 200, matching
     execution-service/strategy-service posture. No repo code changed. Next: todo 13 is actionable from ~08-13/14.
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries, pruned from 12) -- all 3 GCP deploys are done, so
+  dropped the now-stale deploy-time YAML/bucket-naming source paths; kept the 3 codex docs the remaining DOC todos must
+  update, the epic the remaining DOC todo must resolve, and the gated finalize plan.

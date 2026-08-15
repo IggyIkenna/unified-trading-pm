@@ -222,3 +222,4 @@ Approving this plan means: flip `status: draft` → `active` here (the finalize 
   (`~/.cache/prek/patches/1786283053921-3898887.patch`) before this commit. Shipped: unified-trading-pm@afd6891bb3
   (source split + archive doc + stub index); this docs(plans) commit flips this doc's own todo + the source issue doc's
   own todo.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries).

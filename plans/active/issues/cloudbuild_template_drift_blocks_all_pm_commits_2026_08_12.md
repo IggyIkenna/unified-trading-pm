@@ -48,6 +48,7 @@ context_scope:
   [
     scripts/quality_gates/check_cloudbuild_template_drift.py,
     scripts/quality_gates/cloudbuild_template_drift_baseline.yaml,
+    scripts/propagation/rollout-cloudbuild.py,
   ]
 source: >-
   Hit live 2026-08-12 in slot 3, gating an unrelated stash-tooling + freshness-gate change. The same repo's
@@ -276,3 +277,9 @@ The shared structural property is that **`quality-gates.sh` aggregates fleet-wid
 repo's regression becomes every agent's blocker, and the agent who pays is chosen by who commits next rather than by who
 caused it. Worth deciding as a policy question, not incident by incident — see the sibling issue's P2 todo on whether a
 calendar/fleet-triggered ratchet should be able to hard-block commits at all.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (3 entries) — this doc had none before; added the drift checker
+  + its baseline (the doc's own core mechanism) and `rollout-cloudbuild.py` (the open P1 todo's exact named target, the
+  `_cloudbuild_markers()` substitutions blind spot).

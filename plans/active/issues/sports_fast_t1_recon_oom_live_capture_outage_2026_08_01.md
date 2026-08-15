@@ -690,3 +690,5 @@ Re-scope rationale: `odds_horizon_bucket` is never a requested data_type for liv
 known_dead_shard_gate.py:232), so the literal `still fetching=[...]` line cannot fire; the source-blind skip it
 addresses is verified silent (0 `SKIP date` in 7 days) while real capture proceeds (08-09: 14,562 records; GCS objects
 under `day=2026-08-08`+`day=2026-08-09`). No code changed; P3 deploy-dependent follow-up remains tracked separately.
+
+**context-scout 2026-08-15**: re-scouted; context_scope re-verified (6 entries), unchanged.

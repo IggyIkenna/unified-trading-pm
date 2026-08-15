@@ -46,7 +46,13 @@ resolved_by:
 locked_by:
 locked_since:
 context_scope:
-  [/codex/02-data/honest-absence-downstream-handling.md, /codex/02-data/availability-manifest-and-data-status.md]
+  [
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/__init__.py,
+    /plans/active/tradfi_satellite_ao_dispatch_batch12_2026_08_10.md,
+  ]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -151,3 +157,8 @@ urgency, and warrants its own scoped implementation + test pass.
   (status: draft, its own `Source:` citations name this doc's todo 1/todo 2 exactly), drafted by an earlier same-day
   `/ag-closeout-audit tradfi` pass -- see the per-checkbox citations above. Declining to flip `assigned_vm` to avoid a
   double-dispatch once batch12 activates; fix is citation-only.
+
+- **context-scout 2026-08-15**: populated context_scope (5 entries) — first scout pass. Added the operator's
+  `--start-floor` ruling doc, the fix target (`is_venue_available()`), and the confirmed real extraction target
+  `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` (both open todos are citation-only per the 2026-08-10
+  na-eligibility-audit).

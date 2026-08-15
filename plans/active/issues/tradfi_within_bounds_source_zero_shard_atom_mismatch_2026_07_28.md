@@ -386,3 +386,4 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` (status: active) -- the actual dispatch vehicle. Independently
   cross-checked against `tradfi_databento_account_billing_suspended_2026_08_09.md`, which explicitly lists this doc as
   "left ungated" (reads already-captured data, no live Databento dependency). `assigned_vm` unchanged.
+- **context-scout 2026-08-15**: re-verified context_scope (5 entries), unchanged.

@@ -46,7 +46,7 @@ context_scope:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/06-coding-standards/quality-gates.md,
     /codex/11-project-management/,
-    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_07.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_10.md,
   ]
 supersedes:
 superseded_by:
@@ -555,3 +555,6 @@ not data-pipeline).
   `session_bound_vm_monitoring_ reliability_gap_2026_07_26.md` and `infra_plan_reconcile_parked_decisions_2026_07_26.md`
   confirmed already registered above (2026-07-27 entry) with proper `[text](path)` links, not bare filenames — no edit
   needed there.
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) — swapped the parked-findings pointer from
+  `ag_closeout_audit_infra_parked_2026_08_07.md` to the current `ag_closeout_audit_infra_parked_2026_08_10.md` (mirrors
+  this doc's own established rotation pattern; the 08-07 doc's findings are now superseded by later runs).

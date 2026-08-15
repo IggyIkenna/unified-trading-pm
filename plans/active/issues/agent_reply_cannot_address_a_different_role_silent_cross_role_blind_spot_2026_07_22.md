@@ -44,12 +44,9 @@ locked_since:
 depends_on: []
 context_scope:
   [
-    /codex/04-architecture/agent-orchestrator-overview.md,
-    /codex/04-architecture/agent-orchestrator-alerting.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     agent-orchestrator/server/routes/agents.py,
-    unified-trading-pm/agents/main.md,
-    /plans/archive/issues/ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md,
-    /agents/review.md,
   ]
 ---
 
@@ -268,3 +265,8 @@ too large.
   (`gate_on_depends: true`) on batch5's own todos completing first, so this doc's archival will land automatically
   through that already-dispatched chain rather than needing separate action here. Not reclassifying this doc itself —
   doing so would create a competing/duplicate archival claim against the plan that already owns it.
+- **context-scout 2026-08-15**: refreshed context_scope (3 entries) -- the routing fix itself fully shipped (all 4
+  original todos `[x]`); rebuilt around the sole remaining archival-tracking todo (batch5_finalize, the gating plan +
+  the archival-discipline codex SSOT), dropped the now-superseded design-phase pointers
+  (agent-orchestrator-overview/alerting SSOTs, main.md/review.md procedure files, the 2026-07-08 sibling issue) that
+  were load-bearing while the fix was still being designed/shipped, not now that it's archival-pending.

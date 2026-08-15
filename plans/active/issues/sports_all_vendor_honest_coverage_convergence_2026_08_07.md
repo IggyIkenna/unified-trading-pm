@@ -997,3 +997,4 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   direct grep before citing. QG green (5352 passed); 4 existing drilldown-route tests updated to patch `run_bounded` at
   its call-site path (patching the inner fn would make `run_bounded` try to pickle a `Mock` for a real spawned child) +
   1 new regression test for the `BoundedSubprocessError` → 503 mapping.
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries, unchanged).

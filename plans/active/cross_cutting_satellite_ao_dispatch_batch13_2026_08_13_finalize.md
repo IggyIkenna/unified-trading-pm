@@ -72,3 +72,9 @@ source: >-
       standard 6-step archival ritual on it, then archive this finalize plan too. Done when: the batch plan and this
       finalize plan are both under `plans/archive/`, and `regenerate_active_plan_inventory.py` reports zero orphan
       referrers to either.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries) -- gated finalize doc pointing only at
+  its machine-held parent batch plus the two codex SSOTs (archival discipline + commit-push-flip-rule) its own todos
+  cite; no source-code target of its own.

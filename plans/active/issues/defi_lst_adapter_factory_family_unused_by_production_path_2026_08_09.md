@@ -145,3 +145,6 @@ only). This is the same audit methodology, one layer down: `market_interface/fac
   original... binary" section states plainly this is a design call `task_template.md`'s dispatch-scope-eligibility
   rule reserves for a human, not something a worker can determine from the code alone. No RECLASSIFY or
   satellite-extraction applies — there is only the one item, and it is not bounded. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: populated context_scope (3 entries) — the adapter-factory registry, the live ABI-direct
+  LST capture path, and the oracle-prices constants module, i.e. the two live mechanisms the `[OPERATOR]` decision must
+  weigh against the unused adapter-class family.

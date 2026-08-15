@@ -38,8 +38,10 @@ context_scope:
   [
     /cursor-configs/skills/context-scout/SKILL.md,
     /plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md,
-    scripts/plan-hygiene/generate_context_scope_inventory.py,
     /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
+    scripts/plan-hygiene/check_line_caps.sh,
+    /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
+    /plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
   ]
 ---
 
@@ -339,6 +341,12 @@ lock check before doing Phase-1 analysis; a future pass should do the full scout
   `gcs-and-manifest-delete-safety-protocol.md`, `vm_log_archival_cron.py`, `vm_log_archival_scheduler.tf`), not the
   "stub" the Follow-up's own text still describes — surfaced as a stale-candidate finding, not corrected here (out of
   this skill's scope).
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — swapped `generate_context_scope_inventory.py`
+  (Phase-0 inventory tooling, not directly load-bearing for the 3 still-open Follow-ups) for `check_line_caps.sh` (the
+  tool all 3 open trim/split items verify against) and added the two most-recently-named open targets:
+  `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` (Follow-up added 2026-08-14, pre-computed list
+  ready to apply) and the archived `prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md` (the sibling doc
+  the "3 more docs" Follow-up's own text says already carries the full extraction plan for that item).
 
 ## Follow-ups
 

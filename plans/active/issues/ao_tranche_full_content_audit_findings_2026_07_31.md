@@ -43,8 +43,6 @@ context_scope:
     /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/archive/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md,
-    /plans/archive/issues/backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md,
   ]
 source:
   [
@@ -214,3 +212,8 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
   2026-08-06 operator ruling specifically chose opportunistic-only over a bulk pass to avoid a 23-file collision
   magnet). A single-item doc whose only content is an anti-batch instruction cannot be satellite-extracted without
   violating the instruction itself.
+- **context-scout 2026-08-15**: refreshed context_scope (3 entries) — dropped the two duplicate-merge-specific docs
+  (`ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md`,
+  `backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md`): §3 (the merge they supported) closed 2026-08-08, and
+  the sole remaining open item (§2's standing opportunistic-retag rule) is fully self-contained in this doc's own text,
+  so the tracker doc + the two membership/naming-convention SSOTs are the minimal accurate set now.

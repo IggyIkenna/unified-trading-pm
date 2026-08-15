@@ -64,6 +64,7 @@ context_scope:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
     /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
+    /plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md,
   ]
 ---
 
@@ -279,3 +280,6 @@ member, not just a retag.
   cross-tranche parked-findings register; the 2 remaining open todos are `[DOCS] P3` `asset_group` retags of docs owned
   by OTHER tranches, explicitly scoped "leave to the owning tranche's own audit" per the 2026-07-30
   concurrent-sharded-worker rule -- structurally not this tranche's write, not a defaulted-to-NA judgment call.
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) -- added
+  `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, the plan the doc's own 2026-08-10 banner names as now
+  actually dispatching its remaining findings.

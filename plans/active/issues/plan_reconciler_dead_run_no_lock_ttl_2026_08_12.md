@@ -224,3 +224,4 @@ run, i.e. ≥18h, and per this investigation, ≥3 days by 2026-08-12).
   matching the precedent already set (and still open) in the sibling
   `locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md` doc. The 4 named 2026-08-09 docs themselves are
   explicitly out of scope for this doc (a separate session owns their unlock/archive per operator instruction).
+- **context-scout 2026-08-15**: populated context_scope (6 entries).

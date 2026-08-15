@@ -569,6 +569,7 @@ rule (see Progress Log entry below for the observed outcome).
   open `[SCRIPT]`/`[DATA]` P3 follow-ups below already cover clearing it, nothing new to file. `AUTHORING_SLOT` was
   `dp-fleet-monitor` (not a numbered slot) — no ping sent, per the role's own skip rule (the dispatch-time Slack alert
   already covers the FYI). Read-only: no GCS write, no manifest change, no code shipped; PM plan-doc edit only.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (5 entries), unchanged.
 
 ## Follow-ups
 

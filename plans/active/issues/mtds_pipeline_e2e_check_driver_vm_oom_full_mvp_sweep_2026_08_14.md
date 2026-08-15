@@ -58,7 +58,7 @@ depends_on: []
 context_scope:
   [
     market-tick-data-service/scripts/pipeline_e2e_check.py,
-    unified_trading_library/pipeline_e2e_check/launcher.py,
+    unified-trading-library/unified_trading_library/pipeline_e2e_check/prod_precheck.py,
     deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh,
     unified-trading-pm/cursor-configs/skills/data-pipeline-check-mtds/SKILL.md,
     /plans/archive/2026_08/issues/mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md,
@@ -239,3 +239,7 @@ Two independent angles, not mutually exclusive:
   before launching a fresh one. **NOT claiming this fixes DEFI's ~1-min Phase-0 crash or SPORTS's `rc=3`** — DEFI's
   death predates any per-shard skip-leg work entirely, so it's very likely a separate bug; filed as its own new [CODE]
   P2 todo above rather than assumed-fixed.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) — corrected a malformed path
+  (`unified_trading_library/pipeline_e2e_check/launcher.py`, missing its repo prefix) to the actual root-caused+fixed
+  file, `unified-trading-library/unified_trading_library/pipeline_e2e_check/prod_precheck.py`.

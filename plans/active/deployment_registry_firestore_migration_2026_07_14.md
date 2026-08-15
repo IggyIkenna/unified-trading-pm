@@ -234,3 +234,4 @@ heartbeat
   (`deployment_api/routes/deployments_inventory.py`) is now a package (refactored
   `deployment_api_qg_size_gate_debt_2026_07_30.md`, pure code motion); swapped in the resolving `_registry_io.py` (the
   actual GCS-census read logic this doc's Problem section describes) in place of the archived ci_status precedent link.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries) — all 5 still resolve.

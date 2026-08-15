@@ -42,10 +42,10 @@ archive_exempt: true # bridge field, flip-only commit ahead of the immediately-f
 context_scope:
   [
     /plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md,
+    /plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09_finalize.md,
     unified-api-contracts/unified_api_contracts/internal/domain/features_sports/_features_venue_referee_player_odds.py,
     features-service/features_service/sports/exporters/odds_features_exporter.py,
     ml-service/ml_service/training/app/core/sports_feature_loader.py,
-    strategy-service/strategy_service/adapters/sports_feature_subscriber.py,
   ]
 ---
 
@@ -339,3 +339,14 @@ work doesn't reintroduce a 5th convention.
   `/archive-candidates-audit` pass rather than archiving in this sweep (archival's referrer-sweep ritual is out of scope
   for a citation-fix pass, and batch11's extracted todo hasn't landed yet — premature to archive while the extraction is
   still in flight).
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) — swapped `sports_feature_subscriber.py` (already
+  cited on `sports_live_arb_strategy_and_execution_routing_2026_08_14.md`) for
+  `sports_satellite_ao_dispatch_batch11_2026_08_09_finalize.md`, the doc that actually reconciles/archives this one.
+  **Flagging a discrepancy, not fixed here (out of this skill's scope — status/body is `/plan-reconcile`'s)**: this
+  doc's own 2026-08-10 Progress Log entry above claims the full 6-step archival ritual completed, including "(6) git mv
+  to plans/archive/2026_08/ as a separate follow-up commit" — but as of today this doc is still in `plans/active/` with
+  `status: active` and the `archive_exempt: true` bridge field still present (its own inline comment says this field is
+  "dropped in the mv commit"). The git-mv step appears to have never actually executed despite the completion claim;
+  `sports_satellite_ao_dispatch_batch11_2026_08_09_finalize.md` todo 2 (which would complete the reconciliation) is also
+  still `- [ ]` open. A human/`/plan-reconcile` pass should verify and either complete the archival or correct the
+  Progress Log's claim.

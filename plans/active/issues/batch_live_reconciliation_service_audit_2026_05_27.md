@@ -644,3 +644,5 @@ defect, just confirming the coupling is daily, not real-time.
   (was G10) is flipped `[x]` — added a CORRECTED annotation citing both, matching the G3 line's existing 2026-08-12
   correction format. G3's own annotation was already corrected by a prior `/plan-reconcile` pass; no change needed
   there.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate — the only Todos-section
+  item is `[x]`, doc is bridge-archived (`archive_exempt: true`) pending a follow-on archival pass.

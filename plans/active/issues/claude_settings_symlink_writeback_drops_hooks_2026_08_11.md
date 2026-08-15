@@ -45,6 +45,7 @@ context_scope:
     scripts/workspace/migrate-personal-settings-keys.sh,
     unified-trading-pm/cursor-configs/settings.json,
     /codex/05-infrastructure/claude-code-settings-symlink.md,
+    scripts/plan-hygiene/check_settings_symlink_hygiene.sh,
   ]
 locked_by:
 locked_since:
@@ -194,3 +195,8 @@ operator, plausibly a typo'd re-run of the documented `settings.json`-symlink lo
 automated linker existed). No further code-level root cause exists to chase. The 2026-08-11 guard (refuse to write
 through a symlink) plus `check_settings_symlink_hygiene.sh` are therefore the complete fix for this failure class, not a
 backstop pending a future root-cause patch.
+
+**context-scout 2026-08-15**: refreshed context_scope (5 entries, was 4) — added
+`scripts/plan-hygiene/check_settings_symlink_hygiene.sh` (the doc's own 2026-08-14 entry names it as already-shipped;
+worth flagging that the still-open `[SCRIPT] P1` todo asking to "add a hygiene-sweep check" may already be satisfied by
+this script — not independently verified in scope here, left for `/plan-reconcile`).

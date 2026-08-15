@@ -42,6 +42,7 @@ context_scope:
   [
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/config.py,
+    agent-orchestrator/server/model_pricing.py,
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
     /codex/06-coding-standards/model-tier-selection.md,
     /codex/04-architecture/agent-orchestrator-overview.md,
@@ -753,3 +754,6 @@ the operator later decides to also run pay-per-token GLM alongside the subscript
   (`price_usage()` against a REAL captured usage sample) is NOT satisfied — this is registry/pricing-table registration
   only, still blocked on the Coding Plan key + a real registered account for anything requiring live verification.
   Checkboxes stay unflipped.
+
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) -- added `server/model_pricing.py`, the concrete
+  `RateCard` target the new Phase 3 GLM-onboarding + DeepSeek peak/off-peak-pricing todos (2026-08-14/15) directly edit.

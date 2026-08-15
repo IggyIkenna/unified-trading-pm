@@ -33,7 +33,12 @@ source: >-
 resolved_by:
 locked_by:
 locked_since:
-context_scope: [/plans/active/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md]
+context_scope:
+  [
+    /plans/active/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py,
+  ]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -74,3 +79,7 @@ disproportionately or doesn't match a named retirement's actual pool list, escal
 - [ ] [DIAG] P2. Pool-count-level census: distinct tracked pool/instrument ids per venue for `dex_pool_state`/
       `dex_pool_swaps`, known-good (Dec2025-Feb2026) vs recent (2026-06-30..07-19) — confirm the drop matches a named
       retirement plan's actual pool-removal scope, or escalate as a capture gap. (repo: market-tick-data-service)
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries).

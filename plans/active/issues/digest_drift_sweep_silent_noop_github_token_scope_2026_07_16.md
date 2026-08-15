@@ -75,6 +75,7 @@ context_scope:
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     .github/workflows/digest-drift-sweep.yml,
+    scripts/quality-gates-base/tests/test-digest-drift-sweep-silent-failure-hardening.sh,
   ]
 resolved_by:
 depends_on: []
@@ -342,3 +343,7 @@ dedicated regression-test harness. Sole remaining item (line 313, P1 DEVOPS) is 
 -- 'why has update-dependency-version.yml's primary cascade been dormant since 2026-06-28' -- with no stated bounded
 fix, exactly matching the KEEP-NA-valid pattern this skill already independently re-confirmed 3x (2026-07-30,
 2026-08-01, 2026-08-06: 'not RECLASSIFY-eligible, open-ended diagnosis, not a checkable fact or scoped change').
+
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) — added the regression-test harness
+  (`scripts/quality-gates-base/tests/test-digest-drift-sweep-silent-failure-hardening.sh`) that proves the 3-of-4 fix
+  holds; the other 4 entries unchanged.

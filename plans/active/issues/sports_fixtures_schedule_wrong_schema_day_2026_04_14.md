@@ -540,3 +540,4 @@ leagues structurally unmapped, pending an operator decision) stands as-is.
   rather than force either side of that tension; the full archival ritual (status flip + banner + `git mv` + referrer
   sweep, as its own commit) is correctly-scoped follow-up work for the normal archive-candidates sweep
   (`/archive-candidates-audit`), not this todo.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (4 entries), unchanged.

@@ -198,3 +198,5 @@ stress-tested against the RECLASSIFY bar on 2026-08-03 and found NOT to clear it
 instrumentation is already documented as tried-and-clean across 8 runs in the sibling doc, and this doc's own bisection
 found non-deterministic clean/dirty outcomes even under confirmed-serial execution ('surface-bounded,
 substance-unbounded').
+
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (4 entries), unchanged.

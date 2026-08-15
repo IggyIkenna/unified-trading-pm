@@ -68,6 +68,7 @@ context_scope:
     deployment-api/deployment_api/firebase_auth.py,
     deployment-api/deployment_api/main.py,
     unified-trading-library/unified_trading_library/config_interface/cloud_config.py,
+    /plans/active/deployment_api_unauthenticated_prod_p0_2026_08_10.md,
   ]
 ---
 
@@ -198,3 +199,7 @@ populate `DEPLOYMENT_API_KEY` with the real key and the listener will start send
     `assigned_vm: planning`, `sequential: true`; step 1 "Decide the env SSOT + fix the guard" DONE via
     `UTL@336f2b3b6c` + `deployment-api@d0eebac4e6`, 4 follow-on todos open), so no further escalation is needed from
     this retag — the retag is what finally gives the fix a owning tranche to be claimed under.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) — added the successor P0 plan
+  (/plans/active/deployment_api_unauthenticated_prod_p0_2026_08_10.md) now doing the actual fix work this doc's own
+  Progress Log says the 3 remaining BACKEND P1 todos have been escalated to.

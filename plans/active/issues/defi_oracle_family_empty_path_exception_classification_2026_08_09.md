@@ -197,3 +197,7 @@ P3.
   warnings — STEP 5.5 broad-except, STEP 5.101 empty-string-fallback — are pre-existing and not from this diff, do not
   treat as blocking), ship via `quickmerge --agent --files` once green, THEN flip this checkbox with the
   `market-tick-data-service@<sha>` evidence.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate — the Pyth `[CODE] P2`
+  checkbox carries its own shipped evidence (`market-tick-data-service@480e76dd`, ancestor-verified) despite the
+  Progress Log's last narrative entry predating that landing; the sole genuinely open item is the `[LOCAL] P3`
+  Aave/Chainlink aggregate-zero-path design question, which the 4 entries already cover.

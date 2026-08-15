@@ -254,3 +254,4 @@ class in a third script.
   round11. Sole open item ([SCRIPT] P3, bundle-vs-extract-a-shared-membership-test-module) remains a design-preference
   call with no stated done-when; not found in any active `ao_satellite_ao_dispatch_batch*` citation list through
   batch17.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (6 entries), unchanged.

@@ -448,3 +448,5 @@ below is untouched (out of scope — DRIFT-specific, unrelated to this GMX pass)
   this doc's tag being silently wrong in the meantime.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate — sole remaining todo
+  (regen + review the 57 `openapi/prospectus/*.md` files) unchanged.

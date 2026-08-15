@@ -368,6 +368,7 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
   `:latest` image only picked up both fixes as of the 2026-08-09T22:28 UTC image push) rather than a new mystery. Filed
   a new dated P2 follow-up gated on the next real cron cycle (2026-08-10T00:50 UTC) instead of re-opening this as an
   unexplained blocker. Full evidence in the Follow-ups section below.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (5 entries), unchanged.
 
 ## Follow-ups
 

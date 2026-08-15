@@ -164,3 +164,4 @@ repeated per-incident coaching.
   still requires an operator/plan-owner decision among the 3 named options (A/B/C) before an implementation step is
   determinable; no new information since 2026-08-06.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate.

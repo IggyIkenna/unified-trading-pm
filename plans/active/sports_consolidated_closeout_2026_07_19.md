@@ -997,3 +997,4 @@ section above, which conflated answered and open items):
   1-12, most recently `sports_satellite_ao_dispatch_batch11_2026_08_09.md`/`batch12` today, both of which reference this
   doc's Tracks without duplicating them) rather than a whole-doc flip — consistent with every prior audit pass. No new
   extractable item found beyond what batch9-12 already claimed. No flip.
+- **context-scout 2026-08-15**: context_scope re-verified (5 entries), unchanged.

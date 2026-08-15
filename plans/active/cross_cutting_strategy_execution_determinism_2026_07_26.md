@@ -130,3 +130,5 @@ across the full taxonomy; v2_engine_venue_buildout's per-venue items close.
   citing the standing "Plan destination -- ASK BEFORE CREATING" HARD RULE: default `NA` unless the operator explicitly
   overrides. The sole todo's own output is authoring a NEW dispatch batch, which defaults NA -- not re-litigating an
   already-resolved-today question.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate -- coordination-index
+  doc over 8 source plans, no new content since the 2026-08-08 na-eligibility-audit entry.

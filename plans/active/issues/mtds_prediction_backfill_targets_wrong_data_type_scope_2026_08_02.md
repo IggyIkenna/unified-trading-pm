@@ -52,6 +52,7 @@ context_scope:
     market-tick-data-service/market_tick_data_service/scripts/_rebuild_prediction_emit.py,
     market-tick-data-service/market_tick_data_service/scripts/rebuild_prediction_manifest.py,
     /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md,
   ]
 ---
 
@@ -205,3 +206,5 @@ whoever wants to close the loop.
   none apply. Re-verified `prediction_satellite_ao_dispatch_batch7_2026_08_04.md` still carries this exact todo
   (`status: draft`, `assigned_vm: planning`) — still the correct, already-vetted owner; reclassifying here would create
   a competing dispatch surface. No reclassification.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) — added the confirmed extraction target
+  `/plans/active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md` for the remaining open todo.

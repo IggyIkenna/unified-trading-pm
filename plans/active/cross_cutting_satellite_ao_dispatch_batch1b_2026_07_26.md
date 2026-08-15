@@ -708,3 +708,4 @@ context_scope:
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.
 - **context-scout 2026-08-06**: re-scouted (full 669L re-read); context_scope unchanged (4 entries) -- confirmed the one
   shared `_finalize` gate still covers both batch1 and batch1b (no separate batch1b finalize doc exists).
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries) -- still accurate.

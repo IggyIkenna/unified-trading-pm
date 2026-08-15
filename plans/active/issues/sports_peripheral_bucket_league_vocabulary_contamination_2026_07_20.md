@@ -43,9 +43,10 @@ depends_on: []
 context_scope:
   [
     /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
-    /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/epics/sports_master.md,
+    /plans/archive/issues/sports_legacy_league_vocab_recontamination_2026_08_10.md,
+    instruments-service/instruments_service/reference_data/adapters/sports/adapters/api_football_reference.py,
     market-tick-data-service/scripts/sports/league_id_relocation/migrate_instruments_store_sports_league_vocabulary_2026_08_04.py,
+    market-tick-data-service/scripts/sports/league_id_relocation/delete_instruments_store_sports_league_vocabulary_2026_08_04.py,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 ---
@@ -343,3 +344,8 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
   Delete-pass tool shipped (`market-tick-data-service`,
   `scripts/sports/league_id_relocation/delete_instruments_store_sports_league_vocabulary_2026_08_04.py`, dry-run exit 0,
   fresh §3a retention check = 604,800s). Plan-level P2 checkbox stays OPEN (done-when not met).
+
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — added
+  `sports_legacy_league_vocab_recontamination_2026_08_10.md` (now `status: resolved` — the fix for the live-writer
+  blocker on this doc's sole open todo) and `api_football_reference.py` (the specific root-cause file that doc names);
+  dropped `sports_consolidated_closeout_2026_07_19.md` and the `sports_master` epic for space.

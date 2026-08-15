@@ -110,3 +110,4 @@ because a new filename cannot collide with a peer's in-flight edit of an existin
 - 2026-08-14: P0 line-cap breach resolved by the introducing commit's own author, market-tick-data-service@adf74dcf11
   (extracted `_register_lazy_buffer()`, 897 lines, quality gates green). P1 (blocked bybit consumer migration) and P2
   (gate error-message improvement) left open for their respective owners — not touched.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (3 entries), unchanged.

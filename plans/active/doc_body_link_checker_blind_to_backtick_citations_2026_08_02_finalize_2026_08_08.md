@@ -41,6 +41,7 @@ context_scope:
     /codex/11-project-management/cross-reference-path-convention.md,
     /plans/PLAN_FORMAT.md,
     /plans/active/task_template.md,
+    scripts/quality_gates/check_doc_body_links.py,
   ]
 supersedes:
 superseded_by:
@@ -106,3 +107,5 @@ source: >-
   placeholder, 4 genuine), all 12 present in the 23-entry baseline — round5 estimate (14 unresolved, ~6-8 genuine)
   validated, no material divergence. Count recorded inline on todo 1. (Note: todo 2 flipped concurrently by another slot
   @d86597c6c3 — this flip appends alongside, not overwrites.)
+- **context-scout 2026-08-15**: refreshed context_scope (5 -> 6 entries) — added `check_doc_body_links.py`, the shipped
+  checker this doc's own todos re-run and verify against live corpus state.

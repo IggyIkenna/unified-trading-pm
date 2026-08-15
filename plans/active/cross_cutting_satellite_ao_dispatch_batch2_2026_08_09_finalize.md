@@ -75,3 +75,5 @@ context_scope:
       archived alongside it in the same commit.
 
 ## Progress Log
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries).

@@ -356,3 +356,4 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
 - **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — sole open item is an explicit
   portfolio-cost tradeoff decision (reconciliation cadence for 58 findings: full-trace vs spot-check), not a
   determinable fact. Reaffirmed by 6 prior independent passes.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.

@@ -227,3 +227,5 @@ must not also destroy a working (or merely soon-to-expire) credential — the sc
   `[INFRA] P2` checkbox, flipping it `[x]` with the real commit sha / test evidence / independent re-verification detail
   instead of the extraction redirect-pointer. Doc retains 1 open item (`[INFRA] P3` ghost-host-rows, a genuine
   prune-vs-tombstone design call) — stays `status: open`, not archived.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (4 entries), unchanged — all 4 confirmed to still
+  resolve on disk.

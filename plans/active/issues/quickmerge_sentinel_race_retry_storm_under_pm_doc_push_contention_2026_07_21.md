@@ -169,3 +169,5 @@ valid — Fix 2 (backoff+jitter) already shipped and landed via a sibling doc. T
 still-present DO-NOT-DISPATCH banner in the doc body (confirmed present at read time). The Notes section reiterates
 operator sign-off is required on the fast-path predicate because an over-eager 'unchanged tree' skip could bypass a
 genuinely-needed gate.
+
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (4 entries), unchanged.

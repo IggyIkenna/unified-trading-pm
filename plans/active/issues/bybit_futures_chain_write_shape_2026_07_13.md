@@ -42,9 +42,10 @@ resolved_by:
 context_scope:
   [
     /plans/archive/2026_07/bybit_futures_chain_write_shape_migration_2026_07_13.md,
-    /codex/02-data/data-pipeline-correctness-hard-rule.md,
-    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     market-tick-data-service/scripts/audit_bybit_futures_chain_shape2_duplicates_2026_07_13.py,
+    market-tick-data-service/scripts/delete_bybit_futures_chain_shape2_duplicates_2026_08_09.py,
+    /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
   ]
 ---
 
@@ -238,3 +239,7 @@ workspace).
   `archive_exempt: true` (the sanctioned flip-then-mv two-commit pattern documented in
   `scripts/plan-hygiene/check_archive_candidates.sh`) so this commit doesn't trip the archive-candidates pre-commit
   gate. The follow-on pass should drop `archive_exempt` and `git mv` this doc to `plans/archive/[issues/]`.
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) — a prior marker (2026-08-07) claimed 6 entries but
+  the live frontmatter carried only 4 (drift, not forensically restored here — re-derived fresh instead); re-derived
+  from the doc's now-fully-closed state: dropped the absorbed hard-rule/batch4 pointers for the delete-safety protocol,
+  the delete script, and the `locked_by` placeholder doc explaining the current `archive_exempt` bridge.

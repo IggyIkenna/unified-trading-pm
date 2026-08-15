@@ -34,11 +34,8 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
-    /plans/archive/2026_08/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md,
+    /plans/active/issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md,
     /plans/active/issues/defi_mdps_candle_backfill_fleet_outcome_2026_08_06.md,
-    /plans/archive/2026_08/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md,
-    /plans/archive/2026_08/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md,
-    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
@@ -240,3 +237,6 @@ auto-resolved (2026-08-11, docs archived). Finding 2 is a tag correction, not a 
   call, not a deterministic outcome. Todo 2 ("investigate raising ... per-date subprocess timeout") is explicit
   investigation/design work by its own verb, exactly the class this audit's own instructions flag as correctly staying
   NA even when freshly formalized. Doc stays NA.
+- **context-scout 2026-08-15**: refreshed context_scope (3 entries) -- rebuilt around the doc's 2 still-open todos
+  (added the `architecture_v2_drift_leg_specs...` retag target; kept `defi_mdps_candle_backfill_fleet_outcome...`);
+  dropped 3 now-resolved/archived finding targets (findings 1/4/5, all closed) and the superseded `batch10` draft.

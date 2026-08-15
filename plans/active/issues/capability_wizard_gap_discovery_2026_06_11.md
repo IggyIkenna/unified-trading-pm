@@ -871,3 +871,7 @@ fired.
   `archive_exempt: true` (the sanctioned flip-then-mv two-commit pattern documented in
   `scripts/plan-hygiene/check_archive_candidates.sh`) so this commit doesn't trip the archive-candidates pre-commit
   gate. The follow-on pass should drop `archive_exempt` and `git mv` this doc to `plans/archive/[issues/]`.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (5 entries), unchanged — doc carries 0 open
+  todos; only change since the 2026-08-05 marker was the 2026-08-12 `archive_exempt` bridge (metadata-only).
+  Confirmed distinct from `capability_wizard_analysis_findings_2026_06_11.md`, whose own marker was refreshed the
+  same run.

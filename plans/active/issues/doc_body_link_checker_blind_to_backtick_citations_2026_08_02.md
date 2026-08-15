@@ -193,3 +193,5 @@ corpus actually uses was never brought into the checker's purview.
   `/codex/14-customer-journeys/shared-core/strategy-version-governance.md`, `/codex/README.md`, `mega_audit` R14) are
   ALREADY open todos in `docs_reconcile_remaining_broken_links_2026_08_02.md` — no new findings to file. Confirms the
   widened scan surfaces no NEW breakage beyond what P2 baselined + tracked.
+- **context-scout 2026-08-15**: re-verified context_scope (3 entries) — all three still directly cited by the doc's own
+  body; no change needed.

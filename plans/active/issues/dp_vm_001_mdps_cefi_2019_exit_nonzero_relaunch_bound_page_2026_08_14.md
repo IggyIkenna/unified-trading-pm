@@ -119,3 +119,5 @@ guidance both point the same direction: stop and page.
   bound, and the `mdps-cefi-` family was additionally reported already at its `≤2/day` relaunch bound — did not
   relaunch. Filed this issue doc and paged the operator via `/blocked` per the escalation's explicit instruction. No
   code changed this session.
+- **context-scout 2026-08-15**: re-verified context_scope (4 entries) — all four still directly cited by the doc's own
+  body; no change needed.

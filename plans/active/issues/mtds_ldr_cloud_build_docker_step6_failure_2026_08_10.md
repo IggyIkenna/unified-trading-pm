@@ -47,6 +47,7 @@ context_scope:
   [
     market-tick-data-service/Dockerfile,
     market-tick-data-service/cloudbuild.yaml,
+    unified-trading-library/Dockerfile,
     unified-trading-pm/.github/workflows/cloud-build-router.yml,
   ]
 ---
@@ -216,3 +217,6 @@ is why these two MTDS conditions were hard to tell apart from the alert alone.
   pushed (`cloud-build-router` empty-error-detail + credential scrub; the PM quality-gates false CRITICAL, which was an
   hourly LDR `workflow_dispatch` measuring the whole unpromoted backlog and NOT the innocent codex-docs commit the alert
   named).
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) — added `unified-trading-library/Dockerfile`
+  (the base image that bakes the `SETUPTOOLS_SCM_PRETEND_VERSION` ENV central to defect #3).

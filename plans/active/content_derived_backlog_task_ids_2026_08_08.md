@@ -870,3 +870,8 @@ a shipped, tested script mid-draft, without operator direction, is out of scope 
   `orchestrator.service` template still shows the `hk` placeholder, not the live `ubuntu` substitution). Neither
   `[OPERATOR]` todo flipped — still `[ ]`, ready for the operator to paste and run. No agent-orchestrator or
   unified-trading-pm code changed; this is a doc-only change to this plan.
+
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries) -- the source issue doc (analysis SSOT)
+  plus `regen_backlog_from_plan.py`/`bootstrap.py`/`routes/backlog.py`/`routes/slots_worker.py`/`dispatch.py` (the
+  hazard-1/hazard-2 files) remain the accurate minimal set for the two still-open Phase-2 `[OPERATOR]`
+  dry-run/live-apply todos.

@@ -43,6 +43,7 @@ context_scope:
     deployment-service/scripts/vm/launch-mdps-sharded-backfill.sh,
     market-data-processing-service/market_data_processing_service/cli/handlers/process_handler.py,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
+    /plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md,
   ]
 ---
 
@@ -128,3 +129,6 @@ measured empirically.
   done, only relocated. Flagging for the next `/na-eligibility-audit`/archive pass to re-triage this doc (e.g. confirm
   `assigned_vm` should move off `planning` now that it holds no dispatchable item) rather than reclassifying
   unilaterally here.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) - added
+  `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, the doc now holding the sole remaining (relocated) P3
+  item, so a future re-triage pass finds where the real work actually lives.

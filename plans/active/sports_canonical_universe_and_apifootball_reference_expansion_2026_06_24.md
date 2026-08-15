@@ -35,7 +35,7 @@ context_scope:
     /codex/02-data/sports-data-source-coverage-matrix.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py,
-    market-tick-data-service/market_tick_data_service/scripts/_migrate_drop_stale.py,
+    market-tick-data-service/market_tick_data_service/scripts/migrate_sports_canonical_v9.py,
   ]
 ---
 
@@ -632,3 +632,6 @@ materialized.
   operator-gated" entry (hard-stop #2, reversibility-qualified per §3a but not yet exercised for this specific
   population — needs the dry-run census's Part-5 twin-coverage proof first). No flip, no further extraction (would
   duplicate batch12).
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) — replaced `_migrate_drop_stale.py` (never actually
+  named in this doc's own prose) with `migrate_sports_canonical_v9.py` (the real, repeatedly-cited E8 drop-stale
+  script — see the 2026-08-10 measured dry-run census entry above).

@@ -53,10 +53,11 @@ locked_by:
 context_scope:
   [
     /plans/archive/2026_08/issues/defi_code_codex_drift_2026_05_27.md,
-    /plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md,
     /plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md,
-    /plans/archive/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md,
     /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/evm_defi_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/liquidations_handler.py,
+    strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py,
   ]
 execution_scope: local-only
 locked_since:
@@ -553,3 +554,6 @@ tracked here.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries; added
   `infra_satellite_ao_dispatch_batch1_2026_07_26.md`, the live plan several rehomed items now cite).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — dropped 2 source-doc pointers whose contributed
+  items (features-service, gcs-hive-partition) are now fully shipped; added the 3 source files
+  (`evm_defi_handler.py`, `liquidations_handler.py`, `catalog.py`) the doc's remaining open `[CODE]` items actually name.

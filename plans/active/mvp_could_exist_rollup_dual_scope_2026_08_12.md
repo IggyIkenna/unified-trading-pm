@@ -42,15 +42,11 @@ superseded_by:
 depends_on: []
 context_scope:
   [
+    /plans/active/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md,
+    deployment-api/deployment_api/services/data_status/rollup_cache.py,
+    deployment-api/deployment_api/scripts/data_status_rollup_worker.py,
     /plans/archive/2026_08/mvp_scope_catalogue_tagging_2026_06_08.md,
     /plans/active/issues/venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md,
-    deployment-api/deployment_api/routes/data_status/_coverage_scope.py,
-    deployment-api/deployment_api/scripts/data_status_rollup_worker.py,
-    deployment-api/deployment_api/services/data_status/rollup_cache.py,
-    deployment-api/deployment_api/services/data_status/manifest.py,
-    deployment-api/deployment_api/services/data_status/coverage.py,
-    deployment-api/deployment_api/services/data_status/mtds.py,
-    deployment-api/deployment_api/services/data_status/instrument_coverage.py,
   ]
 source:
   [
@@ -593,3 +589,6 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
   `full.json.gz` at all (`instruments-service`, `features-commodity-service`, `execution-service`) — todo 7's literal
   "every entry" bar is structurally unreachable until that separate issue is fixed, not just a matter of more elapsed
   time. Todo 7 stays open, now pointing at the right owning doc instead of a vague "wait longer."
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) -- trimmed from 9 (dropped the already-shipped
+  todo 2/3 source files) and added `data_status_rollup_ml_service_full_blob_missing_2026_07_26.md`, the doc that now
+  structurally blocks the sole remaining todo 7 but was missing from the prior list.

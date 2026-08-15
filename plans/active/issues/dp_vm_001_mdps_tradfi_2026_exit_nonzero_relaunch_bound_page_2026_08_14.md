@@ -41,6 +41,7 @@ context_scope:
     /codex/05-infrastructure/data-pipeline-alerts.md,
     deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
     deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py,
+    deployment-service/deployment_service/data_pipeline_monitors/_gcs.py,
   ]
 created: "2026-08-14"
 parent_epic: infrastructure_master
@@ -134,3 +135,5 @@ guidance both point the same direction: stop and page.
   non-OOM exit codes are a PAGE case regardless of relaunch-count bound, and the `mdps-tradfi-` family was additionally
   reported already at its `≤2/day` relaunch bound — did not relaunch. Filed this issue doc and paged the operator via
   `/blocked` per the escalation's explicit instruction. No code changed this session.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries).

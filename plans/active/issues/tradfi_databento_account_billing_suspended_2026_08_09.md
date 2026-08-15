@@ -42,7 +42,13 @@ source:
 resolved_by:
 locked_by:
 locked_since:
-context_scope: [/codex/02-data/tradfi-databento-sourcing-ssot.md]
+context_scope:
+  [
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    market-tick-data-service/market_tick_data_service/live/connectors/databento_tradfi_ws.py,
+    market-tick-data-service/market_tick_data_service/market_interface/clients/databento_base_client.py,
+    /plans/active/cross_ag_live_capture_parity_2026_08_14.md,
+  ]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -249,3 +255,8 @@ archival — no live Databento dependency).
   (`bash deployment-service/scripts/vm/launch-mtds- live.sh --asset-group tradfi --shard-spec tradfi:CME:trades --instrument-ids <ids>`
   per that launcher's usage, or simply confirming the existing VM's connector auto-recovers once the account is live
   again — untested either way).
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) — added the live WS connector (the
+  zombie-producer target of the open `[CODE] P2` todo), the `DatabentoBaseClient` verification tool used by every
+  resolution check in this doc's history, and `cross_ag_live_capture_parity_2026_08_14.md` (Finding C, the doc that
+  diagnosed the most recent recurrence).

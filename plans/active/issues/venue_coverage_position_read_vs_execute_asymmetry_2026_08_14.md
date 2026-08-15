@@ -32,6 +32,15 @@ resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/06-coding-standards/integration-testing-layers.md,
+    strategy-service/strategy_service/position/position_interface/factory.py,
+    strategy-service/strategy_service/position/models.py,
+    execution-service/execution_service/adapters/defi_adapter.py,
+    execution-service/execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py,
+    unified-api-contracts/unified_api_contracts/registry/lst_token_addresses.py,
+  ]
 ---
 
 # Venue coverage — read vs execute asymmetry
@@ -629,3 +638,11 @@ silently re-open:
   a blind retry ADDS a stash entry and makes it fire sooner. Untracked files do not appear in
   `git stash show --name-only` — they live in the third parent, `stash@{N}^3`. The instinctive re-run would have
   compounded it.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (6 entries) — first pass, no `context_scope` field existed
+  before. Covers the codex SSOT for the venue-coverage-cascade SIT invariants, the strategy-service READ-side
+  resolver + its data model, the two execution-service dispatch gaps named in the open P0 "wire a real dispatcher"
+  todo (`defi_adapter.py`, `recursive_loop_orchestrator.py`), and the new LST address SSOT shipped 2026-08-15. This
+  doc had no dedicated "## Progress Log" section, so one is created here per the skill's create-if-none rule.

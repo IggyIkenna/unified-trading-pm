@@ -45,7 +45,13 @@ source: >-
   bare prose deferral cannot be left to evaporate with the archive per
   `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 2).
 depends_on: []
-context_scope: []
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/issues/semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md,
+    scripts/cicd/reconcile_release_tags.py,
+    /plans/archive/issues/fleet_promoter_glue_runner_stall_2026_08_06.md,
+  ]
 ---
 
 # Untriaged CI backlog: release-tag stall, UTL prod trigger, glue-runner restarts
@@ -88,3 +94,16 @@ count) before doing any deeper fix — do not assume any of the three is still a
 
 - **2026-08-14 (slot-20, infra)**: filed as a migration of an unowned prose deferral row while archiving its parent doc.
   No investigation performed here — see Todos for the re-verify-first approach.
+- **context-scout 2026-08-15**: populated context_scope (4 entries). **Possible duplicate flagged, not resolved**: item
+  1 ("7-repo release-tag stall") closely matches
+  `/plans/active/issues/semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md`'s own still-open todo
+  ("root-cause the residual 7-repo stall" — `e2e-testing`, `fund-administration-service`, `greeks-service`,
+  `ibkr-gateway-infra`, `system-integration-tests`, `trading-agent-service`, `unified-trading-api`, per its 2026-08-09
+  stale-recheck), same tool (`reconcile_release_tags.py`), same stall count. Not confirmed byte-identical (this doc's
+  own item 1 carries no repo list to compare), so not merged/closed here — flagging for whoever re-verifies item 1 to
+  check that doc first before re-investigating from scratch. Item 3 ("glue runner 228 restarts") likely concerns the
+  same `glue`-labeled self-hosted-runner pool as the archived, resolved
+  `/plans/archive/issues/fleet_promoter_glue_runner_stall_2026_08_06.md` (a pool-depletion incident, not a restart-count
+  incident — different specific symptom, same subsystem) — added as background context, not a duplicate claim. Item 2
+  (UTL production trigger) has no existing corpus match found (grepped `plans/active/` for "UTL prod"/trigger-related
+  terms) — genuinely untriaged, no context_scope candidate beyond the general CI/CD SSOT.

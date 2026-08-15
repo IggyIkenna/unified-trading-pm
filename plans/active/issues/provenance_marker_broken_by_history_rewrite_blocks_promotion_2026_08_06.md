@@ -84,6 +84,7 @@ context_scope:
     unified-trading-pm/scripts/cicd/promote_provenance_range.py,
     unified-trading-pm/scripts/cicd/check_strict_quickmerge.py,
     unified-trading-pm/scripts/cicd/ldr_to_main_fleet_promote.sh,
+    /plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md,
   ]
 ---
 
@@ -464,3 +465,5 @@ Two reasons, mirroring the UTL-34-bypass precedent
   line-cap half of the archival deadlock this doc's `archive_exempt: true` cites is resolved. Text-only correction per
   Item N's scope; did not re-verify the deadlock doc's other conditions or unset `archive_exempt` here (left to that
   doc's own operator-decision-gated resolution path).
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries) — added the line-cap/broken-link
+  deadlock doc this doc's own top banner names as the current archival blocker.

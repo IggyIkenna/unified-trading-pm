@@ -280,3 +280,7 @@ not a block on dispatch, it is a design constraint the first worker must satisfy
   multi-axis correction banner's "10× manifest inflation" warning was about making `fixture_id` a FULL shard axis for
   ALL data_types including league-scoped ones — this design scopes per-fixture rows to fixture-scoped data_types only,
   where `fixture_id` is already the GCS path partition key.
+
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — reviewed against the current state (todos 1,2,3,5
+  done, todo 4 remains open); existing list already covers the remaining adapter-wiring work (`build_instrument_catalogue.py`
+  is the file both the fixture-grain builder AND the pending adapter-wiring change land in), left unchanged.

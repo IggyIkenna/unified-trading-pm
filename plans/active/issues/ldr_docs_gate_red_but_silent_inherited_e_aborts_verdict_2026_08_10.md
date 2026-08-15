@@ -44,6 +44,7 @@ context_scope:
   [
     unified-trading-pm/.github/workflows/ldr-docs-gate.yml,
     unified-trading-pm/scripts/plan-hygiene/check_frontmatter_schema.py,
+    unified-trading-pm/scripts/docs/docspec.py,
     unified-trading-pm/codex/04-architecture/ci-alerting.md,
   ]
 ---
@@ -130,3 +131,6 @@ when the violation list is empty.
 - **2026-08-10 (/ci-reconcile, slot-2·laptop)** — Found during the § 0b standing-monitor enumeration; would not have
   been found from the Slack channel, since the defect's whole effect is the absence of a Slack message. Concrete support
   for this skill's own § 6 rule that silence is not evidence of health.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) — added `scripts/docs/docspec.py`, the
+  file where the 2026-08-10 false-positive cross-repo-citation root cause was actually fixed, alongside the workflow
+  file and the checker script that hit the `-e` trap.

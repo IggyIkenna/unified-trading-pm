@@ -40,6 +40,7 @@ context_scope:
   [
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md,
+    deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
   ]
 ---
 
@@ -75,3 +76,9 @@ days re-walked (real Tardis API calls + wall-clock) before reaching new territor
 - [ ] [INFRA] P3. Investigate the silent-death root cause (OOM vs. preemption) — if reproducible, consider whether this
       launcher family's machine-type default needs a rightsizing check (`/vm-resource-rightsizing-check`) given the RSS
       trajectory observed (17.7GB→51GB in <4 min is a fast climb worth a closer look).
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries) — added the named launcher script
+  (`launch-cefi-sharded-backfill.sh`) as the source-code target for the open resume-checkpoint todo. Created this
+  Progress Log section (doc had none).

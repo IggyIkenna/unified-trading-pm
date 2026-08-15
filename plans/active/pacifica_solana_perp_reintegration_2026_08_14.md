@@ -47,6 +47,13 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /codex/04-architecture/solana-defi-coverage.md,
+    unified-api-contracts/unified_api_contracts/canonical/quarantine.py,
+    instruments-service/instruments_service/reference_data/adapters/cefi/pacifica.py,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+  ]
 source: >-
   Split out of /plans/active/solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md 2026-08-14. That plan's
   Track 2 (Pacifica) had every gate resolved via real API testing (live WS streamed trades with zero credentials, REST
@@ -371,3 +378,8 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
   per explicit operator choice over AO-dispatch, despite the work being technically AO-eligible now (every gate closed)
   — this session's value came from the operator catching things (untested premise, schema gap, StandX settlement risk)
   that a background worker executing todos alone wouldn't have surfaced.
+
+- **context-scout 2026-08-15**: populated context_scope (4 entries) -- doc had no context_scope field yet. Codex SSOT for
+  the venue-reversal ruling, the literal `QUARANTINE_REGISTRY` file the sole remaining §C follow-up todo targets, the
+  resurrected instruments-service adapter (the "real catalogue" that reconciliation resolves against), and the
+  canonical-naming SSOT already cited in `related:`.

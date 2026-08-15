@@ -53,6 +53,8 @@ context_scope:
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/availability_semantics.py,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/_source_priority_data.py,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+    market-tick-data-service/scripts/measure_yahoo_1h_equity_emission_latency_2026_08_14.py,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
   ]
 ---
 
@@ -176,3 +178,6 @@ So the lookahead risk the original text worried about is modelled by an existing
   `..._16_fetchable_cells` and the set/count/docstring updated; (2) `TickDataHandler._resolve_source()` grew past the
   50-line method cap — extracted `_is_cboe_yahoo_only()` as its own static helper. QG green
   (`ALL QUALITY GATES PASSED`), all four files shipped together.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) — first scout pass on this doc; added
+  the P3 measurement script (`measure_yahoo_1h_equity_emission_latency_2026_08_14.py`, the actual target of the sole
+  remaining open todo) and `tradfi-databento-sourcing-ssot.md` (the codex doc the P2 todo asks to be updated).

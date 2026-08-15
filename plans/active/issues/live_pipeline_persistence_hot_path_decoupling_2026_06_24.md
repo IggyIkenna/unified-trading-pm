@@ -286,3 +286,6 @@ per-tick files). This issue doc is the problem-record; the plan is the executabl
   the now-superseded vintage-audit-findings pointer and a less-specific pipeline-mode codex doc.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (5 entries), unchanged — still the correct
+  minimal set now that the compaction-sink todo is resolved and the doc's only remaining scope is the parked,
+  operator-gated determinism re-test owned by the recovery plan.

@@ -45,7 +45,7 @@ depends_on: []
 context_scope:
   [
     /plans/archive/issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md,
-    market-tick-data-service/market_tick_data_service/engine/orchestrator/symbol_rules.py,
+    market-tick-data-service/scripts/restamp_tradfi_fx_krw_usd_mislabeled_pipeline_mode_2026_08_14.py,
   ]
 ---
 
@@ -115,3 +115,6 @@ archived doc's remediation plan should treat this KRW/USD sample as corroboratin
   Corrected the doc's title/summary/todos in place rather than filing a second doc, since the original claim never
   shipped anything and would only mislead a future reader. Next: build + dry-run the re-stamp script (see revised P2
   todo), verify all 2,023 rows before any write.
+- **context-scout 2026-08-15**: re-scouted; swapped `symbol_rules.py` (the doc's own text says this is explicitly NOT
+  the bug) for the shipped `restamp_tradfi_fx_krw_usd_mislabeled_pipeline_mode_2026_08_14.py` remediation script, the
+  live open P2 todo's actual target (2 entries).

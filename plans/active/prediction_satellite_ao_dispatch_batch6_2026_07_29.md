@@ -999,3 +999,4 @@ sports-odds/sports-registry content with zero prediction-market-specific work â€
 - **2026-08-12 (slot-16, infra): Betfair egress PROVISIONED + VERIFIED â€” geo-block gone; token refresh now blocked on a
   Betfair account state (re-run: `ACCOUNT_PENDING_PASSWORD_CHANGE`).** Account-holder must change password via
   betfair.com then update GSM `betfair-password`. `/blocked` filed; item stays unchecked. Full detail in the issue doc.
+- **context-scout 2026-08-15**: re-verified context_scope (4 entries), unchanged.

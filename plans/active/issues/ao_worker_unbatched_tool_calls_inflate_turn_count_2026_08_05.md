@@ -202,3 +202,4 @@ them"), but the instruction is not being followed in practice, at least in this 
   this sweep treats as a judgment call, not a mandate, elsewhere in this tranche — no committed threshold or mechanism,
   a genuine design fork. Items 1-2 already correctly executed + closed via
   `ao_satellite_ao_dispatch_batch7_2026_08_06.md`.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.

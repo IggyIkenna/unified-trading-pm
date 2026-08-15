@@ -221,6 +221,7 @@ source: >-
   (deployment-ui could-exist/out_of_window surfacing) was genuinely open; fixed via `deployment-ui@727298b`. All 4
   flipped `[x]` with citations; full evidence in the satellite batch1 plan.
 - **context-scout 2026-08-03**: re-scouted; refreshed context_scope (5 entries) — added the v9 re-stamp source script.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.
 
 ## Deferred work — migrated to:
 

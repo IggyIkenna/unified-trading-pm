@@ -886,3 +886,4 @@ operator activation.
   `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` the 08-09 marker flagged-but-declined-to-correct (over-cap
   budget concern) -- doc is 881 lines, well under the 1000-line hard cap, so a 1-line correction is safe; corrected
   above to the real count (3). `assigned_vm` unchanged.
+- **context-scout 2026-08-15**: re-verified context_scope (6 entries), unchanged.

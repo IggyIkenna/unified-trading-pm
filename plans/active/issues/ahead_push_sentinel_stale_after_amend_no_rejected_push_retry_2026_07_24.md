@@ -140,3 +140,4 @@ behind — rather than a guessed one-line patch to the riskiest file in the code
   **1**, matching. Sole open todo remains a real, undecided retry-vs-alert design call on "the single riskiest
   automated code path in the system" (doc's own words, unchanged framing since filing) — checked against the full
   round7-10 precedent set, none apply.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate.

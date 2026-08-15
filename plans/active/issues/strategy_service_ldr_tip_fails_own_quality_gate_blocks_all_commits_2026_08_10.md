@@ -36,7 +36,13 @@ supersedes:
 superseded_by:
 resolved_by: ""
 last_updated: 2026-08-10
-context_scope: [strategy-service/scripts/quality-gates.sh, strategy-service/strategy_service]
+context_scope:
+  [
+    strategy-service/scripts/quality-gates.sh,
+    strategy-service/strategy_service/api,
+    /plans/archive/SCHEMA_CONTRACTS_AUDIT.md,
+    /plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md,
+  ]
 ---
 
 # strategy-service cannot accept any commit — its own gate is red at HEAD
@@ -127,3 +133,6 @@ host it is partly a function of concurrent load (the run above spent 12s queued 
   `SETUPTOOLS_SCM_PRETEND_VERSION` build-arg, tracked in the MTDS issue doc) is DEFERRED, not abandoned — it is cosmetic
   (version metadata) and not worth forcing past a red gate. No override was used and none should be: the emergency
   `QUICKMERGE_ALLOW_BEHIND`-style escapes exist for staleness, not for a genuinely failing gate.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) — narrowed
+  `strategy-service/strategy_service` to the specific `api/` dir the BaseModel todo names, and added
+  `SCHEMA_CONTRACTS_AUDIT.md` (todo 2's own cited target) + the sibling MTDS issue doc that surfaced this one.

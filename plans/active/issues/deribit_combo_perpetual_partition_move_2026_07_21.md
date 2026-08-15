@@ -670,3 +670,9 @@ backlog remains an unretried capture gap (normal backfill re-attempt, not a code
   fixed first without re-scoping via GCS, could miss the newly accumulated wrong-partition duplicates entirely.
   Continuing this session to build the GCS-driven re-census next Half 1/2 to establish a trustworthy current count
   before scheduling the actual full-batch move.
+
+**context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate — sole remaining todo
+(sweep stale `perpetual`/`future` manifest rows for the 1,719 moved combo objects) unchanged. Cross-batch fingerprint
+check: the `15,119`-row census figure is also cited (for comparison/contrast, not duplicate investigation — that doc
+explicitly distinguishes its own finding as "a different [issue]") by
+`plans/active/issues/deribit_dated_option_trades_perpetual_misclassification_2026_07_27.md`; no action needed.

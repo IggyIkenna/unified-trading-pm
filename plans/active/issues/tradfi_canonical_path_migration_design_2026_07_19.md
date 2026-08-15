@@ -30,12 +30,12 @@ assigned_vm: planning
 resolved_by:
 context_scope:
   [
-    market-tick-data-service/market_tick_data_service/scripts/migrate_tradfi_canonical_2026_07.py,
-    unified-api-contracts/unified_api_contracts/canonical/partition_paths.py,
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/archive/2026_08/tradfi_casing_100pct_redrift_2026_07_27.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/epics/tradfi_master.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tradfi_shared.py,
+    market-tick-data-service/market_tick_data_service/scripts/migrate_tradfi_underlying_display_names_2026_08.py,
+    unified-api-contracts/unified_api_contracts/canonical/_partition_path_canonicality.py,
   ]
 ---
 
@@ -845,3 +845,7 @@ one VM dispatch, since both walk the same `combo`/`futures_chain` corpus.
   `archive_exempt: true` (the sanctioned flip-then-mv two-commit pattern documented in
   `scripts/plan-hygiene/check_archive_candidates.sh`) so this commit doesn't trip the archive-candidates pre-commit
   gate. The follow-on pass should drop `archive_exempt` and `git mv` this doc to `plans/archive/[issues/]`.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — full replacement reflecting the 2026-08-11/12
+  combo/chain-semantics work: swapped the July migration script + `partition_paths.py` for `tradfi_shared.py` (root file
+  for the underlying-naming/combo-chain split), the still-outstanding `migrate_tradfi_underlying_display_names_2026_08.py`
+  migration tool, and the doc-text-named UAC oracle `_partition_path_canonicality.py`.

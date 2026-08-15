@@ -52,6 +52,7 @@ context_scope:
     deployment-service/deployment_service/data_pipeline_monitors/attempted_failed_staleness.py,
     /plans/archive/2026_08/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py,
   ]
 ---
 
@@ -304,3 +305,6 @@ BLAZESTAKE still blocking — Option A still needed).
   capture stoppage) reads AO-dispatchable on its own text, but this doc's own round7 (2026-08-08) entry ruled it
   CONFLICT-DEFERRED -- held by the active `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s operator-ruling-pending
   park. Not re-litigated. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) - added `lending_indices_handler.py`, the file the
+  2026-08-14 root-cause fix actually landed in, directly relevant to the still-open `[DATA] P2` verify-once-redeployed
+  todo.

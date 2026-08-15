@@ -279,3 +279,6 @@ here.
   reasoning (landing even ONE single-day smoke on this doc's sibling tracker required finding+fixing 9 distinct bugs
   across 2 repos, evidencing real multi-file engineering risk on live-dispatch-adjacent ML machinery) is not overridden
   by this pass either. `assigned_vm` unchanged.
+- **context-scout 2026-08-15**: re-verified context_scope (6 entries, unchanged) — all resolve, still the correct
+  minimal set (blocker-history issue doc, sibling data-completion plan, sourcing SSOT, 3 features-service source
+  files the open wiring todos name directly).

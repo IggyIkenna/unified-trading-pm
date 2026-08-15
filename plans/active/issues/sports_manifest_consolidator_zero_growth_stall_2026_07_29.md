@@ -61,6 +61,7 @@ context_scope:
     unified-trading-library/unified_trading_library/manifest_consolidator.py,
     unified-trading-library/unified_trading_library/manifest_writer/_queries.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/tick_data_handler.py,
+    /plans/active/sports_satellite_ao_dispatch_batch12_2026_08_09.md,
   ]
 ---
 
@@ -495,3 +496,7 @@ any direct canonical intervention — § "Diagnostic caveats" now carries the st
 > sentinel-free missing days are 'NOT yet explained' (folded into the blast-radius todo whose DONE content only proves
 > sports-only, not their cause), and the P1 todo itself notes the 595-day canonical gap is still open (owned by the
 > sibling doc). Conservative bias -> NEEDS_TODO for the 23-day residual.
+
+**context-scout 2026-08-15**: refreshed context_scope (6 entries) — added `sports_satellite_ao_dispatch_batch12_2026_08_09.md`,
+the confirmed AO-dispatched tracking home (per the 2026-08-12 /plan-reconcile correction) for the sole open Follow-up
+(23 sentinel-free missing days).

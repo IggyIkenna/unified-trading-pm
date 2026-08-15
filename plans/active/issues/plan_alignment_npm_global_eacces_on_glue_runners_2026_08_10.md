@@ -137,3 +137,7 @@ because an obvious "fix every copy of this line" sweep would touch it for no rea
 `scripts/self-hosted-runners/hosted-baseline/rules-alignment-agent.yml` is a GENERATED snapshot (rebuilt by
 `hosted-baseline.sh snapshot`, used by `restore` to put the hosted form back), not a source template: editing it changes
 nothing in CI and is overwritten on the next snapshot. Both were established the hard way this session.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (2 entries).

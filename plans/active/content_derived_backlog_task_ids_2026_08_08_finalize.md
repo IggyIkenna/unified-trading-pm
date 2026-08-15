@@ -104,3 +104,6 @@ So the questions below are asked against **live state after the fact**, not agai
 ## Progress Log
 
 - **2026-08-08 (interactive session, slot 1)**: Authored alongside the parent as its required gated finalize companion.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries) -- the gated parent plan plus
+  `dispatch.py`/`bootstrap.py` (the two hazard files this finalize plan's verification todos re-check against live
+  state) remain the accurate minimal set.

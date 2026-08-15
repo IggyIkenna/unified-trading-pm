@@ -186,3 +186,5 @@ when the paid Tardis tier is activated.
   doc from archival only (per `plans/PLAN_FORMAT.md` § "Plan Locking"), not from an additive frontmatter field like this
   one — no unlock needed, and this doc's own "let it be" banner/open todos were not touched.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (4 entries), unchanged — all 4 confirmed to still
+  resolve on disk.

@@ -46,7 +46,7 @@ context_scope:
     /plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md,
     deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py,
-    unified-trading-library/unified_trading_library/streaming/parallel_per_symbol_runner.py,
+    deployment-service/scripts/vm/vm_zombie_watchdog.py,
   ]
 assigned_vm: NA
 resolved_by:
@@ -960,3 +960,8 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
       **Documented usage**: `gcloud compute instances add-labels <vm> --zone=<zone> --labels=keep=true` immediately
       before starting actively-supervised manual work on a finished/RUNNING backfill VM; remove the label (or delete the
       VM) the moment that work ends.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — dropped
+  `unified_trading_library/streaming/parallel_per_symbol_runner.py` (scoped to the CeFi Tardis byte-budget mechanism,
+  which the 2026-08-13 asset_group correction confirms is now fully resolved) and added
+  `deployment-service/scripts/vm/vm_zombie_watchdog.py` — the `keep=true` opt-out mechanism (shipped 2026-08-14) a
+  future worker driving the still-open P1 wider-scope `memray` re-run will need to keep a profiling VM alive.

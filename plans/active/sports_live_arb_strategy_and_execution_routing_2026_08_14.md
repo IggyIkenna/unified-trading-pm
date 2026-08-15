@@ -37,12 +37,10 @@ drift_direction: advance-code
 context_scope:
   [
     e2e-testing/scripts/sports/live_arb_scanner.py,
-    strategy-service/strategy_service/adapters/sports/arbitrage_detector.py,
-    strategy-service/strategy_service/position/core/sports_arb_engine.py,
     strategy-service/strategy_service/engine/strategies/v2/arbitrage_structural/sports_arb_dutching.py,
+    strategy-service/strategy_service/adapters/sports/arbitrage_detector.py,
     strategy-service/strategy_service/adapters/sports_feature_subscriber.py,
     execution-service/execution_service/sports_execution/adapters/,
-    unified-api-contracts/unified_api_contracts/internal/unity_child_books.py,
     /codex/02-venues/unity-integration.md,
   ]
 depends_on:
@@ -292,3 +290,9 @@ This Progress Log entry is written from an isolated `git worktree` checked out f
 session's `.tabs/3/unified-trading-pm` checkout had 4 other live sessions sharing it per the SessionStart collision
 warning, plus an actual in-progress unmerged conflict on an unrelated file — editing the plan doc there risked racing a
 concurrent session's index/working-tree state, so this write bypasses that checkout entirely rather than touching it).
+
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries, trimmed from the author-set 8) — dropped
+  `sports_arb_engine.py` (P0's own finding confirms it's post-fill P&L bookkeeping, not detection, so it doesn't
+  correspond to any migration-list function despite being named in "What already exists") and `unity_child_books.py`
+  (the UAC constant; the `unity-integration.md` codex SSOT already orients a worker to it). Kept the 2 pipelines P1 todo
+  1 rules on retiring, the migration source/target pair, and the execution-routing target directory.

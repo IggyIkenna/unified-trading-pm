@@ -50,9 +50,9 @@ locked_by:
 context_scope:
   [
     /codex/06-coding-standards/quality-gates.md,
-    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
     scripts/quality-gates-base/base-service.sh,
-    .github/workflows/python-quality-gates-v2.yml,
+    scripts/quality-gates.sh,
+    /plans/archive/2026_08/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md,
   ]
 locked_since:
 supersedes:
@@ -249,3 +249,10 @@ phase + re-harden-after-clean-baseline) stay unchanged in content, now dispatcha
   MERGED — the LDR→main promotion pipeline is flowing again. **No code fix needed — closing this dispatch as
   confirmed-already-fixed.** (Same shape as `agt-774a0e` slot-28 already-fixed close-out; if this wall re-dispatches,
   the re-dispatch is the `ldr_qg_failure` auto-resolve gap, not a real regression.)
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) — dropped a dead pointer
+  (`.github/workflows/python-quality-gates-v2.yml` no longer exists in this repo; the workflow moved to
+  `unified-trading-ci` per this doc's own 2026-08-09 Progress Log entry) and the now-superseded batch4 citation, added
+  `scripts/quality-gates.sh` (where `BATS_HARD_FAIL=1` is wired) and
+  `pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md` (where the actual re-harden + root-cause bats
+  fixture fixes shipped, per the 2026-08-13 Progress Log entry).

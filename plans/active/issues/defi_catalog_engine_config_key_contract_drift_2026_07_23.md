@@ -973,3 +973,4 @@ auto-generated section's own owner script, rather than hand-editing the table) â
   `[OPERATOR]` RecursiveLoopOrchestrator item has a same-day draft proposal awaiting actual operator ruling, explicitly
   not yet approved (see the entry immediately above). No new fact from today's sweep (credential/webhook unblocks)
   touches either item. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate.

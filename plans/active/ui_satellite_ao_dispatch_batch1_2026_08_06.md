@@ -319,3 +319,4 @@ Approving this plan means: flip `status: draft` → `active` here (the finalize 
   `ui_consolidated_closeout_2026_07_30.md` unchanged since this batch's 2026-08-07 re-verification. `locked_by` unset.
   Dispatching.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-15**: re-verified context_scope (5 entries, unchanged) — all resolve.

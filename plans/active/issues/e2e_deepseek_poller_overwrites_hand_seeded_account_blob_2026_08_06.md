@@ -61,9 +61,11 @@ depends_on: []
 context_scope:
   [
     agent-orchestrator/server/deepseek_usage_poller.py,
+    agent-orchestrator/server/server.py,
     agent-orchestrator/dashboard/tests/e2e/deepseek-per-turn-metrics.spec.ts,
     agent-orchestrator/dashboard/tests/e2e/run-e2e-backend.sh,
     /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md,
+    /plans/active/issues/ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md,
   ]
 ---
 
@@ -161,3 +163,4 @@ context_scope:
   `archive_exempt: true`. Independently re-verified the routing plan
   (`ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md`) still carries its own open `[REVIEW] P0` archival todo
   naming this doc — routing still valid, not stale.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries).

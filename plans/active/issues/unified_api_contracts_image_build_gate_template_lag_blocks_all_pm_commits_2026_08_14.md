@@ -53,6 +53,7 @@ context_scope:
     scripts/quality_gates/detect_template_drift.py,
     scripts/quality_gates/workflow_template_drift_baseline.json,
     scripts/workflow-templates/rollout-workflow-templates.sh,
+    scripts/workflow-templates/image-build-gate.yml,
   ]
 source: >-
   Hit live 2026-08-14 in slot 26 (infra), gating an unrelated rollout-cloudbuild.py substitutions fix. Same-day
@@ -136,3 +137,9 @@ this doc's job was un-blocking the fleet, not redesigning the gate):
       unified-api-contracts (and any future repo growing a similarly hardcoded-consumer job), mirroring
       `check_cloudbuild_template_drift.py`'s STEP 5.108 consumer-scoped wiring — catches this class of drift at
       introduction instead of on a later unrelated PM commit. Repo: unified-api-contracts.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) — added the PM template file itself
+  (`scripts/workflow-templates/image-build-gate.yml`, the 776B SSOT this doc's whole finding is a diff against). This
+  doc had no dedicated "## Progress Log" section, so one is created here per the skill's create-if-none rule.

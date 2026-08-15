@@ -44,7 +44,13 @@ depends_on: []
 assigned_vm: NA
 resolved_by:
 locked_by:
-context_scope: [agent-orchestrator/server/autospawn.py, agent-orchestrator/server/config.py, /agents/worker.md]
+context_scope:
+  [
+    agent-orchestrator/server/autospawn.py,
+    agent-orchestrator/server/config.py,
+    /agents/worker.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+  ]
 ---
 
 # AutoSpawn ~60s refill SLA is routinely missed — fleet_worker_cap headroom throttling
@@ -109,3 +115,8 @@ are irregular (0.6 min to 3h11min) rather than clustered around a fixed per-tick
   `ORCHESTRATOR_FLEET_WORKER_CAP` further / design priority-aware headroom allocation / accept-and-document) with real
   host-resource-degradation risk if the wrong branch is picked unilaterally — the doc's own text explicitly frames this
   as 'not resolvable as a bounded worker todo.' Genuine capacity/operator judgment call.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) — first context-scout pass on this doc;
+  kept the author-populated list (autospawn.py + config.py for the `_apply_fleet_cap()`/headroom code, worker.md for the
+  documented ~60s SLA it contradicts) and added `vm-launcher-runbook.md`, already cited in the doc's own recommended-
+  decision option 1 ("this VM's actual resource ceiling... needs verifying before pushing past 25") but missing from the
+  original list.

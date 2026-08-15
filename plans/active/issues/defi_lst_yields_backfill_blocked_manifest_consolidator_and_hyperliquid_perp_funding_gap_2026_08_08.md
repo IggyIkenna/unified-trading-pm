@@ -47,6 +47,7 @@ context_scope:
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
     features-service/features_service/onchain/cli/handlers/batch_handler.py,
     features-service/scripts/backfill_lst_yields_30day.sh,
+    market-tick-data-service/scripts/check_hyperliquid_perp_funding_gap_2026_08_14.py,
   ]
 ---
 
@@ -182,3 +183,6 @@ Missing: market-tick-data-service-perp
   on the perp_funding side; the manifest-consolidator staleness class from Todo 1 may still need a fresh live check
   before re-running it (not re-verified here). Evidence: script output above; full quality-gates.sh green on the shipped
   SHA.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) — added
+  `check_hyperliquid_perp_funding_gap_2026_08_14.py`, the diagnostic script that resolved todo 2 (the HYPERLIQUID gap
+  check), directly relevant to the remaining todo 3's re-run decision.

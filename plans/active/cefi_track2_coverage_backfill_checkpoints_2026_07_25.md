@@ -51,6 +51,7 @@ context_scope:
   [
     /plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
     /plans/active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md,
     deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
     instruments-service/scripts/measure_honest_coverage.py,
@@ -311,6 +312,9 @@ context_scope:
   only once the 8th VM measurably self-terminates at scope end — next re-verify should watch for a terminal
   `delete`/exit on the 8th VM (the 2 known stall classes — lease-race, honest-absence false-stall — are both fixed since
   `deployment-service@8095aeba`).
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — added
+  `/codex/02-data/availability-manifest-and-data-status.md` (already cited in this doc's own "Codex SSOTs" section,
+  previously omitted). The 5 prior entries remain accurate.
 
 ## Reconciliation
 

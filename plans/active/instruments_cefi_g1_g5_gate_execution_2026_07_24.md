@@ -52,7 +52,7 @@ context_scope:
     /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
     instruments-service/instruments_service/reference_data/adapters/cefi/extended.py,
     instruments-service/instruments_service/engine/orchestrator/process_fetch.py,
-    deployment-service/scripts/vm/launch-cefi-instruments-backfill.sh,
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
   ]
 supersedes:
 superseded_by:
@@ -757,6 +757,11 @@ Coverage is the verification lens — every number flows through `compute_honest
   consolidator-health-gated `MANIFEST_ALLOW_STALE_FALLBACK` revert) are still genuinely human/judgment/gated work.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate — the only change since
   the 2026-08-05 marker was a 2026-08-06 na-eligibility-audit verdict entry, no new content/targets.
+- **context-scout 2026-08-15**: re-scouted; refreshed context_scope (6 entries) — swapped the VM launcher script (tied to
+  the now-DONE G2 backfill) for `instruments_completion_tracker_2026_07_06.md`, which the doc's own body text cites
+  (`C4(a), instruments_completion_tracker_2026_07_06.md:137`) as the standing ruling gating the still-open GATE G4 —
+  more load-bearing than a settled-work source path now that G1/G2/G3 are all DONE/SIGNED OFF and G4 is the one open
+  item.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — MANIFEST_ALLOW_STALE_FALLBACK revert already closed earlier
   today by a concurrent session; 2 open items remain, both operator design/sign-off gates.
 - **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (cefi tranche)**: KEEP-NA, valid — re-checked against

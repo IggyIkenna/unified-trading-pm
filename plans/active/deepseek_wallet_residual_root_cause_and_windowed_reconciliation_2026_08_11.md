@@ -43,14 +43,12 @@ effort: high
 drift_direction: advance-code
 context_scope:
   [
-    agent-orchestrator/server/state_store/slots.py,
-    agent-orchestrator/server/deepseek_balance_poller.py,
+    /codex/12-agent-workflow/measurement-claims-discipline.md,
     agent-orchestrator/server/deepseek_usage_poller.py,
-    agent-orchestrator/server/model_pricing.py,
-    agent-orchestrator/server/orm.py,
+    agent-orchestrator/server/deepseek_balance_poller.py,
+    agent-orchestrator/server/state_store/slots.py,
     agent-orchestrator/dashboard/src/DeepSeekWalletPanel.tsx,
     /plans/archive/2026_08/issues/deepseek_flash_spend_235_residual_2026_08_10.md,
-    /codex/04-architecture/runtime-deployment-topology.md,
   ]
 locked_by:
 locked_since:
@@ -489,3 +487,9 @@ Progress Log).
   shared checkout, "the file isn't where I left it" can mean "your local HEAD is stale," not "it was deleted" — check
   `git show origin/<branch>:<path>` before assuming loss, and prefer the isolated-worktree ship scripts specifically
   because they don't depend on local HEAD being sane.
+
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries, trimmed from 8 to fit the MVI target) -- added
+  `/codex/12-agent-workflow/measurement-claims-discipline.md` (the doc's own cited primary Codex SSOT under "## Codex
+  SSOTs", previously missing from context_scope); dropped `model_pricing.py`/`orm.py`/`runtime-deployment-topology.md`
+  (rate-card + docstring work is done; the sole remaining open todo is an `[OPERATOR]` dashboard action, not a code
+  change).

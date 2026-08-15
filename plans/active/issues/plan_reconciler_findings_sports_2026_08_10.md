@@ -41,6 +41,7 @@ context_scope:
     unified-trading-pm/scripts/plan-hygiene/check_archive_candidates.sh,
     unified-trading-pm/agents/plan_reconciler.md,
     unified-trading-pm/cursor-configs/skills/plan-reconcile/SKILL.md,
+    unified-trading-pm/scripts/plans/regenerate_active_plan_index.py,
   ]
 drift_direction: advance-code
 depends_on: []
@@ -230,3 +231,6 @@ depends_on: []
   confirmed, 0 docs archived. The sports tranche is under heavy concurrent activity (38/105 docs modified in <12h). All
   8 archive candidates blocked on deferred-item migration / cross-reference coordination. The 27 near-complete docs are
   the most actionable backlog when the grace window clears.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) — added
+  `scripts/plans/regenerate_active_plan_index.py`, the script whose commented-continuation-line frontmatter parser bug
+  this doc root-caused, reproduced, and fixed (see `## Filed`).

@@ -48,8 +48,8 @@ source: >-
 depends_on: []
 context_scope:
   [
+    /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
-    /codex/04-architecture/autonomous-recovery-matrix.md,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/dependency_revocation.py,
     deployment-service/deployment_service/data_pipeline_monitors/revocation_actuator.py,
     deployment-service/deployment_service/data_pipeline_monitors/consolidator_scheduler_watcher.py,
@@ -163,3 +163,6 @@ local check. Environment setup, not a code change.
   **6** (UTL `.venv` bootstrap) now literally duplicate open todos in the reopened plan (lines 108, 376, 176
   respectively as of `44b6410206`). Not resolved here — deciding which copy is canonical is a judgment call outside this
   gate-fix's scope; flagging for `/plan-reconcile` or the operator.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries) — swapped the generic
+  `autonomous-recovery-matrix.md` pointer (never cited in this doc's own body) for the parent plan
+  `alert_driven_dependency_revocation_2026_08_12.md`, per this doc's own STALE-correction banner above.

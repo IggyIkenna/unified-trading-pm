@@ -300,3 +300,5 @@ context_scope:
 - **na-eligibility-audit 2026-08-10 (prediction tranche)**: KEEP-NA, valid — re-verified live, 5 open, unchanged.
   `depends_on: [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true` still open (prerequisite still
   status:active, 7 open todos, Phase-B `--apply` not started). Doc stays NA.
+
+- **context-scout 2026-08-15**: re-verified context_scope (4 entries), unchanged.

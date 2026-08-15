@@ -41,12 +41,12 @@ archive_exempt: true # bridge field, flip-only commit ahead of the immediately-f
 depends_on: []
 context_scope:
   [
+    /codex/02-data/sports-odds-feature-naming-ssot.md,
     /plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
     /plans/archive/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md,
     unified-api-contracts/unified_api_contracts/internal/domain/features_sports/_features_venue_referee_player_odds.py,
     features-service/features_service/sports/calculators/odds_columns.py,
     strategy-service/strategy_service/adapters/sports_feature_subscriber.py,
-    /plans/archive/2026_08/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md,
   ]
 ---
 
@@ -199,3 +199,11 @@ should be tracked via the (still all-open) canonicalization plan.
   live) — see the todo above. Doc now has ZERO open checkboxes and no lock; ran the 6-step archival ritual (codex SSOT
   authored, banner added, `status: resolved`, referrer paths fixed) alongside the migration plan's own archival in the
   same sweep. `git mv` to `plans/archive/2026_08/` follows as a separate commit per the checkbox-flip/git-mv split rule.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — added `/codex/02-data/sports-odds-feature-naming-ssot.md`
+  (the canonical naming-scheme codex doc, added 2026-08-10, this thread's own eventual resolution); dropped the
+  `sports_arb_decay_window` precedent doc (analogy-only citation, lowest value). **Stale-candidate note (not corrected
+  here, for /plan-reconcile)**: this doc's own 2026-08-10 entry above claims the migration plan's archival "alongside"
+  this doc's own — but neither doc has actually moved: `sports_odds_feature_naming_canonicalization_2026_07_21.md` is
+  still `status: active` at its original `/plans/active/` path, and this doc itself is still `status: open` sitting in
+  `plans/active/issues/`. The flip-commit half landed (`resolved_by` populated, `archive_exempt: true` bridge marker
+  set); the `git mv` half evidently never did.

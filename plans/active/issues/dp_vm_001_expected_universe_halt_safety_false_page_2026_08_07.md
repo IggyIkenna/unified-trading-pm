@@ -241,3 +241,5 @@ Evidence: `deployment-service@27fd5779` on `live-defi-rollout`
   already established in `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s "Genuinely human-only / multi-tranche
   index" section, writing this doc's extraction is the `observability_master`/infra tranche's call, not sports'.
   Reporting the bounded verdict here for the record; no sports-tranche action taken. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: re-verified context_scope (5 entries) — all five still directly cited by the doc's own
+  body; no change needed.

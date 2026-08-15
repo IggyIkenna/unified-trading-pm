@@ -242,3 +242,4 @@ ELECTION_PRESIDENT_2028 path. OSCARS_BEST_PICTURE is net-new — filed as a foll
   reclassify/archive/duplicate candidates. Agrees with the 2026-07-30 audit's verdict.
 - **na-eligibility-audit 2026-08-10 (prediction tranche)**: KEEP-NA, valid — re-verified live, 4 open, unchanged.
   `sports_master.md`'s Group E gate checkbox still `[ ]` unchecked. Doc stays NA.
+- **context-scout 2026-08-15**: re-verified context_scope (5 entries), unchanged.

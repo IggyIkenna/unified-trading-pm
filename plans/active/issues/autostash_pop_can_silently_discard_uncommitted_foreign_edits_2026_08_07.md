@@ -59,7 +59,13 @@ source:
   ]
 locked_by:
 locked_since:
-context_scope: [scripts/quickmerge.sh, scripts/dev/safe-doc-push.sh, /codex/05-infrastructure/per-tab-worktrees.md]
+context_scope:
+  [
+    scripts/quickmerge.sh,
+    scripts/dev/safe-doc-push.sh,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    plans/archive/issues/autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md,
+  ]
 ---
 
 # `git pull --rebase --autostash` can silently discard a concurrent session's uncommitted edits
@@ -322,3 +328,7 @@ understanding the root cause to be valuable.
   active, unresolved investigation (todo 1) carries real risk of destroying another concurrent session's genuine
   uncommitted work, which is precisely what round11's own author chose to log rather than act on blind. Keeping it
   paired with the todo1/3 investigation is the safer, more conservative call.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) — added the already-resolved sibling doc
+  `autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md` (already named in this doc's own "Why this is NOT
+  the same issue" section, and directly needed by the open DOC P2 todo, which explicitly asks to fold findings into
+  `per-tab-worktrees.md` "clearly distinguishing the two failure modes").

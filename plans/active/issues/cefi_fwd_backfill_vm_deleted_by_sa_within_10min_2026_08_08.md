@@ -56,6 +56,7 @@ context_scope:
     deployment-service/scripts/vm/lib/launcher_common.sh,
     deployment-service/scripts/vm/launch-cefi-forward-poll.sh,
     market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
+    deployment-service/scripts/vm/vm_zombie_watchdog.py,
     /plans/active/issues/cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md,
   ]
 ---
@@ -578,3 +579,6 @@ before launch.
   fires cover days ≥08-10 via the tier=daemon fix" does NOT currently hold (nothing landed for 08-10). When the forward
   backfill runs (once the Tardis slot frees — `cefi-queue-heavy-binancefutu-x17-20260809-083733` still RUNNING), or
   before relaunching the cron host, RE-PROBE the still-empty days 08-06→08-10 rather than trusting that assumption.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries) -- added `vm_zombie_watchdog.py`, the
+  root-cause file for the shipped `[INFRA] P1` heartbeat-threshold/`tier=daemon` fix (`deployment-service@0395764a`),
+  named repeatedly in the doc's own Progress Log but missing from the prior 5-entry list.

@@ -738,3 +738,4 @@ items already extracted there 2026-07-26. One-line index of what moved (`[TAG] P
   this todo targets) — NOT "genuine honest-absence" as the plan anticipated for the remainder; filed as its own new P2
   todo in the issue doc rather than silently absorbed into this checkbox's evidence or left uninvestigated. Full
   evidence trail: `issues/sports_odds_horizon_bucket_reader_writer_path_mismatch_defeats_zombie_purge_2026_08_09.md`.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (6 entries), unchanged.

@@ -743,3 +743,4 @@ either flip the last P3 or decide it's deferrable and archive anyway.
   on planning-vm under load, for a load-drift-free confirmation) rather than leaving it as prose, per the
   findings-triage hard rule. Todo (line ~543, "[DOC] P2. Compare the two tables...") flipped `[x]`. No code change —
   doc-only (analysis of already-recorded data). — unified-trading-pm@(this commit)
+- **context-scout 2026-08-15**: re-verified context_scope (6 entries), unchanged.

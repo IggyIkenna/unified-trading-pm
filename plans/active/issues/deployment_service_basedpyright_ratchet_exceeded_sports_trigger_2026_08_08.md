@@ -119,3 +119,5 @@ plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md (
 same-repo same-file-family basedpyright fix in sports_trigger_periodic.py one week prior (moved the ratchet 1293->1294
 via a reportPrivateUsage fix) and remains AO-dispatchable, creating a real race risk on the SAME shared repo-wide
 basedpyright counter/file family.
+
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate.

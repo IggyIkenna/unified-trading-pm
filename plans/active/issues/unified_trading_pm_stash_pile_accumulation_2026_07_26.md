@@ -34,9 +34,10 @@ resolved_by:
 drift_direction: NA
 context_scope:
   [
-    /codex/05-infrastructure/per-tab-worktrees.md,
+    scripts/dev/audit-stash-pile.sh,
+    scripts/hooks/slot-identity-lib.sh,
     agent-orchestrator/scripts/hooks/block_destructive_commands.py,
-    /codex/06-coding-standards/quality-gates-memory-governance.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 ---
 
@@ -327,6 +328,9 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
   `autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md` (confirmed still live today per this
   sweep's own `SUB_AGENT_MANDATORY_RULES.md`) — reinforces, not weakens, the case for leaving the mechanical drop to the
   operator with a fresh count check immediately before each loop.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) — swapped in the shipped `audit-stash-pile.sh` tool
+  + its `slot-identity-lib.sh` host-derivation dependency (both now the real, built mechanism this doc's follow-ups
+  reference), dropped the less-central memory-governance codex pointer.
 
 ## Deferred work after 2026-08-12
 

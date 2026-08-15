@@ -56,6 +56,7 @@ context_scope:
   [
     agent-orchestrator/scripts/rescale-memory-cap.sh,
     agent-orchestrator/scripts/bootstrap_vm.sh,
+    agent-orchestrator/server/host_resources.py,
     /plans/archive/issues/orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
@@ -184,3 +185,6 @@ again) never triggers it. Nothing currently reminds an operator/agent to re-run 
   feature-sized, cross-repo work (new agent-orchestrator cgroup-v2 memory-stat reader AND a new deployment-ui dashboard
   tile needing its own `pw:L2` regression spec) — 4 prior audits plus `ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s
   own Deferred section agree. No new facts found.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) — added
+  `agent-orchestrator/server/host_resources.py`, the concrete backend target the doc's own sole open `[REVIEW] P3` item
+  names for the cgroup-v2 memory-stat reader.

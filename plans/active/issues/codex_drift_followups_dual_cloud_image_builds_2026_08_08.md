@@ -158,3 +158,6 @@ access from this worktree).
   `codebuild:ListProjects`/`codebuild:BatchGetBuilds`. Kept `[OPERATOR]` (not retagged away) and marked STANDING-ACTION:
   the decision is made but execution requires the operator's own AWS console/CLI access, which no worker can self-serve
   for this identity. Stays open pending the actual grant + a live re-verification.
+- **context-scout 2026-08-15**: refreshed context_scope (1 entry) — sole remaining open item is an `[OPERATOR]`
+  standing-action (AWS IAM grant), genuinely code-free; the codex doc this whole finding set was extracted from remains
+  the only citation needed.

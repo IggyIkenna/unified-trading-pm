@@ -172,3 +172,6 @@ the dispatch-scope-eligibility ruling):
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (2 entries), unchanged.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (2 entries), unchanged — doc's own remaining scope
+  is a redirect-stub verification, not a new implementation target, so no source path added (consistent with the
+  2026-08-03 methodology note above).

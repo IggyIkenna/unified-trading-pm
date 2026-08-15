@@ -334,3 +334,4 @@ build-MTDS-collectors → recompute), not a new one.
   sizing/scoping decision per the doc's own author note and `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s
   Deferred/non-batchable classification — not a bare mechanical build. No satellite-extraction candidate found. Doc
   stays `assigned_vm: NA` (KEEP-NA valid, round11).
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.

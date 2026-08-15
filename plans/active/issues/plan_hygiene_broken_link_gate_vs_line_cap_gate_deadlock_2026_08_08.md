@@ -60,6 +60,8 @@ context_scope:
     scripts/validators/validate_plan_links.py,
     scripts/plan-hygiene/check_line_caps.sh,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 ---
 
@@ -163,3 +165,7 @@ force it through or damage another agent's active doc.
   `ao_dispatch_ignores_same_doc_operator_predecessor_todo_2026_08_08.md`'s `[OPERATOR]` todo to reflect this ruling
   landing (its own park/unpark mechanism is a live-AO-state action outside this doc-editing session's reach — noted
   there as a standing follow-up).
+- **context-scout 2026-08-15**: re-scouted; added the still-`archive_exempt`-pending archival target
+  (`provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`) and the over-cap referrer that
+  triggered the original deadlock (`cross_cutting_consolidated_closeout_2026_07_25.md`) — both are the concrete
+  targets of the one remaining open `[INFRA] P1` todo, now 5 entries.

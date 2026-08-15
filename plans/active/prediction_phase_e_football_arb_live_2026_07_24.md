@@ -193,3 +193,5 @@ context_scope:
   respectively). E3's arb-engine identity-wiring + correctness-guard items also independently confirmed as genuine
   multi-file design/build work on live dispatch-critical machinery, not RECLASSIFY-eligible even setting the gate aside.
   Doc stays NA.
+
+- **context-scout 2026-08-15**: re-verified context_scope (5 entries), unchanged.

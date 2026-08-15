@@ -960,3 +960,5 @@ Other: operator can type a custom answer
   resolved, kept `open` only because the parent rollout plan is still active), so no source path applies.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (3 entries), still accurate — all 38 logged
+  decisions remain resolved; doc stays open only because the parent rollout plan is still active.

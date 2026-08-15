@@ -59,6 +59,7 @@ context_scope:
     /plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md,
     /plans/active/issues/dex_pool_fees_phantom_premise_false_real_mid_may_objects_2026_08_12.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    unified-trading-library/unified_trading_library/cloud_interface/providers/gcp.py,
   ]
 ---
 
@@ -227,3 +228,8 @@ BALANCER rows ... Do NOT touch the 14 CURVE rows").
   twin-matching bug" framing is corrected in the body + Recommended decision #2. Dispatch-level coordination (never
   dispatch plan + issue-doc retirement todos for the same manifest concurrently) remains Recommended-decision #3 + new
   P3 follow-up.
+
+**context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) — added
+unified-trading-library/unified_trading_library/cloud_interface/providers/gcp.py (the conditional_upload_file CAS
+mechanism the sole remaining P3 todo asks to codify in the data SSOT), named directly in the doc's own root-cause
+Progress Log entry.

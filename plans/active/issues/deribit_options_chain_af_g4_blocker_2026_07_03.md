@@ -249,3 +249,4 @@ argument for that issue's Option A). Cross-linked from there.
   cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md's still-open [REVIEW] P2 re-verification todo (that
   todo explicitly re-checks the manifest and conditionally closes this doc; verified `- [ ]` open, not yet executed as
   of this run). Not yet ready to close here ahead of that gate.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate.

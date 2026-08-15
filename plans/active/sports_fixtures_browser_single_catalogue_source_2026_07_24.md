@@ -47,6 +47,7 @@ source: >-
 context_scope:
   [
     /plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md,
+    /plans/active/sports_taxonomy_p3_consumers_2026_08_08.md,
     deployment-api/deployment_api/services/fixtures_browser.py,
     instruments-service/scripts/build_instrument_catalogue.py,
     /codex/02-data/sports-2020-06-data-floor.md,
@@ -140,3 +141,6 @@ Parent plan's P10-B (operator round-3, 2026-07-17) already shipped: `CATALOG_COL
 - **ag-closeout-audit 2026-08-13**: a same-session ag-closeout-audit classifier flagged this doc archivable_now,
   contradicting this doc's OWN round7/round11 na-eligibility-audit KEEP-NA rulings above ("not re-litigated").
   Independently re-verified wrong and overturned before any archival action. Stays open, untouched.
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) — added `sports_taxonomy_p3_consumers_2026_08_08.md`,
+  the doc the `✅ OPERATOR RULING 2026-08-08` banner above names as the confirmed implementer of this doc's sole open
+  item (previously uncited here despite being the doc a worker actually needs to check/complete the work in).

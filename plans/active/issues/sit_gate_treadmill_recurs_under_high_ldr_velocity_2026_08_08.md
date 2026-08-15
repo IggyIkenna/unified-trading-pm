@@ -64,6 +64,8 @@ context_scope:
     scripts/cicd/sit_gate_stuck_detector.py,
     .github/workflows/sit-gate-stuck-detector.yml,
     .github/workflows/ldr-to-main-promote-fleet.yml,
+    scripts/cicd/ldr_to_main_fleet_promote.sh,
+    /codex/04-architecture/ci-alerting.md,
   ]
 ---
 
@@ -213,3 +215,9 @@ this escalation — both fixes were already shipped by other sessions before I w
 next `sit_gate_stuck` escalation for the SAME window doesn't re-diagnose from scratch. Todos 1 (dedup-key) and 3 (hoist
 PR cleanup) are unchanged/still open — this occurrence did not exercise either (no orphaned promote PR was involved this
 time; all recent deployment-api promote PRs #607-#616 are `MERGED`).
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries — added `scripts/cicd/ldr_to_main_fleet_promote.sh`,
+  the source target of the open PR-cleanup-hoist todo, and `/codex/04-architecture/ci-alerting.md`, the SSOT this doc's
+  own dedup-key todo cites).

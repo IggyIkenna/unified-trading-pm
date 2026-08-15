@@ -40,6 +40,7 @@ superseded_by:
 source:
 context_scope:
   [
+    agent-orchestrator/server/codex_bridge_server.py,
     agent-orchestrator/server/accounts.py,
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/model_pricing.py,
@@ -217,3 +218,7 @@ template, minus the third-party dependency).
      this session (genuinely blocked, not skipped): `model_pricing.py` Luna entry, real usage-capture wiring (a
      token-count placeholder exists, clearly marked never-to-be-trusted-for-billing), and the bridge is not deployed
      anywhere — it's a file in this repo, not a running service.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries) — added
+  `agent-orchestrator/server/codex_bridge_server.py` (the plan's own primary deliverable, scaffolded this same day) to
+  the front of the existing 5-entry list.

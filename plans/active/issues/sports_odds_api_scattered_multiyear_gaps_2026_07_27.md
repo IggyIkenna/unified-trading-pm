@@ -55,8 +55,9 @@ context_scope:
     /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
     /codex/02-data/sports-2020-06-data-floor.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md,
+    /plans/active/issues/mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md,
     deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh,
+    /plans/active/issues/sports_honest_coverage_gap_closure_2026_08_14.md,
   ]
 ---
 
@@ -771,3 +772,11 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
 
 `/codex/02-data/sports-2020-06-data-floor.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
 `/codex/02-data/honest-coverage-model.md`.
+
+## Progress Log addendum
+
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — swapped the now-superseded
+  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` for `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`
+  (the doc actually tracking the recurring `smallchunk*` silent-hang deaths this doc's own 2026-08-09..08-11 entries
+  describe), and added `sports_honest_coverage_gap_closure_2026_08_14.md`, the current live-campaign tracking doc for
+  this exact gap.

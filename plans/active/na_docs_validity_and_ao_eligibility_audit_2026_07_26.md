@@ -759,3 +759,4 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   default ("plan-destination defaults to AO-dispatched") does not override an earlier specific, dated ruling. Not
   re-litigated; no new precedent from the accumulated set (IAM self-service, D16, S5.1, escalation-N, reversibility-
   qualified deletes, Option B retirement, DeepSeek/Slack credentials) touches any of the 13 open items.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (6 entries), unchanged.

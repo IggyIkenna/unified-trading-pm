@@ -434,6 +434,10 @@ pair (2026-07-03 `0G`):
   was correctly excluded per operator BLK-0a76df10 (DIRECTION A LEAVE-BOTH). Consolidator cron
   `uts-prod-manifest-consolidator-market-data-cefi-cron` verified ENABLED (full cefi consolidator fleet all ENABLED).
   Apply todo flipped in this session. **Range-2 `cefi-late-renames` apply for LIGHTER-ZKSYNC is now DONE.**
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate -- all 5 todos are now
+  closed (2026-08-11) and this doc is archival-eligible per its own Deferred-work table, but the 4 existing entries
+  (parent chain-drop doc, the actual rename/dedup migration script, the sibling gating doc, the read-only audit script)
+  remain the correct minimal record for whoever archives it next.
 
 ## Deferred work after 2026-08-11
 

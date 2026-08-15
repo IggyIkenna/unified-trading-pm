@@ -361,3 +361,6 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
   `issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`, asked via `/blocked`. 4 items routed to
   the operator (delete-autonomy contradiction, the locked_by ruling, 2 codex-drift items needing new prose / cross-doc
   scope). Full write-up: `issues/plan_reconciler_findings_ui_2026_08_10.md`.
+- **context-scout 2026-08-15**: re-verified context_scope (6 entries, unchanged) — all resolve (incl. the
+  `/codex/11-project-management/` directory reference, matching the doc's own "Codex SSOTs" line verbatim);
+  coordination-index doc, legitimately code-free.

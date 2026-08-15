@@ -189,6 +189,7 @@ stabilize. Left untracked, this manifest residual would silently persist forever
 
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (4 entries), unchanged.
 
 ## Follow-ups
 

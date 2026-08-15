@@ -365,3 +365,4 @@ still in flight.
   context-saturation wedge-kill) converging on one terminal event — the actual fix approach (widen the AgentRow status
   filter vs. block the transition vs. something else) is still an open design call, not reduced to a single mechanical
   change. Staying parked.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.

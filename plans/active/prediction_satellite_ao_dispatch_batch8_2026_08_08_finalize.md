@@ -100,3 +100,4 @@ context_scope:
   checkbox) is a separate follow-up commit, per the archival-discipline rule against combining a checkbox flip with a
   `git mv` in one commit — the `git mv` here was on a DIFFERENT file (the issue doc), so that specific hazard didn't
   apply, but keeping the flip in its own commit still avoids ambiguity for todo 2's own `git mv`s of batch8 + this doc.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries).

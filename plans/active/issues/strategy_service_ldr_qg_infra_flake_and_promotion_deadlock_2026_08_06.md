@@ -766,3 +766,4 @@ process itself in this pass).
   and leaving the runner-pool-capacity / dispatch-storm-mutex follow-ups above as the likely fix path. Did NOT attempt
   `--hotfix-to-main` (operator-only `QUICKMERGE_HOTFIX_TO_MAIN_OK=1`, not available to an agent) or any manual
   intervention in the promoter/SIT workflows themselves.
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (6 entries), unchanged.

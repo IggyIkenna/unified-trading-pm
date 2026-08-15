@@ -354,3 +354,7 @@ adjacent axis the same script happens to also report). **Both findings investiga
   delete-safety gate is genuinely lifted (bucket soft-delete retention independently verified 604800s). Doc reclassified
   `assigned_vm: NA` → `planning`; batch10's broader "operator decision on catalogue-orphan disposition" characterization
   is a SEPARATE, still-open question (new todo below), not a reason to keep this specific migration todo gated.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (6 entries), still accurate. Flagging for
+  `/plan-reconcile` (out of this skill's scope): the 2026-08-12 RULED entry's own "(new todo below)" reference is
+  dangling -- no new todo tracking "operator decision on catalogue-orphan disposition" actually appears in this doc's
+  Todos section.

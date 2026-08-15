@@ -206,3 +206,5 @@ this, each time invisible until someone reads the backlog by hand.
   `archive_exempt: true`. Independently re-verified the routing plan
   (`ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`) still carries its own open `[REVIEW] P0` archival todo
   naming this doc — routing still valid, not stale. Consistent with 6+ prior markers.
+
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate.

@@ -190,3 +190,4 @@ Two independent fix directions, either or both:
   the shared-gcloud-identity fix space.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-15**: re-scouted; context_scope re-verified (3 entries), unchanged.

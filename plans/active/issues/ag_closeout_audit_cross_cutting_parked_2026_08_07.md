@@ -74,6 +74,7 @@ context_scope:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md,
+    /plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md,
   ]
 ---
 
@@ -337,3 +338,6 @@ spot per this skill's SKILL.md).
   "owning-tranche fix, leave to X tranche's own audit, not this run" -- cross-cutting cannot execute these itself by
   construction.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **context-scout 2026-08-15**: refreshed context_scope (5 entries) -- added
+  `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, the plan the doc's own 2026-08-10 banner names as now
+  actually dispatching its remaining findings.

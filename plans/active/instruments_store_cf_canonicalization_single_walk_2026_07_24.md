@@ -299,3 +299,4 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
   C0/E3-E6 single-walk todos are a coordinated migration requiring VM launch + writer-drain coordination (E6 explicitly
   IRREVERSIBLE, hands C-GREEN to a permanent legacy-bucket delete) -- no cheat-sheet precedent unblocks a whole-corpus
   irreversible single-walk migration.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries).

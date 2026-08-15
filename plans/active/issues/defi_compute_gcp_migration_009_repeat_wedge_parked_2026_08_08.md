@@ -43,6 +43,7 @@ last_updated: 2026-08-08
 locked_since:
 context_scope:
   [
+    /plans/archive/2026_08/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md,
     agent-orchestrator/server/routes/slots_worker.py,
     agent-orchestrator/server/routes/slots_ops.py,
     agent-orchestrator/server/auto_park.py,
@@ -115,3 +116,5 @@ reaching the point where a compact would be needed.
   distinct AO slots within ~35min, durably parked per the standing 3rd-distinct-slot mitigation rule. All 3 open
   checkboxes sequentially gated on `review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md`'s external root-cause
   investigation, confirmed still open/in-flight (mtime 2026-08-09 05:46). Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) — added the tmuxpruner root-cause doc (the direct
+  gate every open todo here waits on, per todo 1/2's own text), kept the 3 AO source files.

@@ -38,7 +38,7 @@ locked_by:
 resolved_by:
 context_scope:
   [
-    /plans/archive/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md,
+    /plans/active/issues/operator_ruling_record_ao_round5_apply_session_2026_08_08.md,
     /plans/active/issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md,
     /plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
@@ -196,6 +196,10 @@ pull any specific checkout's full table back up if you want it before deciding.
   with no API, git-stash-drop (categorically blocked for agents), permanent hard-stops, human judgment reviews) — every
   remaining item still requires the operator's own hands per its own definition. Round9 (2026-08-09) already re-verified
   this same conclusion in detail; no new facts found this pass.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) — swapped
+  `prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md` (now archived/resolved, per this doc's own §6)
+  for `operator_ruling_record_ao_round5_apply_session_2026_08_08.md` (cited twice in the doc's 2026-08-10 "Carried in"
+  additions, the highest-frequency new citation since the last scout).
 
 ## Carried in from the 2026-08-10 ag-closeout parked-corpus close-out
 
