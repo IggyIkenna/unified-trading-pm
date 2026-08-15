@@ -139,6 +139,7 @@ jobs:
             || echo "::error::failed to dispatch staging-validated — staging→main will not auto-promote"
 
       - name: Open SIT-failure GH Issue (add-sit-rollback)
+        id: sit-issue
         if: github.event.action == 'sit-failed'
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
@@ -191,6 +192,50 @@ jobs:
             ISSUE_URL="N/A"
           fi
           # Telegram alert migrated to notify job
+
+          {
+            echo "lock_version=${LOCK_VERSION}"
+            echo "issue_url=${ISSUE_URL}"
+          } >> "$GITHUB_OUTPUT"
+
+      # RULED 2026-08-07 (operator): a red SIT should escalate to a background worker, not just
+      # Issue+Slack (the step above + the notify job below). Reuses the SAME escalate-to-orchestrator
+      # dispatch + `sit_failure` wall_type already fired by cascade-qg-ordering.yml's cascade-failure
+      # escalation and staging-to-main.yml's promotion-quarantine escalation — both existing call
+      # sites already treat `sit_failure` as the generic "a SIT-adjacent CI wall needs a worker to
+      # actually look" bucket, so this is the third, not a new wall_type. Targets the first repo with
+      # a pending BREAKING change still queued for SIT validation (the most likely culprit); falls
+      # back to `system-integration-tests` (the harness itself) when nothing is currently pending —
+      # e.g. a starvation auto-remediation re-trigger racing this same completion.
+      - name: Escalate to orchestrator (wall_type=sit_failure) — background-worker dispatch
+        if: github.event.action == 'sit-failed'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          LOCK_VERSION: ${{ steps.sit-issue.outputs.lock_version }}
+          ISSUE_URL: ${{ steps.sit-issue.outputs.issue_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          TARGET=$(python3 -c "
+          import json
+          m = json.load(open('workspace-manifest.json'))
+          ss = m.get('staging_status', {})
+          candidates = (ss.get('breaking_pending') or []) + (ss.get('pending_repos') or [])
+          print(candidates[0] if candidates else 'system-integration-tests')
+          ")
+          export TARGET
+          export CONTEXT="full-workspace-sit failed (run: ${RUN_URL}). Lock version: ${LOCK_VERSION}. Staging is now unlocked for fixes (breaking_pending kept until a green SIT). Issue: ${ISSUE_URL:-N/A}. Identify which pending repo broke the cross-repo invariant suite (scripts/run_cross_repo_invariants.sh in system-integration-tests), push a fix to live-defi-rollout, and let sit-debounce-trigger's 60s quiet-period re-trigger SIT."
+          PAYLOAD=$(python3 -c "import json,os; print(json.dumps({'event_type':'escalate-to-orchestrator','client_payload':{'repo':os.environ['TARGET'],'pr_number':0,'wall_type':'sit_failure','context':os.environ['CONTEXT'],'authoring_slot':'ci','model':'sonnet'}}))")
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${OWNER}/unified-trading-pm/dispatches" \
+            -d "$PAYLOAD")
+          if [ "$HTTP" = "204" ]; then
+            echo "✅ escalated SIT failure to orchestrator (wall_type=sit_failure, target=${TARGET})"
+          else
+            echo "::warning::escalate-to-orchestrator dispatch failed (HTTP ${HTTP}) — SIT failure still tracked via the Issue+Slack path above (non-fatal)."
+          fi
 
       - name: Dispatch staging-unlocked to all repos (re-runs Staging Lock Check on open PRs)
         if: steps.check.outputs.was_locked == 'true'
