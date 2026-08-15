@@ -36,6 +36,7 @@ related:
   [
     /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch8_2026_08_09.md,
     /plans/archive/2026_08/mvp_scope_catalogue_tagging_2026_06_08.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-09"
 author: data_engineering-worker-slot3
