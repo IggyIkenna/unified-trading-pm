@@ -41,7 +41,7 @@ related_plans:
   - ../active/bucket_fold_features_2026_07_17.md
   - ../active/bucket_fold_ml_2026_07_17.md
   - ../active/bucket_fold_portfolio_state_2026_07_17.md
-  - ../active/bucket_iam_write_protection_per_tier_2026_06_09.md
+  - ../archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md
   - ../active/bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27.md
   - ../active/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08_finalize_2026_08_08.md
   - ../active/ci_pipeline_speed_and_cost_redesign_2026_08_05.md
@@ -557,7 +557,7 @@ strategy-store flat → tiered
 **status**: active · **estimate**: 3.2 cal AI-days (class: infra) **title**: Bucket fold — features 25 per-AG/kind → 5
 per-AG (features-{ag}-{env}-{pid})
 
-### [`bucket_iam_write_protection_per_tier_2026_06_09`](../active/bucket_iam_write_protection_per_tier_2026_06_09.md)
+### [`bucket_iam_write_protection_per_tier_2026_06_09`](../archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md)
 
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Bucket IAM write-protection —
 per-tier/per-domain SAs replace the project-wide god-SA (§8 implementation)
@@ -824,8 +824,8 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
       `vm_launcher_startup_url_migration_2026_05_21.md` Pattern B note) — Consider moving the per-run migration script
       from unified-trading-pm to `CODE_BUCKET/scripts/` to enable a future Pattern A conversion. Low priority; Pattern B
       is correct for now. **MOOT 2026-08-03 (slot-7)** — the launcher itself was deleted as dead code (both target
-      scripts long removed; see `plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2i), so there is no
-      Pattern-B script left to convert.
+      scripts long removed; see `plans/archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2i), so
+      there is no Pattern-B script left to convert.
 - [x] ✅ [SCRIPT] P3. **VM startup `gsutil -m cp` wheel-cache step deadlocks → boot-hang (make non-blocking / drop
       `-m`).** **MIGRATED FROM:** `plans/active/issues/running_vm_fleet_status_2026_05_27.md` § C (archived 2026-06-07).
       The VM startup script's final "Caching compiled wheels to GCS" step runs

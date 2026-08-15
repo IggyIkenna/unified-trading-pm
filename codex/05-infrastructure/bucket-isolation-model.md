@@ -28,7 +28,7 @@ referenced_by:
     /codex/09-strategy/architecture-v2/instruments-resolver-architecture.md,
     /codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md,
     plans/archive/2026_07/bucket_env_split_rollout_2026_06.md,
-    plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
+    plans/archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md,
   ]
 owner:
 last_reviewed: 2026-07-20
@@ -284,14 +284,18 @@ Each manifest records what data was written, when, and to which bucket/path.
 
 ---
 
-## 8. Prod Bucket IAM Write-Protection (PARTIALLY ENFORCED — new SAs scoped, god-SA still unconditioned)
+## 8. Prod Bucket IAM Write-Protection (god-SA `objectAdmin` REMOVED 2026-08-08 — per-tier SAs are now the write path)
 
-Prod buckets (`-prd-`) have IAM policies that restrict write access **at the credential level** for callers already
-migrated to the new per-tier service accounts (§ 8.1) — the code-level name-resolver safety net (§ 1) is now backed by
-live GCP IAM conditions for those callers. This is additive, not yet exhaustive: the original `unified-trading-sa` still
-holds unconditioned project-wide `storage.objectAdmin` alongside the new bindings (§ 8.5) until every write path is
-confirmed migrated off it. Terraform SSOT: `deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf`. Rollout plan:
-`/plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md`.
+Prod buckets (`-prd-`) have IAM policies that restrict write access **at the credential level** for callers on the new
+per-tier service accounts (§ 8.1) — the code-level name-resolver safety net (§ 1) is now backed by live GCP IAM
+conditions. The original `unified-trading-sa`'s project-wide `storage.objectAdmin` grant — the "god-SA" that used to sit
+alongside the new bindings — was **removed 2026-08-08** (`deployment-service@f514b6a0`, targeted `tofu apply` destroying
+`unified_trading_storage_admin`; every write-path runtime was confirmed re-pointed to its tier SA first).
+`unified-trading-sa` still live-holds broader `roles/storage.admin` as **undeclared drift** (not in any terraform in
+this repo) — a separate, still-open residual gap, not the god-SA grant this section used to describe as "pending
+removal." See `/plans/archive/issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` for that residual.
+Terraform SSOT: `deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf`. Rollout plan (archived — 0 open todos):
+`/plans/archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md`.
 
 ### 8.1 Per-Tier Service Accounts
 
@@ -332,12 +336,22 @@ locks the tier.
 `resource.name` condition), matching its stated purpose: a narrow exception for migration/cutover scripts that
 legitimately span tiers. Currently used only by `launch-bucket-rsync-vm.sh`.
 
-### 8.5 Pending: God-SA `objectAdmin` Removal
+### 8.5 God-SA `objectAdmin` Removal — DONE 2026-08-08
 
-The original `unified-trading-sa` still holds project-wide `roles/storage.objectAdmin` — the per-tier conditioned
-bindings are live **alongside** it (additive enforcement: new SAs are scoped; the old SA still has broad access).
-Removal of the god-SA grant is tracked as P2.1b of the rollout plan, gated on every remaining write-path runtime
-confirming it runs as its tier SA rather than `unified-trading-sa` or the default compute SA.
+The original `unified-trading-sa`'s project-wide `roles/storage.objectAdmin` grant — the "god-SA" that had allowed
+writes to every bucket including prod, additively alongside the new per-tier conditioned bindings — was **removed
+2026-08-08** (`deployment-service@f514b6a0`, P2.1b of the now-archived rollout plan). The removal was gated on every
+remaining write-path runtime first confirming it runs as its tier SA (`uts-prd-sa`/`uts-test-sa`/`uts-migration-sa`)
+rather than `unified-trading-sa` or the GCP default compute SA — both hard gates (deployment-api traffic cutover,
+launcher wiring) were live-verified complete before the removal was applied; `tofu apply` destroyed exactly the one
+`google_project_iam_member.unified_trading_storage_admin` resource, live-verified via a fresh IAM policy read that
+`unified-trading-sa` no longer holds `objectAdmin`.
+
+**Residual, separately tracked**: `unified-trading-sa` still live-holds the broader `roles/storage.admin` role as
+undeclared drift (present in live GCP IAM, absent from any terraform in this repo) — a distinct, still-open gap from the
+god-SA `objectAdmin` grant this section used to describe. See
+`/plans/archive/issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` for that residual's own status;
+this section's "Pending" framing above described the now-completed `objectAdmin` removal only, not that residual.
 
 `CLOUD_MOCK_MODE=true` or `DEPLOYMENT_ENV=dev` never resolves to prd tier, preventing accidental prod writes during
 development or testing.

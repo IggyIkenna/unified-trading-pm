@@ -337,8 +337,8 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       definition-of-done, inherently unbounded scope for an AO-dispatched todo
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/data_pipeline_check_mdps_features_2026_07_20.md — P0 todo has only a
       prose gate condition, no depends_on/gate_on_depends enforcement — risk of dispatch into a known-blocked wall
-- [ ] [DOC] P3. (codex-drift) plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md — uncertain whether codex
-      §4 correction (vs the shipped §8 fix) landed
+- [ ] [DOC] P3. (codex-drift) plans/archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md — uncertain
+      whether codex §4 correction (vs the shipped §8 fix) landed
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/defi_compute_gcp_migration_2026_08_08.md — destructive AWS ECS-cluster
       delete todo, no `[OPERATOR]` tag
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md —

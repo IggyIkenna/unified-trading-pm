@@ -221,23 +221,9 @@ migration_verification_orphan_safety_2026_06_10
 
 ## Deferred work — migrated from archived plans
 
-- [ ] [AGENT] P2. **[2026-07-12 correction]** `ManifestWriter.add` is a LIVE, actively-extended write path, NOT
-      dead/soft-deprecated code awaiting a grep-confirm-then-delete (was: "Design and land a successor plan for full
-      `ManifestWriter.add` deletion: that method was soft-deprecated in the wave-2 plan (Phase 3 swapped all call sites
-      to `record_captured`/`record_empty`)... grep workspace for any remaining `.add(` call sites → confirm 0 remaining
-      callers → delete `ManifestWriter.add`" — false premise). Re-verified 2026-07-12: 4 live non-test call sites in
-      market-tick-data-service — `market_tick_data_service/scripts/_rebuild_sports_write.py:187`,
-      `market_tick_data_service/scripts/_rebuild_cefi_cf11.py:184`,
-      `market_tick_data_service/cli/handlers/_defi_manifest.py:474`,
-      `market_tick_data_service/scripts/rebuild_defi_manifest.py:478` — and this exact last call site was actively
-      enhanced as recently as M-COORD-5 (mtds@f80c50f1, per
-      `active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`: writer.add(...) now passes
-      asset_group=defi + the source-aware pipeline_mode/source/transport). **MIGRATED FROM:
-      plans/archive/wave2_polymarket_record_captured_from_counts_2026_05_09.md Phase 4.** Corrected todo: any future
-      deletion of `ManifestWriter.add` must first migrate these 4 live call sites to `record_captured`/`record_empty` —
-      do not merely grep-confirm zero callers, there are non-zero callers today. Corrected per plan-reconciliation
-      finding 137, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified"
-      blanket ruling.
+- [x] ✅ **[AGENT] P2. MOVED 2026-08-15 to `/plans/active/manifest_v9_residual_2026_08_15.md`** — `ManifestWriter.add`
+      live call-site migration to `record_captured`/`record_empty` (per plan_reconciler cross-cutting Item F: this epic
+      body is not scanned by any plan-corpus tool, so a live checkbox here was permanently invisible to tooling).
 
 > **MIGRATED FROM:** `bucket_name_ssot_canonicalisation_2026_05_10.md` (archived 2026-05-23) — bucket naming SSOT
 > complete for DeFi/CeFi/core paths; remaining items are env-tiered migration + prediction bucket + workspace audit.
@@ -262,20 +248,17 @@ migration_verification_orphan_safety_2026_06_10
       of already-completed one-off tooling (source plan `prediction_manifest_canonicalisation_2026_06_01.md` E7/E8/E8b,
       also DONE), not an open migration gap. No operator decision needed — the migration itself is already complete.
       Source: `plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_2026_07_25.md` todo 1.
-- [ ] [AGENT] P2. **Workspace-grep audit for legacy bucket references** — run workspace-wide grep to verify zero inline
-      `gs://` f-strings remain after bucket SSOT rollout. Generate audit table confirming all call sites use
-      `resolve_bucket_name()`. Update QG ratchet baseline.
-- [ ] [AGENT] P2. **Legacy bucket rename delegation** — delegate any remaining legacy bucket renames to the appropriate
-      service-repo owners. Confirm each service's QG STEP 5.69 check is green.
+- [x] ✅ **[AGENT] P2. MOVED 2026-08-15 to `/plans/active/manifest_v9_residual_2026_08_15.md`** — workspace-grep audit
+      for legacy bucket references (verify zero inline `gs://` f-strings remain).
+- [x] ✅ **[AGENT] P2. MOVED 2026-08-15 to `/plans/active/manifest_v9_residual_2026_08_15.md`** — legacy bucket rename
+      delegation to the appropriate service-repo owners.
 
 > **MIGRATED FROM:** `manifest_schema_final_gate_2026_05_09.md` (archived 2026-05-23) — v8 schema design complete;
 > Phases 8-13 are execution gates tracked in mtds_mdps_master + master plan.
 
-- [ ] [OPERATOR] P1. **Phase 0.A+0.B pre-audit** — run `gcs_migration Phase 0` pre-audit on same-region test bucket +
-      `measure-honest-coverage.py` on production manifests for each asset_group before full migration execution. Human
-      sign-off required before Phase 9 VM launches.
-- [ ] [AGENT] P2. **Phase 4.DEFAULT-REMOVAL-v8kwargs** — remove `= None` defaults from v8 schema kwargs across UTL
-      `ManifestWriter` + UAC schema definitions; enforce required fields. Low urgency once v8 migration runs are
-      complete.
-- [ ] [OPERATOR] P1. **Phase 8.A+8.B sign-off** — operator reviews class-C triage rows + appends sign-off section to
-      `manifest_divergence_triage_2026_05_09.md` confirming production manifest state post-migration.
+- [x] ✅ **[OPERATOR] P1. MOVED 2026-08-15 to `/plans/active/manifest_v9_residual_2026_08_15.md`** — Phase 0.A+0.B
+      pre-audit (`gcs_migration Phase 0` + `measure-honest-coverage.py`, human sign-off before Phase 9 VM launches).
+- [x] ✅ **[AGENT] P2. MOVED 2026-08-15 to `/plans/active/manifest_v9_residual_2026_08_15.md`** — Phase
+      4.DEFAULT-REMOVAL-v8kwargs (remove `= None` defaults from v8 schema kwargs).
+- [x] ✅ **[OPERATOR] P1. MOVED 2026-08-15 to `/plans/active/manifest_v9_residual_2026_08_15.md`** — Phase 8.A+8.B
+      sign-off on `manifest_divergence_triage_2026_05_09.md`.

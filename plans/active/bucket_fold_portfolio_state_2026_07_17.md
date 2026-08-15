@@ -38,7 +38,7 @@ related:
   [
     plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
     plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md,
-    plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
+    plans/archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md,
     plans/active/bucket_fold_closeout_2026_07_17.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
@@ -67,7 +67,7 @@ source:
 context_scope:
   [
     /codex/05-infrastructure/bucket-isolation-model.md,
-    /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
+    /plans/archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md,
     unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py,
   ]
 ---

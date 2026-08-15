@@ -614,9 +614,6 @@ by hand._
 - [`predictions_ml_walk_forward_and_arb_2026_06_20`](./predictions_ml_walk_forward_and_arb_2026_06_20.md) — Run Model 2A
   walk-forward validation (AUC gate) and ship the FSS arb_calculator — the predictions-ML half of the
   sports_predictions_e2e milestone.
-- [`predictions_other_bucket_and_ui_drilldown_2026_06_20`](./predictions_other_bucket_and_ui_drilldown_2026_06_20.md) —
-  Build the synthetic OTHER canonical-question-group catch-all bucket end-to-end and add the 3-level drilldown panel to
-  deployment-ui for predictions data.
 - [`sports_odds_feature_naming_canonicalization_2026_07_21`](./sports_odds_feature_naming_canonicalization_2026_07_21.md)
   — Operator-ruled 2026-07-21 (BLK-a1ce4719) resolution of sports_odds_feature_naming_four_way_mismatch_2026_07_21.md —
   direction is UAC-as-SSOT (Option A), executed as a scoped migration, not a blind rename. Picks deliberate field names
@@ -651,9 +648,10 @@ by hand._
 - [`bucket_fold_portfolio_state_2026_07_17`](./bucket_fold_portfolio_state_2026_07_17.md) — "Executes Fold E of the
   Wave-3 fold design — the LAST fold, live-trading-adjacent. Collapses six position/pnl/risk stores (positions-store,
   pnl-attribution-store, risk-metrics-store, pnl-attribution-output, archetype-state,…
-- [`bucket_iam_write_protection_per_tier_2026_06_09`](./bucket_iam_write_protection_per_tier_2026_06_09.md) — Implements
-  bucket-isolation-model §8 credential-level write-protection: replaces the project-wide god-SA (unified-trading-sa
-  holds roles/storage.objectAdmin over all buckets) with per-tier/per-domain service accounts (batch/live SAs write…
+- [`bucket_iam_write_protection_per_tier_2026_06_09`](../archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md)
+  — Implements bucket-isolation-model §8 credential-level write-protection: replaces the project-wide god-SA
+  (unified-trading-sa holds roles/storage.objectAdmin over all buckets) with per-tier/per-domain service accounts
+  (batch/live SAs write…
 - [`bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27`](./bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27.md)
   — Gated closeout for bucket_iam_write_protection_per_tier_2026_06_09.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once

@@ -85,8 +85,11 @@ checkbox-flip citations resolve to a real path instead of an unsourced "operator
 - **Item 7 — batch of lower-stakes items already carrying a single clear worker recommendation** (vm-launcher-runbook.md
   Known-Issue note on the freshness-gap race; ao_boot_stub per-todo NA-vs-planning risk re-scoping annotation; 3 ui
   orphaned-successor items flagged as needing a future scoping pass; ci_late_findings xdist-leak title accepted as
-  already-adequately-hedged, no edit) — _"Yes, apply all recommended actions (Recommended)."_ Ruling: approved, apply
-  directly without individual review. Applied this session per each item's own worker recommendation.
+  already-adequately-hedged, no edit; cross-cutting Item E —
+  `carry_staked_basis_funding_scan_experiment_2026_06_16.md`'s possible-duplicate STRATEGY/MTDS drift-funding todos,
+  recommendation was NOT a duplicate, keep both open with an explicit dependency note instead of merging) — _"Yes, apply
+  all recommended actions (Recommended)."_ Ruling: approved, apply directly without individual review. Applied this
+  session per each item's own worker recommendation.
 
 ## What this doc does and does not settle
 

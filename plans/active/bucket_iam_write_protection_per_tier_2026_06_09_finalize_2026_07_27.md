@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, na-audit]
 related:
   [
-    /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
+    /plans/archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md,
     /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -46,7 +46,7 @@ assigned_role: infra
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
+    /plans/archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
   ]
