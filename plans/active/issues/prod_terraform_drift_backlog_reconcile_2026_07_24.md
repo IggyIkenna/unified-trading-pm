@@ -195,12 +195,12 @@ todo below.
       deployment-service.
 
       **DONE 2026-07-30 — deployment-service@f57c96e.** Added `ignore_changes = [client, client_version]` to BOTH the
-              shared `terraform/modules/container-job/gcp/main.tf` `google_cloud_run_v2_job.job` resource (covers every
-              `module.*_job` consumer — the 65-diff bulk) AND the standalone
-              `terraform/gcp/vm_log_archival_scheduler.tf` `google_cloud_run_v2_job.vm_log_archival` resource (not built via
-              the shared module, so it needed its own copy — extended its existing `ignore_changes = [launch_stage]` rather
-              than duplicating). Code-only (no `tofu apply` — that's this doc's still-open P1 item); `tofu fmt -check` clean
-              on the added lines; full `quality-gates.sh` green.
+          shared `terraform/modules/container-job/gcp/main.tf` `google_cloud_run_v2_job.job` resource (covers every
+          `module.*_job` consumer — the 65-diff bulk) AND the standalone
+          `terraform/gcp/vm_log_archival_scheduler.tf` `google_cloud_run_v2_job.vm_log_archival` resource (not built via
+          the shared module, so it needed its own copy — extended its existing `ignore_changes = [launch_stage]` rather
+          than duplicating). Code-only (no `tofu apply` — that's this doc's still-open P1 item); `tofu fmt -check` clean
+          on the added lines; full `quality-gates.sh` green.
 
 ## Progress Log
 

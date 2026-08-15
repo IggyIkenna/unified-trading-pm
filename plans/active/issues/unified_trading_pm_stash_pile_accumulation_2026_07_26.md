@@ -387,17 +387,17 @@ codex write-up.
       in scope. Emitted at the END of the run, not in the header block, because `summary:` quotes the real counts.
 
       **Two corrections to this todo's own premises, both measured 2026-08-12.** (1) The claim that the surface is
-              enforced is FALSE — a frontmatter-less doc there is not review-blocking; `check_frontmatter_schema` skips it
-              entirely (stripping the frontmatter moved the corpus 1995 → 1994 docs and still printed "zero violations"). The
-              real cost is INVISIBILITY to the documented L0→L4 retrieval model, which finds docs by grepping L1 facets: 3 of
-              the 6 reports in that directory were unfindable by `rg -l '^doc_type: issue'`. (2) The "either/or" was wrong —
-              BOTH happen. The three tracked reports were hand-frontmattered; the two untracked ones (`Mac-20260811`,
-              `Mac-20260812`, both slot 3's) have no frontmatter and were never committed.
+          enforced is FALSE — a frontmatter-less doc there is not review-blocking; `check_frontmatter_schema` skips it
+          entirely (stripping the frontmatter moved the corpus 1995 → 1994 docs and still printed "zero violations"). The
+          real cost is INVISIBILITY to the documented L0→L4 retrieval model, which finds docs by grepping L1 facets: 3 of
+          the 6 reports in that directory were unfindable by `rg -l '^doc_type: issue'`. (2) The "either/or" was wrong —
+          BOTH happen. The three tracked reports were hand-frontmattered; the two untracked ones (`Mac-20260811`,
+          `Mac-20260812`, both slot 3's) have no frontmatter and were never committed.
 
-              **Trap worth keeping**: adding frontmatter naively would have CORRUPTED every report. The summary table was
-              spliced in at a fixed `head -n 7` / `tail -n +8` offset, which any header-length change silently breaks. Replaced
-              with a marker-anchored `awk` substitution that hard-fails if the marker is missing, rather than emitting a report
-              with no summary.
+          **Trap worth keeping**: adding frontmatter naively would have CORRUPTED every report. The summary table was
+          spliced in at a fixed `head -n 7` / `tail -n +8` offset, which any header-length change silently breaks. Replaced
+          with a marker-anchored `awk` substitution that hard-fails if the marker is missing, rather than emitting a report
+          with no summary.
 
 - [x] ✅ [SCRIPT] P3. **Default `--host` label is now slot-aware.** — unified-trading-pm@2b4bee96d3. Derives
       `<hostname -s>-slot<N>` by sourcing `scripts/hooks/slot-identity-lib.sh` and reusing its `…/.tabs/<N>/<repo>` path
