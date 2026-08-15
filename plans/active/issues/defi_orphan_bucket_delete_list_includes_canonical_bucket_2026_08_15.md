@@ -125,6 +125,47 @@ have destroyed `market-data-tick-defi{,-prd}` — the live, currently-written ca
 type — a data-correctness incident on the scale this workspace treats as a "big finding" requiring operator
 notification, not a routine cleanup.
 
+## Session 2 findings (2026-08-15, slot 22) — dispatched todo 2 ("migrate the three unique gaps")
+
+Investigated the todo below ("Migrate the three unique gaps into their current canonical destinations") directly against
+LIVE GCS state (read-only, via UTL `get_storage_client` — no `gsutil`/raw walk). Findings, per sub-part:
+
+**(a) + (b) Aave V3 `2022-03-12…2022-10-31` (evm-defi-prd) / `marinade` mSOL LST (solana-defi-prd) — CANNOT VERIFY,
+source buckets no longer exist.** `client.list_buckets()` confirms `evm-defi-prd-central-element-323112` and
+`solana-defi-prd-central-element-323112` do not exist in the project today — they were deleted in the 2026-07-10 "bucket
+estate cleanup" (`deployment-service/configs/cloud-providers.yaml` line ~117: "Confirmed zero callers workspace-wide...
+buckets... were empty and deleted in the same cleanup"). That yaml comment asserts the buckets were **empty** at
+deletion time — if true, the Aave/marinade ranges the 2026-06-08 audit flagged as "unique" were either already
+migrated/never uniquely there, or the "confirmed empty" claim didn't specifically re-check those two ranges before an
+irreversible bucket delete. No `_index/audit/*` artifact anywhere in `market-data-tick-defi-prd` mentions `evm`, `aave`,
+`marinade`, or `solana_defi` (checked the full `_index/audit/` listing) — i.e. there is no record either confirming
+these ranges were migrated OR confirming they were re-verified before the 07-10 deletion. **This cannot be resolved by
+further investigation from this session — the source data (if it ever existed) is gone with the bucket.** Flagging as a
+genuine data-correctness/audit-trail gap, not attempting a migration that has no source to read from.
+
+**(c) KAMINO DEX pools + Solana `lending_indices` (market-data-tick-defi-prd legacy prefixes) — RESOLVED, nothing to
+migrate.** Two independent checks: (1) the exact prefixes the todo names, top-level `dex_pools/` and `lending_indices/`
+(the PRE-canonical path shape, distinct from the current `data_type=dex_pool_state/` / `data_type=lending_indices/`
+segments), have **zero objects** in `market-data-tick-defi-prd-central-element-323112` today — confirmed via
+`list_blobs(prefix=...)`. (2) `market-data-tick-defi-prd`'s own audit trail
+(`_index/audit/kamino_solend_lending_fabrication_pending_delete.parquet`, 10,472 rows, `venue=KAMINO`, plus the
+`_index/availability_index.parquet.kamino_lending_retire.bak` +
+`availability_index.parquet.pre_lending_instrument_ type_restamp_apply_20260730T125527Z.parquet` backups) shows the
+KAMINO/SOLEND `lending_indices` data this todo's source audit (2026-06-08) had flagged as "unique, needs migrating" was
+independently found to be **FABRICATED** (wrong `claimed_day` vs `true_date`, wrong `instrument_type=lending` vs the
+corrected `solana_lending`) and was already relabeled/retired on **2026-07-30** — six weeks before this dispatch, by a
+later and more thorough pass than the original audit. There is nothing unique or real left to migrate for KAMINO
+lending. (KAMINO DEX-pool-state specifically wasn't in that fabrication file — the separate
+`dex_pools_fake_history_pending_delete.parquet` audit file covers ORCA/RAYDIUM fake history only — but since the legacy
+top-level `dex_pools/` prefix this todo names has zero objects regardless of venue, there is no source path to migrate
+FROM either way.)
+
+**Net effect on the dispatched todo**: (c) is resolved-as-moot (no action needed, confirmed via live state); (a)/(b) are
+NOT actionable by a worker — the source is gone, not merely hard to find. Filing per the "big finding" (data-correctness
+/ SSOT-contradiction) HARD RULE rather than silently closing the todo. Did not attempt `--apply`/any GCS write — this
+session was investigation-only, appropriate given both closed sub-parts turned out to need judgment about an
+already-executed, irreversible deletion rather than a migration to perform.
+
 ## Recommended decision
 
 - [ ] [OPERATOR] P1. **Re-scope the delete list.** `market-data-tick-defi{,-prd}` must be REMOVED from any future DeFi
@@ -132,18 +173,24 @@ notification, not a routine cleanup.
       that shipped 2026-07-10..07-16. Confirm this reading (or correct it, if a further architecture change since
       2026-08-14 has occurred) before any DeFi bucket-delete todo is re-dispatched. (repo: unified-trading-pm — plan-doc
       correction only)
-- [ ] [DATA] P1. **Migrate the three unique gaps into their current canonical destinations** (re-scoped against the
-      single-bucket model — the old "dedicated bucket" destinations named in the source todo, `lending-indices-`/
-      `lst-rates-`/`dex-pools-`, no longer exist as separate buckets; the destination is now `market-data-tick-defi-prd`
-      under the correct `data_type=`/`venue=` segments): (a) Aave V3 `2022-03-12…2022-10-31` from `evm-defi-prd` → the
-      canonical `lending_indices` data_type shard for those dates; (b) `marinade` mSOL LST from `solana-defi-prd` → the
-      canonical `lst_rates` data_type shard, confirmed absent there first; (c) KAMINO DEX pools + Solana
-      `lending_indices` from `market-data-tick-defi-prd`'s legacy `dex_pools/`/`lending_indices/` top-level prefixes →
-      the canonical `dex_pool_state`/`lending_indices` data_type shards, confirmed absent there first (sampled
-      ORCA/RAYDIUM were already found present in the old dedicated buckets per
-      `defi_consolidated_closeout_2026_07_18.md` line 385-386 — KAMINO/SOLEND were confirmed ABSENT there, i.e.
-      genuinely unique and at risk). Repo: market-tick-data-service (extend `_migrate_defi_classify.py` or a one-off
-      backfill, either targeting the current single-bucket destination). Owner: vm-defi. parent_epic: defi_master.
+- [x] ✅ [DATA] P1. **INVESTIGATED 2026-08-15 (slot 22) — see "Session 2 findings" above; not literally executable as
+      scoped.** (c) KAMINO DEX pools + Solana `lending_indices` from the legacy top-level prefixes: RESOLVED-AS-MOOT —
+      those prefixes hold zero objects in `market-data-tick-defi-prd` today, and the underlying KAMINO/SOLEND
+      `lending_indices` data this todo's source audit flagged was independently found FABRICATED and already
+      retired/relabeled 2026-07-30 (pre-dates this dispatch). (a) Aave V3 `2022-03-12…2022-10-31` from `evm-defi-prd`
+      and (b) `marinade` mSOL LST from `solana-defi-prd`: NOT ACTIONABLE — both source buckets were deleted in the
+      2026-07-10 bucket-estate cleanup (confirmed via `list_buckets()`, neither exists in the project); no audit-trail
+      record confirms these specific ranges were migrated or re-verified before that deletion. No further worker action
+      is possible without either (i) an operator-confirmed reading of the 07-10 cleanup's own verification scope (was it
+      project-wide "zero callers" only, or did it also re-check historical archived ranges?), or (ii) a
+      GCS/Cloud-Logging admin-activity check for the buckets' pre-deletion object count — deferred to the follow-up todo
+      below rather than attempted here (no code/script exists to act on; this was an investigation task). Repo:
+      market-tick-data-service / instruments-service. Owner: vm-defi. parent_epic: defi_master.
+- [ ] [OPERATOR] P2. **Decide whether the Aave 2022-03..10 / marinade mSOL gap (Session 2 findings above) needs a GCP
+      Cloud-Logging admin-activity check for the 2026-07-10 deletion of `evm-defi-prd`/`solana-defi-prd`** (to confirm
+      the buckets were genuinely 0 objects at delete time, not just "0 code callers") — or whether the 2026-06-08
+      audit's "unique data" claim is itself accepted as stale/superseded, matching the pattern already found for
+      KAMINO/SOLEND lending (fabricated, not unique). No GCS write proposed here. parent_epic: defi_master.
 - [ ] [DATA] P2. **Only after both above are closed**: re-run the five-part delete proof
       (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1) against the CORRECTED list — `solana-defi{,-prd}`
       / `evm-defi{,-prd}` / the 4 empty `*-test-*` DeFi buckets — and execute per §3a's reversibility-qualified
