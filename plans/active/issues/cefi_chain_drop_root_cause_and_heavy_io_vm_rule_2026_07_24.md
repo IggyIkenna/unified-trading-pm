@@ -749,3 +749,11 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
   still-present LIGHTER-ZKSYNC wire-form population. No work done on the todo itself. Skipping (`reason_code=GATED`,
   `estimated_unblock_minutes=180`). **Next dispatch**: re-check the LIGHTER-ZKSYNC issue's todo 3 (BROAD-comparison
   fix) + todo 2 (Range-2 apply) checkbox state — once both are `[x]`, run the verify → clean-PASS → archive sequence.
+- **plan-reconcile cefi-tranche verification pass 2026-08-15**: re-checked blocker 1 per the above "Next dispatch".
+  `cefi_lighter_zksync_systemic_collision_2026_08_08.md` now shows ALL 5 todos `[x]` — todo 3 (BROAD-comparison fix) and
+  todo 2 (Range-2 apply) both completed 2026-08-11 (commits `067262bbca`, `b0fb817d06`: Range-2 apply
+  `EXIT_STATUS=0`/`Collisions: 0 unhandled`, consolidator cron resumed+verified ENABLED). **Both blockers are therefore
+  now cleared** (blocker 2 confirmed already resolved+archived per slot-25's 2026-08-10T19:20Z entry above). Did NOT run
+  `verify_cefi_canonical_4surface_2026_07_20.py` myself in this doc-reconciliation pass (that's a live script
+  execution + archive action, out of scope here — no hard evidence yet to flip this todo). **Next dispatch**: run the
+  verify script for a clean PASS, then archive this doc + parent per the finalize plan.
