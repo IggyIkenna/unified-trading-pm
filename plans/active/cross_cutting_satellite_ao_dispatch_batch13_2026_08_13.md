@@ -930,8 +930,15 @@ source: >-
       directly per source doc. (2) `reap_vms.py --tombstone-only` on the 393-name list: `tombstoned 393/393`, exit 0.
       (3) resumed the cron — `state=ENABLED schedule="0 * * * *"`. Source:
       `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
-- [ ] [CODE] P2. Make exit_code_fleet_monitor complete a full fleet sweep inside its task timeout or loudly report
-      incomplete coverage Source:
+- [x] ✅ [CODE] P2. **Done.** (2026-08-15, slot-15·infra) `sweep()` now takes `deadline_monotonic` +
+      `coverage_sink`; the classify/route/emit loop checkpoints (existing mechanism) and stops early past the
+      deadline instead of risking a mid-VM task-timeout kill. `cli.py` computes ONE deadline for the whole task
+      (not per storm-resweep pass — a per-pass refresh would let each resweep claim a fresh full budget) and
+      routes a new CRITICAL `DP_VM_SWEEP_INCOMPLETE` finding (DP-VM-013, registered in
+      `codex/05-infrastructure/data-pipeline-alerts.registry.yaml`) + writes `ok=False` on the sentinel when
+      coverage was incomplete — the gap now pages instead of reporting green by omission. Evidence: QG green
+      (745s), `unified-trading-library@8764696aef` (event constant), `deployment-service@1b7d1d3587` (bounded
+      sweep + finding routing). Source:
       `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
 - [ ] [CODE] P2. Set the exit-code-monitor Cloud Run job's concurrency to 1 to stop */5 executions overlapping Source:
       `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
