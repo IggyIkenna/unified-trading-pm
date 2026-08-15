@@ -138,3 +138,16 @@ deliberate decision rather than changed mid-session.
   no traceback" signature than the CPU-thrash hypothesis above (both may be contributing factors under the same root
   umbrella of "the instance cap doesn't model real resource cost"). Operator noted it's worth checking whether other
   slots hit the same kill pattern in the same window — not verified in this pass.
+- **2026-08-15 06:26-06:32 (slot 2, third corroborating downstream symptom, same AWS host)**: while shipping the AAVE_V3
+  rewards-capture task (`uac_data_type_validity_combinator_fragmentation_2026_07_07.md` item, repo
+  `market-tick-data-service`), a `bash scripts/quality-gates.sh --no-fix` run (PID `3857681`) was correctly tracked via
+  a `run_in_background` blocking `kill -0` watchdog loop. It queued behind the host-wide governor for the expected
+  `[qg-governor] ... queued Ns` cadence through 300s, then the PID vanished with no further log output whatsoever — no
+  phase markers past the queue lines, no exit code, no traceback — matching the exact "silent external kill" signature
+  from the 2026-08-14 slot-15 entry above. At the moment of death: `uptime` showed load average 11.73/12.74/14.22,
+  `ps aux | grep -c quality-gates.sh` = 20 concurrent instances host-wide, `free -h` showed 20Gi "available" (so a
+  point-in-time snapshot looked clear, same false-negative pattern already noted above). Ruled out as a
+  content/lint/test failure in the diff itself: an earlier, more complete run on the same 2-file diff
+  (`/tmp/qg_run7.log`) had already reached `10799 passed, 28 skipped` through `[3/6] TESTS`. Treating this as further
+  corroboration of the existing root cause, not a new issue; not actioned per the same deliberately-not-hot-patched
+  blast-radius reasoning. Retrying.
