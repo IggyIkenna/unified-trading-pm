@@ -266,6 +266,19 @@ investigation confirmed are both achievable with existing primitives:
   (`.ao-iso-dev`) rather than patching a shared-checkout diff in after the fact, avoiding the confusion of editing code
   that doesn't actually exist yet in the tree I'm looking at. **Phase 2 is now fully done. Starting Phase 3 (dashboard)
   next tick.**
+- **2026-08-15, tick 7 (autonomous, main session)**: Phase 3 fully complete — `agent-orchestrator@6b50caa`. Also caught,
+  this tick, that tick 5's checkbox flips for the register/claim/done scripts and the statusline companion had never
+  actually landed on origin despite being marked done in chat — re-verified against `git show origin/...` directly this
+  time (not just "the edit tool returned success") and fixed both in the same push as this tick's Progress Log update.
+  `AgentKind` union + `KINDS_ORDER`/`AGENT_KIND_LABEL` extended with `"human"`/`"planning-human"`;
+  `ROLE_GROUP_FILTER_OPTIONS` extended (covers `BatchingEfficiencyPanel.tsx` for free via its re-export); new
+  `HumanFleet.tsx` page joins agents↔slots by `label === operator` (no `slot_id` column on `AgentRow` by design) +
+  Router branch + Landing nav button. Full `quality-gates.sh` green after two real fix cycles: a test-fixture bug (an
+  unmatched-agent fallback path masked what a test claimed to isolate) and a genuinely missed edit — `"planning-human"`
+  had reached the backend vocabulary and the filter arrays but not the `AgentKind` TS union itself, caught by `tsc`, not
+  by review. **Phase 3 fully done. Only Phase 4 remains: per-operator JWT issuance (real credential minting — this is
+  where the loop should slow down and be deliberate, not rush), the real end-to-end run per operator, and the durable
+  codex doc.**
 
 ## Todos
 
@@ -369,17 +382,23 @@ investigation confirmed are both achievable with existing primitives:
 
 ### Phase 3 — dashboard
 
-- [ ] [UI] P2. **Add `"human"` to the `AgentKind` union, `KINDS_ORDER`, and `AGENT_KIND_LABEL`**
-      (`dashboard/src/layout.tsx:5092-5134`, `dashboard/src/types.ts:1064-1079`). Done when: a registered human agent
-      renders correctly in the existing `AgentTypesPanel` table with no other frontend changes.
-- [ ] [UI] P2. **Add `"human"`/`"planning-human"` entries to the static role_group filter arrays**
-      (`TaskUsageWindows.tsx:53-60`, re-exported into `BatchingEfficiencyPanel.tsx:26-34`). Done when: both appear as
-      selectable filter options and correctly narrow results in both panels.
-- [ ] [UI] P2. **Build a "Human Fleet" page** following the `FleetGit.tsx`/`FleetKpis.tsx` recipe exactly (fetch+poll
-      shell, pure exported mappers, `Panel`-based render, `onBack` prop) + one new `Router` branch (`App.tsx:317-357`) +
-      one new `Landing.tsx` nav button (`105-129`). Shows current task, model, account, context%, last-heartbeat for
-      every `agent_kind="human"` slot. Done when: the page is reachable from Landing, auto-refreshes, and a component
-      test mirrors the existing `FleetKpis.test.ts` pattern.
+- [x] 17. ✅ [UI] P2. **Add `"human"`/`"planning-human"` to the `AgentKind` union, `KINDS_ORDER`, and
+      `AGENT_KIND_LABEL`** (`dashboard/src/layout.tsx`, `dashboard/src/types.ts`). A registered human agent renders
+      correctly in the existing `AgentTypesPanel` table with no other frontend changes. Evidence:
+      agent-orchestrator@6b50caa795cfede5ecac6e91125a5284cad3a68e.
+- [x] 18. ✅ [UI] P2. **Add `"human"`/`"planning-human"` entries to the static role_group filter arrays**
+      (`TaskUsageWindows.tsx` — `BatchingEfficiencyPanel.tsx` re-exports the same array, one edit covers both). Both
+      appear as selectable filter options in both panels. Evidence:
+      agent-orchestrator@6b50caa795cfede5ecac6e91125a5284cad3a68e.
+- [x] 19. ✅ [UI] P2. **Build a "Human Fleet" page** (`dashboard/src/HumanFleet.tsx`) following the
+      `FleetGit.tsx`/`FleetKpis.tsx` recipe exactly, + one new `Router` branch (`/human-fleet`) + one new `Landing.tsx`
+      nav button. Shows current task, model, account, context%, last-heartbeat — joins human-kind agents against slots
+      in the 9000+ range by `label === operator` (`AgentRow` carries no `slot_id` column by design). Reachable from
+      Landing, auto-refreshes every 30s, 8 new component tests mirroring `FleetKpis.test.ts`. Two real bugs caught by
+      the gate itself, not by inspection: a test fixture that didn't isolate what it claimed (an unmatched-agent
+      fallback row masked the case it was testing), and a genuinely missed edit — `"planning-human"` had been added to
+      the backend vocabulary and the role_group filter arrays but NOT to the `AgentKind` TS union, caught by `tsc`.
+      Evidence: agent-orchestrator@6b50caa795cfede5ecac6e91125a5284cad3a68e.
 
 ### Phase 4 — per-operator setup + rollout
 
