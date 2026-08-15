@@ -1,0 +1,24 @@
+# github-glue-deploy-sync.service — oneshot; syncs host-deployed monitoring/cleanup scripts
+# (glue-runner-crash-loop-watchdog.sh + siblings) from the refreshed slot mirror into their
+# live /usr/local/sbin/ execution path.
+#
+# Epic: infrastructure_master
+# Lifecycle: permanent   Delete-when: NA
+#
+# Driven by github-glue-deploy-sync.timer. Wants+After github-glue-slot-refresh.service so
+# every activation pulls the mirror current FIRST, regardless of the two timers' relative
+# offsets, before reading it. Runs as root (unlike the slot-refresh service, which stays
+# unprivileged) because /usr/local/sbin is root:root 0755. See deploy-sbin-scripts.sh for the
+# full rationale.
+[Unit]
+Description=Sync host-deployed sbin scripts from the refreshed glue-runner slot mirror
+Wants=github-glue-slot-refresh.service
+After=github-glue-slot-refresh.service
+
+[Service]
+Type=oneshot
+Slice=github-glue-runner.slice
+Environment=RUNNER_BASE=/opt/github-glue-runners
+ExecStart=/opt/github-glue-runners/repo/scripts/self-hosted-runners/deploy-sbin-scripts.sh
+# A failed sync must be visible in `systemctl status`, not silently retried into oblivion.
+Restart=no
