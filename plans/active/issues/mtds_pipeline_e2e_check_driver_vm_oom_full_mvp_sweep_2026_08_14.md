@@ -578,3 +578,20 @@ Two independent angles, not mutually exclusive:
   enough to poll it to `EXIT_STATUS` directly (no background monitor needed for a single present session watching one
   VM) or hand off with the VM name so a later session can do a one-shot terminal-state check like this one — SPORTS +
   CEFI + PREDICTION + TRADFI are all real reports in hand now, DEFI alone is what's left to flip this checkbox.
+- **2026-08-15 (slot 29 worker, backend_engineer, resumed post-compact) — launched the last remaining DEFI VM.** AO
+  heartbeat cancelled the prior in-flight dispatch on a stall timeout during an extended pre-compact cycle; confirmed
+  via fresh `git status`/`grep` that the `market-tick-data-service`-side `_captured_days_by_cell` delegation fix
+  (`read_captured_days_by_cell`, cited above as `2e34656a97`) is already live at HEAD, so no re-ship was needed there.
+  Confirmed no `pipeline-e2e-check-mtds*` VM already in flight (`gcloud compute instances list`, empty), then launched
+  DEFI alone via the exact §1a command
+  (`--day 2026-07-01 --asset-group DEFI --legs force,skip --mvp-only --require-captured --auto-day --wall-clock-timeout-sec 14400`).
+  The launcher auto-detected+republished a stale `mtds-code` tarball (manifest was pinned to `368896892f`, repo HEAD had
+  since advanced to `9894335a84`) before launching, so the VM runs code newer than `2e34656a` (includes it, plus
+  everything shipped after). **Launched + STARTED confirmed**: `pipeline-e2e-check-mtds-20260815-172227-4ffa29`
+  (asia-northeast1-c, e2-highmem-4, RUNNING at 17:22:27Z). `run.log`:
+  `gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mtds-20260815-172227-4ffa29/run.log`;
+  `EXIT_STATUS`: same prefix, `/EXIT_STATUS`. Per the documented environment limitation every prior session on this doc
+  hit (`run_in_background` GCS-poll monitors get killed by this session's own harness well before an hours-long VM run's
+  realistic completion window), NOT arming a background monitor — will do a direct one-shot poll before this session
+  ends; if it hasn't reached `EXIT_STATUS` by then, hand off is this VM name + prefix above (check `EXIT_STATUS`
+  directly before assuming stalled or launching a duplicate).
