@@ -92,12 +92,14 @@ source: >-
       recoverable replacement. Source: same doc as above (its remaining P3 todo). Gate: all 3 docs carry a SUPERSEDED
       banner at the top naming their successor.
 
-- [ ] [DEVOPS] P1. **Extend the `sit_failure` wall type's direct PR-closed/merged auto-resolution check**, mirroring the
-      already-shipped fix for other wall types (commit `d990ed5`) — add a regression test, ship via quickmerge. Resolves
-      BLK-f7bb0212 (approved, previously timed out unanswered). Source:
+- [x] ✅ [DEVOPS] P1. **Extend the `sit_failure` wall type's direct PR-closed/merged auto-resolution check**, mirroring
+      the already-shipped fix for other wall types (commit `d990ed5`) — add a regression test, ship via quickmerge.
+      Resolves BLK-f7bb0212 (approved, previously timed out unanswered). Source:
       `plans/active/issues/escalation_queue_sit_failure_no_pr_closed_resolution_2026_08_10.md`. Gate: a `sit_failure`
       wall whose PR is closed/merged resolves automatically without burning further dispatch attempts; regression test
-      added mirroring `d990ed5`'s.
+      added mirroring `d990ed5`'s. — agent-orchestrator@de26a5e911: added a direct `_pr_merge_state` check for
+      `sit_failure` (no head-branch QG poll, deliberately unlike `ldr_qg_failure`); 5 new regression tests in
+      `tests/test_escalation.py` mirroring the `ldr_qg_failure` merge-state coverage; QG green.
 
 - [ ] [BACKEND] P2. **Pin the Tier-A `ci_status` gate's push-time UAC re-verification to the exact commit the PR
       validated against**, instead of content-first re-resolving UAC at HEAD — the design call this doc's remaining todo
