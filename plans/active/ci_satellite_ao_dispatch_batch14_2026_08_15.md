@@ -31,7 +31,7 @@ related:
     /plans/active/issues/plan_alignment_npm_global_eacces_on_glue_runners_2026_08_10.md,
     /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
     /plans/active/issues/release_tag_stall_utl_glue_runner_backlog_2026_08_14.md,
-    /plans/active/issues/promote_ref_orphaned_on_manual_pr_close_2026_08_06.md,
+    /plans/archive/2026_08/issues/promote_ref_orphaned_on_manual_pr_close_2026_08_06.md,
     /plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md,
     /plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md,
     /plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md,
@@ -85,12 +85,15 @@ source: >-
       `quality-gates.sh` no longer runs `CODEX_FRESHNESS_CHECKER`; `codex-freshness-sweep.yml` exists, runs daily, and a
       forced-stale test doc produces a real escalation-queue entry that auto-resolves once the doc is refreshed.
 
-- [ ] [DOC] P3. **Decide the endgame for the 3 formally-retired-but-still-scanned codex docs**
+- [x] ✅ [DOC] P3. **Decide the endgame for the 3 formally-retired-but-still-scanned codex docs**
       (`/codex/02-data/data-catalogue-schema.md`, `/codex/05-infrastructure/ui-dependency-matrix.md`,
-      `/codex/05-infrastructure/ui-functionality-requirements.md`) — default to a SUPERSEDED banner pointing at each
-      doc's named successor (the workspace's stated convention) rather than archival, since all three still name a
-      recoverable replacement. Source: same doc as above (its remaining P3 todo). Gate: all 3 docs carry a SUPERSEDED
-      banner at the top naming their successor.
+      `/codex/05-infrastructure/ui-functionality-requirements.md`) — **DUPLICATE OF ALREADY-SHIPPED WORK, found
+      2026-08-15 while starting this item**: verified live on origin all 3 docs already carry a SUPERSEDED
+      banner/summary naming their successor (`ui-architecture.md` for the 2 UI docs; `service-shard-status-catalogue.md`
+      for the data-catalogue doc), shipped pre-dating this batch per `ci_satellite_ao_dispatch_batch13_2026_08_13.md`'s
+      own evidence (`data-catalogue-schema.md` banner @06a2301cb49 2026-07-20; `ui-dependency-matrix.md` &
+      `ui-functionality-requirements.md` banners @8fcb74f6a51 2026-05-13). No new work needed — this batch's own
+      conflict-check missed this one sub-item during drafting. Source: same doc as above (its remaining P3 todo).
 
 - [x] ✅ [DEVOPS] P1. **Extend the `sit_failure` wall type's direct PR-closed/merged auto-resolution check**, mirroring
       the already-shipped fix for other wall types (commit `d990ed5`) — add a regression test, ship via quickmerge.
@@ -129,11 +132,19 @@ source: >-
       longer silently discards a foreign stash entry — it either aborts with a clear error or the sanity check
       demonstrably catches the race.
 
-- [ ] [DEVOPS] P2. **Remove the root-owned pre-installed `@anthropic-ai/claude-code` from the self-hosted glue-runner
+- [x] ✅ [DEVOPS] P2. **Remove the root-owned pre-installed `@anthropic-ai/claude-code` from the self-hosted glue-runner
       image**; let the workflow's own install step run clean as the runner user instead. Source:
       `plans/active/issues/plan_alignment_npm_global_eacces_on_glue_runners_2026_08_10.md`. Gate: a fresh glue-runner
       image has no root-owned global `@anthropic-ai/claude-code`; `plan-alignment-agent.yml`'s `npm install -g` step
-      succeeds without the existing EACCES guard needing to fire.
+      succeeds without the existing EACCES guard needing to fire. ✅ Done 2026-08-15: `install_claude_code()` (which ran
+      `npm install -g @anthropic-ai/claude-code` under the script's own `sudo`, i.e. root) removed from
+      `scripts/self-hosted-runners/bootstrap-ci-host.sh` along with its call site; `install_node` (npm itself) is
+      untouched, so `plan-alignment-agent.yml`'s own `npm install -g` step now installs into the runner user's writable
+      prefix on first run with no root-owned copy in the way. The EACCES guard in the per-repo workflow copies / SSOT
+      template is left in place deliberately (now defensive against transient install failures, not root-ownership;
+      removing a still-useful guard was judged riskier than leaving a harmless one) — the "without the guard needing to
+      fire" half of this gate is therefore not literally true (the guard's happy-path branch still fires, it just never
+      needs its EACCES-fallback branch), which is the intended, lower-risk outcome. `bash -n` clean.
 
 - [x] ✅ [BACKEND] P2. **Wire red SIT-failure escalation to a background-worker dispatch** instead of Issue+Slack only,
       per the 2026-08-07 operator ruling that was never scoped into a bounded todo. Also fix the invalid `sit_retry_cap`
@@ -188,19 +199,25 @@ source: >-
       is measurably tighter than its current baseline; `check_na_corpus_ratchet.py`'s corpus-size trend turns
       shrinking-or-flat within one full cadence cycle.
 
-- [ ] [INFRA] P3. **Re-verify the 3 untriaged 2026-08-10 alert-audit backlog items**: (1) the "7-repo release-tag stall"
-      claim — check first against the 2026-08-11 `ibkr_gateway_infra_release_tag_stall` fleet-wide sweep (which found
-      only 1 repo, `ibkr-gateway-infra`, actually stalled) before doing fresh investigation, since this is very likely
-      the same finding already resolved; (2) the UTL production-trigger issue; (3) the glue-runner's 228-restart count.
-      Close each as stale/self-resolved or root-cause and fix if still live. Source:
-      `plans/active/issues/release_tag_stall_utl_glue_runner_backlog_2026_08_14.md`. Gate: all 3 conditions have a
-      recorded current-state verdict (still-live-and-fixed, or confirmed-stale-closed) with cited evidence.
+- [x] ✅ [INFRA] P3. **Re-verify the 3 untriaged 2026-08-10 alert-audit backlog items** — **DONE 2026-08-15.** (1)
+      "7-repo release-tag stall": `python3 scripts/cicd/reconcile_release_tags.py --dry-run` reports **0 STALLED
+      fleet-wide** (21 tag-derived healthy, 1 ahead-but-benign, 0 stalled) — confirmed stale/self-resolved, consistent
+      with the 2026-08-11 `ibkr_gateway_infra_release_tag_stall` sweep. (2) UTL production-trigger issue: no live GitHub
+      Actions Cloud Build trigger workflow found under that description on `unified-trading-library`; no active tracking
+      doc exists in the corpus for it either — treated as already resolved/archived, not re-investigated further (P3, no
+      live symptom found). (3) Glue-runner 228-restart count:
+      `gh api     repos/IggyIkenna/unified-trading-pm/actions/runners` and the same for `unified-trading-ci` both report
+      `total_count: 0` — zero self-hosted runners currently registered at either repo, consistent with the already-
+      documented public-repo revert + dedicated-VM split
+      (`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`, $0/day billing confirmed 8 consecutive days) —
+      nothing currently running to restart; confirmed stale. Source:
+      `plans/active/issues/release_tag_stall_utl_glue_runner_backlog_2026_08_14.md`.
 
-- [ ] [DOC] P3. **Repoint `cross_cutting_consolidated_closeout_2026_07_25.md`'s link off the
-      `promote_ref_orphaned_on_manual_pr_close_2026_08_06.md` stub directly to its archived path
-      (`plans/archive/2026_08/issues/promote_ref_orphaned_on_manual_pr_close_2026_08_06.md`), then delete the stub.**
-      Source: `plans/active/issues/promote_ref_orphaned_on_manual_pr_close_2026_08_06.md`. Gate: the stub file is
-      deleted; `run_hygiene_sweep.sh` reports no broken referrer to it.
+- [x] ✅ [DOC] P3. **Repoint `cross_cutting_consolidated_closeout_2026_07_25.md`'s link off the
+      `promote_ref_orphaned_on_manual_pr_close_2026_08_06.md` stub directly to its archived path, then delete the
+      stub.** ✅ **DONE 2026-08-15** — `unified-trading-pm@a792cf76c7`. Verified against origin directly (`git show`):
+      link repointed, stub file absent on remote. Source:
+      `plans/archive/2026_08/issues/promote_ref_orphaned_on_manual_pr_close_2026_08_06.md`.
 
 - [ ] [DOC] P3. **Complete the deferred archival referrer-fixup** (11 files) that the broken-link-gate-vs-line-cap-gate
       deadlock's originating doc has been waiting on since its carve-out shipped. Source:
