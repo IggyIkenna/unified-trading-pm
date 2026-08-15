@@ -109,12 +109,21 @@ leaving it as an unscoped "run a corpus backfill" todo.
 - [ ] [SCRIPT] P2. Re-run `scripts/quality_gates/audit_source_column_distribution.py --strict` against
       `market-data-tick-cefi-prd-central-element-323112` and `market-data-tick-tradfi-prd-central-element-323112` after
       the two backfills above land — confirm 0 RED cells (exit 0).
-- [ ] [CODE] P2. Once confirmed zero-blank on cefi + tradfi, flip the corresponding `[DATA]` P0 "Data parquets" todo
-      checkbox status for cefi/tradfi in `data_source_provenance_enforcement_2026_07_24.md` (defi/ prediction/sports
-      already show 0 blank rows per the results table above — flip those three's P0 status too, if not already done by a
-      peer, since this audit found their per-cell histograms already fully clean).
+- [ ] [CODE] P2. Once confirmed zero-blank on cefi + tradfi, flip the `[DATA]` P0 **"Data parquets"** todo in
+      `data_source_provenance_enforcement_2026_07_24.md` (line ~184) — **correction (2026-08-15, slot-32): that item is
+      ONE combined checkbox spanning all 5 asset groups ("populated on every ingested cell across all five asset
+      groups"), not five separable per-group checkboxes** — despite defi/prediction/sports already being 0-blank per
+      this audit's own table, there is nothing to flip for them individually; the single checkbox can only flip once
+      cefi + tradfi ALSO reach zero-blank. Verified live 2026-08-15: still `- [ ]`, correctly unflipped.
 
 ## Progress Log
 
 - **2026-08-15 (slot-18·infra)**: filed after running the full-corpus post-enforcement `source`-column audit across all
   5 prod manifests per `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md`'s dispatched todo.
+- **2026-08-15 (slot-32, data_engineering)**: Dispatched the P2 "flip the P0 checkbox" todo above. Found its premise
+  imprecise: `data_source_provenance_enforcement_2026_07_24.md`'s "Data parquets" P0 item (line ~184) is a single
+  checkbox covering all 5 asset groups jointly, not per-group — so "flip defi/prediction/sports individually" isn't a
+  real action available in the target plan; corrected the todo's wording in place (see above) rather than leaving a
+  future worker to rediscover this. Both P1 backfill todos above (cefi 14 cells, tradfi 1 cell) are still unchecked with
+  no Progress Log entry showing work started — genuinely nothing to flip yet. GATED-skipping (~120 min), same root
+  blocker as the P2 audit-rerun todo (already GATED this session).
