@@ -133,3 +133,9 @@ confirm the writer stopped.
   `uts-prod-instruments-service-sports-fixtures`, image tag `:latest`); deploy-liveness for the actual fix therefore
   requires promote→image-build-gate→a fresh job execution, none of which has happened yet. GATED-skipping again (~150
   min) — no restamp attempted.
+- 2026-08-15T15:03Z (slot-8, data_engineering): Re-checked live-deploy status ~3h after the slot-32 check — `b872799efa`
+  (2026-08-15T09:09:54Z) is STILL not on `origin/main` (`git merge-base --is-ancestor` false, freshly fetched). `main`
+  is now 1192 commits behind LDR overall, and `b872799efa` itself sits only 24 commits behind LDR's tip — i.e. it's near
+  the FRONT of the queue once the batched promote pipeline catches up, but the backlog is deep enough (observed ~78
+  commits/batch in the slot-32 window) that it hasn't reached it yet. Same conclusion as the two prior checks —
+  genuinely still gated, not stalled. GATED-skipping again (180 min cap) — no restamp attempted.
