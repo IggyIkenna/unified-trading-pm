@@ -382,3 +382,19 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
   `/plans/active/issues/sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md`. The P3 todo above stays open (not
   checked off) — this is a genuine "diagnosed, not GREEN" outcome, matching this doc's own established precedent for the
   sibling CF-8 todos.
+- **data_engineering slot-2, 2026-08-15 (continuation)**: after filing the `timeframe`-drop issue doc above, shipped two
+  new memory-bounded IS-surface diagnostic/backfill-helper scripts to `market-tick-data-service`
+  (`scripts/_sports_is_captured_stream_read_2026_08_15.py`,
+  `scripts/_sports_is_captured_backfill_from_subset_2026_08_15.py` — row-group-streamed read + subset-driven backfill
+  runner for `instruments-store-sports-prd`'s 15.7M-row index, which OOMs a full `pd.read_parquet()` at both 8G and 14G
+  RSS; same write-path logic as the production script, only the target-row-selection differs) via
+  `quickmerge.sh --agent`, commit `908cfecf43f90d32ba3dbcd4dcb62ca2b7a7cb09`. As of this entry the commit is STILL NOT
+  LANDED on `origin/live-defi-rollout` — confirmed via repeated `git merge-base --is-ancestor` checks — due to sustained
+  `qg-host-governor.sh` queue contention (known P2 infra issue
+  `qg_host_governor_caps_instances_not_fanout_2026_08_10.md`), not a defect in the commit itself; the quickmerge process
+  has remained alive and queued throughout. No backfill write was attempted this touch — the operator-approved CF-8
+  captured-row backfill itself remains **not completed**, superseded by the `timeframe`-drop bug discovery. Once this
+  commit lands, `/done` will be called against `task_id=cf_manifest_audit_first_full_rollup_findings-d1fc625d0914`
+  citing `unified-trading-pm@e6d24727aa` (the issue doc) + this commit's landed SHA, explicit that the backfill was not
+  completed this session. If a future session resumes this before landing is confirmed: do NOT re-ship the same two
+  scripts — check `git log --all --grep=908cfecf` / the commit's presence on `origin/live-defi-rollout` first.
