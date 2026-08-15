@@ -325,9 +325,22 @@ source: >-
 - [ ] [CODE] P2. Confirm whether any CARRY_STAKED_BASIS/CARRY_BASIS_PERP paper run's fill-rate or slippage figures were
       cited in an actual promotion/sizing decision, and flag for re-check if so Source:
       `plans/active/cross_cutting_strategy_execution_determinism_2026_07_26.md`
-- [ ] [CODE] P2. make reconcile_release_tags.py's _source_touched() per-repo-source_dir-aware instead of using a flat
-      repo-wide _NON_FUNCTIONAL_PATH_RE allowlist Source:
-      `plans/active/issues/ibkr_gateway_infra_release_tag_stall_2026_08_11.md`
+- [x] ✅ [CODE] P2. **Diagnosed: naive per-repo scoping carries a live regression risk, NOT attempted — re-sequenced
+      instead.** (2026-08-15, slot-20·infra) Empirically confirmed the obvious source for a per-repo `source_dir`
+      (`workspace-manifest.json`'s `breaking_scan_dir`) is INCOMPLETE for at least e2e-testing (`"tests"` misses
+      `scripts/`'s 144 `.py` files, several with landed `fix(...)` commits) — the same repo
+      `detect_breaking_change.py`'s own docstring already cites as the reason full source-dir scoping was reverted after
+      a 2026-08-09 false-negative incident (a real change going invisible to a scoped check silently clears a stall that
+      should have stayed open, violating `_source_touched`'s own "fail toward alerting" design bias). Also confirmed
+      live (not just docstring claim) that `detect_breaking_change.py`'s own `_source_touched` — not just
+      reconcile_release_tags.py's copy — IS the actual semver-agent bump signal
+      (`unified-trading-ci/.github/workflows/semver-agent.yml:612-626` reads its `source_touched` field to default-bump
+      PATCH), so scoping only reconcile_release_tags.py's copy risks exactly the cross-script divergence the shared
+      docstring warns against ("if you change one, change both"). Per CLAUDE.md's "AO-eligible = outcome determinable by
+      the worker alone" rule, did not implement; re-sequenced the source issue doc's todo to gate on its sibling
+      `[OPERATOR]` `breaking_scan_dir`-completeness audit landing first. Source:
+      `plans/active/issues/ibkr_gateway_infra_release_tag_stall_2026_08_11.md` (updated with full diagnosis + Progress
+      Log entry, same commit).
 - [ ] [CODE] P2. Make claim/heartbeat behaviour under test injectable so the common cases can be covered without a real
       tmux server, per the doc's own P2 [SCRIPT] todo Source:
       `plans/active/issues/pm_bats_tmux_fixture_leak_wedges_shared_host_2026_08_10.md`

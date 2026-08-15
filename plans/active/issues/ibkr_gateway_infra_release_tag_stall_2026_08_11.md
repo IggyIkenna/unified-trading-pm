@@ -94,17 +94,35 @@ the underlying condition (27 commits, all non-package, tag unchanged) between 00
 
 ## Follow-up (not fixed this pass)
 
-- [ ] [CODE] P2. **Make `reconcile_release_tags.py`'s `_source_touched()` per-repo-source_dir-aware**, mirroring
-      `detect_breaking_change.py`'s scoping instead of using a flat repo-wide `_NON_FUNCTIONAL_PATH_RE` allowlist.
-      Concretely: for ibkr-gateway-infra, `cloudbuild.yaml` and `scripts/setup.sh` are outside the real source dir
-      (`ibkr_gateway_client/`) but are NOT matched by `_NON_FUNCTIONAL_PATH_RE` (`.github/`, `docs/`, lockfiles,
-      `pyproject.toml`, etc.), so the reconciler will keep classifying any future infra-only commit to this repo as
-      "touched" (stall- alarm-eligible) even though semver-agent (now correctly scoped to `ibkr_gateway_client/`) would
-      never bump on the same diff — the exact STALL/no-bump divergence the script's own docstring warns against. Fix
-      needs a source of per-repo `source_dir` inside the reconciler (candidates: `workspace-manifest.json`'s existing
-      `breaking_scan_dir` field, already correct for ibkr-gateway-infra; or fetch each repo's own `semver-agent.yml`
-      caller stub via the GH contents API the same way `_main_pyproject` already does) — a real design choice, not a
-      one-line change, so left for a dedicated pass. (repo: unified-trading-pm)
+- [ ] [CODE] P2. **Make `reconcile_release_tags.py`'s `_source_touched()` per-repo-source_dir-aware** — **BLOCKED on the
+      OPERATOR audit todo below landing first (2026-08-15 diagnosis, slot-20·infra); do not implement the naive
+      version.** Concretely: for ibkr-gateway-infra, `cloudbuild.yaml` and `scripts/setup.sh` are outside the real
+      source dir (`ibkr_gateway_client/`) but are NOT matched by `_NON_FUNCTIONAL_PATH_RE` (`.github/`, `docs/`,
+      lockfiles, `pyproject.toml`, etc.), so the reconciler will keep classifying any future infra-only commit to this
+      repo as "touched" (stall- alarm-eligible) even though semver-agent (now correctly scoped to
+      `ibkr_gateway_client/`) would never bump on the same diff — the exact STALL/no-bump divergence the script's own
+      docstring warns against. Fix needs a source of per-repo `source_dir` inside the reconciler (candidates:
+      `workspace-manifest.json`'s existing `breaking_scan_dir` field, already correct for ibkr-gateway-infra; or fetch
+      each repo's own `semver-agent.yml` caller stub via the GH contents API the same way `_main_pyproject` already
+      does) — a real design choice, not a one-line change, so left for a dedicated pass. **2026-08-15 finding: the
+      obvious candidate source (`workspace-manifest.json`'s `breaking_scan_dir`) is CONFIRMED INCOMPLETE for at least
+      one repo today — e2e-testing's `breaking_scan_dir: "tests"` covers only 43 of its `.py` files; `scripts/` holds
+      144 `.py` files including recent `fix(...)`-labeled commits (`f27cf30`, `bb2e231`, `601f8be` etc.), and its
+      `.github/workflows/semver-agent.yml` `source_dir: "e2e_testing"` is separately wrong too (no such dir exists) —
+      i.e. this is the SAME repo `detect_breaking_change.py`'s own docstring already cites as the reason full source-dir
+      scoping was reverted 2026-08-09 (a real `scripts/*.py` change going invisible to a scoped check is a FALSE
+      NEGATIVE — a stall that should have cleared stays silently masked, and per `_source_touched`'s own docstring the
+      design bias must be "fail toward alerting, never toward silently clearing a real stall"). Scoping
+      `reconcile_release_tags.py`'s check to `breaking_scan_dir` today would silently reintroduce that exact
+      already-fixed bug class for e2e-testing (and any other repo whose manifest entry is similarly incomplete —
+      unaudited). Per CLAUDE.md's "AO-eligible = outcome determinable by the worker alone" rule this is not safely
+      mechanical: the correct sequencing is (1) the OPERATOR audit todo below FIRST (verify/complete `breaking_scan_dir`
+      — or an equivalent curated source — for every fleet repo, e2e-testing included), THEN (2) implement the scoped
+      `_source_touched()` using that now-trustworthy source, and (3) apply the SAME change to
+      `detect_breaking_change.py`'s own `_source_touched()` too if scoping it — per this file's own "if you change one,
+      change both" invariant, since that copy is the live semver-agent bump signal
+      (`unified-trading-ci/.github/workflows/semver-agent.yml` L612-626 consumes its `source_touched` field directly).
+      Not attempted this pass; do not implement without the audit landing first. (repo: unified-trading-pm)
 - [ ] [OPERATOR] P3. **Audit whether the 2026-08-07 thin-caller-stub migration mis-derived `source_dir` for any OTHER
       repo whose package directory name doesn't match its repo-name-derived guess**
       (`repo-name-with-hyphens-to-underscores`). Spot-checked market-tick-data-service, features-service,
@@ -124,3 +142,14 @@ lands; that is not a bug. The residual reconciler content-check gap is filed abo
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- **slot-20·infra 2026-08-15**: Picked up the `_source_touched()` per-repo-source_dir-aware follow-up via
+  `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md`. Diagnosed rather than blindly implemented: empirically
+  confirmed `workspace-manifest.json`'s `breaking_scan_dir` (the obvious candidate source) is incomplete for e2e-testing
+  (`"tests"` misses `scripts/`'s 144 `.py` files, several with landed `fix(...)` commits) — the exact same repo
+  `detect_breaking_change.py`'s own docstring cites as the reason repo-wide (unscoped) `_source_touched` was chosen over
+  source-dir scoping after the 2026-08-09 false-negative incident. Also confirmed live (not just docstring claim) that
+  `detect_breaking_change.py`'s `_source_touched` IS the actual semver-agent bump signal —
+  `unified-trading-ci/.github/workflows/semver-agent.yml:612-626` reads its `source_touched` field to default-bump PATCH
+  — so scoping `reconcile_release_tags.py`'s copy without also revisiting that one risks the exact cross-script
+  divergence this file's own comments warn against. Re-sequenced the todo above: gate implementation on the OPERATOR
+  `breaking_scan_dir`-completeness audit landing first. Not attempted; no code changed this pass.
