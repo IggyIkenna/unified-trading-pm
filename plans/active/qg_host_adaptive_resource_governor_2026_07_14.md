@@ -751,6 +751,19 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       and downgrade urgency accordingly (still worth root-causing, but no longer the sole path to shipping
       `market-tick-data-service@8b353ef2`).
 
+      **FINAL UPDATE this session — run6 reached 690s, still alive, still legitimately queued** (log progressed cleanly
+          30s→690s in 30s increments, no death marker, no admission yet — last observed state before this session ended).
+          690s is now well over **double** the ~300s mark that killed all 4 priors, with zero sign of a periodic reaper
+          firing at any multiple of 300s (no death at 600s either, which a "reaper tolerating one missed cycle" theory would
+          have predicted). This is the strongest evidence yet toward possibility (a) above — the 4 prior deaths were tied to
+          something specific about those launch contexts/sessions, not a structural timeout in the governor's pre-admission
+          wait loop itself. Next session: check `bticjctmt`'s final outcome first (via the harness's automatic task
+          notification, do not manually re-poll) — if it completed clean and green, ship `market-tick-data-service@8b353ef2`
+          immediately via quickmerge and treat this investigation as closed/deprioritized (downgrade to "rare and
+          unreproduced, no fix needed" rather than continuing to chase root cause); if it eventually died, record the exact
+          death time here (still worth checking against 300s multiples, though 690s already argues against a clean periodic
+          cause).
+
 ## Measured runtime drift — RESOLVED 2026-07-22 (plan-reconcile follow-up)
 
 > **🟢 RESOLVED.** Live SSM re-check of the same VM (`i-0c9b283b31d6b5ca7`) today: `qg-host-governor.sh --status` now
