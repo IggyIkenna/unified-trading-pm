@@ -119,10 +119,13 @@ source: >-
       guarding the sibling `data_status_rollup_ml_service_full_blob_missing_2026_07_26` bucket-alias bug class. No repo
       touched — this was a verification-only todo; the root-fix commits predate this batch plan. Source:
       `plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md`
-- [ ] [DOC] P3. Add a one-line cross-file conflict-check note to
+- [x] ✅ [DOC] P3. Add a one-line cross-file conflict-check note to
       ui_satellite_ao_dispatch_batch3_finalize_2026_08_09.md's todo 1, naming
       ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md's still-open todo 4 as a same-file
-      (artifact_pipeline_observability_2026_07_17.md) dispatch-collision risk. Source:
+      (artifact_pipeline_observability_2026_07_17.md) dispatch-collision risk — unified-trading-pm@`e1c95fa82f`. Added a
+      **Conflict-check** sentence to batch3_finalize's todo 1 naming
+      `ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md` todo 4 (still open) explicitly, so both finalize plans
+      are coordinated/sequenced if ever worked concurrently. Source:
       `plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md`
 - [x] ✅ [CODE] P2. Port the manual-trigger action into the new /ops/artifacts page; remove CloudBuildsTab from the
       per-service tab bar + DeployConsole; delete CloudBuildsTab.tsx (Phase 4) — deployment-ui@9d5ad0d105. Added a
