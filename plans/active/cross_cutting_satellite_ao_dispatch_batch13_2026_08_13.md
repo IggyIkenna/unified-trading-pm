@@ -275,13 +275,19 @@ source: >-
       `ohlcv_24h` fail with `No module named 'yfinance'` — FX ohlcv_24h is explicitly DESCOPED 2026-06-30 per the
       wave-launcher's own comments, and this legacy Yahoo-daily surface is otherwise dead scope; too small/ likely-moot
       to action.) Source: `plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`
-- [ ] [CODE] P2. Fix `wave_launcher.py`'s `_derive_cme_root()` blank-`underlying` fallback (or backfill the missing
-      `underlying` field at the source) so the 110,074 CME `WithinBoundsTradfiSourceZero` rows stuck since 2026-07-07
-      re-enter `compute_dispatch_candidates()`'s gap computation instead of being silently and permanently bucketed into
-      `out_of_scope["CME:unmapped_root"]` — either parse the root from `instrument_id` (e.g. `CME:FUTURE:ESM5` → `ES`,
-      the fallback the function's own docstring already flags as "too fuzzy" but never implemented) or fix the upstream
-      writer that leaves `underlying` blank for these rows. (repo: deployment-service, file: `scripts/wave_launcher.py`)
-      Source: this doc's own 2026-08-15 diagnosis, folded in per the tradfi attempted_failed retry todo above.
+- [x] ✅ [CODE] P2. **Fixed via the live instrument_id format, not the guessed `CME:FUTURE:ESM5` shape.**
+      deployment-service@8e22704756 (2026-08-15, slot-30·infra). A bounded, column-projected read of the live
+      `market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` manifest against the exact
+      110,074-row bucket (venue=CME, data_type in {ohlcv_1s,ohlcv_1m}, error_reason=WithinBoundsTradfiSourceZero, blank
+      `underlying`) confirmed every row's `instrument_id` is actually `<ROOT>.FUT` / `<ROOT>.OPT` (e.g. `CT.FUT`,
+      `MNQ.OPT`) — not the contract-symbol form (`CME:FUTURE:ESM5`) the function's old docstring guessed at. Rewrote
+      `_derive_cme_root()` to fall back to parsing that suffix when `underlying` is blank, so these rows now resolve a
+      real root and re-enter `compute_dispatch_candidates()`'s gap computation instead of permanently bucketing into
+      `out_of_scope["CME:unmapped_root"]`. Added `tests/unit/test_wave_launcher_cme_root_fallback.py` (6 cases:
+      populated-underlying precedence, COMBO→None, FUT/OPT suffix fallback, unparseable-instrument_id→None, both-blank→
+      None). `bash scripts/quality-gates.sh` green (799s, sentinel-verified at HEAD); quickmerge landed on LDR
+      (post-push ancestry verified `8e22704756` on `origin/live-defi-rollout`). Source: this doc's own 2026-08-15
+      diagnosis, folded in per the tradfi attempted_failed retry todo above.
 - [ ] [INFRA] P3. disambiguate 'the planning VM' in monitoring/docs; always name the instance ID or a stable label
       Source: `plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`
 - [ ] [INFRA] P3. wire an automated deploy/sync for glue-runner-crash-loop-watchdog.sh so a repo fix reaches the host
