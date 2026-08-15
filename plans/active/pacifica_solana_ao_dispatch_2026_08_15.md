@@ -52,17 +52,45 @@ checks out — not a blind migrate, not a hold.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Re-run the discovery/classification scan for `PACIFICA-SOLANA` raw-tick objects (same tooling used in
-      `pacifica_solana_perp_reintegration_2026_08_14.md` — the two independent
+- [x] ✅ [SCRIPT] P1. Re-run the discovery/classification scan for `PACIFICA-SOLANA` raw-tick objects (same tooling used
+      in `pacifica_solana_perp_reintegration_2026_08_14.md` — the two independent
       `market-data-tick-cefi-prd-.../venue=PACIFICA-SOLANA/` GCS scans) and confirm the object count/shape still matches
-      the 787 figure. Report any drift before proceeding. (repos: instruments-service)
-- [ ] [SCRIPT] P1. If the re-verify confirms clean: execute the rename migration — prefix each object's filename with
-      `PACIFICA-SOLANA:PERPETUAL:` and backfill matching manifest rows (none currently exist for this venue's raw-tick
-      history). Follow the standard reversibility-qualified GCS-rename pattern
-      (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`). (repos: instruments-service,
-      market-tick-data-service)
+      the 787 figure. Report any drift before proceeding. (repos: instruments-service) —
+      `unified-api-contracts@475270d5`. **Count/stem-count CONFIRMED clean (787 objects, 5 stems — unchanged).** But a
+      real DRIFT was found, not a clean pass-through: see Progress Log below.
+- [ ] [SCRIPT] P1. **CAVEAT ADDED 2026-08-15 by todo #1's re-verify — READ BEFORE EXECUTING.** The rename half of this
+      todo may already be done: a fresh scan found all 787 objects' filenames ALREADY canonical on disk (see Progress
+      Log). Do NOT execute a rename against objects that may already be renamed. Re-run
+      `market-tick-data-service/scripts/reconcile_pacifica_quarantine_2026_08_15.py` fresh (per its own docstring) AND
+      independently check manifest-row state (NOT re-verified by todo #1 — do not assume either way) before taking any
+      action. If that re-verify confirms objects are already canonical: skip the rename, and backfill manifest rows only
+      if genuinely still absent. Follow the standard reversibility-qualified GCS-rename pattern
+      (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) for whatever write work actually remains. (repos:
+      instruments-service, market-tick-data-service)
 
 ## Progress Log
+
+- **2026-08-15 (todo #1 done — re-verify found a real drift, not a clean confirm)**: re-ran
+  `market-tick-data-service/scripts/reconcile_pacifica_quarantine_2026_08_15.py` fresh (`uv sync` + direct run against
+  the prod `market-data-tick-cefi-prd-...` bucket, read-only, no GCS writes). **Count/shape confirmed**: 787 objects, 5
+  unique stems (BTC/ETH/HYPE/SOL/XRP-USDC@LIN) — unchanged from the original scan. **Drift found**: the script's own
+  classification now buckets all 5 stems as `canonical_already` (previously implied non-canonical/"resolved"). Verified
+  this is real, not a script artifact, by calling `discover_objects()` directly and inspecting raw GCS blob names —
+  confirmed live paths read e.g.
+  `raw_tick_data/by_date/day=2025-07-16/pipeline_mode=batch_tardis/asset_group=cefi/venue=PACIFICA-SOLANA/instrument_type=perpetual/data_type=ohlcv_1m/PACIFICA-SOLANA:PERPETUAL:BTC-USDC@LIN.parquet`
+  — the canonical `PACIFICA-SOLANA:PERPETUAL:` prefix is already on the actual filename today. Checked for an
+  explanatory mechanism: `git log --since="2026-08-15 07:00" --all -i --grep=pacifica` in both `instruments-service` and
+  `market-tick-data-service` returned **zero commits** — no tracked rename/migration landed between the original scan
+  and this re-verify, so the on-disk change's mechanism is UNCONFIRMED (possibly an ongoing/scheduled capture process
+  legitimately re-writing these shards with the modern adapter's canonical id-builder, possibly something else — not
+  established here, out of this todo's scope to root-cause). Did NOT check manifest-row state (todo #2's concern, not
+  re-verified here — do not assume either way). **Corrected the stale claim** in
+  `unified_api_contracts/canonical/quarantine.py`'s `QUARANTINE_REGISTRY["PACIFICA-SOLANA"]` entry (`reason` +
+  `verified_by` fields, which explicitly asserted "Objects are UNCHANGED on disk... still the bare BASE-QUOTE@LIN stem")
+  — `unified-api-contracts@475270d5f9`, per the workspace's stale-doc-is-a-finding hard rule; full QG green (384s).
+  **Added a caveat to todo #2 above** so its dispatch doesn't blindly execute a rename against objects that may already
+  be renamed — it still needs its own fresh re-verify (both object AND manifest state) before any write, exactly as its
+  own text already required, now with concrete evidence of why that requirement is load-bearing here.
 
 - **2026-08-15 (na-eligibility-audit follow-up, operator ruling)**: extracted from
   `pacifica_solana_perp_reintegration_2026_08_14.md` per operator's "re-run discovery fresh, then migrate" answer.
