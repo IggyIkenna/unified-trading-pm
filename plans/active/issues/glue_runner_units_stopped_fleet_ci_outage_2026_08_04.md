@@ -1,12 +1,13 @@
 ---
 doc_type: issue
 title:
-  "Two self-hosted glue-runner systemd units left INACTIVE on the planning VM stall UAC LDR->main promotion and cascade
-  a Tier-A CI outage across 11 dependent repos (instruments-service main QG-v2 RED is a symptom, not a code bug)"
+  "Two self-hosted glue-runner systemd units left INACTIVE on the old orchestrator VM (i-0c9b283b31d6b5ca7) stall UAC
+  LDR->main promotion and cascade a Tier-A CI outage across 11 dependent repos (instruments-service main QG-v2 RED is a
+  symptom, not a code bug)"
 summary: >-
   Slot 11 (agt-152447, BLK-37a5da89, 2026-08-04) fully root-caused instruments-service's main quality-gates-v2 RED as a
   cascading INFRA outage, not a code defect: instruments-service code+tests are GREEN on LDR. Chain: (1) two dedicated
-  self-hosted GitHub-Actions glue-runner units are stopped/inactive on the planning VM (ip-172-31-5-118) —
+  self-hosted GitHub-Actions glue-runner units are stopped/inactive on the old orchestrator VM (`i-0c9b283b31d6b5ca7`, ip-172-31-5-118) —
   `github-glue-runner-unified-api-contracts@glue-1.service` (inactive) and
   `github-glue-runner-instruments-service@glue-1.service` (externally `systemctl stop`-ped 09:01:57; `Restart=always`
   never fired because an explicit stop suppresses it). (2) UAC's LDR quality-gates-v2 for commit d67a226f (the OKX_SWAP
@@ -17,7 +18,7 @@ summary: >-
   VERIFIED (read-only `systemctl is-active`): both named units are `inactive` while all 11 OTHER repos'
   `github-glue-runner-*@glue-1.service` units are `active/running` — corroborating the two-unit anomaly. **Neither the
   worker nor main can fix it**: `sudo` is blocked by a no-new-privileges flag for both, and neither has AWS SSM
-  (`ikenna-worker` lacks `ssm:DescribeInstanceInformation`). Needs someone with host root on the planning VM (or SSM) to
+  (`ikenna-worker` lacks `ssm:DescribeInstanceInformation`). Needs someone with host root on the old orchestrator VM (`i-0c9b283b31d6b5ca7`) (or SSM) to
   `systemctl start` the two units. Secondary finding: the glue-runner-crash-loop-watchdog does NOT catch this class — it
   only flags units actively crash-looping (repeated restarts), not a unit sitting cleanly `inactive`/stopped.
 status: open
@@ -103,7 +104,7 @@ context_scope:
 
 `sudo` is blocked by a `no-new-privileges` flag for BOTH the worker session and main agt-1756f6 (verified `sudo -n true`
 => "no new privileges" error). Neither has AWS SSM (`ikenna-worker` lacks `ssm:DescribeInstanceInformation`). Restarting
-a systemd unit needs host root / SSM on the planning VM — genuinely operator-gated.
+a systemd unit needs host root / SSM on the old orchestrator VM (`i-0c9b283b31d6b5ca7`) — genuinely operator-gated.
 
 ## Todos
 
@@ -134,7 +135,7 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       zero `oom`/`killed process` lines in `journalctl -k`/`dmesg` for the window, and `sar -r` shows the host at 15-18%
       memory used at the time (comfortable, not under pressure). No `auditd` was installed, so the actual
       `systemctl stop` invocation's calling UID/process could not be attributed after the fact — that IS the real,
-      fixable gap. **Installed `auditd` + `audispd-plugins` on the planning VM via SSM** with a watch rule on
+      fixable gap. **Installed `auditd` + `audispd-plugins` on the old orchestrator VM (`i-0c9b283b31d6b5ca7`) via SSM** with a watch rule on
       `/usr/bin/systemctl` execution (`-w /usr/bin/systemctl -p x -k systemctl_exec`), verified `active` + rule loaded
       (`auditctl -l`). This does not explain THIS incident, but any recurrence is now attributable via
       `ausearch -k systemctl_exec`. Leaving this specific incident's trigger formally unknown rather than guessing.
@@ -145,7 +146,10 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       peer runners are active, so a stopped runner pages instead of silently stalling promotion for an hour. Repo:
       **unified-trading-pm** (`scripts/self-hosted-runners/glue-runner-crash-loop-watchdog.sh` — corrected 2026-08-06
       (/plan-reconcile ao); previously mis-pointed at agent-orchestrator, see this doc's context-scout 2026-08-06 note
-      below). Cross-ref `/codex/05-infrastructure/deployment-observability.md`, `/codex/04-architecture/ci-alerting.md`.
+      below). Target host for this watchdog's own alert logic and any live-state checks: the CI-runner VM
+      (`i-042a6332509482556`, the box that actually hosts the glue/writer fleet today — confirmed live below), not the
+      old orchestrator VM (`i-0c9b283b31d6b5ca7`), which no longer hosts runners since the 2026-08-05 fleet-split
+      migration. Cross-ref `/codex/05-infrastructure/deployment-observability.md`, `/codex/04-architecture/ci-alerting.md`.
       **2026-08-05 addendum: a THIRD failure mode found (see Progress Log) — "active" at the systemd level but hung
       mid-job for hours, then failing to re-register with GitHub even after restart. The watchdog must catch this too,
       not just crash-loop and cleanly-inactive**, e.g. alert on a runner whose `journalctl` shows "Running job" with no
@@ -173,8 +177,10 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       signature with zero local trace, but confirming it needs GitHub's audit log (org/enterprise plan) or the
       operator's own recollection of any action taken around 08:59:35–09:02:27 UTC on 2026-08-04, neither of which this
       session has access to. Genuine root cause: NOT DETERMINED.
-- [x] ✅ [INFRA] P1. **RESOLVED 2026-08-05 (same session, later).** `writer-1/2/3` on the SAME planning VM
-      (`ip-172-31-3-59`, instance `i-042a6332509482556`, unified-trading-pm's own writer pool) — root cause was a
+- [x] ✅ [INFRA] P1. **RESOLVED 2026-08-05 (same session, later).** `writer-1/2/3` on the CI-runner VM
+      (`ip-172-31-3-59`, instance `i-042a6332509482556` — a DIFFERENT box from the old orchestrator VM
+      `i-0c9b283b31d6b5ca7` named above, despite this entry's original "SAME planning VM" framing at the time;
+      unified-trading-pm's own writer pool) — root cause was a
       **diagnostic miss, not a genuinely unfixable hang**: my earlier "root cause NOT found" checks
       (`systemctl status actions.runner.*`, `journalctl -u actions.runner.*`) matched ZERO units, because these runners
       are NOT self-registered `actions.runner.*` services — they're custom systemd TEMPLATE units,
@@ -208,8 +214,8 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       own actual dispatch reason (unified-api-contracts main QG-v2 RED) was already independently fixed within this same
       entry (see below), and that fix stands regardless of the wrong-box misdiagnosis. Original diagnosis + shipped fix
       preserved verbatim below for the audit trail. **4th recurrence, 2026-08-06 (cicd slot-4, agt-80cfec, `main_ci_red`
-      for unified-api-contracts) — worse than every prior occurrence: the ENTIRE glue/writer pool on the planning VM
-      (`ip-172-31-5-118`) is down, not just 2-4 units.** `systemctl list-units 'github-glue-runner@*' --all` shows the
+      for unified-api-contracts) — worse than every prior occurrence: the ENTIRE glue/writer pool on the old orchestrator VM
+      (`i-0c9b283b31d6b5ca7`, ip-172-31-5-118) is down, not just 2-4 units.** `systemctl list-units 'github-glue-runner@*' --all` shows the
       base unified-trading-pm pool (`glue-1..5`, `writer-1..3`) all `inactive (dead)`/`disabled`;
       `github-glue-runner-<repo>@*` shows **0 loaded units for every per-repo pool** (unified-api-contracts included) —
       not "stopped", never even registered/loaded on this box. `setup-glue-runners.sh status` independently confirms: 0
@@ -230,7 +236,7 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       `unified-trading-pm`, `strategy-service`, `e2e-testing`, `features-service`, `market-tick-data-service`,
       `execution-service`, `ml-service`) was believed still fully blocked at filing time; **per the correction, that
       "still fully blocked" claim is ALSO wrong-box-derived and should not be trusted without a fresh per-repo check.**
-      ~~Needs the same operator/host-root action as every prior entry: SSH or SSM onto the planning VM and either
+      ~~Needs the same operator/host-root action as every prior entry: SSH or SSM onto the old orchestrator VM (`i-0c9b283b31d6b5ca7`) and either
       `systemctl start` the existing units or re-run `setup-glue-runners.sh install` per
       `/codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md` if this was a central-VM relaunch~~ —
       **superseded by the correction: no such action is needed, the real runner VM was never down.**
@@ -257,14 +263,21 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       diagnosed a stuck/unclaimed run and the `ubuntu-latest` re-roll fixed it regardless of root-cause attribution) —
       only the "ENTIRE glue/writer pool ... is down" / "0 loaded units for every per-repo pool" framing in the
       `[OPERATOR] P1` todo above, which conflated the correctly-decommissioned old VM with a real outage.
-- [ ] [INFRA] P3. **Disambiguate "the planning VM" in monitoring/docs and any future investigation checklist.** This
-      doc's own history calls at least 3 different real EC2 instances "the planning VM" at different points
-      (`i-0c9b283b31d6b5ca7` orchestrator box, `i-042a6332509482556` dedicated CI-runner VM, `i-0dd9812a96cdda5dc`
-      human-planning VM) — the ambiguity directly caused the misdiagnosis corrected above (an agent checked the old,
-      correctly-empty box instead of the new dedicated runner VM). Fix: rename references in this doc + the P2
-      monitoring-gap todo above to always name the instance ID or a stable label (e.g. "ci-runner-vm" for
-      `i-042a6332509482556`), and point the P2 watchdog work explicitly at `i-042a6332509482556` (the box that actually
-      hosts the fleet now), not `i-0c9b283b31d6b5ca7`.
+- [x] ✅ [INFRA] P3. **DONE 2026-08-15 (slot-15·infra).** This doc's own history called at least 3 different real EC2
+      instances "the planning VM" at different points (`i-0c9b283b31d6b5ca7` old orchestrator box, `i-042a6332509482556`
+      dedicated CI-runner VM, `i-0dd9812a96cdda5dc` human-planning VM) — the ambiguity directly caused the misdiagnosis
+      corrected above (an agent checked the old, correctly-empty box instead of the new dedicated runner VM). Fixed:
+      replaced every ambiguous "the planning VM" reference in this doc's Root-cause chain / Why-neither-can-self-serve /
+      Todos / Progress Log sections with the specific instance ID (+ stable label — "old orchestrator VM" for
+      `i-0c9b283b31d6b5ca7`, "CI-runner VM" for `i-042a6332509482556`); `i-0dd9812a96cdda5dc` (human-planning VM, itself
+      terminated 2026-08-03 per CLAUDE.md) was never actually implicated in any finding here, named only to close the
+      ambiguity. Also added an explicit host pointer to the P2 monitoring-gap todo above, naming `i-042a6332509482556` as
+      the watchdog's target host, not `i-0c9b283b31d6b5ca7`. Fleet-wide grep confirmed no other codex/monitoring doc in
+      this corpus (`deployment-observability.md`, `ci-alerting.md`, the watchdog script itself) uses the ambiguous
+      "planning VM" phrase — this doc was the sole source. The remaining quoted uses of "planning VM" in this doc (the
+      2026-08-06 correction entries + the final Progress Log entry) are deliberately left as verbatim quotes of the
+      original ambiguous language, since they're the narrative record of the confusion this fix closes, not fresh
+      ambiguous references.
 - [x] ✅ [INFRA] P1. **RESOLVED 2026-08-06 (same session, shipped `879e3e109`).** A THIRD distinct monitoring-gap
       dimension found 2026-08-06: the crash-loop watchdog was structurally false-positiving on every healthy `@glue-N`
       unit, independent of the cleanly-inactive/wedged gaps above.** `is_crash_looping()` only checked
@@ -319,7 +332,7 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
   `[OPERATOR]` todo below).
 - **2026-08-04 (interactive session, `/autonomous` continuation)** — Hit this same outage independently while chasing an
   unrelated stuck MTDS workflow (`update-dependency-version`, queued 10+ min). Found a THIRD stopped unit
-  (`market-tick-data-service`) this doc's original sweep missed. Had SSM reach to the planning VM via the interactive
+  (`market-tick-data-service`) this doc's original sweep missed. Had SSM reach to the old orchestrator VM (`i-0c9b283b31d6b5ca7`) via the interactive
   session's own `admin_od` AWS identity — a capability the filing identities explicitly lacked — so executed the P1 fix
   directly rather than re-escalating: read-only diagnosis (journal, uptime, apt history, `ps`) found no evidence of
   legitimate in-flight maintenance around the 09:01-09:02Z stop window, then `systemctl start` on all three units,
@@ -331,7 +344,8 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
 - **2026-08-04 (interactive session, same continuation, on operator direction "fix the root of these blockages too")** —
   Spent 7 SSM round-trips trying to attribute the actual stop trigger; came up empty on every channel (see the new
   `[DIAG] P1` todo above for the full checklist). Converted the dead end into a real hardening: installed `auditd` on
-  the planning VM with a watch on `systemctl` exec, so a repeat incident is attributable within minutes instead of
+  the old orchestrator VM (`i-0c9b283b31d6b5ca7`) with a watch on `systemctl` exec, so a repeat incident is attributable
+  within minutes instead of
   requiring this kind of after-the-fact archaeology. P2 (extending the crash-loop watchdog to catch a cleanly-`inactive`
   unit, not just a crash-looping one) remains the one open item — still correctly scoped to `agent-orchestrator`, not
   something to bolt onto this session's host-level access.
@@ -340,8 +354,9 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
   pool than this doc's original 3 units — unified-trading-pm's own writer runners, same host) all showed GH-API
   `offline`+`busy` simultaneously. `journalctl` showed all three stuck on `Running job: update-ci-status` since ~10:20
   with no completion line ~2h later — a THIRD distinct failure shape (hung mid-job, not crash-looping, not cleanly
-  stopped). Restarted via SSM (`i-042a6332509482556`, correcting an initial wrong-instance-ID mistake — the planning VM
-  and this writer-pool host are DIFFERENT instances despite the similar naming) after confirming host disk/memory were
+  stopped). Restarted via SSM (`i-042a6332509482556`, correcting an initial wrong-instance-ID mistake — the old
+  orchestrator VM (`i-0c9b283b31d6b5ca7`) and this writer-pool host (`i-042a6332509482556`) are DIFFERENT instances
+  despite the similar naming) after confirming host disk/memory were
   healthy and it wasn't a resource-exhaustion crash-loop. Restart cleared the hang (old PID SIGKILLed) but did NOT
   restore GitHub connectivity — added as the new `[INFRA] P1` todo above, left genuinely unresolved (not a "someone
   else's problem, wait" case — I could not find the root cause with the access/tools available in this session). Also

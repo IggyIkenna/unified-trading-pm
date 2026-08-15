@@ -35,9 +35,10 @@ locked_by: harsh-fleet-audit
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-28
+last_updated: 2026-08-15
 context_scope:
   [
+    /codex/05-infrastructure/vm-log-archival.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     deployment-service/scripts/vm/vm_log_archival_cron.py,
@@ -186,3 +187,20 @@ when the paid Tardis tier is activated.
   doc from archival only (per `plans/PLAN_FORMAT.md` § "Plan Locking"), not from an additive frontmatter field like this
   one — no unlock needed, and this doc's own "let it be" banner/open todos were not touched.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **context-scout 2026-08-15 (slot-14) — full Phase-1 analysis completed.** The 2026-08-03 4-entry list was applied
+  after the lock-check cleared but without a full Phase-1 pass (the original 2026-08-03 scouting agent stopped at the
+  lock check before doing Phase-1 analysis, per
+  `/plans/active/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md`'s own note — this entry is
+  that deferred full pass). Read this doc's frontmatter (`related`/`source`/`parent_epic`) + full body; confirmed every
+  numbered Plan item is `[x]` done, so the doc's only live remaining content is the "Why it matters" VM log-archival
+  durability gap. Found one real gap in the prior list: `/codex/05-infrastructure/vm-log-archival.md` — the direct
+  domain SSOT for that gap, already named in this doc's own `related:` frontmatter and in that codex doc's own
+  `referenced_by:` list — was never added to `context_scope`. Added it (verified on disk, content confirmed genuinely
+  on-topic before adding, per Phase 1 step 3's no-guessing rule). The other 4 entries re-verified as still accurate and
+  kept unchanged. **Adjacent fix (same turn, per the "a doc that misled you is a finding" HARD RULE)**: while verifying
+  `vm-log-archival.md`, found its own banner still claimed "NOT YET DEPLOYED — tofu apply pending (as of 2026-06-02)"
+  for the daily rolling log-archive scheduler — directly contradicted by THIS doc's own 2026-07-28 confirmation
+  (`deployment-service@3cd0b1d`, Cloud Run Job `vm-log-archival-prd` + Cloud Scheduler ENABLED). Corrected that banner
+  in place with the accurate confirmed status, citing this doc as the evidence trail; left Job 2 (periodic serial
+  capture / `vm_serial_capture_scheduler.tf`) explicitly unconfirmed since this doc's own record never verified that
+  half. `context_scope` now 5 entries.

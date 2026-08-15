@@ -253,8 +253,14 @@ source: >-
       None). `bash scripts/quality-gates.sh` green (799s, sentinel-verified at HEAD); quickmerge landed on LDR
       (post-push ancestry verified `8e22704756` on `origin/live-defi-rollout`). Source: this doc's own 2026-08-15
       diagnosis, folded in per the tradfi attempted_failed retry todo above.
-- [ ] [INFRA] P3. disambiguate 'the planning VM' in monitoring/docs; always name the instance ID or a stable label
-      Source: `plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`
+- [x] ✅ [INFRA] P3. disambiguate 'the planning VM' in monitoring/docs; always name the instance ID or a stable label —
+      unified-trading-pm (2026-08-15, slot-15·infra). Replaced every ambiguous "the planning VM" reference in the
+      source issue doc's Root-cause chain / Why-neither-can-self-serve / Todos / Progress Log sections with the specific
+      EC2 instance ID + a stable label ("old orchestrator VM" for `i-0c9b283b31d6b5ca7`, "CI-runner VM" for
+      `i-042a6332509482556`); added an explicit host pointer to the P2 monitoring-gap todo naming `i-042a6332509482556`
+      as the watchdog's target, not `i-0c9b283b31d6b5ca7`. Fleet grep confirmed no other codex/monitoring doc used the
+      ambiguous phrase — this issue doc was the sole source. Full detail in that doc's own P3 todo, now flipped. Source:
+      `plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`
 - [ ] [INFRA] P3. wire an automated deploy/sync for glue-runner-crash-loop-watchdog.sh so a repo fix reaches the host
       Source: `plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`
 - [x] ✅ [BACKEND] P2. document the circular-dependency gap (scheduled workflow runs from default branch) in
@@ -956,7 +962,22 @@ source: >-
       hit the API) — full certainty on the guest-level systemd hang not achievable (VMs deleted, no serial logging).
       deployment-service@4b01cccd3b (2026-08-15, slot-26·infra). Full evidence in source doc's Progress Log.** Source:
       `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
-- [ ] [CODE] P2. Make a VM stuck mid-shutdown actually terminate (shutdown-path DELETE or a reaper watchdog) Source:
+- [x] ✅ [CODE] P2. **Shutdown-wedge reaper watchdog shipped** — deployment-service@34bca6e6 (2026-08-15,
+      slot-27·infra). `deployment_service/data_pipeline_monitors/shutdown_wedge.py`: detects a RUNNING VM whose last
+      non-blank serial-console line is the systemd `Stopping <unit>...` job-start message with nothing logged after it
+      (the exact signature the 2026-08-11 incident used to hand-classify 398 wedged VMs), tracks how long it has held
+      that state via a GCS-persisted watch-state map, and reaps (tombstone + delete, reusing `reap_vms.py`'s
+      tombstone-before-delete ordering so `exit_code_fleet_monitor` never misreads it as a preemption) once past a
+      configurable grace period (default 30 min) — closing the "GCE still reports RUNNING with no automatic path to
+      DELETE" gap this todo names. Pure detection/grace-period core is fully unit-tested (16 tests, DI'd GCE/GCS I/O,
+      no live credentials needed);  `scripts/vm/reap_shutdown_wedged_vms.py` wires the real fleet (defaults to
+      dry-run, `--apply` to actually reap). Uses subprocess `gcloud` for compute-instance list/serial-read (mirrors
+      `reap_vms.py`'s existing convention in this script directory — no cloud-agnostic compute-instance wrapper
+      exists yet, and the TID251 ratchet only bans NEW `google.cloud`/`boto3` SDK imports, not compute subprocess
+      calls). `bash scripts/quality-gates.sh` green (0 basedpyright errors, TID251/empty-string-fallback ratchets
+      held at baseline). Not yet wired into a live Cloud Scheduler cron — the exit-code monitor is deliberately PAUSED
+      per this same source doc's standing operator hold, so a NEW auto-delete cron was deliberately left as an
+      operator-invoked script rather than autonomous infra, consistent with the doc's own gating. Source:
       `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
 - [x] ✅ [CODE] P2. VERIFIED YES (2026-08-15, slot-8·infra) — deployment-service@0c38c00d (2026-08-11 fix, promoted to main@8a054e5f, auto-built on push) still on main HEAD; deployed deployment-api:latest (tag 4048e78, built 2026-08-15T18:39 UTC, 4+ days/5 same-day rebuilds post-fix) implies present. Source: `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
 - [x] ✅ [CODE] P2. **NOT ATTEMPTED — premise unmet: the specific 39 VM names were never persisted, and the fleet has

@@ -24,7 +24,7 @@ referenced_by:
     plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md,
   ]
 owner:
-last_reviewed: 2026-05-30
+last_reviewed: 2026-08-15
 code_refs:
 type: infrastructure
 execution:
@@ -40,14 +40,14 @@ execution:
 
 **Author**: slot-2 agent (2026-05-30) **Related plan**: `plans/active/canonical_vm_log_archival_2026_05_27.md`
 
-> **⚠️ NOT YET DEPLOYED — `tofu apply` pending (as of 2026-06-02).** The **daily rolling log-archive** + **rolling
-> serial-capture** schedulers (`deployment-service/terraform/gcp/vm_log_archival_scheduler.tf` +
-> `vm_serial_capture_scheduler.tf`) are **TF-authored but not applied** — the scheduled `log-archive/rolling/` and
-> `log-archive/serial-rolling/` paths below are not being populated by a live cron yet. On-demand pre-kill snapshots
-> (`snapshot_*/`) and the live `vm-logs/` stream are live; only the _scheduled rolling_ archives await the apply.
-> Tracked as an operator-gated infra item in `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md` §
-> "Operator-gated infra" + `fleet_audit_triad_deferred_followups_2026_06_01.md`. Remove this banner once `tofu apply`
-> lands the two schedulers.
+> **✅ Daily rolling log-archive DEPLOYED (confirmed 2026-07-28)** — `vm_log_archival_scheduler.tf` is applied and the
+> Job 1 cron below is live: `deployment-service@3cd0b1d` shipped `vm_log_archival_cron.py`; Cloud Run Job
+> `vm-log-archival-prd` + Cloud Scheduler `0 2 * * * UTC` are ENABLED, populating `log-archive/rolling/`. Verified via
+> `plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md` (originally flagged not-yet-applied here and
+> in `issue_docs_remediation_sweep_2026_06_02.md`, confirmed shipped 2026-07-07, re-confirmed 2026-07-28). **Job 2
+> (periodic serial capture / `vm_serial_capture_scheduler.tf`, populating `log-archive/serial-rolling/`) was NOT part of
+> that confirmation** — its apply status is unverified as of this note; re-check before relying on `serial-rolling/`
+> data existing for a given VM/date.
 
 ---
 
