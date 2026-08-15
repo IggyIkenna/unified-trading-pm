@@ -162,8 +162,9 @@ context_scope:
   `data-pipeline-check-is` for prediction-only, all shards, post-migration; [DATA] P0. Run `data-pipeline-check-mtds`
   for prediction-only, all shards, post-migration.
 - [`prediction_phase_e_football_arb_live_2026_07_24.md`](/plans/active/prediction_phase_e_football_arb_live_2026_07_24.md)
-  — **3 open** (2 P1 + 1 P2, no P0 yet). Top: [BACKEND] P1. Verified end-to-end fixture link on Polymarket + Kalshi
-  soccer; [BACKEND] P1. Wire the arb engine to CONSUME `af_fixture_id`.
+  — **2 open** (1 P1 + 1 P2, no P0 yet; re-verified via `grep -c` 2026-08-15, `/plan-reconcile` sweep — was 3 as of the
+  2026-07-24 split, since E1 closed 2026-08-15 citing E2's already-shipped Kalshi resolution). Top: [BACKEND] P1. Wire
+  the arb engine to CONSUME `af_fixture_id`; [BACKEND] P2. 3-way arb correctness guards.
 - [`prediction_consolidated_closeout_history_2026_07_18.md`](/plans/archive/2026_07/prediction_consolidated_closeout_history_2026_07_18.md)
   (archived) — **0 open** — VERIFIED: `status: complete`, 995 lines, zero unchecked checkboxes; pure verbatim record.
 
@@ -191,7 +192,8 @@ phantom-wipe issue is downgraded to verify-not-fix) and MTDS prediction `-test-`
 flight (`prediction_phase_ab_residuals_2026_07_24.md`), the formal post-migration smoke-green + MVP backfill gate itself
 has not yet run (Phase D's remaining P0 todos), and the football fixture identity that would enable
 live-odds-vs-Polymarket-vs-Kalshi arb is still threaded onto Polymarket-as-a-string only and onto Kalshi not at all
-(`prediction_phase_e_football_arb_live_2026_07_24.md`, all 3 items open). This plan scopes the full end-to-end.
+(`prediction_phase_e_football_arb_live_2026_07_24.md`, 2 items open — E1's fixture-link item closed 2026-08-15 citing
+E2's already-shipped Kalshi resolution). This plan scopes the full end-to-end.
 
 ### Shard atom for prediction (SSOT-canonical — key is `canonical_question_group`, NOT `(instrument_id OR underlying)`)
 
@@ -332,8 +334,8 @@ fixture-linked before MVP backfill.
     shards, post-migration; run `data-pipeline-check-mtds` for prediction-only, all shards, post-migration.
   - **[BACKEND] P1.**
     [`prediction_phase_e_football_arb_live_2026_07_24.md`](/plans/active/prediction_phase_e_football_arb_live_2026_07_24.md)
-    — 3 open (2 P1 + 1 P2). Top: verify the end-to-end fixture link on Polymarket + Kalshi soccer; wire the arb engine
-    to CONSUME `af_fixture_id`.
+    — 2 open (1 P1 + 1 P2, re-verified via `grep -c` 2026-08-15 — was 3, E1 closed citing E2's shipped Kalshi
+    resolution). Top: wire the arb engine to CONSUME `af_fixture_id`; 3-way arb correctness guards.
 - **Capture / correctness**:
   - [`plans/active/prediction_capture_incident_remediation_2026_07_06.md`](/plans/active/prediction_capture_incident_remediation_2026_07_06.md)
     (7 open total, re-verified via `grep -c` 2026-08-15 — was 9)

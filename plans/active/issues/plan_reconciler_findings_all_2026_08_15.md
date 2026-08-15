@@ -274,13 +274,22 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
       conflict markers were found in the WORKING TREE by an independent sweep agent; already resolved by this session
       directly (confirmed HEAD was always clean — working-tree-only artifact, not corpus corruption). No further action
       needed, noted for completeness.
-- [ ] [OPERATOR] P2. `prediction_phase_e_football_arb_live_2026_07_24.md` — E1 (open) says Kalshi "has none today" for
-      af_fixture_id resolution, but E2 (done, same doc) already shipped exactly that. E1's framing is stale; a narrower
-      3-way-identity-match verification may still be genuinely open. Needs doc-owner call on scope.
-- [ ] [OPERATOR] P2. `sports_predictions_live_mode_activation_readiness_2026_07_21.md:214` — todo checked `[x]` but its
-      own body says "Checkbox NOT flipped... per operator's explicit instruction" YET the doc's Progress Log shows a
+- [x] ✅ [OPERATOR] P2. `prediction_phase_e_football_arb_live_2026_07_24.md` — E1 (open) says Kalshi "has none today"
+      for af_fixture_id resolution, but E2 (done, same doc) already shipped exactly that. E1's framing is stale; a
+      narrower 3-way-identity-match verification may still be genuinely open. Needs doc-owner call on scope. **RESOLVED
+      2026-08-15 (same-session operator interactive)**: E1 flipped `[x]` citing E2's shipment directly in the source doc
+      ("CLOSED (2026-08-15, /plan-reconcile, operator interactive)... Closing citing E2's shipment rather than
+      duplicating it as separately-open"). Doc now shows 2 open (E3's P1 + P2 only); the parent closeout's per-child
+      snapshot line was stale at "3 open" and has been corrected in this pass (see
+      `prediction_consolidated_closeout_2026_07_18.md`).
+- [x] ✅ [OPERATOR] P2. `sports_predictions_live_mode_activation_readiness_2026_07_21.md:214` — todo checked `[x]` but
+      its own body says "Checkbox NOT flipped... per operator's explicit instruction" YET the doc's Progress Log shows a
       DIFFERENT same-day audit pass overrode this and flipped it anyway. Two same-day passes, opposite conclusions.
-      Needs human ruling: re-verify a live poll cycle, resolve explicitly.
+      Needs human ruling: re-verify a live poll cycle, resolve explicitly. **RESOLVED 2026-08-15 (same-session operator
+      interactive)**: live poll cycle re-verified directly against infra (no `mtds-live-sports-*` VM running; warm-sink
+      prefix >4h stale against a 300s max-batch-duration sink) — settles the tension: parent checkbox stays `[x]`
+      (connector code/launcher claim is true), part (b)'s "fresh poll cycle succeeding" condition is NOT met today.
+      Documented in the source doc's body at the cited location.
 
 ## P3 — cosmetic / hygiene (low priority, batch when convenient)
 
