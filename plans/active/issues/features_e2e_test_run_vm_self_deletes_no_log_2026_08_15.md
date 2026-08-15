@@ -147,6 +147,16 @@ match). Whoever picks up todo 1 below should use `gcloud projects get-iam-policy
 `get-iam-policy` genuinely needs a carve-out (a policy READ, not an object read/write — worth a design note, not assumed
 safe to just bypass).
 
+**CONFIRMED 2026-08-15 (slot-6, infra craft, todo 1) — the hypothesis was correct.**
+`gcloud projects get-iam-policy central-element-323112 --format=json` (a project-level IAM read, does NOT trip the
+object-op hook) shows: `uts-test-sa` holds `roles/storage.objectViewer` **UNCONDITIONED** (project-wide read — confirms
+it CAN fetch `vm/setup-data-pipeline-vm.sh`), but its `roles/storage.objectAdmin` (write) grants are BOTH
+IAM-conditioned to `-test-`-suffixed DATA-tier buckets only (`group-a-test-tier-only` / `group-b-test-tier-only`
+conditions — `resource.name.startsWith("projects/_/buckets/features-*-test-")` etc.) —
+**`deployment-scripts-central-element-323112` matches NEITHER condition**, so `uts-test-sa` has zero write access to it.
+Exactly the observed symptom: the VM can read its startup script but can never write `vm-logs/<vm>/run.log` or
+`EXIT_STATUS`.
+
 ## Todos
 
 - [ ] [INFRA] P1. Confirm or refute the `uts-test-sa` IAM hypothesis above: check `uts-test-sa`'s actual bucket-level
@@ -157,6 +167,31 @@ safe to just bypass).
       `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`) and re-verify with one real
       `features-e2e-tradfi-*` launch, checking for a real `run.log` this time. (repo: deployment-service / infra — live
       GCP IAM change, not code)
+
+      **CONFIRMED + FIX APPLIED 2026-08-15 (slot-6, infra craft) — verification launch IN PROGRESS, not yet complete.**
+          Root cause confirmed (see "CONFIRMED" note above the Todos section). Self-granted (this session's active identity
+          IS `unified-trading-sa`, the documented self-service identity for exactly this gap class per
+          `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`) a NEW, narrowly-scoped project-level IAM
+          condition binding — NOT a blanket grant, deliberately mirrors the existing `group-a/b-test-tier-only` pattern
+          rather than widening `uts-test-sa`'s access to every bucket:
+          ```
+          gcloud projects add-iam-policy-binding central-element-323112 \
+            --member="serviceAccount:uts-test-sa@central-element-323112.iam.gserviceaccount.com" \
+            --role="roles/storage.objectAdmin" \
+            --condition='expression=resource.name.startsWith("projects/_/buckets/deployment-scripts-central-element-323112"),title=deployment-scripts-bucket-test-sa-vm-logs,description=uts-test-sa write access for vm-logs/ and EXIT_STATUS on test-run VM launches -- see features_e2e_test_run_vm_self_deletes_no_log_2026_08_15'
+          ```
+          Verified live via a fresh `gcloud projects get-iam-policy` re-read (binding present, condition title
+          `deployment-scripts-bucket-test-sa-vm-logs`, expression scoped to exactly this one bucket — a live infra change,
+          not in git). **Live-launched a fresh verification VM** (`features-e2e-tradfi-20260815-100817-679e08`, same
+          `pipeline_e2e_check.py --day 2026-08-14 --asset-group TRADFI --family volatility --legs benchmark
+          --benchmark-days 7` command as the 3 prior failures) to prove the capability, not just read the policy back — per
+          the self-service rule's "verify the actual capability live" requirement. **Launch was still in progress at the
+          time this session ended** (next agent: check whether `gs://deployment-scripts-central-element-323112/vm-logs/
+          features-e2e-tradfi-20260815-100817-679e08/run.log` now exists — if yes, the fix is proven and this todo is done;
+          if the VM still self-deletes with no log despite the new binding, the hypothesis needs revisiting — e.g. check
+          whether `lc_tier_service_account` is actually being invoked with `is_test_run=true` for this launch shape, or
+          whether a SEPARATE identity is used for the metadata-server startup-script fetch vs. the VM's runtime SA).
+
 - [ ] [INFRA] P1. If the IAM hypothesis is refuted, get real evidence of what actually kills the VM in its first ~30-60s
       of boot: (a) check GCP Cloud Logging for the instance's serial-port output — NOT enabled by default on this
       launcher (`serial-port-logging-enable` metadata not set in `launch-features-vm.sh`); confirm whether enabling it
@@ -186,3 +221,17 @@ safe to just bypass).
   its Progress Log rather than silently marking it done or retrying indefinitely (VM-launcher-runbook "no
   fire-and-forget" + cost-consciousness — 3 real billable VM launches already spent chasing this with zero throughput
   data produced).
+
+- **2026-08-15 (slot-6, infra craft, todo 1, IN PROGRESS — root cause confirmed + fix applied, verification pending)**:
+  dispatcher immediately offered this doc's own todo 1 back to the same slot after the filing above. Adopted infra craft
+  (was backend_engineer for the prior todo). Confirmed the IAM hypothesis live via `gcloud projects get-iam-policy`
+  (project-level read, not object-scoped — avoids the hook block that stopped bucket-level inspection earlier):
+  `uts-test-sa` has unconditioned project-wide `storage.objectViewer` but its `storage.objectAdmin` grants are
+  conditioned to `-test-`-suffixed DATA-tier buckets only, excluding `deployment-scripts-central-element-323112`
+  entirely. Self-granted a narrow, bucket-scoped IAM condition (title `deployment-scripts-bucket-test-sa-vm-logs`)
+  rather than widening `uts-test-sa` project-wide — verified live in a fresh policy read. Launched a real verification
+  VM (`features-e2e-tradfi-20260815-100817-679e08`) to prove the fix closes the gap (not just that the policy read looks
+  right) — **still running when this session ended; the next session/agent should check
+  `gs://deployment-scripts-central-element-323112/vm-logs/ features-e2e-tradfi-20260815-100817-679e08/run.log` for
+  existence before doing anything else with this todo.** See todo 1's own note above for the exact next-step branching
+  (fix proven vs. hypothesis needs revisiting).
