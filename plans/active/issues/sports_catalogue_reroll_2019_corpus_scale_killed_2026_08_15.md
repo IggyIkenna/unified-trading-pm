@@ -30,6 +30,8 @@ source: >-
 resolved_by:
 locked_by:
 locked_since:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # sports catalogue re-roll — corpus-scale finding

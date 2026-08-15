@@ -38,6 +38,9 @@ parent_epic: mtds_mdps_master
 priority: P3
 resolved_by:
 locked_by:
+execution_scope: local-only
+drift_direction: advance-code
+depends_on: []
 ---
 
 # MDPS adapter-protocol polars seam — mis-scoped for AO dispatch
