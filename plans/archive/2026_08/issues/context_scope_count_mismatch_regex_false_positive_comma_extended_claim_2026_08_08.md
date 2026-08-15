@@ -17,7 +17,7 @@ summary: >-
   instead -- which in this specific doc happens to be a quoted excerpt of a DIFFERENT doc's stale marker
   ("`context-scout 2026-08-01 (5 entries)`", quoted later in the same bullet's prose) -- producing claimed=5 instead of
   the correct answer (no confident claim / None). Verified via direct function calls, not by re-reading source alone.
-status: open
+status: archived
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -46,7 +46,7 @@ drift_direction: advance-process
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: unified-trading-pm@fd8c843533
 source: >-
   Found incidentally during the 2026-08-08 daily `/context-scout` sweep (context_scout_auditor, dispatch agt-acfb90,
   slot 6), Phase 0 inventory step, while triaging the run's 2 COUNT_MISMATCH-verdict docs before dispatching Phase 1
@@ -62,6 +62,11 @@ context_scope:
     /cursor-configs/skills/context-scout/SKILL.md,
   ]
 ---
+
+> **ARCHIVED 2026-08-15** — sole todo resolved. `_marker_claimed_count` hardened against window spillover
+> (comma-extended-claim regex + backtick-quoted-span exclusion); verified live against the corpus
+> (`context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md` now reads UP_TO_DATE, not COUNT_MISMATCH). See
+> Progress Log for full detail. `unified-trading-pm@fd8c843533`.
 
 # COUNT_MISMATCH false positive: comma-extended count claim + window spillover
 
@@ -113,7 +118,7 @@ cross-repo / SSOT contradiction / kill-switch / batch≠live -- does not apply h
 
 ## Todos
 
-- [ ] [SCRIPT] P3. **Harden `_marker_claimed_count` against window spillover.** Two independent, combinable fix
+- [x] ✅ [SCRIPT] P3. **Harden `_marker_claimed_count` against window spillover.** Two independent, combinable fix
       directions -- pick after weighing regression risk against the corpus's existing fixture suite (4 unit helpers + 4
       end-to-end fixtures per `context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md`'s Progress Log,
       2026-08-06 slot-11 entry): (a) extend `COUNT_RE` to also accept a comma-extended claim, e.g.
@@ -173,3 +178,16 @@ cross-repo / SSOT contradiction / kill-switch / batch≠live -- does not apply h
   structurally exempt from the finalize-plan-coverage rule (`check_finalize_plan_coverage.py` only globs
   `plans/active/*.md`, non-recursive), so no companion finalize plan authored.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.
+- **2026-08-15 (data_engineering, slot 23)**: shipped fix direction (a)+(b) combined — `COUNT_RE` now
+  `\((\d+)\s+entr(?:y|ies)\b` (accepts a comma-extended claim, no longer requires the closing paren immediately after
+  "entries"), and `_marker_claimed_count` skips any match landing inside a backtick-quoted span in its window (this
+  corpus's convention for citing another doc's marker text verbatim — the exact mechanism that produced the false
+  positive). A pure "narrow the window to the first `)`/`.`/newline" approach (direction (b) alone) was tried first and
+  rejected: this doc's own body has real parenthetical count claims that legitimately span a soft-wrapped newline
+  mid-sentence, and a naive first-`(`-only match broke a real, currently-passing marker elsewhere in this same doc (the
+  2026-08-09 marker above, whose real "(5 entries)" claim is NOT the first parenthetical in its bullet) — backtick-span
+  exclusion was the fix that handled both without regressing either. Added 1 unit test (`_marker_claimed_count`
+  reproducing this exact comma-extended + backtick-quoted-trap shape) + 1 end-to-end fixture. Full PM QG: 2039 passed,
+  17 skipped. Verified live: `context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md` now reads `UP_TO_DATE`
+  (was the confirmed COUNT_MISMATCH false positive) via a fresh `generate_context_scope_inventory.py --json` run against
+  the live corpus post-ship. Shipped unified-trading-pm@fd8c843533.
