@@ -98,6 +98,24 @@ worth fixing at the root rather than re-discovering per audit.
 Fix findings 1 and 2 as scoped code changes; investigate finding 3 as a one-off verification (may resolve to "already
 fine, this was a different code path" — do not assume it's the same bug as findings 1/2 without checking).
 
+## Finding 4 (added 2026-08-15, escalation agt-cf60fa) — a fully-converged catch-up shard reads 0→0 forever, not just once
+
+A backfill/catch-up VM class (e.g. `mdps-<asset_group>-<year>-*` from `launch-mdps-sharded-backfill.sh`) that has
+genuinely finished all real work for its window — everything either `captured` from an earlier run or honestly
+`expected_unattempted` (a pre-genesis data_type gap, now fixed for the dex_pool_swaps/defi/2022 case in
+`dp_vm_002_mdps_defi_2022_dex_pool_swaps_pregenesis_no_manifest_trace_2026_08_15.md`) — will still write ZERO rows to
+its OWN `_index/per_vm/{new-vm-name}.parquet` on every future dispatch, because a fully-fresh shard never gets far
+enough into the pipeline to write anything at all. `exit_code_fleet_monitor`'s captured-delta reads 0→0 for that run
+too, indistinguishable from a genuine silent failure, on EVERY future dispatch of that shard — not a one-time false
+positive like findings 1-3 above, but a permanent, recurring one for any catch-up shard that eventually fully converges.
+The detector currently has no way to ask "did this VM's TOTAL asset_group/date-range coverage (not just this VM's own
+per-VM shard) actually need anything new this run?" before concluding GONE_NO_CAPTURE.
+
+- [ ] [CODE] P3. Give `exit_code_fleet_monitor`'s DP-VM-002 check a way to recognize a fully-converged catch-up shard
+      (e.g. cross-check `check_shard_freshness`/the consolidated manifest for the VM's asset_group+date-range rather
+      than relying solely on the VM's own empty per-VM shard) so a genuinely-nothing-to-do run doesn't page CRITICAL
+      indistinguishably from a silent failure. Repo: deployment-service.
+
 ## Todos
 
 - [ ] [CODE] P3. Confirm whether `exit_code_fleet_monitor.py`'s `DP_VM_GONE_NO_CAPTURE` alert text's `"(N → M)"`
