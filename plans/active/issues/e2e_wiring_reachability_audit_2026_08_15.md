@@ -474,6 +474,56 @@ the `DELETED` statuses in UAC are for VMs and client-reporting, not fills. Zero 
       exchange position. Described as expected behaviour during the ruling but **not found in code** (zero OTC hits in
       `position/`) — either it lives elsewhere, or it is unbuilt and this is its todo.
 
+## AUDIT / IMMUTABILITY OF THE PRIVATE RECORD (operator ruling 2026-08-15)
+
+**Scope**: positions, trades, fills, orders — **and strategy instructions**, which the operator explicitly pulled into
+the same class. Instructions already encode what the system DECIDED (ML, market feed, everything upstream), so auditing
+them captures intent as well as outcome. Data-pipeline artefacts are explicitly NOT in this class.
+
+**Property wanted**: the RECORD is immutable and the ACTIONS on it are audited — **including attempts that did not
+succeed.** The operator's worked example: an order manager or a regulator must be able to see whether a cancel was
+attempted **while the order was in flight** versus **after the fill was confirmed**. Different facts, different
+liability.
+
+### What EXISTS (checked 2026-08-15 — do not rebuild)
+
+- `execution_service/utils/audit_log.py::persist_audit_log()` — persists to GCS as an **immutable JSONL blob** and
+  validates `EXECUTION_AUDIT` schema fields. The immutability primitive is real.
+- `ManualInstructionAuditLog` (`api/manual_schemas.py`) — a typed audit record.
+- Genuinely WIRED, not merely present: `api/manual_instruction_helpers.py:131` calls it.
+- `orders/oms.py` is the order-management surface; `api/evidence_router.py` exposes evidence; `instruction_lifecycle` is
+  a registered service contract (`registry/service_contract_map.py:98`).
+
+### GAP 1 — audit coverage is MANUAL-ONLY
+
+The only caller of `persist_audit_log` is the manual-instruction path. **Automated orders, fills, positions and strategy
+instructions do not route through it.** The immutable trail covers the rarest flow and not the routine one — the inverse
+of what the ruling wants.
+
+### GAP 2 — the canonical vocabulary cannot express an in-flight cancel
+
+Canonical `OrderStatus` (UAC `canonical/domain/execution/base.py:47`) is exactly:
+`PENDING · OPEN · PARTIALLY_FILLED · FILLED · CANCELLED · REJECTED · EXPIRED`.
+
+**There is no `PENDING_CANCEL`.** It exists only in EXTERNAL venue schemas (`external/fix/schemas.py:94,112`,
+`external/mexc`) — so we can PARSE a venue telling us a cancel is pending, but cannot RECORD that we attempted one. A
+cancel racing a fill collapses to `CANCELLED` or `FILLED` with no trace of the attempt, and the
+in-flight-vs-post-confirmation question is unanswerable from our own record.
+
+This is a VOCABULARY gap, not a storage gap — the immutable log would store the transition if the model could express
+it.
+
+- [ ] [AGENT] P0. **Extend audit coverage from manual-only to the whole private record** — orders, fills, positions AND
+      strategy instructions, through the existing `persist_audit_log` immutable path. Reuse the primitive; do not build
+      a second audit mechanism.
+- [ ] [AGENT] P0. **Add attempted-action states so an in-flight cancel is distinguishable from a post-confirmation
+      cancel**, and a REJECTED cancel is recorded as an attempt rather than vanishing. Either extend canonical
+      `OrderStatus` or add a parallel action-audit event — venue schemas already carry `PENDING_CANCEL`.
+- [ ] [AGENT] P0. **Audit the ACTION, not just the state** — actor/when/why for cancel, amend, manual booking, virtual
+      entry and soft-delete. Pairs with the MiFID todo: a delete is a status change PLUS an audited action record.
+- [ ] [AGENT] P1. **Prove each new audit call site's reachability** before claiming coverage — this doc exists because
+      components are complete and uncalled. Grep call sites, not imports.
+
 ### Artefact disclosure boundary (operator, 2026-08-15)
 
 The client receives **strategy-service code only**. The artefact must carry enough that they understand how
