@@ -280,6 +280,27 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Progress Log
 
+- **2026-08-15 (slot-30, data_engineering) — Prod full-history backfill: new launcher shipped, real OOM found+fixed,
+  real PROD VM launched + verified progressing (not yet complete — multi-hour job).** Scoped to the 5 landed EVM
+  oracle_prices pairs (AAVE_V3 rewards excluded, no handler yet; KAMINO-SOLANA excluded, see DESIGN follow-up below).
+  No VM launcher existed for `collect-oracle-prices` (the generic `launch-mtds-backfill-vm.sh` hardcodes
+  `--operation download`, a different CLI path than every prior done-when proof used) — authored + smoke-tested
+  `launch-mtds-oracle-prices-backfill-vm.sh` (39 real rows on a `--test-run` single-day VM), shipped
+  `deployment-service@823a36c41a`. The real full-range launch then OOM-killed almost immediately (exit 137, RSS
+  1.17GB→14.78GB / CPU 371% in <30s on e2-standard-4, single-shot no-chunk dispatch) — root cause NOT fully isolated
+  (driver concurrency confirmed serial; no eager range-wide enumeration found on a static read) — filed as its own P3
+  follow-up. Mitigated via a dedicated chunked `VM_TASK=oracle-prices-backfill` branch in `setup-data-pipeline-vm.sh`
+  (mirrors `cefi_coverage_chunk_loop.sh`, 60d/chunk, `[[VM_PROGRESS]]` resume checkpoints) + `e2-highmem-4` default,
+  shipped `deployment-service@278328bf80`, re-smoke-tested clean (no OOM through 5+ real days). Launched the real PROD
+  VM `mtds-oracle-prices-backfill` (2022-07-25→2026-08-15, 60d chunks, SPOT) — verified STARTED (serial-console boot
+  trace) + genuinely progressing (fresh `run.log`, real per-day captures, correct FLUID/MORPHO pre-genesis honest-
+  absence). **NOT complete** — ~25 chunks is multi-hour, couldn't be monitored to terminal state in one session; see
+  the monitoring follow-up todo above the backfill todo. Two secondary findings filed as their own follow-ups instead
+  of fixed inline: FLUID/MORPHO pre-genesis dates issue noisy-but-harmless real RPC calls instead of a clean skip; and
+  KAMINO-SOLANA/oracle_prices architecturally can't be historically backfilled at all (`target_date_str=today`
+  hardcoded). Files: `deployment-service/scripts/vm/launch-mtds-oracle-prices-backfill-vm.sh` (new),
+  `setup-data-pipeline-vm.sh`, `vm_prefix_registry.py`, `data_pipeline_monitors/launcher_registry.py`.
+
 - **2026-08-15 (DONE, slot-14, data_engineering) — VERIFY-then-reconcile todo (ROCKETPOOL-ETHEREUM/oracle_prices,
   SOLBLAZE-SOLANA/oracle_prices) COMPLETE, resolved roll-back for both.** `unified-api-contracts@d27d29f0c9`
   (`origin/live-defi-rollout`, QG green, post-push ancestry verified). Picked up from slot-12's in-progress checkpoint
@@ -889,13 +910,41 @@ just belongs on a different layer than instrument_type does, and conflating the 
       now-rolled-back ROCKETPOOL-ETHEREUM/oracle_prices pair as a real drift example) to a `monkeypatch`-injected
       synthetic violation, since no real drift pair remains to exercise the discrimination path. 6/6 tests pass, QG
       green. (repo: unified-api-contracts)
-- [ ] [DATA] P2. **Prod full-history backfill of the newly-wired pairs** (gated on the wire-capture todos above
-      landing). Once each pair's capture path is proven against the `-test-` bucket, run the prod full-history backfill
-      so the pairs show real `captured` rows in the live prod manifest (the original monolithic todo's ultimate
-      done-when). Safe- idempotent justification for the VM launch: DeFi backfills are SPOT + idempotent +
-      resumable-from-measured-progress (SSOT `/codex/05-infrastructure/spot-vms-for-backfill.md`) — re-running never
-      double-writes. Done-when: each newly- wired `(venue, data_type)` pair has real `captured` rows in the prod defi
-      availability index. (repo: market-tick-data-service)
+- [ ] [DATA] P2. **Prod full-history backfill of the newly-wired pairs — IN PROGRESS, launched 2026-08-15.** Scoped to
+      the 5 landed EVM pairs only (SPARK/COMPOUND_V3/MORPHO/RADIANT/FLUID) — AAVE_V3 rewards still has no handler;
+      ROCKETPOOL/SOLBLAZE resolved ROLL-BACK (0 real rows, never backfill candidates); KAMINO-SOLANA excluded, see the
+      DESIGN follow-up below. `collect-oracle-prices` isn't venue-scoped, so one VM covers all 5. Full launch trail
+      (new launcher, an OOM found+fixed, the real VM's launch+verification) is in Progress Log 2026-08-15. Done-when
+      unchanged (`captured` rows across full history in the prod defi index) — **not yet verified**, see the
+      monitoring follow-up below (multi-hour job, couldn't complete in one session). (repo: market-tick-data-service,
+      deployment-service)
+- [ ] [DATA] P2. **Verify `mtds-oracle-prices-backfill`'s run completed + confirm prod captured rows** (follow-up to
+      the backfill above). VM launched 2026-08-15 ~07:22 UTC, 2022-07-25→2026-08-15, 60d chunks on e2-highmem-4, SPOT;
+      verified STARTED + progressing but not watched to completion. Check
+      `gs://deployment-scripts-central-element-323112/vm-logs/mtds-oracle-prices-backfill/run.log` for `loop complete`
+      vs `CHUNK_FAILED`/`DEPLOYMENT_FAILED` (resumable via its own `[[VM_PROGRESS]]` checkpoints if it needs a
+      relaunch). Once terminal, confirm real prod `captured` rows per venue across full history (not just today) —
+      that's this doc's actual done-when. (repo: market-tick-data-service)
+- [ ] [DESIGN] P2. **KAMINO-SOLANA/oracle_prices has no historical-backfill path — needs a design decision.** Found
+      2026-08-15: `solana_defi_handler.py::_kamino_oracle_with_date` hardcodes `target_date_str=today` — only ever
+      captures TODAY's price, coverage can only accumulate forward one day at a time via the daily cron, never a
+      backfill VM. Decide: accept forward-only-permanent (same shape as the ORCA/RAYDIUM Solana REST-snapshot
+      venues), or investigate a genuine historical read path if Kamino's oracle exposes one. Not this doc's call
+      unilaterally. (repo: market-tick-data-service)
+- [ ] [CODE] P3. **Quiet the FLUID/MORPHO pre-genesis noisy RPC-call WARNINGs in `collect-oracle-prices`.** Found
+      2026-08-15: dates before FLUID's/MORPHO's own earliest-listing-date constants still trigger real on-chain RPC
+      calls (logged as a decode-error WARNING) before falling back to the correct "0 records" honest-absence outcome —
+      each branch's own earliest-date gate seems to only short-circuit when that venue is targeted directly, not
+      inside the aggregate multi-branch call. Cosmetic (outcome is already honest) but real wasted RPC calls at
+      full-history scale. (repo: market-tick-data-service)
+- [ ] [CODE] P3. **Root-cause the `collect-oracle-prices` single-shot full-range OOM** (found + mitigated 2026-08-15,
+      not root-caused). A single CLI call over 2022-07-25→2026-08-15 OOM-killed in <30s (exit 137, RSS
+      1.17GB→14.78GB, CPU 371.5% on e2-standard-4) — too fast to be genuine per-day work (~8s/day measured). Ruled
+      out: batch-date driver defaults serial (`_drive_serial`, not concurrent); no eager range-wide enumeration found
+      on a static handler read. Mitigated, not explained, via chunking + `e2-highmem-4`
+      (`deployment-service@278328bf80`). High CPU alongside the RSS spike is the strongest unchased clue — some
+      library in the call chain may scale thread/process concurrency to the requested range, not actual per-day work.
+      (repo: market-tick-data-service)
 - [ ] [CODE] P3. **Add `if __name__ == "__main__":` guard to `market_tick_data_service/cli/main.py`** — found 2026-08-12
       while running the COMPOUND_V3 done-when: `python -m market_tick_data_service.cli.main` imports the module
       (printing 2 config lines from UTL DomainValidationService) and exits 0 running nothing, because main.py has no
