@@ -284,10 +284,17 @@ separate alerting-code defect this doc needs to duplicate-track.
       dispatch path — confirmed 2026-08-15 that NEITHER currently uses any zone-fallback/rotation despite the capability
       already existing elsewhere in the codebase; this is an adoption gap, not a build-from-scratch gap. Second
       independent multi-day `asia-northeast1-c` storm in <2 weeks makes the case for adoption stronger than a one-off.
-- [ ] [OPERATOR] P2. Decide the FULL scope of standing zone-diversification for TradFi OHLCV specifically (which zones
-      to rotate through, whether egress-cost-neutral same-region rotation is sufficient or cross-region is ever
-      warranted, and whether other launcher families beyond CME OHLCV should adopt it too) — per
-      `spot-vms-for-backfill.md`, the tradeoff itself is an operator call; the mechanical wiring (todo above) is not.
+      **Scope per operator instruction (below)**: rotate through `asia-northeast1-a`/`-b`/`-c` only (same-region, no
+      cross-region); TradFi CME OHLCV launcher family only, not a fleet-wide adoption.
+- [x] [SCRIPT] P2. Decide the FULL scope of standing zone-diversification for TradFi OHLCV specifically — **RESOLVED
+      2026-08-15, direct operator instruction delivered via AO task dispatch
+      `tradfi_bf_cme_ohlcv_asia_northeast1_c_preemption_thrash-69ae9511a358--ruling`** ("not complicated — loop through
+      a,b,c zones on same region only"): keep it simple — rotate through zones `asia-northeast1-a`/`-b`/`-c` (the SAME
+      region as today's hardcoded `asia-northeast1-c` default) only; no cross-region rotation. Scope stays the TradFi
+      CME OHLCV launcher family per this doc's original finding — the instruction did not extend adoption to other
+      launcher families. This decision is now folded into the P2 SCRIPT todo above ("Wire the existing round-robin
+      zone-rotation capability...") as its concrete zone list — that todo's implementer no longer needs a separate
+      operator call to proceed.
 
 ## Progress Log
 
@@ -326,3 +333,13 @@ liquidations bucket this same session, in case useful precedent —
 `unified_trading_library.manifest_consolidator.consolidate(bucket, force=True)` is a safe, idempotent, already-tested
 entrypoint for exactly this kind of "is my recent progress actually visible to the freshness check yet" verification,
 worth keeping in mind for future TradFi debugging too.
+
+### 2026-08-15 — operator instruction applied to the zone-diversification-scope todo
+
+Direct operator instruction delivered via AO task dispatch
+`tradfi_bf_cme_ohlcv_asia_northeast1_c_preemption_thrash-69ae9511a358--ruling` on the `[OPERATOR]` scope-decision todo:
+"not complicated — loop through a,b,c zones on same region only." Applied: retagged that todo `[SCRIPT]` and flipped it
+`[x]` (the decision itself is now fully captured in the doc, so nothing about it re-triggers dispatch); folded the
+concrete scope (rotate `asia-northeast1-a`/`-b`/`-c`, same region only, no cross-region, TradFi CME OHLCV launcher
+family only — not extended to other launcher families) into the still-open P2 SCRIPT wiring todo above so its future
+implementer has the exact zone list without needing a fresh operator call.
