@@ -275,32 +275,32 @@ source: >-
       `plans/active/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`
 
       **BLOCKED-INFRA 2026-08-15 (slot-6, backend_engineer) — attempted 3x, done_definition not met.** Ran
-          `features-service/scripts/pipeline_e2e_check.py --day 2026-08-14 --asset-group TRADFI --family volatility
-          --legs benchmark --benchmark-days 7` (the documented relaunch shape for this benchmark, per
-          `_vm_name`/`_run_benchmark_leg`) three times. Every attempt's created VM (`features-e2e-tradfi-*`)
-          self-deleted within ~250-320s with ZERO objects written to `vm-logs/<vm>/` (confirmed: `run.log` and
-          `EXIT_STATUS` both `None` via `gcs_describe_object`, instance itself `NOT FOUND` on describe) — 0 throughput
-          captured, not a repeat of the original `_resolve_spot_perp` bug (that fix is confirmed shipped; this VM never
-          got far enough to even run features_service). A manual tarball republish
-          (`create-code-tarballs.sh --include features-service --include deployment-service --force`, including
-          `vm/setup-data-pipeline-vm.sh`) between attempts 2 and 3 did not change the outcome. Filed
-          `plans/active/issues/features_e2e_test_run_vm_self_deletes_no_log_2026_08_15.md` (P1, `assigned_vm: planning`,
-          `assigned_role: infra`) with the leading unconfirmed hypothesis (the test-run launch shape's `uts-test-sa`
-          runtime SA may lack read/write access to the code bucket's `vm/`/`vm-logs/` paths) and the concrete follow-up
-          todos to root-cause + fix + re-relaunch. Leaving this checkbox unchecked rather than marking done on a
-          0-throughput result or retrying indefinitely (3 real billable VM launches already spent). This todo becomes
-          actionable again once that issue doc's infra todos land.
+                  `features-service/scripts/pipeline_e2e_check.py --day 2026-08-14 --asset-group TRADFI --family volatility
+                  --legs benchmark --benchmark-days 7` (the documented relaunch shape for this benchmark, per
+                  `_vm_name`/`_run_benchmark_leg`) three times. Every attempt's created VM (`features-e2e-tradfi-*`)
+                  self-deleted within ~250-320s with ZERO objects written to `vm-logs/<vm>/` (confirmed: `run.log` and
+                  `EXIT_STATUS` both `None` via `gcs_describe_object`, instance itself `NOT FOUND` on describe) — 0 throughput
+                  captured, not a repeat of the original `_resolve_spot_perp` bug (that fix is confirmed shipped; this VM never
+                  got far enough to even run features_service). A manual tarball republish
+                  (`create-code-tarballs.sh --include features-service --include deployment-service --force`, including
+                  `vm/setup-data-pipeline-vm.sh`) between attempts 2 and 3 did not change the outcome. Filed
+                  `plans/active/issues/features_e2e_test_run_vm_self_deletes_no_log_2026_08_15.md` (P1, `assigned_vm: planning`,
+                  `assigned_role: infra`) with the leading unconfirmed hypothesis (the test-run launch shape's `uts-test-sa`
+                  runtime SA may lack read/write access to the code bucket's `vm/`/`vm-logs/` paths) and the concrete follow-up
+                  todos to root-cause + fix + re-relaunch. Leaving this checkbox unchecked rather than marking done on a
+                  0-throughput result or retrying indefinitely (3 real billable VM launches already spent). This todo becomes
+                  actionable again once that issue doc's infra todos land.
 
-          **UPDATE 2026-08-15 (slot-6, infra craft) — infra blocker RESOLVED, still blocked (new cause: data
-          availability).** The `uts-test-sa` IAM gap was confirmed and fixed (see
-          `features_e2e_test_run_vm_self_deletes_no_log_2026_08_15.md` todo 1, DONE, live-verified: a fresh
-          `features-e2e-tradfi-20260815-100817-679e08` launch wrote a real `run.log` (27,656 bytes) and
-          `EXIT_STATUS=0` — the VM no longer self-deletes silently). **But that same verification run, using this
-          todo's exact relaunch command/window, completed `0/11` feature groups** — there is no captured VX
-          (VIX-futures) data anywhere in `2026-08-07..2026-08-14`, so every group correctly refuses to write
-          (honest-absence discipline, not a bug). Still 0 real throughput captured; checkbox stays unchecked. Next
-          attempt must NOT reuse this window — check the manifest for a window with confirmed VX captures first (or
-          confirm/fix VX capture currency if it's stalled), per the amended `[DATA] P1` todo in the issue doc above.
+                  **UPDATE 2026-08-15 (slot-6, infra craft) — infra blocker RESOLVED, still blocked (new cause: data
+                  availability).** The `uts-test-sa` IAM gap was confirmed and fixed (see
+                  `features_e2e_test_run_vm_self_deletes_no_log_2026_08_15.md` todo 1, DONE, live-verified: a fresh
+                  `features-e2e-tradfi-20260815-100817-679e08` launch wrote a real `run.log` (27,656 bytes) and
+                  `EXIT_STATUS=0` — the VM no longer self-deletes silently). **But that same verification run, using this
+                  todo's exact relaunch command/window, completed `0/11` feature groups** — there is no captured VX
+                  (VIX-futures) data anywhere in `2026-08-07..2026-08-14`, so every group correctly refuses to write
+                  (honest-absence discipline, not a bug). Still 0 real throughput captured; checkbox stays unchecked. Next
+                  attempt must NOT reuse this window — check the manifest for a window with confirmed VX captures first (or
+                  confirm/fix VX capture currency if it's stalled), per the amended `[DATA] P1` todo in the issue doc above.
 
 - [x] ✅ [CODE] P2. Todo 3: reconcile BASE_ASSET/manifest underlying string-naming drift if found to cause accounting
       issues Source: `plans/active/issues/tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md`
@@ -364,14 +364,14 @@ source: >-
               **Manifest-counted canonical rows per MVP cell** — bounded columnar query
               (`read_availability_index(columns=[...])`, wrapped in `run-bounded-analysis.sh`, no whole-corpus walk) against
               the live PROD `market-data-tick-tradfi` availability_index:
-                                                              | MVP cell | total rows | captured | attempted_failed | verdict |
-                                                              |---|---|---|---|---|
-                                                              | CME:ohlcv_1m (ES/MES fut+opt, CME crypto fut, Treasury fut) | 1,759,450 | 1,532,443 (87.1%) | 23,467 (1.3%) | healthy |
-                                                              | NASDAQ:ohlcv_1m (delta-one equities) | 1,399,404 | 313,758 (22.4%; rest mostly `empty_confirmed` honest-absence) | 3,990 (0.3%) | healthy |
-                                                              | NYSE:ohlcv_1m (delta-one equities) | 3,135,515 | 2,498,394 (79.7%) | 23,089 (0.7%) | healthy |
-                                                              | CBOE:ohlcv_24h (Treasury yields) | 18,731 | 7,977 | 7,286 (38.9%) | **see below** |
-                                                              | FX:ohlcv_24h (daily KRW) | 7,446 | 3,591 | 1,976 (26.5%) | **see below** |
-                                                              | ICE:ohlcv_24h (daily DXY) | 15,499 | 1,901 | 11,667 (75.3%) | **see below** |
+                                                                      | MVP cell | total rows | captured | attempted_failed | verdict |
+                                                                      |---|---|---|---|---|
+                                                                      | CME:ohlcv_1m (ES/MES fut+opt, CME crypto fut, Treasury fut) | 1,759,450 | 1,532,443 (87.1%) | 23,467 (1.3%) | healthy |
+                                                                      | NASDAQ:ohlcv_1m (delta-one equities) | 1,399,404 | 313,758 (22.4%; rest mostly `empty_confirmed` honest-absence) | 3,990 (0.3%) | healthy |
+                                                                      | NYSE:ohlcv_1m (delta-one equities) | 3,135,515 | 2,498,394 (79.7%) | 23,089 (0.7%) | healthy |
+                                                                      | CBOE:ohlcv_24h (Treasury yields) | 18,731 | 7,977 | 7,286 (38.9%) | **see below** |
+                                                                      | FX:ohlcv_24h (daily KRW) | 7,446 | 3,591 | 1,976 (26.5%) | **see below** |
+                                                                      | ICE:ohlcv_24h (daily DXY) | 15,499 | 1,901 | 11,667 (75.3%) | **see below** |
 
               The 3 Yahoo-daily cells' high `attempted_failed` fractions looked alarming but are NOT real gaps — a
               captured-vs-attempted_failed date-overlap check shows CBOE 100%, FX 99.3%, ICE 97.6% of `attempted_failed`
