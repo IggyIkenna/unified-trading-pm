@@ -120,25 +120,56 @@ committed, so there is nothing to `git show`/reflog-recover.
 
 ## Recommended decision
 
-Root-cause the quarantine-and-restore code path (search `scripts/dev/safe-doc-push.sh` for "extreme" /
+**UPDATE 2026-08-15 (slot-19): the leading hypothesis below (quarantine-and-restore path) is REFUTED by
+reproduction — see Progress Log. Left verbatim for provenance; do not root-cause against it.**
+
+~~Root-cause the quarantine-and-restore code path (search `scripts/dev/safe-doc-push.sh` for "extreme" /
 `autostash_guard_bound_backlog` / `autostash_guard_quarantine_stale_pop`) for how it re-extracts specific `--files`
 paths from the quarantine stash after the pull. The leading hypothesis: it likely does something equivalent to
 `git checkout stash@{N} -- <path>` per named file, which correctly restores a path with CONTENT in the stash snapshot
 but has no defined behavior (or a silently-swallowed error) for a path that is supposed to be ABSENT in that same
 snapshot (the old side of an already-`git mv`'d rename) — the isolated-worktree mode's `2026-08-10` fix for the
 structurally identical "deleted file has nothing to copy" problem (per the archival SSOT) may not have been ported to
-this quarantine-restore path.
+this quarantine-restore path.~~
+
+**Actual root cause (confirmed by reproduction, 2026-08-15): the shared-index path's `git add -- "${FILES[@]}"`
+call (safe-doc-push.sh, the `for attempt in ... git add -- "${FILES[@]}"` retry loop) fails on the OLD side of any
+`--files`-named rename that the CALLER already staged via `git mv` before invoking this script — independent of
+stash-pile size, autostash, or the extreme-quarantine branch entirely.** `git mv old new` removes `old` from the
+index outright (folded into the new path's R100 rename pair) — it is not "tracked but missing from the working
+tree" (the case `git add -- <path>`'s deletion-staging behaviour, and this script's own `reassert_renames` comment,
+correctly handle), it has NO index entry at all. Naming that already-gone path in `--files` and calling
+`git add -- "$path"` on it is what produces `fatal: pathspec '<old>' did not match any files`, identically on every
+one of the 6 retry attempts (a deterministic content shape, not a transient race, so the retry loop can never
+converge). The "24 entries is extreme" quarantine log line in the original report was a real but INCIDENTAL
+co-occurrence (that checkout already carried 24+ unrelated stash entries), not the trigger — see Progress Log for a
+0-stash-entry control repro that fails identically. Isolated-worktree mode (the default off the AO VM) does not hit
+this: its copy loop starts from a FRESH worktree checked out at `origin/$BRANCH` (where the old path is still a
+plain tracked file, not yet mv'd), so `rm -f`-ing it there and then `git add`-ing it genuinely IS the
+tracked-but-missing shape.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Reproduce in an isolated scratch repo (per this workspace's established pattern for verifying
+- [x] [SCRIPT] P1. Reproduce in an isolated scratch repo (per this workspace's established pattern for verifying
       `safe-doc-push.sh` fixes, e.g. `check_create_only_archive_commits.py`'s own regression coverage): seed 24+ stash
       entries, `git mv` a file, run `safe-doc-push.sh --files "<old> <new>"`, confirm the same content-loss
-      reproduces. Repo: unified-trading-pm.
-- [ ] [SCRIPT] P1. Fix the quarantine-and-restore path so a named `--files` entry that is the OLD (now-absent) side of
-      an already-staged rename is restored as a tracked deletion (not silently dropped), mirroring the 2026-08-10
-      isolated-worktree fix's "propagate deletions" logic. Add a regression test covering this exact shape (rename +
-      extreme stash pile). Repo: unified-trading-pm.
+      reproduces. Repo: unified-trading-pm. — ✅ 2026-08-15 (slot-19): reproduced byte-for-byte (identical
+      "🛑 10 entries is extreme — quarantining..." log line, identical
+      `fatal: pathspec 'plans/active/<old>.md' did not match any files` repeated across all 6/6 attempts, identical
+      "Exhausted 6 attempts" exit) via new `scripts/dev/repro-safe-doc-push-extreme-stash-rename-drop.sh`. Also ran a
+      0-stash-entry control (no extreme pile at all, same `git mv` + `--files "<old> <new>"` shape) — it fails
+      IDENTICALLY, which falsifies the quarantine-path hypothesis and pins the true mechanism to the shared-index
+      `git add -- "${FILES[@]}"` call itself (see corrected Recommended decision above). Isolated-worktree mode
+      (`SDP_ISOLATED=1`, the AO-VM-inapplicable laptop default) does NOT reproduce — lands cleanly, per its own
+      code path already handling this shape correctly.
+- [ ] [SCRIPT] P1. Fix `safe-doc-push.sh`'s shared-index `git add -- "${FILES[@]}"` step (around the retry loop,
+      `scripts/dev/safe-doc-push.sh`) so a named `--files` entry that is the OLD side of an already-`git mv`'d
+      rename (no index entry, no disk file — NOT the "tracked but missing" shape `reassert_renames`/the deletion
+      comment at line ~976 already handle) is skipped from the explicit `git add` call rather than passed to it
+      verbatim, mirroring the isolated-worktree copy loop's existing deletion-propagation branch. Add a regression
+      test covering this exact shape at LOW stash-pile size too (the extreme-quarantine framing was a red herring —
+      don't gate the fix or its test on a large stash pile). `scripts/dev/repro-safe-doc-push-extreme-stash-rename-drop.sh`
+      (this session) is a ready-made repro harness for verifying the fix. Repo: unified-trading-pm.
 - [ ] [SCRIPT] P2. Once fixed, consider lowering the "24 entries is extreme" bar or adding a lighter-weight
       protect-and-restore path that doesn't require a full stash round-trip for the common case (few named files,
       most of the pile pre-existing and unrelated) — the current design pays the highest-risk code path exactly when
@@ -160,3 +191,27 @@ this quarantine-restore path.
   not merely wrapper-invoked) instead of the wrapper script. Did not attempt to fix the script itself this session
   (out of this task's scope) or bulk-drop the stash pile (risk of destroying genuine foreign WIP without individual
   review — left as its own P3 todo above).
+- **2026-08-15 (slot-19, infra)**: Reproduced todo 1 in an isolated scratch bare-repo + 2 worker clones (new
+  `scripts/dev/repro-safe-doc-push-extreme-stash-rename-drop.sh`, mirrors the established
+  `repro-safe-doc-push-stale-local-clobber.sh` pattern). Seeded 10 stash entries matching
+  `autostash_guard_bound_backlog`'s own detection regex (its "extreme" bar is `>=10`, not literally 24 — the
+  original report's 24 was this checkout's accumulated total, not a threshold), `git mv`'d a plan from
+  `plans/active/` to `plans/archive/2026_08/`, bundled one unrelated sibling-doc edit, and ran
+  `safe-doc-push.sh --files "<old> <new> <sibling>"`. **Confirmed byte-for-byte**: same "🛑 N entries is extreme"
+  line, same `fatal: pathspec '<old-path>' did not match any files` on every one of 6/6 attempts, same "Exhausted 6
+  attempts" terminal failure; ground-truth check on the bare origin (not the script's own claims) confirmed the new
+  path never landed and the old path was still present — a genuine drop, not merely a reported one. Then ran a
+  **0-stash-entry control** (identical `git mv` + `--files` shape, no pile at all, no quarantine branch eligible)
+  and it failed IDENTICALLY — this falsifies the issue's original "quarantine-and-restore path" hypothesis. Traced
+  the real mechanism to `safe-doc-push.sh`'s shared-index retry loop's `git add -- "${FILES[@]}"` call: a `git mv`
+  removes the OLD path from the index entirely (folded into the destination's R100 pair), so it is a different
+  shape from the "tracked but missing" case the script's own `reassert_renames`/line-~976 deletion comment already
+  handles correctly — `git add` on a path with no index entry and no disk file is a hard, deterministic
+  `fatal: pathspec ... did not match any files`, identical on every retry (matches `commit_failure_is_retriable`'s
+  own framing of a deterministic-vs-transient failure, just one step earlier, at `git add` rather than
+  `git commit`). Isolated-worktree mode (`SDP_ISOLATED=1`) does NOT reproduce (confirmed, same harness) because its
+  copy loop starts from a fresh `origin/$BRANCH` checkout where the old path is still a genuinely-tracked file at
+  that point, so the deletion-propagation branch it already has is the correct shape there. Corrected the
+  Recommended decision section + reworded todo 2 accordingly (struck through, not deleted, for provenance); did not
+  attempt the fix itself (todo 2, separate scope/todo). Left the repro script in place (`Delete-when: NA`, keep
+  until todo 2 lands and is verified against it) as a ready-made regression harness for whoever picks up todo 2.
