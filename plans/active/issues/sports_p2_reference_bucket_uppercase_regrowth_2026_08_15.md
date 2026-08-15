@@ -106,3 +106,20 @@ confirm the writer stopped.
 - [ ] [DATA] P1. Re-stamp the 8,078 residual uppercase reference-bucket rows (manifest-only relabel) once the writer fix
       is confirmed live; re-run `census_sports_19token_lowercase_scope_2026_08_14.py` (or its successor) filtered on
       `attempted_at` after the fix deploy time to confirm 0 new uppercase rows.
+
+## Progress Log
+
+- 2026-08-15 (slot-16): Dispatched the P1 todo above. Independently root-caused P0 in parallel with slot-16 — same 3 of
+  their 4 sites (`sports_reference_core.py::_emit_empty_gap_for_league`'s early-return branch = 8,060 rows;
+  `sports_fixtures.py`'s bare `_orch.FIXTURES_OUTCOMES` constant = 12 rows; `process_enrichment.py`'s blanket
+  `entity_name.upper()` fallback, not yet observed in the regrowth but a real gap) — confirms slot-10's
+  `instruments-service@b872799efa` is correct; did not find their 4th site
+  (`process_preflight.py::_enrichment_only_fast_path`) myself. Discarded my duplicate local edits and fast-forwarded
+  onto their commit rather than shipping a conflicting version. P1 itself is NOT started: "confirmed live" is the
+  load-bearing phrase here — the 2026-08-14 restamp was undone because it followed the code fix onto LDR by only ~2
+  minutes, before the running service had actually picked it up. Restamping again on the same premature timing would
+  reproduce that exact mistake. `instruments-service@b872799efa` needs to (a) promote LDR→main, (b) actually redeploy
+  the live service, and (c) complete at least one subsequent write cycle, before a re-run of
+  `census_sports_19token_lowercase_scope_2026_08_14.py` can honestly confirm 0 new uppercase rows. None of that is
+  verifiable synchronously in one agent turn. Releasing P1 back to the queue (`GATED`, ~180 min) rather than restamping
+  now.
