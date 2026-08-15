@@ -220,7 +220,7 @@ Two independent angles, not mutually exclusive:
       re-run needs 1-2.5hrs VM wall-clock per prior sessions' measurements, disproportionate for one P2 CODE todo — see
       the still-open [DATA] P2 re-run todo above, which already tracks re-running DEFI once a fix lands).
 
-- [ ] [CODE] P1. **NEW (found 2026-08-15 slot 5).** DEFI's re-run (post-`d89f43488e` Phase-0 bound-read fix) STILL
+- [x] ✅ [CODE] P1. **NEW (found 2026-08-15 slot 5).** DEFI's re-run (post-`d89f43488e` Phase-0 bound-read fix) STILL
       OOM-killed (`EXIT_STATUS=137`) ~52s after `Phase-0 consolidation OK`, before any per-shard log line — the
       IDENTICAL symptom signature slot 27's fix targeted. Root cause is very likely that `read_availability_index`'s
       `filters=[("date", ">=", min_day)]` row-group pushdown does NOT actually bound memory for DeFi's specific
@@ -231,12 +231,17 @@ Two independent angles, not mutually exclusive:
       written incrementally by many concurrent per-shard jobs, like the doc's own `capture_status`/`data_type` example),
       the `filters=` bound `_captured_days_by_cell` relies on
       (`market-tick-data-service/scripts/pipeline_e2e_check.py:1188`) silently degrades back to a near-full-index
-      decode. Verify by inspecting the actual row-group `date` clustering of DeFi's consolidated index (e.g.
-      `pyarrow.parquet.ParquetFile(...).metadata` per-row-group min/max stats for the `date` column) — if unclustered,
-      either re-sort/re-write the consolidated index with `date` as the primary row-group sort key, or switch this
-      specific call to a genuinely bounded read path (e.g. a targeted per-day GCS listing instead of a manifest-index
-      scan) rather than relying on pushdown that doesn't apply here. Re-run DEFI's `--asset-group DEFI` leg of the
-      [DATA] P2 todo above once fixed. (repos: market-tick-data-service, unified-trading-library)
+      decode. **CONFIRMED + FIXED 2026-08-15 (slot 29)**: DeFi's consolidated index is indeed not `date`-clustered per
+      row-group, so the `filters=` pushdown degraded to a near-full-index decode exactly as predicted. Fixed by
+      switching `_captured_days_by_cell`/`_resolve_shard_day` off the pushdown-reliant path onto a genuinely bounded
+      STREAMED reader (`read_captured_days_by_cell`, new in UTL) that walks the index one row-group batch at a time
+      instead of materializing the whole decode in memory — this is the "switch to a genuinely bounded read path" option
+      named above, since the index's row-group layout can't be relied on to cooperate with column-filter pushdown. 1 new
+      regression test (`test_pipeline_e2e_shard_selection.py`). Full `quality-gates.sh` green (10,837 passed / 28
+      skipped / 1 xpassed); verified ancestor of `origin/live-defi-rollout`. **Live DEFI re-run to confirm NOT attempted
+      this session** — re-run DEFI's `--asset-group DEFI` leg of the [DATA] P2 todo above to close that todo out; this
+      todo is closed on the code-fix + regression-test evidence, not a live re-run. (repos: market-tick-data-service,
+      unified-trading-library) — unified-trading-library@11f1ebd168 + market-tick-data-service@2e34656a97.
 
 ## Progress Log
 
