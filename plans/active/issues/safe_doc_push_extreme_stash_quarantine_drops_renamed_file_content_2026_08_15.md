@@ -170,7 +170,7 @@ tracked-but-missing shape.
       test covering this exact shape at LOW stash-pile size too (the extreme-quarantine framing was a red herring —
       don't gate the fix or its test on a large stash pile). `scripts/dev/repro-safe-doc-push-extreme-stash-rename-drop.sh`
       (this session) is a ready-made repro harness for verifying the fix. Repo: unified-trading-pm. —
-      unified-trading-pm@60fa240ecc (slot-14, infra): implemented as a new `stage_named_files()` that stages per-file
+      unified-trading-pm@7e03ff2f01 (slot-14, infra): implemented as a new `stage_named_files()` that stages per-file
       and checks the INDEX directly for the missing-from-disk case (needs-staging vs already-staged vs a genuine
       caller error) rather than a single combined `git add`, plus a companion fix re-deriving `KNOWN_RENAME_SOURCES`
       from `FILES` directly (absent-from-disk + present-in-HEAD) instead of an already-staged `-M` diff pair, which
