@@ -119,7 +119,11 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
 ## Todos
 
 - [ ] [OPERATOR] P1. xAI account + API key for both Grok models (best/flagship + 4.1 Fast) — credential-ask, no existing
-      access. Done when: a real key exists and is handed to an agent session for registration.
+      access. **Staged start (operator ruling, 2026-08-15):** Grok has no subscription tiers to stage through (pure
+      metered pay-per-token) — fund a small initial balance (~$10-20) rather than a large top-up, and default test
+      dispatch to the cheap `grok-4.1-fast` model, reserving the flagship for occasional comparison calls, mirroring the
+      cheap-tier-first intent applied to GLM/Codex via balance size and routing weight instead of a tier choice. Done
+      when: a real key exists and is handed to an agent session for registration.
 - [ ] [OPERATOR] P1. Confirm which of the 3 already-set-up GCP/AI-Studio projects map to which quota profile — the
       operator-supplied numbers in this plan's Why section are one profile; confirm all 3 projects share it or supply
       per-project numbers if they differ, since assuming uniformity across projects would be a real bug. Hand over the 3
@@ -249,6 +253,16 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
     "Done when" bar** — every one requires a REAL Grok/Gemini completion, balance fetch, or live throttle proof, all
     structurally impossible without credentials. Checkboxes below stay unflipped on purpose. Todo 143 (tool-use
     translation smoke test) is NOT addressed at all this session — LiteLLM itself was only configured, never run.
+
+- **2026-08-15 (later) — staged cheap-tier-first signup ruling (operator), applied where it maps.** Same
+  reconciliation-technique-reuse ruling applied to the sibling GLM/Codex plans (start cheap, validate, upgrade with no
+  code change) — doesn't map onto a tier choice here since **Grok has no subscription tiers** (pure metered
+  pay-per-token; confirmed this session's earlier research) and **Gemini is already free-tier by design** (this plan's
+  own non-goal). Grok's todo updated to fund a small initial balance
+  (~$10-20, not a large top-up) and default test
+  traffic to `grok-4.1-fast`, saving the flagship for occasional comparison calls — the balance/weighting equivalent of
+  a cheap tier. Gemini needs no change: $0
+  free tier already IS the cheap starting rung.
 
 ## Context scout
 

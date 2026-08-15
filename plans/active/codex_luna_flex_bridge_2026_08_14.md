@@ -3,8 +3,9 @@ doc_type: plan
 title: Codex/Luna bridge — ChatGPT Pro subscription as an Anthropic-compatible AO provider
 summary:
   Bridge Claude Code's Anthropic Messages protocol to OpenAI's Codex App Server (JSON-RPC/SDK), authenticated via a
-  $200/mo ChatGPT Pro subscription, so AO can dispatch sonnet-tier fallback work to Luna (GPT-5.6) while every
-  skill/hook/CLAUDE.md stays untouched — the harness never knows it isn't talking to Claude.
+  ChatGPT subscription (staged start — Plus $20/mo, upgrading to Pro once validated), so AO can dispatch sonnet-tier
+  fallback work to Luna (GPT-5.6) while every skill/hook/CLAUDE.md stays untouched — the harness never knows it isn't
+  talking to Claude.
 status: active
 nature: process
 asset_group: [ao]
@@ -54,13 +55,23 @@ context_scope:
 ## Why
 
 Operator decision (interactive session, 2026-08-14): add OpenAI's Luna (GPT-5.6) as a fourth sonnet-tier fallback
-provider, but billed via a **$200/mo ChatGPT Pro subscription** (Codex entitlement) rather than metered API — OpenAI
-does not expose that subscription as a generic Anthropic- or OpenAI-compatible REST endpoint; it's consumed through the
-**Codex App Server / SDK** (stateful JSON-RPC thread/turn model, authenticated via `~/.codex/auth.json`). Standing
-requirement, restated multiple times this session: Claude Code's harness — CLAUDE.md, skills, hooks, slash commands —
-must not be reengineered for any new provider; every provider must present as if it's just another Claude account.
-DeepSeek and GLM (see the sibling plan) achieve this because their vendors ship a native Anthropic-compatible endpoint.
-**Codex has no such endpoint** — this plan's core deliverable is a bespoke local bridge that provides one.
+provider, but billed via a **ChatGPT subscription** (Codex entitlement) rather than metered API — OpenAI does not expose
+that subscription as a generic Anthropic- or OpenAI-compatible REST endpoint; it's consumed through the **Codex App
+Server / SDK** (stateful JSON-RPC thread/turn model, authenticated via `~/.codex/auth.json`).
+
+**Staged tier start (operator ruling, 2026-08-15):** sign up for **ChatGPT Plus**
+($20/mo), not Pro, to validate the
+whole bridge (auth, translation, usage-capture, the mandatory smoke-test gate) before committing to Pro-tier spend —
+same staging pattern applied to GLM in the sibling plan, mirroring Claude Pro→Max. Codex CLI access exists on Plus
+already (OpenAI's own docs: Plus gets "a few focused coding sessions each week"; Pro multiplies that 5x or 20x
+depending on which Pro tier — sources disagree whether current Pro pricing is ~$100
+or ~$200/mo, verify live at upgrade time rather than trusting either number now). Same `codex login` →
+`~/.codex/auth.json` auth artifact on both tiers — upgrading later is a ChatGPT-account change only, no code change on
+our side beyond the quota-ceiling todo below. Standing requirement, restated multiple times this session: Claude Code's
+harness — CLAUDE.md, skills, hooks, slash commands — must not be reengineered for any new provider; every provider must
+present as if it's just another Claude account. DeepSeek and GLM (see the sibling plan) achieve this because their
+vendors ship a native Anthropic-compatible endpoint. **Codex has no such endpoint** — this plan's core deliverable is a
+bespoke local bridge that provides one.
 
 **Ruled out this session**: xAI's SuperGrok+OpenCode subscription integration (a DIFFERENT open-source coding harness,
 not an API facade — bridging into it would mean running a second, competing agent harness, which conflicts with the
@@ -113,14 +124,19 @@ template, minus the third-party dependency).
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Complete ChatGPT Pro ($200/mo) subscription signup and persist an authenticated
-      `~/.codex/auth.json` session on the orchestrator VM (`planning`) — a human ChatGPT OAuth flow, cannot be automated
-      by a worker. Done when: `~/.codex/auth.json` exists on the VM and a manual `codex` CLI smoke call succeeds against
-      it.
-- [ ] [OPERATOR] P1. Name which existing Claude seat(s) to shut down to offset the new $200/mo spend — genuine
-      business/value judgment with no data-derivable answer (real seat list isn't visible from this checkout; the
-      committed `accounts.mock.json` is example-only). Done when: the seat(s) are named and the corresponding
-      `accounts.json` entries are removed/disabled.
+- [ ] [OPERATOR] P1. Complete **ChatGPT Plus** ($20/mo — staged start, not Pro; see the ruling above) subscription
+      signup and persist an authenticated `~/.codex/auth.json` session on the orchestrator VM (`planning`) — a human
+      ChatGPT OAuth flow, cannot be automated by a worker. Done when: `~/.codex/auth.json` exists on the VM and a manual
+      `codex` CLI smoke call succeeds against it.
+- [ ] [OPERATOR] P3. Upgrade ChatGPT Plus → Pro once the bridge is validated (smoke-test gate passed, real dispatch
+      volume observed) and the operator decides to scale. Done when: the ChatGPT account shows Pro active and the quota
+      tracking todo's ceiling numbers are remeasured against the new tier — same auth artifact, no other code change
+      expected.
+- [ ] [OPERATOR] P2. Name which existing Claude seat(s), if any, to shut down to offset the new Codex spend once it's
+      scaled past Plus — genuine business/value judgment with no data-derivable answer (real seat list isn't visible
+      from this checkout; the committed `accounts.mock.json` is example-only). Not urgent at the $20/mo Plus starting
+      tier. Done when: the seat(s) are named and the corresponding `accounts.json` entries are removed/disabled, or the
+      operator confirms no seat cut is needed at the validated spend level.
 - [ ] [INFRA] P0. Build `codex_bridge_server.py` — a standalone FastAPI process exposing `POST /v1/messages` (Anthropic
       Messages format), translating to/from the Codex App Server SDK's JSON-RPC thread/turn model, authenticated via
       `~/.codex/auth.json`. Structure mirrors `deepseek_native_proxy_server.py` (standalone process, not inline in the
@@ -225,3 +241,17 @@ template, minus the third-party dependency).
   dependency — every provider decision here must respect the opus/fable-hard-pinned-to-Claude rule it defines); dropped
   `autospawn.py` (the shared routing mechanism it carries is already-shipped per this doc's own todo, lower-value than
   the two additions for the REMAINING open work) to stay within the 6-entry cap.
+
+- **2026-08-15 (later) — staged cheap-tier-first signup ruling (operator).** Sign up **ChatGPT Plus
+  ($20/mo), not
+  Pro** — Codex CLI access already exists at Plus (OpenAI's own docs: a few focused coding sessions/week; Pro
+  multiplies that 5x-20x), same `codex login` auth artifact on both tiers, so upgrading later is an account-tier change
+  only, no code change beyond remeasuring the quota-ceiling todo's numbers. Rationale: validate the whole bridge
+  (translation, usage-capture, the mandatory smoke-test gate) before committing to Pro-tier spend — same staging
+  pattern applied to GLM in the sibling `deepseek_claude_blended_provider_routing` plan, mirroring Claude Pro→Max.
+  Research note: current Pro pricing is inconsistently reported across sources ($100
+  vs
+  $200/mo) — verify live at
+  upgrade time rather than trusting either figure now. Todos above updated; new `[OPERATOR] P3` upgrade-to-Pro todo
+  added, and the seat-cut todo downgraded from urgent (not needed at the $20/mo
+  starting spend).
