@@ -125,20 +125,20 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       archiving this todo further.
 
       **REVERTED to `[ ]` (2026-08-15, /plan-reconcile, operator interactive) — live infra check against the 2026-08-12
-          ruling below found only HALF done.** Checked directly via `gcs_describe_object`/`download_bytes`
-          (`unified_trading_library.cloud_interface`, no gsutil/gcloud): `build_instrument_catalogue.py`'s output
-          (`gs://instruments-store-defi-prd-central-element-323112/prod/catalog.parquet`) has `last_modified
-          2026-08-15T04:34:25Z` — genuinely regenerated post-ruling, with `CHAINLINK-ETHEREUM:SPOT_PAIR:AAVE-USD` and the
-          AAVE_V3 spot_asset rows present (78,447 rows total). But `enumerate_expected_universe.py`'s own dedicated output
-          (`gs://market-data-tick-defi-prd-central-element-323112/_index/expected_universe_ranges.parquet`) has
-          `last_modified 2026-07-03T23:31:06Z` — over a month BEFORE the ruling, unchanged since. The ruling required BOTH
-          scripts to have run; only the catalogue half did. This todo stays open until the v2 enumerator is actually
-          executed and its output timestamp moves past 2026-08-12.
+              ruling below found only HALF done.** Checked directly via `gcs_describe_object`/`download_bytes`
+              (`unified_trading_library.cloud_interface`, no gsutil/gcloud): `build_instrument_catalogue.py`'s output
+              (`gs://instruments-store-defi-prd-central-element-323112/prod/catalog.parquet`) has `last_modified
+              2026-08-15T04:34:25Z` — genuinely regenerated post-ruling, with `CHAINLINK-ETHEREUM:SPOT_PAIR:AAVE-USD` and the
+              AAVE_V3 spot_asset rows present (78,447 rows total). But `enumerate_expected_universe.py`'s own dedicated output
+              (`gs://market-data-tick-defi-prd-central-element-323112/_index/expected_universe_ranges.parquet`) has
+              `last_modified 2026-07-03T23:31:06Z` — over a month BEFORE the ruling, unchanged since. The ruling required BOTH
+              scripts to have run; only the catalogue half did. This todo stays open until the v2 enumerator is actually
+              executed and its output timestamp moves past 2026-08-12.
 
-          **RULED 2026-08-12 (/plan-reconcile, operator interactive)**: a literal regen-script run IS required before this
-                          closes — invariant-test confirmation alone is not sufficient. Do NOT flip this todo `[x]` until
-                          `build_instrument_catalogue.py` + `enumerate_expected_universe.py` (v2) have actually been executed against real
-                          infra and the new AAVE/CHAINLINK cells confirmed `expected_unattempted`.
+              **RULED 2026-08-12 (/plan-reconcile, operator interactive)**: a literal regen-script run IS required before this
+              closes — invariant-test confirmation alone is not sufficient. Do NOT flip this todo `[x]` until
+              `build_instrument_catalogue.py` + `enumerate_expected_universe.py` (v2) have actually been executed against real
+              infra and the new AAVE/CHAINLINK cells confirmed `expected_unattempted`.
 
 ## Phase 2 — Collectors ready to fetch
 
@@ -217,7 +217,7 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       euler_v2 across ETHEREUM/ARBITRUM/BASE/OPTIMISM/POLYGON) instead — caught at the T+10min check, stopped after
       ~12min (no `--force`, so idempotent-skip limited the blast radius; no data corruption, just wasted VM-minutes on
       the wrong task). **Corrected + LAUNCHED (2026-07-22, operator-acked)**:
-      `launch-mtds-pyth-lst-backfill-vm.sh     2023-01-27 2026-07-22` (VM `pyth-lst-backfill-20260722-045059`, zone
+      `launch-mtds-pyth-lst-backfill-vm.sh 2023-01-27 2026-07-22` (VM `pyth-lst-backfill-20260722-045059`, zone
       `asia-northeast1-c`) — this script already wires `VM_TASK=cefi-backfill` + `VM_OPERATION=collect-oracle-prices`,
       the correct operation; no venue/data-type filtering needed since `oracle_prices_handler.process()` collects
       Chainlink+Pyth+AAVE together unconditionally for the given date range. Confirmed RUNNING at launch. Code tarball
@@ -266,19 +266,19 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       (999/265/69/856 rows respectively on day 1) confirming the dispatch is correct before committing to the ~4yr
       full-history window. **That same test VM STALLED after day 1** — root-caused on relaunch: a genuine kernel
       OOM-kill, confirmed via `gcloud compute instances get-serial-port-output`
-      (`Out of memory: Killed process ...     anon-rss:12730MiB` on the 250-day-chunk relaunch attempt), with the
-      wrapping chunk-loop/heartbeat/uploader orchestration never detecting or recovering from the child's death — the
-      whole VM just goes silently, unrecoverably stuck. Tried the obvious mitigation (`--chunk-days 1`, forcing one
-      fresh process per day) and it is **NOT reliable**: two consecutive single-day chunks for the identical
-      9-symbol/3-venue scope used 6GB and 14.6GB respectively (the second OOM-killed), ruling out a simple "memory
-      scales with date-range span" theory — the real trigger is unpredictable (per-day data-volume variance, a
-      retry-storm, or a within-process leak). **Re-tagged 2026-07-28 — a normal `[MTDS]` P0 debugging dispatch, not an
-      operator ask.** Filed `plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` (P0) with full
-      evidence — this is a real, cross-cutting MTDS backfill reliability bug (affects the shared `--operation download`
-      / Tardis-adapter CEFI path generically, not specific to LST tokens) that needs code-level debugging, not more
-      blind VM relaunches. The AAVE oracle backfill (Phase 5's other in-flight VM, `pyth-lst-backfill-20260722-045059`)
-      uses a completely different operation (`collect-oracle-prices`, RPC-based, not Tardis-download) and is confirmed
-      unaffected — still healthy and progressing normally as of this entry.
+      (`Out of memory: Killed process ... anon-rss:12730MiB` on the 250-day-chunk relaunch attempt), with the wrapping
+      chunk-loop/heartbeat/uploader orchestration never detecting or recovering from the child's death — the whole VM
+      just goes silently, unrecoverably stuck. Tried the obvious mitigation (`--chunk-days 1`, forcing one fresh process
+      per day) and it is **NOT reliable**: two consecutive single-day chunks for the identical 9-symbol/3-venue scope
+      used 6GB and 14.6GB respectively (the second OOM-killed), ruling out a simple "memory scales with date-range span"
+      theory — the real trigger is unpredictable (per-day data-volume variance, a retry-storm, or a within-process
+      leak). **Re-tagged 2026-07-28 — a normal `[MTDS]` P0 debugging dispatch, not an operator ask.** Filed
+      `plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` (P0) with full evidence — this is a
+      real, cross-cutting MTDS backfill reliability bug (affects the shared `--operation download` / Tardis-adapter CEFI
+      path generically, not specific to LST tokens) that needs code-level debugging, not more blind VM relaunches. The
+      AAVE oracle backfill (Phase 5's other in-flight VM, `pyth-lst-backfill-20260722-045059`) uses a completely
+      different operation (`collect-oracle-prices`, RPC-based, not Tardis-download) and is confirmed unaffected — still
+      healthy and progressing normally as of this entry.
 - [ ] [FEATURES] P2. **#4 lst_yields backfill** — run the `lst_yields` feature over the full `lst_rates` source history.
       **Original diagnosis WAS WRONG (2026-07-22, Explore agent investigation)**: there is no today-vs-prior inner-join
       or vocab bug to fix — `compute_lst_features_for_day()`
@@ -351,7 +351,7 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       absence logic). | Shipped `market-tick-data-service@6ab0359a` (all 7 genesis fixes + new jitoSOL/mSOL gates +
       citations, 4 test-file updates, full MTDS `quality-gates.sh` green). **Cross-repo caveat found + handled
       carefully**: the SAME wrong Sanctum assumption is ALSO embedded in UAC (`_defi_lst.py`'s
-      `LST_TOKEN_GENESIS["sanctumSOL"] =       "2024-01-25"`, and `chain_env.py`'s
+      `LST_TOKEN_GENESIS["sanctumSOL"] = "2024-01-25"`, and `chain_env.py`'s
       `PROTOCOL_LAUNCH_DATES[("SOLANA","SANCTUM")] = "2023-06-01"`) and in IS (`sanctum.py`'s `_SANCTUM_DEPLOY_DATE`).
       **Did NOT blindly overwrite these** — UAC's `LST_TOKEN_GENESIS` entry governs a DIFFERENT mechanism than my Tier-4
       fix (the Tier-1 on-chain SPL stake-pool DECODER, whose account address `SANCTUM_INF_POOL_ACCOUNT` is itself
@@ -381,14 +381,14 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       not silently dropped.
 - [ ] [MTDS] P3. **Retagged 2026-07-29: credential/launch gate confirmed cleared (not `BLOCKED-CREDENTIALS`) — NOT
       flipping to done though: live-reverified right now
-      (`gcloud compute instances list     --filter="name~mtds-dex-swaps-backfill"`) shows `-1`/`-2` still RUNNING,
-      matching this doc's own last status check (2026-07-26, multi-day-to-multi-week runway remaining). Genuinely still
-      open.** #2 DEX fill — deep-backfill `dex_pool_swaps` once the endpoint lands (else remains
-      ~~`BLOCKED-CREDENTIALS`~~). **Endpoint confirmed live since Phase 0** (2026-07-21) and the `price` column shipped
-      this session (`market-tick-data-service@869e46cd`) — this is NOT actually `BLOCKED-CREDENTIALS` any more; ready to
-      launch as a normal backfill. **LAUNCHED (2026-07-22, operator-acked)** — see Progress Log entry. **Status update
-      2026-08-09 (stale-check-defi-tranche)**: the "-1/-2 still RUNNING" framing above is from 2026-07-29 and is now
-      stale — per `issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` Todo 3 (2026-08-07,
+      (`gcloud compute instances list --filter="name~mtds-dex-swaps-backfill"`) shows `-1`/`-2` still RUNNING, matching
+      this doc's own last status check (2026-07-26, multi-day-to-multi-week runway remaining). Genuinely still open.**
+      #2 DEX fill — deep-backfill `dex_pool_swaps` once the endpoint lands (else remains ~~`BLOCKED-CREDENTIALS`~~).
+      **Endpoint confirmed live since Phase 0** (2026-07-21) and the `price` column shipped this session
+      (`market-tick-data-service@869e46cd`) — this is NOT actually `BLOCKED-CREDENTIALS` any more; ready to launch as a
+      normal backfill. **LAUNCHED (2026-07-22, operator-acked)** — see Progress Log entry. **Status update 2026-08-09
+      (stale-check-defi-tranche)**: the "-1/-2 still RUNNING" framing above is from 2026-07-29 and is now stale — per
+      `issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` Todo 3 (2026-08-07,
       `defi_satellite_ao_dispatch_batch10-009`), both `-1` and `-2` had COMPLETED by 2026-08-07 ("No sibling VMs running
       at launch time — both `-1` and `-2` had completed"); `-3` was separately found FAILED (`exit_code=137`,
       2026-07-27, silent 6+ day stall — never relaunched until then) and was relaunched 2026-08-07 (SPOT, SHARD_INDEX=6,

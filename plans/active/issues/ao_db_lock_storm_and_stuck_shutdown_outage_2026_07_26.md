@@ -227,8 +227,8 @@ confirmed still happening at the time of this update. Raised priority P2 → **P
 - [x] ✅ [OPERATOR] P2. **Apply `agent-orchestrator@ee98ccb`'s `--reload` removal to the LIVE deployed
       `/etc/systemd/system/orchestrator.service`** on this VM — re-run `install-orchestrator-service.sh` (or manually
       remove `--reload --reload-dir server` from the `ExecStart` line), then
-      `sudo systemctl daemon-reload && sudo     systemctl restart orchestrator`. Safe per `KillMode=process` (kills only
-      the uvicorn main PID; tmux/claude worker sessions in the cgroup survive, confirmed in this doc's Progress Log). No
+      `sudo systemctl daemon-reload && sudo systemctl restart orchestrator`. Safe per `KillMode=process` (kills only the
+      uvicorn main PID; tmux/claude worker sessions in the cgroup survive, confirmed in this doc's Progress Log). No
       worker has privileged access to do this from a sandboxed slot session (`NoNewPrivileges=yes`). (repo:
       agent-orchestrator, infra action) — **✅ DONE 2026-07-30, VERIFIED LIVE 2026-08-06.** Operator flagged this as
       already applied; confirmed against the running planning VM (`i-0c9b283b31d6b5ca7`, ap-northeast-1) by read-only
@@ -249,10 +249,10 @@ confirmed still happening at the time of this update. Raised priority P2 → **P
       `"Started reloader process"` / `"Stopping reloader process"` log lines stop appearing on future restarts** (proves
       `--reload` is actually off in the running process, not just the repo), then watch the next several
       `ao-self-pull.sh`-triggered or explicit restarts for the previously-observed
-      `"State 'stop-sigterm' timed out.     Killing."` pattern — if it stops recurring across several restarts, close
-      this issue with that evidence; if it still recurs even without the reload-supervisor layer, the root cause is
-      elsewhere (do not re-guess — the resource_tracker/spawn-context teardown lead in the `[BACKEND]` todo above
-      becomes the next thing to check directly, e.g. via `py-spy dump` on a hung process before SIGKILL fires). (repo:
+      `"State 'stop-sigterm' timed out. Killing."` pattern — if it stops recurring across several restarts, close this
+      issue with that evidence; if it still recurs even without the reload-supervisor layer, the root cause is elsewhere
+      (do not re-guess — the resource_tracker/spawn-context teardown lead in the `[BACKEND]` todo above becomes the next
+      thing to check directly, e.g. via `py-spy dump` on a hung process before SIGKILL fires). (repo:
       agent-orchestrator) — **✅ BOTH HALVES VERIFIED 2026-08-06** by read-only SSM `journalctl` on the planning VM.
       **Half 1 (reloader lines stop): PROVEN** — `0` occurrences of `"reloader process"` across **26 real systemd unit
       starts** in the retained journal. **Half 2 (`"State 'stop-sigterm' timed out. Killing."` stops recurring): PROVEN
@@ -261,19 +261,19 @@ confirmed still happening at the time of this update. Raised priority P2 → **P
       restarts is a real sample, not a quiet window.
 
       **Stated limitation — do not over-read this as a before/after comparison.** This VM's journald retention is only
-                                                                                              ~15 hours (oldest retained `orchestrator` entry at measurement time: `2026-08-06T00:45:03Z`, ~220 MB total
-                                                                                              journal). A pre-fix baseline is therefore **unavailable** — querying `--since 2026-07-20 --until 2026-07-30`
-                                                                                              silently returns `0` too, not because the pattern was absent then but because those logs are rotated away. So
-                                                                                              the evidence here is "the failure mode does not occur across 26 post-fix restarts", which is strong on its own
-                                                                                              terms; it is NOT "occurrences went from N to 0". Anyone re-verifying should measure the retained window first
-                                                                                              (`journalctl -u orchestrator -o short-iso | head -1`) before trusting a `--since` date that predates it — a
-                                                                                              `--since` older than retention produces a confident-looking zero that means nothing.
+              ~15 hours (oldest retained `orchestrator` entry at measurement time: `2026-08-06T00:45:03Z`, ~220 MB total
+              journal). A pre-fix baseline is therefore **unavailable** — querying `--since 2026-07-20 --until 2026-07-30`
+              silently returns `0` too, not because the pattern was absent then but because those logs are rotated away. So
+              the evidence here is "the failure mode does not occur across 26 post-fix restarts", which is strong on its own
+              terms; it is NOT "occurrences went from N to 0". Anyone re-verifying should measure the retained window first
+              (`journalctl -u orchestrator -o short-iso | head -1`) before trusting a `--since` date that predates it — a
+              `--since` older than retention produces a confident-looking zero that means nothing.
 
-                                                                                              **Incidental observation, not part of this todo**: those 26 unit starts fall inside a ~15-hour window (~1.7
-                                                                                              restarts/hour). Some are legitimate `ao-self-pull.sh` deploy restarts, but the rate is high enough to be worth a
-                                                                                              glance against
-                                                                                              `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`'s crash-loop concern.
-                                                                                              Not investigated here and NOT claimed to be a fault — recorded so the number is not lost.
+              **Incidental observation, not part of this todo**: those 26 unit starts fall inside a ~15-hour window (~1.7
+              restarts/hour). Some are legitimate `ao-self-pull.sh` deploy restarts, but the rate is high enough to be worth a
+              glance against
+              `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`'s crash-loop concern.
+              Not investigated here and NOT claimed to be a fault — recorded so the number is not lost.
 
 - [x] ✅ [BACKEND] P2. **Second, independent contributing-latency finding + fix, 2026-07-30** (downstream of Problem 1
       above, NOT a duplicate of the `--reload`/`ee98ccb` finding two todos up — both are real, `ee98ccb` is the one that
@@ -441,14 +441,14 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
   `related:` as the todo asked. No new investigation performed into Problem 1 (out of this bookkeeping-only dispatch's
   scope) — the Follow-ups guard and its `[AO] P0` todo stand as the reason this doc stays open and un-archived.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
-- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — the sole remaining item is
-  the Follow-ups § `[AO] P0` DO-NOT-ARCHIVE guard (resolve the SQLite `database is locked` storm, Problem 1). This
-  remains genuine live-incident investigation, not bounded/mechanical work: the doc's own open question ("genuine
-  SECOND undiagnosed bug, or genuine extreme concurrent-write contention... not yet distinguished") is still
-  unresolved, and the item is cross-referenced by 2 other still-open docs
-  (`orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md`, `ao_scheduled_job_reserve_and_staggering_2026_08_04.md`)
-  touching the same live contention surface — a diagnosis-under-real-load question, not a scoped code change with a
-  stated done-when.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — the sole remaining item is the
+  Follow-ups § `[AO] P0` DO-NOT-ARCHIVE guard (resolve the SQLite `database is locked` storm, Problem 1). This remains
+  genuine live-incident investigation, not bounded/mechanical work: the doc's own open question ("genuine SECOND
+  undiagnosed bug, or genuine extreme concurrent-write contention... not yet distinguished") is still unresolved, and
+  the item is cross-referenced by 2 other still-open docs
+  (`orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md`,
+  `ao_scheduled_job_reserve_and_staggering_2026_08_04.md`) touching the same live contention surface — a
+  diagnosis-under-real-load question, not a scoped code change with a stated done-when.
 
 ## Follow-ups
 
