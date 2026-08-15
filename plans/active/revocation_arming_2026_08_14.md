@@ -168,16 +168,55 @@ source:
 > rather than duplicating an admission check into the lightweight path or accepting it as permanently ungated. Removes
 > the second, ungated launch path entirely instead of growing a parallel gate implementation for it.
 
-- [ ] [CODE] P1. **Scope the `lc_`-helper → `vm-exec-with-gcs-tee.sh` migration.** 158 launchers currently use
-      `launcher_common.sh`'s lightweight `lc_` snippet (no venv/tarball/heartbeat-daemon install, hence no admission
-      gate and no drain poll). Before migrating any of them: (1) a fresh per-launcher census — how many of the 158 still
-      resolve to a real, currently-launchable VM_NAME/VM_PREFIX vs. dead/superseded scripts (the VM-launcher-
-      registration QG step already skips 18 with no derivable prefix — start there); (2) confirm
-      `vm-exec-with-gcs-tee.sh` genuinely has no venv-weight assumptions that the lightweight callers were specifically
-      avoiding (why they're on `lc_` at all, not `setup-data-pipeline-vm.sh`, needs to be understood per-launcher, not
-      assumed uniform); (3) given the count, this is very likely too large for one todo in this plan — SPLIT into its
-      own migration plan once the census is in (`plans/active/task_template.md` "10-100 todos" /
-      partial-parallelism-must-split rule). Repo: deployment-service.
+> **CENSUS CORRECTED 2026-08-15 — the "158" figure was wrong, methodology error.** Grepping for any launcher that
+> `source`s `launcher_common.sh` (162 hits) or contains the substring `lc_` (171 hits) counts launchers using ANY of its
+> 20 shared `lc_*` helpers (singleton locks, tarball-pin writes, gcloud-create wrappers — used by canonical-path
+> launchers too), not specifically the lightweight-observability opt-out. The actual signal is a launcher calling
+> `lc_log_upload_trap_block`/`lc_log_upload_continuous_block` — the SSOT function whose own docstring names it "the
+> lightweight equivalent for launchers that inline their own startup script" instead of routing through
+> `vm-exec-with-gcs-tee.sh`. `grep -l 'lc_log_upload_trap_block\|lc_log_upload_continuous_block' launch-*.sh` → **12**,
+> not 158. Of those 12, read in full (headers + one level of delegation):
+>
+> - **1 genuine migration candidate**: `launch-prediction-pipeline-vm.sh` — a real multi-stage MDPS→features backfill
+>   that inlines its own startup script. This is the launcher the admission gate's threat model ("download into a
+>   manifest that never updates") actually describes.
+> - **2 false positives — wrapper scripts whose real data work is already gated**:
+>   `launch-expected-universe-v2- historical-backfill-vm.sh` and `launch-features-sports-parallel-backfill-vm.sh` (also
+>   independently DEPRECATED, superseded by `launch-features-vm.sh`, "will be archived") only use the lightweight
+>   snippet for their OWN orchestrator-process observability — the actual per-chunk data downloads happen on CHILD VMs
+>   launched via `launch-expected-universe-v2-vm.sh` / `launch-features-vm.sh`, both confirmed
+>   (`grep -l setup-data-pipeline-vm.sh`) to already route through the canonical gated path. Migrating the wrapper would
+>   gate nothing new.
+> - **2 not data-capture launchers at all** — the admission-gate concept doesn't apply: `launch-planning-vm.sh` (the
+>   orchestrator/dashboard infra host) and `launch-pipeline-e2e-check-driver-vm.sh` (an orchestration driver that itself
+>   downloads nothing; the VMs it launches go through their own already-gated launchers).
+> - **5 long-lived cron-HOST VMs, a different risk shape**: `launch-cefi-fwd-daily-cron-vm.sh`,
+>   `launch-cefi-onchain-fwd-daily-cron-vm.sh`, `launch-cefi-perp-funding-daily-cron-vm.sh`,
+>   `launch-tradfi-fwd-daily-cron-vm.sh`, `launch-funding-ensemble-daily-cron-host.sh`. These are ALWAYS-ON VMs that
+>   fire a daily job in-place, not one-shot VMs launched fresh into a manifest snapshot — the marker-hold admission
+>   model (block launch, not block an already-running host's next tick) may not fit this shape at all. Needs an operator
+>   call, not a mechanical migration.
+> - **2 validation harnesses**, lower urgency: `launch-aave-lending-rate-validation-vm.sh`,
+>   `launch-amm-golden-fixture-validation-vm.sh` — read + compute a validation report rather than repeatedly
+>   re-downloading into a stale manifest.
+>
+> Net: the real, currently-actionable migration scope is **one launcher** (`launch-prediction-pipeline-vm.sh`), not 158
+> — no plan-split needed. The cron-host question is a separate, smaller operator decision, tracked as its own todo below
+> rather than bundled into "migrate everything."
+
+- [ ] [CODE] P1. **Migrate `launch-prediction-pipeline-vm.sh` onto `vm-exec-with-gcs-tee.sh`.** The one genuine
+      lightweight-launcher migration candidate found by the corrected census above — a real multi-stage backfill (MDPS
+      tick→OHLCV, features-cross-instrument, features-delta-one) inlining its own startup script instead of the
+      canonical gated path. Needs its workload invocation adapted to the tarball-based CLI entrypoint model
+      `setup-data-pipeline-vm.sh` expects, then a real VM launch verified end-to-end (boot, admission-gate check,
+      workload completion) per the VM-launcher runbook's no-fire-and-forget rule — not a blind find/replace. Repo:
+      deployment-service.
+- [ ] [OPERATOR] P2. **Decide whether the marker-hold admission model applies to long-lived cron-HOST VMs at all.** 5
+      launchers (`launch-cefi-fwd-daily-cron-vm.sh` + 4 siblings, listed above) are always-on hosts firing a daily job
+      in-place, not one-shot VMs launched into a manifest snapshot — holding a FUTURE launch doesn't obviously apply to
+      a host that's already running. If the model doesn't fit, document that explicitly (mirrors
+      `launch-data-pipeline-fleet-monitor.sh`'s "must NEVER be gated" carve-out) rather than leaving it read as an
+      accidental gap. Repo: unified-trading-pm (decision) + deployment-service (whichever fix it implies).
 - [x] ✅ [CODE] P1. **`DP-CATALOG-001` (catalogue-stale) now stamps `upstream_entity`.** —
       **deployment-service@2cc79b2a7c.** `meta_watchers.check_catalogue_freshness` now sets
       `details["upstream_entity"] = "instrument-catalog"`, the registered UAC entity type
