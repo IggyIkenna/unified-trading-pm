@@ -24,7 +24,7 @@ related:
     /plans/active/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md,
     /plans/active/issues/codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md,
     /plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md,
-    /plans/active/issues/escalation_queue_autospawn_enqueue_lag_45min_2026_08_15.md,
+    /plans/archive/2026_08/issues/escalation_queue_autospawn_enqueue_lag_45min_2026_08_15.md,
     /plans/active/issues/escalation_queue_sit_failure_no_pr_closed_resolution_2026_08_10.md,
     /plans/active/issues/tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md,
     /plans/active/issues/autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md,
@@ -190,12 +190,20 @@ source: >-
       remediation-goal wording, systemd timer install, Slack-ownership fact-find, codex doc update, full-fleet dry run)
       tracked in the dedicated plan, not this batch — see that plan's own Progress Log.
 
-- [ ] [DEVOPS] P1. **Add a reserved-slot / exemption carve-out for CI-escalation dispatch on `unified-trading-pm`** from
-      AO's one-worker-per-repo collision guard, so red-CI escalations on this repo don't sit un-dispatched up to 45
+- [x] ✅ [DEVOPS] P1. **Add a reserved-slot / exemption carve-out for CI-escalation dispatch on `unified-trading-pm`**
+      from AO's one-worker-per-repo collision guard, so red-CI escalations on this repo don't sit un-dispatched up to 45
       minutes just because the repo nearly always has another active slot. Source:
-      `plans/active/issues/escalation_queue_autospawn_enqueue_lag_45min_2026_08_15.md`. Gate: a CI-escalation dispatch
-      targeting `unified-trading-pm` while another slot is already active on that repo no longer waits the full
-      collision-guard debounce window; existing collision protection for non-escalation dispatch is unaffected.
+      `plans/archive/2026_08/issues/escalation_queue_autospawn_enqueue_lag_45min_2026_08_15.md`. Gate: a CI-escalation
+      dispatch targeting `unified-trading-pm` while another slot is already active on that repo no longer waits the full
+      collision-guard debounce window; existing collision protection for non-escalation dispatch is unaffected. —
+      `agent-orchestrator@7bbd70012b`: `escalate()`'s repo-collision guard in `server/escalation.py` now skips the
+      active-elsewhere check when `repo == "unified-trading-pm"` (scoped to this repo, this function only —
+      `escalate()`/`retry_queued_escalations()` is the sole CI-escalation dispatch path; ordinary backlog dispatch
+      collision protection elsewhere is untouched); regression test
+      `test_escalate_unified_trading_pm_is_exempt_from_collision_guard` added. Documented in
+      `/codex/04-architecture/agent-orchestrator-ci-escalation-wall-types.md`; source issue doc
+      `escalation_queue_autospawn_enqueue_lag_45min_2026_08_15.md` closed (both its OPERATOR + DOCS todos flipped,
+      `status: resolved`). Full QG green (3968 passed, dashboard vitest 374 passed).
 
 - [ ] [INFRA] P2. **Increase `na-eligibility-audit`'s dispatch cadence** (faster retirement of the `assigned_vm: NA`
       corpus) as the resolution path for the corpus-growth-vs-lagging-main promotion deadlock — operator ruled faster

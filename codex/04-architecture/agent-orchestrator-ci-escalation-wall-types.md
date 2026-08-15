@@ -137,6 +137,24 @@ Deliberately NOT touched this pass (correctly human-only by design, confirmed vi
 orchestrator itself might be the thing that's dead is circular), `request-major-bump.yml` / `secret-health-check.yml`
 (deliberately human-gated, not a mechanical fix), `hotfix-mode.yml` (operator-invoked by definition).
 
+## `unified-trading-pm` is exempt from the one-worker-per-repo collision guard (2026-08-15)
+
+`escalate()`'s repo-collision guard (`escalation_backlog_repo_collision_blind_spot_2026_07_25`) correctly refuses to
+spawn a second worker into a repo another slot is already actively working — but `unified-trading-pm` carries such
+exceptionally high concurrent-session traffic (routinely 5-9+ live sessions rooted there) that "another slot already
+active on unified-trading-pm" is close to an invariant, not an occasional condition. That starved CI-escalation dispatch
+for this one repo 15-45+ min at a time even though the guard, the retry loop, and general fleet capacity were all
+healthy — confirmed live 2026-08-15 during a `promote_qg_failure` wave that sat `status: "queued"`, `attempts: 0` for
+the full window. Root-caused: `plans/archive/2026_08/issues/escalation_queue_autospawn_enqueue_lag_45min_2026_08_15.md`.
+
+**Operator ruling (2026-08-15)**: exempt escalation-targeted spawns onto `unified-trading-pm` from this guard —
+escalation workers diagnose/fix one specific CI wall rather than doing the broad plan-doc churn the guard was built to
+protect against, a narrower blast radius that makes the residual double-worker risk acceptable for this repo. Scoped
+narrowly in `server/escalation.py`'s `escalate()`: `repo == "unified-trading-pm"` skips the collision check entirely
+(other repos, and every non-escalation dispatch path elsewhere in the codebase, are unaffected). This is a KNOWN,
+accepted tradeoff — a future `/ci-reconcile` § 5 check on PM escalation dispatch does not need to re-diagnose it as a
+fresh mystery.
+
 ## Still-open coverage gaps (not fixed this pass)
 
 - **Local pre-push ratchet-gate breaches** (a `quality-gates.sh` Pass-1 failure that blocks the commit before it ever

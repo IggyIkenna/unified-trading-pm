@@ -30,8 +30,10 @@ summary: >-
   health is unaffected: `check-ao-backlog-status.sh` shows `LIVE_WORKER_SESSIONS=13` and ordinary backlog dispatch
   (`dispatched: 8`) proceeding normally the whole time — this is specific to escalation-targeted spawns hitting the
   same-repo collision guard.
-status: open
+status: resolved
 resolved_by:
+  ci_satellite_ao_dispatch_batch14_2026_08_15.md todo 9 — agent-orchestrator/server/escalation.py collision-guard
+  exemption
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -77,7 +79,7 @@ source: >-
       `retry_queued_escalations()` correctly. The repeated blocker is a legitimate slot-collision guard
       (`repo 'unified-trading-pm' already active on another slot — not dispatching`) meeting this repo's own
       exceptionally high concurrent-session traffic. Full trace in the summary above.
-- [ ] [OPERATOR] P1. **Policy decision: should CI-escalation dispatch get an exemption from (or a reserved-slot
+- [x] ✅ [OPERATOR] P1. **Policy decision: should CI-escalation dispatch get an exemption from (or a reserved-slot
       carve-out around) the one-worker-per-repo collision guard specifically for `unified-trading-pm`, given how often
       that repo has an active slot at any given moment?** Two real options, both with tradeoffs: (a) exempt
       escalation-targeted spawns from this specific guard for this specific repo (risks the exact collision the guard
@@ -88,9 +90,15 @@ source: >-
       Slack CRITICAL (today's fix) already tells a human directly at 30min, independent of whether AO ever gets a worker
       slot to act on it. **Done when**: the operator picks a direction (or explicitly rules "acceptable as-is, Slack
       CRITICAL is the real signal for this repo") and, if (a), the exemption is scoped + implemented in
-      `agent-orchestrator/server/escalation.py`'s slot-selection logic.
-- [ ] [DOCS] P2. **Once a direction is picked, document it** in
+      `agent-orchestrator/server/escalation.py`'s slot-selection logic. — **Ruled (a) 2026-08-15**, converted into
+      `plans/active/ci_satellite_ao_dispatch_batch14_2026_08_15.md` todo 9. Implemented: `agent-orchestrator@7bbd70012b`
+      — `escalate()`'s collision-guard check in `server/escalation.py` now skips the repo-active-elsewhere check when
+      `repo == "unified-trading-pm"`; regression test `test_escalate_unified_trading_pm_is_exempt_from_collision_guard`
+      in `tests/test_escalation.py`.
+- [x] ✅ [DOCS] P2. **Once a direction is picked, document it** in
       `/codex/04-architecture/agent-orchestrator-ci-escalation-wall-types.md` (or the appropriate AO architecture doc)
       so a future `/ci-reconcile` § 5 check knows this is a KNOWN, understood tradeoff for unified-trading-pm
       specifically (not a fresh mystery to re-diagnose) — a healthy general worker pool does not imply a healthy
-      escalation drain for this one repo, and that's expected given its traffic, not a bug to keep re-finding.
+      escalation drain for this one repo, and that's expected given its traffic, not a bug to keep re-finding. — Added
+      `## unified-trading-pm is exempt from the one-worker-per-repo collision guard (2026-08-15)` section to
+      `agent-orchestrator-ci-escalation-wall-types.md`.
