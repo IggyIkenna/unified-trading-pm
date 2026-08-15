@@ -515,16 +515,16 @@ source: >-
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 
       **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed separately.**
-                                                                          Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism (`load_venue_data_types()` →
-                                                                          `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already exists and is live — no code change needed
-                                                                          — but a real corpus-wide query (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete
-                                                                          within a 120s budget, the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md`
-                                                                          already filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades` data_type
-                                                                          per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a worker-determinable
-                                                                          outcome for one ~1h dispatch. Filed `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
-                                                                          (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read class → run
-                                                                          one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded backfill todos) rather
-                                                                          than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended multi-AG backfill into this dispatch.
+                                                                              Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism (`load_venue_data_types()` →
+                                                                              `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already exists and is live — no code change needed
+                                                                              — but a real corpus-wide query (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete
+                                                                              within a 120s budget, the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md`
+                                                                              already filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades` data_type
+                                                                              per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a worker-determinable
+                                                                              outcome for one ~1h dispatch. Filed `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+                                                                              (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read class → run
+                                                                              one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded backfill todos) rather
+                                                                              than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended multi-AG backfill into this dispatch.
 
 - [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
       operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
@@ -737,7 +737,23 @@ source: >-
       needs its own shard-grain definition before a cumulative-drawdown check can be written). New finding, 2026-08-15,
       from the todo above's scoping diagnosis. Repo: instruments-service (+ a design doc under `codex/02-data/` once the
       shape is decided). Source: this doc's own 2026-08-15 diagnosis, folded in per the cumulative-drawdown todo above.
-- [ ] [CODE] P2. Build the drilldown-correctness ep=0 reconciliation guard as a QG step + watchdog Source:
+- [x] ✅ [CODE] P2. **Built the §2.3 ε=0 reconciliation guard (the narrower "QG step + watchdog" slice of the source
+      doc's full 3-part item — UI-renders-SSOT and per-cell click-traceability are NOT in this batch todo's scope).**
+      (2026-08-15, slot-16·infra) New audit script — e2e-testing@94fdeb0f60
+      (`scripts/audit/drilldown_reconciliation_guard.py` + `tests/unit/test_drilldown_reconciliation_guard.py`):
+      independently recomputes a BOUNDED, date-stratified sample of raw shard row_counts (never a whole-corpus walk) and
+      asserts equality (ε=0) against the manifest's own recorded row_count for the SAME unambiguous (asset_group,
+      data_type, date) captured cell — an ambiguous (e.g. multi-venue) or absent match is skipped, never guessed. Emits
+      `DP_PHANTOM_ROWS` on drift, reusing the existing event per the DP-FETCH-009 precedent (a new
+      `registry_id: DP-MANIFEST-006` in the alert details disambiguates from a true existence-phantom). 4 unit tests
+      cover matching/no-finding, the DoD's own "a seeded manifest/raw divergence trips the guard" case, and the
+      ambiguous-skip case — all green. **QG step**: wired into the existing lint+`--smoke` sweep at MTDS QG STEP 5.90
+      (alongside the other 3 daily data-pipeline audits) — market-tick-data-service@3a24ab8e5d. **Watchdog**: scheduled
+      daily 09:30 UTC via a new Cloud Run Job + Cloud Scheduler cron (Job 5, mirroring the existing 4) —
+      deployment-service@3749eb6042. Registered `DP-MANIFEST-006` in the registry doc + `.registry.yaml`:
+      unified-trading-pm (this commit). Full `bash scripts/quality-gates.sh` green on all 3 code repos (e2e-testing
+      103s, deployment-service 363s, market-tick-data-service 427s), each sentinel-verified at its shipped HEAD; every
+      commit's post-push ancestry verified on `origin/live-defi-rollout`. Source:
       `plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md`
 - [x] ✅ [CODE] P2. **STALE CHECKBOX — already fixed, no code change needed.** (2026-08-15, slot-5·infra) Verified live:
       `_bucket_for()` in `instruments-service/scripts/canonicalize_instruments_store_index.py` already special-cases

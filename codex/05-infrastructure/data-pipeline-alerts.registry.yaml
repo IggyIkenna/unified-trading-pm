@@ -519,6 +519,19 @@ failure_modes:
       fires: "4-pillar shard validation fails",
     }
   - {
+      id: DP-MANIFEST-006,
+      category: MANIFEST,
+      severity: CRITICAL,
+      event: DP_PHANTOM_ROWS,
+      detector: drilldown_reconciliation_guard,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires:
+        "sampled raw shard row_count != manifest's own recorded row_count for the same captured cell (epsilon=0
+        drilldown-correctness drift)",
+    }
+  - {
       id: DP-CATALOG-001,
       category: CATALOG,
       severity: CRITICAL,
