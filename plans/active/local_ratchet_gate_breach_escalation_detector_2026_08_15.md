@@ -146,3 +146,18 @@ source: >-
   (`agent-orchestrator/server/models/escalation.py` — corrected the todo's stale path, the file is
   `server/models/escalation.py` not `server/models.py`). `bash scripts/quality-gates.sh` green (3960 passed, 2 skipped
   - dashboard 374 passed). agent-orchestrator@16c831ed84.
+- **2026-08-15 (slot-6·infra)**: Todo 2 (fleet-wide detector entrypoint) authored and committed locally —
+  `agent-orchestrator/scripts/orchestrator/detect_local_ratchet_gate_breaches.py` (commit `ce84b67`, not yet pushed —
+  see blocker below). Runs a fresh, detached `git worktree` pinned to `origin/live-defi-rollout` HEAD per repo (never a
+  contributor's local working tree) for every repo carrying an entry in one of the three ratchet-baseline YAMLs, invokes
+  `check_ruff_rule_ratchet.py` / `check_no_fallback_imports.py` / `check_no_empty_string_fallback.py` against each,
+  emits a JSON breach/no-breach verdict per (repo, check). Verified functionally: scoped run against
+  `agent-orchestrator` + `unified-trading-pm` (real fleet HEAD) — `unified-trading-pm` clean on all 3 checks (zero false
+  positives on a repo already known green, per the todo's done-when), `agent-orchestrator` genuinely breaches all 3
+  (cross-validated directly against a clean local clone, not a worktree artifact). **BLOCKED shipping via quickmerge**:
+  `agent-orchestrator`'s Pass-1 `quality-gates.sh` is RED on `origin/live-defi-rollout` HEAD for two reasons unrelated
+  to this diff — the DTZ ratchet breach itself (STEP 5.95, 14>8) plus a genuinely-failing (not flaky, reproduced in full
+  isolation) pytest `test_tier1_guidance_does_not_rearm_once_a_force_has_fired`. Filed
+  `/plans/active/issues/agent_orchestrator_ldr_qg_red_dtz_ratchet_and_context_lifecycle_rearm_bug_2026_08_15.md`
+  (assigned_vm: planning, 4 tracked fix todos) and declared a `qg_red` repo-blocker for `agent-orchestrator` per
+  `agents/worker.md` § 4b. Resuming the ship (Pass-1 QG → quickmerge → plan-flip) once the repo reads green again.
