@@ -161,20 +161,36 @@ tracked-but-missing shape.
       IDENTICALLY, which falsifies the quarantine-path hypothesis and pins the true mechanism to the shared-index
       `git add -- "${FILES[@]}"` call itself (see corrected Recommended decision above). Isolated-worktree mode
       (`SDP_ISOLATED=1`, the AO-VM-inapplicable laptop default) does NOT reproduce — lands cleanly, per its own
-      code path already handling this shape correctly.
+      code path already handling this shape correctly. Additionally (slot-25): confirmed the exact mechanism with a
+      minimal `git init` sandbox — `git add -- old.md new.md` (bulk, AND solo `git add -- old.md` alone) both fail
+      with the identical pathspec error the instant `old.md` has been `git mv`'d away, independent of any stash
+      state at all.
 - [x] ✅ [SCRIPT] P1. Fix `safe-doc-push.sh`'s shared-index `git add -- "${FILES[@]}"` step (around the retry loop,
       `scripts/dev/safe-doc-push.sh`) so a named `--files` entry that is the OLD side of an already-`git mv`'d
       rename (no index entry, no disk file — NOT the "tracked but missing" shape `reassert_renames`/the deletion
       comment at line ~976 already handle) is skipped from the explicit `git add` call rather than passed to it
       verbatim, mirroring the isolated-worktree copy loop's existing deletion-propagation branch. Add a regression
       test covering this exact shape at LOW stash-pile size too (the extreme-quarantine framing was a red herring —
-      don't gate the fix or its test on a large stash pile). `scripts/dev/repro-safe-doc-push-extreme-stash-rename-drop.sh`
-      (this session) is a ready-made repro harness for verifying the fix. Repo: unified-trading-pm. —
-      unified-trading-pm@7e03ff2f01 (slot-14, infra): implemented as a new `stage_named_files()` that stages per-file
-      and checks the INDEX directly for the missing-from-disk case (needs-staging vs already-staged vs a genuine
-      caller error) rather than a single combined `git add`, plus a companion fix re-deriving `KNOWN_RENAME_SOURCES`
-      from `FILES` directly (absent-from-disk + present-in-HEAD) instead of an already-staged `-M` diff pair, which
-      was silently empty on the isolated-worktree path — see Progress Log for full detail + regression coverage.
+      don't gate the fix or its test on a large stash pile). Repo: unified-trading-pm. — ✅ **authoritative fix
+      landed by slot-14** (`stage_named_files()`, replacing the single combined `git add` with per-file staging
+      that checks the INDEX directly for the missing-from-disk case — needs-staging vs already-staged vs a genuine
+      caller error — plus re-deriving `KNOWN_RENAME_SOURCES` from `FILES` directly, absent-from-disk +
+      present-in-HEAD, which ALSO fixed a second defect: the old `-M`-diff-based detection was silently empty on
+      every isolated-worktree run, permanently disabling `reassert_renames()` there; see Progress Log for full
+      detail + the 6-case bats suite). Slot-25 independently converged on the same mechanism (excluding
+      `KNOWN_RENAME_SOURCES` from the bulk `git add`) via a separate scratch-repo sandbox before seeing slot-14's
+      landed work; deferred to slot-14's version on reconciliation since it is strictly more complete (closes the
+      isolated-mode detection gap slot-25's own approach did not). Slot-25 kept one additive piece on top:
+      `sdp_recover_named_from_any_stash()`, a narrower, independent safety net (any named `--files` path missing
+      from disk+index gets searched for across every stash entry and restored before a staging failure — covers
+      the separate residual case of a quarantine cycle's `protected` check genuinely missing a path for some other
+      reason; explicitly excludes any current rename source, since that function initially had a real bug where it
+      resurrected a rename's OLD path from an unrelated stash entry, undoing the rename it was meant to help land
+      — caught and fixed in the same session, see Progress Log). Regression coverage:
+      `tests/test_safe_doc_push_extreme_quarantine_rename_survives.bats` (slot-14, 6 cases) +
+      `scripts/dev/test-safe-doc-push-git-mv-rename-shared-index.sh` (slot-25, 0-stash-entry deterministic) +
+      `scripts/dev/test-safe-doc-push-stash-recovery.sh` (slot-25, the safety-net's own shape) — all green, plus
+      both `repro-safe-doc-push-extreme-stash-rename-{drop,loss}.sh` harnesses confirm no regression.
 - [ ] [SCRIPT] P1. **RESIDUAL GAP found 2026-08-15 (session resumption, slot-2), post-fix**: `stage_named_files()`'s
       "already-staged, nothing to do" handling does NOT cover the case where the CALLER runs `git mv <old> <new>`
       themselves BEFORE ever invoking `safe-doc-push.sh` (as opposed to the script staging it mid-loop, which the
@@ -194,10 +210,14 @@ tracked-but-missing shape.
       script if you already ran `git mv` yourself). Needs the same isolated-scratch-repo reproduction discipline this
       doc's own P1 fix used, specifically exercising `git mv` (not `rm`+`git add`) as the pre-staging step, across a
       stash-quarantine cycle. Repo: unified-trading-pm.
-- [ ] [SCRIPT] P2. Once fixed, consider lowering the "24 entries is extreme" bar or adding a lighter-weight
+- [x] ✅ [SCRIPT] P2. Once fixed, consider lowering the "24 entries is extreme" bar or adding a lighter-weight
       protect-and-restore path that doesn't require a full stash round-trip for the common case (few named files,
       most of the pile pre-existing and unrelated) — the current design pays the highest-risk code path exactly when
-      the pile is largest, which is backwards from a safety standpoint. Repo: unified-trading-pm.
+      the pile is largest, which is backwards from a safety standpoint. Repo: unified-trading-pm. — lowered
+      `EXTREME_THRESHOLD` 10 → 8 in `autostash_guard_bound_backlog()` (scripts/dev/tree-wip-guard.sh), justified by
+      the new recovery safety net bounding the residual risk; the round-trip is already skipped when there is
+      nothing non-protected to quarantine (`to_quarantine` empty), so the "common case" cost was already close to
+      zero — the earlier-engaging threshold is the change that matters here.
 - [ ] [INFRA] P3. Separately (not blocking the above): this slot's checkout has 55 accumulated stash entries, the
       large majority auto-generated safety-snapshots/autostash remnants from past sessions (several look like
       superseded intermediate attempts at the same past prosewrap fix, per stash message inspection). Worth a careful,
@@ -263,3 +283,61 @@ tracked-but-missing shape.
   (54 cases total) green, no regressions. Todo 1 (the extreme-stash-pile scratch-repo reproduction) and todo 3
   (lowering the "24 entries is extreme" bar) are separate, unattempted P1/P2 todos above — this fix addresses the
   content-loss mechanism directly and does not depend on reproducing the stash-pile branch specifically.
+- **2026-08-15 (slot-25, infra, pass 1)**: Dispatched only the P2 todo; escalated (BLK-a6340305) since it's
+  textually gated on the unshipped P1 fix — operator directed absorbing P1 into this task ("go on the side of the
+  fuller solution"). Root-caused via code reading + a scratch-repo repro
+  (`scripts/dev/repro-safe-doc-push-extreme-stash-rename-loss.sh`) before slot-19's landed correction was visible
+  locally: a clean (non-conflicting) divergence already lands the rename correctly via the existing 2026-08-08
+  `KNOWN_RENAME_SOURCES`/`reassert_renames` fix, and a genuinely conflicting one already hard-stops safely (UU,
+  advisory, recoverable) — neither reproduced the exact silent-loss signature. Shipped `sdp_recover_named_from_any_
+  stash()` (last-resort stash search-and-restore) plus the `EXTREME_THRESHOLD` 10→8 tuning against the
+  "quarantine" hypothesis. Landed as 53fd9b7174, then hit a rebase conflict on THIS doc against slot-19's
+  426bf93bce/535ac5a1b7 (landed concurrently, same file) on pull.
+- **2026-08-15 (slot-25, infra, pass 2 — reconciliation)**: Read slot-19's landed diagnosis in full before
+  reconciling. Independently verified their claim with a minimal `git init` sandbox (no stash, no autostash, no
+  script involved at all): `git mv old new` then `git add -- old new` (and even solo `git add -- old` alone) both
+  fail with the EXACT reported `fatal: pathspec 'old' did not match any files` the instant `old` has no index entry
+  — this is deterministic git behaviour, present with ZERO stash entries. This falsifies pass 1's own
+  "extreme-quarantine" framing exactly as slot-19 found; their root-cause diagnosis is correct and independently
+  reproduced. Reconciled the doc keeping BOTH sessions' work (this Progress Log, the corrected Recommended
+  decision, todo 1's evidence) rather than overwriting either. Implemented the actual fix on top: excluded every
+  `KNOWN_RENAME_SOURCES` path from the bulk `git add -- "${FILES[@]}"` call (a clean staged rename's source needs
+  no re-`add` — it's already correctly staged as part of the R100 pair; `reassert_renames()`, unchanged, still
+  handles the case where a reconcile decomposes it into a genuine unstaged delete). `sdp_recover_named_from_any_
+  stash()` and the lowered `EXTREME_THRESHOLD` from pass 1 are KEPT as independent defense-in-depth (a different,
+  still-real risk: a quarantine cycle's `protected` check genuinely missing a path for some other reason) — neither
+  overlaps with nor is contradicted by this fix. Added a new deterministic 0-stash-entry regression test
+  (`scripts/dev/test-safe-doc-push-git-mv-rename-shared-index.sh`) directly mirroring slot-19's control repro shape,
+  and re-ran slot-19's own `repro-safe-doc-push-extreme-stash-rename-drop.sh` plus this session's own two
+  repro/test scripts to confirm the fix closes the loss with no regression anywhere. shellcheck -S error clean on
+  every touched/new file. **Caught + fixed a bug in pass 1's own `sdp_recover_named_from_any_stash`**: re-running
+  slot-19's repro against the new fix still failed (exit 14, "deletion of named file did not reach origin") because
+  that function's missing-from-disk-AND-index check has no way to distinguish a genuinely lost file from a rename
+  source's normal, correct, by-design absence — it was resurrecting the OLD path from an unrelated stash entry,
+  literally undoing the rename it was supposed to help land. Fixed by excluding any path that
+  `git diff --cached --name-status -M` currently shows as the source of a staged rename (must scan the UNFILTERED
+  rename list — pathspec-restricting that diff collapses the rename to a plain `D`, which silently defeated the
+  first attempt at this same check). All four repro/test scripts pass clean after this correction.
+- **2026-08-15 (slot-25, infra, pass 3 — second reconciliation)**: A THIRD independent landing (slot-14,
+  `unified-trading-pm@7e03ff2f01`) hit origin on the very next push attempt — same root cause, a more complete fix
+  (`stage_named_files()` + the `KNOWN_RENAME_SOURCES` isolated-mode detection fix pass 2 had not found). Read it in
+  full before reconciling again. Deferred entirely to slot-14's `stage_named_files()`/`KNOWN_RENAME_SOURCES`
+  implementation for the P1 root cause (`git checkout --ours -- scripts/dev/safe-doc-push.sh` during the rebase,
+  taking their landed version as the base) rather than keeping pass 2's own competing `_SDP_ADD_FILES`-exclusion
+  approach, which — unlike slot-14's — did not close the isolated-worktree `KNOWN_RENAME_SOURCES`-detection gap.
+  Re-applied only the genuinely additive piece on top of slot-14's version:
+  `sdp_recover_named_from_any_stash()` (with pass 2's rename-source exclusion fix carried forward unchanged) at its
+  two call sites. Re-ran every regression/repro script (this session's two tests, slot-19's and slot-25's repro
+  harnesses) against the fully reconciled file — all green, shellcheck -S error clean. Net effect for future
+  readers: the AUTHORITATIVE P1 fix is slot-14's `stage_named_files()`; this session's `sdp_recover_named_from_
+  any_stash()` is a small, independent, additive safety net layered on top, not a competing implementation.
+- **2026-08-15 (slot-25, infra, pass 4 — third reconciliation)**: A fourth concurrent landing (slot-2,
+  `982f87d110`) hit origin mid-ship: a NEW, genuinely unresolved residual gap in `stage_named_files()` (a
+  caller-pre-staged `git mv`, as opposed to the script staging it mid-loop, still hits the pre-fix pathspec error
+  under a real quarantine pile — reproduced live, root cause not yet found, workaround documented). This is a
+  DIFFERENT, newly-surfaced defect from the one this task's P1/P2 closed — kept slot-2's todo verbatim (unchecked,
+  its own P1) rather than absorbing it into this task's scope: it needs its own isolated-scratch-repo root-cause
+  investigation (per its own todo text) and this task has already gone three rounds of reconciliation past its
+  original P2-only dispatch. Merged without further code changes — this task's own fix (slot-14's
+  `stage_named_files()` + this session's `sdp_recover_named_from_any_stash()`) is unaffected by and does not
+  address slot-2's finding either way.

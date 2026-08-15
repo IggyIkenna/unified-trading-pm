@@ -782,6 +782,48 @@ fi
 # paths before reaching the explicit release near EOF (see push-host-governor.sh's own header).
 push_gov_acquire_validate
 
+# sdp_recover_named_from_any_stash -- narrower, independent safety net (2026-08-15,
+# safe_doc_push_extreme_stash_quarantine_drops_renamed_file_content_2026_08_15.md), separate
+# from stage_named_files()'s root-cause fix below. A quarantine cycle this script runs
+# (autostash_guard_bound_backlog's pre-pull sweep, autostash_guard_quarantine_stale_pop's
+# post-pop sweep, or a plain `git pull --rebase --autostash` pop) is supposed to skip the
+# caller's own --files via a `protected` string check before touching anything -- that check
+# is a best-effort string match, not a guarantee. Since every quarantine path here only ever
+# pushes a NAMED stash entry (never `git stash drop`s), any content it drops despite that
+# check is still provably recoverable: for any named --files path missing from both disk and
+# the index, search every stash entry (newest first) for that exact path and restore it before
+# ever reaching a staging failure. Must NOT touch a path that is legitimately the source of an
+# already-staged rename (its missing-from-disk-and-index state is CORRECT there, not lost) --
+# checked against the unfiltered `git diff --cached --name-status -M` list (pathspec-filtering
+# that diff collapses a rename to a plain `D`, which would silently defeat this exact check).
+sdp_recover_named_from_any_stash() {
+  local f stash_count idx ref found
+  stash_count="$(git stash list 2>/dev/null | wc -l | tr -d ' ')"
+  [[ "${stash_count:-0}" -gt 0 ]] || return 0
+  for f in "${FILES[@]}"; do
+    [[ -e "$f" ]] && continue
+    git ls-files --error-unmatch -- "$f" >/dev/null 2>&1 && continue
+    if git diff --cached --name-status -M 2>/dev/null | awk -F'\t' -v p="$f" '$1 ~ /^R/ && $2 == p {found=1} END{exit !found}'; then
+      continue
+    fi
+    found=""
+    for idx in $(seq 0 $((stash_count - 1))); do
+      ref="stash@{$idx}"
+      if git cat-file -e "${ref}:${f}" 2>/dev/null; then
+        found="$ref"
+        break
+      fi
+    done
+    if [[ -n "$found" ]]; then
+      echo "  🔧 recovered $f from $found -- it was missing from disk AND the index (a quarantine cycle swept it; see safe_doc_push_extreme_stash_quarantine_drops_renamed_file_content_2026_08_15.md)" >&2
+      mkdir -p "$(dirname "$f")" 2>/dev/null || true
+      git show "${found}:${f}" >"$f" 2>/dev/null || true
+    fi
+  done
+}
+
+sdp_recover_named_from_any_stash
+
 for f in "${FILES[@]}"; do
   if [[ ! -e "$f" ]]; then
     # Not on disk -- still acceptable if git knows this path, e.g. the source half of a
@@ -1354,6 +1396,8 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
         exit 3
       fi
     fi
+
+    sdp_recover_named_from_any_stash
 
     if ! stage_named_files 2>/tmp/_sdp_add_err; then
       # safe_doc_push_reports_success_having_committed_nothing_2026_08_09 (todo 3): `git add`'s

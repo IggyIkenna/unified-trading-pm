@@ -237,9 +237,21 @@ autostash_guard_quarantine_stale_pop() {
 
 # autostash_guard_bound_backlog — call BEFORE any reconcile that may create a new
 # autostash entry. When the backlog is large (>=5 autostash entries), warns and prints
-# the list. When it is extreme (>=10), ALSO quarantines the current dirty tree into a
-# named stash BEFORE the pull, so no NEW autostash entry is created on top of the pile.
-# The chain self-arrests because the next pull has a clean tree, producing no new entry.
+# the list. When it is extreme (>=EXTREME_THRESHOLD), ALSO quarantines the current dirty
+# tree into a named stash BEFORE the pull, so no NEW autostash entry is created on top of
+# the pile. The chain self-arrests because the next pull has a clean tree, producing no
+# new entry.
+#
+# EXTREME_THRESHOLD lowered 10 -> 8 (P2,
+# safe_doc_push_extreme_stash_quarantine_drops_renamed_file_content_2026_08_15): this is
+# the code path measured live to have swept a caller's own --files content into a stash
+# despite the `protected` check below, on a pile that had already grown to 24 entries —
+# engaging the quarantine earlier means fewer accumulated entries to search when
+# something needs recovering, and the risk this branch carries is now bounded by
+# `sdp_recover_named_from_any_stash` (safe-doc-push.sh), which searches every stash entry
+# for a caller-named path missing from disk+index and restores it before staging ever
+# fails. Not lowered further: the >=5 warn-only tier already surfaces the pile early
+# without paying the stash round-trip cost.
 #
 # $1: space-separated protected paths (the caller's --files, or "" for none) — these
 #     are the work being SHIPPED and must NEVER be quarantined, even in the extreme
@@ -249,6 +261,7 @@ autostash_guard_quarantine_stale_pop() {
 # Returns 0 (advisory — never blocks the caller).
 autostash_guard_bound_backlog() {
   local protected="${1:-}" branch="${2:-origin/live-defi-rollout}" entries entry_list count
+  local extreme_threshold=8
   entry_list="$(git stash list 2>/dev/null | grep -i 'autostash\|safety-snapshot.*stale reapplied' || true)"
   [ -n "$entry_list" ] || return 0
   count="$(printf '%s\n' "$entry_list" | wc -l)"
@@ -258,13 +271,13 @@ autostash_guard_bound_backlog() {
       echo "     These entries are parked, not dropped. Inspect with 'git stash list' and drop old ones:"
       echo "       git stash drop 'stash@{N}'   # drop one"
       echo "     SSOT: multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md"
-      if [ "$count" -ge 10 ]; then
+      if [ "$count" -ge "$extreme_threshold" ]; then
         echo "  🛑 ${count} entries is extreme — quarantining current dirty tree into a named stash"
         echo "     BEFORE the pull so no new autostash entry is created on top of the pile."
       fi
     } >&2
   fi
-  if [ "$count" -ge 10 ]; then
+  if [ "$count" -ge "$extreme_threshold" ]; then
     local current_dirty f to_quarantine=()
     current_dirty="$(git diff --name-only 2>/dev/null)"
     if [ -n "$current_dirty" ]; then
