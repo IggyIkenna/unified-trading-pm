@@ -519,7 +519,7 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   `/plans/active/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md` (this corpus's existing
   line-cap-remediation tracking doc) rather than re-discovered fresh next time. One adjacent fix in the same pass: found
   and corrected a pre-existing dangling `related:` reference in
-  `plans/active/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md` (cited
+  `plans/archive/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md` (cited
   `watchdog_kill_events_deployment_gaps_2026_08_05.md` at its pre-archival path; doc had since moved to
   `/plans/archive/2026_08/`) — caught only because that file happened to be staged for this session's own edit; fixed in
   the same commit per the "a pointer that misled you is a finding" HARD RULE. Shipped in 3 verified batches via

@@ -666,7 +666,7 @@ batch)
   — evidence: `ag_closeout_audit_cross_cutting_parked_2026_08_07.md` findings 1/5/6, `…_2026_08_08.md` for the rest.
 - **infrastructure**:
   [`autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md`](/plans/active/issues/autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md),
-  [`claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md`](/plans/active/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md),
+  [`claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md`](/plans/archive/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md),
   [`deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md`](/plans/active/issues/deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md)
   (ci also defensible),
   [`deployment_service_prod_terraform_drift_2026_08_07.md`](/plans/active/issues/deployment_service_prod_terraform_drift_2026_08_07.md),
