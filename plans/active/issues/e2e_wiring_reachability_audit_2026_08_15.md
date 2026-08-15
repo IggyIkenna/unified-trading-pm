@@ -427,9 +427,69 @@ The risk is a hand-entered quantity being WRONG. Reconciliation will correctly d
 `auto_correct_enabled=True`, `CorrectionDispatcher` dispatches a correction ORDER on the strength of a number a human
 typed during an incident. That compounds a typo into a real trade.
 
-- [ ] [OPERATOR] P0. **Rule: should `auto_correct_enabled` be force-disabled for a client/slot after any `RECORD_ONLY`
-      entry, until a human re-arms it?** Auto-correcting against a hand-entered book during a DR episode is the one path
-      here that can turn an operator error into an executed position.
+> **⚠️ The framing above is SUPERSEDED (operator, 2026-08-15).** I proposed disabling auto-correct AFTER a `RECORD_ONLY`
+> entry. That is the wrong mechanism and too late. Correct model below.
+
+**The instant-undo problem.** Partial outages are the common case — orders down, position feed fine. Book a manual trade
+while reconciliation is armed and reconciliation sees internal ≠ exchange and **corrects it away within seconds**. The
+entry is undone by the system almost as soon as it is made. So reconciliation must be **PAUSED BEFORE the entry is
+accepted, not disabled after it**, and attempting a manual booking while reconciliation is armed must raise an ALERT
+rather than silently proceed.
+
+**Two DISTINCT classes of manual entry** — conflating them is what makes this confusing:
+
+| Class                                | Will the venue ever show it?                      | What reconciliation must do                                                             |
+| ------------------------------------ | ------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| **Reconcilable entry**               | Yes — a real trade the feed reports once restored | Converge normally. Pause during entry so it is not undone before the feed catches up.   |
+| **Persistent delta (virtual entry)** | **No — never.** A deliberate permanent offset     | **EXCLUDE it from the comparison**, and keep reconciling everything else, indefinitely. |
+
+The second class has no current answer. It is not a "fake trade" — it is a **consistent delta offset** the system must
+treat as real while knowing the exchange will never confirm it. Without exclusion, reconciliation spends the rest of
+time trying to unbook it.
+
+**Requirements for a virtual entry** (none of this exists today):
+
+1. A mandatory human-written REASON — an emergency protocol, not a routine booking.
+2. A warning at entry, and an alert if attempted while reconciliation is armed.
+3. **Excluded from the reconciliation delta** so it is never auto-unbooked, while the rest of the position keeps
+   reconciling normally.
+4. Persists until a human removes it.
+
+**MiFID: removal is a STATUS CHANGE, never a deletion.** The row is never removed from storage. A deleted entry is
+excluded from system behaviour, but the record — and the delete ACTION itself, with actor and reason — stays auditable.
+
+**What exists today (checked 2026-08-15):** `auto_correct_enabled` plus three guards (flag,
+`auto_correct_threshold_pct`, `auto_correct_max_qty`) at `correction_dispatcher.py:37-40`. That is a STATIC config flag.
+There is **no pause concept, no per-episode suppression, no virtual-entry exclusion, and no soft-delete for trades** —
+the `DELETED` statuses in UAC are for VMs and client-reporting, not fills. Zero hits for OTC diff-booking in
+`strategy_service/position/`.
+
+- [ ] [AGENT] P0. **Reconciliation PAUSE as a PRECONDITION of manual entry** — armed-state check before the booking is
+      accepted, alert if armed, explicit resume. Not a post-hoc disable.
+- [ ] [AGENT] P0. **Virtual / persistent-delta entry**: mandatory reason, excluded from the reconciliation delta so it
+      is never auto-unbooked, while everything else keeps reconciling; warning at entry.
+- [ ] [AGENT] P0. **Soft-delete with audit (MiFID)** — status change only, never row removal; record actor + reason;
+      deleted entries excluded from behaviour but retained and auditable.
+- [ ] [OPERATOR] P1. **Confirm whether OTC reconciliation should auto-book the difference** between internal and
+      exchange position. Described as expected behaviour during the ruling but **not found in code** (zero OTC hits in
+      `position/`) — either it lives elsewhere, or it is unbuilt and this is its todo.
+
+### Artefact disclosure boundary (operator, 2026-08-15)
+
+The client receives **strategy-service code only**. The artefact must carry enough that they understand how
+execution-service _generally_ handles their instructions — without becoming a specification anyone could rebuild from.
+
+| Include                                                                                          | Withhold                                                         |
+| ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| The INSTRUCTION contract — what a strategy can ask for, what each field means                    | The algorithms that fulfil an instruction                        |
+| What the execution flow is TRYING TO ACHIEVE — the goal of each stage                            | The step-by-step execution flow                                  |
+| That behaviour is governed per `(client_id, strategy slot)` and hot-reloadable — the config LOOP | The policy rules, thresholds and selection logic inside the loop |
+| That `urgency` steers aggressive-vs-passive, and that venue/algo choice follows from policy      | Which algo is chosen under which condition                       |
+
+**Test for a passing artefact**: a client engineer can (a) predict what the system will do with an instruction they
+write, and (b) explain why the execution layer exists and what it optimises for — but cannot reconstruct the algorithms
+or policy rules from it. Instructions stay clear; execution stays purposeful but not reproducible. **The config loop is
+understood, not copyable.**
 
 ### Scoping rule: DR is POSITION-shaped, not STRATEGY-shaped
 
