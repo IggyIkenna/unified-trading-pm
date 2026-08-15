@@ -78,14 +78,16 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
       `sports_taxonomy_p2_migration_2026_08_08.md` needs to pick this up. NOT auto-fixable — needs runtime
       re-confirmation first. Real risk: wrong path segment key could misdirect data or break readers on a live
       migration.
-- [ ] [DATA] P1. **Databento billing gate stale-"lifted" claim, live risk of wasted VM spend.**
+- [x] ✅ [DATA] P1. **Databento billing gate stale-"lifted" claim, live risk of wasted VM spend.**
       `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` claims the billing gate is "lifted" for in-scope items
       (CME/ES futures/options, BTC/ETH CME futures), last touched 2026-08-10. But
       `tradfi_databento_account_billing_suspended_2026_08_09.md` shows status flipped back to `blocked` 2026-08-14, with
       2026-08-15 entries confirming the SAME unpaid-invoice wall (402 `account_delinquent_invoice`) on CME/GLBX.MDP3 —
       exactly the MVP-of-MVP doc's in-scope cells. A worker trusting the stale framing would relaunch CME/ES backfills
       that fail immediately. Needs: update the MVP-of-MVP doc's billing-relationship section with a
-      recheck-live-billing-doc caveat.
+      recheck-live-billing-doc caveat. **DONE 2026-08-15** — re-verified billing doc still `blocked` as of 2026-08-15;
+      added a dated caveat to the MVP-of-MVP doc pointing to the billing doc as live source of truth.
+      `unified-trading-pm@f6d90162b4`.
 - [ ] [CODE] P1. **UAC sports odds registry contradicts the 2026-08-08 operator-ruled canonical `data_type`, no tracked
       todo.** `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1565-1591`'s
       `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[("sports","odds")]` still declares `data_type="trades"` as canonical.
@@ -150,48 +152,61 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
       `prediction_satellite_ao_dispatch_batch11_2026_08_13.md` + its finalize (both declare
       `parent_epic: predictions_master`, created before the epic's own last_updated). Auto-fixable: add 2 entries,
       correct 16→18.
-- [ ] [CODE] P1. **cefi_enumeration_audit doc — 2 issues.**
+- [x] ✅ [CODE] P1. **cefi_enumeration_audit doc — 2 issues.**
       `cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md`: (a) frontmatter
       self-contradiction `assigned_vm: planning` + `execution_scope: local-only` (schema requires `orchestrator-agent`
       pairing) — Progress Log records the reclassification but execution_scope was never updated, auto-fixable; (b)
       doc's last line says "a SEPARATE, still-open question (**new todo below**)" but no such todo exists anywhere in
-      the doc — needs human check: author the missing todo or correct the sentence.
-- [ ] [DOCS] P1. **cefi batch10_finalize stale lock-ask premise.**
+      the doc — needs human check: author the missing todo or correct the sentence. **DONE 2026-08-15** — (a) flipped
+      `execution_scope` to `orchestrator-agent`; (b) confirmed no such todo exists anywhere, corrected the false
+      forward-reference sentence instead of guessing at scope. `unified-trading-pm@f6d90162b4`.
+- [x] ✅ [DOCS] P1. **cefi batch10_finalize stale lock-ask premise.**
       `cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize.md` todo 2 (still open) asks the operator to unlock
       `cefi_coinbase_cde_urdi_zero_records_2026_07_28.md` as "locked" — but that doc's own Progress Log shows
       `locked_by` was already cleared 2026-08-12 (corpus-wide placeholder fix), now bridged via `archive_exempt:true`
       awaiting follow-on archival, not actually locked. Needs a human/next-toucher edit to narrow the ask to the other
       named doc (`cefi_universe_capture_rule_2026_06_23.md`, unverified) since the finalize is `sequential:true`/gated —
-      don't blind-flip.
+      don't blind-flip. **DONE 2026-08-15** — verified BOTH named docs have `locked_by` cleared already (not just the
+      one), rewrote the todo to reflect the corpus-wide 2026-08-12 clearing and point at running the archival ritual
+      instead of an operator unlock-ask; did not flip any other todo in this `sequential:true` doc.
+      `unified-trading-pm@f6d90162b4`.
 - [ ] [DOCS] P1. **Predictions consolidated closeout per-child open-todo snapshot 20 days stale.**
       `prediction_consolidated_closeout_2026_07_18.md`: phase_ab says 13 open (actual 6), phase_c says 4 (actual 2),
       phase_d says 6 (actual 5), capture_incident_remediation says 9 (actual 7). Not dispatch-blocking (real gate is
       `depends_on`) but misleads readers. Re-run counts, update both citation points (snapshot table + digest).
-- [ ] [TERRAFORM] P1. **tradfi_master epic stale active-plans list.** `plans/epics/tradfi_master.md:817-888` lists
+- [x] ✅ [TERRAFORM] P1. **tradfi_master epic stale active-plans list.** `plans/epics/tradfi_master.md:817-888` lists
       batch6+finalize as "status: active" but they're archived; list stops at batch8, missing batch9-batch12 entirely
       (epic's own frontmatter `related_plans` cites batch12, `ag_closeout_audit_tradfi_parked_2026_08_10.md` confirms
-      batch11+12 flipped active 2026-08-12). Needs `populate_epic_bodies_2026_05_21.py` re-run.
-- [ ] [SCRIPT] P1. **Checkbox-counting tooling may have a `*`-bullet blind spot causing a false archive candidate.**
+      batch11+12 flipped active 2026-08-12). Needs `populate_epic_bodies_2026_05_21.py` re-run. **DONE 2026-08-15** —
+      ran `populate_epic_bodies_2026_05_21.py --apply` (derived, full-corpus tool); only committed the resulting
+      `tradfi_master.md` diff (correctly now lists batch11/12/13+finalize, drops archived batch6), reverted the tool's
+      incidental regen of the other 18 epics as out-of-scope for this pass. `unified-trading-pm@f6d90162b4`.
+- [x] ✅ [SCRIPT] P1. **Checkbox-counting tooling may have a `*`-bullet blind spot causing a false archive candidate.**
       `tradfi_backfill_oom_remediation_2026_06_24.md:428` has a genuinely open `* [ ]` item (asterisk bullet, not dash)
       but `ag_closeout_audit_tradfi_parked_2026_08_10.md:95` claims "0 open, 12 done" and lists it as an archive
       candidate. Same false-negative class already known for na-eligibility-audit's own star-bullet gap. REAL RISK: doc
       could be archived while carrying genuine open work. Fix: normalize bullet to `-`, AND check whether
-      `check_archive_candidates.sh`/`count_open_tasks.py` has this same regex gap.
+      `check_archive_candidates.sh`/`count_open_tasks.py` has this same regex gap. **DONE 2026-08-15** — normalized the
+      bullet (content unchanged). Confirmed the tooling gap by reading source: `count_open_tasks.py`'s
+      `OPEN_RE =     re.compile(r"^\s*- \[ \]")` and `check_archive_candidates.sh`'s `grep -cE '^[[:space:]]*- \[.\]'`
+      both require a dash bullet — neither counts `* [ ]`. Reported here for a human to fix in the tooling itself (out
+      of scope for this docs-only pass). `unified-trading-pm@f6d90162b4`.
 
 ## P2 — done-but-unchecked (auto-fixable, hard evidence)
 
-- [ ] [SCRIPT] P2. `ff_pull_fleet_drift_rca_2026_08_11.md` 2 of 4 open todos already shipped 2026-08-13 (code self-cites
-      the doc by name) — `unified-trading-pm@c89e109ea7` (slot/clone log tagging), `unified-trading-pm@bb75f3d5ce`
-      (ff-starvation-detect.sh detached-HEAD verdict). Flip both citing the shas.
-- [ ] [DATA] P2. `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md:125-131` Phase A2 todo1 still `[ ]` but
+- [x] ✅ [SCRIPT] P2. `ff_pull_fleet_drift_rca_2026_08_11.md` 2 of 4 open todos already shipped 2026-08-13 (code
+      self-cites the doc by name) — `unified-trading-pm@c89e109ea7` (slot/clone log tagging),
+      `unified-trading-pm@bb75f3d5ce` (ff-starvation-detect.sh detached-HEAD verdict). Flip both citing the shas. **DONE
+      2026-08-15** — both shas re-verified reachable, both flipped. `unified-trading-pm@f6d90162b4`.
+- [x] ✅ [DATA] P2. `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md:125-131` Phase A2 todo1 still `[ ]` but
       `tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md:7-9` shows the verify already done with live
-      code quoted. Flip citing the drift doc.
-- [ ] [DATA] P2. `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md:92-105` "converge GCS chain-bundle onto registry
+      code quoted. Flip citing the drift doc. **DONE 2026-08-15.** `unified-trading-pm@f6d90162b4`.
+- [x] ✅ [DATA] P2. `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md:92-105` "converge GCS chain-bundle onto registry
       values" still `[ ]`, but batch13 (`:76-113`) already did the identical work with full evidence. Flip batch11
-      citing batch13's shas.
-- [ ] [DOCS] P2. `tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md` action item1 has a stale
-      "option 2 still NOT shipped" note but `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md:191-198` shows it DONE
-      (deploy@48f55e934b). Auto-fixable.
+      citing batch13's shas. **DONE 2026-08-15.** `unified-trading-pm@f6d90162b4`.
+- [x] ✅ [DOCS] P2. `tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md` action item1 has a
+      stale "option 2 still NOT shipped" note but `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md:191-198` shows it
+      DONE (deploy@48f55e934b). Auto-fixable. **DONE 2026-08-15.** `unified-trading-pm@f6d90162b4`.
 - [ ] [CODE] P2. `sports_consolidated_closeout_2026_07_19.md:745` Track H RAISE-on-all-NaT todo still `[ ]`, but
       identical work shipped per `sports_consolidated_native_ao_extract_2026_07_25.md:346-350`
       (market-tick-data-service@84ee34f2, 2 named tests, QG green). Flip citing that sha.
