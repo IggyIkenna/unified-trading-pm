@@ -160,3 +160,20 @@ deliberate decision rather than changed mid-session.
   60s (cap 15 checks / 15min) and only launches the next attempt once load drops below 6 (or the cap is hit), then
   tracks that attempt to completion the same way. This is a load-gated retry, not a blind one — the condition being
   waited on (host contention) is external and measurable, not a coin-flip re-run.
+- **2026-08-15 06:54-07:16 (slot 2, load-gated retry result — partial success, then a fourth silent kill much deeper
+  into the gate)**: the load-gated watchdog's cap-fallback fired at 06:54:40 (load never dropped below 6 in its 15-check
+  window) and launched attempt 3 (PID `1069852`) anyway. This attempt broke clean through the governor queue (unlike the
+  two prior identical `queued 300s` deaths) and ran real content for over 20 minutes, progressing through TESTS (pytest
+  visibly at 82-91%, all passing bar 2 skips) and on into the `[5.x/6]` DATA-PIPELINE SELF-MONITORING / ratchet checks,
+  reaching **5.95/6** (792 log lines, last write 07:16:18) — by far the deepest any attempt has reached. It then died
+  the same way as the first two: PID vanished, log stopped mid-stream with **no exit code, no traceback, no phase-6
+  banner**, right after a `5.95 PASS:` line. At death: `uptime` 5.26/7.42/9.15 (host load had already eased from the
+  peak), `free -h` showed 20Gi "available" (same clean-snapshot-hides-the-spike pattern already noted above). Checked
+  `dmesg`/`journalctl` for an OOM/cgroup-eviction signature around 07:16:18 — no kernel OOM lines found (dmesg
+  unreadable without privilege; journalctl had only unrelated substring hits) — inconclusive, does not rule out the
+  memory-pressure hypothesis from the 2026-08-14 operator entry above. **Reframing**: this is not a fixed "dies at 300s"
+  signature — the kill point is not a fixed offset, and forward progress is real and increasing each retry
+  (governor-queue-only → governor-queue-only → 91% through tests and past 5.95/6 checks). Treating this as continued
+  corroboration of the same root cause (a per-instance resource cost the governor doesn't model), now with evidence the
+  failure mode is a moving contention threshold rather than a deterministic timeout. Retrying a 4th time immediately
+  (load already favorable, no load-gate wait needed this time).
