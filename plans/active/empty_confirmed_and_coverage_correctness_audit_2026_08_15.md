@@ -111,17 +111,42 @@ data that's actually needed. This plan gets the evidence first.
       `/plans/active/empty_confirmed_and_coverage_correctness_audit_2026_08_15.md`): the operator's 2026-08-15 "always
       bundle" ruling is broader than the existing F2 rule, which deliberately leaves BYBIT (409,343 rows) as
       per-contract — does BYBIT come into scope too, or stay an intentional exception?
-- [ ] [DATA] P1. **defi empty_confirmed breakdown** (78.7M rows, larger than captured 32.5M — never investigated this
-      session, sibling to the cefi/tradfi/prediction breakdowns already done). Same method: grain confirmation,
-      date/venue/data_type/instrument_type/error_reason distribution, cross-tab for a dominant combination. Done-when:
-      same shape of report as the cefi/tradfi/prediction sibling findings.
-- [ ] [DATA] P1. **defi `EXPECTED_INSTRUMENT_NOT_LISTED` semantics.** Operator question: does this reason mean the
-      instrument is genuinely not listed on-chain/on the venue, or does it reflect instruments-service's own catalogue
-      being incomplete (i.e. the row exists on-chain but IS never enumerated it)? Trace
-      `EXPECTED_INSTRUMENT_NOT_LISTED`'s write call sites for defi specifically and determine which. Separately confirm:
-      are `EXPECTED_PRE_SOURCE_COVERAGE_START` rows already tagged as out-of-scope/excluded from the "real gap" surface,
-      or do they currently read as ordinary `empty_confirmed` indistinguishable from a real gap? Done-when: a clear
-      statement of what each reason actually proves, with file:line evidence.
+- [x] 4. ✅ [DATA] P1. **defi empty_confirmed breakdown — DONE, same benign spread shape as cefi.** Live-measured total
+      78,754,548 (matches the 2026-08-14 snapshot within normal drift). Grain:
+      `(date, chain, venue,     instrument_type, instrument_id, data_type)` — defi's chain axis confirmed. By chain:
+      ETHEREUM 31.50% · BASE 14.36% · AVALANCHE 14.31% · ARBITRUM 13.77% · SOLANA 10.02%, 17 more long-tail. By venue
+      (76 distinct): MORPHO 21.45% · UNISWAP_V3 16.12% · TRADER_JOE_V2 12.28%, long-tail. By date: 3,149 distinct dates,
+      top-20 sum to only 1.57% — no incident window, tracks organic onboarding 2018→2026 same as cefi. Cross-tab: 4,583
+      distinct combos, top-25 sum to only 43% — genuinely spread; largest structural (non-bug) cluster is Morpho's
+      per-market a_token+debt_token × 5-data_type grid (~11.4% combined). **Critically, `SOURCE_RETURNED_ZERO` is only
+      0.003% (2,648 rows)** of defi's total — the miscategorization bug found in the 5 oracle collectors (todo 6) is
+      real but only affects a tiny sliver of this 78.7M figure, not the bulk of it. Error_reason is the real explanatory
+      axis: `EXPECTED_INSTRUMENT_NOT_LISTED` 41.25% · `EXPECTED_REFERENCE_ONLY_NO_CAPTURE_PATH` 28.42% ·
+      `EXPECTED_PRE_GENESIS_CHAIN` 13.83% · `EXPECTED_INSTRUMENT_DELISTED` 10.47% · `EXPECTED_NOT_ENOUGH_TVL` 5.91%.
+- [x] 5. ✅ [DATA] P1. **defi `EXPECTED_INSTRUMENT_NOT_LISTED` semantics — RESOLVED, nuanced "both true" answer, with 2
+      confirmed real incidents.** For instruments ALREADY in instruments-service's catalogue, `NOT_LISTED` is genuinely
+      evidence-backed — cross-referenced against on-chain contract-creation timestamps, subgraph earliest events, or a
+      pre-commit-gated `PROTOCOL_LAUNCH_DATES` registry requiring a `# DERIVED YYYY-MM-DD from...` citation
+      (`enumerate_expected_universe.py:1442-1580,1583-1793`). **But the operator's worry is confirmed real for a
+      DIFFERENT failure mode**: whole archetypes/venues IS never catalogued at all read as silent absence (no expected
+      row generated) unless a remediation script explicitly backfills them. Two confirmed past incidents: 112 Kamino
+      _vaults_ entirely absent from the catalogue (IS only had Kamino _pools_,
+      `reclassify_defi_orphan_eu_notlisted_2026_06_24.py`), and 6 entire LST venues (Ankr/Stader/StakeWise/Swell/
+      Mantle/Maker-Ethereum) missing from the catalogue while MTDS had already captured 90 real days of their data
+      (`expand_defi_lst_vault_catalogue_from_manifest_2026_07_31.py`). **Cannot rule out more undetected catalogue gaps
+      existing today** without a deeper per-archetype on-chain walk (out of this read-only pass's scope).
+      **Pre-coverage-start**: defi uses `EXPECTED_PRE_GENESIS_CHAIN` (not `EXPECTED_PRE_SOURCE_COVERAGE_START`, same
+      semantic role) — mechanically already excluded from `coverage_pct`'s denominator
+      (`OUT_OF_COVERAGE_WINDOW_REASONS`, confirmed). **But the headline `coverage.json`
+      `by_asset_group.defi.empty_confirmed` figure — the exact number that triggered this whole audit — has ZERO reason
+      breakdown at that top level** (`measure_honest_coverage.py` grep for `error_reason`/`by_reason`: zero hits). A
+      reason breakdown DOES exist, but only in deployment-api's per-venue drilldown (`client.ts:1352-1372`), not the
+      aggregate. **Real, validated UX finding**: the scary-looking headline number is genuinely indistinguishable from a
+      real gap at the surface the operator was actually looking at, even though the underlying math is fine — a
+      reporting gap, not a data-correctness gap. Separate note: `EXPECTED_REFERENCE_ONLY_NO_CAPTURE_PATH` (28.42%) is
+      deliberately NOT out-of-window by design — its own docstring states re-classifying it as out-of-window would be
+      "the exact honest-coverage distortion this reason exists to prevent" (the instrument is genuinely
+      alive/catalogued, just structurally non-fetchable).
 - [x] 6. ✅ [DATA] P1. **Cross-AG `SOURCE_RETURNED_ZERO` tagging-quality audit — DONE, confirms operator's concern was
       correct.** Per-AG verdict: **cefi MISCATEGORIZING** (Deribit DVOL: sustained HTTP 429 has no backoff/failure flag,
       `deribit_volatility_index_handler.py:119-152`; Hyperliquid perp funding: per-coin failures swallowed via
@@ -185,6 +210,18 @@ data that's actually needed. This plan gets the evidence first.
 
 ### New execution-scoped todos (surfaced by the above audit findings, not in original scope)
 
+- [ ] [UI] P1. **Surface an error_reason breakdown at the `coverage.json` headline `by_asset_group[ag]` level**, not
+      just deployment-api's per-venue drilldown (`client.ts:1352-1372`). The exact number that triggered this whole
+      audit (`empty_confirmed`) is currently a flat aggregate indistinguishable from a real gap at the surface an
+      operator actually looks at, even though the underlying reason data + denominator math already correctly separate
+      out-of-window/reference-only/genuine-failure. At minimum: an `out_of_window_pct` / `reference_only_pct` /
+      `unexplained_pct` split alongside the existing `empty_confirmed` count, computed once in
+      `measure_honest_coverage.py` (currently zero `error_reason`/`by_reason` references there) and rendered as a
+      sub-breakdown on the Honest Coverage card.
+- [ ] [DATA] P2. **Audit for undetected defi instruments-service catalogue gaps** beyond the 2 already-fixed incidents
+      (112 Kamino vaults, 6 LST venues) — some undetermined share of the current 32.48M `EXPECTED_INSTRUMENT_NOT_LISTED`
+      rows may still be uncaught catalogue-gap residue rather than genuine not-yet-listed absence. Needs a per-archetype
+      on-chain-reality walk, out of scope for this audit's read-only pass.
 - [ ] [DATA] P0. **Fix cefi's 2 SOURCE_RETURNED_ZERO miscategorization bugs**: Deribit DVOL sustained-429 (no backoff/
       no failure flag, `deribit_volatility_index_handler.py:119-152`) and Hyperliquid per-coin swallowing
       (`_perp_funding_hyperliquid.py:253-262`, `return_exceptions=True` with no per-coin failure propagation).
