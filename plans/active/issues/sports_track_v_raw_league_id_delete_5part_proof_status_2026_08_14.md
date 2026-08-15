@@ -3,21 +3,22 @@ doc_type: issue
 title:
   Track V raw-keyed league_id GCS delete — fresh 5-part-proof status, Part 3 now passes, execution tooling still needed
 summary: >-
-  sports_satellite_ao_dispatch_batch13_2026_08_13.md's Track V todo (execute the 5-part-proof-gated DELETE of old
-  raw-keyed league_id GCS objects) cited a 2026-07-22 checklist where Part 3 (no live writer to the old shape) FAILED,
-  and the active plan's own "UNBLOCKED 2026-07-28" note incorrectly attributed the unblock to Track C's K1/K2
-  casing-revert landing — a DIFFERENT axis (instrument_type/data_type casing, not league_id shape) with no logical
-  bearing on this population. A fresh, direct, live re-verification (2026-08-14) of the manifest across the full
-  2026-07-22..2026-08-13 window (the entire gap since the last confirmed index walk) found ZERO trades rows with a true
-  raw (non-canonical) league_id value across 19,797 rows / 5 dates individually probed + a 2026-07-22..08-08 range probe
-  — Part 3 now genuinely passes. Parts 1/2/5 were last verified with hard numbers on 2026-07-22 (275,136/275,136
-  objects, zero collisions, stale_remaining=0) and were NOT re-verified at the object level this session — the todo's
-  own text requires "its own fresh candidate-list re-verify before running", which is real, unstarted engineering work
-  (mirroring the K1/K2 casing-revert trio: candidate-list generator, content-verify report, CAS-delete executor), not
-  something to skip on the strength of the retention check alone. Per finding T (`task_template.md`) and the K1/K2
-  sibling incident (`plans/archive/issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md`), §3a
-  reversibility alone never supplies the five-part proof — it only waives `[OPERATOR]` once that proof independently
-  holds. No delete was executed this session.
+  /plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md's Track V todo (execute the
+  5-part-proof-gated DELETE of old raw-keyed league_id GCS objects) cited a 2026-07-22 checklist where Part 3 (no live
+  writer to the old shape) FAILED, and the active plan's own "UNBLOCKED 2026-07-28" note incorrectly attributed the
+  unblock to Track C's K1/K2 casing-revert landing — a DIFFERENT axis (instrument_type/data_type casing, not league_id
+  shape) with no logical bearing on this population. A fresh, direct, live re-verification (2026-08-14) of the manifest
+  across the full 2026-07-22..2026-08-13 window (the entire gap since the last confirmed index walk) found ZERO trades
+  rows with a true raw (non-canonical) league_id value across 19,797 rows / 5 dates individually probed + a
+  2026-07-22..08-08 range probe — Part 3 now genuinely passes. Parts 1/2/5 were last verified with hard numbers on
+  2026-07-22 (275,136/275,136 objects, zero collisions, stale_remaining=0) and were NOT re-verified at the object level
+  this session — the todo's own text requires "its own fresh candidate-list re-verify before running", which is real,
+  unstarted engineering work (mirroring the K1/K2 casing-revert trio: candidate-list generator, content-verify report,
+  CAS-delete executor), not something to skip on the strength of the retention check alone. Per finding T
+  (`task_template.md`) and the K1/K2 sibling incident
+  (`plans/archive/issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md`), §3a reversibility alone never
+  supplies the five-part proof — it only waives `[OPERATOR]` once that proof independently holds. No delete was executed
+  this session.
 status: open
 nature: issue
 asset_group: [sports]
@@ -27,7 +28,7 @@ scope: [engineer, admin]
 tags: [delete-safety, league-id, sports, gcs, data-correctness, track-v]
 related:
   [
-    /plans/active/sports_satellite_ao_dispatch_batch13_2026_08_13.md,
+    /plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/archive/issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
@@ -36,7 +37,9 @@ related:
 created: 2026-08-14
 parent_epic: sports_master
 priority: P1
-source: "sports_satellite_ao_dispatch_batch13_2026_08_13.md Track V todo, dispatched to slot 10, 2026-08-14"
+source:
+  "/plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md Track V todo, dispatched to slot 10,
+  2026-08-14"
 assigned_vm: planning
 resolved_by:
 locked_by:
@@ -132,8 +135,8 @@ already caught once.
       (`--apply-prod     --confirm-prod-write`) to execute the actual delete, per finding T's carve-out — re-query
       `gcs_bucket_soft_delete_retention_seconds()` fresh at execution time, cite the value inline.
 - [x] [DOC] P2. ✅ Corrected the stale "UNBLOCKED 2026-07-28: Track C's lowercase-revert" citation in
-      `sports_satellite_ao_dispatch_batch13_2026_08_13.md`'s Track V todo (same session, same commit) — see that plan's
-      Progress Log / todo annotation.
+      `/plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md`'s Track V todo (same session, same
+      commit) — see that plan's Progress Log / todo annotation.
 - [x] [CODE] P2. ✅ Added the `sports-league-id-delete` launcher category to `deployment-service`'s
       `scripts/vm/launch-canonical-migration-vm.sh` (5 call sites: usage string, dispatch case block,
       `MIGRATION_EXTRA_ARGS` suppression, asset-group tag, `STALL_PROGRESS_REGEX`), mirroring

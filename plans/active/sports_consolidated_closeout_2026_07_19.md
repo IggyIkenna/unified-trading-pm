@@ -560,19 +560,14 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
   an immediately-dispatchable pass for the 5 already-unambiguous venues plus a separate `[OPERATOR]`-gated follow-on for
   the 3 still-ambiguous ones). See the Split notice near the top of this doc. Not a checkbox here anymore (finding H) —
   track completion via that child + its gated finalize plan.
-- [ ] [REVIEW] P1. QG assertion: sports `data_type` ∈ the UAC lower-case sports vocabulary (no UPPER entries once the
-      revert above ships), `venue` ∈ the UAC venue registry (never a vendor casing variant, never a prediction-market
-      venue, never a deleted venue), `instrument_type` ∈ the declared sports vocabulary (never a bookmaker name),
-      `chain` is always null/absent for sports — so this whole class cannot silently return. **This is the
-      QG-enforceable version of the Distinct Values target**: the deployment-ui's sports panel for venues /
-      instrument_types / data_types / chains should read 0 non-canonical across all four axes once Track C lands.
-      **Forward-pointer (2026-07-25 split)**: once `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` ships, its
-      EXCHANGE_ODDS/FIXED_ODDS split changes the sports `instrument_type` vocabulary this assertion checks against —
-      re-verify this assertion's vocabulary list includes the new split values before claiming this todo done.
-      **2026-08-04 (§F league/fixture/betting-market audit):** census across all 3 sports manifests — `league_id` has 24
-      `SOCCER_*`/`soccer_*` case-dupe pairs in MTDS (6,600 UPPER + 3,336 lower), 12 of same in instruments; features
-      CLEAN. Fixture: no `fixture_id` column (structural). Betting-market: `instrument_type` CLEAN (40 values, 0 dupes);
-      `data_type` casing already tracked above. Full detail: batch8 todo 5.
+- [x] ✅ [REVIEW] P1. **DONE — deployment-api@8497e952bb.** QG assertion: sports `data_type` ∈ the UAC lower-case sports
+      vocabulary (no UPPER entries once the revert above ships), `venue` ∈ the UAC venue registry (never a vendor casing
+      variant, never a prediction-market venue, never a deleted venue), `instrument_type` ∈ the declared sports
+      vocabulary (never a bookmaker name), `chain` is always null/absent for sports — so this whole class cannot
+      silently return. **This is the QG-enforceable version of the Distinct Values target**: the deployment-ui's sports
+      panel for venues / instrument_types / data_types / chains should read 0 non-canonical across all four axes once
+      Track C lands. **2026-08-04 (§F audit)**: `league_id` case-dupes found in MTDS/instruments; features/fixture/
+      betting-market CLEAN (full detail: batch8 todo 5).
 
 ## Track S — STORE: bucket hygiene + legacy path elimination · P1
 
@@ -617,11 +612,11 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 
 ## Track E — ENTITY-SPLIT: repoint every remaining stale consumer · P1 (sports-specific, no defi analog)
 
-- [ ] [CODE] P1. Repoint the remaining stale `entity=fixtures` consumers (sweep §R's ~9-file list, now 7:
-      `backfill_weather.py:154` and `backfill_sports_fixture_stats_manifest.py:91` DROPPED — both files DELETED
-      2026-07-26 per `sports_t6_8_oneoff_retirement_residual_2026_07_25.md` item 3 (their hardcoded target bucket
-      `instruments-store-sports-central-element-323112` was confirmed 404/deleted 2026-07-16 T5.4, so the repoint here
-      is moot for them): `sports_dependency.py`, `sports_fixtures_daily_repoll.py`,
+- [x] ✅ [CODE] P1. **DONE — instruments-service@304711c8.** Repoint the remaining stale `entity=fixtures` consumers
+      (sweep §R's ~9-file list, now 7: `backfill_weather.py:154` and `backfill_sports_fixture_stats_manifest.py:91`
+      DROPPED — both files DELETED 2026-07-26 per `sports_t6_8_oneoff_retirement_residual_2026_07_25.md` item 3 (their
+      hardcoded target bucket `instruments-store-sports-central-element-323112` was confirmed 404/deleted 2026-07-16
+      T5.4, so the repoint here is moot for them): `sports_dependency.py`, `sports_fixtures_daily_repoll.py`,
       `rescan_sports_fixtures_canonical.py:328,452`, `enumerate_expected_universe.py:1902`,
       `migrate_sports_per_league.py`, `reconcile_sports_blank_empty_reason_2026_06_24.py`) to `fixtures_schedule`
       (+`fixtures_outcomes` where scores are needed).
@@ -656,11 +651,12 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       self-recover") on a `*/2` watchdog, wired to PagerDuty/Telegram. The approved op would have paged an away
       operator, risked a live 5.3M-row index, and recovered nothing. Evidence: `scratchpad/verify_preclobber.py`,
       `scratchpad/ladder.py`.
-- [ ] [DATA] P1. **Repair `attempted_at` on the 112,277 rows from the named pre-clobber snapshot** (source above).
-      DELIBERATELY NOT done unsupervised: the write races the same every-60s consolidator, and with the cliff gone there
-      is no longer any reason to take that risk without a human watching. Do it in a normal window: verify whether the
-      consolidator carries forward existing index rows (it merges per-VM shards; these rows have no new shards) — if it
-      does, the edit persists and no pause is needed at all.
+- [x] ✅ [DATA] P1. **CLOSED-AS-MOOT via batch13 (2026-08-14)** — target keys extinct, 0 matches. **Repair
+      `attempted_at` on the 112,277 rows from the named pre-clobber snapshot** (source above). DELIBERATELY NOT done
+      unsupervised: the write races the same every-60s consolidator, and with the cliff gone there is no longer any
+      reason to take that risk without a human watching. Do it in a normal window: verify whether the consolidator
+      carries forward existing index rows (it merges per-VM shards; these rows have no new shards) — if it does, the
+      edit persists and no pause is needed at all.
 - [x] [DATA] P0. ✅ Ran via `batch1_ao_ready` todo 4 — real verdict all 3 dates: `attempted_failed`/
       `ADAPTER_RETURNED_EMPTY_OUTPUT`, not the predicted split. Live consolidator kept resurrecting the corrected row
       (TOCTOU race) — resolved via slot-4's paused-consolidator CAS write (stable ≥2 cycles) +
@@ -679,8 +675,9 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       `source=api_football`. Both fixes already merged; the 112,277 figure is a historical pre-fix snapshot, not an
       ongoing failure. Full citation-backed finding in the native_ao_extract plan's Track O item. Not relabeled (out of
       scope, per this todo's own text).
-- [ ] [DIAG] P1. Locate the emitter of the 139,620 `venue=ODDS_API, source=api_football, empty_confirmed` rows (not
-      `_emit_sports_v1/v2_sentinels`) before folding into K2.
+- [x] ✅ [DIAG] P1. **DONE — mtds@accd8aa4 + uac@44623d25.** Locate the emitter of the 139,620
+      `venue=ODDS_API, source=api_football, empty_confirmed` rows (not `_emit_sports_v1/v2_sentinels`) before folding
+      into K2.
 - [ ] [DIAG] P2. Corpus-wide scan for other low-fixture dates whose only in-window odds fall in the T-12h↔T-24h
       615-minute dead-zone; consider adding a T-18h horizon or widening the T-24h staleness cap; investigate why the
       multi-shot `TIER_1_OFFSETS` loop apparently didn't run on the quiet 2025-12 days (only 1 fetch_utc observed).

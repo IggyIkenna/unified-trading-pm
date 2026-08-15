@@ -24,7 +24,8 @@ assigned_vm: NA
 execution_scope: local-only
 priority: P2
 source: >-
-  Investigated while executing sports_satellite_ao_dispatch_batch13_2026_08_13.md's Track O attempted_at-repair todo.
+  Investigated while executing /plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md's Track O
+  attempted_at-repair todo.
 resolved_by:
 locked_by:
 locked_since:
