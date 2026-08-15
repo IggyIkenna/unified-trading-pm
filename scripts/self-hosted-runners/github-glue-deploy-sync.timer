@@ -1,0 +1,21 @@
+# github-glue-deploy-sync.timer — sync host-deployed sbin scripts every 10 minutes.
+#
+# Epic: infrastructure_master
+# Lifecycle: permanent   Delete-when: NA
+#
+# Same cadence as github-glue-slot-refresh.timer (10 min) since this depends on that mirror
+# being current — the service's own Wants=/After= already forces a fresh pull on every
+# activation regardless, so the two timers' relative offset is not load-bearing. Persistent=
+# true so a rebooted VM syncs promptly instead of running a stale /usr/local/sbin copy until
+# the interval elapses.
+[Unit]
+Description=Periodic sync of host-deployed sbin scripts from the glue-runner slot mirror
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=10min
+Persistent=true
+Unit=github-glue-deploy-sync.service
+
+[Install]
+WantedBy=timers.target

@@ -2,7 +2,7 @@
 
 # CI/CD Workflow Catalog (auto-generated drill-down)
 
-**59 workflows** in `.github/workflows/`, grouped by pipeline stage. Top-down picture:
+**60 workflows** in `.github/workflows/`, grouped by pipeline stage. Top-down picture:
 `docs/repo-management/CI-CD-PIPELINE.svg`; narrative: `codex/08-workflows/ci-cd-flow.md`. This is the
 per-workflow index beneath them — regenerate with `python3 scripts/generate-workflow-catalog.py`.
 
@@ -35,7 +35,7 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | `readiness-verifier` | schedule(0 3 * * *) · manual | `<wf>-<ref>` cancel | Slack | — |
 | `sit-debounce-trigger` | schedule(*/5 * * * *) · dispatch:staging-changed · manual | `sit-debounce-trigger` | manifest, Slack | escalate-to-orchestrator* |
 | `sit-gate` | dispatch:sit-lock | `manifest-update` | manifest, Firestore, Slack | escalate-to-orchestrator* |
-| `sit-unlock` | dispatch:sit-failed,sit-passed | `manifest-update` | manifest, Slack | staging-to-main* |
+| `sit-unlock` | dispatch:sit-failed,sit-passed | `manifest-update` | manifest, →LDR, Slack | escalate-to-orchestrator*, staging-to-main* |
 | `workspace-quickmerge-validation` | schedule(0 */6 * * *) · manual | `<wf>-<ref>` cancel | read-only | — |
 
 ## Release machinery — semver / version / manifest / templates (7)
@@ -79,7 +79,7 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | `plan-notification` | push[main] · issue_comment | `<wf>-<ref>` cancel | Slack | — |
 | `rules-alignment-agent` | push[main] · manual | `<wf>-<ref>` cancel | Slack | — |
 
-## Unclassified — needs a stage in STAGE_BY_WORKFLOW (15)
+## Unclassified — needs a stage in STAGE_BY_WORKFLOW (16)
 
 | Workflow | Triggers | Concurrency | Mutates | Fires next |
 | -------- | -------- | ----------- | ------- | ---------- |
@@ -87,6 +87,7 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | `branch-health` | schedule(0 * * * *) · manual | `branch-health` cancel | Firestore, Slack | main-backmerge-to-ldr |
 | `ci-health` | schedule(0 * * * *) · dispatch:ci-failure-alert,glue-runner-health,ci-vm-resource-alert · manual | — | Firestore, Slack | — |
 | `cloud-build-router-aws` | dispatch:qg-passed | `cloud-build-router-aws-<var>` | Slack | change-freeze-check, escalate-to-orchestrator* |
+| `codex-freshness-sweep` | schedule(0 6 * * *) · manual | `codex-freshness-sweep` | Slack | escalate-to-orchestrator* |
 | `digest-drift-sweep` | schedule(0 */6 * * *) · manual | — | read-only | — |
 | `glue-pool-starvation-monitor` | manual | `glue-pool-starvation-monitor` cancel | Slack | escalate-to-orchestrator* |
 | `glue-runner-health-monitor` | manual | `glue-runner-health-monitor` cancel | Slack | — |

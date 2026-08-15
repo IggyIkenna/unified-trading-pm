@@ -71,8 +71,10 @@ worker). `HOME` is deliberately **not** redirected: it would break `$HOME/.confi
 | `glue-runner-run.sh`                       | per-runner ExecStart wrapper; **forks on the pool** in the `%i` name   |
 | `job-cleanup.sh`                           | `ACTIONS_RUNNER_HOOK_JOB_COMPLETED` — per-job `_work` wipe for writers |
 | `refresh-slot-repo.sh`                     | FF-pulls the slot clone; **stale pre-staged code = silent wrongness**  |
+| `deploy-sbin-scripts.sh`                   | syncs host-wide `/usr/local/sbin/*` monitors from the slot mirror      |
 | `github-glue-runner@.service`              | systemd template unit (`%i` = `<pool>-<index>`)                        |
 | `github-glue-slot-refresh.{service,timer}` | 10-min slot-clone refresh                                              |
+| `github-glue-deploy-sync.{service,timer}`  | 10-min `/usr/local/sbin/*` monitor-script sync (base pool only)        |
 | `github-glue-runner.slice`                 | resource cap protecting the orchestrator                               |
 | `classify-glue-workflows.sh`               | **SSOT** for MOVE vs KEEP                                              |
 
@@ -186,6 +188,7 @@ is now `KEEP-M`.
 journalctl -u 'github-glue-runner@glue-1' -n 50 --no-pager
 journalctl -u 'github-glue-runner@writer-1' -n 50 --no-pager
 systemctl list-timers 'github-glue-slot-refresh*'     # slot clone must refresh every ~10 min
+systemctl list-timers 'github-glue-deploy-sync*'      # /usr/local/sbin/* monitors must sync every ~10 min
 ./setup-glue-runners.sh prune                         # clear OFFLINE EPHEMERAL runners only
 ```
 
@@ -193,6 +196,13 @@ Health signal: `>=1` runner Online **per pool**, slice `MemoryCurrent` well unde
 within ~10 min. A queued glue job with 0 Online runners = that pool is down →
 `systemctl restart 'github-glue-runner@glue-*'`. **A stale slot clone is the quiet failure**: the writer keeps
 succeeding while writing Firestore rows from outdated code, so treat a red freshness stamp as an incident, not a nit.
+
+**`/usr/local/sbin/*` monitor scripts** (`glue-runner-crash-loop-watchdog.sh`, `docker-disk-cleanup.sh`,
+`tmpfs-disk-cleanup.sh`, `ci-vm-resource-watchdog.sh`) are host-wide singletons, deployed once by the base (untagged)
+pool's `install` and kept current by `github-glue-deploy-sync.timer` (reads the same slot mirror
+`github-glue-slot-refresh.timer` already keeps fresh — no separate checkout). A repo fix to one of these no longer needs
+a manual SSM copy to reach production; the next tick (≤10 min) picks it up. Verify a specific host copy matches the
+repo: `diff <(git -C <pm-clone> show HEAD:scripts/self-hosted-runners/<name>) /usr/local/sbin/<name>`.
 
 ## Rollback (instant, safe)
 

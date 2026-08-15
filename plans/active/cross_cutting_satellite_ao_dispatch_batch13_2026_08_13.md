@@ -261,8 +261,27 @@ source: >-
       as the watchdog's target, not `i-0c9b283b31d6b5ca7`. Fleet grep confirmed no other codex/monitoring doc used the
       ambiguous phrase — this issue doc was the sole source. Full detail in that doc's own P3 todo, now flipped. Source:
       `plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`
-- [ ] [INFRA] P3. wire an automated deploy/sync for glue-runner-crash-loop-watchdog.sh so a repo fix reaches the host
-      Source: `plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`
+- [x] ✅ [INFRA] P3. Wired an automated `/usr/local/sbin/*` sync — unified-trading-pm@d6bc752b3d (2026-08-15,
+      slot-27·infra). Confirmed live via the repo (no host access from this role): no workflow, cron, or install
+      script previously deployed `glue-runner-crash-loop-watchdog.sh` (or its 3 siblings —
+      `docker-disk-cleanup.sh`, `tmpfs-disk-cleanup.sh`, `ci-vm-resource-watchdog.sh` — same
+      systemd-`ExecStart=/usr/local/sbin/*` layout, same gap) to `/usr/local/sbin/`; every prior fix needed a
+      manual SSM copy that evidently didn't happen consistently (per this doc's own 2026-08-06 Progress Log
+      entry, the live watchdog copy had already drifted). Added `deploy-sbin-scripts.sh` (diffs the already
+      10-min-refreshed slot mirror `${RUNNER_BASE}/repo` against each script's live `/usr/local/sbin/` copy,
+      `install`s only the ones that changed) + `github-glue-deploy-sync.{service,timer}` (10-min cadence,
+      `Wants=`/`After=github-glue-slot-refresh.service` so every activation pulls the mirror fresh first
+      regardless of timer offset; runs as root since `/usr/local/sbin` is root:root 0755, unlike the
+      unprivileged slot-refresh service). Wired into `setup-glue-runners.sh`'s `cmd_install` (guarded to the
+      base/untagged pool only — these 4 scripts are host-wide singletons, not per-pool); documented in the
+      README's Files table + Verify section. `shellcheck`/`bash -n` clean on the new + modified scripts;
+      `bash scripts/quality-gates.sh` green (sentinel-verified at HEAD `fd9fcd858b`); quickmerge landed on LDR
+      as `d6bc752b3d` (post-push ancestry independently verified). Live host deploy of the two new systemd
+      units (`github-glue-deploy-sync.{service,timer}`) is a separate operational step for whoever next runs
+      `setup-glue-runners.sh install`/has host access — this todo's scope was the code that makes future fixes
+      self-propagate, matching this doc's own P1 pattern (the crash-loop-watchdog fix itself) of code-lands
+      first, host-deploy follows. Source:
+      `plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`
 - [x] ✅ [BACKEND] P2. document the circular-dependency gap (scheduled workflow runs from default branch) in
       ci-cd-flow.md — unified-trading-pm@83a3227b7d (2026-08-15, slot-19·backend). Added a paragraph to
       `/codex/08-workflows/ci-cd-flow.md`'s "Staging re-entry procedure" section, immediately after the existing
@@ -955,7 +974,14 @@ source: >-
       (745s), `unified-trading-library@8764696aef` (event constant), `deployment-service@1b7d1d3587` (bounded
       sweep + finding routing). Source:
       `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
-- [ ] [CODE] P2. Set the exit-code-monitor Cloud Run job's concurrency to 1 to stop */5 executions overlapping Source:
+- [x] ✅ [CODE] P2. **Cloud Run Jobs have no native cross-execution concurrency cap** (confirmed:
+      `google_cloud_run_v2_job`'s terraform schema exposes only per-execution `parallelism`/`task_count`) — added a GCS
+      CAS lease (`exit_code_lease.py`, create-if-absent + 35-min staleness takeover) that only one
+      `uts-prod-dp-exit-code-monitor` execution can hold at a time; skipped a losing execution exits 0 without
+      consulting the relaunch budget. deployment-service@2855b17833 (2026-08-15, slot-18·infra). Merged live with a
+      concurrent peer fix (todo above, `deadline_monotonic`/`coverage_sink`/`sweep_incomplete`) landed on the same file
+      in the interim — both preserved. `bash scripts/quality-gates.sh` green (445s, sentinel-verified at HEAD
+      `2855b178`); quickmerge landed on LDR (post-push ancestry verified). Source:
       `plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`
 - [x] ✅ [CODE] P2. **Diagnosed via audit logs — spot-preemption wave RULED OUT (0 overlap wedged/preempted); found +
       fixed an unbounded `gcloud compute instances delete` in all 3 self-delete paths (only 16/~398 delete calls ever
