@@ -244,25 +244,25 @@ flip and is corrected here (slot-14).
       operator-decision item)
 
       **Shipped**: `unified-api-contracts@17b1cf21` (registration + `DEFI_PERPETUAL_PERP_DAILY_CTX` SchemaContract +
-          `NEEDS_CANDLE_PROCESSING["perp_daily_ctx"]=False`), `features-service@c678f0fd` (real `ManifestWriter.add()` call
-          in `perp_funding_corpus.py`'s `perp_daily_ctx` write path + 2 new unit tests). **MTDS HL mark-price backfill
-          script** (`scripts/backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py`) confirmed still present but
-          DELIBERATELY NOT touched — its target bucket (`perp-funding-{project}`) is confirmed deleted (404), so any manifest
-          write there would target a dead path; its writer-half of this todo is moot (nothing to add a manifest call to that
-          would ever run). **Historical backfill**: `unified-trading-pm/scripts/migration/
-          register_perp_daily_ctx_manifest_backfill_2026_08_04.py` (one-off, committed for audit trail) discovered +
-          registered 1,158 `(day, venue)` manifest rows covering 169,461 real underlying objects — HYPERLIQUID 1,109 days
-          (2023-05-20..2026-06-01, zero gaps; the issue doc's "1,109 objects" sanity-check figure turned out to be counting
-          shard-DAYS, not the ~230-per-day per-coin files — reconciled exactly, see the script's own docstring) + the 7 CeFi
-          Tardis venues' 2026-05-16..22 window (49 rows). Dry-run then `--apply` both run against prod
-          (`market-data-tick-defi-prd-central-element-323112`); verified via a direct per-VM-shard read
-          (`_index/per_vm/local-64151-459f.parquet`) showing all 1,158 rows `capture_status=captured` with correct
-          `row_count`s. Manifest consolidator run attempted same session — hit a transient network `IncompleteRead` on the
-          ~1.7GB canonical index and fell back to a shards-only computation it did NOT persist (canonical index confirmed
-          UNCHANGED via blob metadata, `last_modified` predates the consolidator run — no data loss); the per-VM-shard
-          reader fallback already surfaces the captured rows to any caller regardless, per the established
-          `defi_fold_manifest_registration_pending_2026_07_21.md` precedent. A future consolidator run (standing cron or a
-          follow-up session) will complete the merge normally.
+              `NEEDS_CANDLE_PROCESSING["perp_daily_ctx"]=False`), `features-service@c678f0fd` (real `ManifestWriter.add()` call
+              in `perp_funding_corpus.py`'s `perp_daily_ctx` write path + 2 new unit tests). **MTDS HL mark-price backfill
+              script** (`scripts/backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py`) confirmed still present but
+              DELIBERATELY NOT touched — its target bucket (`perp-funding-{project}`) is confirmed deleted (404), so any manifest
+              write there would target a dead path; its writer-half of this todo is moot (nothing to add a manifest call to that
+              would ever run). **Historical backfill**: `unified-trading-pm/scripts/migration/
+              register_perp_daily_ctx_manifest_backfill_2026_08_04.py` (one-off, committed for audit trail) discovered +
+              registered 1,158 `(day, venue)` manifest rows covering 169,461 real underlying objects — HYPERLIQUID 1,109 days
+              (2023-05-20..2026-06-01, zero gaps; the issue doc's "1,109 objects" sanity-check figure turned out to be counting
+              shard-DAYS, not the ~230-per-day per-coin files — reconciled exactly, see the script's own docstring) + the 7 CeFi
+              Tardis venues' 2026-05-16..22 window (49 rows). Dry-run then `--apply` both run against prod
+              (`market-data-tick-defi-prd-central-element-323112`); verified via a direct per-VM-shard read
+              (`_index/per_vm/local-64151-459f.parquet`) showing all 1,158 rows `capture_status=captured` with correct
+              `row_count`s. Manifest consolidator run attempted same session — hit a transient network `IncompleteRead` on the
+              ~1.7GB canonical index and fell back to a shards-only computation it did NOT persist (canonical index confirmed
+              UNCHANGED via blob metadata, `last_modified` predates the consolidator run — no data loss); the per-VM-shard
+              reader fallback already surfaces the captured rows to any caller regardless, per the established
+              `defi_fold_manifest_registration_pending_2026_07_21.md` precedent. A future consolidator run (standing cron or a
+              follow-up session) will complete the merge normally.
 
 - [x] ✅ [CODE] P2. Wire real capture for AAVE-PLASMA and FLUID-PLASMA: (1) add `CHAIN_CONFIGS[9745]` Alchemy RPC
       template to unified-api-contracts' `capability_declarations/_defi_chain_data.py`; (2) add Aave V3 Plasma
@@ -460,49 +460,49 @@ flip and is corrected here (slot-14).
       `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`
 
       **CORRECTED 2026-08-12 (/plan-reconcile) — inline delete-safety citation** (was a bare "operator-RULED" date
-          reference; the destructive step needs the actual reversibility citation inline, per
-          `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a): reversibility cleared per finding T —
-          `mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md` todo 7 confirmed the same bucket
-          (`market-data-tick-defi-prd-central-element-323112`) at `604800s` GCS Soft Delete retention as of 2026-07-27.
-          **Whoever executes this todo must re-verify `gcs_bucket_soft_delete_retention_seconds()` fresh in the same run
-          before the actual delete** (cheap, keeps the finding-T check same-run for the destructive step itself) — but no
-          fresh operator ask is needed to START this dispatch. Full context:
-          `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md:387-399`.
+              reference; the destructive step needs the actual reversibility citation inline, per
+              `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a): reversibility cleared per finding T —
+              `mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md` todo 7 confirmed the same bucket
+              (`market-data-tick-defi-prd-central-element-323112`) at `604800s` GCS Soft Delete retention as of 2026-07-27.
+              **Whoever executes this todo must re-verify `gcs_bucket_soft_delete_retention_seconds()` fresh in the same run
+              before the actual delete** (cheap, keeps the finding-T check same-run for the destructive step itself) — but no
+              fresh operator ask is needed to START this dispatch. Full context:
+              `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md:387-399`.
 
-          **DONE 2026-08-15 (slot-11, data_engineering) — verified already-shipped-elsewhere, checkbox was stale (conflict-check
-          protocol §3 item 4: "already-shipped, checkbox just never flipped").** Both items independently confirmed:
-          (1) **Delete + rebuild** — a broader, independently-authored migration
-          (`plans/archive/2026_08/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md`, archived
-          `status: complete`) fully superseded this narrower ask: it deleted the ENTIRE frozen `asset_group=defi`
-          HYPERLIQUID+ASTER corpus (7,599 objects — the audit broke it down as HYPERLIQUID 6,683 `perp_daily_ctx`+
-          `perp_funding` + ASTER 916 `perp_funding`, a superset of this todo's `perp_funding`-only scope) after relabel-
-          migrating it to `asset_group=cefi` with per-object (size, crc32c) parity verification (zero mismatches, zero
-          missing cefi twins) — `market-tick-data-service@24f11df7` (audit + migration script) +
-          `market-tick-data-service@55d88025` (soft-delete-retention-gated `--apply` delete: `604800s` confirmed fresh,
-          exit 0, post-delete paths confirmed empty). Independently RE-VERIFIED via a second VM run 2026-08-06
-          (`canonical-migration-defi-hl-aster-ag-relabel-20260806-161708`, exit 0, "Plan: 0 objects to copy" — durable
-          no-op). A later narrower one-off (`market-tick-data-service@2752f113`, 2026-08-11, explicitly refs this todo)
-          re-confirmed zero remaining objects and was itself deleted per its own `Delete-when:` marker being satisfied.
-          **Freshly re-verified this session** via a single column-pruned, filtered `read_availability_index` read
-          (`data_type=perp_funding`, defi bucket): `HYPERLIQUID`/`ASTER` are entirely ABSENT from the venue set (0 rows) —
-          durable, not a stale point-in-time claim. (2) **RULE 11 relax** — code + test confirmed shipped:
-          `unified-api-contracts@dbbc8f28` (added `CEFI: ("binance","bybit","kraken","okx")` to
-          `_EXTRA_LIVE_PROBE_SOURCES_BY_AG`) + `@6fae460b` (stale-comment fix); the test was already relaxed/renamed to
-          `test_extra_live_probe_sources_do_not_leak_cross_ag` (`unified-api-contracts/tests/unit/test_possible_manifest.py`)
-          asserting the new prediction+cefi UNION scope, not prediction-exclusive — satisfies the "full-completion mandate"
-          grep-for-other-consumers bar. The live phantom-row-auditor RE-RUN (confirming the ~35 mis-flagged
-          live_kraken/live_binance shards flip to `captured`) could NOT be completed on this shared host this session:
-          `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` loads the full, unfiltered cefi manifest
-          (no column-pruned entry point) and was safely SIGKILLed by `run-bounded-analysis.sh`'s memory-bounding wrapper at
-          14.3GB RSS (>8G cap) before it could threaten the shared host — per RULES.md STEP 0.56, this is corpus-scale work
-          needing a dedicated VM, not a P3 verification tail-item worth forcing through here. Filed as a follow-up todo
-          below (bounded/safe — no delete, no `--apply`, dispatchable without an `[OPERATOR]` tag). A lighter targeted
-          manifest check this session (BINANCE-FUTURES/KRAKEN-FUTURES `derivative_ticker`, column-pruned) found zero rows
-          carrying any `phantom`-named `capture_status` and large healthy `captured` counts (972,339 / 573,025) — no sign
-          of a currently-persisted mass-demotion, though this does not substitute for the real GCS cross-reference the
-          auditor performs.
+              **DONE 2026-08-15 (slot-11, data_engineering) — verified already-shipped-elsewhere, checkbox was stale (conflict-check
+              protocol §3 item 4: "already-shipped, checkbox just never flipped").** Both items independently confirmed:
+              (1) **Delete + rebuild** — a broader, independently-authored migration
+              (`plans/archive/2026_08/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md`, archived
+              `status: complete`) fully superseded this narrower ask: it deleted the ENTIRE frozen `asset_group=defi`
+              HYPERLIQUID+ASTER corpus (7,599 objects — the audit broke it down as HYPERLIQUID 6,683 `perp_daily_ctx`+
+              `perp_funding` + ASTER 916 `perp_funding`, a superset of this todo's `perp_funding`-only scope) after relabel-
+              migrating it to `asset_group=cefi` with per-object (size, crc32c) parity verification (zero mismatches, zero
+              missing cefi twins) — `market-tick-data-service@24f11df7` (audit + migration script) +
+              `market-tick-data-service@55d88025` (soft-delete-retention-gated `--apply` delete: `604800s` confirmed fresh,
+              exit 0, post-delete paths confirmed empty). Independently RE-VERIFIED via a second VM run 2026-08-06
+              (`canonical-migration-defi-hl-aster-ag-relabel-20260806-161708`, exit 0, "Plan: 0 objects to copy" — durable
+              no-op). A later narrower one-off (`market-tick-data-service@2752f113`, 2026-08-11, explicitly refs this todo)
+              re-confirmed zero remaining objects and was itself deleted per its own `Delete-when:` marker being satisfied.
+              **Freshly re-verified this session** via a single column-pruned, filtered `read_availability_index` read
+              (`data_type=perp_funding`, defi bucket): `HYPERLIQUID`/`ASTER` are entirely ABSENT from the venue set (0 rows) —
+              durable, not a stale point-in-time claim. (2) **RULE 11 relax** — code + test confirmed shipped:
+              `unified-api-contracts@dbbc8f28` (added `CEFI: ("binance","bybit","kraken","okx")` to
+              `_EXTRA_LIVE_PROBE_SOURCES_BY_AG`) + `@6fae460b` (stale-comment fix); the test was already relaxed/renamed to
+              `test_extra_live_probe_sources_do_not_leak_cross_ag` (`unified-api-contracts/tests/unit/test_possible_manifest.py`)
+              asserting the new prediction+cefi UNION scope, not prediction-exclusive — satisfies the "full-completion mandate"
+              grep-for-other-consumers bar. The live phantom-row-auditor RE-RUN (confirming the ~35 mis-flagged
+              live_kraken/live_binance shards flip to `captured`) could NOT be completed on this shared host this session:
+              `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` loads the full, unfiltered cefi manifest
+              (no column-pruned entry point) and was safely SIGKILLed by `run-bounded-analysis.sh`'s memory-bounding wrapper at
+              14.3GB RSS (>8G cap) before it could threaten the shared host — per RULES.md STEP 0.56, this is corpus-scale work
+              needing a dedicated VM, not a P3 verification tail-item worth forcing through here. Filed as a follow-up todo
+              below (bounded/safe — no delete, no `--apply`, dispatchable without an `[OPERATOR]` tag). A lighter targeted
+              manifest check this session (BINANCE-FUTURES/KRAKEN-FUTURES `derivative_ticker`, column-pruned) found zero rows
+              carrying any `phantom`-named `capture_status` and large healthy `captured` counts (972,339 / 573,025) — no sign
+              of a currently-persisted mass-demotion, though this does not substitute for the real GCS cross-reference the
+              auditor performs.
 
-- [ ] [SCRIPT] P3. Re-run the live phantom-row auditor's `--unphantom-only` reverse pass for cefi BINANCE-FUTURES/
+- [x] ✅ [SCRIPT] P3. Re-run the live phantom-row auditor's `--unphantom-only` reverse pass for cefi BINANCE-FUTURES/
       KRAKEN-FUTURES
       (`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --unphantom-only --venues BINANCE-FUTURES,KRAKEN-FUTURES`)
       on a dedicated VM (its full-manifest load measured >8GB RSS, unsafe on the shared host — confirmed this session
@@ -511,7 +511,20 @@ flip and is corrected here (slot-14).
       already-shipped RULE 11 relax (`unified-api-contracts@dbbc8f28`). Read-only diagnostic (`--dry-run` first;
       `--apply` only if it finds genuine phantom rows to correct) — no delete, no `[OPERATOR]` gate needed. Repo:
       instruments-service (VM launch via deployment-service). Done when: the dry-run report is captured and, if any
-      genuine phantom rows are found, `--apply` corrects them with a cited before/after count.
+      genuine phantom rows are found, `--apply` corrects them with a cited before/after count. — **DONE 2026-08-15
+      (slot-17, data_engineering).** Existing `launch-manifest-recon-all-vm.sh`/`-apply-vm.sh` had no `--venues`/
+      `--unphantom-only` scoping and no comma-safe `--metadata` delimiter — extended both (semicolon-delimited metadata,
+      mirroring `launch-mtds-lending-indices-backfill-vm.sh`'s existing fix shape) — `deployment-service@04fd67e025` (+
+      a same-session brace-group/subshell fix after a live test caught the delimiter change breaking the existing
+      log-upload line). First dry-run attempt (`manifest-recon-cefi-20260815-093854`, e2-standard-8/32GB) OOM-killed at
+      99.2% mem — confirms + supersedes the "not fully confirmed"/"NOT OOM'd" hypotheses in
+      `issues/dp_vm_003_manifest_recon_cefi_silent_death_unsliced_manifest_read_2026_08_15.md` +
+      `issues/dp_vm_003_manifest_recon_cefi_wedged_non_relaunchable_2026_08_15.md` (both updated with this
+      confirmation + the now-moot kill-the-VM todo). Re-ran on `e2-highmem-16` (128GB):
+      `manifest-recon-cefi-20260815-100959`, `Manifest rows: 29,707,581`, **"No phantoms found and nothing to unphantom.
+      Manifest is clean."** — 0 previously-flagged phantom rows for either venue; the ~35 mis-flagged shards from the
+      2026-07-07 finding have already self-resolved (matches this doc's own earlier lighter targeted-check note above).
+      No `--apply` pass needed (none found to correct).
 
 - [x] ✅ [SCRIPT] P2. Project every bare `read_availability_index()` call site to actual column usage across: unified-
       trading-library `manifest_writer/_queries.py` (4 sites) + `_maintenance.py` (4 sites) + `_writer_io.py:156`;

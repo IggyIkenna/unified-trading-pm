@@ -149,8 +149,12 @@ triage.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Decide kill-vs-diagnose-first for `manifest-recon-cefi-20260815-093854` per the recommended
-      decision above, and terminate it once resolved (it will keep billing until then).
+- [x] ✅ [OPERATOR] P2. Decide kill-vs-diagnose-first for `manifest-recon-cefi-20260815-093854` per the recommended
+      decision above, and terminate it once resolved (it will keep billing until then). **MOOT 2026-08-15 (slot-17)**:
+      confirmed gone (`gcloud compute instances describe` → not found) — the VM was genuinely OOM-killed (guest-level
+      `mem_pct` reached 99.2% per its own deployment registry telemetry, read before archival), not merely wedged;
+      correcting this doc's "NOT OOM'd" characterization above, which was based on the GCE instance `status` field
+      (RUNNING) rather than in-guest memory telemetry. No manual kill needed — billing already stopped on its own.
 - [ ] [BACKEND] P3. If this recurs for another `manifest-recon-*`/phantom-recon dry-run, capture a live `py-spy dump`
       before killing to identify the exact blocking call, then bound it with a timeout (the DP-VM-003/004 "unbounded
       HTTP call hangs" fix pattern) in whichever of `reconcile_phantom_manifest_rows_all.py` or `heartbeat_daemon.py`'s
@@ -169,3 +173,12 @@ triage.
   all went silent within the same ~2-minute window around 09:43-09:44Z and none has recovered in 20+ minutes since. Did
   not identify the specific blocking call (no traceback in `run.log`) and did not attempt an in-VM stack dump or kill
   the VM. Filed this issue doc with full diagnosis and a recommended kill-vs-diagnose-first decision for the operator.
+- 2026-08-15 (slot-17, data_engineering, batch6 P3 todo owner): This doc's "NOT OOM'd" determination was based on the
+  GCE instance `status` field alone (RUNNING at read time) — a separate read of the VM's own deployment registry JSON
+  (`deployments/active/b45704e9-266e-4cbd-b9d2-472a0e7541d8.json`, before it was archived) showed `mem_pct` climbing
+  75.3%→99.2% in the last sampled minute before all signals went dead, i.e. it WAS a genuine guest-level OOM — the VM is
+  now confirmed fully gone (`gcloud compute instances describe` → not found). See the companion doc
+  `dp_vm_003_manifest_recon_cefi_silent_death_unsliced_manifest_read_2026_08_15.md`'s matching Progress Log entry for
+  the full evidence + the successful re-run on `e2-highmem-16` that closed
+  `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s P3 todo. Flipped this doc's operator-kill todo as moot (billing
+  already stopped).

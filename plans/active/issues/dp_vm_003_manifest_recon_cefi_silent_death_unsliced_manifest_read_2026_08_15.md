@@ -164,10 +164,12 @@ was never previously flagged as at-risk for this same unsliced read.
       this VM class) now that a genuine stall/silent-death has been observed for it, or whether the deliberate `None`
       (manual-judgment-only) should stand. If kept `None`, no action needed; if changed, the ≤2/(vm-prefix,day) budget
       already applies uniformly via `vm_prefix()`'s longest-prefix match.
-- [ ] [OPERATOR] P3. Confirm `manifest-recon-cefi-20260815-100959` (currently running on `e2-highmem-16`) completes
+- [x] ✅ [OPERATOR] P3. Confirm `manifest-recon-cefi-20260815-100959` (currently running on `e2-highmem-16`) completes
       successfully and its output satisfies `/plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md` todo #P3
       (cefi BINANCE-FUTURES/KRAKEN-FUTURES `--unphantom-only` re-run) — flip that checkbox once confirmed; this issue
-      doc does not flip it directly since the run had not completed as of this write-up.
+      doc does not flip it directly since the run had not completed as of this write-up. **CONFIRMED 2026-08-15
+      (slot-17)**: completed cleanly, `exit_code=0`, `Manifest rows: 29,707,581`, "No phantoms found and nothing to
+      unphantom. Manifest is clean." Batch6 checkbox flipped.
 
 ## Progress Log
 
@@ -185,3 +187,19 @@ was never previously flagged as at-risk for this same unsliced read.
   write-up (`run.log` heartbeats to 10:15:00Z past the point the first VM died) — did not launch a duplicate against it.
   Filed this issue doc with the root-cause hypothesis + a scoped follow-up todo rather than shipping an unverified
   column-slimming change under escalation time pressure. No code changed this session.
+- 2026-08-15 (slot-17, data_engineering, batch6 P3 todo owner): Root-cause CONFIRMED (was "not fully confirmed" above) —
+  the first VM's own deployment registry entry
+  (`gs://deployment-scripts-central-element-323112/deployments/active/b45704e9-266e-4cbd-b9d2-472a0e7541d8.json`, read
+  before it was archived) carries a `host_metrics_window` showing `mem_pct` climbing 75.3%→99.2% (`mem_slope=23.9`) in
+  the same ~1-minute window `run.log` froze — a genuine guest-level OOM, not a `relaunch_stalled_vm.py` kill or an
+  unrelated hang. The VM has since fully vanished (`gcloud compute instances describe` → not found), consistent with an
+  OOM-triggered crash rather than a clean shutdown. Confirmed `--venues` scoping does NOT reduce this cost — the
+  manifest load happens before any venue filter applies, and the re-run (below) still needed a 128GB box even scoped to
+  2 venues. Separately: `launch-manifest-recon-all-vm.sh`/`-apply-vm.sh` were extended this session with
+  `UNPHANTOM_ONLY`/`VENUES` scoping so this exact invocation is reproducible without hand-rolling metadata
+  (`deployment-service@04fd67e025`) — orthogonal to this doc's `columns=` slim-read todo (still open, still the real
+  fix; scoping alone doesn't avoid the full-manifest load). Re-ran on `e2-highmem-16` (128GB):
+  `manifest-recon-cefi-20260815-100959` completed cleanly (`exit_code=0`), `Manifest rows: 29,707,581`, "No phantoms
+  found and nothing to unphantom. Manifest is clean." — flipped this doc's todo #3 and
+  `/plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s P3 todo. The `columns=` slim-read todo above remains
+  open — a genuine efficiency fix, not required to close batch6's todo now that a correctly-sized VM proved sufficient.
