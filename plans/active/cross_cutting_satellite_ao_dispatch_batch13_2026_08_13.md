@@ -523,8 +523,13 @@ source: >-
       `plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md`
       (P1, assigned_vm: planning, [OPERATOR] migration-strategy todo + 2 gated [CODE] follow-ups) per the
       findings-triage rule. Source: `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md`
-- [ ] [CODE] P2. Fix the stale scheduled-jobs table in agent-orchestrator-single-vm-architecture.md
-      (opus/01:00-UTC-daily -> sonnet/hourly-retry) Source:
+- [x] ✅ [CODE] P2. **NOT ATTEMPTED — already fixed by a prior session; premise unmet.** (2026-08-15, slot-16·infra)
+      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md:159`'s `plan_reconciler` row already reads
+      `sonnet` + "every-2h even-hour fire ... retry-until-capacity" — the opus/01:00-UTC-daily and hourly-retry
+      staleness this todo targets was corrected 2026-08-09 (`unified-trading-pm@879b8e9907` fixed opus/schedule;
+      `unified-trading-pm@717a17bdfa` fixed the hourly-retry phrasing that first fix had carried forward stale), per
+      `plans/active/issues/plan_reconciler_findings_2026_08_08.md:212-220`. Verified live against current HEAD — the
+      row's own inline note cites both corrections by date and SHA. No further edit needed. Source:
       `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md`
 - [ ] [CODE] P2. Launch the now-unblocked EXTENDED-STARKNET instrument-catalogue + perp backfill
       (candles/funding/orderbook/trades) Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
