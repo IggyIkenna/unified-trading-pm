@@ -380,3 +380,15 @@ tracked-but-missing shape.
   rather than this session's own superseded approach), both `repro-safe-doc-push-extreme-stash-rename-{drop,loss}.sh`
   harnesses (NO DROP / NO LOSS), and the full `tests/test_safe_doc_push_*.bats` suite (51/51) — all green, no
   regressions.
+- **2026-08-15 (slot-17, infra)**: Independently converged on the same could-not-reproduce verdict as slot-23
+  before seeing their landed writeup (traced `stage_named_files()`'s branches by hand, then forced a real
+  `autostash_rebase_reconcile` cycle via a different mechanism — a local unpushed commit ahead of origin before
+  the `git mv`, rather than slot-23's peer-conflicting-edit approach — both against `unified-trading-pm@7e03ff2f01`
+  and both landed cleanly). Deferring to slot-23's more complete writeup (their 3-scenario sweep includes a control
+  against the pre-fix commit, which mine did not) rather than duplicating it here, and agree with their call to
+  leave the todo unchecked — could-not-reproduce is not confirmed-absent. Kept my own repro,
+  `scripts/dev/repro-sdp-caller-staged-rename-reconcile-forced.sh` (`Delete-when: NA`), as additional standing
+  coverage: it exercises a still-distinct reconcile trigger (ahead>0 from a prior local commit, forcing the retry
+  loop's `else` branch unconditionally) from both slot-23's peer-conflict-forced rebase and slot-19/25's
+  rebase-free harnesses, so the corpus now has three independently-triggered reconcile shapes covered instead of
+  one. No further code change made.
