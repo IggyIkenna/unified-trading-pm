@@ -34,7 +34,9 @@ does_not:
   - Run the daily deep plan/codex reconciliation (that is plan_reconciler.md — keep scoped to making the gate green)
 triggers:
   - POST /api/escalate from GHA with wall_type in {merge_conflict, label_mismatch, sit_failure, ldr_qg_failure,
-    plan_health, cloud_build_router_failure}
+    plan_health, cloud_build_router_failure}, or from the local_ratchet_gate_breach detector (no GHA run involved — a
+    local pre-push quality-gate ceiling breach on origin/live-defi-rollout HEAD, dispatched the same way once
+    still-unresolved past its 15-minute self-heal grace window)
 escalation_to: main
 temperament_base: decisive
 ---
@@ -62,7 +64,8 @@ Dynamic per-session values are delivered in your **boot message** — never inli
 - `escalation_id` — this wall's id (`$ESCALATION_ID` below)
 - `repo` — the target repo (`$REPO`)
 - `pr_number` — the PR (`#$PR_NUMBER`; `#0` for a wall with no PR)
-- `wall_type` — `merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | plan_health`
+- `wall_type` —
+  `merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | plan_health | local_ratchet_gate_breach`
 - `authoring_slot` — the slot that authored the work (`$AUTHORING_SLOT`)
 - `slot_id` — your slot (`$SLOT_ID`), with `worktree` + `branch`
 - `server_url` — the orchestrator URL (`$SERVER_URL`)
@@ -168,6 +171,24 @@ WHAT TO DO BY wall type:
     plan/codex/cross-plan reconciliation + auto-archive is the **plan_reconciler** worker's job
     (`unified-trading-pm/agents/plan_reconciler.md`, mode=reconcile, daily systemd timer) — NOT this gate-failure
     handler; keep this path scoped to making the gate green.
+- **local_ratchet_gate_breach**: a fleet-wide detector found a LOCAL, pre-push `quality-gates.sh` ratchet/baseline
+  ceiling (DTZ/TID251 count, a fallback-import baseline, an empty-string-fallback baseline — see
+  `unified-trading-pm/scripts/quality_gates/check_ruff_rule_ratchet.py` and its siblings `check_no_fallback_imports.py`
+  / `check_no_empty_string_fallback.py`) still breached on `origin/live-defi-rollout` HEAD for `$REPO`, unresolved >=15
+  minutes after first detected (the self-heal grace window — the observed pattern is the next quickmerge fixing it on
+  its own — already elapsed; `context` names the exact check + current count vs. baseline ceiling). **Your
+  `done_definition` is NOT "the escalation is acknowledged/closed" — it is "the specific check named in `context`,
+  re-run against my fix, reports the metric back at-or-below its baseline ceiling" (per the 2026-08-12 ruling in
+  `plans/archive/2026_08/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md`).** `cd $REPO`;
+  identify the exact check script from `context` and re-run it DIRECTLY (e.g.
+  `python scripts/quality_gates/check_ruff_rule_ratchet.py --scope $REPO`) BEFORE the full `quality-gates.sh` — this is
+  your fast, targeted done-when signal, not a proxy for it. Diagnose + fix the ACTUAL regressed code (never widen the
+  ratchet ceiling, add a suppression/pragma, or otherwise move the baseline to make the count-check pass — that is
+  lowering the floor, the same ban this repo already applies to a coverage floor). Once the targeted check is clean, run
+  the full backgrounded `quality-gates.sh` (see the pattern above) to confirm no other regression, then ship via
+  `quickmerge --agent --files '<paths>'` to `live-defi-rollout` (Path-B; `#$PR_NUMBER` is `#0` — same shape as
+  `ldr_qg_failure`, there is no PR). Cite the targeted check's own clean re-run output (not just "QG green") as your
+  evidence in the commit message and the authoring-slot ping.
 - **cloud_build_router_failure**: `unified-trading-pm/.github/workflows/cloud-build-router.yml` failed to trigger (or
   verify) a `<repo>-prod` Cloud Build for `$REPO`. Read `route-build`'s job log first
   (`gh run view <run_id> --repo IggyIkenna/unified-trading-pm --log`) for the actual `gcloud builds triggers run` error,
