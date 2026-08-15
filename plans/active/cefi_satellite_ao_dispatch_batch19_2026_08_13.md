@@ -405,8 +405,17 @@ source: >-
       there is nothing further to promote. No code shipped by this todo (none needed) — this todo's own line was never
       flipped after the 0c38c00d fix landed and its Progress Log's own text already documents the extraction. Source:
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
-- [ ] [CODE] P2. Fix flaky shellcheck under host load in launch-expected-universe-v2-vm.sh Source:
-      `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
+- [x] ✅ [CODE] P2. Fix flaky shellcheck under host load in launch-expected-universe-v2-vm.sh Source:
+      `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md` — **SHIPPED deployment-service@8df1bf3e20
+      (2026-08-15, slot-9·backend_engineer).** Independently arrived at the same root cause + fix slot-3 already
+      diagnosed below (`TestShellcheckClean.test_shellcheck_no_errors`, `tests/unit/test_vm_zombie_watchdog.py`, ~180
+      parametrized per-script `shellcheck` subprocess calls flaking under concurrent gate load — SIGPIPE, the same
+      anti-pattern `test_script_syntax_validation` fixed 2026-08-14): batched into ONE
+      `shellcheck --severity=error     <all scripts>` subprocess call (shellcheck accepts multiple file args natively,
+      no wrapper loop needed). Unlike slot-3's commit (`2512a92b`, GATED — stayed local to their clone, never reached
+      origin after repeated host-contention QG kills), this run's Pass-1 `quality-gates.sh` completed clean (527s,
+      sentinel matched HEAD) on the first attempt and shipped via quickmerge with no rebase —
+      `post-push ancestry verified` against `origin/live-defi-rollout`.
 - [x] ✅ [CODE] P2. Generalise the test-hermeticity guard for the pytest fake-GCS backend persistence bug **CLOSED —
       already-shipped in the SAME commit as the original ad-hoc fix (2026-08-15, slot-26·backend_engineer).** Read
       `deployment-service/tests/conftest.py` directly: `_isolate_local_storage_provider_default_root` (an `autouse=True`
