@@ -32,6 +32,13 @@ drift_direction: fix
 resolved_by:
 locked_by: plan_reconciler (agt-fb0ce4) since 2026-08-10T05:19:46Z
 depends_on: []
+context_scope:
+  [
+    /plans/archive/2026_08/issues/plan_reconciler_findings_ci_2026_08_09.md,
+    /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # plan_reconciler findings — ci tranche — 2026-08-10

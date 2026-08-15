@@ -38,6 +38,14 @@ superseded_by:
 source: operator question 2026-08-14 — measured while arming /plans/active/revocation_arming_2026_08_14.md
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/04-architecture/dependency-health-policy.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+    /codex/04-architecture/kill-switch-circuit-breaker.md,
+    /plans/active/alert_driven_dependency_revocation_2026_08_12.md,
+    /plans/active/revocation_arming_2026_08_14.md,
+  ]
 ---
 
 # Live path has no stale-producer detection

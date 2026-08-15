@@ -28,6 +28,12 @@ drift_direction: fix
 resolved_by:
 locked_by: plan_reconciler (agt-716973) since 2026-08-10T05:24:47Z
 depends_on: []
+context_scope:
+  [
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
+    /plans/epics/infrastructure_master.md,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 ---
 
 # plan_reconciler findings — infra tranche — 2026-08-10

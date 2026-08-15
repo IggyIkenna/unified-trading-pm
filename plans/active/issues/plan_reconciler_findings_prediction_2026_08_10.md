@@ -33,6 +33,12 @@ drift_direction: fix
 resolved_by:
 locked_by: plan_reconciler (agt-12ce9c) since 2026-08-10T18:20:00Z
 depends_on: []
+context_scope:
+  [
+    /plans/archive/2026_08/issues/ag_closeout_audit_prediction_parked_2026_08_10_r2.md,
+    /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+  ]
 ---
 
 # plan_reconciler findings — prediction tranche — 2026-08-10

@@ -28,6 +28,12 @@ drift_direction: fix
 resolved_by:
 locked_by: plan_reconciler (agt-33a6ec) since 2026-08-10T00:20:00Z
 depends_on: []
+context_scope:
+  [
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /plans/active/issues/deployment_api_prod_disable_auth_true_2026_08_06.md,
+    /plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md,
+  ]
 ---
 
 # plan_reconciler findings — cross-cutting tranche — 2026-08-10

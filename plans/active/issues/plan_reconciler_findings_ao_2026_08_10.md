@@ -32,6 +32,13 @@ drift_direction: fix
 resolved_by:
 locked_by: plan_reconciler (agt-c7578b) since 2026-08-10T05:18:32Z
 depends_on: []
+context_scope:
+  [
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # plan_reconciler findings — ao tranche — 2026-08-10
