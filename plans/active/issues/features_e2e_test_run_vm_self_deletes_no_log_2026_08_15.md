@@ -159,7 +159,7 @@ Exactly the observed symptom: the VM can read its startup script but can never w
 
 ## Todos
 
-- [ ] [INFRA] P1. Confirm or refute the `uts-test-sa` IAM hypothesis above: check `uts-test-sa`'s actual bucket-level
+- [x] ✅ [INFRA] P1. Confirm or refute the `uts-test-sa` IAM hypothesis above: check `uts-test-sa`'s actual bucket-level
       IAM bindings on `deployment-scripts-central-element-323112` (both the `vm/` prefix read path and the `vm-logs/`
       prefix write path) via `gcloud projects get-iam-policy central-element-323112` or the IAM Admin API (not a
       bucket-object CLI call, per the hook note above). If confirmed, grant the missing role (least-privilege — the
@@ -169,36 +169,43 @@ Exactly the observed symptom: the VM can read its startup script but can never w
       GCP IAM change, not code)
 
       **CONFIRMED + FIX APPLIED 2026-08-15 (slot-6, infra craft) — verification launch IN PROGRESS, not yet complete.**
-          Root cause confirmed (see "CONFIRMED" note above the Todos section). Self-granted (this session's active identity
-          IS `unified-trading-sa`, the documented self-service identity for exactly this gap class per
-          `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`) a NEW, narrowly-scoped project-level IAM
-          condition binding — NOT a blanket grant, deliberately mirrors the existing `group-a/b-test-tier-only` pattern
-          rather than widening `uts-test-sa`'s access to every bucket:
-          ```
-          gcloud projects add-iam-policy-binding central-element-323112 \
-            --member="serviceAccount:uts-test-sa@central-element-323112.iam.gserviceaccount.com" \
-            --role="roles/storage.objectAdmin" \
-            --condition='expression=resource.name.startsWith("projects/_/buckets/deployment-scripts-central-element-323112"),title=deployment-scripts-bucket-test-sa-vm-logs,description=uts-test-sa write access for vm-logs/ and EXIT_STATUS on test-run VM launches -- see features_e2e_test_run_vm_self_deletes_no_log_2026_08_15'
-          ```
-          Verified live via a fresh `gcloud projects get-iam-policy` re-read (binding present, condition title
-          `deployment-scripts-bucket-test-sa-vm-logs`, expression scoped to exactly this one bucket — a live infra change,
-          not in git). **Live-launched a fresh verification VM** (`features-e2e-tradfi-20260815-100817-679e08`, same
-          `pipeline_e2e_check.py --day 2026-08-14 --asset-group TRADFI --family volatility --legs benchmark
-          --benchmark-days 7` command as the 3 prior failures) to prove the capability, not just read the policy back — per
-          the self-service rule's "verify the actual capability live" requirement. **Launch was still in progress at the
-          time this session ended** (next agent: check whether `gs://deployment-scripts-central-element-323112/vm-logs/
-          features-e2e-tradfi-20260815-100817-679e08/run.log` now exists — if yes, the fix is proven and this todo is done;
-          if the VM still self-deletes with no log despite the new binding, the hypothesis needs revisiting — e.g. check
-          whether `lc_tier_service_account` is actually being invoked with `is_test_run=true` for this launch shape, or
-          whether a SEPARATE identity is used for the metadata-server startup-script fetch vs. the VM's runtime SA).
+              Root cause confirmed (see "CONFIRMED" note above the Todos section). Self-granted (this session's active identity
+              IS `unified-trading-sa`, the documented self-service identity for exactly this gap class per
+              `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`) a NEW, narrowly-scoped project-level IAM
+              condition binding — NOT a blanket grant, deliberately mirrors the existing `group-a/b-test-tier-only` pattern
+              rather than widening `uts-test-sa`'s access to every bucket:
+              ```
+              gcloud projects add-iam-policy-binding central-element-323112 \
+                --member="serviceAccount:uts-test-sa@central-element-323112.iam.gserviceaccount.com" \
+                --role="roles/storage.objectAdmin" \
+                --condition='expression=resource.name.startsWith("projects/_/buckets/deployment-scripts-central-element-323112"),title=deployment-scripts-bucket-test-sa-vm-logs,description=uts-test-sa write access for vm-logs/ and EXIT_STATUS on test-run VM launches -- see features_e2e_test_run_vm_self_deletes_no_log_2026_08_15'
+              ```
+              Verified live via a fresh `gcloud projects get-iam-policy` re-read (binding present, condition title
+              `deployment-scripts-bucket-test-sa-vm-logs`, expression scoped to exactly this one bucket — a live infra change,
+              not in git). **Live-launched a fresh verification VM** (`features-e2e-tradfi-20260815-100817-679e08`, same
+              `pipeline_e2e_check.py --day 2026-08-14 --asset-group TRADFI --family volatility --legs benchmark
+              --benchmark-days 7` command as the 3 prior failures) to prove the capability, not just read the policy back — per
+              the self-service rule's "verify the actual capability live" requirement. **Launch was still in progress at the
+              time this session ended** (next agent: check whether `gs://deployment-scripts-central-element-323112/vm-logs/
+              features-e2e-tradfi-20260815-100817-679e08/run.log` now exists — if yes, the fix is proven and this todo is done;
+              if the VM still self-deletes with no log despite the new binding, the hypothesis needs revisiting — e.g. check
+              whether `lc_tier_service_account` is actually being invoked with `is_test_run=true` for this launch shape, or
+              whether a SEPARATE identity is used for the metadata-server startup-script fetch vs. the VM's runtime SA).
 
-- [ ] [INFRA] P1. If the IAM hypothesis is refuted, get real evidence of what actually kills the VM in its first ~30-60s
-      of boot: (a) check GCP Cloud Logging for the instance's serial-port output — NOT enabled by default on this
-      launcher (`serial-port-logging-enable` metadata not set in `launch-features-vm.sh`); confirm whether enabling it
-      (even temporarily for one diagnostic launch) is acceptable, or (b) SSH into a freshly-launched VM of this exact
-      shape IMMEDIATELY after creation (before it can self-delete) to observe `setup-data-pipeline-vm.sh`'s live
-      execution — may require racing the ~250s window or temporarily disabling
-      `VM_SHUTDOWN_ON_COMPLETION`/`--instance-termination-action` for one diagnostic run. (repo: deployment-service)
+          **PROVEN 2026-08-15 (slot 5, infra craft) — the fix works, todo DONE.** Picked up todo 2 below (dispatched
+          independently by the backlog) and found todo 1 already in-flight; continued monitoring its verification VM
+          instead of duplicating work. `features-e2e-tradfi-20260815-100817-679e08` progressed through the FULL real
+          lifecycle for the first time across 4 total attempts on this launch shape: `EXIT_STATUS=RUNNING` written at
+          ~10:14Z (the early sentinel `vm-exec-with-gcs-tee.sh` writes at start — never written on any of the 3 prior
+          failures), then `run.log` appeared, then `EXIT_STATUS=0` at 10:15:07Z with a clean `DEPLOYMENT_COMPLETED
+          exit_code=0` — the VM ran its full command and self-deleted normally, not the silent self-delete-with-zero-objects
+          crash this whole doc tracks. Confirms the `uts-test-sa` write-access gap really was the sole cause of the
+          self-delete/no-log symptom.
+
+- [x] ✅ [INFRA] P1. If the IAM hypothesis is refuted, get real evidence of what actually kills the VM in its first
+      ~30-60s of boot — **N/A, not executed: the hypothesis was CONFIRMED (todo 1 above), not refuted**, so this
+      diagnostic branch's own precondition never applies. Checking it off as resolved-by-the-other-branch rather than
+      leaving it dangling — see todo 1's "PROVEN" note for the evidence. (repo: deployment-service)
 - [ ] [SCRIPT] P2. Once root-caused, add a regression signal for this specific failure mode: `launch_vm_and_wait`/the
       pipeline_e2e_check engine already distinguishes `vm_self_deleted_no_exit_status` from `timeout_no_exit_status` in
       its `reason` field (per a prior agent's read this session) but the shard-result `reason` string surfaced in the
@@ -211,7 +218,21 @@ Exactly the observed symptom: the VM can read its startup script but can never w
       TRADFI:volatility benchmark once todo 1 lands"
       (`pipeline_e2e_check.py --day <fresh> --asset-group TRADFI --family volatility --legs benchmark --benchmark-days 7`)
       and flip that todo's checkbox with the real throughput numbers this doc's author was trying to capture. (repo:
-      features-service)
+      features-service) **NOT satisfied by the 2026-08-15 slot 5 verification launch** — that launch proved the
+      IAM/self-delete fix (todo 1) but reported `Completed 0/11 groups`, a genuine ZERO-throughput result, not real
+      numbers to cite. Still needs a real successful relaunch once the new [DATA] P1 finding below is resolved.
+- [ ] [DATA] P1. **NEW (found 2026-08-15 slot 5).** The verification VM's `run.log` shows every one of the 11 feature
+      groups failing identically: `No data for VX on <date>` (VIX/variance-risk-premium/vol_greeks_features all depend
+      on a captured VX perp that's absent) immediately followed by
+      `empty_confirmed manifest write failed ...     record_empty(reason=SOURCE_RETURNED_ZERO) requires FetchEvidence proving a clean 200+empty fetch ... The     supplied evidence does NOT prove honest absence ... most likely an auth / rate-limit / 5xx / timeout /     exception / missing-credential path masquerading as honest absence — call record_failed instead`.
+      This is a DISTINCT bug from the IAM/self-delete issue this doc otherwise tracks — the VM now runs to completion
+      cleanly (`exit_code=0`), but the underlying feature-compute path can't tell a genuine data gap from a masked fetch
+      failure and is being refused (correctly, per the guard's own honest-absence contract) rather than silently
+      recording a false empty. Root-cause whether VX perp data is genuinely uncaptured for 2026-08-07..14 (a real gap,
+      in which case the benchmark needs a day range that actually has data) or whether the fetch itself is silently
+      failing (auth/rate-limit/etc., in which case that's the real bug to fix). Full evidence:
+      `gs://deployment-scripts-central-element-323112/vm-logs/features-e2e-tradfi-20260815-100817-679e08/run.log`.
+      (repo: features-service)
 
 ## Progress Log
 
@@ -235,3 +256,17 @@ Exactly the observed symptom: the VM can read its startup script but can never w
   `gs://deployment-scripts-central-element-323112/vm-logs/ features-e2e-tradfi-20260815-100817-679e08/run.log` for
   existence before doing anything else with this todo.** See todo 1's own note above for the exact next-step branching
   (fix proven vs. hypothesis needs revisiting).
+
+- **2026-08-15 (slot 5, infra craft)**: dispatched todo 2 (the "if refuted" diagnostic branch) independently of slot-6's
+  todo 1 work; on picking it up found todo 1 already in-flight with a verification VM running, so continued monitoring
+  that VM to terminal state instead of duplicating a second diagnostic launch.
+  `features-e2e-tradfi-20260815-100817-679e08` reached `EXIT_STATUS=0` / clean `DEPLOYMENT_COMPLETED` — the FIRST time
+  in 4 total attempts on this launch shape that ANY object (let alone a real `run.log` + non-`RUNNING` `EXIT_STATUS`)
+  was ever written. **Flipped todo 1 (proven) and todo 2 (N/A — hypothesis confirmed, not refuted, so its own diagnostic
+  precondition never applies).** The VM's `run.log` also surfaced a genuinely NEW, distinct bug: all 11 feature groups
+  reported `Completed 0/11 groups` — every group hit `No data for VX` then an `empty_confirmed manifest write failed`
+  guard rejection (the write correctly refuses to record a masked failure as honest absence). Filed as a new [DATA] P1
+  todo above and annotated todo 4 (the "capture real throughput" relaunch) as NOT YET satisfied — the launch mechanism
+  works now, but zero real throughput numbers exist to cite. Did not attempt to root-cause the
+  VX-data-gap-vs-masked-failure question itself — genuinely distinct domain (features-service data correctness) from
+  this doc's IAM/infra scope, out of proportion for this already-large infra todo to absorb inline.
