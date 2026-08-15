@@ -65,13 +65,15 @@ source: >-
 
 ## Todos
 
-- [ ] [INFRA] P1. Add `local_ratchet_gate_breach` to `WALL_TYPES` in `agent-orchestrator/server/escalation.py`,
+- [x] ✅ [INFRA] P1. Add `local_ratchet_gate_breach` to `WALL_TYPES` in `agent-orchestrator/server/escalation.py`,
       following the `data_pipeline_failure`/`main_ci_red` push-fix-to-LDR pattern — a non-PR wall dispatched with the
       established `pr_number=0` sentinel (see `test_data_pipeline_failure_registers_dp_kind` in
       `agent-orchestrator/tests/test_escalation.py` for the reference shape), with an explanatory comment citing the
       2026-08-12 ruling. Also add the literal to `EscalateRequest.wall_type`'s closed `Literal` in
-      `agent-orchestrator/server/models.py` (per `test_escalate_request_wall_type_matches_escalation_wall_types`).
-      Done-when: `bash scripts/quality-gates.sh` is green in agent-orchestrator and the new literal round-trips through
+      `agent-orchestrator/server/models/escalation.py` (corrected path — the file is `server/models/escalation.py`, not
+      `server/models.py`; `models.py` doesn't exist in this repo) (per
+      `test_escalate_request_wall_type_matches_escalation_wall_types`). — agent-orchestrator@16c831ed84 Done-when:
+      `bash scripts/quality-gates.sh` is green in agent-orchestrator and the new literal round-trips through
       `EscalateRequest`.
 - [ ] [INFRA] P1. Author the fleet-wide detector entrypoint — new script
       `agent-orchestrator/scripts/orchestrator/detect_local_ratchet_gate_breaches.py` — that runs
@@ -139,3 +141,8 @@ source: >-
 - **2026-08-15 (slot-7·infra)**: Plan authored per the batch13 todo "author the implementation plan for the
   2026-08-12-ruled local-ratchet-gate-breach escalation detector" — routing confirmed AO-dispatched via BLK-3f47f1af
   (main agent, 2026-08-15). Not yet executed.
+- **2026-08-15 (slot-7·infra)**: Todo 1 shipped — `local_ratchet_gate_breach` added to `WALL_TYPES`
+  (`agent-orchestrator/server/escalation.py`) and to `EscalateRequest.wall_type`'s Literal
+  (`agent-orchestrator/server/models/escalation.py` — corrected the todo's stale path, the file is
+  `server/models/escalation.py` not `server/models.py`). `bash scripts/quality-gates.sh` green (3960 passed, 2 skipped
+  - dashboard 374 passed). agent-orchestrator@16c831ed84.
