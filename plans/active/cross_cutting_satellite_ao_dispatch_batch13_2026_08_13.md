@@ -391,8 +391,18 @@ source: >-
 - [ ] [CODE] P2. OKX-SWAP perp funding sparse (only ~9 coins captured in 2026 vs expected ~19+) -- verify the OKX
       derivative_ticker backfill universe in MTDS. Source:
       `plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md`
-- [ ] [CODE] P2. P9.2 -- run scripts/repo-management/run-version-alignment.sh --fix in strategy-service after pulling
-      main in PM; small, deterministic, worth a fresh re-verify since it may already be stale/resolved. Source:
+- [x] ✅ [CODE] P2. **STALE PREMISE, CONFIRMED — duplicate of an already-resolved source-doc item, no fix needed.**
+      (2026-08-15, slot-10·infra) The source doc's own item (`citadel_paper_batch_live_reconciliation_2026_06_19.md`
+      P9.2) was already re-verified + closed on 2026-08-14: the cited UAC `0.26.0`/`0.27.0` blocking pairing no longer
+      exists. Fresh live re-run this session of
+      `bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh` (check-only, PM already fresh-pulled to
+      `origin/live-defi-rollout`) confirms the same result: **"OK: All dependencies aligned with manifest and canonical
+      constraints." / "Alignment OK."** — strategy-service's QG-preflight version-alignment gate is not blocked. `--fix`
+      was not run: the two currently-open conditions the check surfaces (fleet-wide `uv.lock` drift across ~18 repos, PM
+      self-version drift `pyproject=1.2.596` vs `manifest=1.2.741`, and a 21-repo local-vs-`origin/main`
+      `staging_versions` lag) are the SAME pre-existing, separately-tracked, out-of-scope conditions the source doc's
+      2026-08-14 re-verification already identified — none is the strategy-service-blocking pairing this todo cites, and
+      `--fix` would touch ~20 unrelated repos outside this todo's scope. Source:
       `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`
 - [x] ✅ [CODE] P2. Phase 1c: wire the drain registry into MTDS/MDPS/instruments-service/features-service backfill
       entrypoints. **STALE DUPLICATE, closed 2026-08-14** — this specific Phase-1 item shipped; Phase 1 landed
