@@ -250,18 +250,42 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
       Terraform decommission as a new STANDING-ACTION todo below rather than executing it in this diagnostic pass
       (34+1 schedulers across the shared `t1_batch_services` map is a bigger, more error-prone change than this DIAG
       todo's scope — needs its own careful `for_each` exclusion work, not folded in here).
-- [ ] [INFRA] P3. **STANDING-ACTION — Terraform-retire the 34 confirmed-abandoned dev/staging-tier `*-t1-schedule`
-      schedulers + `central-market-data-service-scheduler-trigger` (europe-west1)**, per the DIAG finding directly
-      above. In `deployment-service/terraform/gcp/t1_batch_scheduler.tf`: extend the existing
-      `t1_batch_services_dev_excluded_keys` pattern (currently sports-only) to a broader
-      `t1_batch_services_dev_staging_excluded_keys` covering every key whose dev/staging Cloud Run Job was never
-      provisioned (all keys except none currently confirmed-live for dev/staging — i.e. exclude for BOTH dev AND
-      staging, not just dev), and change the `t1_batch_services` local's conditional from `var.environment == "dev"`
-      to `contains(["dev", "staging"], var.environment)` gated on the new excluded-keys list. Separately retire
-      `central-market-data-service-scheduler-trigger` (its own resource, not in this map — locate it, likely in
-      `deployment-service/terraform/gcp/` under a service-liveness or MDPS-named `.tf` file). Targeted `tofu apply`
-      per env (`ENV=dev`, `ENV=staging` — prod untouched), verify `gcloud scheduler jobs describe` → `NOT_FOUND` for
-      all 35, matching the verification pattern already used for repoint candidates (1)/(3)/(4) above.
+- [x] ✅ [INFRA] P3. **STANDING-ACTION — Terraform-retire the dev/staging-tier `*-t1-schedule` schedulers +
+      `central-market-data-service-scheduler-trigger` — DONE 2026-08-15 (slot-7).** The doc's own stated "34" count
+      didn't reconcile against its own Full-list table above (24 dev/staging rows) — re-derived live instead of
+      trusting either number: `gcloud scheduler jobs list --filter="name~'uts-(dev|staging)-.*-t1-schedule'"` →
+      **24** (14 dev + 10 staging, matching the table exactly) + 1 (`central-market-data-service-scheduler-trigger`)
+      = **25 total**, not 34 (see Progress Log for the discrepancy note; `uts-dev-instruments-t1-schedule`, the one
+      OTHER live `uts-dev-*` match, is a different legacy scheduler not in this doc's dead-target list at all —
+      excluded, its target is the one stray live job the sibling alert-coverage doc already flagged). Shipped
+      `deployment-service@38f42829`: `t1_batch_scheduler.tf` adds `t1_batch_services_dev_staging_excluded_keys =
+      keys(local.t1_batch_services_all)` (derived from the map's own keys, not hand-listed — can't go stale the way
+      the schedulers themselves did) and changes the `t1_batch_services` conditional to
+      `contains(["dev","staging"], var.environment)`. **Neither the dev-tier schedulers nor the trigger were ever
+      Terraform-tracked** (confirmed via `state list` — dev's state has zero `t1_batch_schedule` instances; the
+      trigger doesn't appear anywhere in the repo) — only staging's 10 were real tracked resources, destroyed via
+      `tofu apply -target='google_cloud_scheduler_job.t1_batch_schedule'` (`0 to add, 0 to change, 10 destroyed`).
+      Dev's 14 + the europe-west1 trigger deleted directly via `gcloud scheduler jobs delete` (mirroring this doc's
+      own original pause action, which was also direct-gcloud, never Terraform). **All 25 verified `NOT_FOUND`.**
+- [ ] [DIAG] P3. **NEW 2026-08-15 (slot-7)** — Root-cause the 3 PROD dead-target schedulers found while re-deriving
+      this doc's live count (see Progress Log): `uts-prod-execution-config-snapshot-t1-schedule`,
+      `uts-prod-ml-inference-t1-schedule`, `uts-prod-ml-t1-schedule` (all `ENABLED→PAUSED` in the original 2026-08-07
+      bulk-pause, never explained by any repoint candidate or the already-paused-prod-features rows — prod SHOULD
+      have real Cloud Run Jobs for these families). Determine why + fix (repoint or retire) — mirrors this doc's own
+      already-proven method. Repo: unified-trading-pm (diag) + deployment-service (fix, if Terraform-retire applies).
+- [ ] [INFRA] P3. **NEW 2026-08-15 (slot-7)** — Clean up 2 orphaned staging Terraform-state entries:
+      `google_cloud_scheduler_job.t1_batch_schedule["features-onchain"]` and `["features-sports"]`, tracked in
+      staging's state but absent from the current `t1_batch_services_all` map keys entirely. Low-risk/self-resolving
+      (any future untargeted `ENV=staging tofu apply` would destroy them anyway) — a small `tofu apply
+      -target='google_cloud_scheduler_job.t1_batch_schedule["features-onchain"]'
+      -target='google_cloud_scheduler_job.t1_batch_schedule["features-sports"]'` clears them explicitly. Repo:
+      deployment-service.
+- [ ] [DIAG] P2. **NEW 2026-08-15 (slot-7)** — Investigate dev Terraform state's `google_service_account.t1_batch`
+      entry, recorded with PROD's real values (`account_id=uts-prod-batch-sa`, matching prod's live SA email/
+      unique_id exactly) instead of a genuine dev SA — likely a stray `terraform import` of prod's real SA into
+      dev's state slot. A targeted plan proposes a REPLACE (`uts-prod-batch-sa`→`uts-dev-batch-sa`); do NOT blindly
+      apply that without first confirming nothing depends on the CURRENT (prod-identity) state entry under the dev
+      slot. Repo: deployment-service.
 
 ## Progress Log
 
@@ -295,3 +319,28 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
   redeploy — same shape as the sports dev-tier precedent above. Filed the actual Terraform decommission as a new
   `[INFRA]` STANDING-ACTION todo rather than executing it in this diagnostic pass (needs its own careful
   `for_each`-exclusion change against the shared `t1_batch_services` map, not folded into a DIAG todo).
+
+- **2026-08-15 (slot-7, infra) — STANDING-ACTION todo executed; 3 adjacent findings flagged, not fixed (all out of
+  this todo's dev/staging-only scope).** Full evidence in the flipped todo above. Adjacent findings for whoever picks
+  these up next:
+  1. **3 unexplained PROD dead-target schedulers**, present in this doc's own original 38-row Full-list table but
+     never covered by any of the 4 repoint candidates or the 6 already-paused-prod-features rows:
+     `uts-prod-execution-config-snapshot-t1-schedule`, `uts-prod-ml-inference-t1-schedule`,
+     `uts-prod-ml-t1-schedule` (all `ENABLED→PAUSED` in the original 2026-08-07 action, root cause never
+     investigated — prod SHOULD have real Cloud Run Jobs for these families, unlike dev/staging). This is very
+     likely where the doc's "34" count actually came from (34 ≈ 24 dev/staging + these 3 + rounding/miscount, not
+     independently confirmed). Not touched here (prod explicitly out of scope for this todo) — worth a fresh
+     root-cause pass.
+  2. **2 orphaned staging Terraform-state entries**: `google_cloud_scheduler_job.t1_batch_schedule["features-onchain"]`
+     and `["features-sports"]` are tracked in staging's state but absent from the CURRENT `t1_batch_services_all` map
+     keys entirely (not merely excluded) — a `-target`'d apply doesn't reach genuinely-orphaned instances the way an
+     untargeted `tofu plan` would (confirmed: my targeted apply's summary was `10 destroyed`, not 12, even though
+     `state list` showed 12 `t1_batch_schedule` entries pre-apply). Low-risk — self-resolving on any future
+     untargeted staging apply — not chased further this pass.
+  3. **Dev's Terraform state carries `google_service_account.t1_batch` recorded with PROD's real values**
+     (`account_id=uts-prod-batch-sa`, matching prod's live SA email/unique_id exactly) instead of a genuine dev SA —
+     a targeted plan against it proposes a REPLACE (`uts-prod-batch-sa`→`uts-dev-batch-sa`). NOT touched by this
+     todo (unrelated to the scheduler retirement; replacing/deleting a service-account resource that may be
+     cross-referenced elsewhere warrants its own careful investigation, not an incidental side-effect here). staging's
+     own SA entry was independently confirmed correct (`0 to change` in the same targeted plan) — this drift is
+     dev-specific, likely a stray `terraform import` of prod's real SA into dev's state slot at some point.
