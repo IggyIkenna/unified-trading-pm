@@ -552,3 +552,95 @@ Open items across the chain, deduplicated, in priority order:
 governor measured NOT FIFO (a 42-minute wait was overtaken by younger runs); every extra gate cycle is a fresh lottery,
 not a queue position. Ship code via `quickmerge.sh --agent --files '<paths>'`, docs via `safe-doc-push.sh`. Flip this
 checkbox in the same turn as any ship.
+
+### 2026-08-15 (later) — items 1-3 and 5-7 done or code-complete; ship blocked on a 30+ min QG queue
+
+**Item 1 — the 7 DP ids, done.** All seven pasted into `DP_FAILURE_MODE_ACTIONS` in
+`unified-api-contracts/canonical/crosscutting/dependency_revocation.py`, right after `DP-WATCHER-004`. Verified live via
+UAC's own `.venv`: `evaluate_revocation()` resolves all seven without raising, matching the intended action exactly
+(`DP-WATCHER-005`→HOLD, `DP-WATCHER-006`→NONE, `DP-VM-012`→HOLD, `DP-LIVE-001`→HOLD, `DP-LIVE-002`→DRAIN,
+`DP-LIVE-003`→HOLD, `DP-LIVE-004`→NONE). **A second required fix, not in the original todo text**: UAC's own
+`test_dependency_revocation.py` carries a `_DP_REGISTRY_IDS` frozenset transcribed from
+`codex/05-infrastructure/data-pipeline-alerts.registry.yaml`, asserted
+`set(DP_FAILURE_MODE_ACTIONS) == _DP_REGISTRY_IDS` — adding the 7 ids without updating this literal fails that test.
+Added the 7 to the frozenset, with a comment flagging that registry.yaml itself is now the STALE side (also discovered:
+`DP-VM-012` is separately already registered in `alerting/rules.py`'s `_dp_rule()` table — a THIRD, independent registry
+— confirming registry.yaml, not the code, is what's out of sync). Did not touch registry.yaml or alerting/rules.py this
+session — that is real, separate, cross-registry reconciliation work, tracked as a new todo below rather than silently
+expanded into.
+
+**Item 2 — the two-arm guard, done, `deployment-service/tests/unit/test_registry_id_closed_set.py`.** Arm 1 matches the
+peer's spec exactly (AST-walk, string-constant `registry_id=` literals, `len(ids) >= 10` guard-the-guard) — 18 literal
+ids collected and parametrized (not 17: `DP-WATCHER-006` uses a module-level `Final` constant reference at its call
+site, not a literal, so arm 1 correctly can't see it — out of scope by its own stated spec). Arm 2 is this session's own
+design: any module in `data_pipeline_monitors/` with a REAL (AST-verified, not docstring-mentioned) call to
+`log_event()` must also reach `route_finding()`/`emit_finding()` somewhere in the same file — "reach" covers both
+calling it and DEFINING it (`escalation.py`'s own case). Verified non-vacuous against 3 known legitimate exceptions
+already in the codebase (FLEET_HALT announcement, the DP-RESOLVED bookend, the DP-VM-005 auto-kill announcement) and a
+synthesized failing case. 21 tests, all green standalone.
+
+**Item 3 — prediction-pipeline-vm.sh migration — still code-complete from the prior session, verified intact again
+(`bash -n` clean both files, dispatch branch present).**
+
+**A new item found and fixed while implementing item 5 (FLEET_HALT double-page) — a real, separate pre-existing gap**:
+`RevocationActuator.release()` never resumes the schedulers `_pause_schedulers` paused — only Phase-4/5's generic
+marker-clearing runs. A FLEET_HALT-paused cron stays paused until someone resumes it by hand. Not fixed here (changes
+actual pause/resume behavior, needs its own dedicated pass with tests) — added as a new P2 todo below.
+
+**Item 5 — FLEET_HALT double-page, CODE-COMPLETE, not yet shippable as originally scoped.** Operator chose "route
+through `pause_for_maintenance()`" (surface scoped per-target, `locked_by="revocation-actuator"`, `ttl_minutes=1440`
+matching the 24h actuation budget window). Implementing it hit a REAL, measured import cycle: this module sits BELOW
+`escalation.py` (which imports it); `consolidator_scheduler_watcher.consolidator_job_to_bucket()` — the function that
+resolves a job name to its owning bucket, needed to register the window in the right place — sits behind
+`meta_targets.py` → `meta_watchers.py` → `escalation.py` → back to this module. Attempted the direct import first; it
+raised `ImportError: cannot import name 'EscalationTier' from partially initialized module`, confirmed not a typo.
+Duplicating the resolution logic locally was considered and rejected: `meta_targets.scheduler_env_prefix()` carries a
+real historical bug fix baked into it (a raw-vs-short environment-word conflation that 404'd against the live Scheduler
+API until fixed 2026-07-27) — a hand-copied duplicate risks silently reintroducing exactly that class of bug, and I have
+no live GCS credentials in this checkout to test the acquire/pause round-trip end-to-end anyway. **Resolved via
+dependency injection, matching this exact module's own established pattern** (`pauser`/`visibility` are already injected
+optional callables): `RevocationActuator.__init__` gained
+`consolidator_bucket_resolver: Callable[[], Mapping[str, str]] | None = None`. `None` (every current production call
+site) is a verified no-op — FLEET_HALT pauses exactly as it did before this session, no regression.
+`_register_maintenance_windows()` groups jobs by bucket (one window object per bucket, not additive — acquiring an
+unrelated live window in the same bucket for a DIFFERENT `locked_by` raises `MaintenanceWindowActiveError`, caught and
+logged, never blocking the real pause). 3 new tests (no-resolver-is-a-no-op, resolver-groups-and-acquires-correctly,
+acquisition-failure-never-blocks-the-pause) — 28/28 green in `test_revocation_actuator.py`. **What's NOT done**:
+actually wiring the real resolver in at a production call site (`escalation.py:775` or `meta_watchers.py:195`) — both
+sit inside the same cycle, so the wiring itself needs either untangling `meta_targets.py`'s (unrelated, for 3 other
+functions) import of `meta_watchers.py`, or a narrower cycle-safe accessor. New P2 todo below; the class is ready for
+either fix to just pass the argument.
+
+**Item 6 — DP-WATCHER-001/002, CLOSED, doc-only.** Operator confirmed reading (b) — the same conclusion the parent
+plan's own 2026-08-14 entry already reached independently. Closed the issue-doc's duplicate copy (finding 4) with a
+cross-reference rather than re-deciding it.
+
+**Item 7 — HOLD-vs-DRAIN re-confirmation, CLOSED, doc-only.** Same duplication shape as item 6: the parent plan's
+2026-08-14 Phase-6 reconciliation entry already answered this against the exact money-burn framing. Closed the
+issue-doc's copy (finding 3) with a cross-reference and a 2026-08-15 freshness check (nothing shipped since touches
+either policy assignment).
+
+**Item 4 (p95 measurement) — re-attempted, still BLOCKED-CREDENTIALS, unchanged.** `state_bucket()` still resolves to
+`''` in this slot. Left open.
+
+**Two new follow-up todos, both P2, both real, neither silently absorbed into this pass:**
+
+- [ ] [CODE] P2. Wire `consolidator_bucket_resolver=consolidator_scheduler_watcher.consolidator_job_to_bucket` into
+      `RevocationActuator`'s production construction site(s) (`escalation.py:775`, `meta_watchers.py:195`). Blocked on
+      breaking the import cycle first — either extract `meta_targets.py`'s 3 `FreshnessTarget`-building functions
+      (`catalogue_targets`/`high_attempted_failed_targets`/`cron_targets`, the ONLY things in that file needing
+      `meta_watchers`) to a separate module, or find another cycle-safe path. Repo: deployment-service.
+- [ ] [CODE] P2. `RevocationActuator.release()` never resumes a FLEET_HALT's paused schedulers — only the generic
+      marker-clearing runs. A halt that opens has no code path that closes the actual pause; someone must resume it by
+      hand. Needs its own pass (this is pause/resume behavior, not a nicety) with real tests. Repo: deployment-service.
+
+**Live peer-contention note, worth carrying forward**: mid-session, `ps aux` surfaced a peer process (started ~30 min
+before this session's own UAC gate run) already quickmerging a SPLIT of `dependency_revocation.py` into
+`_dependency_revocation_types.py` + `_dependency_revocation_policies.py` (file-size-ratchet driven, unrelated to this
+session's content addition) — the exact file this session's item 1 edited. Checked `origin/live-defi-rollout` before
+proceeding: the split had NOT landed. This session's own UAC `quality-gates.sh` run then queued 1770s+ (29.5+ min) at
+`[qg-governor] unified-api-contracts sub-cap 1` — very plausibly the SAME peer holding that repo's single gate slot.
+Deliberately did not force/dispatch around the queue (measured elsewhere in this plan: ad-hoc dispatches into a
+contended slot cost a 2h+ livelock). If the split lands before this session's own quickmerge, the 7-id addition will
+need to be re-applied against whichever new file hosts `DP_FAILURE_MODE_ACTIONS`, verified via
+`git diff origin/<branch> -- <path>` before pushing, per the stale-local-content rule — not blind-retried.

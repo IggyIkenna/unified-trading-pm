@@ -107,9 +107,19 @@ urgent; nothing is broken.
 
 **Repo:** unified-api-contracts (if the policy changes) — read-only review otherwise.
 
-- [ ] [DOC] P3. Re-read the HOLD rationale for DP-MANIFEST-001/DP-CATALOG-001 against the "money-burn" framing in the
+- [x] ✅ [DOC] P3. Re-read the HOLD rationale for DP-MANIFEST-001/DP-CATALOG-001 against the "money-burn" framing in the
       plan's original "Why this exists" section and confirm HOLD is still the right call, or open a policy-change todo
-      if not.
+      if not. — **RESOLVED 2026-08-15, already answered — this duplicates work done in the parent plan, not redone
+      here.** The parent plan's own `2026-08-14 — [x] ✅ [DOC] P2` Phase-6 reconciliation entry
+      (`/plans/active/alert_driven_dependency_revocation_2026_08_12.md`, "Reconcile Phase 6's stale prose against the
+      shipped policy table") already re-derived this exact question against the exact money-burn framing and confirmed
+      HOLD is correct for both: a down consolidator makes the manifest STALE, not FALSE, and it is `AUTO_RECOVER` —
+      draining every manifest-writing VM would destroy in-flight work over a condition that heals itself (the
+      LYING-manifest case, `DP-MANIFEST-003` phantom rows, is the one that correctly drains, and does); a stale
+      catalogue means do not START against a universe nobody refreshed, but capture already running is still writing
+      valid raw data against the universe it launched with. Re-verified 2026-08-15: nothing shipped since (the 7 new DP
+      id registrations, the self-scoped asset_group targeting fix) touches either policy assignment or its rationale —
+      still correct.
 
 ## 4. No alert identity maps to FLEET_HALT for the actual watch-the-watchers condition (P2)
 
@@ -124,14 +134,18 @@ design (`/codex/05-infrastructure/data-pipeline-alerts.md` § "Watching the watc
 independent... does NOT import the alerting-service"), so a stale-sentinel condition may correctly never reach
 `evaluate_revocation()` at all, and Phase 6's scenario description was aspirational rather than a real gap.
 
-**This is a design call, not mine to make unilaterally** — it changes what action the fleet takes on a real,
-safety-relevant condition (whether the whole fleet halts new launches when the watchers themselves go dark).
+**RESOLVED 2026-08-15 — operator confirmed reading (b), same conclusion the parent plan already reached.** This
+duplicates work done in the parent plan, not redone here:
+`/plans/active/alert_driven_dependency_revocation_2026_08_12.md`'s own `2026-08-14 — [x] ✅ [CODE] P2` entry ("No alert
+identity in the shipped policy table resolves to FLEET_HALT for the watch-the-watchers condition") already reached
+reading (b) independently — the deadman poster stays deliberately independent of the alerting-service,
+`DP-WATCHER-001/002 → DEPS_HOLD` is correct as shipped, and no code change is needed. The operator's 2026-08-15 answer
+confirms this a second time: intended design, not a gap. No further action.
 
-**Repo:** unified-api-contracts (if a new mapping is added) or unified-trading-pm docs (if reading (b) is correct and
-this gets documented as intentional instead).
+**Repo:** unified-trading-pm docs only (this entry) — no `unified-api-contracts` change.
 
-- [ ] [CODE] P2. Operator/design decision: does DP-WATCHER-001/002 need a FLEET_HALT mapping, or is the deadman poster's
-      independence from the revocation layer the intended design? Resolve and document either way.
+- [x] ✅ [CODE] P2. Operator/design decision: does DP-WATCHER-001/002 need a FLEET_HALT mapping, or is the deadman
+      poster's independence from the revocation layer the intended design? Resolve and document either way.
 
 ## 5. `DependentAction.DEPS_DRAIN` enum docstring — FIXED 2026-08-14
 
