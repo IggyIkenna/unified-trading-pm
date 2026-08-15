@@ -190,24 +190,21 @@ issue's scope); flagged as a follow-up todo below.
 
 ## Todos
 
-- [ ] [DATA] P0. Fix `_write_captured_rows()` (`market-tick-data-service/scripts/_rebuild_sports_write.py:305-327`) to
+- [x] [DATA] P0. Fix `_write_captured_rows()` (`market-tick-data-service/scripts/_rebuild_sports_write.py:305-327`) to
       thread `timeframe=str(row.get("timeframe") or "")` through the `writer.add()` call, so a rewrite carries the
       original row's real timeframe value instead of defaulting to blank. Add a regression test proving a
       multi-timeframe `odds_horizon_bucket` group re-emits N distinct rows (one per original timeframe), not one phantom
       blank-timeframe row. Needs review given this surface's 2 prior real regressions — small-scale test first, matching
-      this doc's own established protocol. (repo: market-tick-data-service) — **IN PROGRESS, not yet landed**: code
-      change + 2 regression tests (`test_write_captured_rows_threads_original_timeframe_through`,
+      this doc's own established protocol. (repo: market-tick-data-service) — ✅ **LANDED**:
+      `market-tick-data-service@e0b34e77fd` (fix + 2 regression tests
+      `test_write_captured_rows_threads_original_timeframe_through`,
       `test_write_captured_rows_blank_timeframe_row_stays_blank` in
-      `tests/unit/scripts/test_rebuild_sports_manifest_v9.py`) are written and passing LOCALLY on the slot-2
-      `market-tick-data-service` checkout; `bash scripts/quality-gates.sh --no-fix` finished GREEN (exit 0). Now
-      committed locally as `market-tick-data-service@1c9a7858` (2 files, 101 insertions, nothing else staged).
-      `bash scripts/quickmerge.sh ... --agent` is running in background as of the last check (re-gating after a peer
-      push moved HEAD, queued behind this shared host's qg-governor cap) —
-      `git rev-list --count     origin/live-defi-rollout..HEAD` = 1, i.e. **NOT YET PUSHED**. Do not re-implement, do
-      not re-commit; resume by checking the quickmerge run's outcome, verify with
-      `git merge-base --is-ancestor 1c9a7858     origin/live-defi-rollout`, then flip this box with the real landed sha
-      (rebase churn may change the sha — check `git log --oneline -5`, don't assume `1c9a7858` survives unchanged, as
-      happened to this doc's diagnostic-script commit below).
+      `tests/unit/scripts/test_rebuild_sports_manifest_v9.py`), confirmed an ancestor of `origin/live-defi-rollout` via
+      `git merge-base --is-ancestor e0b34e77fd origin/live-defi-rollout` (exit 0) and
+      `git rev-list --count origin/live-defi-rollout..HEAD` = 0. Note: the sha churned from the original local commit
+      `1c9a7858` to `e0b34e77fd` — quickmerge amended HEAD to add the missing `Quickmerge: agent` trailer before pushing
+      (content unchanged, not a rebase this time), exactly the kind of sha drift this doc's own note warned about.
+      `quality-gates.sh` was GREEN (10865 passed, 0 failed) before commit.
 - [ ] [DATA] P0. Once the fix above ships, identify + clean up the phantom timeframe-blank rows this session created on
       MDPS (~26,982 lower-bound, `data_type=odds_horizon_bucket`, `written_at` in the 2026-08-15T11:0x-2x UTC window,
       `timeframe` blank) — either delete them (they carry no information the corrected rewrite won't re-derive) or leave
@@ -345,7 +342,7 @@ issue's scope); flagged as a follow-up todo below.
   `bash scripts/quality-gates.sh --no-fix` (task `bd0xbn5xh`) finished GREEN (exit 0) after ~592s queued behind the
   qg-governor cap — environment/dep/lint gates + full pytest suite (10,894 items) all passed. Staged exactly the 2
   intended files by name (`git status`/`git diff --cached --stat` confirmed nothing else picked up), committed as
-  `market-tick-data-service@1c9a7858`, and launched `bash scripts/quickmerge.sh "..." --agent --files '...'` in the
+  `market-tick-data-service@e0b34e77`, and launched `bash scripts/quickmerge.sh "..." --agent --files '...'` in the
   background (task `bjrk1mgbl`). As of this checkpoint quickmerge is re-gating (a peer push moved HEAD mid-run — normal,
   self-resolving per this doc's own established pattern) and queued again behind qg-governor;
   `git rev-list --count origin/live-defi-rollout..HEAD` = 1, so the fix is **NOT YET LANDED**. Scratchpad audit: besides
@@ -357,3 +354,18 @@ issue's scope); flagged as a follow-up todo below.
   poll), verify landing via `git merge-base --is-ancestor 1c9a7858 origin/live-defi-rollout` (sha may churn through
   rebase, check `git log --oneline -5` for the real landed sha), then flip todo #1 with that sha. Only after todo #1 is
   actually landed does todo #2 (phantom-row cleanup) become actionable.
+- **data_engineering slot-2, 2026-08-15 (landing checkpoint)**: quickmerge task `bjrk1mgbl` completed exit 0. Its own
+  internal `quality-gates.sh` run (STAGE 3) re-gated once (peer-push HEAD move, self-resolving as predicted above),
+  queued ~153s behind the host's qg-governor cap, then ran the full 10,894-item suite clean (10,865 passed, 28 skipped,
+  1 xpassed, 0 failed, 81.83% coverage) and all remaining gate stages green (`ALL QUALITY GATES PASSED (380s)`). At
+  STAGE 5 (Create PR) quickmerge found the working tree already committed but noted it was **missing the `Quickmerge:`
+  trailer**, so it amended HEAD to add `Quickmerge: agent` before pushing — this changed the local sha from `1c9a7858`
+  to `e0b34e77fd` (content-identical, trailer-only amend, not a rebase). Pushed and self-verified:
+  `[market-tick-data-service] ✅ post-push ancestry verified — e0b34e77f is an ancestor of origin/live-defi-rollout`.
+  Independently re-confirmed this session: `git merge-base --is-ancestor e0b34e77fd origin/live-defi-rollout` (exit 0)
+  and `git rev-list --count origin/live-defi-rollout..HEAD` = 0. Todo #1 flipped to `[x]` with the real landed sha.
+  **Lesson for future sessions on this doc**: sha drift on this repo isn't only from rebase — a missing Quickmerge
+  trailer on an already-committed tree triggers a silent amend at push time too; always re-derive the landed sha from
+  the ship script's own "post-push ancestry verified" line or `git log`, never assume the pre-quickmerge local sha
+  survives. **Next actionable item**: todo #2 (P0, phantom blank-timeframe row cleanup on MDPS, ~26,982 lower-bound) is
+  now unblocked — pick it up next.
