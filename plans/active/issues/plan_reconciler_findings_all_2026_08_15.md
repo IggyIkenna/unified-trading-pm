@@ -97,29 +97,36 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
       `sports_p2_raw_tick_live_writer_still_emits_trades_2026_08_15.md:145-153` but the finder explicitly declined to
       create a tracked todo ("small enough to fold in") — itself a HARD RULE violation (every follow-up must be a `- [ ]
       todo, never prose"). Needs: (a) update the UAC registry entry, (b) this todo IS the tracked instance now.
-- [ ] [DOCS] P1. **AWS-vs-GCP epic contradiction — infrastructure_master.md still frames DeFi compute as AWS-primary.**
-      `plans/epics/infrastructure_master.md:869,875` carries 2 open todos ("Operator sign-off on dual-cloud parity",
-      "GCP bucket decommission" post-AWS-parity) that are opposite-direction from
+- [x] ✅ [DOCS] P1. **AWS-vs-GCP epic contradiction — infrastructure_master.md still frames DeFi compute as
+      AWS-primary.** `plans/epics/infrastructure_master.md:869,875` carries 2 open todos ("Operator sign-off on
+      dual-cloud parity", "GCP bucket decommission" post-AWS-parity) that are opposite-direction from
       `defi_compute_gcp_migration_2026_08_08.md`, which is ~72% executed (13/18 todos) moving compute OFF AWS ONTO GCP.
       That migration plan's own todo 16 (still open) already knows it needs to resolve/supersede these 2 epic todos but
-      hasn't executed. NOT auto-fixable — needs the citing/superseding edit (todo 16's own job).
-- [ ] [DATA] P1. **Zero-checkbox doc with real P1 data-correctness work, structurally undispatchable despite
+      hasn't executed. NOT auto-fixable — needs the citing/superseding edit (todo 16's own job). **DONE 2026-08-15**:
+      confirmed todo 16 is still open (not force-resolving); added a cross-reference banner to the epic pointing at the
+      migration plan's todo 16 as the pending resolution, per its own explicit instruction not to hand-edit the 2 epic
+      todos myself. `unified-trading-pm@01cf658dc9`.
+- [x] ✅ [DATA] P1. **Zero-checkbox doc with real P1 data-correctness work, structurally undispatchable despite
       assigned_vm:planning.**
       `plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md`
       — priority:P1, assigned_vm:planning, but body's "Recommended decision" section has 3 numbered action items with NO
       checkbox syntax anywhere, no Todos section. Same class as an already-fixed instance elsewhere in this same
-      original findings doc. Auto-fixable: convert the 3 numbered items to `- [ ]` todos.
-- [ ] [DOCS] P1. **Zero-checkbox doc, real orphaned follow-up.**
+      original findings doc. Auto-fixable: convert the 3 numbered items to `- [ ]` todos. **DONE 2026-08-15**: converted
+      all 3 to `- [ ] [OPERATOR]/[CODE]/[CODE] P1.` todos, exact content preserved. `unified-trading-pm@1c3fef9ea5`.
+- [x] ✅ [DOCS] P1. **Zero-checkbox doc, real orphaned follow-up.**
       `dp_manifest_hygiene_defi_index_scale_oom_2026_08_15.md` — zero checkboxes, Option C (defi manifest granularity)
       explicitly self-flagged as "NOT yet tracked" — corpus-grep confirms no home anywhere. Found independently by both
       the defi-tranche AND cross-cutting-tranche sweeps (cross-validated). Auto-fixable: add a `- [ ] [DIAG] P3` todo
-      for the Option-C investigation.
-- [ ] [DOCS] P1. **Dangling reference to a nonexistent OPERATOR todo blocks a real CODE todo.**
+      for the Option-C investigation. **DONE 2026-08-15**: added the `- [ ] [DIAG] P3` todo under a new "Follow-up"
+      section. `unified-trading-pm@1c3fef9ea5`.
+- [x] ✅ [DOCS] P1. **Dangling reference to a nonexistent OPERATOR todo blocks a real CODE todo.**
       `ibkr_gateway_infra_release_tag_stall_2026_08_11.md:97-98,152` — a `[CODE] P2` todo is BLOCKED on "the OPERATOR
       audit todo below" but NO such `[OPERATOR]` todo exists anywhere in the doc (corroborated:
       `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md:401-403` references the same missing todo). Corpus-wide
       grep confirms zero actual checkbox exists for "breaking_scan_dir completeness". Auto-fixable: add the missing
-      `- [ ] [OPERATOR] P2` todo to the ibkr doc (natural owner).
+      `- [ ] [OPERATOR] P2` todo to the ibkr doc (natural owner). **DONE 2026-08-15**: added the missing
+      `- [ ] [OPERATOR] P2` todo, content inferred from the batch13 doc's own diagnosis of the same missing item.
+      `unified-trading-pm@1c3fef9ea5`.
 - [ ] [BACKEND] P1. **QG-red commit claimed "shipped, tested, QG green" in one doc; breaking a cross-repo gate per
       another, same week, unresolved.** `sports_honest_coverage_gap_closure_2026_08_14.md:213-232` claims
       `instruments-service@4844b6286b` is "FIXED, shipped, tested... QG green", but
@@ -137,19 +144,27 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
       (`complete`/`resolved`), banner added, `git mv`'d to `plans/archive/2026_08/` (+ `issues/` for the four-way-
       mismatch doc), `archive_exempt` dropped, and all real active-corpus referrers (frontmatter `related:` links +
       markdown links) fixed to the new paths.
-- [ ] [CODE] P1. **Done-but-unchecked, 4 items in one doc.**
+- [x] ✅ [CODE] P1. **Done-but-unchecked, 4 items in one doc.**
       `plans/active/artifact_pipeline_observability_2026_07_17.md` — 4 of 7 cross-referenced items from batch4 are
       done-but-unchecked with hard evidence: `:646-647` port manual-trigger action/retire CloudBuildsTab
       (deployment-ui@9d5ad0d105), `:648` retire superseded deployment-api routes (deployment-api@3f13e4435e), `:688-689`
       build→deploy latency join (deployment-api@764db37c33), `:702-703` deploy-churn/crash-loop health condition
-      (deployment-api@ec80509550). All 4 auto-fixable: flip citing the shas.
-- [ ] [CODE] P1. **Done-but-unchecked, 3 more items, mechanism exists but hasn't run.**
+      (deployment-api@ec80509550). All 4 auto-fixable: flip citing the shas. **DONE 2026-08-15**: all 4 shas
+      independently re-verified reachable (ancestor of `origin/live-defi-rollout`); for item 1, the real citation is
+      `deployment-ui@b3300a71a7` ("port manual-trigger build action..., retire CloudBuildsTab") — `9d5ad0d105` was a
+      same-topic follow-up bugfix, not the port itself; flipped all 4 citing the correct shas, trimmed prose to keep the
+      doc under its 1000L cap. `unified-trading-pm@5196dfcafc`.
+- [x] ✅ [CODE] P1. **Done-but-unchecked, 3 more items, mechanism exists but hasn't run.**
       `data_status_tab_and_downloads_remediation_2026_06_16.md` — 3 of 4 batch4-claimed fixes still open despite hard
       evidence: `:186-188` rollup-difference-clarity tooltip (deployment-ui@8033b83651), `:238-247` Yahoo/Kalshi
       market-tick-view scope check (confirmed correct-by-design), `:338-347` per-service coverage BucketNamingError
       root-fix (already root-fixed, deployment-api@c1aab6e/@b014ae9). Root cause:
       `ui_satellite_ao_dispatch_batch4_2026_08_13_finalize.md`'s reconciliation todo hasn't run yet (machine-gated
-      mechanism exists, just not executed).
+      mechanism exists, just not executed). **DONE 2026-08-15**: sha flipped citing `deployment-ui@8033b83651`;
+      correct-by-design item verified via direct read of UAC `expected_coverage.py` (YAHOO_FINANCE removed as a venue
+      2026-07-15, KALSHI's expected data_types list deliberately excludes `ohlcv_1m`) and flipped; BucketNamingError
+      item flipped citing both `deployment-api@c1aab6e` (root-fixed) and `@b014ae9` (SHARED pseudo-key honest-empty by
+      design, tracked separately). `unified-trading-pm@5196dfcafc`.
 - [x] [DOCS] P1. **Predictions_master epic missing batch11.** `plans/epics/predictions_master.md` `related_plans:`
       (lines 35-51) and "Assigned active plans" section (says "16 active plans", actual 18) both omit
       `prediction_satellite_ao_dispatch_batch11_2026_08_13.md` + its finalize (both declare
@@ -220,12 +235,18 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
       (canonicalization doc's parity-test todo) is `[x]` with features-service@36fb7b88, independently corroborated
       (10/10 tests passing). Flip citing evidence (entangled with the P1 archival-claim finding above — fix both
       together). — **APPLIED 2026-08-15**: flipped alongside the P1 archival fix above.
-- [ ] [DOCS] P2. `bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27.md` sole todo not flipped even
+- [x] ✅ [DOCS] P2. `bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27.md` sole todo not flipped even
       though the source plan was already archived 2026-08-15 (this session's own batch3). Flip citing the archive
-      commit, then archive this finalize doc too (no lock on it).
-- [ ] [DOCS] P2. `strategy_archetype_latency_deployment_profile_audit_2026_08_10.md` — all 10 todos `[x]`,
+      commit, then archive this finalize doc too (no lock on it). **DONE 2026-08-15**: flipped citing
+      `unified-trading-pm@5ee2edd598` (the archive commit); confirmed no lock, 0 open todos, `git mv`'d to
+      `plans/archive/2026_08/`. `unified-trading-pm@01cf658dc9`.
+- [x] ✅ [DOCS] P2. `strategy_archetype_latency_deployment_profile_audit_2026_08_10.md` — all 10 todos `[x]`,
       archive_exempt bridge same pattern as bucket_iam (already fixed this session) but this doc was missed. Standard
-      6-step archival (paired execution plan has real open work, don't touch that one).
+      6-step archival (paired execution plan has real open work, don't touch that one). **DONE 2026-08-15**: confirmed
+      all 10 `[x]`, no lock; ran the 6-step ritual (banner, `archive_exempt` dropped, `git mv` to
+      `plans/archive/2026_08/`, every corpus referrer's path fixed — the paired execution plan +
+      `RUNTIME_TOPOLOGY_DECISIONS.md` + 3 family docs); the paired execution plan itself left `active` (real open work
+      confirmed, untouched). `unified-trading-pm@01cf658dc9`.
 - [ ] [DATA] P2. `honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md` — possible (not confirmed) that the
       [OPERATOR] P1 "decide immediate unblock" todo is already satisfied (08-10 00:37 success referenced as established
       fact in a later entry) but no citable sha/GCS check exists. Needs a live check before flipping.
@@ -258,23 +279,31 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
       `prediction_capture_incident_remediation_2026_07_06.md`, `consolidator_throughput_backlog_monitor_2026_07_09.md`,
       `data_status_catalogue_true_source_phase2_2026_07_24.md`, `data_status_cell_grid_rearchitecture_2026_07_18.md`, 8
       named docs from tradfi batch1, `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`.
-- [ ] [DOCS] P3. 3 cross-cutting docs mistagged with `prediction` in `asset_group` with zero real prediction-market
+- [x] ✅ [DOCS] P3. 3 cross-cutting docs mistagged with `prediction` in `asset_group` with zero real prediction-market
       content: `sports_odds_feature_naming_four_way_mismatch_2026_07_21.md`,
       `sports_odds_feature_naming_canonicalization_2026_07_21.md`,
       `adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md`. Drop `prediction` from all 3.
+      **DONE 2026-08-15**: `adapter_findings...` fixed directly (`unified-trading-pm@e83ca342dd`); the other two were
+      mid-archival by a concurrent session at the time — landed the `asset_group` fix woven into that session's own
+      archival commit (see the P1 CLAIM≤MEASUREMENT item above, same 2 docs).
 - [ ] [DOCS] P3. 4 cross-cutting docs carry identical stale `archive_exempt` BRIDGE markers from 2026-08-12, all
       0-open-todos, 3+ days past the promised follow-on: `backfill_vm_slack_alert_e2e_verification_2026_06_23.md`,
       `batch_live_reconciliation_service_audit_2026_05_27.md`, `capability_wizard_gap_discovery_2026_06_11.md`,
       `cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`. Route to `/archive-candidates-audit`.
-- [ ] [DOCS] P3. `reference_path_convention_2026_07_23.md:144-150` todo assumed a file would be split (it's exactly
+- [x] ✅ [DOCS] P3. `reference_path_convention_2026_07_23.md:144-150` todo assumed a file would be split (it's exactly
       1000L) then its dangling ref fixed — file was instead ARCHIVED whole, archived copy still carries the unfixed
-      reference. Todo as worded is unexecutable; needs re-scoping.
+      reference. Todo as worded is unexecutable; needs re-scoping. **DONE 2026-08-15**: re-scoped the todo (split-first
+      premise moot, `check_line_caps.sh` is scoped to `plans/active/`+`plans/epics/` only) and fixed the reference
+      directly in the archived copy + 4 more pre-existing dangling refs the same archived doc carried.
+      `unified-trading-pm@e83ca342dd`.
 - [ ] [DOCS] P3. `safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md:185-195` — 2 of 3 ag_closeout_audit
       slug-collision pairs (cefi, prediction) already resolved via `_r2` split; only tradfi pair remains. Bonus:
       `check_create_only_archive_commits.py`'s `ALLOWED_DUPLICATE_STEMS` still lists all 3, 2 are now vestigial.
-- [ ] [DOCS] P3. `deployment_registry_firestore_migration_2026_07_14.md:66-69,126` still frames the P3 halt as
+- [x] ✅ [DOCS] P3. `deployment_registry_firestore_migration_2026_07_14.md:66-69,126` still frames the P3 halt as
       operator-gated, contradicting the sibling doc's 2026-08-15 fix (this session) that corrected the SAME framing
-      elsewhere. Reword to match, fix a stale banner-color reference too.
+      elsewhere. Reword to match, fix a stale banner-color reference too. **DONE 2026-08-15**: reworded both spots to
+      match the sibling p3_cutover doc's corrected framing (HALTED on an unmet data precondition, not an
+      operator-approval gate) and fixed the stale 🔴→🟡 banner-color reference. `unified-trading-pm@e83ca342dd`.
 
 ## Zero-checkbox docs found (flagged, not all confirmed violations — several route to sibling plans)
 
