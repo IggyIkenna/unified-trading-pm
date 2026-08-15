@@ -338,12 +338,12 @@ data that's actually needed. This plan gets the evidence first.
       operational.
 
       **DONE 2026-08-15 (slot-28, backend_engineer) — same operation as
-                      `plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s "Re-run rebuild_tradfi_manifest.py..." todo
-                      (dispatched separately, resolved here concurrently — see that plan for full evidence).** Full-corpus rebuild
-                      (`canonical-migration-tradfi-manifest-rebuild-20260815-061239`, 2020-01-01..2026-08-15, `--chunk-days 30`)
-                      completed exit_code=0, 1,397,013 shards / 81 chunks. Live manifest recount confirms 0
-                      `instrument_type=FUTURE` rows with populated `underlying` + blank `instrument_id` remain (checked both
-                      CME-scoped and unscoped across all venues).
+                              `plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s "Re-run rebuild_tradfi_manifest.py..." todo
+                              (dispatched separately, resolved here concurrently — see that plan for full evidence).** Full-corpus rebuild
+                              (`canonical-migration-tradfi-manifest-rebuild-20260815-061239`, 2020-01-01..2026-08-15, `--chunk-days 30`)
+                              completed exit_code=0, 1,397,013 shards / 81 chunks. Live manifest recount confirms 0
+                              `instrument_type=FUTURE` rows with populated `underlying` + blank `instrument_id` remain (checked both
+                              CME-scoped and unscoped across all venues).
 
 - [x] ✅ [DATA] P2. Fix cefi's legacy blank-instrument-id FUTURE bucket (~3,299 captured rows, BYBIT/DERIBIT) — add
       `"future"` to `_BUNDLE_GRAIN_EXCLUDED` or route it to `futures_chain` at `rebuild_cefi_manifest.py:454` (mirrors
@@ -489,3 +489,16 @@ data that's actually needed. This plan gets the evidence first.
   cleanly and that only this session's own files were still dirty in each repo, then retried both ships.
   `instruments-service` — ✅ landed `instruments-service@1c1ca7553f`, content-verified against
   `origin/live-defi-rollout`. `market-tick-data-service` retry still in flight at this entry's time of writing.
+- **2026-08-15 (same session, final entry)**: `market-tick-data-service` — ✅ landed
+  `market-tick-data-service@cdf782b249`, content-verified against `origin/live-defi-rollout`. **All 3 repos from this
+  session's 13 execution-scoped todos are now fully shipped**: `market-tick-data-service@cdf782b249` (cefi/defi/tradfi
+  SOURCE_RETURNED_ZERO + landmine fixes, cefi legacy-bucket futures_chain reroute), `instruments-service@1c1ca7553f`
+  (error_reason breakdown backend), `deployment-ui@080ceb8c39` (error_reason UI, drilldown un-suppress, MTDS "All" pill
+  UX fix). Working trees clean in all three repos. Still outstanding: the deferred Playwright verification for
+  `deployment-ui`'s new UI (beyond the Vitest unit-test coverage added this pass) and a live pytest/QG confirmation pass
+  is already satisfied by the ships themselves (each landed through a genuine green `quality-gates.sh` run, not a
+  bypass) — what remains is manual/visual UI verification in a browser, not test coverage. Also still open, deliberately
+  deferred to Phase-N per this doc's own scope (audit-only, zero manifest/GCS mutations): the cefi legacy blank-ID
+  FUTURE bucket re-stamp, the BYBIT+KRAKEN-FUTURES bundling migration, the OKX-FUTURES live-writer fix, and the
+  newly-filed BYBIT-FUTURES post-universe-resolve zero-capture root-cause (see
+  `cross_ag_live_capture_parity_2026_08_14.md` for that last one's tracked todos).
