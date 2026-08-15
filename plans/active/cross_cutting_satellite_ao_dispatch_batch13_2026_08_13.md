@@ -116,15 +116,25 @@ source: >-
       (2026-08-14). Full evidence extracted verbatim (2026-08-15) to
       `plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch13_history_2026_08_15.md`. Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
-- [ ] [CODE] P3. Make `quickmerge.sh`'s STAGE 3 re-gate contention-vs-content guard (`_qm_other_fail`, ~L2463-2464) also
-      exclude ❌ lines produced by `CODEX_MAX_VIOLATIONS`-tolerated checks — currently it only excludes the
-      duration-budget line, so a run that warns-but-passes the codex-compliance tolerance check (prints its per-STEP
-      `log_fail()` ❌ lines regardless) but fails purely on the independent duration hard-gate still gets misclassified
-      as "a REAL failure" instead of "HOST CONTENTION, not your change" (repro case: strategy-service 2026-08-10, see
-      the diagnosis todo above). Fix: additionally check the re-gate log's own final verdict line
-      (`✅ ALL QUALITY GATES PASSED` / `⚠️ Codex compliance: N violations (within tolerance...)` vs
-      `Codex compliance FAILED` / `Quality gates FAILED: N hard gate...`) rather than raw-grepping intermediate ❌ lines
-      alone. Repo: unified-trading-pm. Source:
+- [x] ✅ [CODE] P3. **DONE 2026-08-15 (slot-24·infra) — unified-trading-pm@a0689afd34.** `scripts/quickmerge.sh`'s STAGE
+      3 re-gate guard (`_qm_other_fail`, ~L2482) now anchors on the re-gate log's own verdict lines instead of
+      raw-grepping every ❌: if the log contains a hard `❌ Codex compliance FAILED` line, the script already `exit 1`'d
+      right there (base-service.sh ~L2440-2442) and it IS a real failure; if instead it contains the WARN-tolerated
+      `Codex compliance: N violations (within tolerance of M)` rollup, everything before that line is per-STEP
+      `log_fail()` noise from checks that ran but did not fail the STEP (fires unconditionally per violation category,
+      regardless of eventual tolerance — `qg-common.sh`), so the "other real failure" scan is now scoped to content
+      AFTER that verdict line, where only STEPS that can still fail the run live (post-codex ratchets + the duration
+      hard-gate). Verified against 3 mock re-gate logs before shipping (tolerated-codex + duration-only-fail →
+      `other_fail=0`/host-contention as intended; tolerated-codex + a real typecheck `E ` line →
+      `other_fail=1`/real-failure; hard codex-FAILED → `other_fail=2`/real-failure) — all 3 behaved as the fix intends.
+      `bash scripts/quality-gates.sh` green (sentinel-verified at commit HEAD before the push-race rebase); quickmerge
+      landed on LDR — note the shipped SHA `a0689afd34` differs from the original commit SHA `9f60b2e42b` because
+      quickmerge's push retry rebased onto a moving remote tip mid-ship (high branch churn); post-push ancestry
+      independently verified (`git merge-base --is-ancestor a0689afd34 origin/live-defi-rollout`) and the landed
+      commit's content/message confirmed via `git show --stat`. No existing bats/unit test covers this inline guard
+      (same as the original 2026-08-10 fix it extends — no dedicated test seam exists for logic embedded in the
+      sentinel-retry loop); correctness was verified via the 3 standalone mock-log scenarios above instead. Repo:
+      unified-trading-pm. Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md` (new
       finding, 2026-08-14 diagnosis)
 - [x] ✅ [CODE] P2. Split the remaining MTDS >900L files + extract oversized fns/methods —
