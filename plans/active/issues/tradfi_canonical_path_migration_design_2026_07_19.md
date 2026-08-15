@@ -845,3 +845,11 @@ one VM dispatch, since both walk the same `combo`/`futures_chain` corpus.
   `archive_exempt: true` (the sanctioned flip-then-mv two-commit pattern documented in
   `scripts/plan-hygiene/check_archive_candidates.sh`) so this commit doesn't trip the archive-candidates pre-commit
   gate. The follow-on pass should drop `archive_exempt` and `git mv` this doc to `plans/archive/[issues/]`.
+- **2026-08-15 (slot-7, pre-compact audit)** — the `../scratch/combo_dispositions_full.tsv` manifest cited above (line
+  ~832) is **local-only**: it lives in slot-7's persistent worktree root (`.tabs/7/scratch/`), not git, not GCS — no
+  durable home, no backup, same as the "regenerable (not committed)" enumeration file noted earlier in this doc. The
+  audit's aggregate result is fully preserved in this doc's prose above (row/cell counts, disposition breakdown), so
+  nothing load-bearing is lost if the raw tsv is swept — but per-row detail is only recoverable by re-running
+  `market_tick_data_service/scripts/audit_tradfi_cme_combo_cell_dispositions_2026_08_11.py` (shipped
+  `market-tick-data-service@ff5642a2`) over the same corpus window. Noting this so the eventual archival pass doesn't
+  inherit a silently-broken reference.
