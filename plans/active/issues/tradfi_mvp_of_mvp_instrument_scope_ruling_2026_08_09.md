@@ -123,6 +123,14 @@ That was independently live-verified the same day — direct calls to Databento'
 doc's scope list). The billing issue doc itself stays open as a standing awareness record; it no longer blocks the
 in-scope relaunch this doc authorizes.
 
+**CAVEAT (2026-08-15, /plan-reconcile)**: the "lifted" verdict above was true AS OF 2026-08-10. It has since flipped
+back — the billing doc's 2026-08-12/14/15 entries confirm the account re-suspended (`402 account_delinquent_invoice`,
+unpaid invoice) on the SAME CME/GLBX.MDP3 cells this doc calls in-scope, both on the live MTDS side and on repeated
+batch/IS-reference-data relaunch attempts through 2026-08-15. **Do not trust this section's "lifted" framing at face
+value — re-check `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`'s current
+`status:`/latest Progress Log entry before relaunching any in-scope CME cell**; it is the live source of truth for
+whether the gate is actually open.
+
 ## Known relaunch gotchas (carry forward, don't re-discover)
 
 - `wave_launcher.py`'s dedup check (`running_cell_keys`) parses live VM names for a `root` group label and never matches

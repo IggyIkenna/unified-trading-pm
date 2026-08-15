@@ -77,12 +77,15 @@ context_scope:
       commit is reachable on `origin/live-defi-rollout` before citing it.** **Done when**: every landed todo's source
       checkbox/section is flipped or appended with a verified commit, and each source doc's remaining-open count is
       explicitly re-stated.
-- [ ] [OPERATOR] P1. **Ask the operator to unlock the 2 fully-done-but-locked docs for archival**:
-      `issues/cefi_coinbase_cde_urdi_zero_records_2026_07_28.md` and `issues/cefi_universe_capture_rule_2026_06_23.md`
-      (both all-`[x]`, both carry `locked_by: live-defi-rollout`). If the operator approves, unlock and run the standard
-      6-step archival ritual on each (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). If the
-      operator declines or is unreachable, leave both as-is and note the decision here. **Done when**: the operator has
-      been asked and their answer (approve/decline/deferred) is recorded, with archival executed only on approval.
+- [ ] [DOC] P1. **STALE PREMISE CORRECTED (2026-08-15, /plan-reconcile)** — both named docs' `locked_by` was already
+      cleared corpus-wide 2026-08-12 (`locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`, operator
+      ruling Option B); re-verified 2026-08-15, neither `issues/cefi_coinbase_cde_urdi_zero_records_2026_07_28.md` nor
+      `issues/cefi_universe_capture_rule_2026_06_23.md` carries a `locked_by` value today — both are instead bridged via
+      `archive_exempt: true` (0 open todos each) awaiting the follow-on archival pass their own bridge comments name. No
+      operator unlock-ask is needed anymore for either doc. **Run the standard 6-step archival ritual on both**
+      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — drop each `archive_exempt` bridge line,
+      `git mv` to `plans/archive/[issues/]`, fix corpus referrers. **Done when**: both docs are archived and every
+      corpus referrer resolves to the new path.
 - [ ] [REVIEW] P1. **Re-check the 32 non-batchable Deferred items from batch10 for cleared gates before batch11's
       Phase-1 re-triage** (per the skill's iterative-drain methodology — check the prior batch's Deferred section first,
       before spinning fresh Phase-1 agents). In particular: (a) has the operator ruled on

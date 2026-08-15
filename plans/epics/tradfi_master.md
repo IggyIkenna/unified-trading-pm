@@ -39,19 +39,22 @@ codex_ssots:
   - /codex/02-data/per-asset-group-bucket-layouts.md
   - /codex/09-strategy/architecture-v2/category-instrument-coverage.md
 related_plans:
-  - /plans/active/tradfi_backfill_throughput_followups_2026_07_24.md
-  - /plans/active/tradfi_consolidated_closeout_2026_07_18.md
-  - /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md
-  - /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27.md
-  - /plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md
-  - /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md
-  - /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md
-  - /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md
-  - /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md
-  - /plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md
-  - /plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md
-  - /plans/active/tradfi_satellite_ao_dispatch_batch12_2026_08_10.md
-  - /plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md
+  - ../active/tradfi_backfill_throughput_followups_2026_07_24.md
+  - ../active/tradfi_consolidated_closeout_2026_07_18.md
+  - ../active/tradfi_manifest_content_recovery_completion_2026_07_24.md
+  - ../active/tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27.md
+  - ../active/tradfi_phase_d_terminal_gate_2026_07_24.md
+  - ../active/tradfi_satellite_ao_dispatch_batch11_2026_08_10.md
+  - ../active/tradfi_satellite_ao_dispatch_batch11_2026_08_10_finalize.md
+  - ../active/tradfi_satellite_ao_dispatch_batch12_2026_08_10.md
+  - ../active/tradfi_satellite_ao_dispatch_batch12_2026_08_10_finalize.md
+  - ../active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md
+  - ../active/tradfi_satellite_ao_dispatch_batch13_2026_08_13_finalize.md
+  - ../active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md
+  - ../active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md
+  - ../active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md
+  - ../active/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md
+  - ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md
 last_updated: 2026-08-12
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -816,69 +819,87 @@ operator 2026-05-08 and now lives in `live_defi_rollout` deliverable on `defi_ma
 
 ## Assigned active plans
 
-_12 active plans declare `parent_epic: tradfi_master` in their frontmatter. Workers pick up in priority order (P0
+_16 active plans declare `parent_epic: tradfi_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`tradfi_backfill_throughput_followups_2026_07_24`](/plans/active/tradfi_backfill_throughput_followups_2026_07_24.md)
+### [`tradfi_backfill_throughput_followups_2026_07_24`](../active/tradfi_backfill_throughput_followups_2026_07_24.md)
 
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: TradFi backfill-throughput follow-ups —
 download/VM throughput residuals + T+1 job hardening
 
-### [`tradfi_manifest_content_recovery_completion_2026_07_24`](/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md)
+### [`tradfi_manifest_content_recovery_completion_2026_07_24`](../active/tradfi_manifest_content_recovery_completion_2026_07_24.md)
 
 **status**: active · **estimate**: 4.8 cal AI-days (class: infra)
 
-### [`tradfi_phase_d_terminal_gate_2026_07_24`](/plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md)
+### [`tradfi_phase_d_terminal_gate_2026_07_24`](../active/tradfi_phase_d_terminal_gate_2026_07_24.md)
 
 **status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: TradFi Phase-D terminal gate —
 post-migration all-shards re-smoke-test
 
 ## P1 — important; post-current-gate
 
-### [`tradfi_consolidated_closeout_2026_07_18`](/plans/active/tradfi_consolidated_closeout_2026_07_18.md)
+### [`tradfi_consolidated_closeout_2026_07_18`](../active/tradfi_consolidated_closeout_2026_07_18.md)
 
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: TradFi consolidated close-out — one-pass
 code→migrations→coverage→smoke-test to MVP-backfill-ready
 
+### [`tradfi_satellite_ao_dispatch_batch11_2026_08_10`](../active/tradfi_satellite_ao_dispatch_batch11_2026_08_10.md)
+
+**status**: active · **estimate**: 4.8 cal AI-days (class: infra) **title**: TradFi satellite AO batch 11 — orphan
+extraction from the 2026-08-10 /ag-closeout-audit tradfi tranche pass
+
 ## P2 — useful; opportunistic
 
-### [`tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27`](/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27.md)
+### [`tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27`](../active/tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27.md)
 
 **status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
 
-### [`tradfi_satellite_ao_dispatch_batch6_2026_08_01`](/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md)
+### [`tradfi_satellite_ao_dispatch_batch11_2026_08_10_finalize`](../active/tradfi_satellite_ao_dispatch_batch11_2026_08_10_finalize.md)
 
-**status**: active · **estimate**: 0.5 cal AI-days (class: infra) **title**: TradFi satellite AO batch 6 — fresh
-/ag-closeout-audit extraction (4 clean orphans)
-
-### [`tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize`](/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md)
-
-**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: TradFi satellite AO batch 6 — finalize
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: TradFi satellite AO batch 11 — finalize
 (reconcile source docs + resolve deferrals + archive)
 
-### [`tradfi_satellite_ao_dispatch_batch7_2026_08_06`](/plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md)
+### [`tradfi_satellite_ao_dispatch_batch12_2026_08_10`](../active/tradfi_satellite_ao_dispatch_batch12_2026_08_10.md)
+
+**status**: active · **estimate**: 0.48 cal AI-days (class: infra)
+
+### [`tradfi_satellite_ao_dispatch_batch12_2026_08_10_finalize`](../active/tradfi_satellite_ao_dispatch_batch12_2026_08_10_finalize.md)
+
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: TradFi satellite AO batch 12 — finalize
+(reconcile source doc + archive)
+
+### [`tradfi_satellite_ao_dispatch_batch13_2026_08_13`](../active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: refactor) **title**: tradfi satellite AO dispatch batch 13 —
+2026-08-13
+
+### [`tradfi_satellite_ao_dispatch_batch13_2026_08_13_finalize`](../active/tradfi_satellite_ao_dispatch_batch13_2026_08_13_finalize.md)
+
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: tradfi satellite AO batch 13 — finalize
+
+### [`tradfi_satellite_ao_dispatch_batch7_2026_08_06`](../active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md)
 
 **status**: active · **estimate**: 0.6 cal AI-days (class: infra) **title**: TradFi satellite AO batch 7 — fresh
 /ag-closeout-audit extraction (4 clean orphans)
 
-### [`tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize`](/plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md)
+### [`tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize`](../active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md)
 
 **status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: TradFi satellite AO batch 7 — finalize
 (reconcile source docs + resolve deferrals + archive)
 
-### [`tradfi_satellite_ao_dispatch_batch8_2026_08_08`](/plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md)
+### [`tradfi_satellite_ao_dispatch_batch8_2026_08_08`](../active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md)
 
 **status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: TradFi satellite AO batch 8 — fresh
 /ag-closeout-audit extraction (3 clean orphans)
 
-### [`tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize`](/plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md)
+### [`tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize`](../active/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md)
 
 **status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: TradFi satellite AO batch 8 — finalize
 (reconcile source docs + resolve deferrals + archive)
 
-### [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](/plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md)
+### [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md)
 
 **status**: active · **estimate**: 4 cal AI-days (class: brand-new) **title**: TradFi S&P ML + price-arb backtest
 readiness (ES feature runs + data-clean slice)
