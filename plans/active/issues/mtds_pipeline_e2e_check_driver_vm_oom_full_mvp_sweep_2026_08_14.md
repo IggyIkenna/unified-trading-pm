@@ -326,3 +326,24 @@ Two independent angles, not mutually exclusive:
     (`pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-07-01/` — the now-`{asset_group}`-suffixed path per
     the earlier collision fix), flip the [DATA] P2 checkbox above citing both report paths, ship, verify on origin, then
     `/done` this task (`mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep-a1aea0b75315`).
+- **2026-08-15 (slot 29 worker, infra)**: dispatched against the pre-split (a)+(b) combined todo text
+  (`mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep-bdac55792233`), before pulling saw slot 18's split + root-cause
+  above. Independently arrived at the identical `rc=3` = `_setup_wall_clock_timeout`'s SIGALRM backstop diagnosis via a
+  cold read of `pipeline_e2e_check.py` (matching exit code 3 to `_WALL_CLOCK_TIMEOUT_EXIT_CODE`, `os._exit()` bypassing
+  Python's exception machinery matching the "no Traceback anywhere" signature, and CEFI's ~64min crash landing right at
+  the un-re-armed 3600s default) before reading slot 18's Progress Log entry — same conclusion, independent
+  corroboration. Rather than re-flip the already-`[x]` (b) checkbox (slot 18's doc-only `--wall-clock-timeout-sec 14400`
+  fix already closed it — not touching a landed checkbox per the shared-doc append-don't-replace rule), shipped a
+  complementary CODE-level robustness fix so future runs don't need to hand-tune the flag at all: `run_pipeline_check()`
+  now re-arms the SIGALRM alarm (`_rearm_wall_clock_timeout`) after every shard's legs finish, converting the backstop
+  from a flat "kill after N seconds regardless of progress" deadline into a genuine stall/hang detector ("kill if no
+  shard has completed in the last N seconds") — mirroring the launcher's own `_STALL_THRESHOLD_SEC` progress-vs-stall
+  distinction at the whole-sweep level. `wall_clock_timeout_sec` defaults to 0 (disabled) for existing callers, and
+  `main()` now threads `args.wall_clock_timeout_sec` through — fully backward compatible with slot 18's in-flight
+  `--wall-clock-timeout-sec 14400` re-runs (same value, just re-armed instead of static) and with every existing
+  test/caller that doesn't pass it. 6 new regression tests (arm/no-op semantics + per-shard re-arm count via
+  `run_pipeline_check`); full `quality-gates.sh` green. Shipped market-tick-data-service@64d1093068, verified ancestor
+  of `origin/live-defi-rollout`. Does not touch DEFI's separate Phase-0 death (still-open todo above, out of this task's
+  scope — observed a concurrent slot 27 quickmerge in flight for exactly that todo while shipping this). No checkbox to
+  flip for this task — the (b) item this was dispatched against is already `[x]` via slot 18's fix; this entry is the
+  evidence trail for `/done`.
