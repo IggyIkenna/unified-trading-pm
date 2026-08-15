@@ -41,6 +41,8 @@ context_scope:
     /codex/05-infrastructure/vm-launcher-runbook.md,
     instruments-service/scripts/build_instrument_catalogue.py,
   ]
+drift_direction: advance-code
+depends_on: []
 ---
 
 # sports catalogue re-roll — corpus-scale finding

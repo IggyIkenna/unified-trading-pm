@@ -41,6 +41,9 @@ context_scope:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     market-tick-data-service/scripts/sports/purge_league_legacy_objects_2026_08_15.py,
   ]
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # 1,814 orphan legacy `league=` objects — disposition follow-up

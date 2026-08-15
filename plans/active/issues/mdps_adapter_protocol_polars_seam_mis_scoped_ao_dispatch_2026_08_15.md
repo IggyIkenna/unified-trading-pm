@@ -46,6 +46,9 @@ context_scope:
     /plans/archive/2026_06/mdps_adapter_protocol_pandas_to_polars_2026_06_21.md,
     market-data-processing-service/market_data_processing_service/app/adapters/base_adapter.py,
   ]
+execution_scope: local-only
+drift_direction: advance-code
+depends_on: []
 ---
 
 # MDPS adapter-protocol polars seam — mis-scoped for AO dispatch

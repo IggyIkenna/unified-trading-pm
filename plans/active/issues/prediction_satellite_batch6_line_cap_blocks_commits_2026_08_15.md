@@ -34,6 +34,8 @@ model_tier:
 thinking_tier:
 estimate_class: refactor
 assigned_role: data_engineering
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found
