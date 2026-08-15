@@ -190,7 +190,8 @@ when the paid Tardis tier is activated.
 - **context-scout 2026-08-15 (slot-14) — full Phase-1 analysis completed.** The 2026-08-03 4-entry list was applied
   after the lock-check cleared but without a full Phase-1 pass (the original 2026-08-03 scouting agent stopped at the
   lock check before doing Phase-1 analysis, per
-  `/plans/active/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md`'s own note — this entry is
+  `/plans/archive/2026_08/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md`'s own note (now
+  resolved/archived) — this entry is
   that deferred full pass). Read this doc's frontmatter (`related`/`source`/`parent_epic`) + full body; confirmed every
   numbered Plan item is `[x]` done, so the doc's only live remaining content is the "Why it matters" VM log-archival
   durability gap. Found one real gap in the prior list: `/codex/05-infrastructure/vm-log-archival.md` — the direct

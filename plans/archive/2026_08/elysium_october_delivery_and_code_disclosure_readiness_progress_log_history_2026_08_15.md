@@ -19,14 +19,14 @@ parent_epic: client_isolation_and_governance_master
 source:
   [
     /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
-    /plans/active/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md,
+    /plans/archive/2026_08/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md,
   ]
 ---
 
 # Extracted — Progress Log history (2026-08-11 → 2026-08-12 "second pass")
 
 > **Extracted verbatim 2026-08-15** → this file (line-cap remediation,
-> `/plans/active/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md` Follow-up todo) — the three
+> `/plans/archive/2026_08/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md` Follow-up todo) — the three
 > oldest Progress Log entries from
 > [elysium_october_delivery_and_code_disclosure_readiness](/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md),
 > superseded by that plan's own "State as of 2026-08-13" section and its later Progress Log entries. No open todo lives

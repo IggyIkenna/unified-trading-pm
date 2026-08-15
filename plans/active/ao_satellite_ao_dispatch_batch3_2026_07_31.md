@@ -459,7 +459,7 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   count as unverified until checked directly, same class as this workspace's general measured-not-claimed discipline).
   Reverted the 9 over-cap docs' working-tree edits (their computed, disk-verified `context_scope` entries were not lost
   — captured into a new follow-up issue doc,
-  `/plans/active/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md`, ready to re-apply once each
+  `/plans/archive/2026_08/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md`, ready to re-apply once each
   doc gets a real trim/split). Also 2 docs were correctly left `NEVER_SCOUTED` by their scouting agent because they
   carry `locked_by:` — editing a locked doc's frontmatter needs operator sign-off; also logged in the same follow-up
   issue doc rather than silently dropped. Before shipping the remaining 66, ran a **word-level (whitespace-normalized)
@@ -517,7 +517,7 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   locked at scouting time) + 1 (`elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`, 998L pre-edit)
   reverted after its 3-entry `context_scope` alone (no marker) pushed it to 1004L, over the 1000L hard cap — its
   pre-computed, disk-verified entries are now logged as a new Follow-up in
-  `/plans/active/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md` (this corpus's existing
+  `/plans/archive/2026_08/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md` (this corpus's existing
   line-cap-remediation tracking doc) rather than re-discovered fresh next time. One adjacent fix in the same pass: found
   and corrected a pre-existing dangling `related:` reference in
   `plans/archive/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md` (cited

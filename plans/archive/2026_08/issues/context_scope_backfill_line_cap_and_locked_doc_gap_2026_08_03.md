@@ -9,7 +9,7 @@ summary: >-
   were correctly skipped by the scouting agents because they carry `locked_by:` and editing a locked doc's frontmatter
   needs operator sign-off. All 11 docs already have their `context_scope` entries computed and verified-to-resolve below
   — this is a re-apply task, not a re-scout.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -30,7 +30,7 @@ assigned_role: script
 priority: P2
 drift_direction: advance-code
 source: [context-scout-session-2026-08-03]
-resolved_by:
+resolved_by: unified-trading-pm (slot-3, 2026-08-15) — all 3 Follow-ups closed, 0 open todos remain; see Progress Log for the shipping commit SHA
 locked_by:
 locked_since:
 depends_on: []
@@ -42,6 +42,8 @@ context_scope:
     /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
   ]
 ---
+
+> **ARCHIVED 2026-08-15** — all 3 Follow-up todos done (last one this turn, slot-3), 0 open items remain, unlocked.
 
 # What
 
@@ -357,23 +359,34 @@ lock check before doing Phase-1 analysis; a future pass should do the full scout
       unchanged, and fixed that codex doc's own stale "not yet deployed" banner as an adjacent finding (contradicted by
       the doc's own confirmed-shipped record). `context_scope` now 5 entries, dated Progress Log marker added on the
       target doc. See that doc's own Progress Log for the full account.
-- [ ] [SCRIPT] P3. Trim/split 3 more docs newly confirmed sitting at the EXACT 1000-line hard cap during the 2026-08-07
-      corpus-wide context-scout run (same remediation pattern as this issue's own earlier 11-doc batch — extract the
-      oldest fully-closed Progress Log section(s) to an archive-bound history doc, leave a one-line pointer): (1)
-      `plans/active/data_pipeline_check_mdps_features_2026_07_20.md` — hunter left context_scope untouched (5 entries,
-      still accurate) and skipped the marker; (2) `plans/active/data_completion_defi_2026_07_15.md` — hunter did a
-      0-net-line-delta content swap (3→3 entries) but could not add the marker; (3)
-      `plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md` — hunter left context_scope untouched (5
-      entries) and skipped the marker; already independently tracked with a full extraction-plan writeup in
-      `prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md` (filed same day by a concurrent
-      na-eligibility-audit pass) — that doc's plan applies here too, just needs an operator/committer to execute it. All
-      3 will keep reading STALE on every future Phase-0 run until trimmed.
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-15 (slot-3).** Trimmed/split all 3 docs newly confirmed sitting at the EXACT
+      1000-line hard cap during the 2026-08-07 corpus-wide context-scout run (same remediation pattern as this issue's
+      own earlier 11-doc batch — extracted the oldest fully-closed Progress Log section(s) with zero embedded open
+      todos, verbatim, to an archive-bound history doc, left a one-line pointer, added the dated context-scout marker):
+      (1) `plans/active/data_pipeline_check_mdps_features_2026_07_20.md` — extracted 3 closed 2026-07-27 dated entries
+      (124 lines) to `/plans/archive/2026_08/data_pipeline_check_mdps_features_progress_log_history_2026_08_15.md`;
+      1002L → 884L; context_scope (5 entries) re-verified unchanged, still accurate. (2)
+      `plans/active/data_completion_defi_2026_07_15.md` — extracted the entire folded-in-from-M-1 chronological block
+      of 2026-06-21/2026-06-22 dated entries (566 lines) to
+      `/plans/archive/2026_08/data_completion_defi_progress_log_history_2026_08_15.md`; 1033L → 473L; context_scope (3
+      entries) re-verified unchanged, still accurate — the earlier hunter's proposed 0-net-delta swap was not
+      reconstructable (never recorded) and the existing list still resolves + covers the doc's substance, so it was
+      left as-is rather than guessed. (3) `plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md` — no
+      trim needed: `prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md` (via
+      `prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md`, now archived/resolved) already extracted its
+      history on 2026-08-09, so the doc sits at 432L/435L — just added the missing context-scout marker. All 3
+      re-verified with `check_line_caps.sh` (green) + `check_frontmatter.sh` (clean); open-checkbox counts confirmed
+      unchanged pre/post extraction (mdps 4, defi 17) — nothing lost, only moved. Repo: unified-trading-pm.
 
 - **2026-08-15 (slot-16)**: closed the elysium Follow-up above — trim/split + pre-computed `context_scope` applied,
   marker added. 2 Follow-ups remain open (fleet_audit_triad full scout; the 3-doc 2026-08-07 batch).
 - **2026-08-15 (slot-14)**: closed the fleet_audit_triad full-scout Follow-up — real Phase-1 analysis done (not just a
   re-apply), 1 genuinely-missing entry found and added, an adjacent stale-banner finding fixed in the cited codex doc.
   1 Follow-up remains open (the 3-doc 2026-08-07 batch).
+- **2026-08-15 (slot-3)**: closed the 3-doc 2026-08-07 batch Follow-up — 2 docs (mdps_features, data_completion_defi)
+  trimmed via verbatim Progress Log extraction; the 3rd (prediction_cross_venue_arb) was already trimmed by an
+  unrelated batch8 finalize pass on 2026-08-09, just needed its marker. All 3 Follow-ups on this issue are now closed
+  with no open items remaining — this issue is archive-eligible pending the standard 6-step ritual.
 
 > **2026-08-06 archive-candidate audit**: The doc's locked-docs note explicitly says
 > 'fleet_audit_triad_deferred_followups_2026_06_01.md had no proposed list computed ... a future pass should do the full

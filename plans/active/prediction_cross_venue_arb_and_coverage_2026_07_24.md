@@ -388,6 +388,9 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
   question per today's Finding 5 (does `instruments-service@62a8b1d8` cover 3a/3b, not just 3c). **Doc now 1009L, over
   the 1000L hard cap** (was 999 on 08-08) — SCOPED-mode append only; remediation is batch8's active, not-yet-executed
   todo. Doc stays NA.
+- **context-scout 2026-08-15**: re-scouted; doc is now 432L (well under the 1000L hard cap, per batch8's 2026-08-09
+  extraction — the line-cap issue this note used to describe is resolved); context_scope re-verified (5 entries),
+  unchanged.
 
 ## Extracted items index (2026-08-09)
 
