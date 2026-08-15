@@ -452,7 +452,7 @@ not because anything needs follow-up.
       instead of the 5500MB unmeasured-repo fallback. Note: build `49413a09` for `8b8e9a3` (05:55:16Z, still pre-fix)
       also TIMEOUT — expected, it predates `d7453ed`; not a regression. No further action needed. (repo:
       unified-api-contracts, evidence: build=4465fc18-3277-4711-abd3-f86daac715e0)
-- [ ] [CODE] P3. **[BLOCKED-CREDENTIALS] Fix the 7 failing `github-glue-slot-refresh-*` systemd units** on host
+- [ ] [CODE] P3. **[BLOCKED-PERMISSIONS] Fix the 7 failing `github-glue-slot-refresh-*` systemd units** on host
       `i-042a6332509482556` (Structural finding C): git-credential failure
       (`could not read Username for 'https://github.com'`) on the periodic mirror-refresh side-timer for
       ao/e2e-testing/execution-service/features-service/market-tick-data-service/ml-service/strategy-service. Does not
@@ -462,7 +462,7 @@ not because anything needs follow-up.
       git's global credential helper, so the refresh timer's later plain `git pull` had nothing to authenticate with.
       Fix adds `gh auth setup-git` (unconditional, every install — repairs an existing pool too, no reclone needed) to
       `setup-glue-runners.sh`, using gh's own persisted token via the credential-helper indirection (same no-PAT-on-disk
-      property as the existing clone). **Live application/verification BLOCKED-CREDENTIALS**: this session's AWS
+      property as the existing clone). **Live application/verification BLOCKED-PERMISSIONS**: this session's AWS
       identity (`ikenna-worker`) has no `ssm:SendCommand` on `i-042a6332509482556` and no self-service IAM path to grant
       it (confirmed: `SendCommand`/`AssumeRole`/`PutUserPolicy`/`SimulatePrincipalPolicy` all AccessDenied — unlike the
       ambient `uts-orchestrator-epic-role`'s documented self-service grant in
