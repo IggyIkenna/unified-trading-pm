@@ -228,3 +228,21 @@ source: >-
 
 - **2026-08-15 (interactive session)**: drafted from a full CI-tranche survey + operator QA pass. Awaiting operator
   approval to flip `status: active`.
+- **2026-08-15 (slot-26·infra)**: Worked todo 1 (`codex_freshness_stale` wall type). PM-side shipped and verified
+  landed: `unified-trading-pm@e2ed126d78` on `origin/live-defi-rollout` (`merge-base --is-ancestor` confirmed) — removed
+  `CODEX_FRESHNESS_CHECKER` from `quality-gates.sh`'s post-gate path, added
+  `.github/workflows/codex-freshness-sweep.yml` (daily cron, mirrors `digest-drift-sweep.yml`'s shape, `--strict` mode +
+  escalate-to-orchestrator dispatch + Slack notify/notify-resolved), wired `codex_freshness_stale` into
+  `escalate-to-orchestrator.yml`'s valid wall_type set, and catalogued it in
+  `agent-orchestrator-ci-escalation-wall-types.md`. Also fixed an unrelated, pre-existing manifest-drift gate failure
+  hit while shipping (`e2e-testing` → `deployment-service` dependency entry missing from `workspace-manifest.json`
+  despite the notes field already documenting it — bundled into the same push since it blocked quickmerge Stage 1.5 for
+  this change). Agent-orchestrator-side changes (`server/escalation.py` WALL_TYPES + `_poll_wall_resolution`
+  codex_freshness_stale branch, `server/models/escalation.py` EscalateRequest Literal, `tests/test_escalation.py` — 4
+  new/updated tests) are complete, syntax-validated, and QG-passing on my own diff (3962 passed, only the one
+  pre-existing unrelated failure below) but **NOT YET SHIPPED** — blocked by repo-blocker `RB-2549326a`
+  (`agent-orchestrator` `qg_red`, pre-existing/unrelated: STEP 5.95 DTZ ratchet over baseline +
+  `test_tier1_guidance_does_not_rearm_once_a_force_has_fired` genuinely failing in `context_lifecycle.py` — both tracked
+  in `agent_orchestrator_ldr_qg_red_dtz_ratchet_and_context_lifecycle_rearm_bug_2026_08_15.md`, already had a
+  repo-blocker open before I joined as a waiter). **Remaining work**: once RB-2549326a clears, ship the AO-side diff via
+  the normal Pass-1/Pass-2 flow — the diff itself needs no further changes.
