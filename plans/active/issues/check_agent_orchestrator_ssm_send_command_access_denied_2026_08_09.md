@@ -151,3 +151,10 @@ on shared AWS infra, not something to self-grant.
   `ssm:SendCommand` against `i-0c9b283b31d6b5ca7` for `ikenna-worker`; PM checkout confirmed clean/`ahead=0` in the same
   pass — no in-flight task exists to continue (KAMINO-SOLANA scope shipped/archived in an earlier session segment, no
   new dispatch landed since). No new information on the IAM gap itself.
+- **2026-08-15 (slot-2, data_engineering)**: SEVENTH independent confirmation, same session, re-run in response to a
+  plain "proceed now" ask with no in-flight task otherwise open. Identical `AccessDeniedException` on `ssm:SendCommand`
+  against `i-0c9b283b31d6b5ca7` for `ikenna-worker`, `aws sts get-caller-identity` again confirming the identity/account
+  are correct and reachable. Local grep across `plans/active/*.md` for `assigned_role: data_engineering` returned a
+  broad cross-section of the active corpus (not a targeted dispatch signal — role tags are not a live-claim indicator),
+  confirming there is no local-file substitute for the blocked live-dispatch read. No new information on the IAM gap
+  itself; still the sole blocker to confirming whether any new task has been queued/dispatched to this identity.
