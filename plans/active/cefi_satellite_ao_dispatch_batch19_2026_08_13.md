@@ -699,3 +699,30 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   (`gcloud compute instances list --filter='name~"^(cefi|tradfi)-.*-(heavy|light)-|^cefi-queue-|^mtds-backfill- cefi-" AND status=RUNNING' --zones=asia-northeast1-c --project=central-element-323112`).
   Follow-up (light group + the small Dec-2025 tail) should be a separate slice launched once this heavy slice is
   running, per the same `LAUNCH_GROUPS` pattern — not folded into this same VM.
+
+- **2026-08-15 (slot-3·backend_engineer)**: dispatched the "Fix flaky shellcheck under host load in
+  launch-expected-universe-v2-vm.sh" todo — **GATED, code correct + committed but not yet landed.** Root-caused: the
+  cited flake is `TestShellcheckClean.test_shellcheck_no_errors` in
+  `deployment-service/tests/unit/test_vm_zombie_watchdog.py` (parametrized one-Python-subprocess-per-launcher-script
+  over ~180 `launch-*.sh` files) — the exact same anti-pattern already fixed for `test_script_syntax_validation` in
+  `test_vm_launcher_scripts.py` on 2026-08-14 (see that test's own docstring: SIGPIPE/SIGTRAP/timeout under concurrent
+  gate load). Applied the identical fix: batched into ONE bash subprocess looping `shellcheck --severity=error` over
+  every script, collecting failures instead of spawning ~180 Python subprocesses. **Committed**
+  `deployment-service@2512a92b` (rebased once mid-ship onto a peer push; content-identical diff, verified via `git diff`
+  against the pre-rebase SHA that already passed QG clean). **Blocked purely on re-verification, not on the fix
+  itself**: the FIRST Pass-1 `quality-gates.sh` run completed cleanly (`ALL QUALITY GATES PASSED`, 736s, sentinel
+  matched HEAD) before a peer's push forced a rebase and invalidated that sentinel. Every attempt since to re-stamp the
+  sentinel against the rebased HEAD (5 consecutive: 1 quickmerge-internal re-gate + 4 direct `quality-gates.sh` re-runs,
+  one after a bounded 20-min wait-for-capacity loop) was killed mid-run by genuine, severe shared-host contention —
+  `uptime` 1-min load 25-36 throughout, 15+ concurrent `quality-gates.sh` processes fleet-wide observed via `ps aux`
+  (vs. the documented `≤2 full QGs at once` rule), one kill caught live as the qg-governor's own runtime abort-watchdog
+  firing (loud `SIGTERM`, "host RAM pressure >= 75%") at 91% through the TESTS stage — this is the exact,
+  already-catalogued pattern in `/plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`
+  (status: resolved — the fix made kills loud/safe, it did not eliminate the underlying contention), whose own precedent
+  is explicit: stop blind-retrying after repeated kills, preserve the commit, GATED-skip rather than keep burning shared
+  host capacity. Following that precedent here. **Nothing left to redo**: the diff above is final and content-verified;
+  whoever next picks this up (possibly this same slot) only needs a clean `quality-gates.sh` run against
+  `deployment-service@2512a92b` (or its current rebase) to re-stamp the sentinel and ship via
+  `quickmerge --agent --files 'tests/unit/test_vm_zombie_watchdog.py'`. Commit stays local to slot-3's
+  `deployment-service` clone (not stashed, not lost) per the incident doc's own established pattern. Returning task to
+  backlog with `reason_code=GATED`.
