@@ -270,13 +270,43 @@ separate alerting-code defect this doc needs to duplicate-track.
       fails the whole-date freshness check and drags an already-captured root along for a wasteful re-fetch. **Not yet
       verified — next step is reading `tick_data_handler.py`'s date-level orchestration loop to confirm whether
       `is_fresh` is computed and gated per (date) or per (date, root/venue).**
-- [ ] [SCRIPT] P1. NEW (2026-08-15): Read `tick_data_handler.py`'s freshness-gate call site in full to determine whether
+- [x] [SCRIPT] P1. NEW (2026-08-15): Read `tick_data_handler.py`'s freshness-gate call site in full to determine whether
       it evaluates freshness per-date (coarse, can drag an already-fresh root into a re-fetch caused by an unrelated gap
       on the same date) or per (date, venue/root) — this is now the most concrete, code-verifiable next step and likely
-      explains the repeated `2022-01-03` re-capture found above.
-- [ ] [SCRIPT] P2. Once the freshness-scoping bug (or whichever mechanism is confirmed) is nailed down, fix it and add a
-      regression test asserting an already-fully-captured (date, root) is never re-fetched when a SIBLING root/venue for
-      the same date is still gapped.
+      explains the repeated `2022-01-03` re-capture found above. **RESOLVED 2026-08-15 — neither framing is correct.**
+      Read `TickDataHandler._apply_freshness_skip` in full
+      (`market-tick-data-service/market_tick_data_service/cli/     handlers/tick_data_handler.py:491-540`, the actual
+      `check_shard_freshness` call site at line 512). Its very first line (507-508) is
+      `if self._force or not self._bucket or explicit_venues: return False, explicit_venues` — whenever
+      `explicit_venues` is truthy, this gate returns immediately WITHOUT ever calling `check_shard_freshness`. Traced
+      `explicit_venues`'s origin to the CLI `--venues` flag, and confirmed via
+      `deployment-service/scripts/vm/setup-data-pipeline-vm.sh:2943`
+      (`[[ -n "$VM_VENUE" && "$_FANOUT" != "1" ]] && CLI_ARGS="$CLI_ARGS --venues $VM_VENUE"`) that every
+      `mtds-backfill` VM — including every `tradfi-bf-cme-ohlcv-1m-*` launch, `--only-root` or not — carries
+      `VM_VENUE=CME`, which ALWAYS becomes `--venues CME`. So this gate is a structural NO-OP for this launcher family:
+      it never evaluates per-date OR per-(date,venue/root) freshness at all, for any launch. Traced one level deeper to
+      find where skip-if-fresh actually happens: `process_ticks` → `_run_preflight_availability_check`
+      (`market_tick_data_service/engine/orchestrator/preflight.py:811-897`) reads the full availability index and builds
+      `state.preflight_captured_atoms: dict[(venue, data_type), set[atom]]` where `atom` is derived from the manifest
+      row's `instrument_id`/`underlying` (+ chain/quote/margin qualifiers, lines 871-888) — this mechanism IS
+      fine-grained (per venue, data_type, AND instrument/root atom), not coarse per-date either. **So the repeated
+      `2022-01-03` re-capture is explained by NEITHER of this todo's two original hypotheses** — one candidate gate is
+      bypassed entirely, the other is already atom-level. New, sharper next step for the P2 todo below: the defect is
+      most likely in how `state.preflight_captured_atoms` is CONSUMED downstream (`_process_venue`'s per-instrument
+      fetch-skip decision) — a plausible atom-format mismatch (e.g. the CME launcher's requested parent-symbol atom,
+      `ETH.FUT`/`ETH.OPT`, vs. whatever `instrument_id`/`underlying` value the manifest row for an already-captured
+      2022-01-03 CME/ETH ohlcv_1m record actually carries), or a rejection inside `_is_preflight_source_evidence`. NOT
+      verified within this todo's bounded scope (reading `tick_data_handler.py`'s call site, as scoped) — flagged for
+      the next investigator via the revised P2 todo below.
+- [ ] [SCRIPT] P2. REVISED 2026-08-15 (see resolved todo above — the original "freshness-scoping" framing was based on
+      an incorrect premise; both `tick_data_handler.py`'s handler-level gate and `_run_preflight_availability_check`'s
+      atom-set build are now confirmed NOT to be coarse per-date checks). Read `_process_venue`'s consumption of
+      `state.preflight_captured_atoms` (`market_tick_data_service/engine/orchestrator/__init__.py`) and compare its
+      atom-lookup construction against `_run_preflight_availability_check`'s atom construction (`preflight.py:880-888`)
+      for a CME OHLCV instrument specifically — most likely an atom-format mismatch (parent root symbol vs. manifest's
+      stored instrument_id/underlying) or a source-evidence rejection (`_is_preflight_source_evidence`) is silently
+      defeating the skip for already-captured CME dates. Once the actual mechanism is confirmed, fix it and add a
+      regression test asserting an already-captured CME (date, root) atom is never re-fetched on a subsequent relaunch.
 - [ ] [SCRIPT] P2. Wire the existing round-robin zone-rotation capability
       (`deployment_service/backends/services/vm_lifecycle.py`'s `_zone_index` / `deployment_service/backends/vm.py`, and
       the simpler 2-zone fallback pattern already live in `scripts/vm/launch-prediction-live.sh:164`) into the TradFi
@@ -343,3 +373,20 @@ Direct operator instruction delivered via AO task dispatch
 concrete scope (rotate `asia-northeast1-a`/`-b`/`-c`, same region only, no cross-region, TradFi CME OHLCV launcher
 family only — not extended to other launcher families) into the still-open P2 SCRIPT wiring todo above so its future
 implementer has the exact zone list without needing a fresh operator call.
+
+### 2026-08-15 — follow-up: freshness-gate call site read in full, both original hypotheses ruled out
+
+Read `TickDataHandler._apply_freshness_skip` (`tick_data_handler.py:491-540`) in full per the prior entry's dispatched
+follow-up. Found the actual mechanism is sharper and more direct than either "per-date" or "per-(date,venue/root)"
+framing: the gate short-circuits (`explicit_venues` truthy → `return False, explicit_venues` at line 507-508) BEFORE
+`check_shard_freshness` is ever called, and `--venues $VM_VENUE` (confirmed live in
+`deployment-service/scripts/vm/setup-data-pipeline-vm.sh:2943`) is unconditionally set for every `mtds-backfill` VM
+including this whole launcher family — so `check_shard_freshness` never runs for a CME OHLCV launch, `--only-root` or
+not. Traced the real skip-if-fresh mechanism one level deeper into `process_ticks` → `_run_preflight_availability_check`
+(`orchestrator/preflight.py:811-897`), which builds a per-(venue, data_type) → captured-atom-set structure from the
+manifest — genuinely atom/instrument-level, not coarse per-date. Both candidate "freshness gates" this todo was framed
+around are therefore NOT the coarse-vs-fine scoping bug originally hypothesized — one doesn't run at all for this
+launcher, the other already operates at root granularity. Redirected the P2 fix todo toward the real remaining suspect
+(atom-format matching between `_run_preflight_availability_check`'s captured-atom construction and `_process_venue`'s
+per-instrument lookup) rather than leave a stale premise for the next investigator. No code changed — this todo's scope
+was read-only investigation of the named call site; the fix + regression test is the revised P2 todo.
