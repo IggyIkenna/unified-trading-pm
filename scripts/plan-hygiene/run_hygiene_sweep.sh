@@ -181,6 +181,15 @@ if [ "$CI_MODE" = "--precommit" ]; then
     bash "$SCRIPT_DIR/check_todo_regression.sh" --only "${STAGED_PLANS[@]}" \
       && echo "  ✅ Todo regression (staged plans)" \
       || { echo "  ❌ A staged plan lost todos (total open+done shrank) vs origin/live-defi-rollout — restore the missing line(s), a checkbox flip never shrinks the total"; PF=$(( PF + 1 )); }
+    # Stale base (2026-08-15): the check ABOVE counts todos, so it is blind to the
+    # case measured that day — a staged edit that ADDED two todos while silently
+    # dropping a peer's corrected prose blockquote. The count grew, so todo-regression
+    # passed clean. Divergence-from-origin catches what counting cannot: if the file
+    # changed upstream since your HEAD, your full-file edit cannot contain that change
+    # and staging it overwrites with no conflict signal.
+    bash "$SCRIPT_DIR/check_plan_stale_base.sh" --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Stale base (staged plans)" \
+      || { echo "  ❌ A staged plan was edited against a stale base — 'git pull --rebase --autostash', then verify BOTH your edit and the peer's survived"; PF=$(( PF + 1 )); }
     # Evidence-backed-completion, --only-scoped (2026-08-09): sub-rule B (a `- [x]` runtime-green
     # claim with no `Evidence: cloudbuild=<id>`) previously had NO precommit-time presence, only
     # the full corpus-wide baseline mode. Root-caused after a push to live-defi-rollout (sha

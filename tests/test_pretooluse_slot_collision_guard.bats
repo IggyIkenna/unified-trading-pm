@@ -37,10 +37,40 @@ teardown() {
     done
 }
 
+# Spawn a fake peer AND wait until the detector can actually see it, rather than
+# assuming a fixed settle time.
+#
+# Why this is a poll and not `sleep 0.3` (measured 2026-08-15): the guard resolves
+# each candidate pid's cwd with `lsof`, under a `subprocess.run(..., timeout=10)`.
+# `TimeoutExpired` is a `SubprocessError`, which the guard catches and folds into
+# `(1, "")` -- the same value as "no peer" -- so under host load it FAILS OPEN.
+# On a host at load 48 that turned every "must BLOCK" case here into a failure
+# while every "must ALLOW" case passed, and because this repo runs BATS_HARD_FAIL=1
+# it blocked EVERY unified-trading-pm commit, attributed to whatever change happened
+# to be shipping (it was one touching only scripts/plan-hygiene/).
+#
+# Failing open is correct for the guard; asserting a BLOCK when the detector never
+# saw the peer is what is wrong. So: establish the precondition explicitly, and if
+# it cannot be established, SKIP -- a timing-sensitive assertion must never
+# hard-fail the repo's gate as a false regression.
+# Issue: plans/active/issues/slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md
 _spawn_fake_peer() {
     ( cd "$1" && exec -a claude-bats-fake-peer sleep 20 ) &
     _PEER_PIDS+=("$!")
-    sleep 0.3
+
+    local detect="${_PM_ROOT}/cursor-configs/hooks/lib/slot-collision-detect.sh"
+    local slot deadline=$(( SECONDS + 15 ))
+    slot="$(bash "${detect}" slot-dir "$1" 2>/dev/null)"
+    [ -n "${slot}" ] || slot="$1"
+
+    while [ "${SECONDS}" -lt "${deadline}" ]; do
+        if [ -n "$(bash "${detect}" foreign-pids "${slot}" 2>/dev/null)" ]; then
+            return 0
+        fi
+        sleep 0.2
+    done
+
+    skip "slot-collision detector could not see the fake peer within 15s — host too loaded to establish the BLOCK precondition (see plans/active/issues/slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md)"
 }
 
 # Feed the guard a PreToolUse payload. $1 command, $2 cwd.
