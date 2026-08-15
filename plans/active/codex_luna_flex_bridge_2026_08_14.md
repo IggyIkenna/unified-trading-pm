@@ -186,3 +186,27 @@ template, minus the third-party dependency).
   live on the org's shared `central-element-323112` project). Full findings live in the sibling
   `/plans/active/grok_gemini_translation_proxy_2026_08_14.md` Progress Log, which owns Gemini onboarding for this plan
   family — not duplicated here.
+
+- **2026-08-15 — `codex_bridge_server.py` scaffold shipped (operator instruction: "build blind but at best you can" — no
+  `~/.codex/auth.json` access this session).** `agent-orchestrator@5a9c1dd90e`. What's real and tested: the standalone
+  FastAPI process exists (`POST /v1/messages`, `GET /health`), request/response translation against the real
+  `openai-codex` SDK surface (`Codex()`/`thread_start()`/`thread.run()`, confirmed via live docs research, not guessed),
+  `AccountProvider` extended with `"codex"` (`server/accounts.py`), a Codex `RateCard` entry NOT yet added (todo below
+  still open), and 12 new unit tests (request parsing, prompt-flattening, error handling, SDK-failure wrapping) — all
+  green, full suite 3777 passed. **None of this session's shipped code satisfies any todo's stated "Done when" bar** —
+  every one of them requires a REAL Codex completion/session, which is structurally impossible without live
+  `~/.codex/auth.json` access. Checkboxes below stay unflipped on purpose; this entry records real progress without
+  overclaiming it. Three gaps stated plainly in the module's own docstring (not discovered later, deliberately designed
+  around given the blind-build constraint):
+  1. **No incremental Codex thread reuse** — every request starts a fresh thread and replays the full flattened history,
+     matching Anthropic's own per-call statelessness rather than guessing at a session-correlation heuristic (there's no
+     stable session id in an Anthropic Messages request body to key one on). Forfeits Codex's native context caching; a
+     documented inefficiency, not a silent one.
+  2. **Tool-use translation is a structural stub** — `tool_use`/`tool_result` content blocks are rendered as a labelled
+     text placeholder (`[tool_use: name input=...]`), NOT translated into whatever Codex's own tool-execution model
+     expects. This is exactly the mandatory smoke-test gate's job to catch — do not skip it.
+  3. **No streaming (SSE) support** — returns one non-streaming response. Functionally correct for Claude Code (slower
+     pane updates, not a correctness gap), but a real engineering gap vs. DeepSeek's own native proxy. Also NOT done
+     this session (genuinely blocked, not skipped): `model_pricing.py` Luna entry, real usage-capture wiring (a
+     token-count placeholder exists, clearly marked never-to-be-trusted-for-billing), and the bridge is not deployed
+     anywhere — it's a file in this repo, not a running service.
