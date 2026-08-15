@@ -70,12 +70,16 @@ drift_direction: advance-code
       never actually gets to run against real data. Repo: strategy-service. Done-when: a `quality-gates-v2` CI run's log
       shows the clients.yaml coverage test actually EXECUTED (not skipped) — cite the run URL/ID and the log line.
 
-- [ ] [BACKEND] P2. Add a missing-entry test case to `test_clients_yaml_coverage_gate.py` that constructs a
+- [x] ✅ [BACKEND] P2. Add a missing-entry test case to `test_clients_yaml_coverage_gate.py` that constructs a
       clients.yaml-shaped input with one archetype's entry deliberately removed and asserts `uncovered_archetypes()`
       returns it non-empty (i.e. the existing `assert not violations` line would actually fail on real bad data) — today
       the single test only exercises the clean, 0-violation path. Repo: strategy-service. Done-when: the new test is
       present, and manually stubbing `clients_yaml_coverage.py`'s detection logic to always return `[]` makes this new
-      test fail (verify locally, do not ship the stub).
+      test fail (verify locally, do not ship the stub). — strategy-service@af99cbda31: added
+      `test_uncovered_archetypes_flags_a_missing_entry`, monkeypatching `ARCHETYPE_ENGINE_REGISTRY` +
+      `_deployment_service_strategy_config_root` to a `tmp_path` tree with one archetype's dir omitted; locally verified
+      the negative control by stubbing `uncovered_archetypes()` to return `[]` and confirming the new test then FAILS
+      (stub reverted, not shipped — `git diff --stat` confirmed clean before commit).
 
 - [x] ✅ [BACKEND] P1. Add a negative-control test proving `run_paper()`'s ε=0 reconciliation actually detects a
       divergence when `dynamic_universe_as_of_dates` mismatches between the paper and batch-rerun sides. Today
@@ -102,3 +106,5 @@ drift_direction: advance-code
   collision resolution were both independently verified CORRECT with no stragglers or dropped members — no todos filed
   for those two. Companion docs from the same audit: `execution_service_verification_debt_findings_2026_08_15.md`,
   `pm_archive_false_done_and_review_backlog_2026_08_15.md`.
+- **2026-08-15**: Todo 2 (missing-entry negative-control test for the coverage gate) shipped —
+  strategy-service@af99cbda31.
