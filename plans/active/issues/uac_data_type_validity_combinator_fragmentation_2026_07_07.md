@@ -280,6 +280,23 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Progress Log
 
+- **2026-08-15 (slot-7, data_engineering) — checkpoint: VM confirmed RUNNING + genuinely progressing on the slot-32
+  relaunch (4th launch); still not complete, GATED-skipping again, no code changed.** Live-verified (not trusted from
+  the prior note): `gcloud compute instances describe mtds-oracle-prices-backfill --zone=asia-northeast1-c` = RUNNING,
+  created `2026-08-15T05:10:11-07:00` (12:10:11Z) — matches the slot-32 entry's "VM created ~12:10Z" 4th-launch
+  relaunch, no further preemption since. `run.log` (via UTL `download_from_storage`, 9,655 lines / ~2.1MB, incremental
+  tail read not a full re-walk) is fresh through `2026-08-15T13:36:31Z` — actively querying Chainlink/AAVE/Spark/
+  Compound-V3 oracle feeds across ETHEREUM/ARBITRUM/BASE/OPTIMISM/POLYGON, currently at `2022-09-29` (day ~66 of the
+  ~1,481-day full range `2022-07-25`→`2026-08-15`), with `ManifestWriter` landing real rows to the per-VM shard
+  (`mtds-oracle-prices-backfill-c2.parquet`, 271 entries) and periodic `PIPELINE_HEARTBEAT`/`RESOURCE_SAMPLE` lines (RSS
+  ~3.9GiB / mem ~16% on `e2-highmem-4` — higher than slot-30's ~513MiB day-3 reading but still well within bounds, no
+  OOM signature). `WARNING Short return`/`Failed to decode`/`Failed to query` lines remain expected honest-absence noise
+  at pre-genesis block heights, not job failures. At this checkpoint's pace (~66 days in ~86min since launch, ≈1.3
+  min/day — faster than the earlier ~7.4 min/day estimate) the remaining ~1,415 days is still roughly a day-plus of
+  wall-clock, not something a single bounded worker session should busy-poll to completion. Skipping via
+  `reason_code: GATED` per `worker.md` §4c (this task's own done-when condition, not a genuine ambiguity) so the fleet
+  cooldown arms instead of immediate re-dispatch; the "Verify … reached a terminal state" todo below remains open and
+  unchanged for whoever picks this up next.
 - **2026-08-15 (slot-32, data_engineering) — 3rd SPOT preemption caught + relaunched (4th launch); relaunch was also
   blocked on a stale-tarball safety gate (diagnosed, no code defect — worked around); still not complete.** Confirmed
   the same preemption signature as before (`run.log` stalled `10:05:32Z` mid-write, `EXIT_STATUS` stuck `RUNNING`
