@@ -227,9 +227,21 @@ last_updated: 2026-06-27
       see the cross-cloud WIF todo below; ship the code, hold the installer. Superseded original text: it has no timer
       and no server module today, which is why this storm sat unattended. Includes confirming AO's SA has
       `secretmanager.versions.access` on `SLACK_ALERTS_READER_BOT_TOKEN`.
-- [ ] [DATA] P1. Determine which layer wrote the cefi `attempted_failed` rows (MTDS fetch vs MDPS derivation) and
-      whether the 2026-08-02 ruling is inflating them. Read-only analysis; the operator's hypothesis (a 200-with-zero-
-      rows is legitimately `empty_confirmed`) is the thing under test.
+- [x] ✅ [DATA] P1. **CLOSED 2026-08-15 (slot-16) — hypothesis TESTED AND REJECTED, no code fix needed.** Determine
+      which layer wrote the cefi `attempted_failed` rows (MTDS fetch vs MDPS derivation) and whether the 2026-08-02
+      ruling is inflating them. Read-only; operator's hypothesis (a 200-with-zero-rows is legitimately
+      `empty_confirmed`) was the thing under test. **Layer split** (live manifest query, cols-pushdown, 1,064,950 total
+      cefi `attempted_failed`): dominant reason `VENUE_FETCH_FAILED` (218,038, 20.5%, 100% MTDS) is genuine vendor
+      errors, unrelated to zero-rows. `NO_RAW_TICK_DATA_FOR_SHARD` (6,630, 0.6%, matches this hypothesis) is 100% MDPS.
+      No dated "2026-08-02" doc found; the matching ruling in code is dated 2026-07-27 (`batch_workers.py`). **Verdict:
+      NOT inflating — matches a settled precedent**, re-verified for TradFi in
+      `/plans/active/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` (5+ re-checks through
+      2026-08-10). MDPS makes no live vendor call, so it has no `FetchEvidence` for the `SOURCE_RETURNED_ZERO` gate
+      `record_empty` requires — `record_failed` is the deliberate interim. Cefi cross-reference confirms it: MTDS's own
+      row for a sampled shard reads `expected_unattempted`; MDPS's row for the identical key reads `attempted_failed` —
+      two layers honestly reporting one cell, not double-counting. `empty_confirmed` needs the live call that produces a
+      200; MDPS never makes one. No code shipped — the TradFi doc already tracks the one open thread (the unbuilt
+      certified-absence-vs-real-gap split), asset-group-generic, will cover cefi once built.
 
 ### New findings surfaced by the 2026-08-10 fan-out (none existed before this session)
 

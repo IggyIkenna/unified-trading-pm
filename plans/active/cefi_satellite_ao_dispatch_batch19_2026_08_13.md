@@ -228,9 +228,16 @@ source: >-
       host from `GONE_NO_CAPTURE`. No code shipped by this batch (none needed) — the source doc's own checkbox was
       flipped in the same commit as this one citing the same sha; see its Progress Log entry for full file:line detail.
       Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
-- [ ] [CODE] P2. Determine which layer wrote the cefi attempted_failed rows (MTDS fetch vs MDPS derivation) and whether
-      the 2026-08-02 ruling inflates them Source:
-      `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
+- [x] ✅ [CODE] P2. Determine which layer wrote the cefi attempted_failed rows (MTDS fetch vs MDPS derivation) and
+      whether the 2026-08-02 ruling inflates them Source:
+      `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md` — **CLOSED 2026-08-15 (slot-16),
+      hypothesis TESTED AND REJECTED, no code fix needed.** Read-only analysis, no code shipped (none needed): the
+      reason matching this hypothesis (`NO_RAW_TICK_DATA_FOR_SHARD`, 6,630/1,064,950 = 0.6% of cefi attempted_failed) is
+      100% MDPS-side and matches an already-settled TradFi precedent
+      (`issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`, 5+ re-checks) — MDPS makes no live vendor
+      call so has no FetchEvidence for `empty_confirmed`; `record_failed` is the deliberate, correct interim, not
+      inflation. The dominant bucket (`VENUE_FETCH_FAILED`, 218,038 rows, 20.5%) is 100% MTDS-side genuine vendor
+      errors, unrelated to the zero-rows question. Full evidence in the source doc's own todo (same commit).
 - [ ] [CODE] P2. Chain relabel migration part 2 of 2 (options_chain/futures_chain path-position fix,
       entity-rename-governed, writer+manifest+status+gate+UI same change) Source:
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
@@ -341,3 +348,9 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   Tardis-guard-conditional relaunch text, the launcher-host `GONE_NO_CAPTURE` exemption) rather than trusting the commit
   subject alone. No code shipped by this batch (none needed) — checkbox flipped citing the sha; the source doc's own
   checkbox was flipped in the same commit, see its Progress Log entry for full file:line detail.
+
+- **2026-08-15 (slot-16·backend_engineer)**: dispatched the "Determine which layer wrote the cefi attempted_failed rows"
+  read-only analysis todo. Live-queried `market-data-tick-cefi-prd-.../_index/availability_index.parquet`
+  (cols-pushdown) and traced the reason matching the operator's hypothesis (`NO_RAW_TICK_DATA_FOR_SHARD`) to a code
+  mechanism already exhaustively settled for TradFi — hypothesis rejected, no code fix needed. Checkbox flipped citing
+  the finding; the source doc's own checkbox was flipped in the same commit with the full evidence.
