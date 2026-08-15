@@ -718,6 +718,10 @@ about a spawn that had already, demonstrably, succeeded. Hoisting the diagnosis 
 `_spawn_cap_alerted` on a working-pane hit closes both halves at once: a working pane can no longer be reported as
 capped, and a slot that recovers after being capped is not left permanently marked as such.
 
+**Post-fix measurement (2026-08-06 → 2026-08-15)**: false-positive rate on `spawn_retry_cap_reached` (pane genuinely
+`working` at declaration time) dropped from 17.8% (8/45 baseline) to 0.7% (8/1148) — 1,148 cap declarations in-window,
+still only 8 showing `pane=working`.
+
 **A future refactor must preserve this order.** Any change to `check_spawn_heartbeat_timeouts` that reintroduces the
 retry-cap check ahead of the pane diagnosis (or that adds a new early-return between "timeout elapsed" and "diagnose
 pane") silently reopens this exact false-page class — it will not show up as a test failure unless the test specifically

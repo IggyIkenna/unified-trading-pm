@@ -294,3 +294,15 @@ shipped independently or these findings would still be sitting entirely undocume
     (date 2026-08-11, subject as quoted) and `git merge-base --is-ancestor` against `origin/live-defi-rollout`. This
     postdates both this doc's filing (2026-08-07) and the finalize plan's authoring (2026-08-08), so it was never in
     scope for either doc's original todo lists — noted here for whoever runs the actual reconciliation next.
+- **2026-08-15 (reconciliation, this session — evidence-only append, same governance rule as above)**: **Item 4 (the
+  `ui-testing-layers.md` doc-update note) — written.** Item 3's `backlog-collision.spec.ts` root cause (confirmed above:
+  two local-slot-only port-mismatch bugs, no async race) is now documented in
+  `/codex/06-coding-standards/ui-testing-layers.md` § "agent-orchestrator e2e: background-poller vs. fixture-data
+  interaction" as a third, distinct pattern from the two already documented there (poller-overwrite,
+  async-panel-data-fetch) — a general "propagate the slot-offset port to BOTH the spawned subprocess env AND the
+  test-runner's own `process.env`" convention, since any spec doing a direct out-of-band fetch is exposed to the same
+  class of bug. The `PlanRegenLoop`-in-mock-mode class this todo also asked to cover (item 2's `worker-chat.spec.ts`
+  fix) was already documented separately in that same codex file per batch8-002's Progress Log entry above — not
+  duplicated here. Item 1 (`deepseek-per-turn-metrics.spec.ts` + `deepseek-wallet-reconciliation.spec.ts`) remains
+  genuinely open — no re-run confirmation exists against either fix yet, so this todo cannot fully close until that
+  lands. Doc-level disposition unchanged (checkbox stays with the finalize plan per this doc's own governance rule).

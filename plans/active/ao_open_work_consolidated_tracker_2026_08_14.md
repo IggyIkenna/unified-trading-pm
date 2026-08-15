@@ -159,10 +159,20 @@ context_scope:
       before-cap-branch ordering invariant" subsection was really added — but was silently dropped by a LATER commit
       (`unified-trading-pm@9786794390`, a 71-insertion/68-deletion edit to the same file by a different session) that
       appears to have started from a stale local copy predating the addition — a live instance of this workspace's own
-      documented "stale local content overwrites, not merges" hazard. Re-added the identical section (verified against
-      the original commit's diff) at the same location, immediately before "Calibration-source contract". This is a
-      finding for whoever runs a corpus-wide staleness audit next: the SAME failure class could be silently dropping
-      other sessions' concurrent doc edits to this heavily-contended file. Source: same doc.
+      documented "stale local content overwrites, not merges" hazard. **Correction to this tracker's own earlier batch-2
+      "false-completion finding"**: that finding's remediation (re-adding the content) was right, but its
+      characterization ("never done despite the checkbox") was wrong — the edit WAS genuinely done once, then silently
+      erased by an unrelated concurrent edit; the false-completion framing should read "silently reverted," not "never
+      made." Re-added the section (merging two independently-written near-duplicate versions found mid-session — one
+      from this reconciliation, one from a concurrent peer session — into a single copy retaining the peer's fuller "why
+      the order is the whole bug" + "future refactor must preserve this order" framing plus this session's post-fix
+      measurement numbers) at the same location, immediately before "Calibration-source contract." Also flipped the
+      adjacent `[DATA] P3` measurement todo in the source doc using the same numbers (1,148 cap declarations, 8
+      `pane=working`, 17.8%→0.7%). This is a finding for whoever runs a corpus-wide staleness audit next: the SAME
+      failure class could be silently dropping other sessions' concurrent doc edits to this heavily-contended file.
+      Source: `/plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md` — both checkboxes flipped
+      there too.
+
 - [x] [REVIEW] P3. **DONE.** Decision made + recorded live: `server/models/scheduled_jobs.py:19-27` carries a dated
       `DECISION (...2026-08-04.md, 2026-08-14): KEEP "no_capacity"` — reachable only by an ad-hoc caller omitting
       `job_name`, every real timer-driven dispatch now reports `queued` instead (post `@5087f30`); kept as
@@ -323,9 +333,12 @@ before touching the source doc directly._
       (6/6 tests, zero flakes) reproduced the fix — the source doc's checkbox stays unflipped only per its own
       evidence-append-only governance rule, not because the fix is unconfirmed. Verified 2026-08-15 (reconciliation
       sweep, this session). Source: same doc.
-- [ ] [DOC] P3. Note the fix pattern in `/codex/06-coding-standards/ui-testing-layers.md`, including the
-      "PlanRegenLoop-in-mock-mode" general class, once root-caused. Now actionable — both flaky-spec root causes above
-      are confirmed. Source: same doc.
+- [x] [DOC] P3. **DONE 2026-08-15 (this session).** Added a third pattern entry (slot-offset port not propagated to the
+      test-runner's own `process.env`) to `/codex/06-coding-standards/ui-testing-layers.md` § "agent-orchestrator e2e:
+      background-poller vs. fixture-data interaction," alongside the two already-documented patterns (poller-overwrite,
+      async-panel-fetch). The `PlanRegenLoop`-in-mock-mode class was already covered separately in the same codex file
+      (batch8-002's fix) — not duplicated. Appended evidence-only note to the source doc per its own checkbox-governance
+      rule (does not flip that doc's checkbox directly — its item 1 remains open). Source: same doc.
 - [x] [REVIEW] P3. **DONE — shipped `agent-orchestrator@9cd1fa0`** (2026-08-11). `dashboard/playwright.config.ts`'s
       `serversForThisRun()`/`neededProjects()` (lines ~119-231) filters the `webServer` array to only the pair(s)
       matching the requested `--project`/positional filter — a single-project run now boots only that pair, "start
@@ -488,3 +501,17 @@ before touching the source doc directly._
   above. `l2_book` retest gate untouched (correctly blocked on its own separate `assigned_vm: NA` hold). Dashboard e2e
   deepseek-spec residual + the `free_provider_health_gate_skipped` DeepSeek-routing investigation were dispatched in
   this pass; see this doc's next edit for their outcome once that agent reports back.
+- **2026-08-15 (same extended session, operator-need triage + doc-gap closures — written concurrently with, and before
+  seeing, the "parallel implementation session" entry directly above)**: operator asked to confirm nothing else needs
+  them before dispatch. Closed 2 items directly this pass (both small, zero-judgment doc-gap fixes, done under the
+  "misleading doc → fix same turn" hard rule): wrote the missing pane-guard-ordering subsection into
+  `/codex/04-architecture/agent-orchestrator-worker-liveness.md` and flipped the adjacent measurement todo (this
+  overlapped with, and was reconciled against, the parallel session's own independent restoration of the same section —
+  see that entry above and the merged result in Track 2); wrote the `backlog-collision.spec.ts` port-mismatch pattern
+  into `/codex/06-coding-standards/ui-testing-layers.md`. **This pass's count (9 confirmed STILL open) is SUPERSEDED by
+  the parallel session's more complete count directly above — see the consolidated re-count entry immediately below for
+  the current authoritative number.** One item flagged for a quick operator read, not a hard block: Track 4's DB-pool
+  right-sizing item (`[BACKEND] P3`) is a genuine two-option design fork (lower `pool_timeout` vs. batch per-slot
+  git-status writes) with no data-derivable tiebreaker — an AO worker can pick the lower-blast-radius default
+  (`pool_timeout`) and document the tradeoff rather than wait on a ruling, per finding-U discipline, unless the operator
+  wants to just call it directly.

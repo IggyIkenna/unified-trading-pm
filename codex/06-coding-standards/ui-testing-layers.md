@@ -882,6 +882,31 @@ Fix direction decided (operator-authorized, source:
 `/plans/active/issues/e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md` todo 2 ✅): disable
 `DeepSeekUsagePoller` in the e2e backend. Implementation tracked in that doc's todo 3.
 
+### A third, distinct pattern: slot-offset port not propagated to the test-runner's OWN `process.env`
+
+A spec that looks like the two races above but isn't one at all: `backlog-collision.spec.ts` intermittently failed with
+"Failed to fetch" and was originally hypothesized as an async remint→confirm race. Root cause was two
+**local-slot-only** port-mismatch bugs, unrelated to poller overwrite or async timing:
+
+1. `run-e2e-backend-collision.sh` pointed `ORCHESTRATOR_BACKENDS` at a checked-in, hardcoded-port
+   `backends.e2e.collision.json` fixture — `playwright.config.ts` offsets every port per `.tabs/N` slot, so on any
+   non-zero slot the dashboard resolved to the wrong backend and every request failed.
+2. The spec's own out-of-band fetch (outside the app's configured API client) read
+   `process.env.E2E_COLLISION_BACKEND_PORT` in the **test-runner process** — but `playwright.config.ts` only passed the
+   computed port into the **spawned backend subprocess's** env, never into its own `process.env`, so the direct fetch
+   silently targeted the wrong port too.
+
+**Fix**: generate the backends file at runtime with the actual slot-offset-aware port (mirroring
+`run-e2e-backend-tier.sh`'s established pattern; the static fixture was deleted), and set the port into the config's
+**main process** `process.env` (which worker processes inherit) so any spec doing a direct out-of-band fetch sees the
+same value the spawned backend actually bound. 5/5 clean isolated re-runs after the fix — no async race ever existed.
+`agent-orchestrator@1e2ecac`+`3ba4ba4`, `ao_satellite_ao_dispatch_batch8_2026_08_08` todo 3.
+
+**General class**: any e2e spec that does a direct fetch/request outside the app's own configured API client, in a
+slot-offset-aware local checkout, needs its target port propagated to BOTH the spawned subprocess env AND the
+test-runner's own `process.env` — propagating to only one is a silent, CI-invisible failure (CI runs un-tabbed at
+`SLOT_OFFSET=0`, so this class of bug is undetectable there).
+
 ---
 
 ## References
