@@ -127,3 +127,15 @@ shared host, per the memory-bounding + heavy-I/O HARD RULES.
       `sports_taxonomy_p3_consumers_2026_08_08`, corrected above) — a re-run after that plan's Phase 0 lands may be
       needed if fresh `trades` rows reappear (same caveat already accepted for the sibling tick-bucket restamp,
       `manifest_swap_trades_to_odds_2026_08_12.py`).
+- [ ] [DATA] P3. **Update UAC's stale `data_type="trades"` canonical declaration for sports odds.**
+      `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1565-1591`'s
+      `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[("sports","odds")]` still declares `data_type="trades"` as the
+      CONFIRMED canonical value (with a comment describing a 2026-07-27 reversion that restored lowercase `"trades"` as
+      "the sole canonical form again"), directly contradicting the 2026-08-08 operator ruling +
+      2026-08-12/13/14/15-executed `trades`->`odds` restamp migration
+      (`/plans/active/sports_taxonomy_p2_migration_2026_08_08.md`). Confirmed (2026-08-15 session,
+      `sports_p2_raw_tick_live_writer_still_emits_trades_2026_08_15.md`) this table is NOT consulted anywhere in the
+      live write/sentinel path (0 references in
+      `market-tick-data-service/market_tick_data_service/engine/orchestrator/`), so it does not affect write-path
+      correctness today, but it is a stale doc/registry entry that will mislead the next reader who trusts it as the
+      canonical source. (repo: unified-api-contracts)

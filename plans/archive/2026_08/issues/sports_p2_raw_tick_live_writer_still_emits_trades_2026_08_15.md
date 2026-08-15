@@ -12,7 +12,7 @@ summary: >-
   historical corpus but never touched this live write path, so it keeps writing new `trades`-labeled objects (+
   presumably matching manifest rows via the `shard_counts[(bm_str, "trades", league_str, "odds", fixture_str)]`
   accumulator at the same lines) every day the writer stays unfixed.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -36,7 +36,7 @@ source:
     "sports_taxonomy_p2_migration_2026_08_08.md 'Four-surface reconciliation' REVIEW todo, live census 2026-08-15
     (slot-9)",
   ]
-resolved_by:
+resolved_by: slot-31, 2026-08-15
 locked_by:
 locked_since:
 drift_direction: advance-code
@@ -44,6 +44,10 @@ depends_on: []
 ---
 
 # Sports raw-tick live writer still emits `data_type=trades`
+
+> **ARCHIVED (2026-08-15) — all 4 todos done, unlocked.** Live writer fixed at both the code (accumulator) and
+> deployment-parameter (shard-spec) level; the historical + orphaned-shard residuals both re-stamped to `odds` with
+> independent verification showing 0 `trades` rows remaining across every manifest surface. See Progress Log below.
 
 ## What I found
 
@@ -169,7 +173,7 @@ rather than a dedicated VM launch, per proportionality.
       confirmed via direct per-VM manifest-shard read: 325/325 rows `data_type=odds`, growing clean. The live writer is
       now genuinely fixed at the deployment-parameter level, not just the code level.
 
-- [ ] [SCRIPT] P2. **Sweep the 1,604 `trades` rows orphaned in the deleted mislabeled VM's per-VM manifest shard**
+- [x] ✅ [SCRIPT] P2. **Sweep the 1,604 `trades` rows orphaned in the deleted mislabeled VM's per-VM manifest shard**
       (`_index/per_vm/mtds-live-sports-odds-api-trades-20260815-111158.parquet`, all `date=2026-08-15`) once the sports
       asset_group's manifest consolidator (hourly Cloud Scheduler cron,
       `/codex/05-infrastructure/manifest-consolidator-ssot.md`) merges that orphaned shard into the durable surfaces —
@@ -177,11 +181,21 @@ rather than a dedicated VM launch, per proportionality.
       objects were ALREADY clean (0 residual, 57/57 `already_present_verified` under `data_type=odds/` paths) — the gap
       is purely the transient per-VM shard, exactly the "KNOWN PHASED-STATE CAVEAT"
       `manifest_swap_trades_to_odds_2026_08_12.py`'s own docstring anticipates ("re-consolidation reintroduces trades
-      rows... run this swap again"). A bounded ~75min background monitor (slot-19, this session) is polling
-      `manifest_swap_trades_to_odds_2026_08_12.py`'s dry-run output and will auto-apply + verify once the consolidator
-      absorbs the shard; if it times out before that happens, re-run
-      `python scripts/sports/manifest_swap_trades_to_odds_2026_08_12.py --apply-prod --confirm-prod-write` by hand and
-      confirm 0 `trades` remaining.
+      rows... run this swap again"). **DONE 2026-08-15 (slot-31)**: no pre-existing background monitor was found live in
+      this session (prior slot-19 monitor, if any, did not survive to this dispatch); manually triggered the sports
+      `market-data` Cloud Run consolidator
+      (`gcloud run jobs execute uts-prod-manifest-consolidator-market-data-sports     --region asia-northeast1 --wait`,
+      per this codex SSOT's own "manual `gcloud run jobs execute` invocations during operator interventions are safe
+      (CAS on canonical blob prevents double-write)" invariant) rather than wait up to an hour for the next cron cycle —
+      completed clean in 5m21s. Post-consolidation dry-run confirmed the orphaned shard's 1,604 rows had landed in the
+      merged index (`rows=6,156,628`, `trades to relabel=1,604`; seed unaffected). Ran
+      `manifest_swap_trades_to_odds_2026_08_12.py --apply-prod --confirm-prod-write`: first attempt killed (exit 137,
+      host contention — load avg ~27, matches this same issue's earlier-documented kill pattern; verified no corruption
+      via a fresh dry-run still showing 1,604 pending, snapshot-first ordering held). Retried in background: succeeded
+      clean (`merged: base=6,156,628 relabeled=1,604 final_rows=6,156,628`, VERIFY 0 remaining; seed unaffected, VERIFY
+      0 remaining; exit 0). **Final independent verification**: fresh dry-run shows **0 `data_type=trades` rows to
+      relabel on both surfaces** — the orphaned shard is fully swept. This closes the last open todo in this issue; all
+      four todos (P0 code fix, P1 restamp, P0 OPERATOR redeploy, P2 sweep) are now done.
 
 ## Progress Log
 
