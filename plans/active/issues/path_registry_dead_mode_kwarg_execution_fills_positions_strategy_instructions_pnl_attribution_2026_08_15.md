@@ -118,15 +118,25 @@ data from multiple modes), not a bounded mechanical fix:
       `domain_adapter.py`'s callers already use vs. the fuller `PipelineMode` enum) and whether `unified-trading-api`'s
       already-mode-partitioned `live_service.py` template should become the canonical shape instead of the
       `PATH_REGISTRY` one.
-- [ ] [CODE] P1. **Once the above is decided**, add the `{mode}` placeholder to the 4 affected `path_template`s in
+- [ ] [CODE] P1. **Once the above is decided**, add the `{mode}` placeholder to the affected `path_template`s in
       `unified-trading-library/unified_trading_library/config_interface/paths/registry.py` (`execution_fills`,
-      `positions`, `strategy_instructions`, `pnl_attribution`), add `mode` to each `partition_keys` list, and verify
-      every writer/reader call site (`execution-service/execution_service/results/save_operations.py`,
-      `strategy-service/strategy_service/pnl/adapters/domain_adapter.py`, and any others a fresh grep turns up) still
+      `positions`, `strategy_instructions`, `pnl_attribution`, and **`strategy_orders`** — a 5th live occurrence found
+      during todo 3's hardening pass: `strategy-service/strategy_service/adapters/domain_adapter.py:68`'s
+      `write_strategy_orders_path()` also passes `mode=` into a template with no `{mode}` placeholder; not in this doc's
+      original 4-dataset survey), add `mode` to each `partition_keys` list, and verify every writer/reader call site
+      (`execution-service/execution_service/results/save_operations.py`,
+      `strategy-service/strategy_service/pnl/adapters/domain_adapter.py`,
+      `strategy-service/strategy_service/adapters/domain_adapter.py`, and any others a fresh grep turns up) still
       resolves the SAME path at both ends (byte-parity, per `domain_adapter.py`'s own existing "BYTE-PARITY TWIN"
-      comments on this exact risk).
-- [ ] [CODE] P1. **Harden `build_path()` itself** to fail loudly instead of silently dropping unconsumed kwargs (e.g.
-      assert the passed keys match `spec.partition_keys` exactly, or use a stricter formatter that raises on unused
-      arguments) — this exact bug class (a template silently missing a placeholder a caller already passes) has now
-      recurred twice (`raw_tick_data` 2026-07-28, this one). Fixing it at the shared helper stops future recurrences
-      fleet-wide instead of relying on per-dataset manual audits.
+      comments on this exact risk). Once a dataset's placeholder lands, remove it from `_MODE_KWARG_PENDING_MIGRATION`
+      in `registry.py` (added by todo 3) so `build_path()`'s hardening covers it too.
+- [x] ✅ [CODE] P1. **Harden `build_path()` itself** to fail loudly instead of silently dropping unconsumed kwargs —
+      unified-trading-library@3313e3f441. `build_path()` now parses `path_template`'s actual placeholders (via
+      `string.Formatter`) and raises `ValueError` on any passed kwarg the template doesn't consume, except two
+      documented carve-outs: `category` (always harmlessly forwarded by `build_full_uri()`) and `mode` for the 5
+      datasets above still pending the `{mode}` migration (todos 1/2) — hardening those 5 immediately would turn today's
+      silent path collision into a hard crash on live writes/reads ahead of that migration landing, which is a worse
+      regression than the bug this hardening targets. Added regression tests
+      (`test_build_path_rejects_unconsumed_kwargs`,
+      `test_build_path_mode_kwarg_carve_out_for_pending_migration_datasets`) in
+      `tests/config_interface/unit/test_paths_registry_smoke.py`. QG green (316s), sentinel verified on origin.
