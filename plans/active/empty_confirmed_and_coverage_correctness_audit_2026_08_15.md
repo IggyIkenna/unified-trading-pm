@@ -338,12 +338,12 @@ data that's actually needed. This plan gets the evidence first.
       operational.
 
       **DONE 2026-08-15 (slot-28, backend_engineer) — same operation as
-              `plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s "Re-run rebuild_tradfi_manifest.py..." todo
-              (dispatched separately, resolved here concurrently — see that plan for full evidence).** Full-corpus rebuild
-              (`canonical-migration-tradfi-manifest-rebuild-20260815-061239`, 2020-01-01..2026-08-15, `--chunk-days 30`)
-              completed exit_code=0, 1,397,013 shards / 81 chunks. Live manifest recount confirms 0
-              `instrument_type=FUTURE` rows with populated `underlying` + blank `instrument_id` remain (checked both
-              CME-scoped and unscoped across all venues).
+                  `plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s "Re-run rebuild_tradfi_manifest.py..." todo
+                  (dispatched separately, resolved here concurrently — see that plan for full evidence).** Full-corpus rebuild
+                  (`canonical-migration-tradfi-manifest-rebuild-20260815-061239`, 2020-01-01..2026-08-15, `--chunk-days 30`)
+                  completed exit_code=0, 1,397,013 shards / 81 chunks. Live manifest recount confirms 0
+                  `instrument_type=FUTURE` rows with populated `underlying` + blank `instrument_id` remain (checked both
+                  CME-scoped and unscoped across all venues).
 
 - [x] ✅ [DATA] P2. Fix cefi's legacy blank-instrument-id FUTURE bucket (~3,299 captured rows, BYBIT/DERIBIT) — add
       `"future"` to `_BUNDLE_GRAIN_EXCLUDED` or route it to `futures_chain` at `rebuild_cefi_manifest.py:454` (mirrors
@@ -457,3 +457,28 @@ data that's actually needed. This plan gets the evidence first.
   un-suppress, the MTDS UX fix, and this doc itself) is staged locally, verified only by syntax-check + careful manual
   review (not a live `quality-gates.sh`/Playwright run) due to sustained host RAM contention across this entire pass —
   retry is the very next action after this entry lands.
+- **2026-08-15 (same session, retry-shipping pass)**: `deployment-ui` (error_reason UI, drilldown un-suppress, MTDS
+  "All" pill UX fix) — ✅ landed `deployment-ui@080ceb8c39`, content-verified against `origin/live-defi-rollout`. Hit a
+  genuine (not host-contention) global branch-coverage-threshold gate failure on the first attempt (63.89% vs the 64%
+  floor) — root-caused to two new conditional branches in `HonestCoverageCard.tsx`'s error_reason-split render block
+  (the `referenceOnlyPct > 0` guard and the amber-vs-muted `unexplainedPct` ternary) that were exercised only by a
+  Playwright smoke spec, which doesn't feed this repo's Vitest coverage report at all — added 2 new unit tests to
+  `HonestCoverageCard.test.tsx` covering both branch directions (76.52% on that file, up from 70.43%), which cleared the
+  global floor on retry. Lesson for future UI work here: a Playwright-only assertion of new conditional JSX does NOT
+  satisfy this repo's Vitest branch-coverage gate — every new branch needs a same-repo Vitest unit-test case too, not
+  just an e2e/smoke one. `market-tick-data-service` (14 files) and `instruments-service` (2 files) remain unshipped:
+  both are blocked on a **foreign, currently-live** cross-repo conflict, not a bug in either diff — another concurrent
+  session (slot-6, `backend_engineer`, tracked in
+  `plans/active/issues/tradfi_instrument_type_lowercase_residual_381k_2026_08_15.md`) has been actively flip-flopping
+  `unified-trading-library`'s canonical "combo" instrument-type casing today (3 commits: add `combo_chain` dispatch →
+  stop-excluding `combo` from uppercase canon → revert that exclusion-removal, the last one local + unpushed as of this
+  entry, `unified-trading-library@64af7a4e`). Both MTDS's
+  `tests/unit/scripts/test_migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py` /
+  `tests/unit/test_venue_fetch_cefi_manifest_canonicalization.py` and instruments-service's
+  `tests/unit/scripts/test_enumerate_expected_universe_v2.py` (4 tests) now assert the now-reverted "combo → COMBO"
+  behavior and fail deterministically (confirmed by reproducing in isolation, not just full-suite xdist noise; MTDS's
+  first identical-twice failure was initially mis-diagnosed as xdist test-order pollution before this deeper root cause
+  surfaced). Neither this diff's own files nor any foreign-owned file were touched — per per-tab-worktree discipline
+  this is the other session's active WIP to land, not mine to patch. Waiting for that conflict to settle (their commit
+  to land + push, or their test/canon state to otherwise stabilize) before retrying either ship; both diffs are
+  otherwise complete and were QG-clean before this cross-repo drift appeared mid-session.
