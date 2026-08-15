@@ -152,8 +152,16 @@ source: >-
       `scripts/cefi/equity_perp_funding_basis_scan_daily.sh` (mirrors `scripts/defi/daily_positioning_dump.sh`'s cron
       pattern, 00:15 UTC). 15 new unit tests (`tests/unit/test_equity_perp_funding_basis_scan.py`), `quality-gates.sh`
       green.
-- [ ] [CODE] P2. Backfill the 3 KRX stocks via guardrailed Yahoo (Phase 5, deployment-service +
-      market-tick-data-service) Source: `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
+- [x] ✅ [CODE] P2. **Daily leg backfilled; 1h/15m/1m intraday leg is superseded by an operator ruling recorded in
+      `/plans/archive/issues/krx_intraday_ohlcv_registry_vs_adapter_mismatch_2026_07_12.md` (2026-07-12, KRX narrowed to
+      ohlcv_24h-only, predates this todo's own 2026-06-24 authoring).** (2026-08-15, slot-29·backend_engineer)
+      `market_tick_data_service/adapters/_umi_yahoo.py::route_yahoo_tradfi` hard-blocks any non-ohlcv_24h KRX request by
+      design — per that same archived doc, operator chose "narrow the registry" over "build intraday", shipped
+      `unified-api-contracts@a2751f36`; manifest confirms zero `captured` rows for KRX 1h/15m/1m fleet-wide. Re-launched
+      the existing daily launcher (`deployment-service/scripts/vm/launch-tradfi-bf-krx-equities-ohlcv-24h.sh`) for all 8
+      year-shards (2019-2026) to close the real `attempted_failed`/`expected_unattempted` gap in the already-partially-
+      captured daily data — all 8 VMs confirmed STARTED. Full diagnosis + a new residual-finding todo recorded in the
+      source doc. Source: `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
 - [x] ✅ [CODE] P2. Databento L-floor boundary PRECISION probe + update LEVEL_MAX_LOOKBACK_DAYS (Phase 5,
       unified-api-contracts) **CLOSED — already-satisfied (2026-08-15).** This exact probe already shipped
       **unified-api-contracts@92a418e5** (2026-08-09, `sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 4, prior

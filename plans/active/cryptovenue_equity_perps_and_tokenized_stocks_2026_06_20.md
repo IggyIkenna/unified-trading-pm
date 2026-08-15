@@ -220,10 +220,13 @@ context (probed limits, file surfaces, conventions) is in the Progress Log so a 
       KRX bases to `TRADFI_EQUITY_PERP_BASIS_UNIVERSE`). Their Binance perps are already cefi-MVP → both legs MVP → the
       tradfi-perp superset closes at 103/103. Repo: unified-api-contracts. — unified-api-contracts@844c5ee6b
       (tradfi_ticker_universe.py + tradfi_instrument_universe.py: 005930/000660/005380 .KS entries).
-- [ ] [SCRIPT] P1. **Backfill the 3 KRX stocks via guardrailed Yahoo (operator ladder).** Per stock: 1d since 2019-01-01
-      (full) + 1h 730d + 15m 89d(range=60d) + 1m 28d(7d-chunked). FX→yahoo wave-launcher is the precedent for a
-      yahoo-source backfill. Verify rows captured + manifest reflects them (KRX shard). Repo: deployment-service
-      (launcher) + market-tick-data-service.
+- [x] ✅ [SCRIPT] P1. **Daily leg backfilled; 1h/15m/1m leg SUPERSEDED** by operator ruling
+      `plans/archive/issues/krx_intraday_ohlcv_registry_vs_adapter_mismatch_2026_07_12.md` (narrowed KRX to
+      `ohlcv_24h`-ONLY, `unified-api-contracts@a2751f36`; `route_yahoo_tradfi` hard-empties non-`ohlcv_24h` KRX by
+      design; zero `captured` 15m/1h/1m rows; "FX→yahoo precedent" stale too, DESCOPED 2026-06-30). Re-launched the
+      idempotent KRX launcher, all 8 year-shards, all confirmed STARTED (2026-08-15, slot-29).
+- [ ] [DIAG] P3. KRX `ohlcv_24h` `expected_unattempted` ~1095-1099/year anomaly (possible double-count) — MTDS/UTL,
+      found 2026-08-15.
 - [x] ✅ [SCRIPT] P1. **CENTRALISED data-driven venue/source/adapter/MVP parity gate (the general guard).** ONE
       parametrised gate (UAC contract test + a `check_*` wired into `base-*.sh` where cross-repo) that ITERATES the
       canonical registries: every venue in the universe/MVP → assert present in IS-registry + MTDS-routing + manifest
