@@ -62,8 +62,8 @@ source: >-
 
 # AO satellite AO batch 18
 
-> **`status: draft`** — pending operator approval, same convention as batch5-17: flip to `active` to dispatch.
-> **`assigned_vm: planning` / `execution_scope: orchestrator-agent`** once approved.
+> **`status: active`** — operator-approved, same convention as batch5-17. **`assigned_vm: planning` /
+> `execution_scope: orchestrator-agent`**.
 
 ## Why this plan exists
 
