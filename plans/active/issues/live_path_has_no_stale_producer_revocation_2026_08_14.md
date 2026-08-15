@@ -172,20 +172,34 @@ posed (hold vs flatten) — it is conditional on whether we still know our posit
 This issue stays open for the parts the plan does not cover: the dependency-health chain's three-level inertness, and
 the launcher-gate guardrail question.
 
-## Original proposed todos (superseded by the plan above)
+## Follow-up todos
 
-- [ ] [CODE] P0. Decide the intended live behaviour when a producer goes silent — hold new orders only, or also flatten
-      / hand existing exposure to a supervisor. This is a risk decision, not an engineering one, and everything below
-      depends on it. Repo: unified-trading-pm (decision), then execution-service.
-- [ ] [CODE] P0. Add producer-liveness gating to the execution path: a last-instruction-received clock per
-      strategy/client with a declared SLA, checked where `assert_market_data_fresh()` is checked. Repo:
-      execution-service.
-- [ ] [CODE] P0. Wire `dependency_health_policy` to an actuator rather than only to alerts — at minimum, an SEV0 breach
-      on a registered internal service should reach the kill-switch bus at its declared scope. Repo: alerting-service.
+Items 1-2 below (the risk decision + producer-liveness gating) are **superseded** by
+`/plans/active/producer_silence_flatten_protocol_2026_08_14.md` (15 todos) — do not redo them here. Items 3-5 are the
+genuinely open remainder this issue is tracking (the dependency-health chain's three-level inertness + its doc claim);
+none of them appear as todos in that plan.
+
+- [x] ~~Decide the intended live behaviour when a producer goes silent~~ — SUPERSEDED, resolved by the operator
+      2026-08-14 into `/plans/active/producer_silence_flatten_protocol_2026_08_14.md`.
+- [x] ~~Add producer-liveness gating to the execution path~~ — SUPERSEDED, covered by the same plan.
+- [ ] [CODE] P0. Wire `dependency_health_policy` to an actuator rather than only to alerts. Sequencing matters (see
+      "WORSE THAN 'ALERTS ONLY'" above — each step is inert without the one before it): (a) inject a real `probe_fn` for
+      at least execution-service/strategy-service so a probe result exists at all (today every registered dependency
+      fail-opens to healthy forever), (b) register our own services in the policy (currently 0/27 entries are internal),
+      (c) only then wire an SEV0 breach on a registered internal service to reach the kill-switch bus at its declared
+      scope. Repo: alerting-service.
 - [ ] [TEST] P0. An anti-inertness guard for the live path, mirroring the batch one: assert the dependency-health policy
-      has a non-test consumer that changes behaviour. Repo: alerting-service.
+      has a non-test consumer that changes behaviour (not just logs/pages) — so a future regression back to alerts-only
+      fails CI instead of silently reverting to today's inert state. Repo: alerting-service.
 - [ ] [DOC] P1. `/codex/04-architecture/dependency-health-policy.md` reads as though the policy governs behaviour; it
-      governs alerting only. State that explicitly until an actuator exists. Repo: unified-trading-pm.
+      governs alerting only (and today, per the three-level-inertness finding above, does not even reliably alert —
+      every built-in probe fail-opens). State that explicitly until an actuator + real probes exist. Repo:
+      unified-trading-pm.
+- [ ] [OPERATOR] P1. Decide the lightweight-launcher admission-gate question (see "Admission-gate coverage for the
+      lightweight launcher path" above) — one of: migrate the ~158 `launcher_common.sh` launchers onto
+      `vm-exec-with-gcs-tee.sh`; grant a narrow documented exception to the cloud-CLI-in-startup-script guardrail for a
+      single-object hold-marker read; or accept the lightweight path as deliberately ungated and record it in the codex.
+      Blocked on this decision, not further investigation.
 
 ## Evidence
 
