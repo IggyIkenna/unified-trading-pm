@@ -62,10 +62,21 @@ context_scope:
     deployment-service/deployment_service/data_pipeline_monitors/escalation.py,
     deployment-service/deployment_service/data_pipeline_monitors/escalation_dedup.py,
     deployment-service/scripts/wave_launcher.py,
+    deployment-service/scripts/vm/vm_zombie_watchdog.py,
+    deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
   ]
 ---
 
 # mdps-* fleet duplicate-relaunch explosion — 676 VMs against an expected ~28
+
+> **🔴 SECOND WAVE, 2026-08-15 (later same day) — see "Second wave" section below.** A SEPARATE, independently-
+> discovered bug (`vm_zombie_watchdog.py`'s EXIT_STATUS check being content-blind) was actively mass-killing healthy,
+> actively-working VMs fleet-wide (320 distinct VMs over ~10h, 07:39-17:29 UTC) at the time this was found. Strong
+> correlating evidence (below) indicates this bug was very likely the ACTUAL trigger — not genuine SPOT reclaim — behind
+> at least the "four independent mdps-cefi-{2019,2020,2021,2022} preemptions" this doc's ORIGINAL section below cites as
+> the incident's proximate cause. Read the Second-wave section before trusting the "SPOT reclaim" framing in the text
+> below it.
 
 ## What happened (timeline)
 
@@ -195,6 +206,111 @@ radius for THIS incident (`DEFAULT_WORKER_STALL_SAFE_LAUNCHERS` — the only lau
 — does not include `launch-mdps-sharded-backfill.sh`), but the same class of bug given the right trigger. Not fixed here
 to keep this ship narrowly scoped to the proven incident; tracked below.
 
+## Second wave (2026-08-15, later same day): vm_zombie_watchdog false-kill bug — likely the TRUE trigger
+
+Dispatched to investigate a SEPARATE, unrelated-looking symptom: a manually-launched on-demand (non-preemptible) CeFi
+liquidations backfill VM (`launch-mdps-backfill-vm.sh`, NOT `launch-mdps-sharded-backfill.sh`) was deleted TWICE within
+hours, each time actively processing real work with zero errors. Root-caused via the Compute Engine audit log
+(`protoPayload.methodName="v1.compute.instances.delete"`) to `uts-prd-sa` from IP `34.104.218.77`, and via that IP's
+serial-console log trail to the standalone `vm-zombie-watchdog-20260810-163005` GCE VM
+(`scripts/vm/vm_zombie_watchdog.py`) — a completely separate mechanism from `uts-prod-dp-exit-code-monitor-cron`
+(confirmed PAUSED at `2026-08-15T15:45:15Z`, i.e. AFTER the first kill and BEFORE the second — ruling the cron out
+directly). Serial console proof: `KILLED mdps-backfill-cefi-20260815-155830 (...) reason=zombie_finished_not_shutdown`.
+
+### Root cause
+
+A same-day commit, `599b4b81` (`fix(vm): stamp RUNNING sentinel at boot in vm-exec-with-gcs-tee.sh...`, landed 09:41
+UTC), ported an existing `launcher_common.sh` fix (2026-07-13, `lc_log_upload_trap_block`) into
+`vm-exec-with-gcs-tee.sh`: both now stamp a non-terminal `"RUNNING"` sentinel into the `EXIT_STATUS` GCS blob
+immediately at boot, BEFORE the workload starts, so a same-named relaunch's `read_terminal_exit_code()` never misreads a
+stale prior run's terminal exit code (`"RUNNING"` fails `int()` parse → correctly falls through to `None`). Necessary
+and correct for that reader.
+
+`vm_zombie_watchdog.py`'s `_evaluate_vm()` EXIT_STATUS check, however, is content-BLIND — it only checks blob
+EXISTENCE + AGE (`exit_status_age > finished_grace`, default 10min) and treats that alone as proof the workload finished
+and failed to self-delete (`zombie_finished_not_shutdown`). Because the RUNNING sentinel is written once near boot and
+only overwritten at TRUE completion, its age grows from boot time, not from any real completion — so ANY VM using either
+wrapper, whose job runs longer than `min_age`(15) + `finished_grace`(10) ≈ 15-25 minutes, gets killed while genuinely
+still working, unconditionally.
+
+**Confirmed live**, this was not narrowly scoped to the 2 CeFi VMs discovered first. A full-day Cloud Logging sweep
+(`textPayload:"reason=zombie_finished_not_shutdown"`, freshness=1d) found **320 distinct VMs killed, 07:39-17:29 UTC** —
+spanning `mdps-cefi` (192), `instr-backfill-defi-pchk-*` (144, many DeFi venues: solend/marginfi/jito/
+raydium/orca/marinade/kamino/aave-v3-linea), `mdps-tradfi` (106), `mdps-sports` (76), `mdps-defi` (74), `tradfi-bf`
+(32), `mtds-oracle-prices-backfill` (12), plus smaller counts across `mdps-backfill-cefi`, `prediction-pipeline`,
+`mtds-live`, `mtds-backfill`, `cefi-queue`, `cefi-binance`. At the moment of discovery the watchdog was killing a VM
+roughly every 60-90 seconds, live, in real time (last observed kill 17:29:45 UTC, ~1 minute before this investigation
+stopped the watchdog VM — see Immediate mitigation below).
+
+**Kills started 07:39 UTC — well before `599b4b81` (09:41 UTC)**, meaning the earliest kills that day cannot be
+explained by the `vm-exec-with-gcs-tee.sh` port; they are consistent with the OLDER `lc_log_upload_trap_block` sentinel
+(live since 2026-07-13), which has apparently been causing the SAME class of false kill for over a month for any
+inline-startup-script launcher whose job runs past the grace window — this bug's true historical blast radius is almost
+certainly larger than one day and was not scoped further in this pass (see residual todo below).
+
+### Correlation with THIS doc's own "Bug 1" narrative — likely the actual trigger
+
+This doc's ORIGINAL text above cites, as confirmed live evidence for the explosion: _"four independent
+`mdps-cefi-{2019,2020,2021,2022}-*` VMs each independently logged 'preempted (SPOT reclaim) — dispatching a
+preemption-aware relaunch...' within a ~30-minute window ~14:00-14:30 UTC."_
+
+The full-day zombie-kill sweep shows, in that EXACT 14:00-14:30 UTC window, the watchdog killing `mdps-cefi-2019-*`,
+`mdps-cefi-2020-*`, `mdps-cefi-2021-*`, and `mdps-cefi-2022-*` VMs via `reason=zombie_finished_not_shutdown` roughly
+once per minute, PER YEAR, continuously (e.g. `mdps-cefi-2019- 20260815-120236` killed 13:59:40Z,
+`mdps-cefi-2020-20260815-120236` killed 14:08:00Z, `mdps-cefi-2021-20260815- 120236` killed 14:15:54Z,
+`mdps-cefi-2022-20260815-120941` killed 14:23:55Z, and many more before/after — not an isolated four-VM event, a
+sustained pattern). An earlier, separate four-VM cluster of the identical shape (all 4 years, run-ts `20260815-100208`,
+~3 minutes apart) appears at 10:24-10:27 UTC too.
+
+The exit-code-monitor's classifier has no way to distinguish "watchdog force-deleted this VM" from "GCE preempted it" —
+both manifest identically as the VM vanishing/going TERMINATED with no clean EXIT_STATUS. It is very likely that at
+least some, plausibly most, of what the earlier session's Cloud Run Job log query read as "preempted (SPOT reclaim)" was
+actually this watchdog bug's own kill, misclassified. If so, the causal chain was a SELF-SUSTAINING LOOP, not four
+isolated events: watchdog false-kills a batch of VMs → (pre-Bug1-fix) the unscoped relaunch fans out to ~28 VMs → ~20-25
+minutes later, any of THOSE that ran long enough get false-killed too → repeat. That fully explains sustained growth to
+676 VMs over hours far better than four isolated preemptions would. This is offered as STRONG circumstantial correlation
+(timing + VM-identity match is exact), not 100%-proven causation — the original session's own log query text ("preempted
+(SPOT reclaim)") was not re-derived by this investigation from the raw Cloud Run Job source event, only the watchdog's
+own kill log was. Bug 1 and Bug 2's fixes (unscoped-launcher CLI scoping + cell-level dedup) remain necessary and
+correct regardless of which of the two triggers actually fired first — they close the AMPLIFICATION step either way.
+
+### The fix
+
+`deployment-service/scripts/vm/vm_zombie_watchdog.py`: added `_read_exit_status_terminal_code()`, which downloads and
+`int()`-parses the EXIT_STATUS blob's CONTENT (mirroring `read_terminal_exit_code()`'s own contract in `_gcs_tail.py`)
+before treating an aged blob as completion proof. `"RUNNING"` (or any unparseable content, or a content-read failure —
+fail-safe, never zombie on an undetermined read) now falls through to the heartbeat/shard checks instead of an immediate
+kill; a genuinely terminal integer exit code (real completion, self-delete failed) still kills correctly — the fix is
+scoped to the false-positive, not a blanket disable. Regression tests added in `tests/unit/test_vm_zombie_watchdog.py`
+(`TestReadExitStatusTerminalCode`, `TestEvaluateVmExitStatusContentAware`).
+
+### Immediate mitigation (this session, before the fix could reach the live watchdog process)
+
+The watchdog VM fetches its script from GCS ONCE at boot (`launch-vm-zombie-watchdog.sh`'s `LOOP_CMD`:
+`gsutil cp ... /tmp/watchdog.py` then `while true; do python3 /tmp/watchdog.py ...; sleep 300; done`) — it does NOT
+re-fetch per cycle, so shipping the code fix alone does not stop the live process from continuing to kill VMs. Given the
+confirmed ACTIVE, ONGOING damage (a kill roughly every 60-90s at time of discovery) to real, in-flight backfill
+campaigns, this session:
+
+1. Applied `keep=true` label to the then-currently-running, in-danger `mdps-backfill-cefi-20260815-181733` (age ~10min
+   at label time, just under the danger window) — the sanctioned protective mechanism this same file's own docstring
+   documents for exactly this situation.
+2. STOPPED `vm-zombie-watchdog-20260810-163005` (`gcloud compute instances stop`, not delete — reversible) once the
+   scale of active ongoing damage was confirmed, rather than wait for a full relaunch-with-fix cycle. This trades a
+   temporary (minutes) loss of genuine-zombie protection fleet-wide against continuing, confirmed, active destruction of
+   real work — judged the correct trade given the evidence. See Progress Log for the fixed watchdog's relaunch +
+   old-instance retirement outcome.
+
+### Scope NOT closed by this pass (tracked below)
+
+- The ~320 VMs killed today were NOT auto-relaunched (`uts-prod-dp-exit-code-monitor-cron` has been PAUSED since
+  15:45:15Z per this doc's own earlier decision, and many kills predate that anyway) — every one of those killed
+  campaigns is a genuine, un-recovered data-capture gap until an operator reviews and relaunches as needed. This is
+  beyond what a single investigation pass can safely bulk-remediate (320 separate launch decisions, several asset
+  groups) — tracked as an `[OPERATOR]` todo below, not auto-relaunched by this session.
+- The `lc_log_upload_trap_block` sentinel (2026-07-13) predates today — this same false-kill class may have been live
+  for over a month for launchers using that wrapper. Not historically scoped beyond today's 1-day sweep.
+
 ## Todos
 
 - [x] [SCRIPT] P0. Root-cause the duplicate-relaunch explosion — confirmed both the CLI-arg-scoping gap
@@ -243,6 +359,44 @@ to keep this ship narrowly scoped to the proven incident; tracked below.
       2026-08-10 fix, currently zero-blast-radius for this incident (no MDPS launcher is in
       `DEFAULT_WORKER_STALL_SAFE_LAUNCHERS`) but worth closing proactively. Migrate it to `ShardedState` mirroring
       `RelaunchBackfillVm`/`RelaunchPreemptedVm`'s pattern.
+
+### Second-wave todos (vm_zombie_watchdog false-kill, added 2026-08-15 later same day)
+
+- [x] [SCRIPT] P0. Root-cause the CeFi liquidations VM double-deletion via the Compute Engine audit log +
+      `vm-zombie-watchdog-20260810-163005`'s serial-console trail — confirmed `reason=zombie_finished_not_shutdown`, a
+      content-blind EXIT_STATUS-age check misfiring on the `"RUNNING"` boot sentinel `599b4b81`/`launcher_common.sh`
+      (2026-07-13) both stamp.
+- [x] [SCRIPT] P0. Fix `vm_zombie_watchdog.py`'s `_evaluate_vm()` to be content-aware
+      (`_read_exit_status_terminal_code()`) before treating an aged EXIT_STATUS blob as completion proof; add regression
+      tests (`TestReadExitStatusTerminalCode`, `TestEvaluateVmExitStatusContentAware`).
+- [x] [SCRIPT] P0. Ship via `quality-gates.sh` green → `quickmerge --agent`. See Progress Log for SHA.
+- [x] [SCRIPT] P0. Immediate mitigation while the fix propagates: `keep=true` label on the live
+      `mdps-backfill-cefi-20260815-181733`; STOP (not delete) the buggy `vm-zombie-watchdog-20260810-163005` given
+      confirmed active ongoing damage (~1 kill/60-90s fleet-wide at discovery time).
+- [ ] [SCRIPT] P0. Relaunch `vm-zombie-watchdog` via `launch-vm-zombie-watchdog.sh` (re-uploads the fixed
+      `vm_zombie_watchdog.py` to GCS, boots a fresh watchdog VM) — verify it boots healthy (a sweep completes, no crash)
+      BEFORE retiring the old stopped instance, so fleet zombie-protection coverage is never fully dark.
+- [ ] [SCRIPT] P1. Once the fixed watchdog is confirmed healthy: delete the old stopped
+      `vm-zombie-watchdog-20260810-163005`, and remove the `keep=true` label from `mdps-backfill-cefi-20260815-181733`
+      (restores normal genuine-zombie protection for that VM once the false-positive risk is gone).
+- [ ] [OPERATOR] P0. Review + selectively relaunch the ~320 distinct VMs killed 07:39-17:29 UTC today by this bug
+      (families: `mdps-cefi`/`mdps-tradfi`/`mdps-sports`/`mdps-defi`, `instr-backfill-defi-pchk-*`,
+      `mtds-oracle-prices-backfill`, `tradfi-bf-*`, smaller counts elsewhere) — none were auto-relaunched
+      (exit-code-monitor-cron paused). Each represents a real, un-recovered data-capture gap. Too broad (320 separate
+      launch decisions across several asset groups) for a single autonomous pass to safely bulk-remediate; needs an
+      operator triage pass on which campaigns are still incomplete vs already covered by a later manual relaunch.
+- [ ] [OPERATOR] P1. `lc_log_upload_trap_block`'s RUNNING sentinel has existed since 2026-07-13 — over a month before
+      this was caught. Historically scope how far back this false-kill class goes for launchers using that wrapper (this
+      pass only swept the last 24h of Cloud Logging). May surface additional silently-lost campaigns predating today.
+- [ ] [SCRIPT] P2. Re-derive the ORIGINAL "four preemptions" narrative above from the raw
+      `uts-prod-dp-exit-code-monitor` Cloud Run Job source log text (not just this doc's own paraphrase) to confirm vs.
+      definitively refute whether those specific four dispatch events were themselves triggered by this watchdog bug
+      rather than genuine SPOT reclaim — the correlation section above is strong but circumstantial.
+- [ ] [SCRIPT] P2. `launch-vm-zombie-watchdog.sh`'s UAC/UTL source-tarball `pip install`s pipe through
+      `tail -3 ||     true` (lines ~205-214), silently truncating and swallowing a real build failure — confirmed this
+      caused one relaunch attempt to boot into a broken, protection-providing-nothing state (`ModuleNotFoundError` on
+      the eventual deployment-service install) with no loud failure signal until the very end. Should fail loudly (or at
+      minimum log the FULL captured output, not just `tail -3`) on a non-zero pip exit instead of `|| true`.
 
 ## Progress Log
 
@@ -307,3 +461,54 @@ re-enabling now would resume dispatching relaunches through the still-unpatched 
 this incident happened in the first place. Did not manually trigger `ldr-to-main-promote-fleet.yml` to check/force this
 (explicit workspace rule against it — shared single-concurrency slot, measured 2+ h livelock risk). Full verification
 checklist for the next session/operator is in the still-open Todo above.
+
+### 2026-08-15, later same day — second wave: vm_zombie_watchdog false-kill root-caused, fixed, shipped, watchdog live
+
+Dispatched separately to investigate a manually-launched CeFi liquidations backfill VM deleted twice. Root-caused via
+Compute Engine audit log + `vm-zombie-watchdog-20260810-163005`'s serial console to a content-blind EXIT_STATUS-age
+check in `vm_zombie_watchdog.py` misfiring on the `"RUNNING"` boot sentinel `vm-exec-with-gcs-tee.sh` (`599b4b81`, same
+day) and `launcher_common.sh` (2026-07-13) both stamp — full detail in the "Second wave" section above.
+
+A full-day Cloud Logging sweep (not just the 2 originally-reported VMs) found **320 distinct VMs killed 07:39-17:29
+UTC**, with the watchdog actively killing a VM roughly every 60-90s at discovery time — confirmed via a live-updating
+`freshness` query showing kills continuing in real time. Applied `keep=true` to the then-in-danger
+`mdps-backfill-cefi-20260815-181733` as an immediate stopgap, then STOPPED (not deleted) the buggy
+`vm-zombie-watchdog-20260810-163005` once the scale of active damage was confirmed — judged the right trade given
+confirmed ongoing destruction of real work vs. a temporary (deliberately short) gap in genuine-zombie protection.
+
+Fixed `vm_zombie_watchdog.py`'s `_evaluate_vm()` to be content-aware (`_read_exit_status_terminal_code()`) before
+treating an aged EXIT_STATUS blob as completion proof, mirroring `read_terminal_exit_code()`'s own int-parse contract.
+Added regression tests (`TestReadExitStatusTerminalCode`, `TestEvaluateVmExitStatusContentAware`) in
+`tests/unit/test_vm_zombie_watchdog.py`.
+
+**QG + ship**: `bash scripts/quality-gates.sh --no-fix` passed green (248s) on the first attempt. Quickmerge's Stage 2
+pre-flight hit the SAME `unified-trading-library` dirty-deps blocker the earlier session in this doc already diagnosed
+(`.gitleaks.toml`/`.pre-commit-config.yaml`, the same known hook-rollout content) — started landing it properly via its
+own quickmerge in parallel, but the shared host was under such heavy concurrent multi-agent `quality-gates.sh` load
+(Load Avg 10.9-15.1, near-zero free RAM, confirmed via `top`) that it was still queued/ running past 28 minutes with no
+free CPU consumed. Given the confirmed ACTIVE, ongoing fleet damage from the still- unpatched live watchdog, prioritized
+speed: used `--skip-preflight` (same sanctioned escape hatch the earlier session in this doc used for this identical
+dirty-deps condition) to land the fix immediately rather than keep waiting. **Shipped `deployment-service@149374355e`**,
+ancestor-verified on `origin/live-defi-rollout`, content verified present at that SHA
+(`git show 149374355e:<path> | grep -c ...` for both files).
+
+**Watchdog relaunch**: the watchdog VM fetches its script from GCS once at boot and loops on the local copy forever —
+shipping the code alone does not fix the live process. Relaunched via `launch-vm-zombie-watchdog.sh` (re-uploads the
+fixed script). First attempt (`vm-zombie-watchdog-20260815-190257`) failed to boot — a PRE-EXISTING, unrelated bootstrap
+bug: `launch-vm-zombie-watchdog.sh` pipes its UAC/UTL source-tarball `pip install`s through `tail -3 || true` (lines
+~205-214), silently truncating and swallowing a real build failure, so the script continued past a broken UTL install
+and only failed loudly later at the deployment-service install
+(`ModuleNotFoundError: No module named 'unified_trading_library'`). Deleted the broken instance and retried once (cheap)
+rather than debug this separate infra fragility as part of this task — the retry (`vm-zombie-watchdog- 20260815-191525`)
+booted clean and completed a healthy first sweep:
+`Watchdog summary: 54 alive / 0 zombie / 6 too_young — watchdog complete: killed 0/0 zombies`. Confirmed the fix is live
+and correct (zero false-positive kills across a real 54-VM fleet, several of which are genuinely long-running backfills
+that would previously have tripped the bug). Deleted the old stopped `vm-zombie-watchdog-20260810-163005` and removed
+the `keep=true` label from `mdps-backfill-cefi-20260815-181733` (confirmed still RUNNING throughout, never re-killed).
+Exactly one watchdog VM now live in the fleet, running the fixed code.
+
+**Not fixed in this pass** (tracked as todos above): the ~320 already-killed VMs were never auto-relaunched
+(exit-code-monitor-cron paused) and are un-recovered data-capture gaps needing operator triage; the
+`lc_log_upload_trap_block` sentinel's 2026-07-13 vintage means this false-kill class may predate today by over a month,
+not historically scoped beyond this session's 1-day sweep; and the tarball-install swallowed-failure bug in
+`launch-vm-zombie-watchdog.sh` is a separate, real bug worth its own fix.
