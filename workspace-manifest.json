@@ -68,8 +68,8 @@
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.49.32",
-    "deployment-api": "0.87.25",
-    "deployment-service": "0.146.7",
+    "deployment-api": "0.87.26",
+    "deployment-service": "0.146.9",
     "deployment-ui": "0.1.0",
     "execution-service": "0.75.1",
     "features-service": "0.83.6",
@@ -78,7 +78,7 @@
     "instruments-service": "0.102.22",
     "market-tick-data-service": "0.136.21",
     "system-integration-tests": "0.15.3",
-    "unified-api-contracts": "0.126.23",
+    "unified-api-contracts": "0.127.0",
     "unified-trading-library": "0.86.0",
     "unified-trading-pm": "1.2.741",
     "market-data-processing-service": "0.29.36",
@@ -905,7 +905,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "1688d9d56148541db2dbadc9e0c8b69d2a52de2a"
+      "ldr_ci_status_sha": "27484b18e9d89089d112ccbaa50ba918ecbaa0f2"
     },
     "ml-service": {
       "promotion_model": "ldr_main",
@@ -1039,7 +1039,7 @@
         "warn_file_count": 10
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "42a31f6efc759a2f85e2a6d243cc3eff47b87d87"
+      "ldr_ci_status_sha": "fe9c2aa38c3d6180b23de532d801186b725dc6a6"
     },
     "system-integration-tests": {
       "promotion_model": "ldr_main",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "c6639f0fe1bacc6998b55dbe11a5ef475bd89109"
+      "ldr_ci_status_sha": "6d86169ebceaf60c695d21ebe4a3c4a25b2f31ec"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
@@ -1562,7 +1562,7 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server",
-      "ldr_ci_status_sha": "e4f470e6da43f1f1181654b381210c610602cda0"
+      "ldr_ci_status_sha": "8ba680c0f746dfa94c6d63538e157da508800083"
     },
     "unified-trading-ci": {
       "type": "infrastructure",
@@ -2254,8 +2254,8 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.126.23",
-      "published_at": "2026-08-15T21:21:28Z",
+      "version": "0.127.0",
+      "published_at": "2026-08-15T22:06:34Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {
