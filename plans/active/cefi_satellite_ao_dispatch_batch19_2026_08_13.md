@@ -217,6 +217,14 @@ source: >-
       finally be flipped. Judgment call on what to archive/condense (likely candidate: fold older superseded
       Progress-Log sections into an archived companion doc per the plan-completion-and-archival-discipline SSOT), so out
       of scope for this batch's mechanical todo. Repo: unified-trading-pm.
+- [ ] [SCRIPT] P3. Trim `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md` back under its 1000-line
+      hard cap (currently 1001L, pre-existing — `check_line_caps.sh`/plan-hygiene pre-commit hard-blocks ANY commit
+      touching this file until it's under cap) so its own stale `meta_watchers.check_high_attempted_failed`
+      windowed-ratio checkbox (line ~303, already satisfied by `deployment-service@96271280`/`@0c38c00d` — see this
+      batch's todo above + its Progress Log entry) can finally be flipped. Judgment call on what to archive/condense
+      (likely candidate: fold the many near-duplicate `(cefi, book_snapshot_5)` STATIC-BACKLOG repeat-dispatch Progress
+      Log entries into a condensed summary, per the plan-completion-and-archival-discipline SSOT), so out of scope for
+      this batch's mechanical todo. Repo: unified-trading-pm.
 - [x] ✅ [CODE] P2. Codex SSOT updates for crypto-venue equity-perp sourcing + equity-basis arb archetype Source:
       `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` — **SHIPPED unified-trading-pm (this
       commit).** `/codex/02-data/tradfi-databento-sourcing-ssot.md`: new subsection documenting DBEQ.BASIC's missing
@@ -294,8 +302,20 @@ source: >-
       dtype match at the write seam) Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [ ] [CODE] P2. Audit UNCLASSIFIED_ADAPTER_ERROR rows (51% of trades cell, 14% of derivative_ticker) Source:
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
-- [ ] [CODE] P2. Fix meta_watchers.check_high_attempted_failed's mismatched trailing-14-day-numerator vs
-      all-time-denominator ratio Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
+- [x] ✅ [CODE] P2. Fix meta_watchers.check_high_attempted_failed's mismatched trailing-14-day-numerator vs
+      all-time-denominator ratio **CLOSED — already-shipped elsewhere (2026-08-15, slot-20·backend_engineer).** This
+      exact fix already shipped **deployment-service@96271280** (2026-08-08, "trailing-window threshold for
+      check_high_attempted_failed (DP-FETCH-009)") and was refined further by **deployment-service@0c38c00d**
+      (2026-08-11, "windowed attempted_failed ratio"). Verified live in
+      `_attempted_failed_index.py::read_attempted_failed_cells`:
+      `windowed_captured_mask = captured_mask &     within_window_mask` — `captured` now shares the SAME
+      `ATTEMPTED_FAILED_TRAILING_WINDOW_DAYS=14` window as `attempted_failed`, so the ratio is no longer a 14-day
+      numerator over an all-time denominator. `max_attempted_at`/`stale_days` diagnostics correctly remain
+      LIFETIME-scoped (a different, intentional use — "when did this last fail at all"). No code shipped by this batch
+      (none needed) — this todo's own source line was never flipped after the fix landed. **Source doc's own checkbox
+      NOT flipped in this commit** — see the new follow-up todo below (the source doc is 1001L, over its 1000-line hard
+      cap, pre-existing, blocking any commit that touches it). Source:
+      `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [ ] [CODE] P2. Fix sports reference-table exporter fabricating http_status=200 FetchEvidence for a GCS-missing
       upstream Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [ ] [CODE] P2. Recompute the 2026-08-10 sports reference tables once instruments-service backfills that day Source:
@@ -434,3 +454,15 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   (cols-pushdown) and traced the reason matching the operator's hypothesis (`NO_RAW_TICK_DATA_FOR_SHARD`) to a code
   mechanism already exhaustively settled for TradFi — hypothesis rejected, no code fix needed. Checkbox flipped citing
   the finding; the source doc's own checkbox was flipped in the same commit with the full evidence.
+
+- **2026-08-15 (slot-20·backend_engineer)**: dispatched the "Fix meta_watchers.check_high_attempted_failed's mismatched
+  trailing-14-day-numerator vs all-time-denominator ratio" todo. Read `_attempted_failed_index.py` directly and found
+  the fix already shipped — `deployment-service@96271280` (2026-08-08) introduced the trailing-window threshold, then
+  `deployment-service@0c38c00d` (2026-08-11) windowed `captured` to the SAME `ATTEMPTED_FAILED_TRAILING_WINDOW_DAYS=14`
+  cutoff as `attempted_failed` (`windowed_captured_mask = captured_mask & within_window_mask`), closing exactly the gap
+  this todo describes; the module's own docstring documents the fix inline. Confirmed via `git log` that both commits
+  are ancestors of `origin/live-defi-rollout`. No code shipped by this batch (none needed) — checkbox flipped citing
+  both shas. The source doc's own checkbox could NOT be flipped in the same commit:
+  `data_pipeline_alert_storm_root_ cause_batch_2026_08_10.md` is 1001L, over its 1000-line hard cap (pre-existing,
+  unrelated to this fix) — `check_line_caps.sh`/plan-hygiene pre-commit hard-blocks any commit touching it. Filed a P3
+  follow-up todo above to trim it under cap first; the source checkbox stays stale until then.
