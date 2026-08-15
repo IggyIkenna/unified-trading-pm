@@ -127,6 +127,27 @@ found the thing.**
 | Dispersion params "not in `PARAM_SCHEMA_REGISTRY`" | Grep formatting artifact. **Loading the registry in Python** gave the real answer                                         |
 | Three separate plan phrases "missing"              | **Prettier wraps prose mid-sentence**, so the phrase spans a newline                                                      |
 
+**Three more instances, 2026-08-15, all on the same investigation** — the class did not stop at code searches:
+
+| What was wrongly declared                                    | Why the probe missed it                                                                                                                                                                                                |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Revocation "has never successfully fired"                    | Searched logs for `revocation_action` / `DP-REVOCATION`; the writer emits **`revocation deps_drain delivered`**. The empty result was read as CONFIRMATION on a mechanism that had delivered to 30 VMs in 12h          |
+| Revocation "rejects every alert it sees, zero evaluations"   | Measured ONE Cloud Run job (`dp-meta-watchers`) and stated the conclusion about **the mechanism**. A second job was delivering correctly the whole time                                                                |
+| Emitters of an alert id (`rg -rn -o 'DP-(LIVE\|WATCHER)-…'`) | `-r` is rg's **`--replace`**, so `-rn` consumed `n` as the replacement text and every match printed `:n`. A malformed flag produced silent, plausible-looking output — not an error                                    |
+| PBMS "deployed as a service in NO environment"               | Listed Cloud Run for a service NAMED pbms/position, found none. It is **mounted inside strategy-service** (`app.mount("/position", …)`) and ships with it. **Searched for a deployment UNIT; never read the consumer** |
+
+**The PBMS row is the most expensive of the four**, because a negative result was written straight into a codex SSOT and
+an `[OPERATOR]` todo asking someone to deploy an already-deployed thing — work against a non-problem. It was caught only
+because the operator said "I thought that was inside strategy-service now". **When a probe's answer would create work
+for someone else, the bar rises: read the consumer before writing the finding down.** A thing can be absent as a
+deployment unit and fully present as a mounted module; "is it deployed" and "is there a service named X" are different
+questions, and only the second was asked.
+
+**The middle row is the one worth internalising: the SCOPE of your probe bounds the scope of your claim.** "Job X
+rejects every alert" and "the mechanism never fires" are different sentences with different blast radii, and only the
+first was measured. Before writing a conclusion, check whether its subject is the thing you actually sampled — an
+instance-scoped measurement stated as a system-scoped verdict is wrong even when the measurement itself is perfect.
+
 **The four discharges, in order of cheapness:**
 
 1. **For anything with a registry, ASK THE REGISTRY.** `python3 -c "from … import REGISTRY; print(len(REGISTRY))"` beats
@@ -137,6 +158,13 @@ found the thing.**
    phrase is uninformative.
 4. **One file is not a registry.** Schemas, capabilities and enums are split across modules here by design; a
    single-file grep establishes only what that file contains.
+5. **A negative from LOGS needs the same vocabulary discipline as a negative from code** — read the emitting
+   `logger.*`/`log_event` call and search for ITS format string, never for the field name you would have chosen. Prefer
+   a stable literal the writer definitely emits (`revocation deps_`) over a semantic guess (`revocation_action`).
+6. **Sanity-check the flags before trusting a zero.** A single-letter flag that silently changes a tool's MODE (`rg -r`
+   = replace, and the workspace `rg` config has already turned `-E` into `--encoding` once) turns a real search into a
+   no-op that still exits 0. If a search returns nothing, re-run it once in its simplest possible form — no combined
+   short flags — before recording the absence.
 
 **A corollary that cost its own time: over-stating an error's scope is itself a defect.** Twice in that session a
 correction was broader than the fault — "there is no `templates/` directory" (one exists, elsewhere) and "the

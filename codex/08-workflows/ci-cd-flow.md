@@ -104,6 +104,27 @@ when all three hold; PM uses its own dedicated `ldr-to-main-promote.yml`, same t
 Plus the trivial **mechanics** that are NOT "gates": content-differs (0-file diff → no-op), don't-promote-a-RED-repo
 (Tier-A `ci_status != FAILING`), the runaway-breaker, and the frozen per-SHA promote-PR head.
 
+### Checking whether YOUR change promoted — verify by CONTENT, never by SHA-ancestry
+
+**`git merge-base --is-ancestor <your-sha> origin/main` is the WRONG test and reports a false negative.** The LDR→main
+promote is a **reconciled projection**, not a merge: it rewrites history onto `main`, so your LDR commit SHA is
+generally NOT an ancestor of `main` even when your change has fully landed and deployed. The same reason makes
+`git rev-list --count origin/main..origin/live-defi-rollout` look alarming (measured 1553 on deployment-service,
+2026-08-15) while nothing is actually behind — that count includes `_backmerge` merge commits that exist only on the LDR
+side.
+
+Verify the thing you actually care about — that the CONTENT is on `main`:
+
+```bash
+git fetch -q origin main
+git cat-file -e origin/main:<path>                     # file exists on main
+git show origin/main:<path> | grep -c '<your symbol>'  # your change is IN it
+```
+
+This cost a full round of "still waiting on the `*/15` promote" on 2026-08-15 for five commits that had promoted hours
+earlier. **And landing on `main` still deploys nothing** — for a runtime claim, follow it with the deployed-image and
+execution-log check (§ deployment flow), not with the promote check alone.
+
 ### Retired / advisory-only — do NOT treat these as blocking
 
 These were the WS-L "complex pipeline" and are the exact gates that were BLOCKING promotion. They are removed or

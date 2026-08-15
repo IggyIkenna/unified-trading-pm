@@ -93,6 +93,13 @@ the single largest contributor measured here.
       Repo: unified-trading-pm.
 - [ ] [OPERATOR] P2. Consider whether 24 GiB physical is sufficient for the current slot count, or whether the practical
       concurrent-gate ceiling should be documented as a hard number for this host.
+- [ ] [CODE] P1. **The per-repo sub-cap queue starves the oldest waiter — it is not FIFO.** Measured 2026-08-15 10:40:
+      four distinct `quality-gates.sh` runs on `unified-api-contracts` (sub-cap 1) from `.tabs/4` (×2 sessions — the
+      shared-slot case), `.tabs/1` and the root checkout. The run that had waited **36:49** was still printing `queued`,
+      while runs aged 1:42, 5:01 and 10:12 were admitted ahead of it. A waiter that can be overtaken indefinitely has no
+      bound on its wait, which is a different defect from the host being busy: adding RAM would not fix it. Give the
+      ledger FIFO ordering (or aging), so wait time is bounded by queue depth rather than by luck. Repo:
+      unified-trading-pm.
 
 ## Evidence
 
