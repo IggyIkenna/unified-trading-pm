@@ -15,7 +15,7 @@ summary: >-
   instruments = NO (position-state continuity is broken; restart required)", but `_on_instruments_reload()` hot-swaps
   `_active_instruments`, computes an added/removed delta, and fans it out via `INSTRUMENT_UNIVERSE_CHANGED` — so the
   exact change the doc calls unsafe is applied live today with no error raised.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [strategy]
@@ -38,10 +38,10 @@ execution_scope: local-only
 drift_direction: needs-decision
 depends_on: []
 assigned_vm: NA
-resolved_by:
+resolved_by: strategy-service@c688512912
 locked_by:
 locked_since:
-archive_exempt: true
+last_updated: "2026-08-14"
 context_scope:
   [
     strategy-service/strategy_service/config_reloaders.py,
@@ -51,6 +51,11 @@ context_scope:
     /codex/06-coding-standards/config-reloader-pattern.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-14 — RESOLVED** (status: resolved, 1/1 todo `[x]`, unlocked). Safe-field allow-list +
+> `UnsafeConfigChangeError` guard implemented in `strategy_service/config_reloaders.py` (`strategy-service@c688512912`)
+> per the operator-confirmed 2026-08-12 option-A ruling; codex doc updated to reflect the strategies-domain enforcement.
+> Archived by review worker (slot 20).
 
 # Documented hot-reload safety machinery does not exist; instrument-universe row contradicts shipped behaviour
 

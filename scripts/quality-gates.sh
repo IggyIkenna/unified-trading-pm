@@ -26,7 +26,7 @@ PYTEST_WORKERS=${PYTEST_WORKERS:-}  # default: max(1, cpu_count//4) computed by 
 # documented per-repo override point instead (space-separated, word-split into pytest args).
 # Verified 2026-07-14: all 18 files here (254 tests) collect + pass together with no name
 # collisions. SSOT: plans/active/issues/qg_pytest_testpaths_excludes_scripts_quality_gates_2026_07_14.md
-PYTEST_UNIT_DIR="tests/unit/ scripts/quality_gates/ scripts/cicd/ scripts/docs/"
+PYTEST_UNIT_DIR="tests/unit/ scripts/quality_gates/ scripts/cicd/ scripts/docs/ scripts/plan-hygiene/"
 LOCAL_DEPS=("unified-api-contracts" "unified-trading-library")
 MAX_DURATION=600  # PM: 5 min for local gates + ~5 min for act simulation (--act flag)
 

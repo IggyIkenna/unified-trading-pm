@@ -46,7 +46,7 @@ related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/archive/issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md,
-    /plans/active/issues/pipeline_smoke_sweep_findings_2026_07_20.md,
+    /plans/archive/2026_08/issues/pipeline_smoke_sweep_findings_2026_07_20.md,
     /plans/active/issues/blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18.md,
     /plans/archive/issues/manifest_index_read_oom_canonical_cache_2026_06_24.md,
     /plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md,

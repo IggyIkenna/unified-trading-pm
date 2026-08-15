@@ -82,7 +82,7 @@ event**; that name appears nowhere in the workspace.
 > crash and no restart is forced automatically; an operator still has to actually perform the restart to apply the
 > archetype change). The instruments-domain row below remains **unenforced** — this guard is strategies-only, per the
 > operator-confirmed 2026-08-12 scoping in
-> `/plans/active/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`.
+> `/plans/archive/2026_08/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`.
 
 | Field class                  | Hot-reload safe?            | Notes                                                                                                                                |
 | ---------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
@@ -98,7 +98,10 @@ event**; that name appears nowhere in the workspace.
 `_active_instruments`, computes the added/removed delta, and notifies strategy engines via `INSTRUMENT_UNIVERSE_CHANGED`
 — i.e. an instrument-universe change is hot-applied today, with no restart and no error raised. Either the code is doing
 something the design considers unsafe for position-state continuity, or the design row is obsolete. Resolve before
-relying on either statement: `/plans/active/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`.
+relying on either statement:
+`/plans/active/issues/instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md` (split off 2026-08-14
+from the now-archived `/plans/archive/2026_08/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`, which
+only closed the strategy-config half of this concern).
 
 ## Live = batch
 

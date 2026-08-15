@@ -211,9 +211,18 @@ source: >-
       `unified-trading-pm@71f10bc0f`). No repo/code changes; retained by existing operator/main ruling. Corroborated by
       slot 20's independent 6-slot sample the same day (same no-`.venv` fact; slot 27's citation of the 2026-08-10
       ruling is the authoritative verdict).
-- [ ] [CODE] P2. Execute the 'immediately-safe ~40' script deletions (UI 2026-03 .tsx.bak splitters/codemods, done
-      deployment-service bucket migrations, the 5 dead checkers) -- the sub-list this doc's own Delete-execution item
-      names as unconditionally safe, distinct from the campaign-gated cohort it's bundled with Source:
+- [x] ✅ [CODE] P2. **DONE 2026-08-15 (slot 15).** Executed the 'immediately-safe ~40' script deletions -- live
+      re-verification found the named sub-list was only genuinely safe for a subset; the rest had drifted since the
+      2026-06-18 audit (new CI callers, unmet Delete-when conditions). Executed as safe: 4 UI `.tsx.bak` splitters
+      (`build-deployment-details-views.py`, `generate-deployment-split.py`, `split-deploy-form.py`,
+      `split-deployment-components.py` -- all read a hardcoded now-nonexistent `.tsx.bak` path, split output already
+      stable) — `unified-trading-system-ui@181ae65d8f`; a stale-pointer fix (not a deletion) in a live QG script's SSOT
+      citation — `market-tick-data-service@eda08816ef`; `unified-api-contracts check_schema_organization.py` already
+      deleted upstream, no action needed. Reclassified NOT-safe (5 of 9 named items — live CI callers or unmet
+      `Delete-when` conditions) and filed as tracked follow-up todos, not executed: `unified-trading-pm@` issue doc
+      `plans/active/issues/immediately_safe_40_delete_cohort_stale_reclassification_2026_08_14.md`. Also corroborated
+      (not this todo's scope, filed separately) a QG background-kill symptom hit while shipping the MTDS fix:
+      `plans/active/issues/qg_host_governor_caps_instances_not_fanout_2026_08_10.md` Progress Log. Source:
       `plans/active/repo_scripts_governance_audit_2026_06_18.md`
 
 ## Deferred

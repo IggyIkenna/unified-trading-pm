@@ -687,10 +687,11 @@ batch)
 
 ### Genuinely cross-cutting, operator-gated (NOT a mistag — tracked here pending an operator ruling, not a retag)
 
-- [`strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`](/plans/active/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md)
-  — `drift_direction: needs-decision`: is `/codex/04-architecture/live-strategy-config-hot-reload.md`'s documented
-  safe-field allow-list/`UnsafeConfigChangeError` the target to BUILD, or is the doc wrong and the shipped
-  unconditional-swap behavior the accepted state? Unruled since 2026-07-31.
+- [`strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`](/plans/archive/2026_08/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md)
+  — **RESOLVED 2026-08-14** (strategy-config half only): operator-confirmed 2026-08-12 ruling (option A) implemented via
+  `strategy-service@c688512912` (safe-field allow-list + `UnsafeConfigChangeError`, strategies domain); doc archived.
+  The instrument-universe half of the original concern was split off, still unruled:
+  [`instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md`](/plans/active/issues/instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md).
 
 ### Genuinely cross-cutting, real open work, currently uncovered (orphaned_never_touched)
 

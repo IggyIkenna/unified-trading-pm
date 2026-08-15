@@ -11,7 +11,7 @@ summary: >-
   is a GENERATED file, two agents hitting the same cohort simultaneously both regenerate it and collide (observed: a UU
   conflict on codex_doc_freshness_baseline.yaml on 2026-08-12). Measured over one session, six ship attempts on a
   tests-only change were blocked by six different gates and only two were the author's.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -25,7 +25,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-12
-last_updated: "2026-08-12"
+last_updated: "2026-08-14"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -35,12 +35,11 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
 assigned_role: backend_engineer
 drift_direction: advance-code
-resolved_by:
+resolved_by: unified-trading-pm@9498b9f3a5
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
-archive_exempt: true
 source: >-
   Observed 2026-08-11/12 while shipping unrelated bats-hermeticity and codex-doc work; the same ratchet blocked ships on
   two consecutive days with no content change in either case.
@@ -51,6 +50,10 @@ context_scope:
     unified-trading-pm/scripts/quality_gates/codex_doc_freshness_baseline.yaml,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-14 — RESOLVED** (status: resolved, 2/2 todos `[x]`, unlocked). De-cohorted freshness thresholds
+> (sha256-derived jitter, `check_codex_doc_freshness.py`) and wrote up the correctness-ratchet-vs-hygiene-ratchet
+> distinction as a codex SSOT. Archived by review worker (slot 20).
 
 # QG ratchets block unrelated ships
 

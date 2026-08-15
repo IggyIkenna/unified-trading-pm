@@ -285,14 +285,15 @@ def _run_diff_base(base_ref: str, quiet: bool) -> int:
     base_fmt, base_exist = _violations_at(base_ref)
     new_fmt = sorted(head_fmt - base_fmt)
     new_exist = sorted(head_exist - base_exist)
+    n = len(new_fmt) + len(new_exist)
 
-    if not quiet:
+    # Evidence prints on FAILURE regardless of --quiet (see _run_only's docstring).
+    if not quiet or n > 0:
         for v in new_fmt:
             print(f"  FORMAT    {v}")
         for v in new_exist:
             print(f"  DANGLING  {v}")
 
-    n = len(new_fmt) + len(new_exist)
     print(
         f"{'✅' if n == 0 else '❌'} check_reference_paths (--diff-base {base_ref}): {n} NEW violation(s) vs {base_ref}"
     )
@@ -302,14 +303,25 @@ def _run_diff_base(base_ref: str, quiet: bool) -> int:
 def _run_only(paths: list[str], quiet: bool) -> int:
     """Precommit-scoped mode: check exactly the given files, no baseline math. A
     format/existence violation in a file you're actively staging is unconditionally
-    wrong regardless of the rest of the corpus's pre-existing backlog."""
+    wrong regardless of the rest of the corpus's pre-existing backlog.
+
+    A path that does not resolve to a file is a caller ERROR (mistaken cwd, a
+    since-deleted file still on the command line, ...), never treated the same as
+    "zero violations" — that conflation previously cost seven failed safe-doc-push
+    attempts on a single one-line violation (issue:
+    check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12): a
+    path that silently resolved to nothing reported "0 violation(s)" / exit 0, a
+    clean bill of health for a file that was never actually checked.
+    """
     format_violations: list[str] = []
     existence_violations: list[str] = []
+    unresolved: list[str] = []
     for raw in paths:
         p = Path(raw)
         if not p.is_absolute():
             p = Path.cwd() / p
         if not p.is_file():
+            unresolved.append(str(p))
             continue
         try:
             relpath = p.relative_to(PM_DIR).as_posix()
@@ -319,14 +331,21 @@ def _run_only(paths: list[str], quiet: bool) -> int:
         format_violations.extend(fmt)
         existence_violations.extend(exist)
 
-    if not quiet:
+    n = len(format_violations) + len(existence_violations)
+    # Evidence prints on FAILURE regardless of --quiet -- quiet suppresses noise
+    # on success, never the reason for a failure (defect 2 of the issue above).
+    if not quiet or n > 0 or unresolved:
         for v in format_violations:
             print(f"  FORMAT    {v}")
         for v in existence_violations:
             print(f"  DANGLING  {v}")
+        for u in unresolved:
+            print(f"  UNRESOLVED  --only path did not resolve to a file: {u}")
 
-    n = len(format_violations) + len(existence_violations)
     print(f"{'✅' if n == 0 else '❌'} check_reference_paths (--only): {n} violation(s) in staged files")
+    if unresolved:
+        print(f"❌ check_reference_paths (--only): {len(unresolved)} unresolved path(s) — see above")
+        return 1
     return 0 if n == 0 else 1
 
 

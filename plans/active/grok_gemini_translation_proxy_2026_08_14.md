@@ -223,3 +223,29 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
     token + `X-Goog-User-Project` header. Ground-truth and scriptable, unlike AI Studio's browser-only dashboard or
     third-party blog posts — worth running against the real 3 projects to independently verify the operator-supplied
     numbers in the Why section's table rather than trusting them un-cross-checked.
+
+- **2026-08-15 — registry/pricing/gating scaffolding shipped (operator instruction: "build blind but at best you can" —
+  no xAI/Gemini credentials this session).** `agent-orchestrator@5a9c1dd90e`. What's real and tested (12 new unit tests,
+  full suite green, 3777 passed):
+  - `AccountProvider` extended with `"grok"` (`server/accounts.py`); `variant` widened from a DeepSeek-only Literal to a
+    free-form string; new `gcp_project` field (Gemini's per-project quota scoping) and `grok_team_id` field (xAI's
+    balance endpoint is team-path-scoped).
+  - `RateCard` entries for `grok-4.1-fast` ($0.20/$0.50, confirmed) and `grok-4.6` ($2.00/$6.00 + $0.50 cache-read,
+    confirmed — xAI's flagship as of 2026-08-12) in `model_pricing.py`. Per todo 152's own instruction:
+    FlashX/4.1-fast's cache-read rate was NOT published anywhere this session's research found — placeholdered at
+    `input_usd` (no assumed discount) rather than extrapolating from a sibling model, so this can never silently
+    understate spend while unverified.
+  - `server/grok_balance.py` (new): xAI prepaid-balance poller, mirrors `deepseek_balance.py`'s structure exactly. Real
+    endpoint confirmed via live docs research (`management-api.x.ai/v1/billing/teams/{team_id}/prepaid/balance`,
+    inverted-cents ledger — a $10 top-up posts as `"-1000"`), not guessed.
+  - `server/gemini_headroom.py` (new): per-account RPM/RPD dispatch-gate PRIMITIVE using the operator-confirmed real
+    ceilings (3.5 Flash-Lite 15RPM/500RPD, 3.7 Flash 5RPM/20RPD). **Built and tested as a standalone module — NOT yet
+    wired into `select_account_for_spawn()`'s dispatch loop** (todo 164 stays open for that reason specifically; the
+    gate exists and is correct in isolation, but nothing calls it yet).
+  - `config/litellm/grok_gemini_proxy.yaml` + `scripts/litellm-grok-gemini-proxy.service` + install script (new):
+    LiteLLM proxy config for all 8 backends (2 Grok + 6 Gemini), mirrors `deepseek-native-proxy.service`'s
+    systemd/install-script pattern. **`litellm[proxy]` is a NEW dependency, not yet in `pyproject.toml`/`uv.lock`** —
+    flagged in the unit's own header comments, not silently assumed present. **None of this satisfies any todo's stated
+    "Done when" bar** — every one requires a REAL Grok/Gemini completion, balance fetch, or live throttle proof, all
+    structurally impossible without credentials. Checkboxes below stay unflipped on purpose. Todo 143 (tool-use
+    translation smoke test) is NOT addressed at all this session — LiteLLM itself was only configured, never run.

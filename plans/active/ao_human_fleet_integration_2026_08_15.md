@@ -67,7 +67,9 @@ source: >-
   plan tasks... OR even better humans can do any tasks at will BUT they need to clear the 'AO isnt already working on
   them' i.e. they are not dispatched nor are they in the next 50 plans to be dispatched by AO" — read as: the pre-flight
   check is the default gate, the `assigned_vm` flip is the escape hatch when it fails and the human wants to proceed
-  anyway.
+  anyway. Then, 2026-08-15: "can we do it all now its scoped. /autonomous" — full-authority drive-to-completion per
+  `cursor-configs/AUTONOMOUS_AGENT_RULES.md`; [OPERATOR]-tagged todos and any genuinely-undecided network/infra call
+  stay gated per that dispatch's own explicit carve-out.
 assigned_role: infra
 effort: high
 drift_direction: advance-code
@@ -91,9 +93,7 @@ investigation confirmed are both achievable with existing primitives:
    escape hatch when that check fails and the human wants the task now is flipping the owning plan's `assigned_vm` to
    `NA`, pulling it out of AO's eligible pool entirely.
 
-## What the investigation found (grounds every todo below — do not re-derive, verify against the cited line if a todo
-
-depends on it)
+## What the investigation found (grounds every todo below — do not re-derive; verify against the cited line if a todo depends on it)
 
 - **Claim/dispatch** (`agent-orchestrator/server/routes/slots_worker.py:275-729,732-1032`,
   `server/dispatch.py:520-561`): `/boot` and `/heartbeat` are plain authed HTTP routes with zero spawn-origin check;
@@ -147,13 +147,13 @@ depends on it)
   (free); `role_group` filter options are a static array (`TaskUsageWindows.tsx:53-60`, re-exported into
   `BatchingEfficiencyPanel.tsx:26-34`) needing one new entry per file.
 
-## Design decisions (resolved via /plan-brainstorm, not re-open these without a new operator ruling)
+## Design decisions (resolved via /plan-brainstorm + autonomous tick 1 — do not re-open without a new operator ruling)
 
 - **Network transport**: recommended default is an SSH/SSM tunnel per session (reuses the existing AWS-SSM access
   pattern already used for read-only AO status checks — no new open port, no VPN). MUST be verified to work identically
   whether the human is in a bare terminal `claude` session or Cursor's embedded terminal (this session's own
-  environment) — Phase 0 todo below confirms this before anything is built on top of it. If a tunnel proves unworkable
-  in one context, escalate to the operator rather than silently picking the open-firewalled-path or VPN alternative.
+  environment). If a tunnel proves unworkable in one context, escalate to the operator rather than silently picking the
+  open-firewalled-path or VPN alternative.
 - **Dispatch depth**: self-report only. A human-claim call performs an atomic pre-flight check (task not currently
   `dispatched_to` anyone, not within the next 50 tasks AO's own priority ordering would dispatch) before setting
   `dispatched_to`, avoiding a check-then-claim race. When the check fails and the human wants the task anyway, the
@@ -163,52 +163,93 @@ depends on it)
   `"planning-human"`) for plan-authoring time specifically, per the operator's own framing that authoring is the one
   categorically different activity. Both are explicit, deliberate entries in `task_role_group()` — never the silent
   `"planning"` catch-all default.
+- **Human-slot ID namespace** (resolved tick 1, see Progress Log): `SlotRow.slot_id` is `Mapped[int]`
+  (`server/orm.py:76`), integer PK — not a string. Real production slots are small dense integers (`_MAIN_SLOT_ID = 0`,
+  `autospawn.py:135`; review/CI-escalation/scheduled reserves are computed as "the top N of the CURRENT roster",
+  `config.py:459-490`, observed at fleet sizes of 15-17 — never a fixed high block). Human slots use a documented
+  reserved floor, **`HUMAN_SLOT_ID_BASE = 9000`**, with each operator assigned a fixed offset (Ikenna = 9001, Harsh
+  = 9002) — high enough that no realistic fleet-size growth collides, asserted at registration time so a collision fails
+  loud rather than silently double-assigning a slot.
+- **Transcript path**: resolved tick 1 (see Progress Log) — `~/.claude/projects/<slugified-cwd>/<session-id>.jsonl` is
+  Claude Code's own default (confirmed via `CLAUDE_CONFIG_DIR` being unset in this session), independent of what
+  terminal launched it. High confidence this is identical in a bare terminal; a 10-second manual confirmation
+  (`ls ~/.claude/projects`) on each operator's machine is the remaining verification, not a design unknown.
+- **Next-N-eligible preview mechanism**: resolved tick 1 (see Progress Log) — a new `rank_eligible_tasks()` function
+  reusing `_build_ctx`/`first_blocking_filter`/the exact `(tier, priority, plan_order, plan_ref)` sort key
+  `pick_next_task()` already uses (`server/dispatch.py:520-561,555`), following the read-only sentinel-slot pattern
+  `explain_blocked_bulk()` already proves safe in production (`dispatch.py:852-880`, sentinel slot id `-1`). No
+  duplication — every primitive already exists as a standalone, importable function.
+
+## Progress Log (append-only — this is the loop's memory across context compression; do not delete prior entries)
+
+- **2026-08-15, tick 1 (autonomous, main session)**: Phase 0 todos 1-3 resolved by direct investigation + 2 parallel
+  sub-agents (SUB_AGENT_MANDATORY_RULES.md injected). Findings folded into Design decisions above. Model-tier
+  self-check: CLAUDE.md's explicit ruling ("opus-required = ZERO categories", 2026-08-08) overrides the generic
+  `/autonomous` skill's "usually opus-required" default for long loops — staying Sonnet, `effort: high` (already
+  declared). Todo 4 (assigned_vm retroactive-eligibility check) still running as of this log entry; Phase 1 backend work
+  starts once it resolves (a real gap there would add a new Phase 1 todo, per that todo's own "done when").
+- **2026-08-15, tick 2 (autonomous, main session)**: Phase 0 todo 4 resolved by sub-agent — found a REAL gap, not just a
+  documentation question: `assigned_vm` gates task CREATION and prune-time survival only, never dispatch eligibility of
+  an already-`queued` row (`_FILTERS`, `server/dispatch.py:320-427`, has zero `assigned_vm` reference; confirmed via
+  full grep of `server/backlog.py`/`server/models/_types.py` too). A flip to NA is only enforced once (a)
+  `pm-pull.timer` fetches the push (~5min) and (b) the next `PlanRegenLoop` tick or a manual `POST /api/backlog/regen`
+  runs `_prune_stale` and deletes the now-orphaned queued row — **worst-case ~10min window where AO could still dispatch
+  the task out from under the human's escape hatch**. Added a new P0 Phase 1 todo (live `assigned_vm` dispatch-time
+  filter, mirroring the already-proven `gate_on_depends_on_disk` live-disk-read pattern) to close this to zero rather
+  than ship a "safe within ~10 minutes, best-effort" guarantee — the plan's own hard constraint #2 promised
+  no-competition, not eventually-no-competition. Phase 0 fully resolved; starting Phase 1 implementation this tick.
 
 ## Todos
 
 ### Phase 0 — confirm remaining unknowns (fast, gates real work — do these first)
 
-- [ ] [INFRA] P0. **Confirm `SlotRow.slot_id`'s actual type/constraint** (int PK vs open string — check `server/orm.py`
-      and every `slot_id=` call site in `server/dispatch.py`/`slots_worker.py`) and propose a human-slot ID namespace
-      that cannot collide with AO's own numeric slot IDs (e.g. a reserved high-offset range, or confirm string IDs are
-      accepted and use a `"human-<operator>"` form). Done when: a concrete, collision-proof convention is written into
-      this doc's Design decisions section with the type evidence cited.
-- [ ] [INFRA] P0. **Confirm the Claude Code transcript storage path in both a bare terminal session AND a
-      Cursor-embedded terminal session** (this session's own environment) — same directory layout as
-      `~/.claude-configs/*/projects/*/*.jsonl` (the path `deepseek_usage.scan_session_usage()` reads on AO's own host),
-      or different under Cursor's extension sandboxing. Done when: both paths are confirmed by direct inspection on both
-      operators' machines and recorded here.
-- [ ] [BACKEND] P0. **Confirm whether AO's dispatch/backlog code can cheaply expose "the next N eligible-to-dispatch
-      tasks in priority order"** — read `pick_next_task()` (`server/dispatch.py:520-561`) and the `_FILTERS` table
-      (`320-427`) to determine if a read-only "preview" mode (same eligibility logic, no side effects, returns ranked
-      task_ids instead of dispatching the first) is a small wrapper or needs new indexing/sorting work. Done when: a
-      concrete implementation approach for the pre-flight "not in next 50" check is written here with the function(s) it
-      would call.
-- [ ] [BACKEND] P0. **Confirm whether flipping a plan's `assigned_vm` from `planning` to `NA` retroactively removes
-      already-generated `BacklogTask`/`TaskRow` rows from AO's dispatch-eligible pool**, or only affects future
-      `regen_backlog_from_plan.py` runs (read `regen_backlog_from_plan.py`'s reconciliation path + `dispatch.py`'s
-      eligibility check to see if either consults the CURRENT plan doc's `assigned_vm` at dispatch time or only a cached
-      value on the row). Done when: the escape-hatch mechanism either works today, or a specific fix is scoped as a
-      Phase 1 todo below (add one if the answer is "only affects future regen").
+- [x] 1. ✅ [INFRA] P0. **Confirm `SlotRow.slot_id`'s actual type/constraint** — resolved: `Mapped[int]` PK
+      (`server/orm.py:76`). Convention: `HUMAN_SLOT_ID_BASE = 9000` (Ikenna=9001, Harsh=9002), recorded in Design
+      decisions above. Evidence: direct code read, tick 1 Progress Log.
+- [x] 2. ✅ [INFRA] P0. **Confirm the Claude Code transcript storage path in both a bare terminal session AND a
+      Cursor-embedded terminal session** — resolved (high confidence):
+      `~/.claude/projects/<cwd-slug>/<session-id>.jsonl`, Claude Code's own default (`CLAUDE_CONFIG_DIR` unset),
+      independent of launching terminal — confirmed by locating this exact session's own transcript file at that path.
+      Bare-terminal confirmation is now a trivial 10-second manual check (Phase 4), not an open design question.
+      Evidence: `ls ~/.claude/projects/`, tick 1 Progress Log.
+- [x] 3. ✅ [BACKEND] P0. **Confirm whether AO's dispatch/backlog code can cheaply expose "the next N
+      eligible-to-dispatch tasks in priority order"** — resolved: yes, cheaply, via a new `rank_eligible_tasks()`
+      reusing `_build_ctx`/`first_blocking_filter`/`pick_next_task`'s exact sort key, following the proven read-only
+      sentinel-slot pattern `explain_blocked_bulk()` (`dispatch.py:852-880`) already uses in production. Recorded in
+      Design decisions above. Evidence: sub-agent investigation, tick 1 Progress Log.
+- [x] 4. ✅ [BACKEND] P0. **Confirm whether flipping a plan's `assigned_vm` from `planning` to `NA` retroactively
+      removes already-generated `BacklogTask`/`TaskRow` rows from AO's dispatch-eligible pool** — resolved: NO, not
+      immediately — `assigned_vm` gates creation/prune-survival only, `_FILTERS` never checks it live, leaving a ~10min
+      race window (prune-cycle-dependent). A new Phase 1 P0 todo below closes this gap. Evidence: sub-agent
+      investigation, tick 2 Progress Log.
 
 ### Phase 1 — AO backend: vocabulary, exemption, pre-flight check, human-claim/done wiring
 
+- [ ] [BACKEND] P0. **Close the `assigned_vm` live-dispatch-eligibility gap found in Phase 0 todo 4** — add a new
+      `FilterScope.FLEET` entry to `_FILTERS` (`server/dispatch.py:320-427`) mirroring `gate_on_depends_on_disk`'s
+      already-proven pattern (`:366-377`, re-derives state straight from the plan file on every dispatch attempt): call
+      the existing `_parse_frontmatter_assigned_vm(plan_path)` helper (`server/regen_backlog_from_plan.py:501`) for
+      `task.plan_ref` and block dispatch if the current on-disk value is an unassigned sentinel
+      (`_UNASSIGNED_SENTINELS`, `regen_backlog_from_plan.py:790`). This is what makes the `assigned_vm` escape hatch
+      actually immediate rather than best-effort-within-~10min. Done when: a test proves a task whose owning plan is
+      `assigned_vm: NA` on disk is never returned by `pick_next_task`/`rank_eligible_tasks` even while its `TaskRow`
+      still exists as `queued`, and the existing `_FILTERS` test suite still passes.
 - [ ] [BACKEND] P1. **Add `"human"` and `"planning-human"` as deliberate, explicit buckets in `task_role_group()`**
       (`server/state_store/slots.py:703-720`) rather than letting either silently collapse to `"planning"` — extend
       `TASK_ROLE_GROUPS` and the membership-set logic. Done when: a unit test asserts
       `task_role_group("human") == "human"` and `task_role_group("planning-human") == "planning-human"` and the existing
       test suite for `task_role_group` still passes.
 - [ ] [BACKEND] P1. **Add `human_slot_ids()` to `server/config.py`** mirroring `review_slot_ids()` (`config.py:316-331`)
-      exactly (same config-list primitive shape), and wire the check into the same three pre-tmux-call sites already
-      confirmed: `WorkerLivenessWatchdog._tick_once` (before `has_session` at `worker_liveness_watchdog.py:931`),
-      `AutoSpawn._should_spawn` (before `has_session` at `autospawn.py:3319`), `WorkerLivenessKicker._tick_once`
-      (`worker_liveness/__init__.py:736`, alongside the existing review check). Done when: a test proves no
-      `capture_pane`/`kill_session`/`has_session` call is ever made for a slot in `human_slot_ids()`, mirroring the
-      existing review-slot exemption tests.
+      exactly (same config-list primitive shape; default derived from `HUMAN_SLOT_ID_BASE` offsets above), and wire the
+      check into the same three pre-tmux-call sites already confirmed: `WorkerLivenessWatchdog._tick_once` (before
+      `has_session` at `worker_liveness_watchdog.py:931`), `AutoSpawn._should_spawn` (before `has_session` at
+      `autospawn.py:3319`), `WorkerLivenessKicker._tick_once` (`worker_liveness/__init__.py:736`, alongside the existing
+      review check). Done when: a test proves no `capture_pane`/`kill_session`/`has_session` call is ever made for a
+      slot in `human_slot_ids()`, mirroring the existing review-slot exemption tests.
 - [ ] [BACKEND] P1. **Build a read-only pre-flight endpoint** `GET /api/slots/{slot_id}/human-claim-check?task_id=...`
       returning `{claimable: bool, reason: str|null, currently_dispatched: bool, queue_position: int|null}`, using the
-      Phase-0-confirmed "next N eligible" mechanism. Done when: a request against a currently-dispatched task and a
-      request against a task ranked >50 both return the correct `claimable` verdict in a test.
+      new `rank_eligible_tasks()` (Design decisions above). Done when: a request against a currently-dispatched task and
+      a request against a task ranked >50 both return the correct `claimable` verdict in a test.
 - [ ] [BACKEND] P1. **Build the human-claim endpoint** `POST /api/slots/{slot_id}/human-claim {task_id}` — runs the same
       check as the pre-flight endpoint atomically (inside the same `session_scope()` transaction, no check-then-claim
       race), and on pass calls `mark_dispatched`/`assign_task_to_slot` (`slots_worker.py`'s existing helpers) directly
@@ -229,9 +270,10 @@ depends on it)
 
 ### Phase 2 — laptop-side tooling
 
-- [ ] [INFRA] P1. **Build the network-transport wrapper** implementing the Phase-0-confirmed tunnel mechanism, proven to
-      work identically from a bare terminal `claude` session and from Cursor's embedded terminal. Done when: a `curl`
-      against AO's `/api/agents` through the wrapper succeeds from both contexts on both operators' machines.
+- [ ] [INFRA] P1. **Build the network-transport wrapper** implementing the SSH/SSM tunnel mechanism (Design decisions
+      above), proven to work identically from a bare terminal `claude` session and from Cursor's embedded terminal. Done
+      when: a `curl` against AO's `/api/agents` through the wrapper succeeds from both contexts on both operators'
+      machines.
 - [ ] [INFRA] P1. **Build `/ao-register`, `/ao-claim <task_id>`, `/ao-done` slash-commands (or equivalent scripts)**
       calling the Phase 1 endpoints through the Phase 2 transport wrapper, reading the operator's stored JWT (Phase 4).
       Done when: an operator can run all three commands end-to-end against a real backlog task from either terminal
@@ -242,11 +284,11 @@ depends on it)
       operator's `AgentRow.context_used_pct`/`model`/`last_ping` visibly update in AO within one throttle interval of
       normal Claude Code use.
 - [ ] [INFRA] P2. **Build the local usage-scan-and-push companion** — reuses `deepseek_usage.scan_session_usage()`'s
-      logic (import if feasible, otherwise port the minimal needed function) against the Phase-0-confirmed local
-      transcript path, and pushes computed usage to a new ingest endpoint tagged `account_id`/`agent_kind="human"`,
-      following `SlotGitStatusRow`'s `(host, slot_id)`-keyed pattern as the structural template. Done when: a real
-      Claude Code turn on the operator's laptop produces a usage row visible via `GET /api/backlog/usage/windows`
-      filtered to `role_group="human"`.
+      logic (import if feasible, otherwise port the minimal needed function) against the confirmed local transcript path
+      (`~/.claude/projects/...`, Design decisions above), and pushes computed usage to a new ingest endpoint tagged
+      `account_id`/`agent_kind="human"`, following `SlotGitStatusRow`'s `(host, slot_id)`-keyed pattern as the
+      structural template. Done when: a real Claude Code turn on the operator's laptop produces a usage row visible via
+      `GET /api/backlog/usage/windows` filtered to `role_group="human"`.
 
 ### Phase 3 — dashboard
 
@@ -270,8 +312,8 @@ depends on it)
       succeeds end-to-end for each.
 - [ ] [SCRIPT] P2. **Run one real, low-stakes task end-to-end per operator** through register → claim → statusline
       heartbeat → done, and confirm dashboard visibility (Human Fleet page) and a real usage row (Phase 2's
-      scan-and-push companion). Done when: both operators' first human-claimed task shows up correctly in the dashboard
-      with non-zero usage attribution.
+      scan-and-push companion). Done when: both operators' first human-claimed task shows up correctly in the plan
+      dashboard with non-zero usage attribution.
 - [ ] [INFRA] P3. **Document the human-slot contract as a durable codex SSOT** — extend
       `/codex/04-architecture/agent-orchestrator-worker-liveness.md` (or a new sibling doc if scope doesn't fit) with
       the human-slot exemption, self-report/pre-flight-check contract, and the `assigned_vm` escape hatch, so a future

@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 293 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 291 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -629,7 +629,7 @@ by hand._
   direction is UAC-as-SSOT (Option A), executed as a scoped migration, not a blind rename. Picks deliberate field names
   for…
 
-### cross-cutting (65)
+### cross-cutting (63)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -694,14 +694,6 @@ by hand._
   from…
 - [`cross_cutting_satellite_ao_dispatch_batch13_2026_08_13_finalize`](./cross_cutting_satellite_ao_dispatch_batch13_2026_08_13_finalize.md)
   — Gated closeout for cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md — machine-held via depends_on +
-  gate_on_depends until every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE
-  source doc's…
-- [`cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13`](./cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md)
-  — Extraction batch from the cross-cutting tranche's 2026-08-13 /na-eligibility-audit + /ag-closeout-audit full sweep —
-  37 live conflict-cleared, bounded/deterministic items (39 total todos, 2 marked out-of-scope, see below) pulled
-  directly…
-- [`cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13_finalize`](./cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13_finalize.md)
-  — Gated closeout for cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md — machine-held via depends_on +
   gate_on_depends until every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE
   source doc's…
 - [`cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize`](./cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md)
