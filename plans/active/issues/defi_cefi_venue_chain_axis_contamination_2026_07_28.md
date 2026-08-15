@@ -527,6 +527,17 @@ doc for the full history).
   idempotent, safe to re-run). Not launched here — outside this task's own scope (a P3 diagnostic todo in a different
   doc); flagging for whoever picks up the todo above next. No code changed.
 
+- **slot-7 2026-08-15 ~21:36Z (data_engineering, task `defi_cefi_venue_chain_axis_contamination-7a50eb15bb1e`,
+  follow-up cron-verification re-check)**: Picked up the follow-up todo above (verify
+  `cefi-fwd-daily-cron-20260815-212910` + `cefi-perp-funding-daily-cron-20260815-212924`). The todo's own done-when
+  is explicit — "No earlier than 2026-08-16T09:10Z" (both crons' first fires are 07:00Z/09:00Z on 2026-08-16, per the
+  launch entry directly above). Current time confirmed **2026-08-15T21:36Z** — ~11.5h before the gate opens; none of
+  the todo's 3 verification steps (cron log tail, raw `derivative_ticker` probe, corpus-freshness re-probe) can
+  produce a meaningful result yet, so no GCS/gcloud calls were made this pass. Skipping `reason_code=GATED` (real ETA
+  ~694min exceeds the fleet's 180min dispatch-cooldown cap — `estimated_unblock_minutes` left unset so the standard
+  GATED cooldown policy applies rather than passing a value the server would discard anyway). Re-dispatch any time
+  at/after 2026-08-16T09:10Z.
+
 ## Session final report — 2026-08-04 (`/autonomous`, operator away ~8h from ~01:00)
 
 **Dispatch**: operator screenshotted deployment-ui's DEFI Distinct Values panel showing non-canonical venues/chains/
