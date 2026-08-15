@@ -533,25 +533,35 @@ source: >-
       `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md`
 - [ ] [CODE] P2. Launch the now-unblocked EXTENDED-STARKNET instrument-catalogue + perp backfill
       (candles/funding/orderbook/trades) Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
-- [ ] [CODE] P2. Step 2 IS-store backfill for Kraken/LIGHTER/PACIFICA/EXTENDED/BITGET gap-days so MTDS<->IS subsets
-      close both ways Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
+- [x] ✅ [CODE] P2. **Step 2 IS-store backfill — premise mostly STALE, real gap found + closed.** (2026-08-15,
+      slot-18·infra). Ran `scripts/verify_instrument_manifest_coverage.py` (reads the IS reference-data catalogue
+      manifest, 2019-03-30..2026-08-14) against all 5 named venues: KRAKEN-SPOT, KRAKEN-FUTURES, BITGET-SPOT,
+      BITGET-FUTURES, LIGHTER-ZKSYNC, EXTENDED-STARKNET were already fully covered (only the current day missing —
+      normal daily-job lag, self-heals) — the "Kraken ~6yr" gap this todo's title cites was already closed by the time
+      this ran (likely folded into the already-`[x]` Step 1 per-AG backfill dated 2026-07-06). PACIFICA-SOLANA had a
+      genuine 27-day gap (2026-07-19..2026-08-14). Backfilled it directly (bounded single-venue/27-day run, not
+      corpus-scale — ran via `run-bounded-analysis.sh` wrapper per the memory-bounding rule):
+      `uv run instruments-service --operation instruments --mode batch --asset-group CEFI --venues PACIFICA-SOLANA     --start-date 2026-07-19 --end-date 2026-08-14 --force`
+      — wrote 74 records/day × 27 dates, `Batch complete: 27     results collected`. Re-verified: `missing_dates=0` for
+      PACIFICA-SOLANA over the full 2019-03-30..2026-08-14 range. No code changes required (data-op only); no commit to
+      ship. Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 - [ ] [CODE] P2. Step 3 cross-data_type completeness capture per venue_data_types.yaml Source:
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 
       **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed
-          separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
-          (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
-          exists and is live — no code change needed — but a real corpus-wide query
-          (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
-          the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
-          filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
-          data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
-          worker-determinable outcome for one ~1h dispatch. Filed
-          `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
-          (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
-          class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
-          backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
-          multi-AG backfill into this single dispatch.
+              separately.** Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism
+              (`load_venue_data_types()` → `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already
+              exists and is live — no code change needed — but a real corpus-wide query
+              (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete within a 120s budget,
+              the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already
+              filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades`
+              data_type per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a
+              worker-determinable outcome for one ~1h dispatch. Filed
+              `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+              (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read
+              class → run one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded
+              backfill todos) rather than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended
+              multi-AG backfill into this single dispatch.
 
 - [ ] [CODE] P2. Verify/implement the DeFi catalogue MVP filter (MTDS reading IS catalogue as TVL-qualifying filter)
       Source: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
