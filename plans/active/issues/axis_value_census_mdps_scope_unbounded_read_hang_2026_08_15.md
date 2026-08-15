@@ -88,16 +88,65 @@ slow.
 Not fixed here (a small, scoped code change discovered mid-verification of an unrelated todo — filed per findings triage
 rather than folded into a quick-verify task). Bounded fix:
 
+## Findings (confirmed 2026-08-15, slot-9 backend_engineer)
+
+**Answer: the reader does NOT apply the honest-absence column-backfill before evaluating pushdown filters — but
+`service_name` specifically is not at risk in practice, so the proposed fix (todo 2) is safe to ship.**
+
+Traced the exact filter-application code path in `unified_trading_library/manifest_writer/_read_index.py`:
+
+1. `_read_availability_index_slim`'s `filters:` branch (`_read_index.py:1003-1050`) calls `_read_consolidated_if_fresh`
+   / `_read_self_shard` / (via `_read_slow_path`) `_read_and_merge_per_vm_shards` — every one of these calls
+   `_read_parquet_columns_safe(data, columns, filters)` directly on the RAW per-file bytes
+   (`_read_index.py:1181, 1206, 1241, 1469, 1710`). `_backfill_slim()` runs only AFTER these calls return, on the
+   already-merged DataFrame (`_read_index.py:1019, 1043`) — i.e. **filters are evaluated against each file's raw,
+   pre-backfill schema, not the backfilled value.**
+2. Inside `_read_parquet_columns_safe` (`_read_index.py:87-195`): when a filtered column is absent from a given file's
+   raw schema, pyarrow raises `ArrowInvalid` (a `ValueError`), caught and retried with `columns` narrowed to the file's
+   actual columns — but `filters` still references the missing column, so the retry raises again, and the code falls
+   through to a full unfiltered read + manual pandas re-filter (`_read_index.py:183-195`). There,
+   `if col not in full.columns: continue` — **the missing-column filter condition is SILENTLY SKIPPED for that file, not
+   evaluated against a backfilled `""` default.** Net effect for a genuinely-missing filter column: every row in that
+   file passing the OTHER filters is included regardless — an over-inclusion risk (opposite of the under-inclusion this
+   issue's "Open question" speculated).
+3. However, `service_name` is NOT actually at risk of hitting that gap: `AvailabilityRecord.service_name`
+   (`unified_trading_library/manifest_writer/_rows.py:169`, listed under that dataclass's own
+   `# Universal (always populated)` heading, schema v4+ per its docstring) and `ManifestRow.service_name` are both
+   REQUIRED fields with no default — part of the row-identity/dedup key `(date, venue, data_type, service_name)`
+   (`_read_index.py:66-67`'s `_SLIM_MERGE_BASE_COLS` comment literally calls these "the hard-required base 4";
+   `_writer_io.py:1336` uses the same 4-col key for dedup). Every row the writer has ever emitted carries a real
+   `service_name` value — there is no code path that writes a row without it, so the "v6+ column, legacy shards backfill
+   it" premise in this doc's original "Open question" was incorrect (verified against the writer's row schema, not
+   assumed).
+
+**Conclusion for todo 2**: pushing `("service_name", "==", _CANDLE_SERVICE_NAME)` into `filters=` is safe to ship as
+proposed — no real file should lack `service_name`. Keep `_filter_to_candle_rows` as a cheap post-read safety net
+regardless (near-zero cost once the pushdown has already discarded ~54% of rows) — a correctness backstop for the
+now-confirmed reader gap (point 2 above), not because `service_name` itself is at risk.
+
 ## Open work (tracked todos)
 
-- [ ] [BACKEND] P2. Confirm `read_availability_index`'s honest-absence column-backfill happens before filter evaluation
-      (or is otherwise filter-safe for a column absent from some underlying files) — read
+- [x] ✅ [BACKEND] P2. Confirm `read_availability_index`'s honest-absence column-backfill happens before filter
+      evaluation (or is otherwise filter-safe for a column absent from some underlying files) — read
       `unified_trading_library/manifest_writer/_read_index.py`'s filter-application code path directly, don't assume.
-      (repo: unified-trading-library)
-- [ ] [BACKEND] P2. Once confirmed safe, change `get_axis_value_census` to push
-      `("service_name", "==", _CANDLE_SERVICE_NAME)` into the `filters=` list passed to `_ds._read_availability_index`
-      when `is_candle_census`, and drop the now-redundant post-read `_filter_to_candle_rows` call (or keep it as a cheap
-      no-op safety net if the filter-safety check above finds any edge case it doesn't fully cover). Add a regression
-      test asserting the MDPS-scoped census still excludes MTDS-only rows. Done when a live timed call for a large
-      asset_group (e.g. tradfi) completes in single-digit seconds with an unchanged result shape/row_count vs the
-      pre-fix behavior. (repo: deployment-api)
+      (repo: unified-trading-library) — investigation-only, no code change; see "## Findings" above. Confirmed: backfill
+      runs AFTER filter evaluation (a real gap for genuinely-optional columns), but `service_name` is a hard-required
+      base column since schema v4, so todo 2 is safe to proceed unmodified. — unified-trading-pm@(this commit)
+- [ ] [BACKEND] P2. Push `("service_name", "==", _CANDLE_SERVICE_NAME)` into the `filters=` list passed to
+      `_ds._read_availability_index` when `is_candle_census`, in `get_axis_value_census`. KEEP the post-read
+      `_filter_to_candle_rows` call as a cheap safety net (do not drop it — see Findings above: it's a correctness
+      backstop for the reader's general filter-safety gap, not redundant). Add a regression test asserting the
+      MDPS-scoped census still excludes MTDS-only rows. Done when a live timed call for a large asset_group (e.g.
+      tradfi) completes in single-digit seconds with an unchanged result shape/row_count vs the pre-fix behavior. (repo:
+      deployment-api)
+- [ ] [BACKEND] P3. Separate, lower-priority follow-up (not blocking todo 2): the general reader gap confirmed in
+      Findings above — `read_availability_index`'s pushdown `filters=` silently SKIPS (not backfill-safely excludes) a
+      filter condition on any column absent from a given raw file — is real for genuinely legacy-optional columns (v6+
+      `quote_asset`/`margin_type`/`combo_type`, v7 `fixture_id`/`job_id`, v8 `pipeline_mode`, v9
+      `source`/`transport`/`cadence`/`available_at`). A future caller pushing one of THOSE into `filters=` against a
+      bucket with pre-that-version shards would silently over-include legacy rows that should have failed the filter.
+      Fix: in `_read_parquet_columns_safe`'s legacy-schema fallback (`_read_index.py:183-195`), apply the SAME
+      per-column default `_backfill`/`_backfill_slim` already use (e.g. `CaptureStatus.CAPTURED.value` for
+      `capture_status`, `""` for most others) to a missing filter column before evaluating it, instead of `continue`-ing
+      past it. Add a regression test with a synthetic legacy-schema parquet (missing one v6+ column) + a `filters=` on
+      that column, asserting rows are correctly excluded rather than passed through. (repo: unified-trading-library)
