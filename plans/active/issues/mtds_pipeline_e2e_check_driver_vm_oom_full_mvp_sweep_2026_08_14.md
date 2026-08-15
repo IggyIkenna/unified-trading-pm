@@ -210,6 +210,24 @@ Two independent angles, not mutually exclusive:
       re-run needs 1-2.5hrs VM wall-clock per prior sessions' measurements, disproportionate for one P2 CODE todo — see
       the still-open [DATA] P2 re-run todo above, which already tracks re-running DEFI once a fix lands).
 
+- [ ] [CODE] P1. **NEW (found 2026-08-15 slot 5).** DEFI's re-run (post-`d89f43488e` Phase-0 bound-read fix) STILL
+      OOM-killed (`EXIT_STATUS=137`) ~52s after `Phase-0 consolidation OK`, before any per-shard log line — the
+      IDENTICAL symptom signature slot 27's fix targeted. Root cause is very likely that `read_availability_index`'s
+      `filters=[("date", ">=", min_day)]` row-group pushdown does NOT actually bound memory for DeFi's specific
+      consolidated index: `_read_availability_index_full_filtered`'s own docstring already caveats this ("PROVIDED the
+      filtered column's values are actually clustered per row-group ... a filter on a column whose values are scattered
+      across every row-group ... skips few or no row-groups and gives little to no memory benefit") — if DeFi's
+      consolidated `_index/availability_index.parquet` was NOT written with `date` sorted/clustered per row-group (e.g.
+      written incrementally by many concurrent per-shard jobs, like the doc's own `capture_status`/`data_type` example),
+      the `filters=` bound `_captured_days_by_cell` relies on
+      (`market-tick-data-service/scripts/pipeline_e2e_check.py:1188`) silently degrades back to a near-full-index
+      decode. Verify by inspecting the actual row-group `date` clustering of DeFi's consolidated index (e.g.
+      `pyarrow.parquet.ParquetFile(...).metadata` per-row-group min/max stats for the `date` column) — if unclustered,
+      either re-sort/re-write the consolidated index with `date` as the primary row-group sort key, or switch this
+      specific call to a genuinely bounded read path (e.g. a targeted per-day GCS listing instead of a manifest-index
+      scan) rather than relying on pushdown that doesn't apply here. Re-run DEFI's `--asset-group DEFI` leg of the
+      [DATA] P2 todo above once fixed. (repos: market-tick-data-service, unified-trading-library)
+
 ## Progress Log
 
 - **2026-08-14 (defi_satellite_ao_dispatch_batch13 worker, slot 12)**: filed from a failed MTDS baseline attempt while
@@ -417,3 +435,10 @@ Two independent angles, not mutually exclusive:
     stalled/relaunching —
     `gcloud compute instances list --project central-element-323112 --filter="name~pipeline-e2e-check-mtds"` shows the
     live fleet.
+  - **UPDATE**: DEFI's fresh re-run (`pipeline-e2e-check-mtds-20260815-093408-4ffa29`) crashed `EXIT_STATUS=137` (OOM)
+    ~52s after `Phase-0 consolidation OK` — the SAME symptom shape slot 27's `d89f43488e` fix targeted, meaning that fix
+    did not actually resolve DEFI's OOM. Filed as a new [CODE] P1 todo above with a specific hypothesis (`filters=`
+    row-group pushdown likely doesn't apply because DeFi's consolidated index isn't `date`-clustered per row-group) —
+    needs its own investigation, out of scope for this P2 data-todo to chase further. **CEFI**'s fresh re-run
+    (`pipeline-e2e-check-mtds-20260815-093348-fc5255`) is still RUNNING cleanly past 30 minutes (confirmed
+    post-`64d10930` re-arm fix tarball) as of this entry — tracking to terminal state.
