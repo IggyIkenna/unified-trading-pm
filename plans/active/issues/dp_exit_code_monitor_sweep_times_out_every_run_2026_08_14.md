@@ -117,6 +117,16 @@ that plan.
       sweep 329.8s (16 running, 56 terminated)" with zero `Terminating task` lines; `9wgqf` (00:00Z, 2026-08-15)
       succeeded in ~86s. deployment-service commit `f13d5859` (the commit this issue was originally blocked on landing)
       was never pushed and is superseded — do not resume pushing it, the problem it targeted is independently resolved.
+      **Disposition confirmed + parked 2026-08-15 (slot 5).** A session resuming from an older checkpoint did attempt to
+      push it; quickmerge correctly refused with `QUICKMERGE_BLOCKED code=BEHIND_DIVERGED_CONFLICT` (63 behind, conflict
+      in `exit_code_fleet_monitor.py`). Reading the landed work rather than resolving the conflict confirmed the commit
+      is not merely redundant but **actively harmful now**: it breaks out of the classify loop at a 1200s budget, which
+      is EARLIER than the 1800s kill that `cbe58d2d` already made survivable and self-resuming, so it would examine
+      strictly FEWER VMs per tick; and its early `break` bypasses `_checkpoint_census()`, whose prior-value-preservation
+      for unclassified VMs is the exact mechanism that makes them retry next tick. The commit is preserved (not deleted)
+      on local branch `parked/exit-code-sweep-budget-2026-08-15` in slot 5's deployment-service clone, and the trunk was
+      returned to origin via `git reset --keep` (clean tree, nothing uncommitted destroyed). It is local-only and will
+      vanish with that clone — that is intended; nothing needs recovering from it.
 - [ ] [INFRA] P0. Make a truncated sweep loud instead of silent — if the fleet is not fully walked, the run must say so
       (count examined vs total, non-zero exit or an explicit alert) — DoD: a deliberately shortened run emits a "sweep
       incomplete, N of M examined" signal rather than looking identical to a clean pass. **Code + tests WRITTEN
