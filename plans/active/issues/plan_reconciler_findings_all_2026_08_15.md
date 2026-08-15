@@ -70,14 +70,18 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
 
 ## P1 — live operational/data-correctness risks
 
-- [ ] [DATA] P1. **Sports taxonomy path-key contradiction, active migration.**
-      `sports_taxonomy_p2_consumer_inventory_2026_08_12.md:386-409` — the sports-taxonomy P2 migration plan assumes
-      `league_id=` is the canonical GCS path key, but the actual UAC path-builder
-      (`canonical/domain/sports/gcs_paths.py`) writes under the key `league=`, never `league_id=`. Doc itself flags this
-      as unresolved and says to resolve it "as the todo's first step" before correcting plan text. Sibling plan
-      `sports_taxonomy_p2_migration_2026_08_08.md` needs to pick this up. NOT auto-fixable — needs runtime
-      re-confirmation first. Real risk: wrong path segment key could misdirect data or break readers on a live
-      migration.
+- [x] ✅ [DATA] P1. **Sports taxonomy path-key contradiction, active migration — RESOLVED 2026-08-15.**
+      `sports_taxonomy_p2_consumer_inventory_2026_08_12.md:386-409` — re-confirmed live: UAC
+      `canonical/domain/sports/gcs_paths.py` (`league_id` param, lines 233/351-352/360/365/377/380) unambiguously writes
+      only `league=` — that part of the finding was correct and stands. But this is a DIFFERENT path builder from the
+      actual migration-sweep target: MTDS's raw-tick odds pipeline
+      (`market-tick-data-service/scripts/merge_migrated_odds_into_canonical_2026_07_17.py`), which canonicalizes on
+      `league_id=` instead (confirmed via the sibling migration plan's exhaustive 2026-08-15 census,
+      `sports_taxonomy_p2_migration_2026_08_08.md:576-594`, + an already-executed purge of 15,154/16,968 legacy
+      `league=` raw-tick objects, `market-tick-data-service@8a772b3180`). No remaining contradiction — the two docs were
+      describing two different path builders for two different data domains; corrected both the §12 text and the
+      "Cross-cutting findings" bullet 3 in the consumer-inventory doc to state the domain-scoped truth explicitly.
+      `unified-trading-pm` (doc-only, this session).
 - [x] ✅ [DATA] P1. **Databento billing gate stale-"lifted" claim, live risk of wasted VM spend.**
       `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` claims the billing gate is "lifted" for in-scope items
       (CME/ES futures/options, BTC/ETH CME futures), last touched 2026-08-10. But
@@ -127,13 +131,17 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
       `- [ ] [OPERATOR] P2` todo to the ibkr doc (natural owner). **DONE 2026-08-15**: added the missing
       `- [ ] [OPERATOR] P2` todo, content inferred from the batch13 doc's own diagnosis of the same missing item.
       `unified-trading-pm@1c3fef9ea5`.
-- [ ] [BACKEND] P1. **QG-red commit claimed "shipped, tested, QG green" in one doc; breaking a cross-repo gate per
-      another, same week, unresolved.** `sports_honest_coverage_gap_closure_2026_08_14.md:213-232` claims
-      `instruments-service@4844b6286b` is "FIXED, shipped, tested... QG green", but
-      `mtds_qg_red_morpho_url_and_sports_contract_regression_2026_08_15.md:57-70` shows this EXACT commit currently
-      breaking a cross-repo adapter-contract QG gate (5 missing tracked contract-call patterns below baseline). NOT
-      auto-fixable — needs a worker decision (restore patterns vs regenerate baseline) + correct the "shipped, tested"
-      framing in the first doc.
+- [x] ✅ [BACKEND] P1. **QG-red commit claim — RESOLVED, claim was accurate, gate doc was stale.** Live re-run of the
+      actual scanner (`check_adapter_contract_regression.py`) against the current checkout:
+      `OK — 363 baselined     file(s) at or above minimum` — NOT currently red. `4844b6286b`'s api_football refactor
+      legitimately split `sports_reference_core.py` (extracting `sports_reference_fixture_existence_gate.py`, confirmed
+      real `record_empty()` calls, not a stub); the baseline was correctly regenerated same-day
+      (`unified-trading-pm@438838ae72`, on `origin/live-defi-rollout`, 14+6=20 ≥ original 19 — call count went UP).
+      `sports_honest_coverage_gap_closure_2026_08_14.md:213-232`'s "FIXED, shipped, tested" claim already cited that
+      same baseline-bump commit and was accurate — no correction needed there. Flipped
+      `mtds_qg_red_morpho_url_and_sports_contract_regression_2026_08_15.md`'s adapter-contract todo `[x]` with this
+      evidence (its unrelated morpho-URL todo stays open — still genuinely red, separate finding). `unified-trading-pm`
+      (doc-only, this session).
 - [x] [DOCS] P1. **CLAIM≤MEASUREMENT violation — 2 docs falsely claim archival ritual completed.**
       `sports_odds_feature_naming_canonicalization_2026_07_21.md` and
       `sports_odds_feature_naming_four_way_mismatch_2026_07_21.md` both have na-eligibility-audit entries claiming "ran

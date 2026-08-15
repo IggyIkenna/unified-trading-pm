@@ -402,11 +402,30 @@ path SSOT)" — but UAC's actual path-builder code says the opposite:
   binding); `scripts/sports/league_id_relocation/migrate_instruments_store_sports_league_vocabulary_2026_08_04.py:282`
   (error message referencing unresolved `league=` values).
 
-**Action for the sweep todo**: re-read `gcs_paths.py`'s actual emitted path string (not the parameter name) before
-declaring either segment canonical — the plan's stated assumption (`league_id=` is canonical) is contradicted by the one
-place that actually builds the path. Resolve this contradiction explicitly as the todo's first step, and correct the
-plan text once resolved (this is exactly the "doc/pointer that misled you" HARD RULE — fix it in the same turn once
-confirmed, per CLAUDE.md).
+**RESOLVED 2026-08-15** — re-confirmed live:
+`unified-api-contracts/unified_api_contracts/canonical/domain/sports/gcs_paths.py` (current checkout) is unambiguous —
+`candidate_parquet_paths()`'s parameter is named `league_id: str = ""` (line 233) but every emitted path segment
+literally interpolates it as `league={league_id}` (lines 351-352, 360, 365, 377, 380; docstring line 14 too) — **for
+THIS builder (`sports_reference/` reference-data paths — FIXTURES/ODDS(footystats)/ MATCHES/etc.) the on-disk key is
+always `league=`, never `league_id=`.** That part of this doc's original finding was correct and stands unchanged.
+
+BUT the sibling migration plan (`sports_taxonomy_p2_migration_2026_08_08.md:576-594`) went further and found this
+`gcs_paths.py` builder is the WRONG FILE for the actual sweep target: the raw-tick sports pipeline (MTDS's
+`processed/by_date/.../data_type=odds_horizon_bucket/...` and the legacy `ticks_migrated_*.parquet` duplication) is
+built by a completely different path builder
+(`market-tick-data-service/scripts/merge_migrated_odds_into_canonical_2026_07_17.py:76-79`), which is a **separate
+subsystem from the `sports_reference/` reference data this doc's `gcs_paths.py` finding is about**. Direct GCS
+confirmation there (`census_league_vs_league_id_partition_duplication_2026_08_15.py`,
+`market-tick-data-service@96da88c6`, exhaustive 2,128-day census) found **`league_id=` (`pipeline_mode=batch_odds_api`)
+IS canonical** for that raw-tick domain (real per-bookmaker data); `league=` (`pipeline_mode=batch_footystats`,
+mis-stamped 2026-05-05) is the legacy duplicate there. The sweep's purge already ran: 15,154/16,968 legacy `league=`
+raw-tick objects deleted `market-tick-data-service@8a772b3180` (2026-08-15, slot-11); 1,814 no-twin objects
+intentionally left, tracked in `/plans/active/issues/sports_league_legacy_orphan_purge_followup_2026_08_15.md`.
+
+**Net: no remaining contradiction — the two docs were describing two different path builders for two different data
+domains.** `gcs_paths.py` (this doc's target, `sports_reference/`) → `league=` only, confirmed. MTDS raw-tick odds
+pipeline (the migration plan's actual purge target) → `league_id=` canonical, confirmed + already purged. The
+"Cross-cutting findings" bullet 3 below is corrected to scope this distinction explicitly.
 
 ---
 
@@ -416,8 +435,12 @@ confirmed, per CLAUDE.md).
    this whole migration** — read it before touching any of the 19 tokens or `odds_horizon_bucket`.
 2. **`odds_horizon_bucket` and `ODDS_API` are coupled in MTDS's freshness-preflight logic** (§5) — re-verify both
    frozensets together if both rename in the same pass.
-3. **`league=` is the actual UAC-canonical path segment, not `league_id=`** (§12) — the plan's own text is wrong here;
-   correct it once this is re-confirmed at run time.
+3. **`league=`-vs-`league_id=` is domain-scoped, not a single global answer (§12, RESOLVED 2026-08-15)** — UAC
+   `gcs_paths.py`'s `sports_reference/` reference-data paths write `league=` only (confirmed, lines 233/351-352/360/365/
+   377/380). MTDS's separate raw-tick odds pipeline (`merge_migrated_odds_into_canonical_2026_07_17.py`) canonicalizes
+   on `league_id=` instead (confirmed via exhaustive 2026-08-15 census + already-executed purge,
+   `sports_taxonomy_p2_migration_2026_08_08.md:576-594`). Don't apply either key fleet-wide without checking which
+   subsystem a given path belongs to.
 4. **features-service has 3 independent copies and ml-service has 1 more independent copy** of the raw
    `venue=ODDS_API/data_type=odds` / `odds_horizon_bucket` path logic (§5, §6) — a migration that patches only the
    "obvious" `gcs_reader.py` misses `prediction_cross_venue_betfair.py` and `sports_feature_loader.py` entirely.
