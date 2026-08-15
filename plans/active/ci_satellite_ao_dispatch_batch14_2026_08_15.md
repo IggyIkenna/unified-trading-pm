@@ -75,7 +75,7 @@ source: >-
 
 ## Todos
 
-- [ ] [DEVOPS] P1. **Build a `codex_freshness_stale` AO escalation wall_type**: remove `check_codex_doc_freshness.py`
+- [x] ✅ [DEVOPS] P1. **Build a `codex_freshness_stale` AO escalation wall_type**: remove `check_codex_doc_freshness.py`
       from `quality-gates.sh`'s blocking post-gate path; add a daily-cron GitHub Actions workflow
       (`codex-freshness-sweep.yml`, same shape as `digest-drift-sweep.yml`) that runs the checker and, on a violation,
       dispatches through the AO escalation flow (files a real tracked issue doc, not just a Slack post) rather than
@@ -83,7 +83,11 @@ source: >-
       Source: `plans/active/issues/codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md`
       (resolves that doc's own open P2 "decide whether a calendar-triggered ratchet should block commits at all"). Gate:
       `quality-gates.sh` no longer runs `CODEX_FRESHNESS_CHECKER`; `codex-freshness-sweep.yml` exists, runs daily, and a
-      forced-stale test doc produces a real escalation-queue entry that auto-resolves once the doc is refreshed.
+      forced-stale test doc produces a real escalation-queue entry that auto-resolves once the doc is refreshed. —
+      **DONE 2026-08-15 (slot-26·infra).** PM-side: `unified-trading-pm@e2ed126d78` (verified ancestor). AO-side
+      (`server/escalation.py` WALL_TYPES + `_poll_wall_resolution`, `server/models/escalation.py` Literal,
+      `tests/test_escalation.py`): `agent-orchestrator@0224dfa4ac` (verified ancestor, shipped once repo-blocker
+      RB-2549326a cleared via a peer session's DTZ-ratchet + flaky-test fixes). Both QG-green end-to-end.
 
 - [x] ✅ [DOC] P3. **Decide the endgame for the 3 formally-retired-but-still-scanned codex docs**
       (`/codex/02-data/data-catalogue-schema.md`, `/codex/05-infrastructure/ui-dependency-matrix.md`,
