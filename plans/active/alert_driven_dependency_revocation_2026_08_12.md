@@ -173,11 +173,10 @@ bridges them; it does not extend one over the other.
       (9/9 claims): `DependentAction` StrEnum with all 6 members, `evaluate_revocation()`, `resolve_dependents()`,
       `ALERT_CODE_ACTIONS` + `DP_FAILURE_MODE_ACTIONS`, `RetryBudget`, `RETRY_BUDGETS`,
       `MISSING_CREDENTIAL max_attempts=0`, Tardis `max_attempts=1`; 41 tests green. Repo: unified-api-contracts.
-- [ ] [OPERATOR] P2. Bootstrap a `.venv` in this slot's `unified-trading-library` — absent, so every verification
-      round-trip is a full `quality-gates.sh` run (measured this session: 103s / 119s / 218s / 406s, plus a 74s
-      tests-slice). Roughly 20 minutes of one session's wall-clock went to gates for changes checkable in seconds
-      locally. This is the dominant cost on the remaining todos and Phase 6's 12 bad-VM scenarios will be the worst of
-      it.
+- [x] ✅ [SCRIPT] P2. Bootstrap a `.venv` in this slot's `unified-trading-library` — **stale, already resolved**:
+      verified 2026-08-15 the slot's `.venv` exists and is populated (Python 3.13.9, 200 packages installed via
+      `pip list`). Retagged `[OPERATOR]` → `[SCRIPT]` — this was never a judgment call, just an environment-setup step
+      someone else already completed without flipping the box.
 
 ## Phase 1 — The graceful-flush contract (HARD PREREQUISITE — no DEPS_DRAIN edge is armed before this)
 

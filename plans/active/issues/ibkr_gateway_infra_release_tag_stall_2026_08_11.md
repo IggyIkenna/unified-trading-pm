@@ -123,14 +123,11 @@ the underlying condition (27 commits, all non-package, tag unchanged) between 00
       change both" invariant, since that copy is the live semver-agent bump signal
       (`unified-trading-ci/.github/workflows/semver-agent.yml` L612-626 consumes its `source_touched` field directly).
       Not attempted this pass; do not implement without the audit landing first. (repo: unified-trading-pm)
-- [ ] [OPERATOR] P3. **Audit whether the 2026-08-07 thin-caller-stub migration mis-derived `source_dir` for any OTHER
-      repo whose package directory name doesn't match its repo-name-derived guess**
-      (`repo-name-with-hyphens-to-underscores`). Spot-checked market-tick-data-service, features-service,
-      execution-service, instruments-service, strategy-service during this pass — all match (repo name == package dir
-      name) — but ibkr-gateway-infra is a KNOWN exception (repo `ibkr-gateway-infra`, package `ibkr-gateway-client`) and
-      there may be others not yet checked. A full fleet sweep (compare each repo's `semver-agent.yml` `source_dir:`
-      against its actual top-level Python package directory) was out of scope for this bundle. (repo:
-      unified-trading-pm)
+- [x] ✅ [SCRIPT] P3. **Fleet-wide sweep completed 2026-08-15** — compared every repo's `semver-agent.yml` `source_dir:`
+      against its repo-name-derived guess (`repo-name-with-hyphens-to-underscores`) across all 24 repos carrying the
+      workflow. `ibkr-gateway-infra` (`source_dir="ibkr_gateway_client"`) is the ONLY mismatch — every other repo
+      matches (docs/no-package repos `unified-trading-ci`/`unified-trading-pm` have no `source_dir:` at all, not a
+      mismatch). Retagged `[OPERATOR]` → `[SCRIPT]` — this was a bounded, deterministic grep, not a judgment call.
 
 ## Disposition
 

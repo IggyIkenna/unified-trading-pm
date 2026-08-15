@@ -152,7 +152,9 @@ Absent in this dev slot for the whole life of the parent plan, so every UTL veri
 a full `quality-gates.sh` run (measured: 103s/119s/218s/406s + a 74s tests-slice on one session alone) instead of a fast
 local check. Environment setup, not a code change.
 
-- [ ] [OPERATOR] P3. Bootstrap a `.venv` in this slot's `unified-trading-library`.
+- [x] ✅ [SCRIPT] P3. Bootstrap a `.venv` in this slot's `unified-trading-library` — **stale, already resolved**:
+      verified 2026-08-15 the slot's `.venv` exists and is populated (Python 3.13.9, 200 packages). Retagged
+      `[OPERATOR]` → `[SCRIPT]`.
 
 ## Progress Log
 

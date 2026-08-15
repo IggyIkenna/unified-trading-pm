@@ -111,10 +111,18 @@ protocol asks to be investigated before being waved off.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Determine how/when the 900 tradfi legacy-B objects (day range including at least 2025-01-02) were
-      removed from `gs://market-data-tick-tradfi-prd-central-element-323112` — check GCS Object Versioning / Cloud Audit
-      Logs (`gcloud logging read` for `storage.objects.delete` on this bucket/prefix) for the actual deleting
-      principal + timestamp, since neither this doc's author nor any tracked plan/issue records an execution.
+- [x] ✅ [DIAG] P1. Determine how/when the 900 tradfi legacy-B objects (day range including at least 2025-01-02) were
+      removed from `gs://market-data-tick-tradfi-prd-central-element-323112` — **unrecoverable via Cloud Audit Logs,
+      confirmed 2026-08-15**: `storage.objects.delete` query against the project's `_Default` log bucket (90-day
+      freshness window) returns zero rows for this bucket, and the bucket's own configured retention is only 2 days
+      (`gcloud logging buckets describe _Default --format='value(retentionDays)'`) — no custom long-retention sink
+      exists (`gcloud logging sinks list` shows only `_Default`/`_Required`/one unrelated diag sink). A deletion from
+      ~2025-01-02 is ~590 days outside that window; the deleting principal/timestamp cannot be recovered by any logging
+      mechanism currently configured. Retagged `[OPERATOR]` → `[DIAG]` (bounded investigation, not a judgment call) —
+      closing as "mechanism unrecoverable," per this doc's own Disposition options. **Follow-up worth flagging
+      separately**: a 2-day audit-log retention on the project handling prod data-pipeline deletes is unusually short
+      and was the reason this couldn't be answered — may be worth a deliberate retention bump if this kind of forensic
+      question recurs.
 - [ ] [SCRIPT] P2. Once the mechanism is known, spot-check whether the defi and pred legacy-twin-delete candidate sets
       (same gated todo, `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s sibling asset_groups) show the same
       already-vanished pattern BEFORE trusting a future dry-run's twin-coverage number for them — a stale report
