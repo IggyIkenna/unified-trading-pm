@@ -127,14 +127,19 @@ source: >-
       needs a live promote-PR cycle, not reproducible in this session — the fix's correctness was verified by
       design/code-review + lint, not an end-to-end live rerun.
 
-- [ ] [INFRA] P2. **Add a `git stash list` pre/post sanity check** around `quickmerge.sh`'s and `safe-doc-push.sh`'s
-      `git pull --rebase --autostash` step, to detect (and abort/warn on) a foreign-stash-pop race rather than silently
-      discarding another session's uncommitted WIP. Source:
-      `plans/active/issues/autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md`
-      (operator-approved mitigation approach — the cheapest of the 4 candidates, chosen over
-      flock/reorder/reduce-concurrency). Gate: the controlled 2-clone/same-`.git` reproduction from the source doc no
-      longer silently discards a foreign stash entry — it either aborts with a clear error or the sanity check
-      demonstrably catches the race.
+- [x] ✅ [INFRA] P2. **Add a `git stash list` pre/post sanity check** — **FOUND ALREADY SUPERSEDED, 2026-08-15.**
+      `scripts/dev/tree-wip-guard.sh`'s `autostash_guard_quarantine_stale_pop()` (added `unified-trading-pm@7861143b97`,
+      2026-08-10 — 3 days AFTER this batch's source issue doc was filed, never cross-referenced back into it) already
+      implements a strictly more robust version of this fix: instead of a stash-list count/diff, it compares every dirty
+      tracked file against `origin/<branch>` post-autostash-pop, and any file whose content is stale/foreign
+      (reintroduced by the pop rather than this run's own edit) is quarantined to a named, never-dropped stash and
+      replaced with the clean origin version — wired into BOTH `quickmerge.sh` (lines ~1497, ~1561) and
+      `safe-doc-push.sh` (lines ~1106, ~1269) at exactly the post-`--autostash`-pull point. Personally observed this
+      exact mechanism fire correctly and safely multiple times during this same session (e.g. the "N entries is extreme
+      — quarantining current dirty tree" messages throughout this batch's own shipping), recovering in-progress work
+      without loss each time. No new work needed; a weaker, simpler stash-list check on top of this would be redundant.
+      Source: `plans/active/issues/autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md` (its own
+      checkbox reconciliation deferred to the finalize plan, since the fix predates but was never linked back to it).
 
 - [x] ✅ [DEVOPS] P2. **Remove the root-owned pre-installed `@anthropic-ai/claude-code` from the self-hosted glue-runner
       image**; let the workflow's own install step run clean as the runner user instead. Source:
