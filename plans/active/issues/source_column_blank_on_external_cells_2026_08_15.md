@@ -114,9 +114,12 @@ leaving it as an unscoped "run a corpus backfill" todo.
       `git show origin/live-defi-rollout:scripts/backfill_cefi_source_column.py`). Repo-blocker `RB-c19cd263` cleared
       first; the commit SHA changed twice in-flight (local rebase during QG, then a push-time rebase onto a newer remote
       tip) — this final SHA is the one on origin, earlier `f1f41552`/`a1cb93a6` references are stale.
-- [ ] [DATA] P1. Backfill the `source` column for the 1 named tradfi cell (`CME/ohlcv_15m`, 64 rows, repo:
+- [x] ✅ [DATA] P1. Backfill the `source` column for the 1 named tradfi cell (`CME/ohlcv_15m`, 64 rows, repo:
       market-tick-data-service) — all 6,463 non-blank rows are `databento`; verify the 64 blank rows are also genuinely
-      databento-sourced (not a different vendor silently uncaptured) before backfilling.
+      databento-sourced (not a different vendor silently uncaptured) before backfilling. — **DONE 2026-08-15
+      (slot-27·data_engineering).** Manifest patch verified live (0 blank-source rows in `(tradfi, CME, ohlcv_15m)`,
+      6,632/6,632 rows `source=databento`) and code shipped: `market-tick-data-service@5b50fec8ed` — landed on
+      `origin/live-defi-rollout` (verified ancestor, `ahead=0`, clean tree).
 - [x] ✅ [SCRIPT] P2. Re-run `scripts/quality_gates/audit_source_column_distribution.py --strict` against
       `market-data-tick-cefi-prd-central-element-323112` and `market-data-tick-tradfi-prd-central-element-323112` after
       the two backfills above land — confirm 0 RED cells (exit 0). — **DONE 2026-08-15 (slot-8·data_engineering), with
@@ -168,19 +171,14 @@ leaving it as an unscoped "run a corpus backfill" todo.
     `_index/availability_index.parquet` now shows 0 blank-source rows in `(tradfi, CME, ohlcv_15m)`; all 6,632 rows in
     that cell carry `source=databento`. **The data-plane fix is live and confirmed — this is the correctness-critical
     part of the todo and it is done.**
-  - **Code shipping is BLOCKED, not done**: committed the script locally (`market-tick-data-service@2e7753a7`, unpushed)
-    but `quality-gates.sh` hit 2 pre-existing failing tests
-    (`test_migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py::test_build_casing_frame_upgrades_every_known_residual_token`,
-    `test_venue_fetch_cefi_manifest_canonicalization.py::...test_cme_combo_shard_itype_now_canonicalizes_uppercase`) —
-    unrelated to this change (touches only the new script file), already root-caused and tracked by slot-29 as
-    repo-blocker `RB-c19cd263` / `plans/active/issues/mtds_tradfi_combo_casing_qg_red_2026_08_15.md`; joined as a waiter
-    rather than re-diagnosing. **Do NOT flip this todo's checkbox until the code SHA actually lands on
-    `origin/live-defi-rollout`** — the manifest patch is done, but the todo's `done_definition` (checkbox + shipped
-    code) needs the repo-blocker to clear first. If a future session finds `RB-c19cd263` resolved and this todo still
-    unflipped, `cd market-tick-data-service`, `git status` (the commit may already be sitting there if the owning
-    session got interrupted before shipping), fresh-pull, re-run `quality-gates.sh --no-fix`, ship via
-    `quickmerge --agent --files 'scripts/restamp_tradfi_cme_ohlcv15m_blank_source_2026_08_15.py'`, then flip this
-    checkbox with the landed SHA as evidence.
+  - **Code shipped — todo done.** `RB-c19cd263` (the repo-wide QG red blocking the initial push) cleared; re-ran
+    quickmerge
+    (`bash scripts/quickmerge.sh "feat(tradfi): backfill source column for CME/ohlcv_15m blank rows" --agent --files 'scripts/restamp_tradfi_cme_ohlcv15m_blank_source_2026_08_15.py'`),
+    which queued behind the shared `qg-governor` host-wide token cap for ~3101s before admission, then ran the full
+    local gate (10,854-item pytest suite, basedpyright, lint, all `[5.9x/6]` late-stage checks) clean — exit 0. Landed
+    `market-tick-data-service@5b50fec8ed` on `origin/live-defi-rollout` (post-push ancestry verified; local
+    `git fetch` + `merge-base --is-ancestor HEAD origin/live-defi-rollout` confirmed YES, `ahead=0`,
+    `git status --porcelain` empty). Both the manifest fix and the code are now durable.
 - **2026-08-15 (slot-8·data_engineering)**: Worked the cefi P1 backfill todo (todo 1, now `[x]`) + the P2 re-audit todo
   (todo 3, now `[x]` with caveat) — see those todos above for full detail. Also independently applied the SAME tradfi
   `CME/ohlcv_15m` fix via the general-purpose `restamp_tradfi_source_2026_07_07.py` (rewritten this session for
