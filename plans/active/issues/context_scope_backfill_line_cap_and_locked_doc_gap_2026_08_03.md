@@ -342,20 +342,14 @@ lock check before doing Phase-1 analysis; a future pass should do the full scout
 
 ## Follow-ups
 
-- [ ] [SCRIPT] P3. Trim/split `plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` (998L
-      pre-edit; the minimal 3-entry `context_scope` block alone — no marker — pushed it to 1004L, over the 1000L hard
-      cap) per this issue's established extraction pattern (move the oldest fully-closed Progress Log section to a
-      `plans/archive/` companion doc, leave a one-line pointer), then apply the pre-computed, disk-verified
-      `context_scope` below and add the `context-scout` Progress Log marker. Pre-computed (2026-08-14, verified to
-      resolve on disk):
-  ```
-  plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md:
-    [
-      /codex/04-architecture/client-funds-isolation.md,
-      /codex/04-architecture/defi-execution-overview.md,
-      /codex/04-architecture/transfer-architecture.md,
-    ]
-  ```
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-15 (slot-16).** Trimmed/split
+      `plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` — extracted the three oldest
+      Progress Log entries (2026-08-11 → 2026-08-12 "second pass", 39 lines, pure historical session narration
+      superseded by the plan's own "State as of 2026-08-13" section, no open todo among them) to
+      `/plans/archive/2026_08/elysium_october_delivery_and_code_disclosure_readiness_progress_log_history_2026_08_15.md`,
+      leaving a one-line pointer; applied the pre-computed `context_scope` (3 entries, re-verified to resolve on disk);
+      added the `context-scout` Progress Log marker; bumped `last_updated`. Result: 999L → 974L, well under the 1000L
+      hard cap — `bash scripts/plan-hygiene/check_line_caps.sh` passes (SOFT, 974L).
 - [ ] [SCRIPT] P3. Complete the full context-scout for fleet_audit_triad_deferred_followups_2026_06_01.md (Phase-1
       analysis + a proper context_scope list; the applied entry is a stub).
 - [ ] [SCRIPT] P3. Trim/split 3 more docs newly confirmed sitting at the EXACT 1000-line hard cap during the 2026-08-07
@@ -369,6 +363,9 @@ lock check before doing Phase-1 analysis; a future pass should do the full scout
       `prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md` (filed same day by a concurrent
       na-eligibility-audit pass) — that doc's plan applies here too, just needs an operator/committer to execute it. All
       3 will keep reading STALE on every future Phase-0 run until trimmed.
+
+- **2026-08-15 (slot-16)**: closed the elysium Follow-up above — trim/split + pre-computed `context_scope` applied,
+  marker added. 2 Follow-ups remain open (fleet_audit_triad full scout; the 3-doc 2026-08-07 batch).
 
 > **2026-08-06 archive-candidate audit**: The doc's locked-docs note explicitly says
 > 'fleet_audit_triad_deferred_followups_2026_06_01.md had no proposed list computed ... a future pass should do the full

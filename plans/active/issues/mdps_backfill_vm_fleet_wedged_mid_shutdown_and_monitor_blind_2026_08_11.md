@@ -206,10 +206,14 @@ guest liveness on 2 samples) — a future check should confirm they're actually 
       393 names, committed alongside this doc so the list outlives the session that produced it) — they were deleted
       before the tool existed and still have no tombstones, so unpausing first would replay the exact burst — then (3)
       unpause. Doing these out of order re-creates the incident.
-- [ ] [SCRIPT] P1. Make `exit_code_fleet_monitor` bounded and complete: it must either finish a full fleet sweep inside
-      its task timeout (parallelise the per-VM probe, or page the fleet across executions with a durable cursor) or
-      loudly report that it did NOT complete. A monitor that silently covers 3% of the fleet is worse than none — it
-      reports green by omission. Evidence: 18 distinct VMs verdicted in 6 h against 651 running.
+- [x] ✅ [SCRIPT] P1. **Done** (2026-08-15, slot-15·infra) — the per-VM probe was already parallelised by a prior
+      session (2026-08-14/15 fixes above); this todo's remaining gap was the "loudly report incomplete coverage"
+      half. `sweep()` now takes `deadline_monotonic` (caller-computed from the task timeout, one deadline for the
+      whole task, not per storm-resweep pass) + `coverage_sink`; past the deadline the classify loop checkpoints
+      + stops early, and `cli.py` routes a CRITICAL `DP_VM_SWEEP_INCOMPLETE` finding (DP-VM-013) + writes
+      `ok=False` on the last-run sentinel instead of a green sentinel by omission. Evidence:
+      `unified-trading-library@8764696aef`, `deployment-service@1b7d1d3587`, QG green (745s). Plan flip:
+      `plans/active/cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` item (exit_code_fleet_monitor).
 - [ ] [SCRIPT] P1. Stop `*/5` executions overlapping — set the Cloud Run job's concurrency to 1 (or take a lease), so
       the relaunch budget is consulted by ONE container at a time. The empty-budget-per-container race is already
       documented in `relaunch_backfill_vm.py`; the schedule still permits it.

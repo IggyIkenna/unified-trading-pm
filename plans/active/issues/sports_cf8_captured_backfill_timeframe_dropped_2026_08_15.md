@@ -291,19 +291,38 @@ issue's scope); flagged as a follow-up todo below.
       wrapper to check `maintenance_status()` first), or (b) documenting the direct-execution path as "ALSO check
       `--status` before running" in the same places the scheduler pause/resume guidance already lives. Scope/design not
       decided — routing to operator/infra owner. (repo: deployment-service or unified-trading-pm docs)
-- [ ] [DATA] P2. **Root cause OPEN, migrated from the now-archived IS-surface doc's own deferral**: why does the
-      ODDS_API venue write blank-`timeframe` `odds_horizon_bucket` rows at all, structurally? RULED OUT: this doc's
-      own `_write_captured_rows()` bug (fixed `market-tick-data-service@e0b34e77fd`) and any known launched VM/Cloud
-      Run job (zero deployment-archive records and zero Cloud Logging matches for the 3 known
-      `_write_captured_rows()` callers on any of 5 spike dates — see
+- [x] [DATA] P2. **Root cause FOUND, 2026-08-15 (slot-2)**: blank-`timeframe` ODDS_API rows are **blank-by-design, not
+      a bug**. The live per-date manifest writer `_write_shard_counts_to_manifest`
+      (`market_tick_data_service/engine/orchestrator/manifest_finalize.py:323`, invoked from `_write_date_manifest`
+      at line 720 — the real always-live capture path, not a rebuild/migration script) never passes `timeframe=` in
+      its `venue_writer.add(...)` call (lines 481-497) for the ODDS_API `itype_key=="odds" and data_type_key=="odds"`
+      branch (lines 430-443); `ManifestWriter.add()`
+      (`unified-trading-library/unified_trading_library/manifest_writer/_writer_ingest.py:75`) defaults
+      `timeframe: str = ""`, so every raw `data_type="odds"` ODDS_API row has always been written blank — for the
+      entire lifetime of this code path, not a regression. The horizon-bucket/timeframe *concept* only exists for the
+      separately-computed `data_type="odds_horizon_bucket"` rollup, built downstream in
+      `market-data-processing-service`'s `SportsBucketAssignmentAdapter`
+      (`market_data_processing_service/app/adapters/sports/bucket_assignment_adapter.py`) — raw `data_type="odds"`
+      captures never carried a timeframe to begin with, which is exactly why zero siblings were ever found (no code
+      path has ever written a non-blank timeframe under that coarse key). **Confidence: High** on the mechanism
+      (confirmed at both call site and library default); **medium-high** on the "blank-by-design, safe to leave"
+      framing — the investigating agent could not directly query the manifest to confirm the 899,508/14,982-row
+      population is exclusively `data_type="odds"` rather than partially mixed with `odds_horizon_bucket` rows from a
+      different write path (see follow-up P3 below). **Practical conclusion: do NOT delete these rows** — this is
+      expected shape for raw ODDS_API captures, not corruption; no cleanup action is warranted absent the P3
+      confirmation surfacing a different population mix. RULED OUT (unchanged from prior investigation): this doc's
+      own `_write_captured_rows()` bug (fixed `market-tick-data-service@e0b34e77fd`, a different function in a
+      v9-rebuild script that only re-threads pre-existing `timeframe` values, never derives new ones) and any known
+      launched VM/Cloud Run job — see
       `/plans/archive/2026_08/issues/sports_is_odds_horizon_bucket_blank_timeframe_odds_api_dominant_2026_08_15.md`
-      for the full evidence trail). Cross-surface, full-scale, zero-sibling pattern confirmed on BOTH surfaces: MDPS
-      14,982 rows (100% ODDS_API, 0/200 sampled siblings), IS 899,508 rows (99.8% ODDS_API, 0/899,508 siblings on
-      the FULL population, not sampled). Needs a genuine code-path investigation (most likely the live ODDS_API
-      capture writer, since every known backfill/rewrite script is now ruled out) before any cleanup scope is
-      considered — no sibling means deleting would destroy real capture data, so do not assume these rows are safe
-      to remove without first determining whether blank `timeframe` is legitimate-by-design for this venue or itself
-      a distinct, older bug. (repo: market-tick-data-service)
+      for that evidence trail. (repo: market-tick-data-service)
+- [ ] [DATA] P3. **Confirm population composition** before fully closing the "safe to leave" verdict above: verify the
+      899,508-row IS population and 14,982-row MDPS population sampled for the zero-sibling finding are exclusively
+      `data_type="odds"` rows (the structurally-blank-by-design population), not partially mixed with
+      `data_type="odds_horizon_bucket"` rows written by a different path — a mixed population would need the
+      `odds_horizon_bucket` subset re-examined separately since that data_type's timeframe is NOT structurally blank
+      by design. Low urgency: mechanism confidence is already high and no destructive action is pending on this.
+      (repo: market-tick-data-service)
 
 ## Progress Log
 
@@ -627,3 +646,12 @@ issue's scope); flagged as a follow-up todo below.
   IS-surface doc (a caller-pre-staged `git mv` still trips the pre-fix pathspec error;
   `safe_doc_push_extreme_stash_quarantine_drops_renamed_file_content_2026_08_15.md` P1 todo, not scoped to this
   doc's own investigation). Every actionable item from this session's resumption list is now committed and pushed.
+- **data_engineering slot-2, 2026-08-15 (P2 DATA root-cause CLOSED)**: dispatched a read-only Explore agent to trace
+  the exact ODDS_API `timeframe`-derivation code path. It returned a conclusive finding: blank-`timeframe` is
+  **blank-by-design** in the live manifest writer (`manifest_finalize.py::_write_shard_counts_to_manifest`, never
+  passes `timeframe=` for the ODDS_API `data_type="odds"` branch; `ManifestWriter.add()` defaults it to `""`), not a
+  bug and not related to the already-fixed `_write_captured_rows()` bug. Full evidence + file:line citations recorded
+  directly on the P2 todo above; flipped to `[x]`. Filed a low-urgency P3 follow-up to confirm the sampled
+  zero-sibling populations are exclusively `data_type="odds"` (not mixed with `odds_horizon_bucket`) before treating
+  the "safe to leave, do not delete" conclusion as fully closed. No code changed — this was pure investigation; no
+  cleanup action is scoped or warranted by this finding.

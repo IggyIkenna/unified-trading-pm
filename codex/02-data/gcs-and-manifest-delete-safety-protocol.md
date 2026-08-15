@@ -57,7 +57,7 @@ referenced_by:
     /codex/02-data/orphan-object-detection.md,
   ]
 owner:
-last_reviewed: 2026-07-28
+last_reviewed: 2026-08-15
 code_refs:
   [
     unified-trading-library/unified_trading_library/cloud_interface/gcs_blob_ops.py,
@@ -384,6 +384,35 @@ review-blocking). Use the manifest-driven route or a sanctioned prefix-scoped / 
 **Pre-delete drain.** Any campaign that will delete or move objects at scale is preceded by the pre-migration drain —
 stop all VMs on both clouds, consolidate the manifest, snapshot — per `/codex/05-infrastructure/vm-launcher-runbook.md`.
 Note that a snapshot does not substitute for Part 2 (§ 1).
+
+**Manifest-write coordination gate (codified 2026-08-15, closes the write-race that caused
+`dex_pool_fees_inverted_flip_write_race_2026_08_12.md`).** Any script that REWRITES the canonical consolidated `_index`
+(`_index/availability_index.parquet`) — a retirement flip, a corrective flip, or any other full-blob rewrite of the
+index, delete or not — MUST do both of the following, not just one:
+
+1. **CAS generation-match on the write itself.** Capture the index blob's `generation` from the SAME read that produced
+   the rows being rewritten, then write via `conditional_upload_file(..., if_generation_match=<that generation>)`
+   (`unified-trading-library/unified_trading_library/cloud_interface/providers/gcp.py:459`) — never a plain
+   `upload_file`/`upload_from_filename`. A `None` return means a racing writer's generation won since the read; the
+   caller MUST treat this as `failed`/refuse and re-read-then-retry on a fresh base, never silently retry-and-overwrite.
+   This is what makes a stale-base writer's rewrite REJECTED (manifest left unchanged-safe) instead of silently
+   reverting a concurrent writer's already-landed rows — the exact mechanism a plain non-CAS `upload_file` race produced
+   in the 2026-08-12 incident (writer 2's base read predated writer 1's write; its full-blob upload silently reverted
+   writer 1's flip while applying its own).
+2. **Pause the manifest-consolidator cron before writing, resume after — and HARD-ABORT if it wasn't already paused.**
+   The script must read back the cron's own state (e.g.
+   `gcloud scheduler jobs describe uts-prod-manifest-consolidator-market-data-<ag>-cron`) and refuse to proceed unless
+   it reads `PAUSED` — a read-only precondition check, not a self-pause (the pause/resume is a separate, explicit
+   operator or launcher step around the script's own run). This is a second, independent race guard: CAS alone stops two
+   one-off scripts from clobbering each other, but the consolidator's own scheduled merge is a THIRD writer that can
+   still race a manual flip if it isn't paused for the duration.
+
+Precedent implementation (worked example, not a template to diverge from): `_assert_consolidator_paused()` +
+`conditional_upload_file(..., if_generation_match=index_generation)` in
+`market-tick-data-service/scripts/one_offs/retire_dex_pool_fees_all_captured_rows_2026_08_12.py`. The sibling one-off
+retire scripts that predate this gate (`retire_rate_indices_...`, `retire_pool_uppercase_...`, `retire_dex_swaps_...`,
+`retire_dex_pools_...`) are historical, already-applied, and are not backfilled — this pattern is the default for every
+_future_ canonical-`_index` rewrite, delete or not.
 
 ---
 

@@ -18,7 +18,7 @@ summary: >-
   attempted-and-failed -- an honest-coverage accounting corruption. Fully reversible (status flips only, no rows/objects
   deleted). Recovery in progress: slot 14 applies a corrective flip (restore 14 CURVE -> captured, retire 7 BALANCER ->
   attempted_failed).
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -34,7 +34,7 @@ related:
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-12"
-last_updated: "2026-08-12"
+last_updated: "2026-08-15"
 source: >-
   Live finding by AO slot 14 (data_engineering) 2026-08-12 while executing plan todo 7 (dex_pool_fees verify+retire).
   Overlapping dispatch of the plan todo and the issue-doc disposition todo caused two concurrent writers to the same
@@ -52,7 +52,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "unified-trading-pm@<pending> (todo 4: coordination gate codified in gcs-and-manifest-delete-safety-protocol.md)"
 depends_on: []
 context_scope:
   [
@@ -61,6 +61,13 @@ context_scope:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-15** — `status: resolved`, all 4 todos done, unlocked; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)'s
+> archive-immediately rule. The write-race incident itself was corrected same-day (2026-08-12, todos 1-2), root-caused +
+> CAS-gated in code (2026-08-12, todo 3, `market-tick-data-service@6b557144`), and the coordination gate is now codified
+> in the data SSOT (2026-08-15, todo 4, `codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § "Manifest-write
+> coordination gate"). No content rewritten below this banner.
 
 # Inverted `dex_pool_fees` flip from a write race (2026-08-12)
 
@@ -162,13 +169,20 @@ BALANCER rows ... Do NOT touch the 14 CURVE rows").
       (`conditional_upload_file(if_generation_match=...)`) on all 4 dex_pool_fees scripts → stale-base writer REJECTED
       (exit 2, manifest UNCHANGED-SAFE); retire-all additionally HARD-ABORTs `--from + --apply`. UTL
       `conditional_upload_file` verified (None-on-PreconditionFailed, gcp.py:459). See Progress Log.
-- [ ] [DATA] P3. Codify the manifest-write coordination gate in the data SSOT
+- [x] ✅ [DATA] P3. Codify the manifest-write coordination gate in the data SSOT
       (`/codex/02-data/availability-manifest-and-data-status.md` or
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §5): any rewrite of a canonical consolidated `_index`
       MUST use CAS generation-match (`conditional_upload_file`) + pause the consolidator cron. Sibling one-off retire
       scripts (`retire_rate_indices_...`, `retire_pool_uppercase_...`, `retire_dex_swaps_...`, `retire_dex_pools_...`)
       predate the gate (historical, already-applied — no backfill needed; the pattern is the default for future
-      retirements). (repo: unified-trading-pm)
+      retirements). (repo: unified-trading-pm) — **DONE 2026-08-15 (slot 14, data_engineering).** Added a new
+      "Manifest-write coordination gate" subsection to
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § "Sanctioned mechanics" codifying both required
+      parts (CAS `if_generation_match` on the write + a read-only `PAUSED`-state precondition check on the
+      manifest-consolidator cron before writing), citing the worked-example implementation
+      (`_assert_consolidator_paused()` + `conditional_upload_file(...)` in
+      `market-tick-data-service/scripts/one_offs/retire_dex_pool_fees_all_captured_rows_2026_08_12.py`) and naming the
+      sibling scripts as historical/no-backfill-needed. `last_reviewed` bumped to 2026-08-15. See Progress Log.
 
 ## Progress Log
 
@@ -227,3 +241,12 @@ BALANCER rows ... Do NOT touch the 14 CURVE rows").
   twin-matching bug" framing is corrected in the body + Recommended decision #2. Dispatch-level coordination (never
   dispatch plan + issue-doc retirement todos for the same manifest concurrently) remains Recommended-decision #3 + new
   P3 follow-up.
+- **2026-08-15 (slot 14, data_engineering) — todo 4 DONE: coordination gate codified in the data SSOT.** Added a
+  "Manifest-write coordination gate" subsection to `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 5
+  "Sanctioned mechanics", requiring BOTH (1) CAS `if_generation_match` on the write itself (never a plain
+  `upload_file`), citing `conditional_upload_file` at `gcp.py:459`, and (2) a read-only precondition check that the
+  manifest-consolidator cron is already `PAUSED` before writing (hard-abort if not) — the consolidator's own scheduled
+  merge is a third writer CAS alone doesn't guard against. Cited the worked-example implementation
+  (`_assert_consolidator_paused()` + `conditional_upload_file(...)` in
+  `retire_dex_pool_fees_all_captured_rows_2026_08_12.py`) and named the sibling pre-gate scripts as historical/no
+  backfill needed. `last_reviewed` bumped 2026-07-28 → 2026-08-15. Docs-only change, no code shipped.

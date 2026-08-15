@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [audit, verification-debt, ci-gate, determinism, code-quality]
 related:
   [
-    /plans/active/issues/execution_service_verification_debt_findings_2026_08_15.md,
+    /plans/archive/2026_08/issues/execution_service_verification_debt_findings_2026_08_15.md,
     /plans/active/issues/pm_archive_false_done_and_review_backlog_2026_08_15.md,
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,

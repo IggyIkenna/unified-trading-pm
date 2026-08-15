@@ -459,86 +459,24 @@ attempted_failed cells accruing), and its diagnosis just reversed, so nobody sho
   exit-code monitor's relaunch-budget bug — this plan's todo #1 (durable race-free relaunch state) is code-complete but
   unshipped; sibling escalation `agt-c06379` (deployment-service) is dispatched on it. This finding needs no MTDS code
   change — the MTDS side was already correct.
-- **2026-08-13 (data_pipeline_failure escalation worker, agt-f601e4, slot 7) — repeat dispatch for
-  `(cefi, book_snapshot_5)`; VERIFIED STATIC BACKLOG on live data, no new failure class, no code fix.** DP-FETCH-009
-  page: 7,806 attempted_failed of 215,756 attempted (ratio 3.6%). **The number is NOT comparable to prior readings
-  (300-380k/~1.1M = 26-34%):** since `deployment-service@96271280` (2026-08-10) both sides of the ratio share the
-  trailing-14-day window (`ATTEMPTED_FAILED_TRAILING_WINDOW_DAYS=14`, `_attempted_failed_index.py`), so the alert now
-  reports the WINDOWED recent count, not the lifetime cell total. **Ran a bounded live manifest read to independently
-  verify (reproduced the detector's exact computation on
-  `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` via the CLI's own
-  GCS-streaming columnar reader — pyarrow `GcsFileSystem` + `columns=`/`filters=` pushdown, ~7.4M rows materialized, no
-  `gcloud` subprocess, no corpus walk):** 14d windowed `attempted_failed` = **7,806 (EXACT match to the alert)** / 14d
-  windowed `captured` = 202,066 / denom 209,872 / ratio **3.72%** (the small 3.6→3.7% delta is window roll in the
-  minutes between alert evaluation and this read). **1d recent attempted_failed = 0** (STATIC BACKLOG materiality floor
-  = 500); `max attempted_at` = 2026-08-11T14:47Z (~2 days stale). **Recent-failure composition (14d window, all
-  already-documented classes — no new mechanism):** `UNCLASSIFIED_VENUE_ERROR` 2,095 + `UpstreamTimestampBiasError`
-  (ASTER) 2,000 (the aiodns/upstream-timestamp classes fixed by `6a067cf1`/`6c6fab03`), `404 GET https` 1,711 (the known
-  historical-PERPETUAL re-attempt 404 wave), `Tardis HTTP 403 code=274 concurrent-IP-lock` ~1,082 (the
-  concurrent-IP-lock P0), `Tardis HTTP 500/503` ~746 transients. All five known MTDS fix commits verified still on
-  `origin/live-defi-rollout`: `2ddc6d4a` (DERIBIT-combo guard-widen), `6a067cf1`/`6c6fab03` (aiodns hard-fail),
-  `31934527` (403-code-274 tagging), `55ec86ac` (BITGET expiry). **Verdict: no fresh regression, no code fix required**
-  — the residual is the same historical backlog family this doc +
-  `cefi_high_attempted_failed_batch_cluster_2026_07_23.md` already cover; the live capture-side remediation stays gated
-  on `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` (Track-2 resume, machine-gated on Track-1). Cross-linked
-  from `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` — another `(cefi, book_snapshot_5)`
-  repeat-dispatch case (the escalation fast-path still has no open-issue-doc dedup). Read-only: no GCS write, no
-  manifest change, no code shipped; PM plan-doc edit only.
-- **2026-08-14 (data_pipeline_failure escalation worker, agt-8ec9c8, slot 6) — repeat dispatch for
-  `(cefi, book_snapshot_5)`; VERIFIED STATIC BACKLOG, zero new attempted_failed activity since the last check, no code
-  fix.** DP-FETCH-009 page: 7,806 attempted_failed of 208,624 attempted (ratio 3.7%), labeled STATIC BACKLOG — no new
-  attempted_failed activity in 2d. Read this doc first per the pre-task plan/issue conflict-check rule; the prior two
-  entries above (`agt-b947d5` 2026-08-10, `agt-f601e4` 2026-08-13) already verified this exact numerator (7,806) as the
-  same windowed historical backlog. Rather than re-deriving the computation, called the shipped detector's own
-  `read_attempted_failed_cells()` + its GCS-streaming columnar reader directly
-  (`deployment_service.data_pipeline_monitors._attempted_failed_index` / `cli._make_streaming_index_reader`,
-  `market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, columns-pushdown only, no corpus
-  walk, no `gcloud` subprocess): live read returns `attempted_failed=7,802` (matches the alert within window-roll
-  noise), `captured=188,363`, `ratio=3.98%`, `high=True`, **`max_attempted_at=2026-08-11T14:47:01Z` — byte-identical to
-  the 2026-08-13 dispatch's reading** (i.e. zero new attempted_failed rows landed in the 3+ days since),
-  `recent_attempted_failed=0`. This is the strongest confirmation yet of no live regression: not just a static ratio,
-  but a literally unchanged `max_attempted_at` across two independent dispatches 24h+ apart. All previously shipped fix
-  commits (`unified-api-contracts@8db188fe`/`@1c4d8864`, `market-tick-data-service@339ca767`/`@6bf568ee`) were not
-  re-verified this session (redundant given the frozen `max_attempted_at` — zero new rows means nothing could have
-  regressed past the last verified checkpoint). **Verdict: no fresh regression, no code fix required** — same conclusion
-  as the prior two entries; the residual ~7.8k windowed rows are the same historical backlog awaiting a normal
-  idempotent backfill re-attempt (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`, Track-2, machine-gated on
-  Track-1). `AUTHORING_SLOT=dp-fleet-monitor` (not a numbered slot) — no ping sent, per the role's own skip rule; the
-  dispatch-time Slack alert already covers the FYI. Read-only: no GCS write, no manifest change, no code shipped; PM
-  plan-doc edit only.
+- **2026-08-10→14 (data_pipeline_failure escalation worker, 4 dispatches condensed: agt-b947d5 2026-08-10,
+  agt-f601e4 slot-7 2026-08-13, agt-8ec9c8 slots 6+14 2026-08-14, agt-07b27b slot-21 2026-08-14) — repeat-dispatch
+  cluster for `(cefi, book_snapshot_5)` DP-FETCH-009, condensed 2026-08-15 per this plan's own line-cap trim todo
+  (batch19); each dispatch independently reached the same verdict.** Every read VERIFIED STATIC BACKLOG, no new
+  failure class, no code fix: `attempted_failed` numerator held flat at ~7,799-7,806 across all four dispatches
+  (2026-08-10→2026-08-14) while the trailing-14-day denominator drifted only from window roll; `max_attempted_at`
+  froze at `2026-08-11T14:47:01Z` across the last three reads (zero new rows in 3+ days) — the strongest available
+  confirmation of no live regression. Recent-failure composition (14d window, all already-documented classes):
+  `UNCLASSIFIED_VENUE_ERROR` 2,095 + `UpstreamTimestampBiasError`(ASTER) 2,000 + `404 GET https` 1,711 +
+  `Tardis 403 code=274 concurrent-IP-lock` ~1,082 + `Tardis 500/503` ~746. All historical MTDS/UAC fix commits
+  (`2ddc6d4a`, `6a067cf1`, `6c6fab03`, `31934527`, `55ec86ac`, `unified-api-contracts@8db188fe`/`@1c4d8864`,
+  `market-tick-data-service@339ca767`/`@6bf568ee`) reconfirmed still on `origin/live-defi-rollout` on every dispatch.
+  **Systemic finding, still open**: `agt-8ec9c8` slots 6 and 14 were TWO workers dispatched for the SAME
+  escalation_id — a genuine duplicate-dispatch bug, not a re-fired condition — matching
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s standing recommendation that the escalation
+  dispatch path needs an open-issue-doc dedup check (unfixed as of the last dispatch). Read-only throughout: no GCS
+  write, no manifest change, no code shipped; PM plan-doc edits only.
 - **context-scout 2026-08-14**: populated context_scope (5 entries).
-- **2026-08-14 (data_pipeline_failure escalation worker, agt-8ec9c8, slot 14) — SECOND worker spawn for the IDENTICAL
-  escalation_id already resolved by the entry directly above (slot 6, same session day).** Received a
-  `data_pipeline_failure` dispatch for `escalation_id=agt-8ec9c8`, `(cefi, book_snapshot_5)`, numbers byte-identical to
-  the slot-6 entry above: 7,806 attempted_failed of 208,624 attempted (ratio 3.7%), STATIC BACKLOG — no new
-  attempted_failed activity in 2d. This is a genuine duplicate dispatch of one escalation event to a second slot, not a
-  re-fired/re-evaluated condition — the same `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` failure
-  mode this doc's earlier entries repeatedly hit. Read this doc first per the pre-task plan/issue conflict-check rule;
-  found the identical escalation_id already fully investigated and concluded immediately above with "no fresh
-  regression, no code fix required." Per that entry's own note that a fresh live manifest read was "redundant given the
-  frozen `max_attempted_at`," did not repeat the GCS-streaming read; instead re-verified the cheap, deterministic signal
-  — all four historical fix commits are still ancestors of `origin/live-defi-rollout`
-  (`market-tick-data-service@339ca767`/`@6bf568ee`, `unified-api-contracts@8db188fe`/`@1c4d8864`, all confirmed via
-  `git merge-base --is-ancestor` against a fresh `git fetch`). **Verdict: no fresh regression, no code fix required** —
-  same conclusion as the slot-6 entry; nothing new to measure since that investigation was itself the same-day
-  same-numbers reading. `AUTHORING_SLOT=dp-fleet-monitor` (not a numbered slot) — no ping sent, per the role's own skip
-  rule. Read-only: no GCS write, no manifest change, no code shipped; PM plan-doc edit only.
-- **2026-08-14 (data_pipeline_failure escalation worker, agt-07b27b, slot 21) — THIRD+ worker spawn for the same
-  `(cefi, book_snapshot_5)` DP-FETCH-009 STATIC BACKLOG condition, same session day.** Received a dispatch with numbers
-  7,799 attempted_failed of 187,140 attempted (ratio 4.2%), labeled STATIC BACKLOG — no new attempted_failed activity in
-  2d, already-tracked, not a fresh regression. Read this doc first per the pre-task plan/issue conflict-check rule; the
-  numerator (7,799) is within window-roll noise of the two entries directly above (7,806 and 7,802) — the same frozen
-  `max_attempted_at=2026-08-11T14:47:01Z` backlog, denominator drifting only because the trailing-14-day window keeps
-  rolling forward while the failed count itself hasn't moved in 3+ days. Per the same two entries' precedent (a fresh
-  live GCS-streaming manifest read is redundant against an already-frozen `max_attempted_at`), did the cheap
-  deterministic check instead: re-verified all four historical fix commits are still ancestors of
-  `origin/live-defi-rollout` after a fresh `git fetch` — `market-tick-data-service@339ca767` YES, `@6bf568ee` YES,
-  `unified-api-contracts@8db188fe` YES, `@1c4d8864` YES. **Verdict: no fresh regression, no code fix required** — same
-  conclusion as the two entries above; this is now the 3rd `data_pipeline_failure` worker dispatch today for the
-  identical already-resolved condition, further corroborating
-  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s recommendation that the escalation dispatch path
-  needs an open-issue-doc dedup check. `AUTHORING_SLOT=dp-fleet-monitor` (not a numbered slot) — no ping sent, per the
-  role's own skip rule. Read-only: no GCS write, no manifest change, no code shipped; PM plan-doc edit only.
 - **2026-08-15 (slot-7·backend_engineer, cefi_satellite_ao_dispatch_batch19 dispatch) — flipped the "Alert-accuracy
   quartet" todo's checkbox; already-shipped, no code change needed.** Dispatched to implement this todo via
   `cefi_satellite_ao_dispatch_batch19_2026_08_13.md`'s own extraction of it. Grepped `deployment-service` before writing

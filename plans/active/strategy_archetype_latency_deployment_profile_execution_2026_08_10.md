@@ -171,10 +171,26 @@ source: >-
       `validate_against_runtime_topology()` (`deployment-service@13223da3`), `derive_instance_resource_sizing()`
       (`deployment-service@9116a2fe`), and `check_sla_tier_latency_budget_gap()` (`deployment-service@c9c1f9509`). Also
       added the two new code files to the doc's `code_refs` frontmatter.
-- [ ] [SCRIPT] P3. **Verify against the actual current archetype set**: run the new derivation against strategy-
-      service's real, currently-registered archetypes and confirm the computed deployment plan matches (or sensibly
-      diverges from, with a stated reason) the currently-live GCP fleet — this is the "does this actually work" proof,
-      not just a unit-test pass.
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-15 (slot 5, backend_engineer) — no code changes, verification-only.** Ran
+      `deployment_service.deployment_profile_derivation` against the ACTUAL registered archetype set — not the full
+      60-value `StrategyArchetype` enum, but `strategy_service.engine.strategies.v2.archetype_slot_resolver
+      .STRATEGY_TYPE_TO_SLOT` (80 real slot rows spanning cefi/defi/tradfi/sports), which resolves to 17 distinct
+      archetypes actually configured. Derivation output: 2 instances — `co_located_vm` (13 archetypes:
+      ARBITRAGE_PRICE_DISPERSION, ARBITRAGE_SPORTS_DUTCHING, CARRY_BASIS_PERP, CARRY_RECURSIVE_STAKED,
+      CARRY_STAKED_BASIS, LIQUIDATION_CAPTURE, MARKET_MAKING_CONTINUOUS, MARKET_MAKING_EVENT_SETTLED,
+      ML_DIRECTIONAL_CONTINUOUS, ML_DIRECTIONAL_EVENT_SETTLED, RULES_DIRECTIONAL_CONTINUOUS, STAT_ARB_PAIRS_FIXED,
+      TSMOM_BTC_CTA) and `distributed` (4 archetypes: EVENT_DRIVEN, VOL_TRADING_OPTIONS, YIELD_ROTATION_LENDING,
+      YIELD_STAKING_SIMPLE) — `--runtime-topology` cross-check returned **zero drift** (exit 0; the only warnings were
+      the pre-existing, already-documented `sla_tier_latency_budget_warnings` gap from todo 4, not a new finding).
+      **Live-GCP-fleet comparison** (`gcloud run services list` + `gcloud compute instances list`, live project
+      `central-element-323112`): `strategy-service` and `execution-service` each run as ONE singleton Cloud Run
+      service today — there is no live infra split by `deployment_profile` (`co_located_vm` vs `distributed`) yet.
+      **Sensible, stated divergence**: this derivation is explicitly read-only / plan-only per todo 3's own scope
+      ("computing a plan, NOT auto-applying infra changes... a separate, later step gated on this one working
+      correctly and being reviewed") — the derivation being correct does not imply the live fleet has been
+      re-provisioned to match it yet, and it hasn't. No auto-apply todo exists in this plan, so this is the expected
+      state, not a defect. Confirms the derivation genuinely works end-to-end against real strategy-service data
+      (not just the unit-test archetype fixtures) — the "does this actually work" proof this todo asked for.
 - [ ] [SCRIPT] P3. **Translate `total_load_units` into a concrete machine size, and fix the load formula's two measured
       blind spots** (repo: deployment-service, `deployment_service/deployment_profile_derivation.py`). The sizing todo
       above deliberately stopped at a dimensionless load proxy — nothing yet maps it to vCPU/memory/machine_type, so no
@@ -330,3 +346,16 @@ source: >-
   `derive_instance_resource_sizing()`, and `check_sla_tier_latency_budget_gap()`, each cited by the SHA that landed it
   (todos 1-4/8 above). Two remaining open todos in this plan (the live-fleet verification proof and the
   load-formula/machine-sizing fix) are unrelated P3 work, untouched by this todo.
+
+- **backend_engineer (slot 5) 2026-08-15**: The "verify against the actual current archetype set" todo done —
+  verification-only, no code shipped. Extracted the REAL registered archetype set from
+  `strategy_service.engine.strategies.v2.archetype_slot_resolver.STRATEGY_TYPE_TO_SLOT` (80 slot rows → 17 distinct
+  archetypes; NOT the full 60-value enum) and ran `deployment_profile_derivation` against it with
+  `--runtime-topology`: derives `co_located_vm` (13 archetypes) + `distributed` (4 archetypes), zero topology drift
+  (exit 0), only the pre-existing documented SLA-tier-latency-budget warnings (todo 6's known gap, not new). Cross-
+  checked against the actual live GCP fleet (`gcloud run services list` / `gcloud compute instances list`,
+  `central-element-323112`): `strategy-service` + `execution-service` each run as ONE singleton Cloud Run service
+  today, not yet split by `deployment_profile` — a sensible, stated divergence, since this derivation is read-only/
+  plan-only by design (todo 3) and no auto-apply todo exists in this plan yet. Proves the derivation works end-to-end
+  against real strategy-service data, not just unit-test fixtures. One P3 todo remains open (load-formula/machine-
+  sizing fix).

@@ -17,7 +17,7 @@ stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [admin, engineer]
 tags: [elysium, custody, transfers, production-readiness, audit, commercial-model]
-last_updated: "2026-08-11"
+last_updated: "2026-08-15"
 related:
   [
     /codex/14-customer-journeys/commercial-model/elysium-carveout-deferral-message-2026-08-11.md,
@@ -46,7 +46,12 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-context_scope: [/codex/04-architecture/client-funds-isolation.md, /codex/04-architecture/defi-execution-overview.md]
+context_scope:
+  [
+    /codex/04-architecture/client-funds-isolation.md,
+    /codex/04-architecture/defi-execution-overview.md,
+    /codex/04-architecture/transfer-architecture.md,
+  ]
 source: >-
   Interactive session 2026-08-11. Operator decisions: defer the code carve-out past the October delivery; send the
   strategy-service repository in full once its code lands; standardise the support period at 30 days; and rescope this
@@ -914,6 +919,11 @@ a corrected claim. Current: deep dive `778c86ca-b08a-465b-af70-557bb84b25df` · 
 
 ## Progress Log
 
+- **context-scout 2026-08-15**: populated `context_scope` (3 entries — added
+  [transfer-architecture](/codex/04-architecture/transfer-architecture.md) alongside the existing two codex SSOTs) per
+  `context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md`'s Follow-up. Extracted the three oldest Progress
+  Log entries (2026-08-11 → 2026-08-12 "second pass") to a history doc to keep this plan under the 1000-line cap — see
+  the pointer at the end of this section.
 - **2026-08-12 — measurement lesson, recorded because it is the SECOND proxy-vs-property slip in one session.** I ran
   `bash scripts/quality-gates.sh --no-fix 2>&1 | tail -45` in the background, was notified "exit code 0", and reported
   the gate green. **That 0 was `tail`'s exit code, not the gate's** — a shell pipeline reports its LAST command's
@@ -958,42 +968,7 @@ a corrected claim. Current: deep dive `778c86ca-b08a-465b-af70-557bb84b25df` · 
   imprecisely is as costly as the error, because the record is what the next reader acts on. Counts have been removed
   rather than corrected wherever the argument did not need them.
 
-- **2026-08-12 (second pass)** — Recorded four un-audited operator asks in H.5: composite-strategy modelling (which
-  gates H.3), collateral-driven archetype selection, rotation volume/ADV filter coverage, and the dispersion basket.
-  **Sections H and H.5 were blocked for seven `safe-doc-push` attempts by a single `check_reference_paths --only`
-  violation, and the diagnosis was wrong for all seven.** Root cause, measured: line 371 of this file carried a **bare**
-  `codex/...` reference (missing the leading slash) — a FORMAT violation, not the hypothesised dangling-at-origin
-  existence violation. Two things hid it, and both are now recorded as gate findings in H.6: `run_hygiene_sweep.sh`
-  invokes the checker with `--quiet`, which prints the violation **count without the filename**; and `_run_only()`
-  **silently `continue`s past any path it cannot stat, then reports 0 violations and exit 0** — so the "same checker
-  returns 0 locally" evidence that anchored six wrong guesses was a false negative produced by running it from the wrong
-  working directory. The lesson is the one already in the rules: after two identical consecutive failures, stop guessing
-  and get the actual identifier — a throwaway worktree at `origin/<branch>` plus the checker run **without** `--quiet`
-  named the reference in one shot.
-- **2026-08-12** — Investigation outcomes recorded in section H. **Corrected my own earlier over-call**: the "four
-  duplicate `TransferStatus`/`TransferResult` declarations" are actually **three legitimate layers plus one deliberate
-  mirror** — a bus contract, an on-chain observation schema and an adapter-level result, which merely share a name.
-  `canonical/crosscutting/transfer_events.py` is already the self-declared SSOT, so the manual route belongs there
-  rather than in anything new. The genuine debts are the `BusTransferType` vs `TransferType` value overlap (acknowledged
-  in the file's own docstring) and the hand-synced fund-admin mirror, which exists to respect the no-service-imports
-  tier rule and must not simply be deleted. Confirmed the operator's recollection that treasury/client prior art exists:
-  `/codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md` and
-  `/codex/14-customer-journeys/shared-core/fund-administration-and-custody.md` are both written and must be read before
-  any keying change. ⚠️ **The rail-enum sentence that follows is WRONG — corrected in H.11, kept here so the error is
-  traceable rather than silently rewritten.** Measured the manual gap precisely: the rail enum has three members, all
-  API-executed, so a bookmaker deposit is unrepresentable; and `ApprovalBus` provides approval of a system-executed
-  transfer, which is the inverse of the manual case. Added manual **trade** capture alongside manual transfers, since
-  betting venues will be hand-operated at first and the fills must still book canonically.
-- **2026-08-11** — Rewritten as a **claims audit** on operator instruction: no new repository build, full audit of
-  everything missing, every fix in line with the existing architecture. Twenty-three load-bearing document claims were
-  checked against the tree: **17 verified in source, 1 partial, 2 unverified, 1 false, 2 already-wrong-and-now-fixed.**
-  The two wrong ones were in a document already published, and both are corrected — the family count was 8 where the
-  enum has **9** members and the list invented "liquidity provision"; and "compliance attestation on every instruction"
-  is untrue for the contracted archetypes, since only the MEV modules populate the field. The unverified claims are now
-  todos rather than assumptions: capital-budget enforcement, and the backtest launch endpoint (inferred from test
-  _filenames_, which is a proxy for an endpoint, not evidence of one). Production gaps carried from reading the tree:
-  **stub transfer handlers labelled "for May-23"** — the highest risk, because a stub returning success on a funds path
-  reports money moved that did not move — the never-built `CustodyRoute` matrix, **placeholder risk thresholds in the
-  client's own strategy config**, and a test-only funding reader. Separately found and fixed: the codex move left **four
-  stale duplicate copies** of client documents live on origin, because `safe-doc-push` commits named files from an
-  isolated worktree and therefore never saw the deletions.
+- **2026-08-11 → 2026-08-12 ("second pass")**: extracted verbatim to
+  [Progress Log history](/plans/archive/2026_08/elysium_october_delivery_and_code_disclosure_readiness_progress_log_history_2026_08_15.md)
+  (line-cap remediation, `context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md`'s Follow-up). No open todo
+  lived in the extracted text — superseded by this plan's own "State as of 2026-08-13" section above.

@@ -363,6 +363,19 @@ failure_modes:
         "resolved-bookend for DP_VM_PREEMPTED — the relaunch subprocess exited 0 and the preempted backfill is running
         again",
     }
+  - {
+      id: DP-VM-013,
+      category: VM,
+      severity: CRITICAL,
+      event: DP_VM_SWEEP_INCOMPLETE,
+      detector: exit_code_fleet_monitor,
+      kind: scriptable,
+      escalation: page_operator,
+      status: active,
+      fires:
+        "exit_code_fleet_monitor's classify/route/emit loop hit its per-sweep deadline before covering every terminated
+        VM this tick — a monitor that silently covers a fraction of the fleet reports green by omission",
+    }
 
   # --- DP-RATE (class C5) ---
   - {

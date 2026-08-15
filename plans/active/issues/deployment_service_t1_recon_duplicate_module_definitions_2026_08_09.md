@@ -36,7 +36,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-15"
 author: interactive-session
 parent_epic: infrastructure_master
 priority: P2
@@ -148,6 +148,36 @@ because:
       their `.tf` block (state-rm-then-delete-code, never delete-code-then-plan, to avoid an accidental destroy plan on
       a live job), remove the corresponding `import` blocks from `_imports_reconcile.tf`, then verify a fresh
       `tofu plan` shows zero diff for these 2 jobs.
+- [ ] [INFRA] P1. **NEW 2026-08-15 (slot-7)** — `_imports_reconcile.tf`'s `alerting_paging_cron` import block is dead:
+      target `projects/central-element-323112/locations/asia-northeast1/jobs/uts-prod-alerting-paging-cron` returns
+      live `NOT_FOUND` (`gcloud scheduler jobs describe`, confirmed 2026-08-15) — matches the exact "import whose `to`
+      resource no longer exists in config errors `tofu plan`/`apply`" pattern the file's own header comments already
+      document for 2 prior removals (`plan_hygiene_sweep`/`plan_hygiene_sweep_cron`). Currently HARD-BLOCKS any
+      untargeted `ENV=dev tofu plan` (confirmed live; likely also `ENV=staging`, not separately re-confirmed). Remove
+      this one `import {}` block (lines 13-16), following the same precedent as the sibling removals in this file.
+- [ ] [OPERATOR] P1. **NEW 2026-08-15 (slot-7)** — Broader systemic risk found while diagnosing the above:
+      `_imports_reconcile.tf`'s header self-describes as "live-but-unimported PROD resources", and every one of its
+      ~20 remaining `import {}` blocks (15 Cloud Run Job/Scheduler/Storage-bucket imports + 25
+      `google_project_iam_member` bindings for `unified-trading-sa`, none env-parameterized — contrast
+      `t1_batch_scheduler.tf`'s correct `account_id = "${local.env_prefix}-batch-sa"` pattern) hardcodes a literal
+      `uts-prod-*`/prod-project resource ID with **zero environment gating**. Confirmed via a live
+      `google_service_account.t1_batch` investigation (this doc's sibling,
+      `asia_northeast1_zombie_schedulers_dead_targets_2026_08_07.md` DIAG-P2 todo) that dev/staging/prod share ONE GCP
+      project (`central-element-323112`) — no project-level isolation boundary. Once the dead `alerting_paging_cron`
+      block above is removed and a plain untargeted `tofu plan`/`apply` can run to completion for `ENV=dev` or
+      `ENV=staging`, it would attempt to import ~20 REAL PROD objects (Cloud Run Jobs, a Storage bucket, and 25
+      project-level IAM admin/writer role grants) into that environment's state — the same shared-real-object aliasing
+      hazard already confirmed and fixed for the single `t1_batch` SA (dev's state had PROD's exact
+      `unique_id`/`account_id` recorded under its own address; a naive `-replace` there would have issued a live GCP
+      DELETE against prod's real, actively-used SA). At that scale (25+ IAM bindings), any later dev/staging-scoped
+      destroy/replace touching one of these addresses risks silently revoking a real PROD IAM grant or deleting a real
+      PROD Cloud Run Job. **NOT yet verified whether this has already happened historically** (i.e., whether dev's or
+      staging's state already contains any of these ~20 addresses from a past untargeted apply) — that check (same
+      `state show` + `unique_id`-cross-reference-against-prod technique used for the SA) should run BEFORE assuming
+      this is only a latent/future risk. Needs an operator call on the right structural fix (prod-only file naming
+      convention + a documented "-target only" rule; a per-block conditional if OpenTofu's `import` syntax supports
+      one; or splitting into a separate file excluded from non-prod's config) — not a mechanical cleanup like the
+      `alerting_paging_cron` removal above.
 
 ## Progress Log
 
@@ -159,3 +189,10 @@ because:
   unrelated to that doc's meta-watchers finding — this doc tracks a different defect discovered as a side effect of
   applying that one. Not fixed — needs an explicit operator call on canonical-definition choice before any state
   surgery, per the findings-triage rule for ambiguous ownership calls.
+- **2026-08-15 (slot-7)**: found 2 new, related `_imports_reconcile.tf` defects while fixing the dev `t1_batch` SA
+  drift in the sibling `asia_northeast1_zombie_schedulers_dead_targets_2026_08_07.md` doc — filed here rather than
+  a new doc since it's the same file + same open-issue home. (1) the `alerting_paging_cron` import block is dead
+  (live-confirmed NOT_FOUND) and hard-blocks any untargeted non-prod plan; (2) the whole file's ~20 remaining import
+  blocks are unconditionally hardcoded to prod resource IDs with no env-gating, and dev/staging/prod share ONE GCP
+  project — a live-verified structural risk (proven via the exact same aliasing bug just found+fixed for the single
+  `t1_batch` SA), not yet known to have caused actual contamination. See the 2 new todos above.
