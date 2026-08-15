@@ -181,3 +181,28 @@ rather than a dedicated VM launch, per proportionality.
   green: quickmerge ship these 2 commits, then run `scripts/sports/restamp_sports_trades_to_odds_2026_08_12.py` +
   `manifest_swap_trades_to_odds_2026_08_12.py` over `--day` 2026-08-10..2026-08-15 (the writer-fix deploy window),
   verify with a fresh census (0 `trades` rows with `attempted_at` after the fix), then flip P1's checkbox.
+
+- **2026-08-15 (slot-19, data_engineering) — residual test-fix commits shipped; GCS-side restamp complete; manifest-side
+  swap in progress.** `market-tick-data-service@6fa0dd9d99` landed on `origin/live-defi-rollout` (both local commits,
+  `ahead=0` verified post-push). Then ran the P1 restamp:
+  1. **GCS object pass** (`restamp_sports_trades_to_odds_2026_08_12.py`, per-day, dry-run then
+     `--apply-prod --confirm-prod-write`): dry-run over 2026-08-10..2026-08-15 found 107 objects (08-10), 0 (08-11/12/13
+     — gap), 550 (08-14), 57 (08-15) = 714 total (this is a GCS-object count, not the manifest's 3,229-row count — the
+     two surfaces have different grain; ~30 of the manifest rows are `empty_confirmed` with no backing object, and a
+     manifest row doesn't map 1:1 to a GCS object). Applied per day: **714/714 processed, 0 failed, 0 content_mismatch**
+     (107 `already_present_verified` on 08-10 — pre-existing target from an earlier partial attempt; 550+57=607 freshly
+     `copied` on 08-14/08-15). This satisfies the manifest-swap script's own GATING requirement (GCS pass 100% clean
+     before touching the manifest).
+  2. **Manifest-side swap** (`manifest_swap_trades_to_odds_2026_08_12.py --apply-prod --confirm-prod-write`): dry-run
+     confirmed 3,229 rows to relabel in the merged index (`_index/availability_index.parquet`, 6,119,572 rows), 0 in the
+     frozen legacy seed (expected — seed predates this residual population). **First apply attempt was killed by the
+     environment** (background-task kill, same pattern as the QG runs earlier this session under host contention — load
+     avg ~11-12, not this script's own defect) mid-retry on a CAS generation conflict (the merged index is a LIVE write
+     target — a concurrent writer/consolidator bumped it from 6,119,572 to 6,120,990 rows between snapshot and write,
+     which is exactly the generation-conflict case the script's 6-attempt retry loop exists for). **Verified no
+     corruption**: a fresh dry-run after the kill still shows exactly 3,229 rows pending in the merged index and 0 in
+     the seed — the script's snapshot-first ordering means a killed mid-retry leaves the source state untouched, nothing
+     partially written. Retrying now (backgrounded again). **P1 checkbox NOT flipped yet** — pending: manifest-swap
+     apply completes clean (0 rows left to relabel on both surfaces), then a fresh census matching this issue's own
+     methodology (`read_availability_index_safe` against `market-data-tick-sports-prd-central-element-323112`) showing 0
+     `trades` rows with `attempted_at` after the fix deploy time, per the task's own done-definition.
