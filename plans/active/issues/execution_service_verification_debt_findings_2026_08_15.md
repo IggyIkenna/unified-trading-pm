@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [audit, verification-debt, defi, code-quality]
 related:
   [
-    /plans/active/issues/strategy_service_verification_debt_findings_2026_08_15.md,
+    /plans/archive/2026_08/issues/strategy_service_verification_debt_findings_2026_08_15.md,
     /plans/active/issues/pm_archive_false_done_and_review_backlog_2026_08_15.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]

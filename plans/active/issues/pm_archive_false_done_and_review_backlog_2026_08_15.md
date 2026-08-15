@@ -18,7 +18,7 @@ tags: [audit, verification-debt, plan-hygiene, false-done, archive]
 related:
   [
     /plans/active/issues/execution_service_verification_debt_findings_2026_08_15.md,
-    /plans/active/issues/strategy_service_verification_debt_findings_2026_08_15.md,
+    /plans/archive/2026_08/issues/strategy_service_verification_debt_findings_2026_08_15.md,
     /plans/archive/recon_rebalancing_order_recovery_2026_03_10.plan.md,
     /plans/archive/defi_transfers_and_gas_fees_2026_03_27.plan.md,
   ]

@@ -7,7 +7,7 @@ summary:
   determinism claim for the ADV as_of_date wiring has no negative control proving a divergence is actually detected.
   venue_capabilities (c95473c3) and the 8c11e2fc shadow-SSOT collisions were also audited and found CORRECT — no todos
   needed for those two. No fixes applied during the audit; scoped here for AO dispatch.
-status: open
+status: resolved
 nature: process
 resolved_by:
 asset_group: [cross-cutting]
@@ -54,6 +54,11 @@ drift_direction: advance-code
 
 # strategy-service Verification-Debt Findings (2026-08-15 Audit)
 
+> **🟢 ARCHIVED 2026-08-15 — RESOLVED** (status: resolved, 0 open todos, unlocked). All 3 findings fixed:
+> `deployment-service` added to `quality-gates-v2.yml` `dep_repos` (strategy-service@610fa77d, CI-verified run
+> 31899718702), the missing-entry coverage test (strategy-service@af99cbda31), and the ε=0 as_of_date negative control
+> (strategy-service@e00096a9c4).
+
 > Read-only verification audit of production commits already shipped in strategy-service. No fixes were applied —
 > findings are scoped below for AO dispatch to decide execution order. Small plan (3 todos); the archival step is folded
 > into the final todo rather than spun into a separate companion finalize plan, per `task_template.md` §4's
@@ -61,14 +66,20 @@ drift_direction: advance-code
 
 ## Findings → todos
 
-- [ ] [INFRA] P1. Add `deployment-service` to strategy-service's `.github/workflows/quality-gates-v2.yml` `dep_repos`
+- [x] ✅ [INFRA] P1. Add `deployment-service` to strategy-service's `.github/workflows/quality-gates-v2.yml` `dep_repos`
       list (currently `"unified-trading-library unified-api-contracts"`) so the clients.yaml coverage gate
       (`test_clients_yaml_coverage_gate.py`) stops unconditionally `pytest.skip`-ing in real CI. Today
       `_deployment_service_strategy_config_root()` in `clients_yaml_coverage.py` always resolves `None` in CI because
       the sibling checkout the reusable workflow clones never includes `deployment-service` — the test then skips
       regardless of how many archetypes are uncovered, so the gate's own hard-fail assertion logic (confirmed correct)
       never actually gets to run against real data. Repo: strategy-service. Done-when: a `quality-gates-v2` CI run's log
-      shows the clients.yaml coverage test actually EXECUTED (not skipped) — cite the run URL/ID and the log line.
+      shows the clients.yaml coverage test actually EXECUTED (not skipped) — cite the run URL/ID and the log line. —
+      strategy-service@610fa77d already added `deployment-service` to `dep_repos` (found already shipped on
+      live-defi-rollout at task pickup). Verified via a `workflow_dispatch` run on `live-defi-rollout`
+      (https://github.com/IggyIkenna/strategy-service/actions/runs/31899718702, conclusion=success): the "QG slice
+      (tests)" job log shows `6016 passed, 248 skipped` with `test_clients_yaml_coverage_gate.py` NOT present among the
+      248 itemized `SKIPPED` lines — the coverage-gate test executed (not skipped) and passed. Not yet promoted to
+      `main` at verification time (`610fa77d` not ancestor of `origin/main`); LDR→main promote cycle will carry it.
 
 - [x] ✅ [BACKEND] P2. Add a missing-entry test case to `test_clients_yaml_coverage_gate.py` that constructs a
       clients.yaml-shaped input with one archetype's entry deliberately removed and asserts `uncovered_archetypes()`
