@@ -22,8 +22,11 @@ summary:
   (originals may still exist, just not matching the sibling-check's coarse key) or may reflect a DESTRUCTIVE
   supersession that lost real timeframe data; or (b) venue=ODDS_API (and the ~dozen affected uppercase bookmaker
   venues) never populated timeframe via a wholly separate, older write path unrelated to CF-8 at all — in which case
-  blank-timeframe is the correct/expected state and no data was lost. This doc does not resolve which; it exists to
-  record the measured scope precisely so nobody re-scopes it as 'the same 500-row test population' by mistake."
+  blank-timeframe is the correct/expected state and no data was lost. UPDATE (2026-08-15, later same session):
+  todo 1 done — exhaustive grep found _write_captured_rows() has exactly 3 production callers repo-wide, all
+  sharing the same bug, whose 3 fix commits all landed 2026-08-15 15:07-17:21 (after every spike date); no separate
+  per-venue writer exists. Hypothesis (a) (CF-8-bug-triggered) is now the dominant, code-evidenced explanation, not
+  an open toss-up. Exact per-date/per-script attribution and destructive-vs-additive status remain open (todos 2-3)."
 status: open
 resolved_by:
 nature: issue
@@ -117,77 +120,96 @@ CF-8's own doc already found a smaller, analogous case on MDPS (14,982 out-of-wi
 cause not yet closed there either — see that doc's open P1 todo) and, separately, root-caused a 959-row no-sibling
 subset as **legitimately pre-existing** (timeframe was never populated for those rows even before CF-8's bug
 existed — sibling absence there was expected, not evidence of loss). This IS finding could be the same class of
-pre-existing legitimate-blank population, just far larger in the IS surface's case (venue=ODDS_API and a dozen
-bookmaker venues may have simply never carried a per-horizon-bucket timeframe on IS, structurally, from whatever
-wrote them). Two facts point at least partly this direction:
+pre-existing legitimate-blank population, just far larger in the IS surface's case. One fact still points at least
+partly this direction:
 
-- The 100%-blank vs 100%-non-blank split by SPECIFIC venue (not a random/uniform corruption rate) suggests a
-  writer-identity effect, not a rewrite-based accident — this looks more like "venue X's writer never set
-  timeframe" than "venue X's rows got randomly re-emitted blank."
 - The uppercase/lowercase venue-casing duplication pattern here closely resembles
   `sports_odds_data_type_casing_wider_than_odds_api_2026_08_15.md` and
   `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`'s ALREADY-CONFIRMED writer-casing-bug
-  class on this exact codebase (`SPORTS_VENUE_FOLD` bypassed at specific call sites) — raising the possibility that
-  the ~100%-blank uppercase venues here are being written by a DIFFERENT, uncanonicalised call site than the
-  ~100%-non-blank uppercase venues, entirely independent of CF-8's `_write_captured_rows()` regression.
+  class on this exact codebase (`SPORTS_VENUE_FOLD` bypassed at specific call sites) — this pattern may still be a
+  CONTRIBUTING factor to *which* venues/rows appear in each rewrite's touched set, even if it is not the cause of
+  the blank `timeframe` itself (see below).
 
-But two other facts point toward it at least partly being CF-8's bug (or a related earlier trigger of the same
-function), not purely a legitimate design gap:
+**UPDATE (2026-08-15, later same session, todo 1 done): the writer-identity hypothesis is now substantially
+weakened.** `_write_captured_rows()` (`market_tick_data_service/scripts/_rebuild_sports_write.py:274`) has exactly
+**three** production call sites in the whole repo (exhaustive `grep -rn '_write_captured_rows('` across the full
+tree, non-test) — there is no separate per-venue or per-bookmaker writer for `odds_horizon_bucket` rows at all:
 
-- `rebuild_sports_manifest_v9.py` (the sports-v9-canonicalization manifest rebuild,
-  `market_tick_data_service/scripts/rebuild_sports_manifest_v9.py:727`) ALSO calls `_write_captured_rows()` — the
-  exact function CF-8 fixed today at `e0b34e77fd`. It is launched via
-  `deployment-service/scripts/vm/launch-sports-v9-migration-vm.sh`, a full-corpus migration, not a routine/scheduled
-  job. The 2026-08-08/09 spike (78.8% of the blank population) is circumstantially consistent with a run of this
-  migration on IS around that date, which — if it ran before `e0b34e77fd` landed — would have inherited the same
-  timeframe-drop defect at a much larger scale than today's incidental 500-row test. **Not confirmed**: I did not
-  find direct evidence (a VM launch log, a manifest `written_at` provenance field) that this migration actually ran
-  on those specific dates against IS — this is a plausible correlation, not a proven causal link.
-- `sports_captured_available_at_targeted_backfill_2026_07_14.py` (a DIFFERENT script, 2026-07-14) also calls
-  `_write_captured_rows()` and explicitly targets `capture_status=captured` rows on both surfaces including IS —
-  another candidate trigger for some of the smaller historical spikes (2026-06-28, 2026-07-13, 2026-07-25 predate
-  even that script though, so it cannot explain all of them).
+1. `market_tick_data_service/scripts/rebuild_sports_manifest_v9.py:727` — the v9 canonicalization manifest rebuild.
+   Confirmed via `--surface` arg handling (`if surface == "instruments":`) that this script DOES target the IS
+   surface directly, not just MDPS. Launched via `deployment-service/scripts/vm/launch-sports-v9-migration-vm.sh`,
+   a full-corpus migration — the only one of the three call sites with a plausible 500K+-row blast radius, making it
+   the leading candidate for the dominant 2026-08-08/09 spike (708,506 rows, 78.8% of the population).
+2. `scripts/sports_captured_available_at_targeted_backfill_2026_07_14.py:252` — already named above; created
+   2026-07-14, so cannot explain the 2026-06-28 or 2026-07-13 spikes, but could explain 2026-07-25 or contribute to
+   2026-08-08/09 if re-run.
+3. `scripts/_sports_is_captured_backfill_from_subset_2026_08_15.py:149` — today's own script (this session's IS
+   500-row test path); cannot explain any pre-08-15 spike.
+
+All three route through the identical `_write_captured_rows()` function, and **all three of its timeframe-threading
+fix commits landed TODAY, 2026-08-15, between 15:07 and 17:21 UTC** (`ecd30f4d` 15:07, `6ee75b0a` 17:08, `e0b34e77`
+17:21 — confirmed via `git show -s --format='%h %ad %s'`). Every one of the blank-population's written_at spikes
+(2026-06-28, 2026-07-13, 2026-07-25, 2026-08-08, 2026-08-09) falls BEFORE all three fix commits. This means: **for
+the entire period that produced every spike in this population, the ONLY write path for captured `odds_horizon_bucket`
+rows on IS was carrying the exact same bug CF-8 already diagnosed and fixed** — there is no evidence of a second,
+structurally-different writer that "never populated timeframe by design." The bimodal 100%-blank-vs-100%-non-blank
+venue split is now more parsimoniously explained as "which venues' rows happened to be present in a given rewrite's
+touched batch" than as a writer-identity effect — though this is not yet proven down to the per-venue level (see
+updated todo 2).
+
+**Net effect: hypothesis (a) (CF-8-bug-triggered) is now the dominant, code-evidenced explanation.** What remains
+genuinely open is (i) exactly which script(s) ran against IS on which spike dates (todo 2, needs execution logs —
+the code-path plausibility is now very high but not log-confirmed), and (ii) whether the loss is destructive — the
+0/5,000 sibling-check-miss result already suggests it may be, unlike MDPS's mostly-additive finding, but this needs
+the full non-sampled re-check (todo 3) before treating it as confirmed data loss.
 
 ## What I did NOT do
 
 - Did not attempt any write, cleanup, or delete — this audit is 100% read-only (no `--apply` flag exists on the
   script).
 - Did not check whether `rebuild_sports_manifest_v9.py` or the 2026-07-14 targeted-backfill script actually ran
-  against IS on the spike dates (would need VM launch history / Cloud Logging, not attempted this pass).
-- Did not check the `odds_api_adapter.py` / uppercase-bookmaker-venue writer code paths to determine whether
-  `venue=ODDS_API` (and the other ~100%-blank venues) EVER populate timeframe by design, or whether the
-  100%-non-blank venue set uses a structurally different adapter/write path. This is the single most direct way to
-  resolve the (a) vs (b) root-cause question above and should be the first step for whoever picks this up.
+  against IS on the spike dates (would need VM launch history / Cloud Logging — still open, see todo 2, downgraded
+  P1→P2 since it's no longer the root-cause blocker).
+- ~~Did not check the `odds_api_adapter.py` / uppercase-bookmaker-venue writer code paths~~ — DONE later this
+  session (todo 1): `odds_api_adapter.py` has zero `timeframe` references, and `_write_captured_rows()` has exactly
+  3 production callers, all sharing the same bug. See the "UPDATE" in the section above.
 - Did not compare this population against the equivalent MDPS surface's venue breakdown (does MDPS show the same
   ODDS_API-dominant blank pattern, or is this IS-specific?) — worth checking, since CF-8's doc's MDPS blast-radius
   numbers were reported by written_at-window, not by venue, so this comparison hasn't been made yet either.
 
 ## Recommended decision
 
-This needs the venue-writer-code investigation above before any cleanup scope is set — NOT a mechanical dispatch as
-written. Once the writer-path question is resolved:
+Todo 1 (writer-code investigation) is now DONE — see the UPDATE above. Hypothesis (a) (CF-8-bug-triggered) is the
+dominant, code-evidenced explanation; no separate "designed to be blank" writer exists. This narrows the remaining
+work:
 
-- If (a) (CF-8-bug-triggered, potentially destructive): needs the same rigor CF-8's doc used for MDPS — snapshot,
-  full non-sampled sibling audit (not just a 5,000-row sample), and a decision on whether any of the 899,508 rows
-  represent genuinely lost data needing backfill from another source, since the sibling-check here found ZERO
-  survivors (unlike MDPS's mostly-additive finding).
-- If (b) (legitimate/structural, unrelated to CF-8): this doc's population should be RE-CLASSIFIED as expected
-  behavior and closed with that finding recorded (mirroring CF-8's own LA_LIGA_2 resolution), not treated as a data
-  gap needing a fix.
-- Either way: NOT a P0 blocker on CF-8's own remaining todos (that doc's fix already landed and its own scope is
-  MDPS + the original 500-row-test-equivalent IS class) — this is genuinely separate, larger-scoped work.
+- Treat as (a) (CF-8-bug-triggered, potentially destructive) by default: needs the same rigor CF-8's doc used for
+  MDPS — snapshot, full non-sampled sibling audit (not just a 5,000-row sample), and a decision on whether any of
+  the 899,508 rows represent genuinely lost data needing backfill from another source, since the sibling-check here
+  found ZERO survivors (unlike MDPS's mostly-additive finding). This is now the PRIMARY path, not a conditional one.
+- Confirming exact per-date/per-script attribution (todo 2) is still valuable for scoping any backfill/remediation,
+  but is no longer a precondition for treating this as CF-8-bug-class data loss — the code-path evidence alone is
+  now strong enough to proceed on that assumption.
+- Still NOT a P0 blocker on CF-8's own remaining todos (that doc's fix already landed and its own scope is MDPS +
+  the original 500-row-test-equivalent IS class) — this is genuinely separate, larger-scoped work, and per the
+  workspace's big-finding HARD RULE (data-correctness, cross-repo) the operator has been notified in-chat.
 
 ## Todos
 
-- [ ] [REVIEW] P1. Read `market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py` and whatever
-      writes the ~100%-blank uppercase bookmaker venues (BETVICTOR/WILLIAMHILL/FANDUEL/UNIBET/SKYBET/PADDYPOWER/
-      PINNACLE/SPORT888/MATCHBOOK/DRAFTKINGS/BETONLINEAG/BET888SPORT) to determine whether these paths ever populate
-      `timeframe` for `odds_horizon_bucket` rows by design, vs. the 100%-non-blank venue set's writer. This resolves
-      the (a)-vs-(b) root-cause question above. (repo: market-tick-data-service)
-- [ ] [DATA] P1. Check Cloud Logging / VM launch history for whether `rebuild_sports_manifest_v9.py` (or the
-      2026-07-14 targeted backfill) actually executed against `instruments-store-sports-prd` on 2026-06-28,
-      2026-07-13, 2026-07-25, 2026-08-08, or 2026-08-09 — confirming or ruling out the migration-triggered-CF-8-bug
-      hypothesis for the dominant spikes. (repo: deployment-service or GCP Cloud Logging)
+- [x] [REVIEW] P1. Read `market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py` and whatever
+      writes the ~100%-blank uppercase bookmaker venues to determine whether these paths ever populate `timeframe`
+      for `odds_horizon_bucket` rows by design, vs. the 100%-non-blank venue set's writer. **DONE (2026-08-15)**:
+      `odds_api_adapter.py` has zero `timeframe` references — it does not write `odds_horizon_bucket` rows at all.
+      Exhaustive repo-wide grep found exactly 3 production callers of `_write_captured_rows()`
+      (`rebuild_sports_manifest_v9.py`, `sports_captured_available_at_targeted_backfill_2026_07_14.py`,
+      `_sports_is_captured_backfill_from_subset_2026_08_15.py`), all sharing the one buggy function, whose 3
+      timeframe-threading fix commits all landed 2026-08-15 15:07-17:21 — after every spike date. No per-venue
+      writer distinction exists; see the UPDATE in "Why this is NOT simply..." above. (repo: market-tick-data-service)
+- [ ] [DATA] P2. Check Cloud Logging / VM launch history for whether `rebuild_sports_manifest_v9.py`, the
+      2026-07-14 targeted backfill, or another rewrite actually executed against `instruments-store-sports-prd` on
+      2026-06-28, 2026-07-13, 2026-07-25, 2026-08-08, or 2026-08-09 — for per-date attribution/scoping only; the
+      root-cause question itself (todo 1) is now resolved without this. Downgraded from P1 since it's no longer a
+      blocker on treating this as CF-8-bug-class loss. (repo: deployment-service or GCP Cloud Logging)
 - [ ] [DATA] P2. Once root cause is determined, re-run the sibling check WITHOUT the 5,000-row sample cap (full
       899,508-row population) if root cause (a) is confirmed — the 200-row/5,000-row samples CF-8 used elsewhere
       turned out to need exact confirmation before any delete scope was trusted (see that doc's own "NARROWED per
@@ -206,3 +228,12 @@ written. Once the writer-path question is resolved:
   pointer to this doc (that sub-step's literal question — "does the same phantom-row class exist on IS" — is
   answered: yes, trivially, but the real finding is this much larger, structurally different population this doc
   now owns).
+- **2026-08-15 (slot 2, data_engineering, later same session)**: Resolved todo 1. `odds_api_adapter.py` never
+  references `timeframe`. Exhaustive repo-wide grep confirms `_write_captured_rows()` has exactly 3 production
+  callers (`rebuild_sports_manifest_v9.py`, `sports_captured_available_at_targeted_backfill_2026_07_14.py`,
+  `_sports_is_captured_backfill_from_subset_2026_08_15.py`), all routing through the one buggy function; its 3
+  timeframe-threading fix commits (`ecd30f4d`/`6ee75b0a`/`e0b34e77`) all landed today 15:07-17:21 UTC, after every
+  spike date in the blank population. No separate per-venue/writer-identity bug found — the bimodal venue split is
+  explained by which rows a given rewrite touched, not by a structurally-different writer. Root cause substantially
+  narrowed toward hypothesis (a); recommended-decision section updated accordingly. Still not attempting any
+  write/cleanup this pass. Todo 2 downgraded P1→P2 (attribution-only, no longer a root-cause blocker).

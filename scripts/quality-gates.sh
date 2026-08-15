@@ -576,20 +576,46 @@ fi
 # plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md (todo 12).
 # MTDS never set PYTEST_UNIT_DIR, so its whole tests/market_interface/ family
 # (49 unit modules) silently never ran in the gate. This is the fleet-wide
-# guard so the next per-family repo doesn't slip into the same gap unnoticed —
-# flags any repo with a tests/<family>/unit/ dir its PYTEST_UNIT_DIR doesn't
-# reach. Current baseline 1 (execution-service tests/sports_execution/unit/,
-# pre-existing, this todo doesn't fix it) — ratchet down as families get gated.
+# guard so the next test dir anywhere in a repo doesn't slip into the same gap
+# unnoticed — v2 (2026-08-15) widened the scan from tests/<family>/unit/-only
+# to any dir holding a test_*.py file, after v1 passed green while this repo's
+# own scripts/plan-hygiene/ shipped 24 uncollected tests (fixed in
+# 4a4716151f). Baseline recalibrated 2026-08-15 to match the wider, more
+# accurate scan — ratchet down as dirs get gated.
 PYTEST_UNIT_DIR_COVERAGE_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_pytest_unit_dir_coverage.py"
 if [ -f "$PYTEST_UNIT_DIR_COVERAGE_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     echo "Running PYTEST_UNIT_DIR fleet coverage sweep (ratchet mode)..."
     if python3 "$PYTEST_UNIT_DIR_COVERAGE_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
         log_success "PYTEST_UNIT_DIR fleet coverage sweep passed (at-or-below baseline)"
     else
-        echo "❌ PYTEST_UNIT_DIR fleet coverage regression — a tests/<family>/unit/ dir isn't reachable via that repo's PYTEST_UNIT_DIR" >&2
-        echo "   Add the family dir to that repo's PYTEST_UNIT_DIR= (scripts/quality-gates.sh), proving the widened gate stays GREEN (rule 11a)," >&2
+        echo "❌ PYTEST_UNIT_DIR fleet coverage regression — a dir holding test_*.py file(s) isn't reachable via that repo's PYTEST_UNIT_DIR" >&2
+        echo "   Add the dir to that repo's PYTEST_UNIT_DIR= (scripts/quality-gates.sh), proving the widened gate stays GREEN (rule 11a)," >&2
         echo "   or re-baseline with --update-baseline after intentional debt. See mtds_ungated_test_families_2026_07_17.md." >&2
         _post_gate_fail "pytest-unit-dir-coverage"
+    fi
+fi
+
+# ── Post-gates: Reachability gate — baselined ratchet (name-set) ──────────────
+# SSOT: plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md.
+# Fails when a connector/handler/router class in a covered set (a directory
+# census of a common base class, or an explicit venue/handler registry dict)
+# has zero production callers — built, tested, and unreachable is the
+# recurring defect class that issue doc documents seven independent instances
+# of (Marinade/Kamino/Jupiter connectors, V2InstructionRouter, DefiAdapter,
+# among others). Baseline seeded 2026-08-15 from execution-service's DeFi
+# protocol connectors (26 of 33 unreachable, measured) — ratchet down as
+# connectors get wired into a real dispatcher or deleted as confirmed dead
+# code.
+REACHABILITY_GATE_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_reachability_gate.py"
+if [ -f "$REACHABILITY_GATE_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running reachability gate (ratchet mode)..."
+    if python3 "$REACHABILITY_GATE_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
+        log_success "Reachability gate passed (at-or-below baseline)"
+    else
+        echo "❌ Reachability gate regression — a class in a covered set has no production caller" >&2
+        echo "   Wire it into a real dispatcher/handler, delete it as confirmed dead code, or re-baseline with" >&2
+        echo "   --update-baseline after intentional debt. See e2e_wiring_reachability_audit_2026_08_15.md." >&2
+        _post_gate_fail "reachability-gate"
     fi
 fi
 

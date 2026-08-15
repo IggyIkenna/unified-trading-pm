@@ -781,3 +781,18 @@ AO-eligible follow-up:
   **Rule extended: a batched multi-repo chain must open with an explicit `cd <absolute-path>` for its FIRST repo too**
   — never assume the shell's cwd from a prior, unrelated command. Re-run with the explicit `cd` confirmed PM/MTDS/IS all
   genuinely clean, MTDS's two commits intact.
+- **Progress Log 2026-08-15 (slot-25, third post-compaction ritual) — 6th occurrence, same family as the first four.**
+  A chained PM→MTDS→"---IS---"-labeled command never actually issued `cd instruments-service` before the IS check, so
+  that section silently re-ran against MTDS's working directory. Self-caught (not via a paired `pwd`, which this
+  particular chain omitted) by pattern-matching against this doc's own already-documented cd-omission lessons before
+  reporting a result; reissued with an explicit `cd .../instruments-service && pwd` and confirmed IS genuinely clean
+  from the correct directory. No false result was reported to the operator. This window's own Step-1 audit (see below)
+  used the `cd`+`pwd`-paired form for every repo including the first, per the 5th-occurrence rule extension, and
+  produced no false-positive — the rule holds; the gap is discipline lapsing on ad-hoc mid-session checks that skip the
+  paired form, not a flaw in the rule itself.
+- **Progress Log 2026-08-15 (slot-25, third post-compaction ritual) — pre-compact verdict.** Full Step 1–8 audit run:
+  PM/MTDS/IS all clean (explicit `cd`+`pwd` pairs used throughout, no false-positive this time); scratchpad unchanged at
+  44 real files (a `wc -l` reading of 47 is the `total` header + `.`/`..` entries, not drift — reconfirmed, not new);
+  MTDS's two unpushed commits (`85d593bc`/`31995524`) intact atop `a89bd433`; no new operator ruling on the governor
+  doc's option 1 vs option 2, still `BLOCKED-OPERATOR-DECISION` at 10 confirmed silent deaths (retry11 = PID
+  `3872768`), no retry12. Nothing to promote, nothing shipped this window, nothing at risk. **Safe to compact: YES.**

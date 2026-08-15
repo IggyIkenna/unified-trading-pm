@@ -1,25 +1,39 @@
 # Baseline for the PYTEST_UNIT_DIR coverage fleet sweep — SHRINKING ratchet.
 #
-# repos[<repo>] is the number of `tests/<family>/unit/` dirs this checker
-# tolerates as UNGATED (not reachable via that repo's PYTEST_UNIT_DIR) in
-# that repo. A repo whose live ungated-family count EXCEEDS its baseline
-# fails the gate — a NEW per-family test dir landed without being wired
-# into PYTEST_UNIT_DIR (the exact MTDS bug this checker exists to catch).
-# Fix by adding the family dir (or its parent) to that repo's
+# repos[<repo>] is the number of directories anywhere in that repo holding a
+# test_*.py file this checker tolerates as UNGATED (not reachable via that
+# repo's PYTEST_UNIT_DIR) — NOT limited to tests/<family>/unit/ shapes; a
+# co-located scripts/<name>/test_*.py dir counts too (v2, 2026-08-15 — v1's
+# tests/<family>/unit/-only scan missed unified-trading-pm's own
+# scripts/plan-hygiene/ shipping 24 uncollected tests, see check_pytest_unit_
+# dir_coverage.py's module docstring). A repo whose live ungated-dir count
+# EXCEEDS its baseline fails the gate — a NEW test dir landed without being
+# wired into PYTEST_UNIT_DIR (the exact MTDS bug this checker exists to catch).
+# Fix by adding the test dir (or its parent) to that repo's
 # `PYTEST_UNIT_DIR=` in scripts/quality-gates.sh, proving the widened gate
 # is still GREEN (rule 11a), then re-run `--update-baseline`.
 #
-# LOWER counts as families get gated. NEVER raise a count. Repos not
+# LOWER counts as dirs get gated. NEVER raise a count. Repos not
 # listed (or not using the PYTEST_UNIT_DIR contract) default to 0.
 #
 # SSOT: plans/active/issues/mtds_ungated_test_families_2026_07_17.md
 # (todo 5) + plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md
 # (todo 12).
 note:
-  "Seeded 2026-07-31 — ci_satellite_ao_dispatch_batch2 todo 12. Known pre-existing gap: execution-service
-  tests/sports_execution/unit/ is not named in PYTEST_UNIT_DIR (scripts/quality-gates.sh only lists trade_execution/unit
-  + defi_execution's one lateral-loader file) — ratchet down by widening PYTEST_UNIT_DIR there, proving quality-gates.sh
-  stays green."
+  'Seeded 2026-07-31 — ci_satellite_ao_dispatch_batch2 todo 12. RECALIBRATED 2026-08-15 (v2 detector fix,
+  plans/active/issues/mtds_ungated_test_families_2026_07_17.md todo 5 follow-up): the checker''s scan widened from
+  tests/<family>/unit/-only to any dir holding a test_*.py file (see check_pytest_unit_dir_coverage.py''s module
+  docstring for why — it missed unified-trading-pm''s own scripts/plan-hygiene/, 24 tests across 4 files, fixed in
+  4a4716151f). The 6 counts below that increased are NOT new debt landing now — they are pre-existing gaps v1 was
+  structurally blind to (measured + spot-checked real, e.g. execution-service tests/sports_execution/unit/ was ALREADY
+  known-gapped per this note''s original text, just undercounted at 1 instead of the true 8 sub-paths;
+  unified-api-contracts scripts/test_mock_loading.py, unified-trading-library''s ml/tests + testing/, PM''s own
+  github-integration/tests/, instruments-service tests/scripts/, e2e-testing''s 4 dirs — all confirmed real test_*.py
+  files, not template/non-unit-tier false positives, which the v2 exclusion list (see _EXCLUDED_DIR_NAMES) already
+  screens out). --update-baseline''s own min(seen, prior) clamp correctly refuses to silently widen tolerance in the
+  normal case; this file was hand-edited instead, once, as the reviewed exception the module docstring''s "re-run the
+  measurement and review the diff" convention anticipates. Ratchet down by widening PYTEST_UNIT_DIR for these dirs,
+  proving quality-gates.sh stays green.'
 repos:
   agent-orchestrator: 0
   alerting-service: 0
@@ -27,20 +41,20 @@ repos:
   client-reporting-api: 0
   deployment-api: 0
   deployment-service: 0
-  e2e-testing: 0
-  execution-service: 1
+  e2e-testing: 4
+  execution-service: 8
   features-service: 0
   fund-administration-service: 0
   greeks-service: 0
   ibkr-gateway-infra: 0
-  instruments-service: 0
+  instruments-service: 1
   market-data-processing-service: 0
   market-tick-data-service: 0
   ml-service: 0
   strategy-service: 0
   system-integration-tests: 0
   trading-agent-service: 0
-  unified-api-contracts: 0
+  unified-api-contracts: 1
   unified-trading-api: 0
-  unified-trading-library: 0
-  unified-trading-pm: 0
+  unified-trading-library: 2
+  unified-trading-pm: 1

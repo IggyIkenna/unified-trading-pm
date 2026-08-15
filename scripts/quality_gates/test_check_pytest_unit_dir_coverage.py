@@ -4,11 +4,16 @@
 """Unit tests for check_pytest_unit_dir_coverage.py.
 
 Covers the three PYTEST_UNIT_DIR resolution shapes (literal / self-discovering
-/ unset-default), the coverage predicate, and — the "done when" bar from
-`plans/active/issues/mtds_ungated_test_families_2026_07_17.md` todo 5 — a
-synthetic fixture repo reproducing the exact MTDS bug shape: a new
-`tests/<family>/unit/` dir the repo's PYTEST_UNIT_DIR doesn't reach, which
-`main()` must flag once it's over baseline.
+/ unset-default), the coverage predicate, and two "done when" bars:
+- the original MTDS bug shape from
+  `plans/active/issues/mtds_ungated_test_families_2026_07_17.md` todo 5: a new
+  `tests/<family>/unit/` dir the repo's PYTEST_UNIT_DIR doesn't reach.
+- the v2 fix's own reason for existing: a co-located `scripts/<name>/test_*.py`
+  dir (the exact shape PM's own `scripts/plan-hygiene/` shipped — 24 tests
+  across 4 files, fixed in `4a4716151f` — that v1's `tests/<family>/unit/`-only
+  scan structurally could not have caught, because it never looked outside
+  `tests/`).
+`main()` must flag both shapes once they're over baseline.
 """
 
 from __future__ import annotations
@@ -18,12 +23,12 @@ from pathlib import Path
 from check_pytest_unit_dir_coverage import (  # type: ignore[import-not-found]
     BASE_DEFAULT_ENTRY,
     Baseline,
-    find_family_unit_dirs,
+    find_test_containing_dirs,
     is_pytest_unit_dir_repo,
     load_baseline,
     main,
     resolve_effective_entries,
-    ungated_families,
+    ungated_test_dirs,
     write_baseline,
 )
 
@@ -73,46 +78,112 @@ def test_repo_not_sourcing_base_scripts_is_out_of_scope() -> None:
     assert not is_pytest_unit_dir_repo("npm run lint && npm test\n")
 
 
-# ── find_family_unit_dirs ───────────────────────────────────────────────────
+# ── find_test_containing_dirs ───────────────────────────────────────────────
 
 
-def test_find_family_unit_dirs_ignores_top_level_tests_unit(tmp_path: Path) -> None:
+def test_find_test_containing_dirs_finds_family_unit_shape(tmp_path: Path) -> None:
+    """The original MTDS shape: tests/<family>/unit/ with a test file inside."""
     (tmp_path / "tests" / "unit").mkdir(parents=True)
+    (tmp_path / "tests" / "unit" / "test_a.py").write_text("def test_a(): pass\n")
     (tmp_path / "tests" / "market_interface" / "unit").mkdir(parents=True)
-    (tmp_path / "tests" / "market_interface" / "adapters").mkdir(parents=True)
+    (tmp_path / "tests" / "market_interface" / "unit" / "test_b.py").write_text("def test_b(): pass\n")
+    (tmp_path / "tests" / "market_interface" / "adapters").mkdir(parents=True)  # no test_*.py -> not counted
 
-    assert find_family_unit_dirs(tmp_path) == ["tests/market_interface/unit"]
-
-
-def test_find_family_unit_dirs_no_tests_dir(tmp_path: Path) -> None:
-    assert find_family_unit_dirs(tmp_path) == []
+    assert find_test_containing_dirs(tmp_path) == ["tests/market_interface/unit", "tests/unit"]
 
 
-# ── ungated_families / _covers ──────────────────────────────────────────────
+def test_find_test_containing_dirs_finds_colocated_scripts_shape(tmp_path: Path) -> None:
+    """The v1-blind-spot shape: co-located test_*.py directly under scripts/<name>/, NOT
+    nested under tests/ at all — the real unified-trading-pm scripts/plan-hygiene/ bug."""
+    (tmp_path / "scripts" / "plan-hygiene").mkdir(parents=True)
+    (tmp_path / "scripts" / "plan-hygiene" / "test_check_na_corpus_ratchet.py").write_text("def test_x(): pass\n")
+
+    assert find_test_containing_dirs(tmp_path) == ["scripts/plan-hygiene"]
 
 
-def test_ungated_families_flags_family_with_zero_overlap() -> None:
-    families = ["tests/trade_execution/unit", "tests/sports_execution/unit"]
+def test_find_test_containing_dirs_prunes_venv_and_hidden_dirs(tmp_path: Path) -> None:
+    """A vendored .venv test suite (pytest's own tests, hypothesis, etc.) or an agent
+    worktree checkout under a hidden dir must never inflate the observed count."""
+    (tmp_path / ".venv" / "lib" / "site-packages" / "pytest" / "tests").mkdir(parents=True)
+    (tmp_path / ".venv" / "lib" / "site-packages" / "pytest" / "tests" / "test_vendored.py").write_text("x\n")
+    (tmp_path / ".claude" / "worktrees" / "agent-1" / "tests").mkdir(parents=True)
+    (tmp_path / ".claude" / "worktrees" / "agent-1" / "tests" / "test_worktree.py").write_text("x\n")
+    (tmp_path / "tests" / "unit").mkdir(parents=True)
+    (tmp_path / "tests" / "unit" / "test_real.py").write_text("def test_real(): pass\n")
+
+    assert find_test_containing_dirs(tmp_path) == ["tests/unit"]
+
+
+def test_find_test_containing_dirs_no_test_files(tmp_path: Path) -> None:
+    (tmp_path / "tests" / "unit").mkdir(parents=True)
+    assert find_test_containing_dirs(tmp_path) == []
+
+
+def test_find_test_containing_dirs_excludes_non_unit_tiers(tmp_path: Path) -> None:
+    """tests/integration/, tests/e2e/, tests/smoke/ etc. are a deliberately separate
+    tier with their own collection mechanism (e.g. system-integration-tests' Layer 3a/3b
+    @pytest.mark.smoke / @pytest.mark.full_e2e) — not this checker's bug class. Measured
+    2026-08-15: an unscoped scan flagged ~60 such dirs across the real fleet as false
+    positives before this exclusion was added."""
+    for tier in ("integration", "e2e", "smoke", "perf", "regression", "backtest"):
+        d = tmp_path / "tests" / tier
+        d.mkdir(parents=True)
+        (d / "test_x.py").write_text("def test_x(): pass\n")
+    (tmp_path / "tests" / "defi" / "swap").mkdir(parents=True)  # feature name, not a tier
+    (tmp_path / "tests" / "defi" / "test_swap.py").write_text("def test_swap(): pass\n")
+
+    assert find_test_containing_dirs(tmp_path) == ["tests/defi"]
+
+
+def test_find_test_containing_dirs_excludes_codex_docs_root(tmp_path: Path) -> None:
+    """codex/06-coding-standards/test-templates/test_event_logging.py is a CANONICAL
+    TEMPLATE meant to be copied into a service's tests/unit/, never collected in place —
+    confirmed via its own leading comment on the real file."""
+    template_dir = tmp_path / "codex" / "06-coding-standards" / "test-templates"
+    template_dir.mkdir(parents=True)
+    (template_dir / "test_event_logging.py").write_text("# CANONICAL TEMPLATE\n")
+
+    assert find_test_containing_dirs(tmp_path) == []
+
+
+# ── ungated_test_dirs / _covers ─────────────────────────────────────────────
+
+
+def test_ungated_test_dirs_flags_dir_with_zero_overlap() -> None:
+    test_dirs = ["tests/trade_execution/unit", "tests/sports_execution/unit"]
     entries = ("tests/unit/", "tests/trade_execution/unit/")
-    assert ungated_families(families, entries) == ["tests/sports_execution/unit"]
+    assert ungated_test_dirs(test_dirs, entries) == ["tests/sports_execution/unit"]
 
 
-def test_ungated_families_prefix_entry_covers_whole_family() -> None:
-    families = ["tests/risk/unit", "tests/pnl/unit"]
-    assert ungated_families(families, ("tests/",)) == []
+def test_ungated_test_dirs_prefix_entry_covers_whole_dir() -> None:
+    test_dirs = ["tests/risk/unit", "tests/pnl/unit"]
+    assert ungated_test_dirs(test_dirs, ("tests/",)) == []
 
 
-def test_ungated_families_file_scoped_entry_still_counts_as_covered() -> None:
-    """A single-file PYTEST_UNIT_DIR entry inside the family dir is coarse
-    partial coverage, not a full-family ungating — out of scope for this
-    checker (a distinct debt class from the MTDS zero-collection bug)."""
-    families = ["tests/defi_execution/unit"]
+def test_ungated_test_dirs_colocated_scripts_dir_covered_by_its_own_entry() -> None:
+    """The scripts/plan-hygiene/ fix shape: naming the dir directly covers it."""
+    assert ungated_test_dirs(["scripts/plan-hygiene"], ("tests/unit/", "scripts/plan-hygiene/")) == []
+
+
+def test_ungated_test_dirs_colocated_scripts_dir_uncovered_without_its_entry() -> None:
+    """Reproduces the actual bug: scripts/plan-hygiene/ ships tests but PYTEST_UNIT_DIR
+    only lists the OTHER co-located scripts/ dirs — the exact pre-4a4716151f state."""
+    test_dirs = ["scripts/plan-hygiene", "scripts/quality_gates"]
+    entries = ("tests/unit/", "scripts/quality_gates/", "scripts/cicd/", "scripts/docs/")
+    assert ungated_test_dirs(test_dirs, entries) == ["scripts/plan-hygiene"]
+
+
+def test_ungated_test_dirs_file_scoped_entry_still_counts_as_covered() -> None:
+    """A single-file PYTEST_UNIT_DIR entry inside the test dir is coarse partial
+    coverage, not a full ungating — out of scope for this checker (a distinct debt
+    class from the MTDS zero-collection bug)."""
+    test_dirs = ["tests/defi_execution/unit"]
     entries = ("tests/defi_execution/unit/test_defi_lateral_loader.py",)
-    assert ungated_families(families, entries) == []
+    assert ungated_test_dirs(test_dirs, entries) == []
 
 
-def test_ungated_families_self_discovering_none_is_always_empty() -> None:
-    assert ungated_families(["tests/anything/unit"], None) == []
+def test_ungated_test_dirs_self_discovering_none_is_always_empty() -> None:
+    assert ungated_test_dirs(["tests/anything/unit"], None) == []
 
 
 # ── Baseline round-trip ──────────────────────────────────────────────────────
@@ -139,14 +210,14 @@ def test_baseline_write_never_raises_and_preserves_unscanned_repos(tmp_path: Pat
     assert loaded.allowed("repo-b") == 2  # unobserved this run — carried forward verbatim
 
 
-# ── main(): synthetic new-uncollected-dir case (the "done when" proof) ─────
+# ── main(): synthetic new-uncollected-dir cases (the "done when" proof) ────
 
 
 def _write_fleet_repo(
     workspace_root: Path,
     name: str,
     pytest_unit_dir: str,
-    family_dirs: list[str],
+    test_dirs: list[str],
 ) -> None:
     repo_root = workspace_root / name
     (repo_root / ".git").mkdir(parents=True)
@@ -156,20 +227,20 @@ def _write_fleet_repo(
         f'PYTEST_UNIT_DIR="{pytest_unit_dir}"\n',
         encoding="utf-8",
     )
-    for family_dir in family_dirs:
-        (repo_root / family_dir).mkdir(parents=True)
-        (repo_root / family_dir / "test_placeholder.py").write_text("def test_x(): pass\n", encoding="utf-8")
+    for test_dir in test_dirs:
+        (repo_root / test_dir).mkdir(parents=True)
+        (repo_root / test_dir / "test_placeholder.py").write_text("def test_x(): pass\n", encoding="utf-8")
 
 
 def test_main_flags_synthetic_new_ungated_family(tmp_path: Path) -> None:
     """Reproduces the exact MTDS bug shape: a repo grows a NEW
     `tests/<family>/unit/` dir that PYTEST_UNIT_DIR doesn't reach. With an
-    empty (zero) baseline, main() must exit 1 and name the ungated family."""
+    empty (zero) baseline, main() must exit 1 and name the ungated dir."""
     _write_fleet_repo(
         tmp_path,
         "synthetic-repo",
         pytest_unit_dir="tests/unit/",
-        family_dirs=["tests/unit", "tests/new_family/unit"],
+        test_dirs=["tests/unit", "tests/new_family/unit"],
     )
     baseline_file = tmp_path / "baseline.yaml"
     write_baseline({}, Baseline(), path=baseline_file)  # seed empty (0 tolerated everywhere)
@@ -188,12 +259,39 @@ def test_main_flags_synthetic_new_ungated_family(tmp_path: Path) -> None:
     assert exit_code == 1
 
 
+def test_main_flags_synthetic_new_ungated_colocated_scripts_dir(tmp_path: Path) -> None:
+    """Reproduces the ACTUAL unified-trading-pm bug: a repo grows a NEW co-located
+    scripts/<name>/test_*.py dir PYTEST_UNIT_DIR doesn't reach — v1's tests/<family>/unit/-
+    only scan could never have flagged this shape (it never looked outside tests/)."""
+    _write_fleet_repo(
+        tmp_path,
+        "synthetic-repo-scripts",
+        pytest_unit_dir="tests/unit/ scripts/quality_gates/",
+        test_dirs=["tests/unit", "scripts/quality_gates", "scripts/plan-hygiene"],
+    )
+    baseline_file = tmp_path / "baseline.yaml"
+    write_baseline({}, Baseline(), path=baseline_file)
+
+    exit_code = main(
+        [
+            "--workspace-root",
+            str(tmp_path),
+            "--scope",
+            "synthetic-repo-scripts",
+            "--baseline-file",
+            str(baseline_file),
+        ]
+    )
+
+    assert exit_code == 1
+
+
 def test_main_passes_when_family_is_gated(tmp_path: Path) -> None:
     _write_fleet_repo(
         tmp_path,
         "synthetic-repo-gated",
         pytest_unit_dir="tests/unit/ tests/new_family/unit/",
-        family_dirs=["tests/unit", "tests/new_family/unit"],
+        test_dirs=["tests/unit", "tests/new_family/unit"],
     )
     baseline_file = tmp_path / "baseline.yaml"
     write_baseline({}, Baseline(), path=baseline_file)
@@ -220,7 +318,7 @@ def test_main_tolerates_pre_existing_debt_at_baseline(tmp_path: Path) -> None:
         tmp_path,
         "synthetic-repo-debt",
         pytest_unit_dir="tests/unit/",
-        family_dirs=["tests/unit", "tests/legacy_family/unit"],
+        test_dirs=["tests/unit", "tests/legacy_family/unit"],
     )
     baseline_file = tmp_path / "baseline.yaml"
     write_baseline({"synthetic-repo-debt": 1}, Baseline(), path=baseline_file)

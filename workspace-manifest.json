@@ -1482,8 +1482,8 @@
         },
         {
           "name": "deployment-service",
-          "version": ">=0.1.0,<1.0.0",
-          "required": false
+          "version": ">=0.132.0,<1.0.0",
+          "required": true
         }
       ],
       "completion_path": "infrastructure",

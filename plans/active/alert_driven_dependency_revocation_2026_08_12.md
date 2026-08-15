@@ -968,3 +968,12 @@ separate work from building.
 - **context-scout 2026-08-15**: populated/refreshed context_scope (12 entries) — verified all 4 codex docs + 8 source
   files across unified-trading-library/unified-api-contracts/deployment-service still resolve; unchanged from a prior
   authoring-time list, no gaps found.
+- **2026-08-15 (unrelated session, unblocking PM shipping)**: `check-dependency-alignment.py` was failing fleet-wide —
+  Phase 6's `e2e-testing` pyproject.toml deployment-service dep (and its manifest `notes` text) had landed, but the
+  structured `repositories.e2e-testing.dependencies[]` array entry was never added, so every quickmerge touching PM hit
+  Stage 1.5. Added `{"name": "deployment-service", "version": ">=0.132.0,<1.0.0", "required": true}` to match
+  pyproject.toml's constraint; `required: true` because the notes describe it as load-bearing for the revocation
+  actuator/gate black-box tests, not optional. Landed `unified-trading-pm@0428f5ee1f` — verified on
+  `origin/live-defi-rollout` (`check-dependency-alignment.py --json` now reports `aligned: true`). Also resolved a
+  merge conflict with an independent concurrent fix to the same manifest entry (theirs used `>=0.1.0,<1.0.0`/
+  `required: false`, a generic placeholder not matching pyproject.toml's actual pin — kept the accurate one).
