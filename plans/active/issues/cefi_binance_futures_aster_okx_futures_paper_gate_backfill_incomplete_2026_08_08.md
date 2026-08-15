@@ -116,15 +116,25 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
       naturally reaches these 3 venues' full chronological range, re-run this exact venue-scoped
       `read_availability_index(columns=, filters=[("venue","in",[...])])` check and cite the fresh reachable-coverage
       numbers here + in the parent doc's Progress Log. Repo: instruments-service.
-- [ ] [OPERATOR] P1. **Purge/reclassify the 2,003 stale ASTER `book_snapshot_5`
+- [x] ✅ [INFRA] P1. **Purge/reclassify the 2,003 stale ASTER `book_snapshot_5`
       `attempted_failed[UpstreamTimestampBiasError]` manifest rows** (see 2026-08-09 DP-FETCH-009 Progress Log entry
       below for full diagnosis) — these represent a structurally-impossible-forever combo (no historical depth endpoint)
-      that the 2026-07-15 operator ruling already says should carry NO manifest row at all
-      (`_onchain_perp_batch_live_only.py` module docstring). Needs a CAS/retire-based manifest correction (an additive
-      `.add()` write cannot delete a row), so it needs delete-safety review before `--apply`, not a blind one-shot edit.
-      Follow the exact safe pattern already proven in
-      `market-tick-data-service/scripts/restamp_cefi_onchain_perp_venue_chain_2026_07_21.py` (dry-run default,
-      `_TEMPORAL_COLS` handling, per-row content-match gate). Repo: market-tick-data-service.
+      that the 2026-07-15 operator ruling (`/plans/archive/2026_07/cefi_completion_program_2026_07_15.md`) already says
+      should carry NO manifest row at all (`_onchain_perp_batch_live_only.py` module docstring). **DONE 2026-08-15**:
+      wrote `market-tick-data-service/scripts/retire_aster_book_snapshot5_dead_rows_2026_08_15.py` (CAS
+      read-classify-write + retry, pre-apply GCS snapshot, fresh §3a soft-delete-retention gate, per-row content-match
+      re-check, post-write verification — same safety model as `restamp_cefi_onchain_perp_venue_chain_2026_07_21.py`
+      plus the later-formalized §3a check). Dry-run measured 2,000 live rows matching the exact 4-field signature
+      (venue=ASTER, data_type=book_snapshot_5, capture_status=attempted_failed, error_reason=UpstreamTimestampBiasError)
+      — 3 fewer than the 2026-08-09 count, expected drift from a live re-measurement, not a stale assumption.
+      Soft-delete retention confirmed fresh at 604800s (7d, meets §3a). Manifest confirmed under continuous live write
+      traffic (29,579,146 rows at diagnostic read → 29,694,222 rows at CAS read ~10 min later, +115,076 from concurrent
+      writers) — validates using CAS over a plain overwrite. `--apply` succeeded on the first CAS attempt: 2,000 rows
+      removed (29,694,222 → 29,692,222 total), all post-write invariants passed (row count, zero remaining
+      target-signature rows, column set preserved). Pre-apply snapshot:
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/backups/availability_index.pre_aster_book_snapshot5_retire_apply_20260815T102620Z.parquet`.
+      Old generation 1786789223350161 → new generation 1786790875420616. Shipped
+      market-tick-data-service@6ab13fdf00d74ce72b081f68a2805c7922fdf4ce.
 
 ## Progress Log (append-only)
 
