@@ -187,13 +187,28 @@ Two independent angles, not mutually exclusive:
       market-tick-data-service) — unified-trading-pm@8a56e126e2:
       `cursor-configs/skills/data-pipeline-check-mtds/SKILL.md` §1a now passes `--wall-clock-timeout-sec 14400`
       explicitly in the per-`--asset-group` loop example (see Progress Log for the full root-cause evidence).
-- [ ] [CODE] P2. **NEW (split off 2026-08-15 slot 18 from the [CODE] P2 todo above — this is the (a) DEFI half that is
-      still genuinely unresolved).** **DEFI** died silently ~1 minute in, immediately after the Phase-0
+- [x] ✅ [CODE] P2. **NEW (split off 2026-08-15 slot 18 from the [CODE] P2 todo above — this is the (a) DEFI half that
+      is still genuinely unresolved).** **DEFI** died silently ~1 minute in, immediately after the Phase-0
       manifest-consolidation line and BEFORE any per-shard force/skip work was logged (see Progress Log, slot 6
       2026-08-15 entry, for the full `run.log` excerpt) — too early to be the wall-clock timeout (that fires at exactly
       3600s, not ~52s) or the per-shard `genuine_skip_proof()` memory growth the root-cause todo above fixed, so likely
       a distinct bug in `_force_consolidate_test_buckets`/Phase-0 itself. Root-cause it directly, then re-run **DEFI**
-      to confirm. (repos: market-tick-data-service)
+      to confirm. (repos: market-tick-data-service) — **ROOT-CAUSED 2026-08-15 (slot 27), NOT
+      `_force_consolidate_test_buckets`**: Phase-0 consolidation logged `OK` (5 shards, 871 rows, 2.8s — genuinely
+      cheap) before the crash; the actual culprit is the very next call in the per-shard loop, `_resolve_shard_day` →
+      `_captured_days_by_cell`, which reads the FULL unfiltered PROD availability index (`columns=` pruning alone does
+      not bound memory on a large index — DeFi's PROD index is ~33M rows per `read_availability_index`'s own docstring,
+      several-to-tens-of-GB to decode even column-pruned). Fired once, on shard #1, before any shard work is logged —
+      matches the silent VM-wide death (even the independent heartbeat bash loop stopped, consistent with an OOM taking
+      the whole process tree, not a catchable Python exception). Fixed market-tick-data-service@d89f43488e: bound the
+      read via the SAME proven `filters=` row-group-pushdown mechanism as
+      `mtds_backfill_vm_startup_oom_rc137_2026_07_14` (~14.86 GiB → ~5 MB for a date filter on this same index) — a
+      400-day lookback window from the requested day, which is all `_resolve_shard_day`'s auto_day fallback needs;
+      `_augment_with_observed_cells` keeps the unbounded scan (not implicated in this crash, needs full cell-existence
+      history). 1 new regression test asserting the read is actually bounded. Full `quality-gates.sh` green; verified
+      ancestor of `origin/live-defi-rollout`. **Live re-run to confirm NOT attempted this session** (each asset_group
+      re-run needs 1-2.5hrs VM wall-clock per prior sessions' measurements, disproportionate for one P2 CODE todo — see
+      the still-open [DATA] P2 re-run todo above, which already tracks re-running DEFI once a fix lands).
 
 ## Progress Log
 
@@ -347,3 +362,37 @@ Two independent angles, not mutually exclusive:
   scope — observed a concurrent slot 27 quickmerge in flight for exactly that todo while shipping this). No checkbox to
   flip for this task — the (b) item this was dispatched against is already `[x]` via slot 18's fix; this entry is the
   evidence trail for `/done`.
+- **2026-08-15 (slot 27 worker, infra)**: root-caused + fixed the DEFI Phase-0 silent-death (a) todo above. Pulled the
+  actual DEFI driver VM's `run.log` (`pipeline-e2e-check-mtds-20260814-234056-c19288`, confirmed via its 2.8KB size
+  matching slot 6's report) directly from GCS — Phase-0 manifest consolidation logged `OK` at 23:44:30 (5 shards, 871
+  rows, 2.8s latency — trivially cheap, ruling out `_force_consolidate_test_buckets` as the culprit despite the todo
+  text's suspicion). The log's last line is a `PIPELINE_HEARTBEAT` at 23:45:12; nothing after, including the independent
+  heartbeat bash loop that has nothing to do with the Python process — strong evidence of a VM-wide OOM kill
+  (uncatchable SIGKILL to the whole process tree), not a Python exception `_force_consolidate_test_buckets`'s own
+  try/except would have caught and logged. Traced the crash to the very next call after Phase-0 in the per-shard loop:
+  `_resolve_shard_day(shard, day, ...)` → `_captured_days_by_cell(shard.asset_group)`, which calls
+  `read_availability_index(_prod_bucket("DEFI"), columns=_PROD_SAMPLE_COLUMNS)` with NO `filters=` — an UNFILTERED read
+  of the full PROD DeFi availability index. `read_availability_index`'s own docstring (already documented, from a PRIOR
+  incident `read_availability_index_slim_read_oom_at_defi_scale_2026_08_01.md`) explicitly warns: "`columns=` alone does
+  NOT bound memory on a large, UNFILTERED index — decoding even 1-2 columns for the FULL row range of a large index
+  (e.g. DeFi's ~33M rows) is itself several-to-tens-of-GB ... prefer filters= or a streaming/aggregate read". This call
+  fires exactly ONCE per asset_group (module-cached in `_CAPTURED_DAYS_CACHE`), on shard #1, BEFORE any per-shard
+  force/skip work is logged — matches every observed symptom exactly. Fix (market-tick-data-service@d89f43488e, rebased
+  from an initial commit ade7e2eb after a concurrent-push race, both same content): bound the read via
+  `filters=[("date", ">=", min_day)]`, the SAME row-group-pushdown mechanism already proven for this exact index
+  (`mtds_backfill_vm_startup_oom_rc137_2026_07_14`: ~14.86 GiB → ~5 MB for a single-day filter on the real 27.4M-row
+  DeFi index) — a 400-day lookback window computed from the requested `--day`, which is all `_resolve_shard_day`'s
+  `auto_day` fallback logic actually needs (it wants the MOST RECENT captured day, not full history).
+  `_augment_with_observed_cells`'s call site (gated off in this `--mvp-only` crash scenario, so not implicated) keeps
+  the unbounded full-history scan unchanged — it needs full cell-existence history, not a specific day, and touching it
+  wasn't warranted by the evidence. Added 1 new regression test
+  (`test_resolve_shard_day_bounds_captured_days_read_via_date_filter`) that mocks `read_availability_index` directly and
+  asserts a non-`None` date-bounded `filters=` is actually passed — proving the fix bounds the read, not just that the
+  pre-existing cache/grouping logic still works. Full `quality-gates.sh` green (868s); `git merge-base --is-ancestor`
+  verified `d89f43488ed2f6e679e1eb33f4b2818153b1b0ca` is an ancestor of `origin/live-defi-rollout` post-quickmerge (the
+  first attempt raced a concurrent push and its background shell got killed mid-flight; rebased cleanly with
+  `--autostash`, re-ran QG on the rebased SHA, re-shipped — no data lost). **Live VM re-run to confirm NOT attempted
+  this session** — every prior worker on this doc measured 1-2.5hrs of real VM wall-clock per asset_group re-run,
+  disproportionate for a single P2 CODE root-cause todo; the still-open [DATA] P2 re-run todo above already owns
+  re-running DEFI (and CEFI/SPORTS) now that fixes exist for all three failure classes (OOM, wall-clock timeout, Phase-0
+  unbounded read) — whoever picks that up next should use the now-corrected §1a command set for all five asset_groups.
