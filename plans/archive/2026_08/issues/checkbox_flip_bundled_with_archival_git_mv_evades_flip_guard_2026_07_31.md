@@ -17,7 +17,7 @@ summary: >-
   informal coaching demonstrably did not stick within-session. The underlying shipped work was fully correct both times
   (review-verified); this is purely a commit-sequencing-discipline + detection-coverage gap, not a data/correctness
   harm.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -46,8 +46,7 @@ source:
     ae19b3fd0), with the cross_repo_pm_file_touched_no_checkbox_flip guard failing to fire either time (checked
     /api/activity both times) because git's rename-similarity heuristic kept pairing old→new path.",
   ]
-resolved_by:
-archive_exempt: true
+resolved_by: "agent-orchestrator@7889a7c"
 locked_by:
 locked_since:
 supersedes:
@@ -60,6 +59,11 @@ context_scope:
     agent-orchestrator/server/verify.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-15** — status=resolved, archived per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s archive-on-resolve rule. Fixed in
+> `agent-orchestrator@7889a7c` (option B: `--no-renames` added to all 4 sibling diff-shape `git show` calls in
+> `server/verify.py`, with regression coverage in `tests/test_done_gate_plan_flip_hard_reject.py`).
 
 # checkbox-flip bundled with archival git-mv evades the no-flip guard
 
