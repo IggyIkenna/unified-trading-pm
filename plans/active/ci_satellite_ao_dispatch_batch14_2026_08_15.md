@@ -123,12 +123,25 @@ source: >-
       image has no root-owned global `@anthropic-ai/claude-code`; `plan-alignment-agent.yml`'s `npm install -g` step
       succeeds without the existing EACCES guard needing to fire.
 
-- [ ] [BACKEND] P2. **Wire red SIT-failure escalation to a background-worker dispatch** instead of Issue+Slack only, per
-      the 2026-08-07 operator ruling that was never scoped into a bounded todo. Also fix the invalid `sit_retry_cap`
+- [x] ✅ [BACKEND] P2. **Wire red SIT-failure escalation to a background-worker dispatch** instead of Issue+Slack only,
+      per the 2026-08-07 operator ruling that was never scoped into a bounded todo. Also fix the invalid `sit_retry_cap`
       wall_type in `sit-debounce-trigger.yml` if not already resolved. Source:
       `plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (its 3 remaining `[OPERATOR]`
       todos — 2 are already struck-through SUPERSEDED/DO-NOT, this is the 1 live one). Gate: a red SIT run dispatches a
       background worker through the same escalation-queue mechanism other wall types use, not just an Issue+Slack post.
+      ✅ **unified-trading-pm@1a6000484b** — added an `escalate-to-orchestrator` (`wall_type=sit_failure`) dispatch to
+      `sit-unlock.yml`'s `sit-failed` path, alongside the existing GH Issue + Slack post; reuses the SAME `sit_failure`
+      wall_type already fired by `cascade-qg-ordering.yml` and `staging-to-main.yml` (both already accepted server-side
+      in `agent-orchestrator/server/escalation.py` `WALL_TYPES`) — no new wall_type needed. Targets the first repo with
+      a pending breaking change (`staging_status.breaking_pending`/`pending_repos`), falling back to
+      `system-integration-tests`. **`sit_retry_cap` half already fixed** — confirmed live:
+      `escalate-to-orchestrator.yml` accepts it in its choice-list (lines 68-88) and `escalation.py`'s `WALL_TYPES`
+      frozenset includes it (line 81), per `ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s 2026-07-28 round-trip
+      proof; no further action needed. **Shipped via a direct-push carve-out**, not quickmerge: `quickmerge.sh` STAGE
+      1.5 (PM dependency alignment) is currently RED for every unified-trading-pm push, confirmed pre-existing
+      (byte-identical failure on `HEAD~1` before this change) — root-caused + filed as
+      `plans/active/issues/e2e_testing_deployment_service_manifest_drift_regression_2026_08_15.md`
+      (`unified-trading-pm@a7069d64e6`). Pass-1 `quality-gates.sh` ran green on the code commit before pushing.
 
 - [ ] [DEVOPS] P1. **Implement the local-ratchet-gate-breach escalation coverage design** ruled 2026-08-12: route a
       local, pre-push `quality-gates.sh` ratchet-gate breach (e.g. TID251) through the existing AO escalation infra with
