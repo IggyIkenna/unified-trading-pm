@@ -54,6 +54,9 @@ context_scope:
 
 # CeFi satellite AO batch 10 — finalize
 
+> **🟢 ARCHIVED 2026-08-15** — all 4 todos complete (batch10 archived); moved to `plans/archive/2026_08/` via the
+> standard 6-step ritual.
+
 > **Status: active from the start (2026-07-30 ruling — no double gate).** `gate_on_depends: true` already machine-holds
 > every todo below until batch10's own 6 tasks are `done`, regardless of batch10's own `status` (draft or active). Only
 > the batch itself needs `status: draft` + explicit operator approval; this finalize plan carries no independent
@@ -102,14 +105,24 @@ context_scope:
       is **batch20**. Re-checked all 32 Deferred items from `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` against
       live corpus/VM state. Full per-item breakdown in the Progress Log below. Zero new batch todos drafted, per this
       todo's own instruction.
-- [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`** via the standard 6-step ritual: confirm
-      the Deferred/Archivable/Cross-tranche/Orthogonality-fixes sections (informational, never batch todos) need no
-      separate migration → add the archive banner → run the codex-alignment check (batch10 creates no new durable
-      contract beyond the 2 orthogonality retags already landed directly on their source docs; confirm still true) →
-      grep the corpus for every referrer of `cefi_satellite_ao_dispatch_batch10_2026_08_08` and repoint each to the
-      archived path → clear `locked_by` (already empty, confirm). **Done when**: the plan is moved to
+- [x] ✅ [DOC] P1. **DONE 2026-08-15 (slot-4).** **Archived `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`** via the
+      standard 6-step ritual. Confirmed the Deferred/Archivable/Cross-tranche/Orthogonality-fixes sections are
+      informational only (never batch todos) — no separate migration needed, each item's actual disposition already
+      lives in its own source doc (per todo 3's per-item re-check above). Added the archive banner to both batch10 and
+      this finalize doc. Codex-alignment check: confirmed still true — batch10 creates no new durable contract beyond
+      the 2 orthogonality retags already landed directly on their source docs (`cefi_ml_directional_continuous_live_2026_06_20.md`,
+      `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`), no codex update needed. Grepped the corpus for
+      every referrer of `cefi_satellite_ao_dispatch_batch10_2026_08_08` and repointed the ACTUAL-path-form referrers in
+      the still-active corpus (`check_reference_paths.py` excludes `plans/archive/` from its scan, so already-archived
+      docs' context_scope entries were left as historical record, matching the corpus's existing convention): (1)
+      `plans/epics/cefi_master.md` — 4 relative-link repoints (frontmatter list ×2, section headers ×2) to
+      `../archive/2026_08/`; (2) `plans/active/INDEX.md` — removed both entries (archived docs aren't listed there,
+      matching the batch9 precedent); (3) `plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md`
+      — repointed the `/plans/active/...` citation; (4)
+      `plans/active/issues/mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md` — repointed the `context_scope`
+      entry. `locked_by` confirmed already empty on both docs. **Done when**: the plan is moved to
       `plans/archive/2026_08/`, every corpus referrer resolves to the new path, `run_hygiene_sweep.sh` stays green, and
-      this finalize doc is archived alongside it in the same commit.
+      this finalize doc is archived alongside it in the same commit. **DONE** — see Progress Log below.
 
 ## Codex SSOTs
 

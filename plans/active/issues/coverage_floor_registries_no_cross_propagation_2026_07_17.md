@@ -265,7 +265,7 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       it's iterated even though MVP catalog-tagging makes every attempt fail — wasting Tardis API quota daily. The
       MVP-removal and backfill-launcher-exclusion findings above are still correct; only "has NEVER been fetched" is
       false. The open remediation (`[INFRA] P3` in the doc cited above, and echoed in
-      `/plans/active/cefi_satellite_ao_dispatch_batch10_2026_08_08.md`) is the live tracking location — no new todo
+      `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch10_2026_08_08.md`) is the live tracking location — no new todo
       needed here. **RESOLVED 2026-08-10**: the `[INFRA] P3` deregistration landed — BINANCE-DELIVERY removed from
       `VENUES_BY_ASSET_GROUP["cefi"]` + `tardis_to_venue`/`all_tardis_exchanges` (the forward-poll's actual iteration
       source) + `VENUE_DATA_TYPE_CAPABILITIES` (unified-api-contracts@56db28e6, verified ancestor of

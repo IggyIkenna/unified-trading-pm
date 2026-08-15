@@ -40,8 +40,8 @@ related_plans:
   - ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md
   - ../active/cefi_ml_directional_continuous_live_2026_06_20.md
   - ../archive/2026_08/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08.md
-  - ../active/cefi_satellite_ao_dispatch_batch10_2026_08_08.md
-  - ../active/cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize.md
+  - ../archive/2026_08/cefi_satellite_ao_dispatch_batch10_2026_08_08.md
+  - ../archive/2026_08/cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize.md
   - ../archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07.md
   - ../archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize.md
   - ../active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md
@@ -681,12 +681,12 @@ vendor-catalog gate + apply-purge — finalize (reconcile + archive)
 **status**: active · **estimate**: 0.48 cal AI-days (class: infra) **title**: CeFi Surface-C chain-drop residual —
 finalize (verify resume sequence + archive)
 
-### [`cefi_satellite_ao_dispatch_batch10_2026_08_08`](../active/cefi_satellite_ao_dispatch_batch10_2026_08_08.md)
+### [`cefi_satellite_ao_dispatch_batch10_2026_08_08`](../archive/2026_08/cefi_satellite_ao_dispatch_batch10_2026_08_08.md)
 
 **status**: active · **estimate**: 0.96 cal AI-days (class: infra) **title**: CeFi satellite AO batch 10 — full-corpus
 closeout-completeness re-audit
 
-### [`cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize`](../active/cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize.md)
+### [`cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize`](../archive/2026_08/cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize.md)
 
 **status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: CeFi satellite AO batch 10 — finalize
 (reconcile source docs + re-check deferrals + archive)

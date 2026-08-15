@@ -17,7 +17,7 @@ tags: [mdps, force-flag, subprocess-per-date, backfill, data-correctness, cross-
 related:
   [
     /plans/active/issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch10_2026_08_08.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch10_2026_08_08.md,
   ]
 created: "2026-08-08"
 last_updated: "2026-08-08"
