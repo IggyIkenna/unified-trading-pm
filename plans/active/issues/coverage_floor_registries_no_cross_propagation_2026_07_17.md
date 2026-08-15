@@ -329,8 +329,21 @@ which value is measured-reality is needed per venue, not a mechanical merge.
   (`/plans/archive/issues/read_availability_index_slim_path_silent_empty_return_2026_07_27.md`, root-caused + fixed
   2026-08-03). Verified live: the fix (`unified-trading-library@0db19a72` + `@3b72245a`) and both regression tests are
   still present in current code. No new code needed.
+- **slot-22 2026-08-15** (coverage_floor_registries_no_cross_propagation-b44de4b21d05): Closed the HYPERLIQUID re-verify
+  Follow-up. Live manifest probe confirms the 2026-07-27 backfill run stopped without completing — 201/261 days in the
+  2023-04-15..2023-12-31 window still carry `expected_unattempted` cells for `book_snapshot_5`/ `derivative_ticker`.
+  Filed a new `[INFRA] P3` Follow-up to relaunch the idempotent backfill (out of scope for this re-verify-only todo).
 
 ## Follow-ups
+
+- [ ] [INFRA] P3. **Relaunch `cefi-hyperliquid-2023-*` backfill** — the 2026-07-27 run (`20260727-071055`) stopped
+      partway through without reaching `DEPLOYMENT_COMPLETED exit_code=0`: `book_snapshot_5`/`derivative_ticker` still
+      show `expected_unattempted` cells on 201 of 261 days in the 2023-04-15..2023-12-31 window (gap starts 2023-06-14,
+      per the re-verification todo above, 2026-08-15). Re-launch via
+      `deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh` (SPOT default, idempotent —
+      resumes/skips already-captured cells, does not replay from `START_DATE`) after confirming zero fleet VMs are
+      already running for this venue; verify STARTED + progressing + eventual `DEPLOYMENT_COMPLETED exit_code=0` per the
+      no-fire-and-forget rule. Cross-ref: `cefi_hl_aster_batch_data_gaps_2026_06_22.md`. Repo: deployment-service.
 
 - [x] ✅ [DATA] P3. Investigate why read_availability_index(bucket, columns=[...]) returned an empty DataFrame on
       2026-07-27 (flagged 'worth its own follow-up, not chased here'). — **ALREADY RESOLVED — this was a stale
@@ -351,11 +364,24 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       and `test_slim_read_row_count_matches_full_read`. No new code needed — this todo's own investigation had already
       happened in a sibling doc that this doc's Follow-ups section was never cross-referenced against. (repo:
       unified-trading-library, no new commit)
-- [ ] [DATA] P3. **Re-verify manifest coverage for Hyperliquid 2023-04-15..2023-12-31** once
-      `DEPLOYMENT_COMPLETED exit_code=0` lands for the `cefi-hyperliquid-2023-*` backfill VM (run-id `20260727-071055`
-      was actively advancing through this window as of 2026-07-27T08:37:45Z, ~88s/day — check current run status, it has
-      had 13 days to complete since). Cross-ref: `cefi_hl_aster_batch_data_gaps_2026_06_22.md` (the live parent doc
-      tracking this fleet). Repo: market-tick-data-service.
+- [x] ✅ [DATA] P3. **Re-verified 2026-08-15 (slot-22)** — VM `cefi-hyperliquid-2023-20260727-071055` is no longer
+      running (0 instances match `cefi-hyperliquid*`/`hyperliquid` fleet-wide via live `gcloud compute instances list`;
+      0 `vm-heartbeat/` blobs and 0 `_index/per_vm/` shards remain for hyperliquid — fully consolidated or the VM was
+      reaped). Live-probed the manifest window (`read_availability_index_safe` on
+      `market-data-tick-cefi-prd-central-element-323112`, `filters=[date 2023-04-15..2023-12-31]`): **the backfill did
+      NOT reach `DEPLOYMENT_COMPLETED exit_code=0`** — it is genuinely PARTIAL, not fully closed. `book_snapshot_5` and
+      `derivative_ticker` (the only two data_types with real coverage in this window; `trades` stays honestly
+      `empty_confirmed` throughout per the 2025-03-22 trades-start floor) each show real `captured` rows (8,917 / 9,194)
+      confirming the venue-fetch itself works, but `expected_unattempted` cells remain on **201 of the 261 days** in the
+      window (first gap 2023-06-14, last gap 2023-12-31 — i.e. the tail of the window, consistent with a run that was
+      progressing chronologically and stopped partway through rather than one that never started). `attempted_failed`=8
+      (negligible). No `DEPLOYMENT_COMPLETED` entry for this run-id appears anywhere in
+      `cefi_hl_aster_batch_data_gaps_2026_06_22.md`'s Progress Log after the 2026-07-27 launch entry — corroborates the
+      VM stopped (preempted or reaped) before finishing rather than completing cleanly. This todo's own scope was
+      re-verification only (its `est_hours: 1.0`, no VM-launch guardrail cited) — relaunching the multi-day fleet job is
+      out of scope here; tracked as a fresh follow-up below instead of silently absorbed. Cross-ref:
+      `cefi_hl_aster_batch_data_gaps_2026_06_22.md` (the live parent doc tracking this fleet). Repo:
+      market-tick-data-service / deployment-service — investigation only, no code shipped this task.
 
 > **CORRECTED 2026-08-09 (plan_reconciler)**: the 2026-08-06 audit note below was itself already stale — its first named
 > item (read_availability_index empty-DF) IS tracked above; only the second (re-verify manifest coverage) was genuinely
