@@ -170,6 +170,13 @@ template, minus the third-party dependency).
       quality vs. the Claude/DeepSeek baseline — confirms or corrects this session's directional estimate that the
       $200/mo bet pencils out given real fallback volume. Done when: a dated Progress Log entry with real
       messages-used-vs-ceiling and quality numbers lands.
+- [ ] [INFRA] P2. Add streaming (SSE) support to `codex_bridge_server.py` — the 2026-08-15 blind-build shipped a
+      non-streaming-only bridge (module docstring gap #3): functionally correct for Claude Code but a real UX regression
+      vs. every other provider (pane goes silent for the whole turn instead of live-updating). Deliberately NOT
+      attempted blind — DeepSeek's own native proxy needed a documented real engineering effort (including a fail-safe
+      circuit breaker for mid-stream failures) to get right, and that can't be replicated without a live Codex session
+      to test against. Done when: a real streaming turn through the bridge updates the Claude Code pane incrementally,
+      not just at completion, verified against an actual live Codex session.
 
 ## Progress Log
 
