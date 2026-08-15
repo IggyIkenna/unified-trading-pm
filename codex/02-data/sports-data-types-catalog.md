@@ -3,10 +3,10 @@ doc_type: codex-ssot
 title: Sports Data Types Catalog
 summary: >-
   Catalog of MTDS/MDPS sports data types under the 2026-08-08 operator taxonomy (P1 rewrite). Raw vocabulary unifies to
-  lowercase `odds` with `in_play` and `horizon` as columns; derived types are `odds_snapshot` and `odds_movement`;
-  `arbitrage_opportunity` moves to signals layer; `markets`/`outcomes`/`settlements` retired (0 rows ever written). GCS
-  path uses `venue=` (not `source=`) with `pipeline_mode=` and `instrument_type=` segments. Contracts landed in P1;
-  physical data migration in P2.
+  lowercase `odds` with `in_play` as a column; the derived type is `odds_horizon_bucket` (absorbs `odds_snapshot`/
+  `odds_movement`/`horizon` as of the 2026-08-15 revision — see banner); `arbitrage_opportunity` moves to signals layer;
+  `markets`/`outcomes`/`settlements` retired (0 rows ever written). GCS path uses `venue=` (not `source=`) with
+  `pipeline_mode=` and `instrument_type=` segments. Contracts landed in P1; physical data migration in P2.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -36,6 +36,23 @@ code_refs:
 
 # Sports Data Types Catalog
 
+> **⚠️ CORRECTION (2026-08-15) — operator reversed the "collapse to ONE raw type" ruling for `odds_horizon_bucket`
+> only.** The 2026-08-08 rewrite below folded `odds_horizon_bucket` (+ `odds_snapshot`/`odds_movement`) into `odds` with
+> `horizon` as a column. That is now OVERTURNED: `odds_horizon_bucket` survives as its own **derived** type, absorbing
+> `odds_snapshot`/`odds_movement` as dimensions of itself (a `computation_type` column distinguishing snapshot-LOCF vs
+> movement-OHLC, plus `horizon`/`timeframe`) instead of retiring into the raw `odds` type. Target is now TWO types:
+> `odds` (raw, unchanged from 08-08 — still absorbs `trades`/`ODDS`/`trades_inplay`) and `odds_horizon_bucket` (derived,
+> batch today + a live variant later — MDPS's derivation is architecturally incremental/streamable per
+> `market-data-processing-service/.../adapters/sports/bucket_assignment_adapter.py`, but zero live rows exist yet;
+> building the live leg is unbuilt work, not a flip). `arbitrage_opportunity`'s disposition is UNCHANGED — still retires
+> to the signals/features layer in P3, not folded into either odds type. Bookmaker-as- `venue` (§ "Aggregator vs venue"
+> below) is UNCHANGED and was never in question — it's the OTHER stale doc,
+> `/codex/04-architecture/sports-batch-live.md` §5, that had this backwards; corrected there separately. Physical
+> migration status: NO rows were re-stamped under the old (retire-to-`odds`) direction — the P2 plan's "Move
+> `odds_horizon_bucket`..." todo only ever executed venue re-attribution (bookmaker fan-out), never the type-collapse —
+> so there is nothing to unwind. See `/plans/active/sports_taxonomy_p2_migration_2026_08_08.md` Progress Log (2026-08-15
+> entry) for the plan-side todo corrections this triggered.
+
 > **Rewritten 2026-08-08 (P1, `sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`).** This doc supersedes all
 > pre-2026-08-08 content. Three sections of the prior version were wrong:
 >
@@ -62,17 +79,18 @@ code_refs:
 
 ---
 
-## Model Overview (2026-08-08 ruling)
+## Model Overview (2026-08-08 ruling, `odds_horizon_bucket` REVISED 2026-08-15 — see banner above)
 
 Every sports price quote — pre-match or in-play, from any bookmaker or aggregator — lands under a SINGLE raw data type
-**`odds`**. Two concepts previously overloaded into `data_type` or `timeframe` names become real schema columns:
+**`odds`**. One concept previously overloaded into `data_type` becomes a real schema column:
 
 - **`in_play: bool`** — `True` for quotes captured while the match is live; `False` for pre-match. Replaces the retired
   `trades_inplay` data type.
-- **`horizon: str | None`** — first-class time-to-kickoff label (`T-24h`, `T-12h`, `T-6h`, `T-4h`, `T-2h`, `T-1h`,
-  `T-10m`, `T-0`) for horizon-bucketed rows; `None` for tick-level or non-bucketed rows. Replaces the retired
-  `odds_horizon_bucket` data type. UAC SSOT: `SPORTS_HORIZONS` constant (landed `unified-api-contracts@685b288a`);
-  validated via `is_valid_horizon()`.
+
+`horizon`/time-to-kickoff bucketing does **NOT** collapse into `odds` (2026-08-15 reversal) — it stays the separate
+derived type `odds_horizon_bucket` (§ below), which itself carries `horizon: str | None` (`T-24h`…`T-0`, UAC
+`SPORTS_HORIZONS`, validated via `is_valid_horizon()`) plus a `computation_type` column discriminating the snapshot-LOCF
+vs movement-OHLC forms it absorbs from the old `odds_snapshot`/`odds_movement` types.
 
 The **`source`** column (`odds_api` / `footystats`) distinguishes the two raw-odds producers. `ODDS_API` and
 `FOOTYSTATS` are sources only — they do NOT appear on the `venue` axis. The `venue` column carries the bookmaker whose
@@ -109,41 +127,42 @@ exception.
 
 ### 1. `odds` — unified raw quotes
 
-| Field               | Value                                                                                                                    |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Producers**       | MTDS `OddsApiAdapter` (`source=odds_api`), MTDS footystats adapter (`source=footystats`)                                 |
-| **Shard key**       | `venue` × `league_id` × `day`                                                                                            |
-| **Instrument type** | `odds`                                                                                                                   |
-| **Schema fields**   | `fixture_id`, `league_id`, `venue`, `market_type`, `outcome`, `odds_decimal`, `in_play`, `horizon`, `source`, `ts_event` |
-| **UAC contract**    | `CONTRACT_REGISTRY[("sports", "odds", "odds")]` = `SPORTS_ODDS_TRADES` (P2 rename pending)                               |
-| **Status**          | CONTRACT LANDED (P1); physical data migration in P2                                                                      |
+| Field               | Value                                                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Producers**       | MTDS `OddsApiAdapter` (`source=odds_api`), MTDS footystats adapter (`source=footystats`)                      |
+| **Shard key**       | `venue` × `league_id` × `day`                                                                                 |
+| **Instrument type** | `odds`                                                                                                        |
+| **Schema fields**   | `fixture_id`, `league_id`, `venue`, `market_type`, `outcome`, `odds_decimal`, `in_play`, `source`, `ts_event` |
+| **UAC contract**    | `CONTRACT_REGISTRY[("sports", "odds", "odds")]` = `SPORTS_ODDS_TRADES` (P2 rename pending)                    |
+| **Status**          | CONTRACT LANDED (P1); physical data migration in P2                                                           |
 
 One row per (fixture, market, outcome, venue, timestamp). `in_play=True` rows were formerly `data_type=trades_inplay`
-(retired). `horizon` is populated only for horizon-bucketed captures (formerly `odds_horizon_bucket`).
+(retired). `horizon` does NOT live here (REVISED 2026-08-15) — it's a column on the separate derived type
+`odds_horizon_bucket` (§4), which is never itself folded into raw `odds`.
 
 **Prior names merged into `odds` (physical migration in P2):**
 
-| Old data_type         | Captured shards | What it actually was                                          |
-| --------------------- | --------------- | ------------------------------------------------------------- |
-| `trades`              | 375,257         | Bookmaker quotes via ODDS_API; misleading name (no execution) |
-| `odds`                | 16,207          | Footystats pre-match snapshots; distinguished by `source` col |
-| `ODDS`                | 6,306           | Same footystats population, uppercase manifest artefact       |
-| `trades_inplay`       | 111             | In-play quotes; 2022 fossil with blank venue                  |
-| `odds_horizon_bucket` | 135,980         | Time-to-kickoff buckets; folds into `odds` with `horizon` col |
+| Old data_type         | Captured shards | What it actually was                                                                                                                                  |
+| --------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `trades`              | 375,257         | Bookmaker quotes via ODDS_API; misleading name (no execution)                                                                                         |
+| `odds`                | 16,207          | Footystats pre-match snapshots; distinguished by `source` col                                                                                         |
+| `ODDS`                | 6,306           | Same footystats population, uppercase manifest artefact                                                                                               |
+| `trades_inplay`       | 111             | In-play quotes; 2022 fossil with blank venue                                                                                                          |
+| `odds_horizon_bucket` | 135,980         | Time-to-kickoff buckets — **REVISED 2026-08-15: does NOT fold into `odds`; survives as its own derived type, see § "4. `odds_horizon_bucket`" below** |
 
 ---
 
 ### 2. `odds_snapshot` — MDPS periodic resample
 
-| Field               | Value                                                                                                           |
-| ------------------- | --------------------------------------------------------------------------------------------------------------- |
-| **Producer**        | MDPS `odds_snapshot_adapter` (derived from `odds`)                                                              |
-| **Shard key**       | `venue` × `league_id` × `day`                                                                                   |
-| **Instrument type** | `odds`                                                                                                          |
-| **NEEDS_CANDLE**    | True                                                                                                            |
-| **Schema fields**   | `fixture_id`, `league_id`, `venue`, `market_type`, `outcome`, `odds_decimal`, `ts_snapshot`, `interval_minutes` |
-| **Upstream guard**  | `DependencyChecker.check_sports_raw_source_captured` blocks if raw `odds` source is absent/stale                |
-| **Status**          | Production (16,521 captured shards since 2026-07-25)                                                            |
+| Field               | Value                                                                                                                                                                           |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Producer**        | MDPS `odds_snapshot_adapter` (derived from `odds`)                                                                                                                              |
+| **Shard key**       | `venue` × `league_id` × `day`                                                                                                                                                   |
+| **Instrument type** | `odds`                                                                                                                                                                          |
+| **NEEDS_CANDLE**    | True                                                                                                                                                                            |
+| **Schema fields**   | `fixture_id`, `league_id`, `venue`, `market_type`, `outcome`, `odds_decimal`, `ts_snapshot`, `interval_minutes`                                                                 |
+| **Upstream guard**  | `DependencyChecker.check_sports_raw_source_captured` blocks if raw `odds` source is absent/stale                                                                                |
+| **Status**          | **REVISED 2026-08-15**: folds into `odds_horizon_bucket` (§4) as `computation_type=snapshot`, not a standalone type. Was: Production (16,521 captured shards since 2026-07-25). |
 
 LOCF resample of raw `odds` ticks at fixed intervals (default 15m). One row per (fixture, market, outcome, venue,
 snapshot-time). The MDPS staleness guard (landed `market-data-processing-service@41cdb702d`) blocks derivation when the
@@ -165,7 +184,7 @@ MDPS snapshot runs. A partial venue set corrupts downstream cross-bookmaker comp
 | **NEEDS_CANDLE**    | True                                                                                                                                                                                                                            |
 | **Schema fields**   | `timestamp`, `timestamp_out`, `venue`, `symbol`, `instrument_id`, `open`, `high`, `low`, `close`, `volume` (always 0), `trade_count` (tick count in the interval) — genuine OHLC of `home_odds`, one row per timeframe interval |
 | **Upstream guard**  | Same `DependencyChecker` staleness gate as `odds_snapshot`                                                                                                                                                                      |
-| **Status**          | Production (16,470 captured shards since 2026-07-25)                                                                                                                                                                            |
+| **Status**          | **REVISED 2026-08-15**: folds into `odds_horizon_bucket` (§4) as `computation_type=movement`, not a standalone type. Was: Production (16,470 captured shards since 2026-07-25).                                                 |
 
 **Corrected 2026-08-08** (P1 discriminator todo): the schema fields above were previously mis-documented as
 `price_prev`/`price_curr`/`delta`/`delta_pct` (a two-point delta shape) — verified against the live adapter code
@@ -177,7 +196,39 @@ points. See § "Snapshot vs Candle Discriminator" below for how this reconciles 
 
 ---
 
-## Snapshot vs Candle Discriminator (P1 decision, 2026-08-08)
+### 4. `odds_horizon_bucket` — MDPS derived, consolidated (ADDED 2026-08-15, reversal of 08-08's retire-into-`odds`)
+
+| Field               | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Producer**        | MDPS `SportsBucketAssignmentAdapter` (`bucket_assignment_adapter.py`) + the folded-in snapshot/movement adapters, all derived from raw `odds`                                                                                                                                                                                                                                                                                                                           |
+| **Shard key**       | `venue` × `league_id` × `day`                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| **Instrument type** | `odds`                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **NEEDS_CANDLE**    | True                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **Schema fields**   | `fixture_id`, `league_id`, `venue`, `horizon` (`T-24h`…`T-0`, UAC `SPORTS_HORIZONS`), `timeframe`, `computation_type` (`bucket`/`snapshot`/`movement`), plus the OHLC fields for `movement`/LOCF fields for `snapshot` rows                                                                                                                                                                                                                                             |
+| **Upstream guard**  | Same `DependencyChecker.check_sports_raw_source_captured` staleness gate as the folded-in types                                                                                                                                                                                                                                                                                                                                                                         |
+| **Mode**            | `batch_mdps_odds_horizon_bucket` today; a `live_mdps_odds_horizon_bucket` variant is architecturally sane (the bucket-assignment logic is incremental/streamable per-tick, not backward-looking — see `assign_horizon_bucket`) but **unbuilt**: zero live rows exist as of 2026-08-15, and MDPS never had live raw `odds` input to derive from until the MTDS live tick-drop fix landed the same day. Building the live leg is new orchestration work, not a flag flip. |
+| **Status**          | Production (batch); absorbs `odds_snapshot`/`odds_movement` per the Discriminator revision below                                                                                                                                                                                                                                                                                                                                                                        |
+
+Time-to-kickoff bucketing of raw `odds` ticks, now the single home for all three previously-separate derived
+computations (bucket assignment, LOCF snapshot, OHLC movement) that share the same upstream dependency and shard key.
+Bookmaker fan-out already re-attributed ~99.97% of rows from the coarse legacy `venue=ODDS_API` rollup to real
+per-bookmaker venues (`market-data-processing-service`'s `migrate_odds_horizon_bucket_venue_to_bookmaker_2026_07_27.py`,
+already shipped and run) — that work is reusable unchanged under this revised model; only the type-collapse-into-`odds`
+step (never executed) is superseded.
+
+`arbitrage_opportunity` is explicitly OUT of scope here — its 08-08 disposition (retire to the signals/features layer in
+P3, not folded into any odds type) is unchanged by this revision.
+
+---
+
+## Snapshot vs Candle Discriminator (P1 decision, 2026-08-08; ruling REVISED 2026-08-15)
+
+> **REVISED 2026-08-15**: the "Discriminator ruling" below (both forms stay separate `mdps_data_type_key`-minted
+> per-timeframe keys, e.g. `odds_snapshot_15m`/`odds_movement_1h`) is superseded. Both forms now consolidate into the
+> single surviving derived type `odds_horizon_bucket` (§4), discriminated by a `computation_type` column
+> (`snapshot`/`movement`) instead of by separate `data_type` key families. Everything below this note about the
+> underlying adapter computations (genuine OHLC vs LOCF) remains factually accurate and unchanged — only the
+> key-minting/naming conclusion at the end changes.
 
 > Resolves `/plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`'s "Decide and record the
 > snapshot-vs-candle discriminator on the collapsed model" todo. `odds_snapshot` and `odds_movement` are two DIFFERENT
@@ -397,11 +448,10 @@ land in one shard file.
 
 ## Manifest Status Rules
 
-| data_type       | `attempted_failed`         | `empty_confirmed`                        | `expected_unattempted`            |
-| --------------- | -------------------------- | ---------------------------------------- | --------------------------------- |
-| `odds`          | Venue API error or timeout | Venue does not cover this league/fixture | Pre-source-coverage-start date    |
-| `odds_snapshot` | MDPS processing error      | Fewer than 2 intervals available         | No upstream `odds` shard captured |
-| `odds_movement` | MDPS processing error      | Fewer than 2 snapshot intervals          | No upstream `odds` shard captured |
+| data_type             | `attempted_failed`         | `empty_confirmed`                                         | `expected_unattempted`            |
+| --------------------- | -------------------------- | --------------------------------------------------------- | --------------------------------- |
+| `odds`                | Venue API error or timeout | Venue does not cover this league/fixture                  | Pre-source-coverage-start date    |
+| `odds_horizon_bucket` | MDPS processing error      | Fewer than 2 intervals available (any `computation_type`) | No upstream `odds` shard captured |
 
 `attempted_failed` = data MAY exist but was unretrievable. `empty_confirmed` = genuinely no data (correct reason enum
 required). Key reason enums: `EXPECTED_PRE_SOURCE_COVERAGE_START` (before per-venue start date),
@@ -427,10 +477,9 @@ member is minted.
 
 ## Cluster Validation (MANDATORY for bundled types)
 
-| data_type       | `cluster_extractor` | Reason                                                     |
-| --------------- | ------------------- | ---------------------------------------------------------- |
-| `odds_snapshot` | `venue`             | Consistent venue set required for cross-bookmaker analysis |
-| `odds_movement` | `venue`             | Derived from `odds_snapshot` with same cluster requirement |
+| data_type             | `cluster_extractor` | Reason                                                                                     |
+| --------------------- | ------------------- | ------------------------------------------------------------------------------------------ |
+| `odds_horizon_bucket` | `venue`             | Consistent venue set required for cross-bookmaker analysis (all `computation_type` values) |
 
 UTL `record_captured()` asserts `cluster_extractor` and `cluster_keys` kwargs present for bundled types. Missing →
 `MissingClusterValidationError`. QG STEP 5.64 statically checks handler source files.

@@ -200,7 +200,11 @@ drilldown carry the identical atom. SSOT:
   on blank). Sports is one of the crosscutting-provenance RED gaps — the historical `_index` source-stamp + the
   `pipeline_mode=` path partition ride the sports canonicalisation walk
   (`sports_manifest_canonicalisation_2026_06_01.md` single-walk rider), with the source lifted path→column.
-- Multi-bookmaker odds: the bookmaker is data INSIDE the odds parquet, not a source — `odds_api` is the vendor.
+- Multi-bookmaker odds: **CORRECTED 2026-08-15 — this line previously said "the bookmaker is data INSIDE the odds
+  parquet, not a source"; that was stale/wrong.** Per `/codex/02-data/sports-data-types-catalog.md` (the more current,
+  actively-maintained SSOT for this axis): the bookmaker IS the `venue` — `odds_api` is the `source` (vendor/ aggregator
+  column), never a venue itself. `venue`=bookmaker (e.g. `WILLIAMHILL`, `FANDUEL`, `PINNACLE`) is real, live production
+  shape (4.1M+ rows across 33 bookmaker venues, `source=odds_api`), not a data-layer implementation detail.
 
 ---
 
