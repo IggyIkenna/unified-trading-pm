@@ -336,7 +336,7 @@ over all pending draft batches) that independently spot-verified every todo belo
       venues confirmed non-null `instrument_id` (MAKER/YEARN_V3/ETHENA/FRAX); MORPHO_VAULTS named as lacking any
       post-08-04 capture (separate gap, filed as a new follow-up todo in the issue doc). Doc stays `open` per the
       alternate done-when condition.
-- [ ] [DIAG] P3. **Dead-code disposition of `e2e-testing/scripts/defi/copy_research_perp_ctx_to_canonical.py`** —
+- [x] ✅ [DIAG] P3. **Dead-code disposition of `e2e-testing/scripts/defi/copy_research_perp_ctx_to_canonical.py`** —
       narrowed by conflict-check from the source doc's original broader "investigate if data was lost" framing, which is
       already answered (preserved): `defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md` fact #3 +
       `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s corroborating manifest-backfill evidence confirm the
@@ -349,7 +349,11 @@ over all pending draft batches) that independently spot-verified every todo belo
       `data_completion_defi_2026_07_15.md` (re-scoped; cite `defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`
       fact #3 as the preserved-data evidence). Done when: the script is either deleted or its lifecycle marker is
       updated to state the bucket-migration supersession, and `data_completion_defi_2026_07_15.md`'s corresponding item
-      is closed by citation.
+      is closed by citation. **DONE 2026-08-15 (slot 24, data_engineering)** — live-verified via
+      `get_storage_client().bucket(<name>).exists()`: both `perp-funding-central-element-323112` (LEGACY) and
+      `perp-funding-prd-central-element-323112` (CANONICAL) are 404/deleted; script deleted — `e2e-testing@f0978fa469`.
+      `data_completion_defi_2026_07_15.md`'s 2026-07-14 flagged finding closed by citation (new Progress Log entry, same
+      date).
 - [ ] [DOC] P3. **Correct a stale status marker**: `instruments_docs_audit_outstanding_items_2026_07_08.md`'s C4 section
       still reads `NEW`, but 3 of its 4 named Solana-adapter sites (Sanctum/Solblaze/Jito-Restaking) were fixed
       2026-07-09 (the shipped code's own comments cite this exact issue doc's C4 section: `sanctum.py:4-5,158-159`,
