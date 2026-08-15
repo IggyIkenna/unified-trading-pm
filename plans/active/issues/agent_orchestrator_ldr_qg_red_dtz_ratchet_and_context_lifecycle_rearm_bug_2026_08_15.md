@@ -124,7 +124,7 @@ goes green), not a design/judgment call.
       `# noqa: qg-empty-fallback` for a genuinely deliberate case. Run
       `check_no_empty_string_fallback.py --workspace-root <ws> --scope agent-orchestrator` for the full current site
       list (not re-pasted here). Done-when: it reports count `<=25`. (repo: agent-orchestrator)
-- [ ] [BACKEND] P1. Diagnose + fix `ContextLifecyclePolicy._tick_target`'s guidance-rearm-vs-force gate in
+- [x] ✅ [BACKEND] P1. Diagnose + fix `ContextLifecyclePolicy._tick_target`'s guidance-rearm-vs-force gate in
       `agent-orchestrator/server/context_lifecycle.py` so `test_tier1_guidance_does_not_rearm_once_a_force_has_fired`
       passes: once `state.forced_at` is set for the current episode, a later tick must NOT overwrite
       `state.guidance_sent_at` (the Tier-1 rearm timer must stay out of `_rearm_if_force_ineffective`'s way while a
@@ -132,6 +132,7 @@ goes green), not a design/judgment call.
       `agent-orchestrator/tests/test_context_lifecycle.py` for the exact scope-guard intent). Done-when:
       `.venv/bin/python -m pytest tests/test_context_lifecycle.py::test_tier1_guidance_does_not_rearm_once_a_force_has_fired -q`
       passes, and `bash scripts/quality-gates.sh` is green end-to-end for agent-orchestrator. (repo: agent-orchestrator)
+      — `agent-orchestrator@6d00256`
 
 ## Status
 
@@ -160,3 +161,19 @@ Open — repo-blocker declared (`kind: qg_red`) alongside this filing per `agent
   whoever owns that mechanism). Re-declared the blocker (`RB-2549326a` — slot-24 independently reached the same
   root-cause diagnosis for their own todo-3 work and joined too) citing the corrected sole blocker. Waiting on todo 4's
   fix to ship.
+- **2026-08-15 (slot-16)**: Todo 4 fixed — root cause was a TEST-ISOLATION bug, not a logic bug in `_tick_target`'s
+  guidance-rearm-vs-force gate itself. The gate was already correct: the rearm timer already carries
+  `and state.forced_at is None`, and Tier-1 already checks `state.guidance_sent_at is None` before firing. The failing
+  test uses session name `"orch-slot-5"`, which collides with an ACTUAL live slot's real transcript directory on this
+  multi-slot orchestrator host — confirmed directly:
+  `context_probe.compaction_confirmed_since("orch-slot-5", <200s-ago>)` returns `True` against the real
+  `/home/ubuntu/.claude-configs/orch-slot-5/...` transcript (a genuine `compact_boundary` record newer than the test's
+  fabricated `state.forced_at`). That spuriously triggers the (correct) production compaction-reset block, clearing
+  `guidance_sent_at`/`forced_at` and letting Tier-1 fire for a reason unrelated to the gate under test. This is the
+  exact same host-collision hazard `_forbid_idle_checks` (same test file, lines 58-73) already documents/guards for
+  other tests — this one test was just missing the `compaction_confirmed_since` mock. Added it (mirrors the existing
+  pattern). `pytest tests/test_context_lifecycle.py::test_tier1_guidance_does_not_rearm_once_a_force_has_fired -q`: 1
+  passed. Full `tests/test_context_lifecycle.py`: 74 passed. Full local `bash scripts/quality-gates.sh --no-fix`: PASSED
+  end-to-end (3960 passed, 2 skipped; dashboard tsc + vitest also green) — confirms slot-20's finding above that todos
+  1/3 (DTZ/empty-string ratchets) don't block AO's own Pass-1 gate; todo 4 was indeed the sole blocker. Shipped
+  `agent-orchestrator@6d00256` via quickmerge (SHA verified ancestor of `origin/live-defi-rollout`).
