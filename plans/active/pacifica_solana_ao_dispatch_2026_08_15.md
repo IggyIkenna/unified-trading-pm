@@ -58,15 +58,19 @@ checks out — not a blind migrate, not a hold.
       the 787 figure. Report any drift before proceeding. (repos: instruments-service) —
       `unified-api-contracts@475270d5`. **Count/stem-count CONFIRMED clean (787 objects, 5 stems — unchanged).** But a
       real DRIFT was found, not a clean pass-through: see Progress Log below.
-- [ ] [SCRIPT] P1. **CAVEAT ADDED 2026-08-15 by todo #1's re-verify — READ BEFORE EXECUTING.** The rename half of this
-      todo may already be done: a fresh scan found all 787 objects' filenames ALREADY canonical on disk (see Progress
-      Log). Do NOT execute a rename against objects that may already be renamed. Re-run
+- [x] ✅ [SCRIPT] P1. **CAVEAT ADDED 2026-08-15 by todo #1's re-verify — READ BEFORE EXECUTING.** The rename half of
+      this todo may already be done: a fresh scan found all 787 objects' filenames ALREADY canonical on disk (see
+      Progress Log). Do NOT execute a rename against objects that may already be renamed. Re-run
       `market-tick-data-service/scripts/reconcile_pacifica_quarantine_2026_08_15.py` fresh (per its own docstring) AND
       independently check manifest-row state (NOT re-verified by todo #1 — do not assume either way) before taking any
       action. If that re-verify confirms objects are already canonical: skip the rename, and backfill manifest rows only
       if genuinely still absent. Follow the standard reversibility-qualified GCS-rename pattern
       (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) for whatever write work actually remains. (repos:
-      instruments-service, market-tick-data-service)
+      instruments-service, market-tick-data-service) — `unified-api-contracts@84d62f242e`. **Both re-verifies confirm NO
+      write action remains**: fresh script re-run classified all 787 objects `canonical_already` (5/5 stems);
+      independent `read_availability_index_safe` check found 787 manifest rows already present (`ohlcv_1m`/`captured`,
+      1:1 with the objects). Corrected the now-doubly-stale `quarantine.py` docstring + registry claims accordingly (see
+      Progress Log). The delete-safety protocol's rename/write path was not invoked — nothing to rename or backfill.
 
 ## Progress Log
 
