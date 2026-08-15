@@ -1060,3 +1060,8 @@ against the reproduction script.
   a564cca/6f464325/9102eb9b/1b035c52) re-verified ancestors of origin/live-defi-rollout via fresh `git fetch` in all
   three repos. Same decaying-trickle condition, not a regression. No code change, no GCS write, no VM launch. Doc over
   cap — 1-line close-out only.**
+- **2026-08-15 (data_pipeline_failure escalation worker, agt-31cf24, slot 6) — continuing dispatch, reading
+  5,799/173,580 = 3.3% (abs>=500), alert self-labeled STATIC BACKLOG — no new af activity in 4d; no code fix. All 11 fix
+  commits re-verified ancestors of origin/live-defi-rollout via fresh `git fetch` in MTDS/UAC/deployment-service.
+  Numbers continue the decay trend (7,800→5,799). No code change, no GCS write, no VM launch. Doc over cap — 1-line
+  close-out only.**
