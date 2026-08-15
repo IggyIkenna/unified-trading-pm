@@ -160,7 +160,17 @@ source: >-
       a 15-minute grace window before it pages, AO-driven remediation on timeout. Source:
       `plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md`. Gate: a simulated
       local ratchet breach (not observed via a GitHub Actions run conclusion) produces an escalation-queue entry within
-      the 15-minute grace window if unresolved.
+      the 15-minute grace window if unresolved. **DUPLICATE — 2026-08-15 (slot-16·infra) finding**: this exact scope is
+      already covered by a dedicated, more-detailed implementation plan authored the same day —
+      `/plans/active/local_ratchet_gate_breach_escalation_detector_2026_08_15.md` (`assigned_vm: planning`,
+      `sequential: true`) — which this batch's own frontmatter conflict-check should have caught but didn't. Rather than
+      re-implement separately, continued that plan's next real todos (3+4: the 15-min grace-window state machine +
+      escalation.enqueue wiring) directly — see that plan's own Progress Log for the technical detail. Result: this
+      item's gate is genuinely met once that code lands (`agent-orchestrator@17f1de8`, committed locally, blocked from
+      shipping by the same pre-existing `agent-orchestrator` QG-red repo-blocker `RB-2549326a` documented there). NOT
+      flipping this checkbox to done yet — the code isn't on origin. Whichever session resumes once the repo-blocker
+      clears should ship `17f1de8`, then flip BOTH this checkbox and the dedicated plan's todos 3+4, citing the same
+      commit.
 
 - [ ] [DEVOPS] P1. **Add a reserved-slot / exemption carve-out for CI-escalation dispatch on `unified-trading-pm`** from
       AO's one-worker-per-repo collision guard, so red-CI escalations on this repo don't sit un-dispatched up to 45

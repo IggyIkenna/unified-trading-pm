@@ -181,3 +181,32 @@ source: >-
   repo-blocker, which stays open (issue doc + escalation `agt-7c29eb` unaffected) for the pre-existing
   DTZ/fallback-import/empty-string/context_lifecycle fixes that are still genuinely outstanding and unrelated to this
   todo.
+- **2026-08-15 (slot-16·infra)**: Discovered this plan while working `ci_satellite_ao_dispatch_batch14_2026_08_15.md`'s
+  duplicate todo ("Implement the local-ratchet-gate-breach escalation coverage design") — that batch14 item duplicates
+  this dedicated plan's scope (both authored 2026-08-15, apparently without cross-referencing each other despite
+  batch14's own frontmatter claiming a conflict-check against every existing active batch/finalize plan). Rather than
+  re-implement separately, continued this plan's own next real todos. **Todos 3+4 implemented**: new script
+  `agent-orchestrator/scripts/orchestrator/escalate_local_ratchet_gate_breaches.py` — a state machine
+  (armed/waiting/escalated/cleared) tracking the 15-minute grace window per (repo, check) via the existing
+  `register_cooldown`/`get_cooldown`/`clear_cooldown` primitives (keyed `local_ratchet_gate_breach:{repo}:{check}`,
+  distinct from `escalation._wall_cooldown_key`), wired to
+  `escalation.enqueue(wall_type="local_ratchet_gate_breach", pr_number=0, ...)` once a breach is still present past the
+  window; self-heal before the window elapses clears the tracker and never escalates. 5 regression tests added
+  (`agent-orchestrator/tests/test_escalate_local_ratchet_gate_breaches.py`) covering all 4 states + the dry-run path —
+  proves the exact happy path todo 11 asks for (breach → unresolved past 15min → enqueue; self-heal-within-window → no
+  enqueue). **Todo 6 (dedup) finding**: no new dedup layer was built — `escalation.enqueue()` already collapses a
+  re-fire for an open (repo, pr_number, wall_type) escalation onto the existing row (`_find_open_escalation`, read
+  directly at `agent-orchestrator/server/escalation.py` around line 1552), and once terminal, its own
+  `_wall_cooldown_key` cooldown throttles a repeat with an unchanged `context` snapshot — the exact same reasoning
+  `python-quality-gates-v2.yml` documents for `promote_qg_failure`'s streak re-fire ("the server absorbs re-fires as a
+  reescalations increment, not a duplicate"). Todo 6 is satisfied by this existing machinery; no code changed for it.
+  **Todo 5 (routing) finding**: `local_ratchet_gate_breach` is absent from
+  `_QG_SIGNAL_WALLS`/`_CONFLICT_RESOLVER_WALLS`/ `_DATA_PIPELINE_WALLS` (confirmed via grep) and its WALL_TYPES comment
+  already states "routes to the generic escalate worker" — consistent, no change needed. **BLOCKED shipping**:
+  agent-orchestrator's Pass-1 `quality-gates.sh` is still RED on `origin/live-defi-rollout` HEAD (pre-existing
+  `test_context_lifecycle.py:: test_tier1_guidance_does_not_rearm_once_a_force_has_fired` failure, unrelated to this
+  diff — same repo-blocker `RB-2549326a` already open above, joined as an additional waiter). Committed locally, NOT
+  pushed: `agent-orchestrator@17f1de8`. Todos 3+4 (and the todo-5/6 findings) are NOT checked off yet — "code shipped"
+  isn't true until this lands on origin post-unblock. Remaining open: todo 7 (remediation-goal wording in the routed
+  boot prompt), todo 8 (systemd timer install), todo 9 (Slack-alert-ownership fact-find), todo 10 (codex doc update),
+  todo 12 (full-fleet dry run) — not attempted this session.
