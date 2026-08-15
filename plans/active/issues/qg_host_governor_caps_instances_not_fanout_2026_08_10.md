@@ -151,3 +151,12 @@ deliberate decision rather than changed mid-session.
   (`/tmp/qg_run7.log`) had already reached `10799 passed, 28 skipped` through `[3/6] TESTS`. Treating this as further
   corroboration of the existing root cause, not a new issue; not actioned per the same deliberately-not-hot-patched
   blast-radius reasoning. Retrying.
+- **2026-08-15 06:32-06:39 (slot 2, retry of the entry above, IDENTICAL failure)**: the retry (PID `14840`, same
+  `--no-fix` invocation, same repo) reproduced the exact same signature — queued behind the host-wide governor through
+  `queued 300s` (final governor line), then the PID vanished with zero further log output, no exit code, no traceback.
+  Host state at time of death: load average 11.02/11.15/12.84, 19 concurrent `quality-gates.sh` processes host-wide. Per
+  the workspace's "two identical consecutive failures = stop blind-retrying" rule, did NOT launch a third immediate
+  attempt. Instead armed a single `run_in_background` watchdog (`/tmp/qg_retry10_watchdog.sh`) that polls `uptime` every
+  60s (cap 15 checks / 15min) and only launches the next attempt once load drops below 6 (or the cap is hit), then
+  tracks that attempt to completion the same way. This is a load-gated retry, not a blind one — the condition being
+  waited on (host contention) is external and measurable, not a coin-flip re-run.
