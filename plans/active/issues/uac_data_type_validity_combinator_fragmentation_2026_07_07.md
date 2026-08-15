@@ -662,13 +662,15 @@ just belongs on a different layer than instrument_type does, and conflating the 
       (`market-data-tick-defi-test-central-element-323112/raw_tick_data/by_date/day=2026-08-14/pipeline_mode=batch_fluid/asset_group=defi/venue=FLUID/chain=ETHEREUM/instrument_type=spot_asset/data_type=oracle_prices/FLUID-ETHEREUM:SPOT_ASSET:{eth,susde,wsteth}.parquet`),
       manifest `pipeline_mode=batch_fluid` matching the physical path. WSTETH/ETH and WEETH/WSTETH vaults correctly
       skipped (non-USD-stable borrow — debt-per-col ratio, not USD price) per `_FLUID_USD_STABLE_BORROWS` design.
-- [ ] [CODE] P2. **WIRE oracle_prices capture for KAMINO-SOLANA** (operator ruling 2026-08-09: WIRE REAL CAPTURE).
-      Over-claims a `2023-06-01` genesis (`defi_venue_capabilities.py:177`), zero captured rows, phase `live`. Kamino is
-      Solana — add the branch to the Solana defi collection path
-      (`market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py` and/or
-      `oracle_prices_handler.py`'s Pyth surface) writing `oracle_prices` under `venue=KAMINO, chain=SOLANA` (Kamino
-      reads Scope/Pyth price feeds). Done-when: single-day force-compute produces real `captured` rows for
-      `KAMINO-SOLANA/oracle_prices` against the `-test-` bucket. (repo: market-tick-data-service)
+- [x] ✅ [CODE] P2. **WIRE oracle_prices capture for KAMINO-SOLANA** (operator ruling 2026-08-09: WIRE REAL CAPTURE,
+      recorded in this doc's Progress Log 2026-08-09,
+      `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`) —
+      `unified-api-contracts@d51fb30a` (UAC registries + ratified-matrix tests) + `market-tick-data-service@7110639703`
+      (Solana defi handler wiring, both post-push ancestry verified against `origin/live-defi-rollout`). Done-when
+      proven via
+      `IS_TEST_RUN=true .venv/bin/market-tick-data-service --operation collect-solana-defi --mode batch --asset-group defi --solana-protocols kamino_oracle --start-date 2026-08-14 --end-date 2026-08-14 --force`
+      — 55 real `captured` rows written for `KAMINO-SOLANA/oracle_prices` against the `-test-` bucket; MTDS QG
+      (`--no-fix`) green, `EXIT_CODE=0`, zero `❌` across the full run.
 - [ ] [CODE] P2. **WIRE rewards capture for AAVE_V3** (operator ruling 2026-08-09: WIRE REAL CAPTURE). `rewards` is
       declared valid for `aave_v3` in `PROTOCOL_CAPABILITIES` (added 2026-08-05, `unified-api-contracts@b2874193`) with
       zero captured rows. Wire real AAVE incentive/GHO-emission `rewards` capture into
