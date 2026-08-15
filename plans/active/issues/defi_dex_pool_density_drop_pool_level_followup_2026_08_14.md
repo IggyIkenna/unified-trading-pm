@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [defi, dex-pools, dex-swaps, shard-density, capture-gap, pool-catalogue]
 related:
   [
-    /plans/active/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md,
+    /plans/archive/2026_08/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-14
@@ -28,12 +28,13 @@ assigned_vm: NA
 execution_scope: local-only
 priority: P2
 source: >-
-  Investigated while executing defi_satellite_ao_dispatch_batch13_2026_08_13.md's shard-density-trend-verification todo
-  (itself sourced from defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md).
+  Investigated while executing /plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md's
+  shard-density-trend-verification todo (itself sourced from
+  defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md).
 resolved_by:
 locked_by:
 locked_since:
-context_scope: [/plans/active/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md]
+context_scope: [/plans/archive/2026_08/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md]
 drift_direction: advance-code
 depends_on: []
 ---

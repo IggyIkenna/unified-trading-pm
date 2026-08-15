@@ -10,7 +10,7 @@ summary:
   closes) applied directly 2026-08-08 once na-eligibility-audit found the source doc had already dropped under the 1000L
   hard cap via an unrelated 2026-08-05 trim (no longer needed Todo 1's extraction as a gate — empirically verified the
   close lands at 998L). Only Todo 1 remains open, now decoupled, downgraded to P3 SOFT-cap hygiene.
-status: open
+status: archived
 nature: issue
 asset_group: [defi]
 stage: [meta, data]
@@ -52,6 +52,11 @@ context_scope:
 
 # lst_rate_honest_coverage over-cap findings — ready-to-apply closes + a stalled backfill VM
 
+> **🟢 ARCHIVED 2026-08-15 — all todos complete.** Both findings resolved: Todo 1 (VM-monitoring-history extraction) and
+> Todo 2 (3 stale checkboxes) done, reconciled via `defi_satellite_ao_dispatch_batch13_2026_08_13.md` /
+> `defi_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`. See `## Todo 1` / `## Todo 2` sections below for
+> evidence.
+
 ## Why this doc exists instead of editing the source plan directly
 
 `plans/active/lst_rate_honest_coverage_2026_07_21.md` is a `doc_type: plan` currently at ~1008 lines, over the 500L soft
@@ -65,10 +70,14 @@ operator-approved wider edit.
 
 ## Todo 1 — split `lst_rate_honest_coverage_2026_07_21.md` under the 1000L cap
 
-- [ ] [SCRIPT] P3. **(was P2, downgraded — see 2026-08-08 note.)** The doc's Progress Log carries a long,
-      safe-to-extract chronological block of VM-monitoring check-in entries (roughly the `2026-07-21` through
-      `2026-07-26` "VM re-check" entries — dozens of timestamped status updates for the now-largely-complete LST-rates
-      and DEX-swaps backfill VMs). Extract that historical block into a companion doc (e.g.
+- [x] ✅ [SCRIPT] P3. **DONE — unified-trading-pm (reconciled via `defi_satellite_ao_dispatch_batch13_2026_08_13.md`).**
+      Extracted the 19-entry contiguous chronological VM-monitoring block (2026-07-22 19:51 UTC → 2026-07-26 07:56 UTC)
+      verbatim into `plans/archive/2026_08/lst_rate_honest_coverage_vm_monitoring_history_2026_07_21.md`, leaving a
+      condensed summary + pointer in the live plan. Doc dropped from 1019L to 856L (under the 1000L hard cap). (was P2,
+      downgraded — see 2026-08-08 note.)** The doc's Progress Log carries a long, safe-to-extract chronological block of
+      VM-monitoring check-in entries (roughly the `2026-07-21` through `2026-07-26` "VM re-check" entries — dozens of
+      timestamped status updates for the now-largely-complete LST-rates and DEX-swaps backfill VMs). Extract that
+      historical block into a companion doc (e.g.
       `plans/archive/issues/lst_rate_honest_coverage_vm_monitoring_history_2026_07_21.md` per the "extracted-history"
       pattern `check_line_caps.sh`'s own comments reference), leaving the live plan with its frontmatter, Phase
       sections/todos, and a condensed summary of the extracted history plus a pointer to the new doc. Verify no other

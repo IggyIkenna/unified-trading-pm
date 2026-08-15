@@ -31,11 +31,13 @@ tags: [defi, bucket-naming, migration, ssot-contradiction, stale-doc]
 related:
   [
     /plans/active/defi_migration_audit_log_2026_07_24.md,
-    /plans/active/defi_satellite_ao_dispatch_batch13_2026_08_13.md,
-    /plans/active/defi_satellite_ao_dispatch_batch13_2026_08_13_finalize.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13_finalize.md,
   ]
 created: 2026-08-14
-author: sub-agent (Claude Code session, dispatched via defi_satellite_ao_dispatch_batch13_2026_08_13.md's REDIRECT todo)
+author:
+  sub-agent (Claude Code session, dispatched via
+  /plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md's REDIRECT todo)
 parent_epic: defi_master
 priority: P2
 assigned_vm: NA
@@ -51,8 +53,8 @@ locked_since:
 context_scope:
   [/plans/active/defi_migration_audit_log_2026_07_24.md, /codex/05-infrastructure/bucket-isolation-model.md]
 source: >-
-  defi_satellite_ao_dispatch_batch13_2026_08_13.md's "[SCRIPT] P2. Redirect the 4 DeFi live handlers..." todo (Source:
-  plans/active/defi_migration_audit_log_2026_07_24.md).
+  /plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md's "[SCRIPT] P2. Redirect the 4 DeFi live
+  handlers..." todo (Source: plans/active/defi_migration_audit_log_2026_07_24.md).
 ---
 
 # defi_migration_audit_log_2026_07_24.md's dedicated-bucket architecture was retired — several open todos are stale
@@ -136,8 +138,9 @@ provisioning SSOT.
 ## Recommended decision
 
 1. **The REDIRECT todo (this dispatch)**: mark resolved-as-moot in `defi_migration_audit_log_2026_07_24.md` — no code
-   change needed, evidenced by this issue doc. (Handled by `defi_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`
-   todo 1's evidence-reconciliation pass — cite this issue doc there.)
+   change needed, evidenced by this issue doc. (Handled by
+   `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13_finalize.md` todo 1's evidence-reconciliation
+   pass — cite this issue doc there.)
 2. **Gas-fees manifest-rebuild-scope + delete-after-migration + aggregator-routes-9th-spec todos**: need a human/
    judgment re-read against the current bucket architecture before further dispatch — recommend the next
    `/na-eligibility-audit` or `/ag-closeout-audit` defi-tranche pass (or a direct operator ruling) either strikes them

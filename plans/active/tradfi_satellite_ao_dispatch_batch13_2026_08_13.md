@@ -85,58 +85,58 @@ source: >-
       `plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`
 
       **DONE 2026-08-14.** Evidence:
-                              - `unified-api-contracts@ebda13eb28`: 15 new `RootMetadata` micro-contract entries + a new reverse-lookup test
-                                converging `tradfi_roots.py`'s table onto the same values as the manifest/GCS migration below.
-                              - `market-tick-data-service@b0e18fd33e`: initial migration-script rewrite — `pc.and_()` fix (bare `&` unsupported
-                                on installed pyarrow's `ChunkedArray`), manifest-row-derived GCS path construction (never a live
-                                `gcloud storage ls` glob — that approach timed out at 120s/call, single-walk-discipline violation), §3a fresh
-                                soft-delete-retention check, per-row resilience (one bad row doesn't abort the run), `"ohlcv_1s"` added to
-                                `TRADFI_DATA_TYPES`.
-                              - `market-tick-data-service@129925df94`: hardening fix after the live prod run below hit a genuine manifest CAS
-                                race — added a retry-with-fresh-read loop around the manifest CAS write (5 attempts) + a `--skip-rename` resume
-                                flag (mirrors both `migrate_tradfi_sector_underlying_2026_08_10.py` and `migrate_tradfi_micro_underlying_2026_08_13.py`).
-                              - **Sector-remap** (8 codes): dry-run measured 25,922 GCS objects to rename. `--apply` on VM
-                                `canonical-migration-tradfi-sector-remap-20260814-040712`: **25,922/25,922 GCS objects renamed, 0 errors** —
-                                but the manifest CAS write lost a race against a concurrent writer right after the clean rename (by-design
-                                `RuntimeError`, no corruption; this is what triggered the `129925df94` fix above). Resumed via
-                                `MIGRATION_EXTRA_ARGS="--skip-rename"` on VM `canonical-migration-tradfi-sector-remap-20260814-053905`:
-                                manifest CAS committed, **self-verify: `✅ VERIFIED: 0 rows with old underlying remain. gen=1786686192651258`**.
-                              - **Micro-remap** (15 codes): dry-run measured **0 manifest rows, 0 GCS objects to rename** — the live
-                                population is genuinely empty, consistent with the script's own documented caveat that these raw micro codes
-                                did not exist in the live `EXCHANGE_CODE_TO_NAME` registry before the 2026-08-07 fix, so no rows were ever
-                                captured under them. Confirmed via `--apply` on VM `canonical-migration-tradfi-micro-remap-20260814-054820`:
-                                `Total GCS objects to rename: 0. Nothing to rename — exiting.` (exit_code=0). Nothing to purge; no manifest
-                                write needed.
-                              - `quality-gates.sh`: green in both `unified-api-contracts` (via the `ebda13eb28` quickmerge) and
-                                `market-tick-data-service` (explicit run, exit 0, confirmed for `129925df94`).
-                              - Also fixed in-flight this task: a stale `download_bytes(...)` API-pattern reference in this plan's own Progress
-                                Log (corrected to the confirmed-working `gcs_read_object_with_generation(uri=...)` call, in two places).
+                                  - `unified-api-contracts@ebda13eb28`: 15 new `RootMetadata` micro-contract entries + a new reverse-lookup test
+                                    converging `tradfi_roots.py`'s table onto the same values as the manifest/GCS migration below.
+                                  - `market-tick-data-service@b0e18fd33e`: initial migration-script rewrite — `pc.and_()` fix (bare `&` unsupported
+                                    on installed pyarrow's `ChunkedArray`), manifest-row-derived GCS path construction (never a live
+                                    `gcloud storage ls` glob — that approach timed out at 120s/call, single-walk-discipline violation), §3a fresh
+                                    soft-delete-retention check, per-row resilience (one bad row doesn't abort the run), `"ohlcv_1s"` added to
+                                    `TRADFI_DATA_TYPES`.
+                                  - `market-tick-data-service@129925df94`: hardening fix after the live prod run below hit a genuine manifest CAS
+                                    race — added a retry-with-fresh-read loop around the manifest CAS write (5 attempts) + a `--skip-rename` resume
+                                    flag (mirrors both `migrate_tradfi_sector_underlying_2026_08_10.py` and `migrate_tradfi_micro_underlying_2026_08_13.py`).
+                                  - **Sector-remap** (8 codes): dry-run measured 25,922 GCS objects to rename. `--apply` on VM
+                                    `canonical-migration-tradfi-sector-remap-20260814-040712`: **25,922/25,922 GCS objects renamed, 0 errors** —
+                                    but the manifest CAS write lost a race against a concurrent writer right after the clean rename (by-design
+                                    `RuntimeError`, no corruption; this is what triggered the `129925df94` fix above). Resumed via
+                                    `MIGRATION_EXTRA_ARGS="--skip-rename"` on VM `canonical-migration-tradfi-sector-remap-20260814-053905`:
+                                    manifest CAS committed, **self-verify: `✅ VERIFIED: 0 rows with old underlying remain. gen=1786686192651258`**.
+                                  - **Micro-remap** (15 codes): dry-run measured **0 manifest rows, 0 GCS objects to rename** — the live
+                                    population is genuinely empty, consistent with the script's own documented caveat that these raw micro codes
+                                    did not exist in the live `EXCHANGE_CODE_TO_NAME` registry before the 2026-08-07 fix, so no rows were ever
+                                    captured under them. Confirmed via `--apply` on VM `canonical-migration-tradfi-micro-remap-20260814-054820`:
+                                    `Total GCS objects to rename: 0. Nothing to rename — exiting.` (exit_code=0). Nothing to purge; no manifest
+                                    write needed.
+                                  - `quality-gates.sh`: green in both `unified-api-contracts` (via the `ebda13eb28` quickmerge) and
+                                    `market-tick-data-service` (explicit run, exit 0, confirmed for `129925df94`).
+                                  - Also fixed in-flight this task: a stale `download_bytes(...)` API-pattern reference in this plan's own Progress
+                                    Log (corrected to the confirmed-working `gcs_read_object_with_generation(uri=...)` call, in two places).
 
 - [x] ✅ [CODE] P2. Add a codified requirement to /codex/02-data/tradfi-databento-sourcing-ssot.md that Databento
       billing-health verification must include one real scoped data-pull, never list_datasets()/warmup() alone Source:
       `plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`
 
       **DONE 2026-08-14 (slot 10, backend_engineer).** Added new section "Billing-health verification MUST include one
-                          real scoped data-pull — never `list_datasets()`/`warmup()` alone" to
-                          `/codex/02-data/tradfi-databento-sourcing-ssot.md` (between "PAYG re-frame" and "Single API key"). Codifies the
-                          hard rule from the source issue doc's 2026-08-10/08-12 recurrence: an unscoped `warmup()`/`list_datasets()`
-                          success proves the API key authenticates but not that every access path (in particular the live WS session) is
-                          functional — a real scoped pull per access path (batch `timeseries.get_range` AND a real received live tick) is
-                          required before trusting an "account restored" verification. — unified-trading-pm@1e1883ee6b
+                              real scoped data-pull — never `list_datasets()`/`warmup()` alone" to
+                              `/codex/02-data/tradfi-databento-sourcing-ssot.md` (between "PAYG re-frame" and "Single API key"). Codifies the
+                              hard rule from the source issue doc's 2026-08-10/08-12 recurrence: an unscoped `warmup()`/`list_datasets()`
+                              success proves the API key authenticates but not that every access path (in particular the live WS session) is
+                              functional — a real scoped pull per access path (batch `timeseries.get_range` AND a real received live tick) is
+                              required before trusting an "account restored" verification. — unified-trading-pm@1e1883ee6b
 
 - [ ] [CODE] P2. Sweep and repoint the 9 identified referrer files' citations, then archive this doc via the standard
       6-step ritual Source: `plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`
 
       **NOT ACTIONABLE 2026-08-14 (slot-12, backend_engineer) — premise invalidated, archival precondition no longer
-                  met.** The source doc's own Progress Log records a 2026-08-14 RECURRENCE (`cross_ag_live_capture_parity_2026_08_14.md`
-                  Finding C): the live `databento_tradfi_ws` connector's Databento account was suspended again
-                  (`api_key_deactivated`/unpaid-invoice CRAM auth error), so the doc's frontmatter flipped back `open` → `blocked`
-                  and it now carries 2 genuinely open todos again — a re-opened `[OPERATOR] P0` "pay the bill" todo and a new
-                  `[CODE] P2` connector-owner flag. Archiving a doc with real open, unresolved work (one operator-gated) would
-                  violate the archival-discipline SSOT's "fully resolved" precondition — do NOT archive; the 9-referrer sweep would
-                  also be premature since the doc's path hasn't changed. Skipping this item (`reason_code: GATED`) until the doc
-                  resolves again and stays resolved; re-check `plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`'s
-                  `status`/Todos before re-attempting.
+                      met.** The source doc's own Progress Log records a 2026-08-14 RECURRENCE (`cross_ag_live_capture_parity_2026_08_14.md`
+                      Finding C): the live `databento_tradfi_ws` connector's Databento account was suspended again
+                      (`api_key_deactivated`/unpaid-invoice CRAM auth error), so the doc's frontmatter flipped back `open` → `blocked`
+                      and it now carries 2 genuinely open todos again — a re-opened `[OPERATOR] P0` "pay the bill" todo and a new
+                      `[CODE] P2` connector-owner flag. Archiving a doc with real open, unresolved work (one operator-gated) would
+                      violate the archival-discipline SSOT's "fully resolved" precondition — do NOT archive; the 9-referrer sweep would
+                      also be premature since the doc's path hasn't changed. Skipping this item (`reason_code: GATED`) until the doc
+                      resolves again and stays resolved; re-check `plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`'s
+                      `status`/Todos before re-attempting.
 
 - [x] ✅ [CODE] P2. Todo 1: re-run the dry-run with the fixed canonical_twin_path, confirm 100% twin-coverage, re-check
       bucket retention, execute delete via sanctioned UTL helpers if both checks clear - fully specified dispatch shape
@@ -152,49 +152,64 @@ source: >-
       number alone. Source: `plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`
 
       **DONE 2026-08-14 — instruments-service@271b3d33ff.** The prior `canonical_twin_path()` fix (`bbcc6395`) was
-              itself still incomplete: its pre-hive rebuild silently omitted `asset_group=` and mis-ordered `data_type=`,
-              so Part 5 still measured 0% for all 900 tradfi candidates. Fixed by formatting the matched
-              `unified_api_contracts.canonical_path_templates("tradfi")` entry directly instead of a partial string splice
-              (+ fixed a separate live memory bug in `_source_by_cell_from_manifest` — an unbounded full-manifest
-              `pd.read_parquet`+`to_dict("records")` hit a real 4.4GB RSS kill on tradfi's ~2.6M-row manifest this session;
-              replaced with a vectorized, cell-filtered pyarrow lookup). 17 regression tests added/updated, all green.
-              **KRX/Yahoo subgroup check (required above)**: the 900-row candidate set's venue distribution is
-              `{NYSE: 870, NASDAQ: 24, FX: 6}` — **0 KRX/Yahoo rows present**, so the required subgroup break-out is
-              vacuously satisfied (nothing to check).
-              **Fresh dry-run + official `--apply --i-understand` run (same session)**: canonical-twin coverage is now
-              897/900 (99.7%, up from the prior 0%) — the fix works. But **0/900 legacy objects themselves still exist in
-              GCS** (verified via `gcs_describe_object` on a 25-row sample, a full 900-row pass, and a prefix listing —
-              the entire candidate-set shape is empty), so the tool correctly reports `0 deletable, 900 blocked` and
-              `--apply` deleted `0/0` (a true no-op, not a bug — nothing to delete). Fresh soft-delete retention confirmed
-              604800s. **Practical outcome: this delete todo's goal (0 legacy duplicates in GCS) is already true** — there
-              is nothing left to apply. The remaining 3/900 missing-canonical cells are the already-tracked
-              `tradfi_fx_krw_usd_phantom_rows_fresh_confirmation_2026_08_12.md` KRW/USD phantom-row population, not a new
-              gap. **How/when the 900 legacy objects vanished is UNEXPLAINED** — no tracked plan/issue records an executed
-              delete, and the bucket's only lifecycle rule is a 60-day COLDLINE storage-class transition (not a delete
-              action) — filed as
-              `plans/active/issues/tradfi_legacy_twin_candidates_already_absent_unexplained_2026_08_14.md` (P1,
-              `assigned_vm: NA`, operator-gated investigation) rather than assumed benign.
+                  itself still incomplete: its pre-hive rebuild silently omitted `asset_group=` and mis-ordered `data_type=`,
+                  so Part 5 still measured 0% for all 900 tradfi candidates. Fixed by formatting the matched
+                  `unified_api_contracts.canonical_path_templates("tradfi")` entry directly instead of a partial string splice
+                  (+ fixed a separate live memory bug in `_source_by_cell_from_manifest` — an unbounded full-manifest
+                  `pd.read_parquet`+`to_dict("records")` hit a real 4.4GB RSS kill on tradfi's ~2.6M-row manifest this session;
+                  replaced with a vectorized, cell-filtered pyarrow lookup). 17 regression tests added/updated, all green.
+                  **KRX/Yahoo subgroup check (required above)**: the 900-row candidate set's venue distribution is
+                  `{NYSE: 870, NASDAQ: 24, FX: 6}` — **0 KRX/Yahoo rows present**, so the required subgroup break-out is
+                  vacuously satisfied (nothing to check).
+                  **Fresh dry-run + official `--apply --i-understand` run (same session)**: canonical-twin coverage is now
+                  897/900 (99.7%, up from the prior 0%) — the fix works. But **0/900 legacy objects themselves still exist in
+                  GCS** (verified via `gcs_describe_object` on a 25-row sample, a full 900-row pass, and a prefix listing —
+                  the entire candidate-set shape is empty), so the tool correctly reports `0 deletable, 900 blocked` and
+                  `--apply` deleted `0/0` (a true no-op, not a bug — nothing to delete). Fresh soft-delete retention confirmed
+                  604800s. **Practical outcome: this delete todo's goal (0 legacy duplicates in GCS) is already true** — there
+                  is nothing left to apply. The remaining 3/900 missing-canonical cells are the already-tracked
+                  `tradfi_fx_krw_usd_phantom_rows_fresh_confirmation_2026_08_12.md` KRW/USD phantom-row population, not a new
+                  gap. **How/when the 900 legacy objects vanished is UNEXPLAINED** — no tracked plan/issue records an executed
+                  delete, and the bucket's only lifecycle rule is a 60-day COLDLINE storage-class transition (not a delete
+                  action) — filed as
+                  `plans/active/issues/tradfi_legacy_twin_candidates_already_absent_unexplained_2026_08_14.md` (P1,
+                  `assigned_vm: NA`, operator-gated investigation) rather than assumed benign.
 
 - [x] ✅ [CODE] P2. Harden _apply_one's destination-exists branch in migrate_tradfi_underlying_display_names_2026_08.py
       to do a real content/byte comparison before deleting the source, not size-only Source:
       `plans/active/issues/tradfi_underlying_rename_apply_size_only_verification_gap_2026_08_12.md`
 
       **DONE 2026-08-15 (slot-14, backend_engineer).** `_apply_one`'s destination-exists branch now compares
-          GCS's own `crc32c` content checksum (already returned by `gcs_describe_object`, no extra download) instead
-          of size alone before deleting the source — a same-size, different-content pair now returns
-          `CONTENT_MISMATCH_KEPT_SRC` and is never deleted. The freshly-copied-by-us branch keeps its existing size
-          check (sane sanity net on our own server-side copy). Added 2 unit tests
-          (`test_apply_one_destination_exists_content_mismatch_keeps_source`,
-          `test_apply_one_destination_exists_content_match_deletes_source`) mocking gcsfs/pyarrow content-read +
-          `unified_trading_library.cloud_interface` GCS ops, proving the mismatch case is kept and the match case
-          still deletes — `market-tick-data-service@050620136f`. Along the way, filed + resolved
-          `plans/active/issues/mtds_qg_red_morpho_url_and_sports_contract_regression_2026_08_15.md` (2 unrelated
-          pre-existing QG-red findings — hardcoded morpho URL literal + a sports adapter-contract-baseline
-          regression — that were blocking this and every other unrelated shippable unit from this repo).
+              GCS's own `crc32c` content checksum (already returned by `gcs_describe_object`, no extra download) instead
+              of size alone before deleting the source — a same-size, different-content pair now returns
+              `CONTENT_MISMATCH_KEPT_SRC` and is never deleted. The freshly-copied-by-us branch keeps its existing size
+              check (sane sanity net on our own server-side copy). Added 2 unit tests
+              (`test_apply_one_destination_exists_content_mismatch_keeps_source`,
+              `test_apply_one_destination_exists_content_match_deletes_source`) mocking gcsfs/pyarrow content-read +
+              `unified_trading_library.cloud_interface` GCS ops, proving the mismatch case is kept and the match case
+              still deletes — `market-tick-data-service@050620136f`. Along the way, filed + resolved
+              `plans/active/issues/mtds_qg_red_morpho_url_and_sports_contract_regression_2026_08_15.md` (2 unrelated
+              pre-existing QG-red findings — hardcoded morpho URL literal + a sports adapter-contract-baseline
+              regression — that were blocking this and every other unrelated shippable unit from this repo).
 
-- [ ] [SCRIPT] P2. Determine whether any manual-launcher-invocation path has a dedup/collision check against
+- [x] ✅ [SCRIPT] P2. Determine whether any manual-launcher-invocation path has a dedup/collision check against
       already-running VMs for the same shard. Source:
       `plans/active/issues/dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md`
+
+      **DONE 2026-08-15 (slot-5, backend_engineer) — deployment-service@b8649d9bd4.** Measured all 187
+          `deployment-service/scripts/vm/launch-*.sh`: only 20 call any singleton/lock function
+          (`lc_singleton_check`/`lc_acquire_singleton_lock`/`ohlcv_check_singleton_lock`). The family actually
+          implicated in the DXY incident — the 11 `launch-tradfi-bf-*-ohlcv-*.sh` scripts — DID call
+          `ohlcv_check_singleton_lock`, but that function is a **fleet-wide concurrency CAP** on the `^tradfi-bf-`
+          prefix, not a per-shard dedup: every `vm_name` embeds a fresh `run_ts`, so two concurrent invocations
+          covering the SAME shard both get distinct names and both pass the cap — confirmed root cause. Fixed by
+          adding a real per-shard collision check inside the shared `ohlcv_create_vm` (strips the trailing
+          `-<run_ts>` to recover the shard identity, refuses if a RUNNING VM already covers it) — applies to all 11
+          launchers via the one shared lib file, no per-launcher-script changes needed. The other ~166 launchers
+          without any check are genuinely audit-scope (each has its own shard-naming convention); filed as a P3
+          follow-up rather than absorbed here:
+          `plans/active/issues/manual_launcher_shard_dedup_gap_167_of_187_2026_08_15.md`.
+
 - [ ] [DATA] P3. Confirm the killed duplicate DXY VMs' partial/redundant writes left no non-idempotent side-effects.
       Source: `plans/active/issues/dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md`
 - [ ] [CODE] P2. Confirm ccb84c57c9 promoted LDR->main cleanly (gh run/PR check) and flip doc status to resolved +

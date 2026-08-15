@@ -16,7 +16,7 @@ tags: [defi, instrument-type, canonicalisation, expected-universe, eigenlayer]
 related:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/defi_satellite_ao_dispatch_batch13_2026_08_13.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md,
     /plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
   ]
@@ -37,8 +37,8 @@ locked_by:
 locked_since:
 resolved_by:
 source: >-
-  Found 2026-08-14 while working `defi_satellite_ao_dispatch_batch13_2026_08_13.md`'s "cross-check
-  instrument_type=spot_pair" todo (source: defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md).
+  Found 2026-08-14 while working `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md`'s
+  "cross-check instrument_type=spot_pair" todo (source: defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md).
 context_scope:
   [
     /codex/02-data/defi-canonical-naming-ssot.md,

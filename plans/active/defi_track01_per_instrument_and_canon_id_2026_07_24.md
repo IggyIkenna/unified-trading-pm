@@ -279,7 +279,7 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
 - **2026-08-10T~09:31Z: `-163511`'s OOM root-caused (an unbounded cross-chunk memory accumulator, not the
   connection-pool guess above), fixed (`market-tick-data-service@483eb895`), deployment content-verified, and relaunched
   under RB-INFRA-RELAUNCH's root-cause-diagnosed carve-out — full diagnosis, fix, carve-out reasoning, and the required
-  operator page: `/plans/active/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md`.**
+  operator page: `/plans/archive/2026_08/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md`.**
 - **[DATA] P2. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** NEW 2026-08-06 (DP-VM-003,
   slot-7 data_pipeline_failure escalation agt-ef3dd8). Skip `migrate_defi_batch_to_per_instrument.py`'s per-year
   `discover_bundled()` full listing for years that already have a recorded `[[VM_PROGRESS]] last_completed_date=`

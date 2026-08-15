@@ -84,10 +84,16 @@ tier=1/priority=20 pool and got re-picked by the very next free slot).
 
 ## Todos
 
-- [ ] [BACKEND] P1. Once `review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md` todo 1 identifies the fleet-wide
-      TmuxPruner/keeper kill root cause, check specifically whether `solana_dex_pool_swaps_indexer-002` has a workload
-      characteristic (prompt size, tool-call pattern, repo state, worktree size) that makes it disproportionately likely
-      to trigger that root cause vs. other tasks. Repo: agent-orchestrator.
+- [x] ✅ [BACKEND] P1. **DONE — unified-trading-pm (reconciled via
+      `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md`) — no workload-intrinsic factor found.**
+      Read both closed root-cause docs for the fleet-wide crash-loop; neither identified mechanism is
+      workload/content-gated (both are host-timing/tmux-target bugs, content-agnostic). The 4-in-30min concentration is
+      best explained by redispatch-timing bad luck landing inside the pre-2026-08-09-fix detection-bug window, not a
+      property of this task's prompt size/tool-call pattern/worktree size. No code change indicated. Once
+      `review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md` todo 1 identifies the fleet-wide TmuxPruner/keeper
+      kill root cause, check specifically whether `solana_dex_pool_swaps_indexer-002` has a workload characteristic
+      (prompt size, tool-call pattern, repo state, worktree size) that makes it disproportionately likely to trigger
+      that root cause vs. other tasks. Repo: agent-orchestrator.
 - [ ] [BACKEND] P2. Independent of the root cause above: consider whether `skip-current-task` should auto-escalate to a
       durable `park` after N repeat skips of the SAME task across DIFFERENT slots within a short window (mirrors the
       existing auto-park threshold logic in `auto_park.py` for BLOCKED/PARKED/GATED declines, per

@@ -478,19 +478,21 @@ P1 redirect todo below.)
       Then a dry-run verify + add to the drain/snapshot/RESUME runbook lists (the `gas-fees` cron + bucket). Repo:
       market-tick-data-service. Owner: vm-defi. parent_epic: mtds_mdps_master. Provenance: slot-2 gas-fees coverage-gap
       audit 2026-06-08 (operator question).
-- [ ] [DATA] P1. **gas-fees MUST be in the manifest + data-status could-exist denominator (operator 2026-06-08).** gas
-      is already RECORDED in the manifest per chain (`gas_fee_handler` → `DefiManifestRecorder.record_captured/empty`,
-      `venue=ALCHEMY`/`chain=<chain>`, `data_type=gas_fees`, chain-grain) — but two things must follow the 7th-spec
-      migration: (a) the gas-fees `_index` MANIFEST is rebuilt to reflect the migrated objects — **NOT automatic**: the
-      migrator writes OBJECTS ONLY (it `_keep`-excludes `/_index/`), so the v9 manifest for the migrated gas objects
-      requires a separate manifest rebuild over `gas-fees-prd` (see the manifest-rebuild-scope P1 below); (b) the
-      **could-exist denominator** (IS `enumerate_expected_universe` + the deployment-api/UI data-status) must include
-      `gas_fees` as a **per-chain expected cell** (one per chain × day in `GAS_FEE_CHAIN_START_DATES` coverage) so
-      coverage % reflects gas presence/absence per chain — gas is chain-grain (NOT per-instrument), so the denominator
-      is the chain set, not the instrument universe. Verify `gas_fees` is in `DATA_TYPES_BY_ASSET_GROUP["defi"]` + the
-      validity matrix (`(defi, SPOT_ASSET, gas_fees)` valid) so it is not dropped as impossible. Repos:
-      instruments-service + unified-api-contracts + deployment-api. Owner: vm-defi. parent_epic: manifest_master.
-      Provenance: slot-2 gas-fees audit 2026-06-08 (operator question).
+- [x] ✅ [DATA] P1. **DONE — instruments-service@e866ca1ac5 (reconciled via
+      `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md`).** gas-fees MUST be in the manifest +
+      data-status could-exist denominator (operator 2026-06-08).** gas is already RECORDED in the manifest per chain
+      (`gas_fee_handler` → `DefiManifestRecorder.record_captured/empty`, `venue=ALCHEMY`/`chain=<chain>`,
+      `data_type=gas_fees`, chain-grain) — but two things must follow the 7th-spec migration: (a) the gas-fees `_index`
+      MANIFEST is rebuilt to reflect the migrated objects — **NOT automatic**: the migrator writes OBJECTS ONLY (it
+      `_keep`-excludes `/_index/`), so the v9 manifest for the migrated gas objects requires a separate manifest rebuild
+      over `gas-fees-prd` (see the manifest-rebuild-scope P1 below); (b) the **could-exist denominator** (IS
+      `enumerate_expected_universe` + the deployment-api/UI data-status) must include `gas_fees` as a **per-chain
+      expected cell** (one per chain × day in `GAS_FEE_CHAIN_START_DATES` coverage) so coverage % reflects gas
+      presence/absence per chain — gas is chain-grain (NOT per-instrument), so the denominator is the chain set, not the
+      instrument universe. Verify `gas_fees` is in `DATA_TYPES_BY_ASSET_GROUP["defi"]` + the validity matrix
+      (`(defi, SPOT_ASSET, gas_fees)` valid) so it is not dropped as impossible. Repos: instruments-service +
+      unified-api-contracts + deployment-api. Owner: vm-defi. parent_epic: manifest_master. Provenance: slot-2 gas-fees
+      audit 2026-06-08 (operator question).
 - [x] ✅ [SCRIPT] P1. **TOOL DONE (mtds@01fda7ce, slot-2 2026-06-09): `rebuild_defi_manifest` now takes `--bucket`** so
       it rebuilds each dedicated `-prd-` bucket's manifest from the migrated objects (run per dedicated bucket as the
       post-`--apply` step — the RUN itself is gated with the apply). Original gap ↓ retained. **MANIFEST-REBUILD SCOPE
@@ -525,7 +527,13 @@ P1 redirect todo below.)
       `dex-pools-`/`lending-indices-` (sampled ORCA/RAYDIUM are; KAMINO/lending unconfirmed), migrate if unique. Repo:
       market-tick-data-service (`scripts/migrate_defi_full_v9_canonical.py` could add these as extra source specs, OR a
       one-off backfill). Owner: vm-defi. parent_epic: mtds_mdps_master. Provenance: slot-2 orphan audit 2026-06-08.
-- [ ] [SCRIPT] P1. **REDIRECT the 4 DeFi live handlers that write to NON-migrated buckets → the dedicated migrated
+- [x] ✅ [SCRIPT] P1. **RESOLVED-AS-MOOT 2026-08-14 (reconciled via
+      `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md`) — the redirect target no longer
+      exists.** The "dedicated migrated-bucket" architecture this todo describes was RETIRED by a later decision
+      (`gcs_bucket_estate_cleanup_2026_07_10`, `defi_dedicated_bucket_shared_migration_2026_07_13`) — every DeFi writer
+      already converges on the ONE shared `market-data-tick-defi-{env}-{pid}` bucket. Full evidence:
+      `plans/active/issues/defi_migration_dedicated_bucket_architecture_retired_2026_08_14.md`. No code change is
+      possible or needed. REDIRECT the 4 DeFi live handlers that write to NON-migrated buckets → the dedicated migrated
       buckets, so new writes stop creating orphans** (the orphan SOURCE). Handler→current-bucket map:
       `dex_swaps_handler` (`resolve_bucket_name(kind="market-data")` → `market-data-tick-defi`) → should write
       `dex-swaps`; `solana_defi_handler` (`get_write_bucket_name("market_data","DEFI")` → `market-data-tick-defi`) →
@@ -541,11 +549,13 @@ P1 redirect todo below.)
       data_type gets its own bucket, never folded into an unrelated one. Until redirected, this bucket keeps diverging
       from the canonical home that features/strategy read. Repo: market-tick-data-service. Owner: vm-defi. parent_epic:
       mtds_mdps_master.
-- [ ] [SCRIPT] P2. **Add `aggregator-routes` as the 9th `migrate_defi_full_v9_canonical.py` migrator spec** (per the
-      2026-08-08 decision above) mirroring the `gas-fees`/`liquidations` additions: register a `BucketSpec` for
-      `aggregator-routes` → `aggregator-routes-prd`, confirm the source path shape, dry-run then `--apply`, rebuild the
-      manifest over the migrated objects (same post-apply step already established for the other 8 dedicated buckets).
-      Repo: market-tick-data-service. Owner: vm-defi. parent_epic: mtds_mdps_master.
+- [x] ✅ [SCRIPT] P2. **DONE — market-tick-data-service@795ddf39e1 (reconciled via
+      `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md`).** Add `aggregator-routes` as the 9th
+      `migrate_defi_full_v9_canonical.py` migrator spec** (per the 2026-08-08 decision above) mirroring the
+      `gas-fees`/`liquidations` additions: register a `BucketSpec` for `aggregator-routes` → `aggregator-routes-prd`,
+      confirm the source path shape, dry-run then `--apply`, rebuild the manifest over the migrated objects (same
+      post-apply step already established for the other 8 dedicated buckets). Repo: market-tick-data-service. Owner:
+      vm-defi. parent_epic: mtds_mdps_master.
 - [x] ✅ [MTDS] P0. **M-COORD-7 — 41 coarse `pipeline_mode="batch"` OBJECT-PATH literals in DeFi handlers (batch≠live
       regression + STEP-5.85 ship-blocker) — FIXED (mtds@57242af5, slot-2 2026-06-08).** Filed by slot-4 while shipping
       the sports fix: mtds STEP 5.85 hard-failed on 41 pre-existing coarse `pipeline_mode="batch"` literals in 25 DeFi

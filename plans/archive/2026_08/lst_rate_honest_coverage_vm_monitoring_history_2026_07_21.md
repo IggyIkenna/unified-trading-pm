@@ -19,7 +19,7 @@ tags: [defi, history, line-cap-remediation, progress-log, vm-monitoring]
 related:
   [
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
-    /plans/active/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md,
+    /plans/archive/2026_08/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md,
   ]
 created: 2026-08-14
 parent_epic: defi_master
@@ -36,7 +36,7 @@ depends_on: []
 source:
   [
     plans/active/lst_rate_honest_coverage_2026_07_21.md,
-    plans/active/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md Todo 1,
+    plans/archive/2026_08/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md Todo 1,
     line-cap remediation 2026-08-14,
   ]
 assigned_role: project_management
@@ -46,7 +46,7 @@ drift_direction: none
 # lst_rate_honest_coverage — VM monitoring history
 
 > Extracted verbatim 2026-08-14 (line-cap remediation, per
-> `/plans/active/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` Todo 1) from
+> `/plans/archive/2026_08/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` Todo 1) from
 > `/plans/active/lst_rate_honest_coverage_2026_07_21.md`'s Progress Log. Covers the contiguous chronological block of VM
 > re-check / preemption-resume / health-check entries for the `mtds-lst-rates-20260722-181845` and
 > `mtds-dex-swaps-backfill*` backfill VMs, 2026-07-22 19:51 UTC through 2026-07-26 07:56 UTC. No other doc was found

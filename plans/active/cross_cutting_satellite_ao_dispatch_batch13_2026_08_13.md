@@ -188,8 +188,19 @@ source: >-
       governance/liquidation/mev/staking_yields/token_transfers handlers + databento_batch_jobs/
       alchemy_transfers_client/thegraph_base_client, then deleted the now-empty exclude list. Full `quality-gates.sh`
       exit 0 (sentinel-verified at HEAD). Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
-- [ ] [CODE] P2. Re-add 17 connector reconnect tests using terminating mocks (market-tick-data-service) Source:
-      `plans/active/mtds_file_size_refactor_2026_06_08.md`
+- [x] ✅ [CODE] P2. Re-add 17 connector reconnect tests using terminating mocks (market-tick-data-service) —
+      market-tick-data-service@26eef1999f (2026-08-15, slot-21·infra). No git-history evidence of a literal "def
+      test_...reconnect..." deletion survived (full non-shallow history search, zero hits) — instead cross-referenced
+      the 25 connectors that got the zero-delay-reconnect tight-loop fix (`cec16b74`) against which test files already
+      exercise the reconnect loop with a TERMINATING mock (`reconnect_base_delay_s`/ `_ws_connect_side_effect` markers):
+      9 already covered (incl. `deribit_book_ticker_ws` — the doc's own reference pattern), 16 gaps found — reconciles
+      to the doc's "17" (the deribit reference + these 16). Added one `test_stream_connect_failure_retries` per gap
+      (aster liquidations, binance-futures, bitfinex-spot, bitget-spot, bybit-futures, coinbase-cde, coinbase-spot,
+      deribit-trades, hyperliquid l2book/ticker/trades, kraken futures/spot, okx-swap, tardis-machine, upbit-book) —
+      each injects a mock `_http_session` whose `ws_connect` raises `aiohttp.ClientError` and flips `conn._closed` on
+      the 3rd attempt, mirroring `test_deribit_book_ticker_ws_coverage.py`'s existing terminating-mock pattern rather
+      than a never-closing one. QG green (`✅ ALL QUALITY GATES PASSED`, 489s, sentinel-verified); quickmerge landed on
+      LDR (post-push ancestry verified). Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
 - [x] ✅ [CODE] P2. **Diagnosed: mis-scoped for single-task AO dispatch, NOT attempted — corrected classification
       instead.** (2026-08-15, slot-31·infra) Concrete file-by-file scope survey of all 18
       `market_data_processing_service/app/adapters/*` files implementing `process_to_candles`, their 4 production caller
@@ -227,8 +238,19 @@ source: >-
       `unified-trading-pm/scripts/openapi/generate_capability_manifest.py` when the committed copy is absent) or accept
       the file staying committed permanently and close this out as won't-do. Repo: agent-orchestrator +
       unified-api-contracts. Source: this doc, todo above.
-- [ ] [CODE] P2. Run PM bash scripts/quality-gates.sh to confirm the plan + codex update pass (unified-trading-pm)
-      Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
+- [x] ✅ [CODE] P2. **Ran PM `bash scripts/quality-gates.sh` — initially FAILED, root-caused + fixed, now confirmed
+      green.** (2026-08-15, slot-12·infra) First run surfaced a real regression, not a stale/pre-existing red:
+      `test_f47_unbuildable_venue_cells_are_not_available` failed with 18 unbuildable cells, all tracing to one venue
+      (`pacifica_solana`). Root cause: the same-day 2026-08-15 "containment fix" to `archetype_leg_spec_seeds.py` added
+      `"pacifica_solana"` to 3 `eligible_venue_ids` lists, reasoning from a hyphen→underscore fold of
+      `catalog_carry.py`'s `full_venue="PACIFICA-SOLANA"` string — but the slot-label parser's alnum-fold
+      (`_slot_venue_token`, full alnum-strip) turns that into `"pacificasolana"`, which never matches
+      `KNOWN_VENUE_TOKENS`'s existing `"pacifica"` entry. The bundle's actual slot-label token (per
+      `_CARRY_BASIS_PERP_VENUE_BUNDLES`'s own `("pacifica", "PACIFICA-SOLANA", ...)` row and `test_target_universe.py`'s
+      live slot-label assertions) is `"pacifica"` — corrected all 3 sites to match. Fixed + shipped
+      `unified-api-contracts@826763229f`; UAC's own `quality-gates.sh` green (429s, sentinel-verified); re-ran PM's full
+      `quality-gates.sh` after the fix landed — `✅ ALL QUALITY GATES PASSED`, sentinel `.qg_last_passed_sha` verified
+      == HEAD `8b7e53a624`. Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
 - [x] ✅ [CODE] P2. **STALE PREMISE — the "13 cells/~12.5k rows" digest figure is ~3 weeks stale; the actual retry
       mechanism is already live, but has a real coverage gap.** (2026-08-15, slot-27·infra). Live re-verification:
       `deployment-service/scripts/wave_launcher.py` (Cloud Run Job, host-cron `0 */3 * * *`) IS running — its own

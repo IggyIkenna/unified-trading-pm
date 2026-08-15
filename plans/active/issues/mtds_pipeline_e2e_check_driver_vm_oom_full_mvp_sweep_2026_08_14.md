@@ -36,7 +36,7 @@ related:
   [
     /plans/archive/2026_08/issues/mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md,
     /plans/active/defi_track5_coverage_mvp_backfill_2026_07_24.md,
-    /plans/active/defi_satellite_ao_dispatch_batch13_2026_08_13.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch13_2026_08_13.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: "2026-08-14"
