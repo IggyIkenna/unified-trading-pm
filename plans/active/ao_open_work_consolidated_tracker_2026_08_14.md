@@ -232,15 +232,18 @@ context_scope:
 
 ## Track 4 — Infra / VM / host hygiene
 
-- [ ] [CREDS] P0. **GENUINELY OPERATOR-BLOCKED — confirmed 2026-08-15 (this session).** Finish vm-0 Secrets-Manager
-      wiring: align the blob's stale `ORCHESTRATOR_JWT_SECRET` (SM ← vm-0). The source doc explicitly states
-      **"Agent-side secret writes are permission-blocked by design"** — this is a deliberate barrier, not reflexive
-      caution; exact commands are staged (line ~297) but must be run by a human. Source:
-      `/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md`.
-- [ ] [DESIGN] P0. **GENUINELY OPERATOR-BLOCKED — confirmed 2026-08-15 (this session).** Design the dirty-worktree
-      resolution policy (Ikenna, Slack 2026-06-12 — the "no dirty worktrees" next-phase flow). References a specific
-      design intent from a conversation only the operator has context on — genuinely unbuilt, not a bounded task.
-      Source: same doc.
+- [x] [CREDS] P0. **DONE — CONFIRMED ALREADY IN SYNC, 2026-08-15 (this session, direct SSM check).** The staged write
+      was never needed: vm-0's live `ORCHESTRATOR_JWT_SECRET` and the `ORCHESTRATOR_ENV_LOCAL` SM blob already matched
+      at check time (compared equal without printing either value), confirmed authoritatively via
+      `bash scripts/refresh_env_from_sm.sh` dry-run on vm-0: `add=0 replace=0 keep=7`,
+      `DRY-RUN: in sync, nothing to     do`, JWT included. No write performed — this item is genuinely closed, not
+      deferred. Source: `/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md` — checkbox flipped there too.
+- [ ] [DESIGN] P0. **STILL OPERATOR-BLOCKED, but the operator is actively revising the policy itself (2026-08-15, this
+      session) — do not batch this item until the revision lands.** Design the dirty-worktree resolution policy (Ikenna,
+      Slack 2026-06-12 — the "no dirty worktrees" next-phase flow). Prior audits (5 passes, 07-30 through 08-10) each
+      flagged the design as possibly-already-decided (the 4-step policy IS spelled out verbatim in the source doc) but
+      deferred a final call; this session put that question to the operator directly, who confirmed they want to revise
+      the policy before it's dispatched as implementation work. Source: same doc.
 - [ ] [DIAG] P2. Best-effort root-cause the specific 49.3G/16G-swap peak more precisely, if feasible. **Confirmed still
       genuinely open 2026-08-15** (reconciliation sweep) — enforcement (resource-watchdog) shipped and live, the "49.3G"
       figure is a sticky cgroup `memory.peak` high-water-mark (not fresh per-restart evidence, confirmed across 3+
