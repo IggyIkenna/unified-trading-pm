@@ -228,3 +228,22 @@ Per `rb_infra_relaunch.md`'s bounds + the OOM-relaunch actuator's own design:
   shipped the two stale doc-path comment references found in `deployment-service/scripts/vm/launch-mdps-backfill-vm.sh`
   and `.../lib/launcher_common.sh` (QG green, quickmerge landed `deployment-service@c409887930`). `/done` posted with
   `one_shot_complete: true`.
+- 2026-08-15 (slot 12, data_pipeline_failure escalation agt-870c6b): A SECOND `relaunch_vm` dispatch for the SAME
+  `mdps-backfill-cefi-20260814-014809` finding reached slot 12 (duplicate dispatch of the finding this doc already
+  resolved above — same VM name, same `exit_code=1`). Per `rb_infra_relaunch.md`'s "check for an already-running
+  replacement before relaunching" step: `gcloud compute instances list --filter="name~mdps-backfill-cefi"` showed
+  `mdps-backfill-cefi-20260815-155830` (the relaunch this doc already documents) is **no longer in the live fleet**
+  (`terminal exit_code=None` in GCS — no terminal marker written, ambiguous rather than a clean finish) and has been
+  superseded by `mdps-backfill-cefi-20260815-181733`, currently `RUNNING`, with `LAUNCH_PARAMS`
+  `RESUME_START_DATE=2020-01-01 RESUME_END_DATE=2026-01-31 MDPS_DATA_TYPES=liquidations RESUME_ASSET_GROUP=cefi` — a
+  strict superset of the original crashed VM's outstanding range (`2022-03-03→2026-01-31`) — actively progressing
+  (`run.log` live output at `2026-08-15T17:48Z`, currently processing `cefi/2020-02-13`). No suppression marker exists
+  at `vm-census/relaunch-paged/vm/mdps-backfill-cefi-20260814-014809.json`. This worker did **not** determine the exact
+  lineage from `155830` to `181733` (whether `155830` completed cleanly, was itself relaunched by a supervising
+  mechanism, or crashed again) — flagging as an open question rather than asserting it, since it wasn't directly
+  evidenced. Given a live, healthy, actively-advancing replacement already fully covers the original shard's data,
+  launching a further VM here would duplicate the shard — **no relaunch action taken**; this dispatch is a no-op.
+  `/done` posted with `one_shot_complete: true`. Open question for a future pass: why did this escalation re-dispatch
+  for an already-resolved finding (possible re-fire of the original DP_VM_EXIT_NONZERO event before the first worker's
+  relaunch/close registered, or a dedup-window gap in the DP_\* cooldown-map mechanism per
+  `/codex/05-infrastructure/data-pipeline-alerts.md` § "Wiring caveat") — not diagnosed further here, one-shot scope.
