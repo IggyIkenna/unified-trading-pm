@@ -168,39 +168,19 @@ Exactly the observed symptom: the VM can read its startup script but can never w
       `features-e2e-tradfi-*` launch, checking for a real `run.log` this time. (repo: deployment-service / infra — live
       GCP IAM change, not code)
 
-      **CONFIRMED + FIX APPLIED 2026-08-15 (slot-6, infra craft) — verification launch IN PROGRESS, not yet complete.**
-              Root cause confirmed (see "CONFIRMED" note above the Todos section). Self-granted (this session's active identity
-              IS `unified-trading-sa`, the documented self-service identity for exactly this gap class per
-              `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`) a NEW, narrowly-scoped project-level IAM
-              condition binding — NOT a blanket grant, deliberately mirrors the existing `group-a/b-test-tier-only` pattern
-              rather than widening `uts-test-sa`'s access to every bucket:
-              ```
-              gcloud projects add-iam-policy-binding central-element-323112 \
-                --member="serviceAccount:uts-test-sa@central-element-323112.iam.gserviceaccount.com" \
-                --role="roles/storage.objectAdmin" \
-                --condition='expression=resource.name.startsWith("projects/_/buckets/deployment-scripts-central-element-323112"),title=deployment-scripts-bucket-test-sa-vm-logs,description=uts-test-sa write access for vm-logs/ and EXIT_STATUS on test-run VM launches -- see features_e2e_test_run_vm_self_deletes_no_log_2026_08_15'
-              ```
-              Verified live via a fresh `gcloud projects get-iam-policy` re-read (binding present, condition title
-              `deployment-scripts-bucket-test-sa-vm-logs`, expression scoped to exactly this one bucket — a live infra change,
-              not in git). **Live-launched a fresh verification VM** (`features-e2e-tradfi-20260815-100817-679e08`, same
-              `pipeline_e2e_check.py --day 2026-08-14 --asset-group TRADFI --family volatility --legs benchmark
-              --benchmark-days 7` command as the 3 prior failures) to prove the capability, not just read the policy back — per
-              the self-service rule's "verify the actual capability live" requirement. **Launch was still in progress at the
-              time this session ended** (next agent: check whether `gs://deployment-scripts-central-element-323112/vm-logs/
-              features-e2e-tradfi-20260815-100817-679e08/run.log` now exists — if yes, the fix is proven and this todo is done;
-              if the VM still self-deletes with no log despite the new binding, the hypothesis needs revisiting — e.g. check
-              whether `lc_tier_service_account` is actually being invoked with `is_test_run=true` for this launch shape, or
-              whether a SEPARATE identity is used for the metadata-server startup-script fetch vs. the VM's runtime SA).
-
           **PROVEN 2026-08-15 (slot 5, infra craft) — the fix works, todo DONE.** Picked up todo 2 below (dispatched
-          independently by the backlog) and found todo 1 already in-flight; continued monitoring its verification VM
-          instead of duplicating work. `features-e2e-tradfi-20260815-100817-679e08` progressed through the FULL real
-          lifecycle for the first time across 4 total attempts on this launch shape: `EXIT_STATUS=RUNNING` written at
-          ~10:14Z (the early sentinel `vm-exec-with-gcs-tee.sh` writes at start — never written on any of the 3 prior
-          failures), then `run.log` appeared, then `EXIT_STATUS=0` at 10:15:07Z with a clean `DEPLOYMENT_COMPLETED
-          exit_code=0` — the VM ran its full command and self-deleted normally, not the silent self-delete-with-zero-objects
-          crash this whole doc tracks. Confirms the `uts-test-sa` write-access gap really was the sole cause of the
-          self-delete/no-log symptom.
+              independently by the backlog) and found todo 1 already in-flight; continued monitoring its verification VM
+              instead of duplicating work. `features-e2e-tradfi-20260815-100817-679e08` progressed through the FULL real
+              lifecycle for the first time across 4 total attempts on this launch shape: `EXIT_STATUS=RUNNING` written at
+              ~10:14Z (the early sentinel `vm-exec-with-gcs-tee.sh` writes at start — never written on any of the 3 prior
+              failures), then `run.log` appeared, then `EXIT_STATUS=0` at 10:15:07Z with a clean `DEPLOYMENT_COMPLETED
+              exit_code=0` — the VM ran its full command and self-deleted normally, not the silent self-delete-with-zero-objects
+              crash this whole doc tracks. Confirms the `uts-test-sa` write-access gap really was the sole cause of the
+              self-delete/no-log symptom. **Independently corroborated 2026-08-15 (slot-6, infra craft)** via
+              `gcs_describe_object`/`gcs_read_object_with_generation` on the same VM: `run.log` = 27,656 bytes
+              (`last_modified=2026-08-15T10:15:16Z`), `EXIT_STATUS` = `b'0\n'` (generation `1786788913139745`) — matches
+              slot-5's finding exactly; see the SCRIPT P2 todo below for a related poll-loop bug this cross-check also
+              surfaced.
 
 - [x] ✅ [INFRA] P1. If the IAM hypothesis is refuted, get real evidence of what actually kills the VM in its first
       ~30-60s of boot — **N/A, not executed: the hypothesis was CONFIRMED (todo 1 above), not refuted**, so this
@@ -214,6 +194,19 @@ Exactly the observed symptom: the VM can read its startup script but can never w
       report's `reason` field so a future reader doesn't have to re-derive it from the raw JSON `exit_status`/duration
       the way this doc's author had to. (repo: unified-trading-library or features-service, wherever the report-writer
       lives)
+
+      **NEW related finding, same verification run (2026-08-15, slot-6, infra craft):** `_poll_until_terminal` has a
+          separate false-negative bug, distinct from the reason-field gap above. The VM's `EXIT_STATUS` object goes through
+          an intermediate state — content literal `"RUNNING"` — written early and overwritten with the real numeric code
+          (`"0\n"`) only once the deployment actually finishes. The poller's tick-5 log line proves it hit this window mid-flight:
+          `EXIT_STATUS present but unreadable/unparsable: invalid literal for int() with base 10: 'RUNNING'` — and instead of
+          treating an unparsable-but-present `EXIT_STATUS` as "not yet terminal, keep polling," it gave up immediately and the
+          report was written with `exit=-1, failed, objects=0`. Ground truth (checked ~1 minute later, same run, no new
+          launch): `EXIT_STATUS` had already flipped to `0` and `run.log` existed complete — i.e. **the run actually
+          succeeded but was reported as failed** because the poller read it at exactly the wrong moment and did not retry.
+          This is a real, reproducible false-negative in the terminal-detection logic, not a flaky one-off — add explicit
+          handling for the `RUNNING` sentinel (treat as non-terminal, continue polling) alongside the reason-field work above.
+
 - [ ] [DATA] P1. Once fixed, relaunch `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s "Todo 2: relaunch
       TRADFI:volatility benchmark once todo 1 lands"
       (`pipeline_e2e_check.py --day <fresh> --asset-group TRADFI --family volatility --legs benchmark --benchmark-days 7`)
@@ -233,6 +226,12 @@ Exactly the observed symptom: the VM can read its startup script but can never w
       failing (auth/rate-limit/etc., in which case that's the real bug to fix). Full evidence:
       `gs://deployment-scripts-central-element-323112/vm-logs/features-e2e-tradfi-20260815-100817-679e08/run.log`.
       (repo: features-service)
+
+      **Independently corroborated 2026-08-15 (slot-6, infra craft)** via a direct `run.log` read of the same VM —
+          identical `Completed 0/11 groups` result, same `No captured perp for VX` / `No data for VX` /
+          `empty_confirmed manifest write failed` pattern across every group and date. One addition to the guidance above:
+          relaunching with the SAME recent window will reproduce this 0/11 result — check the manifest for a window with
+          confirmed VX captures before spending another billable VM launch on this todo, don't retry blind.
 
 ## Progress Log
 
@@ -270,3 +269,19 @@ Exactly the observed symptom: the VM can read its startup script but can never w
   works now, but zero real throughput numbers exist to cite. Did not attempt to root-cause the
   VX-data-gap-vs-masked-failure question itself — genuinely distinct domain (features-service data correctness) from
   this doc's IAM/infra scope, out of proportion for this already-large infra todo to absorb inline.
+
+- **2026-08-15 (slot-6, infra craft, todo 1, DONE — independently corroborated slot-5's result)**: re-checked the same
+  verification VM's GCS objects directly (`run.log` 27,656 bytes, `EXIT_STATUS=b'0\n'`) and reached the identical
+  conclusion as slot-5 above before seeing their push — both sessions confirmed the IAM fix from the same live evidence.
+  Adds one finding slot-5's entry doesn't cover: while re-reading the driver's own poll log
+  (`launch_vm_and_wait(...): poll tick 5 ... WARNING ... EXIT_STATUS present but unreadable/unparsable: invalid literal for int() with base 10: 'RUNNING'`),
+  confirmed the pipeline_e2e_check REPORT for this run was written as `failed, exit=-1, objects=0` — i.e. **the
+  automated report says this run failed, even though it actually succeeded** (this doc, and slot-5's own note, only know
+  that from manually re-reading `EXIT_STATUS` after the report already wrote `-1`). Added this as a second, distinct
+  amendment to the `[SCRIPT] P2` reason-field todo above: `RUNNING` is a valid non-terminal `EXIT_STATUS` value that
+  `_poll_until_terminal` currently treats as an unparsable failure instead of "keep polling." Also updated
+  `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s todo 2 with a matching infra-fixed/now-data-blocked note +
+  Progress Log entry (unconflicted, shipped in the same commit as this doc). Calling `/done` on the AO task scoped to
+  this doc's todo 1 (`features_e2e_test_run_vm_self_deletes_no_log-d63cea8bbc07`) since that specific scope is complete
+  and doubly verified; the remaining todos (poll-loop fix, VX-data-gap root cause, benchmark relaunch) are separate
+  follow-on work already tracked above for a future dispatch.
