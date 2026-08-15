@@ -119,13 +119,15 @@ Diagnose live (not guess) which of the two candidates is the actual cause on a r
 
 ## Todos
 
-- [ ] [DATA] P1. Reproduce the `features-multi-timeframe-service` stall live (repeat `gcloud logging read` across 2-3
+- [x] ✅ [DATA] P1. Reproduce the `features-multi-timeframe-service` stall live (repeat `gcloud logging read` across 2-3
       more `*/20min` cycles, or trigger `POST /api/data-status/rollup-run?services=features-multi-timeframe-service`
       directly and watch it in isolation) to distinguish the two candidate root causes in "What I found" above. Repo:
       deployment-api. Done when: the Progress Log records which candidate is confirmed, with log/trace evidence.
-- [ ] [CODE] P1. Once the root cause is confirmed, fix it per the matching option in "Recommended decision" above +
+      **CONFIRMED 2026-08-15 (slot-5)** — candidate 1 (instance-level kill/recycle), not candidate 2 (child hang past
+      its own SIGTERM/SIGKILL). See Progress Log entry below for the full evidence chain.
+- [x] ✅ [CODE] P1. Once the root cause is confirmed, fix it per the matching option in "Recommended decision" above +
       add the regression test from Recommended-decision item 3. Repo: deployment-api. Done when: QG green, shipped,
-      verified on origin.
+      verified on origin. **FIXED 2026-08-15 (slot-5)**: `deployment-api@26470d4b91`. See Progress Log entry below.
 - [ ] [DATA] P2. Once the fix lands, re-run the original 24h Cloud Logging live-verify (every one of the 14 services
       processed at least once every ~40min, never silently skipped) — the source doc
       (`/plans/archive/2026_08/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md`) is now archived,
@@ -139,3 +141,33 @@ Diagnose live (not guess) which of the two candidates is the actual cause on a r
   (`deployment-api@0bb3694c80`) genuinely helps but doesn't fully close the gap — see "What I found" above for the
   full evidence trail (`gcloud logging read` across 18:44Z-21:02Z). Did not flip the parent doc's P2 todo (done-when
   not met); did not attempt a fix here (root cause not yet confirmed between the two live candidates — see Todos).
+- **data_engineering (slot-5) 2026-08-15**: root-caused todo 1 + shipped todo 2's fix. **Root cause confirmed via
+  `gcloud logging read` on `uts-prod-data-status-rollup-svc`, 2026-08-15T20:45Z-21:05Z window**: the sweep that
+  started 19:20:36Z logged `Shutting down API...` (TWICE, one per gunicorn worker) + `Event logging closed` at
+  20:55:37.4Z — a graceful whole-CONTAINER shutdown, not a per-request cancellation — followed at 21:00:00.7Z by
+  `Starting new instance. Reason: AUTOSCALING`, which then acquired a FRESH lock and restarted the sweep from
+  service #1. `gcloud run revisions list` confirmed no new revision was deployed in that window (still
+  `-00480-v7t`, created 18:44:01Z) — this was Cloud Run's own instance-lifecycle/recycling decision, not a
+  redeploy. This matches candidate 1 exactly (an instance-level kill/recycle orphans the in-flight isolated child
+  before `_run_service_isolated`'s own `join(timeout=...)`/killpg path — which WOULD have logged something within
+  its own budget — ever gets scheduled again): the whole Python process (parent request thread + any live isolated
+  child) was torn down atomically, which is also why zero renewal/failure log appeared for the full ~50min stall
+  (candidate 2, a child hung past its own timeout, would have surfaced a `killpg`/`timed out after Ns` log line
+  within `join_timeout_s` + a few seconds, never zero log entries for 50 minutes straight). **Fix**
+  (`deployment-api@26470d4b91`, `deployment_api/routes/data_status/_rollup.py`): per Recommended-decision option 1
+  ("checkpoint progress so a fresh instance can resume from the next unprocessed service instead of restarting at
+  #1") — added a `_ROLLUP_CHECKPOINT_BLOB` (`_locks/rollup_progress.json`) written incrementally via the existing
+  `on_service_done` heartbeat (same call already renewing the maintenance-window lock) for the unscoped
+  (`services=None`, i.e. the real scheduler sweep) case only; a fresh sweep reads it first and skips any
+  already-done service, and the checkpoint is cleared once a sweep reaches NATURAL completion (an
+  instance-recycle-killed sweep never reaches the clear line, so its partial progress survives for the next
+  instance to resume from). Guarded against a stale/complete checkpoint silently skipping every service (falls
+  through to a full re-run instead). 6 new regression tests in
+  `tests/unit/test_rollup_resume_checkpoint.py` cover: resume skips done services, a checkpoint covering every
+  service is ignored (not silently no-op'd), an ad-hoc `?services=X` probe never touches the checkpoint, the
+  checkpoint is cleared on natural completion, it's updated incrementally via `on_service_done`, and it survives
+  uncleared when the sweep never reaches natural completion (the actual incident's shape). Full QG green
+  (`.qg_last_passed_sha` == `26470d4b9140e456e65b6d5fe7e140623e667e10`), verified ancestor of
+  `origin/live-defi-rollout`. Todo 3 (P2 live re-verify) remains open — needs a real post-fix multi-cycle
+  `gcloud logging read` to confirm the resume actually closes the gap in production, not something to fake from a
+  unit test.
