@@ -119,3 +119,13 @@ archived doc's remediation plan should treat this KRW/USD sample as corroboratin
   Corrected the doc's title/summary/todos in place rather than filing a second doc, since the original claim never
   shipped anything and would only mislead a future reader. Next: build + dry-run the re-stamp script (see revised P2
   todo), verify all 2,023 rows before any write.
+- 2026-08-15 — Retried shipping the race-window-shrink script
+  (`scripts/restamp_tradfi_fx_krw_usd_mislabeled_ pipeline_mode_2026_08_14.py`, market-tick-data-service — the P2 todo's
+  re-stamp is already applied+verified in production; only the CODE fix itself remains uncommitted). Still blocked,
+  confirmed via a fresh `git status`: two other sessions' foreign uncommitted WIP in this shared checkout — a
+  sports-manifest test file in market-tick-data-service, and dependency-revocation/`flatten_readiness.py` work in
+  `unified-api-contracts`. The same `unified-api-contracts` dirty state independently also blocked an unrelated VM
+  launch attempt this session (see `vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md`'s
+  matching 2026-08-15 entry) — its launcher tries to auto-republish a stale code tarball and safely refuses on
+  uncommitted source. Neither blocker is mine to resolve; the script ship is a plain retry once that repo's owner
+  commits or clears their WIP.

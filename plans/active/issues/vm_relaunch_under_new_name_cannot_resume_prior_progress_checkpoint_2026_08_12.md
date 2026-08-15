@@ -102,6 +102,16 @@ days re-walked (real Tardis API calls + wall-clock) before reaching new territor
       (`mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`'s P2: `max_in_flight_bytes` is permanently `None`, a
       no-op) — enabling concurrency before that lands would knowingly reproduce the OOM history already documented there
       for the sibling sports/odds_api launcher. Fix that P2 first, then revisit concurrency as a throughput win.
+- [ ] [CODE] P3. **NEW (found 2026-08-15).** `launch-cefi-sharded-backfill.sh`'s year-scoping env var is a real footgun:
+      the script's OWN usage comment (line 677) documents `YEARS="2024"` as the override, and internally assigns
+      `YEARS_OVERRIDE="${YEARS:-}"` (line 681) — but `YEARS_OVERRIDE` is also the name of that internal working
+      variable, so a caller who (reasonably) exports `YEARS_OVERRIDE=2026` directly gets it silently stomped back to
+      empty by line 681, falls through to the venue's full default year range, and then fails
+      `START_DATE='...' must be YYYY-MM-DD within year <first-default-year>` — this is confirmed live-reproduced as the
+      root cause of this doc's own still-open P2's repeated failed relaunch attempts (see 2026-08-15 Progress Log entry
+      below). Fix: rename the internal variable to something that doesn't collide with a plausible-but-wrong env var
+      name (e.g. `_YEARS_SCOPE`), or add an explicit `[[ -n "${YEARS_OVERRIDE:-}" && -z "${YEARS:-}" ]]` guard that
+      errors loudly ("did you mean YEARS=?") instead of silently discarding the caller's intent.
 
 ## Progress Log
 
@@ -114,3 +124,32 @@ days re-walked (real Tardis API calls + wall-clock) before reaching new territor
     tail-only mistake here. Corrected both P3 and the summary/body above; no code or data was affected by the wrong
     framing (it never drove any action beyond this doc's own open todo). Also closed the rightsizing half of the P3 todo
     the same session — see correction above for the full reasoning on why the CPU idleness isn't independently fixable.
+- 2026-08-15 — Attempted the P2 relaunch (BINANCE-FUTURES cohortA-heavy, resume from the `2026-04-12` checkpoint left by
+  `cefi-binance-futures-2026-heavy-20260815-002451`). Four findings:
+  1. **Root cause of the intermittent `START_DATE=... must be YYYY-MM-DD within year 2020` failure, confirmed via
+     `DRY_RUN=1`**: the caller must set `YEARS="2026"` (not `YEARS_OVERRIDE`, which is silently discarded — see the new
+     [CODE] P3 todo above for the exact mechanism). The correct invocation, dry-run-verified to produce exactly 1 VM
+     with `VM_START_DATE=2026-04-13 VM_END_DATE=2026-08-14`:
+     `VENUES="BINANCE-FUTURES" YEARS="2026" ONLY="BINANCE-FUTURES:2026:heavy" START_DATE="2026-04-13" bash scripts/vm/launch-cefi-sharded-backfill.sh`.
+  2. **A third, unexplained relaunch already ran and died before this check**:
+     `cefi-binance-futures-2026-heavy- 20260815-143847` (`LAUNCH_PARAMS.json`: `ONLY=BINANCE-FUTURES:2026:heavy`, no
+     `START_DATE`) ran ~14:38-15:04 UTC 2026-08-15, launched by something outside this conversation (this slot had a
+     `SessionStart` collision warning for 10 other live `claude` processes sharing this cwd). Its `PROGRESS.json` shows
+     `last_completed_date=2026-01-14` (worse than the existing `2026-04-12` checkpoint — it re-walked from `2026-01-01`
+     because `START_DATE` was never set, exactly the still-open P2 gap this doc tracks) and its `WATCHDOG_TRACE.log`'s
+     last heartbeat was 2.5h stale at check time — genuinely dead (ordinary silent SPOT preemption, `EXIT_STATUS` never
+     updated past `RUNNING`, same signature as every death this doc already documents), not a live conflict. Confirmed
+     via `gcloud compute instances list` returning zero matches before proceeding.
+  3. **The real (parameterized-correctly) launch attempt aborted safely, no VM created, no cost**: the launcher detected
+     `unified-api-contracts`'s deployed code tarball is stale and tried to auto-republish it, but refused because that
+     repo has foreign uncommitted changes in this shared checkout (the same dependency-revocation /
+     `flatten_readiness.py` WIP already blocking `tradfi_fx_krw_usd_phantom_rows_fresh_confirmation_2026_08_12.md`'s
+     race-fix script ship — see that doc's matching 2026-08-15 entry). Did not pass `--allow-dirty-tarball` — that would
+     deploy another session's unreviewed, uncommitted code onto a live production VM, not something to force
+     unilaterally. **VM3 is now correctly parameterized and ready to fire the moment `unified-api-contracts` clears** —
+     nothing else blocks it.
+  4. **Portability note for whoever runs this launcher from a local macOS shell** (as opposed to the Linux AO
+     orchestrator, where it's normally invoked): line 322's `date -u -d yesterday +%Y-%m-%d` is GNU-only syntax and
+     fails outright on BSD/macOS `date`. Workaround: prepend a `gdate` (homebrew `coreutils`) shim onto `PATH` for the
+     invocation, e.g. `ln -sf "$(which gdate)" <tmpdir>/date && PATH="<tmpdir>:$PATH" <launch command>`. Not filing this
+     as its own todo — it only bites a local macOS invocation, which is not this launcher's normal path.
