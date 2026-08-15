@@ -43,6 +43,7 @@ locked_by:
 locked_since:
 context_scope:
   [
+    agent-orchestrator/server/model_pricing.py,
     agent-orchestrator/server/deepseek_usage.py,
     agent-orchestrator/server/state_store/slots.py,
     agent-orchestrator/server/accounts.py,
@@ -680,6 +681,9 @@ using ~190x for AO today.
       QG ruff leg to the paths the hook covers, or state the narrower contract explicitly in
       `/codex/06-coding-standards/quality-gates.md` so agents stop treating QG-green as commit-safe. **Done when**: the
       two linters cover the same paths, or the codex SSOT documents the gap and CLAUDE.md's wording is corrected.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (8 entries) — added `model_pricing.py` (named in the
+  doc's own "Why sequential" line as one of the three files most todos touch, previously missing from the list).
 
 ## Deferred work after 2026-08-10 (evening)
 

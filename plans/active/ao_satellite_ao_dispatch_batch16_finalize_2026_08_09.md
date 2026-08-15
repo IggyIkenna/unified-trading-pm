@@ -114,3 +114,4 @@ source: >-
   doc retains exactly 1 open item (`grep -cE '^[[:space:]]*- \[ \]'` = 1, the P3 ghost-host-rows design call) and left
   it `status: open`, not archived. Todo 4 (archive the batch16 plan itself + regenerate inventory) is `[INFRA]`-tagged
   and next in the `sequential: true` chain — outside this review task's scope.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries).

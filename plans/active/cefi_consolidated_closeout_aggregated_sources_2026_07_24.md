@@ -865,3 +865,6 @@ family (all classified by the 2026-08-10 `/ag-closeout-audit cefi` run, slot 27,
 - **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — discoverability-index doc by design
   (non-checkbox markers for cited content, deliberately un-ingestable by AO's parser per its own frontmatter). Sole real
   checkbox is a standing sync-maintenance duty with no terminal done-state. Reaffirmed across 6+ prior passes.
+- **context-scout 2026-08-15**: re-confirmed context_scope (2 entries) unchanged — still a genuinely code-free
+  discoverability-index doc (its own body IS the reading list); the parent closeout plan + the line-cap-remediation
+  source doc remain the right minimal set.

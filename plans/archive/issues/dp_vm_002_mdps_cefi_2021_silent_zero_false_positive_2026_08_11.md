@@ -12,7 +12,7 @@ summary: >-
   18:11 UTC same day) was deployed. Confirmed FALSE POSITIVE: candles ARE in GCS, the manifest shard was stranded on the
   killed VM's atexit. Fix is already in main — no code to ship. VM should be re-launched (killed mid-run, no
   EXIT_STATUS, real progress).
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -26,7 +26,7 @@ related:
     /codex/05-infrastructure/data-pipeline-alerts.md,
   ]
 source: dp-fleet-monitor
-resolved_by: ""
+resolved_by: "slot-15, 2026-08-15 (archival) — VM re-launched + running 2026-08-13, mdps-cefi-2021-20260813-174738"
 locked_by: ""
 created: 2026-08-11
 parent_epic: infrastructure_master
@@ -46,6 +46,11 @@ context_scope:
     /codex/05-infrastructure/data-pipeline-alerts.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-15** — status=resolved, archived per `/codex/11-project-management/issue-doc-lifecycle.md`'s
+> ACKED-INTO-CODE rule. Confirmed false positive (classifier fix already in main at the time, `2f077c97`→`40b5cf56`);
+> sole todo (re-launch the killed shard) shipped `mdps-cefi-2021-20260813-174738` RUNNING (on-demand, after 3
+> consecutive SPOT preemptions in boot phase).
 
 ## What I found
 

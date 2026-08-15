@@ -47,7 +47,7 @@ source: >-
 context_scope:
   [
     /codex/09-strategy/architecture-v2/capability-wizard.md,
-    /plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
+    /plans/active/issues/venv_workspace_openapi_regen_batch11_findings_2026_08_09.md,
     scripts/openapi/generate-unified-openapi.sh,
     "unified-trading-system-ui/app/(public)/questionnaire/",
     /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
@@ -204,6 +204,11 @@ precondition named by the parent plan.
 - **round-11 RECLASSIFY + satellite-extraction sweep 2026-08-09**: Residual 1 extracted to
   `ci_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 + its gated finalize twin. See the na-eligibility-audit
   verdict entry above for the full disposition. Residual 2 untouched.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — swapped the archived
+  `capability_wizard_and_manifest_2026_06_11.md` pointer for
+  `venv_workspace_openapi_regen_batch11_findings_2026_08_09.md`, which Residual 1's own 2026-08-12 `/plan-reconcile`
+  correction names as where "the next picker-up should start" (specifically its todo 1) rather than repeat the
+  investigation this doc's own stale "nothing committed" text describes.
 
 ## na-eligibility-audit verdict
 

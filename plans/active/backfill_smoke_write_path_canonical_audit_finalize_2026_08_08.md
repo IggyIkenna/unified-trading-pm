@@ -49,6 +49,7 @@ context_scope:
     /plans/archive/2026_08/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md,
     /codex/02-data/non-canonical-path-inventory.md,
     instruments-service/instruments_service/engine/orchestrator/writers.py,
+    instruments-service/instruments_service/engine/orchestrator/process_write.py,
   ]
 locked_by:
 locked_since:
@@ -125,3 +126,6 @@ superseded_by:
   `/plans/archive/2026_08/issues/`), `git mv` to `plans/archive/2026_08/issues/`. Plan fully complete — both todos done,
   no `locked_by`. Set `archive_exempt: true` as the sanctioned bridge per
   `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
+
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) — added `process_write.py` (named alongside
+  `writers.py` in the todo's own key finding) as a second source path; both remaining todos are already `[x]` done.

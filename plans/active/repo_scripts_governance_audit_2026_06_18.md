@@ -197,6 +197,12 @@ a verdict). Heaviest:
       0 in `cloudbuild.yaml`, self-declares `Lifecycle: permanent`) and SIT `check-sit-readiness.py` (invoked from
       `.github/workflows/smoke-test-gate.yml`, self-declares `Lifecycle: permanent`) — see
       `/plans/active/issues/immediately_safe_40_delete_cohort_stale_reclassification_2026_08_14.md`). Target: per-repo.
+      **Immediately-safe subset EXECUTED 2026-08-15 (slot 15, `infra_satellite_ao_dispatch_batch16_2026_08_13.md`)**: 4
+      UI `.tsx.bak` splitters deleted (`unified-trading-system-ui@181ae65d8f`); a stale-pointer fix (not a deletion) in
+      a live QG script's SSOT citation (`market-tick-data-service@eda08816ef`); UAC `check_schema_organization.py`
+      already deleted upstream, no action needed. Checkbox stays OPEN — the campaign-gated DELETE cohort
+      (instruments-service 64 / MTDS 22) is still blocked on the manifest-canonicalisation campaigns per this item's own
+      gating rule; only the immediately-safe sub-list is done.
 - [ ] [AUDIT] P2. **DEPRECATE remediation** — fix the ~10 KEEP/PROMOTE scripts carrying the cloud-discipline gap (UCI
       `get_storage_client`/`gcs_*` + `resolve_bucket_name` + `GCP_PROJECT_ID` via `UnifiedCloudConfig`):
       strategy-service DeFi tracers, `seed_demo_client`, `run_client_reporting_cutover`, `run_amm/lending_validation`,

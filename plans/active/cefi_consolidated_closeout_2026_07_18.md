@@ -688,3 +688,6 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
   backfill for the equity-perp window, `[SCRIPT]` P1) — none of these were in batch11's scope (batch11 only extracted
   the 5 items independently verified as bounded/AO-eligible at drafting time; these 4 remain open, uncategorized new
   work).
+- **context-scout 2026-08-15**: re-verified context_scope (6 entries), unchanged — the 2 codex SSOTs and the 3 child
+  plans (aggregated-sources, migration-cutover critical path, execution-log) + the noncanonical-enumeration audit script
+  all still resolve and remain the right minimal reading-list for this hub/coordination doc.

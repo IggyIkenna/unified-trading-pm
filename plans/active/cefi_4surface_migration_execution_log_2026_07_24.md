@@ -68,7 +68,7 @@ context_scope:
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
     /plans/archive/2026_07/cefi_4surface_migration_execution_log_history_part1_2026_07_24.md,
     market-tick-data-service/scripts/verify_cefi_canonical_4surface_2026_07_20.py,
-    unified-api-contracts/unified_api_contracts/canonical/quarantine.py,
+    /plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md,
   ]
 ---
 
@@ -940,3 +940,8 @@ The `/autonomous` loop is now OFF — resuming requires a fresh explicit invocat
   preserving content — the SAME fix exists today under a new hash (`97801b5d`, confirmed `git merge-base --is-ancestor`
   of `origin/live-defi-rollout`), and direct code read confirms `"chain"` is in `_DRYRUN_COLS`. Both checkboxes flipped
   above with evidence. Doc stays `assigned_vm: NA` overall — no other open items existed in this doc at this pass.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — swapped `unified-api-contracts/.../quarantine.py`
+  (its PACIFICA-SOLANA todo landed 2026-08-09, no longer this doc's live blocker) for
+  `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`, which this doc's own sole remaining open todo
+  (the cicd-escalation-added Final 4-surface re-proof + archival gate) explicitly names as the doc to read instead of
+  duplicate-driving from here.

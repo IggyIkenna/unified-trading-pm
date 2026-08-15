@@ -335,3 +335,7 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
   hours earlier) evaluated this exact doc/item and reached the same conclusion under its own criteria -- filed under
   "Deferred -- standing/recurring (not a single bounded AO outcome)." Two independent audit mechanisms agreeing today is
   a strong signal, not a coincidence to re-litigate; staying KEEP-NA. `assigned_vm` unchanged.
+- **context-scout 2026-08-15**: re-verified context_scope (6 entries), unchanged — all 6 entries (parent issue doc,
+  canonical-id audit, governance-sweep-deferred-followups tracker, the databento symbology.py source path, the
+  cross-asset-canonical-target SSOT, and the tradfi canonical-path-migration design doc) still resolve and remain the
+  right minimal set for this doc's sole standing reconciliation todo.

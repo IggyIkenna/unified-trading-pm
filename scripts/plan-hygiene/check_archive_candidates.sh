@@ -199,7 +199,7 @@ _candidate_slugs_at() {
       case "$name" in *.HANDOVER.md|_*) continue ;; esac
 
       local locked_by
-      locked_by="$(grep -E '^locked_by:' "$f" 2>/dev/null | head -1 | sed -E 's/^locked_by:[[:space:]]*//')"
+      locked_by="$(grep -E '^locked_by:' "$f" 2>/dev/null | head -1 | sed -E 's/^locked_by:[[:space:]]*//; s/^"//; s/"$//')"
       [ -n "$locked_by" ] && continue
 
       grep -qE '^archive_exempt:[[:space:]]*true' "$f" 2>/dev/null && continue
@@ -237,7 +237,7 @@ _candidate_slugs_at() {
       [ -z "$content" ] && continue
 
       local locked_by
-      locked_by="$(echo "$content" | grep -E '^locked_by:' | head -1 | sed -E 's/^locked_by:[[:space:]]*//')"
+      locked_by="$(echo "$content" | grep -E '^locked_by:' | head -1 | sed -E 's/^locked_by:[[:space:]]*//; s/^"//; s/"$//')"
       [ -n "$locked_by" ] && continue
 
       echo "$content" | grep -qE '^archive_exempt:[[:space:]]*true' && continue
@@ -284,7 +284,7 @@ if [ -n "$ONLY_MODE" ]; then
       *) continue ;;
     esac
 
-    locked_by="$(grep -E '^locked_by:' "$f" 2>/dev/null | head -1 | sed -E 's/^locked_by:[[:space:]]*//')"
+    locked_by="$(grep -E '^locked_by:' "$f" 2>/dev/null | head -1 | sed -E 's/^locked_by:[[:space:]]*//; s/^"//; s/"$//')"
     [ -n "$locked_by" ] && continue
 
     grep -qE '^archive_exempt:[[:space:]]*true' "$f" 2>/dev/null && continue
@@ -429,7 +429,7 @@ else
       _*) continue ;;
     esac
 
-    locked_by="$(grep -E '^locked_by:' "$f" 2>/dev/null | head -1 | sed -E 's/^locked_by:[[:space:]]*//')"
+    locked_by="$(grep -E '^locked_by:' "$f" 2>/dev/null | head -1 | sed -E 's/^locked_by:[[:space:]]*//; s/^"//; s/"$//')"
     [ -n "$locked_by" ] && continue
 
     grep -qE '^archive_exempt:[[:space:]]*true' "$f" 2>/dev/null && continue

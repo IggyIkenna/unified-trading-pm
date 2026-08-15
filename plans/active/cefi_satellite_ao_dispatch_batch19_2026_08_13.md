@@ -26,7 +26,7 @@ related:
     /plans/active/cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md,
     /plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md,
     /plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md,
-    /plans/active/issues/dp_vm_002_mdps_cefi_2021_silent_zero_false_positive_2026_08_11.md,
+    /plans/archive/issues/dp_vm_002_mdps_cefi_2021_silent_zero_false_positive_2026_08_11.md,
     /plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md,
     /plans/archive/2026_08/mdps_cefi_chain_bundle_delay_features_timestamp_float_compare_2026_08_12.md,
     /plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md,
@@ -126,7 +126,7 @@ source: >-
       --year 2021) **OUT-OF-SCOPE FOR THIS BATCH (2026-08-13, operator scoping instruction)** — MDPS/features-service
       backfill/recompute work is excluded from this batch unless manifest-canonical or migration-related. The underlying
       item remains open in its own source doc, untouched by this batch/commit. Source:
-      `plans/active/issues/dp_vm_002_mdps_cefi_2021_silent_zero_false_positive_2026_08_11.md`
+      `plans/archive/issues/dp_vm_002_mdps_cefi_2021_silent_zero_false_positive_2026_08_11.md`
 - [ ] [CODE] P2. Capture Binance/OKX/Bybit indexPrice+markPrice+fundingRate as a first-class MTDS data_type (Phase 1b
       follow-up, market-tick-data-service) Source:
       `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`

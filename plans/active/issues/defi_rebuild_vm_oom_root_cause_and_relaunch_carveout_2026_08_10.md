@@ -218,10 +218,10 @@ validated-fine 4-vCPU reduction).
 `canonical-migration-defi-rebuild-20260810-180141` as the VM that OOM'd. That was a mislabeling — the OOM'd VM (raw
 `run.log` tail: `[vm-exec] command exited rc=137` / `DEPLOYMENT_FAILED ... exit_code=137` at 2026-08-10T16:59:47Z) is
 `-141813` (corrected above). `-180141` was launched later and, per
-`/plans/active/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_10.md`, was killed by an unrelated
-rogue `gcloud compute instances delete` at 19:41-19:43Z while actively healthy (heartbeats current to 19:40:30Z, no
-`rc=137`/shutdown-script trace in its own `run.log` — it simply stops, consistent with an external delete, not a kernel
-OOM-kill).
+`/plans/archive/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_10.md`, was killed by an
+unrelated rogue `gcloud compute instances delete` at 19:41-19:43Z while actively healthy (heartbeats current to
+19:40:30Z, no `rc=137`/shutdown-script trace in its own `run.log` — it simply stops, consistent with an external delete,
+not a kernel OOM-kill).
 
 While that ran, a **second, deeper root cause** was found by direct investigation (operator: "why is memory bloating,
 fix the leakage, add canonical resource monitoring"): `ManifestWriter`'s per-VM-shard flush path
@@ -274,20 +274,20 @@ already-running incumbent's ~8%-noise impact) is now a codified HARD RULE, not j
       market-tick-data-service)
 
       **INVESTIGATED 2026-08-14 (slot-12, backend_engineer) — MIXED result, does NOT cleanly confirm retirement alone;
-          follow-up issue filed.** Bounded `read_availability_index_safe(bucket, columns=[date,venue,capture_status],
-          filters=[date range, capture_status=captured])` cross-check, 3 windows: known-good (Dec2025-Feb2026) avg
-          33,091.8 shards/day, 54.54 distinct venues/day; mid (Jun10-29) avg 6,188.7 shards/day, 46.45 venues/day; recent
-          (Jun30-Jul19) avg 1,254.5 shards/day (close to the doc's own ~934 estimate), 37.55 venues/day. **Distinct-venue
-          count fell only ~31% (54.5→37.55) — far short of the >26x total shard-count drop** — so venue retirement alone
-          cannot explain the magnitude; ORCA/RAYDIUM/PHOENIX/TRADER_JOE_V2/KAMINO/SOLEND/HYPERLIQUID/BALANCER dropped out
-          of the venue set (consistent with the doc's named in-flight retirements — KAMINO/SUSHISWAP match directly), but
-          that's ~8/55 venues, not enough. Per-data_type breakdown for the recent window: `dex_pool_state` 657.35/day +
-          `dex_pool_swaps` 173.75/day dominate (66% of the total) — both POOL-grain, not venue-grain, so the true driver is
-          likely a shrinking tracked-POOL universe per venue, not fewer venues; this is directionally consistent with the
-          doc's named `dex_pools`/`dex_swaps` retirement plans but NOT independently confirmed at the pool-count level
-          (out of this bounded check's scope — would need an instrument/pool-level census, not just venue/data_type
-          aggregates). Filed `plans/active/issues/defi_dex_pool_density_drop_pool_level_followup_2026_08_14.md` for the
-          pool-count-level cross-check this todo's done-when couldn't fully resolve.
+              follow-up issue filed.** Bounded `read_availability_index_safe(bucket, columns=[date,venue,capture_status],
+              filters=[date range, capture_status=captured])` cross-check, 3 windows: known-good (Dec2025-Feb2026) avg
+              33,091.8 shards/day, 54.54 distinct venues/day; mid (Jun10-29) avg 6,188.7 shards/day, 46.45 venues/day; recent
+              (Jun30-Jul19) avg 1,254.5 shards/day (close to the doc's own ~934 estimate), 37.55 venues/day. **Distinct-venue
+              count fell only ~31% (54.5→37.55) — far short of the >26x total shard-count drop** — so venue retirement alone
+              cannot explain the magnitude; ORCA/RAYDIUM/PHOENIX/TRADER_JOE_V2/KAMINO/SOLEND/HYPERLIQUID/BALANCER dropped out
+              of the venue set (consistent with the doc's named in-flight retirements — KAMINO/SUSHISWAP match directly), but
+              that's ~8/55 venues, not enough. Per-data_type breakdown for the recent window: `dex_pool_state` 657.35/day +
+              `dex_pool_swaps` 173.75/day dominate (66% of the total) — both POOL-grain, not venue-grain, so the true driver is
+              likely a shrinking tracked-POOL universe per venue, not fewer venues; this is directionally consistent with the
+              doc's named `dex_pools`/`dex_swaps` retirement plans but NOT independently confirmed at the pool-count level
+              (out of this bounded check's scope — would need an instrument/pool-level census, not just venue/data_type
+              aggregates). Filed `plans/active/issues/defi_dex_pool_density_drop_pool_level_followup_2026_08_14.md` for the
+              pool-count-level cross-check this todo's done-when couldn't fully resolve.
 
 ## Pointers
 

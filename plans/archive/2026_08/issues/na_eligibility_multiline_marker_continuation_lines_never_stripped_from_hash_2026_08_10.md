@@ -26,7 +26,7 @@ summary: >-
   every doc that has ever received a real (multi-line) verdict. Not a correctness bug (no doc gets mis-verdicted; worst
   case is an unnecessary full Phase-1 re-read), but a significant, silently-compounding efficiency regression across all
   10 tranches that undermines the stated purpose of the whole incremental-diff mechanism.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -75,6 +75,9 @@ depends_on: []
 context_scope:
   [/cursor-configs/skills/na-eligibility-audit/SKILL.md, scripts/plan-hygiene/generate_na_doc_tranche_inventory.py]
 ---
+
+<!-- ARCHIVED: both todos shipped/verified — unified-trading-pm@fcaaa677f1 (fix + regression tests), and this doc's
+own final todo's live corpus spot-check (2026-08-15, no further code change) -->
 
 # na-eligibility-audit's body_content_hash never strips a multi-line marker's own continuation lines
 
@@ -169,15 +172,32 @@ perfectly uniform in the docs this pass touched.
       stop-condition test, `test_body_content_hash_multiline_marker_stops_at_next_bullet`) in
       `tests/unit/test_generate_na_doc_tranche_inventory.py`; full suite (25 tests) + repo `quality-gates.sh` both green
       on the shipped SHA.
-- [ ] [SCRIPT] P3. Once fixed, spot-check a handful of docs with old (pre-fix) markers to confirm the NEXT
+- [x] ✅ [SCRIPT] P3. Once fixed, spot-check a handful of docs with old (pre-fix) markers to confirm the NEXT
       na-eligibility-audit run against them correctly reports `incremental_skip: true` when no real content changed
       since — i.e. confirm the fix actually restores the intended corpus-wide skip rate, not just that the unit test
-      passes.
+      passes. — ran `generate_na_doc_tranche_inventory.py --tranche tradfi --json` live against the real corpus (36
+      docs; 26 carry a verdict marker) on the shipped fix. **6/26 already report `incremental_skip: true`**, including
+      `plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md`, whose 2026-08-09 marker is a genuine
+      3-line multi-line block (the exact pre-fix failure shape) with no `[body-hash:…]` tag — it exercised the
+      git-history fallback path, and the only commit touching the doc since its marker date is the marker-writing commit
+      itself, confirming the fallback path also correctly recognizes no-real-change. For the 20 `false` verdicts,
+      independently re-verified via direct import of the shipped `body_content_hash`/`_latest_verdict_marker` functions
+      (not the JSON's coarse "next calendar day" git heuristic, which false-positived on same-day post-marker edits)
+      that all 9 same-day-suspicious cases have a genuine stored-hash≠current-hash mismatch; spot confirmed one
+      (`tradfi_consolidated_closeout_2026_07_18.md`) via `git diff` between the marker-writing commit (`e2815ba79f`) and
+      HEAD — real content changed (archival path repoints from `plans/active/...` to `plans/archive/2026_08/...`), so
+      the `false` verdict is correct, not residual breakage. **Verdict: the fix restores the intended corpus-wide skip
+      behavior** — both the primary (stored-hash) and fallback (git-history) comparison paths now correctly distinguish
+      real content drift from no-op reclassification since the marker.
 
 ## Progress Log
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
+
+- 2026-08-15 (slot-15, resumed dispatch `infra_satellite_ao_dispatch_batch16-7aa49cec874f`): spot-check complete — see
+  the flipped todo above for the full finding. Empirical result confirms the `fcaaa677f1` fix works against the live
+  corpus, not just the unit tests.
 
 - 2026-08-10 (na-eligibility-audit, tradfi tranche, dispatch agt-a70469): filed while building this run's own
   hash-computation helper; empirically verified via a minimal repro importing the real function (not a

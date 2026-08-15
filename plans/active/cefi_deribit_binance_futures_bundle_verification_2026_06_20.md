@@ -38,8 +38,9 @@ context_scope:
   [
     /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md,
     /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
+    /plans/active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md,
+    /plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md,
     /plans/active/cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md,
-    instruments-service/scripts/reconcile_phantom_manifest_rows_all.py,
     deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
   ]
 ---
@@ -218,3 +219,9 @@ rate.
   vm-preempted-issue entries (topically peripheral to this doc's own remaining Success-criteria gap) and added the two
   source-code scripts this doc's own body names by name (`reconcile_phantom_manifest_rows_all.py`'s cefi `prefix_tpls`,
   `launch-cefi-sharded-backfill.sh`), per the updated methodology's source-path-is-half-the-job rule.
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — re-added the vm-preempted-issue entry (dropped
+  2026-08-03 as "topically peripheral", but it is now the direct root cause the 2026-07-31 Success-criteria banner names
+  for why Track-2 hasn't completed) plus this doc's own finalize twin's gate doc
+  (`cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md`, whose todo 4 tracks this doc's re-check); dropped
+  `reconcile_phantom_manifest_rows_all.py` (its phantom-audit todos are fully `[x]` and no longer this doc's live
+  blocker) to stay within the 6-entry cap.

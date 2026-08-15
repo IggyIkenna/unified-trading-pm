@@ -249,3 +249,27 @@ archival — no live Databento dependency).
   (`bash deployment-service/scripts/vm/launch-mtds- live.sh --asset-group tradfi --shard-spec tradfi:CME:trades --instrument-ids <ids>`
   per that launcher's usage, or simply confirming the existing VM's connector auto-recovers once the account is live
   again — untested either way).
+
+- **2026-08-15 (data_pipeline_failure escalation agt-f752fb, DP-VM-001 on
+  `tradfi-bf-cme-ohlcv-1m-btc-2023-20260815-000731`, BATCH-side confirmation) — still `blocked`, batch backfill hits the
+  SAME unpaid-invoice wall.** Dispatched to relaunch a VM the exit-code fleet monitor found terminated `exit_code=137`;
+  live-read the archived `run.log`/`EXIT_STATUS` via `_gcs.read_terminal_exit_code`/`run_log_shows_stall_text` BEFORE
+  relaunching and confirmed the kill was genuinely stall-induced (in-guest no-progress watchdog, `stalled_for=3931s`
+  threshold=3900s, `mem_pct` only 52.5% — not OOM), so per DP-VM-001's own routing ("OOM: auto-recover · non-OOM: page")
+  and `RelaunchBackfillVm`'s OOM-only remedy (resize-up — wrong fix for a hang), this was not an automated-OOM-actuator
+  case; no prior relaunch/paged marker existed and `PROGRESS.json` showed a genuine monotonic checkpoint
+  (`last_completed_date=2023-01-28`), so manually relaunched via
+  `launch-tradfi-bf-cme-ohlcv-1m.sh --only-root BTC --year 2023 --env prod` (checkpoint-resume, no resize). **It resumed
+  correctly past the prior checkpoint (started at 2023-02-08) — but every request then failed immediately**:
+  `WARNING DatabentoAdapter: GLBX.MDP3/ohlcv_1m failed [402]: 402 account_delinquent_invoice ... unpaid invoice`
+  (2026-08-15T04:39:56Z) — this doc's `[ ]` P0 "pay the invoice again" recurrence is STILL live today, 3 days after the
+  2026-08-12 detection. Strongly suggests the ORIGINAL VM's stall was this same root cause (402s fast-failing in a loop
+  that never satisfies the no-progress watchdog). Did NOT leave the relaunched VM running once the 402 confirmed the
+  block — deleted it
+  (`gcloud compute instances delete tradfi-bf-cme-ohlcv-1m-btc-2023-20260815-043021 --zone=asia-northeast1-c`) to avoid
+  burning further SPOT compute on a call that cannot succeed; confirmed no other `tradfi-bf-*` VMs were live at the
+  time. Did NOT add the launcher to `DEFAULT_WORKER_STALL_SAFE_LAUNCHERS` despite the clean resume evidence — vetting it
+  under a billing-outage run would conflate "safely idempotent" with "nothing downstream succeeded either way";
+  re-attempt once the invoice todo is next confirmed paid. No code changed; this doc's existing `[ ]` P0 invoice todo
+  already covers the fix. Filed no new issue doc (this one already tracks the live recurrence). Paged the operator via
+  `/blocked` per the escalation contract — same pre-existing `[OPERATOR]`-gated action, not a new decision.

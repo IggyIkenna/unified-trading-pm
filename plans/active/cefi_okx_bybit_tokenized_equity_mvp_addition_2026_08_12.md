@@ -44,8 +44,9 @@ locked_since:
 context_scope:
   [
     /plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md,
-    unified-api-contracts/unified_api_contracts/registry/venue_launch_dates.py,
+    unified-api-contracts/unified_api_contracts/registry/cefi_instrument_universe.py,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/crypto_equity_link.py,
+    deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
   ]
 ---
 
@@ -321,3 +322,10 @@ new symbols") didn't call out — added as a dedicated `[SCRIPT]` todo rather th
   consumer. Task skipped again with `reason_code: GATED`, `estimated_unblock_minutes: 140`. **Next worker**: re-run the
   same two checks before assuming the gate has cleared; once clear, run the exact `launch-cefi-sharded-backfill.sh`
   command above (drop `DRY_RUN=1`), then flip this checkbox with the VM name + evidence.
+
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) — swapped `venue_launch_dates.py` (an initial author
+  guess, cited only in this doc's own frontmatter and never in body text — the real per-symbol listing dates landed via
+  Tardis's own `availableSince` field per Todo 5's findings, not that module) for the actual landed registry
+  `unified_api_contracts/registry/cefi_instrument_universe.py` (Todo 3's `CEFI_TOKENIZED_EQUITY_BASE_UNIVERSE` SSOT),
+  and added `launch-cefi-sharded-backfill.sh` — the exact script the doc's sole remaining open todo (Todo 6, launch)
+  repeatedly names as the next action once the Tardis 1-VM-cap frees.

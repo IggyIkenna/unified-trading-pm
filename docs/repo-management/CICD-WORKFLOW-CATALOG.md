@@ -30,7 +30,7 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | -------- | -------- | ----------- | ------- | ---------- |
 | `cascade-qg-ordering` | dispatch:cascade-qg-trigger · manual | `cascade-qg-ordering` | manifest, Firestore, Slack | escalate-to-orchestrator*, quality-gates-v2 |
 | `change-freeze-check` | callable | — | Firestore, Slack | — |
-| `freeze-deferred-build-replay` | schedule(0 * * * *) · manual | `freeze-deferred-build-replay` | Slack | cloud-build-router*, cloud-build-router-aws* |
+| `freeze-deferred-build-replay` | schedule(0 */2 * * *) · manual | `freeze-deferred-build-replay` | Slack | cloud-build-router*, cloud-build-router-aws* |
 | `quality-gates-v2` | push[main] · PR[main,staging] · manual | `quality-gates-v2-<ref>` | Firestore | cloud-build-router*, cloud-build-router-aws* |
 | `readiness-verifier` | schedule(0 3 * * *) · manual | `<wf>-<ref>` cancel | Slack | — |
 | `sit-debounce-trigger` | schedule(*/5 * * * *) · dispatch:staging-changed · manual | `sit-debounce-trigger` | manifest, Slack | escalate-to-orchestrator* |
@@ -47,7 +47,7 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | `reconcile-release-tags` | schedule(*/30 * * * *) · dispatch:reconcile-release-tags · manual | `reconcile-release-tags` | opens-PR, Firestore, Slack | escalate-to-orchestrator* |
 | `request-major-bump` | manual | `<wf>-<ref>` cancel | Slack | — |
 | `semver-agent` | push[staging] · after:quality-gates-v2[staging] | `<wf>-<ref>` cancel | Slack | update-repo-version* |
-| `supersede-stale-dep-update-prs` | schedule(23 */2 * * *) · manual | `supersede-stale-dep-update-prs` | read-only | conflict-resolution-agent* |
+| `supersede-stale-dep-update-prs` | schedule(23 */6 * * *) · manual | `supersede-stale-dep-update-prs` | read-only | conflict-resolution-agent* |
 | `update-repo-version` | dispatch:version-bump | `version-bump` | manifest, Slack | cascade-qg-ordering*, sit-debounce-trigger* |
 
 ## ci_status SSOT, watchers & health (7)

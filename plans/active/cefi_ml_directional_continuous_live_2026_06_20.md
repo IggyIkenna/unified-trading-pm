@@ -46,6 +46,7 @@ context_scope:
     strategy-service/scripts/run_2yr_config_grid_backtest.py,
     strategy-service/strategy_service/engine/strategies/v2/factory.py,
     /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
+    /plans/active/issues/cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md,
   ]
 ---
 
@@ -295,3 +296,7 @@ This plan's own "Model-improvement backlog" section remains the owner until a su
   ("only schedule once coverage is confirmed") is now answered with a confirmed NO, not an unconfirmed unknown; the
   blocking issue's fix todos are the new path to schedulability. Full breakdown + evidence:
   `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 10 Progress Log entry (same commit).
+- **context-scout 2026-08-15**: refreshed context_scope (6 entries) — added
+  `cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md`, the blocking issue filed the same day as
+  the last scout pass that the batch11 todo-10 measurement names as "the new path to schedulability" for the still-open
+  backtest-fidelity gate.

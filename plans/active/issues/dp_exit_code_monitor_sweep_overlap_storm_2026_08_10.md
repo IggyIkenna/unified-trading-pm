@@ -345,7 +345,7 @@ until the next sweep) and is a stopgap, not the root fix.
       deployment-service. No code changed this session (live verification only, consistent with this task's own P2
       verify-only scope).
 
-- [ ] [BACKEND] P1. **ADDED 2026-08-14 (slot 31, follow-up)** — the tail-cap fix (`deployment-service@e69f8aeda4`)
+- [x] ✅ [BACKEND] P1. **ADDED 2026-08-14 (slot 31, follow-up)** — the tail-cap fix (`deployment-service@e69f8aeda4`)
       confirmed stops the OOM class (see the P2 verify todo above) but the sweep still hits the full 1800s timeout:
       execution `jd9zn` (2026-08-14 22:00:03Z-22:30:24Z, first execution on the post-fix digest `sha256:fb09250c...`/tag
       `61726d7`) classified only 26/266 terminated VMs before the kill, with 180 `download_bytes(...)` stall/retry
@@ -373,7 +373,27 @@ until the next sweep) and is a stopgap, not the root fix.
       not a separate regression: a sweep that reprocesses the same ~266-VM backlog every tick can never converge,
       independent of any single-VM read speed. Target: sweep completes well under 1800s with the terminated backlog
       visibly shrinking execution-over-execution (this is now the SHARPEST signal to check first, ahead of (1)/(2)
-      above). Repo: deployment-service.
+      above). **RESULT (2026-08-15, slot 11)**: candidate (3) — the checkpoint-shrinks-the-backlog hypothesis — is
+      CONFIRMED via live evidence, not just theory. Compared `terminated-base-signals` VM counts across executions on
+      the SAME post-tail-cap-fix digest (`sha256:fb09250c...`): `jd9zn` (22:00Z) logged `266 VMs` / hit the full 1800s
+      timeout / classified only 26 VMs; `r5m7h` (23:00Z, one hour later, same digest) logged `56 VMs` and completed in
+      329.8s with only 7 residual stall warnings (down from 116-180). The `_checkpoint_census` mechanism (`cbe58d2d`)
+      does shrink the backlog once given the chance — `jd9zn` just hadn't had a prior post-fix execution to checkpoint
+      from yet. This directly meets the todo's stated target ("sweep completes well under 1800s with the terminated
+      backlog visibly shrinking execution-over-execution"). Also shipped candidates (1)+(2) as a hardening fix even
+      though the acute P1 was resolved by the live evidence above: `run_log_prefetch_candidates` required
+      `exit_code in (None, 0)`, which structurally excluded every `exit_code=137` VM — exactly the set the
+      `EXIT_NONZERO and exit_code == 137` stall-marker consumer needs — so those VMs (and the
+      `is_preempted`/`is_live_vm`/`not writes_shard` VMs) still paid a synchronous `_gcs_tail.read_text_tail()` call
+      inside the sequential classify loop every sweep, matching the mechanism this todo named. Widened
+      `run_log_prefetch_candidates` to the full `terminated` set (bounded the same way as the tail-cap fix: 2MiB/blob)
+      and made the 137/stall-marker + alert-snippet read sites consult the prefetch dict before falling back to a
+      synchronous read. New regression test `test_sweep_exit_137_vm_run_log_prefetched_before_classify_loop` proves the
+      read now happens during the prefetch fan-out, not lazily in the classify loop — verified it genuinely fails on
+      pre-fix code (`git stash` the source file only, re-ran the test: it failed with
+      `['prefetch-phase-log', 'download']`, i.e. `0 candidates` prefetched and a post-phase synchronous download). Full
+      module suite green (291 passed). `deployment-service@48f4e8e6aa`, QG green, verified ancestor of
+      `origin/live-defi-rollout`. Repo: deployment-service.
 
 ## Related
 
@@ -385,6 +405,23 @@ until the next sweep) and is a stopgap, not the root fix.
   launcher-host exemption), and the DP_SOURCE_RATE_LIMITED cooldown.
 
 ## Progress Log
+
+- 2026-08-15 (slot 11, backend): Closed the final P1 todo (last remaining unchecked item on this doc). Confirmed via
+  live evidence that candidate (3) — the incremental-checkpoint backlog-shrink hypothesis — is CORRECT: the
+  terminated-VM backlog dropped from 266 (`jd9zn`, 22:00Z) to 56 (`r5m7h`, 23:00Z, same post-tail-cap-fix digest
+  `sha256:fb09250c...`), and the 23:00Z sweep completed in 329.8s (well under the 1800s cap) with only 7 residual stall
+  warnings. Also implemented candidates (1)+(2) as hardening: `run_log_prefetch_candidates` previously required
+  `exit_code in (None, 0)`, structurally excluding every `exit_code=137` VM from the fan-out even though the
+  137/stall-marker consumer (and the alert-snippet consumer) needed their run.log too — those VMs kept paying a
+  synchronous read inside the sequential classify loop. Widened the candidate set to the full `terminated` set (same
+  2MiB/blob bound as the tail-cap fix) and made both remaining read sites consult the prefetch dict first. Added
+  `test_sweep_exit_137_vm_run_log_prefetched_before_classify_loop`, empirically verified it fails on the pre-fix code
+  (`git stash`'d the source file, re-ran — failed with the download landing AFTER the phase-complete log line, 0
+  candidates prefetched) before confirming it passes on the fix. Full suite green (291 passed, no regressions). Shipped
+  `deployment-service@48f4e8e6aa` (QG green, verified ancestor of `origin/live-defi-rollout`). Flipping this todo done +
+  this doc stays `archive_exempt: true` per its own earlier note (still referenced by
+  `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` and `plan_reconciler_findings_all_2026_08_12.md` as their
+  source) — not archiving it this session.
 
 - 2026-08-14 (slot 31, backend): Live-verified the P2 tail-cap-fix todo (continuing from slot 18's deploy). Had live
   `gcloud`/GCS credential access (`unified-trading-sa`). `uts-prod-dp-exit-code-monitor-jd9zn` (22:00:03Z-22:30:24Z) is

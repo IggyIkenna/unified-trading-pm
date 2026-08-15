@@ -10,7 +10,7 @@ description: >
   Issue: repeated cross-agent kills of the defi gas_fees legacy purge VM; heartbeat sidecar SIGPIPE root cause; required
   fixes to vm-exec wrapper (SIGPIPE guard), Cloud Run image (PREFIX_KILL_MINUTES), and fleet monitoring agents.
 doc_type: issue
-status: open
+status: resolved
 priority: P0
 nature: issue
 asset_group: cross-cutting
@@ -33,13 +33,20 @@ created: 2026-08-07
 parent_epic: infrastructure_master
 assigned_vm: planning
 source: slot-8-infra-dispatch-batch9-018
-resolved_by: ""
+resolved_by: "slot-15, 2026-08-15 (archival) — fixes landed 2026-08-07/08 per Resolution section below"
 locked_by: ""
 execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-08-15** — status=resolved, archived per `/codex/11-project-management/issue-doc-lifecycle.md`'s
+> ACKED-INTO-CODE rule. All 3 Resolution items shipped: SIGPIPE guard (`deployment-service@3b25aae4`),
+> `PREFIX_KILL_MINUTES` promoted + redeployed (squash promote `1157abe1`, image sha256:7042ab88 live 2026-08-08), and
+> the 3-signal-liveness codex nuance (`unified-trading-pm@762008c33`). See the sibling
+> `claude_code_agent_deletes_active_canonical_migration_vm_2026_08_10.md` (also archived) for the follow-on guardrail
+> work this incident led to.
 
 # Issue: claude_code Agent Deletes Active Canonical-Migration VM (HARD RULE Violation)
 

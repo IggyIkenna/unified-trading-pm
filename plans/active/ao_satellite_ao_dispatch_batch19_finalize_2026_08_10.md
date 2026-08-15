@@ -139,3 +139,4 @@ source: >-
   2 open (`[OPERATOR] P2` unpark decision + `[REVIEW] P3` post-unpark verify). Both `status: open`, unlocked. No
   independent interim closure. Verdict recorded on the checkbox; both docs remain open for their operator-gated /
   design-question work.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries).

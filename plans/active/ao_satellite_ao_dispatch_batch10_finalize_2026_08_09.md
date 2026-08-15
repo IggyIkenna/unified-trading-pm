@@ -177,3 +177,4 @@ source: >-
   orphaned 2026-08-10 satellite plans epic-wired (tradfi batch12 → tradfi_master, ao batch19+finalize →
   orchestrator_master, cefi batch17 +finalize → infrastructure_master); inventory regenerated clean (0 orphans, 313
   plans).
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries).

@@ -213,7 +213,7 @@ narrow the first.
 
 **HARD RULE — `canonical-migration-` VMs require ALL THREE liveness signals before any `gcloud compute instances delete`
 (codified 2026-08-07, incident:
-`/plans/active/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md`).** The standard
+`/plans/archive/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md`).** The standard
 two-heuristic check (heartbeat blob stale AND run.log frozen) is INSUFFICIENT for this prefix class. Root cause, proven
 in ≥5 kills: the vm-life-emitter heartbeat sidecar is a shell subshell that writes to the stdout/tee pipe; when the GCS
 log uploader closes that pipe (typical on a 60-second flush boundary), the next `echo` gets SIGPIPE and the sidecar dies

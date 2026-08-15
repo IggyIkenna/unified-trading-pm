@@ -965,3 +965,7 @@ versus 13 minutes and a failure at load 39. Different test each run in the same 
 **This plan is AT its 1000-line hard cap** and every edit now fights `check_line_caps`. Splitting Phase 8 into its own
 plan is the right fix and is the next structural task — it is also the correct modelling, since arming is genuinely
 separate work from building.
+
+- **context-scout 2026-08-15**: populated/refreshed context_scope (12 entries) — verified all 4 codex docs + 8 source
+  files across unified-trading-library/unified-api-contracts/deployment-service still resolve; unchanged from a prior
+  authoring-time list, no gaps found.

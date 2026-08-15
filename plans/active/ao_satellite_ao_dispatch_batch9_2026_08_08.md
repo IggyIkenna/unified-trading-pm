@@ -194,3 +194,4 @@ Log for the full disposition of the other 47 items re-checked (none needed extra
   `/plans/archive/2026_08/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md`'s own todos/Progress Log
   per this plan's "Rules for every worker" (checkboxes there deliberately left unflipped for the finalize plan to
   reconcile).
+- **context-scout 2026-08-15**: populated/refreshed context_scope (6 entries).

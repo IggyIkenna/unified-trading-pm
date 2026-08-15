@@ -63,8 +63,6 @@ context_scope:
     /codex/02-data/data-lineage-MTDS-features-ml.md,
     features-service/features_service/cross_instrument/app/calculators/adv.py,
     features-service/features_service/cross_instrument/app/calculators/book_depth.py,
-    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
-    /plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md,
   ]
 ---
 
@@ -249,3 +247,8 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
   **Recommendation for the next `/ag-closeout-audit` cefi batch (batch11)**: extract the Phase-3 backend todo alone into
   a satellite AO-dispatch item (leaving this source doc's stretch item open/NA) — not executed in this pass, since
   satellite-batch authoring is that skill's own numbered sequence, not this sweep's mechanism.
+
+- **context-scout 2026-08-15**: refreshed context_scope (3 entries, trimmed from 5) — Phase 1-3 backend all shipped,
+  only the `book_depth.py` P3 stretch item remains open; dropped `pnl-attribution.md` and the aster-coverage issue doc
+  (background context for the now-closed phases) in favor of the two source files the remaining stretch item directly
+  touches.

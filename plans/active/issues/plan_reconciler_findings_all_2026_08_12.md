@@ -108,8 +108,8 @@ idempotency guard silently no-ops re-park attempts (observed 4x/26x redundant re
 - [ ] [OPERATOR] P2. `plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md` —
       decide the resolution path for the local-quality-gate-breach escalation coverage gap (fleet-wide detector +
       escalation wall type, vs accept as a known gap).
-- [ ] [DATA] P2. `plans/active/issues/dp_vm_002_mdps_cefi_2021_silent_zero_false_positive_2026_08_11.md` — re-launch the
-      `mdps-cefi-2021-*` sharded backfill (resume from checkpoint, prior run killed mid-2021-01-04).
+- [ ] [DATA] P2. `plans/archive/issues/dp_vm_002_mdps_cefi_2021_silent_zero_false_positive_2026_08_11.md` — re-launch
+      the `mdps-cefi-2021-*` sharded backfill (resume from checkpoint, prior run killed mid-2021-01-04).
 - [ ] [OPERATOR] P3. `plans/active/issues/tradfi_smoke_290d_window_data_gap_2026_08_11.md` — decide tradfi 290-day
       honest-coverage strategy (3 options stated in doc, recommendation: accept INSUFFICIENT until tracked backfill
       lands).

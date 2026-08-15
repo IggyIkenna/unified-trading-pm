@@ -145,7 +145,7 @@ tranche reports, the owning tranche's own audit retags).
     reproduced (4×) `git pull --rebase --autostash` data-loss hazard in shared `.tabs/<N>/` checkouts. 4 open todos, 1
     `[OPERATOR]`-gated (mitigation choice among 4 candidates touching HIGH-RISK shared `quickmerge.sh`), not fully
     AO-eligible.
-11. **`plans/active/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md`** — bare
+11. **`plans/archive/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md`** — bare
     `cross-cutting` (scalar, not a list — minor frontmatter format inconsistency, not urgent). VM-launcher/heartbeat
     safety: a SIGPIPE bug in the vm-exec wrapper, a stale watcher redeploy, a fleet-monitoring liveness rule. P0
     priority, 3 "Required Fixes" open in prose (no checkboxes — a real prose-remaining-work doc, not a checkbox-count

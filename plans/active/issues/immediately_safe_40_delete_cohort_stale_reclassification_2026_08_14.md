@@ -8,7 +8,7 @@ author: slot-15 [infra worker]
 assigned_vm: planning
 source:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch16_2026_08_13.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch16_2026_08_13.md,
     /plans/active/repo_scripts_governance_audit_2026_06_18.md,
     /plans/audit/results/repo_scripts_characterization_2026_06_18.md,
   ]

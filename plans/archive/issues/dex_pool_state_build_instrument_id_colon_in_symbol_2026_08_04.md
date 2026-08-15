@@ -6,7 +6,7 @@ summary: >
   Investigation of dex_pool_state's build_instrument_id errors. Root cause: some pool symbols contain `:` (the canonical
   ID's own VENUE:TYPE:SYMBOL delimiter), triggering a hard ValueError in `build_instrument_id`. 33 rows across 4
   venue+chain pairs.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -26,7 +26,7 @@ author: slot-5 (data_engineering)
 assigned_vm: planning
 source: [mvp_backfill_defi_onchain_v10-005]
 locked_by: ""
-resolved_by: ""
+resolved_by: "slot-15, 2026-08-15 (archival) — fix + rerun shipped market-tick-data-service@badbcbde, 2026-08-05"
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
@@ -38,6 +38,11 @@ context_scope:
     /plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-15** — status=resolved, archived per `/codex/11-project-management/issue-doc-lifecycle.md`'s
+> ACKED-INTO-CODE rule. Both todos shipped: per-row `build_instrument_id` failure isolation
+> (`market-tick-data-service@badbcbde`) and the 33-shard re-run recovering all blocked pool data (`ok=31 fail=0`, base
+> index verified clean of `attempted_failed`/`build_instrument_id` rows).
 
 ## What I found
 

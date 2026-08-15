@@ -96,7 +96,7 @@ task's own actively-progressing fleet member or a sibling's. If genuinely stale,
 than guess. Deleting a live backfill VM destroys hours of in-progress, idempotent-but-costly work.
 
 **`canonical-migration-` prefix carve-out (codified 2026-08-08,
-`plans/active/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md`)**: Even when all 3 signals
+`plans/archive/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md`)**: Even when all 3 signals
 above read stale, a `canonical-migration-` prefix VM with **unchanged manifest generation for >90 minutes is NOT
 sufficient justification to autonomously delete** — escalate for human confirmation instead. These VMs run large-index
 download-then-filter-then-write operations where the manifest generation is EXPECTED to be frozen through the entire

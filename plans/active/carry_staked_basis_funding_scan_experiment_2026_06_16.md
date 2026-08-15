@@ -205,14 +205,14 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
       today. **Repo: market-tick-data-service + deployment-service.**
 
       **SUPERSEDED-IN-PLACE (plan_reconciler 2026-08-10).** The backfill VM this todo asked for ran and partially
-              completed (see the 2026-06-16 log entries below).
+                          completed (see the 2026-06-16 log entries below).
 
-              Aave V3 wrote for Arbitrum/Avalanche/Base. ETH coverage is spotty (429-throttled).
+                          Aave V3 wrote for Arbitrum/Avalanche/Base. ETH coverage is spotty (429-throttled).
 
-              Remaining scope is narrower now. It is tracked by the "Complete Aave-Ethereum lending backfill" todo under
-              "Open data gaps (part 2)" below (same gap, refined after the first run's real result).
+                          Remaining scope is narrower now. It is tracked by the "Complete Aave-Ethereum lending backfill" todo under
+                          "Open data gaps (part 2)" below (same gap, refined after the first run's real result).
 
-              Leaving this checkbox open since the work is genuinely not done. Do not dispatch both todos independently.
+                          Leaving this checkbox open since the work is genuinely not done. Do not dispatch both todos independently.
 
 - **2026-06-16** — 🟢 **VM RUNNING — Aave + lending-indices backfill** `mtds-lending-indices-20260616-225256`
   (e2-standard-4, asia-northeast1-c). Verdict from investigation: Aave V3 is a **config-run, not new code** — `aave_v3`
@@ -651,17 +651,17 @@ Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget,
 
       **NOT FLIPPING, clarifying only (plan_reconciler 2026-08-10).** The e2e-testing/harness half is verified done.
 
-              Shipped commit `e2e-testing@6e2ffb8`. Confirmed live today in `drift_funding_reader.py` and
-              `install_driftpy_venv.sh`.
+                          Shipped commit `e2e-testing@6e2ffb8`. Confirmed live today in `drift_funding_reader.py` and
+                          `install_driftpy_venv.sh`.
 
-              This matches item 7 of the carry-venue-live-integration-reference codex doc, which already carries its own
-              DONE-for-e2e marker.
+                          This matches item 7 of the carry-venue-live-integration-reference codex doc, which already carries its own
+                          DONE-for-e2e marker.
 
-              This todo's own `Repo:` tag also names "mtds drift handler" — the same scope as the next todo below
-              (Production Drift funding in MTDS).
+                          This todo's own `Repo:` tag also names "mtds drift handler" — the same scope as the next todo below
+                          (Production Drift funding in MTDS).
 
-              It is genuinely unclear whether this duplicates that todo or tracks something narrower. That is a merge/close
-              call, not an evidence-checkable fact, so both stay open. Routed in this run's findings doc.
+                          It is genuinely unclear whether this duplicates that todo or tracks something narrower. That is a merge/close
+                          call, not an evidence-checkable fact, so both stay open. Routed in this run's findings doc.
 
 - [ ] [STRATEGY] P2. Live/paper **history carve-out** (operator 2026-06-17): no funding history for a venue → WARN + use
       the current snapshot (+ whatever spot history exists); never block a venue/coin for missing history. EWMA gate
@@ -811,3 +811,6 @@ GCS `perp_funding` + `perp_daily_ctx` datasets (code in `e2e-testing/scripts/def
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries), unchanged — already carries the
   staked_basis_funding_scan.py harness source path and all entries still resolve.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **context-scout 2026-08-15**: re-verified context_scope (6 entries), unchanged — all 6 (harness script, carry-venue
+  codex SSOT, the 2 forked sibling plans, the perp-funding-semantics issue doc, and the wallet-hierarchy codex doc)
+  still resolve.

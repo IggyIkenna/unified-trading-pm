@@ -192,10 +192,13 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
       existed on disk), MDPS and instruments-service's `[x]` DELETE checkmarks in
       `codex_vs_repo_docs_ssot_audit_2026_06_01.md` are CORRECT as-is — no plan edit needed there. This closes the
       suspected-pattern investigation with a genuine negative result.
-- [ ] [DOCS] P3. Fix `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`'s todo 5/6 repo-count
+- [x] ✅ [DOCS] P3. Fix `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`'s todo 5/6 repo-count
       off-by-ones (states "23"/"22 of 23", enumerated lists count 24 — Doc-drift #2) and
       `defi_compute_gcp_migration_2026_08_08.md`'s missing `related:` back-reference to its own finalize twin (Doc-drift
-      #3). Low-value cosmetic, deferred under time budget.
+      #3). Low-value cosmetic, deferred under time budget. — `unified-trading-pm@6ea81d3e15`: fixed both stated counts
+      to match their enumerated lists (todo 5 → 24, todo 6 → "23 of 24"); added the missing back-reference. Shipped via
+      `infra_satellite_ao_dispatch_batch16_2026_08_13.md` (reconciled here 2026-08-15, source doc's own checkbox had
+      gone stale).
 - [x] ✅ [REVIEW] P2. `s5_7_required_docs_gaps_2026_07_29.md` vs. `codex_vs_repo_docs_ssot_audit_2026_06_01.md` MDPS
       `DEPLOYMENT_GUIDE.md`/`TESTING.md` DELETE-vs-FILL contradiction — **RESOLVED 2026-08-10 ~08:26 UTC, operator
       ruling BLK-2b076fa9 option A: DELETE wins.** The SSOT audit's 2026-07-27 ground-truthed registry is authoritative;
@@ -211,10 +214,13 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
       race from `vm_launcher_setup_script_freshness_gap_2026_07_31.md` despite CLAUDE.md pointing engineers there for
       "full gotchas + measured incidents." Exceeds the mechanical-codex-staleness carve-out (a new addition, not a
       substitution) — needs an editorial decision on scope/placement before applying.
-- [ ] [DOCS] P3. `prod_terraform_drift_backlog_reconcile_2026_07_24.md:177`'s "finding W" citation (downgrading an
+- [x] ✅ [DOCS] P3. `prod_terraform_drift_backlog_reconcile_2026_07_24.md:177`'s "finding W" citation (downgrading an
       `[OPERATOR]` tag) doesn't resolve inside its named target codex doc (`orchestrator-cloud-identity-self-service.md`
       has no lettered-finding scheme) — the cited RULE is real and correct, only the locator is dangling. Fix the
-      citation to point at the actual section name.
+      citation to point at the actual section name. — `unified-trading-pm@d907efbe90`: reworded the citation to
+      `§ "The rule"`, dropped the undefined "finding W" phrasing. Shipped via
+      `infra_satellite_ao_dispatch_batch16_2026_08_13.md` (reconciled here 2026-08-15, source doc's own checkbox had
+      gone stale).
 - [ ] [INFRA] P2. **`unified-trading-ci` slot-6 clone has a foreign unpushed commit + a branch-tracking
       misconfiguration** (found incidentally during a 2026-08-10 pre-compact re-audit, outside this doc's PM-corpus
       scope — noted here rather than lost). `git log origin/main..HEAD` in the slot-6 `unified-trading-ci` checkout

@@ -90,6 +90,7 @@ context_scope:
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 
@@ -383,3 +384,6 @@ context_scope:
   (already independently AO-dispatchable), same underlying fix as this todo — the doc's own text already anticipates
   this ("keep both docs' checkboxes in sync"), so not a new conflict, just noting the two-doors-to-one-fix shape
   explicitly. Dispatching.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) — added
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (already cited in this doc's own "Codex SSOTs"
+  section, and directly operative in todo 2's locked-plan-unlock ask).

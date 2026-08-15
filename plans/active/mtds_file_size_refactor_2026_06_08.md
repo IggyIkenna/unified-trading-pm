@@ -164,7 +164,13 @@ byte-identical output before/after).
       [`mdps_polars_engine_cost_sharpening_2026_06_28.md`](./mdps_polars_engine_cost_sharpening_2026_06_28.md)) but the
       ~18 source adapters still emit/accept pandas at the seam, forcing a per-shard conversion; thread the polars frame
       through the adapter protocol to drop it. Repo: market-data-processing-service. (MIGRATED FROM:
-      `mdps_adapter_protocol_pandas_to_polars_2026_06_21`.)
+      `mdps_adapter_protocol_pandas_to_polars_2026_06_21`.) **2026-08-15 scope survey (slot-31·infra, batch13 todo
+      pickup) confirms this stays P3/parked, NOT a bounded single-task item**: atomic one-PR migration across all 18
+      adapters (the ABC boundary can't be half-converted) with 5 files (cefi/trades_adapter.py,
+      cefi/book_snapshot_adapter.py, cefi/liquidations_adapter.py, sports/bucket_assignment_adapter.py,
+      tradfi/ohlcv_passthrough.py) needing genuine groupby-based feature-engineering rewrites, not type-hint swaps —
+      full file-by-file survey + recommended dedicated design/execution + numeric-parity-verification plan in
+      `issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md`.
 - [x] ✅ [DESIGN] P3. **Phase-6 `_publish_emission_check` scalability — RESOLVED, already shipped
       (round5-cross-cutting-audit 2026-08-08).** Both options already live+composed: in-process 60s-TTL cache
       (`read_availability_index`) + optional `manifest_index` pre-read passthrough (MDPS commit `ca69f512`, "F3 safe
@@ -204,6 +210,15 @@ byte-identical output before/after).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (1 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- was codex-epic-only; added the QG file-size
   codex + the two live source dirs the remaining open todos (fn/method splits, MDPS polars adapter seam) target.
+- **2026-08-15 (slot-31·infra)**: picked up as `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md`'s "All 18
+  MDPS adapters → Polars" todo. Ran a concrete file-by-file scope survey before touching code (18 adapter files, their 4
+  production callers, `base_adapter.py`'s shared pandas helpers) and confirmed batch13's "bounded/deterministic"
+  classification does not hold: this is an atomic single-PR migration across all 18 adapters (the shared ABC can't be
+  half-converted) with 5 files needing genuine groupby-based feature-engineering rewrites on live candle-production
+  code, matching the same scope already operator-deferred twice under two archived predecessor plans (prior combined
+  estimate 2.0 calibrated AI-days). Did not attempt the migration; this item stays P3/parked here pending a dedicated
+  design/execution effort. Full survey + recommendation:
+  `issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md`.
 
 ## Deferred work — migrated to:
 

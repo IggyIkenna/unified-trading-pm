@@ -153,12 +153,12 @@ back RED. A clean-tree verification QG (slot-12's diff stashed, LDR HEAD) establ
   `features_gas_fees_calculator_stale_legacy_venue_read_2026_07_30.md` same-turn, verify SHA on origin, POST /done.
 - **2026-08-05 (data_engineering slot-12) PUSH-BLOCKED NOTE**: this issue doc could NOT be pushed via quickmerge at
   filing time. PM quickmerge ran the FULL gate (not prek-only) because a concurrent session's live edit to
-  `plans/active/issues/dex_pool_state_build_instrument_id_colon_in_symbol_2026_08_04.md` (mtime 12:54) dirtied the tree;
-  the full gate then failed on the PRE-EXISTING `agent-rules-size-cap` check — `cursor-configs/CLAUDE.md` is 41,008 B,
-  48 B over the 40,960 B hard cap (committed at HEAD 0606cf330, 2026-08-05 11:51). Clean-tree `docs(plans:)` commits run
-  prek-only and bypass this check, so the PM gate red does NOT block ordinary plan-flips — it only blocks FULL-gate PM
-  agent commits. Recommend (separate small finding): condense 48 B out of `cursor-configs/CLAUDE.md` to restore the cap;
-  do NOT raise the cap.
+  `plans/archive/issues/dex_pool_state_build_instrument_id_colon_in_symbol_2026_08_04.md` (mtime 12:54) dirtied the
+  tree; the full gate then failed on the PRE-EXISTING `agent-rules-size-cap` check — `cursor-configs/CLAUDE.md` is
+  41,008 B, 48 B over the 40,960 B hard cap (committed at HEAD 0606cf330, 2026-08-05 11:51). Clean-tree `docs(plans:)`
+  commits run prek-only and bypass this check, so the PM gate red does NOT block ordinary plan-flips — it only blocks
+  FULL-gate PM agent commits. Recommend (separate small finding): condense 48 B out of `cursor-configs/CLAUDE.md` to
+  restore the cap; do NOT raise the cap.
 - **2026-08-05 (data_engineering slot-12) COVERAGE CORRECTION**: ran the FULL quality-gates.sh WITH the gas_fee diff
   applied (`/tmp/qg_with_diff.log`, exit 1 only on the 2 pre-existing failures). Result: 9988 passed / 2 failed,
   coverage **80.63% PASSES** the 79% gate (clean baseline 80.65%, −0.02pt; coverage.xml: 22141/26474 lines + 5798/8176

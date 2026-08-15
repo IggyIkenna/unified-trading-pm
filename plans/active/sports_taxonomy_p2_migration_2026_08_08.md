@@ -350,27 +350,27 @@ than proceeding.
       live, not from the prior mapping-code read alone.
 
       **ADDENDUM 2026-08-14 (slot-18) — the population slot-26 verified above is a DIFFERENT one from this todo's own
-                                                                                  cited counts; a second, separate fold was actually still outstanding and is now also closed.** Re-checking this
-                                                                                  todo's own numbers (6,306 captured `ODDS` / 16,207 captured `odds`, venue=FOOTYSTATS) against
-                                                                                  `instruments-store-sports-prd-central-element-323112` (the bucket slot-26 measured) does NOT reproduce them — that
-                                                                                  bucket's lowercase `odds`/footystats count is 30,498, not 16,207. The 6,306/16,207 figures are physically in the
-                                                                                  **MTDS raw-tick manifest** (`market-data-tick-sports-prd-central-element-323112`), a completely separate bucket
-                                                                                  that happens to share the `ODDS`/`odds` token name with the IS 19-token reference-data vocabulary slot-26
-                                                                                  resolved — the EXACT "two different systems, one shared token" trap this whole todo's own UAC-comment correction
-                                                                                  already named once (see the todo's own "the UAC comment... is FALSE" line) and the 19-token migration's Progress
-                                                                                  Log named again for a different pair of systems. Live-verified this session (dispatched as
-                                                                                  `sports_taxonomy_p2_migration-005`): a full-population (not sampled) GCS-existence check of all 6,306 MTDS
-                                                                                  `captured` uppercase-`ODDS` rows found **0/6,306 had backing parquet content** under either known raw_tick_data
-                                                                                  path shape, while every checked (date, league) pair's lowercase `odds` twin did — i.e. this MTDS population was
-                                                                                  phantom bookkeeping residue, not real data needing a content-merge fold. Filed
-                                                                                  `/plans/archive/issues/sports_footystats_odds_uppercase_phantom_not_real_2026_08_14.md`, operator ruling
-                                                                                  BLK-931edbb5: purge rather than fold. Purged 2026-08-14 (6,306 captured + 136 empty_confirmed rows removed,
-                                                                                  manifest-only — no real GCS object existed to touch; consolidator paused via maintenance window, pre-purge
-                                                                                  snapshot taken, §3a fresh soft-delete-retention check passed at 604800s), re-verified 0 remaining post-purge.
-                                                                                  Shipped `market-tick-data-service@5dcb6c865a` (purge tool + test) and `unified-api-contracts@b6378af519`
-                                                                                  (corrected the same UAC comment slot-18 found already-wrong-again, shrunk
-                                                                                  `SPORTS_DATA_TYPE_ACCEPTED_STALE_UPPERCASE_RESIDUE` by dropping `ODDS`). Both populations this todo's title
-                                                                                  implicitly bundled are now genuinely resolved.
+                                                                                          cited counts; a second, separate fold was actually still outstanding and is now also closed.** Re-checking this
+                                                                                          todo's own numbers (6,306 captured `ODDS` / 16,207 captured `odds`, venue=FOOTYSTATS) against
+                                                                                          `instruments-store-sports-prd-central-element-323112` (the bucket slot-26 measured) does NOT reproduce them — that
+                                                                                          bucket's lowercase `odds`/footystats count is 30,498, not 16,207. The 6,306/16,207 figures are physically in the
+                                                                                          **MTDS raw-tick manifest** (`market-data-tick-sports-prd-central-element-323112`), a completely separate bucket
+                                                                                          that happens to share the `ODDS`/`odds` token name with the IS 19-token reference-data vocabulary slot-26
+                                                                                          resolved — the EXACT "two different systems, one shared token" trap this whole todo's own UAC-comment correction
+                                                                                          already named once (see the todo's own "the UAC comment... is FALSE" line) and the 19-token migration's Progress
+                                                                                          Log named again for a different pair of systems. Live-verified this session (dispatched as
+                                                                                          `sports_taxonomy_p2_migration-005`): a full-population (not sampled) GCS-existence check of all 6,306 MTDS
+                                                                                          `captured` uppercase-`ODDS` rows found **0/6,306 had backing parquet content** under either known raw_tick_data
+                                                                                          path shape, while every checked (date, league) pair's lowercase `odds` twin did — i.e. this MTDS population was
+                                                                                          phantom bookkeeping residue, not real data needing a content-merge fold. Filed
+                                                                                          `/plans/archive/issues/sports_footystats_odds_uppercase_phantom_not_real_2026_08_14.md`, operator ruling
+                                                                                          BLK-931edbb5: purge rather than fold. Purged 2026-08-14 (6,306 captured + 136 empty_confirmed rows removed,
+                                                                                          manifest-only — no real GCS object existed to touch; consolidator paused via maintenance window, pre-purge
+                                                                                          snapshot taken, §3a fresh soft-delete-retention check passed at 604800s), re-verified 0 remaining post-purge.
+                                                                                          Shipped `market-tick-data-service@5dcb6c865a` (purge tool + test) and `unified-api-contracts@b6378af519`
+                                                                                          (corrected the same UAC comment slot-18 found already-wrong-again, shrunk
+                                                                                          `SPORTS_DATA_TYPE_ACCEPTED_STALE_UPPERCASE_RESIDUE` by dropping `ODDS`). Both populations this todo's title
+                                                                                          implicitly bundled are now genuinely resolved.
 
 - [x] ✅ [DATA] P0. **Move `odds_horizon_bucket` onto the `odds` + `horizon` model.** ~~135,980 shards... MDPS
       121,762/MTDS 14,656/IS 1,106... 123,642 attributed to venue=ODDS_API~~ **STALE — corrected 2026-08-14 (slot-26),
@@ -491,27 +491,27 @@ than proceeding.
       or market-data-processing-service, whichever owns this shape's manifest-write path)
 
       **CLOSED 2026-08-14 (slot-30) — live re-measured, 0 rows found, nothing left to re-attribute.** Ran the collision
-                                          census this todo's own text asked for: shipped `market-tick-data-service@4709c8dea3`
-                                          (`scripts/sports/census_footystats_odds_horizon_bucket_fold_scope_2026_08_14.py`) against the same live
-                                          `instruments-store-sports-prd-central-element-323112` manifest (`read_availability_index`, columns-projected,
-                                          15,652,378 total rows). **Confirmed via two independent query angles, not one**: (1) direct filter
-                                          `pipeline_mode=batch_footystats AND data_type=odds_horizon_bucket` → **0 rows**; (2) a broad scan of every
-                                          `data_type` value containing "horizon" (case-insensitive, no pipeline_mode assumption) → 1,070,081 rows total,
-                                          **all** already `pipeline_mode=batch_mdps_odds_horizon_bucket`/`source=mdps_odds_horizon_bucket` — the fold-target
-                                          population itself, none under `batch_footystats`. `pipeline_mode=batch_footystats` DOES still exist live
-                                          (2,746,633 rows, confirmed real), but its `data_type` distribution is
-                                          `{matches, predictions, odds, odds_movement, odds_snapshot, trades}` — `odds_horizon_bucket` is not among them,
-                                          and its `data_type=odds` venues (`FOOTYSTATS`/`ODDS_API`/`MDPS_ODDS_HORIZON_BUCKET`/etc — a separate,
-                                          smaller pre-existing manifest-contamination pattern worth a future look, explicitly NOT this todo's scope) show
-                                          none of the 26-bookmaker-venue signature (`LADBROKES_UK`/`SPORT888`/`UNIBET_UK`/etc) the original finding cited.
-                                          **Not determined and not investigated further** (no remaining action value either way): what resolved the
-                                          population between the 2026-08-14 (slot-27) finding and this run — same-day concurrent work by slots 26/28/29 on
-                                          this same plan (the 19-token restamp, the odds_horizon_bucket venue-to-bookmaker VM apply, the footystats
-                                          legacy-seed purge) is the plausible explanation given the timing, but no single commit was traced as the specific
-                                          cause. Fold / `enumerate_expected_universe.py`-override work this todo originally scoped is moot — there is no
-                                          live row left to fold. Census script kept in `scripts/sports/` (its own lifecycle marker already covers deletion
-                                          once a fresh re-run reconfirms 0 — true as of this run, but not acted on since this run IS that verification, not
-                                          a separate throwaway probe).
+                                                  census this todo's own text asked for: shipped `market-tick-data-service@4709c8dea3`
+                                                  (`scripts/sports/census_footystats_odds_horizon_bucket_fold_scope_2026_08_14.py`) against the same live
+                                                  `instruments-store-sports-prd-central-element-323112` manifest (`read_availability_index`, columns-projected,
+                                                  15,652,378 total rows). **Confirmed via two independent query angles, not one**: (1) direct filter
+                                                  `pipeline_mode=batch_footystats AND data_type=odds_horizon_bucket` → **0 rows**; (2) a broad scan of every
+                                                  `data_type` value containing "horizon" (case-insensitive, no pipeline_mode assumption) → 1,070,081 rows total,
+                                                  **all** already `pipeline_mode=batch_mdps_odds_horizon_bucket`/`source=mdps_odds_horizon_bucket` — the fold-target
+                                                  population itself, none under `batch_footystats`. `pipeline_mode=batch_footystats` DOES still exist live
+                                                  (2,746,633 rows, confirmed real), but its `data_type` distribution is
+                                                  `{matches, predictions, odds, odds_movement, odds_snapshot, trades}` — `odds_horizon_bucket` is not among them,
+                                                  and its `data_type=odds` venues (`FOOTYSTATS`/`ODDS_API`/`MDPS_ODDS_HORIZON_BUCKET`/etc — a separate,
+                                                  smaller pre-existing manifest-contamination pattern worth a future look, explicitly NOT this todo's scope) show
+                                                  none of the 26-bookmaker-venue signature (`LADBROKES_UK`/`SPORT888`/`UNIBET_UK`/etc) the original finding cited.
+                                                  **Not determined and not investigated further** (no remaining action value either way): what resolved the
+                                                  population between the 2026-08-14 (slot-27) finding and this run — same-day concurrent work by slots 26/28/29 on
+                                                  this same plan (the 19-token restamp, the odds_horizon_bucket venue-to-bookmaker VM apply, the footystats
+                                                  legacy-seed purge) is the plausible explanation given the timing, but no single commit was traced as the specific
+                                                  cause. Fold / `enumerate_expected_universe.py`-override work this todo originally scoped is moot — there is no
+                                                  live row left to fold. Census script kept in `scripts/sports/` (its own lifecycle marker already covers deletion
+                                                  once a fresh re-run reconfirms 0 — true as of this run, but not acted on since this run IS that verification, not
+                                                  a separate throwaway probe).
 
 ### The purges (each requires the §3a fresh check, in-run)
 
@@ -616,10 +616,10 @@ than proceeding.
 
 ### Added 2026-08-08 (operator, mid-flight) — re-stamp the collapsed derived types
 
-- [ ] [DATA] P0. **REVISED 2026-08-15 (operator reversal — SSOT `/codex/02-data/sports-data-types-catalog.md`): re-stamp
-      `odds_snapshot` (16,521) + `odds_movement` (16,470) onto `data_type=odds_horizon_bucket`, NOT `odds`** — as
-      dimensions of the surviving derived type (`odds_horizon_bucket` no longer retires; was: fold into `odds`+
-      `timeframe`). Path segment + manifest column move together.
+- [ ] [DATA] P0. **BLOCKED-OPERATOR-DECISION 2026-08-15 (second correction, same day) — the "re-stamp odds_snapshot
+      (16,521) + odds_movement (16,470)" premise is FALSE; both adapters are dead code, never scheduled, 0 real captures
+      (3,234 phantom rows/type only).** Evidence + operator decision options:
+      `/codex/02-data/sports-data-types-catalog.md` correction banner, this doc's Progress Log below.
 - [ ] [REVIEW] P1. **REVISED 2026-08-15: assert the vocabulary has collapsed to TWO types** — `odds` (raw, batch+live)
       and `odds_horizon_bucket` (derived, absorbs `odds_snapshot`/`odds_movement`, batch now/live later) — not one.
       `arbitrage_opportunity`→signals (P3) unchanged. Report the final set; anything outside these is incomplete.
@@ -686,6 +686,9 @@ than proceeding.
 
 ## Progress Log
 
+- **2026-08-15 (second entry, same day)** — Picked up the `odds_snapshot`/`odds_movement` re-stamp todo; live census
+  before writing any restamp code found the 16,521/16,470 premise false (3,234 phantom rows/type; dead code, never
+  scheduled). Retagged `BLOCKED-OPERATOR-DECISION`, no prod data touched. `market-tick-data-service@f79c1a143a`.
 - **2026-08-15** — Operator reversed part of 08-08: `odds_horizon_bucket` survives as its own derived type (absorbs
   `odds_snapshot`/`odds_movement`), not folded into `odds`. Rationale: `/codex/02-data/sports-data-types-catalog.md`. No
   rows migrated under the old direction — "Move odds_horizon_bucket..." above only did venue re-attribution.

@@ -83,3 +83,6 @@ context_scope:
 
 - **2026-08-08**: authored alongside the source doc's `assigned_vm: NA -> planning` reclassification
   (na-eligibility-audit round7 RECLASSIFY sweep, cefi tranche, batch 2 of 3).
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) — the source issue doc (now 6 of 7 todos
+  done, 1 open `[INFRA]` P1 backfill-launch follow-up), its sibling false-positive-provisioning issue doc, the
+  vm-launcher runbook, and the archival-discipline codex doc all still resolve.

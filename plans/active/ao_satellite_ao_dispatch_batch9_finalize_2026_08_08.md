@@ -173,3 +173,5 @@ source: >-
   Verified: `grep -rl review_role_boot_read_unconfirmed_stuck_loop plans/ codex/` now returns only bare-slug prose
   mentions (no leading-slash path, out of `check_reference_paths.py`'s scope by design) plus the two archived docs' own
   paths — zero active-corpus `/plans/...` citations remain dangling.
+
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate.

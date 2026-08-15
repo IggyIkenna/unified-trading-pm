@@ -17,7 +17,7 @@ description: >
   the migration target (607,404 bare SUSHISWAP captured rows) is intact. Required response: monitoring/guardrail
   hardening (why did a laptop agent delete a fleet canonical-migration VM) + operator attribution of intent.
 doc_type: issue
-status: open
+status: resolved
 priority: P0
 nature: issue
 asset_group: cross-cutting
@@ -29,25 +29,33 @@ repos:
   - market-tick-data-service
 tags: [vm-safety, agent-safety, canonical-migration, HARD-RULE-VIOLATION, laptop-agent, operator-principal]
 related:
-  - /plans/active/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md
+  - /plans/archive/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md
   - /plans/active/defi_satellite_ao_dispatch_batch11_2026_08_09.md
   - /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md
   - /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md
 context_scope:
   - deployment-service/scripts/vm/gcloud-vm-delete-guard.sh
   - agent-orchestrator/scripts/hooks/block_destructive_commands.py
-  - /plans/active/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md
+  - /plans/archive/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md
 created: 2026-08-10
 parent_epic: infrastructure_master
 assigned_vm: planning
 source: defi_satellite_ao_dispatch_batch11-4a44d70c8936 (BLK-74d8766b / BLK-13334ded investigation)
-resolved_by: ""
+resolved_by: "slot-15, 2026-08-15 (archival) — fixes landed 2026-08-10 per Resolution section below"
 locked_by: ""
 execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-08-15** — status=resolved, archived per `/codex/11-project-management/issue-doc-lifecycle.md`'s
+> ACKED-INTO-CODE rule. Both Resolution items shipped: the AO-worker-side backstop (`agent-orchestrator@40d6ff0855`,
+> `block_destructive_commands.py`) and the operator-principal laptop guard (`deployment-service@54cd393728`,
+> `gcloud-vm-delete-guard.sh` + installer, 18 bats tests green). Operator attribution resolved via BLK-924622c6 (Option
+> B — intent not established). **Follow-up not itself a tracked todo** (per this doc's own 2026-08-10 Progress Log): the
+> laptop installer must actually be RUN on the operator's Mac for the guard to be live there — shipping the code alone
+> does not install it; if re-litigating this incident class, verify that step happened.
 
 # Issue: claude_code Agent on Operator Mac Deletes Active Canonical-Migration VM (HARD RULE Violation — repeat)
 

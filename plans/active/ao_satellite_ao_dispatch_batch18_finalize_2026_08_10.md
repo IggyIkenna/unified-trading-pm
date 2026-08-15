@@ -128,3 +128,4 @@ source: >-
   (`ao_satellite_ao_dispatch_batch12_finalize_2026_08_09.md`) is also still entirely `- [ ]` (machine-gated on batch12
   completing). Source doc stays `status: active` — do NOT archive until batch12 closes out its last todo and its
   finalize reconciles evidence back. This finalize plan's todo 4 (archive batch18 itself) is still pending.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (3 entries).

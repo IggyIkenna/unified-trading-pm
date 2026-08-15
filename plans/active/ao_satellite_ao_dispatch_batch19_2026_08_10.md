@@ -45,6 +45,7 @@ context_scope:
   [
     /plans/active/issues/ao_dispatch_ignores_same_doc_operator_predecessor_todo_2026_08_08.md,
     /plans/active/issues/citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md,
+    agent-orchestrator/server/tmux_pruner.py,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 source: >-
@@ -166,3 +167,4 @@ each source doc's own Progress Log (not just trusting the classifier's one-line 
   `[BACKEND] P2` (template-convention update, explicitly not extracted here per "Why this plan exists" item 1) and a
   `[REVIEW] P3` (verification of the now-de-facto-completed unpark). This batch's own `batch19_finalize_2026_08_10.md`
   should reconcile the P2/P3 status back into the source doc.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries).

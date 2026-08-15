@@ -16,7 +16,11 @@ stage: [meta]
 repos: [execution-service]
 scope: [engineer]
 tags: [docs, stale-doc, quickmerge, contributing-guide, git-discipline]
-related: [/plans/active/infra_satellite_ao_dispatch_batch16_2026_08_13.md]
+related:
+  [
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch16_2026_08_13.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
+  ]
 created: 2026-08-14
 last_updated: "2026-08-14"
 parent_epic: infrastructure_master

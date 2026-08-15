@@ -997,3 +997,4 @@ issue-doc-correction todo (Phase 3c section), and AWS resume (operator/credits-g
   check, misattributed-VM-origin correction) to `ui_satellite_ao_dispatch_batch3_2026_08_09.md` (+ finalize twin) — same
   class batch1 already validated safe here. 7 implementation-shaped items stay deferred per batch1's precedent. Doc
   stays NA; source checkboxes stay open until batch 3's finalize twin reconciles them.
+- **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.

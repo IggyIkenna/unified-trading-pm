@@ -181,18 +181,85 @@ source: >-
       alone. Repo: unified-trading-pm. Source:
       `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md` (new
       finding, 2026-08-14 diagnosis)
-- [ ] [CODE] P2. Split the remaining MTDS >900L files + extract oversized fns/methods (market-tick-data-service) Source:
-      `plans/active/mtds_file_size_refactor_2026_06_08.md`
+- [x] ✅ [CODE] P2. Split the remaining MTDS >900L files + extract oversized fns/methods —
+      market-tick-data-service@21b2f7193a (2026-08-15, slot-30·infra). 0 files >900L already (prior wave); the real
+      remaining scope was the 10 `FUNCTION_SIZE_EXTRA_EXCLUDES` files each carrying 1-2 methods 51-101L — extracted 15
+      methods into private helper methods (all ≤50L, mechanical/behaviour-preserving) across bridge/flash_loan/
+      governance/liquidation/mev/staking_yields/token_transfers handlers + databento_batch_jobs/
+      alchemy_transfers_client/thegraph_base_client, then deleted the now-empty exclude list. Full `quality-gates.sh`
+      exit 0 (sentinel-verified at HEAD). Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
 - [ ] [CODE] P2. Re-add 17 connector reconnect tests using terminating mocks (market-tick-data-service) Source:
       `plans/active/mtds_file_size_refactor_2026_06_08.md`
-- [ ] [CODE] P2. UAC generated-artifact churn: gitignore + git rm --cached openapi/ui-reference-data.json /
-      capability-manifest.json (unified-api-contracts) Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
-- [ ] [CODE] P2. All 18 MDPS adapters' process_to_candles(df, ...) -> Polars adapter-protocol seam
-      (market-data-processing-service) Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
+- [x] ✅ [CODE] P2. **Diagnosed: mis-scoped for single-task AO dispatch, NOT attempted — corrected classification
+      instead.** (2026-08-15, slot-31·infra) Concrete file-by-file scope survey of all 18
+      `market_data_processing_service/app/adapters/*` files implementing `process_to_candles`, their 4 production caller
+      sites, and `base_adapter.py`'s shared pandas helpers confirmed this is an atomic, single-PR migration (the
+      ABC/Protocol boundary can't be half-converted across 18 polymorphic adapters) with 5 of 18 files
+      (cefi/trades_adapter.py, cefi/book_snapshot_adapter.py, cefi/liquidations_adapter.py,
+      sports/bucket_assignment_adapter.py, tradfi/ohlcv_passthrough.py) needing genuine groupby-based
+      feature-engineering rewrites on live candle-production code — the same scope already operator-deferred twice under
+      two archived predecessor plans, with a prior combined estimate of 2.0 calibrated AI-days, never a 1-hour task. Per
+      CLAUDE.md's "AO-eligible = outcome DETERMINABLE by the worker alone" rule, did not attempt the migration; filed
+      the full survey + recommended a dedicated design/execution effort (mirroring the sibling engine-internal
+      conversion's benchmarked-verification pattern) as a new todo in `mtds_file_size_refactor_2026_06_08.md` (the
+      item's designated SSOT owner) instead. Source issue:
+      `plans/active/issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md`
+      (market-data-processing-service). Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
+- [x] ✅ [CODE] P2. **PARTIAL — ui-reference-data.json untracked; capability-manifest.json intentionally LEFT TRACKED
+      (real consumer dependency, not done).** unified-api-contracts@f70f29c8 (2026-08-15, slot-14·infra). Verified both
+      files' actual consumers before untracking either: `openapi/ui-reference-data.json` is safe — its only real reader,
+      `unified-trading-system-ui`'s `.github/workflows/uac-registry-sync.yml`, regenerates it by running
+      `scripts/generate_ui_reference_data.py` from source (`pip install -e .` then invoke the generator), never reads
+      this repo's committed copy — gitignored + `git rm --cached`, QG green (369s), quickmerge landed (post-push
+      ancestry verified `f70f29c8f` on origin; quickmerge's own diff-check false-flagged "push landed but change did
+      not" for this now-gitignored path — a known false-positive class since a deleted+gitignored file has no
+      before/after diff to compare; confirmed the real land via
+      `git cat-file -e     origin/live-defi-rollout:openapi/ui-reference-data.json` → absent, as intended).
+      `openapi/capability-manifest.json` is NOT safe to untrack as-is:
+      `agent-orchestrator/server/mcp/manifest_loader.py` hard-requires it be a **committed** file in this repo's sibling
+      clone (`_MANIFEST_REL`, `manifest_path()`; raises `ManifestUnavailableError` with no regen fallback if absent) —
+      untracking it would break AO's capability MCP server on any fresh clone. Filed as a new followup todo below rather
+      than silently skipped. Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
+- [ ] [CODE] P3. **New finding, 2026-08-15**: before `openapi/capability-manifest.json` can be untracked per the
+      generated-artifact-churn cleanup above, fix `agent-orchestrator/server/mcp/manifest_loader.py`'s hard dependency
+      on it being a committed file (`_MANIFEST_REL = "unified-api-contracts/openapi/capability-manifest.json"`,
+      `ManifestUnavailableError` on missing, no regen path) — either wire a regen-on-demand fallback (invoke
+      `unified-trading-pm/scripts/openapi/generate_capability_manifest.py` when the committed copy is absent) or accept
+      the file staying committed permanently and close this out as won't-do. Repo: agent-orchestrator +
+      unified-api-contracts. Source: this doc, todo above.
 - [ ] [CODE] P2. Run PM bash scripts/quality-gates.sh to confirm the plan + codex update pass (unified-trading-pm)
       Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
-- [ ] [CODE] P2. Retry the tradfi attempted_failed cells (13 cells / ~12.5k rows) surfaced by the digest Source:
-      `plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`
+- [x] ✅ [CODE] P2. **STALE PREMISE — the "13 cells/~12.5k rows" digest figure is ~3 weeks stale; the actual retry
+      mechanism is already live, but has a real coverage gap.** (2026-08-15, slot-27·infra). Live re-verification:
+      `deployment-service/scripts/wave_launcher.py` (Cloud Run Job, host-cron `0 */3 * * *`) IS running — its own
+      last-run sentinel `gs://deployment-scripts-central-element-323112/vm-census/wave-launcher-last-run.json` reads
+      `{"ts": "2026-08-15T03:00:06Z"}`, i.e. it ticked ~90min before this check (the standalone Cloud Scheduler job
+      `uts-prod-tradfi-wave-launcher-cron` in `asia-northeast1` shows `PAUSED` since 2026-06-24, but that's a dormant
+      duplicate of the real host-cron path per the module's own code comment — not evidence the mechanism is off). A
+      fresh, bounded (single manifest object, column-projected duckdb query, no new corpus walk) read of
+      `market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` (371MB, 14.3M rows,
+      last_modified 2026-08-15T04:29Z) found **798,028 attempted_failed rows / 16,171 distinct (venue,data_type,date)
+      cells** — not 13/12.5k. Most of this is genuinely NOT a retry gap: `attempted_at` timestamps for the
+      NYSE/NASDAQ/CME `NO_RAW_TICK_DATA_FOR_SHARD` + CME `SCHEMA_VALIDATION_FAILED` buckets (the bulk of recent
+      activity) run through TODAY (2026-08-15), confirming the wave-launcher's docstring claim ("attempted_failed — the
+      P1 retry is FOLDED IN") is true and live for those cells — they keep re-failing for a real reason (no source data
+      / schema issue), not because nobody retried them. **Real finding, filed as a new todo below**: the single LARGEST
+      bucket — CME ohlcv_1s/1m `WithinBoundsTradfiSourceZero`, 110,074 rows — was attempted exactly ONCE, on 2026-07-07
+      (06:39-07:29 UTC), and never since, because every one of these rows has a blank `underlying` field:
+      `_derive_cme_root()` (`wave_launcher.py:265-271`) returns `None` on a blank/empty `underlying`, so
+      `compute_dispatch_candidates()` (`wave_launcher.py:318-332`) buckets them into `out_of_scope["CME:unmapped_root"]`
+      and PERMANENTLY excludes them from every dispatch tick — a genuine, silent gap in the "P1 retry FOLDED IN" claim,
+      distinct from the source-absence reasons above. (Minor aside, not worth its own todo: 6 rows across KRX/ICE/FX
+      `ohlcv_24h` fail with `No module named 'yfinance'` — FX ohlcv_24h is explicitly DESCOPED 2026-06-30 per the
+      wave-launcher's own comments, and this legacy Yahoo-daily surface is otherwise dead scope; too small/ likely-moot
+      to action.) Source: `plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`
+- [ ] [CODE] P2. Fix `wave_launcher.py`'s `_derive_cme_root()` blank-`underlying` fallback (or backfill the missing
+      `underlying` field at the source) so the 110,074 CME `WithinBoundsTradfiSourceZero` rows stuck since 2026-07-07
+      re-enter `compute_dispatch_candidates()`'s gap computation instead of being silently and permanently bucketed into
+      `out_of_scope["CME:unmapped_root"]` — either parse the root from `instrument_id` (e.g. `CME:FUTURE:ESM5` → `ES`,
+      the fallback the function's own docstring already flags as "too fuzzy" but never implemented) or fix the upstream
+      writer that leaves `underlying` blank for these rows. (repo: deployment-service, file: `scripts/wave_launcher.py`)
+      Source: this doc's own 2026-08-15 diagnosis, folded in per the tradfi attempted_failed retry todo above.
 - [ ] [INFRA] P3. disambiguate 'the planning VM' in monitoring/docs; always name the instance ID or a stable label
       Source: `plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`
 - [ ] [INFRA] P3. wire an automated deploy/sync for glue-runner-crash-loop-watchdog.sh so a repo fix reaches the host

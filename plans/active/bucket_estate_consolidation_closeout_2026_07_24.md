@@ -56,11 +56,10 @@ source:
 last_updated: 2026-07-25
 context_scope:
   [
-    /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md,
-    deployment-api/deployment_api/deployment_api_config.py,
     batch-live-reconciliation-service/batch_live_reconciliation_service/config.py,
+    /plans/active/bucket_fold_ml_2026_07_17.md,
   ]
 ---
 
@@ -435,3 +434,8 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
   the folded `ml-store-{prd,test}` targets) — the same bucket this plan's todo names. Added a dated note inline on the
   todo pointing to the sibling plan as the actual execution record; did not flip this todo's checkbox (no independent
   re-verification run this session) — left for a human/future pass to formally reconcile.
+
+- **context-scout 2026-08-15**: refreshed context_scope (4 entries) — dropped `deployment_api_config.py` (its ml-legacy
+  resolver relevance moved to the sibling plan below) and `bucket-isolation-model.md`; added
+  `/plans/active/bucket_fold_ml_2026_07_17.md`, the confirmed actual execution record for the ml legacy variants delete
+  per the 2026-08-12 note above.

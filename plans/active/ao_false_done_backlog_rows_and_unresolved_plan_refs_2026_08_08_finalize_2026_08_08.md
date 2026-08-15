@@ -133,3 +133,4 @@ context_scope:
   `docs(plans): exact - [x] brief match for 08-06 pre-gate verification flip`) that flipped the PRE-GATE checkpoint
   (line 104, `[x]`, explicitly "NOT the final drain"); the real final-drain todo (line 114) is still `- [ ]`, date-gated
   to on/after 2026-08-09. All 4 ids are absent from the live 3,168-row backlog. No discrepancy to reopen or correct.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries).

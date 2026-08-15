@@ -291,6 +291,8 @@ investigation confirmed are both achievable with existing primitives:
   (JWT issuance/setup on his own machine) is a genuine physical impossibility from this session regardless of any
   decision here. **Plan is functionally complete pending the operator's own Phase 4 execution** — every prerequisite,
   script, endpoint, and doc it needs is shipped and tested.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (14 entries) — all source files + the archived issue
+  doc already matched the "What the investigation found" section's own file:line citations; no gaps found.
 
 ## Todos
 
@@ -369,14 +371,14 @@ investigation confirmed are both achievable with existing primitives:
       LIVE instance with a deliberately invalid token (no real token exists yet — Phase 4): `ao-register.sh` got a
       clean, correct `401 invalid or expired token`, confirming request shape, auth header, and live connectivity all
       work end-to-end. Full operator run against a real backlog task is Phase 4's explicit todo. Evidence:
-      agent-orchestrator@5516874de6ad5789fa78f4b9531926183fe3470.
+      agent-orchestrator@55168745de6ad5789fa78f4b9531926183fe3470.
 - [x] 15. ✅ [INFRA] P1. **Build the statusline-based heartbeat companion** —
       `agent-orchestrator/scripts/human_fleet/ao-statusline-heartbeat.sh`, reads `context_window.used_percentage`,
       `model.id`/`display_name`, `session_id` from stdin, POSTs to `human-heartbeat`, throttled
       (`AO_STATUSLINE_MIN_INTERVAL_SECONDS`, default 60s) via a per-slot state file. Verified DIRECTLY in this session
       (a live statusline consumer): both the no-config path (prints normally, skips heartbeat) and the
       configured-but-invalid-token path (prints normally, heartbeat attempt fails silently, state file correctly not
-      written on failure) behave as designed. Evidence: agent-orchestrator@5516874de6ad5789fa78f4b9531926183fe3470.
+      written on failure) behave as designed. Evidence: agent-orchestrator@55168745de6ad5789fa78f4b9531926183fe3470.
 - [x] 16. ✅ [INFRA] P2. **Build the local usage-scan-and-push companion** — new `POST /api/slots/{slot_id}/human-usage`
       endpoint (reuses `TaskUsageRow`/`record_task_usage` unmodified, prices spend SERVER-SIDE via
       `model_pricing.price_usage()` — never trusts a client-computed dollar figure) +

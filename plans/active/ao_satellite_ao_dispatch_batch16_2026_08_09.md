@@ -138,3 +138,4 @@ re-read this round found:
   citation-based pre-filter to skip re-examining it. Conflict-check run against all `status: draft`/`active` batch1-15 +
   finalizes + the consolidated close-out + the na_docs_validity tracker — zero hits for this specific item.
   File-disjoint by construction (single todo, single file).
+- **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries).
