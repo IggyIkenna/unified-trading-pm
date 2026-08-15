@@ -280,6 +280,11 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Progress Log
 
+- **2026-08-15 (slot-19) — 4th same-day SPOT preemption caught + relaunched (5th launch); still not complete.** VM
+  absent fleet-wide, `run.log`/`EXIT_STATUS` stalled since `14:38Z` (same signature as prior 3). Relaunched via
+  `launch-mtds-oracle-prices-backfill-vm.sh` (idempotent, default flags); verified RUNNING + a fresh `run.log` genuinely
+  writing real captures within ~5min. Reiterating (not acting on) slot-32's flagged cost/design question re: this SPOT
+  pool's instability. GATED-skip; terminal-state todo below unchanged.
 - **2026-08-15 (slot-7, data_engineering) — checkpoint: VM confirmed RUNNING + genuinely progressing on the slot-32
   relaunch (4th launch); still not complete, GATED-skipping again, no code changed.** Live-verified (not trusted from
   the prior note): `gcloud compute instances describe mtds-oracle-prices-backfill --zone=asia-northeast1-c` = RUNNING,
