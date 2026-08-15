@@ -237,3 +237,17 @@ issue's scope); flagged as a follow-up todo below.
   completes. If this session ends before that lands: the commit is safe on disk (`git log --oneline -1` on the
   market-tick-data-service slot-2 checkout), just needs Pass-1 QG + Pass-2 quickmerge to reach origin — non-urgent (2
   new diagnostic-only files, zero production risk sitting uncommitted-to-origin).
+- **data_engineering slot-2, 2026-08-15 (pre-compact checkpoint, corrects the entry above)**: the SHA cited above
+  (`e6d24727aa`) is stale — this doc's own edits (and the parent plan's Progress Log entry) actually landed via the PM
+  push-governor at `unified-trading-pm@9cf09fbda8` (confirmed via the push-governor's own log:
+  `✅ Pushed 9cf09fbda8 -> live-defi-rollout`, after an 1128s queue wait + one origin-moved reconciliation retry). The
+  market-tick-data-service commit (local `28109508`, `908cfecf43f90d32ba3dbcd4dcb62ca2b7a7cb09` after quickmerge's
+  rebase) remains queued in the qg-host-governor (`market-tick-data-service` sub-cap 1 / host-wide cap 6) for 110+
+  minutes this session alone — the longest single wait observed on this task — still the SAME already-tracked
+  `qg_host_governor_caps_instances_not_fanout_2026_08_10.md` P2 condition, not a new failure; the quickmerge PID has
+  been confirmed alive and unchanged throughout. `git merge-base --is-ancestor` against `origin/live-defi-rollout` still
+  returns NOT-LANDED as of this checkpoint (drift `ahead=1/behind=6`). A background heartbeat is polling for landing;
+  once confirmed, `/done` will be called for `task_id=cf_manifest_audit_first_full_rollup_findings-d1fc625d0914` with
+  the landed SHA and evidence citing both `unified-trading-pm@9cf09fbda8` and the landed market-tick-data-service SHA —
+  explicitly noting the backfill itself was NOT completed this session (the `timeframe`-drop correctness bug above was
+  found instead, and is the actual blocker on re-attempting it).
