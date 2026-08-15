@@ -434,3 +434,21 @@ issue's scope); flagged as a follow-up todo below.
   (unrelated). **Next session/window**: verify `bpdxo4199` landed (`git rev-list --count origin/live-defi-rollout..HEAD`
   = 0 for the audit script commit), THEN run the FULL-population sibling check (not the 200-row sample) to finalize todo
   #2's exclusion scope.
+- **data_engineering slot-2, 2026-08-15 (5th pre-compact checkpoint — bpdxo4199 FAILED on a new failure mode, fixed by
+  clean re-ship, now LANDED)**: `bpdxo4199` came back `failed` (exit code 1) with a genuinely different signature than
+  the two prior failures on this file — its output file was 0 bytes, meaning the ship script never produced any
+  stdout/stderr (a dispatch-level crash, not a content/gate failure like the import-pattern or RUF005 misses). Diagnosed
+  the local MTDS checkout before retrying: no stale `.git/index.lock`, local `HEAD` unchanged (no stray partial commit),
+  staged diff exactly the intended 185-line addition (`git diff --cached --stat`) — environment was clean, so this was
+  safe to blind-retry rather than needing a content fix. Re-shipped via
+  `bash scripts/quickmerge.sh "fix: apply RUF005 fix to sports captured phantom-timeframe audit script (re-ship after bpdxo4199 dispatch failure)" --agent --files 'scripts/audit_sports_captured_phantom_timeframe_2026_08_16.py'`
+  (task `bi1euby72`), which ran the full pipeline cleanly (cascade, pre-flight audit, QG sentinel-skip on Pass 2, all
+  pre-commit hooks passed including Conventional Commit) and landed. Independently verified:
+  `market-tick-data-service@e91c3ef2` is `git log`-visible on `origin/live-defi-rollout` for this exact path, working
+  tree clean, `git rev-list --count origin/live-defi-rollout..HEAD` = 0. **Lesson**: a 0-byte task output file on a
+  "failed" background ship is a distinct signal from a populated one showing a gate failure — it means the process never
+  got far enough to report anything, so check local repo state (lock files, stray commits, staged diff) for corruption
+  before assuming the retry needs a content fix; here it didn't, and blind retry was correct. **Next actionable item**:
+  the dry-run audit script (with both the import-pattern and RUF005 fixes) is now fully landed — run the FULL-population
+  sibling check (not the 200-row sample) via `audit_sports_captured_phantom_timeframe_2026_08_16.py` to finalize todo
+  #2's exclusion scope, per the todo's own already-narrowed spec above.
