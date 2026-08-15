@@ -427,25 +427,25 @@ until the next sweep) and is a stopgap, not the root fix.
       Repo: deployment-service.
 
       **RESOLVED 2026-08-15 (slot 8, backend_engineer)** — ✅ Instrumented live RSS via stdlib
-          `resource.getrusage(resource.RUSAGE_SELF).ru_maxrss` at every `sweep()` phase boundary (4 call sites), confirming
-          RSS growth as the actual driver rather than an unmeasured guess. Root-caused the `kpxh6` fast-OOM to a SECOND,
-          previously-unclosed unbounded read: `_gcs.read_terminal_exit_code`'s run.log FALLBACK path (used when a VM's
-          EXIT_STATUS blob is absent) called the plain unbounded `_gcs.read_text` instead of the tail-capped
-          `read_text_tail` the 2026-08-14 fix (`e69f8aeda4`) introduced for every OTHER run.log consumer — this fallback
-          runs inside the fanned-out `terminated-base-signals` phase (up to `_SWEEP_IO_MAX_WORKERS` concurrent calls), so
-          it could still pull a multi-GB blob whole per stalled/retried VM, independent of the abandoned-daemon-thread
-          mechanism this todo asked to investigate. Fix: moved `read_terminal_exit_code` into `_gcs_tail.py` and rewired
-          its fallback onto `read_text_tail` (2MiB cap), closing the gap symmetrically with the rest of the module.
-          `deployment-service@2837e6ddeb` (module-split, `_gcs.py` was pushed to the 960-line file-size QG cap by the
-          instrumentation + fix, split out per this file's own established `_classify.py`-split precedent) on top of
-          `deployment-service@676c5c98` (the RSS instrumentation + tail-cap fix itself). QG green (3323 passed), verified
-          ancestor of `origin/live-defi-rollout`. The abandoned-daemon-thread mechanism this todo also asked to bound/fail-
-          fast was NOT separately confirmed or fixed this session — the concretely-provable unbounded-read gap was the one
-          grounded finding the RSS profiling pointed at; a future OOM with the tail-cap fix already in place and RSS logs
-          showing growth WITHOUT a corresponding large read would be the signal to revisit the daemon-thread-accumulation
-          hypothesis specifically.
+              `resource.getrusage(resource.RUSAGE_SELF).ru_maxrss` at every `sweep()` phase boundary (4 call sites), confirming
+              RSS growth as the actual driver rather than an unmeasured guess. Root-caused the `kpxh6` fast-OOM to a SECOND,
+              previously-unclosed unbounded read: `_gcs.read_terminal_exit_code`'s run.log FALLBACK path (used when a VM's
+              EXIT_STATUS blob is absent) called the plain unbounded `_gcs.read_text` instead of the tail-capped
+              `read_text_tail` the 2026-08-14 fix (`e69f8aeda4`) introduced for every OTHER run.log consumer — this fallback
+              runs inside the fanned-out `terminated-base-signals` phase (up to `_SWEEP_IO_MAX_WORKERS` concurrent calls), so
+              it could still pull a multi-GB blob whole per stalled/retried VM, independent of the abandoned-daemon-thread
+              mechanism this todo asked to investigate. Fix: moved `read_terminal_exit_code` into `_gcs_tail.py` and rewired
+              its fallback onto `read_text_tail` (2MiB cap), closing the gap symmetrically with the rest of the module.
+              `deployment-service@2837e6ddeb` (module-split, `_gcs.py` was pushed to the 960-line file-size QG cap by the
+              instrumentation + fix, split out per this file's own established `_classify.py`-split precedent) on top of
+              `deployment-service@676c5c98` (the RSS instrumentation + tail-cap fix itself). QG green (3323 passed), verified
+              ancestor of `origin/live-defi-rollout`. The abandoned-daemon-thread mechanism this todo also asked to bound/fail-
+              fast was NOT separately confirmed or fixed this session — the concretely-provable unbounded-read gap was the one
+              grounded finding the RSS profiling pointed at; a future OOM with the tail-cap fix already in place and RSS logs
+              showing growth WITHOUT a corresponding large read would be the signal to revisit the daemon-thread-accumulation
+              hypothesis specifically.
 
-- [ ] [BACKEND] P2. **ADDED 2026-08-15 (slot 8, follow-up)** — live-verify the `read_terminal_exit_code` tail-cap fix
+- [x] ✅ [BACKEND] P2. **ADDED 2026-08-15 (slot 8, follow-up)** — live-verify the `read_terminal_exit_code` tail-cap fix
       (`deployment-service@2837e6ddeb`) is live in the running `deployment-api:latest` image and that ≥3 consecutive
       scheduled `uts-prod-dp-exit-code-monitor` executions complete under the 1800s timeout and 16Gi memory ceiling with
       zero signal-9 kills, using the phase-boundary RSS logs this fix added to confirm memory stays bounded (not just
@@ -454,7 +454,23 @@ until the next sweep) and is a stopgap, not the root fix.
       `gcloud scheduler jobs resume` only after this todo confirms zero OOMs across the ≥3-execution window, then flip
       this todo done with the resume evidence. If an OOM recurs even with the tail-cap in place, the RSS logs should
       show WHETHER growth still traces to a read (a third gap) or to something else (the daemon-thread hypothesis this
-      doc's P1 above deliberately left unconfirmed) — record which. Repo: deployment-service.
+      doc's P1 above deliberately left unconfirmed) — record which. Repo: deployment-service. — ✅ **RESULT: target MET
+      — 3/3 clean executions, cron RESUMED.** Content-verified `2837e6ddeb` live in `deployment-api:latest` (docker
+      pull + container-filesystem extraction, digest `sha256:0f362b10c1…`, tag `4c2bf4a`, pushed 2026-08-15T17:15:19Z):
+      `read_terminal_exit_code` now lives in `_gcs_tail.py` (moved out of `_gcs.py`, confirmed absent there) and its
+      run.log fallback calls `read_text_tail` (2MiB cap), not the unbounded `read_text`. Triggered 3 manual executions
+      in sequence (same-session data points, mirroring this doc's own established precedent) since the cron was paused:
+      `dslb2` (17:44-17:55Z, 11m5s, 0 signal-9/memory-limit/30s-stall log hits, peak_rss steady ≤2105MiB, 159 terminated
+      VMs processed) → `v5mwv` (17:57-17:58Z, 59.1s, 0 hits, peak_rss ≤1000.8MiB, terminated backlog down to 1 VM —
+      confirms the incremental-checkpoint mechanism is draining it) → `j5bgf` (18:00-18:01Z, 57.2s, 0 hits, peak_rss
+      ≤958.3MiB, terminated backlog at 0). All 3 well under both the 1800s timeout and 16Gi ceiling, zero signal-9
+      kills, RSS logs confirm memory genuinely stays bounded (not just wall-clock looking fine) — this closes both the
+      `qgtnz`-class OOM (blob-size, already fixed 2026-08-14) and the `kpxh6`-class fast OOM
+      (`read_terminal_exit_code`'s unbounded fallback, fixed by this commit) with direct live evidence. Resumed
+      `uts-prod-dp-exit-code-monitor-cron` (`gcloud scheduler jobs resume`, verified `state=ENABLED`,
+      `schedule=0 * * * *`). No further OOM investigation needed — the daemon-thread hypothesis this todo flagged as a
+      fallback was not reached; the concretely-provable unbounded-read gap was the actual mechanism. Repo:
+      deployment-service (no code changed this session — live-verify + resume only).
 
 ## Related
 
@@ -466,6 +482,16 @@ until the next sweep) and is a stopgap, not the root fix.
   launcher-host exemption), and the DP_SOURCE_RATE_LIMITED cooldown.
 
 ## Progress Log
+
+- 2026-08-15 (slot 23, backend): Closed the final open todo (the `read_terminal_exit_code` tail-cap live-verify).
+  Content-verified `deployment-service@2837e6ddeb` live in `deployment-api:latest` (digest `sha256:0f362b10c1…`, tag
+  `4c2bf4a`) via docker pull + container-filesystem extraction: `read_terminal_exit_code` moved to `_gcs_tail.py`
+  (absent from `_gcs.py`), its run.log fallback calls `read_text_tail` (2MiB cap). Triggered 3 manual executions in
+  sequence since the cron was paused: `dslb2` (11m5s), `v5mwv` (59.1s), `j5bgf` (57.2s) — all 3 clean (0
+  signal-9/memory-limit/30s-stall hits, peak_rss ≤2105MiB, well under 16Gi), terminated backlog draining 159→1→0 across
+  the sequence confirming the incremental-checkpoint mechanism works end-to-end. This closes the `kpxh6`-class fast OOM
+  the fix targeted. Resumed `uts-prod-dp-exit-code-monitor-cron` (verified `state=ENABLED`). No code changed this
+  session (live-verify + resume only).
 
 - 2026-08-15 (slot-14, infra): While closing the sibling OOM doc's final live-verify todo (todo 3), confirmed
   `48f4e8e6aa` live + achieving its own wall-clock goal (fast phase completions), but a manually-triggered execution
