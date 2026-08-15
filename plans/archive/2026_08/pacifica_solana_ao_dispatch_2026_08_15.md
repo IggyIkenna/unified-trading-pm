@@ -6,7 +6,7 @@ summary: >-
   discovery/classification fresh, then execute the rename + manifest-backfill migration to the canonical
   `PACIFICA-SOLANA:PERPETUAL:` filename prefix. Wallet-key provisioning (live order placement) was explicitly NOT
   authorized in this ruling — stays human-gated, out of scope for this plan.
-status: active
+status: complete # archived 2026-08-15 — every todo done; both re-verifies found zero remaining write work
 nature: process
 asset_group: [defi]
 stage: [data]
