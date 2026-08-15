@@ -144,3 +144,16 @@ reaps its own child processes.
   pushed as `market-tick-data-service@eeade63b0c` to `live-defi-rollout` (ancestry-verified). The near-instant-kill
   mechanism did not recur on this run; todo 3 closed. Todos 1-2 (host-level root-cause investigation) remain open — the
   mechanism itself is still unexplained, this is just evidence it isn't 100% reproducible.
+- 2026-08-15 (slot-14, infra): **Cross-repo confirmation — not MTDS-specific.** Hit the identical near-instant-kill
+  pattern shipping an unrelated `deployment-service` fix (bumped `launch-measure-honest-coverage-vm.sh`'s default
+  MACHINE_TYPE, committed `65248727`). Attempt 1: `bash scripts/quality-gates.sh` via `run_in_background: true` produced
+  zero stdout before dying (same shape as this doc's `sleep 180` control). Attempt 2 (retried once per RULES.md, not
+  blind-looped): got further — governor token acquired after 3s wait, dep-content gate PASSED, then `Terminated` + the
+  script's own SIGTERM-trap fired
+  (`❌ [quality-gates] received SIGTERM — wrote kill marker .../qg-governor/killed.<pid>`), confirming an external
+  SIGTERM, not a crash/OOM inside the QG process itself. Stopped after 2 consecutive kills per the established precedent
+  rather than continuing to retry blind. This strengthens todo 1: whatever sends the kill is repo-agnostic (hit
+  `market-tick-data-service` AND `deployment-service` on the same host/session type) and intermittent (both repos have
+  ALSO had clean runs), consistent with a host/session-level reaper racing the QG process rather than something specific
+  to either repo's QG content. Code stays safely committed locally at `deployment-service@65248727` (not a stash — an
+  actual local commit); not pushed. Releasing this task GATED rather than continuing to retry.
