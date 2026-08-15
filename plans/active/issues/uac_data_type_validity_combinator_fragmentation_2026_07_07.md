@@ -652,6 +652,44 @@ just belongs on a different layer than instrument_type does, and conflating the 
     `if __name__ == "__main__":` guard, so it imports (printing 2 config lines from UTL DomainValidationService) and
     exits 0 running nothing; the real entries are the console script `.venv/bin/market-tick-data-service` or
     `python -m market_tick_data_service` (`__main__.py`). Use the console script for all done-when/force-compute runs.
+- **2026-08-15 (slot 2, data_engineering) — AAVE_V3 rewards todo (line ~801, [CODE] P2), IN PROGRESS, NOT YET SHIPPED.**
+  Code is written and locally committed-clean-diff-ready but **not yet pushed** — blocked on a green `quality-gates.sh`
+  run for `market-tick-data-service`, which is itself blocked on host-wide QG contention (see below), not on a content
+  defect. Design: dynamic reserve enumeration via `AaveProtocolDataProvider.getAllReservesTokens()` +
+  `getReserveTokensAddresses()` (replaces a hardcoded reserve list) so newly-listed AAVE_V3-ETHEREUM reserves (incl.
+  ETHx, USDS) are picked up automatically; rewards pulled per-reserve via the RewardsController
+  (`getRewardsByAsset`/`getRewardsData`), one manifest row per `(reserve, reward token)` pair, `source=onchain_rpc`,
+  honest-empty via `record_zero_rows` on zero reserves and `record_failed` on a shard-level RPC error (per-reward-token
+  exceptions isolated so one bad reward doesn't drop sibling rows). 12 unit tests added/passing locally
+  (`test_lending_rewards_handler.py`) covering reward collection, block resolution, manifest emission (captured /
+  honest-empty / failed), and the end-to-end `process()` write path. **Files (uncommitted, MTDS worktree)**:
+  `market_tick_data_service/cli/handlers/_aave_rewards_collection.py`, `tests/unit/test_lending_rewards_handler.py`.
+  `lending_rewards_handler.py` itself was already shipped earlier this session (already on origin, unchanged this pass —
+  verify via `git log -1 --oneline -- market_tick_data_service/cli/handlers/lending_rewards_handler.py` in
+  `market-tick-data-service` if picking this up cold).
+  - **QG blocker — 3 consecutive attempts, 2 identical silent kills, tracked as corroboration not a new issue**: see
+    `/plans/active/issues/qg_host_governor_caps_instances_not_fanout_2026_08_10.md` Progress Log (2026-08-15 entries)
+    for full detail. Net: `bash scripts/quality-gates.sh --no-fix` on this 2-file diff has twice died silently (process
+    vanishes with zero log output right after the governor's `queued 300s` line — no exit code, no traceback) under
+    sustained host load (10-13 load avg, 18-20 concurrent `quality-gates.sh` processes host-wide from OTHER
+    sessions/slots). Ruled out as a content/lint/test problem in the diff: an earlier, more-complete run on the same
+    diff (`/tmp/qg_run7.log`, this AWS host) reached `10799 passed, 28 skipped` through `[3/6] TESTS` before a different
+    kill. MTDS already hard-pins `PYTEST_WORKERS=1` (2026-07-25 fix) so there is no further per-repo fan-out lever on
+    this side — the contention is host-wide, not self-inflicted. Per the "two identical consecutive failures = stop
+    blind-retrying" discipline, did not launch an immediate 3rd attempt; instead armed a **load-gated** background
+    watchdog (`/tmp/qg_retry10_watchdog.sh`, disposable/not promoted — a one-shot script tied to this specific stuck
+    window, not a reusable tool) that polls `uptime` every 60s (cap 15 checks) and only launches the retry once load
+    drops below 6 (or the cap is hit), then tracks that attempt to completion. **This was still in flight when this
+    entry was written** (pre-compact checkpoint) — a fresh session should check whether `/tmp/qg_run10.log` exists and
+    read its actual phase markers (not just process-liveness) before assuming either outcome; if the watchdog and its
+    log are gone (new session/new /tmp), just re-run `bash scripts/quality-gates.sh --no-fix` fresh and check current
+    host load first (`uptime`; `ps aux | grep -c "[q]uality-gates.sh"`) — no reason to assume the diff itself is bad.
+  - **Once QG is green**: commit the 2 files (`Quickmerge: agent` trailer), ship via
+    `bash scripts/quickmerge.sh "<msg>" --agent --files 'market_tick_data_service/cli/handlers/_aave_rewards_collection.py tests/unit/test_lending_rewards_handler.py'`,
+    verify ancestry, then re-run the done-when force-compute
+    (`IS_TEST_RUN=true .venv/bin/market-tick-data-service --operation collect-rewards --mode batch --asset-group defi --start-date <D> --end-date <D> --force`)
+    and confirm real captured rows for `AAVE_V3-ETHEREUM/rewards` (expect at least ETHx + USDS reserve rows, per the
+    dynamic-enumeration design above) before flipping the line-801 checkbox with the final sha + done-when evidence.
 
 ## Follow-ups
 
