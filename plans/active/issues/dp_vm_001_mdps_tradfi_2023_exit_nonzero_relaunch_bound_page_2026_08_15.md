@@ -36,6 +36,7 @@ related:
     /plans/active/issues/dp_vm_001_mdps_tradfi_2026_exit_nonzero_relaunch_bound_page_2026_08_14.md,
     /plans/active/issues/dp_vm_001_mdps_cefi_2019_exit_nonzero_relaunch_bound_page_2026_08_14.md,
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_es_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
+    /plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 context_scope:
@@ -133,3 +134,10 @@ launcher/adapter is cheaper than repeatedly burning the daily relaunch bound on 
   relaunch bound). Did not diagnose in-container root cause (no `run.log` pull this session). Orchestrator HTTP surface
   (`:8765`) was unreachable for the entire session — heartbeat/progress/blocked/done calls all connection-refused; this
   doc stands in place of the `/blocked` page.
+- 2026-08-15 (slot 12, same escalation `agt-5801ea` — apparently dispatched to two slots for the same finding):
+  Independently wrote a duplicate doc at this same path, then on push hit a rebase-autostash conflict against this
+  already-landed slot-10 version. Confirmed both docs reached the identical conclusion (non-OOM `exit_code=1` →
+  page, do not relaunch; no code change) — resolved by keeping this landed version intact (added one purely-additive
+  `related:` link to `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md`) per the "append, don't overwrite
+  landed content" rule, rather than replacing it with the duplicate. Orchestrator `:8765` was also unreachable from
+  slot 12 this session, consistent with slot 10's report — this is the paging artifact for both dispatches.
