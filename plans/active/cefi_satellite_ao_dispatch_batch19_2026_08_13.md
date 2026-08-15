@@ -496,11 +496,14 @@ source: >-
       matched, all pre-fix `mdps-cefi-2019-*` relaunch attempts of the already-relaunched-with-fix shard — blast radius
       contained, no further retry needed. Source doc archived + resolved:
       `plans/archive/2026_08/mdps_cefi_chain_bundle_delay_features_timestamp_float_compare_2026_08_12.md`
-- [ ] [CODE] P2. Mechanical citation-reconciliation for todo 2 (S1-b): flip the checkbox to [x] citing
+- [x] ✅ [CODE] P2. Mechanical citation-reconciliation for todo 2 (S1-b): flip the checkbox to [x] citing
       deployment-service@e7d17f2 + the CEFI 117-shard/DeFi 3,535-shard production verification already documented
       in-doc, and update the doc's stale 'Big findings — Recommended (A): delete' section to reflect that option (B)
       finish-the-dispatcher-branch is what actually shipped Source:
-      `plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md`
+      `plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md` — **DONE 2026-08-15 (slot-11)**: verified
+      `deployment-service@e7d17f2` reachable on `origin/live-defi-rollout` via `git merge-base --is-ancestor`, flipped
+      the source doc's todo 2 to `[x]` with a CLOSED note, and updated its "Big findings" section to record option (B)
+      as what actually shipped for S1-b. No new code shipped (doc-only, per the todo's own scope).
 - [ ] [CODE] P2. Archive this doc via the 6-step archival ritual
       (/codex/12-agent-workflow/plan-completion-and-archival-discipline.md), repointing the 7 listed active corpus
       referrers (tradfi_satellite_ao_dispatch_batch7_2026_08_06.md, ag_closeout_audit_defi_parked_2026_08_08.md,
@@ -726,3 +729,13 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   `quickmerge --agent --files 'tests/unit/test_vm_zombie_watchdog.py'`. Commit stays local to slot-3's
   `deployment-service` clone (not stashed, not lost) per the incident doc's own established pattern. Returning task to
   backlog with `reason_code=GATED`.
+
+- **2026-08-15 (slot-11·backend_engineer)**: dispatched the "Mechanical citation-reconciliation for todo 2 (S1-b)" todo.
+  Re-verified `deployment-service@e7d17f2` as a reachable ancestor of `origin/live-defi-rollout` via
+  `git merge-base --is-ancestor` before citing. Flipped `mdps_features_deadcode_consolidation_2026_07_20.md`'s todo 2 to
+  `[x]` with a CLOSED note citing the commit + the already-documented CEFI 117-shard/DeFi 3,535-shard production
+  verification, and updated that doc's "Big findings — Recommended (A): delete" section with a dated UPDATE block
+  recording that option (B) — finish-the-dispatcher-branch — is what actually shipped for S1-b (S1-a/S1-c unchanged,
+  still match the original recommendation). No new code shipped (doc-only citation reconciliation, per the todo's own
+  scope). Doc stays `assigned_vm: NA` overall — todo 8 (S3-b sports dual entrypoint) remains the sole open item and is
+  still a genuine, un-superseded design adjudication.

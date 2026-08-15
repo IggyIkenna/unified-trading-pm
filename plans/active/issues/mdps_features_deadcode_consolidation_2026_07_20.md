@@ -68,6 +68,12 @@ registry gap (S1-c) by registering it. **(B):** finish `launch-mdps-features-liv
 repoint S1-a's self-heal to `launch-features-vm.sh`. **(C):** do only the `mdps-sports-` registry gap now, defer the
 launcher deletions. Other: free-text.
 
+> **UPDATE 2026-08-15 (batch19 citation-reconciliation): option (B), not (A), is what actually shipped for S1-b.**
+> `deployment-service@e7d17f2` finished `launch-mdps-features-live.sh`'s dispatcher branch instead of deleting the
+> launcher; the CEFI 117-shard + DeFi 3,535-shard production launches were verified RUNNING with zero OOM as of
+> 2026-08-07 (see todo 2 below for the full citation chain). S1-a (deleted, per A) and S1-c (registry gap closed) still
+> match the original recommendation; only the S1-b half of "Recommended (A)" is superseded by what B actually delivered.
+
 > **NOT genuinely `[OPERATOR]`-gated (round5-cefi-question-resolution 2026-08-08).** Applying
 > `plans/active/task_template.md` finding U's explicit positive test: `[OPERATOR]` is for (i) a business/spend/value
 > judgment with no data-derivable answer, (ii) a credential/access-only gate, or (iii) a whole-bucket destroy / failed
@@ -91,7 +97,7 @@ launcher deletions. Other: free-text.
       `launch-features-vm.sh` (documented comment for the `--feature-family cross_instrument --asset-group PREDICTION`
       invocation, per the registry's bare-filename value convention). `test_launcher_registry.py` (9/9) +
       `quality-gates.sh` green on the shipped SHA.
-- [ ] 2. [SCRIPT] P2. S1-b — `launch-mdps-features-live.sh` non-runnable (no dispatcher branch;
+- [x] ✅ 2. [SCRIPT] P2. S1-b — `launch-mdps-features-live.sh` non-runnable (no dispatcher branch;
       `VM_SERVICE=market_data_processing_service+features_service` → ModuleNotFoundError; plan archived) but registered
       in `vm_prefix_registry.py:841-851` (5 rows). DELETE launcher + 5 rows OR finish the dispatcher branch (pending
       operator). **RE-CHECKED 2026-08-09T21:47Z (slot-17, review,
@@ -106,11 +112,12 @@ launcher deletions. Other: free-text.
       bridging + OOM + live-mode defects the first fix didn't catch, all 11 todos done, CEFI 117-shard + DeFi
       3,535-shard production launches both verified RUNNING with ZERO OOM as of 2026-08-07, archived same day). Live
       registry confirms the 5 `mdps-features-live-{ag}-` rows in `vm_prefix_registry.py` are unchanged (still
-      registered) and the launcher script itself is present with no deletion. **Not flipping this checkbox here** —
-      that's a citation-reconciliation task matching todo 1's pattern (this doc's own "Recommended (A): delete" section
-      also needs updating since B, not A, is what actually happened) — better scoped as its own batch13 todo, not folded
-      into this re-check. Batch13 candidate: reconcile this checkbox + the "Big findings" recommendation section with
-      the evidence above.
+      registered) and the launcher script itself is present with no deletion. **CLOSED 2026-08-15 (batch19
+      citation-reconciliation, slot-11)** — `deployment-service@e7d17f2` re-verified as a reachable ancestor of
+      `origin/live-defi-rollout` (`git merge-base --is-ancestor`) before flipping; the "Big findings" recommendation
+      section above updated to record that option (B) — finish-the-dispatcher-branch — is what actually shipped for
+      S1-b, not the doc's original "Recommended (A): delete" text. No new code shipped by this todo (mechanical citation
+      reconciliation only, per its own prior note).
 - [x] ✅ 3. [SCRIPT] P1. S1-c — `mdps-sports-<year>-<ts>` emitted by `launch-mdps-sharded-backfill.sh:206` but
       registered in NEITHER `vm_prefix_registry.py` NOR `launcher_registry.py` → sports MDPS shard invisible to zombie
       watchdog + no relaunch binding; parity test misses it (both registries agree). Add `mdps-sports-` (bucket
@@ -137,7 +144,7 @@ launcher deletions. Other: free-text.
       `reconcile_1440_nan_placeholders.py`. KEEP `benchmark_fullmonth_binance.py` (reused for the MDPS steady-state
       benchmark in the parent plan; its `Delete-when` plan is archived but the tool is in active use). **DONE
       (ao-dispatch batch2 2026-08-03)** — closed via
-      `plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md`:106: `market-data-processing-service@75509b8`,
+      `plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md`:106: `market-data-processing-service@d1e47e4`,
       Delete-when verified 2026-08-04 for all 3 scripts, companion test files deleted, benchmark_fullmonth_binance.py
       confirmed still present, `quality-gates.sh` green.
 - [x] ✅ 7. [SCRIPT] P3. S3-c — repoint `features-service/scripts/sports/smoke_matrix.py` SSOT citations (archived
