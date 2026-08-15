@@ -190,16 +190,19 @@ issue's scope); flagged as a follow-up todo below.
 
 ## Todos
 
-- [x] [DATA] P0. Fix `_write_captured_rows()` (`market-tick-data-service/scripts/_rebuild_sports_write.py:305-327`) to
+- [ ] [DATA] P0. Fix `_write_captured_rows()` (`market-tick-data-service/scripts/_rebuild_sports_write.py:305-327`) to
       thread `timeframe=str(row.get("timeframe") or "")` through the `writer.add()` call, so a rewrite carries the
       original row's real timeframe value instead of defaulting to blank. Add a regression test proving a
       multi-timeframe `odds_horizon_bucket` group re-emits N distinct rows (one per original timeframe), not one phantom
       blank-timeframe row. Needs review given this surface's 2 prior real regressions — small-scale test first, matching
-      this doc's own established protocol. (repo: market-tick-data-service) — ✅ landed pending sha
-      (`market-tick-data-service`, `_write_captured_rows` now passes `timeframe=`; regression tests
-      `test_write_captured_rows_threads_original_timeframe_through` +
-      `test_write_captured_rows_blank_timeframe_row_stays_blank` added to
-      `tests/unit/scripts/test_rebuild_sports_manifest_v9.py`, both green)
+      this doc's own established protocol. (repo: market-tick-data-service) — **IN PROGRESS, not yet landed**: code
+      change + 2 regression tests (`test_write_captured_rows_threads_original_timeframe_through`,
+      `test_write_captured_rows_blank_timeframe_row_stays_blank` in
+      `tests/unit/scripts/test_rebuild_sports_manifest_v9.py`) are written and passing LOCALLY on the slot-2
+      `market-tick-data-service` checkout, but **UNCOMMITTED** — `bash scripts/quality-gates.sh --no-fix` is running in
+      background (queued behind this shared host's qg-governor cap as of the last check) and must go green before
+      commit + quickmerge per the pre-commit-QG hard rule. Do not re-implement; resume by checking the QG run's outcome,
+      then commit + `quickmerge --agent`, then flip this box with the real landed sha.
 - [ ] [DATA] P0. Once the fix above ships, identify + clean up the phantom timeframe-blank rows this session created on
       MDPS (~26,982 lower-bound, `data_type=odds_horizon_bucket`, `written_at` in the 2026-08-15T11:0x-2x UTC window,
       `timeframe` blank) — either delete them (they carry no information the corrected rewrite won't re-derive) or leave
