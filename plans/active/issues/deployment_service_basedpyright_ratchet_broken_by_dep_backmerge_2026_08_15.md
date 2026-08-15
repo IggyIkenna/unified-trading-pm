@@ -87,10 +87,36 @@ same window the backmerge landed:
 - `unified-trading-library` → `bd587735` at `2026-08-15T01:23:34Z`. Candidate commit: `ff9cb5f8`
   "fix(pipeline-e2e-check): suffix GCS report blob with asset_group...".
 
-**Not root-caused further here** — none of these three commits were read in full; this doc names the time-correlated
-candidates so the next session doesn't have to re-derive them, not a proven single culprit. The actual fix needs
-whichever of these lost/widened a type annotation (return type, parameter type, or a `dict`/`list` literal that used to
-infer narrower) that deployment-service's four files call into.
+**Update 2026-08-15 (same day, later pass) — all 5 candidates checked so far are RULED OUT.** Read the full diffs of the
+original 3 candidates plus 2 more found by actually tracing the flagged files' import chains
+(`shard_builder.py`/`shard_calculator.py` → `config_loader.py` → `unified_api_contracts.VenueMapping` +
+`market_data_categories`; `smoke_test_framework.py`/`sports_latency_observation.py` →
+`unified_trading_library.StorageClient`):
+
+| Commit                             | Repo | What it actually changed                                                                                                   | Verdict                                                       |
+| ---------------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `unified-api-contracts@53a5adc7`   | UAC  | New file `registry/lst_token_addresses.py` (additive only, unrelated module)                                               | Ruled out — deployment-service never imports this module      |
+| `unified-api-contracts@bed96aa0`   | UAC  | Same new file, 10-line data edit                                                                                           | Ruled out — same reason                                       |
+| `unified-trading-library@ff9cb5f8` | UTL  | `pipeline_e2e_check/report.py` (unrelated module, not imported by the 4 files)                                             | Ruled out                                                     |
+| `unified-trading-library@b12ceab9` | UTL  | `StorageClient.download_bytes_range()` gains a fully-typed optional `generation` kwarg                                     | Ruled out — fully annotated, predates the window (2026-08-10) |
+| `unified-api-contracts@316002f1`   | UAC  | `VenueMapping`/`market_data_categories`: adds `"PACIFICA-SOLANA"` string literals to existing `list[str]`/`dict[str, str]` | Ruled out — pure data-literal additions, no signature change  |
+
+None of these touch a return type, parameter type, or class attribute annotation. Basedpyright's Unknown cascade in the
+4 flagged files traces to `ConfigLoader`'s `.get(...)` calls (shard_builder.py) and `StorageClient` methods
+(smoke_test_framework.py/sports_latency_observation.py) — but the classes themselves (`ConfigLoader`, `VenueMapping`,
+`StorageClient`) were NOT touched by any commit in the backmerge window. **The "single culprit commit in a known time
+window" theory this doc started with is not panning out** — ad-hoc commit-message-driven guessing has now cost real time
+across 2 passes without a hit.
+
+**Recommended methodology for the next attempt — bisection, not more guessing, and NOT on this shared checkout.**
+`unified-api-contracts`/`unified-trading-library` are editable/path-installed LOCAL_DEPS shared by every slot session
+via this same checkout (per the workspace's multi-agent-safety rule) — checking out an old commit in either repo here
+would silently change what every OTHER concurrent process reading them sees. Do this instead: clone (or
+`git worktree add`) an ISOLATED copy of both dependency repos, point a throwaway venv's editable install at that
+isolated copy, then bisect by checking out each dependency repo at successive commits in the
+`2026-08-14T11:40Z..2026-08-15T01:24Z` window (arming commit through the backmerge) and re-running
+`basedpyright deployment_service/` after each, until the count flips from <=1259 to 1261. That pins the exact commit
+without disturbing this shared checkout.
 
 ## Why this matters
 
@@ -102,14 +128,18 @@ cannot find it — the fix has to be sought in the two dependency repos.
 
 ## Todos
 
-- [ ] [CODE] P1. Identify which of the 3 candidate commits above (or another commit in the same window) changed a type
-      signature/annotation that widened to `Unknown` for a deployment-service call site, and fix it at the SOURCE (the
-      dependency repo), or add a precise local type annotation in deployment-service if the dependency's shape is
-      intentional. DoD: `basedpyright deployment_service/` back to <=1259 (or ratchet the ceiling DOWN once fixed
-      further, never up).
-- [ ] [OPERATOR] P2. If no clean root cause is found quickly, decide whether to temporarily raise
-      `BASEDPYRIGHT_MAX_ERRORS` (against the ratchet-only-goes-down norm) to unblock shipping while the real fix is
-      pursued, or hold all deployment-service quickmerges until fixed. DoD: a stated decision, not a default.
+- [ ] [CODE] P1. 5 candidate commits checked and ruled out 2026-08-15 (see updated Root Cause section — none touch a
+      type signature). Next attempt MUST bisect in an ISOLATED worktree/clone of `unified-api-contracts` +
+      `unified-trading-library` (never this shared checkout — editable installs mean a manual checkout here changes what
+      every concurrent slot session sees), stepping through commits in `2026-08-14T11:40Z..2026-08-15T01:24Z` until
+      `basedpyright deployment_service/` flips 1259→1261. DoD: `basedpyright deployment_service/` back to <=1259 (or
+      ratchet the ceiling DOWN once fixed further, never up).
+- [ ] [OPERATOR] P2. Two guessing passes (5 candidate commits total) have NOT found the root cause — "quickly" per this
+      todo's original DoD has now elapsed. Decide whether to temporarily raise `BASEDPYRIGHT_MAX_ERRORS` (against the
+      ratchet-only-goes-down norm) to unblock shipping — including the already-written, already-tested Todo 2 fix in
+      `dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md` sitting uncommitted — while the isolated-worktree
+      bisection above is pursued, or hold all deployment-service quickmerges until fixed. DoD: a stated decision, not a
+      default.
 
 ## Evidence
 
