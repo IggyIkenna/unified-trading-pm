@@ -26,7 +26,7 @@ related:
     /plans/active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md,
   ]
 created: 2026-08-15
-last_updated: 2026-08-15
+last_updated: 2026-08-15T02:15Z
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only
@@ -184,14 +184,42 @@ cannot find it — the fix has to be sought in the two dependency repos.
       **Recommendation: (a)** — the ratchet's purpose is catching real regressions in deployment-service's own surface,
       and 3 independent lines of evidence now say this isn't one; blocking all shipping on an unresolved
       measurement-methodology question has a real cost (a P0 truncated-sweep fix is parked). DoD: a stated decision, not
-      a default.
-- [ ] [CODE] P2. Determine whether the `bf69b2b289` "ALL QUALITY GATES PASSED" run that established the 1259 baseline
+      a default. **Update 2026-08-15 (Todo 3 resolved, see below): the recommendation strengthens, unchanged in
+      direction** — the ratchet's last GENUINE full-run verification (not this doc's originally-cited `bf69b2b289`) was
+      commit `0aeb925f` at `00:57:58Z`, itself ~23 minutes BEFORE the disputed UAC/UTL backmerge-completion commits
+      (`01:20-01:23Z`) even landed. "1259" was therefore never live-verified against ANY tree state that includes the
+      dependency versions now current — the isolated-worktree bisection (Todo 1) already showed pinning those deps back
+      doesn't recover 1259 either, so the gap predates and is independent of the backmerge this doc was originally filed
+      against.
+- [x] [CODE] P2. Determine whether the `bf69b2b289` "ALL QUALITY GATES PASSED" run that established the 1259 baseline
       was a live basedpyright execution or a `quality-gates.sh` content-sentinel cache HIT (`.qg_last_passed_sha` /
       `.qg_content_sentinel`, gitignored, present in this checkout timestamped `01:11` — before the backmerge-completion
       commits at 01:20-01:23). If it was a cache hit reusing an earlier genuinely-verified hash, re-derive the true
       last-live-verified baseline from history instead of trusting `bf69b2b289`'s claimed count. See the Root Cause
       section's Update for the 2 concrete leads. DoD: a stated determination (cache-hit vs. genuine) with evidence, and
-      if cache-hit, the corrected true baseline commit + count.
+      if cache-hit, the corrected true baseline commit + count. — ✅ **CACHE HIT, CONFIRMED** (2026-08-15, slot 15).
+      `.qg_last_passed_sha` (read fresh, this pass) currently records `0aeb925fc371efd2aa63fc467c1f911749c13c3a` (commit
+      date `2026-08-15T00:57:58Z`, "Merge remote-tracking branch 'origin/main' into \_backmerge") — **not** `bf69b2b289`
+      (`2026-08-15T01:12:12Z`). Per `base-service.sh:4550-4557` (the "H5" comment), this file is deliberately NEVER
+      refreshed on a content-sentinel HIT — only on a genuine full run — so its current content IS the last commit a
+      live full run actually passed on. `git merge-base --is-ancestor 0aeb925f bf69b2b289` confirms ordinary same-branch
+      ancestry (not a fluke/rewrite). This directly falsifies the doc's original premise that the verified-green run
+      happened "on the tree that became `bf69b2b289`" — it happened one commit earlier, at `0aeb925f`. **Follow-on check
+      — does this change the root cause?** `0aeb925f..bf69b2b289` is NOT `.py`-empty like `bf69b2b289..HEAD` is — it's
+      exactly the revocation-release identity fix from `dp_revocation_release_never_resolves_identity_2026_08_15.md`
+      (`meta_watchers.py` + `cli.py` + test file). Checked directly:
+      `basedpyright deployment_service/data_pipeline_monitors/meta_watchers.py     deployment_service/data_pipeline_monitors/cli.py`
+      → 6 errors, **all** in `cli.py:399-411` (pre-existing `CloudSchedulerClient`/`reportAny` typing, nowhere near the
+      diff's touched lines 639/699), **zero** in `meta_watchers.py`. The revocation-release fix is basedpyright-clean —
+      it is not the source of the 1259→1261 gap. **Exact live-verified count at `0aeb925f` — not recoverable, noted as a
+      genuine gap, not chased further**: the sentinel files store a content hash, not an error count, and there is no
+      accessible CI log for that exact execution from this session. Attempted an isolated `git worktree add`
+      re-measurement (mirroring Todo 1's sanctioned methodology) — produced 3569 errors, wildly inconsistent with
+      1259/1261 and clearly an environment artifact (a bare worktree outside the venv's expected sibling layout breaks
+      third-party/stub resolution, not a real count); discarded, worktree removed (`git worktree remove --force` +
+      `prune`, confirmed clean via `git worktree list`). A trustworthy re-measurement would need a fully isolated venv
+      provision at `0aeb925f`, out of scope for this todo's DoD (which only required cache-hit-vs-genuine + corrected
+      baseline commit, both now answered).
 
 ## Evidence
 
@@ -204,13 +232,21 @@ cannot find it — the fix has to be sought in the two dependency repos.
   `unified-trading-library@dd193279` + `deployment-api@7f8fb83` (all 3 pre-arming-window) against `deployment-service`
   current HEAD → still `1261 errors, 0 warnings, 0 notes`. `basedpyright==1.38.2` pinned byte-identical (exact hash
   match) in `uv.lock` at both `bf69b2b289` and current HEAD.
+- **Todo 3 (2026-08-15, slot 15)**: `.qg_last_passed_sha` head line = `0aeb925fc371efd2aa63fc467c1f911749c13c3a`
+  (`2026-08-15T00:57:58Z`), read directly from the gitignored file in this checkout — not `bf69b2b289`
+  (`2026-08-15T01:12:12Z`). `git merge-base --is-ancestor 0aeb925f bf69b2b289` → true.
+  `git diff 0aeb925f..bf69b2b289 --stat` → `cli.py`, `meta_watchers.py`, `tests/unit/test_data_pipeline_monitors.py`
+  (the revocation-release identity fix). `basedpyright deployment_service/data_pipeline_monitors/{meta_watchers,cli}.py`
+  → 6 errors, all in `cli.py:399-411`, 0 in `meta_watchers.py`. Isolated-worktree re-measurement at `0aeb925f`
+  (`git worktree add`) → 3569 errors, discarded as an environment artifact (bare worktree, no isolated venv provision)
+  and removed (`git worktree remove --force` + `prune`).
 
 ## Deferred work after 2026-08-15
 
 | Item                                                                                              | State / why deferred                                                                                                                                                                                                                                                                    | Blocked on                            |
 | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
 | Todo 2 of `dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md` (truncated-sweep signal) | **Code + tests WRITTEN, compile-checked, uncommitted** in `deployment-service` working tree (`exit_code_fleet_monitor.py` + `tests/unit/test_data_pipeline_monitors.py`) — cannot ship, quickmerge requires a green `quality-gates.sh` and this ratchet break is unrelated-but-blocking | This doc's Todo 2 (operator decision) |
-| Todo 3 of this doc (sentinel-cache-hit vs. never-truly-1259 investigation)                        | Needs reading gitignored `.qg_last_passed_sha`/`.qg_content_sentinel` history + `qg-common.sh` cache-hit logic in detail — genuinely open investigation, not a quick finish                                                                                                             | Nobody — real work, pick it up        |
+| A trustworthy exact live error count at baseline commit `0aeb925f`                                | Would need a fully isolated venv provision (not a bare worktree) to reproduce faithfully — the quick worktree attempt gave an unreliable 3569; not pursued further since it wasn't required to close Todo 3's DoD                                                                       | Nobody — real work, low priority      |
 
 **Recommended next item**: Todo 2 (operator decision) — it unblocks ALL deployment-service shipping immediately,
 independent of whether Todo 3's cache-hit investigation ever resolves the "why."
