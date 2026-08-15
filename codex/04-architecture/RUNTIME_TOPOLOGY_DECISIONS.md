@@ -24,7 +24,12 @@ authoritative_for: [runtime-topology.yaml change rationale, deployment_profile d
 referenced_by: []
 owner:
 last_reviewed: 2026-08-10
-code_refs: [unified-trading-pm/configs/runtime-topology.yaml]
+code_refs:
+  [
+    unified-trading-pm/configs/runtime-topology.yaml,
+    unified-api-contracts/internal/architecture_v2/enums.py,
+    deployment-service/deployment_service/deployment_profile_derivation.py,
+  ]
 ---
 
 # Runtime Topology — Decisions Log
@@ -331,3 +336,32 @@ for individual archetypes; this section is the family-level contract its todos e
   later, separately-gated step.
 - **The VOL edge-case override** — deferred per contract item 4 (default `distributed` unless the evaluation finds
   decisive evidence).
+
+## 2026-08-15 — archetype↔deployment link is now live-derived, not manually maintained
+
+The paired execution plan (`/plans/active/strategy_archetype_latency_deployment_profile_execution_2026_08_10.md`) landed
+the code that makes this decision artifact's table self-enforcing at runtime instead of a document a human keeps in sync
+by hand:
+
+- **Archetype side**: `ARCHETYPE_TO_DEPLOYMENT_PROFILE` (60/60 `StrategyArchetype` values) in
+  `unified_api_contracts/internal/architecture_v2/enums.py` — `unified-api-contracts@f39e800992`.
+- **Deployment side**: `archetype_deployment_profile_mapping` reverse-index in `runtime-topology.yaml` (v7→v8) —
+  `unified-trading-pm@ab157b54a1`.
+- **Derivation**: `deployment_service/deployment_profile_derivation.py`'s `derive_required_deployment_profiles()`
+  computes the union of required `deployment_profile` instances from the currently-active archetype set (never
+  collapsing distinct profiles, co-locating archetypes that share one), and `validate_against_runtime_topology()`
+  cross-checks the derived plan against this file so the UAC enum and YAML halves cannot silently diverge —
+  `deployment-service@13223da3`.
+- **Sizing**: `derive_instance_resource_sizing()` / `derive_resource_sizing()` in the same module derive per-instance
+  compute sizing from each routed archetype's live configuration (client/instrument counts) rather than a static guess,
+  fail-loud (`MissingLiveConfigError`) on a routed archetype with no live-config row — `deployment-service@9116a2fe`.
+- **SLA-tier gap surfacing**: `check_sla_tier_latency_budget_gap()` compares each active archetype's real per-family E2E
+  requirement (the table above) against its `min_sla_tier`'s declared `latency_budget_ms` and returns an explicit,
+  non-fatal warning for every gap — the runtime-facing counterpart to the "premium-40ms-vs-reality gap" finding in the
+  binding-contract section above — `deployment-service@c9c1f9509`.
+
+Net effect: the per-archetype→deployment_profile mapping this doc records is no longer just documentation an engineer
+must remember to keep current when the archetype registry changes — `deployment_profile_derivation.py` reads the two
+SSOTs above directly and fails loud on drift between them. This doc remains the decision RECORD (why each row is what it
+is); the code paths above are what keep the derived deployment set and its sizing in sync with the live archetype
+registry.

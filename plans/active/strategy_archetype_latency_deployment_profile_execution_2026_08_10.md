@@ -163,9 +163,14 @@ source: >-
       `bash scripts/quality-gates.sh` green on the shipped SHA (basedpyright caught + I fixed 4 new `Unknown`-type
       errors from the first draft before shipping — cast dict.get() results explicitly, matching the file's existing
       pattern).
-- [ ] [DOC] P3. **Update `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`** (or wherever the audit plan's decision
-      artifact landed) with a note that the archetype↔deployment link is now live-derived, not manually maintained,
-      cross-referencing the new code paths added by this plan.
+- [x] ✅ [DOC] P3. **DONE 2026-08-15 (slot 24, backend_engineer) — unified-trading-pm.** Added a
+      `## 2026-08-15 — archetype↔deployment link is now live-derived, not manually maintained` section to
+      `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`, cross-referencing the code this plan landed:
+      `ARCHETYPE_TO_DEPLOYMENT_PROFILE` (`unified-api-contracts@f39e800992`), the `archetype_deployment_profile_mapping`
+      reverse-index (`unified-trading-pm@ab157b54a1`), `derive_required_deployment_profiles()` +
+      `validate_against_runtime_topology()` (`deployment-service@13223da3`), `derive_instance_resource_sizing()`
+      (`deployment-service@9116a2fe`), and `check_sla_tier_latency_budget_gap()` (`deployment-service@c9c1f9509`). Also
+      added the two new code files to the doc's `code_refs` frontmatter.
 - [ ] [SCRIPT] P3. **Verify against the actual current archetype set**: run the new derivation against strategy-
       service's real, currently-registered archetypes and confirm the computed deployment plan matches (or sensibly
       diverges from, with a stated reason) the currently-live GCP fleet — this is the "does this actually work" proof,
@@ -316,3 +321,12 @@ source: >-
   `/plans/archive/2026_08/issues/ao_backlog_regen_missing_self_declared_not_ao_eligible_guard_2026_08_14.md`. A future
   regen tick should stop dispatching this plan's residual-gaps todo; if it recurs after this fix lands, that's a fresh
   guard-gap, not this same root cause.
+
+- **backend_engineer (slot 24) 2026-08-15**: The "update RUNTIME_TOPOLOGY_DECISIONS.md" todo done — doc-only, no code
+  shipped. Added a dated section to `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` recording that the
+  archetype↔deployment link this plan built is now runtime-enforced (not a document to keep manually in sync):
+  `ARCHETYPE_TO_DEPLOYMENT_PROFILE`, the `archetype_deployment_profile_mapping` reverse-index,
+  `derive_required_deployment_profiles()` / `validate_against_runtime_topology()`,
+  `derive_instance_resource_sizing()`, and `check_sla_tier_latency_budget_gap()`, each cited by the SHA that landed it
+  (todos 1-4/8 above). Two remaining open todos in this plan (the live-fleet verification proof and the
+  load-formula/machine-sizing fix) are unrelated P3 work, untouched by this todo.
