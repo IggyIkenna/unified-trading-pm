@@ -238,8 +238,19 @@ source: >-
       `unified-trading-pm/scripts/openapi/generate_capability_manifest.py` when the committed copy is absent) or accept
       the file staying committed permanently and close this out as won't-do. Repo: agent-orchestrator +
       unified-api-contracts. Source: this doc, todo above.
-- [ ] [CODE] P2. Run PM bash scripts/quality-gates.sh to confirm the plan + codex update pass (unified-trading-pm)
-      Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
+- [x] ✅ [CODE] P2. **Ran PM `bash scripts/quality-gates.sh` — initially FAILED, root-caused + fixed, now confirmed
+      green.** (2026-08-15, slot-12·infra) First run surfaced a real regression, not a stale/pre-existing red:
+      `test_f47_unbuildable_venue_cells_are_not_available` failed with 18 unbuildable cells, all tracing to one venue
+      (`pacifica_solana`). Root cause: the same-day 2026-08-15 "containment fix" to `archetype_leg_spec_seeds.py` added
+      `"pacifica_solana"` to 3 `eligible_venue_ids` lists, reasoning from a hyphen→underscore fold of
+      `catalog_carry.py`'s `full_venue="PACIFICA-SOLANA"` string — but the slot-label parser's alnum-fold
+      (`_slot_venue_token`, full alnum-strip) turns that into `"pacificasolana"`, which never matches
+      `KNOWN_VENUE_TOKENS`'s existing `"pacifica"` entry. The bundle's actual slot-label token (per
+      `_CARRY_BASIS_PERP_VENUE_BUNDLES`'s own `("pacifica", "PACIFICA-SOLANA", ...)` row and `test_target_universe.py`'s
+      live slot-label assertions) is `"pacifica"` — corrected all 3 sites to match. Fixed + shipped
+      `unified-api-contracts@826763229f`; UAC's own `quality-gates.sh` green (429s, sentinel-verified); re-ran PM's full
+      `quality-gates.sh` after the fix landed — `✅ ALL QUALITY GATES PASSED`, sentinel `.qg_last_passed_sha` verified
+      == HEAD `8b7e53a624`. Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
 - [x] ✅ [CODE] P2. **STALE PREMISE — the "13 cells/~12.5k rows" digest figure is ~3 weeks stale; the actual retry
       mechanism is already live, but has a real coverage gap.** (2026-08-15, slot-27·infra). Live re-verification:
       `deployment-service/scripts/wave_launcher.py` (Cloud Run Job, host-cron `0 */3 * * *`) IS running — its own
