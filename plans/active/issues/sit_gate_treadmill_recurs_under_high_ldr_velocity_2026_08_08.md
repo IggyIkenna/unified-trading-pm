@@ -213,3 +213,21 @@ this escalation — both fixes were already shipped by other sessions before I w
 next `sit_gate_stuck` escalation for the SAME window doesn't re-diagnose from scratch. Todos 1 (dedup-key) and 3 (hoist
 PR cleanup) are unchanged/still open — this occurrence did not exercise either (no orphaned promote PR was involved this
 time; all recent deployment-api promote PRs #607-#616 are `MERGED`).
+
+**cicd escalation agt-43a4b9, 2026-08-15 ~10:41Z** (`sit_gate_stuck` wall, `execution-service` 5 straight
+SIT-gate-blocked ticks on `ldr-to-main-promote-fleet.yml`, escalating run
+`https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31880071084`): Live-diagnosed via `gh run view --log` on
+the fleet-promote run history + `sit_gate_stuck_detector.py` (no `--slack`), not assumed from the alert text. **Same
+documented treadmill, already fully converged by the time I was dispatched — no code fix needed, nothing to push.**
+Sequence: run `31880071084` (10:40:58Z) posted
+`SIT GATE BLOCK execution-service: true-delta not SIT-validated on this tree` (fail-closed, `sit_validated_tree` behind
+LDR tree) — the same digest-vs-moving-tip race this doc documents. The VERY NEXT tick, run `31881573001` (11:16:45Z),
+posted `SIT GATE PASS execution-service: non-breaking delta` and cut promote PR `execution-service#652` (frozen head
+`35170eedbc88`) — confirmed `MERGED` at `2026-08-15T11:21:18Z` via `gh pr view 652 --repo IggyIkenna/execution-service`.
+The two subsequent ticks (`31881938530` 11:24Z, `31882197030` 11:30Z) both logged
+`SKIP execution-service: main tree == LDR tree` — i.e. already promoted, nothing left to block. Re-ran
+`sit_gate_stuck_detector.py` live post-convergence (default `--threshold 3` and again at `--threshold 1 --lookback 8`):
+`sit-gate stuck detector: healthy` both times — the most recent tick for every repo, execution-service included, is not
+a `SIT GATE BLOCK` line. No orphaned/stale promote PR this occurrence (PR #652 merged cleanly, unlike the `#939` case in
+the 2026-08-10 measured section) — todo 1 (dedup-key) and the hoist-cleanup todo are unchanged/still open, this
+occurrence did not exercise either.
