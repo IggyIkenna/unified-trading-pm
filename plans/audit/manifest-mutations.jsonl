@@ -2702,3 +2702,5 @@
 {"timestamp": "2026-08-15T18:31:07Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "market-data-processing-service=0.29.35 (branch=main, bump=patch)", "commit_sha": "0a8b0601f18de29fe3fe545113e17448c2e13923"}
 {"timestamp": "2026-08-15T18:32:14Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "ml-service=0.58.24 (branch=main, run=31901343369)", "commit_sha": "0a8b0601f18de29fe3fe545113e17448c2e13923"}
 {"timestamp": "2026-08-15T18:32:17Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "ml-service=0.58.24 (branch=main, bump=patch)", "commit_sha": "0a8b0601f18de29fe3fe545113e17448c2e13923"}
+{"timestamp": "2026-08-15T18:33:39Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "execution-service=0.74.1 (branch=main, run=31901412161)", "commit_sha": "62ee98057cd77898d677557d129a776de0a13159"}
+{"timestamp": "2026-08-15T18:33:43Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "execution-service=0.74.1 (branch=main, bump=patch)", "commit_sha": "62ee98057cd77898d677557d129a776de0a13159"}
