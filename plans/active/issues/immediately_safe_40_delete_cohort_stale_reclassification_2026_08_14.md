@@ -105,10 +105,27 @@ has actually verified).
       strike `unified-trading-library check-ruff-versions.sh` and `system-integration-tests check-sit-readiness.py` from
       the DELETE list — both are live CI tooling with `Lifecycle: permanent` markers, not dead checkers. Repo:
       unified-trading-pm. — `plans/active/repo_scripts_governance_audit_2026_06_18.md` line 190-196 updated.
-- [ ] [AUDIT] P3. Run the dedicated GCS orphan-sweep the closeout plan deferred (per
+- [x] ✅ [AUDIT] P3. Run the dedicated GCS orphan-sweep the closeout plan deferred (per
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) against the 4 deployment-service bucket-migration
       scripts' targets + `aggregate_instruments.py`'s targets; on orphan-sweep=0, git rm all 5 citing the sweep
-      evidence. Repo: deployment-service. [OPERATOR] — GCS delete-adjacent verification.
+      evidence. Repo: deployment-service. [OPERATOR] — GCS delete-adjacent verification. — **DONE for 4/5,
+      `deployment-service@a981eb4cd5`.** Live sweep (in-process `google-cloud-storage`/`boto3` SDK calls, never a
+      subprocess `gcloud`/`aws` CLI, per the workspace guardrail): GCP — all 53 flat legacy bucket names derived from
+      `migrate-flat-to-env-tiered.sh` / `archive-flat-buckets.sh`'s own `build_gcp_*` functions (project
+      `central-element-323112`) confirmed gone (0/53 survivors) against a live `storage.Client().list_buckets()`
+      snapshot. AWS — 94 legacy candidate names derived from all 4 scripts' own bucket-map/list functions (account
+      `427895769566`); 17 still exist, but every one's `list_objects_v2` object count (uncapped pagination) exactly
+      equals its canonical twin's count — no orphaned data, consistent with the scripts' own documented copy-not-delete
+      behavior pending the 30-day archival tag. `git rm`'d `migrate-flat-to-env-tiered.sh`, `archive-flat-buckets.sh`,
+      `aws/migrate-bucket-names-unified-to-canonical.sh`, `aws/migrate-defi-buckets-prod-to-prd.sh`.
+      **`aggregate_instruments.py` NOT deleted** — grepped `instruments-service/instruments_service/` for a live
+      `--operation aggregate` CLI replacement and found none (the closest candidate,
+      `instruments-service/scripts/build_instrument_catalogue.py`, is unconfirmed as the actual completed migration);
+      its own `Delete-when` condition remains unmet. See follow-up todo below.
+- [ ] [AUDIT] P3. Confirm whether `instruments-service/scripts/build_instrument_catalogue.py` (or another live
+      `--operation`) is the actual completed replacement for `deployment-service/scripts/aggregate_instruments.py`; if
+      confirmed, `git rm aggregate_instruments.py` citing the replacement's evidence, else leave it and note why in this
+      doc. Repo: instruments-service + deployment-service.
 - [ ] [CODE] P3. Re-run `codemods/migrate_page_headers.py` against the ~20 still-unmigrated `app/**/page.tsx` files (or
       confirm they're intentionally excluded, e.g. non-standard header shape) before re-evaluating its `Delete-when`
       gate. Repo: unified-trading-system-ui.
@@ -124,3 +141,6 @@ has actually verified).
 
 - **2026-08-14 (slot 15)**: Filed during `infra_satellite_ao_dispatch_batch16_2026_08_13.md`'s Delete-execution todo.
   Executed the 4 genuinely-dead UI splitters + the MTDS pointer fix; deferred the 5 items above with evidence.
+- **2026-08-15 (slot 30)**: Ran the deferred GCS orphan-sweep todo. `deployment-service@a981eb4cd5` deletes the 4
+  bucket-migration scripts (orphan-sweep=0 confirmed both clouds); `aggregate_instruments.py` stays — no live
+  replacement CLI operation confirmed in instruments-service. New follow-up todo added to resolve that gap.
