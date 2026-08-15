@@ -173,7 +173,9 @@ baseline:
   instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py:
     count: 4
   instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py:
-    count: 19
+    count: 14
+  instruments-service/instruments_service/engine/orchestrator/sports_reference_fixture_existence_gate.py:
+    count: 6
   instruments-service/instruments_service/engine/orchestrator/sports_reference_fixtures.py:
     count: 1
   instruments-service/instruments_service/engine/orchestrator/sports_reference_fixtures_write.py:
