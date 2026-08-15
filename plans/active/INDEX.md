@@ -72,13 +72,6 @@ by hand._
   — Gated closeout for cefi_okx_bybit_tokenized_equity_mvp_addition_2026_08_12.md — machine-held via depends_on +
   gate_on_depends until every todo in that plan is done. Reconciles the plan's own checkboxes (self-contained, not a
   batch…
-- [`cefi_satellite_ao_dispatch_batch10_2026_08_08`](./cefi_satellite_ao_dispatch_batch10_2026_08_08.md) — Tenth
-  AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-08-08 (scheduled autonomous dispatch,
-  tranche=cefi, slot 8, dispatch agt-6bc9c4). Unlike batch9 (a narrow 5-doc "never-cited + linkage-gap delta" run),…
-- [`cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize`](./cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize.md)
-  — Finalize twin for `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` (drafted 2026-08-08 by the /ag-closeout-audit
-  skill, slot 8, dispatch agt-6bc9c4). Reconciling 6 source docs' checkboxes once batch10's 6 todos land, asking the
-  operator…
 - [`cefi_satellite_ao_dispatch_batch19_2026_08_13`](./cefi_satellite_ao_dispatch_batch19_2026_08_13.md) — Extraction
   batch from the cefi tranche's 2026-08-13 /na-eligibility-audit + /ag-closeout-audit full sweep — 37 live
   conflict-cleared, bounded/deterministic items (40 total todos, 3 marked out-of-scope, see below) pulled directly from
