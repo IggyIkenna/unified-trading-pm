@@ -128,3 +128,102 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── duplicate-gated finalize plans (duplicate_finalize_plans_created_for_one_parent_2026_08_06) ──
+
+
+def _write_finalize_plan(path: Path, parent_slug: str) -> Path:
+    return _write_plan(path, extra_frontmatter=f"depends_on: [{parent_slug}]\ngate_on_depends: true")
+
+
+def _empty_baseline_path(tmp_path: Path) -> str:
+    """A path that does not exist -> _load_baseline_count defaults every key to 0. Without
+    this, these tests would silently pick up the REAL shipped finalize_plan_coverage_baseline.yaml
+    (DEFAULT_BASELINE_PATH), whose duplicate_violation_count reflects live corpus debt — not 0 —
+    and a small fixture corpus would read as at-or-below that debt instead of exercising the
+    intended fresh-baseline regression path."""
+    return str(tmp_path / "no_such_baseline.yaml")
+
+
+def test_default_mode_fails_when_a_parent_is_gated_by_two_finalize_plans(tmp_path: Path) -> None:
+    """Reproduces the 2026-07-31 collision: two finalize plans, same parent, same day."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_07_31.md")
+    _write_finalize_plan(active / "parent_2026_07_31_finalize.md", "parent_2026_07_31")
+    _write_finalize_plan(active / "parent_finalize_2026_07_31.md", "parent_2026_07_31")
+
+    rc = main(["--workspace-root", str(tmp_path), "--baseline-path", _empty_baseline_path(tmp_path)])
+    assert rc == 1
+
+
+def test_default_mode_passes_when_each_parent_has_exactly_one_finalize_plan(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_07_31.md")
+    _write_finalize_plan(active / "parent_2026_07_31_finalize.md", "parent_2026_07_31")
+
+    rc = main(["--workspace-root", str(tmp_path), "--baseline-path", _empty_baseline_path(tmp_path)])
+    assert rc == 0
+
+
+def test_duplicates_only_isolates_the_check_from_coverage_and_draft_gate_debt(tmp_path: Path) -> None:
+    """--duplicates-only must not re-fail on pre-existing coverage/draft-gate baseline
+    debt that the OTHER two (separately-ratcheted) checks already own."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "uncovered_2026_08_05.md")  # a real coverage violation, ignored here
+
+    rc = main(
+        ["--workspace-root", str(tmp_path), "--duplicates-only", "--baseline-path", _empty_baseline_path(tmp_path)]
+    )
+    assert rc == 0
+
+
+def test_duplicates_only_fails_on_a_duplicate(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_07_31.md")
+    _write_finalize_plan(active / "parent_2026_07_31_finalize.md", "parent_2026_07_31")
+    _write_finalize_plan(active / "parent_finalize_2026_07_31.md", "parent_2026_07_31")
+
+    rc = main(
+        ["--workspace-root", str(tmp_path), "--duplicates-only", "--baseline-path", _empty_baseline_path(tmp_path)]
+    )
+    assert rc == 1
+
+
+def test_duplicates_only_passes_when_count_is_at_or_below_baseline(tmp_path: Path) -> None:
+    """The ratchet property itself: a duplicate count AT the baseline is not a regression —
+    only exceeding it is (pre-existing debt is tracked, not re-blocked on every commit)."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_07_31.md")
+    _write_finalize_plan(active / "parent_2026_07_31_finalize.md", "parent_2026_07_31")
+    _write_finalize_plan(active / "parent_finalize_2026_07_31.md", "parent_2026_07_31")
+    baseline_path = tmp_path / "baseline.yaml"
+    baseline_path.write_text("duplicate_violation_count: 1\n", encoding="utf-8")
+
+    rc = main(["--workspace-root", str(tmp_path), "--duplicates-only", "--baseline-path", str(baseline_path)])
+    assert rc == 0
+
+
+def test_only_catches_a_newly_committed_finalize_plan_that_duplicates_an_existing_gate(tmp_path: Path) -> None:
+    """Todo 1's create-time guard: the SECOND finalize plan is the one being committed
+    (named in --only); the first already exists on disk from an earlier commit."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_07_31.md")
+    _write_finalize_plan(active / "parent_2026_07_31_finalize.md", "parent_2026_07_31")
+    new_finalize = _write_finalize_plan(active / "parent_finalize_2026_07_31.md", "parent_2026_07_31")
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(new_finalize)])
+    assert rc == 1
+
+
+def test_only_ignores_a_preexisting_duplicate_when_neither_gating_plan_is_in_scope(tmp_path: Path) -> None:
+    """RULE-11 blast-radius safety extends to duplicates too: a pre-existing duplicate
+    pair sitting at rest must not block an unrelated commit."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_07_31.md")
+    _write_finalize_plan(active / "parent_2026_07_31_finalize.md", "parent_2026_07_31")
+    _write_finalize_plan(active / "parent_finalize_2026_07_31.md", "parent_2026_07_31")
+    unrelated = _write_plan(active / "unrelated_2026_08_05.md", todos=1)  # single-todo carve-out
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(unrelated)])
+    assert rc == 0

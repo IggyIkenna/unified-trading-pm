@@ -1,7 +1,15 @@
 violation_count: 0
 draft_gate_violation_count: 0
+duplicate_violation_count: 6
 rule: finalize-plan-coverage
 source: "task_template.md \xA74 'Every AO-dispatched plan needs a gated finalize plan'\
   \ (operator ruling 2026-07-24)"
 baseline_files: []
 draft_gate_baseline_files: []
+duplicate_baseline_slugs:
+- prediction_phase_ab_residuals_2026_07_24
+- sports_closeout_track_s2_foldin_2026_07_25
+- sports_taxonomy_p1_capture_and_contracts_2026_08_08
+- sports_taxonomy_p2_migration_2026_08_08
+- tradfi_manifest_content_recovery_completion_2026_07_24
+- venue_capability_route_axis_and_cross_ag_declarations_2026_08_14

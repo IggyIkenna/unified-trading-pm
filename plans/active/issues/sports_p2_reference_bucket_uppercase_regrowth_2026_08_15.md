@@ -37,6 +37,8 @@ source:
 resolved_by:
 locked_by:
 locked_since:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Sports reference-bucket 19-token restamp — live regrowth after the closing verification

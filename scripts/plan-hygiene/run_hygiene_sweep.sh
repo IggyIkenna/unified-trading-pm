@@ -461,6 +461,12 @@ if [ -n "$DIFF_BASE_REF" ]; then
   AGCLOSEOUT_DIFF_ARGS=(--diff-base "$DIFF_BASE_REF")
 fi
 run_check "AG-closeout linkage (single-AG docs -> consolidated closeout, ratchet)" hard python3 "$SCRIPT_DIR/check_ag_closeout_linkage.py" "${AGCLOSEOUT_DIFF_ARGS[@]}"
+# Duplicate-gated finalize plans (duplicate_finalize_plans_created_for_one_parent_2026_08_06 todo 2) —
+# corpus-wide, hard 0 (NOT a ratchet: a duplicate is always a bug, two finalize plans would race the
+# identical archival the moment the shared parent clears, never a tolerable accumulated debt like the
+# checks above). The precommit --only wiring above (staged-plans block) already catches a NEW duplicate
+# at commit time; this is the full-corpus sweep for one already sitting at rest.
+run_check "Duplicate gated finalize plans (hard 0)" hard python3 "$SCRIPT_DIR/../quality_gates/check_finalize_plan_coverage.py" --workspace-root "$(dirname "$PM_DIR")" --duplicates-only
 # Terminal-status-archived (operator finding 2026-07-25) — no plan/issue doc with a TERMINAL
 # status (issue: resolved/false-positive/superseded; plan: complete/superseded/cancelled) may
 # sit in plans/active/ or plans/active/issues/ instead of plans/archive/ — this is
@@ -592,6 +598,10 @@ if [ -n "$NO_REGEN" ]; then
 else
   cd "$PM_DIR" && python3 scripts/plans/regenerate_active_plan_inventory.py 2>&1 | tail -5 || echo "⚠️ regenerator failed"
 fi
+
+echo ""
+echo "--- Duplicate-gated finalize plans (alongside the orphan count above) ---"
+python3 "$SCRIPT_DIR/../quality_gates/check_finalize_plan_coverage.py" --workspace-root "$(dirname "$PM_DIR")" --duplicates-only || true
 
 echo ""
 echo "--- Domain index regenerator (plans/active/INDEX.md) ---"

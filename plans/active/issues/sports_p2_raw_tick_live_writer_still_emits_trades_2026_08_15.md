@@ -39,6 +39,8 @@ source:
 resolved_by:
 locked_by:
 locked_since:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Sports raw-tick live writer still emits `data_type=trades`
