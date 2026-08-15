@@ -81,44 +81,75 @@ context_scope:
       7th "safe survivor" — flagged as needing this decision, never actioned).
 
       **RESOLVED 2026-08-08 (operator ruling, NA-corpus blocker digest round 5, id=62 — "let Claude propose a real
-              contract per pair, deriving from the existing 10 real pairs' conventions").** Read
-              `e2e-testing/scripts/validation/validate_shards_4pillar.py` in full (563 lines) first.
+                  contract per pair, deriving from the existing 10 real pairs' conventions").** Read
+                  `e2e-testing/scripts/validation/validate_shards_4pillar.py` in full (563 lines) first.
 
-              **Root finding**: the script already LOADS a per-family UAC-sourced required-column contract for all 4
-              families — `_OHLCV_REQUIRED`, `_TICK_REQUIRED`, `_DEFI_REQUIRED`, `_SPORTS_REQUIRED` (`_load_uac_required()`,
-              lines 96-129, sourced from `unified_api_contracts.internal.testing.seed_validator`). **But
-              `required_row_columns_for()` (line 184) only ever consults `_OHLCV_REQUIRED`** — every non-OHLCV family
-              hardcodes `base = frozenset()` (line 196), discarding the already-loaded tick/defi/sports contracts. Pillar-3
-              degrades to time-column-only for 51/61 pairs not because no contract exists, but because 3 of 4 already-defined
-              contracts are dead code. Pillar-2 has the matching gap: `_NAN_SCAN_COLUMNS` (lines 162-166) has no `tick` entry
-              at all, so tick-family NaN checks are vacuously green regardless of `price`/`quantity` nulls.
+                  **Root finding**: the script already LOADS a per-family UAC-sourced required-column contract for all 4
+                  families — `_OHLCV_REQUIRED`, `_TICK_REQUIRED`, `_DEFI_REQUIRED`, `_SPORTS_REQUIRED` (`_load_uac_required()`,
+                  lines 96-129, sourced from `unified_api_contracts.internal.testing.seed_validator`). **But
+                  `required_row_columns_for()` (line 184) only ever consults `_OHLCV_REQUIRED`** — every non-OHLCV family
+                  hardcodes `base = frozenset()` (line 196), discarding the already-loaded tick/defi/sports contracts. Pillar-3
+                  degrades to time-column-only for 51/61 pairs not because no contract exists, but because 3 of 4 already-defined
+                  contracts are dead code. Pillar-2 has the matching gap: `_NAN_SCAN_COLUMNS` (lines 162-166) has no `tick` entry
+                  at all, so tick-family NaN checks are vacuously green regardless of `price`/`quantity` nulls.
 
-              **Proposed concrete contract (extends the OHLCV pattern verbatim)**: (1) wire `_TICK_REQUIRED` into
-              `required_row_columns_for()` for `family=="tick"` → required columns `{trade_id, price, quantity, side}`,
-              covers every `trades`/`tick`/`tbbo`/`bbo`/`mbo`/`mbp` pair fleet-wide; (2) add `"tick": ("price", "quantity")`
-              to `_NAN_SCAN_COLUMNS` at the same 1% default threshold; (3) wire `_DEFI_REQUIRED`/`_SPORTS_REQUIRED` too, but
-              ONLY for the specific data_types their single flat UAC contract actually matches (yield/lending-shaped defi;
-              `odds` sports) — do NOT apply blindly to the whole family (defi/sports each span several distinct real schemas,
-              e.g. `dex_pools` has no `apy` column; forcing the yield contract on it would false-fail). The remaining
-              non-matching defi/sports data_types need their own per-data_type UAC contracts first — genuine design work,
-              filed as its own follow-up below, not blocking the tick-family fix.
+                  **Proposed concrete contract (extends the OHLCV pattern verbatim)**: (1) wire `_TICK_REQUIRED` into
+                  `required_row_columns_for()` for `family=="tick"` → required columns `{trade_id, price, quantity, side}`,
+                  covers every `trades`/`tick`/`tbbo`/`bbo`/`mbo`/`mbp` pair fleet-wide; (2) add `"tick": ("price", "quantity")`
+                  to `_NAN_SCAN_COLUMNS` at the same 1% default threshold; (3) wire `_DEFI_REQUIRED`/`_SPORTS_REQUIRED` too, but
+                  ONLY for the specific data_types their single flat UAC contract actually matches (yield/lending-shaped defi;
+                  `odds` sports) — do NOT apply blindly to the whole family (defi/sports each span several distinct real schemas,
+                  e.g. `dex_pools` has no `apy` column; forcing the yield contract on it would false-fail). The remaining
+                  non-matching defi/sports data_types need their own per-data_type UAC contracts first — genuine design work,
+                  filed as its own follow-up below, not blocking the tick-family fix.
 
-              **NOT implemented this session** — the code change is in `e2e-testing`, out of this session's edit scope;
-              filed as a fully-scoped spec citing exact file:line targets (`:96-129`, `:162-166`, `:184-197`) for the next
-              e2e-testing session. See the implementation todo immediately below.
+                  **NOT implemented this session** — the code change is in `e2e-testing`, out of this session's edit scope;
+                  filed as a fully-scoped spec citing exact file:line targets (`:96-129`, `:162-166`, `:184-197`) for the next
+                  e2e-testing session. See the implementation todo immediately below.
 
-- [ ] [SCRIPT] P2. **Implement the schema/NaN contract decided above** in
-      `e2e-testing/scripts/validation/validate_shards_4pillar.py`: (1) wire `_TICK_REQUIRED` into
-      `required_row_columns_for()` for `family=="tick"`; (2) add a `"tick": ("price", "quantity")` entry to
-      `_NAN_SCAN_COLUMNS`; (3) wire `_DEFI_REQUIRED` for yield/lending-shaped defi data_types and `_SPORTS_REQUIRED` for
-      `odds` only (not the whole family) — narrow `_data_type_family()`'s defi/sports branches if needed to avoid
-      false-fails on non-matching data_types. Add/update regression tests pinning the new required-column sets per
-      family. Re-run `--json-out` against a live sample to confirm the actual pair-count split (tick vs. defi-yield vs.
-      sports-odds vs. still-advisory) before claiming a specific "N of 51 now real" number. (repo: e2e-testing)
-- [ ] [DESIGN] P3. **Define real per-data_type UAC contracts for the remaining defi/sports data_types** that don't match
-      the single flat `_DEFI_REQUIRED`/`_SPORTS_REQUIRED` contract (dex_pools/swaps/bridge/gas_fees for defi;
-      fixtures/results/lineups for sports) — genuine design work (new UAC `seed_validator` entries per data_type), not
-      bounded implementation; stays `assigned_vm: NA` until scoped. (repos: unified-api-contracts, e2e-testing)
+- [x] ✅ [SCRIPT] P2. **PARTIAL — tick wired (1+2 shipped); defi/sports (3) deliberately NOT wired, new finding: the
+      flat UAC contracts don't match ANY live production schema, not just the "remaining" ones.** e2e-testing
+      (2026-08-15, slot-31·cicd/infra). Shipped: (1) wired `_TICK_REQUIRED` into `required_row_columns_for()` for
+      `family=="tick"` — post-strip required = `{trade_id, price, quantity, side}`, verified against live CEFI
+      connectors (`tardis_machine_ws.py`, `deribit_ws.py`, `binance_futures_ws.py`, `coinbase_spot_ws.py`, `okx_ws.py`,
+      `bitfinex_spot_ws.py`, `bybit_ws.py` all emit a literal `trade_id` column) — matches for real, safe to enforce;
+      (2) added `"tick": ("price", "quantity")` to `_NAN_SCAN_COLUMNS`. **NOT implemented — (3)
+      `_DEFI_REQUIRED`/`_SPORTS_REQUIRED` wiring, with evidence**: before wiring, verified the two "should obviously
+      match" candidates each contract names (yield-shaped defi, sports odds) against their actual live GCS-writer column
+      names — neither matches: - `_DEFI_REQUIRED` = `{protocol, asset, apy}` (post-strip). `staking_yields_handler.py`
+      writes `{symbol, ts_event, venue, chain, apy, total_staked}` — has `apy` but no `protocol`/`asset` column at all
+      (uses `symbol`). `lst_rates_handler.py`'s `_OUTPUT_COLUMNS` =
+      `{timestamp, token, exchange_rate, apy, quote_asset,       protocol, chain, block_number, method, contract}` — has
+      `protocol` + `apy` but uses `token`, never a literal `asset` column. `lending_indices_write.py` never emits a flat
+      `apy` at all (writes `supply_apy`/`borrow_apy` per `LendingRate`, matching `protocol_data.py`'s dataclass). -
+      `_SPORTS_REQUIRED` = `{league, venue, match_id, odds_home, odds_away}` (post-strip: `venue` is path-identity so
+      really `{league, match_id, odds_home, odds_away}`). `odds_api_adapter.py` writes `event_id` (never `match_id`) and
+      no `odds_home`/`odds_away` columns anywhere in the file; broader grep across every
+      `market_interface/       adapters/sports/*.py` + `live/connectors/odds_api_ws.py` found zero hits for
+      `match_id`/`odds_home`/`odds_away` fleet-wide, only one incidental `league` hit (`opticodds_adapter.py`). Wiring
+      either contract in as specified would have false-failed real production shards under the MTDS quality-gates STEP
+      5.88 harness this script backs (a load-bearing gate, not cosmetic) — exactly the "do NOT apply blindly... would
+      false-fail" risk the 2026-08-08 ruling itself warned about, just a bigger blast radius than that ruling assumed
+      (it's not only the "remaining non-matching" defi/sports data_types that need new contracts — the two it assumed
+      already matched don't either). Left `required_row_columns_for()` returning `frozenset()` for defi/sports
+      (unchanged no-op behavior, safe) with a docstring recording this evidence inline. Added regression tests
+      (`tests/unit/test_validate_shards_4pillar_required_columns.py`) pinning both the new tick contract AND the
+      deliberate defi/sports non-wiring, so a future edit can't silently reintroduce the false-fail risk. Did NOT re-run
+      `--json-out` pair-count split — the DEFI/SPORTS numbers are unchanged from the pre-existing baseline (still
+      advisory/vacuous), only the tick pair count moved; a fresh live sample run is folded into the design todo below
+      once real per-data_type contracts exist to validate against. Source:
+      `plans/active/issues/silent_wrong_answer_audit_untracked_followups_2026_07_28.md`
+- [ ] [DESIGN] P3. **Define real per-data_type UAC contracts for defi/sports data_types** — corrected scope, 2026-08-15:
+      this is NOT limited to the "remaining" non-yield/non-odds data_types (dex_pools/swaps/bridge/gas_fees for defi;
+      non-odds sports types) as originally scoped. The implementation todo above found the flat `_DEFI_REQUIRED`/
+      `_SPORTS_REQUIRED` UAC seed_validator contracts don't match live production column names even for the "obviously
+      yield/odds-shaped" candidates (`staking_yields`/`lst_rates` write `symbol`/`token`+no bare `apy` in one case,
+      `apy`+no `protocol`/`asset` in the other; the `odds` writer uses `event_id` with no `match_id`/
+      `odds_home`/`odds_away` at all). Needed: real per-data_type UAC `seed_validator` entries (or a rename of the
+      seed_validator's role — it may be intentionally seed-only and never meant to gate live prod schema; that framing
+      question itself needs an operator/design call) matching each data_type's ACTUAL live writer schema, not the
+      seed-data mirror. Genuine design work, not bounded implementation; stays `assigned_vm: NA` until scoped. (repos:
+      unified-api-contracts, e2e-testing)
 
 ## Why this wasn't fixed inline
 
@@ -159,3 +190,9 @@ should be filed as its own todo against that decision's outcome.
   explicitly undecided schema-contract design question (no per-pair schema/NaN-tolerance contract exists to check
   against), not bounded work a worker could resolve alone.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **2026-08-15 (slot-31·cicd/infra, cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md dispatch)**: Implemented
+  the tick half of the 2026-08-08-ruled contract (safe, verified against live connectors); did NOT implement the
+  defi/sports half — live-schema verification found the flat UAC contracts don't match production column names for
+  either candidate data_type, a bigger/different finding than the 2026-08-08 ruling assumed. See the todo above for the
+  full evidence trail; corrected the DESIGN follow-up's scope to match. Doc remains `assigned_vm: NA` — the corrected
+  DESIGN todo is still a genuine open decision (real per-data_type contracts, or a reframing of seed_validator's role).

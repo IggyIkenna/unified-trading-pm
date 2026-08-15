@@ -140,8 +140,18 @@ source: >-
       capture is actually dispatched+landing non-null for the equity-perp symbol subset specifically) stays tracked
       there as the one genuinely open (verify, not build) question. Source:
       `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
-- [ ] [CODE] P2. Recurring daily funding/basis scan across crypto-venue equity-perps (e2e-testing, scheduled job)
-      Source: `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
+- [x] ✅ [CODE] P2. Recurring daily funding/basis scan across crypto-venue equity-perps (e2e-testing, scheduled job)
+      Source: `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` — **SHIPPED
+      e2e-testing@d1fe3dc6aa**. `scripts/cefi/equity_perp_funding_basis_scan.py`: scans the
+      `CEFI_EQUITY_PERP_BASE_UNIVERSE` across Binance/OKX/Bybit, computing annualized funding (UAC
+      `perp_funding_cadence`), perp-vs-index basis (bps), and a market-hours-vs-off-hours flag, ranked into an
+      opportunity-sizing report. Reads the already-populated `derivative_ticker` data
+      (mark_price/index_price/funding_rate — see
+      `cefi_equity_perp_mark_index_funding_derivative_ticker_already_covers_2026_08_15.md`) via
+      `CanonicalParquetReader`, no new capture needed. Wired as a scheduled job via
+      `scripts/cefi/equity_perp_funding_basis_scan_daily.sh` (mirrors `scripts/defi/daily_positioning_dump.sh`'s cron
+      pattern, 00:15 UTC). 15 new unit tests (`tests/unit/test_equity_perp_funding_basis_scan.py`), `quality-gates.sh`
+      green.
 - [ ] [CODE] P2. Backfill the 3 KRX stocks via guardrailed Yahoo (Phase 5, deployment-service +
       market-tick-data-service) Source: `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
 - [ ] [CODE] P2. Databento L-floor boundary PRECISION probe + update LEVEL_MAX_LOOKBACK_DAYS (Phase 5,
@@ -196,8 +206,10 @@ source: >-
       `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [ ] [CODE] P2. Track 0: Capture Binance/OKX/Bybit indexPrice/markPrice/fundingRate for equity-perps as a first-class
       data_type Source: `plans/active/cefi_consolidated_closeout_2026_07_18.md`
-- [ ] [CODE] P2. Track 0: Wire a recurring daily funding/basis scan across all crypto-venue equity-perps Source:
-      `plans/active/cefi_consolidated_closeout_2026_07_18.md`
+- [x] ✅ [CODE] P2. Track 0: Wire a recurring daily funding/basis scan across all crypto-venue equity-perps Source:
+      `plans/active/cefi_consolidated_closeout_2026_07_18.md` — **SAME underlying work as this batch's earlier
+      "Recurring daily funding/basis scan" todo above (both cite the same cryptovenue Phase 1b item via different source
+      docs)** — SHIPPED e2e-testing@d1fe3dc6aa, see that entry for full evidence.
 - [ ] [CODE] P2. Track 0: Launch the CeFi Tardis backfill for the equity-perp window Source:
       `plans/active/cefi_consolidated_closeout_2026_07_18.md`
 - [ ] [CODE] P2. instrument_type casing residual: fresh live re-count against current manifest to confirm literal 100%

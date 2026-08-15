@@ -382,17 +382,69 @@ source: >-
       `-t "="` exact-match semantics) — tagged `# bats test_tags=integration,tmux` so it's selectable via
       `bats --filter-tags` even though the fleet's current bats invocation doesn't filter. All 5 tests green locally.
       Source: `plans/active/issues/pm_bats_tmux_fixture_leak_wedges_shared_host_2026_08_10.md`
-- [ ] [CODE] P2. Implement the schema/NaN contract in e2e-testing/scripts/validation/validate_shards_4pillar.py per the
-      operator-ruled spec (wire _TICK_REQUIRED, add tick to _NAN_SCAN_COLUMNS, wire _DEFI_REQUIRED/_SPORTS_REQUIRED
-      narrowly) Source: `plans/active/issues/silent_wrong_answer_audit_untracked_followups_2026_07_28.md`
-- [ ] [CODE] P2. Backfill the 10 dataless coins (WIF/BONK/JUP/JTO/RENDER/FET/TAO/ORDI/STX/LDO) into GCS perp funding via
-      launch-cefi-sharded-backfill.sh -- operator-approved 2026-08-08, no further confirmation needed, ready to launch
-      as a VM backfill. Source: `plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md`
-- [ ] [CODE] P2. OKX-SWAP perp funding sparse (only ~9 coins captured in 2026 vs expected ~19+) -- verify the OKX
-      derivative_ticker backfill universe in MTDS. Source:
+- [x] ✅ [CODE] P2. **PARTIAL — tick contract wired + tested; defi/sports deliberately NOT wired (new finding: flat UAC
+      contracts don't match live production schema for either candidate data_type).** e2e-testing@0270b15d6a
+      (2026-08-15, slot-31·cicd/infra). Wired `_TICK_REQUIRED` into `required_row_columns_for()` for `family=="tick"`
+      (verified against live CEFI connectors) + added `"tick": ("price", "quantity")` to `_NAN_SCAN_COLUMNS`; added
+      `tests/unit/test_validate_shards_4pillar_required_columns.py` pinning both the tick contract and the deliberate
+      defi/sports non-wiring. QG green (`✅ ALL QUALITY GATES PASSED`, sentinel-verified at HEAD); quickmerge landed on
+      LDR (post-push ancestry verified). Full evidence trail + corrected DESIGN follow-up scope in the source issue
+      doc's Progress Log. Source: `plans/active/issues/silent_wrong_answer_audit_untracked_followups_2026_07_28.md`
+- [x] ✅ [CODE] P2. **MOOT — already captured live; the todo's own premise (a hand-curated `--instrument-ids` filter to
+      edit) no longer exists.** (2026-08-15, slot-29·infra)
+      `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh` carries its own 2026-08-14 stale-description
+      correction (found + fixed by a peer session, re-verified live today): since 2026-06-23 the launcher is
+      catalogue-mvp-driven with NO `--instrument-ids` — CeFi shards launch with `VM_INSTRUMENT_IDS` unset and MTDS
+      resolves the per-venue capture universe from the IS catalogue via the shared `is_in_mvp_capture_universe`
+      predicate (perp-gated). There is no hand-curated coin list left to edit. A bounded, column-projected read of the
+      live IS catalogue (`instruments-store-cefi-prd-…/prod/catalog.parquet`) confirms all 10 named coins already have
+      `mvp=True` PERPETUAL rows on 7-11 CeFi venues each (BINANCE-FUTURES/BYBIT/OKX-SWAP/
+      KRAKEN-FUTURES/BITGET-FUTURES/COINBASE-FUTURES/… — all venues this launcher already iterates). A second bounded
+      read of the live MTDS manifest (`market-data-tick-cefi-prd-…`, `derivative_ticker` rows only) confirms funding
+      data is **already substantially captured** for every one of the 10 coins, not zero: WIF 16,857 captured rows
+      (2023-01-01→2026-08-15, 10 venues), BONK 11,475, JUP 14,785, JTO 14,463, RENDER 10,758, FET 13,519, TAO 13,573,
+      ORDI 18,963, STX 19,936 (back to 2021-01-01), LDO 21,175 (back to 2022-01-01) — each also carries a residual mix
+      of `expected_unattempted`/`empty_confirmed`/`attempted_failed` rows, the normal honest-absence bookkeeping, not
+      evidence of a gap. The 2026-06-17 "10 dataless coins" diagnosis was accurate **at the time** (pre-2026-06-23
+      mechanism); the catalogue-mvp cutover + subsequent periodic backfill runs already closed it — no VM launch needed,
+      nothing left to do here. Source: `plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md`
+- [x] ✅ [CODE] P2. **STALE PREMISE — the "only ~9 coins" figure is ~2 months stale; the current OKX-SWAP
+      derivative_ticker backfill universe + capture are healthy, no code bug found.** (2026-08-15, slot-20·infra) Two
+      independent, bounded (single-object, column-projected) live checks against prod `central-element-323112`: (1)
+      **Universe-resolution code** (`tardis_symbol_resolution._catalogue_symbols_for_venue_date`, the actual
+      per-(venue,date) backfill-universe resolver `TardisAdapter._resolve_symbols` calls) reads the rolled-up CeFi
+      lifecycle catalogue (`instruments-store-cefi-prd-…/prod/catalog.parquet`) with NO per-venue base-currency
+      restriction — the MVP base universe (`CEFI_BASE_ASSET_UNIVERSE`, ~490 assets) is shared across every cefi venue,
+      gated only by the generic mvp+perp-gate predicate. Live read: OKX-SWAP carries 667 catalogue PERPETUAL rows / 417
+      distinct mvp base assets vs BINANCE-FUTURES' 929 rows / 592 distinct mvp bases — same order of magnitude, no
+      OKX-specific universe cap in the resolver. (2) **Actual captured data** — a bounded, streamed (column-projected,
+      `iter_batches`, no full-corpus load; wrapped under `run-bounded-analysis.sh`), read of
+      `market-data-tick-cefi-prd-…/_index/availability_index.parquet` (29.4M rows) filtered to
+      `data_type=derivative_ticker` + `date>=2026-01-01` found OKX-SWAP has **379 distinct base assets with
+      `capture_status=captured` AND `row_count>0` in 2026** — vs BINANCE-FUTURES 603 and BYBIT 555 (same read). This
+      directly contradicts the "~9 coins" premise (a >40x gap vs the actual current count) — the June observation was
+      accurate at the time (the source doc's own coverage-window note: "funding to 2026-05-24") but the ongoing
+      pipeline/backfill work since then closed the gap; no separate fix landed here, this is a fresh verification.
+      **Content spot-check** (3 real captured OKX-SWAP + 1 BINANCE-FUTURES shard, read via the production
+      `CanonicalParquetReader.read_shard(..., pipeline_mode="batch_tardis")`, same code path a live caller uses):
+      `funding_rate` column present and >99.9% non-null in every sample (NEIRO-USDT 41172/41178, MOODENG-USDT
+      90260/90269, ACE-USDT 43693/43693) — no captured-but-empty-funding defect either. **Verdict**: nothing to fix in
+      MTDS's OKX-SWAP derivative_ticker backfill universe or capture path; closing as verified rather than filing a new
+      finding. (Not touching the source doc per this batch's own convention — checkbox reconciliation back into source
+      docs happens in the paired finalize plan.) Source:
       `plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md`
-- [ ] [CODE] P2. P9.2 -- run scripts/repo-management/run-version-alignment.sh --fix in strategy-service after pulling
-      main in PM; small, deterministic, worth a fresh re-verify since it may already be stale/resolved. Source:
+- [x] ✅ [CODE] P2. **STALE PREMISE, CONFIRMED — duplicate of an already-resolved source-doc item, no fix needed.**
+      (2026-08-15, slot-10·infra) The source doc's own item (`citadel_paper_batch_live_reconciliation_2026_06_19.md`
+      P9.2) was already re-verified + closed on 2026-08-14: the cited UAC `0.26.0`/`0.27.0` blocking pairing no longer
+      exists. Fresh live re-run this session of
+      `bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh` (check-only, PM already fresh-pulled to
+      `origin/live-defi-rollout`) confirms the same result: **"OK: All dependencies aligned with manifest and canonical
+      constraints." / "Alignment OK."** — strategy-service's QG-preflight version-alignment gate is not blocked. `--fix`
+      was not run: the two currently-open conditions the check surfaces (fleet-wide `uv.lock` drift across ~18 repos, PM
+      self-version drift `pyproject=1.2.596` vs `manifest=1.2.741`, and a 21-repo local-vs-`origin/main`
+      `staging_versions` lag) are the SAME pre-existing, separately-tracked, out-of-scope conditions the source doc's
+      2026-08-14 re-verification already identified — none is the strategy-service-blocking pairing this todo cites, and
+      `--fix` would touch ~20 unrelated repos outside this todo's scope. Source:
       `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`
 - [x] ✅ [CODE] P2. Phase 1c: wire the drain registry into MTDS/MDPS/instruments-service/features-service backfill
       entrypoints. **STALE DUPLICATE, closed 2026-08-14** — this specific Phase-1 item shipped; Phase 1 landed
