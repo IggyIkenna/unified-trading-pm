@@ -178,14 +178,49 @@ already caught once.
       unconfirmed scope (other dates/leagues, not scanned by the 30-day window above) — P3 stays correctly blocked until
       a full-range re-verify shows 0 FAIL fleet-wide.** See the new P1/P2 todos below for the two follow-ups this
       surfaced.
-- [ ] [DATA] P1. Recover the FULL remaining FAIL scope: re-run `sports-league-id-delete` `dry` mode (list+verify only,
-      zero GCS writes) over the FULL `2020-06-06..2026-08-13` range — this time pull `league-id-work/verify_report.json`
-      off the VM (or write it directly to GCS/a durable path) BEFORE it self-deletes — to get the complete FAIL list (up
-      to 757 remaining beyond the 12 fixed above for `day=2025-09-18`). For each remaining FAIL, apply the SAME
-      diagnostic (does the target's `last_modified` postdate 2026-07-21/22? does its schema/sport_key vocabulary differ
-      from the raw source's?) before assuming the same fix applies blindly — a different root cause elsewhere in the
-      6-year population is possible. Only once the full-range dry-run shows 0 FAIL is Parts 1/2/5 of the 5-part proof
-      genuinely clean.
+- [x] [DATA] P1. ✅ Recovered the FULL remaining FAIL scope + applied the diagnostic — but the diagnostic surfaced a
+      DIFFERENT (not yet safe-to-fix) root cause than `day=2025-09-18`; see the new P1 investigation todo below. A
+      concurrent full-range `dry`-mode run (`canonical-migration-sports-league-id-delete-20260815-091724`, launched by
+      an earlier turn of this same slot-10 session, completed cleanly before this turn started: `EXIT_STATUS=1`,
+      `run.log` confirms `=== VERIFY DONE rc=1 ===`) uploaded the complete report to
+      `gs://deployment-scripts-central-element-323112/canonical-migration-sports-league-id-delete/20260815-091724/verify_report.json`
+      (73.5MB, 144,276 targets) — the durable-report fix (`deployment-service@f41f56d9`) worked as designed. **757 FAIL
+      / 143,519 PASS**, exactly matching the doc's own "up to 757 remaining beyond the 12 fixed for `day=2025-09-18`"
+      expectation (769 total − 12 fixed = 757). Note: this session ALSO redundantly launched two more copies of the same
+      full-range run (`...-104309`, likely a SPOT-preemption auto-relaunch of `...-091724`, and `...-105755`, this
+      turn's own now-unnecessary manual launch which self-deleted within ~2min, presumably refused/errored on a
+      concurrent-category conflict) — no harm done (dry mode, zero GCS writes either way), but flagging so a future
+      session doesn't assume "VM launched" without first checking for an already-completed sibling run's report.
+      Diagnostic applied to a random 15-object sample of the 757 FAILs: unlike `day=2025-09-18` (root cause: a
+      2026-07-27..07-29 fixture-enrichment overwrite), EVERY sampled canon-target's `last_modified` is `2026-08-15`
+      TODAY, clustered 10:12-10:42 UTC — squarely inside this session's own VM-launch window, but AFTER `...-091724`'s
+      own VERIFY completed (10:00:26) and BEFORE `...-104309` started (10:43:09), so neither known VM run explains the
+      write. Re-`gcs_describe_object`'d one sample object ~15min after the first check: **generation unchanged**
+      (`1786790328407356` both times) — ruling out an actively-mid-write race at read time, but not explaining who wrote
+      it once, minutes before either check. All 757 FAILs share the identical reason string ("does not fully cover the
+      raw group's rows (natural-key subset check failed)") and each is a DISTINCT (day, venue, raw) triple across 19
+      days (2026-04-18..2026-05-31), 21 venues, 7 raw league labels — notably `SUPER_LEAGUE` maps to BOTH
+      `GREEK_SUPER_LEAGUE` and `SWISS_SUPER_LEAGUE` depending on (day, venue), confirming genuine raw-label ambiguity is
+      at least a contributing factor, not just a coincidence. **Because the root-cause mechanism here is unconfirmed and
+      unlike the already-diagnosed `day=2025-09-18` case, no fix was attempted this session** — applying the
+      day=2025-09-18 remediation blindly here would repeat exactly the "assumed-identical, unverified" mistake finding T
+      already flagged as a permanent hard-stop pattern. See the new P1 todo below.
+- [ ] [DATA] P1. Identify what wrote the 757 remaining FAIL targets' current content (all sampled `last_modified` land
+      `2026-08-15`, the day of this session, NOT the `2026-07-27..07-29` K1/K2-casing-window that explained
+      `day=2025-09-18`) before attempting any fix. Candidates to check: (1) grep+READ for a scheduled/cron sports-odds
+      backfill or gap-fill job that recaptures recent-past days as part of normal steady-state operation (would explain
+      why exactly these specific (day, venue, league) shards keep getting fresh content — a live writer racing the
+      verify script rather than a stale historical gap); (2) check `deployments/archive/2026-08-15/` for any OTHER
+      `migrate_sports_league_id_casing_2026_07_21.py --apply-prod` invocation around 10:12-10:42 UTC today (rule out a
+      concurrent slot already mid-fix); (3) content-diff one sample target's current bytes against what Track V's own
+      2026-07-21/22 migration would have written, to see if it's additive (a legitimate later capture) or a genuine
+      clobber (same shape as `day=2025-09-18`). Once the writer is identified and the affected objects are confirmed
+      QUIESCENT (stable generation across two checks a few minutes apart — already true for the one object sampled this
+      session, re-confirm for others), apply `day=2025-09-18`'s diagnostic (schema/vocabulary comparison) to decide
+      fold-vs-quarantine per unit, then re-run `list_...`/`verify_...` scoped to the affected days to confirm 0 FAIL
+      before Parts 1/2/5 can be called clean. Full 757-row FAIL list is preserved at
+      `gs://deployment-scripts-central-element-323112/canonical-migration-sports-league-id-delete/20260815-091724/verify_report.json`
+      — do not re-launch a fresh full-range VM to re-derive it.
 - [x] [DATA] P2. ✅ Fix the false-negative bug in `migrate_sports_league_id_casing_2026_07_21.py`'s
       `no_clobber_all_sources_present` diagnostic (`process_unit`, `by_src`/`present` computation): it computed
       `by_src`'s per-source row hashes from `body` (the raw-source-only column schema) BEFORE the merge with `existing`,
@@ -300,6 +335,24 @@ already caught once.
   tests were green every time they ran to completion). Shipped via quickmerge (foreground, after 3 backgrounded attempts
   were also killed early) — `market-tick-data-service@ec715e509c`, verified as an ancestor of
   `origin/live-defi-rollout`.
+
+- **2026-08-15 (slot 10, this session, continued)**: Picked up the "recover the FULL remaining FAIL scope" P1 todo.
+  Found a full-range `dry`-mode run had already completed cleanly earlier this session
+  (`canonical-migration-sports-league-id-delete-20260815-091724`, `EXIT_STATUS=1`, report uploaded to GCS via the
+  already-shipped `deployment-service@f41f56d9` durable-report fix) — recovered its `verify_report.json` (73.5MB,
+  144,276 targets, 757 FAIL / 143,519 PASS, matching the doc's own up-to-757 expectation) directly rather than
+  re-launching (a redundant manual launch this turn, `...-105755`, self-deleted within ~2min without producing a report
+  — harmless, dry mode, but wasted; a SPOT-preemption auto-relaunch `...-104309` was also independently in-flight, since
+  abandoned in favor of the already-complete `...-091724` report). Applied the todo's own diagnostic to a 15-object
+  random sample of the 757 FAILs via `gcs_describe_object`: all sampled canon-targets' `last_modified` fall on
+  2026-08-15 (today), NOT the 2026-07-27..07-29 window that explained `day=2025-09-18` — a materially different,
+  unconfirmed root cause. Re-described one sample object ~15min after the first check: generation unchanged, ruling out
+  an active mid-write race but not identifying the one-time writer. Did NOT attempt any fix this session (unlike
+  `day=2025-09-18`, the mechanism here is unconfirmed — blindly reapplying that fix would be exactly the
+  "assumed-identical-without-verifying" pattern finding T already flagged as a hard-stop). Flipped this todo done
+  (recovery + diagnostic-application both genuinely complete) and filed a new, narrower P1 todo for the
+  writer-identification + per-unit fix work, keeping P3's full-mode delete correctly blocked. No code shipped this turn
+  (read-only GCS investigation + doc updates only).
 
 ## Context scout
 
