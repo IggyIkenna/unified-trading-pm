@@ -280,6 +280,13 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Progress Log
 
+- **2026-08-15 (slot-22) — 5th SPOT preemption, relaunched (6th, chunk-days 60→5); still not complete.** VM absent,
+  `run.log` stalled `17:29Z` vs check `17:50Z`. Relaunched `--chunk-days 5`, confirmed RUNNING+progressing in ~4min.
+  **Root cause**: `[[VM_PROGRESS]]` fires only on whole-chunk completion; 60-day chunks (1.3-7.4h at pace) exceeded the
+  ~1.5-2h preemption cadence, so every relaunch restarted from `VM_START_DATE` with zero checkpoint. **Unconfirmed**:
+  relaunch also re-queried `2022-07-25` for real despite prior captures though `pre_process_skip` freshness-skip exists
+  — candidates: lost mid-batch writes or manifest staleness (cf. ALCHEMY gas_fees); spot-check once idle. No code
+  shipped — GATED-skip §4c.
 - **2026-08-15 (slot-19) — 4th same-day SPOT preemption caught + relaunched (5th launch); still not complete.** VM
   absent fleet-wide, `run.log`/`EXIT_STATUS` stalled since `14:38Z` (same signature as prior 3). Relaunched via
   `launch-mtds-oracle-prices-backfill-vm.sh` (idempotent, default flags); verified RUNNING + a fresh `run.log` genuinely
