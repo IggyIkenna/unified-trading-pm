@@ -75,11 +75,13 @@ resolved_by:
       originally scoped would have destroyed the live canonical DeFi tick-data bucket. Filed the new issue doc with a
       corrected re-scoped delete list + the still-needed migration todos. (repo: instruments-service — verification
       only, no code change needed for this todo)
-- [ ] [DATA] P2. Enumerate the ~40 DeFi venues currently left as `BLOCKED-BUILD` live-poller placeholders
-      (`cross_ag_live_capture_parity_2026_08_14.md` § Finding D) and produce a phased build plan (not a full 40-poller
-      build in one pass — scope tranches by venue TVL/priority, identify shared connector patterns that reduce per-venue
-      build cost). This todo's done-when is the phased plan existing and reviewed, not all 40 pollers built. Operator
-      approved DeFi live capture as in-scope 2026-08-15. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P2. Enumerated the DeFi venues currently left as `BLOCKED-BUILD` live-poller placeholders
+      (`cross_ag_live_capture_parity_2026_08_14.md` § Finding D) and produced a phased build plan —
+      `/plans/active/defi_live_poller_phased_build_2026_08_15.md` (unified-trading-pm, this commit). Measured 39
+      currently BLOCKED-BUILD (not the `~40` estimate — 41 registered across the two scaffolds, 2 already taken over by
+      real connectors), phased into a prerequisite connector-pattern-extraction tranche + 4 chain-footprint tranches,
+      with 2 operator follow-up todos (TVL-ordering confirmation, dispatch-cadence ruling) filed in the new plan. Not
+      all 40 pollers built — that was never this todo's done-when.
 
 ## Progress Log
 
@@ -97,3 +99,10 @@ resolved_by:
   Separately, the Aave 2022-03..10 / marinade / KAMINO unique-gap migration this todo was gated on has no code/script
   evidence of ever landing. Full evidence + a corrected re-scoped delete list + follow-up migration todos filed in
   `/plans/active/issues/defi_orphan_bucket_delete_list_includes_canonical_bucket_2026_08_15.md`.
+
+- **2026-08-15 (data_engineering, slot 10, task `defi_operator_ruling_ao_dispatch-656d2e5acbf7`)**: todo 3 closed —
+  enumerated the two BLOCKED-BUILD scaffold registries directly (`dex_swap_scaffold_ws.py` 22 keys,
+  `defi_lending_scaffold_ws.py` 19 keys; 2 already taken over by real connectors) and produced the phased build plan at
+  `/plans/active/defi_live_poller_phased_build_2026_08_15.md`. `status: draft` on the new plan — it needs an operator
+  ruling on dispatch cadence (filed as a follow-up todo in that plan) before any tranche is extracted into an
+  AO-dispatchable batch.
