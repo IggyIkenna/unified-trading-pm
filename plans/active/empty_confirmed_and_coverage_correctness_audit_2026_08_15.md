@@ -113,7 +113,7 @@ data that's actually needed. This plan gets the evidence first.
       per-contract — does BYBIT come into scope too, or stay an intentional exception?
 - [x] 4. ✅ [DATA] P1. **defi empty_confirmed breakdown — DONE, same benign spread shape as cefi.** Live-measured total
       78,754,548 (matches the 2026-08-14 snapshot within normal drift). Grain:
-      `(date, chain, venue,     instrument_type, instrument_id, data_type)` — defi's chain axis confirmed. By chain:
+      `(date, chain, venue, instrument_type, instrument_id, data_type)` — defi's chain axis confirmed. By chain:
       ETHEREUM 31.50% · BASE 14.36% · AVALANCHE 14.31% · ARBITRUM 13.77% · SOLANA 10.02%, 17 more long-tail. By venue
       (76 distinct): MORPHO 21.45% · UNISWAP_V3 16.12% · TRADER_JOE_V2 12.28%, long-tail. By date: 3,149 distinct dates,
       top-20 sum to only 1.57% — no incident window, tracks organic onboarding 2018→2026 same as cefi. Cross-tab: 4,583
@@ -238,11 +238,25 @@ data that's actually needed. This plan gets the evidence first.
       in `_DATABENTO_SUPPORTED_DATA_TYPES` instead of silently returning an empty DataFrame with no failure flag. Not
       urgent (nothing currently misfires — all configured tradfi dts are supported today) but should land before any new
       tradfi data_type is added to the expected-universe.
-- [ ] [DATA] P0. **Verify whether prediction's Polymarket catalog-writer gap (zero blobs since 2026-08-05) is being
+- [x] ✅ [DATA] P0. **Verify whether prediction's Polymarket catalog-writer gap (zero blobs since 2026-08-05) is being
       silently absorbed as honest `SOURCE_RETURNED_ZERO`** via `process_completeness.py:205-259`'s daily venue-grain
       stamp — check live manifest rows for POLYMARKET `empty_confirmed`/`SOURCE_RETURNED_ZERO` counts since 2026-08-05
       specifically (not yet done, flagged but out of scope in the tagging-quality pass). If confirmed, this is masking a
-      real production outage as clean data — treat as P0 alongside the already-filed catalog-gap issue.
+      real production outage as clean data — treat as P0 alongside the already-filed catalog-gap issue. **2026-08-15**:
+      re-measured live (`get_storage_client().list_blobs()` against `instruments-store-pred-prd-central-element-323112`)
+      — gap is real and ONGOING through today: 08-03/08-05/08-08 had 62-63 POLYMARKET blobs, **08-10 through 08-15 all
+      have exactly 0** (KALSHI stayed healthy every date, 43→50 growing) — the actual break point is between 08-08 and
+      08-10, not immediately after 08-05. Separately confirmed the Gamma API itself is healthy right now (live
+      unauthenticated `GET     gamma-api.polymarket.com/markets?closed=false&active=true` → HTTP 200, normal payload, no
+      schema drift), so this is **NOT** the same SOURCE_RETURNED_ZERO-absorption class as the cefi/defi bugs just fixed
+      above (those were a code path silently swallowing a real fetch failure into a false confirmed-empty stamp).
+      Checked for a Cloud Scheduler job or GH Actions `schedule:` workflow driving this catalogue build — found neither
+      in this project's visible config, so the trigger lives outside this repo (Cloud Run job / VM cron / AO dispatch).
+      Zero blobs (not a thin/partial catalogue) is more consistent with the job simply not running for POLYMARKET since
+      08-10 than with an in-code absorption bug, but this isn't fully proven without the job's own run logs — full
+      evidence + the updated root-cause todo landed in
+      `plans/active/issues/prediction_live_instrument_cache_never_refreshed_and_polymarket_catalog_gap_2026_08_14.md`
+      (Root Cause B), which remains open pending whoever owns the trigger mechanism.
 - [ ] [OPERATOR] P1. **Rule on BYBIT's scope in the FUTURE→futures_chain "always bundle" policy** — 409,343 rows,
       currently an intentional per-contract exception under the existing F2 rule; the 2026-08-15 "always bundle" ruling
       is broader than F2 and doesn't explicitly resolve whether BYBIT is now in scope too.
@@ -253,12 +267,12 @@ data that's actually needed. This plan gets the evidence first.
       operational.
 
       **DONE 2026-08-15 (slot-28, backend_engineer) — same operation as
-              `plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s "Re-run rebuild_tradfi_manifest.py..." todo
-              (dispatched separately, resolved here concurrently — see that plan for full evidence).** Full-corpus rebuild
-              (`canonical-migration-tradfi-manifest-rebuild-20260815-061239`, 2020-01-01..2026-08-15, `--chunk-days 30`)
-              completed exit_code=0, 1,397,013 shards / 81 chunks. Live manifest recount confirms 0
-              `instrument_type=FUTURE` rows with populated `underlying` + blank `instrument_id` remain (checked both
-              CME-scoped and unscoped across all venues).
+                  `plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s "Re-run rebuild_tradfi_manifest.py..." todo
+                  (dispatched separately, resolved here concurrently — see that plan for full evidence).** Full-corpus rebuild
+                  (`canonical-migration-tradfi-manifest-rebuild-20260815-061239`, 2020-01-01..2026-08-15, `--chunk-days 30`)
+                  completed exit_code=0, 1,397,013 shards / 81 chunks. Live manifest recount confirms 0
+                  `instrument_type=FUTURE` rows with populated `underlying` + blank `instrument_id` remain (checked both
+                  CME-scoped and unscoped across all venues).
 
 - [ ] [DATA] P2. Fix cefi's legacy blank-instrument-id FUTURE bucket (~3,299 captured rows, BYBIT/DERIBIT) — add
       `"future"` to `_BUNDLE_GRAIN_EXCLUDED` or route it to `futures_chain` at `rebuild_cefi_manifest.py:454` (mirrors
