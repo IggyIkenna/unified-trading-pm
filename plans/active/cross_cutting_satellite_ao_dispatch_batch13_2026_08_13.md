@@ -293,8 +293,15 @@ source: >-
       Source: `plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`
 - [ ] [INFRA] P3. wire an automated deploy/sync for glue-runner-crash-loop-watchdog.sh so a repo fix reaches the host
       Source: `plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`
-- [ ] [BACKEND] P2. document the circular-dependency gap (scheduled workflow runs from default branch) in ci-cd-flow.md
-      Source: `plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`
+- [x] ✅ [BACKEND] P2. document the circular-dependency gap (scheduled workflow runs from default branch) in
+      ci-cd-flow.md — unified-trading-pm@83a3227b7d (2026-08-15, slot-19·backend). Added a paragraph to
+      `/codex/08-workflows/ci-cd-flow.md`'s "Staging re-entry procedure" section, immediately after the existing
+      "Default-branch gotcha" line: documents that fixing a scheduled/`workflow_dispatch` workflow's OWN `run:` block is
+      inert on every scheduled trigger until the fix promotes LDR→main (a circular dependency when the fix's purpose is
+      to unblock the alerting/promotion pipeline itself — the exact shape the source incident hit), and cites the
+      `gh workflow run <wf>.yml --ref live-defi-rollout` escape hatch used to verify the `ldr-docs-gate.yml` `set +e`
+      fix ahead of promotion. Source:
+      `plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`
 - [ ] [BACKEND] P2. sweep the fleet for the same 'set -uo pipefail' + RC=$? -e trap via the given rg command Source:
       `plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`
 - [ ] [BACKEND] P2. add a meta-assertion that any job publishing a notify-consumed verdict output emits it on the
