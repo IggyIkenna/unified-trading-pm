@@ -21,7 +21,22 @@ repo_gates:
 - {repo: system-integration-tests, code: C5, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
 depends_on: []
 todos:
-- {id: write-check-uic-completeness, content: 'Write unified-internal-contracts/scripts/check_uic_completeness.py — AST-scan UIC source, diff against __all__, exit 1 if gaps.', status: done, note: DONE (94411e6) — 0 missing.}
+- {
+    id: write-check-uic-completeness,
+    content: 'Write unified-internal-contracts/scripts/check_uic_completeness.py — AST-scan UIC source, diff against __all__, exit 1 if gaps.',
+    status: done,
+    note: DONE (94411e6) — 0 missing.,
+    verified:
+      '2026-08-15 VERIFIED (review, slot 7, per measurement-claims-discipline — confirmed via gh api commit lookup
+      against the still-extant-on-GitHub IggyIkenna/unified-internal-contracts repo, not a local-workspace-absence
+      assumption): the DONE (94411e6) claim is ACCURATE. Commit 94411e6c71b833e7db059d12d4347a40630a9cd0
+      (2026-03-10T13:35:53Z, Rollout Agent) genuinely added scripts/check_uic_completeness.py (178 lines, file
+      status "added") to unified-internal-contracts. The repo/dir absence from the current local workspace is
+      CONFIRMED-BUILT-THEN-RETIRED, not fabrication — unified-internal-contracts was later formally eliminated
+      and merged into unified-api-contracts as the unified_api_contracts.internal subpackage (2026-03-26, per
+      codex/10-audit/_archive/unified-internal-contracts.yaml), which is why it and check_uic_completeness.py are
+      absent from this workspace today. No correction to the done-claim itself is needed.',
+  }
 - {id: add-10-missing-uic-classes, content: Add 10 missing UIC domain classes (features_liquidity + features_sports domains) to unified_internal_contracts/__init__.py __all__., status: done, note: DONE — 0 missing after fix.}
 - {id: write-check-uac-completeness, content: 'Write unified-api-contracts/scripts/check_uac_completeness.py — AST-scan UAC source, diff against __all__, exit 1 if gaps.', status: done, note: DONE (3761420) — 163 missing (curation backlog).}
 - {id: write-sit-uic-completeness, content: Write system-integration-tests/tests/integration/test_uic_completeness.py — parametrized SIT test mirroring the script., status: done, note: DONE.}

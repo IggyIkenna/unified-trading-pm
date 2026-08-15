@@ -87,7 +87,7 @@ drift_direction: advance-code
       specifically — superseded by a different, also-ML-based architecture-v2 archetype (`ML_DIRECTIONAL_EVENT_SETTLED`,
       real + substantive/169 lines/no stubs, wired to 3 prod-labeled sports slots). See Progress Log for full evidence.
 
-- [ ] [REVIEW] P3. Verify + correct the claim in `plans/archive/contract_completeness_checker_2026_03_10.plan.md` (id
+- [x] [REVIEW] P3. Verify + correct the claim in `plans/archive/contract_completeness_checker_2026_03_10.plan.md` (id
       `write-check-uic-completeness`) that `unified-internal-contracts/scripts/check_uic_completeness.py` was created
       (commit `94411e6` cited) — the `unified-internal-contracts` repo/dir is absent from the current workspace
       entirely, and `find . -name check_uic_completeness.py` returns 0 hits. Lower confidence than the item above:
@@ -96,6 +96,14 @@ drift_direction: advance-code
       Repo: unified-trading-pm. Done-when: confirm via git history (a non-shallow clone or `gh api` commit lookup for
       `94411e6`) whether the script genuinely existed pre-retirement; annotate the archived doc accordingly either way
       (confirmed-built-then-retired vs. confirmed-fabricated).
+      ✅ DONE 2026-08-15 — CONFIRMED-BUILT-THEN-RETIRED, not fabricated. `gh api repos/IggyIkenna/unified-internal-contracts`
+      confirms the repo still exists on GitHub (private; simply not cloned into this workspace), and
+      `gh api repos/IggyIkenna/unified-internal-contracts/commits/94411e6` confirms commit
+      `94411e6c71b833e7db059d12d4347a40630a9cd0` (2026-03-10T13:35:53Z) genuinely added
+      `scripts/check_uic_completeness.py` (178 lines, file status "added"). The repo was later formally eliminated —
+      merged into unified-api-contracts as the `unified_api_contracts.internal` subpackage (2026-03-26, per
+      `codex/10-audit/_archive/unified-internal-contracts.yaml`) — which explains the absence. Annotated the archived
+      doc's `write-check-uic-completeness` entry with a `verified:` field recording this evidence (same commit).
 
 - [ ] [REVIEW] P3. Verify + correct the claim in `plans/archive/operational_config_migration_2026_03_11.plan.md` (id
       `update-code-references`) citing `catalogue_updater.py` in instruments-service plus commits
@@ -178,3 +186,16 @@ drift_direction: advance-code
   **Not independently re-verified**: whether the 3 sports slots are *currently live-trading* in production vs. just
   configured (the `-prod` slot-label suffix is suggestive but not proof of live trading status) — `code-shipped` was
   chosen over `live` in the codex fix specifically to avoid over-claiming a runtime fact I did not check.
+
+- **2026-08-15 (todo `write-check-uic-completeness`, review slot 7)**: verified via `gh api` against the still-extant
+  (but no-longer-locally-cloned) `IggyIkenna/unified-internal-contracts` GitHub repo — commit
+  `94411e6c71b833e7db059d12d4347a40630a9cd0` (2026-03-10T13:35:53Z) genuinely added
+  `scripts/check_uic_completeness.py` (178 lines, confirmed via the commit's `files[].status: "added"`). This is
+  CONFIRMED-BUILT-THEN-RETIRED, not a false-done: the repo was later formally eliminated (merged into
+  unified-api-contracts as `unified_api_contracts.internal`, 2026-03-26, per
+  `codex/10-audit/_archive/unified-internal-contracts.yaml`), which is why `find` and a workspace grep return 0 hits
+  today. Annotated `plans/archive/contract_completeness_checker_2026_03_10.plan.md`'s `write-check-uic-completeness`
+  entry with a `verified:` field capturing this evidence (same commit). No correction to the archived doc's
+  substantive DONE claim was needed — only the confirmation itself. The doc stays `status: open` — 2 todos remain
+  (the `operational_config_migration` P3 `catalogue_updater.py` verification, and the `[OPERATOR]` "Chunks 1/2 and
+  Phase B" naming ask).
