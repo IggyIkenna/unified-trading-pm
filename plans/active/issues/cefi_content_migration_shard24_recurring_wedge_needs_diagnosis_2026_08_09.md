@@ -139,6 +139,15 @@ not `2026-01-07`.
       count spike) that the migration script's per-file loop chokes on, by comparing shard 24's file-count/size
       distribution against a shard that completed cleanly. Repo: market-tick-data-service. —
       market-tick-data-service@483eb895
+- [ ] [SCRIPT] P3. **New, 2026-08-15**: shard 24's final completed run (`canonical-migration-cefi-content-apply-
+      20260815-181337`, WORKERS=8, reached `EXIT_STATUS=0` / 52,519/52,519 files) logged a confirmed poison-pill file
+      the script's own safety-skip correctly refused to read:
+      `raw_tick_data/by_date/day=2026-01-15/pipeline_mode=batch_tardis/asset_group=cefi/venue=DERIBIT/
+      instrument_type=perpetual/data_type=trades/XRP_USDC-30JAN26-2D3-P.parquet` — `parquet metadata claims
+      2611989805 uncompressed bytes from only 5159827874 bytes on disk (> 2147483648 ceiling)`. `read_error` totaled 3
+      for the run (2 earlier, unconfirmed from the log tail alone); this is the 1 explicitly confirmed. Manually
+      inspect/repair or re-fetch this specific file from the upstream source. Repo: market-tick-data-service
+      (investigation) / instruments-service or the venue capture pipeline (repair, TBD once inspected).
 
 ## Progress Log
 
@@ -259,3 +268,11 @@ not `2026-01-07`.
   under the fleet's existing 900s stall-timeout self-kill + `DP_VM_STALL` escalation monitoring rather than babysitting
   to completion within one session. If it wedges again on `WORKERS=8`, recommendations #2-4 (explicit `del df`, tighter
   `release_unused` cadence, 120s `as_completed` timeout) are the next things to try, in that order.
+- **2026-08-15T21:10Z (slot-3, review, from `cefi_residual_ao_dispatch_2026_08_15_finalize.md`)**: the `WORKERS=8`
+  relaunch above **completed successfully** — `EXIT_STATUS=0`, all 52,519/52,519 files, terminal
+  `SCRIPT 1 CONTENT MIGRATION SUMMARY (APPLIED)` banner, `DEPLOYMENT_COMPLETED exit_code=0` at 20:13:16Z, clean
+  `VM_SHUTDOWN_ON_COMPLETION` self-delete — no repeat wedge, recommendations #2-4 were not needed. This closes out
+  shard 24 as the sole remaining holdout of the 44-way `cefi-content-apply` fleet per
+  `cefi_residual_ao_dispatch_2026_08_15.md`'s todo 2. One new finding filed as a todo above (a confirmed poison-pill
+  parquet file this run's own safety-skip correctly refused). Full verification evidence + method:
+  `cefi_residual_ao_dispatch_2026_08_15_finalize.md` Progress Log (now archived to `plans/archive/2026_08/`).
