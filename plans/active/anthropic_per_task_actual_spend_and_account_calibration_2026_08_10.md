@@ -684,6 +684,35 @@ using ~190x for AO today.
 - **context-scout 2026-08-15**: populated/refreshed context_scope (8 entries) — added `model_pricing.py` (named in the
   doc's own "Why sequential" line as one of the three files most todos touch, previously missing from the list).
 
+### 2026-08-15 (slot-4, data_engineering) — todo 11 (reservation verification) BLOCKED, not completable from this slot
+
+Dispatched todo 11 ("Verify the reservation actually held over the first post-reset window"). Two independent
+blockers, neither self-fixable from here:
+
+1. **Live VM data is unreachable from this identity.** Attempted `calibrate_account_value.py --account sub-a-ikenna`
+   and `--account sub-e-odum3default` (since 2026-08-12, the first Wednesday reset after the reservation) via a direct
+   `aws ssm send-command` against the central orchestrator VM — `AccessDeniedException` on `ssm:SendCommand` for
+   `ikenna-worker`, the same fleet-wide gap already tracked (13 independent confirmations now) in
+   `/plans/active/issues/check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09.md`. Also checked the authed
+   HTTP surface as a substitute — `GET /api/accounts/claude/wallet-reconciliation/window` already exists and computes a
+   windowed per-account multiplier, which would have been directly usable, but `ikenna-worker` has no bearer token and
+   no script mints one. Appended a 13th confirmation entry to that issue doc rather than re-diagnosing.
+2. **The task's own "Done when" needs todo 21 (laptop-side login sampler, `[OPERATOR]`, not yet shipped) regardless of
+   #1** — "for the first window after the Wednesday resets, the login sampler shows zero laptop sessions on either
+   reserved account." No VM-side proxy substitutes for that: `account_usage_history` alone cannot distinguish an AO
+   turn from a laptop turn on the same reserved account, only whether the meter moved.
+
+**Incidental finding, not yet actioned**: `server/routes/accounts.py` already ships `compute_claude_wallet_reconciliation`
+/ `compute_claude_wallet_window_reconciliation` (referenced in code as
+`claude_anthropic_flat_rate_billing_calibration_2026_08_12`) — an implied-$-vs-actual-$ boost-multiplier calculation
+per Anthropic account, live as an HTTP endpoint. This looks like it may overlap with this plan's own
+`calibrate_account_value.py` (todo 6) and the proportional-allocation todos (9, 12). Not investigated further this
+session — worth a follow-up read of `state_store.compute_claude_wallet_reconciliation` before more calibration code is
+written here, to avoid duplicating what already shipped elsewhere.
+
+Not flipping todo 11 — its Done-when is not met. Released via `/skip-current-task` with `reason_code: GATED` rather
+than re-dispatched blind.
+
 ## Deferred work after 2026-08-10 (evening)
 
 | item                                                        | state / why deferred                                                                                                                                                                                                      | blocked on                       |
