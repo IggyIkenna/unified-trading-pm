@@ -12,7 +12,7 @@ summary: >-
   historical corpus but never touched this live write path, so it keeps writing new `trades`-labeled objects (+
   presumably matching manifest rows via the `shard_counts[(bm_str, "trades", league_str, "odds", fixture_str)]`
   accumulator at the same lines) every day the writer stays unfixed.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -36,7 +36,7 @@ source:
     "sports_taxonomy_p2_migration_2026_08_08.md 'Four-surface reconciliation' REVIEW todo, live census 2026-08-15
     (slot-9)",
   ]
-resolved_by:
+resolved_by: "market-tick-data-service@28e2eb36d8 (P0), manifest-swap + GCS restamp apply 2026-08-15 (P1, slot-19)"
 locked_by:
 locked_since:
 drift_direction: advance-code
@@ -112,9 +112,19 @@ rather than a dedicated VM launch, per proportionality.
       would fall through to the generic non-sports branch) and left captured-vs-sentinel rows permanently split under
       different `data_type` values. 9 existing unit tests updated to assert the new canonical value; full
       `quality-gates.sh` green (10,796+ passed).
-- [ ] [DATA] P1. Re-stamp the ~3.2K `trades` rows written 2026-08-10 → fix-date to `odds` (GCS path + manifest, both
+- [x] ✅ [DATA] P1. Re-stamp the ~3.2K `trades` rows written 2026-08-10 → fix-date to `odds` (GCS path + manifest, both
       surfaces) via the existing restamp tooling; verify with a fresh census showing 0 `trades` rows with `attempted_at`
-      after the fix deploy time.
+      after the fix deploy time. — GCS: `restamp_sports_trades_to_odds_2026_08_12.py --apply-prod` over `--day`
+      2026-08-10..2026-08-15, 714/714 objects processed, 0 failed, 0 content_mismatch. Manifest:
+      `manifest_swap_trades_to_odds_2026_08_12.py --apply-prod` relabeled 3,229 rows in the merged index
+      (`_index/availability_index.parquet`, 0 in the frozen legacy seed) with CAS + post-write verification re-download
+      confirming 0 `trades` rows remaining on both surfaces (first attempt killed by host contention mid-CAS-retry, no
+      corruption — snapshot-first ordering held, confirmed via dry-run before retrying; second attempt succeeded clean,
+      exit 0). Fresh independent census via
+      `read_availability_index_safe(bucket="market-data-tick-sports-prd-central-     element-323112", filters=[("data_type","==","trades")])`
+      (same methodology as the original 4-surface reconciliation, different code path than the swap script's own
+      self-check): **0 `trades` rows in the sports manifest, period** — trivially satisfies "0 rows with `attempted_at`
+      after the fix deploy time" since none remain at all.
 
 ## Progress Log
 
@@ -206,3 +216,14 @@ rather than a dedicated VM launch, per proportionality.
      apply completes clean (0 rows left to relabel on both surfaces), then a fresh census matching this issue's own
      methodology (`read_availability_index_safe` against `market-data-tick-sports-prd-central-element-323112`) showing 0
      `trades` rows with `attempted_at` after the fix deploy time, per the task's own done-definition.
+
+- **2026-08-15 (slot-19, data_engineering) — P1 COMPLETE, checkbox flipped.** Second manifest-swap apply attempt
+  succeeded clean (exit 0): merged index relabeled 3,229 rows (`base=6,120,990 relabeled=3,229`, post-write verify
+  re-download confirms `data_type=trades rows remaining = 0`); legacy seed relabeled 0 (unchanged, as expected, verify
+  confirms 0 remaining there too). Independently confirmed with a fresh dry-run of the same script (0/0 rows to relabel
+  on both surfaces) and, per this issue's own stated methodology, an independent `read_availability_index_safe` census
+  (`bucket="market-data-tick-sports-prd-central-element-323112"`, `filters=[("data_type","==","trades")]`) — different
+  code path than the swap script's own self-verify — returned **0 `trades` rows in the sports manifest, period**, which
+  trivially satisfies "0 rows with `attempted_at` after the fix deploy time" since none remain at all. P1 checkbox
+  flipped above with full evidence. Both P0 and P1 are now done — this issue is ready to archive per the
+  plan-completion-and-archival-discipline SSOT (no `locked_by`, nothing blocking).
