@@ -708,6 +708,17 @@ same-session live read.
 
 ---
 
+## Known Issues
+
+- **Setup-script freshness gap on raw-create launchers** (found 2026-07-31, live-reproduced 2026-08-09): only 4 of 143
+  launchers call `lc_gcloud_create`, the only path that auto-invokes `lc_verify_setup_script_freshness`; the other 139
+  call `gcloud compute instances create` directly and get no automated warning if the GCS copy of
+  `setup-data-pipeline-vm.sh` (or another fetched startup script) drifts stale — confirmed as the live cause of a 5/5
+  missed-preemption-marker incident via a concurrent-agent republish race. Status: the shape is operator-ruled (migrate
+  high-value raw-create launchers to `lc_gcloud_create`; a first batch of 3 shipped deployment-service@6998cc228) and a
+  follow-up plan for the remaining ~136 launchers is tracked as an open P3 todo. See
+  `/plans/active/issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md` for the full incident + resolution state.
+
 ## References
 
 - `/codex/05-infrastructure/launcher-script-ssot.md` — naming, CODE_BUCKET, tarball patterns
