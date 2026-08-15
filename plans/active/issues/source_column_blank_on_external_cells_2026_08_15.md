@@ -127,3 +127,36 @@ leaving it as an unscoped "run a corpus backfill" todo.
   future worker to rediscover this. Both P1 backfill todos above (cefi 14 cells, tradfi 1 cell) are still unchecked with
   no Progress Log entry showing work started — genuinely nothing to flip yet. GATED-skipping (~120 min), same root
   blocker as the P2 audit-rerun todo (already GATED this session).
+- **2026-08-15 (slot-27, data_engineering)**: Worked the tradfi `CME/ohlcv_15m` P1 backfill todo. Investigated the 64
+  blank rows before backfilling per the todo's own verification instruction: all 64 are `pipeline_mode=live_databento` /
+  `capture_status=attempted_failed` (a failed LIVE Databento fetch, not a successful capture) — confirmed via
+  `unified-trading-library`'s own `test_manifest_writer_source_noncaptured.py` that this is the documented, intentional
+  OPTIONAL-source contract for non-captured rows under a non-batch pipeline_mode (NOT a write-path bug). Since
+  `pipeline_mode=live_databento` unambiguously encodes the attempted vendor regardless of `CME/ohlcv_15m` being a
+  registered multi-source (databento+yahoo) cell, deriving `source=databento` via
+  `source_string_for(PipelineMode.LIVE_DATABENTO)` is retroactively correct, not an imputed majority value — satisfies
+  the todo's "verify genuinely databento-sourced" bar.
+  - Wrote `market-tick-data-service/scripts/restamp_tradfi_cme_ohlcv15m_blank_source_2026_08_15.py` (copied the
+    `restamp_tradfi_source_2026_07_07.py` template per this repo's established backfill pattern, scoped tighter to just
+    this cell). First 3 apply attempts were OOM-killed on this shared host (pandas materializes the manifest's ~30
+    string columns as object-dtype Python arrays, ballooning a 367MB-compressed/14.3M-row parquet past 16GB resident) —
+    rewrote the script to pure `pyarrow.Table` + `pyarrow.compute` (peak RSS ~7GB), which then succeeded.
+  - **Applied against PROD and independently verified** (separate read-only check, not just the script's own
+    self-report, since the apply process was SIGKILLed partway through its own post-write gate check — verified the GCS
+    write itself completed cleanly before the kill): `market-data-tick-tradfi-prd-central-element-323112`'s
+    `_index/availability_index.parquet` now shows 0 blank-source rows in `(tradfi, CME, ohlcv_15m)`; all 6,632 rows in
+    that cell carry `source=databento`. **The data-plane fix is live and confirmed — this is the correctness-critical
+    part of the todo and it is done.**
+  - **Code shipping is BLOCKED, not done**: committed the script locally (`market-tick-data-service@2e7753a7`, unpushed)
+    but `quality-gates.sh` hit 2 pre-existing failing tests
+    (`test_migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py::test_build_casing_frame_upgrades_every_known_residual_token`,
+    `test_venue_fetch_cefi_manifest_canonicalization.py::...test_cme_combo_shard_itype_now_canonicalizes_uppercase`) —
+    unrelated to this change (touches only the new script file), already root-caused and tracked by slot-29 as
+    repo-blocker `RB-c19cd263` / `plans/active/issues/mtds_tradfi_combo_casing_qg_red_2026_08_15.md`; joined as a waiter
+    rather than re-diagnosing. **Do NOT flip this todo's checkbox until the code SHA actually lands on
+    `origin/live-defi-rollout`** — the manifest patch is done, but the todo's `done_definition` (checkbox + shipped
+    code) needs the repo-blocker to clear first. If a future session finds `RB-c19cd263` resolved and this todo still
+    unflipped, `cd market-tick-data-service`, `git status` (the commit may already be sitting there if the owning
+    session got interrupted before shipping), fresh-pull, re-run `quality-gates.sh --no-fix`, ship via
+    `quickmerge --agent --files 'scripts/restamp_tradfi_cme_ohlcv15m_blank_source_2026_08_15.py'`, then flip this
+    checkbox with the landed SHA as evidence.
