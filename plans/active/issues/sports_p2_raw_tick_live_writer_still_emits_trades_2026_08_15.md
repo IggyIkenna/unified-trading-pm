@@ -12,7 +12,7 @@ summary: >-
   historical corpus but never touched this live write path, so it keeps writing new `trades`-labeled objects (+
   presumably matching manifest rows via the `shard_counts[(bm_str, "trades", league_str, "odds", fixture_str)]`
   accumulator at the same lines) every day the writer stays unfixed.
-status: resolved
+status: open
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -36,7 +36,7 @@ source:
     "sports_taxonomy_p2_migration_2026_08_08.md 'Four-surface reconciliation' REVIEW todo, live census 2026-08-15
     (slot-9)",
   ]
-resolved_by: "market-tick-data-service@28e2eb36d8 (P0), manifest-swap + GCS restamp apply 2026-08-15 (P1, slot-19)"
+resolved_by:
 locked_by:
 locked_since:
 drift_direction: advance-code
@@ -125,6 +125,33 @@ rather than a dedicated VM launch, per proportionality.
       (same methodology as the original 4-surface reconciliation, different code path than the swap script's own
       self-check): **0 `trades` rows in the sports manifest, period** — trivially satisfies "0 rows with `attempted_at`
       after the fix deploy time" since none remain at all.
+- [ ] [OPERATOR] P0. **REOPENED 2026-08-15 (slot-19): the live writer is still emitting `data_type=trades` in PRODUCTION
+      as of `attempted_at` up to 2026-08-15T10:49:54Z — after both the P0 code fix
+      (`market-tick-data-service@28e2eb36d8` + `63728200`) and the P1 restamp/swap above completed.** A fresh census
+      (same `read_availability_index_safe` methodology) found **1,604 NEW `trades` rows**, all `date=2026-08-15`, all
+      `attempted_at` between 09:18:01Z and 10:49:54Z, spread across 32 sports venues (BETFAIR_EX_UK, SKYBET, BETFRED_UK,
+      … full breakdown in the Progress Log entry below). Confirmed the CODE on current `origin/live-defi-rollout` HEAD
+      is clean — `grep -n '"trades"'` across all 5 coupled call sites
+      (`venue_fetch.py`/`_sports_tick_path.py`/`odds_api_ws.py`/`manifest_finalize.py`/`sentinels.py`) returns only
+      comments + genuinely-unrelated tradfi/Polymarket/Kalshi `"trades"` literals, zero sports hardcodes remaining. So
+      this is NOT a code-fix gap — it is a **deployment gap**: per
+      `/codex/04-architecture/runtime-deployment-topology.md`
+      (`market-tick-data-service (MTDH) | VM (co-located) |     always-on`), the sports live writer runs as a standalone
+      always-on VM process (deployed via `/codex/05-infrastructure/vm-tarball-deployment.md`'s code-tarball mechanism),
+      not something a `git push` to `live-defi-rollout` auto-restarts. The running process is still executing the
+      pre-fix code image. **Needs an operator decision, not a worker action**: (1) no validated safe-restart procedure
+      exists for MTDS yet (`/codex/15-runbooks/safe-service-restart-procedures.md`: "No other critical service has a
+      validated safe-restart procedure yet" — AO is the only one built out); (2) this VM is co-located with MDPS +
+      execution-service via in_memory transport per the same topology doc, so a naive restart risks disrupting other
+      live production dataflows sharing the process; (3) I do not have the specific VM identity/redeploy command for the
+      sports live writer in this session. **Recommendation**: redeploy/restart the MTDS sports live-writer VM with the
+      current `live-defi-rollout` HEAD (`63728200`/`6fa0dd9d` or later), then re-run the P1 restamp tooling
+      (`restamp_sports_trades_to_odds_2026_08_12.py` + `manifest_swap_trades_to_odds_2026_08_12.py`) over the newly
+      accumulated window once the writer is confirmed to have stopped producing new `trades` rows (a repeat census
+      showing 0 NEW rows post-redeploy, not just 0 total, since restamping while the writer is still actively broken is
+      pure whack-a-mole — exactly the mistake this issue's own P1 already diagnosed once for the first 3,229-row
+      population). **Did NOT re-run the restamp this turn** — it would immediately go stale against the still-writing
+      process. **Did NOT restart the VM** — no validated procedure + co-located blast radius + no VM identity in hand.
 
 ## Progress Log
 
@@ -227,3 +254,27 @@ rather than a dedicated VM launch, per proportionality.
   trivially satisfies "0 rows with `attempted_at` after the fix deploy time" since none remain at all. P1 checkbox
   flipped above with full evidence. Both P0 and P1 are now done — this issue is ready to archive per the
   plan-completion-and-archival-discipline SSOT (no `locked_by`, nothing blocking).
+
+- **2026-08-15 (slot-19, data_engineering) — REOPENED: dispatched to check QG run `bd0h1ufrx` (already-landed, empty
+  output — the 5 sports/tradfi test files were already shipped and the archive already reflects it, so that half of the
+  instruction was a no-op) and then execute the P1 restamp. Before restamping, ran the standard pre-restamp census and
+  found the population had NOT stayed at 0 — it had regrown to 1,604 rows.** Full breakdown of the new population:
+  `date=2026-08-15` for all 1,604 rows; `attempted_at` range 09:18:01Z → 10:49:54Z (i.e. entirely AFTER the manifest
+  swap completed and AFTER the P0 fix commits landed); 32 venues, roughly even distribution (BETFAIR_EX_UK 58, SKYBET
+  58, BETFRED_UK 58, BETRIVERS 58, BOYLESPORTS 58, CASUMO 58, LEOVEGAS 58, GROSVENOR 58, FANDUEL 58, LIVESCOREBET 58,
+  VIRGINBET 58, WILLIAMHILL 58, PADDYPOWER 58, SMARKETS 57, BETWAY 57, UNIBET_UK 56, BETMGM 55, LADBROKES 55, CORAL 55,
+  DRAFTKINGS 55, BOVADA 54, BETONLINEAG 48, BETUS 47, LOWVIG 47, BETFAIR_SB_UK 45, BETVICTOR 41, BETANO_UK 41,
+  BET888SPORT 38, FANATICS 38, WILLIAMHILL_US 28, MATCHBOOK 18, MYBOOKIEAG 10, ODDS_API 5). Re-checked the code on
+  current HEAD across all 5 previously-fixed call sites (`venue_fetch.py`, `_sports_tick_path.py`, `odds_api_ws.py`,
+  `manifest_finalize.py`, `sentinels.py`) — confirmed clean, no sports hardcode remains, only unrelated comments +
+  genuinely-distinct tradfi/Polymarket/Kalshi `"trades"` literals. So the CODE fix holds; the gap is that the **deployed
+  production VM process has not been restarted/ redeployed** with it (`market-tick-data-service` is a standalone
+  always-on VM service per `/codex/04-architecture/runtime-deployment-topology.md`, not an auto-pull-on-push service).
+  New P0 `[OPERATOR]` todo filed above with full reasoning + recommendation. **Deliberately did NOT re-run the P1
+  restamp tooling this turn** (would immediately go stale against a still-actively-writing process — literal repeat of
+  the exact "not static residue, it keeps growing" failure mode this issue was originally opened to fix) **and did NOT
+  attempt to restart/redeploy the VM** (no validated safe-restart procedure exists for MTDS yet, the process is
+  co-located with MDPS + execution-service live dataflows per the same topology doc, and I don't have the specific VM
+  identity in this session — a blind restart of a co-located, unverified-procedure production service is outside
+  AO-worker scope without operator sign-off). Task NOT marked done; slot 19 continuing to hold this task pending the
+  operator redeploy decision above.
