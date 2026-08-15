@@ -280,6 +280,12 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Progress Log
 
+- **2026-08-15 (slot-8) — AAVE_V3 rewards todo DONE, shipped + done-when reproven.** Peer code (`c6195b59`) + UAC
+  genesis produced 0 rows — the static `_AAVE_V3_REWARD_RESERVES` list had zero active incentives. Fixed via live
+  `getAllReservesTokens()`/`getReserveTokensAddresses()` discovery (mirrors `lending_indices_rpc.py`) — currently-
+  incentivized reserves are **ETHx and USDS**. Shipped `market-tick-data-service@448d7d8eb9` (QG green vs `7e556c2b`);
+  reproven post-ship: 2 real `captured` rows. QG hit ~10 silent kills under host-wide contention (corroborated in
+  `qg_host_governor_caps_instances_not_fanout_2026_08_10.md`), cleared via a load-gated watch.
 - **2026-08-15 (slot-3, data_engineering) — 2nd SPOT preemption caught + relaunched (3rd launch); root-caused + fixed a
   real cross-VM-family monitoring bug found while diagnosing it; still not complete (multi-hour job).** Picked up after
   the slot-30 GATED checkpoint below. Live re-check found `mtds-oracle-prices-backfill` absent from
@@ -903,14 +909,12 @@ just belongs on a different layer than instrument_type does, and conflating the 
       `IS_TEST_RUN=true .venv/bin/market-tick-data-service --operation collect-solana-defi --mode batch --asset-group defi --solana-protocols kamino_oracle --start-date 2026-08-14 --end-date 2026-08-14 --force`
       — 55 real `captured` rows written for `KAMINO-SOLANA/oracle_prices` against the `-test-` bucket; MTDS QG
       (`--no-fix`) green, `EXIT_CODE=0`, zero `❌` across the full run.
-- [ ] [CODE] P2. **WIRE rewards capture for AAVE_V3** (operator ruling 2026-08-09: WIRE REAL CAPTURE). `rewards` is
-      declared valid for `aave_v3` in `PROTOCOL_CAPABILITIES` (added 2026-08-05, `unified-api-contracts@b2874193`) with
-      zero captured rows. Wire real AAVE incentive/GHO-emission `rewards` capture into
-      `market-tick-data-service/market_tick_data_service/cli/handlers/lending_rewards_handler.py` (RewardsController /
-      incentives-controller emissions per reserve). Also add the `(venue, data_type)` genesis entry to
-      `DEFI_VENUE_DATA_TYPE_CAPABILITIES` for the AAVE_V3-<chain> venues once the write path is proven. Done-when:
-      single-day force-compute produces real `captured` `rewards` rows for at least AAVE_V3-ETHEREUM against the
-      `-test-` bucket. (repos: market-tick-data-service, unified-api-contracts)
+- [x] ✅ [CODE] P2. **WIRE rewards capture for AAVE_V3** (operator ruling 2026-08-09: WIRE REAL CAPTURE — recorded in
+      this doc's Progress Log 2026-08-09,
+      `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`) —
+      `market-tick-data-service@c6195b59` (peer-shipped) + `market-tick-data-service@448d7d8eb9` (this session — fixed
+      the static reserve list; see Progress Log). Done-when reproven: 2 real `captured` `AAVE_V3-ETHEREUM/rewards` rows
+      (ETHx, USDS). MTDS QG green vs HEAD `7e556c2b`.
 - [x] ✅ [CODE] P2. **WIRE gas_fees capture for alchemy_onchain** (operator ruling 2026-08-09: WIRE REAL CAPTURE, not
       roll-back — recorded in this doc's Progress Log 2026-08-09,
       `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`) —
