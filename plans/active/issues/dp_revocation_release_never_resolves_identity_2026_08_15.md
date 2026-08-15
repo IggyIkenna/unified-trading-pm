@@ -135,13 +135,25 @@ Option 1 is the structural fix; option 2 is a stopgap that only covers the 3 eve
 
 ## Todos
 
-- [ ] [CODE] P1. Fix the deliver/release identity mismatch — carry `registry_id` through the alert-key / reconcile path
+- [x] [CODE] P1. Fix the deliver/release identity mismatch — carry `registry_id` through the alert-key / reconcile path
       (Option 1 above), or register the missing bare-event identities as a stopgap (Option 2) if the operator wants
       speed over completeness. DoD: a live execution shows a previously-held target's release succeeding
-      (`revocation release` with no "failed" / no exception), for at least one of the 3 events observed here.
-- [ ] [TEST] P1. A regression test asserting `_release_revocation` succeeds for every event the DELIVER path can
+      (`revocation release` with no "failed" / no exception), for at least one of the 3 events observed here. — ✅
+      deployment-service@bf69b2b289: `_alert_key()` stays the dict KEY; new `_encode_alert_value`/`_decode_alert_value`/
+      `alert_value()` trio in `meta_watchers.py` encode the dict VALUE as `event::registry_id` (backward-compat: a
+      pre-fix bare-event value with no `::` decodes to `registry_id=""`). `_release_revocation` takes
+      `registry_id: str = ""` and evaluates on `registry_id or event`; `reconcile_resolved` decodes `prior[key]` and
+      threads `registry_id` through; `_emit` now stores `alert_value(finding)` instead of the bare `finding.event`. Two
+      other independent sweep sites in `cli.py` (exit-code + heartbeat monitors) also switched to building their
+      `emitted` dict via `meta_watchers.alert_value(f)` instead of `f.event`, so all three call sites populate the key
+      consistently.
+- [x] [TEST] P1. A regression test asserting `_release_revocation` succeeds for every event the DELIVER path can
       legitimately produce — mirrors the anti-inertness-guard pattern already used for the batch actuator. DoD: the test
-      fails on the current code (proving it reproduces this defect) and passes after the fix.
+      fails on the current code (proving it reproduces this defect) and passes after the fix. — ✅
+      deployment-service@bf69b2b289: `test_reconcile_resolved_releases_using_registry_id_not_bare_event` in
+      `tests/unit/test_data_pipeline_monitors.py` (asserts `resolved == ["DP_VM_GONE_NO_CAPTURE::vm-x"]`,
+      `seen_identities == ["DP-VM-001"]`, `released == ["DP-VM-001"]`); full suite green (`quality-gates.sh --no-fix`,
+      3462 passed, 5 skipped, 0 failed, coverage 73.25%).
 - [ ] [OPERATOR] P2. Decide whether existing stuck holds (if any accumulated since the arming commit went live,
       ~2026-08-14T11:40Z) need manual clearing once the fix lands, or whether they self-heal on next delivery of the
       same key. DoD: a stated decision, not a default.

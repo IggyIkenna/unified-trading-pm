@@ -55,6 +55,15 @@ magnitude. Cutting redundant round-trips is the right one.
 
 - **Compound shell.** `cd x && pytest -q && git status` as ONE Bash call, not three. Chain with `&&` when a later step
   should be skipped on failure, `;` when each must run regardless.
+- **Multi-repo batched checks: `cd` each target in its own subshell, `(cd repoA && checks)` — never one flat
+  `cd repoA && checks && cd repoB && checks` chain.** A flat chain silently survives an omitted `cd` before a later
+  section: the section just runs in whatever directory the PREVIOUS section left it in and reports a real, plausible,
+  wrong repo's output under the new section's header (no error — same-shaped git output, different repo). A per-target
+  subshell can't leak a missing `cd` past its own parent's fixed cwd, so the failure mode degrades to a loud "not a git
+  repository" instead of a silent wrong-repo answer. Reproduced twice in immediate succession in one multi-repo
+  `/pre-compact` audit (2026-08-15): a flat `cd PM && ... && cd MTDS && ... && echo "=== UAC ===" && ...` (missing the
+  `cd` into UAC) reported MTDS's SHA mislabeled as UAC's both times — caught only because the two repos' SHAs were
+  implausibly identical, not by the command's own structure.
 - **Multiple `tool_use` blocks in one message** for independent calls — reading four files, grepping three patterns,
   checking two repos' status. These are independent by construction; nothing is learned by spacing them out.
 - **`replace_all: true`, or one Write**, instead of a serial run of near-identical Edits on the same file.

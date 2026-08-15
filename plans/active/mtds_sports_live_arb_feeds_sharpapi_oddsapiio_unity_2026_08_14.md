@@ -261,3 +261,21 @@ sports cell that we actually have a provider for.
   relaunching under `data_type=ODDS`, but that crashes `live_pipeline_mode_for_venue` (UAC's
   `SPORTS_DATA_TYPE_TO_SOURCE["ODDS"]` resolves to `footystats`, which has no live `PipelineMode`) — reverted to
   `trades` to unblock this recovery and filed it as a new P1 todo instead of blocking on it.
+- **2026-08-15**: Operator reversed part of the 08-08 sports taxonomy ruling — `odds_horizon_bucket` survives as its own
+  derived type (absorbs `odds_snapshot`/`odds_movement`), not folded into `odds`; `odds` (raw) stays batch+live,
+  bookmaker-as-`venue` confirmed correct (4.1M+ real rows across 33 bookmaker venues, `source=odds_api` — the earlier P1
+  todo's "batch writes ODDS" framing was based on a vestigial unused field, not the real write path). Full rationale +
+  SSOT update: `/codex/02-data/sports-data-types-catalog.md`; P2 plan todos corrected in place
+  (`unified-trading-pm@4a0f0d6c0d`). Implemented the resulting fix: `LiveWebsocketRunner` now stamps the real bookmaker
+  (from `tick["bookmaker_key"]`) as `venue` for fan-out ticks instead of the shard's coarse `ODDS_API` label, matching
+  the batch convention (`WsInstrumentBuffer.venue` override, every manifest/GCS-path/boundary-event call site updated).
+  Quality gates green (10,676 tests). **NOT YET SHIPPED**: quickmerge blocked twice by live peer WIP in dependency repos
+  (first `unified-api-contracts`/`unified-trading-library` mid-edit <60s old, blocking the pre-flight dependency-clean
+  check) — this is the same shared-slot collision pattern hit earlier in this session, not a defect in the fix itself.
+  Uncommitted but QG-verified changes sit locally in `market-tick-data-service` (`websocket_runner.py`,
+  `_ws_window_helpers.py`, `tests/unit/test_websocket_runner.py`). **Next session**: retry `bash scripts/quickmerge.sh`
+  (same commit message as this entry describes) once `unified-trading-library`/`unified-api-contracts` are clean, then
+  rebuild the tarball + redeploy `mtds-live-sports-odds-api-trades-20260814-110648` under
+  `--shard-spec sports:ODDS_API:trades` (data_type stays `trades` — see the still-open P1 data_type-mismatch todo above;
+  do NOT switch to `odds` without re-verifying pipeline_mode resolution first) and verify captured rows now carry real
+  bookmaker `venue` values, not `ODDS_API`.

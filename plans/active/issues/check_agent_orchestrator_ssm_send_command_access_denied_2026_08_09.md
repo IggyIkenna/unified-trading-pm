@@ -142,3 +142,12 @@ on shared AWS infra, not something to self-grant.
   instead, so the dispatch-freshness half of §5 still completed; only the tmux-session-count/host-watchdog-log liveness
   cross-check was skipped and reported as an explicit coverage gap in that run's report. Fourth independent consumer now
   blocked, adding `/ci-reconcile` to the list in the entry above.
+- **2026-08-15 (slot-2, data_engineering)**: FIFTH independent confirmation, from `/check-agent-orchestrator` invoked in
+  response to an operator "send a heartbeat" ask with no in-flight task otherwise open. Identical
+  `AccessDeniedException` on `ssm:SendCommand` against `i-0c9b283b31d6b5ca7` for `ikenna-worker`. No new information —
+  gap remains unresolved six days on; still blocking this identity's only credential-free read path to live AO state.
+- **2026-08-15 (slot-2, data_engineering)**: SIXTH independent confirmation, same session, re-run in response to a
+  second identical "send a /heartbeat now and continue your in-flight task" ask. Identical `AccessDeniedException` on
+  `ssm:SendCommand` against `i-0c9b283b31d6b5ca7` for `ikenna-worker`; PM checkout confirmed clean/`ahead=0` in the same
+  pass — no in-flight task exists to continue (KAMINO-SOLANA scope shipped/archived in an earlier session segment, no
+  new dispatch landed since). No new information on the IAM gap itself.
