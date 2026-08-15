@@ -86,13 +86,15 @@ drift_direction: advance-code
       unchanged — out of the registry's scope per its own docstring. `unified-api-contracts` was not modified (read-only
       reference), so only execution-service's `quality-gates.sh` was run (green, 369s).
 
-- [ ] [BACKEND] P3. Add unit-test coverage for the `GoogleAPICallError` catch that 2b92d6ac6 added to the GCS
+- [x] ✅ [BACKEND] P3. Add unit-test coverage for the `GoogleAPICallError` catch that 2b92d6ac6 added to the GCS
       blob-existence probe in `loader_transforms.py` and `loaders/base.py` (widened from
       `(OSError, ConnectionError, TimeoutError, ValueError)`) — currently zero tests reference this exception type, so a
       regression re-narrowing the catch tuple would go undetected. Repo: execution-service. Done-when:
       `tests/unit/data/test_loader_transforms.py` and `test_loaders_base.py` each have a passing case that raises
       `google.api_core.exceptions.GoogleAPICallError` from the probe and asserts the loader falls back to the
-      canonical-first candidate path instead of propagating.
+      canonical-first candidate path instead of propagating. **Already done — execution-service@8a3ab8b261**
+      (`test(data): add GoogleAPICallError coverage for GCS blob-existence probe fallback`, landed ahead of this
+      dispatch); both `test_google_api_call_error_falls_back_to_canonical_candidate` cases verified passing.
 
 - [ ] [BACKEND] P3. Add a fail-loud guard (explicit `None`/shape check, not a silent pass-through) to
       `ExecutionPolicyResolver.resolve()` / `resolve_config_algorithm()` in `execution_service/v2/policy_resolver.py`,
@@ -114,3 +116,11 @@ drift_direction: advance-code
   execution-service items: DeFi address provenance/duplication, 2b92d6ac6 scope-creep review, and the slot_label proxy
   claim). Companion docs for the strategy-service and unified-trading-pm findings from the same audit:
   `strategy_service_verification_debt_findings_2026_08_15.md`, `pm_archive_false_done_and_review_backlog_2026_08_15.md`.
+- **2026-08-15 (slot-24)**: Todo 2 (`GoogleAPICallError` test coverage) found ALREADY DONE on fresh-pull — commit
+  `execution-service@8a3ab8b261` ("test(data): add GoogleAPICallError coverage for GCS blob-existence probe fallback")
+  had already landed both required cases
+  (`TestBuildGcsPath::test_google_api_call_error_falls_back_to_canonical_candidate` in `test_loader_transforms.py`,
+  `TestBaseDataLoaderBuildGcsPath::test_google_api_call_error_falls_back_to_canonical_candidate` in
+  `test_loaders_base.py`), each raising `GoogleAPICallError` from a mocked `blob_exists` probe and asserting the
+  fallback to `expected_candidates[0]`. Ran both directly (`pytest ... -v`): 2 passed. No code change needed — checkbox
+  flipped citing the existing SHA.
