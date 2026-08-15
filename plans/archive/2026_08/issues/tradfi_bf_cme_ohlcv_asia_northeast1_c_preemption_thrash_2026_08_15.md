@@ -442,7 +442,7 @@ as `expected_atoms` into `_filter_data_types_by_atom_coverage`. These two shapes
 comparison — confirming the todo's "atom-format mismatch" hypothesis exactly, and fully explaining the repeated
 `2022-01-03` re-capture the prior entry measured.
 
-**Fix**: `market-tick-data-service@c35af0713c70b75c09815a5859430c62c5135256` (LOCAL, not yet on origin — see below) adds
+**Fix**: `market-tick-data-service@65dc99a5fffeaaf0e54c9e1da4e9b2b9ceaef022` (LOCAL, not yet on origin — see below) adds
 `tradfi_root_parent_symbol_atom()` / `with_root_parent_symbol_aliases()` in `_tradfi_manifest_shard.py`, reusing the
 EXISTING `unified_api_contracts.resolve_tradfi_underlying_to_root()` reverse lookup (built for exactly this
 `EXCHANGE_CODE_TO_NAME` product-name↔root-code translation) to derive the root-parent-symbol alias from a captured
@@ -479,6 +479,12 @@ better chance of admission), then
 verify the SHA lands on `origin/live-defi-rollout`, THEN flip the P2 checkbox above with the landed SHA. Do not redo the
 investigation or the fix — both are complete; only the ship step remains.
 
+**RESOLVED 2026-08-15**: the above is now stale — `quickmerge --agent` re-gated the tree from scratch (its own STAGE 0.4
+rebase invalidated the Pass-1 sentinel, unrelated to the RAM-valve kills above) and landed clean.
+`c35af0713c70b75c09815a5859430c62c5135256` never reached origin; the rebase rewrote it to
+`market-tick-data-service@65dc99a5ff`, ancestor-verified on `origin/live-defi-rollout`. The P2 checkbox above is flipped
+with that SHA.
+
 ### 2026-08-15 — adjacent no-op fix in `_apply_freshness_skip` shipped (slot 12); does NOT close the revised P2 todo
 
 Was dispatched the original (now-superseded) P2 framing before the entry above's atom-format-mismatch root-cause landed;
@@ -497,5 +503,5 @@ time. **Shipped**: `market-tick-data-service@abc40d9f` (+ regression test
 consecutive QG/quickmerge attempts sacrificed under 14-15 concurrent host-wide QG runs, load 9-14 sustained) before a
 clean window let it through — same governor, same root cause, independent confirmation of that entry's diagnosis.
 **Scope note**: this fix is real and adjacent but does NOT itself resolve the revised P2 atom-format-mismatch todo above
-(disjoint files, disjoint mechanism) — leaving that checkbox unflipped for whoever lands
-`c35af0713c70b75c09815a5859430c62c5135256`.
+(disjoint files, disjoint mechanism) — see the RESOLVED note above: that todo shipped separately as
+`market-tick-data-service@65dc99a5ff` (not `c35af0713c`, which never reached origin).
