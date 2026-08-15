@@ -79,8 +79,16 @@ source: >-
       services across 9 runtime SAs enumerated into `live_runtime_bindings` + `live_runtime_sa_roles` sections; YAML
       validated; QG green; quickmerge landed on LDR) Source:
       `plans/active/issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`
-- [ ] [INFRA] P3. document which live services rely on the default-compute-SA and what secrets/buckets they can
-      therefore reach (bounded documentation task) Source:
+- [x] ✅ [INFRA] P3. document which live services rely on the default-compute-SA and what secrets/buckets they can
+      therefore reach (bounded documentation task) — deployment-service@2062cb7ba1 (2026-08-15: added
+      `default_compute_sa_risk_assessment` to `gcp_service_accounts.yaml`; confirmed both broad roles
+      (secretmanager.secretAccessor, storage.admin) are UNCONDITIONAL project-level bindings — no IAM Condition on
+      either, verified via `gcloud projects get-iam-policy` condition-column check; quantified the live blast radius
+      (105 GCS buckets / 211 Secret Manager secrets reachable by all 10 default-compute-SA services, enumerated via
+      UTL `get_storage_client().list_buckets()` + `gcloud secrets list`); named the highest-risk unneeded categories
+      (wallet keys, per-trader exchange trade keys, orchestrator control-plane secrets, execution/portfolio/audit
+      stores). Read-only — no IAM binding changed. YAML validated; QG green (sentinel-verified at HEAD); quickmerge
+      landed on LDR, post-push ancestry independently verified) Source:
       `plans/active/issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`
 - [x] ✅ [DIAG] P2. verify the exact CME instrument_id string format for FUTURE contracts against the live catalogue
       before implementing tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md's already-ruled fix —
