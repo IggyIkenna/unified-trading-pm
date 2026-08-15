@@ -109,10 +109,20 @@ source: >-
       investigation finds a dedicated boot prompt is genuinely warranted; state the decision + why in the same commit.
       Done-when: `server/escalation.py`'s routing tables (`_DATA_PIPELINE_WALLS`, `_LAST_CHANCE_WALLS`, prompt
       selection) are internally consistent with the decision and a test pins it. — agent-orchestrator@8ba680c0f7
-- [ ] [INFRA] P2. Add dedup so repeated detector ticks against an already-open escalation for the same (repo, check)
+- [x] ✅ [INFRA] P2. Add dedup so repeated detector ticks against an already-open escalation for the same (repo, check)
       never spam-enqueue — reuse the existing `_wall_cooldown_key`/`get_cooldown`/`register_cooldown` machinery every
       other wall type already relies on. Done-when: a test proves 3 consecutive detector ticks against the same
-      still-open breach enqueue exactly once.
+      still-open breach enqueue exactly once. — Added
+      `test_repeated_ticks_against_open_escalation_enqueue_exactly_once` driving the REAL (unmocked)
+      `escalation.enqueue()`/`_find_open_escalation` dedup path (the prior session's Progress Log finding that "no new
+      dedup layer is needed" was architecturally correct but untested — every existing test mocked `enqueue()` out).
+      Writing that test surfaced a genuine bug it was designed to catch: `run()` held one open write `session_scope()`
+      for the whole tick while `process_breach()` called `escalation.enqueue()`, which opens its OWN write session —
+      SQLite allows only one writer, so this self-deadlocked (`database is locked`) every time a breach was actually
+      still-open past the 15-minute window, i.e. on every real escalation. Fixed: `process_breach()` now returns
+      `("escalated", armed_at)` as a signal instead of calling `enqueue()` inline; `run()` defers the real
+      `escalation.enqueue()` call (via new `_enqueue_escalation()`) until after its session closes. `bash
+      scripts/quality-gates.sh` green (3975 passed, up from 3974). `agent-orchestrator@dd4789d305`.
 - [ ] [INFRA] P1. Ensure the dispatched worker's remediation goal is always **driving the breached metric back below its
       baseline ceiling** (per the 2026-08-12 ruling), never just acknowledging/logging it — write or extend a
       boot-prompt/role doc the dispatched worker reads so its own `done_definition` reads "re-running the detector's
@@ -247,3 +257,11 @@ source: >-
   plan docs attributed to `slot-16` from earlier in this session — verified byte-for-byte already landed on HEAD (via
   `ab33befa91` and a plan-hygiene commit), so nothing was lost; the redundant stash entry was left parked (guardrail
   blocks `git stash drop` for autonomous workers) rather than force-cleaned.
+- **2026-08-15 (slot-20·infra)**: Todo 6 flipped — wrote the still-missing dedup test through the REAL (unmocked)
+  `escalation.enqueue()` path, which the prior "no code needed" finding never actually exercised. That test
+  reproduced a genuine self-deadlock: `process_breach()` called `escalation.enqueue()` (its own nested write
+  `session_scope()`) while `run()`'s own session was still open — SQLite single-writer contention, `database is
+  locked` on every real still-open-past-window tick. Fixed by deferring `enqueue()` until after `run()`'s session
+  closes. `bash scripts/quality-gates.sh` green (3975 passed). `agent-orchestrator@dd4789d305`. Remaining open: todo
+  7 (remediation-goal wording), todo 8 (systemd timer), todo 9 (Slack-ownership fact-find), todo 10 (codex doc
+  update), todo 11 (happy-path regression test), todo 12 (full-fleet dry run) — not attempted this session.
