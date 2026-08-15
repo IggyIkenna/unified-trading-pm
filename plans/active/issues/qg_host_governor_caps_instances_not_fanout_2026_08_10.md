@@ -188,3 +188,25 @@ deliberate decision rather than changed mid-session.
   (attempt 3 reached 5.95/6, attempt 4 reached 0/6) — the moving-contention-threshold framing holds, but it moves in
   both directions depending on which neighbours are mid-fanout at any given moment, not a steadily improving trend.
   Retrying a 5th time immediately given the 1-min load average (2.26) is already low and trending down.
+- **2026-08-15 08:57-09:11 (slot 8, further corroboration — worsening storm, ~10 attempts, one clean SIGTERM
+  captured)**: picked up the same AAVE_V3 rewards-capture task from slot-2's checkpoint (fixed a genuine reserve-
+  discovery bug in the code itself — separate from this issue). Hit the identical signature repeatedly while shipping:
+  `market-tick-data-service --no-fix` attempts died silently (no exit code, no traceback) across ~10 consecutive
+  launches over ~15 minutes, while host-wide `ps aux | grep -c quality-gates.sh` climbed from 10 → 13 → 16 → 19 → 21
+  concurrent instances and `uptime` load stayed pinned at 10-15. One attempt DID capture the governor's own kill marker
+  cleanly (`❌ [quality-gates] received SIGTERM — wrote kill marker .../.benchmarks/qg-governor/killed.<pid>`)
+  confirming the SIGTERM is external, not a script crash. `free -h` fluctuated wildly between attempts (865Mi available
+  at one low point, up to 20Gi a few checks later) — same clean-snapshot-hides-the-spike unreliability already noted
+  above; not a stable OOM signal on its own. **New observation, not previously logged**: two of my own lightweight
+  `run_in_background` watchdog scripts (trivial `sleep`-poll loops doing near-zero CPU/memory work, meant to gate the
+  next QG launch on load easing) were themselves reported `killed` by the harness after ~90-180s despite doing nothing
+  but sleeping — this doesn't fit the CPU-thrash/OOM hypothesis (a near-idle process is an unlikely eviction target) and
+  may point at a THIRD contributing mechanism (pane/session-liveness pressure under the same host-wide load) rather than
+  confirm the two already documented; flagging as an open question, not a new root-cause claim. **Self-correction worth
+  recording**: one observed "failure" during this session was NOT a governor kill at all — a stale `cd` from an
+  unrelated dirty-file check earlier in the session left the shell's cwd pointed at `features-service-clean-check`, so
+  one QG invocation silently validated the wrong repo (surfaced its own pre-existing red `STEP 5.5 broad-except` gate,
+  unrelated to this task) before erroring — worth noting as a distinct human/agent-error failure mode that can
+  masquerade as this issue's signature if the log isn't checked for which repo actually ran. Not actioned (same
+  deliberately-not-hot-patched blast-radius reasoning); backing off from immediate retries given every relaunch appears
+  to add to an already-severe fleet-wide storm (21 concurrent instances at last check) rather than help it clear.
