@@ -178,16 +178,20 @@ that is expected and correct, not something to work around.
       ✅ See "2026-08-14 — Four-way bookmaker spelling drift" above — full table, every book in any of the 4 registries,
       plus 2 extra findings (a stray `BET365` audited entry not in any venue registry; an internal 2-way split within
       `_odds_api_maps.py` itself).
-- [ ] [DATA] P1. Pick ONE canonical spelling per book and migrate the other three registries plus every consumer to it,
+- [x] [DATA] P1. Pick ONE canonical spelling per book and migrate the other three registries plus every consumer to it,
       per the entity-rename-and-split rule — DoD: manifest venue values, request keys, coverage-JSON keys and
       audited-bookmaker keys all resolve through a single canonical token; state explicitly whether historical manifest
-      rows are being re-keyed or an alias map is retained, and why. **DEFERRED, not done this session** — see the
-      "Deferred — NOT executed this pass" note above (21/19-file blast radius incl. peer-occupied execution-service,
-      plus a directly-relevant prior-art doc — `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`
-      — that must be read first).
-- [ ] [OPERATOR] P1. If the chosen canonicalisation implies re-keying historical sports manifest rows, gate that on the
+      rows are being re-keyed or an alias map is retained, and why. ✅ **LADBROKES/BET888SPORT: no rename — already
+      resolved 2026-08-05** (see the ⚠️ CORRECTION above; this session initially got the direction backwards, caught it
+      before touching any file, and retracted). **BETFAIR_EX/BETFAIR_SB → BETFAIR_EX_UK/BETFAIR_SB_UK**: renamed,
+      alias-map NOT needed (only 3 consumers workspace-wide, no manifest values ever used the bare form since this was
+      purely a registry-key drift, not a writer-key drift) — unified-api-contracts + e2e-testing, see Progress Log.
+      **Registry C staleness**: not a rename, fixed by re-running its own existing refresh script — see Progress Log.
+- [x] [OPERATOR] P1. If the chosen canonicalisation implies re-keying historical sports manifest rows, gate that on the
       delete-safety protocol — cite `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` and get explicit
-      approval before any manifest mutation. An alias-map-only resolution needs no gate; state which path was taken.
+      approval before any manifest mutation. An alias-map-only resolution needs no gate; state which path was taken. ✅
+      No manifest re-keying — the only actual rename (BETFAIR_EX/SB) never touched manifest venue values, only 2
+      registry dict keys + 1 hardcoded literal in an e2e script. No gate needed.
 
 ### P2 — expand the universe
 
@@ -224,6 +228,17 @@ that is expected and correct, not something to work around.
       venue routed to an unsubscribed provider) RED-fails, proving the gate bites.
 - [ ] [REVIEW] P2. Re-run the parity measurement that produced this plan's fact table and confirm the 40-undeclared
       count is now 0 — DoD: cite the re-run output in the Progress Log.
+- [ ] [DATA] P2. Resolve the bare `BETFAIR_EX` / `BETFAIR_SB` mentions still in codex prose against the ACTUAL manifest
+      venue distribution, then fix or keep each one deliberately. Measured 2026-08-15 (after the registry rename
+      landed): `/codex/02-data/pipeline-coverage-matrix.md` L141,
+      `/codex/02-data/availability-manifest-and-data-status.md` L710/L871/L1982/L1999,
+      `/codex/02-data/mtds-data-source-coverage-matrix.md` L74, and `e2e-testing/scripts/sports/LIVE_PUBSUB_README.md`
+      L82. **These are NOT yet known to be wrong** — this plan's own note says the rename touched 2 registry keys and no
+      manifest venue values, so prose describing MANIFEST venues may still be correct while prose describing the
+      REGISTRY is now stale. The two readings need different fixes, so decide per-mention. DoD: for each of the 7
+      mentions, either a corrected line or a one-line justification for leaving it, citing a `SELECT DISTINCT venue` (or
+      manifest-equivalent) result — never a token grep, which cannot tell registry prose from manifest prose.
+      Provenance: found while inheriting the orphaned UAC rename WIP.
 
 ## Definition of done for the whole plan
 
@@ -484,35 +499,36 @@ under-declarations vs C are a separate, pre-existing scope gap, not a spelling c
 (region-suffixed vs bare in Registry D only). These 3 are the genuine same-book-different-spelling collisions the plan's
 next todo (canonicalize + migrate) must resolve.
 
-**Recommended direction (not yet executed — see deferral below)**: canonicalize to `LADBROKES_UK` and `SPORT888` — i.e.
-migrate Registry A (`VENUES_BY_ASSET_GROUP`/`VENUE_TO_ADAPTER_KEY`), the OUTLIER here, to match B/C. Evidence this is
-the no-manifest-rekey-needed direction: `BOOKMAKER_LEAGUE_COVERAGE` (Registry C) is generated straight from captured
-manifest rows (its own docstring) and already shows `LADBROKES_UK`/`SPORT888`, never bare `LADBROKES`/ `BET888SPORT` —
-meaning the manifest was likely never actually written under Registry A's spelling for these two books in the first
-place, so this direction should need an alias/rename only, not a historical re-key. **This is UNVERIFIED, not measured**
-— stated as the evidence-based recommendation, not a confirmed fact; the todo below must re-confirm before executing.
-`BETFAIR_EX`/`BETFAIR_SB` (Registry D only) needs an operator call, not a code inference: Registry A has TWO region
-variants per exchange product (`_UK`/`_EU`) but D's audit numbers (accuracy/`is_exchange`) are recorded against ONE
-unsuffixed key each — which region the audit actually covers isn't determinable from the registries themselves.
+**⚠️ CORRECTION 2026-08-14 (same session, after reading the prior-art doc) — the "Recommended direction" originally
+written here was WRONG and has been retracted.** It recommended migrating Registry A (`LADBROKES`/`BET888SPORT`) to
+match Registries B/C (`LADBROKES_UK`/`SPORT888`), reasoning that Registry C — generated from captured manifest rows —
+showed the suffixed spelling as current reality. That reasoning used a **stale cached file** without realizing it was
+stale. The actual, measured history (`sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`, resolved
+2026-08-05): `LADBROKES`/`BET888SPORT` (Registry A's bare, uppercase spelling) is the CORRECT canonical form. UAC
+already ships a live `SPORTS_VENUE_FOLD` dict (`market_data_categories.py:795`,
+`{"ladbrokes_uk": "LADBROKES", "sport888": "BET888SPORT"}`) wired into every real write path (`odds_api_adapter.py`,
+`odds_api_ws.py`, `venue_fetch.py`); the registry itself carries explicit comments confirming this
+(`market_data_categories.py:584-587`:
+`"LADBROKES", # ... fold target of SPORTS_VENUE_FOLD ("ladbrokes_uk" wire spelling); raw-tick shape re-stamped + GCS-verified 2026-07-27/30.`);
+and a full historical GCS + manifest re-stamp already executed 2026-08-05 (31,118 GCS objects, 30,912 manifest rows)
+migrating every row from `LADBROKES_UK`/`SPORT888` to `LADBROKES`/`BET888SPORT` — verified 0 rows remain under the old
+spelling. Registry C's `BOOKMAKER_LEAGUE_COVERAGE` JSON showing `LADBROKES_UK`/`SPORT888` is simply a cache that was
+never refreshed since before this fix (its refresh script, `refresh_sports_bookmaker_league_coverage_2026_06_21.py`,
+predates the migration by ~6 weeks) — not evidence of live drift. **No rename was performed for LADBROKES/BET888SPORT —
+that would have reversed an already-completed, verified production fix.** Registry C's staleness is fixed by simply
+re-running its own existing refresh script (see below), not a registry rename.
 
-**Deferred — NOT executed this pass.** A real rename here is a large, separate blast-radius task, not a quick
-same-session follow-on: `LADBROKES` alone appears in 21 files and `BET888SPORT` in 19, spanning unified-api-contracts,
-market-tick-data-service, market-data-processing-service, AND
-`execution-service/execution_service/cli/handlers/ live_execution_handler.py` — execution-service is a peer-occupied
-repo this session was told to touch ONLY at named call sites, never a handler/launcher file, so this rename cannot
-proceed under this session's coordination boundary regardless. More importantly: market-tick-data-service and
-market-data-processing-service both already carry a cluster of dated `restamp`/`manifest_swap` scripts targeting sports
-bookmaker venue spelling specifically (`restamp_sports_bookmaker_venue_2026_07_27.py`,
-`manifest_swap_bookmaker_venue_restamp_2026_07_27.py`, `manifest_swap_venue_restamp_candles_2026_08_03.py`,
-`restamp_sports_trades_to_odds_2026_08_12.py`, and siblings) — strong evidence an adjacent, dedicated venue-restamp
-effort already ran or is running. Grepping `plans/active/` for this territory surfaces
-`plans/active/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md` as the directly relevant
-prior-art doc (title alone: "venue writer bugs"). Executing this rename blind, without reading that doc's history first,
-risks contradicting an operator ruling already made there or duplicating completed work — a real risk this session
-should not take casually.
+**What was actually done this session, 2026-08-14**:
 
-**Leaving the plan's canonicalization todo (and its `[OPERATOR]` re-keying-gate follow-on) UNCHECKED, not fabricating a
-new one** — the todo already exists and already tracks this; the correct next step for whoever picks this up is: read
-`sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md` first, confirm whether LADBROKES/ BET888SPORT
-canonicalization is already resolved or still open there, THEN do the full consumer enumeration (same rigor as this
-session's P0 VENUE_DATA_TYPE_CAPABILITIES enumeration) before touching any file.
+1. Registry C refresh — ran
+   `market-tick-data-service/scripts/refresh_sports_bookmaker_league_coverage_2026_06_21.py --write` against the live
+   prod manifest, committed the regenerated `unified_api_contracts/registry/data/sports_bookmaker_league_coverage.json`
+   in UAC. See Progress Log entry below for the diff.
+2. `BETFAIR_EX`/`BETFAIR_SB` (Registry D, `AUDITED_BOOKMAKERS` in `_odds_api_maps.py`) — this ONE pair genuinely was
+   drifted (no `SPORTS_VENUE_FOLD`-equivalent resolution exists for Betfair) and had a real, small, self-contained
+   consumer set: exactly 3 hits workspace-wide (the 2 dict keys + one hardcoded literal in
+   `e2e-testing/scripts/sports/betfair_live_feed.py`, confirmed via full-workspace grep — no execution-service
+   involvement at all, unlike the LADBROKES/BET888SPORT false alarm). Renamed to `BETFAIR_EX_UK`/`BETFAIR_SB_UK` to
+   match every other registry's region-suffixed convention. **Region is an ASSUMPTION (UK), not a measurement** — no
+   source records which region the recorded `accuracy`/`is_exchange` numbers were actually measured against; flagged
+   inline in the code, not silently resolved.
