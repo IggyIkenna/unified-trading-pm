@@ -417,3 +417,20 @@ issue's scope); flagged as a follow-up todo below.
   (`git rev-list --count origin/live-defi-rollout..HEAD` = 0 for the audit script commit — rely on the harness
   completion notification, don't poll), then run the FULL-population sibling check (not the 200-row sample) to finalize
   todo #2's exclusion scope.
+- **data_engineering slot-2, 2026-08-15 (4th pre-compact checkpoint — second, DIFFERENT quickmerge failure on the same
+  script, fixed + re-shipped)**: `bze6dwost` (the re-ship from the prior checkpoint) also FAILED — but on a genuinely
+  DIFFERENT gate than `b3l0jzbxk`: `RUF005` (list-concat style) at
+  `scripts/audit_sports_captured_phantom_timeframe_2026_08_16.py:137` (`_ROW_IDENTITY_COLS[:-1] + ["service_name"]` →
+  `[*_ROW_IDENTITY_COLS[:-1], "service_name"]`). Per the ritual's Step-7 retry discipline: two DIFFERENT failures in a
+  row on a brand-new file is expected friction (each finding is a real, distinct gate result on genuinely new code, not
+  a flapping/foreign-session condition) — diagnosed via the task's own output tail, applied the one-line ruff-suggested
+  fix, verified clean with both `ruff check` and `check-import-patterns.py` scoped to the file, and re-shipped as task
+  `bpdxo4199` (in flight as of this checkpoint, not polled further per async-wait discipline — pick up on the harness
+  completion notification). **Lesson for future sessions**: a quickmerge failure on your own newly-authored file should
+  be diagnosed fresh EACH time, not assumed to be "the same bug again" — this file hit two unrelated gates
+  (import-pattern, then lint) back to back, and blind-retry without re-reading the new failure's own output would have
+  wasted a cycle. Re-verified PM clean at `824e7e5e25` (4 more unrelated plan-reconcile/archival commits ff-pulled, none
+  touching this doc) and MTDS behind by exactly the routine `chore(deps): refresh base-image digest pin` commit
+  (unrelated). **Next session/window**: verify `bpdxo4199` landed (`git rev-list --count origin/live-defi-rollout..HEAD`
+  = 0 for the audit script commit), THEN run the FULL-population sibling check (not the 200-row sample) to finalize todo
+  #2's exclusion scope.
