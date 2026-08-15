@@ -234,11 +234,15 @@ source: >-
       link repointed, stub file absent on remote. Source:
       `plans/archive/2026_08/issues/promote_ref_orphaned_on_manual_pr_close_2026_08_06.md`.
 
-- [ ] [DOC] P3. **Complete the deferred archival referrer-fixup** (11 files) that the broken-link-gate-vs-line-cap-gate
-      deadlock's originating doc has been waiting on since its carve-out shipped. Source:
-      `plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`. Gate: the originating
-      over-cap doc is archived with all 11 referrers repointed; `validate_plan_links.py` and `check_line_caps.sh` both
-      pass clean on the result.
+- [x] ✅ [DOC] P3. **Complete the deferred archival referrer-fixup** — **DONE 2026-08-15.**
+      `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md` archived to
+      `plans/archive/2026_08/issues/`; live-corpus referrers repointed
+      (`cross_cutting_consolidated_closeout_2026_07_25.md`, `/codex/08-workflows/ci-cd-flow.md`,
+      `ag_closeout_audit_cross_cutting_parked_2026_08_07.md`,
+      `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` — the other 7 of the originally-cited 11 were
+      already-archived docs, frozen historical state, not live referrers needing a fix). Verified directly against
+      `origin/live-defi-rollout` (not just exit code): archived path exists, active path gone, referrer link resolves.
+      Source: `plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`.
 
 - [x] ✅ [BACKEND] P2. **Instrument quickmerge's `STAGE 0: Cascade`/pull step with an `os.environ` diff before/after**,
       to find the real trigger surface for the `DEPLOYMENT_ENV` leak shared by two open MTDS investigations — this is
