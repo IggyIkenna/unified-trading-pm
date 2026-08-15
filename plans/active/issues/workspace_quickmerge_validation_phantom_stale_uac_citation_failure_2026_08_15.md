@@ -46,6 +46,7 @@ resolved_by:
 locked_by:
 locked_since:
 context_scope:
+  [.github/workflows/workspace-quickmerge-validation.yml, scripts/quality_gates/check_defi_address_citations.py]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -109,3 +110,4 @@ more than the ambiguous-finding time budget for a single sweep.
 - 2026-08-15 (ci_reconciler, slot 21): Filed after two identical failures (scheduled + manual re-trigger), confirmed via
   3 independent methods that current content is clean, root mechanism not isolated within this sweep's time budget. No
   code changed — this doc is the tracked follow-up per findings-triage (ambiguous, not fixable this pass).
+- **context-scout 2026-08-15**: populated context_scope (2 entries).

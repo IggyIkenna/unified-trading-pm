@@ -32,6 +32,13 @@ resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md,
+    /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
+    /codex/06-coding-standards/integration-testing-layers.md,
+    strategy-service/strategy_service/position/models.py,
+  ]
 ---
 
 # Venue coverage — read vs execute asymmetry
@@ -629,3 +636,7 @@ silently re-open:
   a blind retry ADDS a stash entry and makes it fire sooner. Untracked files do not appear in
   `git stash show --name-only` — they live in the third parent, `stash@{N}^3`. The instinctive re-run would have
   compounded it.
+
+## Context scout
+
+- **context-scout 2026-08-15**: populated context_scope (4 entries).

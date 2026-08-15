@@ -38,6 +38,14 @@ parent_epic: mtds_mdps_master
 priority: P3
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /plans/active/mtds_file_size_refactor_2026_06_08.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md,
+    /plans/archive/2026_06/mdps_pure_polars_migration_2026_05_28.md,
+    /plans/archive/2026_06/mdps_adapter_protocol_pandas_to_polars_2026_06_21.md,
+    market-data-processing-service/market_data_processing_service/app/adapters/base_adapter.py,
+  ]
 ---
 
 # MDPS adapter-protocol polars seam — mis-scoped for AO dispatch
@@ -118,3 +126,7 @@ Do NOT re-extract this todo into a future AO satellite-dispatch batch as a singl
       numeric-parity verification step for the 5 groupby-heavy adapters (cefi/trades_adapter.py,
       cefi/book_snapshot_adapter.py, cefi/liquidations_adapter.py, sports/bucket_assignment_adapter.py,
       tradfi/ohlcv_passthrough.py) before ship. Repo: market-data-processing-service.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (5 entries).

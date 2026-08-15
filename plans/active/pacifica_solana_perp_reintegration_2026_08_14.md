@@ -47,6 +47,14 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope:
+  [
+    /plans/active/solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /codex/04-architecture/solana-defi-coverage.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-funding-dispersion.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+  ]
 source: >-
   Split out of /plans/active/solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md 2026-08-14. That plan's
   Track 2 (Pacifica) had every gate resolved via real API testing (live WS streamed trades with zero credentials, REST
@@ -417,3 +425,4 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
   per explicit operator choice over AO-dispatch, despite the work being technically AO-eligible now (every gate closed)
   — this session's value came from the operator catching things (untested premise, schema gap, StandX settlement risk)
   that a background worker executing todos alone wouldn't have surfaced.
+- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries).

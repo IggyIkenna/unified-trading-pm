@@ -33,6 +33,12 @@ resolved_by:
 depends_on: []
 source:
   - "observed during a routine plan checkbox-flip push, slot-14, 2026-08-15"
+context_scope:
+  [
+    /plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
+    scripts/dev/safe-doc-push.sh,
+  ]
 ---
 
 # safe-doc-push orphaned prek patch — recurrence of an archived issue class
@@ -95,3 +101,7 @@ possibly specific to long push-queue waits — this run queued 287s, well past t
       push-queue wait**, despite the 2026-08-09 fix — reopen or extend
       `/plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`'s
       investigation for this trigger path. (repo: unified-trading-pm)
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (3 entries).

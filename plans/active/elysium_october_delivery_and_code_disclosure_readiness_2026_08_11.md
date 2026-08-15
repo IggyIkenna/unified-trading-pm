@@ -46,6 +46,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+context_scope: [/codex/04-architecture/client-funds-isolation.md, /codex/04-architecture/defi-execution-overview.md]
 source: >-
   Interactive session 2026-08-11. Operator decisions: defer the code carve-out past the October delivery; send the
   strategy-service repository in full once its code lands; standardise the support period at 30 days; and rescope this

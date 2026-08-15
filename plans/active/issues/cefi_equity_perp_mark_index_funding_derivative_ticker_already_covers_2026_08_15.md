@@ -28,6 +28,13 @@ related:
     /plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md,
   ]
 parent_epic: cefi_master
+context_scope:
+  [
+    /plans/active/cefi_satellite_ao_dispatch_batch19_2026_08_13.md,
+    /plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md,
+    unified-api-contracts/unified_api_contracts/registry/expected_coverage.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py,
+  ]
 priority: P2
 source:
   [
@@ -122,3 +129,7 @@ infrastructure.
       not just the venues' native crypto pairs. If a real gap is found (universe/enumeration excludes these symbols from
       the `derivative_ticker` shard set), fix the enumeration — do not build a new data_type. Repo:
       market-tick-data-service.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (4 entries).

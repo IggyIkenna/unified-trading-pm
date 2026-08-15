@@ -34,6 +34,13 @@ locked_by:
 created: 2026-08-15
 author: slot-11
 source: ["sports_taxonomy_p2_migration_2026_08_08.md P2 purge todo, executed 2026-08-15"]
+context_scope:
+  [
+    /plans/active/sports_taxonomy_p2_migration_2026_08_08.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    market-tick-data-service/scripts/sports/purge_league_legacy_objects_2026_08_15.py,
+  ]
 ---
 
 # 1,814 orphan legacy `league=` objects — disposition follow-up
@@ -85,3 +92,4 @@ Split the 1,814 objects into the two classes above and resolve each:
 
 - **2026-08-15 (slot-11)** — Filed on close of the P2 purge todo. No investigation done yet beyond what the purge
   script's own dry-run/apply reports already surfaced (object count, byte total, exclusion reason).
+- **context-scout 2026-08-15**: populated context_scope (4 entries).

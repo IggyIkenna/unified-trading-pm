@@ -62,6 +62,13 @@ depends_on: []
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_since:
+context_scope:
+  [
+    /plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/archive/issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 ---
 
 ## What I found
@@ -277,3 +284,7 @@ already caught once.
   test coverage in the same pass this session's actual data fix depended on felt like the wrong trade-off; verification
   for THIS session's fix relied on the independently-correct natural-key content-verify script instead (0 FAIL,
   confirmed twice).
+
+## Context scout
+
+- **context-scout 2026-08-15**: populated context_scope (4 entries).

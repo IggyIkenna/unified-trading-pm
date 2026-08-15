@@ -24,6 +24,11 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+  ]
 ---
 
 # Sports honest-coverage gap closure — 2026-08-14
@@ -360,3 +365,7 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
   "queryable" for scripts using this write path; verify against the raw per-VM shard file directly if you need immediate
   confirmation, and expect up to ~1-6 minutes of lag (cron cadence + lock-contention/TTL) before the consolidated view
   catches up.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (2 entries).

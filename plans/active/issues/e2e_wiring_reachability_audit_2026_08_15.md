@@ -30,6 +30,14 @@ resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md,
+    /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
+    strategy-service/strategy_service/close_all/carry_staked_basis.py,
+    execution-service/execution_service/api/app.py,
+    unified-api-contracts/unified_api_contracts/internal/modes.py,
+  ]
 ---
 
 # E2E wiring — built vs REACHABLE
@@ -196,3 +204,7 @@ as a zero-token adapter reporting zero balances.
    imports it" is how `V2InstructionRouter` scored as wired.
 4. **State which property you measured.** "Write path is real" and "reachable in production" are different claims and
    this corpus has conflated them repeatedly.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (5 entries).

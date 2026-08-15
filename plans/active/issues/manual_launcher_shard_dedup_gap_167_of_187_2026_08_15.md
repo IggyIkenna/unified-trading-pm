@@ -35,6 +35,13 @@ priority: P2
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    deployment-service/scripts/vm/_tradfi-ohlcv-launcher-lib.sh,
+  ]
 ---
 
 # 167/187 manual VM launchers lack a dedup/collision check
@@ -113,3 +120,4 @@ mechanism 9 launchers use) rather than inventing a new pattern per family.
 
 - **2026-08-15 (slot-5, backend_engineer)**: filed this issue doc with the measured 20/187 finding and shipped the
   bounded fix for the incident's own launcher family (tradfi-bf-ohlcv, 11 scripts via the shared lib).
+- **context-scout 2026-08-15**: populated context_scope (4 entries).

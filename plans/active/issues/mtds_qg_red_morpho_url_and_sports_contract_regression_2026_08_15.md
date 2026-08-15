@@ -24,7 +24,12 @@ priority: P1
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-context_scope: []
+context_scope:
+  [
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_constants.py,
+    instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py,
+  ]
 ---
 
 # market-tick-data-service QG RED — two unrelated pre-existing findings
@@ -84,3 +89,7 @@ caused by my diff) via `git log -1 -- <file>` on each flagged file, both showing
       `adapter_contract_baseline.yaml` floor of 19 — or, if the drop is a legitimate intentional consolidation,
       regenerate the baseline per the QG script's own instructions (`--regenerate-baseline`, never to mask a real
       regression). Repo: instruments-service.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (3 entries).

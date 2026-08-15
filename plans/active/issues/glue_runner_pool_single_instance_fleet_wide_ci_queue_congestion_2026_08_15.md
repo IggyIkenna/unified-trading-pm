@@ -46,6 +46,12 @@ resolved_by:
 locked_by:
 locked_since:
 context_scope:
+  [
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+    /codex/07-security/self-hosted-runner-security-posture.md,
+    .github/workflows/glue-runner-health-monitor.yml,
+    e2e-testing/.github/workflows/quality-gates-v2.yml,
+  ]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -120,3 +126,4 @@ genuinely different, non-self-service identity is a real access gap, not somethi
 - 2026-08-15 (ci_reconciler, slot 21): Filed after observing 30+ minutes of fleet-wide CI queue congestion behind a
   single busy self-hosted glue runner while verifying an unrelated fix's downstream CI. Root cause not reachable this
   session (AWS IAM gap, confirmed live, matches the sweep's §0c host-dispatched-watchdog coverage gap). No code changed.
+- **context-scout 2026-08-15**: populated context_scope (4 entries).

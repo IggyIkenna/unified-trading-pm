@@ -34,6 +34,13 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/repo_scripts_governance_audit_2026_06_18.md,
+    /plans/audit/results/repo_scripts_characterization_2026_06_18.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
+  ]
 ---
 
 # "immediately-safe ~40" DELETE cohort — 5 of 9 named items reclassified NOT-safe
@@ -162,3 +169,4 @@ has actually verified).
   which caught 5 files beyond the 3 originally named (new Loader2 usages had appeared since the 2026-08-14 audit). QG
   green, shipped `unified-trading-system-ui@58b332e852`. Two todos remain open (page-header codemod re-run, openapi
   typegen-input confirmation).
+- **context-scout 2026-08-15**: populated context_scope (4 entries).

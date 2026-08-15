@@ -34,6 +34,13 @@ source: >-
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    instruments-service/scripts/build_instrument_catalogue.py,
+  ]
 ---
 
 # sports catalogue re-roll — corpus-scale finding
@@ -99,3 +106,7 @@ here.
 - [ ] [DIAG] P3. If the VM-launched run is ALSO killed/interrupted before completion, capture `dmesg` + peak RSS + full
       stdout/stderr AT the moment of the kill (not after) so the root cause (protective host action vs. a genuine bug in
       the roll-up itself) is actually confirmed before a third attempt.
+
+## Progress Log
+
+- **context-scout 2026-08-15**: populated context_scope (4 entries).
