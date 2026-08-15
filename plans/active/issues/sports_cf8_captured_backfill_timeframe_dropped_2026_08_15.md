@@ -205,12 +205,22 @@ issue's scope); flagged as a follow-up todo below.
       `1c9a7858` to `e0b34e77fd` — quickmerge amended HEAD to add the missing `Quickmerge: agent` trailer before pushing
       (content unchanged, not a rebase this time), exactly the kind of sha drift this doc's own note warned about.
       `quality-gates.sh` was GREEN (10865 passed, 0 failed) before commit.
-- [ ] [DATA] P0. Once the fix above ships, identify + clean up the phantom timeframe-blank rows this session created on
-      MDPS (~26,982 lower-bound, `data_type=odds_horizon_bucket`, `written_at` in the 2026-08-15T11:0x-2x UTC window,
-      `timeframe` blank) — either delete them (they carry no information the corrected rewrite won't re-derive) or leave
-      them as harmless-but-wasteful duplicates if delete-safety can't be cleanly established; snapshot first, verify via
-      row-count before/after. Also audit whether the same class of phantom row exists on IS from the 500-row test there.
-      (repo: market-tick-data-service, unified-trading-library)
+- [ ] [DATA] P0. **NARROWED per 2026-08-15 audit (see Progress Log) — do NOT blanket-delete.** Of the live 14,330
+      in-window phantom rows, 6.5% (13/200 sampled, extrapolates to ~930) have NO non-blank-timeframe sibling under
+      their coarse (date,venue,league_id,data_type,service_name) key — deleting THOSE would be destructive,
+      contradicting this doc's original "NON-destructive" claim for that subset. 12/13 sampled exceptions share
+      `league_id=LA_LIGA_2, service_name=market-data-processing-service`. Before any delete: (a) run the full-population
+      (not 200-sample) sibling check via `audit_sports_captured_phantom_timeframe_2026_08_16.py`, (b) root-cause why
+      LA_LIGA_2/MDPS rows lack a sibling (single-horizon-bucket league? a second, different bug?), (c) exclude any
+      no-sibling row from delete scope entirely (leave those as-is, don't guess). Only the sibling-confirmed subset is
+      safe to delete; snapshot first, verify via row-count before/after. Also audit whether the same class of phantom
+      row exists on IS from the 500-row test there. (repo: market-tick-data-service, unified-trading-library)
+- [ ] [DATA] P1. **NEW finding, 2026-08-15 audit**: 14,982 blank-`timeframe` `data_type=odds_horizon_bucket` rows exist
+      on MDPS OUTSIDE the session's 2026-08-15T11:0x-2x UTC window (i.e. NOT created by this session's bug) — a
+      population almost as large as the in-window one, previously unknown. Root-cause: are these from an earlier,
+      unrelated blank-timeframe write path (a different bug), or a legitimate case where `timeframe` is genuinely blank
+      for some `odds_horizon_bucket` rows? Do not assume same disposition as the in-window population without
+      independent investigation. (repo: market-tick-data-service)
 - [ ] [DATA] P1. Once the fix + cleanup above are done, re-attempt the full CF-8 captured-row backfill on BOTH surfaces
       (MDPS ~285K rows minus whatever the 2 already-landed groups covered correctly; IS ~458K rows) plus the bundled
       CF-3/CF-4 legacy-row cleanup (3,833 rows) — this is the ORIGINAL scope of
@@ -338,6 +348,24 @@ issue's scope); flagged as a follow-up todo below.
   diagnostic-script shipping loose end** — the CF-8 backfill itself remains genuinely incomplete; the 4 todos below (P1
   `timeframe=` fix, P2 phantom-row cleanup, P2 backfill re-attempt, P3 maintenance-window gap) are still open and still
   the actual remaining scope. Picking up todo #1 next.
+- **data_engineering slot-2, 2026-08-15 (todo #2 audit — dry-run only, NO write performed)**: built + ran
+  `market-tick-data-service/scripts/audit_sports_captured_phantom_timeframe_2026_08_16.py` (dry-run only, no `--apply`,
+  same posture as `drop_sports_odds_phantom_uppercase_2026_07_26.py`) against the live MDPS canonical. Three findings
+  that change this todo's scope, none acted on yet:
+  1. **Live in-window phantom count is 14,330, not the doc's ~26,982 lower-bound.** The original estimate only counted
+     landed/consolidated rows at write time; live count differs (consolidation churn since, or the estimate was simply a
+     bound, not a measurement — not further diagnosed here, noting the discrepancy rather than treating either number as
+     ground truth going forward).
+  2. **NEW: 14,982 blank-`timeframe` `odds_horizon_bucket` rows exist OUTSIDE the session window** — a comparably-sized
+     population this doc never scoped, previously unknown. Filed as a new P1 todo below; NOT assumed same
+     cause/disposition as the in-window bug.
+  3. **The "NON-destructive" claim does NOT hold for the full population.** A 200-row sibling-check sample (does a
+     non-blank-timeframe row survive under the same coarse key?) found 13/200 (6.5%) with NO surviving sibling — 12 of
+     which share `league_id=LA_LIGA_2, service_name=market-data-processing-service`. Deleting those specific rows WOULD
+     be destructive. Todo #2 above is narrowed accordingly: blanket delete is now explicitly ruled out; only a
+     sibling-confirmed subset (pending a full-population, not sampled, sibling check) is safe to act on. Script + this
+     doc update are being shipped now; the actual cleanup write remains NOT started, correctly gated on the exclusion
+     work above.
 - **data_engineering slot-2, 2026-08-15 (todo #1 QG green + committed, quickmerge in flight)**: background
   `bash scripts/quality-gates.sh --no-fix` (task `bd0xbn5xh`) finished GREEN (exit 0) after ~592s queued behind the
   qg-governor cap — environment/dep/lint gates + full pytest suite (10,894 items) all passed. Staged exactly the 2
