@@ -338,12 +338,12 @@ data that's actually needed. This plan gets the evidence first.
       operational.
 
       **DONE 2026-08-15 (slot-28, backend_engineer) — same operation as
-                  `plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s "Re-run rebuild_tradfi_manifest.py..." todo
-                  (dispatched separately, resolved here concurrently — see that plan for full evidence).** Full-corpus rebuild
-                  (`canonical-migration-tradfi-manifest-rebuild-20260815-061239`, 2020-01-01..2026-08-15, `--chunk-days 30`)
-                  completed exit_code=0, 1,397,013 shards / 81 chunks. Live manifest recount confirms 0
-                  `instrument_type=FUTURE` rows with populated `underlying` + blank `instrument_id` remain (checked both
-                  CME-scoped and unscoped across all venues).
+                      `plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s "Re-run rebuild_tradfi_manifest.py..." todo
+                      (dispatched separately, resolved here concurrently — see that plan for full evidence).** Full-corpus rebuild
+                      (`canonical-migration-tradfi-manifest-rebuild-20260815-061239`, 2020-01-01..2026-08-15, `--chunk-days 30`)
+                      completed exit_code=0, 1,397,013 shards / 81 chunks. Live manifest recount confirms 0
+                      `instrument_type=FUTURE` rows with populated `underlying` + blank `instrument_id` remain (checked both
+                      CME-scoped and unscoped across all venues).
 
 - [x] ✅ [DATA] P2. Fix cefi's legacy blank-instrument-id FUTURE bucket (~3,299 captured rows, BYBIT/DERIBIT) — add
       `"future"` to `_BUNDLE_GRAIN_EXCLUDED` or route it to `futures_chain` at `rebuild_cefi_manifest.py:454` (mirrors
@@ -482,3 +482,10 @@ data that's actually needed. This plan gets the evidence first.
   this is the other session's active WIP to land, not mine to patch. Waiting for that conflict to settle (their commit
   to land + push, or their test/canon state to otherwise stabilize) before retrying either ship; both diffs are
   otherwise complete and were QG-clean before this cross-repo drift appeared mid-session.
+- **2026-08-15 (same session, ~15 min later)**: the foreign UTL conflict settled — `unified-trading-library@64af7a4e`
+  landed on `origin/live-defi-rollout` (no longer locally-ahead), and slot-6 had already fixed the dependent tests on
+  their side (`market-tick-data-service@b5343275`/`6fa0dd9d`, instruments-service's
+  `test_enumerate_expected_universe_v2.py` verified passing locally). Re-verified both previously-failing test sets pass
+  cleanly and that only this session's own files were still dirty in each repo, then retried both ships.
+  `instruments-service` — ✅ landed `instruments-service@1c1ca7553f`, content-verified against
+  `origin/live-defi-rollout`. `market-tick-data-service` retry still in flight at this entry's time of writing.
