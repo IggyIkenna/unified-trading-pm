@@ -213,8 +213,18 @@ source: >-
       coverage-matrix row for the CeFi×TradFi cross-category pairing. The archetype DESIGN itself (dispersion +
       overnight-gap legs, Phase 4) and the IBKR adapter (Phase 1e) remain open in the source plan — this todo covers
       documentation of what's already decided/shipped, not new design.
-- [ ] [CODE] P2. Alert-accuracy quartet fix (deployment-service: interpolate/drop fixed '(0 → 0)' template, extend
+- [x] ✅ [CODE] P2. Alert-accuracy quartet fix (deployment-service: interpolate/drop fixed '(0 → 0)' template, extend
       captured-reader probe fallback, conditional Tardis-guard text, exempt cron/launcher host VMs from GONE_NO_CAPTURE)
+      **CLOSED — already-shipped elsewhere (2026-08-15, slot-7·backend_engineer).** `deployment-service@0c38c00d`
+      (2026-08-11, subject line literally "alert-accuracy quartet") shipped all four pieces before this batch was even
+      drafted — verified live on `origin/live-defi-rollout`: the `"(0 → 0)"` figure was always interpolated (never a
+      literal fixed string) in `_classify.py::finding_for`; `_captured_reader.py::make_captured_reader._read` probes
+      every `market-data`/`instruments-store`/`features` bucket via `_probe_all` on a bucket-resolves-but-blob-absent
+      miss, not just an unresolvable bucket; the DP_VM_PREEMPTED relaunch-note text is gated on `TARDIS_GUARD_LAUNCHERS`
+      membership (non-member launchers like `launch-mdps-sharded-backfill.sh` get "(no Tardis dependency)" instead of
+      the Tardis-guard phrase); `classify_terminated_vm`'s `is_launcher_host` branch exempts a registered launcher/cron
+      host from `GONE_NO_CAPTURE`. No code shipped by this batch (none needed) — the source doc's own checkbox was
+      flipped in the same commit as this one citing the same sha; see its Progress Log entry for full file:line detail.
       Source: `plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`
 - [ ] [CODE] P2. Determine which layer wrote the cefi attempted_failed rows (MTDS fetch vs MDPS derivation) and whether
       the 2026-08-02 ruling inflates them Source:
@@ -321,3 +331,11 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   equity-basis arb archetype" todo — 3 codex docs updated (`tradfi-databento-sourcing-ssot.md` dividends-gap subsection,
   `carry-basis-perp.md` new equity-perp basis variant section, `category-instrument-coverage.md` new coverage row),
   checkbox flipped in the same commit. See the todo's own evidence line for full detail.
+
+- **2026-08-15 (slot-7·backend_engineer)**: dispatched the "Alert-accuracy quartet fix" todo — found it already shipped
+  `deployment-service@0c38c00d` (2026-08-11, same commit as its source doc's todo 1, subject line literally
+  "alert-accuracy quartet") before this batch was drafted. Verified all four pieces live on `origin/live-defi-rollout`
+  (interpolated `(before → after)` captured-count text, the bucket-resolves-but-blob-absent probe fallback, the
+  Tardis-guard-conditional relaunch text, the launcher-host `GONE_NO_CAPTURE` exemption) rather than trusting the commit
+  subject alone. No code shipped by this batch (none needed) — checkbox flipped citing the sha; the source doc's own
+  checkbox was flipped in the same commit, see its Progress Log entry for full file:line detail.

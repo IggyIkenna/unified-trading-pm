@@ -187,11 +187,23 @@ last_updated: 2026-06-27
       `/plans/archive/2026_08/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md`
       that the fix had landed at `features-service@305d897a` — that sha never existed (`git cat-file -t` → not a valid
       object); 692ce76b is the real one.
-- [ ] [SCRIPT] P1. Alert-accuracy quartet (deployment-service): interpolate or drop the fixed-template `"(0 → 0)"`;
-      extend the captured-reader probe fallback to the bucket-resolves-but-blob-absent case (+ `instruments-store` /
-      `features` kind buckets); make the "relaunching through the Tardis/launcher concurrency guard" text conditional on
-      the VM's ACTUAL launcher binding (`mdps-*` binds `launch-mdps-sharded-backfill.sh`, which has ZERO Tardis
-      references); exempt cron/launcher HOST VMs from the capture-based `GONE_NO_CAPTURE` population.
+- [x] ✅ [SCRIPT] P1. **SHIPPED — deployment-service@0c38c00d (same commit as todo 1's durable relaunch state, titled
+      literally "alert-accuracy quartet" in its own subject line).** Alert-accuracy quartet (deployment-service):
+      interpolate or drop the fixed-template `"(0 → 0)"`; extend the captured-reader probe fallback to the
+      bucket-resolves-but-blob-absent case (+ `instruments-store` / `features` kind buckets); make the "relaunching
+      through the Tardis/launcher concurrency guard" text conditional on the VM's ACTUAL launcher binding (`mdps-*`
+      binds `launch-mdps-sharded-backfill.sh`, which has ZERO Tardis references); exempt cron/launcher HOST VMs from the
+      capture-based `GONE_NO_CAPTURE` population. Verified live in `origin/live-defi-rollout` (2026-08-15):
+      `_classify.py`'s `finding_for` interpolates `f"({result.captured_before} → {result.captured_after})"` for
+      DP_VM_GONE_NO_CAPTURE (never a fixed `"(0 → 0)"` string) and gates the DP_VM_PREEMPTED relaunch-note text on
+      `TARDIS_GUARD_LAUNCHERS` membership
+      (`relaunch_note = f"relaunching via {relaunch_launcher} (no Tardis     dependency)"` for non-member launchers like
+      `launch-mdps-sharded-backfill.sh`); `classify_terminated_vm`'s `is_launcher_host` branch routes a registered
+      launcher/cron host to `EXPECTED_NO_CAPTURE` (no page) instead of `GONE_NO_CAPTURE`; `_captured_reader.py`'s
+      `make_captured_reader._read` falls through to `_probe_all` (every `market-data`/`instruments-store`/`features` ×
+      asset_group bucket, plus the flat `features-sports` key) whenever the primary bucket resolves but the blob isn't
+      there, not just when bucket resolution itself fails. This todo's own checkbox was the only piece of the commit
+      left unflipped — todo 1 above already cited the same sha for the relaunch-state half of that commit.
 - [x] ✅ [SCRIPT] P2. Make `/data-pipeline-alerts-reconcile` AO-schedulable — **already shipped upstream by a peer while
       this session worked** (agent-orchestrator slot-18): the `data_pipeline_alerts_reconciler` AgentKind, the
       `plan_health` mode + prompt-template mapping, and `install-data-pipeline-alerts-reconciler-timer.sh` were all on
@@ -515,6 +527,23 @@ attempted_failed cells accruing), and its diagnosis just reversed, so nobody sho
   `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s recommendation that the escalation dispatch path
   needs an open-issue-doc dedup check. `AUTHORING_SLOT=dp-fleet-monitor` (not a numbered slot) — no ping sent, per the
   role's own skip rule. Read-only: no GCS write, no manifest change, no code shipped; PM plan-doc edit only.
+- **2026-08-15 (slot-7·backend_engineer, cefi_satellite_ao_dispatch_batch19 dispatch) — flipped the "Alert-accuracy
+  quartet" todo's checkbox; already-shipped, no code change needed.** Dispatched to implement this todo via
+  `cefi_satellite_ao_dispatch_batch19_2026_08_13.md`'s own extraction of it. Grepped `deployment-service` before writing
+  anything and found `deployment-service@0c38c00d` (2026-08-11, subject line literally "alert-accuracy quartet") already
+  shipped all four pieces in the SAME commit as this doc's todo 1 (durable relaunch state) — verified live on
+  `origin/live-defi-rollout` after a fresh pull, not just from the commit message: (1) `_classify.py` `finding_for`'s
+  DP_VM_GONE_NO_CAPTURE summary interpolates `f"({result.captured_before} → {result.captured_after})"` — the `"(0 → 0)"`
+  figure was always dynamic, never a fixed template string (confirms this doc's own Lesson 3); (2)
+  `_captured_reader.py`'s `make_captured_reader._read` falls through to `_probe_all` (every `market-data` /
+  `instruments-store` / `features` × asset_group bucket, plus the flat `features-sports` key) on a
+  bucket-resolves-but-blob-absent miss, not only on an unresolvable bucket; (3) the DP_VM_PREEMPTED relaunch-note text
+  is gated on `TARDIS_GUARD_LAUNCHERS` membership — a non-member launcher (e.g. `launch-mdps-sharded-backfill.sh`) gets
+  `"relaunching via {launcher} (no Tardis dependency)"` instead of the Tardis-guard phrase; (4)
+  `classify_terminated_vm`'s `is_launcher_host` branch routes a registered launcher/cron host straight to
+  `EXPECTED_NO_CAPTURE`, exempting it from `GONE_NO_CAPTURE`. Flipped this todo's checkbox citing the sha; also flipped
+  the corresponding extraction todo in `cefi_satellite_ao_dispatch_batch19_2026_08_13.md` in the same commit (per the
+  shared conflict-check protocol §3.4, "already-shipped elsewhere, checkbox just never flipped").
 
 ## Liquidations re-drive — operator decision recorded 2026-08-11
 
