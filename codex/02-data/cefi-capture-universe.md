@@ -17,7 +17,7 @@ related:
   [
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
-    ../../plans/active/issues/cefi_universe_capture_rule_2026_06_23.md,
+    ../../plans/archive/2026_08/issues/cefi_universe_capture_rule_2026_06_23.md,
   ]
 created: 2026-06-24
 authoritative_for: [CeFi capture universe two-layer model + perp-gate]
@@ -30,8 +30,9 @@ codified: 2026-06-23
 
 # CeFi Capture Universe — Two-Layer Architecture
 
-> **Anchor**: `plans/active/issues/cefi_universe_capture_rule_2026_06_23.md` is the authoritative SSOT for the operator
-> directives. This codex doc is the durable concise reference. SUPERSEDES the earlier "curated top-100 guess".
+> **Anchor**: `plans/archive/2026_08/issues/cefi_universe_capture_rule_2026_06_23.md` (archived 2026-08-15, all todos
+> shipped) carries the original operator directives + full implementation log. This codex doc is the durable concise
+> reference and is now the live SSOT. SUPERSEDES the earlier "curated top-100 guess".
 
 ## Two-layer model (the key split)
 
@@ -249,5 +250,5 @@ licence upgrade (more concurrent IPs) would change the ceiling. Do NOT re-open t
   denominator; consumers read it, never re-derive.
 - `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS owns the full catalogue; MTDS derives its
   capture universe from it.
-- `plans/active/issues/cefi_universe_capture_rule_2026_06_23.md` — authoritative operator spec with full implementation
-  log.
+- `plans/archive/2026_08/issues/cefi_universe_capture_rule_2026_06_23.md` — original operator spec with full
+  implementation log (archived).

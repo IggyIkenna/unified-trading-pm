@@ -25,7 +25,7 @@ related:
     /plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
     issues/cefi_layer1_denominator_gaps_2026_07_03.md,
     issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
-    issues/cefi_universe_capture_rule_2026_06_23.md,
+    /plans/archive/2026_08/issues/cefi_universe_capture_rule_2026_06_23.md,
     issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md,
     /plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md,
     issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md,

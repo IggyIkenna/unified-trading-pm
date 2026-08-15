@@ -4,7 +4,7 @@ title: CeFi capture universe + perp-gated capture rule (authoritative)
 summary:
   Authoritative SSOT for the CeFi capture universe + the capture rule, per operator 2026-06-23. SUPERSEDES the earlier
   "curated top-100 guess".
-status: open
+status: resolved
 nature: process
 asset_group:
   [cefi] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
@@ -21,7 +21,6 @@ priority: P2
 source: [operator directive 2026-06-23, cefi_hl_aster_batch_data_gaps_2026_06_22.md]
 assigned_vm: planning
 resolved_by:
-archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -35,6 +34,14 @@ context_scope:
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-15 (cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize.md todo 2).** Every checkbox across
+> all sections `[x]` with shipped-SHA/prod-verified evidence; 0 open. `locked_by` was cleared corpus-wide 2026-08-12
+> (`locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`, operator ruling Option B); the deferred
+> `archive_exempt: true` bridge marker is dropped in this same commit per its own stated instruction. The durable
+> content already lives at `/codex/02-data/cefi-capture-universe.md` (the "durable concise reference" per its own anchor
+> line) — this doc remains the historical implementation log. Every corpus referrer using an actual path form was
+> repointed to `/plans/archive/2026_08/issues/`.
 
 ## What this is
 

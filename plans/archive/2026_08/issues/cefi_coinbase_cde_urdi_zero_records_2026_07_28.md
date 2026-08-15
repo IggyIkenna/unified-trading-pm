@@ -6,7 +6,7 @@ summary: >-
   not the known raw-vs-canonical-id checker false-positive that affected the other 23 venues in the same run.
   COINBASE-CDE crashes with a real Traceback ("URDI returned zero records") on force, skip, AND live legs — confirmed
   via both the checker's own no_parquet_at verdict and direct VM run.log inspection.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -27,7 +27,6 @@ assigned_role: backend_engineer
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi-rollout placeholder (operator ruling, option B, see /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md) immediately surfaces this doc as 0-open-todos archive-eligible. Per that ruling's explicit scope ("do NOT auto-archive in this same pass"), archival is deferred to a separate follow-on pass. Bridged via the sanctioned flip-then-mv two-commit pattern documented in scripts/plan-hygiene/check_archive_candidates.sh -- drop this line + git mv to plans/archive/[issues/] in that follow-on pass.
 locked_by:
 locked_since:
 source: >-
@@ -48,6 +47,12 @@ context_scope:
 ---
 
 # CEFI COINBASE-CDE — URDI returns zero records, real crash on all 3 legs
+
+> **🟢 ARCHIVED 2026-08-15 (cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize.md todo 2).** All 3 todos `[x]` with
+> dated, verified commit evidence; 0 open. `locked_by` was cleared corpus-wide 2026-08-12
+> (`locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`, operator ruling Option B); the deferred
+> `archive_exempt: true` bridge marker is dropped in this same commit per its own stated instruction. Every corpus
+> referrer using an actual path form was repointed to `/plans/archive/2026_08/issues/`.
 
 ## Finding
 

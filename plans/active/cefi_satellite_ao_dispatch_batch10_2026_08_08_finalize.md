@@ -22,7 +22,7 @@ related:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-10"
+last_updated: "2026-08-15"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -77,15 +77,24 @@ context_scope:
       commit is reachable on `origin/live-defi-rollout` before citing it.** **Done when**: every landed todo's source
       checkbox/section is flipped or appended with a verified commit, and each source doc's remaining-open count is
       explicitly re-stated.
-- [ ] [DOC] P1. **STALE PREMISE CORRECTED (2026-08-15, /plan-reconcile)** — both named docs' `locked_by` was already
-      cleared corpus-wide 2026-08-12 (`locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`, operator
-      ruling Option B); re-verified 2026-08-15, neither `issues/cefi_coinbase_cde_urdi_zero_records_2026_07_28.md` nor
-      `issues/cefi_universe_capture_rule_2026_06_23.md` carries a `locked_by` value today — both are instead bridged via
-      `archive_exempt: true` (0 open todos each) awaiting the follow-on archival pass their own bridge comments name. No
-      operator unlock-ask is needed anymore for either doc. **Run the standard 6-step archival ritual on both**
-      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — drop each `archive_exempt` bridge line,
-      `git mv` to `plans/archive/[issues/]`, fix corpus referrers. **Done when**: both docs are archived and every
-      corpus referrer resolves to the new path.
+- [x] ✅ [DOC] P1. **DONE 2026-08-15 (slot-3).** **STALE PREMISE CORRECTED (2026-08-15, /plan-reconcile)** — both named
+      docs' `locked_by` was already cleared corpus-wide 2026-08-12
+      (`locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`, operator ruling Option B); re-verified
+      2026-08-15, neither `issues/cefi_coinbase_cde_urdi_zero_records_2026_07_28.md` nor
+      `issues/cefi_universe_capture_rule_2026_06_23.md` carried a `locked_by` value — both were bridged via
+      `archive_exempt: true` (0 open todos each) awaiting this follow-on archival pass. No operator unlock-ask was
+      needed for either doc. **Ran the standard 6-step archival ritual on both**
+      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — dropped each `archive_exempt` bridge
+      line, added an ARCHIVED banner, `git mv`'d both to `plans/archive/2026_08/issues/`, fixed every corpus referrer
+      using an actual path form (6 files: `/codex/02-data/cefi-capture-universe.md` ×3,
+      `plans/active/instruments_completion_tracker_2026_07_06.md`,
+      `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` ×2). Codex-alignment check: doc2's durable
+      content already lives at `/codex/02-data/cefi-capture-universe.md` (that doc's own "durable concise reference"
+      anchor line); doc1's fix is fully described in code + tests, no new codex contract. Bare-filename prose citations
+      (no path form) were left as historical narrative, matching the existing corpus convention (e.g. archived
+      `cefi_satellite_ao_dispatch_batch2_2026_07_26.md` cites sibling archived docs by bare name). **Done when**: both
+      docs are archived and every corpus referrer resolves to the new path. See Progress Log below for the shipping
+      commit.
 - [ ] [REVIEW] P1. **Re-check the 32 non-batchable Deferred items from batch10 for cleared gates before batch11's
       Phase-1 re-triage** (per the skill's iterative-drain methodology — check the prior batch's Deferred section first,
       before spinning fresh Phase-1 agents). In particular: (a) has the operator ruled on
@@ -113,6 +122,20 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-15 (slot-3, todo 2)** — archived both `cefi_coinbase_cde_urdi_zero_records_2026_07_28.md` (0 open, 3/3 todos
+  `[x]`) and `cefi_universe_capture_rule_2026_06_23.md` (0 open, 16/16 todos `[x]`) via the 6-step ritual: dropped each
+  `archive_exempt` bridge line, flipped `status: open` → `resolved`, added an ARCHIVED banner citing this doc,
+  `git mv`'d both to `plans/archive/2026_08/issues/`. Referrer sweep: both docs' only ACTUAL-path-form referrers (6
+  files: `/codex/02-data/cefi-capture-universe.md` frontmatter `related:` + anchor line + composes-with line,
+  `plans/active/instruments_completion_tracker_2026_07_06.md` `related:` entry,
+  `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` `related:` + `context_scope:` entries) repointed to
+  `/plans/archive/2026_08/issues/`. Bare-filename prose mentions across ~8 other docs (both active and already-archived)
+  left unchanged, matching the corpus's existing convention for historical narrative citations. Codex-alignment check:
+  doc2's durable content already lives at `/codex/02-data/cefi-capture-universe.md` (its own pre-existing "durable
+  concise reference" anchor, now updated to state it is the live SSOT); doc1's crash-hardening fix is fully captured in
+  code + regression tests, no separate codex contract needed. No new referrer-broken links found post-move (`grep -rl`
+  re-run on both new paths after the `git mv` confirmed only the fixed files + the two archived docs themselves
+  reference the new paths).
 - **2026-08-10 (slot-17, todo 1)** — reconciled all 6 source docs' checkboxes for batch10's 6 landed todos; **every
   cited commit verified as an ancestor of `origin/live-defi-rollout` before citing**. Per-doc outcome + remaining-open
   count: (1) `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` — Phase C already `[x]`
