@@ -187,13 +187,22 @@ source: >-
       clone (`_MANIFEST_REL`, `manifest_path()`; raises `ManifestUnavailableError` with no regen fallback if absent) —
       untracking it would break AO's capability MCP server on any fresh clone. Filed as a new followup todo below rather
       than silently skipped. Source: `plans/active/mtds_file_size_refactor_2026_06_08.md`
-- [ ] [CODE] P3. **New finding, 2026-08-15**: before `openapi/capability-manifest.json` can be untracked per the
-      generated-artifact-churn cleanup above, fix `agent-orchestrator/server/mcp/manifest_loader.py`'s hard dependency
-      on it being a committed file (`_MANIFEST_REL = "unified-api-contracts/openapi/capability-manifest.json"`,
-      `ManifestUnavailableError` on missing, no regen path) — either wire a regen-on-demand fallback (invoke
-      `unified-trading-pm/scripts/openapi/generate_capability_manifest.py` when the committed copy is absent) or accept
-      the file staying committed permanently and close this out as won't-do. Repo: agent-orchestrator +
-      unified-api-contracts. Source: this doc, todo above.
+- [x] ✅ [CODE] P3. **WON'T-DO — regen-on-demand fallback deliberately not wired; documented in-code instead.**
+      agent-orchestrator@16f8c4f66a (2026-08-15, slot-6·infra). The generator
+      (`unified-trading-pm/scripts/openapi/generate_capability_manifest.py`) imports UAC-internal domain registries
+      fleet-wide (`_capability_extract`/`_capability_gaps`/`_capability_orphan`/`_capability_readiness`,
+      `unified_api_contracts.internal.architecture_v2.capability_manifest`) and sets up a mock-service env
+      (`CLOUD_PROVIDER`/`CLOUD_MOCK_MODE`/`STORAGE_EMULATOR_HOST`/etc.) — wiring it as a live subprocess/import fallback
+      inside AO's `manifest_loader.py` would contradict that module's own documented design (read-only,
+      credential-free, minimal). The sibling todo above already resolved to keep `capability-manifest.json`
+      permanently committed (not untracking it), so the forcing premise for a regen fallback ("the file might not
+      exist") no longer applies — absence should only happen on a broken/partial checkout, and
+      `ManifestUnavailableError` is the correct loud failure for that. Confirmed every MCP caller already handles it
+      gracefully: `query_manifest()` in `server/mcp/tools.py` catches `ManifestUnavailableError` and returns an honest
+      `ok: false` typed verdict, never a raw exception. Added a doc comment to `manifest_loader.py` recording this
+      decision so a future reader doesn't re-raise the same question. `bash scripts/quality-gates.sh` green (3976
+      passed, 2 skipped; dashboard tsc + vitest green); quickmerge landed on LDR, post-push ancestry verified
+      (`16f8c4f66a` on `origin/live-defi-rollout`). Repo: agent-orchestrator. Source: this doc, todo above.
 - [x] ✅ [CODE] P2. **Ran PM `bash scripts/quality-gates.sh` — initially FAILED, root-caused + fixed, now confirmed
       green.** (2026-08-15, slot-12·infra) First run surfaced a real regression, not a stale/pre-existing red:
       `test_f47_unbuildable_venue_cells_are_not_available` failed with 18 unbuildable cells, all tracing to one venue
