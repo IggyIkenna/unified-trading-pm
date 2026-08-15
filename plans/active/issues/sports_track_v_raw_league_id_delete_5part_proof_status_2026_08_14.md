@@ -205,22 +205,24 @@ already caught once.
       unlike the already-diagnosed `day=2025-09-18` case, no fix was attempted this session** — applying the
       day=2025-09-18 remediation blindly here would repeat exactly the "assumed-identical, unverified" mistake finding T
       already flagged as a permanent hard-stop pattern. See the new P1 todo below.
-- [ ] [DATA] P1. Identify what wrote the 757 remaining FAIL targets' current content (all sampled `last_modified` land
-      `2026-08-15`, the day of this session, NOT the `2026-07-27..07-29` K1/K2-casing-window that explained
-      `day=2025-09-18`) before attempting any fix. Candidates to check: (1) grep+READ for a scheduled/cron sports-odds
-      backfill or gap-fill job that recaptures recent-past days as part of normal steady-state operation (would explain
-      why exactly these specific (day, venue, league) shards keep getting fresh content — a live writer racing the
-      verify script rather than a stale historical gap); (2) check `deployments/archive/2026-08-15/` for any OTHER
-      `migrate_sports_league_id_casing_2026_07_21.py --apply-prod` invocation around 10:12-10:42 UTC today (rule out a
-      concurrent slot already mid-fix); (3) content-diff one sample target's current bytes against what Track V's own
-      2026-07-21/22 migration would have written, to see if it's additive (a legitimate later capture) or a genuine
-      clobber (same shape as `day=2025-09-18`). Once the writer is identified and the affected objects are confirmed
-      QUIESCENT (stable generation across two checks a few minutes apart — already true for the one object sampled this
-      session, re-confirm for others), apply `day=2025-09-18`'s diagnostic (schema/vocabulary comparison) to decide
-      fold-vs-quarantine per unit, then re-run `list_...`/`verify_...` scoped to the affected days to confirm 0 FAIL
-      before Parts 1/2/5 can be called clean. Full 757-row FAIL list is preserved at
+- [ ] [DATA] P1. **Narrowed 2026-08-15 (slot 22)**: the writer-identity mystery is UNRESOLVED after exhausting every
+      available forensic surface (see Progress Log), but the CONTENT root cause is now well-evidenced and looks
+      DIFFERENT from `day=2025-09-18`'s clobber — genuine ambiguous-raw-league-label under-coverage, not a
+      foreign-schema overwrite. Remaining work, in order: (1) for the one split-target label (`SUPER_LEAGUE` ->
+      `GREEK_SUPER_LEAGUE` 125 / `SWISS_SUPER_LEAGUE` 35), confirm via a content read whether the raw source's rows
+      genuinely partition cleanly across both canonical targets (expected) or whether either target is simply missing
+      entirely (a real gap) — do this for at least 2-3 sample (day, venue) units before generalizing to the other 6
+      single-target labels; (2) if confirmed as an under-coverage gap (not a clobber), the correct fix is very likely a
+      re-run of `migrate_sports_league_id_casing_2026_07_21.py`'s union/fold logic scoped to these 757 units (additive
+      CAS merge, same tool already proven safe for `day=2025-09-18` and the original 275K-object run) — NOT the
+      day=2025-09-18 quarantine path, since the vocabulary/schema is NOT foreign here (see Progress Log); (3) re-run
+      `list_.../verify_...` scoped to the affected 19 days to confirm 0 FAIL before Parts 1/2/5 can be called clean.
+      Full 757-row FAIL list remains at
       `gs://deployment-scripts-central-element-323112/canonical-migration-sports-league-id-delete/20260815-091724/verify_report.json`
-      — do not re-launch a fresh full-range VM to re-derive it.
+      — do not re-launch a fresh full-range VM to re-derive it. **Before any prod write**, do a fresh QUIESCENCE check
+      (2 x `gcs_describe_object` a few minutes apart) on whatever units are about to be touched — the 2026-08-15
+      10:11-10:42 write burst has not recurred as of this session's own checks, but confirm fresh each time regardless
+      of who caused it, since the writer was never identified.
 - [x] [DATA] P2. ✅ Fix the false-negative bug in `migrate_sports_league_id_casing_2026_07_21.py`'s
       `no_clobber_all_sources_present` diagnostic (`process_unit`, `by_src`/`present` computation): it computed
       `by_src`'s per-source row hashes from `body` (the raw-source-only column schema) BEFORE the merge with `existing`,
@@ -353,6 +355,77 @@ already caught once.
   (recovery + diagnostic-application both genuinely complete) and filed a new, narrower P1 todo for the
   writer-identification + per-unit fix work, keeping P3's full-mode delete correctly blocked. No code shipped this turn
   (read-only GCS investigation + doc updates only).
+
+- **2026-08-15 (slot 22, this session)**: Picked up the "identify the writer" P1 todo. Recovered the full 757-row FAIL
+  list from the preserved `verify_report.json` (73.5MB, streamed via `gcs_read_object_range` under
+  `run-bounded-analysis.sh`, no re-launch) rather than re-deriving it. Worked through all three named candidates and
+  ruled out each with hard evidence, then found the actual content root cause via direct schema/vocabulary inspection —
+  full detail below; NO prod write was made this session (read-only investigation only).
+  - **Candidate (1) — scheduled/cron gap-fill recapturing recent-past days**: read `sports-trigger-tiers.yaml` in full.
+    Discovery tier's rolling window is `lookback_days=1` only; pre/post-match tiers are fixture-proximate (offsets
+    relative to a specific fixture's kickoff/final-whistle, not a historical date sweep). Nothing in the live scheduler
+    touches arbitrary days 2.5-4 months in the past. **Ruled out** — no code path exists that would sweep
+    2026-04-18..2026-05-31 today.
+  - **Candidate (2) — another `--apply-prod` invocation in the window**: queried the durable `run_ledger` BigQuery table
+    (`central-element-323112.deployment_operational_data.run_ledger`) for ALL rows (every asset_group, not just sports)
+    with `completed_at BETWEEN 2026-08-15 10:12:00 AND 10:42:00` — zero rows mention sports/league/footystats. Widened
+    to `asset_group=sports` since 2026-08-14 — only the already-known dry-run VMs and `sports-forward-poll` show up,
+    none inside the window (in fact `sports-forward-poll`/`footystats-fwd` shows a ~20h gap with nothing between 08-14
+    13:29 and 08-15 09:10, and nothing again until after 11:00). Confirmed the `list_.../verify_...` trio itself (which
+    WAS running mid-window per the doc above) is provably read-only — grepped
+    `verify_stale_raw_league_id_content_2026_08_14.py` for every write-shaped call; the only `upload_*` call uploads the
+    trio's OWN report, never a target object. Checked two other same-day sports migrations for timing overlap:
+    `merge_exchange_fixed_odds_content_2026_08_14.py --confirm` executed **2026-08-14** (slot-28, per
+    `sports_taxonomy_p2_migration_2026_08_08.md`'s own Progress Log) — a full day before the anomaly, and although its
+    own additive-union design (`pd.concat([tgt_df, to_add_df])`, never removes rows, write-verified via readback) means
+    it could never have CAUSED a coverage loss even if timing had overlapped.
+    `canonical-migration-sport-residue-blank-venue-purge` ran 2026-08-15 **01:40-01:41 UTC**, 9h before the window
+    (`run_ledger` confirmed). Checked `gcloud run jobs executions list` for the sports/instruments Cloud Run Jobs — only
+    the routine every-1-min manifest-consolidator + every-5-min sports-scheduler executions appear (background noise
+    present at all times, not a signal); none of these write parquet CONTENT (manifest-consolidator only rewrites
+    manifest index rows per its own SSOT). Checked Cloud Logging for GCS Data Access audit entries on one sample
+    object's exact path for the window — **zero results**: Data Access audit logging does not appear to be enabled on
+    `market-data-tick-sports-prd-central-element-323112`, so the one authoritative "who wrote this object" signal is
+    unavailable for this incident (flagging as a real gap, not fixed this session — enabling it would only help FUTURE
+    incidents, not this one retroactively). Checked two other 2026-08-15-dated sports plans
+    (`sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md`,
+    `sports_odds_api_data_type_casing_standardization_2026_08_15.md`) for same-day execution — both are still
+    code-only/not-yet-shipped or explicitly gated behind operator approval; neither has executed a prod content rewrite
+    yet. **Net: exhausted every readily-available forensic surface; the specific writer/process remains unidentified.**
+  - **Candidate (3) — content-diff + NEW finding (root cause of the 757 FAILs)**: downloaded a 6-day-spread sample of
+    canon targets + their raw sources directly (`pyarrow`, bounded). Two findings:
+    1. **Timing, at full 757-object scale**: `gcs_describe_object`'d ALL 757 canon targets (not just a sample) — 100%
+       show `last_modified=2026-08-15`, clustered in an unbroken, steadily-paced sequence from 10:11 to 10:42 UTC
+       (roughly 15-45 objects/minute throughout, no gaps/bursts) — this is the signature of ONE continuous ~31-minute
+       process, not several independent triggers. This window sits entirely BETWEEN the two known dry-run VMs' active
+       periods (`...-091724`'s VERIFY completed 10:00:26 and self-deleted; the SPOT-relaunch `...-104309` started
+       10:43:09) — neither VM's own code path writes target content (confirmed above), so this remains an unexplained
+       gap even with the fuller picture.
+    2. **Root-cause mechanism is DIFFERENT from `day=2025-09-18`, not the same pattern re-occurring**: for
+       `day=2025-09-18` the canon target carried a genuinely FOREIGN vocabulary (`sport_key="UEFA Champions League"`
+       title-case vs the odds-api slug `SPORTKEY_CANON` maps) and a foreign schema shape. For this session's 6-day
+       sample, canon and raw BOTH carry the same odds-api human-readable `sport_key` convention (e.g. canon
+       `'Brazil Série A'` / raw `{'Serie A - Italy', 'Brazil Série A'}` for the `SERIE_A`→`BRASILEIRAO` unit) — no
+       foreign vocabulary, no foreign schema (the `af_fixture_id`/`af_fixture_match_status` extra columns are present on
+       BOTH src and canon in most samples, not canon-only as in the `day=2025-09-18` case). Full breakdown of all 757
+       FAILs by (raw, canon) pair: `SERIE_A`→`BRASILEIRAO` (188), `PREMIERSHIP`→`SCOTTISH_PREMIERSHIP` (140),
+       `SUPER_LEAGUE`→`GREEK_SUPER_LEAGUE`/`SWISS_SUPER_LEAGUE` (125/35, the ONE split-target label), `PRIMERA_DIVISION`
+       →`ARGENTINA_PRIMERA` (118), `SUPERLIGA`→`DANISH_SUPERLIGA` (104), `BUNDESLIGA`→`AUSTRIAN_BUNDESLIGA` (37),
+       `FIRST_DIVISION_A`→`JUPILER_PRO` (10) — every single one of the 7 raw labels is a GENERICALLY-NAMED league string
+       that collides with a same-named league in another country (Italian vs Brazilian Serie A, Danish vs Turkish
+       Superliga, Scottish vs lower-tier English Premiership, German vs Austrian Bundesliga, Greek vs Swiss Super
+       League, Belgian Jupiler First Division A vs others). The 188/140/118/104/37/10 counts for the 6 single-target
+       labels, plus the 125+35 split for the one genuinely dual-target label, is exactly the signature
+       `sport_key`→`SPORTKEY_CANON`-derived-target coverage would produce if Track V's 2026-07-21/22 original migration
+       simply never achieved 100% coverage for this ambiguous-raw-label subset (a LATENT gap from July, not a new
+       clobber) — consistent with this being the first-ever full-range object-level re-verification since that run.
+  - **Conclusion / recommendation**: the "who touched `last_modified` today" question stays open (real gap: no Data
+    Access audit logging on this bucket) but is very likely NOT load-bearing for the fix — see the narrowed todo above.
+    Recommended next step is a small-sample content-partition check on the one split-target label (`SUPER_LEAGUE`), then
+    treat this as a Track V union-of-targets coverage gap (additive fold, same proven tool) — materially different from,
+    and simpler than, the `day=2025-09-18` foreign-writer quarantine case. Not flipping this todo `[x]` since positive
+    writer identification (the todo's literal ask) was not achieved despite exhausting every available lead; narrowed it
+    instead to reflect what IS now known and the concrete next step.
 
 ## Context scout
 
