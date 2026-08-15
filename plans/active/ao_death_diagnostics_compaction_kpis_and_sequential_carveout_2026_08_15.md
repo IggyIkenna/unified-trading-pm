@@ -114,47 +114,86 @@ _(Also fixed in the same commit:
 `_active_worker_slot_ids`'s widened return contract, `list[int]` → `dict[int, str]` — a real, expected test-contract
 update caught by the Pass-1 QG run, not a regression.)_
 
-## Not shipped this session — item 4's carve-out (design only)
+## Item 4 — CORRECTED: a DeepSeek-only carve-out already existed; extended to Claude (2026-08-15, later same session)
 
-- [ ] [INFRA] P0. **Design phase only — implementation intentionally deferred, see rationale below.** Add a scoped
-      carve-out so a `sequential: true` plan's next-ready task does NOT get torn down by `one_task_per_session_enabled`
-      (default `True`) — instead the SAME session runs pre-compact→compact (if `context_used_pct` warrants it, same
-      threshold `context_worker_force_compact_pct` the unconditional worker force path already uses) and continues
-      draining the next task, mirroring the PRE-2026-08-04 "case 1 — next task ready: hand it over, same live session
-      drains it" path documented in `/codex/04-architecture/agent-orchestrator-worker-liveness.md`'s
-      dispatch-context-driven-lifecycle table — which still exists in code, just gated off by the current default. -
-      **Scope, precisely**: the carve-out applies ONLY when (a) the finishing task belongs to a plan with
-      `sequential: true`, AND (b) `pick_next_task` returns the immediate next task in that SAME sequential chain for
-      this slot. Every other `/done` — a non-sequential plan, or a sequential plan's LAST task — keeps the current
-      one-task-per-session teardown unchanged. - **Explicit conflict with the 2026-08-04/08-05 operator ruling**
-      (documented in the worker-liveness SSOT): that ruling deliberately forces a fresh session on every task boundary
-      fleet-wide, reasoning "conversational carry-over was never load-bearing... costs nothing but respawn overhead."
-      This carve-out does not overturn that reasoning fleet-wide — it targets specifically the case the ruling's own
-      rationale doesn't cover well: a `sequential: true` chain is, by construction, a single logical unit of work an
-      operator explicitly asked to serialize; forcing N fresh boots + N re-reads of the plan/Progress Log between its
-      own steps is pure respawn overhead with no isolation benefit (the SAME slot claims the SAME plan's next step
-      regardless). - **Why this wasn't implemented in the same pass as items 1-3 above**: it changes control flow in the
-      SAME `tuning.one_task_per_session_enabled` gate that a documented incident (four plan-worker roles wrongly reaped
-      after every task, 2026-07-21) already had a real regression in — see
-      `/codex/04-architecture/agent-orchestrator-worker-liveness.md` § "The defect this corrects". A live orchestrator
-      managing dozens of dispatched slots right now (verified this session via `/check-agent-orchestrator`) is the wrong
-      place to land an unreviewed change to that exact lifecycle decision in the same pass as three lower-risk,
-      purely-additive observability changes. Landing it separately, with its own quality-gate run and its own regression
-      test, keeps a bug in THIS change from being masked by or blamed on the observability changes that shipped
-      alongside it. - **Implementation sketch for whoever picks this up** (this session, next tick, or the operator
-      interactively): 1. In the `/done` handler's case-1 lookup (`pick_next_task` returning a task for this slot), check
-      whether the just-completed task's `plan_order`-adjacent successor is (a) in the same plan, (b) that plan has
-      `sequential: true`. If so, skip the `one_task_per_session` teardown for this ONE transition. 2. Before handing the
-      next task to the same live session, check `context_used_pct` against `context_worker_force_compact_pct` (currently
-      60, same threshold `context_lifecycle.py`'s worker path uses) — if over, run the SAME two-phase
-      pre-compact→compact `_force_compact_now` sequence synchronously-enough that the next task's brief isn't handed to
-      a session mid-compaction. 3. New regression test: a 3-task `sequential: true` plan drains in ONE session (no
-      `slot_boot` between tasks 1→2 and 2→3), while a control (non-sequential) 3-task plan still shows 3 separate
-      `slot_boot`s — proves the carve-out is scoped, not a blanket revert. 4. Verify against the 2026-07-21 regression
-      this codebase already fixed once: confirm a `sequential: true` chain's worker does NOT go idle/get reaped
-      mid-chain (case 2 in the lifecycle table) — only case 1 (next-task-ready) changes. - Done-when: the regression
-      test in step 3 above is green, `quality-gates.sh` is green, and a real `sequential:       true` plan observed live
-      shows N tasks completing in fewer than N `slot_boot` events for that slot.
+**This section's original text (below the line) was written before discovering `routes/slots_worker.py`'s
+`_maybe_plan_switch_reset` already implements a `sequential: true` carve-out — just scoped to `provider == "deepseek"`
+only, deliberately, because DeepSeek's disk-based cache survives hours-to-days while Claude's (~5min-1hr) does not
+(skipping the reset for Claude risked a full cache-miss on the very next turn). The design-only text below is preserved
+for its own record but is now SUPERSEDED by what actually shipped.**
+
+- [x] 6. ✅ [INFRA] P0. Extend the existing DeepSeek-only carve-out to non-DeepSeek providers too, but ONLY when
+      `req.context_used_pct` at `/done`-time is under a NEW, separate, conservative threshold
+      (`sequential_carveout_max_context_pct_for_non_deepseek`, default 40 — well under
+      `context_worker_force_compact_pct`'s 60) — leaving real headroom for context_lifecycle.py's existing ~60s
+      unconditional worker force-compact tick to compact BEFORE the next big turn runs, closing the exact cache-miss
+      risk the original DeepSeek-only scoping was written to avoid, without inventing any new synchronous compaction
+      call inside the `/done` HTTP handler. `agent-orchestrator/server/config.py` (new tuning field) +
+      `server/routes/slots_worker.py` (`_maybe_plan_switch_reset`). Two regression tests updated/added in
+      `tests/test_task_lifecycle_done_gate_resume.py`: `..._still_resets_..._at_high_context` (65% — still resets, the
+      safety boundary) and `..._skips_reset_..._at_low_context` (10% — now skips, the new behavior). —
+      `agent-orchestrator@<pending-this-batch>`.
+
+<details><summary>Original design-only text (superseded, preserved for record)</summary>
+
+Add a scoped carve-out so a `sequential: true` plan's next-ready task does NOT get torn down by
+`one_task_per_session_enabled` (default `True`) — instead the SAME session runs pre-compact→compact (if
+`context_used_pct` warrants it) and continues draining the next task, mirroring the PRE-2026-08-04 "case 1" path in
+`/codex/04-architecture/agent-orchestrator-worker-liveness.md`'s dispatch-context-driven-lifecycle table. Explicit
+conflict with the 2026-08-04/08-05 operator ruling noted; implementation sketch called for a NEW synchronous
+pre-compact→compact call inside the `/done` handler — superseded by the simpler, safer headroom-gated approach actually
+shipped above, which reuses the ALREADY-EXISTING tick-based compactor instead.
+
+</details>
+
+## Additional root-cause work, same extended session (2026-08-15) — triggered by two live operator questions
+
+**"Can we retrospectively tell OOM from an external kill?"** — verified live (SSM) that the orchestrator's own service
+user (`ubuntu`, group `adm`) can read both `journalctl -k` (kernel OOM-killer log) and `/var/log/audit/audit.log` (the
+SAME auditd mechanism `ao_tmux_session_loss_mid_task_root_cause_2026_08_10` used to find the original `tmux kill-server`
+root cause) WITHOUT any new privilege grant.
+
+- [x] 7. ✅ [INFRA] P2. New `agent-orchestrator/server/death_forensics.py` — best-effort, never-raises
+      `check_oom_kill`/`check_external_kill`/`classify_unexplained_death`, wired into `tmux_pruner.py` for every
+      `death_class=="unexplained"` row, run AFTER the write session closes (this file's OWN documented precedent,
+      `ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26` — a subprocess call inside an open write transaction
+      scales lock-hold time with fleet size). Logs a separate `unexplained_death_forensics` event per slot. 11 unit
+      tests in `tests/test_death_forensics.py` (mocked subprocess, no live dependency). —
+      `agent-orchestrator@<pending-this-batch>`.
+
+**"Slot #18 went 'stale' — the detail blob (`silence_seconds`/`threshold_seconds` only) doesn't say what/which slot/task
+went stale, and diagnose+fix the root cause without a regression."** Live investigation (SSM) found: slot 18's account
+got rate-limited ~07:31-07:34, then 20 consecutive `worker_kick_skipped_account_blocked` events over ~20min with NOTHING
+recovering it faster — `mark_account_rate_limited` only steers FUTURE spawn decisions (`autospawn.py`'s headroom
+picker), it does nothing for an ALREADY-running slot stuck on the now-blocked account. The slot sat silent until the
+generic 25-30min staleness path eventually noticed independently, firing TWO separate pages 5 minutes apart for the same
+root cause.
+
+- [x] 8. ✅ [INFRA] P1. Enrich `slot_stale`/`slot_idle_stale` `details_json` with `current_task`/`tmux_session`/
+      `account_id`/`last_msg` (previously silence_seconds/threshold_seconds only — self-contained now, no
+      cross-referencing a separate column/UI chip needed). `server/health.py`. New test
+      `test_slot_stale_detail_is_self_contained` in `tests/test_health_scheduled_lifecycle_exemption.py`. —
+      `agent-orchestrator@<pending-this-batch>`.
+- [x] 9. ✅ [INFRA] P1. Root-cause fix: a NEW, SEPARATE escalation counter (`_consecutive_account_blocked_ticks`, own
+      tuning field `account_blocked_kick_escalation_ticks` default 8) in
+      `WorkerLivenessKicker._handle_account_blocked_pane` — after N consecutive blocked-pane ticks on a slot with a real
+      `current_task`, **pages the operator** (`notify_slot_failed`, deduped once per episode) instead of silently
+      waiting up to 25-30min for the generic staleness path. **Deliberately alert-only, NEVER a kill/respawn** — an
+      earlier draft of this fix called `_maybe_auto_respawn_stuck_slot(force=True)` from this exact branch and was
+      caught, before shipping, as a direct reproduction of `ao_kick_escalation_rate_limit_blind_force_kill_2026_08_14`
+      (7 slots sharing one blocked account force-killed within a 90s window) — this branch was deliberately carved OUT
+      of the pane-classification escalation path specifically so account-blocked can never reach a force-kill; an
+      N-slots-share-one-account scenario would tick every one of them up in lockstep and reproduce that exact incident,
+      just delayed by N ticks instead of immediate. `server/worker_liveness/__init__.py` + `server/config.py`. 4 new
+      regression tests in `tests/test_worker_liveness.py` (alerts at threshold / doesn't alert early / dedups within an
+      episode / resets on recovery) — the first of these explicitly asserts `_maybe_auto_respawn_stuck_slot` is NEVER
+      called, pinning the corrected design. — `agent-orchestrator@<pending-this-batch>`.
+
+**Lesson worth carrying forward**: the account-blocked branch's existing test
+(`test_account_blocked_pane_skips_kick_and_marks_account_rate_limited`) already asserted
+`mock_respawn.assert_not_called()` — a direct, named guard against exactly the mistake almost made here. Reading and
+understanding an adjacent existing test BEFORE extending the code path it covers would have caught this without needing
+to draft-then-catch it.
 
 ## Follow-ups not in scope for this doc (filed for later, not silently dropped)
 
