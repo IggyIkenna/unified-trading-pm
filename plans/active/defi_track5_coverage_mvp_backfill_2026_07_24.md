@@ -151,6 +151,17 @@ context_scope:
       this session — out of proportion to run to completion synchronously alongside this apply session's other 8 items,
       and the skill is designed for VM-launch + poll, not an inline quick check. The `--day` blocker is genuinely
       cleared now; whoever runs the 3x-each cadence next can go straight to execution with the commands above.
+      **2026-08-14/15 MTDS baseline attempts (both `--day 2026-07-01`)**: first attempt
+      (defi_satellite_ao_dispatch_batch13, 2026-08-14) OOM'd 10 min in on the unscoped full sweep (3126 shards) — filed
+      `/plans/active/issues/mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep_2026_08_14.md`. Second attempt
+      (2026-08-15, slot 6) re-ran per that issue doc's landed per-`--asset-group` interim workaround (5 separate driver
+      VMs) — **still only PARTIAL, not a genuine baseline**: PREDICTION and TRADFI completed and produced reports
+      (`plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_01_PREDICTION.md`, `…_TRADFI.md`); CEFI, DEFI, and
+      SPORTS did not complete (2 died silently with no report, 1 exited `rc=3` with no report — see that issue doc's
+      2026-08-15 Progress Log entry for full detail + the two new todos it added). The IS baseline (companion check)
+      succeeded cleanly on 2026-08-14 — MTDS is the side still blocked. **Do not check this todo off on the MTDS side**
+      until the issue doc's [CODE] P1 root-cause todo ships and a genuinely complete 5/5 MTDS baseline run exists to
+      cite.
 
 ## MVP universe — proven-wired vs. merely-declared (gate-audit §14, 2026-07-24: no such section existed; this track is the closest source)
 

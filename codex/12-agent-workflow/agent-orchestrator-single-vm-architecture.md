@@ -484,9 +484,27 @@ memory cap (`orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`
 
 ## Checking live status from a dev checkout (read-only)
 
-The API needs a JWT most dev checkouts lack, and the VM's public `:8765` has no inbound rule. The supported read-only
-path is **AWS SSM Session Manager** `send-command` running `curl localhost:8765/api/backlog` ON the VM (no firewall
-change, no JWT, CloudTrail-audited):
+**Corrected 2026-08-15** (`ao_human_fleet_integration_2026_08_15.md` Phase 2 investigation) — the "no inbound rule"
+claim below was STALE (verified wrong, not re-derived from doc): security group `sg-066c852065f8cdcac` on
+`i-0c9b283b31d6b5ca7` allows `0.0.0.0/0` on `tcp/8765` (also `22` and `443`), and the API is directly, publicly
+reachable — `curl https://13.113.200.22:8765/api/agents` (or plain `http://`) returns a real `401 missing bearer token`
+from a machine outside AWS, confirming both the port is open AND the app-level auth gate is live. Whether this was
+always the case or changed since this doc was written is unknown from here — flagging as a fact, not a ruling on whether
+it's the intended posture.
+
+A real anomaly, unresolved: the same IP over the **proper domain name** (`api.agent-orchestrator.odum-research.com` —
+DNS resolves correctly to `13.113.200.22`, a valid Let's Encrypt cert for that exact CN is served on `:443`) times out
+at the TLS handshake, reproducibly, even when the IP is pinned via `curl --resolve` — while a bare-IP HTTPS connection
+to the identical port succeeds immediately. Points at SNI-based filtering somewhere in the path (client-side network, or
+a WAF/proxy on the server side); root cause not established from this investigation alone — worth checking whether it
+reproduces from a different network before assuming either side.
+
+**Practical effect**: a caller with a real bearer token (`issue_token(role="worker", ...)`, see `server/auth.py`) can
+reach the API directly over HTTPS today — no SSM tunnel required for that case. The SSM path below remains the right
+choice for **credential-free, read-only** checks (no JWT provisioning needed) and stays documented as-is for that use:
+
+The API needs a JWT most dev checkouts lack. The supported credential-free read-only path is **AWS SSM Session Manager**
+`send-command` running `curl localhost:8765/api/backlog` ON the VM (no firewall change, no JWT, CloudTrail-audited):
 
 - **Script**: `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh [substring-filter]` — needs AWS CLI
   authed against account `427895769566` with `ssm:SendCommand` + `ssm:GetCommandInvocation`.

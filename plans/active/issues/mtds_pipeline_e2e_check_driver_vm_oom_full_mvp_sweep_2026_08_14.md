@@ -123,7 +123,11 @@ Two independent angles, not mutually exclusive:
       unscoped `--mvp-only` sweep (3126 shards) and bound it — either stream the report to disk per-shard instead of
       accumulating in memory, or cap concurrent in-flight `launch_vm_and_wait()` calls. Verify by running the same
       unscoped `--day 2026-07-01 --legs force,skip --mvp-only --require-captured --auto-day` sweep to a clean exit on
-      the same e2-highmem-4 driver VM class. (repos: market-tick-data-service)
+      the same e2-highmem-4 driver VM class. **STRENGTHENED 2026-08-15 (see Progress Log): the per-asset-group
+      workaround (todo below) is NOT a sufficient interim mitigation — 3/5 asset_groups still failed to produce a clean
+      report on a real re-run** (CEFI + DEFI drivers died silently with no EXIT_STATUS/report at all; SPORTS exited
+      `rc=3` with no report and no logged traceback). This root-cause fix is now the ONLY path to a genuinely complete
+      MTDS baseline — the interim doc-only workaround does not close this issue. (repos: market-tick-data-service)
 - [x] [DOCS] P2. ✅ Update `unified-trading-pm/cursor-configs/skills/data-pipeline-check-mtds/SKILL.md` §1a to recommend
       per-`--asset-group` driver-VM invocations (5 launches) as the default sweep pattern until the above OOM fix ships,
       instead of the current single unscoped-sweep example. (repos: unified-trading-pm) — unified-trading-pm (this
@@ -131,8 +135,23 @@ Two independent angles, not mutually exclusive:
       that even a per-asset_group run may still need `--venue`-level splitting (cefi alone was ~30+ shards deep and
       still climbing when the unscoped run OOM'd).
 - [ ] [DATA] P2. Once either todo above lands, re-run the MTDS baseline (`--day 2026-07-01`) to completion and cite the
-      resulting report path in `defi_track5_coverage_mvp_backfill_2026_07_24.md`'s pipeline-check gate todo. (repos:
-      market-tick-data-service)
+      resulting report path in `defi_track5_coverage_mvp_backfill_2026_07_24.md`'s pipeline-check gate todo. **ATTEMPTED
+      2026-08-15, NOT satisfied — see Progress Log.** Real per-`--asset-group` re-run only completed cleanly for
+      PREDICTION + TRADFI (reports rescued to `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_01_{AG}.md`);
+      CEFI, DEFI, SPORTS did not produce usable reports. Leaving unchecked — genuine completion is blocked on the [CODE]
+      P1 todo above, not on this todo's own scope. Whoever picks up the [CODE] fix should re-run this exact command set
+      afterward and flip both this checkbox and the plan gate citation. (repos: market-tick-data-service)
+- [ ] [CODE] P1. **NEW (found 2026-08-15).** The report writer's GCS mirror path has NO `asset_group` segment
+      (`pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/<run_date>/data_pipeline_e2e_check_mtds_<run_date>.md`,
+      no `{AG}` component) — confirmed live: running the §1a per-`--asset-group` loop sequentially, each completing
+      asset_group's report SILENTLY OVERWRITES the previous one at that same GCS path. A human/agent following the
+      documented per-AG loop and checking the report only at the end will see only the LAST asset_group's results and
+      believe (incorrectly) that it covers the whole sweep. Fix: parameterize the GCS mirror path (and ideally the local
+      path too) with `{asset_group}` — e.g.
+      `.../data_pipeline_e2e_check_mtds/<run_date>/data_pipeline_e2e_check_mtds_<run_date>_<asset_group>.md` — so
+      sequential/parallel per-AG runs never clobber each other. Until fixed, anyone running the per-AG loop MUST
+      download/rescue each AG's report immediately after that AG's driver VM reaches a terminal `EXIT_STATUS`, before
+      launching or waiting on the next AG. (repos: market-tick-data-service)
 
 ## Progress Log
 
@@ -140,3 +159,33 @@ Two independent angles, not mutually exclusive:
   executing the batch13 satellite todo "Run /data-pipeline-check-is and /data-pipeline-check-mtds 3x each". IS baseline
   succeeded (separate doc fix, no code bug); MTDS baseline blocked on this OOM. Not fixing inline — out of the satellite
   todo's bounded scope.
+- **2026-08-15 (slot 6 worker)**: attempted the re-run per the now-landed §1a per-`--asset-group` workaround — launched
+  5 separate driver VMs (CEFI/DEFI/TRADFI/SPORTS/PREDICTION,
+  `--day 2026-07-01 --legs force,skip --mvp-only --require-captured --auto-day`, all e2-highmem-4). Real outcome, 40-70
+  min later:
+  - **PREDICTION** — completed cleanly, exit_code=1 (partial pass — total=8 passed=1 failed=3 skipped=4, failures are
+    genuine data gaps, not a crash). Report rescued to
+    `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_01_PREDICTION.md` (GCS source:
+    `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-07-01/`,
+    since overwritten by TRADFI's run — see the new report-collision todo above).
+  - **TRADFI** — completed, exit_code=1, total=12 passed=0 failed=12 (all `no_parquet_under` on the `-test-` bucket —
+    reads as a genuine pre-existing test-bucket data gap for these NASDAQ/NYSE cells, not evidence of the OOM/crash
+    class this issue tracks; not investigated further here, out of this todo's scope). Report rescued to
+    `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_01_TRADFI.md`.
+  - **CEFI** — driver VM (`pipeline-e2e-check-mtds-20260814-233918-a4fbf5`) ran ~13 min (RSS holding at 13.5GB, well
+    under the 32GB VM cap — so not a simple "hit the memory ceiling" OOM this time), then `run.log` stops mid-poll with
+    NO further output, NO `EXIT_STATUS`, NO report — the VM shows a `delete` operation ~18 min after the last log line
+    (`operation-…-5875e5b8`, no `preempted` op), consistent with the top-level process being killed abruptly (signal not
+    captured because the trap never ran) and an outer wrapper eventually self-deleting on a stall/timeout path.
+  - **DEFI** — same silent-death pattern, but far earlier: `run.log` (only 2.8KB) stops right after the Phase-0
+    manifest-consolidation line, ~1 minute into the run, before any shard force/skip work is even logged. No
+    `EXIT_STATUS`, no report, `delete` op fired ~18 min later.
+  - **SPORTS** — driver exited `command exited rc=3` after successfully launching + confirming one shard VM
+    (SMARKETS:odds) — no `EXIT_STATUS`-blocking crash signature (not 137), but no Traceback/ERROR/Exception string
+    anywhere in its 49.9KB `run.log` either — the failure mode is currently undiagnosed. No report produced.
+  - **Net**: even scoped to ONE asset_group per driver VM (the documented interim mitigation), only 2/5 completed
+    cleanly. The per-asset-group split reduces but does NOT eliminate the underlying instability — root-causing [CODE]
+    P1 above is now the only path to a genuinely complete baseline. Did not attempt a 3rd retry of CEFI/DEFI/SPORTS in
+    this session (out of proportion to a single P2 data todo — the retry would very likely hit the same unfixed root
+    cause). Plan gate todo (`defi_track5_coverage_mvp_backfill_2026_07_24.md`'s "Run /data-pipeline-check-is and
+    /data-pipeline-check-mtds 3x each") updated to cite this partial result honestly rather than a false "done".
