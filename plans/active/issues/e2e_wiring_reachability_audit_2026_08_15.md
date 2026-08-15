@@ -130,6 +130,63 @@ Recorded because it is the one place the chain is complete, and it shows what "d
 - [ ] [OPERATOR] P2. **Cited `LST_TOKEN_GENESIS` date for Kelp/rsETH and ether.fi/eETH** — both have cited addresses but
       no venue declaration. That map drives coverage denominators, so an invented date corrupts them silently.
 
+## FINDING 4 — a second, dead position-adapter resolver
+
+`position/position_interface/` has **two** adapter-building paths:
+
+| Resolver                                    | Production callers                                                                                |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `factory.get_position_adapter(venue, **kw)` | **yes** — `AccountQueryClient` → `balance_reconciliation_engine` + `position/engine/orchestrator` |
+| `routing.create_position_adapter(config)`   | **none** — zero callers outside its own module and the `__init__` re-export                       |
+
+`routing.py` carries a full parallel implementation (`PositionDataSourceConfig`, `_build_defi_adapter`,
+`_build_cefi_adapter`, `_build_market_adapter`, `_build_cefi_alt_adapter`) and a typed config object the factory path
+does not have. Per the standing ruling this is a **unify-and-complete**, not a delete: `routing.py`'s typed
+`PositionDataSourceConfig` is arguably the better interface, and the LST wiring currently lives only in `factory.py`.
+
+Recorded also because it nearly bit: the LST read-side wiring (`strategy-service@5b2a50ed`) went into `factory.py`. Had
+production used `routing.py`, that fix would have been a seventh unreachable component — authored by the same session
+that documented the defect class. Verified reachable before claiming otherwise.
+
+## DESIGN PASS — the mode axis for position reading (operator ruling 2026-08-15)
+
+Operator chose "add the mode axis to `position_interface/` first" over weakening SIT invariant 2.
+
+**Current state**: `BasePositionAdapter` has **zero** mode awareness. What exists is ad-hoc and per-family — CeFi
+adapters take `testnet: bool`, DeFi adapters take `fork_mode` / `tenderly_fork_rpc_url`. Neither is the batch/live/paper
+axis; both are network-selection flags.
+
+**Canonical vocabulary is `OperationalMode`** (`unified_api_contracts/internal/modes.py:215`): `LIVE` · `MANUAL` ·
+`BACKTEST` · `PAPER`. Note the ruling said "batch" — the canonical term is `BACKTEST`, and there is a fourth mode
+(`MANUAL`) the ruling did not mention.
+
+**The design question, and why it is not mechanical.** Reconciliation compares the internal book against _independent
+venue truth_. That independence is what makes a match meaningful. Per mode:
+
+| Mode       | Is there independent venue truth to read?                                                                                                                            |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LIVE`     | Yes — mainnet venue API / chain RPC.                                                                                                                                 |
+| `PAPER`    | **Yes** — CeFi paper accounts are real venue-side accounts (Binance testnet, IBKR paper TWS ports 7497/4002, already known to `routing.py`). Independently readable. |
+| `BACKTEST` | **No** — the "venue" is the simulator. Reading from it makes reconciliation compare the book against itself.                                                         |
+| `MANUAL`   | Same as `LIVE` (real venue), but instruction origin differs — likely not a reader distinction at all.                                                                |
+
+**So the axis is meaningful for LIVE/PAPER and degenerate for BACKTEST**, and the existing `testnet: bool` is the
+two-state shadow of it. The dangerous outcome to avoid: a `BACKTEST` reader that returns simulator state, producing a
+reconciliation that **always agrees, detects nothing, and reports green** — the same fabricated-agreement failure class
+as a zero-token adapter reporting zero balances.
+
+`reconciliation_engine.py` currently has **no mode guard at all** — it publishes `RISK_ALERTS` regardless of mode.
+
+**Proposed shape** (needs operator confirmation before a refactor touching every adapter):
+
+1. `BasePositionAdapter` gains an explicit `operational_mode: OperationalMode`, replacing per-family `testnet` /
+   `fork_mode` flags as the SSOT for endpoint selection.
+2. `LIVE` → mainnet endpoints; `PAPER` → venue paper/testnet endpoints (real, independent).
+3. `BACKTEST` → **no external adapter is constructed**. Reconciliation in backtest either skips, or compares against the
+   backtest ledger with an explicit non-independent marker so a green result cannot be mistaken for evidence.
+4. Only then is SIT invariant 2 expressible, and it should assert a reader for `LIVE` and `PAPER` — asserting one for
+   `BACKTEST` would be asserting the tautology exists.
+
 ## How to verify a reachability claim (method, so this is repeatable)
 
 1. **Find the production entry points** — `rg 'FastAPI\(|APIRouter\(|def main\('`, excluding tests.
