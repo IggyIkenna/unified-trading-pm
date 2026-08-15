@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [data-status, rollup, cloud-run, maintenance-window, dead-lock, honest-absence]
 related:
   [
-    /plans/active/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md,
+    /plans/archive/2026_08/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md,
     /plans/active/data_status_cell_grid_rearchitecture_2026_07_18.md,
   ]
 created: 2026-08-15
@@ -46,7 +46,7 @@ context_scope:
   [
     deployment-api/deployment_api/scripts/data_status_rollup_worker.py,
     deployment-api/deployment_api/routes/data_status/_rollup.py,
-    /plans/active/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md,
+    /plans/archive/2026_08/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md,
   ]
 ---
 
@@ -56,9 +56,9 @@ context_scope:
 
 Live-verifying `deployment-api@0bb3694c80` (the maintenance-window dead-lock fix — heartbeat-renew the lock after each
 service, TTL 150min→40min) against its own done-when
-(`/plans/active/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md`'s P2 todo: "a 24h Cloud Logging
-trace showing every one of the 14 services processed at least once every ~40min, never silently skipped on a stale
-dead-man's lock"):
+(`/plans/archive/2026_08/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md`'s P2 todo, now marked
+verified-partial in that archived doc: "a 24h Cloud Logging trace showing every one of the 14 services processed at
+least once every ~40min, never silently skipped on a stale dead-man's lock"):
 
 Confirmed the fix commit reached the live revision `uts-prod-data-status-rollup-svc-00480-v7t` (created
 2026-08-15T18:44:01Z). `gcloud logging read` over 2026-08-15T18:44Z-21:02Z (~2h18m of the requested 24h window — not
@@ -126,10 +126,11 @@ Diagnose live (not guess) which of the two candidates is the actual cause on a r
 - [ ] [CODE] P1. Once the root cause is confirmed, fix it per the matching option in "Recommended decision" above +
       add the regression test from Recommended-decision item 3. Repo: deployment-api. Done when: QG green, shipped,
       verified on origin.
-- [ ] [DATA] P2. Once the fix lands, re-run the live-verify from
-      `/plans/active/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md`'s P2 todo (24h Cloud
-      Logging trace, every one of the 14 services processed at least once every ~40min, never silently skipped) and
-      flip that todo there. Repo: deployment-api. Done when: the trace confirms the cadence with no unexplained stall.
+- [ ] [DATA] P2. Once the fix lands, re-run the original 24h Cloud Logging live-verify (every one of the 14 services
+      processed at least once every ~40min, never silently skipped) — the source doc
+      (`/plans/archive/2026_08/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md`) is now archived,
+      so record the confirming trace here instead. Repo: deployment-api. Done when: the trace confirms the cadence
+      with no unexplained stall.
 
 ## Progress Log
 

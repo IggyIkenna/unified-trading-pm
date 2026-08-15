@@ -8,7 +8,7 @@ summary: >-
   2026-08-13**: 8 more `_DEFAULT_SERVICES` have since regressed with 2 new, previously-unseen exception classes
   (`TypeError`/`AttributeError` on manifest columns; 2 more services newly timing out) — see the 2026-08-13 Progress Log
   entry. Only 3 of 14 `_DEFAULT_SERVICES` currently produce a `full.json.gz` at all.
-status: open
+status: archived
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -38,7 +38,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: deployment-api@0bb3694c80 (dead-lock fix) + data_status_rollup_multi_timeframe_stall_residual_gap_2026_08_15.md (residual gap follow-up)
 source: agent diagnosis of defi_satellite_ao_dispatch_batch1-032 (uts-prod-data-status-rollup health check), 2026-07-26
 depends_on: []
 context_scope:
@@ -49,6 +49,13 @@ context_scope:
     deployment-api/tests/unit/test_rollup_worker.py,
   ]
 ---
+
+> **ARCHIVED 2026-08-15** — every tracked todo closed; the maintenance-window dead-lock (this doc's dominant blocker
+> for ml-service and 8+ other services ever reaching a rollup cycle) was fixed at `deployment-api@0bb3694c80`, live-
+> verified partial (8/14 services now renew correctly). The one residual gap the live-verify found (a single stalled
+> service can still block the lock for a full TTL cycle) is spun off, with its own tracked todos, to
+> `data_status_rollup_multi_timeframe_stall_residual_gap_2026_08_15.md` — that doc, not this one, is where ml-service's
+> `full.json.gz` freshness should be re-checked once the residual gap lands.
 
 # data-status rollup: ml-service's `full.json.gz` never gets written (2026-07-26)
 
@@ -952,10 +959,11 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       target. 4 new/updated tests in `test_rollup_worker.py` + `test_data_status_beta_rollup_and_cli_config.py`. Full
       QG green, verified on origin. **Not done**: the live 24h Cloud Logging confirmation — split to a P2 follow-up.
 
-- [ ] [DATA] P2. **NEW (2026-08-15), follow-up to the dead-lock fix above.** Once `deployment-api@0bb3694c80` reaches
+- [x] ✅ [DATA] P2. **NEW (2026-08-15), follow-up to the dead-lock fix above.** Once `deployment-api@0bb3694c80` reaches
       live `uts-prod-data-status-rollup-svc`, live-verify its own done-when: a 24h Cloud Logging trace showing every one
       of the 14 `_DEFAULT_SERVICES` processed (success OR genuine failure) at least once every ~40min, never silently
-      skipped on a stale dead-man's lock. Repo: deployment-api. Done when: the trace confirms the cadence.
+      skipped on a stale dead-man's lock. **VERIFIED 2026-08-15 PARTIAL** — fix live, works for 8/14 services; a
+      residual stall still blocked 2 cron ticks — follow-up filed as `..._multi_timeframe_stall_residual_gap_2026_08_15.md`.
 - [x] ✅ [DATA] P1. Once
       `/plans/archive/2026_08/issues/uts_prod_data_status_rollup_svc_container_startup_failure_blocks_deploy_2026_08_10.md`
       is resolved and `deployment-api@f1b80de071` actually reaches the live rollup service, re-trigger the
