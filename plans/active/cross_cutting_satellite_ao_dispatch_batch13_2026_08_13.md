@@ -345,19 +345,11 @@ source: >-
       baselines (`ldr-to-main-promote.yml`, `staging-to-main.yml`, `reconcile-staging-versions.yml`) are unrelated
       pre-existing conditions, unchanged by this run — out of scope for this bounded todo.) Source:
       `plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md`
-- [x] ✅ [DATA] P1. **MOOT — already deleted, confirmed live (2026-08-13, slot 29).** This todo's premise (run a fresh
-      retention check, then delete) was stale: the source doc's own 2026-08-12 docs-drift note records that
-      `ml-models-store` was already deleted 2026-08-08 (operator-authorized) via the sibling plan
-      `bucket_fold_ml_2026_07_17.md`'s "Delete sources" todo — this batch's extraction just hadn't picked that up. Fresh
-      live re-verification this session (not just trusting the note):
-      `gcloud asset search-all-resources --scope=projects/central-element-323112 --query="name:ml-" --asset-types="storage.googleapis.com/Bucket"`
-      returns only `ml-store-test-central-element-323112` and `ml-store-prd-central-element-323112` (the folded
-      canonical buckets) — zero hits for `ml-models-store`, confirming the flat legacy bucket is gone. Dead
-      TF/yaml-reference half also re-confirmed clean: fresh
-      `grep -rn "ml-models-store\b" deployment-service/terraform deployment-service/configs deployment-api unified-api-contracts`
-      across all 4 repos returns only comments/docstrings describing the already-executed fold (`outputs.tf`,
-      `_core.py`, a test docstring, `_ml_training_contract.py`) — no live resource declarations or resolver calls. No
-      retention check or delete action was needed or taken. Source:
+- [x] ✅ [DATA] P1. **MOOT — already deleted, confirmed live (2026-08-13, slot 29).** `ml-models-store` was already
+      deleted 2026-08-08 (operator-authorized, via `bucket_fold_ml_2026_07_17.md`) — this batch's extraction hadn't
+      picked that up. Fresh re-verification: `gcloud asset search-all-resources` finds zero `ml-models-store` hits (only
+      the folded `ml-store-{test,prd}-*` buckets remain); a fleet grep across 4 repos finds only dead
+      comments/docstrings, no live TF/resolver references. No retention check or delete action was needed. Source:
       `plans/active/bucket_estate_consolidation_closeout_2026_07_24.md`
 - [x] ✅ [CODE] P2. **CONFIRMED: NO — never cited in any actual promotion/sizing decision; nothing to flag.**
       (2026-08-15, slot-29·infra) Four independent, converging lines of evidence: (1) **The promote workflow's frozen
@@ -586,16 +578,16 @@ source: >-
       `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 
       **NOT ACTIONABLE 2026-08-15 (slot-5, infra craft) — mis-scoped for a single AO dispatch, re-scoping filed separately.**
-                                                  Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism (`load_venue_data_types()` →
-                                                  `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already exists and is live — no code change needed
-                                                  — but a real corpus-wide query (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete
-                                                  within a 120s budget, the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md`
-                                                  already filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades` data_type
-                                                  per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a worker-determinable
-                                                  outcome for one ~1h dispatch. Filed `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
-                                                  (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read class → run
-                                                  one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded backfill todos) rather
-                                                  than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended multi-AG backfill into this dispatch.
+                                                      Investigated both halves: (1) the venue-specific completeness MEASUREMENT mechanism (`load_venue_data_types()` →
+                                                      `get_data_status_turbo_impl`, `service="market-tick-data-handler"`) already exists and is live — no code change needed
+                                                      — but a real corpus-wide query (`include_sub_dimensions=True`, all 5 asset groups, 30-day window) did not complete
+                                                      within a 120s budget, the same unbounded-read class `axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md`
+                                                      already filed today for a sibling MDPS call. (2) The actual "capture" ask — backfilling every non-`trades` data_type
+                                                      per venue across all 5 asset groups — is an unbounded, multi-VM, multi-day operation, not a worker-determinable
+                                                      outcome for one ~1h dispatch. Filed `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+                                                      (P2, `assigned_vm: NA`) with the full investigation + a recommended sequencing (fix the unbounded-read class → run
+                                                      one real measurement pass → carve genuine gaps into properly-sized per-AG/per-venue bounded backfill todos) rather
+                                                      than re-attempting this umbrella-scoped todo as-is or absorbing an open-ended multi-AG backfill into this dispatch.
 
 - [x] ✅ [CODE] P2. **STALE PREMISE — verified: no TVL-qualifying filter exists ANYWHERE by design, per an
       operator-directed decision already canonical elsewhere; no code change needed.** (2026-08-15, slot-17·infra) Full
@@ -903,10 +895,10 @@ source: >-
       landed the feature was actually wired (2026-08-13), so the doc was brought CURRENT instead (added a "Status —
       WIRED end-to-end" section citing the real shipped commits) rather than caveated as not-live — same
       `unified-trading-pm` commit as this checkbox flip. Duplicate of this batch's copy.
-- [ ] [CODE] P2. Bisect test_dp_recovery_actuators.py's full-suite contamination against predecessor test files
-      (candidates: _\_relaunch_/fleet-monitor/dp-alerts suites; regression window b501a5e5, b34e85a2, 4ca051ea,
-      dd7b62e1), find the shared-state leak, add cleanup Source:
-      `plans/active/issues/deployment_service_qg_red_11_actuator_tests_suite_order_regression_2026_08_10.md`
+- [x] ✅ [CODE] P2. **STALE PREMISE — already resolved+archived 2026-08-13 (`deployment-service@0c38c00d`, an `autouse`
+      conftest fixture closing the shared-tempdir leak), no bisection needed.** (2026-08-15, slot-32·infra) Re-confirmed
+      live: `0c38c00d` is still an ancestor of LDR tip `c7e661db`. No code change needed. Source:
+      `plans/archive/2026_08/issues/deployment_service_qg_red_11_actuator_tests_suite_order_regression_2026_08_10.md`
 - [ ] [CODE] P2. Confirm via Cloud Logging how far back the exit-code-monitor OOM recurrence goes (single blip vs
       sustained) Source: `plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md`
 - [x] ✅ [CODE] P2. **CONFIRMED already done, no code change** (2026-08-15, slot-20·infra) — terraform already reads
