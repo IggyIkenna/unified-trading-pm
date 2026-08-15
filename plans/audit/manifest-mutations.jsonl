@@ -2378,3 +2378,5 @@
 {"timestamp": "2026-08-15T06:30:50Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "e2e-testing=0.41.9 (branch=main, bump=patch)", "commit_sha": "39d257951c0fea3e05e25e98baeffdd25e847369"}
 {"timestamp": "2026-08-15T06:34:23Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "unified-trading-library=0.83.5 (branch=main, run=31869763940)", "commit_sha": "49c4866070e90eb24521abacfea287266b0f55b7"}
 {"timestamp": "2026-08-15T06:34:27Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "unified-trading-library=0.83.5 (branch=main, bump=patch)", "commit_sha": "49c4866070e90eb24521abacfea287266b0f55b7"}
+{"timestamp": "2026-08-15T06:35:47Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "e2e-testing=0.41.10 (branch=main, run=31869811407)", "commit_sha": "a69742a897f83da0fe73bb8e02112d4ad812d3e0"}
+{"timestamp": "2026-08-15T06:35:50Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "e2e-testing=0.41.10 (branch=main, bump=patch)", "commit_sha": "a69742a897f83da0fe73bb8e02112d4ad812d3e0"}
