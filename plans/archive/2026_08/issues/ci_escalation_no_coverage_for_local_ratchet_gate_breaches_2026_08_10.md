@@ -191,3 +191,8 @@ the fix inline. Does not block anything currently (the originating incident is r
       full-fleet dry run — tracked in that plan, not here). This doc's own scope (author the plan) is done; archiving
       here does not require the dedicated plan's OWN remaining todos to be finished first — see that plan for
       ongoing status.
+
+> **2026-08-15 (slot-23·infra) — documentation cross-reference**: the implementation plan's todo 10 (document the wall
+> type + grace window + AO-primary/Slack-visibility-only split) landed in
+> `/codex/04-architecture/agent-orchestrator-alerting.md`, a new subsection immediately before "Self-monitoring
+> detector registry" — see that doc for the shipped content.
