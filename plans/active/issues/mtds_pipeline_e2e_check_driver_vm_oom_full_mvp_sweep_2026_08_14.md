@@ -142,7 +142,13 @@ Two independent angles, not mutually exclusive:
       PREDICTION + TRADFI (reports rescued to `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_01_{AG}.md`);
       CEFI, DEFI, SPORTS did not produce usable reports. Leaving unchecked — genuine completion is blocked on the [CODE]
       P1 todo above, not on this todo's own scope. Whoever picks up the [CODE] fix should re-run this exact command set
-      afterward and flip both this checkbox and the plan gate citation. (repos: market-tick-data-service)
+      afterward and flip both this checkbox and the plan gate citation. (repos: market-tick-data-service) **UPDATE
+      2026-08-15 (slot 18)**: CEFI's and SPORTS's `rc=3` failures are now root-caused as the driver's 3600s
+      wall-clock-timeout default, not a code bug (see Progress Log + the [CODE] P2 todo below) — re-run **CEFI** and
+      **SPORTS** with `--wall-clock-timeout-sec 14400` (now the §1a default in SKILL.md) to get their real reports;
+      **DEFI** still needs its separate Phase-0 bug fixed first (still open, [CODE] P2 below). Did not launch either
+      re-run this session (each needs 1-2.5hrs of VM wall-clock, out of proportion for this P2 data todo's
+      `est_hours: 1.0`) — leaving unchecked for whoever picks this back up next.
 - [x] [CODE] P1. ✅ **NEW (found 2026-08-15).** The report writer's GCS mirror path has NO `asset_group` segment
       (`pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/<run_date>/data_pipeline_e2e_check_mtds_<run_date>.md`,
       no `{AG}` component) — confirmed live: running the §1a per-`--asset-group` loop sequentially, each completing
@@ -161,20 +167,25 @@ Two independent angles, not mutually exclusive:
       on this exact commit. This closes the silent-clobber risk for FUTURE per-AG runs; it does not itself produce the
       still-missing CEFI/DEFI/SPORTS reports from the [CODE] P1 root-cause todo above, which remains open. (repos:
       market-tick-data-service)
-- [ ] [CODE] P2. **NEW (found 2026-08-15, see Progress Log; WIDENED 2026-08-15 slot 27).** Slot 6's 2026-08-15
-      per-`--asset-group` re-run hit two failure modes the memory-growth fix above does NOT explain and has NOT been
-      verified to fix: (a) **DEFI** died silently ~1 minute in, immediately after the Phase-0 manifest-consolidation
-      line and BEFORE any per-shard force/skip work was logged — too early to be the per-shard `genuine_skip_proof()`
-      memory growth this issue's root-caused todo targets, so likely a distinct bug in
-      `_force_consolidate_test_buckets`/Phase-0 itself; (b) **SPORTS** exited `rc=3` with no Traceback/ERROR/Exception
-      string anywhere in its run.log — undiagnosed. **Slot 27 confirmed the SAME `rc=3` also hit CEFI** in the unscoped
-      full-sweep live-verification run (`pipeline-e2e-check-mtds-20260815-004426-388f81`, terminal `EXIT_STATUS: 3`
-      ~64min in — see Progress Log) — the propagation mechanism is a per-shard sub-VM `DEPLOYMENT_FAILED(exit_code=3)`
-      that isn't caught/skipped, killing the whole driver instead. So `rc=3` is not DEFI/SPORTS-specific; it's a general
-      per-shard-sub-deployment-failure-not-isolated bug. Root-cause it directly (bound the driver to continue past a
-      single failed sub-deployment instead of dying) rather than re-running per-asset-group to fish for the trigger —
-      re-run **CEFI** and **DEFI** with the memory-growth fix already shipped to confirm whether either symptom
-      persists, then diagnose from there. (repos: market-tick-data-service)
+- [ ] [CODE] P2. **NEW (found 2026-08-15, see Progress Log; WIDENED 2026-08-15 slot 27; `rc=3` HALF CORRECTED 2026-08-15
+      slot 18 — see Progress Log for the full evidence).** Slot 6's 2026-08-15 per-`--asset-group` re-run hit two
+      failure modes the memory-growth fix above does NOT explain and has NOT been verified to fix: (a) **DEFI** died
+      silently ~1 minute in, immediately after the Phase-0 manifest-consolidation line and BEFORE any per-shard
+      force/skip work was logged — too early to be the per-shard `genuine_skip_proof()` memory growth this issue's
+      root-caused todo targets, so likely a distinct bug in `_force_consolidate_test_buckets`/Phase-0 itself — **STILL
+      OPEN, no fix yet**; (b) **SPORTS** exited `rc=3` with no Traceback/ERROR/Exception string anywhere in its run.log
+      — ~~undiagnosed~~ **ROOT-CAUSED, not a code bug**: slot 27 confirmed the SAME `rc=3` also hit CEFI in the unscoped
+      full-sweep live-verification run and theorized it was a per-shard sub-VM `DEPLOYMENT_FAILED` propagating up
+      uncaught — **slot 18 corrected this**: the deployment id in that log line is the TOP-LEVEL driver's own record
+      (registered `E2E-CHECK-DRIVER` at VM boot), and the crash lands at exactly 3600s after `DEPLOYMENT_STARTED` — this
+      is `pipeline_e2e_check.py`'s own documented `--wall-clock-timeout-sec` SIGALRM backstop (default 3600s) firing on
+      a real sweep that legitimately runs longer, not a per-shard-failure propagation defect. **No code fix needed for
+      (b)** — `unified-trading-pm/cursor-configs/skills/     data-pipeline-check-mtds/SKILL.md` §1a now passes
+      `--wall-clock-timeout-sec 14400` explicitly (this commit). **Remaining scope of this todo is (a) DEFI's Phase-0
+      death only** — root-cause `_force_consolidate_test_buckets` (or whatever Phase-0 does immediately before the
+      crash), then re-run **DEFI** to confirm; **CEFI/SPORTS should be re-run with the corrected
+      `--wall-clock-timeout-sec 14400` flag** (tracked as the [DATA] P2 re-run todo above, not here — no further code
+      change expected for those two). (repos: market-tick-data-service)
 
 ## Progress Log
 
@@ -259,3 +270,31 @@ Two independent angles, not mutually exclusive:
   `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-07-01/data_pipeline_e2e_check_mtds_2026_07_01.md`
   is stale — it's slot 6's earlier TRADFI-only per-AG report (generated 00:32:34Z, before this VM's 00:44:26Z launch),
   not a product of this run; this run crashed before writing any report at all.
+- **2026-08-15 (slot 18 worker, data_engineering) — CORRECTION to slot 27's `rc=3` diagnosis above.** Re-pulled
+  `pipeline-e2e-check-mtds-20260815-004426-388f81`'s full `run.log` (369 lines, not just the tail) and grepped it for
+  `registered deployment`/`DEPLOYMENT_STARTED`: deployment id `469b85f3-bdb3-4d4d-9e7c-3def8d5c8d76` — the SAME id in
+  slot 27's "`DEPLOYMENT_FAILED(exit_code=3)`" line — is registered at line 10 as `(E2E-CHECK-DRIVER, full)` and
+  `DEPLOYMENT_STARTED` at **2026-08-15 00:48:47Z**, i.e. it is the TOP-LEVEL driver's own deployment record from the
+  moment the VM booted, not a per-shard sub-VM's. The crash fires at **01:48:44-46Z — exactly 3600s (60min) later**.
+  `market-tick-data-service/scripts/pipeline_e2e_check.py` has its own defense-in-depth SIGALRM wall-clock backstop
+  (`_setup_wall_clock_timeout`/`_wall_clock_timeout_handler`, `_WALL_CLOCK_TIMEOUT_EXIT_CODE = 3`,
+  `--wall-clock-timeout-sec` **defaulting to 3600** per the CLI help text at the top of that file) that force-terminates
+  the driver via `os._exit(3)` the instant the timer fires — mid-poll, with no exception, no traceback, and no
+  `EXIT_STATUS` write, which is exactly the "no Traceback/ERROR/Exception string anywhere" signature slot 6's SPORTS
+  entry and slot 27's CEFI entry both independently observed. I found no per-shard `DEPLOYMENT_FAILED` event anywhere
+  else in the log for a NESTED sub-VM's own deployment id — only this one top-level record, whose lifecycle exactly
+  brackets the driver's own runtime. So `rc=3` is the wall-clock timeout doing its documented job on a real
+  `--legs force,skip --mvp-only` sweep that legitimately runs longer than 3600s (CEFI alone was ~30+ shards deep and
+  climbing before the earlier 137/OOM point, at ~2-5min/shard-pair of VM-launch-and-wait overhead — comfortably >1hr),
+  not a distinct per-shard-failure-propagation bug. **Fix shipped, no code change needed**: added an explicit
+  `--wall-clock-timeout-sec 14400` (4hr) to the §1a per-`--asset-group` loop example in
+  `unified-trading-pm/cursor-configs/skills/data-pipeline-check-mtds/SKILL.md` (this commit) — the launcher already
+  passes arbitrary flags straight through to `pipeline_e2e_check.py` via `PASSTHROUGH_ARGS`, so no launcher/checker code
+  change was required, only picking a generous explicit value instead of relying on the too-short 1hr default. **This
+  does not touch DEFI's separate ~1-min Phase-0 silent-death** (confirmed by direct log read: DEFI's run.log stops 52s
+  after `DEPLOYMENT_STARTED`, immediately after the Phase-0 manifest-consolidation line, an order of magnitude too early
+  to be the wall-clock timeout) — that half of the still-open [CODE] P2 todo above remains a genuinely separate,
+  undiagnosed bug. Did not re-launch CEFI/SPORTS with the corrected flag in this session (P2 data-todo scope,
+  `est_hours: 1.0`, and each re-run needs 1-2.5hrs of VM wall-clock to prove out) — whoever next attempts the [DATA] P2
+  re-run above should use the now-corrected §1a command (with `--wall-clock-timeout-sec 14400`) for CEFI and SPORTS
+  specifically; DEFI still needs its own Phase-0 fix first.
