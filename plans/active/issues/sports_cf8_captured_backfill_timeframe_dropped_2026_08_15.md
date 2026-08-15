@@ -233,9 +233,16 @@ issue's scope); flagged as a follow-up todo below.
       cautious. (c): exclude every no-sibling row (959, enumerated by date/venue/league_id/service_name in the retry
       audit log) from delete scope entirely (leave those as-is) — no further action needed on this sub-step, the
       confirmation above IS the justification. Only the sibling-confirmed 13,371-row subset is safe to delete; snapshot
-      first, verify via row-count before/after. Still open: audit whether the same class of phantom row exists on IS
-      from the 500-row test there — NOT YET DONE (this script only audits MDPS). (repo: market-tick-data-service,
-      unified-trading-library)
+      first, verify via row-count before/after. IS sub-step **DONE (2026-08-15)**: audited via
+      `audit_sports_is_captured_phantom_timeframe_2026_08_16.py` (memory-bounded, row-group-streamed — IS's 15.7M-row
+      index OOMs a naive full read). Answer to the literal question ("does the same phantom-row class exist on IS")
+      is yes, trivially — but the real population found is **899,508 rows (84% of ALL IS odds_horizon_bucket data)**,
+      ~1800x larger than the 500-row test and NOT explained by it (78.8% of the population was written 2026-08-08/09,
+      before this session started). Root cause NOT confirmed to be this same CF-8 bug — filed as its own doc rather
+      than folded in here, since it's plausibly a distinct/older writer-path issue, not this doc's narrow
+      `_write_captured_rows()` regression:
+      `/plans/active/issues/sports_is_odds_horizon_bucket_blank_timeframe_odds_api_dominant_2026_08_15.md`. (repo:
+      market-tick-data-service, unified-trading-library)
 - [ ] [DATA] P1. **NEW finding, 2026-08-15 audit**: 14,982 blank-`timeframe` `data_type=odds_horizon_bucket` rows exist
       on MDPS OUTSIDE the session's 2026-08-15T11:0x-2x UTC window (i.e. NOT created by this session's bug) — a
       population almost as large as the in-window one, previously unknown. Root-cause: are these from an earlier,

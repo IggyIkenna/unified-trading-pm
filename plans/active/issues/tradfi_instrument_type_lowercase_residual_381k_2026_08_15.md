@@ -771,3 +771,13 @@ AO-eligible follow-up:
   of the four times (empty `git status --porcelain`, empty `git log origin/live-defi-rollout..HEAD` once run in the
   correct directory). This window's own audit command (Step 1 above) used the corrected `pwd`-paired form throughout and
   produced no false-positive.
+- **Progress Log 2026-08-15 (slot-25, second post-compaction ritual) — 5th occurrence, new variant.** A `/pre-compact`
+  re-run's audit chain opened with a bare `pwd` (no `cd`), relying on the Bash tool's cross-call persisted cwd — which
+  was left at `instruments-service` by the immediately prior turn's chain (which had ended on `cd ../instruments-service`).
+  The chain's own leading `pwd` correctly exposed this before any git command ran (printed `instruments-service` under
+  the `=PM_DONE=` label), so the "PM" git-status ran against the wrong repo (harmlessly, since both were clean) before
+  being caught and re-run with an explicit absolute `cd` at the chain's start. Same family as the prior four (missing/
+  leaked directory context), distinct trigger (cross-command persisted cwd rather than an omitted `cd` mid-chain).
+  **Rule extended: a batched multi-repo chain must open with an explicit `cd <absolute-path>` for its FIRST repo too**
+  — never assume the shell's cwd from a prior, unrelated command. Re-run with the explicit `cd` confirmed PM/MTDS/IS all
+  genuinely clean, MTDS's two commits intact.

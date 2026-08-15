@@ -168,9 +168,10 @@ source: >-
   `agent-orchestrator`'s Pass-1 `quality-gates.sh` is RED on `origin/live-defi-rollout` HEAD for two reasons unrelated
   to this diff — the DTZ ratchet breach itself (STEP 5.95, 14>8) plus a genuinely-failing (not flaky, reproduced in full
   isolation) pytest `test_tier1_guidance_does_not_rearm_once_a_force_has_fired`. Filed
-  `/plans/active/issues/agent_orchestrator_ldr_qg_red_dtz_ratchet_and_context_lifecycle_rearm_bug_2026_08_15.md`
-  (assigned_vm: planning, 4 tracked fix todos) and declared a `qg_red` repo-blocker for `agent-orchestrator` per
-  `agents/worker.md` § 4b. Resuming the ship (Pass-1 QG → quickmerge → plan-flip) once the repo reads green again.
+  `/plans/archive/2026_08/issues/agent_orchestrator_ldr_qg_red_dtz_ratchet_and_context_lifecycle_rearm_bug_2026_08_15.md`
+  (assigned_vm: planning, 4 tracked fix todos, since resolved + archived) and declared a `qg_red` repo-blocker for
+  `agent-orchestrator` per `agents/worker.md` § 4b. Resuming the ship (Pass-1 QG → quickmerge → plan-flip) once the
+  repo reads green again.
 - **2026-08-15 (slot-6·infra) — process-deviation note (todo 2 now flipped)**: while the repo-blocker above was still
   open, an UNRELATED dirty-deps `uv.lock` refresh (`uv sync` had picked up a stale lock entry for an already-declared
   `google-cloud-monitoring` dependency — pyproject.toml untouched, lock-only) was committed + pushed directly per the

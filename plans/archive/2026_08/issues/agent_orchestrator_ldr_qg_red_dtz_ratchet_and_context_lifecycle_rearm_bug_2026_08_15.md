@@ -7,7 +7,7 @@ summary: >-
   fresh-pulled agent-orchestrator clone at origin/live-defi-rollout HEAD fails for TWO independent, pre-existing reasons
   — neither touches any file this task's own diff (a brand-new, additive script) came anywhere near. Both were
   cross-validated against a clean local clone with zero uncommitted changes.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting, meta]
 stage: [meta]
@@ -32,7 +32,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by: ""
+resolved_by: "agent-orchestrator@c884ce3c9c,ed15e2c596,6d00256,f5b199c797"
 context_scope:
   [
     agent-orchestrator/server/context_lifecycle.py,
@@ -42,6 +42,11 @@ context_scope:
   ]
 related: [/plans/active/local_ratchet_gate_breach_escalation_detector_2026_08_15.md]
 ---
+
+> **ARCHIVED**: resolved by agent-orchestrator@c884ce3c9c,ed15e2c596,6d00256,f5b199c797 (slots 6/20/16/24,
+> 2026-08-15) — all 4 todos done (DTZ ratchet, fallback-import, empty-string-fallback ratchet,
+> `context_lifecycle` rearm-vs-force test-isolation bug). Successor: none (self-contained fix set; no follow-up
+> work spun off).
 
 ## What I found
 
@@ -121,11 +126,12 @@ goes green), not a design/judgment call.
       `# noqa: fallback-import` if it is genuinely a documented optional extra). Done-when:
       `check_no_fallback_imports.py --scope agent-orchestrator` reports count `<=0`. (repo: agent-orchestrator) —
       `agent-orchestrator@ed15e2c596`
-- [ ] [BACKEND] P2. Fix the 20 new/over-baseline empty-string-fallback sites (baseline 25, observed 45) — rewrite each
+- [x] ✅ [BACKEND] P2. Fix the 20 new/over-baseline empty-string-fallback sites (baseline 25, observed 45) — rewrite each
       `.get("key", "")` to fail fast (raise, or return `None` and let the caller decide), or add a one-line-reasoned
       `# noqa: qg-empty-fallback` for a genuinely deliberate case. Run
       `check_no_empty_string_fallback.py --workspace-root <ws> --scope agent-orchestrator` for the full current site
-      list (not re-pasted here). Done-when: it reports count `<=25`. (repo: agent-orchestrator)
+      list (not re-pasted here). Done-when: it reports count `<=25`. (repo: agent-orchestrator) —
+      `agent-orchestrator@f5b199c797`
 - [x] ✅ [BACKEND] P1. Diagnose + fix `ContextLifecyclePolicy._tick_target`'s guidance-rearm-vs-force gate in
       `agent-orchestrator/server/context_lifecycle.py` so `test_tier1_guidance_does_not_rearm_once_a_force_has_fired`
       passes: once `state.forced_at` is set for the current episode, a later tick must NOT overwrite
@@ -138,8 +144,8 @@ goes green), not a design/judgment call.
 
 ## Status
 
-Open — repo-blocker declared (`kind: qg_red`) alongside this filing per `agents/worker.md` § 4b; the backend's
-`RepoHealthWatcher` will notify waiters once `quality-gates-v2` reads green again on `live-defi-rollout` for this repo.
+All 4 todos done — ready for archival (follow-up `git mv` commit, per this doc's own cross-repo mode-2 archival
+discipline: `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).
 
 ## Progress Log
 
@@ -193,3 +199,15 @@ Open — repo-blocker declared (`kind: qg_red`) alongside this filing per `agent
   rebased onto `agent-orchestrator@6d00256` once slot-16's fix landed, full local `bash scripts/quality-gates.sh`:
   PASSED end-to-end. Shipped `agent-orchestrator@c884ce3c9c` via quickmerge (SHA verified ancestor of
   `origin/live-defi-rollout`).
+- **2026-08-15 (slot-24)**: Todo 3 (empty-string-fallback ratchet) fixed — of the 20 new/over-baseline sites, 2
+  (`escalation.py`'s `_queue_escalation` repo/wall_type extraction) rewritten to fail fast via direct `payload["repo"]`/
+  `payload["wall_type"]` access (always present per `escalate()`'s typed required params, so a missing key would be a
+  real internal bug worth raising loudly, not a legitimately-absent field silently corrupting dedup/root_key
+  resolution); the remaining 18 (sort keys, echo-only/display fields, already-type-narrowed Anthropic content-block
+  `text` reads, documented best-effort parse fallbacks) got one-line-reasoned `# noqa: qg-empty-fallback` markers.
+  `check_no_empty_string_fallback.py --scope agent-orchestrator`: 45 → 25 (`== baseline`). Joined repo-blocker
+  `RB-2549326a` independently (same root-cause diagnosis as slot-20); once it resolved, fresh-pulled + rebased onto
+  `agent-orchestrator@6d00256`/`ed15e2c596`/`c884ce3c9c`, full local `bash scripts/quality-gates.sh`: PASSED end-to-end
+  (3973 passed, 2 skipped; dashboard tsc + vitest green). Shipped `agent-orchestrator@f5b199c797` via quickmerge (SHA
+  verified ancestor of `origin/live-defi-rollout`). Checkbox flipped above. All 4 todos now done, unlocked — archiving
+  as a follow-up commit per the cross-repo mode-2 ritual.
