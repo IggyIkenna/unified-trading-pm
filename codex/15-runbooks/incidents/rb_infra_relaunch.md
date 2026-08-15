@@ -17,7 +17,9 @@ created: 2026-06-23
 owner: ikenna@odum-research.com
 cadence: On-demand (fired by a data-pipeline auto_recover hand-off)
 verifier: test_dp_recovery_actuators.py (dispatch-fires + payload-binding tests)
-last_executed: never
+last_executed:
+  2026-08-15 (DP-VM-008 escalation agt-9c7b77, cefi-binance-futures-2026-heavy — verified an already-succeeded
+  auto-recovered relaunch, corrected two stale doc claims in the same pass)
 code_refs:
 authoritative_for: [How a planning-VM worker relaunches a failed/stalled/OOM'd data VM from the registries]
 referenced_by:
@@ -52,10 +54,18 @@ The `context` field repeats this in prose; **prefer the structured fields**.
 
 ## Procedure (deterministic — read the registries, do NOT re-derive args by hand)
 
-1. **Read the registry row** for the failed deployment to recover its launch tags:
-   `deployment_service.deployments_registry.DeploymentsRegistry().get(deployment_id)` → `asset_group` / `task` / `mode`
-   / `start_date` / `end_date`. (If `deployment_id` is absent, fall back to the most-recent active/archive row for
-   `vm_name`.)
+1. **Read the VM's own durable launch/progress record to recover its launch tags** —
+   `deployment_service.deployments_registry.DeploymentsRegistry` does NOT exist in `deployment-service` (confirmed
+   2026-08-15, DP-VM-008 escalation agt-9c7b77 — a repo-wide grep for `deployments_registry` returns nothing); the real
+   SSOT is the per-VM GCS state the actuators themselves read:
+   `deployment_service.data_pipeline_monitors._gcs.read_launch_params(storage_client, bucket, vm_name)` →
+   `LAUNCH_PARAMS.json` (the exact env the VM was launched with — venue/year/group filters, instrument ids) and
+   `..._gcs.read_progress_checkpoint(storage_client, bucket, vm_name)` → `PROGRESS.json` (`last_completed_date` /
+   `monotonic`, for resume-from-checkpoint). `bucket = f"deployment-scripts-{project}"`. `asset_group` /
+   `relaunch_launcher` come from the finding's `client_payload` directly, not a lookup. This is exactly what
+   `deployment_service.data_pipeline_monitors.escalation._recover_preempted_vm` / `RelaunchPreemptedVm.relaunch()`
+   (`scripts/recovery/relaunch_backfill_vm.py`) already do in-band — prefer invoking that actuator directly (or its
+   exact GCS reads) over hand-deriving args.
 2. **Resolve the launcher** if `relaunch_launcher` is empty:
    `deployment_service.data_pipeline_monitors.launcher_registry.resolve_launcher_for_vm(vm_name)` (longest-prefix
    match). A `None` result = an unrecoverable prefix → STOP, file an issue, page (do not guess a launcher).
@@ -78,12 +88,31 @@ The `context` field repeats this in prose; **prefer the structured fields**.
 
 ## Bounds + safety
 
-- The original in-image actuators bound relaunches to **≤2 / (vm-prefix, day)** — honour the same: if the registry
-  archive shows ≥2 relaunches of this prefix today, do NOT relaunch again; page the operator. **Root-cause-diagnosed
-  carve-out (ruled 2026-08-02, `plan_reconcile_parked_operator_decisions_2026_08_02.md` na-eligibility-audit item 25):**
-  the ≤2/day bound resets for a relaunch that is not blind retry — root cause diagnosed, a fix shipped, AND this exact
-  launch is the first attempt made WITH that fix live (i.e. genuinely new information, not a 3rd identical guess). Page
-  the operator with the diagnosis + shipped fix reference before using the carve-out, don't invoke it silently.
+- The OOM/exit-137 actuator (`RelaunchBackfillVm`) bounds relaunches to **≤2 / (vm-prefix, day)** — honour the same for
+  that class: if the registry archive shows ≥2 relaunches of this prefix today, do NOT relaunch again; page the
+  operator. **The PREEMPTED actuator (`RelaunchPreemptedVm`, DP-VM-008/this runbook) has its OWN, more generous budget —
+  `_MAX_PREEMPTION_RELAUNCHES_PER_DAY = 48`** (confirmed 2026-08-15 by reading `relaunch_backfill_vm.py` directly) — a
+  SPOT VM legitimately preempts far more often than an OOM crash-loops, so do not apply the ≤2/day figure to a
+  preemption relaunch; the actuator enforces its own bound atomically. **Root-cause-diagnosed carve-out (ruled
+  2026-08-02, `plan_reconcile_parked_operator_decisions_2026_08_02.md` na-eligibility-audit item 25):** the ≤2/day OOM
+  bound resets for a relaunch that is not blind retry — root cause diagnosed, a fix shipped, AND this exact launch is
+  the first attempt made WITH that fix live (i.e. genuinely new information, not a 3rd identical guess). Page the
+  operator with the diagnosis + shipped fix reference before using the carve-out, don't invoke it silently.
+- **A prior FAILED relaunch attempt for the SAME vm_name pages CRITICAL `DP_VM_PREEMPTED_NO_RELAUNCH` and durably
+  SUPPRESSES further automated retries for that exact vm_name** (`RelaunchPreemptedVm._already_paged`, a
+  page-once-per-VM-name marker in `gs://deployment-scripts-<project>/vm-census/relaunch-paged/vm/<vm_name>.json` — check
+  its `last_modified` via `gcs_describe_object` to see when/whether an attempt already ran). This is BY DESIGN — it
+  hands the retry decision to whoever reads the page (you). Before hand-relaunching: **check the live VM fleet
+  (`gcloud compute instances list`, filtered to the launcher's VM-name prefix) for an ALREADY-RUNNING replacement** — a
+  later automated sweep (once the earlier blocker, e.g. the launcher's own `tardis_concurrency_guard` refusing while
+  another Tardis consumer held the slot, cleared) may have already relaunched successfully under a fresh timestamped VM
+  name (each launch mints a new name, so the suppression on the OLD name never blocks it). Confirmed live 2026-08-15
+  (this escalation): the OLD `cefi-binance-futures-2026-heavy-20260814-161717` was suppressed (`already_adjudicated`,
+  paged at `00:01:19Z`), but `cefi-binance-futures-2026-heavy-20260815-002451` was already RUNNING with matching
+  `LAUNCH_PARAMS.json` and an advancing `PROGRESS.json`/`run.log` — launching a second VM here would have violated the
+  Tardis 1-concurrent-VM cap and duplicated the shard. Verify a genuine replacement exists (matching launch params +
+  advancing checkpoint/run.log) before concluding the relaunch is done; if none exists, proceed with the manual relaunch
+  as normal.
 - Protective/fail-safe actions are autonomous; a destructive `manual_unkill`-class action is human-only (see
   `/codex/04-architecture/autonomous-recovery-matrix.md`).
 
