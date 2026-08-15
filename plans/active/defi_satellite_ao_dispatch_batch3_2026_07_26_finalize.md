@@ -187,3 +187,4 @@ context_scope:
   from `plans/active/` → `plans/archive/2026_07/` across 20 files. INDEX.md batch3 entry removed. File moved via
   `git mv` to `plans/archive/2026_07/`. Note: finalize plan NOT archived alongside — Todo 1 (source-doc reconciliation)
   still open; finalize will archive once Todo 1 ships.
+- **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
