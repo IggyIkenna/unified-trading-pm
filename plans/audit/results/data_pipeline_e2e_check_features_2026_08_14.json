@@ -1,0 +1,38 @@
+{
+  "service": "data_pipeline_e2e_check_features",
+  "run_date": "2026-08-14",
+  "legs": ["benchmark"],
+  "started_at": "2026-08-15T09:38:25.891397+00:00",
+  "finished_at": "2026-08-15T09:59:03.303000+00:00",
+  "total": 1,
+  "passed": 0,
+  "failed": 1,
+  "ambiguous": 0,
+  "skipped": 0,
+  "results": [
+    {
+      "shard_label": "TRADFI:volatility",
+      "leg": "benchmark",
+      "status": "failed",
+      "reason": "window=2026-08-07..2026-08-14 (7d) wall_clock=317s ~45s/shard-day objects=0",
+      "vm_name": "features-e2e-tradfi-20260815-095346-679e08",
+      "exit_status": null,
+      "write_verified": false,
+      "parquet_count": 0,
+      "manifest_ok": false,
+      "manifest_status": "",
+      "skip_signal_found": false,
+      "skip_proof": "not_applicable",
+      "fingerprint_before": null,
+      "fingerprint_after": null,
+      "attempt_ts": "2026-08-15T09:53:46.232631+00:00",
+      "duration_sec": 317.025357,
+      "parquet_bucket": "features-tradfi-test-central-element-323112",
+      "manifest_bucket": "",
+      "parquet_uri": "",
+      "content_check": "not_checked",
+      "content_check_nan_ratio": null
+    }
+  ],
+  "orphaned_vms_still_running": []
+}
