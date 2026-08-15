@@ -141,7 +141,7 @@ Two independent angles, not mutually exclusive:
       CEFI, DEFI, SPORTS did not produce usable reports. Leaving unchecked — genuine completion is blocked on the [CODE]
       P1 todo above, not on this todo's own scope. Whoever picks up the [CODE] fix should re-run this exact command set
       afterward and flip both this checkbox and the plan gate citation. (repos: market-tick-data-service)
-- [ ] [CODE] P1. **NEW (found 2026-08-15).** The report writer's GCS mirror path has NO `asset_group` segment
+- [x] [CODE] P1. ✅ **NEW (found 2026-08-15).** The report writer's GCS mirror path has NO `asset_group` segment
       (`pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/<run_date>/data_pipeline_e2e_check_mtds_<run_date>.md`,
       no `{AG}` component) — confirmed live: running the §1a per-`--asset-group` loop sequentially, each completing
       asset_group's report SILENTLY OVERWRITES the previous one at that same GCS path. A human/agent following the
@@ -151,7 +151,14 @@ Two independent angles, not mutually exclusive:
       `.../data_pipeline_e2e_check_mtds/<run_date>/data_pipeline_e2e_check_mtds_<run_date>_<asset_group>.md` — so
       sequential/parallel per-AG runs never clobber each other. Until fixed, anyone running the per-AG loop MUST
       download/rescue each AG's report immediately after that AG's driver VM reaches a terminal `EXIT_STATUS`, before
-      launching or waiting on the next AG. (repos: market-tick-data-service)
+      launching or waiting on the next AG. — **unified-trading-library@ff9cb5f811**: `write_report()` now suffixes the
+      GCS blob name with the single asset_group whenever a report's results are scoped to exactly one (a genuine
+      unscoped multi-asset_group sweep keeps the original unsuffixed name, unchanged) — derived from the real
+      `ShardCheckResult.shard_label`s via the existing `_asset_groups_tested()` helper, never a new CLI flag. 2 new
+      regression tests added (`tests/unit/test_pipeline_e2e_check_report_gcs_upload.py`); full `quality-gates.sh` green
+      on this exact commit. This closes the silent-clobber risk for FUTURE per-AG runs; it does not itself produce the
+      still-missing CEFI/DEFI/SPORTS reports from the [CODE] P1 root-cause todo above, which remains open. (repos:
+      market-tick-data-service)
 
 ## Progress Log
 
