@@ -583,6 +583,24 @@ cmd_install() {
   systemctl start "${TOKEN_REFRESH_SERVICE}" || {
     echo "WARN: token refresh failed at install; runners will fall back to a direct Secret Manager read" >&2
   }
+
+  # 8) host-wide sbin deploy-sync — ONLY for the base (untagged) pool. glue-runner-crash-loop-
+  # watchdog.sh + siblings are host-wide singletons (one /usr/local/sbin copy per HOST, not per
+  # pool), so installing this again under a second POOL_TAG would just re-render the identical
+  # unit against a different pool's mirror for no reason — the base pool's mirror is always the
+  # unified-trading-pm checkout that actually owns these scripts. See deploy-sbin-scripts.sh.
+  if [ -z "${POOL_TAG}" ]; then
+    # No separate copy of deploy-sbin-scripts.sh itself is installed anywhere — the unit's
+    # ExecStart= reads it straight out of ${RUNNER_BASE}/repo (kept current by
+    # github-glue-slot-refresh.timer), so THIS script auto-updates the same way the scripts it
+    # deploys do, with no bootstrap chicken-and-egg.
+    install -m 0644 "${HERE}/github-glue-deploy-sync.service" "${UNIT_DIR}/github-glue-deploy-sync.service"
+    install -m 0644 "${HERE}/github-glue-deploy-sync.timer" "${UNIT_DIR}/github-glue-deploy-sync.timer"
+    systemctl daemon-reload
+    systemctl enable --now github-glue-deploy-sync.timer
+    log "enabled github-glue-deploy-sync.timer — /usr/local/sbin scripts now auto-sync from the repo mirror"
+  fi
+
   log "started ${GLUE_COUNT} ephemeral (glue-*) + ${WRITER_COUNT} long-lived (writer-*) — verify with: $0 status"
 }
 
