@@ -427,6 +427,32 @@ issue's scope); flagged as a follow-up todo below.
       one level further into `_streaming_write_per_tf`'s eventual `record_captured`/writer call to find where the
       string actually goes blank). Do not assume confirmed without running this. (repo:
       market-data-processing-service)
+- [x] [DATA] P1. **RESOLVED this pass, 2026-08-16 — MAJOR REDIRECT, overturns the P1 chase above**: ran the
+      registry lookup via `market-tick-data-service/.venv/bin/python` (MDPS itself has no `.venv` in this checkout;
+      MTDS shares the same `unified_api_contracts` install). Confirmed: `BASE_GRANULARITY_BY_DATA_TYPE.get(
+      "odds_horizon_bucket")` = `"15m"` (a real, registered, non-zero-seconds token — NOT the `"15s"` fallback),
+      and `"horizon" in TIMEFRAME_SECONDS` = **False** (confirmed absent, defaults to 0 per
+      `get_valid_output_timeframes`'s `.get(tf, 0)`). So `get_valid_output_timeframes(["horizon"])` evaluates
+      `TIMEFRAME_SECONDS.get("horizon", 0) >= base_secs` → `0 >= 900` (15m in seconds) → **False** —
+      `"horizon"` is filtered out of `valid_tfs` entirely. Then also confirmed
+      `live_workers_streaming.py:874-875` calls the IDENTICAL `adapter.get_valid_output_timeframes(timeframes)` →
+      `sorted_tfs` construction as the chain path (not a different, unfiltered list as hoped). **Conclusion: BOTH
+      of MDPS's live-dispatch write paths (`live_workers_chain.py::_process_all_timeframes` AND
+      `live_workers_streaming.py`'s streaming equivalent) filter `"horizon"` out before ever reaching a write call
+      — neither can produce an `odds_horizon_bucket` row, blank-timeframe or otherwise.** This means the entire
+      chase through `live_workers_chain.py`/`live_workers_streaming.py`/`canonical_writer*.py` in the two todos
+      above was down the WRONG code path — the ~914,490 observed rows were NOT written by MDPS's standard live
+      adapter dispatch mechanism at all. **New, precise next step**: the real writer must be a batch/backfill/
+      reprocessing script that calls `SportsBucketAssignmentAdapter.process_to_candles`/
+      `process_to_bucketed_df` directly and constructs its own write call, bypassing
+      `get_valid_output_timeframes` — strong candidates already named in this doc's own repo (all under
+      `market-data-processing-service/scripts/`, none read yet this pass):
+      `backfill_odds_horizon_bucket_missing_shards_2026_07_28.py`, `reprocess_sports_odds.py`,
+      `reclassify_odds_horizon_bucket_unresolvable_rows_2026_07_28.py`,
+      `close_odds_horizon_bucket_expected_unattempted_cells_2026_07_25.py`,
+      `migrate_odds_horizon_bucket_venue_to_bookmaker_2026_07_27.py`. Read each for how it calls the adapter and
+      what `timeframe` value (if any) it threads into its own write call — one of these is the actual culprit.
+      (repo: market-data-processing-service)
 
 ## Progress Log
 
