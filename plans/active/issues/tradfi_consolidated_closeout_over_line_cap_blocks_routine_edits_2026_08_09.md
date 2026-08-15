@@ -72,10 +72,14 @@ context_scope:
       to this doc. Parent left with a short pointer note in its place. **Verified**: parent now 879 lines (was 1005),
       `bash scripts/plan-hygiene/check_line_caps.sh plans/active/tradfi_consolidated_closeout_2026_07_18.md` exits 0
       (SOFT warning only, no HARD violation).
-- [ ] [DATA] P3. **Once the cap is cleared, land the accurate "S&P index options" MVP-cell row** (the corrected text is
-      already drafted — see `tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md`'s third
+- [x] ✅ [DATA] P3. **Once the cap is cleared, land the accurate "S&P index options" MVP-cell row** (the corrected text
+      is already drafted — see `tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md`'s third
       finding for the exact content: 2020-2024 ~94.8-100% covered, 2025 confirmed 0% gap, 2026 73% partial — replacing
       the stale "66% attempted_failed... not yet launched" text). Repo: unified-trading-pm.
+
+      **DONE 2026-08-15 (slot-7, backend_engineer)** — landed via
+          `plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s corresponding todo. `unified-trading-pm@<pending>`.
+
 - [ ] [OPERATOR] P3. **CORRECTED 2026-08-12 (/plan-reconcile): de-ambiguated "consider whether X should Y" — this is a
       real gate-design decision, not a worker-determinable task.** Original ask: whether `check_line_caps.sh`'s
       scoped-mode carve-out should accept a net-zero-LENGTH content substitution (not just `DELETED=0`), per the

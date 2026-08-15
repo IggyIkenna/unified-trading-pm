@@ -280,6 +280,48 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Progress Log
 
+- **2026-08-15 (in-progress, slot-12, data_engineering) — VERIFY-then-reconcile todo (ROCKETPOOL-ETHEREUM/oracle_prices,
+  SOLBLAZE-SOLANA/oracle_prices): registries confirmed, methodology lesson found, live-manifest verification NOT yet
+  complete.** No code shipped this session. Confirmed both pairs' current registry state:
+  `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py` — `rocketpool`'s
+  `PROTOCOL_CAPABILITIES` entry (~line 839) declares `data_types=["lst_rates", "staking_yields"]`; `solblaze`'s
+  (~line 974) declares `data_types=["lst_rates"]` — **neither declares `oracle_prices`**.
+  `unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py` —
+  `DEFI_VENUE_DATA_TYPE_CAPABILITIES["ROCKETPOOL-ETHEREUM"]` (~line 290) and `["SOLBLAZE-SOLANA"]` (~line 310) both
+  declare an `oracle_prices` genesis date. This confirms the doc's own Layer-1/Layer-2 drift shape for both pairs.
+  **Methodology lesson (new, not previously documented in this doc)**:
+  `read_availability_index(bucket, columns, filters=[...])`
+  (`unified-trading-library/unified_trading_library/manifest_writer/_read_index.py`) hangs/stalls (RSS flat ~2MB, no
+  progress) rather than erroring when the consolidated index blob is older than the default
+  `MANIFEST_CONSOLIDATED_STALENESS_SEC` (120s) — it falls into the per-VM-shard-merge fallback path, which per
+  `_read_index.py:401` (`budget = _resolve_per_vm_merge_max_bytes() if filters is None else None`) has **no byte cap at
+  all** when `filters` is set (the exact case a one-off diagnostic query uses), unlike the codex's documented
+  "single-venue bare query is fast" precedent (that precedent's window must have caught the index inside its freshness
+  budget by luck). Confirmed via `gcs_describe_object` that the live consolidated index
+  (`gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`, 6.74GB) was ~19min old at
+  query time — well past the 120s default. **Fix**: set env var `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` before the
+  read (same fix the DeFi codex doc already documents for the instruments-catalog reader, now confirmed to apply here
+  too) — this dropped the read from a 280s+ unbounded hang to ~51s for the single-venue filtered query. **Provisional
+  result, UNVERIFIED**: with the fix applied, `venue="ROCKETPOOL-ETHEREUM"` (the literal
+  `DEFI_VENUE_DATA_TYPE_CAPABILITIES` composite dict-key string) + `data_type="oracle_prices"` returned **0 rows total**
+  (not just 0 captured — zero rows of any `capture_status`). **This is NOT yet trustworthy as evidence of absence** —
+  this exact doc's own prior finding (the ALCHEMY `gas_fees` composite-key case, see the 2026-08-15 slot-14 entry below)
+  proved a `DEFI_VENUE_DATA_TYPE_CAPABILITIES` composite dict key (e.g. `"ALCHEMY-ETHEREUM"`) does not necessarily match
+  what the writer actually stamps (bare `venue="ALCHEMY"` + separate `chain=` column) — querying the wrong vocabulary
+  silently returns a false "absent" verdict, per the workspace's own HARD RULE ("an absence result is evidence only once
+  you've confirmed you probed the vocabulary the WRITER actually emits"). Dispatched an Explore sub-agent (not yet
+  returned when this checkpoint was written, mid-`/pre-compact`) to find the actual rocketpool/solblaze MTDS handler
+  code and confirm whether it stamps the bare-venue+chain form or the composite form before re-querying. **Next step for
+  whoever resumes this**: read the sub-agent's findings (or re-derive: grep `market-tick-data-service` for
+  `rocketpool`/`solblaze` handler code, check what `venue=`/`chain=` it passes to `record_captured`/`manifest.add`),
+  then re-query both pairs with the CORRECT vocabulary (bare venue + chain filter, not composite string) using
+  `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` (re-check the index's own freshness via `gcs_describe_object` first — the
+  24h override is only safe when the blob is actually same-day fresh). Then apply the todo's own resolution rule: real
+  captured rows → declare `oracle_prices` in the protocol's `PROTOCOL_CAPABILITIES.data_types`; genuinely zero → roll
+  back the `DEFI_VENUE_DATA_TYPE_CAPABILITIES` genesis date. SOLBLAZE-SOLANA/oracle_prices was not queried at all yet in
+  this session (was doing ROCKETPOOL first to nail the methodology before repeating). No files edited outside this doc;
+  4 tiny scratchpad diagnostic scripts (not referenced by anything committed, trivially recreatable) were left in the
+  scratchpad, not promoted.
 - **2026-08-15 (slot-27, data_engineering) — VERIFY-then-roll-back todo DONE, both pairs resolved WIRE-not-roll-back.**
   `unified-api-contracts@0b4ab0e204` (`origin/live-defi-rollout`, QG green, post-push ancestry verified). Queried the
   live prod defi availability manifest directly (column-pruned/filtered pyarrow read on `venue`+`data_type`, no
@@ -332,7 +374,24 @@ just belongs on a different layer than instrument_type does, and conflating the 
   confidence): decide + implement option (a) — relabel `defi_venue_capabilities.py:227-231`'s gas_fees keys to bare
   `ALCHEMY`, deciding whether per-chain genesis-date grain is dropped or preserved via a parallel `chain`-keyed
   structure — then run `test_venue_key_parity.py` + ship. No code changed yet. `docs(plans):` commit for this note only.
-
+- **2026-08-15 (slot-14, data_engineering) — gas_fees/alchemy_onchain todo DONE, shipped.**
+  `unified-api-contracts@21a7e5c305` (`origin/live-defi-rollout`, post-push ancestry verified, QG green — "ALL QUALITY
+  GATES PASSED", 0 new ❌). Resolved per the option-(a) direction from the prior two entries, but simpler than a
+  bare-`ALCHEMY` relabel-with-grain-tradeoff: the composite `ALCHEMY-<CHAIN>` keys in
+  `DEFI_VENUE_DATA_TYPE_CAPABILITIES` were pure phantom declarations no writer ever emits (confirmed by the prior
+  entry's full-bucket venue distribution — zero `ALCHEMY-<CHAIN>` rows anywhere) that the authoritative reconciler
+  (`instruments-service/scripts/enumerate_expected_universe.py`'s `_yield_v2_defi_pre_launch_rows`, via its own
+  `GAS_FEE_CHAIN_START_DATES` lookup) never reads for gas_fees in the first place — it already matches expected/captured
+  rows on the writer's real bare-`ALCHEMY`-venue + `chain`-column grain. So no per-chain genesis-date grain needed
+  preserving via a parallel structure: the 5 phantom keys were simply deleted (not relabeled), the stale "aspirational:
+  not yet wired" `PROTOCOL_CAPABILITIES["alchemy_onchain"]` gas_fees comment was corrected to explain the real history,
+  and `tests/data/mtds_batch_live_coverage_baseline.json` was updated (5 `ALCHEMY-<CHAIN>` entries removed from
+  `missing_live_coverage`, since `batch_capable_venues()` derives from the same registry and correctly shrinks —
+  ratchet-down, ran `test_venue_key_parity.py`'s parent QG suite, all green). Todo checkbox flipped above. **Lesson
+  carried**: a "0 captured rows" signal on a Layer-2 registry key does not by itself mean the writer is unwired — check
+  whether ANY reconciler that computes completeness actually reads that specific registry for that data_type before
+  assuming the registry is the source of truth; here it wasn't (the reconciler has its own independent lookup table), so
+  the registry key was free to delete rather than needing to match the writer's exact string.
 - **2026-08-12** — **SPARK-ETHEREUM oracle_prices capture wired (the decomposed per-pair todo), done + shipped.**
   Shipped `market-tick-data-service@845bd085` (`_spark_oracle_collection.py` + wiring) +
   `unified-api-contracts@e34b0f44` (BATCH_SPARK / SOURCE_MODE_CAPABILITY["spark"]={BATCH} / SOURCE_PRIORITY +
@@ -732,17 +791,24 @@ just belongs on a different layer than instrument_type does, and conflating the 
       `DEFI_VENUE_DATA_TYPE_CAPABILITIES` for the AAVE_V3-<chain> venues once the write path is proven. Done-when:
       single-day force-compute produces real `captured` `rewards` rows for at least AAVE_V3-ETHEREUM against the
       `-test-` bucket. (repos: market-tick-data-service, unified-api-contracts)
-- [ ] [CODE] P2. **WIRE gas_fees capture for alchemy_onchain** (operator ruling 2026-08-09: WIRE REAL CAPTURE).
-      `gas_fees` is declared valid for `alchemy_onchain` in `PROTOCOL_CAPABILITIES` (added 2026-08-05) with zero
-      captured rows. **First verify the venue-key**: `gas_fees` genesis dates already exist in
-      `DEFI_VENUE_DATA_TYPE_CAPABILITIES` on `ALCHEMY-ETHEREUM/ARBITRUM/POLYGON/OPTIMISM/BASE`
-      (`defi_venue_capabilities.py:210-214`) and
-      `market-tick-data-service/market_tick_data_service/cli/handlers/gas_fee_handler.py` exists — so this may be a
-      venue-key mismatch (writer emits `ALCHEMY-<chain>`, `PROTOCOL_CAPABILITIES` keys it under `alchemy_onchain`)
-      rather than a genuinely-unwired path. Check the live manifest for real `ALCHEMY-<chain>/gas_fees` captured rows
-      first; if captured, reconcile the Layer-1↔Layer-2 venue-key naming instead of wiring new capture. Done-when:
-      `gas_fees` has real `captured` rows reconciled to the declared venue key (proven, not just declared). (repos:
-      market-tick-data-service, unified-api-contracts)
+- [x] ✅ [CODE] P2. **WIRE gas_fees capture for alchemy_onchain** (operator ruling 2026-08-09: WIRE REAL CAPTURE, not
+      roll-back — recorded in this doc's Progress Log 2026-08-09,
+      `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`) —
+      `unified-api-contracts@21a7e5c305` (`origin/live-defi-rollout`, post-push ancestry verified). **Confirmed a
+      venue-key mismatch, not a missing writer** — `gas_fee_handler.py` correctly writes `venue="ALCHEMY"` (bare) + a
+      separate `chain=` column, and the authoritative reconciler
+      (`instruments-service/scripts/enumerate_expected_universe.py`, `_yield_v2_defi_pre_launch_rows` via
+      `GAS_FEE_CHAIN_START_DATES`) already matches expected/captured rows on that exact grain — it never reads
+      `DEFI_VENUE_DATA_TYPE_CAPABILITIES` for gas_fees at all. The 5 composite `ALCHEMY-<CHAIN>` gas_fees keys in
+      `DEFI_VENUE_DATA_TYPE_CAPABILITIES` (`defi_venue_capabilities.py:210-214`) were phantom declarations no writer
+      could ever match, making completeness read permanently 0% despite real captured rows existing. Fix: removed the 5
+      phantom keys, corrected the stale "aspirational: not yet wired" comment in
+      `PROTOCOL_CAPABILITIES["alchemy_onchain"]` (`capability_declarations/_defi.py`), and updated
+      `tests/data/mtds_batch_live_coverage_baseline.json` (removed the 5 now-absent `ALCHEMY-<CHAIN>` entries from
+      `missing_live_coverage`, since `batch_capable_venues()` derives from the same registry and correctly shrinks). QG
+      green (`ALL QUALITY GATES PASSED`, 0 new ❌/regressions). Done-when met: real capture already existed under the
+      writer's actual venue key; the Layer-2 registry now reflects that reality instead of an unreachable composite key.
+      (repos: unified-api-contracts)
 - [x] ✅ [CODE] P2. **VERIFY-then-roll-back the 2 over-claim misclassifications** (`AAVE-ETHEREUM/oracle_prices`,
       `MAKER-ETHEREUM/lst_rates`) — `unified-api-contracts@0b4ab0e204` (`origin/live-defi-rollout`, post-push ancestry
       verified). **Both pairs verified as REAL capture surfaces — neither rolled back.** Queried the live prod defi

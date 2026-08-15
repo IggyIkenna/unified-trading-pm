@@ -127,8 +127,18 @@ source: >-
       backfill/recompute work is excluded from this batch unless manifest-canonical or migration-related. The underlying
       item remains open in its own source doc, untouched by this batch/commit. Source:
       `plans/archive/issues/dp_vm_002_mdps_cefi_2021_silent_zero_false_positive_2026_08_11.md`
-- [ ] [CODE] P2. Capture Binance/OKX/Bybit indexPrice+markPrice+fundingRate as a first-class MTDS data_type (Phase 1b
-      follow-up, market-tick-data-service) Source:
+- [x] ✅ [CODE] P2. ~~Capture Binance/OKX/Bybit indexPrice+markPrice+fundingRate as a first-class MTDS data_type (Phase
+      1b follow-up, market-tick-data-service)~~ **CLOSED — already-satisfied (2026-08-15, operator-approved via BLOCKED
+      Q BLK-483148f6).** The existing `derivative_ticker` data_type (already first-class, already in `EXPECTED_COVERAGE`
+      for all 3 venues) already fully populates `mark_price`/`index_price`/`funding_rate` for Binance/OKX/Bybit via
+      already-wired live WS connectors, generically across each venue's whole instrument universe (no symbol-type filter
+      excludes the equity-perps) — building a standalone data_type would duplicate storage for an identical-source
+      signal, the same anti-pattern `perp_funding_handler.py`'s ASTER/LIGHTER-ZKSYNC precedent documents avoiding. No
+      code shipped (none needed). Full evidence + file:line citations:
+      `plans/active/issues/cefi_equity_perp_mark_index_funding_derivative_ticker_already_covers_2026_08_15.md`
+      (unified-trading-pm@229e86f53b). That issue doc's own `[CODE] P3` follow-up (manifest-level verification that
+      capture is actually dispatched+landing non-null for the equity-perp symbol subset specifically) stays tracked
+      there as the one genuinely open (verify, not build) question. Source:
       `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
 - [ ] [CODE] P2. Recurring daily funding/basis scan across crypto-venue equity-perps (e2e-testing, scheduled job)
       Source: `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
