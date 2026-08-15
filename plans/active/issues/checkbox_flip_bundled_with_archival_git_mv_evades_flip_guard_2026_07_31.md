@@ -47,6 +47,7 @@ source:
     /api/activity both times) because git's rename-similarity heuristic kept pairing old→new path.",
   ]
 resolved_by:
+archive_exempt: true
 locked_by:
 locked_since:
 supersedes:
@@ -110,29 +111,27 @@ repeated per-incident coaching.
 
 ## Todos
 
-- [ ] [BACKEND] P3. **DECIDED 2026-08-08 (operator ruling, NA-corpus blocker digest round 5, id=56): option (B)** —
-      tighten the `cross_repo_pm_file_touched_no_checkbox_flip` guard's own rename-similarity threshold. Scoped the
-      exact fix by reading the live guard (it does NOT live in `unified-trading-pm/scripts/` — the literal string
-      `cross_repo_pm_file_touched_no_checkbox_flip` is a `reason` value emitted from `check_plan_flip()` in
-      `agent-orchestrator/server/verify.py:1385`, line 1700). **Root mechanism**: four sibling diff-shape checks —
-      `_diff_flips_checkbox` (verify.py:865, git call :890), `_diff_cancels_checkbox` (:915/:936),
-      `_diff_defers_checkbox` (:961/:976), `_diff_blocks_checkbox` (:1001/:1028) — all run
-      `git show --unified=0 --no-color --format= <sha> -- <path>` with NO `-M`/`--find-renames`/`--no-renames` flag, so
-      git's default `diff.renames=true` (~50% similarity threshold) pairs a bundled archival-rename+flip commit as a
-      clean rename and only prints the changed hunks against the OLD path — a similarity-%-dependent knife-edge, not a
-      deterministic check. **Concrete fix**: add `"--no-renames"` to the `git show` argv at verify.py lines 890, 936,
-      976, 1028 — forces every archival git-mv+edit commit to present as delete+add regardless of similarity%, routing
-      ALL bundled-flip commits through the already-hardened content-based fallback (`_flips_at_path_or_rename` →
-      `_same_commit_added_path_matching_basename` → `_archival_rename_disposition`, verify.py:1053-1206) instead of the
-      size-dependent hunk-diff path. No existing test currently exercises rename-similarity
-      (`agent-orchestrator/tests/test_done_gate_plan_flip_hard_reject.py`) — add one pinning a bundled-rename+flip
-      commit is still detected post-fix. **NOT implemented this session** — the actual code change is in
-      `agent-orchestrator`, out of this session's edit scope (unified-trading-pm only); filed here as a fully-scoped,
-      ready-to-implement todo citing exact file:line targets so the next agent-orchestrator session can ship it
-      directly. Confirm the fix against the bfd1194dc / ae19b3fd0 commit shapes once implemented. (repos:
-      agent-orchestrator)
+- [x] ✅ [BACKEND] P3. **DONE 2026-08-15 — `agent-orchestrator@7889a7c`.** DECIDED 2026-08-08 (operator ruling,
+      NA-corpus blocker digest round 5, id=56 — see this doc's own § "Recommended decision" above, option (B), in
+      `checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md`, which the ruling adopted verbatim):
+      option (B) — tightened the `cross_repo_pm_file_touched_no_checkbox_flip` guard's own rename-similarity threshold.
+      `--no-renames` added to all four sibling diff-shape checks' `git show` argv (`_diff_flips_checkbox`,
+      `_diff_cancels_checkbox`, `_diff_defers_checkbox`, `_diff_blocks_checkbox` in
+      `agent-orchestrator/server/verify.py`), forcing every archival git-mv+edit commit to present as delete+add
+      regardless of similarity%, so it routes through the content-based fallback (`_flips_at_path_or_rename` →
+      `_same_commit_added_path_matching_basename` → `_archival_rename_disposition`) instead of the size-dependent
+      hunk-diff path. Regression coverage added:
+      `test_done_accepts_single_repo_minimal_diff_bundled_rename_flip_that_git_would_pair_as_rename` in
+      `agent-orchestrator/tests/test_done_gate_plan_flip_hard_reject.py` — pins a minimal-diff bundled-rename+flip
+      commit (one git would otherwise pair as a clean rename) as still detected post-fix. Verified live: commit
+      confirmed on `origin/live-defi-rollout` via `git merge-base --is-ancestor`. (repos: agent-orchestrator)
 
 ## Progress Log
+
+- 2026-08-15 (slot-7 backend_engineer): flipped the sole todo — code already shipped by another session
+  (`agent-orchestrator@7889a7c`, confirmed on `origin/live-defi-rollout`), all 4 sibling diff-shape checks now carry
+  `--no-renames`, regression test present. All todos now `[x]` + unlocked → archiving in the immediately following
+  commit per the cross-repo (mode-2) two-commit archival rule.
 
 **na-eligibility-audit 2026-08-13**: RECLASSIFY_WHOLE — every open todo bounded/deterministic, flipped
 `assigned_vm: NA -> planning` after full-sweep classification + conflict review (see run report).
