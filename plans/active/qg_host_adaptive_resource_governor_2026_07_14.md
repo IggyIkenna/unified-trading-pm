@@ -694,20 +694,48 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
     min" (=300s) per slot — the exact interval at which all 3 deaths occurred. Not verified this session whether that
     cron path can reap a peer's backgrounded child; flagging the coincidence rather than asserting causation.
   - **Net**: root cause remains OPEN. Two plausible mechanisms (cgroup cap, this plan's own watchdog) are now positively
-    ruled out by direct measurement — narrowing, not closing, the search. Whoever picks up todo 258 should start from
-    "not the cgroup, not `_qg_watchdog_start`, look at what else touches a slot's process tree every ~300s."
+    ruled out by direct measurement — narrowing, not closing, the search. **Correction to this entry's own earlier
+    wording**: "todo 258" (the runtime abort-monitor) is NOT the right hook for this — it shipped 2026-07-27
+    (self-scoped v1, see that Progress Log entry) and is post-admission-only by design, confirmed by direct code trace
+    (`_qg_watchdog_start` is called from inside `_qg_governor_acquire_reservation()`, gated on `ADMIT|SOLO_ADMIT`); the
+    separately-shipped "MAX_DURATION queue-time exclusion" (280 — `f36ac5877`) is also unrelated (it excludes queue time
+    from a run's OWN wall-clock budget, it doesn't protect a queued run from an external kill). Neither shipped
+    mechanism covers a PRE-admission queue-wait death. Tracked as a new todo below instead.
 - **Reusable diagnostic**: wrap the launch so a killed child logs its OWN exit code instead of vanishing —
   `setsid bash -c 'bash scripts/quality-gates.sh --no-fix > "$LOG" 2>&1; echo "EXIT=$? at $(date +%T)" >> "$LOG"' < /dev/null &`
   — the `setsid`-detached wrapper shell survives even if the inner command is SIGKILLed, and appends the real exit code
-  (137 = SIGKILL) to the log, turning "vanished without a trace" into "confirmed signal + code." A third run launched
-  this way was in progress at the time of this entry.
-- Filed as evidence for the runtime abort-monitor/observability follow-up (todo 258 above), not a new todo on its own —
-  no fix implied by evidence alone. (slot 29, `mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep-f433c955099b`)
+  (137 = SIGKILL) to the log, turning "vanished without a trace" into "confirmed signal + code."
+- **UPDATE, same session (slot 29) — 4th confirmed death, exactly 300s again, this time under the harness's OWN native
+  background-task tracking (not my own nohup/setsid chain)**: run 5 (via the harness's `run_in_background`, no custom
+  wrapper at all) also died at exactly 300s of real queue time. This rules out a flaw in my own detachment mechanism as
+  the cause — the kill happens regardless of how the process is backgrounded. A 5th attempt (run 6, task `bticjctmt`)
+  was launched via the harness's native tracking and was still in progress (queued ~30s) when this session compacted;
+  its own eventual result (if it also dies at ~300s) would make this fully deterministic across every launch mechanism
+  tried. (slot 29, `mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep-f433c955099b`)
 
 ## Deferred / open decisions
 
 - Canonical-cost source (Phase 0): `max(local,vm)` vs a fresh single canonical measurement — decide at Phase 0.
 - `cpu_weight` per-repo refinement (Phase 3 CPU gate) deferred to v2 unless the count-based slot proves too coarse.
+- [ ] [INFRA] P1. **NEW (found 2026-08-15 slot 29).** A `quality-gates.sh` instance still WAITING for the total-instance
+      flock token (i.e. still inside `qg_governor_acquire_total_instance()`'s pre-admission queue loop,
+      `scripts/quality-gates-base/qg-host-governor.sh` ~line 850-895) dies silently, with no terminal marker of any
+      kind, at a strikingly consistent **~300s of queue time** — reproduced 4/4 independent launches on
+      market-tick-data-service (2 via plain `nohup`, 1 via a `setsid`-wrapper that would have captured a
+      `QG_WRAPPER_EXIT=` line even from a SIGKILL, 1 via the AO harness's own native `run_in_background` tracking — all
+      4 died at the same ~300s mark regardless of launch mechanism). **Positively ruled out by direct measurement/code
+      trace**: kernel OOM-killer (`dmesg`/`journalctl -k` empty both times), `orchestrator.service` cgroup cap
+      (`MemoryCurrent` well under both `MemoryHigh`/`MemoryMax` at check time), and BOTH of this plan's own shipped
+      runtime-protection mechanisms (`_qg_watchdog_start`'s post-admission watchdog — doesn't start until AFTER
+      `ADMIT|SOLO_ADMIT`, the deaths are all pre-admission; the `MAX_DURATION` queue-time exclusion — that only affects
+      a run's own internal wall-clock accounting, not an external kill). The `qg_governor_acquire_total_instance` queue
+      loop itself has zero internal timeout/self-kill logic (read directly). **Root cause still unknown.** Next lead
+      (not yet checked): CLAUDE.md's `slot-cron-ff-pull.sh` + `slot-git-status-report.sh`, documented as running "every
+      5 min" (=300s) per slot — check whether either can reap a peer's backgrounded child process tree, and whether any
+      OTHER 300s-cadence job/timer exists on this host. Real fleet impact: this is currently blocking a real,
+      already-committed fix (`market-tick-data-service@8b353ef2`) from ever getting a green-gate ship, since the sub-cap
+      for that repo is 1 host-wide and 4-5 concurrent slots were observed contending for it. Evidence:
+      `qg_host_adaptive_resource_governor_2026_07_14.md` Progress Log entries dated 2026-08-15 (slot 29, two entries).
 
 ## Measured runtime drift — RESOLVED 2026-07-22 (plan-reconcile follow-up)
 
