@@ -103,12 +103,12 @@ source: >-
       `escalation.enqueue()`'s own `_find_open_escalation`/`_wall_cooldown_key` dedup (verified by reading
       `server/escalation.py` directly) collapses those re-fires onto the single open escalation row — see this plan's
       Progress Log for the full reasoning and why todo 6 needed no new code.
-- [ ] [INFRA] P2. Confirm the new wall type is NOT added to `_QG_SIGNAL_WALLS` (`server/escalation.py`) — it has no
+- [x] ✅ [INFRA] P2. Confirm the new wall type is NOT added to `_QG_SIGNAL_WALLS` (`server/escalation.py`) — it has no
       GitHub Actions run to poll, same reasoning already documented for `data_pipeline_failure` — and route it through
       the generic `escalate`/cicd worker boot prompt (same as `main_ci_red`/`harness_lint`) unless this todo's own
       investigation finds a dedicated boot prompt is genuinely warranted; state the decision + why in the same commit.
       Done-when: `server/escalation.py`'s routing tables (`_DATA_PIPELINE_WALLS`, `_LAST_CHANCE_WALLS`, prompt
-      selection) are internally consistent with the decision and a test pins it.
+      selection) are internally consistent with the decision and a test pins it. — agent-orchestrator@8ba680c0f7
 - [ ] [INFRA] P2. Add dedup so repeated detector ticks against an already-open escalation for the same (repo, check)
       never spam-enqueue — reuse the existing `_wall_cooldown_key`/`get_cooldown`/`register_cooldown` machinery every
       other wall type already relies on. Done-when: a test proves 3 consecutive detector ticks against the same
@@ -147,6 +147,19 @@ source: >-
       breach found is filed as its own issue doc rather than silently absorbed into this infra plan.
 
 ## Progress Log
+
+- **2026-08-15 (slot-4·infra)**: Todo 5 flipped — the prior session's Progress Log finding ("`local_ratchet_gate_breach`
+  is absent from `_QG_SIGNAL_WALLS`/`_CONFLICT_RESOLVER_WALLS`/`_DATA_PIPELINE_WALLS`; `_prompt_template_for` falls
+  through to the generic `cicd` prompt") was verified still true against current
+  `origin/live-defi-rollout` HEAD (`grep` on `server/escalation.py`'s three routing frozensets + a direct read of
+  `_prompt_template_for`), but no test pinned it yet — the done_definition's "a test pins it" half was still
+  outstanding. Added `test_local_ratchet_gate_breach_is_a_valid_wall_type` to
+  `agent-orchestrator/tests/test_escalation.py`, mirroring the existing
+  `test_backmerge_sync_failure_is_a_valid_wall_type`/`test_cloud_build_failure_is_a_valid_wall_type` pattern: asserts
+  membership in `WALL_TYPES`, non-membership in the three routing frozensets, and
+  `_prompt_template_for("local_ratchet_gate_breach") == "cicd"`. `bash scripts/quality-gates.sh` green (post `uv sync`
+  — repo/dashboard suites both passed, 374 dashboard tests). Shipped via quickmerge, post-push ancestry verified:
+  agent-orchestrator@8ba680c0f7.
 
 - **2026-08-15 (slot-7·infra)**: Plan authored per the batch13 todo "author the implementation plan for the
   2026-08-12-ruled local-ratchet-gate-breach escalation detector" — routing confirmed AO-dispatched via BLK-3f47f1af
